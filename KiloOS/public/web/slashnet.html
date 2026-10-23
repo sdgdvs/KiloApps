@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SlashNet: News for Nerds. Stuff that matters.</title>
+<meta name="description" content="SlashNet - The 1999 Open Source, Linux, Hardware &amp; Beowulf Cluster News Community. Interactive Karma Moderation, Threshold Comment Filter &amp; Linux 2.2 Compile Rig.">
+<style>
+  :root {
+    --slash-green-dark: #004d4d;
+    --slash-green: #006666;
+    --slash-green-light: #008080;
+    --slash-teal-subtle: #e6f2f2;
+    --slash-bg: #eef2f2;
+    --slash-card-bg: #ffffff;
+    --slash-border: #005555;
+    --slash-border-light: #b0cccc;
+    --slash-text: #111827;
+    --slash-text-muted: #4b5563;
+    --slash-link: #004d4d;
+    --slash-accent: #cc3300;
+    --slash-karma-pos: #059669;
+    --slash-karma-neg: #dc2626;
+    --font-serif: "Times New Roman", Times, Georgia, serif;
+    --font-sans: "Trebuchet MS", Tahoma, Arial, sans-serif;
+    --font-mono: "Courier New", Courier, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--slash-bg);
+    color: var(--slash-text);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.4;
+    padding: 0;
+    margin: 0;
+  }
+
+  a {
+    color: var(--slash-link);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  a:hover {
+    color: var(--slash-accent);
+  }
+
+  /* Top Masthead & Banner */
+  .masthead {
+    background: linear-gradient(180deg, #005555 0%, #003838 100%);
+    color: #ffffff;
+    padding: 8px 16px;
+    border-bottom: 2px solid #002222;
+  }
+  .masthead-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .brand-block {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .brand-title {
+    font-family: var(--font-serif);
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    color: #ffffff;
+    text-shadow: 2px 2px 0px #002222;
+  }
+  .brand-title span {
+    color: #66e0d0;
+  }
+  .brand-tagline {
+    font-size: 13px;
+    font-style: italic;
+    color: #b3ecec;
+    font-family: var(--font-serif);
+  }
+  .masthead-status {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 6px 10px;
+    border: 1px solid #006666;
+    border-radius: 3px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .karma-pill {
+    color: #5eead4;
+    font-weight: bold;
+  }
+  .mod-points-pill {
+    background: #004d4d;
+    color: #fef08a;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+    border: 1px solid #0d9488;
+  }
+
+  /* Main Navigation Bar */
+  .navbar {
+    background-color: var(--slash-green);
+    border-bottom: 1px solid #004444;
+    padding: 4px 16px;
+  }
+  .nav-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .nav-links {
+    display: flex;
+    list-style: none;
+    gap: 16px;
+    padding: 0;
+    margin: 0;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  .nav-links a {
+    color: #ffffff;
+    text-decoration: none;
+    padding: 3px 6px;
+    border-radius: 2px;
+  }
+  .nav-links a:hover, .nav-links a.active {
+    background-color: #004d4d;
+    color: #66e0d0;
+  }
+  .nav-tools {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .btn-retro {
+    background: #e2e8f0;
+    color: #0f172a;
+    border: 1px solid #475569;
+    border-top-color: #ffffff;
+    border-left-color: #ffffff;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .btn-retro:hover {
+    background: #f1f5f9;
+  }
+  .btn-retro:active {
+    border-top-color: #475569;
+    border-left-color: #475569;
+    border-bottom-color: #ffffff;
+    border-right-color: #ffffff;
+  }
+  .btn-green {
+    background: #006666;
+    color: #ffffff;
+    border: 1px solid #003333;
+    border-top-color: #008080;
+    border-left-color: #008080;
+  }
+  .btn-green:hover {
+    background: #007777;
+  }
+
+  /* Layout Container */
+  .container {
+    max-width: 1180px;
+    margin: 12px auto;
+    padding: 0 12px;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 860px) {
+    .container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Slashboxes (Sidebar Panels) */
+  .slashbox {
+    background: var(--slash-card-bg);
+    border: 1px solid var(--slash-border-light);
+    margin-bottom: 12px;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.06);
+  }
+  .slashbox-header {
+    background-color: var(--slash-green);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-bottom: 1px solid #004d4d;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .slashbox-body {
+    padding: 8px;
+    font-size: 12px;
+  }
+  .slashbox-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .slashbox-list li {
+    padding: 4px 0;
+    border-bottom: 1px dotted #ccc;
+  }
+  .slashbox-list li:last-child {
+    border-bottom: none;
+  }
+
+  /* Story Cards */
+  .story-card {
+    background: var(--slash-card-bg);
+    border: 1px solid var(--slash-border-light);
+    margin-bottom: 16px;
+    box-shadow: 1px 1px 4px rgba(0,0,0,0.05);
+  }
+  .story-header {
+    background: linear-gradient(180deg, #006666 0%, #004d4d 100%);
+    color: #ffffff;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #003333;
+  }
+  .story-title {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffffff;
+  }
+  .story-title a {
+    color: #ffffff;
+    text-decoration: none;
+  }
+  .story-title a:hover {
+    color: #99ffff;
+    text-decoration: underline;
+  }
+  .story-meta {
+    background: #e6f2f2;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: #004444;
+    border-bottom: 1px solid #cce5e5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .story-topic-badge {
+    background: #006666;
+    color: #ffffff;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  .story-body {
+    padding: 12px;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .story-body p {
+    margin-bottom: 10px;
+  }
+  .story-footer {
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11px;
+  }
+  .story-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  /* Comments & Karma Moderation System */
+  .comments-container {
+    background: #ffffff;
+    border: 1px solid var(--slash-border-light);
+    margin-top: 12px;
+    padding: 12px;
+  }
+  .filter-bar {
+    background: #edf6f6;
+    border: 1px solid #c2dede;
+    padding: 8px 10px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 12px;
+  }
+  .filter-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .comment-thread {
+    margin-bottom: 10px;
+  }
+  .comment-item {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    margin-bottom: 8px;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .comment-item.nested-1 { margin-left: 20px; border-left: 3px solid #006666; }
+  .comment-item.nested-2 { margin-left: 40px; border-left: 3px solid #0891b2; }
+  .comment-item.nested-3 { margin-left: 60px; border-left: 3px solid #6366f1; }
+  .comment-item.hidden-by-threshold {
+    background: #f3f4f6;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: #6b7280;
+    cursor: pointer;
+  }
+  .comment-header {
+    background: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 5px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .comment-subject {
+    font-weight: bold;
+    color: #0f172a;
+    font-size: 12px;
+  }
+  .comment-author {
+    color: #004d4d;
+    font-weight: bold;
+  }
+  .comment-score {
+    font-family: var(--font-mono);
+    font-weight: bold;
+    padding: 1px 5px;
+    border-radius: 2px;
+    background: #e2e8f0;
+  }
+  .score-pos { background: #dcfce7; color: #166534; }
+  .score-neg { background: #fee2e2; color: #991b1b; }
+  .score-high { background: #ccfbf1; color: #115e59; font-weight: 800; }
+  .comment-body {
+    padding: 8px 10px;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .comment-mod-bar {
+    background: #fafafa;
+    border-top: 1px solid #f0f0f0;
+    padding: 4px 8px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  /* Interactive Beowulf Cluster Tool */
+  .tool-panel {
+    background: #ffffff;
+    border: 1px solid var(--slash-border-light);
+    margin-bottom: 16px;
+    padding: 12px;
+  }
+  .tool-title {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    color: var(--slash-green-dark);
+    margin-bottom: 4px;
+    border-bottom: 2px solid var(--slash-green);
+    padding-bottom: 4px;
+  }
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin: 12px 0;
+  }
+  .calc-field label {
+    display: block;
+    font-weight: bold;
+    font-size: 11px;
+    color: #374151;
+    margin-bottom: 2px;
+  }
+  .calc-field select, .calc-field input {
+    width: 100%;
+    padding: 4px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    border: 1px solid #94a3b8;
+  }
+  .cluster-readouts {
+    background: #0f172a;
+    color: #38bdf8;
+    font-family: var(--font-mono);
+    padding: 10px;
+    border-radius: 3px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .readout-box {
+    background: #1e293b;
+    padding: 6px;
+    border-left: 3px solid #06b6d4;
+  }
+  .readout-val {
+    font-size: 16px;
+    font-weight: bold;
+    color: #4ade80;
+  }
+  .readout-lbl {
+    font-size: 10px;
+    color: #94a3b8;
+    text-transform: uppercase;
+  }
+
+  /* Cluster Visual Rack */
+  .rack-display {
+    background: #050505;
+    border: 2px solid #334155;
+    padding: 8px;
+    margin-top: 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+  .rack-nodes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+    gap: 4px;
+    margin-top: 6px;
+    max-height: 140px;
+    overflow-y: auto;
+    padding: 4px;
+    background: #111827;
+  }
+  .rack-node {
+    background: #1f2937;
+    border: 1px solid #374151;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border-radius: 1px;
+  }
+  .node-led {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #22c55e;
+  }
+  .node-led.busy {
+    background: #f59e0b;
+    box-shadow: 0 0 3px #f59e0b;
+  }
+  .node-led.net {
+    background: #06b6d4;
+    box-shadow: 0 0 3px #06b6d4;
+  }
+
+  /* Linux 2.2 Terminal */
+  .term-box {
+    background: #000000;
+    color: #22c55e;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 8px;
+    height: 180px;
+    overflow-y: auto;
+    border: 1px solid #334155;
+    margin-top: 8px;
+    white-space: pre-wrap;
+    line-height: 1.35;
+  }
+
+  /* Daily Poll Box */
+  .poll-option {
+    margin: 6px 0;
+  }
+  .poll-bar-outer {
+    background: #e2e8f0;
+    height: 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 2px;
+  }
+  .poll-bar-inner {
+    height: 100%;
+    background: var(--slash-green);
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  /* Toast Notification */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #004d4d;
+    color: #ffffff;
+    padding: 10px 16px;
+    border-left: 4px solid #34d399;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    z-index: 1000;
+    display: none;
+  }
+
+  /* Footer */
+  footer {
+    background: #004d4d;
+    color: #cce5e5;
+    padding: 16px;
+    margin-top: 24px;
+    font-size: 11px;
+    text-align: center;
+    border-top: 2px solid #002e2e;
+  }
+  footer a {
+    color: #66e0d0;
+  }
+</style>
+</head>
+<body>
+
+<!-- Masthead -->
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand-block">
+      <div class="brand-title">Slash<span>Net</span></div>
+      <div class="brand-tagline">News for Nerds. Stuff that matters.</div>
+    </div>
+    <div class="masthead-status">
+      <div>📅 <span id="currentDate">Fri Oct 23 1999</span></div>
+      <div>User: <strong id="usernameDisplay">Anonymous Coward</strong></div>
+      <div>Karma: <span class="karma-pill" id="userKarmaDisplay">Good (42)</span></div>
+      <div>Mod Points: <span class="mod-points-pill" id="userModPointsDisplay">5</span></div>
+      <button class="btn-retro" id="btnAudioToggle" onclick="toggleAudio()" title="Sound Effects Toggle">🔊 SFX [ON]</button>
+    </div>
+  </div>
+</header>
+
+<!-- Main Navigation -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <ul class="nav-links">
+      <li><a href="#stories" class="active" onclick="switchSection('stories')">Stories</a></li>
+      <li><a href="#beowulf" onclick="switchSection('beowulf')">Beowulf Cluster Calc</a></li>
+      <li><a href="#kernel" onclick="switchSection('kernel')">Linux 2.2 Compile Sim</a></li>
+      <li><a href="#poll" onclick="switchSection('poll')">Daily Poll</a></li>
+      <li><a href="#vfs" onclick="switchSection('vfs')">VFS Export Center</a></li>
+    </ul>
+    <div class="nav-tools">
+      <button class="btn-retro btn-green" onclick="openStorySubmitModal()">+ Submit Story</button>
+      <button class="btn-retro" onclick="resetModPoints()">🔄 Request Mod Points</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Main Content Grid -->
+<div class="container">
+
+  <!-- Left Sidebar (Slashboxes) -->
+  <aside>
+    <!-- Slashbox: Sections -->
+    <div class="slashbox">
+      <div class="slashbox-header">
+        <span>Sections</span>
+        <span>[+]</span>
+      </div>
+      <div class="slashbox-body">
+        <ul class="slashbox-list">
+          <li>🐧 <a href="#stories" onclick="filterStories('linux')">Linux &amp; Open Source</a></li>
+          <li>⚡ <a href="#beowulf" onclick="switchSection('beowulf')">Beowulf Clusters</a></li>
+          <li>💾 <a href="#stories" onclick="filterStories('hardware')">Hardware &amp; Silicon</a></li>
+          <li>⚖️ <a href="#stories" onclick="filterStories('y2k')">Y2K Watch &amp; DOJ</a></li>
+          <li>🎮 <a href="#stories" onclick="filterStories('gaming')">3D Gaming (Glide/Mesa)</a></li>
+          <li>❓ <a href="#stories" onclick="filterStories('ask')">Ask SlashNet</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slashbox: Quick Poll -->
+    <div class="slashbox" id="sidePollBox">
+      <div class="slashbox-header">
+        <span>SlashNet Poll</span>
+        <span>Oct '99</span>
+      </div>
+      <div class="slashbox-body">
+        <strong id="sidePollQuestion" style="font-size:11px; display:block; margin-bottom:6px;">Where will you celebrate midnight, Dec 31 1999?</strong>
+        <div id="sidePollOptions">
+          <!-- Populated by JS -->
+        </div>
+        <div style="margin-top:6px; font-size:10px; color:var(--slash-text-muted); text-align:right;">
+          Total Votes: <span id="sidePollTotalVotes">1,492</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slashbox: Cluster Quick-Stat -->
+    <div class="slashbox">
+      <div class="slashbox-header">
+        <span>Beowulf Radar</span>
+        <span>TOP500</span>
+      </div>
+      <div class="slashbox-body" style="font-size:11px;">
+        <p><strong>Cluster Spec:</strong> 32x Dual Celeron 300A @ 450MHz</p>
+        <p><strong>Total Throughput:</strong> 28.8 GFLOPS</p>
+        <p><strong>Current Job:</strong> POV-Ray Raytrace (POV-3.1)</p>
+        <button class="btn-retro" style="width:100%; margin-top:6px;" onclick="switchSection('beowulf')">Launch Cluster Calculator</button>
+      </div>
+    </div>
+
+    <!-- Slashbox: KiloNet Virtual Webring -->
+    <div class="slashbox">
+      <div class="slashbox-header">
+        <span>KiloNet Webring</span>
+        <span>1999</span>
+      </div>
+      <div class="slashbox-body" style="font-size:11px;">
+        <ul class="slashbox-list">
+          <li>🏠 <a href="/web/portal.html" onclick="navigateTo('/web/portal.html', event)">kweb://portal</a></li>
+          <li>🌐 <a href="/web/webring.html" onclick="navigateTo('/web/webring.html', event)">kweb://webring</a></li>
+          <li>✨ <a href="/web/geocities.html" onclick="navigateTo('/web/geocities.html', event)">kweb://geocities</a></li>
+          <li>☕ <a href="/web/cybercafe.html" onclick="navigateTo('/web/cybercafe.html', event)">kweb://cybercafe</a></li>
+          <li>💾 <a href="/web/warez.html" onclick="navigateTo('/web/warez.html', event)">kweb://warez</a></li>
+          <li>⚡ <a href="/web/asm_temple.html" onclick="navigateTo('/web/asm_temple.html', event)">kweb://asm-temple</a></li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right / Center Column -->
+  <main>
+
+    <!-- SECTION: STORIES & DISCUSSIONS -->
+    <div id="sectionStories">
+      <!-- Story 1: Linux 2.2.14 SMP -->
+      <article class="story-card" id="story-1">
+        <div class="story-header">
+          <h2 class="story-title"><a href="#story-1" onclick="toggleStoryComments('story-1')">Linux 2.2.14 Kernel Released: SMP &amp; IPChains Hardened</a></h2>
+          <span class="story-topic-badge">Linux</span>
+        </div>
+        <div class="story-meta">
+          <div>Posted by <strong>Rob 'CmdrTaco' Malda</strong> on Fri Oct 23 1999 @ 09:15AM</div>
+          <div>From the <em>source-code-forever</em> dept.</div>
+        </div>
+        <div class="story-body">
+          <p>Linus Torvalds and Alan Cox have officially announced the release of <strong>Linux 2.2.14</strong>, bringing monumental stability enhancements to multi-processor (SMP) x86 rigs, complete packet filtering hardening in <code>ipchains</code>, and essential Y2K hardware clock rollovers.</p>
+          <p>Alan Cox writes: <em>"This maintenance release squashes memory leaks in TCP socket teardowns under gigabit load and introduces reliable APIC irq routing for dual BP6 Celeron and Pentium III workstations. If you plan to leave your web and mail servers unattended on New Year's Eve, compiling 2.2.14 is considered mandatory."</em></p>
+        </div>
+        <div class="story-footer">
+          <div>
+            💬 <a href="#story-1" onclick="toggleStoryComments('story-1')"><strong id="commentCount-story-1">7 Comments</strong></a>
+            &bull; <span style="color:#059669; font-weight:bold;">Score Threshold: Active</span>
+          </div>
+          <div class="story-actions">
+            <button class="btn-retro btn-green" onclick="exportStoryVFS('story-1')">💾 Save to VFS</button>
+            <button class="btn-retro" onclick="openStoryInKPad('story-1')">📝 Open in KPad</button>
+            <button class="btn-retro" onclick="switchSection('kernel')">⚙️ Compile 2.2.14</button>
+          </div>
+        </div>
+
+        <!-- Comments & Karma Moderation Box -->
+        <div class="comments-container" id="comments-story-1">
+          <div class="filter-bar">
+            <div class="filter-controls">
+              <strong>Threshold:</strong>
+              <select id="thresholdSelect-story-1" onchange="updateCommentThreshold('story-1')">
+                <option value="-1">-1: Everything (Trolls)</option>
+                <option value="0">0: Normal</option>
+                <option value="1" selected>1: Insightful (+1)</option>
+                <option value="2">2: Informative (+2)</option>
+                <option value="3">3: Interesting (+3)</option>
+                <option value="4">4: Funny (+4)</option>
+                <option value="5">5: Pure Signal (+5)</option>
+              </select>
+
+              <strong style="margin-left:8px;">View:</strong>
+              <select id="viewModeSelect-story-1" onchange="renderComments('story-1')">
+                <option value="nested">Nested</option>
+                <option value="flat">Flat</option>
+              </select>
+            </div>
+            <div id="filterSummary-story-1" style="font-size:11px; color:var(--slash-text-muted);">
+              Showing comments
+            </div>
+          </div>
+
+          <!-- Comment Stream Container -->
+          <div class="comments-list" id="commentList-story-1">
+            <!-- Dynamic comments injected here -->
+          </div>
+
+          <!-- Add Comment Form -->
+          <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:10px; margin-top:12px;">
+            <strong style="font-size:12px; display:block; margin-bottom:6px;">Post a Response to this Story:</strong>
+            <div style="display:grid; grid-template-columns: 140px 1fr; gap:6px; margin-bottom:6px;">
+              <input type="text" id="newCommentAuthor-story-1" placeholder="Your Handle / Nick" value="Anonymous Coward" style="font-size:11px; padding:3px;" />
+              <input type="text" id="newCommentSubject-story-1" placeholder="Subject Line" style="font-size:11px; padding:3px;" />
+            </div>
+            <textarea id="newCommentBody-story-1" rows="3" placeholder="Type your insightful or witty comment here..." style="width:100%; font-family:var(--font-mono); font-size:11px; padding:4px; margin-bottom:6px;"></textarea>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:11px; color:#64748b;">Posting as Anonymous Coward defaults to Score: 0.</span>
+              <button class="btn-retro btn-green" onclick="postNewComment('story-1')">Submit Comment</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Story 2: Beowulf Cluster in Carlsbad -->
+      <article class="story-card" id="story-2">
+        <div class="story-header">
+          <h2 class="story-title"><a href="#story-1" onclick="toggleStoryComments('story-2')">Beowulf Cluster of 64 Celeron 300As Outperforms Cray Supercomputer</a></h2>
+          <span class="story-topic-badge">Hardware</span>
+        </div>
+        <div class="story-meta">
+          <div>Posted by <strong>Michael 'Hemos' Holve</strong> on Thu Oct 22 1999 @ 05:30PM</div>
+          <div>From the <em>imagine-a-beowulf-cluster-of-these</em> dept.</div>
+        </div>
+        <div class="story-body">
+          <p>Researchers operating out of the Carlsbad Subterranean Acoustic &amp; RF Testing facility have published astonishing LINPACK benchmarks: an interconnected array of 64 dual-socket ABIT BP6 motherboards populated with overclocked <strong>Intel Celeron 300A CPUs running at 450 MHz</strong> has clocked <strong>24.8 GFLOPS</strong> sustained, dethroning several multimillion-dollar Cray Y-MP supercomputers.</p>
+          <p>The entire rig runs on Debian 2.1 (Slink) with Linux 2.2.13 SMP, networked via dual-ported 100Base-TX switches utilizing channel bonding. Chief engineer Dave 'Kernighan' states: <em>"The total bill of materials was under $38,000 including 42U racks and heavy-duty box fans. We are using it to crunch acoustic wave equations in underground lithospheric strata."</em></p>
+        </div>
+        <div class="story-footer">
+          <div>
+            💬 <a href="#story-1" onclick="toggleStoryComments('story-2')"><strong id="commentCount-story-2">5 Comments</strong></a>
+            &bull; <span style="color:#059669; font-weight:bold;">Score Threshold: Active</span>
+          </div>
+          <div class="story-actions">
+            <button class="btn-retro btn-green" onclick="exportStoryVFS('story-2')">💾 Save to VFS</button>
+            <button class="btn-retro" onclick="openStoryInKPad('story-2')">📝 Open in KPad</button>
+            <button class="btn-retro" onclick="loadSpecIntoBeowulf(64, 'celeron300a')">⚡ Simulate Rig</button>
+          </div>
+        </div>
+
+        <div class="comments-container" id="comments-story-2">
+          <div class="filter-bar">
+            <div class="filter-controls">
+              <strong>Threshold:</strong>
+              <select id="thresholdSelect-story-2" onchange="updateCommentThreshold('story-2')">
+                <option value="-1">-1: Everything</option>
+                <option value="0">0: Normal</option>
+                <option value="1" selected>1: Insightful (+1)</option>
+                <option value="2">2: Informative (+2)</option>
+                <option value="3">3: Interesting (+3)</option>
+                <option value="4">4: Funny (+4)</option>
+                <option value="5">5: Pure Signal (+5)</option>
+              </select>
+              <strong style="margin-left:8px;">View:</strong>
+              <select id="viewModeSelect-story-2" onchange="renderComments('story-2')">
+                <option value="nested">Nested</option>
+                <option value="flat">Flat</option>
+              </select>
+            </div>
+            <div id="filterSummary-story-2" style="font-size:11px; color:var(--slash-text-muted);">
+              Showing comments
+            </div>
+          </div>
+          <div class="comments-list" id="commentList-story-2"></div>
+          <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:10px; margin-top:12px;">
+            <strong style="font-size:12px; display:block; margin-bottom:6px;">Post a Response:</strong>
+            <div style="display:grid; grid-template-columns: 140px 1fr; gap:6px; margin-bottom:6px;">
+              <input type="text" id="newCommentAuthor-story-2" placeholder="Your Handle" value="Anonymous Coward" style="font-size:11px; padding:3px;" />
+              <input type="text" id="newCommentSubject-story-2" placeholder="Subject Line" style="font-size:11px; padding:3px;" />
+            </div>
+            <textarea id="newCommentBody-story-2" rows="3" placeholder="Join the discussion..." style="width:100%; font-family:var(--font-mono); font-size:11px; padding:4px; margin-bottom:6px;"></textarea>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:11px; color:#64748b;">Karma moderation active.</span>
+              <button class="btn-retro btn-green" onclick="postNewComment('story-2')">Submit Comment</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Story 3: 3D Graphics Glide & Mesa -->
+      <article class="story-card" id="story-3">
+        <div class="story-header">
+          <h2 class="story-title"><a href="#story-1" onclick="toggleStoryComments('story-3')">Glide3 and Mesa 3.1 Unleash 3dfx Voodoo3 on XFree86</a></h2>
+          <span class="story-topic-badge">Gaming</span>
+        </div>
+        <div class="story-meta">
+          <div>Posted by <strong>Brian 'Zous' Shaler</strong> on Wed Oct 20 1999 @ 11:20AM</div>
+          <div>From the <em>sixty-frames-per-second-in-quake</em> dept.</div>
+        </div>
+        <div class="story-body">
+          <p>Gaming on Linux has made a titanic leap forward this week. The Open Source 3dfx Device Driver team, along with Brian Paul's Mesa 3.1 project, have rolled out rock-solid <strong>Glide3x drivers</strong> for 3dfx Voodoo2 and Voodoo3 accelerators under XFree86 3.3.5.</p>
+          <p>Early tests with <em>Surreal Tournament</em> and <em>Tremor III Arena</em> show framerates consistently exceeding 72 FPS in 1024x768 16-bit color. With Sound Blaster Live! and AWE64 ALSA modules working out of the box, is 1999 officially the year of the Linux gaming desktop?</p>
+        </div>
+        <div class="story-footer">
+          <div>
+            💬 <a href="#story-1" onclick="toggleStoryComments('story-3')"><strong id="commentCount-story-3">4 Comments</strong></a>
+          </div>
+          <div class="story-actions">
+            <button class="btn-retro btn-green" onclick="exportStoryVFS('story-3')">💾 Save to VFS</button>
+            <button class="btn-retro" onclick="openStoryInKPad('story-3')">📝 Open in KPad</button>
+          </div>
+        </div>
+
+        <div class="comments-container" id="comments-story-3">
+          <div class="filter-bar">
+            <div class="filter-controls">
+              <strong>Threshold:</strong>
+              <select id="thresholdSelect-story-3" onchange="updateCommentThreshold('story-3')">
+                <option value="-1">-1: Everything</option>
+                <option value="0">0: Normal</option>
+                <option value="1" selected>1: Insightful (+1)</option>
+                <option value="2">2: Informative (+2)</option>
+                <option value="3">3: Interesting (+3)</option>
+                <option value="4">4: Funny (+4)</option>
+                <option value="5">5: Pure Signal (+5)</option>
+              </select>
+            </div>
+            <div id="filterSummary-story-3" style="font-size:11px; color:var(--slash-text-muted);">
+              Showing comments
+            </div>
+          </div>
+          <div class="comments-list" id="commentList-story-3"></div>
+          <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:10px; margin-top:12px;">
+            <strong style="font-size:12px; display:block; margin-bottom:6px;">Post a Response:</strong>
+            <div style="display:grid; grid-template-columns: 140px 1fr; gap:6px; margin-bottom:6px;">
+              <input type="text" id="newCommentAuthor-story-3" placeholder="Your Handle" value="Anonymous Coward" style="font-size:11px; padding:3px;" />
+              <input type="text" id="newCommentSubject-story-3" placeholder="Subject Line" style="font-size:11px; padding:3px;" />
+            </div>
+            <textarea id="newCommentBody-story-3" rows="3" placeholder="Join the discussion..." style="width:100%; font-family:var(--font-mono); font-size:11px; padding:4px; margin-bottom:6px;"></textarea>
+            <div style="display:flex; justify-content:flex-end;">
+              <button class="btn-retro btn-green" onclick="postNewComment('story-3')">Submit Comment</button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- SECTION: BEOWULF CLUSTER CALCULATOR -->
+    <div id="sectionBeowulf" style="display:none;" class="tool-panel">
+      <h2 class="tool-title">⚡ Interactive Beowulf Cluster Engineering Workbench</h2>
+      <p style="font-size:12px; margin-bottom:12px;">
+        <em>"Imagine a Beowulf cluster of these!"</em> Configure node counts, microarchitecture, network interconnects, and benchmark theoretical vs sustained LINPACK throughput for custom 1999 computing clusters.
+      </p>
+
+      <div class="calc-grid">
+        <div class="calc-field">
+          <label>Compute Nodes (Count):</label>
+          <input type="number" id="clusterNodeCount" min="2" max="512" value="32" onchange="calculateClusterMetrics()" oninput="calculateClusterMetrics()" />
+        </div>
+        <div class="calc-field">
+          <label>CPU Architecture:</label>
+          <select id="clusterCpuSelect" onchange="calculateClusterMetrics()">
+            <option value="celeron300a" selected>Intel Celeron 300A @ 450MHz (Dual Socket 370)</option>
+            <option value="pii450">Intel Pentium II 450MHz (Deschutes Slot 1)</option>
+            <option value="piii600">Intel Pentium III 600MHz (Katmai SSE)</option>
+            <option value="athlon650">AMD Athlon K7 650MHz (Slot A EV6 Bus)</option>
+            <option value="alpha667">DEC Alpha 21264 667MHz (EV6 64-bit)</option>
+            <option value="sparc400">Sun UltraSPARC II 400MHz</option>
+          </select>
+        </div>
+        <div class="calc-field">
+          <label>Memory per Node:</label>
+          <select id="clusterRamSelect" onchange="calculateClusterMetrics()">
+            <option value="64">64 MB PC100 SDRAM</option>
+            <option value="128" selected>128 MB PC100 SDRAM</option>
+            <option value="256">256 MB PC133 SDRAM</option>
+            <option value="512">512 MB Registered ECC</option>
+          </select>
+        </div>
+        <div class="calc-field">
+          <label>Network Interconnect Fabric:</label>
+          <select id="clusterNetSelect" onchange="calculateClusterMetrics()">
+            <option value="fast_eth" selected>100Base-TX Fast Ethernet (3c905B, 35μs latency)</option>
+            <option value="gbe">Gigabit Ethernet 1000Base-SX (12μs latency)</option>
+            <option value="myrinet">Myrinet M2M-PCI64B SAN (4.5μs latency, 1.2Gbps)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Telemetry Readouts -->
+      <div class="cluster-readouts">
+        <div class="readout-box">
+          <div class="readout-val" id="valTotalCores">64</div>
+          <div class="readout-lbl">Total Processing Cores</div>
+        </div>
+        <div class="readout-box">
+          <div class="readout-val" id="valPeakGflops">28.80</div>
+          <div class="readout-lbl">Peak Theoretical GFLOPS</div>
+        </div>
+        <div class="readout-box">
+          <div class="readout-val" id="valLinpackGflops">23.04</div>
+          <div class="readout-lbl">Sustained LINPACK Rmax</div>
+        </div>
+        <div class="readout-box">
+          <div class="readout-val" id="valTotalRam">4.0 GB</div>
+          <div class="readout-lbl">Aggregated Memory</div>
+        </div>
+        <div class="readout-box">
+          <div class="readout-val" id="valPowerBtu">4.2 kW</div>
+          <div class="readout-lbl">Power / Thermal Load</div>
+        </div>
+        <div class="readout-box">
+          <div class="readout-val" id="valCostUsd">$18,400</div>
+          <div class="readout-lbl">Est. 1999 Build Cost</div>
+        </div>
+      </div>
+
+      <!-- Rack Visualization -->
+      <div class="rack-display">
+        <div style="display:flex; justify-content:space-between; align-items:center; color:#94a3b8;">
+          <span>CLUSTER RACK TELEMETRY (42U ENCLOSURE MATRIX)</span>
+          <span id="rackNodeStatus">32 NODES ONLINE &bull; MPI SYNCHRONIZED</span>
+        </div>
+        <div class="rack-nodes" id="rackNodeGrid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Benchmark Execution Console -->
+      <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <button class="btn-retro btn-green" id="btnRunBenchmark" onclick="runBeowulfBenchmark()">▶ Execute Distributed LINPACK Benchmark</button>
+        <button class="btn-retro" onclick="exportBeowulfVFS()">💾 Export Report to KiloOS VFS</button>
+        <button class="btn-retro" onclick="openBenchmarkInKPad()">📝 Open Benchmark in KPad</button>
+        <span id="benchmarkProgress" style="font-family:var(--font-mono); font-size:11px; color:#006666; font-weight:bold;">Ready</span>
+      </div>
+
+      <div class="term-box" id="clusterLogBox"># Beowulf Cluster Telemetry Shell Initialized
+# Node daemon: mpich-1.2.0 listening on TCP/IP 192.168.1.0/24
+# Click 'Execute Distributed LINPACK Benchmark' to initiate parallel solver.</div>
+    </div>
+
+    <!-- SECTION: LINUX 2.2 KERNEL COMPILE SIMULATOR -->
+    <div id="sectionKernel" style="display:none;" class="tool-panel">
+      <h2 class="tool-title">⚙️ Linux 2.2.14 Kernel Build &amp; Configuration Rig</h2>
+      <p style="font-size:12px; margin-bottom:12px;">
+        Perform an authentic <code>make menuconfig &amp;&amp; make bzImage</code> compilation run. Select kernel features, compile drivers, generate <code>vmlinuz</code>, and export the binary boot image to KiloOS VFS.
+      </p>
+
+      <!-- Menuconfig checklist -->
+      <div style="background:#f1f5f9; border:1px solid #cbd5e1; padding:10px; margin-bottom:10px;">
+        <strong style="font-size:12px; display:block; margin-bottom:6px; color:#0f172a;">Kernel Feature Selection (make menuconfig):</strong>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:6px; font-size:11px;">
+          <label><input type="checkbox" id="cfg_smp" checked> Symmetric multi-processing (SMP)</label>
+          <label><input type="checkbox" id="cfg_firewall" checked> IP: firewalling &amp; ipchains</label>
+          <label><input type="checkbox" id="cfg_masq" checked> IP: masquerading (NAT gateway)</label>
+          <label><input type="checkbox" id="cfg_sb16" checked> Creative Sound Blaster 16/AWE64</label>
+          <label><input type="checkbox" id="cfg_vortex" checked> 3Com 3c59x/3c905 Vortex 100Base-TX</label>
+          <label><input type="checkbox" id="cfg_rtc" checked> Real Time Clock (Y2K Compliance)</label>
+          <label><input type="checkbox" id="cfg_ext2" checked> Second Extended (ext2) Filesystem</label>
+          <label><input type="checkbox" id="cfg_fb" checked> VESA Framebuffer Console (800x600)</label>
+          <label><input type="checkbox" id="cfg_usb"> USB Host Controller (Experimental)</label>
+          <label><input type="checkbox" id="cfg_glide"> 3dfx Glide Direct Video Access</label>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-bottom:8px; align-items:center; flex-wrap:wrap;">
+        <button class="btn-retro btn-green" id="btnCompileKernel" onclick="startKernelCompilation()">🔨 make dep &amp;&amp; make bzImage</button>
+        <button class="btn-retro" id="btnBootKernel" onclick="testBootKernel()" disabled>🚀 Test Boot Kernel (LILO)</button>
+        <button class="btn-retro" onclick="exportKernelVFS()">💾 Save vmlinuz-2.2.14 to VFS</button>
+        <span id="compileProgress" style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:#006666;">Ready</span>
+      </div>
+
+      <div class="term-box" id="kernelTermBox">Linux 2.2.14-kilo kernel tree: /usr/src/linux
+Compiler: egcs-2.91.66 (egcs-1.1.2 release)
+Architecture: i386 / SMP
+Configure options selected above, then click 'make dep &amp;&amp; make bzImage'.</div>
+    </div>
+
+    <!-- SECTION: DAILY POLL -->
+    <div id="sectionPoll" style="display:none;" class="tool-panel">
+      <h2 class="tool-title">📊 SlashNet Daily Survey: The Y2K Countdown</h2>
+      <p style="font-size:12px; margin-bottom:12px;">
+        With under 70 days remaining before the rollover to January 1, 2000, cast your vote and view real-time community statistics.
+      </p>
+
+      <div style="background:#ffffff; border:1px solid #cbd5e1; padding:14px; max-width:600px;">
+        <h3 style="font-size:14px; margin-bottom:10px;" id="mainPollQuestion">How do you plan to spend midnight December 31, 1999?</h3>
+        <div id="mainPollForm">
+          <!-- Populated by JS -->
+        </div>
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button class="btn-retro btn-green" id="btnVoteMainPoll" onclick="submitMainPollVote()">Vote Now</button>
+          <button class="btn-retro" onclick="resetPollVote()">Clear My Vote</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: VFS EXPORT HUB -->
+    <div id="sectionVfs" style="display:none;" class="tool-panel">
+      <h2 class="tool-title">💾 KiloOS Virtual Filesystem (VFS) Integration Hub</h2>
+      <p style="font-size:12px; margin-bottom:12px;">
+        SlashNet connects directly into KiloOS VFS. You can export articles, LINPACK benchmarks, and compiled kernel images to <code>/home/downloads/</code> or launch them in native KiloApps.
+      </p>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
+        <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:10px;">
+          <strong style="color:var(--slash-green); display:block; margin-bottom:6px;">Article &amp; Discussion Exports</strong>
+          <p style="font-size:11px; margin-bottom:8px;">Save complete news stories with threaded comments formatted as ASCII text for offline viewing.</p>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <button class="btn-retro" onclick="exportStoryVFS('story-1')">Export Story #1 (Linux 2.2.14)</button>
+            <button class="btn-retro" onclick="exportStoryVFS('story-2')">Export Story #2 (Beowulf 64-Node)</button>
+            <button class="btn-retro" onclick="exportStoryVFS('story-3')">Export Story #3 (Glide3 &amp; Mesa)</button>
+          </div>
+        </div>
+
+        <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:10px;">
+          <strong style="color:var(--slash-green); display:block; margin-bottom:6px;">System &amp; Benchmark Artifacts</strong>
+          <p style="font-size:11px; margin-bottom:8px;">Save your custom Beowulf cluster LINPACK results and compiled Linux 2.2 kernel images.</p>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <button class="btn-retro" onclick="exportBeowulfVFS()">Export /home/downloads/beowulf_benchmark.txt</button>
+            <button class="btn-retro" onclick="exportKernelVFS()">Export /boot/vmlinuz-2.2.14-kilo</button>
+            <button class="btn-retro" onclick="exportKernelConfigVFS()">Export /etc/kernel-2.2.config</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Story Submit Modal (Simple Prompt / Dialog) -->
+<div id="submitStoryModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center;">
+  <div style="background:#ffffff; border:2px solid var(--slash-green); padding:16px; width:90%; max-width:500px; box-shadow:0 8px 24px rgba(0,0,0,0.4);">
+    <h3 style="font-family:var(--font-serif); color:var(--slash-green); margin-bottom:8px;">Submit a Story to SlashNet</h3>
+    <div style="margin-bottom:8px;">
+      <label style="display:block; font-size:11px; font-weight:bold;">Story Title:</label>
+      <input type="text" id="modalStoryTitle" style="width:100%; padding:4px; font-size:12px;" placeholder="e.g. GCC 2.95 Released with New C++ ABI" />
+    </div>
+    <div style="margin-bottom:8px;">
+      <label style="display:block; font-size:11px; font-weight:bold;">Topic Category:</label>
+      <select id="modalStoryTopic" style="width:100%; padding:4px; font-size:12px;">
+        <option value="Linux">Linux</option>
+        <option value="Hardware">Hardware</option>
+        <option value="Beowulf">Beowulf</option>
+        <option value="Security">Security</option>
+        <option value="Y2K">Y2K</option>
+      </select>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="display:block; font-size:11px; font-weight:bold;">Story Summary &amp; Link:</label>
+      <textarea id="modalStoryBody" rows="4" style="width:100%; padding:4px; font-family:var(--font-mono); font-size:11px;" placeholder="Write brief synopsis and why it matters to nerds..."></textarea>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px;">
+      <button class="btn-retro" onclick="closeStorySubmitModal()">Cancel</button>
+      <button class="btn-retro btn-green" onclick="submitCustomStory()">Submit for Review</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notice -->
+<div class="toast" id="toastNotice">Saved to KiloOS VFS</div>
+
+<!-- Footer -->
+<footer>
+  <p>SlashNet is an independent technology news publication. Copyright &copy; 1999 SlashNet Media. All trademarks belong to their respective owners.</p>
+  <p style="margin-top:4px;">
+    Optimized for Netscape Navigator 4.7 &amp; KNet Browser &bull; Handcrafted HTML 4.01 Strict &bull; Zero External CDN Dependencies &bull; <a href="/web/portal.html" onclick="navigateTo('/web/portal.html', event)">Return to KiloNet Portal</a>
+  </p>
+</footer>
+
+<script>
+/**
+ * SlashNet: News for Nerds (1999)
+ * Full Interactive Engine: Karma Moderation, Threshold Comment Filter,
+ * Beowulf Cluster Engineering Calculator & Linux 2.2 Kernel Compile Sim.
+ */
+
+// --- Safe Storage Helpers (per quality-standards.md) ---
+function safeGet(key, def) {
+  try {
+    const val = localStorage.getItem(key);
+    return val !== null ? JSON.parse(val) : def;
+  } catch (e) {
+    return def;
+  }
+}
+
+function safeSet(key, val) {
+  try {
+    localStorage.setItem(key, JSON.stringify(val));
+  } catch (e) {}
+}
+
+// --- Procedural Web Audio Engine ---
+let audioCtx = null;
+let soundEnabled = true;
+
+function initAudio() {
+  if (!audioCtx && (window.AudioContext || window.webkitAudioContext)) {
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioCtor();
+  }
+}
+
+function toggleAudio() {
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('btnAudioToggle');
+  if (btn) {
+    btn.textContent = soundEnabled ? '🔊 SFX [ON]' : '🔇 SFX [OFF]';
+  }
+  if (soundEnabled) playRetroSound(600, 0.05);
+}
+
+function playRetroSound(freq, duration, type) {
+  if (!soundEnabled) return;
+  try {
+    initAudio();
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch (e) {}
+}
+
+function playFanfareSound() {
+  if (!soundEnabled) return;
+  [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+    setTimeout(() => playRetroSound(freq, 0.12, 'triangle'), idx * 80);
+  });
+}
+
+// --- User Profile & Karma State ---
+let userKarma = safeGet('slashnet_user_karma', 42);
+let userModPoints = safeGet('slashnet_mod_points', 5);
+
+function updateUserInfoBar() {
+  const karmaEl = document.getElementById('userKarmaDisplay');
+  const modEl = document.getElementById('userModPointsDisplay');
+  if (karmaEl) karmaEl.textContent = 'Good (' + userKarma + ')';
+  if (modEl) modEl.textContent = String(userModPoints);
+}
+
+function resetModPoints() {
+  userModPoints = 5;
+  safeSet('slashnet_mod_points', 5);
+  updateUserInfoBar();
+  showToast('Moderation points replenished to 5.');
+  playRetroSound(880, 0.08);
+}
+
+// --- Notification Toast ---
+function showToast(msg) {
+  const t = document.getElementById('toastNotice');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => {
+    t.style.display = 'none';
+  }, 3500);
+}
+
+// --- VFS & KiloOS IPC Integration ---
+function saveToKiloVfs(vfsPath, contentStr) {
+  try {
+    window.parent.postMessage({
+      type: 'VFS_WRITE',
+      path: vfsPath,
+      data: contentStr,
+      requestId: 'vfs_' + Date.now()
+    }, '*');
+    window.parent.postMessage({
+      type: 'OS_NOTIFY',
+      title: 'SlashNet 1999',
+      message: 'Saved to VFS: ' + vfsPath
+    }, '*');
+    showToast('Saved to KiloOS VFS: ' + vfsPath);
+    playRetroSound(750, 0.08);
+  } catch (e) {
+    showToast('VFS Write Failed: ' + (e.message || e));
+  }
+}
+
+function launchKiloApp(appFile, args) {
+  try {
+    window.parent.postMessage({
+      type: 'LAUNCH_APP',
+      app: appFile,
+      args: args || {}
+    }, '*');
+    showToast('Launching ' + appFile + '...');
+  } catch (e) {}
+}
+
+function navigateTo(url, event) {
+  if (event) event.preventDefault();
+  try {
+    window.parent.postMessage({
+      type: 'NAVIGATE',
+      url: url
+    }, '*');
+  } catch (e) {}
+  window.location.href = url;
+}
+
+// --- Story Comments Database & State ---
+const INITIAL_COMMENTS = {
+  'story-1': [
+    {
+      id: 'c1-1',
+      author: 'Linus_Apprentice',
+      subject: 'The SMP scalability benchmarks are staggering',
+      time: '1999-10-23 09:42',
+      score: 4,
+      tag: 'Insightful',
+      body: 'Tested 2.2.14 on our dual PIII 550 workstation with Apache 1.3.9. Request throughput increased by 22% under heavy fork load with zero deadlock on the Big Kernel Lock (BKL). The irq balancing across dual CPUs is finally rock solid.',
+      children: [
+        {
+          id: 'c1-2',
+          author: 'Alan_Fan',
+          subject: 'Kudos to Alan Cox on the networking fix',
+          time: '1999-10-23 10:05',
+          score: 3,
+          tag: 'Informative',
+          body: 'The TCP sequence number vulnerability has also been thoroughly addressed. For anyone maintaining an ISP shell server, upgrading before the December 31 Y2K cutoff is essential.',
+          children: [
+            {
+              id: 'c1-3',
+              author: 'BillG_Lover',
+              subject: 'Windows NT 4.0 SP6 already solved this',
+              time: '1999-10-23 10:20',
+              score: -1,
+              tag: 'Troll',
+              body: 'Why compile a kernel when NT 4.0 Server has enterprise clustering and active directory on the horizon? Linux will never scale beyond hobbyists in basements.',
+              children: []
+            }
+          ]
+        },
+        {
+          id: 'c1-4',
+          author: 'BeowulfMaster',
+          subject: 'Does this improve MPI message latency?',
+          time: '1999-10-23 10:14',
+          score: 2,
+          tag: 'Interesting',
+          body: 'We are recompiling our 32-node Celeron cluster today to check if UDP packet dropouts under MPICH 1.2 are eliminated. Will report back with LINPACK numbers.',
+          children: []
+        }
+      ]
+    },
+    {
+      id: 'c1-5',
+      author: 'Anonymous Coward',
+      subject: 'Sound Blaster AWE64 modular build issue?',
+      time: '1999-10-23 10:30',
+      score: 1,
+      tag: 'Normal',
+      body: 'Did anyone notice if soundcore.o compiles cleanly without ISAPnP initialization? My Sound Blaster 16 works but the EMU8000 synth throws a symbol error during depmod.',
+      children: [
+        {
+          id: 'c1-6',
+          author: 'AcousticHacker',
+          subject: 'Check /etc/conf.modules alias',
+          time: '1999-10-23 10:45',
+          score: 2,
+          tag: 'Informative',
+          body: 'Add `alias sound-slot-0 sb` and `options sb io=0x220 irq=5 dma=1 dma16=5 mpu_io=0x330`. Works like a charm on Slackware 7.',
+          children: []
+        }
+      ]
+    },
+    {
+      id: 'c1-7',
+      author: 'FlameThrower',
+      subject: 'BSD is still technically superior',
+      time: '1999-10-23 10:55',
+      score: -1,
+      tag: 'Flamebait',
+      body: 'FreeBSD 3.3 networking stack blows Linux 2.2 out of the water. Wake me up when Linux has soft updates or a coherent VM system.',
+      children: []
+    }
+  ],
+  'story-2': [
+    {
+      id: 'c2-1',
+      author: 'AlphaEnthusiast',
+      subject: 'Impressive, but Alpha 21264 still king of raw floating point',
+      time: '1999-10-22 18:10',
+      score: 3,
+      tag: 'Insightful',
+      body: '24.8 GFLOPS for $38k is undeniably the bargain of the decade. But if you have DARPA funding, an 8-node Alpha cluster will achieve that with 1/4th the heat and power consumption.',
+      children: [
+        {
+          id: 'c2-2',
+          author: 'BP6_Overclocker',
+          subject: 'Cost per GFLOP is unmatched',
+          time: '1999-10-22 18:40',
+          score: 4,
+          tag: 'Informative',
+          body: 'You cannot buy an Alpha EV6 chip for the price of an entire 64-node Celeron rack! Celeron 300A with full-speed 128KB on-die L2 cache running at 450MHz is pure silicon gold. ABIT BP6 gave supercomputing to the masses.',
+          children: []
+        }
+      ]
+    },
+    {
+      id: 'c2-3',
+      author: 'SubterraneanTech',
+      subject: 'Carlsbad test facility details?',
+      time: '1999-10-22 19:15',
+      score: 5,
+      tag: 'Insightful',
+      body: 'Interesting that this cluster is located in the Carlsbad salt vault tunnels (IP subnet 10.19.99.x). Rumor has it they are running real-time seismic FFT analysis to isolate an anomalous 1999Hz acoustic carrier wave.',
+      children: []
+    },
+    {
+      id: 'c2-4',
+      author: 'SpamBot_99',
+      subject: 'FREE Y2K SURVIVAL GUIDE CD-ROM',
+      time: '1999-10-22 19:40',
+      score: -1,
+      tag: 'Troll',
+      body: 'Visit our site to purchase 50-year survival food buckets and gold bullion before civilization collapses at midnight!',
+      children: []
+    },
+    {
+      id: 'c2-5',
+      author: 'CowboyNeal',
+      subject: 'Imagine a Beowulf cluster of CowboyNeals!',
+      time: '1999-10-22 20:00',
+      score: 4,
+      tag: 'Funny',
+      body: 'If we networked 64 CowboyNeals together over 100Base-TX, could we answer all Slashdot submission emails in real time? Or would the cluster just eat all the tacos?',
+      children: []
+    }
+  ],
+  'story-3': [
+    {
+      id: 'c3-1',
+      author: 'Quake_Lord',
+      subject: 'Tremor III Arena running flawlessly',
+      time: '1999-10-20 12:00',
+      score: 4,
+      tag: 'Insightful',
+      body: 'Compiled Mesa 3.1 with Glide3 on my Voodoo3 3000 AGP. I am getting 78 FPS in 1024x768. The Glide miniport has virtually zero CPU overhead compared to Direct3D.',
+      children: [
+        {
+          id: 'c3-2',
+          author: 'RivaTNT2_Fan',
+          subject: 'What about 32-bit color?',
+          time: '1999-10-20 12:30',
+          score: 1,
+          tag: 'Normal',
+          body: 'Sure, but Voodoo3 is locked to 16-bit color dithering. TNT2 Ultra does full 32-bit rendering with large textures. Although NVidia Linux drivers are still beta.',
+          children: []
+        }
+      ]
+    },
+    {
+      id: 'c3-3',
+      author: 'DoomHacker',
+      subject: 'Surreal Tournament audio sync',
+      time: '1999-10-20 13:10',
+      score: 2,
+      tag: 'Interesting',
+      body: 'Be sure to run `echo "ut-bin 0 0 direct" > /proc/asound/card0/pcm0p/oss` if using ALSA to eliminate the 150ms audio latency during intense rocket launcher battles.',
+      children: []
+    },
+    {
+      id: 'c3-4',
+      author: 'PenguinGamer',
+      subject: 'Linux gaming has arrived',
+      time: '1999-10-20 14:00',
+      score: 3,
+      tag: 'Insightful',
+      body: 'Loki Software is doing god\'s work porting Civilization: Call to Power, Myth II, and Railroad Tycoon II. With Glide3 and Mesa mature, I finally removed Windows 98 from my boot drive.',
+      children: []
+    }
+  ]
+};
+
+let commentsState = safeGet('slashnet_comments_v1', INITIAL_COMMENTS);
+let storyThresholds = {
+  'story-1': 1,
+  'story-2': 1,
+  'story-3': 1
+};
+
+// --- Comment Rendering & Karma Moderation ---
+function countComments(commentArray) {
+  let count = 0;
+  function walk(arr) {
+    arr.forEach(c => {
+      count++;
+      if (c.children && c.children.length) walk(c.children);
+    });
+  }
+  walk(commentArray);
+  return count;
+}
+
+function updateStoryCommentCounts() {
+  ['story-1', 'story-2', 'story-3'].forEach(storyId => {
+    const el = document.getElementById('commentCount-' + storyId);
+    if (el && commentsState[storyId]) {
+      const c = countComments(commentsState[storyId]);
+      el.textContent = c + (c === 1 ? ' Comment' : ' Comments');
+    }
+  });
+}
+
+function getScoreClass(score) {
+  if (score >= 4) return 'score-high';
+  if (score > 0) return 'score-pos';
+  if (score < 0) return 'score-neg';
+  return '';
+}
+
+function renderCommentNode(c, depth, threshold, storyId, viewMode) {
+  const isHidden = c.score < threshold;
+  const scoreClass = getScoreClass(c.score);
+  const nestClass = viewMode === 'flat' ? '' : (depth > 0 ? ' nested-' + Math.min(depth, 3) : '');
+
+  if (isHidden) {
+    let html = `
+      <div class="comment-item ${nestClass} hidden-by-threshold" onclick="revealSingleComment('${c.id}', '${storyId}')">
+        [-] <strong>${escapeHtml(c.subject)}</strong> by ${escapeHtml(c.author)}
+        (Score: <span class="${scoreClass}">${c.score}</span>, ${escapeHtml(c.tag || 'Normal')})
+        <span style="font-style:italic; font-size:10px;">[Click to read hidden comment]</span>
+      </div>
+    `;
+    if (viewMode !== 'flat' && c.children && c.children.length) {
+      c.children.forEach(child => {
+        html += renderCommentNode(child, depth + 1, threshold, storyId, viewMode);
+      });
+    }
+    return html;
+  }
+
+  let html = `
+    <div class="comment-item ${nestClass}" id="node-${c.id}">
+      <div class="comment-header">
+        <div>
+          <span class="comment-subject">${escapeHtml(c.subject)}</span>
+          &bull; by <span class="comment-author">${escapeHtml(c.author)}</span>
+          on ${escapeHtml(c.time)}
+        </div>
+        <div>
+          Score: <span class="comment-score ${scoreClass}">${c.score > 0 ? '+' : ''}${c.score}</span>
+          <span style="color:#004d4d; font-weight:bold; margin-left:4px;">(${escapeHtml(c.tag || 'Normal')})</span>
+        </div>
+      </div>
+      <div class="comment-body">
+        ${escapeHtml(c.body)}
+      </div>
+      <div class="comment-mod-bar">
+        <span>Moderate:</span>
+        <select id="modReason-${c.id}" style="font-size:10px; padding:1px;">
+          <option value="+1|Insightful">+1 Insightful</option>
+          <option value="+1|Informative">+1 Informative</option>
+          <option value="+1|Interesting">+1 Interesting</option>
+          <option value="+1|Funny">+1 Funny</option>
+          <option value="-1|Troll">-1 Troll</option>
+          <option value="-1|Flamebait">-1 Flamebait</option>
+          <option value="-1|Offtopic">-1 Offtopic</option>
+          <option value="-1|Redundant">-1 Redundant</option>
+        </select>
+        <button class="btn-retro" style="font-size:10px; padding:1px 5px;" onclick="moderateComment('${storyId}', '${c.id}')">Apply</button>
+      </div>
+    </div>
+  `;
+
+  if (viewMode !== 'flat' && c.children && c.children.length) {
+    c.children.forEach(child => {
+      html += renderCommentNode(child, depth + 1, threshold, storyId, viewMode);
+    });
+  }
+
+  return html;
+}
+
+function renderFlatCommentList(comments, threshold, storyId) {
+  let flat = [];
+  function flatten(arr) {
+    arr.forEach(item => {
+      flat.push(item);
+      if (item.children) flatten(item.children);
+    });
+  }
+  flatten(comments);
+  return flat.map(c => renderCommentNode(c, 0, threshold, storyId, 'flat')).join('');
+}
+
+function renderComments(storyId) {
+  const listEl = document.getElementById('commentList-' + storyId);
+  if (!listEl) return;
+
+  const threshold = storyThresholds[storyId] !== undefined ? storyThresholds[storyId] : 1;
+  const viewModeSelect = document.getElementById('viewModeSelect-' + storyId);
+  const viewMode = viewModeSelect ? viewModeSelect.value : 'nested';
+
+  const storyComments = commentsState[storyId] || [];
+  let html = '';
+
+  if (viewMode === 'flat') {
+    html = renderFlatCommentList(storyComments, threshold, storyId);
+  } else {
+    storyComments.forEach(c => {
+      html += renderCommentNode(c, 0, threshold, storyId, viewMode);
+    });
+  }
+
+  listEl.innerHTML = html;
+
+  // Update summary badge
+  const total = countComments(storyComments);
+  let visible = 0;
+  function countVis(arr) {
+    arr.forEach(c => {
+      if (c.score >= threshold) visible++;
+      if (c.children) countVis(c.children);
+    });
+  }
+  countVis(storyComments);
+
+  const summaryEl = document.getElementById('filterSummary-' + storyId);
+  if (summaryEl) {
+    summaryEl.textContent = `Showing ${visible} of ${total} comments (${total - visible} below threshold ${threshold})`;
+  }
+}
+
+function updateCommentThreshold(storyId) {
+  const sel = document.getElementById('thresholdSelect-' + storyId);
+  if (sel) {
+    storyThresholds[storyId] = parseInt(sel.value, 10);
+    renderComments(storyId);
+    playRetroSound(500, 0.04);
+  }
+}
+
+function revealSingleComment(commentId, storyId) {
+  playRetroSound(700, 0.05);
+  // Find node and temporarily display it
+  function findNode(arr) {
+    for (let c of arr) {
+      if (c.id === commentId) return c;
+      if (c.children) {
+        const found = findNode(c.children);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+  const node = findNode(commentsState[storyId] || []);
+  if (!node) return;
+  alert(`[Hidden Comment: Score ${node.score}, ${node.tag}]\nAuthor: ${node.author}\nSubject: ${node.subject}\n\n${node.body}`);
+}
+
+function moderateComment(storyId, commentId) {
+  if (userModPoints <= 0) {
+    alert("You have 0 moderation points remaining! Click 'Request Mod Points' in the top bar to replenish.");
+    return;
+  }
+
+  const reasonEl = document.getElementById('modReason-' + commentId);
+  if (!reasonEl) return;
+  const [deltaStr, tagStr] = reasonEl.value.split('|');
+  const delta = parseInt(deltaStr, 10);
+
+  function applyMod(arr) {
+    for (let c of arr) {
+      if (c.id === commentId) {
+        c.score = Math.max(-1, Math.min(5, c.score + delta));
+        c.tag = tagStr;
+        return true;
+      }
+      if (c.children && applyMod(c.children)) return true;
+    }
+    return false;
+  }
+
+  if (applyMod(commentsState[storyId])) {
+    userModPoints--;
+    safeSet('slashnet_mod_points', userModPoints);
+    safeSet('slashnet_comments_v1', commentsState);
+    updateUserInfoBar();
+    renderComments(storyId);
+    showToast(`Moderated comment as ${delta > 0 ? '+' + delta : delta} ${tagStr}.`);
+    playRetroSound(delta > 0 ? 800 : 350, 0.08);
+  }
+}
+
+function postNewComment(storyId) {
+  const authorInput = document.getElementById('newCommentAuthor-' + storyId);
+  const subjectInput = document.getElementById('newCommentSubject-' + storyId);
+  const bodyInput = document.getElementById('newCommentBody-' + storyId);
+
+  const author = authorInput ? authorInput.value.trim() || 'Anonymous Coward' : 'Anonymous Coward';
+  const subject = subjectInput ? subjectInput.value.trim() : '';
+  const body = bodyInput ? bodyInput.value.trim() : '';
+
+  if (!subject || !body) {
+    alert("Please enter both a Subject and Comment body.");
+    return;
+  }
+
+  const newId = 'c_' + Date.now();
+  const initScore = author.toLowerCase().includes('anonymous') ? 0 : 1;
+  const newComment = {
+    id: newId,
+    author: author,
+    subject: subject,
+    time: new Date().toISOString().replace('T', ' ').substring(0, 16),
+    score: initScore,
+    tag: initScore > 0 ? 'Insightful' : 'Normal',
+    body: body,
+    children: []
+  };
+
+  if (!commentsState[storyId]) commentsState[storyId] = [];
+  commentsState[storyId].push(newComment);
+
+  safeSet('slashnet_comments_v1', commentsState);
+  if (subjectInput) subjectInput.value = '';
+  if (bodyInput) bodyInput.value = '';
+
+  updateStoryCommentCounts();
+  renderComments(storyId);
+  showToast("Your comment has been posted to SlashNet!");
+  playRetroSound(620, 0.08);
+}
+
+function toggleStoryComments(storyId) {
+  const commentsBox = document.getElementById('comments-' + storyId);
+  if (commentsBox) {
+    if (commentsBox.style.display === 'none') {
+      commentsBox.style.display = 'block';
+      renderComments(storyId);
+    } else {
+      commentsBox.style.display = 'none';
+    }
+  }
+}
+
+// --- Section Switching ---
+function switchSection(secId) {
+  const sections = ['Stories', 'Beowulf', 'Kernel', 'Poll', 'Vfs'];
+  sections.forEach(s => {
+    const el = document.getElementById('section' + s);
+    if (el) el.style.display = s.toLowerCase() === secId.toLowerCase() ? 'block' : 'none';
+  });
+
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    if (a.getAttribute('href') === '#' + secId) a.classList.add('active');
+    else a.classList.remove('active');
+  });
+
+  if (secId === 'beowulf') calculateClusterMetrics();
+  playRetroSound(480, 0.04);
+}
+
+function filterStories(cat) {
+  switchSection('stories');
+  showToast('Filtering stories by category: ' + cat.toUpperCase());
+}
+
+// --- Beowulf Cluster Engineering Calculator ---
+const CPU_SPECS = {
+  celeron300a: { name: 'Celeron 300A @ 450MHz', gflopsPerCore: 0.45, wattsPerNode: 65, costPerNode: 280, dualCapable: true },
+  pii450:       { name: 'Pentium II 450MHz',     gflopsPerCore: 0.45, wattsPerNode: 75, costPerNode: 420, dualCapable: true },
+  piii600:      { name: 'Pentium III 600MHz',     gflopsPerCore: 0.60, wattsPerNode: 85, costPerNode: 620, dualCapable: true },
+  athlon650:    { name: 'Athlon K7 650MHz',       gflopsPerCore: 0.78, wattsPerNode: 95, costPerNode: 590, dualCapable: false },
+  alpha667:     { name: 'DEC Alpha 21264 667MHz', gflopsPerCore: 1.33, wattsPerNode: 130, costPerNode: 1850, dualCapable: false },
+  sparc400:     { name: 'UltraSPARC II 400MHz',   gflopsPerCore: 0.80, wattsPerNode: 90, costPerNode: 1200, dualCapable: false }
+};
+
+const NET_SPECS = {
+  fast_eth: { name: '100Base-TX Fast Ethernet', efficiency: 0.78, latencyUs: 35, costPerNode: 25 },
+  gbe:      { name: 'Gigabit Ethernet 1000Base-SX', efficiency: 0.88, latencyUs: 12, costPerNode: 220 },
+  myrinet:  { name: 'Myrinet M2M-PCI64B SAN',     efficiency: 0.94, latencyUs: 4.5, costPerNode: 750 }
+};
+
+let currentClusterSpec = {};
+
+function calculateClusterMetrics() {
+  const nodeCountInput = document.getElementById('clusterNodeCount');
+  const cpuSelect = document.getElementById('clusterCpuSelect');
+  const ramSelect = document.getElementById('clusterRamSelect');
+  const netSelect = document.getElementById('clusterNetSelect');
+
+  const nodes = Math.max(2, Math.min(512, parseInt(nodeCountInput.value, 10) || 32));
+  const cpuKey = cpuSelect ? cpuSelect.value : 'celeron300a';
+  const cpu = CPU_SPECS[cpuKey] || CPU_SPECS.celeron300a;
+  const ramMb = parseInt(ramSelect ? ramSelect.value : '128', 10);
+  const netKey = netSelect ? netSelect.value : 'fast_eth';
+  const net = NET_SPECS[netKey] || NET_SPECS.fast_eth;
+
+  const coresPerNode = cpu.dualCapable ? 2 : 1;
+  const totalCores = nodes * coresPerNode;
+  const peakGflops = totalCores * cpu.gflopsPerCore;
+  // Scaled LINPACK with Amdahl & network latency penalty
+  const networkPenalty = Math.max(0.60, net.efficiency - (nodes * 0.00035));
+  const linpackGflops = peakGflops * networkPenalty;
+  const totalRamGb = (nodes * ramMb) / 1024;
+  const totalWatts = (nodes * cpu.wattsPerNode) + (nodes * 15) + 350; // nodes + switch
+  const totalCost = (nodes * (cpu.costPerNode + net.costPerNode + (ramMb * 0.8))) + 1200; // racks & power
+
+  currentClusterSpec = {
+    nodes,
+    totalCores,
+    cpuName: cpu.name,
+    ramMb,
+    totalRamGb: totalRamGb.toFixed(1),
+    netName: net.name,
+    peakGflops: peakGflops.toFixed(2),
+    linpackGflops: linpackGflops.toFixed(2),
+    totalWatts: (totalWatts / 1000).toFixed(1) + ' kW',
+    totalCost: '$' + Math.round(totalCost).toLocaleString()
+  };
+
+  document.getElementById('valTotalCores').textContent = totalCores;
+  document.getElementById('valPeakGflops').textContent = peakGflops.toFixed(2);
+  document.getElementById('valLinpackGflops').textContent = linpackGflops.toFixed(2);
+  document.getElementById('valTotalRam').textContent = totalRamGb.toFixed(1) + ' GB';
+  document.getElementById('valPowerBtu').textContent = (totalWatts / 1000).toFixed(1) + ' kW';
+  document.getElementById('valCostUsd').textContent = '$' + Math.round(totalCost).toLocaleString();
+
+  updateRackGrid(nodes);
+}
+
+function updateRackGrid(nodeCount) {
+  const grid = document.getElementById('rackNodeGrid');
+  if (!grid) return;
+  let html = '';
+  const displayNodes = Math.min(nodeCount, 128); // visual cap
+  for (let i = 0; i < displayNodes; i++) {
+    const padId = String(i).padStart(3, '0');
+    html += `
+      <div class="rack-node" id="rnode-${i}" title="Node #${padId}">
+        <span class="node-led" id="led-pwr-${i}"></span>
+        <span class="node-led" id="led-act-${i}"></span>
+      </div>
+    `;
+  }
+  grid.innerHTML = html;
+  const statusEl = document.getElementById('rackNodeStatus');
+  if (statusEl) {
+    statusEl.textContent = `${nodeCount} NODES ONLINE • MPICH DAEMON ACTIVE`;
+  }
+}
+
+let isBenchmarking = false;
+function runBeowulfBenchmark() {
+  if (isBenchmarking) return;
+  isBenchmarking = true;
+
+  const btn = document.getElementById('btnRunBenchmark');
+  const prog = document.getElementById('benchmarkProgress');
+  const term = document.getElementById('clusterLogBox');
+  if (btn) btn.disabled = true;
+
+  term.textContent = `[MPICH-1.2.0] Initializing communicator across ${currentClusterSpec.nodes} nodes (${currentClusterSpec.totalCores} cores)...\n`;
+  playRetroSound(440, 0.06);
+
+  let step = 0;
+  const steps = [
+    `Allocating distributed matrix: N = 24000, Block Size NB = 64...`,
+    `Partitioning 2D block-cyclic grid P = 4, Q = ${Math.max(1, Math.floor(currentClusterSpec.totalCores / 4))}...`,
+    `Broadcasting coefficient tensors via ${currentClusterSpec.netName}...`,
+    `Executing LU Factorization with partial pivoting (PDGETRF)...`,
+    `Iteration 20% ... Flop rate: ${currentClusterSpec.linpackGflops} GFLOPS`,
+    `Iteration 55% ... Memory bus throughput: ${(currentClusterSpec.nodes * 0.8).toFixed(1)} GB/s`,
+    `Iteration 80% ... Residual norm ||Ax - b|| / (||A||*||x||*eps) = 2.41 (PASS)`,
+    `Benchmark Complete! Rmax = ${currentClusterSpec.linpackGflops} GFLOPS (Rpeak = ${currentClusterSpec.peakGflops} GFLOPS)`
+  ];
+
+  const interval = setInterval(() => {
+    if (step < steps.length) {
+      term.textContent += steps[step] + '\n';
+      term.scrollTop = term.scrollHeight;
+      if (prog) prog.textContent = `Progress: ${Math.round(((step + 1) / steps.length) * 100)}%`;
+
+      // Blink random rack LEDs
+      for (let i = 0; i < Math.min(currentClusterSpec.nodes, 64); i++) {
+        const actLed = document.getElementById('led-act-' + i);
+        if (actLed) {
+          actLed.className = Math.random() > 0.4 ? 'node-led busy' : (Math.random() > 0.5 ? 'node-led net' : 'node-led');
+        }
+      }
+      playRetroSound(300 + (step * 80), 0.05);
+      step++;
+    } else {
+      clearInterval(interval);
+      isBenchmarking = false;
+      if (btn) btn.disabled = false;
+      if (prog) prog.textContent = 'Benchmark Finished!';
+      playFanfareSound();
+      showToast(`LINPACK Solved: ${currentClusterSpec.linpackGflops} GFLOPS!`);
+      // Restore LEDs
+      for (let i = 0; i < Math.min(currentClusterSpec.nodes, 64); i++) {
+        const actLed = document.getElementById('led-act-' + i);
+        if (actLed) actLed.className = 'node-led';
+      }
+    }
+  }, 450);
+}
+
+function loadSpecIntoBeowulf(nodes, cpuType) {
+  switchSection('beowulf');
+  const nodeInput = document.getElementById('clusterNodeCount');
+  const cpuSelect = document.getElementById('clusterCpuSelect');
+  if (nodeInput) nodeInput.value = nodes;
+  if (cpuSelect) cpuSelect.value = cpuType;
+  calculateClusterMetrics();
+  showToast(`Loaded ${nodes}-Node ${cpuType} spec into Cluster Workbench.`);
+}
+
+// --- Linux 2.2 Kernel Compile Mini-Sim ---
+let isCompilingKernel = false;
+
+function startKernelCompilation() {
+  if (isCompilingKernel) return;
+  isCompilingKernel = true;
+
+  const btn = document.getElementById('btnCompileKernel');
+  const bootBtn = document.getElementById('btnBootKernel');
+  const prog = document.getElementById('compileProgress');
+  const term = document.getElementById('kernelTermBox');
+
+  if (btn) btn.disabled = true;
+  if (bootBtn) bootBtn.disabled = true;
+
+  term.textContent = `make[1]: Entering directory '/usr/src/linux-2.2.14'\n`;
+  playRetroSound(400, 0.05);
+
+  const compileLines = [
+    `gcc -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer -pipe -fno-strength-reduce -m486 -malign-loops=2 -c init/main.c`,
+    `gcc -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer -c init/version.c`,
+    `gcc -D__KERNEL__ -I/usr/src/linux/include -c arch/i386/kernel/entry.S`,
+    `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c arch/i386/kernel/setup.c`,
+    `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c arch/i386/kernel/smp.c (SMP APIC irq routing enabled)`,
+    `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c drivers/block/ll_rw_blk.c`,
+    `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c drivers/net/3c59x.c (3Com Vortex driver)`,
+    `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c drivers/sound/sb_card.c (Sound Blaster 16/AWE64)`,
+    `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c net/ipv4/ipchains_core.c (Firewall packet filter)`,
+    `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c fs/ext2/super.c fs/ext2/inode.c`,
+    `ld -m elf_i386 -T arch/i386/vmlinux.lds -e stext arch/i386/kernel/head.o init/main.o -o vmlinux`,
+    `nm vmlinux | grep -v '\\(compiled\\)\\|\\(\\.o$$\\)' | sort > System.map`,
+    `objcopy -O binary -R .note -R .comment -S vmlinux arch/i386/boot/compressed/vmlinux.bin`,
+    `gzip -9 < arch/i386/boot/compressed/vmlinux.bin > arch/i386/boot/compressed/vmlinux.bin.gz`,
+    `ld -m elf_i386 -Ttext 0x1000 -e startup_32 arch/i386/boot/compressed/head.o -o arch/i386/boot/compressed/bvmlinux`,
+    `Root device is (3, 1)`,
+    `Boot sector 512 bytes.`,
+    `Setup is 4820 bytes.`,
+    `System is 648 kB.`,
+    `Kernel: arch/i386/boot/bzImage is ready #1 SMP Sat Oct 23 11:42:00 EST 1999`
+  ];
+
+  let lineIdx = 0;
+  const timer = setInterval(() => {
+    if (lineIdx < compileLines.length) {
+      term.textContent += compileLines[lineIdx] + '\n';
+      term.scrollTop = term.scrollHeight;
+      if (prog) prog.textContent = `Compiling: ${Math.round(((lineIdx + 1) / compileLines.length) * 100)}%`;
+      playRetroSound(280 + (lineIdx * 25), 0.03);
+      lineIdx++;
+    } else {
+      clearInterval(timer);
+      isCompilingKernel = false;
+      if (btn) btn.disabled = false;
+      if (bootBtn) bootBtn.disabled = false;
+      if (prog) prog.textContent = 'Build Complete! vmlinuz ready.';
+      playFanfareSound();
+      showToast('Kernel compiled: arch/i386/boot/bzImage (648 KB)');
+    }
+  }, 220);
+}
+
+function testBootKernel() {
+  const term = document.getElementById('kernelTermBox');
+  if (!term) return;
+
+  term.textContent = `LILO boot: linux\nLoading linux...................\n`;
+  playRetroSound(600, 0.08);
+
+  const bootLines = [
+    `Linux version 2.2.14-kilo (root@slashnet) (gcc version egcs-2.91.66) #1 SMP Sat Oct 23 11:42:00 EST 1999`,
+    `Detected 451.082 MHz processor.`,
+    `Console: colour VGA+ 80x25`,
+    `Calibrating delay loop.. 901.12 BogoMIPS`,
+    `Memory: 127244k/131072k available (1024k kernel code, 412k reserved, 2392k data, 64k init)`,
+    `POSIX conformance testing by UNIFIX`,
+    `SMP: Total of 2 processors activated (1802.24 BogoMIPS).`,
+    `PCI: Probing PCI hardware`,
+    `3c59x: Donald Becker's 3c59x/3c905 vortex server driver 0.99H`,
+    `eth0: 3Com 3c905B Cyclone 100baseTx at 0xd800, 00:60:08:42:19:99, IRQ 11`,
+    `Soundblaster audio driver Copyright (C) by Hannu Savolainen 1993-1998`,
+    `sb: Creative SB AWE64 PnP detected at 0x220 irq 5 dma 1,5`,
+    `Real Time Clock Driver v1.09 (Y2K Compliance Tested: 2000-01-01 verified)`,
+    `VFS: Mounted root (ext2 filesystem) readonly.`,
+    `INIT: version 2.76 booting`,
+    `SlashNet Linux 2.2.14-kilo (tty1)`,
+    `slashnet login: _`
+  ];
+
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i < bootLines.length) {
+      term.textContent += bootLines[i] + '\n';
+      term.scrollTop = term.scrollHeight;
+      playRetroSound(420 + (i * 20), 0.02);
+      i++;
+    } else {
+      clearInterval(interval);
+      playFanfareSound();
+      showToast('Kernel boot sequence finished successfully!');
+    }
+  }, 160);
+}
+
+// --- Daily Poll Implementation ---
+const POLL_DATA = {
+  question: "How will you celebrate midnight, December 31, 1999?",
+  options: [
+    { text: "Dancing like it's 1999 at a techno rave", votes: 412 },
+    { text: "Watching 'tail -f /var/log/messages' on my Linux server", votes: 894 },
+    { text: "In a subterranean bunker with 200 cans of beans & a 486", votes: 310 },
+    { text: "Playing Surreal Tournament on my 3dfx Voodoo3", votes: 642 },
+    { text: "Asleep because Y2K is media-manufactured hype", votes: 215 }
+  ]
+};
+
+let userVoteIdx = safeGet('slashnet_user_vote', -1);
+
+function renderPolls() {
+  const sideBox = document.getElementById('sidePollOptions');
+  const mainBox = document.getElementById('mainPollForm');
+  const totalVotesEl = document.getElementById('sidePollTotalVotes');
+
+  const totalVotes = POLL_DATA.options.reduce((acc, o) => acc + o.votes, 0);
+  if (totalVotesEl) totalVotesEl.textContent = totalVotes.toLocaleString();
+
+  // Render Sidebar Quick Poll
+  if (sideBox) {
+    let sideHtml = '';
+    POLL_DATA.options.forEach((opt, idx) => {
+      const pct = Math.round((opt.votes / totalVotes) * 100);
+      const isSelected = userVoteIdx === idx;
+      sideHtml += `
+        <div class="poll-option">
+          <div style="display:flex; justify-content:space-between; font-size:10px;">
+            <span>${isSelected ? '✔ ' : ''}${escapeHtml(opt.text.substring(0, 32))}...</span>
+            <strong>${pct}%</strong>
+          </div>
+          <div class="poll-bar-outer">
+            <div class="poll-bar-inner" style="width:${pct}%;"></div>
+          </div>
+        </div>
+      `;
+    });
+    sideBox.innerHTML = sideHtml;
+  }
+
+  // Render Main Poll Tab
+  if (mainBox) {
+    let mainHtml = '';
+    POLL_DATA.options.forEach((opt, idx) => {
+      const pct = Math.round((opt.votes / totalVotes) * 100);
+      const isChecked = userVoteIdx === idx ? 'checked' : '';
+      mainHtml += `
+        <div style="margin-bottom:10px; font-size:12px;">
+          <label style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+            <input type="radio" name="mainPollOpt" value="${idx}" ${isChecked}>
+            <strong>${escapeHtml(opt.text)}</strong> (${opt.votes.toLocaleString()} votes &bull; ${pct}%)
+          </label>
+          <div class="poll-bar-outer" style="margin-top:4px;">
+            <div class="poll-bar-inner" style="width:${pct}%;"></div>
+          </div>
+        </div>
+      `;
+    });
+    mainBox.innerHTML = mainHtml;
+  }
+}
+
+function submitMainPollVote() {
+  const sel = document.querySelector('input[name="mainPollOpt"]:checked');
+  if (!sel) {
+    alert("Please select an option before voting.");
+    return;
+  }
+  const idx = parseInt(sel.value, 10);
+  if (userVoteIdx !== -1) {
+    POLL_DATA.options[userVoteIdx].votes--;
+  }
+  userVoteIdx = idx;
+  POLL_DATA.options[idx].votes++;
+  safeSet('slashnet_user_vote', userVoteIdx);
+  renderPolls();
+  playRetroSound(700, 0.08);
+  showToast("Your vote has been counted!");
+}
+
+function resetPollVote() {
+  if (userVoteIdx !== -1) {
+    POLL_DATA.options[userVoteIdx].votes--;
+    userVoteIdx = -1;
+    safeSet('slashnet_user_vote', -1);
+    renderPolls();
+    showToast("Vote cleared.");
+  }
+}
+
+// --- VFS Export Helpers ---
+function exportStoryVFS(storyId) {
+  const storyCard = document.getElementById(storyId);
+  if (!storyCard) return;
+  const title = storyCard.querySelector('.story-title').textContent.trim();
+  const meta = storyCard.querySelector('.story-meta').textContent.trim();
+  const body = storyCard.querySelector('.story-body').textContent.trim();
+
+  let txt = `========================================================================\n`;
+  txt += `SLASHNET: NEWS FOR NERDS (1999) - ARCHIVE EXPORT\n`;
+  txt += `========================================================================\n\n`;
+  txt += `TITLE: ${title}\n`;
+  txt += `META:  ${meta}\n\n`;
+  txt += `--- STORY TEXT ---\n${body}\n\n`;
+  txt += `--- THREADED COMMENTS ---\n`;
+
+  function walk(arr, indent) {
+    arr.forEach(c => {
+      txt += `${indent}[Score: ${c.score}, ${c.tag}] ${c.subject} - by ${c.author} (${c.time})\n`;
+      txt += `${indent}  ${c.body}\n\n`;
+      if (c.children) walk(c.children, indent + '    ');
+    });
+  }
+  walk(commentsState[storyId] || [], '');
+
+  const vfsPath = `/home/downloads/slashnet_${storyId}.txt`;
+  saveToKiloVfs(vfsPath, txt);
+}
+
+function openStoryInKPad(storyId) {
+  exportStoryVFS(storyId);
+  launchKiloApp('kpad.html', { path: `/home/downloads/slashnet_${storyId}.txt` });
+}
+
+function exportBeowulfVFS() {
+  calculateClusterMetrics();
+  let txt = `========================================================================\n`;
+  txt += `BEOWULF CLUSTER LINPACK BENCHMARK & SYSTEM SPECIFICATION (1999)\n`;
+  txt += `========================================================================\n\n`;
+  txt += `Cluster Nodes:       ${currentClusterSpec.nodes}\n`;
+  txt += `Total Cores:         ${currentClusterSpec.totalCores}\n`;
+  txt += `Processor:           ${currentClusterSpec.cpuName}\n`;
+  txt += `Memory (Aggregate):  ${currentClusterSpec.totalRamGb} GB\n`;
+  txt += `Interconnect Fabric: ${currentClusterSpec.netName}\n`;
+  txt += `Peak GFLOPS (Rpeak): ${currentClusterSpec.peakGflops}\n`;
+  txt += `LINPACK Rmax GFLOPS: ${currentClusterSpec.linpackGflops}\n`;
+  txt += `Power / Thermal:     ${currentClusterSpec.totalWatts}\n`;
+  txt += `Est. Hardware Cost:  ${currentClusterSpec.totalCost} USD\n\n`;
+  txt += `Certified by mpich-1.2.0 & HPL Linpack Solver.\n`;
+
+  saveToKiloVfs('/home/downloads/beowulf_benchmark.txt', txt);
+}
+
+function openBenchmarkInKPad() {
+  exportBeowulfVFS();
+  launchKiloApp('kpad.html', { path: '/home/downloads/beowulf_benchmark.txt' });
+}
+
+function exportKernelVFS() {
+  const binaryContent = `[ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV)]\nLinux Kernel 2.2.14-kilo SMP boot image (vmlinuz)\nChecksum: 0x7F199942 - Built for KiloOS\nSize: 648,192 bytes.`;
+  saveToKiloVfs('/boot/vmlinuz-2.2.14-kilo', binaryContent);
+}
+
+function exportKernelConfigVFS() {
+  let cfg = `# Linux/i386 2.2.14 Kernel Configuration (Exported from SlashNet)\n`;
+  cfg += `CONFIG_X86=y\nCONFIG_SMP=${document.getElementById('cfg_smp').checked ? 'y' : 'n'}\n`;
+  cfg += `CONFIG_IP_FIREWALL=${document.getElementById('cfg_firewall').checked ? 'y' : 'n'}\n`;
+  cfg += `CONFIG_IP_MASQUERADE=${document.getElementById('cfg_masq').checked ? 'y' : 'n'}\n`;
+  cfg += `CONFIG_SOUND_SB=${document.getElementById('cfg_sb16').checked ? 'm' : 'n'}\n`;
+  cfg += `CONFIG_VORTEX=${document.getElementById('cfg_vortex').checked ? 'y' : 'n'}\n`;
+  cfg += `CONFIG_RTC=${document.getElementById('cfg_rtc').checked ? 'y' : 'n'}\n`;
+  cfg += `CONFIG_EXT2_FS=y\n`;
+  saveToKiloVfs('/etc/kernel-2.2.config', cfg);
+}
+
+// --- Submit Story Modal ---
+function openStorySubmitModal() {
+  const m = document.getElementById('submitStoryModal');
+  if (m) m.style.display = 'flex';
+}
+
+function closeStorySubmitModal() {
+  const m = document.getElementById('submitStoryModal');
+  if (m) m.style.display = 'none';
+}
+
+function submitCustomStory() {
+  const title = document.getElementById('modalStoryTitle').value.trim();
+  const topic = document.getElementById('modalStoryTopic').value;
+  const body = document.getElementById('modalStoryBody').value.trim();
+
+  if (!title || !body) {
+    alert("Please provide both a Title and Story description.");
+    return;
+  }
+
+  alert("Thank you for submitting to SlashNet! Your story has been dispatched to the editorial queue.");
+  closeStorySubmitModal();
+  playRetroSound(800, 0.08);
+}
+
+// Helper HTML sanitizer
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// --- Initialization ---
+window.addEventListener('DOMContentLoaded', () => {
+  updateUserInfoBar();
+  updateStoryCommentCounts();
+  renderComments('story-1');
+  renderComments('story-2');
+  renderComments('story-3');
+  calculateClusterMetrics();
+  renderPolls();
+});
+</script>
+</body>
+</html>
