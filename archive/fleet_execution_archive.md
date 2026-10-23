@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T13:51:05-07:00 — kilo-usability: KCipher (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 156.5 KB, native 12.0 KB < 999 KB; startup, Vite & security_lint PASS).
+  - Layout & HiDPI: Enhanced touch-action manipulation, nowrap tabs, RAF-debounced canvas resize and pixelated stego canvas.
+  - Keyboard & Modals: Added Tab focus trapping in modal overlays, lastFocusedElement restoration, live key input guards, and Ctrl+S / Ctrl+O VFS shortcuts in web and native C.
+  - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
+
 - **2026-10-23T13:41:14-07:00 — kilo-tester: KDB (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 215.6 KB, native 66.0 KB < 999 KB; startup, Vite & security_lint PASS).
   - UI & Hotkeys: Added Escape/Enter modal dismissal and hotkeys [5] Schema and [X] Index Lab.

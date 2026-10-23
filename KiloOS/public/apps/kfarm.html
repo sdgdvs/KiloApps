@@ -171,9 +171,10 @@
             <button id="scarecrowBtn" onclick="buyScarecrow()" style="padding:5px 10px; font-size:14px; background-color:#607D8B; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Buy Scarecrow ($100) [K]</button>
         </div>
         <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:10px;">
-            <button id="millBtn" onclick="buyMill()" style="padding:5px 10px; font-size:14px; background-color:#D7CCC8; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Mill ($150) [M]</button>
+            <button id="millBtn" onclick="buyMill()" style="padding:5px 10px; font-size:14px; background-color:#D7CCC8; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Mill ($150) [W]</button>
             <button id="mayoBtn" onclick="buyMayoMaker()" style="padding:5px 10px; font-size:14px; background-color:#FFF9C4; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Mayo Maker ($100) [Y]</button>
             <button id="cheeseBtn" onclick="buyCheesePress()" style="padding:5px 10px; font-size:14px; background-color:#FFE082; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Cheese Press ($200) [E]</button>
+            <button id="soundToggleBtn" onclick="toggleAudio()" style="padding:5px 10px; font-size:14px; background-color:#8E24AA; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">🔊 Sound: ON [M]</button>
             <button onclick="showHelp()" style="padding:5px 10px; font-size:14px; background-color:#2196F3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Almanac [H / F1]</button>
             <button id="saveBtn" onclick="saveGame(true)" style="padding:5px 10px; font-size:14px; background-color:#4CAF50; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Save [F5/S]</button>
             <button id="loadBtn" onclick="loadGame(true)" style="padding:5px 10px; font-size:14px; background-color:#00897B; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Load [F9/L]</button>
@@ -211,7 +212,8 @@
                 <strong>[C]</strong>: Buy Chicken ($50)<br>
                 <strong>[O]</strong>: Buy Cow ($150)<br>
                 <strong>[K]</strong>: Buy Scarecrow ($100)<br>
-                <strong>[M]</strong>: Buy Mill ($150)<br>
+                <strong>[W]</strong>: Buy Mill ($150)<br>
+                <strong>[M]</strong>: Toggle Sound / Mute<br>
                 <strong>[Y]</strong>: Buy Mayo Maker ($100)<br>
                 <strong>[E]</strong>: Buy Cheese Press ($200)<br>
                 <strong>[F5] / [S]</strong>: Quicksave Farm<br>
@@ -286,6 +288,11 @@
 
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey || e.altKey || e.metaKey) return;
+            ensureAudioRunning();
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                return;
+            }
             const modal = document.getElementById('helpModal');
             const isModalOpen = (modal && modal.style.display === 'flex');
             const resetModal = document.getElementById('resetModal');
@@ -397,6 +404,11 @@
             }
             if (e.key === 'm' || e.key === 'M') {
                 e.preventDefault();
+                toggleAudio();
+                return;
+            }
+            if (e.key === 'w' || e.key === 'W') {
+                e.preventDefault();
                 buyMill();
                 return;
             }
@@ -412,85 +424,739 @@
             }
         });
 
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            const now = audioCtx.currentTime;
-            
-            if (type === 'till') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
-                gain.gain.setValueAtTime(0.5, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
-            } else if (type === 'plant') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
-            } else if (type === 'water') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(600, now);
-                for(let i=1; i<=3; i++) osc.frequency.setValueAtTime(600 + Math.random()*200, now + i*0.05);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.2);
-                osc.start(now); osc.stop(now + 0.2);
-            } else if (type === 'harvest') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(300, now);
-                osc.frequency.setValueAtTime(400, now + 0.05);
-                osc.frequency.setValueAtTime(500, now + 0.1);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.15);
-                osc.start(now); osc.stop(now + 0.15);
-            } else if (type === 'chicken') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-                osc.frequency.exponentialRampToValueAtTime(400, now + 0.2);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.2);
-                osc.start(now); osc.stop(now + 0.2);
-            } else if (type === 'cow') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(100, now);
-                osc.frequency.linearRampToValueAtTime(80, now + 0.5);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.5);
-                osc.start(now); osc.stop(now + 0.5);
-            } else if (type === 'night') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(200, now);
-                osc.frequency.linearRampToValueAtTime(150, now + 1);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0, now + 1);
-                osc.start(now); osc.stop(now + 1);
-            } else if (type === 'morning') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.setValueAtTime(500, now + 0.2);
-                osc.frequency.setValueAtTime(600, now + 0.4);
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.2, now + 0.2);
-                gain.gain.linearRampToValueAtTime(0, now + 0.6);
-                osc.start(now); osc.stop(now + 0.6);
-            } else if (type === 'upgrade') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(330, now);
-                osc.frequency.setValueAtTime(440, now + 0.08);
-                osc.frequency.setValueAtTime(554, now + 0.16);
-                osc.frequency.setValueAtTime(659, now + 0.24);
-                gain.gain.setValueAtTime(0.25, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.35);
-                osc.start(now); osc.stop(now + 0.35);
+        // =========================================================================
+        // PROCEDURAL YM2612 2-OP FM SYNTHESIS & SPC700 CHIPTUNE SOUNDSCAPE SUITE
+        // Pastoral 16-Bit Harvest & Seasonal Town: 6-Channel Suite in G Major / Mixolydian
+        // Ch1: Acoustic Guitar Lead (delayed vibrato) | Ch2: Marimba Counterpoint
+        // Ch3: Shell Arp & Accordion Pad | Ch4: Upright FM Bass (<C3)
+        // Ch5: Brushed Snare & Soft Kick | Ch6: Metallic Hats & Seasonal Harvest Earcons
+        // =========================================================================
+        let audioCtx = null;
+        let masterLimiter = null;
+        let spcBus = null;
+        let soundMuted = false;
+        let bgmStep = 0;
+        let bgmTimer = null;
+
+        // Pitches in Hz
+        const NOTE = {
+            C2: 65.41, D2: 73.42, E2: 82.41, F2: 87.31, Fs2: 92.50, G2: 98.00, A2: 110.00, B2: 123.47,
+            C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, Fs3: 185.00, G3: 196.00, A3: 220.00, B3: 246.94,
+            C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, Fs4: 369.99, G4: 392.00, A4: 440.00, B4: 493.88,
+            C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, Fs5: 739.99, G5: 783.99, A5: 880.00, B5: 987.77,
+            C6: 1046.50, D6: 1174.66, E6: 1318.51, G6: 1567.98
+        };
+
+        function initAudio() {
+            if (audioCtx) {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(() => {});
+                }
+                return;
             }
+            try {
+                const AudioClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioClass) return;
+                audioCtx = new AudioClass();
+
+                // Master Dynamics Compressor / Limiter for 6-channel summing
+                masterLimiter = audioCtx.createDynamicsCompressor();
+                masterLimiter.threshold.setValueAtTime(-4, audioCtx.currentTime);
+                masterLimiter.knee.setValueAtTime(8, audioCtx.currentTime);
+                masterLimiter.ratio.setValueAtTime(12, audioCtx.currentTime);
+                masterLimiter.attack.setValueAtTime(0.003, audioCtx.currentTime);
+                masterLimiter.release.setValueAtTime(0.15, audioCtx.currentTime);
+                masterLimiter.connect(audioCtx.destination);
+
+                // SPC700 Stereo Delay Bus: warm 190ms / 240ms delay, 2200Hz LP filter, 0.28 feedback
+                const delayL = audioCtx.createDelay(1.0);
+                const delayR = audioCtx.createDelay(1.0);
+                delayL.delayTime.setValueAtTime(0.19, audioCtx.currentTime);
+                delayR.delayTime.setValueAtTime(0.24, audioCtx.currentTime);
+
+                const feedbackGain = audioCtx.createGain();
+                feedbackGain.gain.setValueAtTime(0.28, audioCtx.currentTime);
+
+                const spcDamp = audioCtx.createBiquadFilter();
+                spcDamp.type = 'lowpass';
+                spcDamp.frequency.setValueAtTime(2200, audioCtx.currentTime);
+
+                const merger = audioCtx.createChannelMerger(2);
+                delayL.connect(spcDamp);
+                spcDamp.connect(feedbackGain);
+                feedbackGain.connect(delayR);
+                delayR.connect(spcDamp);
+
+                delayL.connect(merger, 0, 0);
+                delayR.connect(merger, 0, 1);
+                merger.connect(masterLimiter);
+
+                const dryGain = audioCtx.createGain();
+                dryGain.gain.setValueAtTime(0.85, audioCtx.currentTime);
+                dryGain.connect(masterLimiter);
+
+                spcBus = { delayL, delayR, dryGain };
+            } catch (e) {}
+        }
+
+        function connectVoiceToBus(node, sendSPC) {
+            if (sendSPC && spcBus) {
+                node.connect(spcBus.dryGain);
+                node.connect(spcBus.delayL);
+                node.connect(spcBus.delayR);
+            } else if (masterLimiter) {
+                node.connect(masterLimiter);
+            } else if (audioCtx) {
+                node.connect(audioCtx.destination);
+            }
+        }
+
+        // --- Ch1: Pastoral Acoustic FM Guitar Lead (YM2612 2-Op with delayed vibrato) ---
+        function playGuitarLead(freq, dur = 0.24, vol = 0.17) {
+            if (soundMuted || !audioCtx) return;
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const carrier = audioCtx.createOscillator();
+                const modulator = audioCtx.createOscillator();
+                const modGain = audioCtx.createGain();
+                const ampEnv = audioCtx.createGain();
+
+                carrier.type = 'sine';
+                modulator.type = 'triangle';
+                carrier.frequency.setValueAtTime(freq, now);
+                modulator.frequency.setValueAtTime(freq * 1.5, now);
+
+                // Attack and mod index decay
+                modGain.gain.setValueAtTime(freq * 2.2, now);
+                modGain.gain.exponentialRampToValueAtTime(freq * 0.12, now + 0.08);
+                modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+                // Delayed LFO vibrato (after 180ms)
+                if (dur > 0.18) {
+                    const lfo = audioCtx.createOscillator();
+                    const lfoGain = audioCtx.createGain();
+                    lfo.frequency.setValueAtTime(5.4, now);
+                    lfoGain.gain.setValueAtTime(0, now);
+                    lfoGain.gain.setValueAtTime(0, now + 0.18);
+                    lfoGain.linearRampToValueAtTime(freq * 0.015, now + Math.min(dur, 0.35));
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(carrier.frequency);
+                    lfo.start(now);
+                    lfo.stop(now + dur + 0.02);
+                }
+
+                ampEnv.gain.setValueAtTime(vol, now);
+                ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(ampEnv);
+
+                connectVoiceToBus(ampEnv, true);
+
+                modulator.start(now);
+                carrier.start(now);
+                modulator.stop(now + dur + 0.02);
+                carrier.stop(now + dur + 0.02);
+            } catch (e) {}
+        }
+
+        // --- Ch2: Warm Marimba Counterpoint (YM2612 2-Op Bell-Wood Pluck) ---
+        function playMarimbaCounter(freq, dur = 0.18, vol = 0.13) {
+            if (soundMuted || !audioCtx) return;
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const carrier = audioCtx.createOscillator();
+                const modulator = audioCtx.createOscillator();
+                const modGain = audioCtx.createGain();
+                const ampEnv = audioCtx.createGain();
+
+                carrier.type = 'sine';
+                modulator.type = 'sine';
+                carrier.frequency.setValueAtTime(freq, now);
+                modulator.frequency.setValueAtTime(freq * 2.756, now);
+
+                modGain.gain.setValueAtTime(freq * 3.2, now);
+                modGain.gain.exponentialRampToValueAtTime(freq * 0.08, now + 0.05);
+                modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+                ampEnv.gain.setValueAtTime(vol, now);
+                ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(ampEnv);
+
+                connectVoiceToBus(ampEnv, true);
+
+                modulator.start(now);
+                carrier.start(now);
+                modulator.stop(now + dur + 0.02);
+                carrier.stop(now + dur + 0.02);
+            } catch (e) {}
+        }
+
+        // --- Ch3: Pastoral Acoustic Arp Harp (Shell Voicings: 3rd + 7th) ---
+        function playArpHarp(freq, dur = 0.12, vol = 0.08) {
+            if (soundMuted || !audioCtx) return;
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const carrier = audioCtx.createOscillator();
+                const modulator = audioCtx.createOscillator();
+                const modGain = audioCtx.createGain();
+                const ampEnv = audioCtx.createGain();
+
+                carrier.type = 'sine';
+                modulator.type = 'sine';
+                carrier.frequency.setValueAtTime(freq, now);
+                modulator.frequency.setValueAtTime(freq * 2.0, now);
+
+                modGain.gain.setValueAtTime(freq * 1.6, now);
+                modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+
+                ampEnv.gain.setValueAtTime(vol, now);
+                ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(ampEnv);
+
+                connectVoiceToBus(ampEnv, true);
+
+                modulator.start(now);
+                carrier.start(now);
+                modulator.stop(now + dur + 0.02);
+                carrier.stop(now + dur + 0.02);
+            } catch (e) {}
+        }
+
+        // --- Ch3 Pad: Downbeat Pastoral Accordion / Reed Drone ---
+        function playPastoralPad(freq, dur = 2.2, vol = 0.032) {
+            if (soundMuted || !audioCtx) return;
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const carrier = audioCtx.createOscillator();
+                const modulator = audioCtx.createOscillator();
+                const modGain = audioCtx.createGain();
+                const ampEnv = audioCtx.createGain();
+
+                carrier.type = 'triangle';
+                modulator.type = 'sine';
+                carrier.frequency.setValueAtTime(freq, now);
+                modulator.frequency.setValueAtTime(freq * 0.5, now);
+
+                modGain.gain.setValueAtTime(freq * 1.1, now);
+                modGain.gain.exponentialRampToValueAtTime(freq * 0.4, now + 0.8);
+                modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+                ampEnv.gain.setValueAtTime(0.001, now);
+                ampEnv.gain.linearRampToValueAtTime(vol, now + 0.3);
+                ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(ampEnv);
+
+                connectVoiceToBus(ampEnv, true);
+
+                modulator.start(now);
+                carrier.start(now);
+                modulator.stop(now + dur + 0.02);
+                carrier.stop(now + dur + 0.02);
+            } catch (e) {}
+        }
+
+        // --- Ch4: Upright Acoustic FM Bass (strictly below C3 = 130.81Hz, punchy & DRY) ---
+        function playUprightBass(freq, dur = 0.11, vol = 0.22) {
+            if (soundMuted || !audioCtx) return;
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const carrier = audioCtx.createOscillator();
+                const modulator = audioCtx.createOscillator();
+                const modGain = audioCtx.createGain();
+                const ampEnv = audioCtx.createGain();
+
+                carrier.type = 'sawtooth';
+                modulator.type = 'square';
+                carrier.frequency.setValueAtTime(freq, now);
+                modulator.frequency.setValueAtTime(freq * 2.0, now);
+
+                modGain.gain.setValueAtTime(freq * 3.8, now);
+                modGain.gain.exponentialRampToValueAtTime(freq * 0.3, now + 0.04);
+                modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+                ampEnv.gain.setValueAtTime(vol, now);
+                ampEnv.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+                carrier.connect(ampEnv);
+
+                // Bass connects DRY to Master Limiter (never through stereo echo)
+                connectVoiceToBus(ampEnv, false);
+
+                modulator.start(now);
+                carrier.start(now);
+                modulator.stop(now + dur + 0.02);
+                carrier.stop(now + dur + 0.02);
+            } catch (e) {}
+        }
+
+        // --- Ch5 & Ch6: Brushed Country/Folk Snare, Soft Kick, and Inharmonic Hats ---
+        function playPastoralDrums(type) {
+            if (soundMuted || !audioCtx) return;
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                if (type === 'kick') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(135, now);
+                    osc.frequency.exponentialRampToValueAtTime(42, now + 0.09);
+                    gain.gain.setValueAtTime(0.32, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.10);
+                    osc.connect(gain);
+                    connectVoiceToBus(gain, false);
+                    osc.start(now);
+                    osc.stop(now + 0.11);
+                } else if (type === 'snare') {
+                    // Brushed folk snare: bandpass filtered noise burst + soft FM tone
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    const filter = audioCtx.createBiquadFilter();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(75, now + 0.09);
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(1250, now);
+                    filter.Q.setValueAtTime(2.5, now);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.10);
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    connectVoiceToBus(gain, false);
+                    osc.start(now);
+                    osc.stop(now + 0.11);
+                } else if (type === 'hat') {
+                    // Metallic inharmonic closed hat (highpass filtered square/sawtooth)
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    const filter = audioCtx.createBiquadFilter();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(4600, now);
+                    filter.type = 'highpass';
+                    filter.frequency.setValueAtTime(5200, now);
+                    gain.gain.setValueAtTime(0.04, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    connectVoiceToBus(gain, false);
+                    osc.start(now);
+                    osc.stop(now + 0.04);
+                } else if (type === 'openhat') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    const filter = audioCtx.createBiquadFilter();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(3800, now);
+                    filter.type = 'highpass';
+                    filter.frequency.setValueAtTime(4800, now);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    connectVoiceToBus(gain, false);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                }
+            } catch (e) {}
+        }
+
+        // =========================================================================
+        // 64-STEP 6-CHANNEL PASTORAL HARVEST TRACKER SUITE
+        // Key: G Major / G Mixolydian (G, A, B, C, D, E, F, F#)
+        // Bar 0: G Major (Meadow Sunrise) | Bar 1: C Maj7 (Flowing Brook)
+        // Bar 2: Em7 (Golden Harvest Orchard) | Bar 3: D7 (Village Square Festival)
+        // =========================================================================
+        const BGM_LEAD = [
+            // Bar 0: G Major (Steps 0-15)
+            NOTE.G4, 0, NOTE.B4, 0, NOTE.D5, 0, NOTE.E5, 0, NOTE.D5, 0, NOTE.B4, 0, NOTE.G4, 0, NOTE.A4, 0,
+            // Bar 1: C Maj7 (Steps 16-31)
+            NOTE.E5, 0, NOTE.G5, 0, NOTE.E5, 0, NOTE.D5, 0, NOTE.C5, 0, NOTE.B4, 0, NOTE.A4, 0, 0, 0,
+            // Bar 2: Em7 (Steps 32-47)
+            NOTE.B4, 0, NOTE.G4, 0, NOTE.E4, 0, NOTE.G4, 0, NOTE.A4, 0, NOTE.B4, 0, NOTE.D5, 0, NOTE.B4, 0,
+            // Bar 3: D7 Mixolydian (Steps 48-63)
+            NOTE.A4, 0, NOTE.C5, 0, NOTE.B4, 0, NOTE.A4, 0, NOTE.G4, 0, NOTE.A4, 0, NOTE.G4, 0, 0, 0
+        ];
+
+        const BGM_COUNTER = [
+            // Bar 0: Contrary motion marimba counterpoint
+            0, NOTE.D4, 0, NOTE.G4, 0, NOTE.B4, 0, NOTE.A4, 0, NOTE.G4, 0, NOTE.D4, 0, NOTE.E4, 0, NOTE.Fs4,
+            // Bar 1: Counter-melody spotlight solo while Lead rests!
+            0, NOTE.G4, 0, NOTE.C5, 0, NOTE.E5, 0, NOTE.D5, 0, NOTE.C5, 0, NOTE.B4, NOTE.A4, NOTE.B4, NOTE.C5, NOTE.D5,
+            // Bar 2: Contrary ascending marimba counterpoint
+            0, NOTE.E4, 0, NOTE.G4, 0, NOTE.B4, 0, NOTE.D5, 0, NOTE.E5, 0, NOTE.D5, 0, NOTE.B4, 0, NOTE.A4,
+            // Bar 3: Playful festival cadence turnaround
+            0, NOTE.Fs4, 0, NOTE.A4, 0, NOTE.G4, 0, NOTE.Fs4, 0, NOTE.E4, 0, NOTE.Fs4, 0, NOTE.D4, 0, NOTE.Fs4
+        ];
+
+        // Ch3: Shell Voicings (3rd + 7th only - never double the 5th)
+        const BGM_ARP = [
+            // Bar 0: Gmaj7 shell (B4, F#4)
+            NOTE.B4, 0, NOTE.Fs4, 0, NOTE.B4, 0, NOTE.Fs4, 0, NOTE.B4, 0, NOTE.Fs4, 0, NOTE.B4, 0, NOTE.Fs4, 0,
+            // Bar 1: Cmaj7 shell (E4, B4)
+            NOTE.E4, 0, NOTE.B4, 0, NOTE.E4, 0, NOTE.B4, 0, NOTE.E4, 0, NOTE.B4, 0, NOTE.E4, 0, NOTE.B4, 0,
+            // Bar 2: Em7 shell (G4, D5)
+            NOTE.G4, 0, NOTE.D5, 0, NOTE.G4, 0, NOTE.D5, 0, NOTE.G4, 0, NOTE.D5, 0, NOTE.G4, 0, NOTE.D5, 0,
+            // Bar 3: D7 shell (F#4, C5)
+            NOTE.Fs4, 0, NOTE.C5, 0, NOTE.Fs4, 0, NOTE.C5, 0, NOTE.Fs4, 0, NOTE.C5, 0, NOTE.Fs4, 0, NOTE.C5, 0
+        ];
+
+        // Ch4: Punchy acoustic upright FM bass (strictly below C3 = 130.81Hz)
+        const BGM_BASS = [
+            // Bar 0: G root/octave
+            NOTE.G2, 0, NOTE.G2, 0, NOTE.D2, 0, NOTE.G2, 0, NOTE.B2, 0, NOTE.G2, 0, NOTE.D2, 0, NOTE.G2, 0,
+            // Bar 1: C walking
+            NOTE.C2, 0, NOTE.C3, 0, NOTE.G2, 0, NOTE.C3, 0, NOTE.E2, 0, NOTE.C3, 0, NOTE.G2, 0, NOTE.B2, 0,
+            // Bar 2: Em walking
+            NOTE.E2, 0, NOTE.E2, 0, NOTE.B2, 0, NOTE.E2, 0, NOTE.G2, 0, NOTE.E2, 0, NOTE.B2, 0, NOTE.C3, 0,
+            // Bar 3: D7 cadence
+            NOTE.D2, 0, NOTE.D3, 0, NOTE.A2, 0, NOTE.D3, 0, NOTE.Fs2, 0, NOTE.D3, 0, NOTE.A2, 0, NOTE.D2, 0
+        ];
+
+        const BGM_PADS = [
+            [NOTE.G3, NOTE.B3, NOTE.Fs4], // Bar 0: Gmaj7
+            [NOTE.C3, NOTE.E4, NOTE.B4],  // Bar 1: Cmaj7
+            [NOTE.E3, NOTE.G4, NOTE.D5],  // Bar 2: Em7
+            [NOTE.D3, NOTE.Fs4, NOTE.C5]  // Bar 3: D7
+        ];
+
+        function playTrackerStep(step) {
+            if (soundMuted || !audioCtx) return;
+            const pat = Math.floor(step / 16);
+            const sub = step % 16;
+
+            // Ch4: Upright FM Bass (strictly below C3)
+            const bNote = BGM_BASS[step];
+            if (bNote) playUprightBass(bNote, 0.11, 0.22);
+
+            // Ch1: Acoustic Guitar Lead (with delayed vibrato)
+            const lNote = BGM_LEAD[step];
+            if (lNote) playGuitarLead(lNote, 0.24, 0.17);
+
+            // Ch2: Marimba Counter-Melody
+            const cNote = BGM_COUNTER[step];
+            if (cNote) playMarimbaCounter(cNote, 0.18, 0.13);
+
+            // Ch3: Shell Arpeggios
+            const aNote = BGM_ARP[step];
+            if (aNote) playArpHarp(aNote, 0.12, 0.08);
+
+            // Ch3 Pad: Downbeat Pastoral Accordion Pad
+            if (sub === 0) {
+                const chord = BGM_PADS[pat];
+                if (chord) {
+                    chord.forEach(f => playPastoralPad(f, 2.2, 0.032));
+                }
+            }
+
+            // Ch5 & Ch6: Brushed Snare, Kick & Inharmonic Metallic Hats
+            if (sub === 0 || sub === 6 || sub === 8 || sub === 10) {
+                playPastoralDrums('kick');
+            }
+            if (sub === 4 || sub === 12 || (pat === 3 && (sub === 14 || sub === 15))) {
+                playPastoralDrums('snare');
+            }
+            if (sub % 2 === 1) {
+                playPastoralDrums('hat');
+            }
+            if (sub === 14 && pat !== 3) {
+                playPastoralDrums('openhat');
+            }
+        }
+
+        // 5:3 Swing-tick groove engine (~125 BPM pastoral swing shuffle)
+        function scheduleBgmStep() {
+            if (soundMuted) {
+                bgmTimer = null;
+                return;
+            }
+            const isEven = (bgmStep % 2 === 0);
+            const stepDelay = isEven ? 140 : 92;
+
+            try {
+                playTrackerStep(bgmStep);
+            } catch (e) {}
+
+            bgmStep = (bgmStep + 1) % 64;
+            bgmTimer = setTimeout(scheduleBgmStep, stepDelay);
+        }
+
+        function startBGM() {
+            if (soundMuted || bgmTimer) return;
+            initAudio();
+            scheduleBgmStep();
+        }
+
+        function stopBGM() {
+            if (bgmTimer) {
+                clearTimeout(bgmTimer);
+                bgmTimer = null;
+            }
+        }
+
+        function ensureAudioRunning() {
+            initAudio();
+            if (!soundMuted && !bgmTimer) {
+                startBGM();
+            }
+        }
+
+        function toggleAudio() {
+            initAudio();
+            soundMuted = !soundMuted;
+            const btn = document.getElementById('soundToggleBtn');
+            if (soundMuted) {
+                stopBGM();
+                if (btn) {
+                    btn.innerHTML = '🔇 Sound: MUTED [M]';
+                    btn.style.backgroundColor = '#757575';
+                }
+                showToast('Sound Muted [M]');
+            } else {
+                startBGM();
+                if (btn) {
+                    btn.innerHTML = '🔊 Sound: ON [M]';
+                    btn.style.backgroundColor = '#8E24AA';
+                }
+                showToast('Sound Enabled (YM2612 FM / SPC700 Delay) [M]');
+            }
+        }
+
+        // Clean pause/resume on tab backgrounding
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopBGM();
+            } else {
+                if (!soundMuted) startBGM();
+            }
+        });
+
+        // Initialize audio unlocking on first user interaction anywhere
+        window.addEventListener('pointerdown', ensureAudioRunning, { once: true });
+
+        // --- Context-Specific Action Earcons & Procedural FM SFX ---
+        function playSound(type) {
+            if (soundMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+
+                if (type === 'till') {
+                    // Earthy hoe chop: FM dirt thud (85Hz -> 35Hz pitch drop) + crisp soil crunch
+                    const carrier = audioCtx.createOscillator();
+                    const modulator = audioCtx.createOscillator();
+                    const modGain = audioCtx.createGain();
+                    const gain = audioCtx.createGain();
+
+                    carrier.type = 'triangle';
+                    carrier.frequency.setValueAtTime(140, now);
+                    carrier.frequency.exponentialRampToValueAtTime(45, now + 0.12);
+
+                    modulator.type = 'square';
+                    modulator.frequency.setValueAtTime(70, now);
+
+                    modGain.gain.setValueAtTime(240, now);
+                    modGain.gain.exponentialRampToValueAtTime(10, now + 0.08);
+
+                    gain.gain.setValueAtTime(0.28, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+                    modulator.connect(modGain);
+                    modGain.connect(carrier.frequency);
+                    carrier.connect(gain);
+                    connectVoiceToBus(gain, false);
+
+                    modulator.start(now); carrier.start(now);
+                    modulator.stop(now + 0.13); carrier.stop(now + 0.13);
+                } else if (type === 'plant') {
+                    // Delicate seed sprinkle: dual ascending crystalline FM droplets (587Hz -> 880Hz)
+                    [NOTE.D5, NOTE.A5].forEach((freq, idx) => {
+                        const t = now + idx * 0.05;
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, t);
+                        osc.frequency.exponentialRampToValueAtTime(freq * 1.25, t + 0.09);
+                        gain.gain.setValueAtTime(0.18, t);
+                        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.10);
+                        osc.connect(gain);
+                        connectVoiceToBus(gain, true);
+                        osc.start(t); osc.stop(t + 0.11);
+                    });
+                } else if (type === 'water') {
+                    // Bubbling spring splash: 3 cascading modulated droplets
+                    [620, 740, 880].forEach((freq, idx) => {
+                        const t = now + idx * 0.045;
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, t);
+                        osc.frequency.exponentialRampToValueAtTime(freq * 0.7, t + 0.08);
+                        gain.gain.setValueAtTime(0.12, t);
+                        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+                        osc.connect(gain);
+                        connectVoiceToBus(gain, true);
+                        osc.start(t); osc.stop(t + 0.10);
+                    });
+                } else if (type === 'harvest') {
+                    // Golden Harvest Fanfare: Rapid ascending G-Major pentatonic arpeggio stinger with SPC700 echo
+                    [NOTE.G5, NOTE.B5, NOTE.D6, NOTE.G6].forEach((freq, idx) => {
+                        const t = now + idx * 0.055;
+                        const c = audioCtx.createOscillator();
+                        const m = audioCtx.createOscillator();
+                        const mg = audioCtx.createGain();
+                        const g = audioCtx.createGain();
+
+                        c.type = 'sine';
+                        m.type = 'sine';
+                        c.frequency.setValueAtTime(freq, t);
+                        m.frequency.setValueAtTime(freq * 2.0, t);
+
+                        mg.gain.setValueAtTime(freq * 1.5, t);
+                        mg.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+
+                        g.gain.setValueAtTime(0.19, t);
+                        g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+
+                        m.connect(mg); mg.connect(c.frequency);
+                        c.connect(g);
+                        connectVoiceToBus(g, true);
+
+                        m.start(t); c.start(t);
+                        m.stop(t + 0.24); c.stop(t + 0.24);
+                    });
+                } else if (type === 'chicken') {
+                    // Playful poultry cluck: dual rapid FM formant chirp
+                    [390, 520].forEach((f, idx) => {
+                        const t = now + idx * 0.08;
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(f, t);
+                        osc.frequency.exponentialRampToValueAtTime(f * 1.4, t + 0.04);
+                        osc.frequency.exponentialRampToValueAtTime(f * 0.9, t + 0.08);
+                        gain.gain.setValueAtTime(0.15, t);
+                        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+                        osc.connect(gain);
+                        connectVoiceToBus(gain, false);
+                        osc.start(t); osc.stop(t + 0.10);
+                    });
+                } else if (type === 'cow') {
+                    // Resonant low moo + gentle wooden cowbell tap
+                    const carrier = audioCtx.createOscillator();
+                    const modulator = audioCtx.createOscillator();
+                    const modGain = audioCtx.createGain();
+                    const gain = audioCtx.createGain();
+
+                    carrier.type = 'sawtooth';
+                    carrier.frequency.setValueAtTime(82, now);
+                    carrier.frequency.linearRampToValueAtTime(76, now + 0.45);
+
+                    modulator.type = 'sine';
+                    modulator.frequency.setValueAtTime(164, now);
+                    modGain.gain.setValueAtTime(180, now);
+                    modGain.gain.linearRampToValueAtTime(20, now + 0.45);
+
+                    gain.gain.setValueAtTime(0.24, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.48);
+
+                    modulator.connect(modGain); modGain.connect(carrier.frequency);
+                    carrier.connect(gain);
+                    connectVoiceToBus(gain, false);
+
+                    modulator.start(now); carrier.start(now);
+                    modulator.stop(now + 0.5); carrier.stop(now + 0.5);
+
+                    // Cowbell tap
+                    const bell = audioCtx.createOscillator();
+                    const bg = audioCtx.createGain();
+                    bell.type = 'square';
+                    bell.frequency.setValueAtTime(880, now);
+                    bg.gain.setValueAtTime(0.06, now);
+                    bg.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+                    bell.connect(bg);
+                    connectVoiceToBus(bg, true);
+                    bell.start(now); bell.stop(now + 0.13);
+                } else if (type === 'night') {
+                    // Twilight dusk lullaby: gentle descending acoustic harp/guitar chord with SPC700 echo
+                    [NOTE.B4, NOTE.G4, NOTE.E4, NOTE.D4].forEach((freq, idx) => {
+                        const t = now + idx * 0.14;
+                        playGuitarLead(freq, 0.45, 0.14);
+                    });
+                } else if (type === 'morning') {
+                    // Sunrise rooster & morning fanfare stinger: ascending brassy bugle
+                    [NOTE.D4, NOTE.G4, NOTE.B4, NOTE.D5].forEach((freq, idx) => {
+                        const t = now + idx * 0.09;
+                        const c = audioCtx.createOscillator();
+                        const m = audioCtx.createOscillator();
+                        const mg = audioCtx.createGain();
+                        const g = audioCtx.createGain();
+
+                        c.type = 'sine';
+                        m.type = 'triangle';
+                        c.frequency.setValueAtTime(freq, t);
+                        m.frequency.setValueAtTime(freq * 1.5, t);
+
+                        mg.gain.setValueAtTime(freq * 2.0, t);
+                        mg.gain.exponentialRampToValueAtTime(0.01, t + 0.14);
+
+                        g.gain.setValueAtTime(0.22, t);
+                        g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+                        m.connect(mg); mg.connect(c.frequency);
+                        c.connect(g);
+                        connectVoiceToBus(g, true);
+
+                        m.start(t); c.start(t);
+                        m.stop(t + 0.30); c.stop(t + 0.30);
+                    });
+                } else if (type === 'upgrade') {
+                    // Harvest festival celebration stinger: triumphant G Major brassy fanfare
+                    [NOTE.D5, NOTE.G5, NOTE.B5, NOTE.D6].forEach((freq, idx) => {
+                        const t = now + idx * 0.07;
+                        const c = audioCtx.createOscillator();
+                        const m = audioCtx.createOscillator();
+                        const mg = audioCtx.createGain();
+                        const g = audioCtx.createGain();
+
+                        c.type = 'sine';
+                        m.type = 'triangle';
+                        c.frequency.setValueAtTime(freq, t);
+                        m.frequency.setValueAtTime(freq * 2.0, t);
+
+                        mg.gain.setValueAtTime(freq * 2.5, t);
+                        mg.gain.exponentialRampToValueAtTime(0.01, t + 0.16);
+
+                        g.gain.setValueAtTime(0.25, t);
+                        g.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+
+                        m.connect(mg); mg.connect(c.frequency);
+                        c.connect(g);
+                        connectVoiceToBus(g, true);
+
+                        m.start(t); c.start(t);
+                        m.stop(t + 0.35); c.stop(t + 0.35);
+                    });
+                }
+            } catch (e) {}
         }
 
         const canvas = document.getElementById('gameCanvas');
@@ -1810,6 +2476,7 @@
         }, { passive: false });
 
         canvas.addEventListener('mousedown', (e) => {
+            ensureAudioRunning();
             if (timeOfDay === 'night') return;
             const rect = canvas.getBoundingClientRect();
             const scaleX = 400 / (rect.width || 400);

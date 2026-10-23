@@ -19,9 +19,9 @@
     "id": "kalchemy",
     "title": "KAlchemy",
     "folder": "Games",
-    "webBytes": 258333,
+    "webBytes": 280378,
     "exeBytes": 70144,
-    "budgetPercent": 25.9
+    "budgetPercent": 28.1
   },
   {
     "id": "kanomaly",
@@ -59,9 +59,9 @@
     "id": "kbbs",
     "title": "KBBS",
     "folder": "Network",
-    "webBytes": 170550,
-    "exeBytes": 101888,
-    "budgetPercent": 17.1
+    "webBytes": 200109,
+    "exeBytes": 104448,
+    "budgetPercent": 20.0
   },
   {
     "id": "kbookmark",
@@ -147,9 +147,9 @@
     "id": "kcipher",
     "title": "KCipher",
     "folder": "System",
-    "webBytes": 157581,
+    "webBytes": 160261,
     "exeBytes": 12288,
-    "budgetPercent": 15.8
+    "budgetPercent": 16.0
   },
   {
     "id": "kclip",
@@ -251,9 +251,9 @@
     "id": "kdb",
     "title": "KDB",
     "folder": "Dev",
-    "webBytes": 193990,
+    "webBytes": 220421,
     "exeBytes": 67584,
-    "budgetPercent": 19.4
+    "budgetPercent": 22.1
   },
   {
     "id": "kdirector",
@@ -467,9 +467,9 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 195725,
+    "webBytes": 203425,
     "exeBytes": 45056,
-    "budgetPercent": 19.6
+    "budgetPercent": 20.4
   },
   {
     "id": "knetmap",
@@ -675,9 +675,9 @@
     "id": "kstarship",
     "title": "KStarship",
     "folder": "Games",
-    "webBytes": 175246,
+    "webBytes": 192129,
     "exeBytes": 146944,
-    "budgetPercent": 17.5
+    "budgetPercent": 19.2
   },
   {
     "id": "kstellar",
