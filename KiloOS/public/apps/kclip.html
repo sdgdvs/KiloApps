@@ -482,21 +482,52 @@
       border: 1px solid var(--border);
       border-radius: 4px;
       overflow: hidden;
+      flex-wrap: wrap;
+      background: var(--bg-alt);
     }
 
     .view-tab {
-      padding: 3px 8px;
+      padding: 4px 9px;
       font-size: 11px;
+      font-family: var(--font-mono);
       background: var(--card-bg);
       color: var(--text-muted);
       border: none;
+      border-right: 1px solid var(--border);
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      user-select: none;
+      transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .view-tab:last-child {
+      border-right: none;
+    }
+
+    .view-tab:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+
+    .view-tab:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+      z-index: 2;
     }
 
     .view-tab.active {
       background: var(--primary);
       color: #0b0f19;
-      font-weight: bold;
+      font-weight: 700;
+      box-shadow: inset 0 -2px 0 var(--accent);
+    }
+
+    .clip-card:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: -1px;
+      box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
     }
 
     /* Transformation Drawer / Quick Toolbox */
@@ -1110,11 +1141,12 @@
           </button>
         </div>
 
-        <div class="view-mode-tabs">
-          <button class="view-tab active" id="tabViewText">Raw Text</button>
-          <button class="view-tab" id="tabViewHex">Hex Dump</button>
-          <button class="view-tab" id="tabViewHtml">HTML View</button>
-          <button class="view-tab" id="tabViewImage">Image View</button>
+        <div class="view-mode-tabs" role="tablist" aria-label="Inspector modes">
+          <button class="view-tab active" id="tabViewText" role="tab" aria-selected="true" title="Raw Text Editor">Raw Text</button>
+          <button class="view-tab" id="tabViewHex" role="tab" aria-selected="false" title="Hexadecimal Memory Dump">Hex Dump</button>
+          <button class="view-tab" id="tabViewHtml" role="tab" aria-selected="false" title="Sandboxed HTML Preview">HTML View</button>
+          <button class="view-tab" id="tabViewImage" role="tab" aria-selected="false" title="Image and Data URI View">Image View</button>
+          <button class="view-tab" id="tabViewDiff" role="tab" aria-selected="false" title="High-Contrast Diff Inspector">Diff View</button>
         </div>
       </div>
 
@@ -1161,6 +1193,7 @@
         <div id="hexViewerContainer" class="hex-viewer" style="display:none;"></div>
         <iframe id="htmlViewerContainer" class="html-viewer" sandbox="allow-same-origin" style="display:none; width:100%; height:100%; border:none; background:#ffffff; border-radius:4px;"></iframe>
         <div id="imageViewerContainer" class="image-viewer" style="display:none; width:100%; height:100%; overflow:auto; align-items:center; justify-content:center; background:#080d16; padding:16px; border-radius:4px; box-sizing:border-box;"></div>
+        <div id="diffViewerContainer" class="diff-viewer" style="display:none; width:100%; height:100%; overflow:auto; padding:12px; font-family:var(--font-mono); font-size:12px; background:var(--bg); box-sizing:border-box;"></div>
       </div>
 
       <!-- Live Inspector Readout -->
@@ -2217,9 +2250,28 @@
           card.setAttribute('role', 'button');
           card.setAttribute('aria-label', (clip.pinned ? 'Pinned ' : '') + clip.category + ' clip: ' + clip.content.substring(0, 40).replace(/\n/g, ' '));
           card.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.key === ' ') {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              copyToClipboard(clip.content);
+              playSoundEffect('copy');
+              showToast('📋 Copied clip #' + (idx + 1) + ' to clipboard! [Enter]');
+            } else if (e.key === ' ') {
               e.preventDefault();
               card.click();
+            } else if (e.key === 'ArrowDown' || e.key === 'j' || e.key === 'J') {
+              e.preventDefault();
+              navigateClip(1);
+              setTimeout(function() {
+                const next = document.querySelector('.clip-card.selected');
+                if (next) next.focus();
+              }, 15);
+            } else if (e.key === 'ArrowUp' || e.key === 'k' || e.key === 'K') {
+              e.preventDefault();
+              navigateClip(-1);
+              setTimeout(function() {
+                const prev = document.querySelector('.clip-card.selected');
+                if (prev) prev.focus();
+              }, 15);
             }
           });
 
@@ -2290,6 +2342,8 @@
         if (htmlViewer && state.viewMode === 'html') htmlViewer.srcdoc = sel.content;
         const imgViewer = document.getElementById('imageViewerContainer');
         if (imgViewer && state.viewMode === 'image') renderImagePreview(sel.content, imgViewer);
+        const diffViewer = document.getElementById('diffViewerContainer');
+        if (diffViewer && state.viewMode === 'diff') renderDiffViewer(sel.content, diffViewer);
 
         const chars = sel.content.length;
         const words = sel.content.trim() ? sel.content.trim().split(/\s+/).length : 0;
@@ -2537,21 +2591,69 @@
         }
       }
 
+      function renderDiffViewer(currentText, container) {
+        if (!container) return;
+        const visible = getFilteredClips();
+        const currentIdx = visible.findIndex(function(c) { return c.id === state.selectedClipId; });
+        const compareClip = currentIdx > 0 ? visible[currentIdx - 1] : (visible.length > 1 ? visible[1] : null);
+        const baseText = compareClip ? compareClip.content : '';
+
+        const baseLines = baseText.split('\n');
+        const currLines = (currentText || '').split('\n');
+
+        let html = '<div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; padding-bottom:6px; border-bottom:1px solid var(--border); font-size:11px;">';
+        html += '<div style="color:var(--text-muted);"><strong style="color:var(--primary);">DIFF INSPECTOR:</strong> Comparing active clip with ' + (compareClip ? 'previous buffer clip (#' + (currentIdx) + ')' : 'empty buffer') + '</div>';
+        html += '<div style="display:flex; gap:8px; align-items:center;">';
+        html += '<span style="display:inline-flex; align-items:center; gap:4px; color:#4ade80; font-size:10px;"><span style="display:inline-block;width:8px;height:8px;background:#22c55e;border-radius:2px;"></span> Added</span>';
+        html += '<span style="display:inline-flex; align-items:center; gap:4px; color:#f87171; font-size:10px;"><span style="display:inline-block;width:8px;height:8px;background:#ef4444;border-radius:2px;"></span> Removed</span>';
+        html += '</div></div>';
+
+        html += '<div style="display:flex; flex-direction:column; gap:2px; font-family:var(--font-mono); font-size:11px; line-height:1.5;">';
+
+        const maxL = Math.max(baseLines.length, currLines.length);
+        if (maxL === 0 || (baseLines.length === 1 && baseLines[0] === '' && currLines.length === 1 && currLines[0] === '')) {
+          html += '<div style="color:var(--text-muted); padding:16px; text-align:center;">No text content available to compare.</div>';
+        } else {
+          for (let i = 0; i < maxL; i++) {
+            const b = baseLines[i];
+            const c = currLines[i];
+            const ln = (i + 1).toString().padStart(3, ' ');
+            if (b === undefined) {
+              html += '<div style="background:rgba(34,197,94,0.18); border-left:3px solid #22c55e; padding:1px 6px; color:#86efac; white-space:pre-wrap;"><span style="color:#22c55e; margin-right:8px; user-select:none;">+' + ln + '</span>' + escapeHtml(c || '') + '</div>';
+            } else if (c === undefined) {
+              html += '<div style="background:rgba(239,68,68,0.18); border-left:3px solid #ef4444; padding:1px 6px; color:#fca5a5; white-space:pre-wrap; text-decoration:line-through;"><span style="color:#ef4444; margin-right:8px; user-select:none;">-' + ln + '</span>' + escapeHtml(b || '') + '</div>';
+            } else if (b !== c) {
+              html += '<div style="background:rgba(239,68,68,0.18); border-left:3px solid #ef4444; padding:1px 6px; color:#fca5a5; white-space:pre-wrap;"><span style="color:#ef4444; margin-right:8px; user-select:none;">-' + ln + '</span>' + escapeHtml(b) + '</div>';
+              html += '<div style="background:rgba(34,197,94,0.18); border-left:3px solid #22c55e; padding:1px 6px; color:#86efac; white-space:pre-wrap;"><span style="color:#22c55e; margin-right:8px; user-select:none;">+' + ln + '</span>' + escapeHtml(c) + '</div>';
+            } else {
+              html += '<div style="padding:1px 6px; color:var(--text-muted); border-left:3px solid transparent; white-space:pre-wrap;"><span style="opacity:0.4; margin-right:8px; user-select:none;"> ' + ln + '</span>' + escapeHtml(c) + '</div>';
+            }
+          }
+        }
+        html += '</div>';
+        container.innerHTML = html;
+      }
+
       function applyViewMode(mode) {
         state.viewMode = mode || 'text';
         const tabText = document.getElementById('tabViewText');
         const tabHex = document.getElementById('tabViewHex');
         const tabHtml = document.getElementById('tabViewHtml');
         const tabImg = document.getElementById('tabViewImage');
+        const tabDiff = document.getElementById('tabViewDiff');
         const editor = document.getElementById('editorClipContent');
         const hexViewer = document.getElementById('hexViewerContainer');
         const htmlViewer = document.getElementById('htmlViewerContainer');
         const imgViewer = document.getElementById('imageViewerContainer');
+        const diffViewer = document.getElementById('diffViewerContainer');
 
-        [tabText, tabHex, tabHtml, tabImg].forEach(function(t) {
-          if (t) t.classList.remove('active');
+        [tabText, tabHex, tabHtml, tabImg, tabDiff].forEach(function(t) {
+          if (t) {
+            t.classList.remove('active');
+            t.setAttribute('aria-selected', 'false');
+          }
         });
-        [editor, hexViewer, htmlViewer, imgViewer].forEach(function(el) {
+        [editor, hexViewer, htmlViewer, imgViewer, diffViewer].forEach(function(el) {
           if (el) el.style.display = 'none';
         });
 
@@ -2559,32 +2661,41 @@
         const content = sel ? sel.content : (editor ? editor.value : '');
 
         if (state.viewMode === 'hex') {
-          if (tabHex) tabHex.classList.add('active');
+          if (tabHex) { tabHex.classList.add('active'); tabHex.setAttribute('aria-selected', 'true'); }
           if (hexViewer) {
             hexViewer.style.display = 'block';
             hexViewer.textContent = generateHexDump(content);
           }
         } else if (state.viewMode === 'html') {
-          if (tabHtml) tabHtml.classList.add('active');
+          if (tabHtml) { tabHtml.classList.add('active'); tabHtml.setAttribute('aria-selected', 'true'); }
           if (htmlViewer) {
             htmlViewer.style.display = 'block';
             htmlViewer.srcdoc = content || '<!DOCTYPE html><html><body style="font-family:sans-serif;color:#666;padding:12px;">No HTML content</body></html>';
           }
         } else if (state.viewMode === 'image') {
-          if (tabImg) tabImg.classList.add('active');
+          if (tabImg) { tabImg.classList.add('active'); tabImg.setAttribute('aria-selected', 'true'); }
           if (imgViewer) {
             imgViewer.style.display = 'flex';
             renderImagePreview(content, imgViewer);
           }
+        } else if (state.viewMode === 'diff') {
+          if (tabDiff) { tabDiff.classList.add('active'); tabDiff.setAttribute('aria-selected', 'true'); }
+          if (diffViewer) {
+            diffViewer.style.display = 'block';
+            renderDiffViewer(content, diffViewer);
+          }
         } else {
           state.viewMode = 'text';
-          if (tabText) tabText.classList.add('active');
+          if (tabText) { tabText.classList.add('active'); tabText.setAttribute('aria-selected', 'true'); }
           if (editor) editor.style.display = 'block';
         }
       }
 
       // --- 12. MODAL CONTROLS ---
+      let lastFocusedElement = null;
+
       function openModal(id) {
+        lastFocusedElement = document.activeElement;
         const m = document.getElementById(id);
         if (!m) return;
 
@@ -2614,6 +2725,12 @@
         m.classList.add('active');
         m.setAttribute('aria-modal', 'true');
         playSoundEffect('click');
+        setTimeout(function() {
+          const focusable = m.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+          if (focusable.length > 0) {
+            focusable[0].focus();
+          }
+        }, 30);
       }
 
       function closeModal(id) {
@@ -2624,6 +2741,10 @@
           m.removeAttribute('aria-modal');
           playSoundEffect('click');
         }
+        if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+          try { lastFocusedElement.focus(); } catch(e) {}
+          lastFocusedElement = null;
+        }
       }
 
       function closeAllModals() {
@@ -2632,6 +2753,10 @@
           m.classList.remove('active');
           m.removeAttribute('aria-modal');
         });
+        if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+          try { lastFocusedElement.focus(); } catch(e) {}
+          lastFocusedElement = null;
+        }
       }
 
       function dismissSplash(goTo = null) {
@@ -3205,6 +3330,13 @@
             playSoundEffect('click');
           });
         }
+        const tabDiff = document.getElementById('tabViewDiff');
+        if (tabDiff) {
+          tabDiff.addEventListener('click', function() {
+            applyViewMode('diff');
+            playSoundEffect('click');
+          });
+        }
 
         // Transformations Bar
         document.querySelectorAll('.transform-toolbox .btn').forEach(function(btn) {
@@ -3436,8 +3568,30 @@
             return;
           }
 
-          // If modal is open, handle Enter / Space to advance / confirm, and block all background shortcuts
+          // If modal is open, trap Tab focus, handle Enter / Space to advance / confirm, and block all background shortcuts
           if (isAnyModalOpen()) {
+            if (e.key === 'Tab') {
+              const activeModals = Array.from(document.querySelectorAll('.modal-backdrop')).filter(function(m) {
+                return m.style.display === 'flex' || m.classList.contains('active');
+              });
+              const currentModal = activeModals[activeModals.length - 1];
+              if (currentModal) {
+                const focusables = Array.from(currentModal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+                if (focusables.length > 0) {
+                  const first = focusables[0];
+                  const last = focusables[focusables.length - 1];
+                  if (e.shiftKey && (document.activeElement === first || !currentModal.contains(document.activeElement))) {
+                    e.preventDefault();
+                    last.focus();
+                    return;
+                  } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                    return;
+                  }
+                }
+              }
+            }
             if (e.key === 'Enter' || e.key === ' ') {
               const modalSplash = document.getElementById('modalSplash');
               const modalTutorial = document.getElementById('modalTutorial');

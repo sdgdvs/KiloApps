@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ current_targets:
   kilo_graphics: KStarship
   kilo_soundscape: KAlchemy
   kilo_tester: KDB
-  kilo_usability: KClip
+  kilo_usability: KCipher
   kilo_qa: KConverter
   kilo_expander: KNet
 virtual_web_target: kweb://cabled
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
-  app: KCipher
-  timestamp: '2026-10-23T11:50:34-07:00'
+  agent: kilo-usability
+  app: KClip
+  timestamp: '2026-10-23T12:05:20-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -130,7 +130,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Audit SQL/table workbench, schema builder, query filter, chart modals, CSV/JSON/VFS export, and Escape modal dismissals. |
-| `KClip` | `KiloOS/public/apps/kclip.html`, `KClip/main.c` | Audit clipboard manager, 12 text transformation pipelines, regex find/replace bar (`Ctrl+H`), and F5/F9 persistence; promote to Mature if clean. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -138,11 +137,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Audit cipher workbench (AES/XOR/Vigenère/ROT13/RSA toy), frequency histogram, key input guards, and VFS import/export. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KClip`
+- **Active Target**: `KCipher`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KClip` | `KiloOS/public/apps/kclip.html`, `KClip/main.c` | Compact toolbar wrapping, keyboard snippet navigation (`ArrowUp/Down`, `Enter` to copy), high-contrast diff/hex tabs, and modal focus restoration. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Side-by-side plaintext/ciphertext responsive split pane, HiDPI frequency chart crispness, one-click copy/swap ergonomics, and `[F1/H]` help overlay. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
@@ -159,7 +157,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
 | `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Pass 5 QA: verify 14-category custom unit/history F5/F9 persistence, tutorial flag, and dual Win32 C build (`KConverter.exe` <999 KB); promote to Mature if complete. |
-| `KClip` | `KiloOS/public/apps/kclip.html`, `KClip/main.c` | Pass 5 QA: verify snippet vault & pinned history F5/F9 persistence, tutorial flag, and dual Win32 C build (`KClip.exe` <999 KB); promote to Mature if complete. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA: verify multi-table schema/rows F5/F9 persistence, first-run tutorial flag, and dual Win32 C build (`KDB.exe` <999 KB); promote to Mature if complete. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | Pass 5 QA: verify ship credits, cargo manifest, sector position, and market ledger F5/F9 persistence + dual Win32 C build (`KTrader.exe` <999 KB). |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | Pass 5 QA: verify mech chassis loadout, heat/armor state, arena progression F5/F9 persistence + dual Win32 C build (`KMech.exe` <999 KB). |
@@ -192,6 +189,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KClip** | `KiloOS/public/apps/kclip.html` | Pass 5+ (2026-10-23) | Workstation & Utilities | Clipboard manager, 12 text transformation pipelines, regex find/replace, Diff/Hex inspector, F5/F9 persistence, and dual Win32 C parity. |
 | **KFont** | `KiloOS/public/apps/kfont.html` | Pass 5+ (2026-10-23) | Media / Typography | Complete typography workstation: 11 tabs, custom bitmap glyph editor & font bank, OTF axes, WCAG contrast matrix, C LOGFONT/JSON exports, F5/F9 persistence, dual Win32 C parity. |
 | **KHex** | `KiloOS/public/apps/khex.html` | Pass 5+ (2026-10-23) | System / Analysis | Complete binary byte workstation featuring 9 analysis/edit tabs, multi-arch disassembler (x86/6502/Z80), VFS Open/Save integration, F5/F9 persistence, and dual Win32 C parity. |
 | **KPass** | `KiloOS/public/apps/kpass.html` | Pass 5+ (2026-10-23) | Security / Vault | Feature-complete retro password manager & vault; 4 generator modes, entropy visualizer, AES-GCM 256 encrypted vault, security audit scanner, export suite, F5/F9 persistence, dual Win32 C parity. |
@@ -233,6 +231,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T12:05:20-07:00 — kilo-usability: KClip (Usability & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 207.0 KB, native 21.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - Keyboard & Navigation: Added clip card ArrowUp/Down navigation, Enter to copy snippet, Tab modal focus trapping, and modal focus restoration.
+  - Diff & Tabs: Added high-contrast Diff View tab comparing active clip with previous buffer, enhanced hex/html/image tabs with crisp contrast.
+  - Mature Quarantine & Handoff: Promoted `KClip` to Mature archive; advanced `kilo-usability` to `KCipher`; next agent `kilo-qa`.
+
 - **2026-10-23T11:50:34-07:00 — kilo-tester: KCipher (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 153.9 KB, native 12.0 KB < 999 KB; startup, Vite & security_lint PASS).
   - UI & Hotkey Audit: Verified workbench AES/XOR/Vigenere/ROT13/RSA toy, frequency histogram, modals, Escape dismissal, and key input guards.
@@ -257,10 +261,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated live 6-channel YM2612 2-Op FM + SPC700 stereo delay synthesizer with CRT oscilloscope/spectrum visualizer.
   - Implemented KiloOS VFS /home/music/ .mod/.trk persistence, IRC chat lobby, and routed kweb://trapster in knet/portal/webring.
   - Handoff: Advanced `kilo-creator` to `kweb://cabled`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-23T11:06:25-07:00 — kilo-expander: KTrader (KTrader Phase VI VFS Mesh, Commodity Futures Ledger & RFMS Multiplayer)**
-  - Status: PASS ✅ (0 errors, web 179.8 KB, native 26.0 KB < 999 KB; startup, Vite & security_lint PASS).
-  - VFS & Cross-App Mesh: Added KiloVFS bridge with voyage & cargo ledger export (/home/saves/ktrader_ledger.json), VFS picker import, KPad ledger inspection, and KHex viewer launch.
-  - Commodity Futures Ledger: Implemented 8-commodity forward contracts (Long/Short, 20% margin, 3/5/8 jump expiry, early liquidation, cumulative P&L tracking, and jump auto-settlement).
-  - RFMS Multiplayer & Cargo Duel: Wired retro_multiplayer.js with explicit Connect gate, 25s solo AI fallback vs Vance Orion, 10-jump net worth race for 2,500 cr bounty, and live Syndicate Ticker tape.
-  - Handoff: Advanced `kilo-expander` to `KNet`; rotated active agent to `kilo-creator`.

@@ -75,9 +75,9 @@
     "id": "kbreakout",
     "title": "KBreakout",
     "folder": "Games",
-    "webBytes": 181739,
-    "exeBytes": 56320,
-    "budgetPercent": 18.2
+    "webBytes": 186793,
+    "exeBytes": 55808,
+    "budgetPercent": 18.7
   },
   {
     "id": "kbudget",
@@ -147,7 +147,7 @@
     "id": "kcipher",
     "title": "KCipher",
     "folder": "System",
-    "webBytes": 157552,
+    "webBytes": 157581,
     "exeBytes": 12288,
     "budgetPercent": 15.8
   },
@@ -467,9 +467,9 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 195068,
+    "webBytes": 195725,
     "exeBytes": 45056,
-    "budgetPercent": 19.5
+    "budgetPercent": 19.6
   },
   {
     "id": "knetmap",
@@ -675,9 +675,9 @@
     "id": "kstarship",
     "title": "KStarship",
     "folder": "Games",
-    "webBytes": 157536,
+    "webBytes": 175246,
     "exeBytes": 146944,
-    "budgetPercent": 15.8
+    "budgetPercent": 17.5
   },
   {
     "id": "kstellar",
