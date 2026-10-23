@@ -4577,6 +4577,7 @@
           orb.innerText = '💨';
           addLog(`The reaction fizzles! No transmutation found for ${selectedSlots[0].name} + ${selectedSlots[1].name}.`, false, true, false);
           playGlassClinker(0.5);
+          playFmFizzle();
         }
 
         setTimeout(() => { orb.innerText = '🔮'; }, 1500);
@@ -4834,7 +4835,8 @@
     // =========================================================================
     // Authentic YM2612 2-Operator FM Synthesizer & SPC700 Delay Audio Suite
     // Track: "The Hermetic Transmutation" (Alchemical Laboratory Chiptune Suite)
-    // 6-Channel Counterpoint: Lead, Counter, Shell Harmony, Bass, Drums, Earcons
+    // 6-Channel Counterpoint: Celesta Lead, Glass Bell Counter, 3rd/7th Shells,
+    // FM Sub-Bass (<= C3), Pitch-Drop Kick + Noise Snare, Metallic Hats & Cauldron Pops
     // =========================================================================
     let audioCtx = null;
     let masterGain = null;
@@ -4860,10 +4862,10 @@
           masterGain.gain.setValueAtTime(0.72, audioCtx.currentTime);
           masterGain.connect(audioCtx.destination);
 
-          // SPC700 Stereo Slapback Delay DSP (180ms delay, 2200Hz LP filter, 0.28 feedback)
+          // Selective SPC700 Stereo Slapback Delay DSP (200ms delay, 2200Hz LP filter, 0.28 feedback)
           try {
             snesDelayNode = audioCtx.createDelay(1.0);
-            snesDelayNode.delayTime.setValueAtTime(0.18, audioCtx.currentTime);
+            snesDelayNode.delayTime.setValueAtTime(0.20, audioCtx.currentTime);
 
             snesFilterNode = audioCtx.createBiquadFilter();
             snesFilterNode.type = 'lowpass';
@@ -4971,8 +4973,11 @@
       } catch (e) {}
     }
 
-    // Named FM Patches
-    // Patch 1: E-Piano / Mystic Flute Lead with 140ms delayed LFO vibrato
+    // =========================================================================
+    // Named YM2612 Patches
+    // =========================================================================
+
+    // Patch 1: Celesta / Mystic Flute Lead with 180ms delayed LFO vibrato
     function playFmLead(freq, dur, vol, useEcho = true) {
       if (!soundEnabled || !freq) return;
       initAudio();
@@ -4987,19 +4992,19 @@
         carrier.type = 'sine';
         carrier.frequency.setValueAtTime(freq, now);
 
-        // Delayed vibrato (after 140ms, 5.2 Hz rate)
+        // Expressive delayed vibrato: ramp LFO after 180ms
         const lfo = audioCtx.createOscillator();
         const lfoGain = audioCtx.createGain();
-        lfo.frequency.setValueAtTime(5.2, now);
+        lfo.frequency.setValueAtTime(5.5, now);
         lfoGain.gain.setValueAtTime(0, now);
-        lfoGain.gain.setValueAtTime(0, now + 0.14);
-        lfoGain.gain.linearRampToValueAtTime(freq * 0.018, now + 0.26);
+        lfoGain.gain.setValueAtTime(0, now + 0.18);
+        lfoGain.gain.linearRampToValueAtTime(freq * 0.022, now + 0.32);
         lfo.connect(lfoGain);
         lfoGain.connect(carrier.frequency);
 
         mod.type = 'sine';
         mod.frequency.setValueAtTime(freq * 2.0, now);
-        modGain.gain.setValueAtTime(freq * 2.0 * 2.4, now);
+        modGain.gain.setValueAtTime(freq * 2.0 * 2.5, now);
         modGain.gain.exponentialRampToValueAtTime(freq * 0.2, now + 0.08);
         modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
 
@@ -5017,7 +5022,7 @@
       } catch(e) {}
     }
 
-    // Patch 2: Crystalline Bell / Celesta (Counter-Melody & Chimes)
+    // Patch 2: Crystalline Celesta / Glass Bells (Counter-Melody & Sparkle Runs)
     function playFmCounter(freq, dur, vol, useEcho = true) {
       if (!soundEnabled || !freq) return;
       initAudio();
@@ -5035,7 +5040,7 @@
         mod.frequency.setValueAtTime(freq * 3.5, now);
 
         modGain.gain.setValueAtTime(freq * 3.5 * 3.8, now);
-        modGain.gain.exponentialRampToValueAtTime(freq * 0.08, now + 0.06);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.08, now + 0.05);
         modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
 
         amp.gain.setValueAtTime(vol, now);
@@ -5052,7 +5057,7 @@
       } catch(e) {}
     }
 
-    // Patch 3: Shell Voicing Harmony (Warm Mystic Brass / Pad)
+    // Patch 3: Shell Voicing Harmony (Warm Mystic Glass Pad — 3rd & 7th Only)
     function playFmHarmony(freq, dur, vol, useEcho = true) {
       if (!soundEnabled || !freq) return;
       initAudio();
@@ -5069,7 +5074,7 @@
         mod.type = 'sine';
         mod.frequency.setValueAtTime(freq * 1.0, now);
 
-        modGain.gain.setValueAtTime(freq * 1.5, now);
+        modGain.gain.setValueAtTime(freq * 1.6, now);
         modGain.gain.exponentialRampToValueAtTime(freq * 0.2, now + dur);
 
         amp.gain.setValueAtTime(vol, now);
@@ -5086,7 +5091,7 @@
       } catch(e) {}
     }
 
-    // Patch 4: Slap / Wood Bass (Dry, Tight transients, No echo)
+    // Patch 4: Punchy 2-Op FM Slap/Sub Bass (Strictly <= C3 = 130.81Hz, Strictly Dry)
     function playFmBass(freq, dur, vol) {
       if (!soundEnabled || !freq) return;
       initAudio();
@@ -5103,8 +5108,8 @@
         mod.type = 'sine';
         mod.frequency.setValueAtTime(freq * 2.0, now);
 
-        modGain.gain.setValueAtTime(freq * 2.0 * 3.2, now);
-        modGain.gain.exponentialRampToValueAtTime(freq * 0.05, now + 0.04);
+        modGain.gain.setValueAtTime(freq * 2.0 * 3.5, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.05, now + 0.035);
         modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
 
         amp.gain.setValueAtTime(vol, now);
@@ -5113,14 +5118,14 @@
         mod.connect(modGain);
         modGain.connect(carrier.frequency);
         carrier.connect(amp);
-        amp.connect(masterGain);
+        amp.connect(masterGain); // Strictly dry — no delay send
 
         mod.start(now); carrier.start(now);
         mod.stop(now + dur); carrier.stop(now + dur);
       } catch(e) {}
     }
 
-    // Patch 5: FM Kick Drum
+    // Patch 5: FM Pitch-Drop Kick Drum (Strictly Dry)
     function playFmKick(vol = 0.22) {
       if (!soundEnabled) return;
       initAudio();
@@ -5130,16 +5135,16 @@
         const osc = audioCtx.createOscillator();
         const amp = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.setValueAtTime(150, now);
         osc.frequency.exponentialRampToValueAtTime(36, now + 0.055);
         amp.gain.setValueAtTime(vol, now);
         amp.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
-        osc.connect(amp); amp.connect(masterGain);
+        osc.connect(amp); amp.connect(masterGain); // Strictly dry
         osc.start(now); osc.stop(now + 0.12);
       } catch(e) {}
     }
 
-    // Patch 6: FM Snare / Shaker
+    // Patch 6: High-MUL Inharmonic Noise Snare (Strictly Dry)
     function playFmSnare(vol = 0.15) {
       if (!soundEnabled) return;
       initAudio();
@@ -5152,24 +5157,24 @@
         const amp = audioCtx.createGain();
 
         c.type = 'sine';
-        c.frequency.setValueAtTime(240, now);
+        c.frequency.setValueAtTime(220, now);
         m.type = 'sawtooth';
-        m.frequency.setValueAtTime(240 * 9.87, now);
-        mg.gain.setValueAtTime(240 * 9.87 * 6.5, now);
+        m.frequency.setValueAtTime(220 * 9.87, now);
+        mg.gain.setValueAtTime(220 * 9.87 * 6.5, now);
         mg.gain.exponentialRampToValueAtTime(1, now + 0.08);
 
         amp.gain.setValueAtTime(vol, now);
         amp.gain.exponentialRampToValueAtTime(0.0001, now + 0.10);
 
         m.connect(mg); mg.connect(c.frequency);
-        c.connect(amp); amp.connect(masterGain);
+        c.connect(amp); amp.connect(masterGain); // Strictly dry
 
         m.start(now); c.start(now);
         m.stop(now + 0.10); c.stop(now + 0.10);
       } catch(e) {}
     }
 
-    // Patch 7: FM Hi-Hat
+    // Patch 7: Inharmonic Metallic Hi-Hat (MUL 11.0)
     function playFmHiHat(vol = 0.06, open = false) {
       if (!soundEnabled) return;
       initAudio();
@@ -5183,10 +5188,10 @@
         const amp = audioCtx.createGain();
 
         c.type = 'sine';
-        c.frequency.setValueAtTime(3400, now);
+        c.frequency.setValueAtTime(3500, now);
         m.type = 'sine';
-        m.frequency.setValueAtTime(3400 * 11.0, now);
-        mg.gain.setValueAtTime(12000, now);
+        m.frequency.setValueAtTime(3500 * 11.0, now);
+        mg.gain.setValueAtTime(12500, now);
         mg.gain.exponentialRampToValueAtTime(10, now + dur);
 
         amp.gain.setValueAtTime(vol, now);
@@ -5200,7 +5205,7 @@
       } catch(e) {}
     }
 
-    // Patch 8: Laboratory Bubble Pop
+    // Patch 8: Laboratory Cauldron Bubble Pop (Procedural FM surface tension)
     function playFmBubblePop(vol = 0.10) {
       if (!soundEnabled) return;
       initAudio();
@@ -5237,63 +5242,124 @@
       } catch(e) {}
     }
 
-    // Frequency Table: D Dorian / D Aeolian with Andalusian Cadence
+    // Patch 9: Fizzle / Smoke Puff (Failed reaction / invalid action)
+    function playFmFizzle() {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx || !masterGain) return;
+      try {
+        const now = audioCtx.currentTime;
+        const c = audioCtx.createOscillator();
+        const m = audioCtx.createOscillator();
+        const mg = audioCtx.createGain();
+        const amp = audioCtx.createGain();
+
+        c.type = 'sawtooth';
+        c.frequency.setValueAtTime(280, now);
+        c.frequency.exponentialRampToValueAtTime(70, now + 0.22);
+
+        m.type = 'sine';
+        m.frequency.setValueAtTime(280 * 2.8, now);
+        m.frequency.exponentialRampToValueAtTime(70 * 2.8, now + 0.22);
+        mg.gain.setValueAtTime(450, now);
+        mg.gain.exponentialRampToValueAtTime(10, now + 0.22);
+
+        amp.gain.setValueAtTime(0.18, now);
+        amp.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+
+        m.connect(mg); mg.connect(c.frequency);
+        c.connect(amp); amp.connect(masterGain);
+        m.start(now); c.start(now);
+        m.stop(now + 0.22); c.stop(now + 0.22);
+      } catch(e) {}
+    }
+
+    // Precise Note Frequency Reference
     const NOTE = {
-      C2: 65.41,   D2: 73.42,   E2: 82.41,   F2: 87.31,   G2: 98.00,   A2: 110.00,  Bb2: 116.54, B2: 123.47,
-      C3: 130.81,  Csh3: 138.59, D3: 146.83, Eb3: 155.56, E3: 164.81,  F3: 174.61,  G3: 196.00,  A3: 220.00,  Bb3: 233.08, B3: 246.94,
-      C4: 261.63,  Csh4: 277.18, D4: 293.66, Eb4: 311.13, E4: 329.63,  F4: 349.23,  Fsh4: 369.99, G4: 392.00,  A4: 440.00,  Bb4: 466.16, B4: 493.88,
-      C5: 523.25,  Csh5: 554.37, D5: 587.33, Eb5: 622.25, E5: 659.26,  F5: 698.46,  G5: 783.99,  A5: 880.00,  Bb5: 932.33, B5: 987.77,
-      C6: 1046.50, D6: 1174.66, E6: 1318.51, G6: 1567.98
+      // Octave 1 & 2: Bass (strictly <= C3 = 130.81Hz)
+      C2: 65.41,   Csh2: 69.30, D2: 73.42,   Eb2: 77.78,  E2: 82.41,   F2: 87.31,
+      Fsh2: 92.50, G2: 98.00,   Ab2: 103.83, A2: 110.00,  Bb2: 116.54, B2: 123.47,
+      C3: 130.81,
+      // Octave 3 & 4: Harmony / Shells / Mid Melodies
+      Csh3: 138.59, D3: 146.83, Eb3: 155.56, E3: 164.81,  F3: 174.61,  Fsh3: 185.00,
+      G3: 196.00,  Ab3: 207.65, A3: 220.00,  Bb3: 233.08, B3: 246.94,
+      C4: 261.63,  Csh4: 277.18, D4: 293.66, Eb4: 311.13, E4: 329.63,  F4: 349.23,
+      Fsh4: 369.99, G4: 392.00,  Ab4: 415.30, A4: 440.00,  Bb4: 466.16, B4: 493.88,
+      // Octave 5 & 6: Lead & Counter Melodies / Chimes
+      C5: 523.25,  Csh5: 554.37, D5: 587.33, Eb5: 622.25, E5: 659.26,  F5: 698.46,
+      Fsh5: 739.99, G5: 783.99,  Ab5: 830.61, A5: 880.00,  Bb5: 932.33, B5: 987.77,
+      C6: 1046.50, Csh6: 1108.73, D6: 1174.66, E6: 1318.51, F6: 1396.91, Fsh6: 1479.98,
+      G6: 1567.98, A6: 1760.00,  B6: 1975.53
     };
 
     // =========================================================================
-    // Track: "The Hermetic Transmutation"
-    // 32-Step Chiptune Suite (Progression: Dm -> C -> Bb/G -> A7)
-    // 6-Channel Architecture with Counterpoint & Shell Voicings
+    // Track: "The Hermetic Transmutation" (64-Step Chiptune Suite)
+    // Modal Progression: D Dorian -> Cmaj9 / F Lydian -> Bbmaj7 / Gm7 -> A7alt Phrygian
+    // 6 Channels: Ch1 Lead, Ch2 Counter, Ch3 Shells, Ch4 Sub-Bass, Ch5 Drums, Ch6 FX
     // =========================================================================
+
+    // Ch1 Lead Melody: Expressive phrasing with vocal rests and 180ms ramped LFO vibrato
     const bgmLead = [
-      // Bar 1 (Steps 0-7): Dm (Ascending mystical query)
-      NOTE.D4, 0, NOTE.F4, NOTE.G4, NOTE.A4, 0, NOTE.C5, NOTE.A4,
-      // Bar 2 (Steps 8-15): C / F (Long vocal sustain, counter-melody spotlight)
-      NOTE.G4, 0, 0, 0, 0, 0, NOTE.E4, NOTE.F4,
-      // Bar 3 (Steps 16-23): Bb / G (Alchemical transmutation crest)
-      NOTE.Bb4, 0, NOTE.D5, NOTE.C5, NOTE.B4, NOTE.A4, NOTE.G4, NOTE.F4,
-      // Bar 4 (Steps 24-31): A7 (Hermetic tension resolving to C# leading tone)
-      NOTE.E4, 0, NOTE.G4, NOTE.F4, NOTE.E4, 0, NOTE.Csh4, 0
+      // Bar 1 (0-15): D Dorian contemplative flute/celesta theme
+      NOTE.D4, 0, NOTE.F4, 0, NOTE.G4, NOTE.A4, NOTE.C5, 0,
+      NOTE.D5, 0, 0, 0, NOTE.A4, 0, NOTE.F4, 0,
+      // Bar 2 (16-31): Lydian soaring ascension
+      NOTE.E4, 0, NOTE.G4, 0, NOTE.B4, 0, NOTE.C5, NOTE.D5,
+      NOTE.E5, 0, 0, 0, NOTE.D5, 0, NOTE.B4, 0,
+      // Bar 3 (32-47): Alchemical tension & minor fall
+      NOTE.D5, 0, NOTE.Bb4, 0, NOTE.A4, NOTE.G4, NOTE.F4, 0,
+      NOTE.G4, 0, NOTE.Bb4, 0, NOTE.A4, 0, NOTE.F4, 0,
+      // Bar 4 (48-63): A7alt Phrygian dominant climax
+      NOTE.E4, 0, NOTE.G4, 0, NOTE.Bb4, NOTE.Csh5, NOTE.E5, 0,
+      NOTE.F5, NOTE.E5, NOTE.Csh5, 0, NOTE.Csh4, 0, 0, 0
     ];
 
+    // Ch2 Counter-Melody: Contrary motion & dancing crystal glass bells
     const bgmCounter = [
-      // Bar 1 (Steps 0-7): Answering descending bell cascade (contrary motion)
-      0, NOTE.A5, 0, NOTE.F5, 0, NOTE.E5, 0, NOTE.D5,
-      // Bar 2 (Steps 8-15): Melodic spotlight with sparkling crystal 16ths!
-      0, NOTE.E5, NOTE.G5, NOTE.B5, NOTE.C6, NOTE.G5, NOTE.E5, NOTE.D5,
-      // Bar 3 (Steps 16-23): Contrary motion arpeggios
-      NOTE.F5, NOTE.D5, 0, NOTE.Bb4, 0, NOTE.G5, 0, NOTE.E5,
-      // Bar 4 (Steps 24-31): High bell suspension resolving into tonic
-      NOTE.A5, 0, NOTE.G5, 0, NOTE.F5, NOTE.E5, NOTE.Csh5, NOTE.E5
+      // Bar 1 (0-15): Answering crystalline bell cascades in contrary motion
+      0, NOTE.A5, 0, NOTE.F5, 0, 0, 0, NOTE.E5,
+      0, NOTE.F5, NOTE.E5, NOTE.C5, 0, NOTE.D5, 0, NOTE.A5,
+      // Bar 2 (16-31): High bell sparkle when Lead holds
+      0, NOTE.G5, 0, NOTE.E5, 0, NOTE.D5, 0, 0,
+      0, NOTE.G5, NOTE.Fsh5, NOTE.D5, 0, NOTE.E5, 0, NOTE.G5,
+      // Bar 3 (32-47): Weaving contrary motion arpeggios
+      0, NOTE.F5, 0, NOTE.D5, 0, 0, 0, NOTE.A5,
+      0, NOTE.Bb5, NOTE.A5, NOTE.F5, 0, NOTE.G5, 0, NOTE.D5,
+      // Bar 4 (48-63): Dominant trill & descending resolution into tonic
+      0, NOTE.A5, 0, NOTE.E5, 0, 0, 0, NOTE.G5,
+      0, NOTE.A5, NOTE.G5, NOTE.F5, NOTE.E5, NOTE.Csh5, NOTE.E5, 0
     ];
 
-    // Shell Voicings: Root in Bass, 3rd + 7th in Upper Voice (No 5th doubling)
+    // Ch3 Shell Voicings: Strict 3rd + 7th voicings only (never double the 5th!)
     const bgmHarmony = [
-      // Bar 1 (Dm): Off-beat stabs [F4 (3rd), C5 (7th)]
+      // Bar 1 (Dm7 -> G7): [F4, C5] on Dm7, [F4, B4] on G7
       null, null, [NOTE.F4, NOTE.C5], null, null, null, [NOTE.F4, NOTE.C5], null,
-      // Bar 2 (C7): Off-beat stabs [E4 (3rd), Bb4 (7th)]
-      null, null, [NOTE.E4, NOTE.Bb4], null, null, null, [NOTE.E4, NOTE.Bb4], null,
-      // Bar 3 (Bbmaj7 / G7): Steps 18 [D4, A4] and 22 [B3, F4]
-      null, null, [NOTE.D4, NOTE.A4], null, null, null, [NOTE.B3, NOTE.F4], null,
-      // Bar 4 (A7): Steps 26 & 30 [C#4, G4] (Tritone dominant tension)
-      null, null, [NOTE.Csh4, NOTE.G4], null, null, null, [NOTE.Csh4, NOTE.G4], null
+      null, null, [NOTE.F4, NOTE.B4], null, null, null, [NOTE.F4, NOTE.B4], null,
+      // Bar 2 (Cmaj7 -> Fmaj7): [E4, B4] on Cmaj7, [A4, E5] on Fmaj7
+      null, null, [NOTE.E4, NOTE.B4], null, null, null, [NOTE.E4, NOTE.B4], null,
+      null, null, [NOTE.A4, NOTE.E5], null, null, null, [NOTE.A4, NOTE.E5], null,
+      // Bar 3 (Bbmaj7 -> Gm7): [D4, A4] on Bbmaj7, [Bb3, F4] on Gm7
+      null, null, [NOTE.D4, NOTE.A4], null, null, null, [NOTE.D4, NOTE.A4], null,
+      null, null, [NOTE.Bb3, NOTE.F4], null, null, null, [NOTE.Bb3, NOTE.F4], null,
+      // Bar 4 (A7 -> A7b9): [C#4, G4] on A7, [C#4, Bb4] on A7b9
+      null, null, [NOTE.Csh4, NOTE.G4], null, null, null, [NOTE.Csh4, NOTE.G4], null,
+      null, null, [NOTE.Csh4, NOTE.Bb4], null, null, null, [NOTE.Csh4, NOTE.G4], null
     ];
 
+    // Ch4 FM Bass: Melodic 2-Op sub bass strictly below C3 (130.81Hz)
     const bgmBass = [
-      // Bar 1 (Dm): Steps 0-7 - Melodic counterpoint with root & octave motion
-      NOTE.D2, 0, NOTE.D3, NOTE.D2, NOTE.F2, NOTE.G2, NOTE.A2, NOTE.D3,
-      // Bar 2 (C): Steps 8-15 - Stepwise walking run
-      NOTE.C2, 0, NOTE.C3, NOTE.C2, NOTE.E2, NOTE.G2, NOTE.C3, NOTE.B2,
-      // Bar 3 (Bb/G): Steps 16-23 - Contrary motion
-      NOTE.Bb2, 0, NOTE.Bb2, NOTE.D3, NOTE.G2, NOTE.B2, NOTE.D3, NOTE.G2,
-      // Bar 4 (A7): Steps 24-31 - Dominant push with C# leading tone
-      NOTE.A2, 0, NOTE.E3, NOTE.A2, NOTE.A2, NOTE.Csh3, NOTE.E3, NOTE.A2
+      // Bar 1 (Dm -> G): D2, A2, C3, D2, G2, B2, D2
+      NOTE.D2, 0, NOTE.A2, NOTE.D2, 0, NOTE.F2, NOTE.G2, NOTE.A2,
+      NOTE.G2, 0, NOTE.B2, NOTE.G2, 0, NOTE.F2, NOTE.E2, NOTE.C2,
+      // Bar 2 (C -> F): C2, G2, C3, E2, F2, C3, A2, G2
+      NOTE.C2, 0, NOTE.G2, NOTE.C3, 0, NOTE.E2, NOTE.G2, NOTE.B2,
+      NOTE.F2, 0, NOTE.C3, NOTE.A2, 0, NOTE.G2, NOTE.E2, NOTE.C2,
+      // Bar 3 (Bb -> Gm): Bb2, F2, Bb2, D2, G2, D2, G2, Bb2
+      NOTE.Bb2, 0, NOTE.F2, NOTE.Bb2, 0, NOTE.D2, NOTE.F2, NOTE.A2,
+      NOTE.G2, 0, NOTE.D2, NOTE.G2, 0, NOTE.Bb2, NOTE.A2, NOTE.F2,
+      // Bar 4 (A7alt): A2, E2, A2, G2, A2, C#2, E2, G2
+      NOTE.A2, 0, NOTE.E2, NOTE.A2, 0, NOTE.G2, NOTE.F2, NOTE.E2,
+      NOTE.A2, 0, NOTE.Csh2, NOTE.E2, NOTE.G2, 0, NOTE.A2, NOTE.Csh2
     ];
 
     let bgmStep = 0;
@@ -5317,10 +5383,10 @@
 
     function scheduleBgmStep() {
       if (!bgmRunning || !soundEnabled) return;
-      // 5:3 Swing groove: 170ms on even steps, 110ms on odd steps (~107 BPM 16ths)
+      // 5:3 Swing groove: 165ms on even steps, 110ms on odd steps (~109 BPM swing)
       const isEven = (bgmStep % 2 === 0);
-      const nextDelay = isEven ? 170 : 110;
-      playBgmStep(bgmStep % 32);
+      const nextDelay = isEven ? 165 : 110;
+      playBgmStep(bgmStep % 64);
       bgmStep++;
       bgmTimer = setTimeout(scheduleBgmStep, nextDelay);
     }
@@ -5328,45 +5394,46 @@
     function playBgmStep(step) {
       if (!soundEnabled) return;
 
-      // Channel 4: Bass
+      // Channel 4: Bass (Strictly dry, <= C3)
       const b = bgmBass[step];
       if (b) playFmBass(b, 0.12, 0.22);
 
-      // Channel 1: Lead Melody
+      // Channel 1: Lead Melody (With delayed vibrato & delay echo)
       const l = bgmLead[step];
       if (l) playFmLead(l, 0.26, 0.18, true);
 
-      // Channel 2: Counter-Melody
+      // Channel 2: Counter-Melody (Glass bells & delay echo)
       const c = bgmCounter[step];
       if (c) playFmCounter(c, 0.20, 0.15, true);
 
-      // Channel 3: Shell Harmony
+      // Channel 3: Shell Harmony (3rd + 7th pad with delay echo)
       const h = bgmHarmony[step];
       if (h && Array.isArray(h)) {
         h.forEach(freq => playFmHarmony(freq, 0.22, 0.09, true));
       }
 
-      // Channel 5: Percussion (Kick & Snare)
-      if (step === 0 || step === 8 || step === 16 || step === 24 || step === 28) {
-        playFmKick(step === 28 ? 0.18 : 0.22);
+      // Channel 5: Percussion (FM Pitch-Drop Kick & High-MUL Noise Snare)
+      const barStep = step % 16;
+      if (barStep === 0 || barStep === 8 || barStep === 14) {
+        playFmKick(barStep === 14 ? 0.17 : 0.23);
       }
-      if (step === 4 || step === 12 || step === 20 || step === 28) {
-        playFmSnare(0.15);
-      } else if (step === 30) {
-        playFmSnare(0.09); // Ghost snare
+      if (barStep === 4 || barStep === 12) {
+        playFmSnare(0.16);
+      } else if (barStep === 15 && (step === 31 || step === 63)) {
+        playFmSnare(0.10); // Section turnaround ghost snare
       }
 
-      // Channel 6: Hi-Hat & Bubbling FX
+      // Channel 6: Inharmonic Metallic Hi-Hats & Alchemical Cauldron Bubbles
       if (step % 2 === 1) {
-        const isOpen = (step === 14 || step === 30);
-        playFmHiHat(isOpen ? 0.08 : 0.05, isOpen);
+        const isOpen = (barStep === 15);
+        playFmHiHat(isOpen ? 0.08 : 0.045, isOpen);
       }
-      if (step === 6 || step === 14 || step === 22) {
-        playFmBubblePop(0.08);
+      if (barStep === 6 || barStep === 10) {
+        playFmBubblePop(0.085);
       }
     }
 
-    // Upgraded Backward-Compatible playChime
+    // Upgraded Universal FM Synthesizer for retro tone calls
     function playChime(freq, type = 'sine', duration = 0.2) {
       if (!soundEnabled || !freq) return;
       if (type === 'sawtooth') {
@@ -5380,48 +5447,54 @@
       }
     }
 
-    // Action Stingers & Apparatus Sounds
+    // =========================================================================
+    // Action Stingers & Apparatus Earcons
+    // =========================================================================
+
     function playBubbleSimmer() {
       if (!soundEnabled) return;
       for (let i = 0; i < 5; i++) {
-        setTimeout(() => playFmBubblePop(0.11), i * 42 + Math.random() * 25);
+        setTimeout(() => playFmBubblePop(0.12), i * 45 + Math.random() * 25);
       }
     }
 
     function playGlassClinker(pitchMult = 1.0) {
       if (!soundEnabled) return;
       const baseFreq = 1800 * pitchMult;
-      playFmCounter(baseFreq, 0.18, 0.14, true);
+      playFmCounter(baseFreq, 0.18, 0.15, true);
       playFmTone(baseFreq * 1.48, 2.76, 2.8, 0.16, 0.10, true);
     }
 
     function playTransmutationZap() {
       if (!soundEnabled) return;
-      playFmTone(160, 2.5, 4.8, 0.24, 0.18, true);
-      setTimeout(() => playFmTone(640, 1.5, 3.2, 0.18, 0.16, true), 60);
-      setTimeout(() => playFmCounter(1318.51, 0.35, 0.18, true), 120);
+      // 3-stage alchemical transmutation reaction: sub swell -> ionized FM sizzle -> crystal shimmer
+      playFmTone(140, 2.5, 5.2, 0.22, 0.20, false);
+      setTimeout(() => playFmTone(680, 1.5, 3.6, 0.18, 0.18, true), 60);
+      setTimeout(() => playFmCounter(1318.51, 0.38, 0.20, true), 130);
     }
 
     function playDiscoveryChime() {
       if (!soundEnabled) return;
-      const freqs = [NOTE.C5, NOTE.E5, NOTE.G5, NOTE.C6, NOTE.E6];
+      // 5-note Dorian celesta arpeggio (C5, E5, G5, B5, D6)
+      const freqs = [NOTE.C5, NOTE.E5, NOTE.G5, NOTE.B5, NOTE.D6];
       freqs.forEach((f, idx) => {
-        setTimeout(() => playFmCounter(f, 0.45, 0.16, true), idx * 55);
+        setTimeout(() => playFmCounter(f, 0.45, 0.16, true), idx * 60);
       });
     }
 
     function playMagicFanfare() {
       if (!soundEnabled) return;
-      // Triumphant Mario/Heroic Dorian Cadence: Bb4 -> C5 -> D5 with brass & bells
+      // Triumphant alchemical fanfare: Bb4 -> C5 -> D5 -> G5 with FM brass & crystal bells
       const fanNotes = [
         { f: NOTE.Bb4, d: 0.18, t: 0 },
-        { f: NOTE.C5,  d: 0.20, t: 140 },
-        { f: NOTE.D5,  d: 0.48, t: 300 }
+        { f: NOTE.C5,  d: 0.20, t: 130 },
+        { f: NOTE.D5,  d: 0.24, t: 270 },
+        { f: NOTE.G5,  d: 0.55, t: 430 }
       ];
       fanNotes.forEach(fn => {
         setTimeout(() => {
-          playFmHarmony(fn.f, fn.d, 0.22, true);
-          playFmCounter(fn.f * 2, fn.d, 0.16, true);
+          playFmHarmony(fn.f, fn.d, 0.24, true);
+          playFmCounter(fn.f * 2, fn.d, 0.18, true);
         }, fn.t);
       });
     }
@@ -5436,12 +5509,12 @@
 
     function playFmBrewingPotion() {
       if (!soundEnabled) return;
-      const brewNotes = [NOTE.D4, NOTE.F4, NOTE.G4, NOTE.A4, NOTE.C5];
+      const brewNotes = [NOTE.D4, NOTE.F4, NOTE.G4, NOTE.A4, NOTE.C5, NOTE.D5];
       brewNotes.forEach((f, idx) => {
         setTimeout(() => {
-          playFmLead(f, 0.14, 0.16, true);
+          playFmLead(f, 0.15, 0.18, true);
           playFmBubblePop(0.10);
-        }, idx * 75);
+        }, idx * 70);
       });
     }
 
@@ -5449,7 +5522,7 @@
       if (!soundEnabled) return;
       const elixirNotes = [NOTE.E5, NOTE.G5, NOTE.A5, NOTE.C6, NOTE.D6, NOTE.E6];
       elixirNotes.forEach((f, idx) => {
-        setTimeout(() => playFmCounter(f, 0.22, 0.14, true), idx * 60);
+        setTimeout(() => playFmCounter(f, 0.24, 0.15, true), idx * 55);
       });
     }
 
@@ -5457,7 +5530,7 @@
       if (!soundEnabled) return;
       const retortNotes = [NOTE.F4, NOTE.A4, NOTE.C5, NOTE.E5, NOTE.A5];
       retortNotes.forEach((f, idx) => {
-        setTimeout(() => playFmTone(f, 2.76, 3.0, 0.16, 0.14, true), idx * 55);
+        setTimeout(() => playFmTone(f, 2.76, 3.2, 0.18, 0.15, true), idx * 55);
       });
     }
 
@@ -5465,15 +5538,15 @@
       if (!soundEnabled) return;
       const alembicNotes = [NOTE.A4, NOTE.C5, NOTE.E5, NOTE.G5, NOTE.C6];
       alembicNotes.forEach((f, idx) => {
-        setTimeout(() => playFmCounter(f, 0.35, 0.15, true), idx * 50);
+        setTimeout(() => playFmCounter(f, 0.38, 0.16, true), idx * 50);
       });
     }
 
     function playFmAnvilStrike() {
       if (!soundEnabled) return;
-      playFmBass(90, 0.25, 0.35);
-      playFmTone(640, 1.0, 4.0, 0.18, 0.25, false);
-      setTimeout(() => playFmCounter(1280, 0.30, 0.20, true), 40);
+      playFmBass(NOTE.F2, 0.25, 0.36);
+      playFmTone(640, 1.0, 4.2, 0.18, 0.26, false);
+      setTimeout(() => playFmCounter(1280, 0.32, 0.22, true), 40);
     }
 
 
@@ -6199,9 +6272,13 @@
           cancelAnimationFrame(animFrameId);
           animFrameId = null;
         }
+        stopBgm();
       } else {
         if (!animFrameId) {
           animFrameId = requestAnimationFrame(updateParticles);
+        }
+        if (soundEnabled && !bgmRunning) {
+          startBgm();
         }
       }
     });

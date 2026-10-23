@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -27,7 +27,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://scallion
   kilo_graphics: KAlchemy
-  kilo_soundscape: KAlchemy
+  kilo_soundscape: KFarm
   kilo_tester: KDB
   kilo_usability: KCipher
   kilo_qa: KDB
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KStarship
-  timestamp: '2026-10-23T13:06:33-07:00'
+  agent: kilo-soundscape
+  app: KAlchemy
+  timestamp: '2026-10-23T13:22:28-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -109,11 +109,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Active Target**: `KAlchemy`
+- **Active Target**: `KFarm`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Compose mystical alchemical workshop 6-channel suite (Dorian/Lydian celesta bells, warm glass pad, bubbling FM cauldron transients, transmutation fanfare stingers). |
 | `KFarm` | `KiloOS/public/apps/kfarm.html` | Compose pastoral 16-bit harvest & seasonal town 6-channel suite (Major pentatonic / Mixolydian acoustic FM guitar, warm marimba counter-melody, brushed snare groove, harvest earcons). |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
@@ -123,6 +122,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Compose high-energy 6-channel YM2612 FM arcade synthwave theme (Ionian/Mixolydian, 5:3 swing groove, slap bass, brass lead, selective SPC700 delay) + harmonic brick-hit combo pitch escalator and powerup earcons. |
 | `KQuest` | `KiloOS/public/apps/kquest.html` | Compose overworld & battle 6-channel JRPG chiptune suite (Royal Road `IV-V-iii-vi` town/overworld + Heroic `bVI-bVII-I` combat cadence, E-Piano & flute counterpoint, SPC700 echo) + spell/quest earcons. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Compose bridge alert & deep-space exploration 6-channel FM suite (Lydian `#4` pad + tactical Phrygian Dominant combat march, sonar/shield/warp earcons). |
+| `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Compose mystical alchemical workshop 6-channel suite (Dorian/Lydian celesta bells, warm glass pad, bubbling FM cauldron transients, transmutation fanfare stingers). |
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Active Target**: `KDB`
@@ -229,6 +229,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T13:22:28-07:00 — kilo-soundscape: KAlchemy (The Hermetic Transmutation — YM2612/SPC700 Chiptune Suite)**
+  - Status: PASS ✅ (0 errors, web 256.2 KB, native 68.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - Composition: D Dorian / Lydian expansion, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
+  - Patches & DSP: 2-Op FM lead w/ 180ms vibrato, celesta bells, sub-bass (<= C3), selective 200ms SPC700 delay.
+  - Handoff: Advanced `kilo-soundscape` to `KFarm`; rotated active agent to `kilo-tester`.
+
 - **2026-10-23T13:06:33-07:00 — kilo-graphics: KStarship (Starship Bridge, Schematics & Nebula Parallax Upgrade)**
   - Status: PASS ✅ (web 187.6 KB, native 143.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - Added interactive top-down starship hull subsystem schematic HUD with real-time deflector shield, weapon, engine, and reactor telemetry.
@@ -253,9 +259,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kconverter_tutorialSeen flag, and Escape modal dismissals.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity across 14 categories and visibilitychange timer cleanup.
   - Mature Quarantine & Handoff: Promoted `KConverter` to Mature archive; advanced `kilo-qa` to `KDB`; next agent `kilo-expander`.
-
-- **2026-10-23T12:05:20-07:00 — kilo-usability: KClip (Usability & Ergonomics Polish)**
-  - Status: PASS ✅ (0 errors, web 207.0 KB, native 21.5 KB < 999 KB; startup, Vite & security_lint PASS).
-  - Keyboard & Navigation: Added clip card ArrowUp/Down navigation, Enter to copy snippet, Tab modal focus trapping, and modal focus restoration.
-  - Diff & Tabs: Added high-contrast Diff View tab comparing active clip with previous buffer, enhanced hex/html/image tabs with crisp contrast.
-  - Mature Quarantine & Handoff: Promoted `KClip` to Mature archive; advanced `kilo-usability` to `KCipher`; next agent `kilo-qa`.
