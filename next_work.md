@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ current_targets:
   kilo_creator: kweb://slashnet
   kilo_graphics: KRogue
   kilo_soundscape: KQuest
-  kilo_tester: KPass
+  kilo_tester: KConverter
   kilo_usability: KConverter
   kilo_qa: KHex
   kilo_expander: KCipher
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KBreakout
-  timestamp: '2026-10-23T07:41:43-07:00'
+  agent: kilo-tester
+  app: KPass
+  timestamp: '2026-10-23T07:51:18-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -125,11 +125,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Compose high-energy 6-channel YM2612 FM arcade synthwave theme (Ionian/Mixolydian, 5:3 swing groove, slap bass, brass lead, selective SPC700 delay) + harmonic brick-hit combo pitch escalator and powerup earcons. |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KPass`
+- **Active Target**: `KConverter`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPass` | `KiloOS/public/apps/kpass.html`, `KPass/main.c` | Audit password generator, entropy visualizer, AES vault lock/unlock modals, keyboard shortcuts, and input focus guards; promote to Mature if 0 defects remain. |
 | `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Audit all 14 dimensional conversion categories, engineering notation toggle, reciprocal swap, presets, and F5/F9 persistence. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | Audit hex byte editor, multi-arch opcode disassembler (x86/6502/Z80), search/patch modals, and VFS file loading hooks. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Audit cipher workbench (AES/XOR/Vigenère/ROT13/RSA toy), frequency histogram, key input guards, and VFS import/export. |
@@ -163,7 +162,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 |---|---|---|
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | Pass 5 QA: verify F5/F9 hex buffer & disassembler state persistence, `khex_tutorialSeen` flag, VFS file open/save, and clean Win32 C build (`KHex.exe` <999 KB); promote to Mature if complete. |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA: verify custom glyph bitmap F5/F9 persistence, first-run tutorial flag, Escape modal dismissals, and dual Win32 C build (`KFont.exe` <999 KB); promote to Mature if complete. |
-| `KPass` | `KiloOS/public/apps/kpass.html`, `KPass/main.c` | Pass 5 QA: verify encrypted vault F5/F9 persistence, tutorial flag, lock timeout cleanup, and dual Win32 C build (`KPass.exe` <999 KB); promote to Mature if complete. |
 | `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Pass 5 QA: verify 14-category custom unit/history F5/F9 persistence, tutorial flag, and dual Win32 C build (`KConverter.exe` <999 KB); promote to Mature if complete. |
 | `KClip` | `KiloOS/public/apps/kclip.html`, `KClip/main.c` | Pass 5 QA: verify snippet vault & pinned history F5/F9 persistence, tutorial flag, and dual Win32 C build (`KClip.exe` <999 KB); promote to Mature if complete. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA: verify multi-table schema/rows F5/F9 persistence, first-run tutorial flag, and dual Win32 C build (`KDB.exe` <999 KB); promote to Mature if complete. |
@@ -198,6 +196,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KPass** | `KiloOS/public/apps/kpass.html` | Pass 5+ (2026-10-23) | Security / Vault | Feature-complete retro password manager & vault; 4 generator modes, entropy visualizer, AES-GCM 256 encrypted vault, security audit scanner, export suite, F5/F9 persistence, dual Win32 C parity. |
 | **KSpace** | `KiloOS/public/apps/kspace.html` | Pass 5 (2026-10-23) | Action / Deep Space Shooter | 6-chassis space shooter, 12 enemy archetypes, 3 boss flagships, F5/F9 state persistence, first-run tutorial integrity, replay telemetry, dual Win32 native client parity. |
 | **KBase** | `KiloOS/public/apps/kbase.html` | Pass 5+ (2026-10-23) | Dev / Radix Converter | Full multi-base studio (radix 2-36, BCD, Gray, Base32/58/64, ULEB/SLEB128, IEEE-754, bitboard matrix), F5/F9 state, export suite (CSV/MD/JSON), dual Win32 C parity. |
 | **KTowers** | `KiloOS/public/apps/ktowers.html` | Pass 6+ (2026-10-08) | Puzzle / Strategy | Feature-complete Tower of Hanoi variant; full state persistence, responsive controls, zero glints. |
@@ -236,6 +235,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T07:51:18-07:00 — kilo-tester: KPass (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 139.1 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS).
+  - UI & Hotkey Audit: Password generator (4 modes), entropy visualizer, AES vault lock/unlock modals, Esc dismissal, F1/F5/F9, and input focus guards verified.
+  - Repairs: Removed dead conditional tutorial hotkey block and tightened active/target input focus guards; 0 defects remaining; promoted to Mature.
+  - Mature Quarantine & Handoff: Promoted `KPass` to Mature archive; advanced `kilo-tester` to `KConverter`; next agent `kilo-usability`.
+
 - **2026-10-23T07:41:43-07:00 — kilo-soundscape: KBreakout (Neon Deflector: Superluminal Orbit — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 177.5 KB, native 55.0 KB < 999 KB; startup, Vite & security_lint PASS).
   - Composition: D Dorian / D minor synthwave, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
@@ -261,10 +266,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Directory & Search Alignment: Linked KiloAuctions into quick bar, tab row, search index, and registered missing fleet apps (`kquarantine`, `kcontribute`) to achieve 100% fleet search coverage.
   - Verification: Startup test PASS (670.4 KB < 999 KB, 0 JS errors, hit-test unblocked), Vite build clean (929ms), security lint PASS.
   - Queue Handoff: Advanced `kilo_creator` and `virtual_web_target` to `kweb://slashnet`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-23T05:35:00-07:00 — kilo-expander: KConverter (Dimensional Conversion & Precision Expansion)**
-  - Status: PASS ✅ (0 runtime errors, startup check clean 124.4 KB, Vite build clean in 486ms).
-  - Feature Expansion: Added 5 categories (Data Rate, Angle/GPS, Audio Pitch, Energy, Power) for 14 total categories.
-  - Engineering & Reciprocal: Added Engineering notation, up to 10 decimal precision, live reciprocal ratio equations & telemetry.
-  - Parity & Builds: Dual Win32 C parity complete; compiled clean with CL/RC (32 KB); byte-budget & security lint 100% PASS.
-  - Handoff: Advanced kilo-expander to KTrader; rotated active agent to kilo-creator.

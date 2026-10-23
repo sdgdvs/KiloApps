@@ -2123,39 +2123,6 @@
             return;
         }
 
-        if (false) {
-            if (e.key === 'Escape') {
-                closeTutorial();
-                return;
-            }
-            if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                advanceTutorial();
-                return;
-            }
-            if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                prevTutorial();
-                return;
-            }
-            if (e.key === 'Enter' || e.key === ' ') {
-                if (e.target === btnTutPrev) {
-                    e.preventDefault();
-                    prevTutorial();
-                    return;
-                }
-                if (e.target === btnTutClose) {
-                    e.preventDefault();
-                    closeTutorial();
-                    return;
-                }
-                e.preventDefault();
-                advanceTutorial();
-                return;
-            }
-            return;
-        }
-
         if (e.key === 'Escape') {
             if (helpOverlay.style.display === 'flex' || editModal.style.display === 'flex' || deleteModal.style.display === 'flex' || (tutorialOverlay && tutorialOverlay.style.display === 'flex')) {
                 closeModals();
@@ -2261,7 +2228,12 @@
             return;
         }
 
-        const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName);
+        const activeTag = (document.activeElement && document.activeElement.tagName) || '';
+        const targetTag = (e.target && e.target.tagName) || '';
+        const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(activeTag) ||
+                        ['INPUT', 'SELECT', 'TEXTAREA'].includes(targetTag) ||
+                        !!(document.activeElement && document.activeElement.isContentEditable) ||
+                        !!(e.target && e.target.isContentEditable);
         if (!isInput && lockScreen.style.display === 'none') {
             if (e.key === 'Enter' && contentGen.style.display !== 'none') {
                 e.preventDefault();
