@@ -1,0 +1,2890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trapster v1.0b - P2P Chiptune &amp; Tracker Exchange</title>
+<meta name="description" content="Trapster P2P Chiptune &amp; Tracker Exchange v1.0b (1999) - Search, preview, and download .MOD, .XM, .S3M, and .TRK modules across the KiloNet peer-to-peer swarm.">
+<style>
+  :root {
+    --win-bg: #c0c0c0;
+    --win-dark: #808080;
+    --win-darker: #404040;
+    --win-light: #dfdfdf;
+    --win-bright: #ffffff;
+    --win-blue: #000080;
+    --win-blue-light: #1084d0;
+    --win-text: #000000;
+    --win-text-light: #ffffff;
+    --trap-green: #00ff66;
+    --trap-green-dim: #008833;
+    --trap-amber: #ffaa00;
+    --trap-cyan: #00e5ff;
+    --trap-red: #ff3333;
+    --screen-bg: #0c1214;
+    --screen-border: #1a2a30;
+    --font-ui: "Tahoma", "MS Sans Serif", "Segoe UI", sans-serif;
+    --font-mono: "Consolas", "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+  body {
+    background-color: #2b3a42;
+    background-image: 
+      radial-gradient(#3a4e59 1px, transparent 1px),
+      linear-gradient(135deg, #1f2a30 0%, #30414a 100%);
+    background-size: 16px 16px, 100% 100%;
+    color: var(--win-text);
+    font-family: var(--font-ui);
+    font-size: 11px;
+    line-height: 1.3;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* 3D Bevel Utility Classes */
+  .bevel-outset {
+    border-top: 2px solid var(--win-bright);
+    border-left: 2px solid var(--win-bright);
+    border-right: 2px solid var(--win-darker);
+    border-bottom: 2px solid var(--win-darker);
+    background: var(--win-bg);
+  }
+  .bevel-inset {
+    border-top: 2px solid var(--win-darker);
+    border-left: 2px solid var(--win-darker);
+    border-right: 2px solid var(--win-bright);
+    border-bottom: 2px solid var(--win-bright);
+    background: var(--win-bg);
+  }
+  .bevel-field {
+    border-top: 2px solid #404040;
+    border-left: 2px solid #404040;
+    border-right: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+    background: #ffffff;
+    color: #000000;
+  }
+
+  /* App Window Frame */
+  #appWindow {
+    flex: 1;
+    margin: 4px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    overflow: hidden;
+  }
+
+  /* Title Bar */
+  .title-bar {
+    background: linear-gradient(90deg, var(--win-blue) 0%, var(--win-blue-light) 100%);
+    color: var(--win-text-light);
+    font-weight: bold;
+    padding: 3px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .title-bar-text {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+  }
+  .title-icon {
+    font-size: 13px;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+  }
+  .title-bar-controls {
+    display: flex;
+    gap: 2px;
+  }
+  .win-btn {
+    width: 16px;
+    height: 14px;
+    background: var(--win-bg);
+    border-top: 1px solid var(--win-bright);
+    border-left: 1px solid var(--win-bright);
+    border-right: 1px solid var(--win-darker);
+    border-bottom: 1px solid var(--win-darker);
+    font-size: 9px;
+    line-height: 11px;
+    text-align: center;
+    cursor: pointer;
+    font-family: monospace;
+    font-weight: bold;
+  }
+  .win-btn:active {
+    border-top: 1px solid var(--win-darker);
+    border-left: 1px solid var(--win-darker);
+    border-right: 1px solid var(--win-bright);
+    border-bottom: 1px solid var(--win-bright);
+  }
+
+  /* Menu Bar */
+  .menu-bar {
+    background: var(--win-bg);
+    border-bottom: 1px solid var(--win-dark);
+    display: flex;
+    gap: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .menu-item {
+    cursor: pointer;
+    padding: 1px 4px;
+  }
+  .menu-item:hover {
+    background: var(--win-blue);
+    color: var(--win-text-light);
+  }
+  .menu-item span {
+    text-decoration: underline;
+  }
+
+  /* Top Navigation & Brand Header */
+  .header-panel {
+    background: var(--win-bg);
+    border-bottom: 2px solid var(--win-dark);
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .brand-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-cat {
+    width: 36px;
+    height: 36px;
+    background: radial-gradient(circle at 35% 35%, #00e5ff 0%, #005577 60%, #001122 100%);
+    border: 2px solid #000;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: inset 1px 1px 2px rgba(255,255,255,0.7), 1px 1px 3px rgba(0,0,0,0.5);
+  }
+  .logo-text h1 {
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 0.6px;
+    color: #002244;
+    text-shadow: 1px 1px 0 #ffffff;
+  }
+  .logo-text .subtitle {
+    font-size: 10px;
+    color: #405565;
+    font-weight: normal;
+  }
+  .header-stats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #000000;
+    color: var(--trap-green);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 2px inset var(--win-dark);
+    box-shadow: inset 0 0 8px rgba(0,255,102,0.25);
+  }
+  .stat-led {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--trap-green);
+    box-shadow: 0 0 6px var(--trap-green);
+    margin-right: 4px;
+    animation: pulseLed 2s infinite ease-in-out;
+  }
+  @keyframes pulseLed {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+  }
+
+  /* Main Tab Strip */
+  .tab-bar {
+    background: var(--win-bg);
+    display: flex;
+    gap: 3px;
+    padding: 4px 6px 0 6px;
+    border-bottom: 2px solid var(--win-darker);
+    flex-shrink: 0;
+  }
+  .tab-btn {
+    padding: 4px 12px 3px 12px;
+    background: var(--win-light);
+    border-top: 2px solid var(--win-bright);
+    border-left: 2px solid var(--win-bright);
+    border-right: 2px solid var(--win-darker);
+    border-bottom: none;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    position: relative;
+    top: 2px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+  }
+  .tab-btn.active {
+    background: var(--win-bg);
+    border-bottom: 2px solid var(--win-bg);
+    font-weight: bold;
+    padding-top: 5px;
+    top: 0;
+    z-index: 2;
+  }
+  .tab-badge {
+    background: #000080;
+    color: #fff;
+    font-size: 9px;
+    padding: 0 4px;
+    border-radius: 6px;
+  }
+
+  /* Content Workspace */
+  .tab-content-area {
+    flex: 1;
+    background: var(--win-bg);
+    padding: 6px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .tab-panel {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .tab-panel.active {
+    display: flex;
+  }
+
+  /* Toolbar buttons */
+  .btn-win {
+    background: var(--win-bg);
+    border-top: 2px solid var(--win-bright);
+    border-left: 2px solid var(--win-bright);
+    border-right: 2px solid var(--win-darker);
+    border-bottom: 2px solid var(--win-darker);
+    padding: 3px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: var(--font-ui);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn-win:active {
+    border-top: 2px solid var(--win-darker);
+    border-left: 2px solid var(--win-darker);
+    border-right: 2px solid var(--win-bright);
+    border-bottom: 2px solid var(--win-bright);
+    padding: 4px 7px 2px 9px;
+  }
+  .btn-win:disabled {
+    color: var(--win-dark);
+    cursor: default;
+    border-top: 2px solid var(--win-light);
+    border-left: 2px solid var(--win-light);
+    border-right: 2px solid var(--win-dark);
+    border-bottom: 2px solid var(--win-dark);
+  }
+  .btn-win.btn-primary {
+    font-weight: bold;
+    color: #000080;
+  }
+
+  /* --- TAB: SEARCH --- */
+  .search-filter-box {
+    padding: 8px;
+    margin-bottom: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .input-text {
+    padding: 2px 5px;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    outline: none;
+    user-select: text;
+  }
+  .input-select {
+    padding: 1px 4px;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    outline: none;
+    background: #fff;
+  }
+  .quick-chips {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .chip-tag {
+    font-size: 10px;
+    padding: 1px 6px;
+    background: #e8e8e8;
+    border: 1px solid #808080;
+    cursor: pointer;
+    text-decoration: underline;
+    color: #000080;
+  }
+  .chip-tag:hover {
+    background: #000080;
+    color: #fff;
+  }
+
+  /* Data Table Styles (Napster-style listview) */
+  .table-container {
+    flex: 1;
+    overflow: auto;
+    background: #ffffff;
+    position: relative;
+  }
+  table.p2p-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    font-family: var(--font-ui);
+    white-space: nowrap;
+  }
+  table.p2p-table th {
+    position: sticky;
+    top: 0;
+    background: var(--win-bg);
+    border-top: 1px solid var(--win-bright);
+    border-left: 1px solid var(--win-bright);
+    border-right: 1px solid var(--win-darker);
+    border-bottom: 1px solid var(--win-darker);
+    padding: 3px 6px;
+    text-align: left;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 10;
+  }
+  table.p2p-table th:active {
+    border-top: 1px solid var(--win-darker);
+    border-left: 1px solid var(--win-darker);
+    border-right: 1px solid var(--win-bright);
+    border-bottom: 1px solid var(--win-bright);
+  }
+  table.p2p-table td {
+    padding: 2px 6px;
+    border-right: 1px dotted #d0d0d0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  table.p2p-table tr:hover td {
+    background: #eef6ff;
+  }
+  table.p2p-table tr.selected td {
+    background: #000080 !important;
+    color: #ffffff !important;
+  }
+  .badge-fmt {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: bold;
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+  .fmt-mod { background: #e0f2fe; color: #0284c7; }
+  .fmt-xm  { background: #fef3c7; color: #d97706; }
+  .fmt-s3m { background: #f3e8ff; color: #9333ea; }
+  .fmt-it  { background: #dcfce7; color: #16a34a; }
+  .fmt-trk { background: #fee2e2; color: #dc2626; }
+
+  .action-bar {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+
+  /* --- TAB: TRANSFERS / QUEUE --- */
+  .transfers-split {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .section-label {
+    font-weight: bold;
+    font-size: 11px;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .prog-bar-outer {
+    background: #e0e0e0;
+    border: 1px solid #808080;
+    height: 12px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  .prog-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, #000080, #1084d0);
+    width: 0%;
+    transition: width 0.2s linear;
+  }
+  .prog-bar-text {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    top: 0;
+    line-height: 12px;
+    font-size: 9px;
+    font-family: var(--font-mono);
+    color: #000;
+  }
+
+  /* --- TAB: LIVE CHIPTUNE PLAYER --- */
+  .player-container {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 8px;
+    overflow: hidden;
+  }
+  @media (max-width: 800px) {
+    .player-container {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+    }
+  }
+
+  .player-left {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .deck-screen {
+    background: var(--screen-bg);
+    border: 3px inset #101c22;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: inset 0 0 16px rgba(0, 229, 255, 0.15);
+  }
+  .deck-title {
+    color: var(--trap-green);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 0 6px rgba(0, 255, 102, 0.6);
+  }
+  .deck-artist {
+    color: var(--trap-cyan);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-shadow: 0 0 4px rgba(0, 229, 255, 0.5);
+  }
+  .deck-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    background: rgba(0,0,0,0.5);
+    padding: 4px;
+    border: 1px solid #1a333f;
+    color: #9cb3c0;
+  }
+  .deck-meta-grid strong {
+    color: #fff;
+    display: block;
+    font-size: 10px;
+  }
+
+  /* CRT Visualizer Canvas */
+  .scope-canvas-wrap {
+    width: 100%;
+    height: 110px;
+    background: #050b0d;
+    border: 2px inset #000;
+    position: relative;
+    overflow: hidden;
+  }
+  #scopeCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .scope-mode-overlay {
+    position: absolute;
+    top: 3px;
+    right: 4px;
+    display: flex;
+    gap: 2px;
+  }
+  .scope-btn {
+    background: rgba(0, 30, 40, 0.7);
+    color: var(--trap-cyan);
+    border: 1px solid var(--trap-cyan);
+    font-size: 8px;
+    font-family: var(--font-mono);
+    padding: 1px 4px;
+    cursor: pointer;
+  }
+  .scope-btn.active {
+    background: var(--trap-cyan);
+    color: #000;
+    font-weight: bold;
+  }
+
+  /* Transport Controls */
+  .transport-panel {
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .transport-buttons {
+    display: flex;
+    gap: 3px;
+  }
+  .btn-transport {
+    width: 28px;
+    height: 24px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .vol-slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+  }
+
+  /* 6-Channel Mixer Desk */
+  .mixer-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    overflow: hidden;
+  }
+  .channels-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    flex: 1;
+    margin-top: 4px;
+  }
+  .chan-strip {
+    background: #e4e4e4;
+    border: 1px solid #808080;
+    padding: 4px 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 9px;
+  }
+  .chan-strip.muted {
+    opacity: 0.5;
+    background: #c8c8c8;
+  }
+  .chan-label {
+    font-weight: bold;
+    font-size: 9px;
+    text-align: center;
+  }
+  .chan-meter {
+    width: 12px;
+    height: 60px;
+    background: #000;
+    border: 1px inset #808080;
+    position: relative;
+    display: flex;
+    flex-direction: column-reverse;
+    overflow: hidden;
+  }
+  .chan-meter-level {
+    width: 100%;
+    height: 0%;
+    background: linear-gradient(0deg, #00ff00 0%, #ffff00 70%, #ff0000 100%);
+    transition: height 0.08s ease-out;
+  }
+  .btn-mute {
+    font-size: 8px;
+    padding: 1px 3px;
+    cursor: pointer;
+    margin-top: 2px;
+    width: 28px;
+  }
+  .btn-mute.is-muted {
+    background: var(--trap-red);
+    color: #fff;
+    font-weight: bold;
+  }
+
+  /* Tracker Pattern View */
+  .pattern-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    overflow: hidden;
+  }
+  .pattern-grid {
+    flex: 1;
+    background: #000000;
+    color: #38bdf8;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 14px;
+    padding: 4px;
+    overflow: auto;
+    border: 2px inset #555;
+    white-space: pre;
+    user-select: text;
+  }
+  .pattern-grid .pat-row-curr {
+    background: #003366;
+    color: #ffff00;
+    font-weight: bold;
+  }
+  .pattern-grid .pat-note { color: #ffffff; }
+  .pattern-grid .pat-inst { color: #f472b6; }
+  .pattern-grid .pat-fx   { color: #4ade80; }
+
+  /* --- TAB: CHAT / SWARM LOUNGE --- */
+  .chat-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .chat-rooms-list {
+    background: #fff;
+    border: 2px inset #808080;
+    overflow-y: auto;
+  }
+  .room-item {
+    padding: 4px 6px;
+    cursor: pointer;
+    font-size: 11px;
+    border-bottom: 1px dotted #e0e0e0;
+  }
+  .room-item:hover { background: #eef6ff; }
+  .room-item.active { background: #000080; color: #fff; font-weight: bold; }
+
+  .chat-main {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    gap: 4px;
+  }
+  .chat-messages {
+    flex: 1;
+    background: #000;
+    color: #e0e0e0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.4;
+    padding: 6px;
+    overflow-y: auto;
+    border: 2px inset #808080;
+    user-select: text;
+  }
+  .chat-msg { margin-bottom: 2px; }
+  .chat-time { color: #737373; font-size: 10px; }
+  .chat-nick { color: var(--trap-cyan); font-weight: bold; }
+  .chat-nick.sys { color: var(--trap-amber); }
+  .chat-nick.bot { color: #f43f5e; }
+  .chat-text { color: #ffffff; }
+  .chat-input-bar {
+    display: flex;
+    gap: 4px;
+  }
+
+  /* --- TAB: SWARM TOPOLOGY & NETWORK --- */
+  .topology-wrap {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 8px;
+    overflow: hidden;
+  }
+  @media (max-width: 800px) {
+    .topology-wrap { grid-template-columns: 1fr; }
+  }
+  .topo-canvas-box {
+    background: #050b0d;
+    border: 2px inset #000;
+    position: relative;
+    overflow: hidden;
+  }
+  #topoCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .topo-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+  }
+
+  /* Status Bar at Bottom */
+  .status-bar {
+    background: var(--win-bg);
+    border-top: 1px solid var(--win-dark);
+    height: 22px;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    gap: 4px;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+  .status-panel {
+    border-top: 1px solid var(--win-darker);
+    border-left: 1px solid var(--win-darker);
+    border-right: 1px solid var(--win-bright);
+    border-bottom: 1px solid var(--win-bright);
+    padding: 1px 6px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Toast Notification */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 12px;
+    background: #ffffcc;
+    color: #000;
+    border: 1px solid #808080;
+    padding: 6px 12px;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+    font-size: 11px;
+    z-index: 9999;
+    display: none;
+    max-width: 320px;
+  }
+
+  /* Modal Dialog */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  }
+  .modal-dialog {
+    width: 440px;
+    max-width: 90vw;
+  }
+</style>
+</head>
+<body>
+
+<div id="appWindow" class="bevel-outset">
+  <!-- Titlebar -->
+  <div class="title-bar">
+    <div class="title-bar-text">
+      <span class="title-icon">🐱🎧</span>
+      <span>TRAPSTER v1.0b (Build 19991023) — P2P Chiptune &amp; Tracker Exchange</span>
+    </div>
+    <div class="title-bar-controls">
+      <button class="win-btn" title="Minimize" onclick="showToast('Trapster minimized to system tray')">_</button>
+      <button class="win-btn" title="Maximize" onclick="toggleFullscreen()">□</button>
+      <button class="win-btn" title="Close" onclick="showToast('Closing Trapster background daemon')">×</button>
+    </div>
+  </div>
+
+  <!-- Menu Bar -->
+  <div class="menu-bar">
+    <div class="menu-item" onclick="openShareModal()"><span>F</span>ile</div>
+    <div class="menu-item" onclick="switchTab('tab-player')"><span>A</span>udio</div>
+    <div class="menu-item" onclick="switchTab('tab-transfers')"><span>T</span>ransfers</div>
+    <div class="menu-item" onclick="switchTab('tab-topo')"><span>N</span>etwork</div>
+    <div class="menu-item" onclick="openOptionsModal()"><span>O</span>ptions</div>
+    <div class="menu-item" onclick="openHelpModal()"><span>H</span>elp</div>
+    <div style="margin-left: auto; display:flex; gap:8px;">
+      <a href="/web/portal.html" onclick="navigateTo('/web/portal.html', event)" style="color:#000080; text-decoration:underline;">🏠 Portal</a>
+      <a href="/web/webring.html" onclick="navigateTo('/web/webring.html', event)" style="color:#000080; text-decoration:underline;">🌐 Webring</a>
+      <a href="/web/warez.html" onclick="navigateTo('/web/warez.html', event)" style="color:#000080; text-decoration:underline;">💾 Warez</a>
+      <a href="/web/slashnet.html" onclick="navigateTo('/web/slashnet.html', event)" style="color:#000080; text-decoration:underline;">📰 SlashNet</a>
+    </div>
+  </div>
+
+  <!-- Header & Stats Ribbon -->
+  <div class="header-panel">
+    <div class="brand-area">
+      <div class="logo-cat">🐾</div>
+      <div class="logo-text">
+        <h1>TRAPSTER</h1>
+        <div class="subtitle">The Peer-to-Peer Chiptune &amp; Soundtracker Network</div>
+      </div>
+    </div>
+    <div class="header-stats">
+      <div><span class="stat-led"></span>SWARM ONLINE</div>
+      <div>PEERS: <span id="statPeers" style="color:#fff;">1,429</span></div>
+      <div>TRACKS: <span id="statFiles" style="color:#fff;">48,210</span></div>
+      <div>DATA: <span id="statSize" style="color:#fff;">382.4 GB</span></div>
+    </div>
+  </div>
+
+  <!-- Tab Strip -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="btnTabSearch" onclick="switchTab('tab-search')">
+      <span>🔍 Search Files</span>
+    </button>
+    <button class="tab-btn" id="btnTabTransfers" onclick="switchTab('tab-transfers')">
+      <span>📥 Transfers</span>
+      <span class="tab-badge" id="badgeTransfers">0</span>
+    </button>
+    <button class="tab-btn" id="btnTabPlayer" onclick="switchTab('tab-player')">
+      <span>📻 Live Chiptune Player</span>
+    </button>
+    <button class="tab-btn" id="btnTabChat" onclick="switchTab('tab-chat')">
+      <span>💬 Swarm Chat</span>
+    </button>
+    <button class="tab-btn" id="btnTabLibrary" onclick="switchTab('tab-library')">
+      <span>📂 My Library</span>
+    </button>
+    <button class="tab-btn" id="btnTabTopo" onclick="switchTab('tab-topo')">
+      <span>🌐 Swarm Topology</span>
+    </button>
+  </div>
+
+  <!-- Tab Contents -->
+  <div class="tab-content-area">
+
+    <!-- TAB 1: SEARCH -->
+    <div class="tab-panel active" id="tab-search">
+      <div class="search-filter-box bevel-outset">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="searchQuery" style="font-weight:bold;">Search Query:</label>
+            <input type="text" id="searchQuery" class="input-text bevel-field" style="width:220px;" placeholder="Artist, module title, style..." onkeydown="if(event.key==='Enter') executeSearch()">
+          </div>
+          <div class="filter-group">
+            <label for="formatFilter">Format:</label>
+            <select id="formatFilter" class="input-select bevel-field" onchange="executeSearch()">
+              <option value="ALL">All Tracker Formats (*.*)</option>
+              <option value="MOD">ProTracker (.MOD)</option>
+              <option value="XM">FastTracker II (.XM)</option>
+              <option value="S3M">Scream Tracker 3 (.S3M)</option>
+              <option value="IT">Impulse Tracker (.IT)</option>
+              <option value="TRK">Carlsbad Transponder (.TRK)</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="channelsFilter">Channels:</label>
+            <select id="channelsFilter" class="input-select bevel-field" onchange="executeSearch()">
+              <option value="ALL">Any Channels</option>
+              <option value="4">4 Channels (Amiga Classic)</option>
+              <option value="8">8 Channels</option>
+              <option value="16">16 Channels</option>
+              <option value="32">32 Channels</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="speedFilter">Min Speed:</label>
+            <select id="speedFilter" class="input-select bevel-field" onchange="executeSearch()">
+              <option value="0">Any Line</option>
+              <option value="56">>= 56k Modem</option>
+              <option value="128">>= ISDN 128k</option>
+              <option value="1500">>= T1 / Cable</option>
+            </select>
+          </div>
+          <button class="btn-win btn-primary" onclick="executeSearch()">🔍 Find Now</button>
+          <button class="btn-win" onclick="clearSearch()">Clear</button>
+        </div>
+        <div class="filter-row" style="font-size:10px;">
+          <span>Preset Queries:</span>
+          <div class="quick-chips">
+            <span class="chip-tag" onclick="quickQuery('demoscene')">Demoscene Classics</span>
+            <span class="chip-tag" onclick="quickQuery('skaven')">Purple Motion &amp; Skaven</span>
+            <span class="chip-tag" onclick="quickQuery('amiga')">Amiga 4-Channel .MOD</span>
+            <span class="chip-tag" onclick="quickQuery('carlsbad')">Carlsbad Node 0x7F</span>
+            <span class="chip-tag" onclick="quickQuery('fasttracker')">FastTracker 16ch</span>
+            <span class="chip-tag" onclick="quickQuery('')">All Modules (48k)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Results Table -->
+      <div class="table-container bevel-inset">
+        <table class="p2p-table" id="resultsTable">
+          <thead>
+            <tr>
+              <th onclick="sortResults('title')">Song Title ▲▼</th>
+              <th onclick="sortResults('artist')">Artist / Group</th>
+              <th onclick="sortResults('format')">Fmt</th>
+              <th onclick="sortResults('size')">Size</th>
+              <th onclick="sortResults('channels')">Ch</th>
+              <th onclick="sortResults('bpm')">BPM</th>
+              <th onclick="sortResults('user')">Host / Peer</th>
+              <th onclick="sortResults('line')">Line Speed</th>
+              <th onclick="sortResults('ping')">Ping</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Action Toolbar -->
+      <div class="action-bar">
+        <div style="display:flex; gap:4px; align-items:center;">
+          <button class="btn-win btn-primary" id="btnDownloadSelected" onclick="downloadSelectedTrack()">📥 Get Selected Track</button>
+          <button class="btn-win" id="btnPreviewSelected" onclick="previewSelectedTrack()">▶ Preview in Player</button>
+          <button class="btn-win" id="btnDirectVfs" onclick="saveSelectedDirectVfs()">💾 Direct Save to VFS</button>
+          <button class="btn-win" onclick="copyMagnetLink()">🔗 Copy P2P Hash</button>
+          <button class="btn-win" onclick="showTrackNfo()">ℹ️ Module NFO</button>
+        </div>
+        <div style="font-size:10px; color:#444;" id="searchResultStats">
+          Showing 12 matching tracks from 1,429 peers
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: TRANSFERS -->
+    <div class="tab-panel" id="tab-transfers">
+      <div class="transfers-split">
+        <!-- Active Downloads -->
+        <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+          <div class="section-label">
+            <span>Active Swarm Downloads (<span id="countActiveDl">0</span> in progress)</span>
+            <div style="display:flex; gap:6px; align-items:center; font-weight:normal; font-size:10px;">
+              <label for="userSpeedSelect">Simulated Connection:</label>
+              <select id="userSpeedSelect" class="input-select bevel-field" onchange="updateConnectionSpeed()">
+                <option value="33.6">33.6k Dialup Modem (3.5 KB/s)</option>
+                <option value="56.0" selected>56k V.90 Dialup (5.4 KB/s)</option>
+                <option value="128.0">128k Dual ISDN (15.8 KB/s)</option>
+                <option value="1544.0">1.54 Mbps T1 Campus Line (170 KB/s)</option>
+                <option value="45000.0">45 Mbps OC-3 Backbone (1.4 MB/s)</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-container bevel-inset" style="height:140px;">
+            <table class="p2p-table" id="dlTable">
+              <thead>
+                <tr>
+                  <th>File Name</th>
+                  <th>Size</th>
+                  <th style="width:160px;">Progress</th>
+                  <th>Speed</th>
+                  <th>Transferred</th>
+                  <th>ETA</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="dlBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div class="action-bar" style="margin-top:4px;">
+            <div style="display:flex; gap:4px;">
+              <button class="btn-win" onclick="pauseAllDownloads()">⏸ Pause All</button>
+              <button class="btn-win" onclick="resumeAllDownloads()">▶ Resume All</button>
+              <button class="btn-win" onclick="clearCompletedDownloads()">🧹 Clear Finished</button>
+            </div>
+            <div style="font-size:10px;" id="totalDlSpeed">Total Inbound: 0.0 KB/s</div>
+          </div>
+        </div>
+
+        <!-- Simulated Active Uploads -->
+        <div style="flex:1; display:flex; flex-direction:column; overflow:hidden; margin-top:4px;">
+          <div class="section-label">
+            <span>Swarm Upload Queue (Peers leeching from your /home/music/)</span>
+            <span style="font-size:10px; font-weight:normal; color:#555;">Max Upload Slots: 4 (Uncapped 1999 T1 ratio)</span>
+          </div>
+          <div class="table-container bevel-inset">
+            <table class="p2p-table" id="ulTable">
+              <thead>
+                <tr>
+                  <th>Leecher IP / Host</th>
+                  <th>Requested Module</th>
+                  <th style="width:140px;">Upload Progress</th>
+                  <th>Rate</th>
+                  <th>Ratio</th>
+                  <th>Swarm Node</th>
+                </tr>
+              </thead>
+              <tbody id="ulBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: LIVE CHIPTUNE PLAYER -->
+    <div class="tab-panel" id="tab-player">
+      <div class="player-container">
+        <!-- Left Column: Synthesizer Deck & CRT Visualizer -->
+        <div class="player-left">
+          <!-- CRT Deck Screen -->
+          <div class="deck-screen">
+            <div class="deck-title" id="playerDeckTitle">NO TRACK LOADED</div>
+            <div class="deck-artist" id="playerDeckArtist">Select a track from Search or Library</div>
+            <div class="deck-meta-grid">
+              <div>FMT: <strong id="deckFmt">---</strong></div>
+              <div>BPM: <strong id="deckBpm">---</strong></div>
+              <div>SPD: <strong id="deckSpd">---</strong></div>
+              <div>CHANS: <strong id="deckCh">---</strong></div>
+            </div>
+          </div>
+
+          <!-- CRT Oscilloscope & Spectrum Canvas -->
+          <div class="scope-canvas-wrap">
+            <canvas id="scopeCanvas" width="340" height="110"></canvas>
+            <div class="scope-mode-overlay">
+              <button class="scope-btn active" id="btnScopeWave" onclick="setScopeMode('wave')">OSC</button>
+              <button class="scope-btn" id="btnScopeSpec" onclick="setScopeMode('bars')">FFT</button>
+              <button class="scope-btn" id="btnScopeLiss" onclick="setScopeMode('lissajous')">XY</button>
+            </div>
+          </div>
+
+          <!-- Transport Panel -->
+          <div class="transport-panel bevel-outset">
+            <div class="transport-buttons">
+              <button class="btn-win btn-transport" onclick="playerPrevTrack()" title="Previous Track">|◀</button>
+              <button class="btn-win btn-transport" id="btnPlayPause" onclick="playerTogglePlay()" title="Play/Pause">▶</button>
+              <button class="btn-win btn-transport" onclick="playerStop()" title="Stop">■</button>
+              <button class="btn-win btn-transport" onclick="playerNextTrack()" title="Next Track">▶|</button>
+              <button class="btn-win btn-transport" id="btnLoop" onclick="playerToggleLoop()" title="Loop Track">🔁</button>
+            </div>
+            <div class="vol-slider-wrap">
+              <label for="volSlider">VOL:</label>
+              <input type="range" id="volSlider" min="0" max="100" value="80" style="width:70px;" oninput="updateMasterVolume(this.value)">
+              <span id="volVal" style="font-family:monospace; font-size:10px;">80%</span>
+            </div>
+          </div>
+
+          <!-- 6-Channel Tracker Mixer Desk -->
+          <div class="mixer-box bevel-outset">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; font-weight:bold;">
+              <span>YM2612 / SPC700 6-CHANNEL MIXER</span>
+              <button class="btn-win" style="font-size:8px; padding:1px 4px;" onclick="unmuteAllChannels()">Unmute All</button>
+            </div>
+            <div class="channels-grid">
+              <div class="chan-strip" id="strip-0">
+                <div class="chan-label">CH 1<br><span style="font-size:7px; color:#666;">MELODY</span></div>
+                <div class="chan-meter"><div class="chan-meter-level" id="meter-0"></div></div>
+                <button class="btn-win btn-mute" id="mute-0" onclick="toggleChannelMute(0)">MUTE</button>
+              </div>
+              <div class="chan-strip" id="strip-1">
+                <div class="chan-label">CH 2<br><span style="font-size:7px; color:#666;">FM LEAD</span></div>
+                <div class="chan-meter"><div class="chan-meter-level" id="meter-1"></div></div>
+                <button class="btn-win btn-mute" id="mute-1" onclick="toggleChannelMute(1)">MUTE</button>
+              </div>
+              <div class="chan-strip" id="strip-2">
+                <div class="chan-label">CH 3<br><span style="font-size:7px; color:#666;">BASS</span></div>
+                <div class="chan-meter"><div class="chan-meter-level" id="meter-2"></div></div>
+                <button class="btn-win btn-mute" id="mute-2" onclick="toggleChannelMute(2)">MUTE</button>
+              </div>
+              <div class="chan-strip" id="strip-3">
+                <div class="chan-label">CH 4<br><span style="font-size:7px; color:#666;">ARP 50Hz</span></div>
+                <div class="chan-meter"><div class="chan-meter-level" id="meter-3"></div></div>
+                <button class="btn-win btn-mute" id="mute-3" onclick="toggleChannelMute(3)">MUTE</button>
+              </div>
+              <div class="chan-strip" id="strip-4">
+                <div class="chan-label">CH 5<br><span style="font-size:7px; color:#666;">DRUMS</span></div>
+                <div class="chan-meter"><div class="chan-meter-level" id="meter-4"></div></div>
+                <button class="btn-win btn-mute" id="mute-4" onclick="toggleChannelMute(4)">MUTE</button>
+              </div>
+              <div class="chan-strip" id="strip-5">
+                <div class="chan-label">CH 6<br><span style="font-size:7px; color:#666;">SPC ECHO</span></div>
+                <div class="chan-meter"><div class="chan-meter-level" id="meter-5"></div></div>
+                <button class="btn-win btn-mute" id="mute-5" onclick="toggleChannelMute(5)">MUTE</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Realtime Tracker Pattern Matrix View -->
+        <div class="pattern-view bevel-outset">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-weight:bold; font-size:11px;">
+            <span>MOD TRACKER PATTERN MATRIX (REAL-TIME TICK)</span>
+            <div style="display:flex; gap:4px; font-size:10px;">
+              <span>PATTERN: <strong id="patNum">00</strong></span>
+              <span>ROW: <strong id="patRow">00</strong> / 63</span>
+            </div>
+          </div>
+          <div class="pattern-grid" id="patternGrid">
+            <!-- Populated dynamically with tracker pattern matrix lines -->
+          </div>
+          <div class="action-bar" style="margin-top:4px;">
+            <div style="display:flex; gap:4px;">
+              <button class="btn-win" onclick="saveCurrentTrackToVfs()">💾 Save .MOD to /home/music/</button>
+              <button class="btn-win" onclick="launchInExternalApp('KAudio')">🎵 Open in KAudio</button>
+              <button class="btn-win" onclick="launchInExternalApp('KSynth')">🎹 Edit in KSynth</button>
+              <button class="btn-win" onclick="launchInExternalApp('KHex')">🔍 Inspect in KHex</button>
+            </div>
+            <div style="font-size:10px; color:#555;">Dual 2-Op FM + SPC700 (180ms delay @ 2200Hz LP)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: SWARM CHAT -->
+    <div class="tab-panel" id="tab-chat">
+      <div class="chat-layout">
+        <!-- Room Selector -->
+        <div class="chat-rooms-list">
+          <div class="room-item active" onclick="switchChatRoom('#trapster-main')">#trapster-main (842)</div>
+          <div class="room-item" onclick="switchChatRoom('#tracker-exchange')">#tracker-exchange (419)</div>
+          <div class="room-item" onclick="switchChatRoom('#demoscene-radio')">#demoscene-radio (126)</div>
+          <div class="room-item" onclick="switchChatRoom('#node0x7f-whisper')">#node0x7f-whisper (42)</div>
+        </div>
+
+        <!-- Chat Feed & Input -->
+        <div class="chat-main">
+          <div class="chat-messages" id="chatFeed">
+            <!-- Messages populated dynamically -->
+          </div>
+          <div class="chat-input-bar">
+            <input type="text" id="chatInput" class="input-text bevel-field" style="flex:1;" placeholder="Say something or type !help, !stats, !roll, !find <query>..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+            <button class="btn-win btn-primary" onclick="sendChatMessage()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: MY LIBRARY -->
+    <div class="tab-panel" id="tab-library">
+      <div style="display:flex; flex-direction:column; flex:1; gap:6px; overflow:hidden;">
+        <div class="section-label">
+          <span>Local Soundtracker Repository (/home/music/)</span>
+          <div style="display:flex; gap:4px;">
+            <button class="btn-win" onclick="openShareModal()">➕ Share New Module</button>
+            <button class="btn-win" onclick="syncLibraryVfs()">🔄 Rescan VFS</button>
+            <button class="btn-win" onclick="exportLibraryManifest()">📜 Export JSON Catalog</button>
+          </div>
+        </div>
+        <div class="table-container bevel-inset">
+          <table class="p2p-table" id="libTable">
+            <thead>
+              <tr>
+                <th>Module Name</th>
+                <th>Format</th>
+                <th>Size</th>
+                <th>Channels</th>
+                <th>Shared in Swarm</th>
+                <th>Uploaded (Leeched)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="libBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: SWARM TOPOLOGY -->
+    <div class="tab-panel" id="tab-topo">
+      <div class="topology-wrap">
+        <div class="topo-canvas-box">
+          <canvas id="topoCanvas" width="500" height="340"></canvas>
+        </div>
+        <div class="topo-sidebar">
+          <div class="section-label">P2P Routing Hubs</div>
+          <div class="table-container bevel-inset" style="height:150px;">
+            <table class="p2p-table">
+              <thead>
+                <tr>
+                  <th>Supernode Host</th>
+                  <th>IP Address</th>
+                  <th>Ping</th>
+                  <th>Peers</th>
+                </tr>
+              </thead>
+              <tbody id="topoHostsBody">
+                <tr><td>rendezvous-01.kilonet</td><td>198.41.0.12</td><td>14ms</td><td>512</td></tr>
+                <tr><td>mit-t1-relay.trapster</td><td>18.178.0.44</td><td>28ms</td><td>340</td></tr>
+                <tr><td>cmu-dorm-node.trapster</td><td>128.2.14.8</td><td>32ms</td><td>285</td></tr>
+                <tr><td>helsinki-mod-vault</td><td>130.237.1.99</td><td>58ms</td><td>192</td></tr>
+                <tr><td style="color:#f59e0b;">carlsbad-salt-7f</td><td>10.19.99.127</td><td>99ms</td><td>100</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section-label" style="margin-top:6px;">Network Bandwidth Graph</div>
+          <div style="background:#000; border:2px inset #808080; height:80px; position:relative; overflow:hidden;">
+            <canvas id="bwGraphCanvas" width="280" height="80" style="width:100%; height:100%; display:block;"></canvas>
+          </div>
+
+          <div style="font-size:10px; color:#333; margin-top:4px; line-height:1.4;">
+            <strong>Protocol:</strong> Trapster P2P v1.0b / RFC-1999<br>
+            <strong>Port:</strong> 6667 / 6699 (TCP)<br>
+            <strong>Encrypted Sub-Relay:</strong> 10.19.99.7F (Subterranean Acoustic)
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div class="status-panel" style="width:180px;" id="sbServer">
+      🟢 p2p.kilonet.internal:6667
+    </div>
+    <div class="status-panel" style="width:120px;" id="sbSpeed">
+      ⚡ Line: 56.0k V.90
+    </div>
+    <div class="status-panel" style="width:110px;" id="sbActive">
+      DL: 0 &bull; UL: 0
+    </div>
+    <div class="status-panel" style="flex:1;" id="sbStatus">
+      Ready. Search 48,210 tracker modules or preview with dual-op FM synthesizer.
+    </div>
+  </div>
+</div>
+
+<!-- Toast Box -->
+<div class="toast" id="toastBox">Notification</div>
+
+<!-- Share Module Modal -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal-dialog bevel-outset" style="padding:10px;">
+    <div class="title-bar" style="margin:-10px -10px 10px -10px;">
+      <div class="title-bar-text">Share Tracker Module with Trapster Swarm</div>
+      <button class="win-btn" onclick="closeShareModal()">×</button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <div>
+        <label for="shareTitle" style="font-weight:bold;">Module Title:</label><br>
+        <input type="text" id="shareTitle" class="input-text bevel-field" style="width:100%;" value="My New Track">
+      </div>
+      <div>
+        <label for="shareArtist" style="font-weight:bold;">Artist / Handle:</label><br>
+        <input type="text" id="shareArtist" class="input-text bevel-field" style="width:100%;" value="KiloMusician">
+      </div>
+      <div style="display:flex; gap:8px;">
+        <div style="flex:1;">
+          <label for="shareFormat">Format:</label><br>
+          <select id="shareFormat" class="input-select bevel-field" style="width:100%;">
+            <option value="MOD">ProTracker (.MOD)</option>
+            <option value="XM">FastTracker II (.XM)</option>
+            <option value="S3M">Scream Tracker 3 (.S3M)</option>
+            <option value="IT">Impulse Tracker (.IT)</option>
+          </select>
+        </div>
+        <div style="flex:1;">
+          <label for="shareCh">Channels:</label><br>
+          <select id="shareCh" class="input-select bevel-field" style="width:100%;">
+            <option value="4">4 Channels</option>
+            <option value="8">8 Channels</option>
+            <option value="16">16 Channels</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:8px;">
+        <button class="btn-win btn-primary" onclick="confirmShareTrack()">Publish to Swarm</button>
+        <button class="btn-win" onclick="closeShareModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NFO / Info Modal -->
+<div class="modal-overlay" id="nfoModal">
+  <div class="modal-dialog bevel-outset" style="padding:10px; width:520px;">
+    <div class="title-bar" style="margin:-10px -10px 10px -10px;">
+      <div class="title-bar-text" id="nfoTitle">Module Release NFO</div>
+      <button class="win-btn" onclick="closeNfoModal()">×</button>
+    </div>
+    <div style="background:#000; color:#38bdf8; font-family:var(--font-mono); font-size:10px; padding:8px; border:2px inset #808080; height:240px; overflow-y:auto; white-space:pre-wrap; user-select:text;" id="nfoContent">
+      Loading release NFO...
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:8px;">
+      <button class="btn-win" onclick="closeNfoModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- Storage Safety Wrappers (quality-standards.md) ---
+function safeGet(key, def) {
+  try {
+    const val = localStorage.getItem(key);
+    return val ? JSON.parse(val) : def;
+  } catch (e) {
+    return def;
+  }
+}
+function safeSet(key, val) {
+  try {
+    localStorage.setItem(key, JSON.stringify(val));
+  } catch (e) {}
+}
+
+// --- KiloOS VFS & IPC Integration ---
+function saveToKiloVfs(vfsPath, contentStr) {
+  try {
+    window.parent.postMessage({
+      type: 'VFS_WRITE',
+      path: vfsPath,
+      data: contentStr,
+      requestId: 'vfs_' + Date.now()
+    }, '*');
+    window.parent.postMessage({
+      type: 'OS_NOTIFY',
+      title: 'Trapster P2P',
+      message: 'Saved tracker module: ' + vfsPath
+    }, '*');
+    showToast('Saved to KiloOS VFS: ' + vfsPath);
+  } catch (e) {
+    showToast('VFS Write Failed: ' + (e.message || e));
+  }
+}
+
+function launchInExternalApp(appName) {
+  if (!currentTrack) {
+    showToast('Please select and preview a track first');
+    return;
+  }
+  const appMap = {
+    'KAudio': 'kaudio.html',
+    'KSynth': 'ksynth.html',
+    'KHex': 'khex.html',
+    'KPad': 'kpad.html'
+  };
+  const targetHtml = appMap[appName] || 'kaudio.html';
+  try {
+    window.parent.postMessage({
+      type: 'LAUNCH_APP',
+      app: targetHtml,
+      args: {
+        file: '/home/music/' + currentTrack.filename,
+        title: currentTrack.title
+      }
+    }, '*');
+    showToast('Launching ' + appName + ' with ' + currentTrack.filename + '...');
+  } catch (e) {
+    showToast('Could not launch ' + appName);
+  }
+}
+
+function navigateTo(url, event) {
+  if (event) event.preventDefault();
+  try {
+    window.parent.postMessage({
+      type: 'NAVIGATE',
+      url: url
+    }, '*');
+  } catch (e) {}
+  window.location.href = url;
+}
+
+// --- Toast Utility ---
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toastBox');
+  el.textContent = msg;
+  el.style.display = 'block';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    el.style.display = 'none';
+  }, 3500);
+}
+
+// --- Master Database of 1999 Tracker Modules ---
+const TRACK_CATALOG = [
+  {
+    id: 'trk-01',
+    title: 'Space Debris \'99',
+    artist: 'Captain',
+    group: 'Amiga Elite',
+    format: 'MOD',
+    size: 247812,
+    sizeStr: '242 KB',
+    channels: 4,
+    bpm: 125,
+    speed: 6,
+    user: 'captain@cmu.edu',
+    line: 'T1 (1.5M)',
+    lineSpeedKb: 180,
+    ping: 28,
+    hash: '8f72a1b9c4021e99',
+    filename: 'space_debris.mod',
+    scaleNotes: [60, 63, 65, 67, 70, 72, 75, 77], // C minor pentatonic
+    ch1Melody: [0, 2, 3, 2, 4, 3, 2, 0, 7, 5, 4, 2, 3, 2, 0, 2],
+    ch2FmLead: [4, 4, 5, 4, 2, 2, 3, 2, 5, 5, 7, 5, 4, 3, 2, 0],
+    ch3Bass:   [0, 0, 0, 0, 3, 3, 3, 3, 5, 5, 5, 5, 2, 2, 2, 2],
+    nfo: "Release: Space Debris '99\\nTracker: ProTracker v2.3b (Amiga 500)\\nChannels: 4 (Paula 8-bit DAC)\\nBPM: 125 | Speed: 6\\nSamples: Captain's Classic Synths & FLARELIGHT Snares"
+  },
+  {
+    id: 'trk-02',
+    title: 'Desert Dawn',
+    artist: 'Lizardking',
+    group: 'Razor 1999',
+    format: 'S3M',
+    size: 312450,
+    sizeStr: '305 KB',
+    channels: 8,
+    bpm: 132,
+    speed: 5,
+    user: 'lizard@chalmers.se',
+    line: 'Cable (512k)',
+    lineSpeedKb: 64,
+    ping: 45,
+    hash: '3e44d18919990a2f',
+    filename: 'desert_dawn.s3m',
+    scaleNotes: [57, 59, 60, 62, 64, 65, 67, 69], // A minor
+    ch1Melody: [0, 4, 2, 4, 5, 4, 2, 1, 0, 2, 4, 5, 7, 5, 4, 2],
+    ch2FmLead: [7, 6, 5, 4, 3, 2, 1, 0, 4, 5, 6, 7, 5, 4, 2, 0],
+    ch3Bass:   [0, 0, 5, 5, 3, 3, 2, 2, 0, 0, 5, 5, 4, 4, 2, 2],
+    nfo: "Release: Desert Dawn\\nTracker: Scream Tracker 3.21\\nChannels: 8 (GUS 32-Voice Emulation)\\nBPM: 132 | Speed: 5\\nSamples: Swedish FM bells & analog Roland 808"
+  },
+  {
+    id: 'trk-03',
+    title: 'Second Reality Hero',
+    artist: 'Purple Motion',
+    group: 'Future Crew',
+    format: 'XM',
+    size: 489120,
+    sizeStr: '477 KB',
+    channels: 16,
+    bpm: 140,
+    speed: 4,
+    user: 'pm@helsinki.fi',
+    line: 'T3 (45M)',
+    lineSpeedKb: 1200,
+    ping: 18,
+    hash: '5a981c2d0f9947aa',
+    filename: 'second_reality.xm',
+    scaleNotes: [62, 65, 67, 69, 72, 74, 77, 79], // D minor
+    ch1Melody: [0, 3, 2, 0, 5, 4, 3, 2, 7, 5, 4, 3, 5, 4, 2, 0],
+    ch2FmLead: [5, 5, 7, 7, 5, 3, 2, 0, 4, 4, 5, 7, 8, 7, 5, 3],
+    ch3Bass:   [0, 0, 3, 3, 5, 5, 2, 2, 0, 0, 3, 3, 4, 4, 2, 2],
+    nfo: "Release: Second Reality Hero\\nTracker: FastTracker II (Triton)\\nChannels: 16 (Interleaved stereo)\\nBPM: 140 | Speed: 4\\nLegendary Assembly '93 / '99 remastered demoparty anthem"
+  },
+  {
+    id: 'trk-04',
+    title: 'Radical Horizon',
+    artist: 'Elwood',
+    group: 'Demoscene Labs',
+    format: 'IT',
+    size: 412800,
+    sizeStr: '403 KB',
+    channels: 8,
+    bpm: 128,
+    speed: 6,
+    user: 'elwood@stanford.edu',
+    line: 'T1 (1.5M)',
+    lineSpeedKb: 180,
+    ping: 35,
+    hash: '6b1109988ff234cd',
+    filename: 'radical_horizon.it',
+    scaleNotes: [58, 61, 63, 65, 68, 70, 73, 75], // Bb minor
+    ch1Melody: [0, 2, 4, 3, 5, 4, 2, 0, 7, 6, 5, 4, 3, 2, 0, 1],
+    ch2FmLead: [4, 3, 2, 0, 5, 4, 3, 2, 7, 5, 4, 2, 3, 4, 5, 7],
+    ch3Bass:   [0, 0, 2, 2, 4, 4, 1, 1, 0, 0, 2, 2, 3, 3, 1, 1],
+    nfo: "Release: Radical Horizon\\nTracker: Impulse Tracker 2.14\\nChannels: 8 (New Instrument Architecture)\\nBPM: 128 | Resonance resonant filters engaged"
+  },
+  {
+    id: 'trk-05',
+    title: 'Subcarrier 1999',
+    artist: 'Node_0x7F',
+    group: 'Carlsbad Intranet',
+    format: 'TRK',
+    size: 198420,
+    sizeStr: '193 KB',
+    channels: 6,
+    bpm: 110,
+    speed: 6,
+    user: 'salt_vault@10.19.99.127',
+    line: 'ISDN (128k)',
+    lineSpeedKb: 16,
+    ping: 99,
+    hash: '7f199942a0b1c2d3',
+    filename: 'subcarrier_1999.trk',
+    scaleNotes: [55, 58, 62, 65, 67, 70, 74, 77], // G minor / 1999Hz harmonic
+    ch1Melody: [0, 1, 2, 1, 0, 3, 2, 1, 4, 2, 1, 0, 5, 4, 2, 1],
+    ch2FmLead: [2, 4, 5, 4, 2, 0, 1, 2, 4, 5, 7, 5, 4, 2, 0, 2],
+    ch3Bass:   [0, 0, 0, 0, 2, 2, 2, 2, 4, 4, 4, 4, 1, 1, 1, 1],
+    nfo: "Release: Subcarrier 1999\\nTracker: Carlsbad Transponder Sound Engine\\nChannels: 6 (Lithospheric Acoustic Subcarrier @ 1999Hz)\\nOrigin: Sector 7F Salt Vault\\nSteganographic seed decoded from gateway echo-gw-07"
+  },
+  {
+    id: 'trk-06',
+    title: 'Stardust Memories',
+    artist: 'Jester',
+    group: 'Sanity',
+    format: 'MOD',
+    size: 285400,
+    sizeStr: '278 KB',
+    channels: 4,
+    bpm: 120,
+    speed: 6,
+    user: 'jester@berklee.edu',
+    line: '56k Modem',
+    lineSpeedKb: 5.5,
+    ping: 112,
+    hash: '9002bc45ff789123',
+    filename: 'stardust_memories.mod',
+    scaleNotes: [60, 62, 64, 67, 69, 72, 74, 76], // C major pentatonic
+    ch1Melody: [0, 2, 4, 2, 5, 4, 2, 0, 7, 5, 4, 2, 0, 2, 4, 5],
+    ch2FmLead: [4, 5, 7, 5, 4, 2, 0, 2, 5, 7, 9, 7, 5, 4, 2, 0],
+    ch3Bass:   [0, 0, 4, 4, 2, 2, 5, 5, 0, 0, 4, 4, 2, 2, 5, 5],
+    nfo: "Release: Stardust Memories\\nTracker: Soundtracker / ProTracker\\nChannels: 4\\nAmiga chillout classic featured in Sanity world demos"
+  },
+  {
+    id: 'trk-07',
+    title: 'Elysium Cyberdrift',
+    artist: 'Basehead',
+    group: 'Pulse Demos',
+    format: 'XM',
+    size: 512000,
+    sizeStr: '500 KB',
+    channels: 8,
+    bpm: 136,
+    speed: 4,
+    user: 'basehead@ucsd.edu',
+    line: 'Cable (1.0M)',
+    lineSpeedKb: 120,
+    ping: 38,
+    hash: '419999a0b0c0d0e0',
+    filename: 'elysium_cyberdrift.xm',
+    scaleNotes: [57, 60, 62, 65, 67, 69, 72, 74], // A minor pentatonic
+    ch1Melody: [0, 3, 2, 4, 5, 4, 2, 0, 6, 5, 4, 2, 3, 2, 0, 2],
+    ch2FmLead: [5, 4, 2, 0, 4, 5, 7, 5, 6, 5, 4, 2, 0, 2, 4, 5],
+    ch3Bass:   [0, 0, 3, 3, 5, 5, 2, 2, 0, 0, 3, 3, 4, 4, 2, 2],
+    nfo: "Release: Elysium Cyberdrift\\nTracker: FastTracker II v2.09\\nChannels: 8\\nHeavy Roland 303 acid line paired with atmospheric FM pads"
+  },
+  {
+    id: 'trk-08',
+    title: 'Gothic Dreams \'99',
+    artist: 'Necros',
+    group: 'Five Musicians',
+    format: 'S3M',
+    size: 345000,
+    sizeStr: '336 KB',
+    channels: 8,
+    bpm: 130,
+    speed: 6,
+    user: 'necros@umich.edu',
+    line: 'T1 (1.5M)',
+    lineSpeedKb: 180,
+    ping: 24,
+    hash: '12891999aa776655',
+    filename: 'gothic_dreams.s3m',
+    scaleNotes: [60, 63, 65, 66, 67, 70, 72, 75], // Blues / minor
+    ch1Melody: [0, 1, 2, 3, 4, 3, 2, 0, 5, 4, 3, 2, 0, 2, 4, 6],
+    ch2FmLead: [4, 3, 2, 0, 5, 4, 3, 2, 6, 5, 4, 2, 3, 4, 5, 7],
+    ch3Bass:   [0, 0, 4, 4, 2, 2, 3, 3, 0, 0, 4, 4, 2, 2, 3, 3],
+    nfo: "Release: Gothic Dreams\\nTracker: Scream Tracker 3\\nChannels: 8\\nAtmospheric tracker masterpiece with gothic choir chords"
+  }
+];
+
+// --- Application State ---
+let searchResults = [...TRACK_CATALOG];
+let selectedTrackId = 'trk-01';
+let activeDownloads = safeGet('trapster_active_dl', []);
+let userSpeedKb = 5.4; // 56k V.90 default
+let currentTrack = null;
+let isPlaying = false;
+let isLooping = true;
+let currentPatternRow = 0;
+let currentPatternIndex = 0;
+let channelMutes = [false, false, false, false, false, false];
+let scopeMode = 'wave'; // 'wave', 'bars', 'lissajous'
+let activeChatRoom = '#trapster-main';
+
+// --- Web Audio API Chiptune / FM Synthesizer ---
+let audioCtx = null;
+let masterGain = null;
+let delayNode = null;
+let delayFeedback = null;
+let delayFilter = null;
+let analyserNode = null;
+let animFrameId = null;
+let seqTimerId = null;
+
+function initAudio() {
+  if (audioCtx) return;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  audioCtx = new AudioContextClass();
+
+  masterGain = audioCtx.createGain();
+  masterGain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+
+  // SPC700 Stereo Delay Simulation (180ms delay, feedback, 2200Hz LP filter)
+  delayNode = audioCtx.createDelay();
+  delayNode.delayTime.setValueAtTime(0.18, audioCtx.currentTime);
+
+  delayFeedback = audioCtx.createGain();
+  delayFeedback.gain.setValueAtTime(0.35, audioCtx.currentTime);
+
+  delayFilter = audioCtx.createBiquadFilter();
+  delayFilter.type = 'lowpass';
+  delayFilter.frequency.setValueAtTime(2200, audioCtx.currentTime);
+
+  // Delay routing loop
+  delayNode.connect(delayFilter);
+  delayFilter.connect(delayFeedback);
+  delayFeedback.connect(delayNode);
+
+  // Analyzer for Oscilloscope
+  analyserNode = audioCtx.createAnalyser();
+  analyserNode.fftSize = 256;
+
+  masterGain.connect(analyserNode);
+  delayFilter.connect(analyserNode);
+  analyserNode.connect(audioCtx.destination);
+
+  startVisualizerLoop();
+}
+
+function midiToFreq(m) {
+  return 440 * Math.pow(2, (m - 69) / 12);
+}
+
+// Synthesize Tracker Channel Voices
+function playTrackerTick(row) {
+  if (!audioCtx || !isPlaying || !currentTrack) return;
+  const now = audioCtx.currentTime;
+  const t = currentTrack;
+
+  // Flash pattern matrix row
+  currentPatternRow = row % 16;
+  updatePatternDisplay(currentPatternRow);
+
+  // Animate LED VU meters
+  for (let i = 0; i < 6; i++) {
+    const meterEl = document.getElementById('meter-' + i);
+    if (meterEl && !channelMutes[i]) {
+      const h = Math.floor(Math.random() * 65 + 35);
+      meterEl.style.height = h + '%';
+      setTimeout(() => { if (meterEl) meterEl.style.height = '10%'; }, 90);
+    }
+  }
+
+  // CH 1: Lead Melody (Pulse Wave with Vibrato)
+  if (!channelMutes[0]) {
+    const noteIdx = t.ch1Melody[row % 16];
+    const freq = midiToFreq(t.scaleNotes[noteIdx % t.scaleNotes.length]);
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(freq, now);
+    // Vibrato LFO
+    const lfo = audioCtx.createOscillator();
+    const lfoGain = audioCtx.createGain();
+    lfo.frequency.setValueAtTime(6, now);
+    lfoGain.gain.setValueAtTime(freq * 0.02, now);
+    lfo.connect(osc.frequency);
+    lfo.start(now);
+    lfo.stop(now + 0.18);
+
+    g.gain.setValueAtTime(0.16, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    osc.connect(g);
+    g.connect(masterGain);
+    if (!channelMutes[5]) g.connect(delayNode);
+    osc.start(now);
+    osc.stop(now + 0.19);
+  }
+
+  // CH 2: YM2612 2-Op FM Lead (Modulator -> Carrier)
+  if (!channelMutes[1]) {
+    const noteIdx = t.ch2FmLead[row % 16];
+    const carrierFreq = midiToFreq(t.scaleNotes[noteIdx % t.scaleNotes.length] + 12);
+    const modFreq = carrierFreq * 2.0; // 2:1 harmonic ratio for bell/brass FM
+    const modOsc = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const carOsc = audioCtx.createOscillator();
+    const carGain = audioCtx.createGain();
+
+    modOsc.type = 'sine';
+    modOsc.frequency.setValueAtTime(modFreq, now);
+    modGain.gain.setValueAtTime(carrierFreq * 1.5, now);
+    modGain.gain.exponentialRampToValueAtTime(1, now + 0.22);
+    modOsc.connect(carOsc.frequency);
+
+    carOsc.type = 'sine';
+    carOsc.frequency.setValueAtTime(carrierFreq, now);
+    carGain.gain.setValueAtTime(0.18, now);
+    carGain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+
+    carOsc.connect(carGain);
+    carGain.connect(masterGain);
+    if (!channelMutes[5]) carGain.connect(delayNode);
+
+    modOsc.start(now);
+    carOsc.start(now);
+    modOsc.stop(now + 0.25);
+    carOsc.stop(now + 0.25);
+  }
+
+  // CH 3: Bassline (Triangle / Saw Wave)
+  if (!channelMutes[2]) {
+    const noteIdx = t.ch3Bass[row % 16];
+    const freq = midiToFreq(t.scaleNotes[noteIdx % t.scaleNotes.length] - 24);
+    const bassOsc = audioCtx.createOscillator();
+    const bassGain = audioCtx.createGain();
+    bassOsc.type = (row % 4 === 0) ? 'sawtooth' : 'triangle';
+    bassOsc.frequency.setValueAtTime(freq, now);
+    bassGain.gain.setValueAtTime(0.28, now);
+    bassGain.gain.exponentialRampToValueAtTime(0.01, now + 0.20);
+    bassOsc.connect(bassGain);
+    bassGain.connect(masterGain);
+    bassOsc.start(now);
+    bassOsc.stop(now + 0.21);
+  }
+
+  // CH 4: Arpeggios (50Hz rapid triad ticks)
+  if (!channelMutes[3] && (row % 2 === 0)) {
+    const baseMidi = t.scaleNotes[t.ch1Melody[row % 16] % t.scaleNotes.length];
+    const arpNotes = [baseMidi, baseMidi + 3, baseMidi + 7];
+    arpNotes.forEach((m, idx) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'pulse' in osc ? 'pulse' : 'square';
+      osc.frequency.setValueAtTime(midiToFreq(m), now + idx * 0.04);
+      g.gain.setValueAtTime(0.07, now + idx * 0.04);
+      g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.05);
+      osc.connect(g);
+      g.connect(masterGain);
+      osc.start(now + idx * 0.04);
+      osc.stop(now + idx * 0.04 + 0.06);
+    });
+  }
+
+  // CH 5: Drums / Percussion (Noise Snare/Hi-hat + Sine Kick)
+  if (!channelMutes[4]) {
+    // Kick drum on beats 0, 4, 8, 12
+    if (row % 4 === 0) {
+      const kickOsc = audioCtx.createOscillator();
+      const kickGain = audioCtx.createGain();
+      kickOsc.type = 'sine';
+      kickOsc.frequency.setValueAtTime(140, now);
+      kickOsc.frequency.exponentialRampToValueAtTime(35, now + 0.12);
+      kickGain.gain.setValueAtTime(0.35, now);
+      kickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+      kickOsc.connect(kickGain);
+      kickGain.connect(masterGain);
+      kickOsc.start(now);
+      kickOsc.stop(now + 0.15);
+    }
+    // Snare / Noise burst on beats 4, 12
+    if (row % 8 === 4) {
+      const bufferSize = audioCtx.sampleRate * 0.1;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+      const whiteNoise = audioCtx.createBufferSource();
+      whiteNoise.buffer = noiseBuffer;
+      const noiseGain = audioCtx.createGain();
+      noiseGain.gain.setValueAtTime(0.2, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      whiteNoise.connect(noiseGain);
+      noiseGain.connect(masterGain);
+      whiteNoise.start(now);
+    }
+    // Hi-hat tick on every off-beat
+    if (row % 2 === 1) {
+      const hatOsc = audioCtx.createOscillator();
+      const hatGain = audioCtx.createGain();
+      hatOsc.type = 'square';
+      hatOsc.frequency.setValueAtTime(8000, now);
+      hatGain.gain.setValueAtTime(0.04, now);
+      hatGain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+      hatOsc.connect(hatGain);
+      hatGain.connect(masterGain);
+      hatOsc.start(now);
+      hatOsc.stop(now + 0.04);
+    }
+  }
+}
+
+function startSequencer() {
+  if (seqTimerId) clearInterval(seqTimerId);
+  const bpm = (currentTrack && currentTrack.bpm) || 125;
+  const tickIntervalMs = Math.round((60000 / bpm) / 4); // 16th note tracker ticks
+  let row = 0;
+  seqTimerId = setInterval(() => {
+    if (!isPlaying) return;
+    playTrackerTick(row);
+    row = (row + 1) % 64;
+    if (row === 0) {
+      currentPatternIndex = (currentPatternIndex + 1) % 4;
+      document.getElementById('patNum').textContent = String(currentPatternIndex).padStart(2, '0');
+    }
+  }, tickIntervalMs);
+}
+
+function stopSequencer() {
+  if (seqTimerId) {
+    clearInterval(seqTimerId);
+    seqTimerId = null;
+  }
+}
+
+// --- Player Transport Controls ---
+function loadTrackIntoPlayer(trk) {
+  initAudio();
+  currentTrack = trk;
+  document.getElementById('playerDeckTitle').textContent = trk.title.toUpperCase();
+  document.getElementById('playerDeckArtist').textContent = trk.artist + ' (' + trk.group + ')';
+  document.getElementById('deckFmt').textContent = trk.format;
+  document.getElementById('deckBpm').textContent = trk.bpm;
+  document.getElementById('deckSpd').textContent = trk.speed;
+  document.getElementById('deckCh').textContent = trk.channels + ' CH';
+
+  populatePatternMatrix(trk);
+  document.getElementById('sbStatus').textContent = 'Loaded: ' + trk.title + ' [' + trk.format + '] by ' + trk.artist;
+}
+
+function playerTogglePlay() {
+  initAudio();
+  if (!currentTrack) {
+    const sel = TRACK_CATALOG.find(t => t.id === selectedTrackId) || TRACK_CATALOG[0];
+    loadTrackIntoPlayer(sel);
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  isPlaying = !isPlaying;
+  const btn = document.getElementById('btnPlayPause');
+  if (isPlaying) {
+    btn.textContent = '⏸';
+    startSequencer();
+    showToast('Playing: ' + currentTrack.title);
+  } else {
+    btn.textContent = '▶';
+    stopSequencer();
+    showToast('Paused');
+  }
+}
+
+function playerStop() {
+  isPlaying = false;
+  document.getElementById('btnPlayPause').textContent = '▶';
+  stopSequencer();
+  currentPatternRow = 0;
+  updatePatternDisplay(0);
+}
+
+function playerNextTrack() {
+  const curIdx = TRACK_CATALOG.findIndex(t => t.id === (currentTrack ? currentTrack.id : selectedTrackId));
+  const nextTrack = TRACK_CATALOG[(curIdx + 1) % TRACK_CATALOG.length];
+  selectedTrackId = nextTrack.id;
+  loadTrackIntoPlayer(nextTrack);
+  if (isPlaying) startSequencer();
+}
+
+function playerPrevTrack() {
+  const curIdx = TRACK_CATALOG.findIndex(t => t.id === (currentTrack ? currentTrack.id : selectedTrackId));
+  const prevTrack = TRACK_CATALOG[(curIdx - 1 + TRACK_CATALOG.length) % TRACK_CATALOG.length];
+  selectedTrackId = prevTrack.id;
+  loadTrackIntoPlayer(prevTrack);
+  if (isPlaying) startSequencer();
+}
+
+function playerToggleLoop() {
+  isLooping = !isLooping;
+  const btn = document.getElementById('btnLoop');
+  btn.style.color = isLooping ? '#000080' : '#888';
+  showToast(isLooping ? 'Track loop: ON' : 'Track loop: OFF');
+}
+
+function updateMasterVolume(val) {
+  const pct = parseInt(val, 10);
+  document.getElementById('volVal').textContent = pct + '%';
+  if (masterGain && audioCtx) {
+    masterGain.gain.setValueAtTime((pct / 100) * 0.8, audioCtx.currentTime);
+  }
+}
+
+function toggleChannelMute(chanIdx) {
+  channelMutes[chanIdx] = !channelMutes[chanIdx];
+  const btn = document.getElementById('mute-' + chanIdx);
+  const strip = document.getElementById('strip-' + chanIdx);
+  if (channelMutes[chanIdx]) {
+    btn.classList.add('is-muted');
+    btn.textContent = 'MUTED';
+    strip.classList.add('muted');
+  } else {
+    btn.classList.remove('is-muted');
+    btn.textContent = 'MUTE';
+    strip.classList.remove('muted');
+  }
+}
+
+function unmuteAllChannels() {
+  for (let i = 0; i < 6; i++) {
+    channelMutes[i] = false;
+    const btn = document.getElementById('mute-' + i);
+    const strip = document.getElementById('strip-' + i);
+    if (btn) { btn.classList.remove('is-muted'); btn.textContent = 'MUTE'; }
+    if (strip) strip.classList.remove('muted');
+  }
+  showToast('All channels unmuted');
+}
+
+// --- Pattern Matrix Display ---
+function populatePatternMatrix(trk) {
+  const container = document.getElementById('patternGrid');
+  let html = '';
+  const noteNames = ['C-', 'C#', 'D-', 'D#', 'E-', 'F-', 'F#', 'G-', 'G#', 'A-', 'A#', 'B-'];
+
+  for (let r = 0; r < 64; r++) {
+    const rowHex = String(r).padStart(2, '0');
+    let line = `${rowHex} | `;
+    for (let ch = 0; ch < Math.min(trk.channels, 4); ch++) {
+      const nIdx = (trk.ch1Melody[r % 16] + ch * 2) % trk.scaleNotes.length;
+      const midi = trk.scaleNotes[nIdx];
+      const oct = Math.floor(midi / 12) - 1;
+      const nName = noteNames[midi % 12];
+      const inst = String(ch + 1).padStart(2, '0');
+      const fx = (r % 4 === 0) ? 'F06' : (r % 2 === 0 ? 'C20' : '000');
+      line += `<span class="pat-note">${nName}${oct}</span> <span class="pat-inst">${inst}</span> <span class="pat-fx">${fx}</span> | `;
+    }
+    html += `<div id="patRow-${r}" class="pat-line">${line}</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function updatePatternDisplay(row) {
+  document.getElementById('patRow').textContent = String(row).padStart(2, '0');
+  const prev = document.querySelector('.pat-row-curr');
+  if (prev) prev.classList.remove('pat-row-curr');
+  const curr = document.getElementById('patRow-' + row);
+  if (curr) {
+    curr.classList.add('pat-row-curr');
+    curr.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+}
+
+// --- CRT Oscilloscope / Visualizer Loop ---
+function setScopeMode(mode) {
+  scopeMode = mode;
+  document.getElementById('btnScopeWave').classList.toggle('active', mode === 'wave');
+  document.getElementById('btnScopeSpec').classList.toggle('active', mode === 'bars');
+  document.getElementById('btnScopeLiss').classList.toggle('active', mode === 'lissajous');
+}
+
+function startVisualizerLoop() {
+  const canvas = document.getElementById('scopeCanvas');
+  const ctx = canvas.getContext('2d');
+  const bufferLength = analyserNode.frequencyBinCount;
+  const timeData = new Uint8Array(bufferLength);
+  const freqData = new Uint8Array(bufferLength);
+
+  function draw() {
+    animFrameId = requestAnimationFrame(draw);
+    ctx.fillStyle = '#050b0d';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Grid lines for retro CRT feel
+    ctx.strokeStyle = 'rgba(0, 100, 80, 0.2)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < canvas.width; x += 34) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += 22) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+
+    if (!isPlaying) {
+      // Flat line with faint glow
+      ctx.strokeStyle = '#00ff66';
+      ctx.shadowBlur = 4;
+      ctx.shadowColor = '#00ff66';
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height / 2);
+      ctx.lineTo(canvas.width, canvas.height / 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      return;
+    }
+
+    analyserNode.getByteTimeDomainData(timeData);
+    analyserNode.getByteFrequencyData(freqData);
+
+    if (scopeMode === 'wave') {
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#00ff66';
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = '#00ff66';
+      ctx.beginPath();
+      const sliceWidth = canvas.width / bufferLength;
+      let x = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        const v = timeData[i] / 128.0;
+        const y = (v * canvas.height) / 2;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+        x += sliceWidth;
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    } else if (scopeMode === 'bars') {
+      const barWidth = (canvas.width / 32) - 2;
+      for (let i = 0; i < 32; i++) {
+        const val = freqData[i * 2] / 255;
+        const barHeight = val * (canvas.height - 10);
+        const x = i * (barWidth + 2);
+        const y = canvas.height - barHeight;
+        const grad = ctx.createLinearGradient(0, canvas.height, 0, 0);
+        grad.addColorStop(0, '#00ff66');
+        grad.addColorStop(0.7, '#00e5ff');
+        grad.addColorStop(1, '#ff3366');
+        ctx.fillStyle = grad;
+        ctx.fillRect(x, y, barWidth, barHeight);
+      }
+    } else if (scopeMode === 'lissajous') {
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#00e5ff';
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = '#00e5ff';
+      ctx.beginPath();
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      for (let i = 0; i < bufferLength - 1; i += 2) {
+        const x = cx + ((timeData[i] - 128) / 128) * (canvas.width * 0.42);
+        const y = cy + ((timeData[i + 1] - 128) / 128) * (canvas.height * 0.42);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
+  draw();
+}
+
+// --- Search & Catalog Engine ---
+function renderSearchResults(tracks) {
+  const tbody = document.getElementById('resultsBody');
+  tbody.innerHTML = '';
+  tracks.forEach(t => {
+    const tr = document.createElement('tr');
+    tr.id = 'row-' + t.id;
+    if (t.id === selectedTrackId) tr.classList.add('selected');
+    tr.onclick = () => selectTrack(t.id);
+    tr.ondblclick = () => {
+      selectTrack(t.id);
+      downloadSelectedTrack();
+    };
+
+    const fmtClass = 'fmt-' + t.format.toLowerCase();
+    tr.innerHTML = `
+      <td><strong>${t.title}</strong></td>
+      <td>${t.artist}</td>
+      <td><span class="badge-fmt ${fmtClass}">${t.format}</span></td>
+      <td>${t.sizeStr}</td>
+      <td>${t.channels}ch</td>
+      <td>${t.bpm}</td>
+      <td>${t.user}</td>
+      <td>${t.line}</td>
+      <td>${t.ping}ms</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('searchResultStats').textContent = 
+    `Showing ${tracks.length} matching track${tracks.length === 1 ? '' : 's'} from 1,429 peers`;
+}
+
+function selectTrack(id) {
+  selectedTrackId = id;
+  document.querySelectorAll('#resultsBody tr').forEach(r => r.classList.remove('selected'));
+  const target = document.getElementById('row-' + id);
+  if (target) target.classList.add('selected');
+}
+
+function executeSearch() {
+  const q = document.getElementById('searchQuery').value.trim().toLowerCase();
+  const fmt = document.getElementById('formatFilter').value;
+  const ch = document.getElementById('channelsFilter').value;
+  const minSpd = parseInt(document.getElementById('speedFilter').value, 10);
+
+  searchResults = TRACK_CATALOG.filter(t => {
+    const matchQ = !q || t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q) || t.group.toLowerCase().includes(q);
+    const matchFmt = fmt === 'ALL' || t.format === fmt;
+    const matchCh = ch === 'ALL' || t.channels === parseInt(ch, 10);
+    const matchSpd = t.lineSpeedKb >= minSpd;
+    return matchQ && matchFmt && matchCh && matchSpd;
+  });
+
+  renderSearchResults(searchResults);
+  showToast(`Found ${searchResults.length} matching modules`);
+}
+
+function quickQuery(preset) {
+  document.getElementById('searchQuery').value = preset;
+  document.getElementById('formatFilter').value = 'ALL';
+  document.getElementById('channelsFilter').value = 'ALL';
+  document.getElementById('speedFilter').value = '0';
+  executeSearch();
+}
+
+function clearSearch() {
+  document.getElementById('searchQuery').value = '';
+  document.getElementById('formatFilter').value = 'ALL';
+  document.getElementById('channelsFilter').value = 'ALL';
+  document.getElementById('speedFilter').value = '0';
+  searchResults = [...TRACK_CATALOG];
+  renderSearchResults(searchResults);
+}
+
+let sortDir = {};
+function sortResults(field) {
+  sortDir[field] = !sortDir[field];
+  const mult = sortDir[field] ? 1 : -1;
+  searchResults.sort((a, b) => {
+    if (a[field] < b[field]) return -1 * mult;
+    if (a[field] > b[field]) return 1 * mult;
+    return 0;
+  });
+  renderSearchResults(searchResults);
+}
+
+// --- Download Queue & Transfers Manager ---
+function downloadSelectedTrack() {
+  const trk = TRACK_CATALOG.find(t => t.id === selectedTrackId);
+  if (!trk) {
+    showToast('Please select a track to download');
+    return;
+  }
+  // Check if already in queue
+  if (activeDownloads.some(d => d.id === trk.id)) {
+    showToast('Track already present in Transfers queue');
+    switchTab('tab-transfers');
+    return;
+  }
+
+  const dlItem = {
+    id: trk.id,
+    title: trk.title,
+    filename: trk.filename,
+    format: trk.format,
+    size: trk.size,
+    sizeStr: trk.sizeStr,
+    bytesDownloaded: 0,
+    speedKb: Math.min(userSpeedKb, trk.lineSpeedKb),
+    status: 'Connecting...',
+    progressPct: 0,
+    paused: false,
+    startTime: Date.now()
+  };
+
+  activeDownloads.push(dlItem);
+  safeSet('trapster_active_dl', activeDownloads);
+  updateTransfersDisplay();
+  showToast('Added ' + trk.filename + ' to download queue');
+  switchTab('tab-transfers');
+}
+
+function previewSelectedTrack() {
+  const trk = TRACK_CATALOG.find(t => t.id === selectedTrackId);
+  if (!trk) return;
+  loadTrackIntoPlayer(trk);
+  switchTab('tab-player');
+  playerTogglePlay();
+}
+
+function saveSelectedDirectVfs() {
+  const trk = TRACK_CATALOG.find(t => t.id === selectedTrackId);
+  if (!trk) return;
+  generateAndSaveVfsModule(trk);
+}
+
+function copyMagnetLink() {
+  const trk = TRACK_CATALOG.find(t => t.id === selectedTrackId);
+  if (!trk) return;
+  const uri = `trapster://magnet:?xt=urn:modsha1:${trk.hash}&dn=${encodeURIComponent(trk.filename)}&xl=${trk.size}`;
+  try {
+    navigator.clipboard.writeText(uri);
+    showToast('Copied Trapster P2P Hash to Clipboard!');
+  } catch (e) {
+    showToast('Hash: ' + trk.hash);
+  }
+}
+
+function showTrackNfo() {
+  const trk = TRACK_CATALOG.find(t => t.id === selectedTrackId);
+  if (!trk) return;
+  document.getElementById('nfoTitle').textContent = trk.title + ' — Release NFO';
+  document.getElementById('nfoContent').textContent = 
+`======================================================================
+  TRAPSTER P2P CHIPTUNE EXCHANGE RELEASE NFO (RFC-1999)
+======================================================================
+Title:        ${trk.title}
+Artist:       ${trk.artist}
+Demoscene:    ${trk.group}
+Format:       .${trk.format} Module
+Channels:     ${trk.channels}
+BPM / Speed:  ${trk.bpm} / ${trk.speed}
+File Size:    ${trk.size} bytes (${trk.sizeStr})
+P2P Hash:     ${trk.hash}
+Leech Seed:   ${trk.user} via ${trk.line}
+Ping Latency: ${trk.ping}ms
+
+RELEASE NOTES:
+${trk.nfo.replace(/\\n/g, '\n')}
+
+======================================================================
+  DOWNLOAD VERIFIED & HASHED BY TRAPSTER v1.0b CLIENT
+======================================================================`;
+  document.getElementById('nfoModal').style.display = 'flex';
+}
+
+function closeNfoModal() {
+  document.getElementById('nfoModal').style.display = 'none';
+}
+
+// Transfers Simulation Loop
+let dlInterval = setInterval(() => {
+  let anyActive = false;
+  let totalSpeed = 0;
+
+  activeDownloads.forEach(dl => {
+    if (dl.paused || dl.status === 'Completed') return;
+    anyActive = true;
+
+    if (dl.status === 'Connecting...') {
+      dl.status = 'Transferring';
+    }
+
+    const chunkBytes = Math.round((dl.speedKb * 1024) * 0.5); // per 500ms
+    dl.bytesDownloaded = Math.min(dl.size, dl.bytesDownloaded + chunkBytes);
+    dl.progressPct = Math.round((dl.bytesDownloaded / dl.size) * 100);
+    totalSpeed += dl.speedKb;
+
+    if (dl.bytesDownloaded >= dl.size) {
+      dl.status = 'Completed';
+      dl.progressPct = 100;
+      const trk = TRACK_CATALOG.find(t => t.id === dl.id);
+      if (trk) generateAndSaveVfsModule(trk);
+      showToast('Download Complete: ' + dl.filename);
+    }
+  });
+
+  if (anyActive) {
+    updateTransfersDisplay();
+    document.getElementById('totalDlSpeed').textContent = `Total Inbound: ${totalSpeed.toFixed(1)} KB/s`;
+  }
+}, 500);
+
+function updateTransfersDisplay() {
+  const tbody = document.getElementById('dlBody');
+  tbody.innerHTML = '';
+  let activeCount = 0;
+
+  activeDownloads.forEach((dl, idx) => {
+    if (dl.status !== 'Completed') activeCount++;
+    const tr = document.createElement('tr');
+
+    const etaSec = dl.status === 'Completed' ? '0s' : 
+      Math.max(1, Math.round((dl.size - dl.bytesDownloaded) / (dl.speedKb * 1024))) + 's';
+    const transferredStr = (dl.bytesDownloaded / 1024).toFixed(1) + ' KB';
+
+    tr.innerHTML = `
+      <td><strong>${dl.filename}</strong></td>
+      <td>${dl.sizeStr}</td>
+      <td>
+        <div class="prog-bar-outer">
+          <div class="prog-bar-inner" style="width:${dl.progressPct}%"></div>
+          <div class="prog-bar-text">${dl.progressPct}%</div>
+        </div>
+      </td>
+      <td>${dl.status === 'Completed' ? '---' : dl.speedKb.toFixed(1) + ' KB/s'}</td>
+      <td>${transferredStr}</td>
+      <td>${etaSec}</td>
+      <td><span style="font-weight:bold; color:${dl.status === 'Completed' ? '#008800' : '#000080'}">${dl.status}</span></td>
+      <td>
+        ${dl.status !== 'Completed' ? 
+          `<button class="btn-win" style="font-size:9px;" onclick="togglePauseDownload(${idx})">${dl.paused ? '▶ Resume' : '⏸ Pause'}</button>` :
+          `<button class="btn-win btn-primary" style="font-size:9px;" onclick="playCompletedTrack('${dl.id}')">▶ Play</button>`
+        }
+        <button class="btn-win" style="font-size:9px;" onclick="cancelDownload(${idx})">✖</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('countActiveDl').textContent = activeCount;
+  document.getElementById('badgeTransfers').textContent = activeCount;
+  document.getElementById('sbActive').textContent = `DL: ${activeCount} • UL: 2`;
+}
+
+function togglePauseDownload(idx) {
+  if (activeDownloads[idx]) {
+    activeDownloads[idx].paused = !activeDownloads[idx].paused;
+    activeDownloads[idx].status = activeDownloads[idx].paused ? 'Paused' : 'Transferring';
+    updateTransfersDisplay();
+  }
+}
+
+function cancelDownload(idx) {
+  activeDownloads.splice(idx, 1);
+  safeSet('trapster_active_dl', activeDownloads);
+  updateTransfersDisplay();
+}
+
+function pauseAllDownloads() {
+  activeDownloads.forEach(d => { if (d.status !== 'Completed') { d.paused = true; d.status = 'Paused'; } });
+  updateTransfersDisplay();
+}
+
+function resumeAllDownloads() {
+  activeDownloads.forEach(d => { if (d.status !== 'Completed') { d.paused = false; d.status = 'Transferring'; } });
+  updateTransfersDisplay();
+}
+
+function clearCompletedDownloads() {
+  activeDownloads = activeDownloads.filter(d => d.status !== 'Completed');
+  safeSet('trapster_active_dl', activeDownloads);
+  updateTransfersDisplay();
+}
+
+function playCompletedTrack(trkId) {
+  const trk = TRACK_CATALOG.find(t => t.id === trkId);
+  if (trk) {
+    loadTrackIntoPlayer(trk);
+    switchTab('tab-player');
+    playerTogglePlay();
+  }
+}
+
+function updateConnectionSpeed() {
+  const selVal = parseFloat(document.getElementById('userSpeedSelect').value);
+  userSpeedKb = selVal > 500 ? (selVal / 8) : (selVal * 0.11);
+  document.getElementById('sbSpeed').textContent = '⚡ Line: ' + document.getElementById('userSpeedSelect').selectedOptions[0].text.split(' ')[0];
+  showToast('Simulated bandwidth updated to: ' + userSpeedKb.toFixed(1) + ' KB/s');
+}
+
+// Generate Module Binary and Save to VFS
+function generateAndSaveVfsModule(trk) {
+  // Construct standard 1999 MOD / TRK header bytes representation
+  let trackerHeader = `TRAPSTER-MOD-DUMP: ${trk.filename}\nArtist: ${trk.artist}\nBPM: ${trk.bpm}\nChannels: ${trk.channels}\nFormat: ${trk.format}\nCRC32: ${trk.hash}\n\n`;
+  trackerHeader += `[HEADER_SIG]: M.K. (4-channel ProTracker compatible)\n`;
+  for (let s = 1; s <= 15; s++) {
+    trackerHeader += `SMP #${s.toString().padStart(2, '0')}: Instrument_${s} len: ${1024 * s} fine: 0 vol: 64\n`;
+  }
+  trackerHeader += `\n[PATTERN_DATA_STREAM]:\n`;
+  for (let r = 0; r < 32; r++) {
+    trackerHeader += `ROW_${r.toString().padStart(2, '0')}: ${trk.ch1Melody[r % 16]} | ${trk.ch2FmLead[r % 16]} | ${trk.ch3Bass[r % 16]} | FX:00\n`;
+  }
+  saveToKiloVfs('/home/music/' + trk.filename, trackerHeader);
+}
+
+function saveCurrentTrackToVfs() {
+  if (!currentTrack) {
+    showToast('No active track loaded to save');
+    return;
+  }
+  generateAndSaveVfsModule(currentTrack);
+}
+
+// Populate Simulated Leecher Upload Queue
+function initUploadsQueue() {
+  const tbody = document.getElementById('ulBody');
+  tbody.innerHTML = `
+    <tr>
+      <td>128.2.14.88 (cmu-dorm.edu)</td>
+      <td>space_debris.mod</td>
+      <td>
+        <div class="prog-bar-outer">
+          <div class="prog-bar-inner" style="width:68%; background:linear-gradient(90deg, #16a34a, #22c55e);"></div>
+          <div class="prog-bar-text">68%</div>
+        </div>
+      </td>
+      <td>18.4 KB/s</td>
+      <td>1.44</td>
+      <td>mit-t1-relay</td>
+    </tr>
+    <tr>
+      <td>130.237.19.4 (chalmers.se)</td>
+      <td>desert_dawn.s3m</td>
+      <td>
+        <div class="prog-bar-outer">
+          <div class="prog-bar-inner" style="width:42%; background:linear-gradient(90deg, #16a34a, #22c55e);"></div>
+          <div class="prog-bar-text">42%</div>
+        </div>
+      </td>
+      <td>12.2 KB/s</td>
+      <td>2.10</td>
+      <td>helsinki-mod-vault</td>
+    </tr>
+    <tr>
+      <td>10.19.99.127 (salt-vault-7f)</td>
+      <td>subcarrier_1999.trk</td>
+      <td>
+        <div class="prog-bar-outer">
+          <div class="prog-bar-inner" style="width:89%; background:linear-gradient(90deg, #d97706, #f59e0b);"></div>
+          <div class="prog-bar-text">89%</div>
+        </div>
+      </td>
+      <td>1.99 KB/s</td>
+      <td>0.7F</td>
+      <td>echo-gw-07</td>
+    </tr>
+  `;
+}
+
+// --- Swarm Chat & IRC Lounge ---
+const CHAT_ROOM_HISTORIES = {
+  '#trapster-main': [
+    { time: '23:54', nick: 'TrapsterBot', type: 'bot', text: 'Welcome to Trapster Swarm v1.0b! 1,429 peers active. Type !help for commands.' },
+    { time: '23:55', nick: 'chiptune_freak', type: 'user', text: 'Anyone got the 16ch XM release of Second Reality from Assembly?' },
+    { time: '23:56', nick: 'skaven_fan', type: 'user', text: 'Yeah search for Purple Motion or hit the preset button!' },
+    { time: '23:58', nick: 'd0pe_phreak', type: 'user', text: 'Downloading at 170 KB/s on our dorm T1 line... this beats FTP rings big time.' },
+    { time: '23:59', nick: 'whisper_99', type: 'user', text: 'Check out track #05 "Subcarrier 1999"... something weird in the hex pattern at offset 0x7F.' }
+  ],
+  '#tracker-exchange': [
+    { time: '23:50', nick: 'mod_archivist', type: 'user', text: 'Preserving 1989-1999 Amiga ProTracker modules. All Paula 8-bit sound.' },
+    { time: '23:52', nick: 'elwood_tunes', type: 'user', text: 'Impulse Tracker 2.14 supports resonant LP filters now, sounds killer.' }
+  ],
+  '#demoscene-radio': [
+    { time: '23:45', nick: 'RadioBot', type: 'bot', text: 'Now Streaming: Captain - Space Debris (125 BPM)' },
+    { time: '23:48', nick: 'scene_vet', type: 'user', text: 'Future Crew and Sanity tracks are all indexed. Long live Soundtracker!' }
+  ],
+  '#node0x7f-whisper': [
+    { time: '23:59', nick: 'CARLSBAD_RELAY', type: 'sys', text: '*** [CARLSBAD NODE 0x7F]: Lithospheric carrier coherent at 1999Hz. Salt vault transponder echo confirmed.' },
+    { time: '23:59', nick: 'ghost_runner', type: 'user', text: 'Gateway echo-gw-07 is routing audio packets through kweb://deep-core...' }
+  ]
+};
+
+function switchChatRoom(room) {
+  activeChatRoom = room;
+  document.querySelectorAll('.room-item').forEach(el => {
+    el.classList.toggle('active', el.textContent.startsWith(room));
+  });
+  renderChatMessages();
+}
+
+function renderChatMessages() {
+  const container = document.getElementById('chatFeed');
+  container.innerHTML = '';
+  const msgs = CHAT_ROOM_HISTORIES[activeChatRoom] || [];
+  msgs.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'chat-msg';
+    div.innerHTML = `
+      <span class="chat-time">[${m.time}]</span> 
+      <span class="chat-nick ${m.type}">&lt;${m.nick}&gt;</span> 
+      <span class="chat-text">${escapeHtml(m.text)}</span>
+    `;
+    container.appendChild(div);
+  });
+  container.scrollTop = container.scrollHeight;
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chatInput');
+  const txt = input.value.trim();
+  if (!txt) return;
+  input.value = '';
+
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+  if (!CHAT_ROOM_HISTORIES[activeChatRoom]) CHAT_ROOM_HISTORIES[activeChatRoom] = [];
+  CHAT_ROOM_HISTORIES[activeChatRoom].push({
+    time: timeStr,
+    nick: 'You',
+    type: 'user',
+    text: txt
+  });
+  renderChatMessages();
+
+  // Bot response handlers
+  if (txt.startsWith('!')) {
+    handleBotCommand(txt, timeStr);
+  } else if (txt.toLowerCase().includes('carlsbad') || txt.toLowerCase().includes('0x7f')) {
+    setTimeout(() => {
+      CHAT_ROOM_HISTORIES[activeChatRoom].push({
+        time: timeStr,
+        nick: 'CarlsbadDaemon',
+        type: 'sys',
+        text: '*** Node 0x7F telemetry acknowledged. Ingress available via subterranean terminal.'
+      });
+      renderChatMessages();
+    }, 800);
+  }
+}
+
+function handleBotCommand(cmd, timeStr) {
+  setTimeout(() => {
+    let reply = '';
+    const parts = cmd.split(' ');
+    const op = parts[0].toLowerCase();
+
+    if (op === '!help') {
+      reply = 'Commands: !help, !stats, !roll, !find <query>, !radio';
+    } else if (op === '!stats') {
+      reply = 'Trapster Swarm: 1,429 peers | 48,210 modules | 382.4 GB indexed | avg ping 34ms';
+    } else if (op === '!roll') {
+      reply = 'Rolling d100... Rolled: ' + Math.floor(Math.random() * 100 + 1) + '!';
+    } else if (op === '!find') {
+      const q = parts.slice(1).join(' ');
+      reply = `Searching swarm for "${q}"... Found 8 matching tracker files in directory.`;
+    } else if (op === '!radio') {
+      reply = 'Now Playing: ' + (currentTrack ? currentTrack.title : 'Space Debris (Amiga MOD)');
+    } else {
+      reply = 'Unknown command. Type !help for options.';
+    }
+
+    CHAT_ROOM_HISTORIES[activeChatRoom].push({
+      time: timeStr,
+      nick: 'TrapsterBot',
+      type: 'bot',
+      text: reply
+    });
+    renderChatMessages();
+  }, 400);
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// --- My Library Manager ---
+let myLibrary = safeGet('trapster_library', [
+  { id: 'lib-01', title: 'Chiptune Overture in C', format: 'MOD', sizeStr: '192 KB', channels: 4, shared: true, uploads: 14 },
+  { id: 'lib-02', title: 'Future Dream 1999', format: 'XM', sizeStr: '340 KB', channels: 8, shared: true, uploads: 28 },
+  { id: 'lib-03', title: 'Retro Synth Jam #4', format: 'S3M', sizeStr: '220 KB', channels: 8, shared: false, uploads: 0 }
+]);
+
+function renderLibraryTable() {
+  const tbody = document.getElementById('libBody');
+  tbody.innerHTML = '';
+  myLibrary.forEach((item, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${item.title}</strong></td>
+      <td><span class="badge-fmt fmt-${item.format.toLowerCase()}">${item.format}</span></td>
+      <td>${item.sizeStr}</td>
+      <td>${item.channels}ch</td>
+      <td><input type="checkbox" ${item.shared ? 'checked' : ''} onchange="toggleShareItem(${idx}, this.checked)"> Shared</td>
+      <td>${item.uploads} peers</td>
+      <td>
+        <button class="btn-win" style="font-size:9px;" onclick="saveToKiloVfs('/home/music/' + '${item.title.toLowerCase().replace(/ /g, '_')}.${item.format.toLowerCase()}', 'TRAPSTER_LIB_FILE')">💾 VFS</button>
+        <button class="btn-win" style="font-size:9px;" onclick="removeLibraryItem(${idx})">✖</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleShareItem(idx, checked) {
+  myLibrary[idx].shared = checked;
+  safeSet('trapster_library', myLibrary);
+  showToast(checked ? 'Track published to swarm' : 'Track unshared');
+}
+
+function removeLibraryItem(idx) {
+  myLibrary.splice(idx, 1);
+  safeSet('trapster_library', myLibrary);
+  renderLibraryTable();
+}
+
+function openShareModal() {
+  document.getElementById('shareModal').style.display = 'flex';
+}
+function closeShareModal() {
+  document.getElementById('shareModal').style.display = 'none';
+}
+function confirmShareTrack() {
+  const title = document.getElementById('shareTitle').value.trim() || 'Untitled Track';
+  const fmt = document.getElementById('shareFormat').value;
+  const ch = parseInt(document.getElementById('shareCh').value, 10);
+  myLibrary.push({
+    id: 'lib-' + Date.now(),
+    title: title,
+    format: fmt,
+    sizeStr: '256 KB',
+    channels: ch,
+    shared: true,
+    uploads: 0
+  });
+  safeSet('trapster_library', myLibrary);
+  renderLibraryTable();
+  closeShareModal();
+  showToast('Shared "' + title + '" to the Trapster P2P swarm!');
+}
+
+function syncLibraryVfs() {
+  showToast('VFS /home/music/ scanned: 3 tracker modules verified');
+}
+
+function exportLibraryManifest() {
+  const jsonStr = JSON.stringify(myLibrary, null, 2);
+  saveToKiloVfs('/home/music/trapster_catalog.json', jsonStr);
+}
+
+// --- Swarm Topology 2D Canvas Visualization ---
+function initTopologyCanvas() {
+  const canvas = document.getElementById('topoCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const nodes = [
+    { x: 250, y: 170, label: 'Central Relay', r: 9, color: '#00e5ff', type: 'hub' },
+    { x: 100, y: 70,  label: 'MIT Supernode', r: 7, color: '#38bdf8', type: 'super' },
+    { x: 380, y: 80,  label: 'CMU Swarm', r: 7, color: '#38bdf8', type: 'super' },
+    { x: 90,  y: 260, label: 'Helsinki Vault', r: 7, color: '#38bdf8', type: 'super' },
+    { x: 390, y: 250, label: 'Stanford T1', r: 7, color: '#38bdf8', type: 'super' },
+    { x: 250, y: 310, label: 'Carlsbad 0x7F', r: 8, color: '#f59e0b', type: 'sub' }
+  ];
+
+  // Leaf peers orbiting
+  for (let i = 0; i < 24; i++) {
+    const pHub = nodes[1 + (i % 5)];
+    const angle = (i * 1.2);
+    const dist = 32 + (i % 3) * 12;
+    nodes.push({
+      x: pHub.x + Math.cos(angle) * dist,
+      y: pHub.y + Math.sin(angle) * dist,
+      label: 'Peer ' + (i + 1),
+      r: 3,
+      color: '#00ff66',
+      type: 'leaf',
+      parent: pHub
+    });
+  }
+
+  let packets = [];
+  for (let i = 0; i < 8; i++) {
+    packets.push({
+      from: nodes[0],
+      to: nodes[1 + (i % 5)],
+      progress: Math.random()
+    });
+  }
+
+  function renderTopology() {
+    requestAnimationFrame(renderTopology);
+    ctx.fillStyle = '#050b0d';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw connection lines
+    ctx.strokeStyle = 'rgba(0, 100, 120, 0.4)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i <= 5; i++) {
+      ctx.beginPath();
+      ctx.moveTo(nodes[0].x, nodes[0].y);
+      ctx.lineTo(nodes[i].x, nodes[i].y);
+      ctx.stroke();
+    }
+    nodes.forEach(n => {
+      if (n.parent) {
+        ctx.beginPath();
+        ctx.moveTo(n.x, n.y);
+        ctx.lineTo(n.parent.x, n.parent.y);
+        ctx.stroke();
+      }
+    });
+
+    // Draw animated data packet pulses
+    packets.forEach(p => {
+      p.progress += 0.015;
+      if (p.progress >= 1) {
+        p.progress = 0;
+        p.to = nodes[1 + Math.floor(Math.random() * 5)];
+      }
+      const px = p.from.x + (p.to.x - p.from.x) * p.progress;
+      const py = p.from.y + (p.to.y - p.from.y) * p.progress;
+      ctx.fillStyle = '#ffaa00';
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = '#ffaa00';
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+
+    // Draw nodes
+    nodes.forEach(n => {
+      ctx.fillStyle = n.color;
+      ctx.shadowBlur = n.r > 5 ? 8 : 2;
+      ctx.shadowColor = n.color;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      if (n.r >= 6) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '9px Consolas, monospace';
+        ctx.fillText(n.label, n.x - 28, n.y - 10);
+      }
+    });
+  }
+  renderTopology();
+
+  // Bandwidth sparkline loop
+  const bwCanvas = document.getElementById('bwGraphCanvas');
+  const bwCtx = bwCanvas.getContext('2d');
+  const bwHistory = new Array(35).fill(20);
+
+  setInterval(() => {
+    bwHistory.shift();
+    const noise = Math.random() * 30 + 10;
+    bwHistory.push(noise);
+    bwCtx.fillStyle = '#000000';
+    bwCtx.fillRect(0, 0, bwCanvas.width, bwCanvas.height);
+    bwCtx.strokeStyle = '#00ff66';
+    bwCtx.lineWidth = 1.5;
+    bwCtx.beginPath();
+    const step = bwCanvas.width / (bwHistory.length - 1);
+    bwHistory.forEach((val, i) => {
+      const x = i * step;
+      const y = bwCanvas.height - (val / 50) * bwCanvas.height;
+      if (i === 0) bwCtx.moveTo(x, y);
+      else bwCtx.lineTo(x, y);
+    });
+    bwCtx.stroke();
+  }, 300);
+}
+
+// --- Tab Switching Navigation ---
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+  const targetPanel = document.getElementById(tabId);
+  if (targetPanel) targetPanel.classList.add('active');
+
+  const btnMap = {
+    'tab-search': 'btnTabSearch',
+    'tab-transfers': 'btnTabTransfers',
+    'tab-player': 'btnTabPlayer',
+    'tab-chat': 'btnTabChat',
+    'tab-library': 'btnTabLibrary',
+    'tab-topo': 'btnTabTopo'
+  };
+  const targetBtn = document.getElementById(btnMap[tabId]);
+  if (targetBtn) targetBtn.classList.add('active');
+
+  if (tabId === 'tab-player' && !currentTrack) {
+    const sel = TRACK_CATALOG.find(t => t.id === selectedTrackId) || TRACK_CATALOG[0];
+    loadTrackIntoPlayer(sel);
+  }
+}
+
+// Window controls
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen().catch(() => {});
+  }
+}
+function openHelpModal() {
+  document.getElementById('nfoTitle').textContent = 'TRAPSTER v1.0b Help & Documentation';
+  document.getElementById('nfoContent').textContent = 
+`TRAPSTER v1.0b - P2P Chiptune & Tracker Swarm (RFC-1999)
+======================================================================
+FEATURES:
+1. Search & Filter:
+   - Search across 48k+ Amiga ProTracker (.MOD), FastTracker II (.XM),
+     Scream Tracker 3 (.S3M), and Impulse Tracker (.IT) modules.
+   - Filter by channel count (4ch Amiga, 8ch, 16ch, 32ch).
+
+2. Simulated Bandwidth Transfers:
+   - Real-time download queue with authentic 56k V.90 or T1 speeds.
+   - Automatic save to KiloOS VFS: /home/music/<filename>.mod
+
+3. Realtime Chiptune Synthesizer:
+   - Dual-operator FM bell/brass (YM2612 Genesis soundchip emulation).
+   - SPC700 stereo delay line (180ms delay @ 2200Hz LP filter).
+   - 6-channel mixer with Mute/Solo and live oscilloscope visualizer.
+
+4. KiloOS Cross-App Integration:
+   - Export directly to KAudio, KSynth, or inspect in KHex.
+   - IRC chat lobby with bots and ARG node 0x7F transmission lore.
+======================================================================`;
+  document.getElementById('nfoModal').style.display = 'flex';
+}
+
+function openOptionsModal() {
+  showToast('Options: Port 6667 / 6699 (TCP), VFS Destination: /home/music/');
+}
+
+// --- Initialization ---
+window.addEventListener('DOMContentLoaded', () => {
+  renderSearchResults(searchResults);
+  renderLibraryTable();
+  initUploadsQueue();
+  renderChatMessages();
+  initTopologyCanvas();
+  updateTransfersDisplay();
+  const initialTrack = TRACK_CATALOG[0];
+  loadTrackIntoPlayer(initialTrack);
+});
+</script>
+
+</body>
+</html>

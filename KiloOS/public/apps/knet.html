@@ -611,6 +611,7 @@
       <optgroup label="🌐 Virtual 1999 Web">
         <option value="kweb://portal">🏠 KiloNet 1999 Web Portal</option>
         <option value="kweb://slashnet">📰 SlashNet: News for Nerds</option>
+        <option value="kweb://trapster">🐱 Trapster P2P Chiptune Swarm</option>
         <option value="kweb://webring">🌐 Central Webring Hub</option>
         <option value="kweb://geocities">✨ CyberSpire Retro Shrine &amp; MOD Vault</option>
         <option value="kweb://cybercafe">☕ CyberCafe '99 (BBS &amp; ASCII Lounge)</option>
@@ -688,6 +689,7 @@
           <span style="font-size:11px; color:var(--text-muted); font-weight:700;">1999 WEB:</span>
           <button class="btn-chip" data-url="kweb://portal" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🏠 1999 Portal</button>
           <button class="btn-chip" data-url="kweb://slashnet" style="color:#34d399; border-color:rgba(52, 211, 153, 0.4);">📰 SlashNet</button>
+          <button class="btn-chip" data-url="kweb://trapster" style="color:#00ff66; border-color:rgba(0, 255, 102, 0.4);">🐱 Trapster</button>
           <button class="btn-chip" data-url="kweb://webring">🌐 Webring</button>
           <button class="btn-chip" data-url="kweb://geocities" style="color:#f0abfc;">✨ GeoCities</button>
           <button class="btn-chip" data-url="kweb://cybercafe" style="color:#fbbf24; border-color:rgba(251, 191, 36, 0.4);">☕ CyberCafe</button>
@@ -1121,6 +1123,7 @@
           <tr><td><code>bench / speed</code></td><td>URL command to run 1999 dial-up speedometer benchmark</td></tr>
           <tr><td><code>kweb://portal</code></td><td>Access 1999 KiloNet Directory &amp; Hypermedia Portal</td></tr>
           <tr><td><code>kweb://slashnet</code></td><td>Access SlashNet: News for Nerds (1999), Karma Moderation &amp; Beowulf Cluster Calc</td></tr>
+          <tr><td><code>kweb://trapster</code></td><td>Access Trapster P2P Chiptune &amp; Tracker Exchange v1.0b</td></tr>
           <tr><td><code>kweb://webring</code></td><td>Access Central KiloNet Webring Hub &amp; Node Directory</td></tr>
           <tr><td><code>kweb://geocities</code></td><td>Access CyberSpire Retro Shrine, Amiga .MOD Vault, Diskmag Reader, 16-Bit SFX Lab, Web-Safe 216 Color Lab, Halite Crypt Dungeon RPG &amp; Odometer Marquee Forge</td></tr>
           <tr><td><code>kweb://cybercafe</code></td><td>Access Underground BBS, Threaded Forums, ASCII Art Studio, 1999 LAN Arena, Visitor Guestbook, CCTV Surveillance &amp; ShoutCast NetRadio</td></tr>
@@ -2211,6 +2214,8 @@
     // Virtual 1999 Web Route Mappings
     if (url.toLowerCase() === 'kweb://portal' || url.toLowerCase() === 'portal') {
       url = '/web/portal.html';
+    } else if (url.toLowerCase() === 'kweb://trapster' || url.toLowerCase() === 'trapster' || url.toLowerCase() === 'kweb://napster' || url.toLowerCase() === 'napster' || url.toLowerCase() === 'kweb://trapster.org') {
+      url = '/web/trapster.html';
     } else if (url.toLowerCase() === 'kweb://slashnet' || url.toLowerCase() === 'slashnet' || url.toLowerCase() === 'kweb://slashdot' || url.toLowerCase() === 'slashdot' || url.toLowerCase() === 'kweb://slashnet.org' || url.toLowerCase() === 'slashnet.org') {
       url = '/web/slashnet.html';
     } else if (url.toLowerCase() === 'kweb://webring' || url.toLowerCase() === 'webring') {
@@ -2412,6 +2417,7 @@
       const virtualReverseMap = {
         '/web/portal.html': 'kweb://portal',
         '/web/slashnet.html': 'kweb://slashnet',
+        '/web/trapster.html': 'kweb://trapster',
         '/web/webring.html': 'kweb://webring',
         '/web/geocities.html': 'kweb://geocities',
         '/web/cybercafe.html': 'kweb://cybercafe',

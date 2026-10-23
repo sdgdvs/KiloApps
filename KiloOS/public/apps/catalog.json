@@ -307,9 +307,9 @@
     "id": "kfont",
     "title": "KFont",
     "folder": "System",
-    "webBytes": 227804,
+    "webBytes": 231614,
     "exeBytes": 32256,
-    "budgetPercent": 22.8
+    "budgetPercent": 23.2
   },
   {
     "id": "kfortress",
@@ -787,9 +787,9 @@
     "id": "ktrader",
     "title": "KTrader",
     "folder": "Games",
-    "webBytes": 135421,
+    "webBytes": 184135,
     "exeBytes": 26624,
-    "budgetPercent": 13.6
+    "budgetPercent": 18.4
   },
   {
     "id": "ktype",
