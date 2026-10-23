@@ -2062,6 +2062,7 @@ endif
             closeModal(benchModal);
             closeModal(exportModal);
             closeModal(astModal);
+            closeModal(vfsModal);
             const ob = document.getElementById('onboardingBanner');
             if (ob) ob.style.display = 'none';
             toastContainer.innerHTML = '';
@@ -2069,7 +2070,8 @@ endif
         }
         const isInputFocused = document.activeElement && (
             document.activeElement.tagName === 'INPUT' ||
-            document.activeElement.tagName === 'TEXTAREA'
+            document.activeElement.tagName === 'TEXTAREA' ||
+            document.activeElement.tagName === 'SELECT'
         );
         if (e.key === 'F1' || (!isInputFocused && (e.key === 'h' || e.key === 'H' || e.key === '?')) || (e.altKey && !e.ctrlKey && (e.key === 'h' || e.key === 'H'))) {
             e.preventDefault();
@@ -2078,7 +2080,7 @@ endif
             else openModal(helpModal);
             return;
         }
-        if (helpModal.classList.contains('active') || benchModal.classList.contains('active') || exportModal.classList.contains('active') || (astModal && astModal.classList.contains('active'))) {
+        if (helpModal.classList.contains('active') || benchModal.classList.contains('active') || exportModal.classList.contains('active') || (astModal && astModal.classList.contains('active')) || (vfsModal && vfsModal.classList.contains('active'))) {
             return;
         }
         if (e.ctrlKey && (e.key === '=' || e.key === '+')) {
@@ -3083,6 +3085,7 @@ endif
 
     // Modal Focus Trapping & Restoration
     let previousActiveEl = null;
+    let modalKeyDownHandler = null;
     function trapModalFocus(modalEl) {
         const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
         const focusable = Array.from(modalEl.querySelectorAll(focusableSelectors)).filter(el => !el.disabled && el.offsetParent !== null);
@@ -3092,9 +3095,13 @@ endif
         const last = focusable[focusable.length - 1];
         first.focus();
 
-        const handleKeyDown = (e) => {
+        if (modalKeyDownHandler) {
+            modalEl.removeEventListener('keydown', modalKeyDownHandler);
+        }
+        modalKeyDownHandler = (e) => {
             if (!modalEl.classList.contains('active')) {
-                modalEl.removeEventListener('keydown', handleKeyDown);
+                modalEl.removeEventListener('keydown', modalKeyDownHandler);
+                modalKeyDownHandler = null;
                 return;
             }
             if (e.key === 'Tab') {
@@ -3111,7 +3118,7 @@ endif
                 }
             }
         };
-        modalEl.addEventListener('keydown', handleKeyDown);
+        modalEl.addEventListener('keydown', modalKeyDownHandler);
     }
 
     function openModal(el) {
@@ -3124,6 +3131,10 @@ endif
     function closeModal(el) {
         if (el && el.classList.contains('active')) {
             el.classList.remove('active');
+            if (modalKeyDownHandler) {
+                el.removeEventListener('keydown', modalKeyDownHandler);
+                modalKeyDownHandler = null;
+            }
             if (previousActiveEl && typeof previousActiveEl.focus === 'function') {
                 previousActiveEl.focus();
             }
@@ -3853,6 +3864,7 @@ endif
     helpModal.onclick = (e) => { if (e.target === helpModal) closeModal(helpModal); };
     benchModal.onclick = (e) => { if (e.target === benchModal) closeModal(benchModal); };
     exportModal.onclick = (e) => { if (e.target === exportModal) closeModal(exportModal); };
+    if (vfsModal) vfsModal.onclick = (e) => { if (e.target === vfsModal) closeModal(vfsModal); };
 
     // Onboarding Banner Logic & Pass 5 Tutorial Integrity
     const onboardingBanner = document.getElementById('onboardingBanner');

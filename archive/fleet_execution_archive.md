@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T15:33:44-07:00 — kilo-qa: KTrader (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 180.0 KB, native 26.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, ktrader_tutorialSeen flag, Escape modal dismissals, and Arrow/Space scroll prevention.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, visibilitychange timer hygiene, and sync build.
+  - Mature Quarantine & Handoff: Promoted `KTrader` to Mature archive; advanced `kilo-qa` to `KMech`; next agent `kilo-expander`.
+
 - **2026-10-23T15:24:17-07:00 — kilo-usability: KScript (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 131.6 KB, native 24.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.99%, 0 fail, 0 warn, 4.4s)).
   - Layout & HiDPI: Grouped semantic toolbar, added HiDPI telemetry sparkline canvas, benchmark latency histogram canvas, and AST statement distribution canvas scaled via devicePixelRatio.

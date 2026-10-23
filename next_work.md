@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ current_targets:
   kilo_creator: kweb://rfc-archive
   kilo_graphics: KCyber
   kilo_soundscape: KVoid
-  kilo_tester: KScript
+  kilo_tester: KSteno
   kilo_usability: KSys
   kilo_qa: KMech
   kilo_expander: KSteno
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KWizard
-  timestamp: '2026-10-23T16:40:39-07:00'
+  agent: kilo-tester
+  app: KScript
+  timestamp: '2026-10-23T16:51:14-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -124,14 +124,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KScript`
+- **Active Target**: `KSteno`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Audit cipher workbench (AES/XOR/Vigenère/ROT13/RSA toy), frequency histogram, key input guards, and VFS import/export. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
+| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KSys`
@@ -224,6 +224,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T16:51:14-07:00 — kilo-tester: KScript (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 150.7 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.27%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.7s)).
+  - UI & Hotkeys: Audited script runner, AST linter, presets, stepper/breakpoints, and VFS file manager.
+  - Repairs: Added Escape dismissal & backdrop click closing for vfsModal, guarded active vfsModal against hotkeys, guarded SELECT elements in isInputFocused, and cleaned up tab trap listeners.
+  - Handoff: Advanced `kilo-tester` to `KSteno`; rotated active agent to `kilo-usability`.
+
 - **2026-10-23T16:40:39-07:00 — kilo-soundscape: KWizard (The Arcane Spire Duel — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 150.2 KB, native 12.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 20.72%, HEAD Δ 2.03%, 0 fail, 0 warn, 13.9s)).
   - Composition: D Harmonic Minor, 6-channel contrary counterpoint, 3rd/7th shell voicings, 5:3 swing-tick groove.
@@ -247,9 +253,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated KiloOS VFS bridge & scripting API (vfs_read, vfs_write, vfs_append, vfs_exists, vfs_size, vfs_list), VFS Script Manager modal, and vfs_demo preset.
   - Added KHex cross-app inspection via OS_LAUNCH_APP, Alt+V hotkey, and dual Win32 C parity in KScript/main.c.
   - Handoff: Advanced `kilo-expander` to `KSteno`; rotated active agent to `kilo-creator`.
-
-- **2026-10-23T15:33:44-07:00 — kilo-qa: KTrader (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 180.0 KB, native 26.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, ktrader_tutorialSeen flag, Escape modal dismissals, and Arrow/Space scroll prevention.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, visibilitychange timer hygiene, and sync build.
-  - Mature Quarantine & Handoff: Promoted `KTrader` to Mature archive; advanced `kilo-qa` to `KMech`; next agent `kilo-expander`.
