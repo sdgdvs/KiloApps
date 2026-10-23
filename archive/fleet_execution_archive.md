@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T14:59:45-07:00 — kilo-adhoc: Fleet Testing (`scripts/visual_probe.py`, `verify_turn.py`, `test_app_startup.py`, `baseline_diff.js`)**
+  - Status: PASS ✅ (0 errors; Vite production build, security_lint, startup audit & visual probe PASS).
+  - Upgraded `scripts/visual_probe.py` with in-process `KiloOS/public` HTTP server, real KiloOS window sizing, trusted-input CDP playtest, and 1-image before/after (`--compare-head`) contact sheets (`docs/gallery/review/<app>/sheet.png`).
+  - Calibrated `visual_probe.py` & `test_app_startup.py` to ignore `pointer-events: none` CRT overlays (`crt-overlay`), `opacity: 0` backdrops, and scrollable child containers while supporting 2-stage splash -> tutorial dismissal.
+  - Replaced raw compressed-byte PNG comparison in `scripts/baseline_diff.js` with zero-dependency decoded-RGB pixel diffing and integrated `visual_probe.py` into `verify_turn.py` and agent skills.
+
 - **2026-10-23T14:51:38-07:00 — kilo-soundscape: KFarm (Pastoral Harvest & Seasonal Town — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 119.5 KB, native 132.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Composition: G Major pentatonic / Mixolydian, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.

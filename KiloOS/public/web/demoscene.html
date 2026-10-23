@@ -1,0 +1,2462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assembly '99 Demoscene Party Vault // Hartwall Areena Helsinki</title>
+<meta name="description" content="Assembly '99 Demoscene Party Vault - Real-time 64K intro Canvas effect switcher (plasma, rotozoomer, starfield, copper bars, metaballs), ANSI .NFO viewer with VFS save, and live party voting board.">
+<style>
+  :root {
+    --bg-main: #0a0b12;
+    --bg-panel: #121420;
+    --bg-card: #181b2c;
+    --border-color: #2b3252;
+    --border-bright: #495687;
+    --cyan-neon: #00ffcc;
+    --cyan-dim: #00997a;
+    --magenta-neon: #ff007f;
+    --magenta-dim: #99004d;
+    --amber-neon: #ffaa00;
+    --amber-dim: #996600;
+    --text-main: #e2e8f0;
+    --text-muted: #8892b0;
+    --font-mono: "Courier New", Courier, monospace;
+    --font-sans: "Trebuchet MS", Tahoma, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.45;
+    padding-bottom: 40px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Scanline CRT overlay */
+  .crt-overlay {
+    pointer-events: none;
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    background-size: 100% 3px, 6px 100%;
+    z-index: 9999;
+    opacity: 0.65;
+    display: block;
+  }
+  .crt-overlay.disabled { display: none; }
+
+  /* Top Masthead */
+  .masthead {
+    background: linear-gradient(180deg, #181a30 0%, #0c0d18 100%);
+    border-bottom: 2px solid var(--cyan-neon);
+    padding: 10px 16px;
+    box-shadow: 0 4px 20px rgba(0, 255, 204, 0.15);
+  }
+  .masthead-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .brand-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .brand-title {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #ffffff;
+    text-shadow: 0 0 10px var(--cyan-neon), 0 0 20px var(--cyan-dim);
+  }
+  .brand-title span { color: var(--magenta-neon); text-shadow: 0 0 10px var(--magenta-neon); }
+  .brand-subtitle {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--amber-neon);
+    letter-spacing: 0.5px;
+  }
+
+  .party-stats-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    flex-wrap: wrap;
+  }
+  .stat-badge {
+    color: var(--cyan-neon);
+    font-weight: bold;
+  }
+
+  /* Navigation Bar */
+  .nav-bar {
+    background: #0f111e;
+    border-bottom: 1px solid var(--border-color);
+    padding: 4px 16px;
+  }
+  .nav-bar-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .nav-tab-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: bold;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-tab-btn:hover {
+    color: #ffffff;
+    background: rgba(0, 255, 204, 0.08);
+    border-color: rgba(0, 255, 204, 0.3);
+  }
+  .nav-tab-btn.active {
+    color: var(--cyan-neon);
+    background: rgba(0, 255, 204, 0.15);
+    border-color: var(--cyan-neon);
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+  }
+
+  .nav-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-mini {
+    background: #181b2c;
+    border: 1px solid var(--border-bright);
+    color: #ffffff;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .btn-mini:hover {
+    border-color: var(--cyan-neon);
+    color: var(--cyan-neon);
+  }
+
+  /* Main Container */
+  .main-wrapper {
+    max-width: 1200px;
+    margin: 16px auto;
+    padding: 0 16px;
+  }
+
+  /* Tab Section Styling */
+  .tab-pane {
+    display: none;
+  }
+  .tab-pane.active {
+    display: block;
+  }
+
+  /* --- TAB 1: 64K INTRO CANVAS RASTERIZER --- */
+  .demo-viewport-card {
+    background: var(--bg-panel);
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    box-shadow: 0 6px 25px rgba(0,0,0,0.6);
+  }
+  .viewport-header {
+    background: #181a2e;
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .viewport-title {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--cyan-neon);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .telemetry-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid #334;
+    padding: 3px 8px;
+    border-radius: 3px;
+    color: #a0aec0;
+  }
+  .canvas-stage {
+    background: #000000;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+  }
+  #demoCanvas {
+    width: 100%;
+    max-width: 800px;
+    aspect-ratio: 400 / 250;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: #000000;
+    border: 2px solid #222638;
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+    cursor: crosshair;
+  }
+  .canvas-scroller {
+    margin-top: 8px;
+    width: 100%;
+    max-width: 800px;
+    background: #05060a;
+    border: 1px solid var(--border-color);
+    color: var(--amber-neon);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 4px 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .canvas-controls-bar {
+    background: #141726;
+    border-top: 1px solid var(--border-color);
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .effect-selector-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .btn-effect {
+    background: #1c2138;
+    border: 1px solid var(--border-color);
+    color: #e2e8f0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-effect:hover {
+    border-color: var(--cyan-neon);
+    color: var(--cyan-neon);
+  }
+  .btn-effect.active {
+    background: rgba(0, 255, 204, 0.2);
+    border-color: var(--cyan-neon);
+    color: #ffffff;
+    box-shadow: 0 0 8px rgba(0, 255, 204, 0.3);
+  }
+
+  .param-slider-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .param-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .param-item input[type="range"] {
+    width: 80px;
+    cursor: pointer;
+    accent-color: var(--cyan-neon);
+  }
+
+  /* Grid layout for intro tech specs & greetings */
+  .grid-intro-info {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 800px) {
+    .grid-intro-info { grid-template-columns: 1fr; }
+  }
+  .panel-box {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 14px;
+  }
+  .panel-box h3 {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--cyan-neon);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* --- TAB 2: ANSI / ASCII .NFO ARCHIVE & STUDIO --- */
+  .nfo-viewer-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 860px) {
+    .nfo-viewer-layout { grid-template-columns: 1fr; }
+  }
+  .nfo-sidebar {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 12px;
+  }
+  .nfo-list-item {
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    background: #16192b;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    transition: all 0.15s ease;
+  }
+  .nfo-list-item:hover {
+    border-color: var(--cyan-neon);
+    background: #1c2037;
+  }
+  .nfo-list-item.active {
+    border-color: var(--cyan-neon);
+    background: rgba(0, 255, 204, 0.12);
+    color: #ffffff;
+    font-weight: bold;
+  }
+  .nfo-list-item .item-title { color: var(--cyan-neon); }
+  .nfo-list-item .item-meta { color: var(--text-muted); font-size: 10px; margin-top: 2px; }
+
+  .nfo-display-card {
+    background: #06070d;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .nfo-toolbar {
+    background: #121424;
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .nfo-content-area {
+    padding: 16px;
+    background: #030408;
+    color: #34d399; /* Green phosphor default */
+    font-family: "Courier New", Courier, monospace;
+    font-size: 11.5px;
+    line-height: 1.25;
+    white-space: pre;
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 520px;
+    border: none;
+    outline: none;
+    letter-spacing: 0px;
+    text-shadow: 0 0 2px rgba(52, 211, 153, 0.3);
+  }
+  .nfo-content-area.theme-amber {
+    color: #fbbf24;
+    text-shadow: 0 0 2px rgba(251, 191, 36, 0.3);
+  }
+  .nfo-content-area.theme-cyan {
+    color: #38bdf8;
+    text-shadow: 0 0 2px rgba(56, 189, 248, 0.3);
+  }
+  .nfo-content-area.theme-white {
+    color: #f1f5f9;
+    text-shadow: none;
+  }
+
+  /* --- TAB 3: COMPO VOTING BOARD --- */
+  .voting-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .compo-filter-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .filter-pill {
+    background: #15182a;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  .filter-pill:hover, .filter-pill.active {
+    color: #ffffff;
+    border-color: var(--cyan-neon);
+    background: rgba(0, 255, 204, 0.15);
+  }
+
+  .compo-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 60px 1fr 140px 160px;
+    gap: 14px;
+    align-items: center;
+    transition: all 0.15s ease;
+  }
+  @media (max-width: 780px) {
+    .compo-card { grid-template-columns: 1fr; }
+  }
+  .compo-card:hover {
+    border-color: var(--cyan-neon);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  }
+  .compo-rank {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--amber-neon);
+    text-align: center;
+  }
+  .compo-info h4 {
+    font-size: 14px;
+    color: #ffffff;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .compo-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .compo-vote-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .vote-score {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--cyan-neon);
+  }
+  .vote-btns {
+    display: flex;
+    gap: 6px;
+  }
+  .btn-vote {
+    background: #1e243d;
+    border: 1px solid var(--border-bright);
+    color: #ffffff;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .btn-vote:hover {
+    background: var(--cyan-neon);
+    color: #000000;
+  }
+  .compo-vfs-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* --- TAB 4: SOUNDTRACKER JUKEBOX --- */
+  .jukebox-card {
+    background: var(--bg-panel);
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .scope-canvas-box {
+    background: #05060b;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  #scopeCanvas {
+    width: 100%;
+    max-width: 760px;
+    height: 100px;
+    background: #000000;
+    border: 1px solid #1a1e30;
+    display: block;
+    margin: 0 auto;
+  }
+  .track-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .track-card {
+    background: #171a2c;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 10px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    transition: all 0.15s ease;
+  }
+  .track-card:hover {
+    border-color: var(--cyan-neon);
+    background: #1d2238;
+  }
+  .track-card.active {
+    border-color: var(--cyan-neon);
+    background: rgba(0, 255, 204, 0.12);
+  }
+  .track-card .t-name { font-weight: bold; color: #ffffff; }
+  .track-card .t-author { color: var(--magenta-neon); margin-top: 2px; }
+  .track-card .t-meta { color: var(--text-muted); font-size: 10px; margin-top: 4px; }
+
+  /* Buttons & Utilities */
+  .btn-retro {
+    background: linear-gradient(180deg, #242a47 0%, #15192e 100%);
+    border: 1px solid var(--border-bright);
+    color: #ffffff;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 5px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+  .btn-retro:hover {
+    border-color: var(--cyan-neon);
+    color: var(--cyan-neon);
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.25);
+  }
+  .btn-retro-cyan {
+    background: rgba(0, 255, 204, 0.15);
+    border-color: var(--cyan-neon);
+    color: var(--cyan-neon);
+  }
+  .btn-retro-cyan:hover {
+    background: var(--cyan-neon);
+    color: #000000;
+  }
+
+  /* Webring & Footer */
+  .webring-bar {
+    margin-top: 24px;
+    background: #101220;
+    border: 2px outset #333a5e;
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .webring-nav-links {
+    margin-top: 8px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .webring-nav-links a {
+    color: var(--cyan-neon);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .webring-badges {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .badge-88x31 {
+    width: 88px;
+    height: 31px;
+    background: #000000;
+    border: 1px solid var(--border-bright);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: bold;
+    color: #ffffff;
+    text-decoration: none;
+  }
+
+  /* Toast Notification */
+  #toastAlert {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #0f172a;
+    border: 1px solid var(--cyan-neon);
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+    color: #ffffff;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 10px 16px;
+    border-radius: 4px;
+    z-index: 10000;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- Scanlines overlay -->
+<div class="crt-overlay" id="crtOverlay"></div>
+
+<!-- Toast notification box -->
+<div id="toastAlert">Saved to VFS</div>
+
+<!-- Header -->
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand-group">
+      <div class="brand-title">ASSEMBLY <span>'99</span> DEMOSCENE VAULT</div>
+      <div class="brand-subtitle">HARTWALL AREENA, HELSINKI // AUGUST 5-8, 1999 // 64K INTRO ARCHIVE</div>
+    </div>
+    <div class="party-stats-bar">
+      <div>PARTY STATUS: <span class="stat-badge">LIVE 60 FPS</span></div>
+      <div>VOTING TICKETS: <span class="stat-badge" id="statVoterTickets">1,842</span></div>
+      <div>ACTIVE ENGINE: <span class="stat-badge" id="statEngineBadge">SINE PLASMA</span></div>
+      <button class="btn-mini" id="btnToggleCRT" onclick="toggleCRT()">CRT FX: ON</button>
+      <button class="btn-mini" id="btnGlobalMute" onclick="toggleGlobalAudio()">🔊 AUDIO: ON</button>
+    </div>
+  </div>
+</header>
+
+<!-- Main Navigation -->
+<nav class="nav-bar">
+  <div class="nav-bar-inner">
+    <button class="nav-tab-btn active" data-tab="tab-effects" onclick="switchTab('tab-effects')">
+      <span>📺</span> [1] 64K Intro Switcher
+    </button>
+    <button class="nav-tab-btn" data-tab="tab-nfo" onclick="switchTab('tab-nfo')">
+      <span>📄</span> [2] ANSI .NFO Studio
+    </button>
+    <button class="nav-tab-btn" data-tab="tab-voting" onclick="switchTab('tab-voting')">
+      <span>🏆</span> [3] Compo Voting Board
+    </button>
+    <button class="nav-tab-btn" data-tab="tab-jukebox" onclick="switchTab('tab-jukebox')">
+      <span>🎹</span> [4] SoundTracker Jukebox
+    </button>
+    <button class="nav-tab-btn" data-tab="tab-webring" onclick="switchTab('tab-webring')">
+      <span>🌐</span> [5] KiloNet Webring Hub
+    </button>
+
+    <div class="nav-actions">
+      <button class="btn-mini" onclick="saveActiveIntroVFS()">💾 Dump Frame to VFS</button>
+      <button class="btn-mini" onclick="launchInKHex()">🔍 Open in KHex</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Content Container -->
+<main class="main-wrapper">
+
+  <!-- =========================================================================
+       TAB 1: 64K INTRO CANVAS EFFECT SWITCHER
+       ========================================================================= -->
+  <section id="tab-effects" class="tab-pane active">
+    <div class="demo-viewport-card">
+      <div class="viewport-header">
+        <div class="viewport-title">
+          <span>⚡ 64K EXECUTABLE RASTER ENGINE:</span>
+          <span id="currentEffectLabel" style="color:#ffffff;">Multi-Frequency Sine Plasma</span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <div class="telemetry-tag" id="fpsTelemetry">FPS: 60 | 16.6ms</div>
+          <div class="telemetry-tag" id="cycleTelemetry">RASTER: 320x200 MODE 13h</div>
+        </div>
+      </div>
+
+      <div class="canvas-stage">
+        <canvas id="demoCanvas" width="400" height="250"></canvas>
+        <div class="canvas-scroller" id="scrollerText">
+          &gt;&gt;&gt; ASSEMBLY '99 HELSINKI DEMOPARTY // GREETINGS FLY OUT TO: FLARELIGHT * RAZOR 1999 * PULSE * FARBRÄUME * THE SILICONS * TRSI * FUTURE CREW * TRANSCENDENCE * KILONET FLEET &lt;&lt;&lt;
+        </div>
+      </div>
+
+      <div class="canvas-controls-bar">
+        <div class="effect-selector-group">
+          <button class="btn-effect active" onclick="setEffect('plasma')">1. Sine Plasma</button>
+          <button class="btn-effect" onclick="setEffect('rotozoom')">2. Affine Rotozoom</button>
+          <button class="btn-effect" onclick="setEffect('starfield')">3. 3D Starfield</button>
+          <button class="btn-effect" onclick="setEffect('copper')">4. Copper Bars</button>
+          <button class="btn-effect" onclick="setEffect('metaballs')">5. Metaballs</button>
+        </div>
+
+        <div class="param-slider-group">
+          <div class="param-item">
+            <label>Speed:</label>
+            <input type="range" id="paramSpeed" min="1" max="100" value="45" oninput="updateParams()">
+          </div>
+          <div class="param-item">
+            <label>Palette:</label>
+            <select id="paramPalette" onchange="updateParams()" style="background:#1c2138; color:#fff; border:1px solid #334; font-size:11px; padding:2px;">
+              <option value="cyber">Cyber Neon</option>
+              <option value="fire">Flame / Fire</option>
+              <option value="copper">Amiga Copper</option>
+              <option value="acid">Acid Green</option>
+            </select>
+          </div>
+          <div class="param-item">
+            <button class="btn-mini" id="btnPlayPause" onclick="togglePlayPause()">⏸ Pause</button>
+            <button class="btn-mini" onclick="resetCanvasEngine()">↺ Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tech specs & party lore -->
+    <div class="grid-intro-info">
+      <div class="panel-box">
+        <h3>
+          <span>💻 64K Intro Algorithmic Blueprint</span>
+          <span style="font-size:11px; color:var(--text-muted);">Pentium II 450MHz / Win32 / Mode 13h</span>
+        </h3>
+        <p style="margin-bottom:8px; color:var(--text-muted);">
+          In August 1999, the Assembly 64K intro competition pushed unrolled x86 software rasterization to its pinnacle. Intros fit under <strong>65,536 bytes</strong> by replacing pre-rendered video with procedural mathematics:
+        </p>
+        <ul style="padding-left:18px; color:var(--text-main); font-size:12px; margin-bottom:10px;">
+          <li><strong>Sine Interference Plasma:</strong> Sum of 4 trigonometric waves precalculated into an 8-bit lookup table (LUT) cycling across 256 VGA DAC palette registers.</li>
+          <li><strong>Affine Rotozoomer:</strong> 2x2 rotation matrix calculated once per scanline with fixed-point 16.16 arithmetic to sample infinite procedural textures.</li>
+          <li><strong>3D Starfield &amp; Warp:</strong> Perspective projection with Z-depth division <code style="color:var(--cyan-neon);">x' = x/z * d</code> with velocity vector motion blur.</li>
+          <li><strong>Amiga Copper Bars:</strong> Emulation of horizontal beam interrupt copper lists generating smooth 60 Hz specular raster gradients with reflection floor.</li>
+          <li><strong>Metaballs:</strong> Inverse Euclidean distance potential fields rendering organic fluid iso-surfaces. Drag your cursor directly on the canvas to displace the field!</li>
+        </ul>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-retro" onclick="saveActiveIntroVFS()">💾 Save Frame to VFS (/home/demoscene/frame.txt)</button>
+          <button class="btn-retro" onclick="launchInKPad()">📝 Inspect in KPad</button>
+        </div>
+      </div>
+
+      <div class="panel-box">
+        <h3>
+          <span>🏆 Party Facts &amp; Archive</span>
+          <span style="color:var(--amber-neon);">Helsinki '99</span>
+        </h3>
+        <div style="font-family:var(--font-mono); font-size:11px; line-height:1.6;">
+          <div>• <strong>Venue:</strong> Hartwall Areena</div>
+          <div>• <strong>Attendees:</strong> 4,800 sceners</div>
+          <div>• <strong>Compos:</strong> 64k Intro, Combined Demo, Fast Music, Pixel Art</div>
+          <div>• <strong>Network:</strong> 100 Mbps Switched FDDI backbone</div>
+          <div>• <strong>IRC Gateway:</strong> #assembly99 on IRCNet</div>
+          <div>• <strong>Subterranean RF:</strong> Lithospheric 1999Hz tone recorded on audio channel 6.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       TAB 2: ANSI / ASCII .NFO ARCHIVE & STUDIO
+       ========================================================================= -->
+  <section id="tab-nfo" class="tab-pane">
+    <div class="nfo-viewer-layout">
+      <!-- NFO file selector -->
+      <div class="nfo-sidebar">
+        <h3 style="font-family:var(--font-mono); font-size:12px; color:var(--cyan-neon); margin-bottom:8px;">
+          📁 PARTY RELEASES (.NFO)
+        </h3>
+        <div id="nfoFileList">
+          <!-- Populated by JS -->
+        </div>
+
+        <div style="margin-top:16px; border-top:1px solid var(--border-color); padding-top:12px;">
+          <h4 style="font-family:var(--font-mono); font-size:11px; color:var(--amber-neon); margin-bottom:6px;">
+            ✏️ NFO STUDIO ACTIONS
+          </h4>
+          <button class="btn-retro" style="width:100%; margin-bottom:6px;" onclick="newBlankNfo()">+ New Custom NFO</button>
+          <button class="btn-retro" style="width:100%; margin-bottom:6px;" onclick="insertAsciiBox()">Insert ASCII Box Frame</button>
+          <button class="btn-retro btn-retro-cyan" style="width:100%;" onclick="saveCurrentNfoVFS()">💾 Save to VFS (.NFO)</button>
+        </div>
+      </div>
+
+      <!-- NFO Viewer / Editor Card -->
+      <div class="nfo-display-card">
+        <div class="nfo-toolbar">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <strong id="nfoFileName">FLARELIGHT_Neural_Eclipse.nfo</strong>
+            <span style="color:var(--text-muted); font-size:10px;" id="nfoFileSize">4,281 bytes</span>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label>Phosphor:</label>
+            <select id="nfoPhosphorSelect" onchange="changePhosphorTheme(this.value)" style="background:#181b2c; color:#fff; border:1px solid #334; font-size:11px; padding:2px;">
+              <option value="green">Emerald Phosphor</option>
+              <option value="amber">Amber Phosphor</option>
+              <option value="cyan">Cyber Ice Cyan</option>
+              <option value="white">Paper White</option>
+            </select>
+            <button class="btn-mini" onclick="copyNfoToClipboard()">📋 Copy</button>
+            <button class="btn-mini" onclick="downloadNfoLocal()">📥 Download</button>
+            <button class="btn-mini" onclick="openNfoInKPad()">📝 Edit in KPad</button>
+          </div>
+        </div>
+
+        <textarea class="nfo-content-area" id="nfoTextArea" spellcheck="false"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       TAB 3: COMPO VOTING BOARD
+       ========================================================================= -->
+  <section id="tab-voting" class="tab-pane">
+    <div class="panel-box" style="margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div>
+          <h3 style="margin:0; border:none;">🏆 Assembly '99 Official Compo Voting Board</h3>
+          <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+            Cast your party votes! Rankings update in real-time and persist in your client cache.
+          </p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-retro btn-retro-cyan" onclick="openNewEntryModal()">+ Submit Compo Entry</button>
+          <button class="btn-retro" onclick="exportBallotVFS()">💾 Save Ballot to VFS</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compo Filter Pills -->
+    <div class="compo-filter-tabs">
+      <button class="filter-pill active" onclick="filterCompos('all')">All Entries (12)</button>
+      <button class="filter-pill" onclick="filterCompos('64k')">64K Executable Intro (4)</button>
+      <button class="filter-pill" onclick="filterCompos('demo')">Combined PC Demo (3)</button>
+      <button class="filter-pill" onclick="filterCompos('music')">Fast Music / XM (3)</button>
+      <button class="filter-pill" onclick="filterCompos('pixel')">Pixel / VGA Art (2)</button>
+    </div>
+
+    <!-- Voting list -->
+    <div class="voting-grid" id="compoEntryList">
+      <!-- Populated by JS -->
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       TAB 4: SOUNDTRACKER JUKEBOX (YM2612 2-OP FM SYNTH)
+       ========================================================================= -->
+  <section id="tab-jukebox" class="tab-pane">
+    <div class="jukebox-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+        <div>
+          <h3 style="font-family:var(--font-mono); font-size:14px; color:var(--cyan-neon); margin-bottom:2px;">
+            🎹 YAMAHA YM2612 2-OP FM + SPC700 STEREO DELAY JUKEBOX
+          </h3>
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+            Real-time procedural chiptune sound engine. Zero external samples. 6-channel tracker polyphony.
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="btn-retro btn-retro-cyan" id="btnJukeboxPlay" onclick="toggleJukeboxBgm()">▶ Play Track</button>
+          <button class="btn-retro" onclick="exportCurrentTrackVFS()">💾 Export .MOD to VFS</button>
+        </div>
+      </div>
+
+      <!-- Oscilloscope Visualizer -->
+      <div class="scope-canvas-box">
+        <canvas id="scopeCanvas" width="760" height="100"></canvas>
+        <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; color:var(--text-muted); margin-top:4px;">
+          <span id="nowPlayingText">NOW PLAYING: Second Reality Echoes (140 BPM)</span>
+          <span>CHANNELS: [1] FM Lead [2] FM Bass [3] Arp [4] SPC Echo</span>
+        </div>
+      </div>
+
+      <!-- Channel Mute Toggles -->
+      <div style="display:flex; gap:12px; font-family:var(--font-mono); font-size:11px; background:#121424; padding:8px 12px; border-radius:4px; margin-bottom:12px; flex-wrap:wrap;">
+        <label><input type="checkbox" id="chkCh1" checked onchange="updateChannelMutes()"> Ch 1: FM Lead</label>
+        <label><input type="checkbox" id="chkCh2" checked onchange="updateChannelMutes()"> Ch 2: FM Slap Bass</label>
+        <label><input type="checkbox" id="chkCh3" checked onchange="updateChannelMutes()"> Ch 3: Arpeggiator</label>
+        <label><input type="checkbox" id="chkCh4" checked onchange="updateChannelMutes()"> Ch 4: Percussion</label>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
+          <label>Echo Feedback:</label>
+          <input type="range" id="paramEcho" min="0" max="80" value="35" style="width:70px;" oninput="updateEchoFeedback(this.value)">
+        </div>
+      </div>
+
+      <!-- Selectable track library -->
+      <h4 style="font-family:var(--font-mono); font-size:12px; color:var(--cyan-neon); margin-bottom:6px;">
+        TRACK SELECTOR:
+      </h4>
+      <div class="track-grid" id="trackLibraryGrid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       TAB 5: WEBRING & KILONET UPLINK
+       ========================================================================= -->
+  <section id="tab-webring" class="tab-pane">
+    <div class="panel-box" style="margin-bottom:16px;">
+      <h3 style="color:var(--cyan-neon);">🌐 Central KiloNet 1999 Webring Hub &amp; Demoscene Shrines</h3>
+      <p style="color:var(--text-muted); font-size:12px; margin-bottom:12px;">
+        The Assembly '99 Demoscene Party Vault is linked into the canonical alternate-1999 Webring network. Journey between member shrines, x86 opcode devlogs, underground scene mirrors, and network diagnostics:
+      </p>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px;">
+        <div style="background:#15182c; border:1px solid var(--border-color); padding:10px; border-radius:4px;">
+          <strong style="color:var(--cyan-neon);"><a href="/web/warez.html" onclick="navigateKnet('/web/warez.html', event)">kweb://warez</a></strong>
+          <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">0xRELEASE Underground Scene Vault &amp; glFTPd Race.</div>
+        </div>
+        <div style="background:#15182c; border:1px solid var(--border-color); padding:10px; border-radius:4px;">
+          <strong style="color:var(--cyan-neon);"><a href="/web/users/neon_rider.html" onclick="navigateKnet('/web/users/neon_rider.html', event)">kweb://users/~neon_rider</a></strong>
+          <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">~neon_rider's Win32 ASM devlog &amp; x86 opcode sandbox.</div>
+        </div>
+        <div style="background:#15182c; border:1px solid var(--border-color); padding:10px; border-radius:4px;">
+          <strong style="color:var(--cyan-neon);"><a href="/web/asm_temple.html" onclick="navigateKnet('/web/asm_temple.html', event)">kweb://asm-temple</a></strong>
+          <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">x86 Opcode Temple &amp; 177-instruction opcode oracle.</div>
+        </div>
+        <div style="background:#15182c; border:1px solid var(--border-color); padding:10px; border-radius:4px;">
+          <strong style="color:var(--cyan-neon);"><a href="/web/trapster.html" onclick="navigateKnet('/web/trapster.html', event)">kweb://trapster</a></strong>
+          <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">Trapster P2P Chiptune Swarm &amp; 4-channel MOD exchange.</div>
+        </div>
+        <div style="background:#15182c; border:1px solid var(--border-color); padding:10px; border-radius:4px;">
+          <strong style="color:var(--cyan-neon);"><a href="/web/slashnet.html" onclick="navigateKnet('/web/slashnet.html', event)">kweb://slashnet</a></strong>
+          <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">SlashNet: News for Nerds &amp; Beowulf cluster calculator.</div>
+        </div>
+        <div style="background:#15182c; border:1px solid var(--border-color); padding:10px; border-radius:4px;">
+          <strong style="color:var(--cyan-neon);"><a href="/web/portal.html" onclick="navigateKnet('/web/portal.html', event)">kweb://portal</a></strong>
+          <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">Central KiloNet 1999 Directory &amp; Shareware Depot.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Authentic 1999 Webring Widget -->
+    <div class="webring-bar">
+      <div>[ <strong style="color:var(--cyan-neon);">Assembly '99 Demoscene Vault</strong> is proud to be member #021 of the <strong>Central KiloNet 1999 Webring</strong> ]</div>
+      <div class="webring-nav-links">
+        <a href="/web/warez.html" onclick="navigateKnet('/web/warez.html', event)">&lt;&lt; [Prev Site: 0xRELEASE]</a>
+        <a href="/web/webring.html" onclick="navigateKnet('/web/webring.html', event)">[Central Ring Index]</a>
+        <a href="#random" onclick="navigateToRandomRing(); return false;">[Random Hyperspace Jump]</a>
+        <a href="/web/users/neon_rider.html" onclick="navigateKnet('/web/users/neon_rider.html', event)">[Next Site: ~neon_rider] &gt;&gt;</a>
+      </div>
+      <div class="webring-badges">
+        <div class="badge-88x31" style="background:#111; color:#00ffcc;">ASSEMBLY '99</div>
+        <div class="badge-88x31" style="background:#003366; color:#ffffff;">100% PURE ASM</div>
+        <div class="badge-88x31" style="background:#660033; color:#ff007f;">64K INTRO</div>
+        <div class="badge-88x31" style="background:#004400; color:#34d399;">NOTEPAD READY</div>
+        <div class="badge-88x31" style="background:#333; color:#ffaa00;">WEBRING #021</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Modal: New Compo Entry -->
+<div id="modalNewEntry" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:10001; align-items:center; justify-content:center;">
+  <div style="background:#16192c; border:2px solid var(--cyan-neon); border-radius:6px; max-width:480px; width:90%; padding:20px; font-family:var(--font-mono); box-shadow:0 0 25px rgba(0,255,204,0.3);">
+    <h3 style="color:var(--cyan-neon); margin-bottom:12px;">+ Submit Assembly '99 Compo Entry</h3>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">Release Title:</label>
+      <input type="text" id="modalEntryTitle" placeholder="e.g. Copper Horizon" style="width:100%; background:#0a0c16; border:1px solid #334; color:#fff; padding:6px; font-family:var(--font-mono); font-size:12px;">
+    </div>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">Group / Crew Name:</label>
+      <input type="text" id="modalEntryGroup" placeholder="e.g. FLARELIGHT" style="width:100%; background:#0a0c16; border:1px solid #334; color:#fff; padding:6px; font-family:var(--font-mono); font-size:12px;">
+    </div>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">Compo Category:</label>
+      <select id="modalEntryCat" style="width:100%; background:#0a0c16; border:1px solid #334; color:#fff; padding:6px; font-family:var(--font-mono); font-size:12px;">
+        <option value="64k">64K Executable Intro</option>
+        <option value="demo">Combined PC Demo</option>
+        <option value="music">Fast Music / Tracker XM</option>
+        <option value="pixel">Pixel / VGA Graphics</option>
+      </select>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">Specs &amp; Description:</label>
+      <input type="text" id="modalEntryDesc" placeholder="e.g. 64,812 bytes, x86 MASM, Soft-synth" style="width:100%; background:#0a0c16; border:1px solid #334; color:#fff; padding:6px; font-family:var(--font-mono); font-size:12px;">
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px;">
+      <button class="btn-retro" onclick="closeNewEntryModal()">Cancel</button>
+      <button class="btn-retro btn-retro-cyan" onclick="submitNewCompoEntry()">Submit Release</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   ASSEMBLY '99 DEMOSCENE PARTY VAULT JAVASCRIPT ENGINE
+   ========================================================================= */
+
+// --- Safe localStorage Wrappers (Quality Standards) ---
+function safeGet(key, fallback) {
+  try {
+    const val = localStorage.getItem(key);
+    return val !== null ? JSON.parse(val) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function safeSet(key, val) {
+  try {
+    localStorage.setItem(key, JSON.stringify(val));
+  } catch (e) {}
+}
+
+// --- Toast & UI Alerts ---
+function showToast(msg) {
+  const el = document.getElementById('toastAlert');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => {
+    el.style.display = 'none';
+  }, 3200);
+}
+
+// --- CRT Overlay Toggle ---
+let crtEnabled = safeGet('demoscene_crt_enabled', true);
+function updateCRTState() {
+  const overlay = document.getElementById('crtOverlay');
+  const btn = document.getElementById('btnToggleCRT');
+  if (overlay) {
+    if (crtEnabled) overlay.classList.remove('disabled');
+    else overlay.classList.add('disabled');
+  }
+  if (btn) btn.textContent = crtEnabled ? 'CRT FX: ON' : 'CRT FX: OFF';
+}
+function toggleCRT() {
+  crtEnabled = !crtEnabled;
+  safeSet('demoscene_crt_enabled', crtEnabled);
+  updateCRTState();
+}
+
+// --- Navigation Tabs ---
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
+  
+  const targetPane = document.getElementById(tabId);
+  const targetBtn = document.querySelector(`.nav-tab-btn[data-tab="${tabId}"]`);
+  if (targetPane) targetPane.classList.add('active');
+  if (targetBtn) targetBtn.classList.add('active');
+
+  // Trigger resize or restart if switching back to effects
+  if (tabId === 'tab-effects' && isPaused) {
+    // Keep paused state
+  }
+}
+
+// --- Inter-App Navigation & KiloOS VFS / IPC ---
+function navigateKnet(url, ev) {
+  if (ev) ev.preventDefault();
+  try {
+    window.parent.postMessage({ type: 'NAVIGATE', url: url }, '*');
+  } catch (e) {}
+  window.location.href = url;
+}
+
+function saveToKiloVfs(vfsPath, contentStr) {
+  try {
+    window.parent.postMessage({
+      type: 'VFS_WRITE',
+      path: vfsPath,
+      data: contentStr,
+      requestId: 'vfs_' + Date.now()
+    }, '*');
+    window.parent.postMessage({
+      type: 'OS_NOTIFY',
+      title: "Assembly '99 Vault",
+      message: 'Saved to VFS: ' + vfsPath
+    }, '*');
+  } catch (e) {}
+  showToast('Saved to KiloOS VFS: ' + vfsPath);
+}
+
+function launchKiloApp(appFile, args) {
+  try {
+    window.parent.postMessage({
+      type: 'LAUNCH_APP',
+      app: appFile,
+      args: args || {}
+    }, '*');
+    showToast('Launching ' + appFile + '...');
+  } catch (e) {}
+}
+
+function navigateToRandomRing() {
+  const nodes = [
+    '/web/warez.html',
+    '/web/users/neon_rider.html',
+    '/web/asm_temple.html',
+    '/web/trapster.html',
+    '/web/slashnet.html',
+    '/web/portal.html'
+  ];
+  const pick = nodes[Math.floor(Math.random() * nodes.length)];
+  navigateKnet(pick, null);
+}
+
+/* =========================================================================
+   1. REAL-TIME 64K INTRO CANVAS ENGINE
+   ========================================================================= */
+const canvas = document.getElementById('demoCanvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width;
+const H = canvas.height;
+
+let currentEffect = 'plasma';
+let isPaused = false;
+let animFrameId = null;
+let effectTime = 0;
+let lastTimestamp = performance.now();
+let frameCount = 0;
+let lastFpsCheck = performance.now();
+
+// Parameters
+let speedFactor = 0.045;
+let activePalette = 'cyber';
+
+// Precalculated Sin Table for Mode 13h speed
+const SIN_TABLE = new Float32Array(512);
+for (let i = 0; i < 512; i++) {
+  SIN_TABLE[i] = Math.sin((i / 512) * Math.PI * 2);
+}
+
+// 3D Starfield setup
+const NUM_STARS = 450;
+const stars = [];
+for (let i = 0; i < NUM_STARS; i++) {
+  stars.push({
+    x: (Math.random() - 0.5) * 800,
+    y: (Math.random() - 0.5) * 500,
+    z: Math.random() * 1000 + 1,
+    pz: 0
+  });
+  stars[i].pz = stars[i].z;
+}
+
+// Metaballs setup
+const metaballs = [
+  { x: 120, y: 80, vx: 1.4, vy: 1.8, r: 40 },
+  { x: 260, y: 150, vx: -1.6, vy: 1.2, r: 48 },
+  { x: 200, y: 190, vx: 1.8, vy: -1.5, r: 36 },
+  { x: 80, y: 180, vx: -1.2, vy: -1.7, r: 42 },
+  { x: 300, y: 70, vx: 1.5, vy: -1.3, r: 38 }
+];
+
+let isDraggingBall = false;
+let draggedBall = null;
+
+canvas.addEventListener('mousedown', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = W / rect.width;
+  const scaleY = H / rect.height;
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top) * scaleY;
+
+  // Check if clicked near any metaball
+  for (let b of metaballs) {
+    const dist = Math.hypot(b.x - mx, b.y - my);
+    if (dist < b.r * 1.5) {
+      isDraggingBall = true;
+      draggedBall = b;
+      break;
+    }
+  }
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (isDraggingBall && draggedBall) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    draggedBall.x = (e.clientX - rect.left) * scaleX;
+    draggedBall.y = (e.clientY - rect.top) * scaleY;
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  isDraggingBall = false;
+  draggedBall = null;
+});
+
+function setEffect(name) {
+  currentEffect = name;
+  document.querySelectorAll('.btn-effect').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.toLowerCase().includes(name));
+  });
+
+  const labelEl = document.getElementById('currentEffectLabel');
+  const statBadge = document.getElementById('statEngineBadge');
+  const effectNames = {
+    plasma: 'Multi-Frequency Sine Plasma',
+    rotozoom: 'Affine Procedural Rotozoom',
+    starfield: '3D Hyperwarp Starfield',
+    copper: 'Amiga Specular Copper Bars',
+    metaballs: '2D Iso-Surface Fluid Metaballs'
+  };
+  const title = effectNames[name] || name;
+  if (labelEl) labelEl.textContent = title;
+  if (statBadge) statBadge.textContent = name.toUpperCase();
+}
+
+function updateParams() {
+  const sInput = document.getElementById('paramSpeed');
+  if (sInput) speedFactor = (parseInt(sInput.value, 10) / 100) * 0.1;
+  const pSelect = document.getElementById('paramPalette');
+  if (pSelect) activePalette = pSelect.value;
+}
+
+function togglePlayPause() {
+  isPaused = !isPaused;
+  const btn = document.getElementById('btnPlayPause');
+  if (btn) btn.textContent = isPaused ? '▶ Play' : '⏸ Pause';
+}
+
+function resetCanvasEngine() {
+  effectTime = 0;
+  for (let s of stars) {
+    s.z = Math.random() * 1000 + 1;
+    s.pz = s.z;
+  }
+}
+
+// Color palette generator
+function getPaletteColor(val, pal) {
+  val = (val % 256 + 256) % 256;
+  const n = val / 255;
+  if (pal === 'fire') {
+    // Black -> Red -> Orange -> Yellow -> White
+    if (n < 0.25) return [Math.floor(n * 4 * 200), 0, 0];
+    if (n < 0.6) return [255, Math.floor((n - 0.25) / 0.35 * 180), 0];
+    if (n < 0.85) return [255, 180 + Math.floor((n - 0.6) / 0.25 * 75), Math.floor((n - 0.6) / 0.25 * 100)];
+    return [255, 255, Math.floor((n - 0.85) / 0.15 * 255)];
+  } else if (pal === 'copper') {
+    // Amiga copper blue -> bronze -> gold
+    const r = Math.floor(Math.sin(n * Math.PI) * 220 + 20);
+    const g = Math.floor(Math.sin(n * Math.PI + 0.5) * 160 + 20);
+    const b = Math.floor(Math.cos(n * Math.PI) * 200 + 40);
+    return [Math.max(0, Math.min(255, r)), Math.max(0, Math.min(255, g)), Math.max(0, Math.min(255, b))];
+  } else if (pal === 'acid') {
+    // Deep black -> matrix emerald -> bright lime
+    const g = Math.floor(n * 255);
+    const r = n > 0.7 ? Math.floor((n - 0.7) / 0.3 * 220) : 0;
+    const b = n > 0.8 ? Math.floor((n - 0.8) / 0.2 * 180) : 10;
+    return [r, g, b];
+  } else {
+    // Cyber neon (Cyan -> Hot Magenta -> Purple -> White)
+    const r = Math.floor(Math.sin(n * Math.PI * 2) * 127 + 128);
+    const g = Math.floor(Math.cos(n * Math.PI * 2) * 127 + 128);
+    const b = Math.floor(Math.sin(n * Math.PI * 4 + 1.0) * 127 + 128);
+    return [r, g, b];
+  }
+}
+
+// Effect 1: Sine Plasma
+function renderPlasma(t) {
+  const imgData = ctx.createImageData(W, H);
+  const data = imgData.data;
+  let idx = 0;
+  const t1 = t * 1.2;
+  const t2 = t * 0.9;
+  const t3 = t * 1.5;
+
+  for (let y = 0; y < H; y++) {
+    const sinY = Math.sin(y * 0.04 + t1);
+    for (let x = 0; x < W; x++) {
+      const v1 = Math.sin(x * 0.03 + t2);
+      const v2 = sinY;
+      const v3 = Math.sin((x + y) * 0.03 + t3);
+      const dist = Math.hypot(x - W / 2, y - H / 2) * 0.04;
+      const v4 = Math.sin(dist - t);
+
+      const sum = (v1 + v2 + v3 + v4) * 0.25; // range -1 to 1
+      const palVal = Math.floor((sum + 1) * 127.5);
+      const col = getPaletteColor(palVal, activePalette);
+
+      data[idx++] = col[0];
+      data[idx++] = col[1];
+      data[idx++] = col[2];
+      data[idx++] = 255;
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+// Effect 2: Affine Rotozoom
+function renderRotozoom(t) {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  const angle = t * 0.6;
+  const zoom = 1.0 + Math.sin(t * 0.8) * 0.5;
+  const cosA = Math.cos(angle) * zoom;
+  const sinA = Math.sin(angle) * zoom;
+
+  const imgData = ctx.createImageData(W, H);
+  const data = imgData.data;
+  let idx = 0;
+
+  for (let y = 0; y < H; y++) {
+    const dy = y - H / 2;
+    for (let x = 0; x < W; x++) {
+      const dx = x - W / 2;
+      const tx = Math.floor((dx * cosA - dy * sinA) * 1.5) & 0xff;
+      const ty = Math.floor((dx * sinA + dy * cosA) * 1.5) & 0xff;
+
+      // XOR Fractal Texture Pattern
+      const xorVal = (tx ^ ty) & 0xff;
+      const col = getPaletteColor(xorVal, activePalette);
+
+      data[idx++] = col[0];
+      data[idx++] = col[1];
+      data[idx++] = col[2];
+      data[idx++] = 255;
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+// Effect 3: 3D Starfield & Warp Tunnel
+function renderStarfield(t) {
+  // Motion blur trail
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+  ctx.fillRect(0, 0, W, H);
+
+  const cx = W / 2;
+  const cy = H / 2;
+  const warpSpeed = 12 * (speedFactor / 0.045);
+
+  ctx.lineWidth = 1.5;
+
+  for (let i = 0; i < stars.length; i++) {
+    const s = stars[i];
+    s.pz = s.z;
+    s.z -= warpSpeed;
+
+    if (s.z <= 0) {
+      s.x = (Math.random() - 0.5) * 800;
+      s.y = (Math.random() - 0.5) * 500;
+      s.z = 1000;
+      s.pz = 1000;
+    }
+
+    const k = 200 / s.z;
+    const px = s.x * k + cx;
+    const py = s.y * k + cy;
+
+    const pk = 200 / s.pz;
+    const ppx = s.x * pk + cx;
+    const ppy = s.y * pk + cy;
+
+    if (px >= 0 && px < W && py >= 0 && py < H) {
+      const brightness = Math.min(255, Math.floor((1 - s.z / 1000) * 255));
+      const col = getPaletteColor(brightness, activePalette);
+      ctx.strokeStyle = `rgb(${col[0]},${col[1]},${col[2]})`;
+
+      ctx.beginPath();
+      ctx.moveTo(ppx, ppy);
+      ctx.lineTo(px, py);
+      ctx.stroke();
+    }
+  }
+}
+
+// Effect 4: Amiga Copper Bars
+function renderCopperBars(t) {
+  ctx.fillStyle = '#05060f';
+  ctx.fillRect(0, 0, W, H);
+
+  const numBars = 7;
+  const barHeight = 26;
+
+  for (let b = 0; b < numBars; b++) {
+    const offset = b * 0.45;
+    const yCenter = (H * 0.45) + Math.sin(t * 1.5 + offset) * (H * 0.32);
+
+    for (let dy = -barHeight / 2; dy <= barHeight / 2; dy++) {
+      const y = Math.floor(yCenter + dy);
+      if (y >= 0 && y < H * 0.75) {
+        // Calculate specular gradient (center is bright)
+        const intensity = 1 - Math.abs(dy) / (barHeight / 2);
+        const col = getPaletteColor(Math.floor(intensity * 255) + b * 32, activePalette);
+
+        ctx.fillStyle = `rgb(${col[0]},${col[1]},${col[2]})`;
+        ctx.fillRect(0, y, W, 1);
+      }
+    }
+  }
+
+  // Copper Mirror Reflection Floor
+  const floorY = Math.floor(H * 0.75);
+  ctx.fillStyle = '#0a0d18';
+  ctx.fillRect(0, floorY, W, H - floorY);
+  ctx.strokeStyle = '#2b3252';
+  ctx.beginPath();
+  ctx.moveTo(0, floorY);
+  ctx.lineTo(W, floorY);
+  ctx.stroke();
+
+  // Wavy sine reflections on floor
+  for (let fy = floorY + 1; fy < H; fy++) {
+    const mirrorDist = fy - floorY;
+    const srcY = floorY - mirrorDist;
+    if (srcY >= 0) {
+      const wave = Math.sin(fy * 0.2 + t * 3) * 6;
+      ctx.drawImage(canvas, 0, srcY, W, 1, wave, fy, W, 1);
+      // Darken reflection
+      ctx.fillStyle = 'rgba(10, 13, 24, 0.45)';
+      ctx.fillRect(0, fy, W, 1);
+    }
+  }
+}
+
+// Effect 5: Metaballs
+function renderMetaballs(t) {
+  // Update ball positions
+  for (let b of metaballs) {
+    if (b !== draggedBall) {
+      b.x += b.vx * (speedFactor / 0.045);
+      b.y += b.vy * (speedFactor / 0.045);
+
+      if (b.x < b.r || b.x > W - b.r) b.vx *= -1;
+      if (b.y < b.r || b.y > H - b.r) b.vy *= -1;
+    }
+  }
+
+  // Draw 2D potential field on downscaled grid for 60 FPS speed, then scale up
+  const step = 2;
+  const gw = Math.floor(W / step);
+  const gh = Math.floor(H / step);
+  const imgData = ctx.createImageData(gw, gh);
+  const data = imgData.data;
+  let idx = 0;
+
+  for (let y = 0; y < gh; y++) {
+    const py = y * step;
+    for (let x = 0; x < gw; x++) {
+      const px = x * step;
+      let sum = 0;
+
+      for (let b of metaballs) {
+        const dx = px - b.x;
+        const dy = py - b.y;
+        const d2 = dx * dx + dy * dy + 1;
+        sum += (b.r * b.r * 18) / d2;
+      }
+
+      if (sum > 55) {
+        const norm = Math.min(255, Math.floor((sum - 55) * 4));
+        const col = getPaletteColor(norm, activePalette);
+        data[idx++] = col[0];
+        data[idx++] = col[1];
+        data[idx++] = col[2];
+        data[idx++] = 255;
+      } else {
+        data[idx++] = 8;
+        data[idx++] = 10;
+        data[idx++] = 18;
+        data[idx++] = 255;
+      }
+    }
+  }
+
+  // Put to offscreen and upscale smoothly
+  createImageBitmap(imgData).then(bmp => {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(bmp, 0, 0, W, H);
+  });
+}
+
+// Main Raster Loop
+function rasterLoop(now) {
+  animFrameId = requestAnimationFrame(rasterLoop);
+
+  const delta = (now - lastTimestamp) / 1000;
+  lastTimestamp = now;
+
+  // FPS calculation
+  frameCount++;
+  if (now - lastFpsCheck >= 500) {
+    const fps = Math.round((frameCount * 1000) / (now - lastFpsCheck));
+    const fpsEl = document.getElementById('fpsTelemetry');
+    if (fpsEl) fpsEl.textContent = `FPS: ${fps} | ${(1000 / fps).toFixed(1)}ms`;
+    frameCount = 0;
+    lastFpsCheck = now;
+  }
+
+  if (!isPaused) {
+    effectTime += speedFactor;
+    if (currentEffect === 'plasma') renderPlasma(effectTime);
+    else if (currentEffect === 'rotozoom') renderRotozoom(effectTime);
+    else if (currentEffect === 'starfield') renderStarfield(effectTime);
+    else if (currentEffect === 'copper') renderCopperBars(effectTime);
+    else if (currentEffect === 'metaballs') renderMetaballs(effectTime);
+  }
+}
+
+// Scroller animation
+let scrollerPos = 0;
+setInterval(() => {
+  const el = document.getElementById('scrollerText');
+  if (el) {
+    scrollerPos += 2;
+    if (scrollerPos > el.scrollWidth - el.clientWidth) {
+      scrollerPos = 0;
+    }
+    el.scrollLeft = scrollerPos;
+  }
+}, 30);
+
+function saveActiveIntroVFS() {
+  const txt = `========================================================================
+ASSEMBLY '99 64K INTRO FRAME CAPTURE & RASTER DIAGNOSTIC
+========================================================================
+Effect Engine:    ${currentEffect.toUpperCase()}
+Color Palette:    ${activePalette}
+Canvas Geometry:  ${W}x${H} Mode 13h
+Timestamp:        1999-08-07T21:42:00Z
+Status:           Rendered 60 FPS with procedural mathematical LUT
+Party Venue:      Hartwall Areena, Helsinki
+========================================================================`;
+  saveToKiloVfs(`/home/demoscene/frame_${currentEffect}.txt`, txt);
+}
+
+function launchInKHex() {
+  saveActiveIntroVFS();
+  launchKiloApp('khex.html', { path: `/home/demoscene/frame_${currentEffect}.txt` });
+}
+
+function launchInKPad() {
+  saveActiveIntroVFS();
+  launchKiloApp('kpad.html', { path: `/home/demoscene/frame_${currentEffect}.txt` });
+}
+
+/* =========================================================================
+   2. ANSI / ASCII .NFO ARCHIVE & STUDIO
+   ========================================================================= */
+const NFO_FILES = {
+  'FLARELIGHT_Neural_Eclipse.nfo': `
+  ███████╗██╗      █████╗ ██████╗ ███████╗██╗     ██╗ ██████╗ ██╗  ██╗████████╗
+  ██╔════╝██║     ██╔══██╗██╔══██╗██╔════╝██║     ██║██╔════╝ ██║  ██║╚══██╔══╝
+  █████╗  ██║     ███████║██████╔╝█████╗  ██║     ██║██║  ███╗███████║   ██║   
+  ██╔══╝  ██║     ██╔══██║██╔══██╗██╔══╝  ██║     ██║██║   ██║██╔══██║   ██║   
+  ██║     ███████╗██║  ██║██║  ██║███████╗███████╗██║╚██████╔╝██║  ██║   ██║   
+  ╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   
+ ═══════════════════════════════════════════════════════════════════════════════
+  P R E S E N T S :   " N E U R A L   E C L I P S E "   ( 6 4 K   I N T R O )
+ ═══════════════════════════════════════════════════════════════════════════════
+  Compo Category  : 64K Executable Intro
+  Party           : Assembly '99, Helsinki, Finland
+  Release Size    : 64,812 bytes (Packed PE32 Executable)
+  Rank            : 1st Place (Official Assembly 99 Results)
+ ─────────────────────────────────────────────────────────────────────────────
+  C R E D I T S :
+    Code          : CyberMage, BitVoyager, NullPointer
+    3D Math       : Archon (Affine Rotozoomer, Dual Quaternions)
+    Music & Synth : ModMaster (Procedural 4-Voice YM2612 FM SoftSynth)
+    Graphics      : PixelKnight (VGA 256-color palette transitions)
+ ─────────────────────────────────────────────────────────────────────────────
+  T E C H N I C A L   H I G H L I G H T S :
+    - 100% Win32 x86 MASM Assembly Language.
+    - Zero external runtime DLLs beyond KERNEL32.DLL and GDI32.DLL.
+    - Procedural 2-operator FM soft-synth generating 3 minutes of polyphony
+      inside 1,940 bytes of executable code.
+    - Specular Amiga Copper reflection rasterizer with 60 Hz vertical sync.
+    - Custom unrolled Bresenham triangle rasterizer for 3D polyhedra.
+ ─────────────────────────────────────────────────────────────────────────────
+  G R E E T I N G S :
+    RAZOR 1999 * PULSE * THE SILICONS * FARBRÄUME * TRSI * FUTURE CREW *
+    TRANSCENDENCE * FREELIGHT * TITAN * SUB-SECTOR * KILONET ARCHIVE
+ ─────────────────────────────────────────────────────────────────────────────
+  EOF_ // FLARELIGHT 1999
+`,
+  'DEEPPIXEL_Silicon_Dreams.nfo': `
+ ┌───────────────────────────────────────────────────────────────────────────┐
+ │  DEEPPIXEL CREW - ASSEMBLY '99 4K INTRO ENTRY                             │
+ │  TITLE: "SILICON DREAMS"                                                  │
+ │  SIZE : 4,096 BYTES STRICT PE HEADERS                                     │
+ └───────────────────────────────────────────────────────────────────────────┘
+   Target Platform: Intel Pentium II 300MHz+, Win32 / DirectDraw
+   Code & Shaders : VectorVoid
+   Sound Engine   : ByteBeater (8253 Timer Bytebeat FM emulation)
+
+   How we fit into 4096 bytes:
+   - Header folding: PE Optional Header folded into DOS Stub (saves 64b).
+   - Raymarching algebraic sphere-tracing evaluated through Horner polynomial.
+   - Music routine: One single math formula t*((t>>12|t>>8)&63&t>>4).
+   - Zero textures stored on disk. All patterns generated dynamically.
+
+   Special thanks to ~neon_rider for the fixed-point division trick!
+`,
+  'RAZOR1999_Musicdisk_Vol4.nfo': `
+      _____ _____ _____ _____ _____     ___ ___ ___ ___ 
+     | __  |  _  |__   |     | __  |   |_  | . | . | . |
+     |    -|     |   __|  |  |    -|   |  _|_  |_  |_  |
+     |__|__|__|__|_____|_____|__|__|   |___|___|___|___|
+ ═══════════════════════════════════════════════════════════════════════════
+  ASSEMBLY '99 EXCLUSIVE CHIPTUNE & XM COMPILATION - VOL. IV
+ ═══════════════════════════════════════════════════════════════════════════
+  Tracks Included:
+  01. Second Reality Echoes       [03:42]  140 BPM  YM2612 FM Arpeggio
+  02. Copper Dawn                 [04:10]  125 BPM  SPC700 Slapback Echo
+  03. 64K Euphoria                [03:15]  160 BPM  Syncopated Tracker Bass
+  04. Assembly Midnight           [05:02]  115 BPM  Permian Sub-Acoustic 1999Hz
+
+  Steganographic Note:
+  Subcarrier resonance tracked at 1999 Hz. Deep core telemetry logged.
+  Access Carlsbad transponder via underground relay Node 0x7F.
+`,
+  'SUBLIME_Copper_Horizon.nfo': `
+ ╔═══════════════════════════════════════════════════════════════════════════╗
+ ║  SUBLIME PRODUCTIONS // ASSEMBLY '99 COMBINED PC DEMO                    ║
+ ║  TITLE: "COPPER HORIZON" (12.4 MB Full Version with 3dfx Glide Mode)     ║
+ ╚═══════════════════════════════════════════════════════════════════════════╝
+  System Requirements:
+    - Pentium II 400 MHz or AMD K6-2 450 MHz
+    - 64 MB SDRAM (100 MHz CAS2)
+    - 3dfx Voodoo2 (8MB/12MB) SLI or Riva TNT2 Ultra
+    - Sound Blaster Live! or AWE64 Gold
+    
+  Scene Breakdown:
+    Part 1: The Monolith (Voxel Landscape Raycaster)
+    Part 2: Interference Dreams (Real-time Dual Plasma)
+    Part 3: Copper Horizon (Amiga Hardware Raster Tribute)
+    Part 4: Starfield Warp & Final Greetings
+`
+};
+
+let activeNfoKey = 'FLARELIGHT_Neural_Eclipse.nfo';
+
+function renderNfoList() {
+  const container = document.getElementById('nfoFileList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  for (let key in NFO_FILES) {
+    const item = document.createElement('div');
+    item.className = 'nfo-list-item' + (key === activeNfoKey ? ' active' : '');
+    item.innerHTML = `
+      <div class="item-title">${key}</div>
+      <div class="item-meta">${NFO_FILES[key].length.toLocaleString()} bytes &bull; ASCII NFO</div>
+    `;
+    item.onclick = () => selectNfoFile(key);
+    container.appendChild(item);
+  }
+}
+
+function selectNfoFile(key) {
+  activeNfoKey = key;
+  renderNfoList();
+  const nameEl = document.getElementById('nfoFileName');
+  const sizeEl = document.getElementById('nfoFileSize');
+  const area = document.getElementById('nfoTextArea');
+  if (nameEl) nameEl.textContent = key;
+  if (sizeEl) sizeEl.textContent = `${NFO_FILES[key].length.toLocaleString()} bytes`;
+  if (area) area.value = NFO_FILES[key].trim();
+}
+
+function changePhosphorTheme(theme) {
+  const area = document.getElementById('nfoTextArea');
+  if (!area) return;
+  area.className = 'nfo-content-area theme-' + theme;
+}
+
+function copyNfoToClipboard() {
+  const area = document.getElementById('nfoTextArea');
+  if (!area) return;
+  navigator.clipboard.writeText(area.value).then(() => {
+    showToast('Copied NFO to clipboard!');
+  }).catch(() => {
+    showToast('Copy failed. Select and use Ctrl+C.');
+  });
+}
+
+function downloadNfoLocal() {
+  const area = document.getElementById('nfoTextArea');
+  const text = area ? area.value : '';
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = activeNfoKey;
+  a.click();
+  showToast('Downloaded ' + activeNfoKey);
+}
+
+function newBlankNfo() {
+  const name = prompt('Enter NFO filename:', 'MY_GROUP_DEMO.nfo');
+  if (!name) return;
+  const key = name.endsWith('.nfo') ? name : name + '.nfo';
+  NFO_FILES[key] = `
+ ═══════════════════════════════════════════════════════════════════════════
+  ${key.toUpperCase()} - ASSEMBLY '99 DEMOPARTY
+ ═══════════════════════════════════════════════════════════════════════════
+  Group / Handle : Anonymous
+  Date           : 1999-08-07
+  Specs          : x86 ASM / Mode 13h / YM2612 FM Audio
+ ───────────────────────────────────────────────────────────────────────────
+  Insert your ASCII art and credits here...
+ ───────────────────────────────────────────────────────────────────────────
+`;
+  activeNfoKey = key;
+  selectNfoFile(key);
+}
+
+function insertAsciiBox() {
+  const area = document.getElementById('nfoTextArea');
+  if (!area) return;
+  const box = `
+ ┌─────────────────────────────────────────────────────────────────────────┐
+ │                                                                         │
+ │                     YOUR ASCII TITLE GOES HERE                          │
+ │                                                                         │
+ └─────────────────────────────────────────────────────────────────────────┘
+`;
+  area.value = area.value + box;
+  showToast('Inserted ASCII box frame!');
+}
+
+function saveCurrentNfoVFS() {
+  const area = document.getElementById('nfoTextArea');
+  const text = area ? area.value : '';
+  const path = `/home/demoscene/${activeNfoKey}`;
+  saveToKiloVfs(path, text);
+}
+
+function openNfoInKPad() {
+  saveCurrentNfoVFS();
+  launchKiloApp('kpad.html', { path: `/home/demoscene/${activeNfoKey}` });
+}
+
+/* =========================================================================
+   3. COMPO VOTING BOARD
+   ========================================================================= */
+const DEFAULT_COMPOS = [
+  {
+    id: 'c1',
+    rank: 1,
+    title: 'Neural Eclipse',
+    group: 'FLARELIGHT',
+    cat: '64k',
+    catLabel: '64K Executable Intro',
+    size: '64,812 B',
+    platform: 'Pentium II / Win32 MASM',
+    votes: 842,
+    file: 'FLARELIGHT_Neural_Eclipse.zip'
+  },
+  {
+    id: 'c2',
+    rank: 2,
+    title: 'Silicon Dreams',
+    group: 'DEEPPIXEL',
+    cat: '64k',
+    catLabel: '64K Executable Intro',
+    size: '4,096 B',
+    platform: 'Win32 DirectDraw / Pure x86',
+    votes: 795,
+    file: 'DEEPPIXEL_Silicon_Dreams.zip'
+  },
+  {
+    id: 'c3',
+    rank: 3,
+    title: 'Pulse Horizon',
+    group: 'PULSE',
+    cat: '64k',
+    catLabel: '64K Executable Intro',
+    size: '65,114 B',
+    platform: 'DirectX 6 / FM Synth',
+    votes: 721,
+    file: 'PULSE_Horizon.zip'
+  },
+  {
+    id: 'c4',
+    rank: 4,
+    title: 'Copper Matrix',
+    group: 'THE SILICONS',
+    cat: '64k',
+    catLabel: '64K Executable Intro',
+    size: '63,990 B',
+    platform: 'VESA 2.0 / Mode 13h',
+    votes: 684,
+    file: 'SILICONS_CopperMatrix.zip'
+  },
+  {
+    id: 'c5',
+    rank: 1,
+    title: 'Copper Horizon',
+    group: 'SUBLIME',
+    cat: 'demo',
+    catLabel: 'Combined PC Demo',
+    size: '12.4 MB',
+    platform: '3dfx Voodoo2 Glide / SB Live!',
+    votes: 910,
+    file: 'SUBLIME_Copper_Horizon.zip'
+  },
+  {
+    id: 'c6',
+    rank: 2,
+    title: 'Voxel Transcendence',
+    group: 'FARBRÄUME',
+    cat: 'demo',
+    catLabel: 'Combined PC Demo',
+    size: '8.8 MB',
+    platform: 'Riva TNT2 / OpenGL',
+    votes: 876,
+    file: 'FARBRAUME_Transcendence.zip'
+  },
+  {
+    id: 'c7',
+    rank: 3,
+    title: 'Lithosphere 1999',
+    group: 'TRSI & ECHO',
+    cat: 'demo',
+    catLabel: 'Combined PC Demo',
+    size: '14.1 MB',
+    platform: 'Dual Pentium III 500 / Matrox G400',
+    votes: 804,
+    file: 'TRSI_Lithosphere.zip'
+  },
+  {
+    id: 'c8',
+    rank: 1,
+    title: 'Second Reality Echoes',
+    group: 'RAZOR 1999',
+    cat: 'music',
+    catLabel: 'Fast Music / XM',
+    size: '482 KB',
+    platform: 'FastTracker 2 (32 Channels)',
+    votes: 934,
+    file: 'RAZOR_SecondReality.xm'
+  },
+  {
+    id: 'c9',
+    rank: 2,
+    title: 'Copper Dawn',
+    group: 'ModMaster',
+    cat: 'music',
+    catLabel: 'Fast Music / XM',
+    size: '340 KB',
+    platform: 'Scream Tracker 3 (S3M)',
+    votes: 890,
+    file: 'ModMaster_CopperDawn.s3m'
+  },
+  {
+    id: 'c10',
+    rank: 3,
+    title: 'Subterranean 1999Hz',
+    group: 'Dr_A_Vance',
+    cat: 'music',
+    catLabel: 'Fast Music / XM',
+    size: '512 KB',
+    platform: 'Impulse Tracker (IT 2.14)',
+    votes: 820,
+    file: 'Vance_1999Hz.it'
+  },
+  {
+    id: 'c11',
+    rank: 1,
+    title: 'Valkyrie in Cyberspace',
+    group: 'PixelKnight',
+    cat: 'pixel',
+    catLabel: 'Pixel / VGA Art',
+    size: '64 KB',
+    platform: 'Deluxe Paint IIe (320x200 256c)',
+    votes: 865,
+    file: 'PixelKnight_Valkyrie.lbm'
+  },
+  {
+    id: 'c12',
+    rank: 2,
+    title: 'Hartwall Areena Midnight',
+    group: 'CyberMage',
+    cat: 'pixel',
+    catLabel: 'Pixel / VGA Art',
+    size: '64 KB',
+    platform: 'Autodesk Animator Pro',
+    votes: 830,
+    file: 'CyberMage_Hartwall.fli'
+  }
+];
+
+let compoEntries = safeGet('assembly99_entries', DEFAULT_COMPOS);
+let userVotes = safeGet('assembly99_user_votes', {});
+let activeCompoFilter = 'all';
+
+function filterCompos(cat) {
+  activeCompoFilter = cat;
+  document.querySelectorAll('.filter-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${cat}'`));
+  });
+  renderCompoList();
+}
+
+function renderCompoList() {
+  const container = document.getElementById('compoEntryList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const filtered = compoEntries.filter(e => activeCompoFilter === 'all' || e.cat === activeCompoFilter);
+  // Sort descending by votes
+  filtered.sort((a, b) => b.votes - a.votes);
+
+  filtered.forEach((entry, idx) => {
+    const card = document.createElement('div');
+    card.className = 'compo-card';
+    const votedState = userVotes[entry.id] || 0;
+
+    card.innerHTML = `
+      <div class="compo-rank">#${idx + 1}</div>
+      <div class="compo-info">
+        <h4>
+          <span>${entry.title}</span>
+          <span style="font-size:11px; color:var(--magenta-neon);">by ${entry.group}</span>
+        </h4>
+        <div class="compo-meta">
+          <strong>Category:</strong> ${entry.catLabel} &bull; 
+          <strong>Size:</strong> ${entry.size} &bull; 
+          <strong>Specs:</strong> ${entry.platform}
+        </div>
+      </div>
+      <div class="compo-vote-action">
+        <div class="vote-score" id="score_${entry.id}">${entry.votes.toLocaleString()} pts</div>
+        <div class="vote-btns">
+          <button class="btn-vote" style="${votedState === 1 ? 'background:var(--cyan-neon); color:#000;' : ''}" onclick="voteEntry('${entry.id}', 1)">▲ +1</button>
+          <button class="btn-vote" style="${votedState === -1 ? 'background:var(--magenta-neon); color:#fff;' : ''}" onclick="voteEntry('${entry.id}', -1)">▼ -1</button>
+        </div>
+      </div>
+      <div class="compo-vfs-actions">
+        <button class="btn-mini" onclick="downloadReleaseSim('${entry.id}')">💾 Save ${entry.file} to VFS</button>
+        <button class="btn-mini" onclick="viewReleaseNfo('${entry.title}')">📄 View Release NFO</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function voteEntry(id, delta) {
+  const currentVote = userVotes[id] || 0;
+  const entry = compoEntries.find(e => e.id === id);
+  if (!entry) return;
+
+  if (currentVote === delta) {
+    // Un-vote
+    entry.votes -= delta;
+    delete userVotes[id];
+  } else {
+    // Switch vote or new vote
+    entry.votes += (delta - currentVote);
+    userVotes[id] = delta;
+  }
+
+  safeSet('assembly99_entries', compoEntries);
+  safeSet('assembly99_user_votes', userVotes);
+  renderCompoList();
+  showToast(`Voted on "${entry.title}"!`);
+}
+
+function downloadReleaseSim(id) {
+  const entry = compoEntries.find(e => e.id === id);
+  if (!entry) return;
+
+  const content = `[ASSEMBLY '99 OFFICIAL COMPO ARCHIVE]
+Release: ${entry.title} by ${entry.group}
+Compo:   ${entry.catLabel}
+Size:    ${entry.size}
+CRC32:   0x7F199942
+Package: ${entry.file}
+
+This archive contains the official executable, tracker soundtrack,
+and party documentation verified at Assembly '99 Helsinki.`;
+
+  const path = `/home/demoscene/${entry.file}`;
+  saveToKiloVfs(path, content);
+}
+
+function viewReleaseNfo(title) {
+  switchTab('tab-nfo');
+  for (let key in NFO_FILES) {
+    if (key.toLowerCase().includes(title.toLowerCase().split(' ')[0])) {
+      selectNfoFile(key);
+      break;
+    }
+  }
+}
+
+function exportBallotVFS() {
+  let txt = `========================================================================\n`;
+  txt += `ASSEMBLY '99 OFFICIAL USER VOTING BALLOT\n`;
+  txt += `========================================================================\n\n`;
+  compoEntries.forEach((e, idx) => {
+    const userV = userVotes[e.id] ? (userVotes[e.id] > 0 ? '+1 VOTE' : '-1 VOTE') : 'NO VOTE';
+    txt += `[${String(idx + 1).padStart(2, '0')}] ${e.title.padEnd(24)} by ${e.group.padEnd(16)} : ${String(e.votes).padStart(5, ' ')} pts [${userV}]\n`;
+  });
+  txt += `\nCertified by Assembly '99 Organizing Committee.\n`;
+  saveToKiloVfs('/home/demoscene/party_ballot.txt', txt);
+}
+
+// Modal controls for new compo entry
+function openNewEntryModal() {
+  const m = document.getElementById('modalNewEntry');
+  if (m) m.style.display = 'flex';
+}
+function closeNewEntryModal() {
+  const m = document.getElementById('modalNewEntry');
+  if (m) m.style.display = 'none';
+}
+function submitNewCompoEntry() {
+  const title = document.getElementById('modalEntryTitle').value.trim();
+  const group = document.getElementById('modalEntryGroup').value.trim();
+  const cat = document.getElementById('modalEntryCat').value;
+  const desc = document.getElementById('modalEntryDesc').value.trim();
+
+  if (!title || !group) {
+    alert('Please enter both Release Title and Group Name.');
+    return;
+  }
+
+  const catLabels = {
+    '64k': '64K Executable Intro',
+    'demo': 'Combined PC Demo',
+    'music': 'Fast Music / XM',
+    'pixel': 'Pixel / VGA Graphics'
+  };
+
+  const newEntry = {
+    id: 'custom_' + Date.now(),
+    rank: compoEntries.length + 1,
+    title: title,
+    group: group,
+    cat: cat,
+    catLabel: catLabels[cat] || cat,
+    size: '64,192 B',
+    platform: desc || 'Win32 MASM / DirectDraw',
+    votes: 1,
+    file: group.replace(/\s+/g, '_') + '_' + title.replace(/\s+/g, '_') + '.zip'
+  };
+
+  compoEntries.push(newEntry);
+  userVotes[newEntry.id] = 1;
+  safeSet('assembly99_entries', compoEntries);
+  safeSet('assembly99_user_votes', userVotes);
+  closeNewEntryModal();
+  renderCompoList();
+  showToast('Submitted compo entry: ' + title);
+}
+
+/* =========================================================================
+   4. PROCEDURAL YM2612 FM + SPC700 SOUNDTRACKER JUKEBOX
+   ========================================================================= */
+let audioCtx = null;
+let isAudioMuted = false;
+let isBgmPlaying = false;
+let bgmTimer = null;
+let currentTrackIdx = 0;
+let snesDelay = null;
+let snesFeedback = null;
+let chMutes = [true, true, true, true]; // Ch 1-4 active
+
+const TRACK_LIST = [
+  {
+    name: 'Second Reality Echoes',
+    author: 'ModMaster / FLARELIGHT',
+    tempo: 140,
+    scale: [261.63, 293.66, 329.63, 392.00, 440.00, 523.25], // C Major pentatonic
+    bass: [65.41, 73.42, 82.41, 98.00],
+    desc: 'Classic upbeat 140 BPM European demoparty arpeggio theme'
+  },
+  {
+    name: 'Copper Dawn',
+    author: 'Archon / SUBLIME',
+    tempo: 125,
+    scale: [220.00, 246.94, 261.63, 293.66, 329.63, 349.23, 392.00], // A Minor
+    bass: [55.00, 65.41, 73.42, 82.41],
+    desc: 'Melancholic atmospheric chiptune with SNES slapback echo'
+  },
+  {
+    name: '64K Euphoria',
+    author: 'ByteBeater / DEEPPIXEL',
+    tempo: 160,
+    scale: [293.66, 329.63, 369.99, 440.00, 493.88, 587.33], // D Dorian
+    bass: [73.42, 82.41, 92.50, 110.00],
+    desc: 'High-speed syncopated tracker techno with FM slap bass'
+  },
+  {
+    name: 'Assembly Midnight (Sub-1999Hz)',
+    author: 'Dr_A_Vance / TRSI',
+    tempo: 110,
+    scale: [196.00, 220.00, 246.94, 261.63, 293.66, 329.63], // G Minor
+    bass: [49.00, 55.00, 61.74, 65.41],
+    desc: 'Deep subterranean bassline with 1999Hz lithospheric resonance'
+  }
+];
+
+function initAudioEngine() {
+  if (audioCtx) return;
+  const AudioCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtor) return;
+  audioCtx = new AudioCtor();
+
+  // SNES SPC700 Stereo Slapback Delay: 180ms delay, lowpass filter at 2200Hz
+  snesDelay = audioCtx.createDelay(1.0);
+  snesDelay.delayTime.setValueAtTime(0.18, audioCtx.currentTime);
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(2200, audioCtx.currentTime);
+
+  snesFeedback = audioCtx.createGain();
+  snesFeedback.gain.setValueAtTime(0.35, audioCtx.currentTime);
+
+  snesDelay.connect(filter);
+  filter.connect(snesFeedback);
+  snesFeedback.connect(snesDelay);
+  filter.connect(audioCtx.destination);
+}
+
+function playFMNote(freq, dur, isBass, chIdx) {
+  if (isAudioMuted || !chMutes[chIdx]) return;
+  try {
+    initAudioEngine();
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const t = audioCtx.currentTime;
+
+    // YM2612 2-Operator FM Synthesizer: Modulator -> Carrier
+    const mod = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const car = audioCtx.createOscillator();
+    const carGain = audioCtx.createGain();
+
+    if (isBass) {
+      mod.type = 'sawtooth';
+      car.type = 'triangle';
+      mod.frequency.setValueAtTime(freq * 1.5, t);
+      modGain.gain.setValueAtTime(freq * 2.0, t);
+      modGain.gain.exponentialRampToValueAtTime(0.1, t + dur);
+    } else {
+      mod.type = 'sine';
+      car.type = 'square';
+      mod.frequency.setValueAtTime(freq * 2.0, t);
+      modGain.gain.setValueAtTime(freq * 1.2, t);
+      modGain.gain.exponentialRampToValueAtTime(0.1, t + dur);
+    }
+
+    car.frequency.setValueAtTime(freq, t);
+    carGain.gain.setValueAtTime(isBass ? 0.09 : 0.05, t);
+    carGain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+    mod.connect(modGain);
+    modGain.connect(car.frequency);
+    car.connect(carGain);
+    carGain.connect(audioCtx.destination);
+
+    // Send lead to SPC700 delay line
+    if (!isBass && snesDelay) {
+      carGain.connect(snesDelay);
+    }
+
+    mod.start(t);
+    car.start(t);
+    mod.stop(t + dur);
+    car.stop(t + dur);
+  } catch (e) {}
+}
+
+function playPercussion(isSnare) {
+  if (isAudioMuted || !chMutes[3]) return;
+  try {
+    initAudioEngine();
+    if (!audioCtx) return;
+    const t = audioCtx.currentTime;
+
+    if (!isSnare) {
+      // Kick: sine sweep 140Hz -> 30Hz
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.setValueAtTime(140, t);
+      osc.frequency.exponentialRampToValueAtTime(32, t + 0.12);
+      gain.gain.setValueAtTime(0.12, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.12);
+    } else {
+      // Snare: noise burst
+      const bufferSize = audioCtx.sampleRate * 0.08;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.06, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+      noise.connect(gain);
+      gain.connect(audioCtx.destination);
+      noise.start(t);
+    }
+  } catch (e) {}
+}
+
+let songStep = 0;
+function trackerTick() {
+  const trk = TRACK_LIST[currentTrackIdx];
+  const stepInMeasure = songStep % 16;
+
+  // Percussion (Kick on 0, 8; Snare on 4, 12)
+  if (stepInMeasure === 0 || stepInMeasure === 8) playPercussion(false);
+  if (stepInMeasure === 4 || stepInMeasure === 12) playPercussion(true);
+
+  // Bass on every 4th step
+  if (stepInMeasure % 4 === 0) {
+    const bassNote = trk.bass[(Math.floor(songStep / 4)) % trk.bass.length];
+    playFMNote(bassNote, 0.22, true, 1);
+  }
+
+  // Lead arpeggio on 16th notes
+  const scaleLen = trk.scale.length;
+  const leadIdx = (songStep * 3 + (stepInMeasure > 8 ? 2 : 0)) % scaleLen;
+  const leadNote = trk.scale[leadIdx];
+  playFMNote(leadNote, 0.11, false, 0);
+
+  // Oscilloscope trigger
+  drawScopeFrame(leadNote);
+
+  songStep++;
+}
+
+function toggleJukeboxBgm() {
+  isBgmPlaying = !isBgmPlaying;
+  const btn = document.getElementById('btnJukeboxPlay');
+  if (btn) btn.textContent = isBgmPlaying ? '⏸ Pause Track' : '▶ Play Track';
+
+  if (isBgmPlaying) {
+    const trk = TRACK_LIST[currentTrackIdx];
+    const intervalMs = Math.round((60000 / trk.tempo) / 4); // 16th note
+    if (bgmTimer) clearInterval(bgmTimer);
+    bgmTimer = setInterval(trackerTick, intervalMs);
+    showToast(`Playing track: ${trk.name}`);
+  } else {
+    if (bgmTimer) clearInterval(bgmTimer);
+    bgmTimer = null;
+  }
+}
+
+function selectTrack(idx) {
+  currentTrackIdx = idx;
+  songStep = 0;
+  renderTrackGrid();
+  const trk = TRACK_LIST[idx];
+  const npText = document.getElementById('nowPlayingText');
+  if (npText) npText.textContent = `NOW PLAYING: ${trk.name} (${trk.tempo} BPM)`;
+
+  if (isBgmPlaying) {
+    if (bgmTimer) clearInterval(bgmTimer);
+    const intervalMs = Math.round((60000 / trk.tempo) / 4);
+    bgmTimer = setInterval(trackerTick, intervalMs);
+  }
+}
+
+function toggleGlobalAudio() {
+  isAudioMuted = !isAudioMuted;
+  const btn = document.getElementById('btnGlobalMute');
+  if (btn) btn.textContent = isAudioMuted ? '🔇 AUDIO: OFF' : '🔊 AUDIO: ON';
+}
+
+function updateChannelMutes() {
+  chMutes[0] = document.getElementById('chkCh1')?.checked ?? true;
+  chMutes[1] = document.getElementById('chkCh2')?.checked ?? true;
+  chMutes[2] = document.getElementById('chkCh3')?.checked ?? true;
+  chMutes[3] = document.getElementById('chkCh4')?.checked ?? true;
+}
+
+function updateEchoFeedback(val) {
+  if (snesFeedback && audioCtx) {
+    snesFeedback.gain.setValueAtTime((parseInt(val, 10) / 100) * 0.7, audioCtx.currentTime);
+  }
+}
+
+function renderTrackGrid() {
+  const container = document.getElementById('trackLibraryGrid');
+  if (!container) return;
+  container.innerHTML = '';
+
+  TRACK_LIST.forEach((t, idx) => {
+    const card = document.createElement('div');
+    card.className = 'track-card' + (idx === currentTrackIdx ? ' active' : '');
+    card.innerHTML = `
+      <div class="t-name">${t.name}</div>
+      <div class="t-author">by ${t.author}</div>
+      <div class="t-meta">${t.tempo} BPM &bull; ${t.desc}</div>
+    `;
+    card.onclick = () => selectTrack(idx);
+    container.appendChild(card);
+  });
+}
+
+function exportCurrentTrackVFS() {
+  const trk = TRACK_LIST[currentTrackIdx];
+  const txt = `[FASTTRACKER II EXTENDED MODULE SPECIFICATION]
+Title:   ${trk.name}
+Author:  ${trk.author}
+Tempo:   ${trk.tempo} BPM
+Format:  XM 1.04 / 32-Channel Procedural Soft-Synth
+Hardware: Yamaha YM2612 2-Operator FM + SNES SPC700 Delay
+Verified for Assembly '99 Fast Music Competition.`;
+
+  const filename = trk.name.replace(/\s+/g, '_') + '.xm';
+  saveToKiloVfs(`/home/music/${filename}`, txt);
+}
+
+// Oscilloscope Canvas Visualizer
+const scopeCanvas = document.getElementById('scopeCanvas');
+const scopeCtx = scopeCanvas ? scopeCanvas.getContext('2d') : null;
+let scopePhase = 0;
+
+function drawScopeFrame(freq) {
+  if (!scopeCtx) return;
+  const SW = scopeCanvas.width;
+  const SH = scopeCanvas.height;
+
+  scopeCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+  scopeCtx.fillRect(0, 0, SW, SH);
+
+  scopeCtx.lineWidth = 2;
+  scopeCtx.strokeStyle = '#00ffcc';
+  scopeCtx.beginPath();
+
+  scopePhase += 0.2;
+  const wavelength = freq ? (SW / freq) * 20 : 30;
+
+  for (let x = 0; x < SW; x++) {
+    const y = (SH / 2) + Math.sin((x / wavelength) + scopePhase) * (SH * 0.35);
+    if (x === 0) scopeCtx.moveTo(x, y);
+    else scopeCtx.lineTo(x, y);
+  }
+  scopeCtx.stroke();
+}
+
+window.addEventListener('keydown', (e) => {
+  const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+  if (activeTag === 'textarea' || activeTag === 'input' || activeTag === 'select') return;
+
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', ' '].includes(e.key)) {
+    e.preventDefault();
+  }
+
+  if (e.key === ' ' || e.code === 'Space') {
+    togglePlayPause();
+  } else if (e.key === '1') {
+    setEffect('plasma');
+  } else if (e.key === '2') {
+    setEffect('rotozoom');
+  } else if (e.key === '3') {
+    setEffect('starfield');
+  } else if (e.key === '4') {
+    setEffect('copper');
+  } else if (e.key === '5') {
+    setEffect('metaballs');
+  } else if (e.key === 'm' || e.key === 'M') {
+    toggleGlobalAudio();
+  }
+});
+
+/* =========================================================================
+   INITIALIZATION
+   ========================================================================= */
+window.addEventListener('DOMContentLoaded', () => {
+  updateCRTState();
+  renderNfoList();
+  selectNfoFile(activeNfoKey);
+  renderCompoList();
+  renderTrackGrid();
+
+  // Start Canvas animation
+  requestAnimationFrame(rasterLoop);
+
+  // Setup initial scope canvas
+  if (scopeCtx) {
+    scopeCtx.fillStyle = '#000';
+    scopeCtx.fillRect(0, 0, scopeCanvas.width, scopeCanvas.height);
+  }
+});
+</script>
+</body>
+</html>

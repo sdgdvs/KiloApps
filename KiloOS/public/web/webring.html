@@ -3776,6 +3776,19 @@ const DEFAULT_RING_NODES = [
     tags: "echo,acoustic,lab,hydrophone,1999hz,sigint,sonogram,beamformer,carlsbad,salado,steganography,squid,tomograph"
   },
   {
+    id: "#021",
+    num: 21,
+    name: "Assembly '99 Demoscene Party Vault",
+    handle: "FLARELIGHT_Crew",
+    category: "demoscene",
+    url: "/web/demoscene.html",
+    desc: "Real-time 64K intro Canvas effect switcher (multi-sine plasma, affine rotozoom, 3D starfield, Amiga copper bars, metaballs), ANSI .NFO studio with KiloOS VFS save, and live party voting board.",
+    tech: "HTML 4.01 / Mode 13h Canvas / YM2612 2-Op FM / SPC700 Delay / ANSI Studio / VFS IPC",
+    badgeLabel: "ASSEMBLY '99",
+    latency: 25,
+    tags: "demoscene,assembly99,64k,plasma,rotozoom,starfield,copper,metaballs,nfo,chiptune,ym2612,compo,voting,helsinki"
+  },
+  {
     id: "#020",
     num: 20,
     name: "Node ??? (Subsurface Transponder)",
@@ -9802,7 +9815,7 @@ function simulateTrafficBurst() {
 
   const logBody = document.getElementById('trafficLogBody');
   if (logBody) {
-    const nodes = ['kweb://portal', 'kweb://slashnet', 'kweb://cabled', 'kweb://scallion', 'kweb://trapster', 'kweb://cybercafe', 'kweb://users/~neon_rider', 'kweb://asm-temple', 'kweb://warez', 'kweb://geocities'];
+    const nodes = ['kweb://portal', 'kweb://slashnet', 'kweb://cabled', 'kweb://scallion', 'kweb://demoscene', 'kweb://trapster', 'kweb://cybercafe', 'kweb://users/~neon_rider', 'kweb://asm-temple', 'kweb://warez', 'kweb://geocities'];
     const fromNode = nodes[Math.floor(Math.random() * nodes.length)];
     let toNode = nodes[Math.floor(Math.random() * nodes.length)];
     while (toNode === fromNode) toNode = nodes[Math.floor(Math.random() * nodes.length)];

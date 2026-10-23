@@ -283,9 +283,9 @@
     "id": "kfarm",
     "title": "KFarm",
     "folder": "Games",
-    "webBytes": 91601,
+    "webBytes": 122414,
     "exeBytes": 135680,
-    "budgetPercent": 9.2
+    "budgetPercent": 12.3
   },
   {
     "id": "kflash",
@@ -467,7 +467,7 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 203425,
+    "webBytes": 203476,
     "exeBytes": 45056,
     "budgetPercent": 20.4
   },
@@ -611,9 +611,9 @@
     "id": "kscript",
     "title": "KScript",
     "folder": "Dev",
-    "webBytes": 114328,
-    "exeBytes": 24576,
-    "budgetPercent": 11.4
+    "webBytes": 153629,
+    "exeBytes": 25600,
+    "budgetPercent": 15.4
   },
   {
     "id": "ksettings",
@@ -723,7 +723,7 @@
     "id": "ksys",
     "title": "KSys",
     "folder": "System",
-    "webBytes": 187358,
+    "webBytes": 187492,
     "exeBytes": 32256,
     "budgetPercent": 18.8
   },
@@ -787,7 +787,7 @@
     "id": "ktrader",
     "title": "KTrader",
     "folder": "Games",
-    "webBytes": 184135,
+    "webBytes": 184293,
     "exeBytes": 26624,
     "budgetPercent": 18.4
   },
