@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ current_targets:
   kilo_soundscape: KWizard
   kilo_tester: KScript
   kilo_usability: KSys
-  kilo_qa: KTrader
+  kilo_qa: KMech
   kilo_expander: KScript
 virtual_web_target: kweb://demoscene
 virtual_web_rotation:
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KScript
-  timestamp: '2026-10-23T15:24:17-07:00'
+  agent: kilo-qa
+  app: KTrader
+  timestamp: '2026-10-23T15:33:44-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -102,7 +102,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
-| `KTrader` | `KiloOS/public/apps/ktrader.html` | Space trader commodity & planetary docking visual upgrade: replace primitive planet circles and station shapes with multi-layered celestial bodies, orbital spaceport sprites, ship hull silhouettes, and eliminate any perimeter glints. |
 | `KRogue` | `KiloOS/public/apps/krogue.html` | Subterranean roguelike visual polish: crisp tile/entity sprite rendering, atmospheric torchlight vignette, boss monster visual distinction, and perimeter glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
@@ -144,16 +143,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KHash` | `KiloOS/public/apps/khash.html`, `KHash/main.c` | Multi-digest comparison table responsiveness, one-click hash verification badge, HMAC toggle ergonomics, and keyboard shortcuts. |
 | `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Encrypted container tree navigation, responsive hex/file inspector split, clear lock/unlock status banner, and modal focus trapping. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
-| `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | Space trader market table ergonomics: responsive commodity columns, `[1-9]`/`[B]`/`[S]` quick-trade hotkeys, HiDPI star map scaling, and docking modal focus trap. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Side-by-side plaintext/ciphertext responsive split pane, HiDPI frequency chart crispness, one-click copy/swap ergonomics, and `[F1/H]` help overlay. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KTrader`
+- **Active Target**: `KMech`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | Pass 5 QA: verify ship credits, cargo manifest, sector position, and market ledger F5/F9 persistence + dual Win32 C build (`KTrader.exe` <999 KB). |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | Pass 5 QA: verify mech chassis loadout, heat/armor state, arena progression F5/F9 persistence + dual Win32 C build (`KMech.exe` <999 KB). |
 | `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | Pass 5 QA: verify campaign progression, maze editor, RFMS duel solo fallback, F5/F9 persistence + dual Win32 C build (`KPac.exe` <999 KB); promote to Mature if complete. |
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Pass 5 QA: verify deck state, move undo stack, scoring, F5/F9 persistence + dual Win32 C build (`KSolitaire.exe` <999 KB); promote to Mature if complete. |
@@ -169,7 +166,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Phase VI VFS & IPC Mesh: add KiloOS VFS Open/Save (`/home/crypto/*.enc`), `"Inspect Ciphertext in KHex"` IPC launch (`OS_LAUNCH_APP`), multi-stage cipher chaining pipeline, and dual Win32 C parity. |
-| `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | Phase VI RFMS & VFS Expansion: add RFMS Galactic Syndicate Trade Ticker & Cargo Duel (explicit Connect button, 25s solo AI fallback), commodity futures ledger, VFS manifest export (`/home/saves/ktrader_ledger.json`), and C parity. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 
@@ -183,6 +179,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KTrader** | `KiloOS/public/apps/ktrader.html` | Pass 5+ (2026-10-23) | Strategy / Space Simulation | Complete space trading & planetary commerce simulation; 12 planetary systems, commodity futures ledger, shipyard upgrades, pirate combat, dual Win32 native client parity, full F5/F9 state persistence. |
 | **KDB** | `KiloOS/public/apps/kdb.html` | Pass 5+ (2026-10-23) | Productivity / Database & SQL | Enterprise relational table & SQL studio with multi-table schema designer, ER diagram, index simulator, VFS mount/export (/home/data/), KGraph IPC plotting, F5/F9 persistence, and dual Win32 C parity. |
 | **KConverter** | `KiloOS/public/apps/kconverter.html` | Pass 5+ (2026-10-23) | Productivity / Math & Units | High-precision engineering and dimensional unit converter across 14 physical categories with Smart Expression Parser, Batch tables, custom factors, F5/F9 persistence, and dual Win32 C parity. |
 | **KClip** | `KiloOS/public/apps/kclip.html` | Pass 5+ (2026-10-23) | Workstation & Utilities | Clipboard manager, 12 text transformation pipelines, regex find/replace, Diff/Hex inspector, F5/F9 persistence, and dual Win32 C parity. |
@@ -227,6 +224,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T15:33:44-07:00 — kilo-qa: KTrader (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 180.0 KB, native 26.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, ktrader_tutorialSeen flag, Escape modal dismissals, and Arrow/Space scroll prevention.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, visibilitychange timer hygiene, and sync build.
+  - Mature Quarantine & Handoff: Promoted `KTrader` to Mature archive; advanced `kilo-qa` to `KMech`; next agent `kilo-expander`.
+
 - **2026-10-23T15:24:17-07:00 — kilo-usability: KScript (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 131.6 KB, native 24.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.99%, 0 fail, 0 warn, 4.4s)).
   - Layout & HiDPI: Grouped semantic toolbar, added HiDPI telemetry sparkline canvas, benchmark latency histogram canvas, and AST statement distribution canvas scaled via devicePixelRatio.
@@ -250,10 +253,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Composition: G Major pentatonic / Mixolydian, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
   - Patches & DSP: Acoustic FM guitar, marimba counterpoint, upright FM bass, brushed snare, 190/240ms SPC700 stereo delay & harvest earcons.
   - Handoff: Advanced `kilo-soundscape` to `KWizard`; rotated active agent to `kilo-tester`.
-
-- **2026-10-23T14:42:40-07:00 — kilo-graphics: KAlchemy (Alchemical Laboratory & Glassware Graphics Overhaul)**
-  - Status: PASS ✅ (0 errors, web 273.8 KB, native 68.5 KB < 999 KB; startup, Vite & security_lint PASS).
-  - Integrated ornate alembic glassware, runic crucible, retort & cauldron apparatus SVGs with active reaction glows.
-  - Upgraded elemental reagent cards with tier-specific alchemical seal discs, antique glyphs & responsive layout.
-  - Glint sweep verified: zero traveling perimeter dots or rotating specular glints.
-  - Handoff: Advanced `kilo-graphics` to `KVoid`; rotated active agent to `kilo-soundscape`.

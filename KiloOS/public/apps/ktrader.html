@@ -4183,7 +4183,7 @@
 
     document.addEventListener('visibilitychange', () => {
 
-      document.hidden ? stopLoop() : startLoop();
+      // Handled in main visibilitychange listener at bottom of file
 
     });
 
@@ -6966,6 +6966,10 @@
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
 
       
+
+      if ([' ', 'Spacebar', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+      }
 
       const helpOpen = document.getElementById('help-modal') && document.getElementById('help-modal').style.display === 'flex';
 

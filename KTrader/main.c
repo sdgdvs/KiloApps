@@ -1648,6 +1648,8 @@ void __stdcall MainEntry() {
                         SendMessage(hwnd, WM_COMMAND, ID_BTN_QUICKLOAD, 0);
                     } else if (msg.wParam == VK_F1) {
                         SendMessage(hwnd, WM_COMMAND, ID_BTN_HELP, 0);
+                    } else if (msg.wParam == VK_ESCAPE) {
+                        // Dismiss / cancel shortcut
                     } else if (state.inCombat) {
                         if (msg.wParam == 'F' || msg.wParam == VK_SPACE) {
                             SendMessage(hwnd, WM_COMMAND, ID_BTN_FIRE, 0);
