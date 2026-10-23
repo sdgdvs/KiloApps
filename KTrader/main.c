@@ -1665,6 +1665,20 @@ void __stdcall MainEntry() {
                             SendMessage(hwnd, WM_COMMAND, ID_BTN_DEST3, 0);
                         } else if (msg.wParam == 'R') {
                             SendMessage(hwnd, WM_COMMAND, ID_BTN_REFUEL, 0);
+                        } else if (msg.wParam == 'B') {
+                            for (int i = 0; i < 8; i++) {
+                                if (state.credits >= currentPrices[i] && state.cargo < state.maxCargo) {
+                                    SendMessage(hwnd, WM_COMMAND, ID_BTN_BUY_START + i, 0);
+                                    break;
+                                }
+                            }
+                        } else if (msg.wParam == 'S') {
+                            for (int i = 0; i < 8; i++) {
+                                if (state.inventory[i] > 0) {
+                                    SendMessage(hwnd, WM_COMMAND, ID_BTN_SELL_START + i, 0);
+                                    break;
+                                }
+                            }
                         }
                     }
                 }

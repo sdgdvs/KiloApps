@@ -219,9 +219,9 @@
     "id": "kconverter",
     "title": "KConverter",
     "folder": "System",
-    "webBytes": 132758,
+    "webBytes": 134273,
     "exeBytes": 34304,
-    "budgetPercent": 13.3
+    "budgetPercent": 13.4
   },
   {
     "id": "kcosmic",
@@ -555,9 +555,9 @@
     "id": "kquest",
     "title": "KQuest",
     "folder": "Games",
-    "webBytes": 324747,
+    "webBytes": 353218,
     "exeBytes": 99328,
-    "budgetPercent": 32.5
+    "budgetPercent": 35.4
   },
   {
     "id": "kradio",
@@ -788,7 +788,7 @@
     "title": "KTrader",
     "folder": "Games",
     "webBytes": 114922,
-    "exeBytes": 26624,
+    "exeBytes": 26112,
     "budgetPercent": 11.5
   },
   {
