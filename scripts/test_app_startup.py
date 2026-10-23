@@ -264,10 +264,24 @@ async def run_cdp_audit(app_name: str, browser_path: str, port: int) -> Dict[str
 
                 function isVisible(el) {
                     if (!el) return false;
+                    if (el.checkVisibility && !el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) return false;
                     const style = window.getComputedStyle(el);
-                    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+                    if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) < 0.05) return false;
                     const rect = el.getBoundingClientRect();
                     return rect.width > 0 && rect.height > 0;
+                }
+
+                function isBlockingOverlay(el) {
+                    if (!isVisible(el)) return false;
+                    const style = window.getComputedStyle(el);
+                    if (style.pointerEvents === 'none') return false;
+                    if (el.querySelector('canvas')) return false;
+                    const rect = el.getBoundingClientRect();
+                    if ((rect.width * rect.height) <= totalArea * 0.35) return false;
+                    const cx = Math.max(4, Math.min(vw - 4, rect.left + rect.width / 2));
+                    const cy = Math.max(4, Math.min(vh - 4, rect.top + rect.height / 2));
+                    const hit = document.elementFromPoint(cx, cy);
+                    return Boolean(hit && (el === hit || el.contains(hit)));
                 }
 
                 // Check for canvas elements and primary game surface
@@ -285,30 +299,27 @@ async def run_cdp_audit(app_name: str, browser_path: str, port: int) -> Dict[str
                     };
                 }
 
-                // Check for large overlay / modal elements
+                // Check for large blocking overlay / modal elements
                 const overlayCandidates = Array.from(document.querySelectorAll(
                     '[class*="modal"], [id*="modal"], [class*="overlay"], [id*="overlay"], [class*="dialog"], [class*="backdrop"], [class*="manual"], [id*="manual"], [class*="splash"], [id*="splash"]'
-                )).filter(isVisible);
+                )).filter(isBlockingOverlay);
 
                 let primaryOverlay = null;
                 for (const el of overlayCandidates) {
                     const rect = el.getBoundingClientRect();
-                    const area = rect.width * rect.height;
-                    const coverage = (area / totalArea);
-                    if (coverage > 0.35) { // Covers >35% of viewport
-                        const closeBtn = el.querySelector(
-                            'button[class*="close"], .btn-close, button[title*="Close"], button[title*="close"], button[title*="Dismiss"], .btn-help-footer-close, button'
-                        );
-                        primaryOverlay = {
-                            id: el.id,
-                            className: el.className,
-                            coverage: Math.round(coverage * 100),
-                            hasCloseBtn: Boolean(closeBtn),
-                            closeBtnSelector: closeBtn ? (closeBtn.id ? '#' + closeBtn.id : (closeBtn.className ? '.' + closeBtn.className.split(' ')[0] : 'button')) : null,
-                            closeBtnText: closeBtn ? closeBtn.innerText.trim() : null
-                        };
-                        break;
-                    }
+                    const coverage = (rect.width * rect.height) / totalArea;
+                    const closeBtn = el.querySelector(
+                        'button.primary, .splash-btn.primary, button[class*="close"], .btn-close, button[title*="Close"], button[title*="close"], button[title*="Dismiss"], .btn-help-footer-close, button'
+                    );
+                    primaryOverlay = {
+                        id: el.id,
+                        className: el.className,
+                        coverage: Math.round(coverage * 100),
+                        hasCloseBtn: Boolean(closeBtn),
+                        closeBtnSelector: closeBtn ? (closeBtn.id ? '#' + closeBtn.id : (closeBtn.className ? '.' + closeBtn.className.split(' ')[0] : 'button')) : null,
+                        closeBtnText: closeBtn ? closeBtn.innerText.trim() : null
+                    };
+                    break;
                 }
 
                 return {
@@ -336,48 +347,46 @@ async def run_cdp_audit(app_name: str, browser_path: str, port: int) -> Dict[str
                 dismiss_test_js = """
                 (async function() {
                     const sel = %s;
-                    let clicked = false;
-                    const candidates = [
-                        sel,
-                        '.help-control-btn.help-btn-close',
-                        '.btn-help-footer-close',
-                        'button.close',
-                        '.modal-close',
-                        'button[class*="close"]',
-                        '[class*="modal"] button',
-                        '[class*="overlay"] button',
-                        '#btnStartDive',
-                        '.tutorial-btn-primary'
-                    ];
-
-                    for (const s of candidates) {
-                        if (!s) continue;
-                        const btn = document.querySelector(s);
-                        if (btn) {
-                            btn.click();
-                            clicked = true;
-                            break;
-                        }
-                    }
-
-                    if (!clicked) {
-                        // Try ESC key
-                        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }));
-                    }
-
-                    await new Promise(r => setTimeout(r, 250));
-
-                    // Verify if overlay is now hidden
-                    const overlays = Array.from(document.querySelectorAll(
-                        '[class*="modal"], [id*="modal"], [class*="overlay"], [id*="overlay"], [class*="dialog"], [class*="backdrop"]'
-                    ));
-                    const stillVisible = overlays.some(el => {
+                    const vw = window.innerWidth || 1024;
+                    const vh = window.innerHeight || 768;
+                    function isBlocking(el) {
+                        if (!el) return false;
+                        if (el.checkVisibility && !el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) return false;
                         const style = window.getComputedStyle(el);
-                        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+                        if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) < 0.05 || style.pointerEvents === 'none') return false;
+                        if (el.querySelector('canvas')) return false;
                         const rect = el.getBoundingClientRect();
-                        return (rect.width * rect.height) > (window.innerWidth * window.innerHeight * 0.35);
-                    });
+                        if ((rect.width * rect.height) <= (vw * vh * 0.35)) return false;
+                        const cx = Math.max(4, Math.min(vw - 4, rect.left + rect.width / 2));
+                        const cy = Math.max(4, Math.min(vh - 4, rect.top + rect.height / 2));
+                        const hit = document.elementFromPoint(cx, cy);
+                        return Boolean(hit && (el === hit || el.contains(hit)));
+                    }
+                    function activeOverlays() {
+                        return Array.from(document.querySelectorAll(
+                            '[class*="modal"], [id*="modal"], [class*="overlay"], [id*="overlay"], [class*="dialog"], [class*="backdrop"], [class*="splash"], [id*="splash"]'
+                        )).filter(isBlocking);
+                    }
 
+                    let clicked = false;
+                    // Support 2-stage splash -> tutorial dismissal
+                    for (let pass = 0; pass < 2; pass++) {
+                        const ovs = activeOverlays();
+                        if (!ovs.length) break;
+                        const topOv = ovs[0];
+                        const startRe = /start|play|begin|commence|initialize|launch|continue|resume|enter|dive|deploy|proceed|acknowledge|accept|got it|get started|ok|close|dismiss|skip|×|✕|✖/i;
+                        const btns = Array.from(topOv.querySelectorAll('button, [role="button"], .btn')).filter(b => !b.disabled);
+                        const matchBtn = btns.find(b => startRe.test((b.innerText || b.title || b.id || '').trim())) || btns[0];
+                        if (matchBtn) {
+                            matchBtn.click();
+                            clicked = true;
+                        } else {
+                            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }));
+                        }
+                        await new Promise(r => setTimeout(r, 300));
+                    }
+
+                    const stillVisible = activeOverlays().length > 0;
                     return { clicked, stillVisible };
                 })()
                 """ % json.dumps(primary_overlay.get("closeBtnSelector"))

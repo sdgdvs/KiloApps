@@ -15,10 +15,11 @@ Replaces programmer art with Imagen 3 generated assets and eliminates perimeter 
 - **Fast Skip Path (<= 3 tool calls total!)**:
   - If the target game is pure vector/wireframe, abstract board/text, or **already has production sprites integrated**, **DO NOT compile C binaries, DO NOT run Vite builds, and DO NOT run startup tests!**
   - Immediately run `python scripts/advance_turn.py --agent kilo-graphics --app <TargetGame> --title "Skip — Asset Suitability" --bullet "⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for <TargetGame>."`, commit `next_work.md`, push, and **STOP immediately**!
-- **1-Command Verification (when edits were made)**:
+- **1-Command Verification & Visual Sheet Review (when edits were made)**:
   ```powershell
   python scripts/verify_turn.py --app <TargetGame>
   ```
+  - Then call `view_file` once on `docs/gallery/review/<targetgame>/sheet.png` (generated automatically by `verify_turn.py` via `scripts/visual_probe.py --compare-head`) to visually confirm your new sprites/textures rendered cleanly vs `git HEAD` and gameplay responds to input!
 - **1-Command Queue Handoff & Logging**:
   ```powershell
   python scripts/advance_turn.py --agent kilo-graphics --app "<TargetGame>" `

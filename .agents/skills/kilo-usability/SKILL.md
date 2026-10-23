@@ -12,10 +12,11 @@ Executes UX, responsive layout, accessibility, and input ergonomics enhancements
 ## ⚡ Flash Execution & Tool-Budget Protocol (CRITICAL)
 - **Tool Call Budget (<= 25 tool calls)** & **Commit Checkpoint (~12 tool calls)**:
   - Inspect `KiloOS/public/apps/k<name>.html` (and `<AppName>/main.c` if native C exists), apply high-craft responsive layout, HiDPI canvas, focus trap, and keyboard/VFS UX improvements, then verify and hand off!
-- **1-Command Verification**:
+- **1-Command Verification & Visual Sheet Review**:
   ```powershell
   python scripts/verify_turn.py --app <TargetApp>
   ```
+  - `verify_turn.py` automatically runs `scripts/visual_probe.py --compare-head` at the app's exact `KiloOS/src/App.jsx` window dimensions, reporting any clipped controls (`cutOff`), overflow, or canvas aspect distortion, and saves a before/after contact sheet at `docs/gallery/review/<targetapp>/sheet.png`. Call `view_file` once on `sheet.png` to visually confirm zero clipped controls and clean layout!
 - **1-Command Queue Handoff & Logging**:
   ```powershell
   python scripts/advance_turn.py --agent kilo-usability --app "<TargetApp>" `

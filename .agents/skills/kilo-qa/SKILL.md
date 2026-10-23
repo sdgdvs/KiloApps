@@ -13,10 +13,11 @@ Executes Pass 5 QA, state persistence verification, and dual Win32 C build parit
 ## ⚡ Flash Execution & Tool-Budget Protocol (CRITICAL)
 - **Tool Call Budget (<= 25 tool calls)** & **Commit Checkpoint (~12 tool calls)**:
   - Inspect `KiloOS/public/apps/k<name>.html` and `<AppName>/main.c` (if present), fix any state persistence (`F5`/`F9`), tutorial flag, lifecycle leak, or Win32 C parity gaps, then run 1-command verification!
-- **1-Command Verification (with Native C Build)**:
+- **1-Command Verification (with Native C Build & Headless Visual/Gameplay Probe)**:
   ```powershell
   python scripts/verify_turn.py --app <TargetApp> --build-native
   ```
+  - `verify_turn.py` runs `scripts/visual_probe.py --compare-head` and writes `docs/gallery/review/<targetapp>/sheet.png` (`boot | ready | after-input | diff heatmap`). Call `view_file` on `sheet.png` if any visual/layout warnings are reported.
 - **1-Command Queue Handoff & Mature Quarantine**:
   - When Pass 5 QA passes cleanly and the app is complete, **promote it to Mature Applications** so the fleet continuously graduates finished apps:
   ```powershell

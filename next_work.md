@@ -227,6 +227,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T14:59:45-07:00 — kilo-adhoc: Fleet Testing (`scripts/visual_probe.py`, `verify_turn.py`, `test_app_startup.py`, `baseline_diff.js`)**
+  - Status: PASS ✅ (0 errors; Vite production build, security_lint, startup audit & visual probe PASS).
+  - Upgraded `scripts/visual_probe.py` with in-process `KiloOS/public` HTTP server, real KiloOS window sizing, trusted-input CDP playtest, and 1-image before/after (`--compare-head`) contact sheets (`docs/gallery/review/<app>/sheet.png`).
+  - Calibrated `visual_probe.py` & `test_app_startup.py` to ignore `pointer-events: none` CRT overlays (`crt-overlay`), `opacity: 0` backdrops, and scrollable child containers while supporting 2-stage splash -> tutorial dismissal.
+  - Replaced raw compressed-byte PNG comparison in `scripts/baseline_diff.js` with zero-dependency decoded-RGB pixel diffing and integrated `visual_probe.py` into `verify_turn.py` and agent skills.
+
 - **2026-10-23T14:51:38-07:00 — kilo-soundscape: KFarm (Pastoral Harvest & Seasonal Town — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 119.5 KB, native 132.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Composition: G Major pentatonic / Mixolydian, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
@@ -254,9 +260,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added direct OS_LAUNCH_APP bridge to KPad and KHex, plus VFS character/manifest export for LORD and TradeWars door games.
   - Dual Win32 C parity: added Files [F] command 116 with native bulletin saving and door stats export to disk.
   - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-creator`.
-
-- **2026-10-23T14:05:51-07:00 — kilo-qa: KDB (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 215.3 KB, native 66.0 KB < 999 KB; startup, Vite & security_lint PASS).
-  - State & Persistence: Verified F5/F9 quicksave/quickload, kdb_tutorialSeen flag, safe storage try/catch wrappers, and Escape modal dismissals.
-  - VFS & Parity: Added KiloOS VFS Open/Save (/home/data/), Plot in KGraph IPC bridge (OS_LAUNCH_APP), and native Win32 C parity with VK_ESCAPE reset.
-  - Mature Quarantine & Handoff: Promoted `KDB` to Mature archive; advanced `kilo-qa` to `KTrader`; next agent `kilo-expander`.

@@ -103,8 +103,9 @@ DOM_PROBE_JS = r"""
   const vw = innerWidth, vh = innerHeight;
   const vis = el => {
     if (!el) return false;
+    if (el.checkVisibility && !el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) return false;
     const s = getComputedStyle(el);
-    if (s.display === 'none' || s.visibility === 'hidden' || parseFloat(s.opacity) === 0) return false;
+    if (s.display === 'none' || s.visibility === 'hidden' || parseFloat(s.opacity) < 0.05) return false;
     const r = el.getBoundingClientRect();
     return r.width > 0 && r.height > 0;
   };
@@ -131,21 +132,44 @@ DOM_PROBE_JS = r"""
   let overlay = null;
   for (const el of document.querySelectorAll(sel)) {
     if (!vis(el)) continue;
+    const s = getComputedStyle(el);
+    if (s.pointerEvents === 'none') continue;
+    if (canvases.length && el.querySelector('canvas')) continue;
     const r = el.getBoundingClientRect();
     const cov = inter(r) / (vw * vh);
-    if (cov > 0.35) { overlay = { id: el.id || null, cls: String(el.className || '').slice(0, 50), cov: Math.round(cov * 100) }; break; }
+    if (cov <= 0.35) continue;
+    const cx = Math.max(4, Math.min(vw - 4, r.left + r.width / 2));
+    const cy = Math.max(4, Math.min(vh - 4, r.top + r.height / 2));
+    const hit = document.elementFromPoint(cx, cy);
+    if (!hit || !(el === hit || el.contains(hit))) continue;
+    overlay = { id: el.id || null, cls: String(el.className || '').slice(0, 50), cov: Math.round(cov * 100) };
+    break;
   }
 
-  // Interactive controls cut off by the window edge while the page can't scroll there.
+  const canAncScroll = (el, axis) => {
+    for (let p = el.parentElement; p && p !== de; p = p.parentElement) {
+      const ps = getComputedStyle(p);
+      if (axis === 'x' && /auto|scroll/.test(ps.overflowX) && p.scrollWidth > p.clientWidth + 2) return true;
+      if (axis === 'y' && /auto|scroll/.test(ps.overflowY) && p.scrollHeight > p.clientHeight + 2) return true;
+    }
+    return axis === 'x' ? (scrollX && sw > vw + 2) : (scrollY && sh > vh + 2);
+  };
+
+  // Interactive controls partially clipped by the window edge when no ancestor can scroll there.
   const cut = [];
   for (const el of document.querySelectorAll('button, input, select, textarea, [role="button"], [onclick]')) {
     if (!vis(el)) continue;
     const r = el.getBoundingClientRect();
+    if (inter(r) <= 0) continue; // completely offscreen drawer/panel
     if (el.closest('[class*="modal"],[class*="overlay"],[role="dialog"]') && overlay) continue;
     const pos = getComputedStyle(el).position;
-    const sides = (r.right > vw + 2 && (!scrollX || pos === 'fixed') ? 'R' : '') +
-                  (r.bottom > vh + 2 && (!scrollY || pos === 'fixed') ? 'B' : '') +
-                  (r.left + scrollX_ < -2 ? 'L' : '') + (r.top + scrollY_ < -2 ? 'T' : '');
+    const sx = pos === 'fixed' ? false : canAncScroll(el, 'x');
+    const sy = pos === 'fixed' ? false : canAncScroll(el, 'y');
+    const clipR = r.right - vw, clipB = r.bottom - vh, clipL = -(r.left + scrollX_), clipT = -(r.top + scrollY_);
+    const sides = (clipR > 8 && clipR > r.width * 0.25 && !sx ? 'R' : '') +
+                  (clipB > 8 && clipB > r.height * 0.25 && !sy ? 'B' : '') +
+                  (clipL > 8 && clipL > r.width * 0.25 ? 'L' : '') +
+                  (clipT > 8 && clipT > r.height * 0.25 ? 'T' : '');
     if (sides) {
       const lbl = ((el.innerText || el.value || el.id || el.tagName) + '').replace(/\s+/g, ' ').trim().slice(0, 22);
       cut.push(`${lbl}[${sides}@${Math.round(r.left)},${Math.round(r.top)}]`);
@@ -172,14 +196,22 @@ FIND_BTN_JS = r"""
   const vw = innerWidth, vh = innerHeight;
   let scope = document;
   if (scopeOverlay) {
-    const ov = [...document.querySelectorAll('[class*="modal"],[id*="modal"],[class*="overlay"],[id*="overlay"],[role="dialog"],[class*="splash"],[id*="splash"],[class*="tutorial"],[id*="tutorial"],[class*="welcome"],[id*="welcome"],[class*="intro"],[id*="intro"]')]
-      .filter(e => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e);
-        return s.display !== 'none' && s.visibility !== 'hidden' && r.width * r.height > vw * vh * 0.2; });
+    const ov = [...document.querySelectorAll('[class*="modal"],[id*="modal"],[class*="overlay"],[id*="overlay"],[role="dialog"],[class*="splash"],[id*="splash"],[class*="tutorial"],[id*="tutorial"],[class*="welcome"],[id*="welcome"],[class*="intro"],[id*="intro"],[class*="backdrop"]')]
+      .filter(e => {
+        if (e.checkVisibility && !e.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) return false;
+        const r = e.getBoundingClientRect(); const s = getComputedStyle(e);
+        if (s.display === 'none' || s.visibility === 'hidden' || parseFloat(s.opacity) < 0.05 || s.pointerEvents === 'none') return false;
+        if (r.width * r.height <= vw * vh * 0.2) return false;
+        const cx = Math.max(4, Math.min(vw - 4, r.left + r.width / 2)), cy = Math.max(4, Math.min(vh - 4, r.top + r.height / 2));
+        const hit = document.elementFromPoint(cx, cy);
+        return hit && (e === hit || e.contains(hit));
+      });
     if (ov.length) scope = ov[0];
   }
   const cands = [...scope.querySelectorAll('button, [role="button"], .btn, a.button, input[type="button"], input[type="submit"]')];
   const out = [];
   for (const el of cands) {
+    if (el.disabled) continue;
     const r = el.getBoundingClientRect();
     if (r.width < 4 || r.height < 4) continue;
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
@@ -188,16 +220,23 @@ FIND_BTN_JS = r"""
     if (!top || !(top === el || el.contains(top))) continue;
     const label = ((el.innerText || el.value || el.getAttribute('aria-label') || el.title || '') + '').trim().replace(/\s+/g, ' ');
     if (bad && bad.test(label + ' ' + (el.id || ''))) continue;
-    if (re.test(label) || re.test(el.id || '')) out.push({ x: Math.round(cx), y: Math.round(cy), text: label.slice(0, 30) });
+    if (re.test(label) || re.test(el.id || '')) {
+      const pri = /primary|start|play|new|begin|commence/i.test((el.className || '') + ' ' + (el.id || '')) ? 0 : 1;
+      out.push({ x: Math.round(cx), y: Math.round(cy), text: label.slice(0, 30), pri });
+    }
   }
+  out.sort((a, b) => a.pri - b.pri);
   return out;
 })
 """
 
-START_RE = r"^\s*(▶\s*)?(start|play|begin|continue|ok|okay|got it|close|dismiss|skip|enter|let'?s go|new game|start game|play now|launch|insert coin|×|x|✕|✖)\b"
-GAME_START_RE = r"^\s*(▶\s*)?(start|play|new game|start game|play now|begin|deal|launch|insert coin|campaign|arcade)\b"
+START_RE = (r"^[^a-z0-9]*(start|play|begin|commence|initialize|launch|continue|resume|enter|dive|deploy|proceed|"
+            r"acknowledge|accept|got it|get started|ok|okay|close|dismiss|skip|let'?s go|new game|start game|play now|"
+            r"insert coin)\b|^(×|x|✕|✖)$")
+GAME_START_RE = r"^[^a-z0-9]*(start|play|new game|start game|play now|begin|commence|initialize|deal|launch|insert coin|campaign|arcade|dive|deploy)\b"
 UNSAFE_RE = (r"reset|clear|delete|quit|exit|close|reload|restart|remove|erase|logout|disconnect|connect|online|"
-             r"multiplayer|matchmak|host|join|save|load|export|import|download|upload|print|format|wipe|shutdown")
+             r"multiplayer|matchmak|host|join|save|load|export|import|download|upload|print|format|wipe|shutdown|"
+             r"help|manual|guide|tutorial|codex|rules|about|settings|config|options|^\?$")
 
 
 # ----------------------------------------------------------------------------- utils
@@ -213,6 +252,35 @@ def free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
+
+
+def start_static_server() -> tuple[Any, int]:
+    """Starts a quiet background HTTP server rooted at KiloOS/public/."""
+    import functools
+    import http.server
+    import threading
+
+    class QuietHandler(http.server.SimpleHTTPRequestHandler):
+        def log_message(self, format: str, *args: Any) -> None:
+            pass
+
+    pub_dir = ROOT / "KiloOS" / "public"
+    handler = functools.partial(QuietHandler, directory=str(pub_dir))
+    srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    port = srv.server_address[1]
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    return srv, port
+
+
+def target_url(html: Path, http_port: Optional[int]) -> str:
+    pub_dir = (ROOT / "KiloOS" / "public").resolve()
+    try:
+        rel = html.resolve().relative_to(pub_dir).as_posix()
+        if http_port:
+            return f"http://127.0.0.1:{http_port}/{rel}"
+    except ValueError:
+        pass
+    return html.as_uri()
 
 
 def load_viewports() -> dict[str, tuple[int, int]]:
@@ -428,9 +496,15 @@ class Page:
         elif meth == "Network.webSocketCreated":
             if self.booting:
                 self.boot_net.append(p.get("url", "")[:120])
+        elif meth == "Network.responseReceived":
+            url = p.get("response", {}).get("url", "")
+            status = p.get("response", {}).get("status", 200)
+            if url.startswith("http://127.0.0.1:") and status >= 400 and not url.endswith("/favicon.ico"):
+                path_part = "/" + url.split("/", 3)[-1]
+                self.missing.append(f"{path_part} (HTTP {status})"[:120])
         elif meth == "Network.loadingFailed":
             url = self.req_urls.get(p.get("requestId", ""), "")
-            if url.startswith("file:") and not p.get("canceled"):
+            if (url.startswith("file:") or url.startswith("http://127.0.0.1:")) and not p.get("canceled") and not url.endswith("/favicon.ico"):
                 self.missing.append(url.split("/public/")[-1][:120])
         elif meth == "Page.javascriptDialogOpening":
             asyncio.ensure_future(self.send("Page.handleJavaScriptDialog", {"accept": True}))
@@ -502,13 +576,14 @@ class Page:
 
 # ----------------------------------------------------------------------------- probe
 
-async def run_probe(cdp: CDP, html: Path, viewport: tuple[int, int]) -> dict[str, Any]:
+async def run_probe(cdp: CDP, html: Path, viewport: tuple[int, int], http_port: Optional[int] = None) -> dict[str, Any]:
     """Runs one full boot -> dismiss -> playtest pass. Returns metrics + PIL frames."""
     pg = Page(cdp)
     res: dict[str, Any] = {"actions": [], "frames": {}}
+    url = target_url(html, http_port)
     await pg.open(*viewport)
     try:
-        await pg.goto(html.as_uri())
+        await pg.goto(url)
         await asyncio.sleep(0.7)
         boot_a = await pg.shot()
         await asyncio.sleep(0.5)
@@ -518,18 +593,22 @@ async def run_probe(cdp: CDP, html: Path, viewport: tuple[int, int]) -> dict[str
         res["boot_errors"] = list(pg.errors)
         res["anim"], _ = diff_stats(boot_a, boot_b)
 
-        # Dismiss startup overlay with trusted input.
+        # Dismiss startup overlay(s) with trusted input (handles 2-stage splash -> tutorial modals).
         if dom.get("overlay"):
             res["overlay"] = dom["overlay"]
-            btns = await pg.eval(f"{FIND_BTN_JS}({json.dumps(START_RE)}, true, null)") or []
-            if btns:
-                await pg.click(btns[0]["x"], btns[0]["y"])
-                res["actions"].append(f'click "{btns[0]["text"]}"')
-            else:
-                await pg.key("Escape")
-                res["actions"].append("Escape")
-            await asyncio.sleep(0.45)
-            again = await pg.eval(DOM_PROBE_JS) or {}
+            again = dom
+            for _ in range(2):
+                if not again.get("overlay"):
+                    break
+                btns = await pg.eval(f"{FIND_BTN_JS}({json.dumps(START_RE)}, true, null)") or []
+                if btns:
+                    await pg.click(btns[0]["x"], btns[0]["y"])
+                    res["actions"].append(f'click "{btns[0]["text"]}"')
+                else:
+                    await pg.key("Escape")
+                    res["actions"].append("Escape")
+                await asyncio.sleep(0.45)
+                again = await pg.eval(DOM_PROBE_JS) or {}
             if again.get("overlay"):
                 any_btn = await pg.eval(f"{FIND_BTN_JS}('.', true, {json.dumps(UNSAFE_RE)})") or []
                 if any_btn:
@@ -580,7 +659,8 @@ async def run_probe(cdp: CDP, html: Path, viewport: tuple[int, int]) -> dict[str
         res["dom"] = dom
         res["opened"] = dom_after.get("opened", [])
         res["scroll_shift"] = abs(dom_after.get("scrollPos", 0) - dom.get("scrollPos", 0))
-        res["navigated"] = [u for u in pg.navigations if u and not u.startswith(html.as_uri().split("#")[0])]
+        base_url = url.split("#")[0].split("?")[0]
+        res["navigated"] = [u for u in pg.navigations if u and not u.startswith(base_url)]
         res["console_errors"] = list(dict.fromkeys(pg.console_errors))[:5]
         res["missing"] = list(dict.fromkeys(pg.missing))[:8]
         res["boot_net"] = list(dict.fromkeys(pg.boot_net))[:5]
@@ -644,21 +724,21 @@ def fmt_bbox(b) -> str:
     return f"({b[0]},{b[1]})-({b[2]},{b[3]})" if b else "none"
 
 
-async def probe_app(cdp: CDP, html: Path, viewports: dict, compare_head: bool, strict: bool, quiet: bool) -> dict[str, Any]:
+async def probe_app(cdp: CDP, html: Path, viewports: dict, compare_head: bool, strict: bool, quiet: bool, http_port: Optional[int] = None) -> dict[str, Any]:
     slug = html.stem
     vp = viewports.get(html.name.lower(), DEFAULT_VIEWPORT)
     out_dir = REVIEW_DIR / slug
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
 
-    r = await run_probe(cdp, html, vp)
+    r = await run_probe(cdp, html, vp, http_port)
     head = None
     head_delta = None
     if compare_head:
         hp = git_head_copy(html)
         if hp:
             try:
-                head = await run_probe(cdp, hp, vp)
+                head = await run_probe(cdp, hp, vp, http_port)
             finally:
                 try:
                     hp.unlink()
@@ -748,6 +828,7 @@ async def main_async(args) -> int:
             return 2
         targets = [t]
 
+    http_srv, http_port = start_static_server()
     port = free_port()
     profile = tempfile.mkdtemp(prefix="kilo_probe_")
     proc = subprocess.Popen([browser, "--headless=new", f"--remote-debugging-port={port}", f"--user-data-dir={profile}",
@@ -777,7 +858,7 @@ async def main_async(args) -> int:
             fleet = []
             for t in targets:
                 try:
-                    rep = await probe_app(cdp, t, viewports, args.compare_head, args.strict, quiet=args.all)
+                    rep = await probe_app(cdp, t, viewports, args.compare_head, args.strict, quiet=args.all, http_port=http_port)
                 except Exception as e:  # keep sweeping
                     rep = {"app": t.stem, "verdict": "FAIL", "fails": [f"probe crashed: {e}"], "warns": [], "summary": f"FAIL (probe crashed: {e})"}
                 if rep["verdict"] == "FAIL":
@@ -796,6 +877,7 @@ async def main_async(args) -> int:
                 print(f"\nFLEET: {counts}  -> docs/gallery/review/_fleet.json")
     finally:
         cleanup_head_copies()
+        http_srv.shutdown()
         proc.terminate()
         try:
             proc.wait(timeout=3)

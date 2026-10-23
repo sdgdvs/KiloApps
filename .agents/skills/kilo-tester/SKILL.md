@@ -11,8 +11,8 @@ Executes a self-contained interactive UI audit and in-line repair on **exactly O
 
 ## ⚡ Flash Execution & Tool-Budget Protocol (CRITICAL)
 - **Tool Call Budget (<= 25 tool calls)** & **Commit Checkpoint (~12 tool calls)**:
-  - Run `uv run scripts/test_app_startup.py --app <TargetApp>` first, inspect `KiloOS/public/apps/k<name>.html` (and `<AppName>/main.c` if present), fix any broken handlers/modals/hotkeys inline, and wrap up by ~12 tool calls!
-- **1-Command Verification**:
+  - Run `uv run scripts/visual_probe.py --app <TargetApp>` first (renders at real KiloOS window size over local HTTP, tests trusted-input gameplay & layout clipping, and writes `docs/gallery/review/<targetapp>/sheet.png`), call `view_file` on `docs/gallery/review/<targetapp>/sheet.png`, inspect `KiloOS/public/apps/k<name>.html` (and `<AppName>/main.c` if present), fix any broken handlers/modals/clipping/hotkeys inline, and wrap up by ~12 tool calls!
+- **1-Command Verification (includes before/after `git HEAD` visual probe)**:
   ```powershell
   python scripts/verify_turn.py --app <TargetApp>
   ```

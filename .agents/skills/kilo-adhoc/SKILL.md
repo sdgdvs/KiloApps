@@ -25,11 +25,12 @@ Use this skill when responding to human user requests for specific features, reb
 - **Multiplayer Autostart Prohibition**: Never autostart into matchmaking on load; require explicit user Connect click and include 25s solo AI fallback (`retro_multiplayer.js`).
 
 ## 3. One-Command Verification Pipeline (MANDATORY)
-Run the unified verification script:
+Run the unified verification script (which includes `scripts/visual_probe.py --compare-head` and generates a before/after contact sheet at `docs/gallery/review/<targetapp>/sheet.png`):
 ```powershell
 python scripts/verify_turn.py --app <TargetApp> --build-native
 ```
-Or if modifying fleet-wide scripts/shell, run `npm run build` inside `KiloOS/` and `python scripts/security_lint.py`.
+- Call `view_file` on `docs/gallery/review/<targetapp>/sheet.png` to visually inspect boot, ready, after-input, and `git HEAD` diff frames in a single call.
+- Or if modifying fleet-wide scripts/shell, run `npm run build` inside `KiloOS/` and `python scripts/security_lint.py`.
 
 ## 4. Logging & Deployment
 1. Prepend a terse log entry (≤ 6 lines) under `## Recent Execution Logs` in `next_work.md` (and run `python scripts/rotate_logs.py` so old entries archive at 0 token cost). Preserve scheduled frontmatter unless the user asked to redirect the fleet queue.
