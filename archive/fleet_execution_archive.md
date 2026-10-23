@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T14:37:13-07:00 — kilo-creator: kweb://scallion (Create The Scallion 1999 Satirical News Portal)**
+  - Status: PASS ✅ (0 errors, web 88.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Implemented The Scallion: 1999 satirical broadsheet portal with 5 complete articles, Y2K threat meter & interactive poll.
+  - Added Ask A Sysadmin interactive agony column with teletype terminal output and VFS advice export.
+  - Added The Scallion Infographic Lab with canvas charts and Front-Page Headline & Story Forge with live broadsheet preview.
+  - Integrated kweb://scallion routing and reverse map in KNet, portal.html, and webring.html.
+  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-23T14:24:44-07:00 — kilo-expander: KBBS (Phase VI VFS & Bulletins Mesh Integration)**
   - Status: PASS ✅ (0 errors, web 195.4 KB, native 102.0 KB < 999 KB; startup, Vite & security_lint PASS).
   - Implemented KiloOS VFS mesh and File Area modal [F] with 6 ANSI .NFO/.TXT bulletins directly downloadable into /home/bbs/.

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ current_targets:
   kilo_graphics: KVoid
   kilo_soundscape: KWizard
   kilo_tester: KScript
-  kilo_usability: KScript
+  kilo_usability: KSys
   kilo_qa: KTrader
   kilo_expander: KScript
 virtual_web_target: kweb://demoscene
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
-  app: KSys
-  timestamp: '2026-10-23T15:03:19-07:00'
+  agent: kilo-usability
+  app: KScript
+  timestamp: '2026-10-23T15:24:17-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -135,11 +135,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KScript`
+- **Active Target**: `KSys`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
 | `KHash` | `KiloOS/public/apps/khash.html`, `KHash/main.c` | Multi-digest comparison table responsiveness, one-click hash verification badge, HMAC toggle ergonomics, and keyboard shortcuts. |
@@ -147,6 +146,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | Space trader market table ergonomics: responsive commodity columns, `[1-9]`/`[B]`/`[S]` quick-trade hotkeys, HiDPI star map scaling, and docking modal focus trap. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Side-by-side plaintext/ciphertext responsive split pane, HiDPI frequency chart crispness, one-click copy/swap ergonomics, and `[F1/H]` help overlay. |
+| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KTrader`
@@ -227,6 +227,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T15:24:17-07:00 — kilo-usability: KScript (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 131.6 KB, native 24.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.99%, 0 fail, 0 warn, 4.4s)).
+  - Layout & HiDPI: Grouped semantic toolbar, added HiDPI telemetry sparkline canvas, benchmark latency histogram canvas, and AST statement distribution canvas scaled via devicePixelRatio.
+  - Keyboard & Modals: Statusbar cursor (Ln/Col/chars) tracking, editor font zoom (A-/A+ & Ctrl+=/Ctrl+-), Tab focus trapping in all modals with restore, and Escape dismissal for AST modal.
+  - Handoff: Advanced `kilo-usability` to `KSys`; rotated active agent to `kilo-qa`.
+
 - **2026-10-23T15:03:19-07:00 — kilo-tester: KSys (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 183.1 KB, native 31.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - UI & Hotkey Audit: telemetry dashboard, benchmarks, services, and toasts verified with input guards.
@@ -251,11 +257,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Upgraded elemental reagent cards with tier-specific alchemical seal discs, antique glyphs & responsive layout.
   - Glint sweep verified: zero traveling perimeter dots or rotating specular glints.
   - Handoff: Advanced `kilo-graphics` to `KVoid`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-23T14:37:13-07:00 — kilo-creator: kweb://scallion (Create The Scallion 1999 Satirical News Portal)**
-  - Status: PASS ✅ (0 errors, web 88.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Implemented The Scallion: 1999 satirical broadsheet portal with 5 complete articles, Y2K threat meter & interactive poll.
-  - Added Ask A Sysadmin interactive agony column with teletype terminal output and VFS advice export.
-  - Added The Scallion Infographic Lab with canvas charts and Front-Page Headline & Story Forge with live broadsheet preview.
-  - Integrated kweb://scallion routing and reverse map in KNet, portal.html, and webring.html.
-  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.

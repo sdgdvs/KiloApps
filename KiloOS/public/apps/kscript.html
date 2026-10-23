@@ -21,6 +21,8 @@
         --pink: #f472b6;
         --code-bg: #090d16;
         --gutter-bg: #0d1322;
+        --editor-font-size: 13px;
+        --editor-line-height: 20px;
     }
 
     * {
@@ -155,6 +157,22 @@
         align-items: center;
         gap: 4px;
         user-select: none;
+        touch-action: manipulation;
+    }
+
+    
+    .toolbar-group {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+    }
+
+    .toolbar-divider {
+        width: 1px;
+        height: 18px;
+        background: rgba(255, 255, 255, 0.16);
+        margin: 0 3px;
+        flex-shrink: 0;
     }
 
     button:hover {
@@ -296,15 +314,15 @@
         user-select: none;
         overflow-y: hidden;
         font-family: "Consolas", "Monaco", monospace;
-        font-size: 13px;
-        line-height: 20px;
+        font-size: var(--editor-font-size, 13px);
+        line-height: var(--editor-line-height, 20px);
         color: #475569;
         text-align: right;
     }
 
     .gutter-line {
-        height: 20px;
-        line-height: 20px;
+        height: var(--editor-line-height, 20px);
+        line-height: var(--editor-line-height, 20px);
         box-sizing: border-box;
         padding-right: 8px;
         cursor: pointer;
@@ -351,8 +369,8 @@
         padding: 10px 12px;
         color: #e2e8f0;
         font-family: "Consolas", "Monaco", "Courier New", monospace;
-        font-size: 13px;
-        line-height: 20px;
+        font-size: var(--editor-font-size, 13px);
+        line-height: var(--editor-line-height, 20px);
         resize: none;
         outline: none;
         tab-size: 2;
@@ -732,12 +750,108 @@
         line-height: 1.4;
     }
 
+    
+    /* Status Bar & Ergonomics */
+    .statusbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(10, 15, 29, 0.85);
+        border: 1px solid var(--glass-border);
+        border-radius: 7px;
+        padding: 4px 10px;
+        font-size: 11px;
+        color: var(--text-muted);
+        gap: 8px;
+        user-select: none;
+        min-height: 26px;
+        flex-shrink: 0;
+    }
+
+    .statusbar-left, .statusbar-center, .statusbar-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .statusbar-pill {
+        padding: 1px 6px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 10.5px;
+        color: #cbd5e1;
+    }
+
+    .statusbar-pill.status-ready {
+        color: #10b981;
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .statusbar-hint {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10.5px;
+        color: #94a3b8;
+    }
+
+    .statusbar-hint .kbd {
+        font-size: 9.5px;
+        padding: 1px 4px;
+    }
+
+    .zoom-controls {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .btn-zoom {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--glass-border);
+        color: #cbd5e1;
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 10px;
+        cursor: pointer;
+        box-shadow: none;
+        touch-action: manipulation;
+    }
+
+    .btn-zoom:hover {
+        background: rgba(139, 92, 246, 0.3);
+        color: #fff;
+    }
+
+    .telemetry-sparkline {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    @media (max-width: 960px) {
+        .statusbar-center { display: none; }
+        .toolbar-divider { display: none; }
+    }
+
     @media (max-width: 820px) {
         body { height: auto; overflow: auto; }
         .container { height: auto; min-height: calc(100vh - 24px); }
         .panels { flex-direction: column; }
         .panel { min-height: 280px; }
         .export-grid { grid-template-columns: 1fr; }
+        .presets-bar { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; scrollbar-width: thin; }
+        .preset-chip { flex-shrink: 0; }
+    }
+
+    @media (max-width: 600px) {
+        .header { flex-direction: column; align-items: flex-start; }
+        .toolbar { width: 100%; }
+        .telemetry-bar { flex-direction: column; align-items: flex-start; }
+        .statusbar { flex-direction: column; align-items: flex-start; gap: 4px; }
+        .statusbar-right { width: 100%; justify-content: flex-end; }
     }
 </style>
 </head>
@@ -752,46 +866,59 @@
             <span id="statusBadge" class="status-badge">READY</span>
         </div>
         <div class="toolbar">
-            <button id="btnRec" type="button" style="background:#f43f5e" title="Record Keystrokes (Alt+M)">
-                <span>⏺ Rec</span> <span class="btn-key">Alt+M</span>
-            </button>
-            <button id="btnPlay" type="button" style="background:#10b981" title="Play Macro (Alt+P)">
-                <span>▶ Play</span> <span class="btn-key">Alt+P</span>
-            </button>
-            <button id="btnStep" type="button" style="background:#f59e0b" title="Step Line-by-Line (F10)">
-                <span>⏭ Step</span> <span class="btn-key">F10</span>
-            </button>
-            <button id="btnContinue" type="button" style="background:#d97706" title="Continue to Breakpoint (F8)">
-                <span>⏯ Continue</span> <span class="btn-key">F8</span>
-            </button>
-            <button id="btnAst" type="button" style="background:#8b5cf6" title="AST & Code Linter (Alt+T)"><span>🌳 AST & Lint</span> <span class="btn-key">Alt+T</span></button>
-            <button id="btnRun" type="button" title="Execute Script (Ctrl+Enter)">
-                <span>⚡ Run</span> <span class="btn-key">Ctrl+Enter</span>
-            </button>
-            <button id="btnQuicksave" type="button" style="background:#4338ca" title="Quicksave Workspace Snapshot [F5]">
-                <span>💾 Save</span> <span class="btn-key">F5</span>
-            </button>
-            <button id="btnQuickload" type="button" style="background:#4338ca" title="Restore Quicksaved Workspace [F9]">
-                <span>📂 Load</span> <span class="btn-key">F9</span>
-            </button>
-            <button id="btnBench" type="button" style="background:#6366f1" title="Run Performance Benchmark (F6)">
-                <span>⏱️ Bench</span> <span class="btn-key">F6</span>
-            </button>
-            <button id="btnExport" type="button" style="background:#0284c7" title="Export Formats & JSON">
-                <span>📤 Export</span>
-            </button>
-            <button id="btnLoad" type="button" style="background:#475569" title="Load Script File (Ctrl+O)">
-                <span>📂 Load</span> <span class="btn-key">Ctrl+O</span>
-            </button>
-            <button id="btnSave" type="button" style="background:#475569" title="Save Script File (Ctrl+S)">
-                <span>💾 Save</span> <span class="btn-key">Ctrl+S</span>
-            </button>
-            <button id="btnClear" type="button" style="background:#64748b" title="Clear State (Ctrl+K)">
-                <span>🧹 Clear</span> <span class="btn-key">Ctrl+K</span>
-            </button>
-            <button id="btnHelp" type="button" style="background:#3b82f6" title="Help & Reference (F1)">
-                <span>❓ Help</span> <span class="btn-key">F1</span>
-            </button>
+            <div class="toolbar-group" role="group" aria-label="Execution controls">
+                <button id="btnRun" type="button" title="Execute Script (Ctrl+Enter)">
+                    <span>⚡ Run</span> <span class="btn-key">Ctrl+↵</span>
+                </button>
+                <button id="btnStep" type="button" style="background:#f59e0b" title="Step Line-by-Line (F10)">
+                    <span>⏭ Step</span> <span class="btn-key">F10</span>
+                </button>
+                <button id="btnContinue" type="button" style="background:#d97706" title="Continue to Breakpoint (F8)">
+                    <span>⏯ Cont</span> <span class="btn-key">F8</span>
+                </button>
+                <button id="btnRec" type="button" style="background:#f43f5e" title="Record Keystrokes (Alt+M)">
+                    <span>⏺ Rec</span> <span class="btn-key">Alt+M</span>
+                </button>
+                <button id="btnPlay" type="button" style="background:#10b981" title="Play Macro (Alt+P)">
+                    <span>▶ Play</span> <span class="btn-key">Alt+P</span>
+                </button>
+            </div>
+            <div class="toolbar-divider" aria-hidden="true"></div>
+            <div class="toolbar-group" role="group" aria-label="Diagnostics & Analysis">
+                <button id="btnAst" type="button" style="background:#8b5cf6" title="AST & Code Linter (Alt+T)">
+                    <span>🌳 AST</span> <span class="btn-key">Alt+T</span>
+                </button>
+                <button id="btnBench" type="button" style="background:#6366f1" title="Run Performance Benchmark (F6)">
+                    <span>⏱️ Bench</span> <span class="btn-key">F6</span>
+                </button>
+            </div>
+            <div class="toolbar-divider" aria-hidden="true"></div>
+            <div class="toolbar-group" role="group" aria-label="Snapshots & Files">
+                <button id="btnQuicksave" type="button" style="background:#4338ca" title="Quicksave Workspace Snapshot [F5]">
+                    <span>💾 Q-Save</span> <span class="btn-key">F5</span>
+                </button>
+                <button id="btnQuickload" type="button" style="background:#4338ca" title="Restore Quicksaved Workspace [F9]">
+                    <span>📂 Q-Load</span> <span class="btn-key">F9</span>
+                </button>
+                <button id="btnLoad" type="button" style="background:#475569" title="Load Script File (Ctrl+O)">
+                    <span>📁 Open</span> <span class="btn-key">Ctrl+O</span>
+                </button>
+                <button id="btnSave" type="button" style="background:#475569" title="Save Script File (Ctrl+S)">
+                    <span>💾 Save</span> <span class="btn-key">Ctrl+S</span>
+                </button>
+                <button id="btnExport" type="button" style="background:#0284c7" title="Export Formats & JSON">
+                    <span>📤 Export</span>
+                </button>
+            </div>
+            <div class="toolbar-divider" aria-hidden="true"></div>
+            <div class="toolbar-group" role="group" aria-label="Utilities">
+                <button id="btnClear" type="button" style="background:#64748b" title="Clear State (Ctrl+K)">
+                    <span>🧹 Clear</span> <span class="btn-key">Ctrl+K</span>
+                </button>
+                <button id="btnHelp" type="button" style="background:#3b82f6" title="Help & Reference (F1 or H)">
+                    <span>❓ Help</span> <span class="btn-key">F1</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -817,6 +944,9 @@
         </div>
         <div class="telemetry-group">
             <span id="telemLine" style="color:#94a3b8; font-size:11px;">Breakpoints: <strong id="bpCount" style="color:#ef4444">0</strong></span>
+            <div class="telemetry-sparkline" title="HiDPI Realtime Execution Timing Sparkline">
+                <canvas id="telemSparkline" width="130" height="20" style="display:block; width:130px; height:20px; border-radius:4px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08);"></canvas>
+            </div>
         </div>
     </div>
 
@@ -901,6 +1031,32 @@
             </div>
         </div>
     </div>
+
+    <!-- Status Bar & Ergonomics -->
+    <div class="statusbar" role="status" aria-label="Status Bar">
+        <div class="statusbar-left">
+            <span class="statusbar-pill" id="sbCursor">Ln 1, Col 1</span>
+            <span class="statusbar-pill" id="sbSelection" style="display:none;">Sel 0</span>
+            <span class="statusbar-pill" id="sbDocStats">0 lines, 0 chars</span>
+            <span class="statusbar-pill status-ready" id="sbStatusText">Ready</span>
+        </div>
+        <div class="statusbar-center">
+            <span class="statusbar-hint"><span class="kbd">Ctrl+Enter</span> Run</span>
+            <span class="statusbar-hint"><span class="kbd">F5/F9</span> Q-Save/Load</span>
+            <span class="statusbar-hint"><span class="kbd">F10</span> Step</span>
+            <span class="statusbar-hint"><span class="kbd">Alt+T</span> AST</span>
+            <span class="statusbar-hint"><span class="kbd">F1 / H</span> Help</span>
+        </div>
+        <div class="statusbar-right">
+            <div class="zoom-controls" title="Adjust Editor Font Size">
+                <button type="button" id="btnZoomOut" class="btn-zoom" title="Decrease Editor Font Size (Ctrl+-)">A-</button>
+                <span id="zoomLevel" style="font-family:monospace; font-size:10px; min-width:28px; text-align:center;">13px</span>
+                <button type="button" id="btnZoomIn" class="btn-zoom" title="Increase Editor Font Size (Ctrl+=)">A+</button>
+                <button type="button" id="btnZoomReset" class="btn-zoom" title="Reset Font Size">100%</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- Help Modal -->
@@ -983,6 +1139,13 @@
                     <tr style="border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:4px 0; color:#94a3b8;">AST Node Evaluation Speed:</td><td id="bResNodeSpeed" style="text-align:right; font-weight:bold; color:#c4b5fd;"></td></tr>
                     <tr><td style="padding:4px 0; color:#94a3b8;">Allocated Variables:</td><td id="bResVars" style="text-align:right; font-weight:bold; color:#f8fafc;"></td></tr>
                 </table>
+                <div style="margin-top:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px;">Latency Distribution Histogram & Percentiles</span>
+                        <span id="benchPercentiles" style="font-size:10.5px; font-family:monospace; color:#38bdf8;">P50: - | P95: - | P99: -</span>
+                    </div>
+                    <canvas id="benchCanvas" style="display:block; width:100%; height:130px; border-radius:6px; background:#050811; border:1px solid rgba(255,255,255,0.08);"></canvas>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" id="btnBenchModalCloseBottom" style="background:#475569;">Close [Esc]</button>
@@ -1510,9 +1673,10 @@ endif
     // Global Hotkeys
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            helpModal.classList.remove('active');
-            benchModal.classList.remove('active');
-            exportModal.classList.remove('active');
+            closeModal(helpModal);
+            closeModal(benchModal);
+            closeModal(exportModal);
+            closeModal(astModal);
             const ob = document.getElementById('onboardingBanner');
             if (ob) ob.style.display = 'none';
             toastContainer.innerHTML = '';
@@ -1525,10 +1689,26 @@ endif
         if (e.key === 'F1' || (!isInputFocused && (e.key === 'h' || e.key === 'H' || e.key === '?')) || (e.altKey && !e.ctrlKey && (e.key === 'h' || e.key === 'H'))) {
             e.preventDefault();
             toastContainer.innerHTML = '';
-            helpModal.classList.toggle('active');
+            if (helpModal.classList.contains('active')) closeModal(helpModal);
+            else openModal(helpModal);
             return;
         }
-        if (helpModal.classList.contains('active') || benchModal.classList.contains('active') || exportModal.classList.contains('active')) {
+        if (helpModal.classList.contains('active') || benchModal.classList.contains('active') || exportModal.classList.contains('active') || (astModal && astModal.classList.contains('active'))) {
+            return;
+        }
+        if (e.ctrlKey && (e.key === '=' || e.key === '+')) {
+            e.preventDefault();
+            applyFontSize(currentFontSize + 1);
+            return;
+        }
+        if (e.ctrlKey && (e.key === '-' || e.key === '_')) {
+            e.preventDefault();
+            applyFontSize(currentFontSize - 1);
+            return;
+        }
+        if (e.ctrlKey && e.key === '0') {
+            e.preventDefault();
+            applyFontSize(13);
             return;
         }
         if (e.key === 'F5') {
@@ -2259,6 +2439,339 @@ endif
         return parts;
     }
 
+    
+    // ==========================================
+    // HiDPI Canvas & Usability Ergonomics
+    // ==========================================
+    function setupHiDpiCanvas(canvas) {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width > 0 ? rect.width : (canvas.clientWidth || parseInt(canvas.style.width, 10) || 300);
+        const h = rect.height > 0 ? rect.height : (canvas.clientHeight || parseInt(canvas.style.height, 10) || 100);
+        const targetW = Math.max(1, Math.round(w * dpr));
+        const targetH = Math.max(1, Math.round(h * dpr));
+        if (canvas.width !== targetW || canvas.height !== targetH) {
+            canvas.width = targetW;
+            canvas.height = targetH;
+        }
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return { ctx, width: w, height: h, dpr };
+    }
+
+    // Telemetry execution latency history sparkline
+    const telemHistory = [];
+    function recordTelemTiming(ms) {
+        telemHistory.push(Math.max(0.01, ms));
+        if (telemHistory.length > 24) telemHistory.shift();
+        renderTelemSparkline();
+    }
+
+    function renderTelemSparkline() {
+        const canvas = document.getElementById('telemSparkline');
+        if (!canvas) return;
+        const { ctx, width, height } = setupHiDpiCanvas(canvas);
+        ctx.clearRect(0, 0, width, height);
+
+        if (telemHistory.length < 2) {
+            ctx.fillStyle = 'rgba(148, 163, 184, 0.4)';
+            ctx.font = '9px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Latency Spark', width / 2, height / 2);
+            return;
+        }
+
+        const maxVal = Math.max(...telemHistory, 1.0);
+        const step = width / (telemHistory.length - 1);
+
+        // Gradient fill
+        const grad = ctx.createLinearGradient(0, 0, 0, height);
+        grad.addColorStop(0, 'rgba(56, 189, 248, 0.35)');
+        grad.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+
+        ctx.beginPath();
+        ctx.moveTo(0, height);
+        for (let i = 0; i < telemHistory.length; i++) {
+            const x = i * step;
+            const y = height - (telemHistory[i] / maxVal) * (height - 4) - 2;
+            ctx.lineTo(x, y);
+        }
+        ctx.lineTo((telemHistory.length - 1) * step, height);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Line
+        ctx.beginPath();
+        for (let i = 0; i < telemHistory.length; i++) {
+            const x = i * step;
+            const y = height - (telemHistory[i] / maxVal) * (height - 4) - 2;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Pulse dot on last point
+        const lastX = (telemHistory.length - 1) * step;
+        const lastY = height - (telemHistory[telemHistory.length - 1] / maxVal) * (height - 4) - 2;
+        ctx.fillStyle = '#a78bfa';
+        ctx.beginPath();
+        ctx.arc(lastX, lastY, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Benchmark Histogram & Percentiles
+    function renderBenchHistogram(latencies, avgMicros, minMicros, maxMicros) {
+        const canvas = document.getElementById('benchCanvas');
+        if (!canvas || !latencies || latencies.length === 0) return;
+        const { ctx, width, height } = setupHiDpiCanvas(canvas);
+        ctx.clearRect(0, 0, width, height);
+
+        const padLeft = 36;
+        const padRight = 16;
+        const padTop = 18;
+        const padBottom = 24;
+        const chartW = width - padLeft - padRight;
+        const chartH = height - padTop - padBottom;
+
+        const p50 = latencies[Math.floor(latencies.length * 0.50)];
+        const p95 = latencies[Math.floor(latencies.length * 0.95)];
+        const p99 = latencies[Math.floor(latencies.length * 0.99)];
+
+        const benchPctlEl = document.getElementById('benchPercentiles');
+        if (benchPctlEl) {
+            benchPctlEl.textContent = `P50: ${p50.toFixed(1)}μs | P95: ${p95.toFixed(1)}μs | P99: ${p99.toFixed(1)}μs`;
+        }
+
+        const numBins = 12;
+        const range = Math.max(1, maxMicros - minMicros);
+        const binSize = range / numBins;
+        const bins = new Array(numBins).fill(0);
+
+        for (let i = 0; i < latencies.length; i++) {
+            let b = Math.floor((latencies[i] - minMicros) / binSize);
+            if (b >= numBins) b = numBins - 1;
+            bins[b]++;
+        }
+
+        const maxCount = Math.max(...bins, 1);
+        const barWidth = Math.max(2, (chartW / numBins) - 3);
+
+        // Grid lines
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+        ctx.lineWidth = 1;
+        for (let r = 0; r <= 3; r++) {
+            const y = padTop + (chartH / 3) * r;
+            ctx.beginPath();
+            ctx.moveTo(padLeft, y);
+            ctx.lineTo(width - padRight, y);
+            ctx.stroke();
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = '9px monospace';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            const countVal = Math.round(maxCount * (1 - r / 3));
+            ctx.fillText(countVal.toString(), padLeft - 4, y);
+        }
+
+        // Bars
+        for (let i = 0; i < numBins; i++) {
+            const x = padLeft + i * (chartW / numBins) + 1.5;
+            const bH = (bins[i] / maxCount) * chartH;
+            const y = padTop + chartH - bH;
+
+            const barGrad = ctx.createLinearGradient(0, y, 0, y + bH);
+            barGrad.addColorStop(0, '#8b5cf6');
+            barGrad.addColorStop(1, '#3b82f6');
+
+            ctx.fillStyle = barGrad;
+            ctx.fillRect(x, y, barWidth, bH);
+
+            ctx.fillStyle = '#c4b5fd';
+            ctx.fillRect(x, y, barWidth, 1.5);
+        }
+
+        // Baseline & Axis labels
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.beginPath();
+        ctx.moveTo(padLeft, padTop + chartH);
+        ctx.lineTo(width - padRight, padTop + chartH);
+        ctx.stroke();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '9px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${minMicros.toFixed(1)}μs`, padLeft, height - 8);
+        ctx.textAlign = 'center';
+        ctx.fillText(`Avg: ${avgMicros.toFixed(1)}μs`, padLeft + chartW / 2, height - 8);
+        ctx.textAlign = 'right';
+        ctx.fillText(`${maxMicros.toFixed(1)}μs`, width - padRight, height - 8);
+    }
+
+    // AST Statement Type Distribution Canvas
+    function renderAstDistribution(ast) {
+        const canvas = document.getElementById('astCanvas');
+        if (!canvas || !ast || ast.length === 0) return;
+        const { ctx, width, height } = setupHiDpiCanvas(canvas);
+        ctx.clearRect(0, 0, width, height);
+
+        const counts = {};
+        for (const node of ast) {
+            counts[node.category] = (counts[node.category] || 0) + 1;
+        }
+
+        const colors = {
+            'Assignment': '#38bdf8',
+            'Branching': '#f59e0b',
+            'Loop': '#ec4899',
+            'Output': '#10b981',
+            'Expression': '#a78bfa',
+            'Comment': '#64748b'
+        };
+
+        const categories = Object.keys(counts);
+        const total = ast.length;
+
+        const summaryEl = document.getElementById('astCategorySummary');
+        if (summaryEl) {
+            summaryEl.textContent = categories.map(c => `${c}: ${counts[c]}`).join(' · ');
+        }
+
+        const barY = 14;
+        const barH = 20;
+        const pad = 10;
+        const barW = width - pad * 2;
+
+        let curX = pad;
+        for (const cat of categories) {
+            const segW = (counts[cat] / total) * barW;
+            ctx.fillStyle = colors[cat] || '#8b5cf6';
+            ctx.fillRect(curX, barY, segW, barH);
+            curX += segW;
+        }
+
+        let legX = pad;
+        const legY = 50;
+        ctx.font = '10px monospace';
+        ctx.textBaseline = 'middle';
+
+        for (const cat of categories) {
+            const col = colors[cat] || '#8b5cf6';
+            ctx.fillStyle = col;
+            ctx.fillRect(legX, legY - 4, 8, 8);
+            ctx.fillStyle = '#cbd5e1';
+            ctx.textAlign = 'left';
+            const pct = Math.round((counts[cat] / total) * 100);
+            const label = `${cat} ${pct}%`;
+            ctx.fillText(label, legX + 12, legY);
+            legX += ctx.measureText(label).width + 20;
+            if (legX > width - 60) break;
+        }
+    }
+
+    // Modal Focus Trapping & Restoration
+    let previousActiveEl = null;
+    function trapModalFocus(modalEl) {
+        const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+        const focusable = Array.from(modalEl.querySelectorAll(focusableSelectors)).filter(el => !el.disabled && el.offsetParent !== null);
+        if (focusable.length === 0) return;
+        
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        first.focus();
+
+        const handleKeyDown = (e) => {
+            if (!modalEl.classList.contains('active')) {
+                modalEl.removeEventListener('keydown', handleKeyDown);
+                return;
+            }
+            if (e.key === 'Tab') {
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    }
+                } else {
+                    if (document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
+            }
+        };
+        modalEl.addEventListener('keydown', handleKeyDown);
+    }
+
+    function openModal(el) {
+        if (!el) return;
+        previousActiveEl = document.activeElement;
+        el.classList.add('active');
+        trapModalFocus(el);
+    }
+
+    function closeModal(el) {
+        if (el && el.classList.contains('active')) {
+            el.classList.remove('active');
+            if (previousActiveEl && typeof previousActiveEl.focus === 'function') {
+                previousActiveEl.focus();
+            }
+        }
+    }
+
+    // Status bar & cursor tracking
+    function updateStatusBar() {
+        const text = exprInput.value;
+        const pos = exprInput.selectionStart || 0;
+        const lines = text.substring(0, pos).split('\n');
+        const lineNum = lines.length;
+        const colNum = lines[lines.length - 1].length + 1;
+        const totalLines = text.split('\n').length;
+        const totalChars = text.length;
+
+        const sbCursor = document.getElementById('sbCursor');
+        const sbDocStats = document.getElementById('sbDocStats');
+        const sbSelection = document.getElementById('sbSelection');
+
+        if (sbCursor) sbCursor.textContent = `Ln ${lineNum}, Col ${colNum}`;
+        if (sbDocStats) sbDocStats.textContent = `${totalLines} lines, ${totalChars} chars`;
+
+        const selLen = Math.abs(exprInput.selectionEnd - exprInput.selectionStart);
+        if (sbSelection) {
+            if (selLen > 0) {
+                sbSelection.style.display = 'inline-block';
+                sbSelection.textContent = `Sel ${selLen}`;
+            } else {
+                sbSelection.style.display = 'none';
+            }
+        }
+    }
+
+    // Font size zoom controls
+    let currentFontSize = 13;
+    try {
+        const savedFs = parseInt(localStorage.getItem('kscript_fontsize'), 10);
+        if (savedFs >= 10 && savedFs <= 22) currentFontSize = savedFs;
+    } catch(e) {}
+
+    function applyFontSize(sz) {
+        currentFontSize = Math.min(22, Math.max(10, sz));
+        const lh = Math.round(currentFontSize * 1.54);
+        document.documentElement.style.setProperty('--editor-font-size', `${currentFontSize}px`);
+        document.documentElement.style.setProperty('--editor-line-height', `${lh}px`);
+        const zoomLevelEl = document.getElementById('zoomLevel');
+        if (zoomLevelEl) zoomLevelEl.textContent = `${currentFontSize}px`;
+        renderGutter();
+        try { localStorage.setItem('kscript_fontsize', currentFontSize.toString()); } catch(e) {}
+    }
+
+    document.getElementById('btnZoomIn')?.addEventListener('click', () => applyFontSize(currentFontSize + 1));
+    document.getElementById('btnZoomOut')?.addEventListener('click', () => applyFontSize(currentFontSize - 1));
+    document.getElementById('btnZoomReset')?.addEventListener('click', () => applyFontSize(13));
+
     // UI Updates
     function updateUI(state, execTimeMs = 0) {
         if (!state) return;
@@ -2268,6 +2781,7 @@ endif
 
         // Telemetry stats
         telemTime.textContent = `${execTimeMs.toFixed(2)} ms`;
+        recordTelemTiming(execTimeMs);
         telemNodes.textContent = state.nodeCount;
         const varKeys = Object.keys(state.vars);
         telemVars.textContent = varKeys.length;
@@ -2470,11 +2984,9 @@ endif
     };
 
     // Benchmark Suite
-    btnBench.onclick = () => {
-        toastContainer.innerHTML = '';
-        benchModal.classList.add('active');
+    btnBench.onclick = () => { toastContainer.innerHTML = ''; openModal(benchModal);
     };
-    benchModalClose.onclick = () => benchModal.classList.remove('active');
+    benchModalClose.onclick = () => closeModal(benchModal);
 
     document.getElementById('btnStartBench').onclick = () => {
         const iters = parseInt(document.getElementById('benchIters').value, 10);
@@ -2517,6 +3029,7 @@ endif
         document.getElementById('bResThroughput').textContent = `${runsPerSec.toLocaleString()} runs/sec`;
         document.getElementById('bResNodeSpeed').textContent = `${nodeSpeed.toLocaleString()} nodes/sec`;
         document.getElementById('bResVars').textContent = `${Object.keys(lastVars).length} variables`;
+        renderBenchHistogram(latencies, avgMicros, minMicros, maxMicros);
 
         // Output summary to console as well
         outputArea.textContent = `=== BENCHMARK REPORT ===\nIterations: ${iters}\nTotal Time: ${totalMs.toFixed(2)} ms\nAvg Latency: ${avgMicros.toFixed(1)} μs\nThroughput: ${runsPerSec.toLocaleString()} runs/sec\nNode Speed: ${nodeSpeed.toLocaleString()} nodes/sec\n`;
@@ -2680,11 +3193,9 @@ endif
     };
 
     // Export Center
-    btnExport.onclick = () => {
-        toastContainer.innerHTML = '';
-        exportModal.classList.add('active');
+    btnExport.onclick = () => { toastContainer.innerHTML = ''; openModal(exportModal);
     };
-    exportModalClose.onclick = () => exportModal.classList.remove('active');
+    exportModalClose.onclick = () => closeModal(exportModal);
 
     window.exportJson = () => {
         const state = lastExecutionState || { vars: {}, nodeCount: 0, lastVal: 0 };
@@ -2916,23 +3427,24 @@ endif
             return `L${padLine} | [${node.category}] ${node.detail}`;
         }).join('\n');
 
-        astModal.classList.add('active');
+        renderAstDistribution(ast);
+        openModal(astModal);
     }
 
     if (btnAst) btnAst.onclick = openAstModal;
-    if (astModalClose) astModalClose.onclick = () => astModal.classList.remove('active');
-    if (btnAstModalCloseBottom) btnAstModalCloseBottom.onclick = () => astModal.classList.remove('active');
-    if (astModal) astModal.onclick = (e) => { if (e.target === astModal) astModal.classList.remove('active'); };
+    if (astModalClose) astModalClose.onclick = () => closeModal(astModal);
+    if (btnAstModalCloseBottom) btnAstModalCloseBottom.onclick = () => closeModal(astModal);
+    if (astModal) astModal.onclick = (e) => { if (e.target === astModal) closeModal(astModal); };
 
     // Modal Events
-    btnHelp.onclick = () => { toastContainer.innerHTML = ''; helpModal.classList.add('active'); };
-    modalClose.onclick = () => helpModal.classList.remove('active');
-    document.getElementById('btnHelpModalCloseBottom').onclick = () => helpModal.classList.remove('active');
-    document.getElementById('btnBenchModalCloseBottom').onclick = () => benchModal.classList.remove('active');
-    document.getElementById('btnExportModalCloseBottom').onclick = () => exportModal.classList.remove('active');
-    helpModal.onclick = (e) => { if (e.target === helpModal) helpModal.classList.remove('active'); };
-    benchModal.onclick = (e) => { if (e.target === benchModal) benchModal.classList.remove('active'); };
-    exportModal.onclick = (e) => { if (e.target === exportModal) exportModal.classList.remove('active'); };
+    btnHelp.onclick = () => { toastContainer.innerHTML = ''; openModal(helpModal); };
+    modalClose.onclick = () => closeModal(helpModal);
+    document.getElementById('btnHelpModalCloseBottom').onclick = () => closeModal(helpModal);
+    document.getElementById('btnBenchModalCloseBottom').onclick = () => closeModal(benchModal);
+    document.getElementById('btnExportModalCloseBottom').onclick = () => closeModal(exportModal);
+    helpModal.onclick = (e) => { if (e.target === helpModal) closeModal(helpModal); };
+    benchModal.onclick = (e) => { if (e.target === benchModal) closeModal(benchModal); };
+    exportModal.onclick = (e) => { if (e.target === exportModal) closeModal(exportModal); };
 
     // Onboarding Banner Logic & Pass 5 Tutorial Integrity
     const onboardingBanner = document.getElementById('onboardingBanner');
@@ -2968,8 +3480,16 @@ endif
 
     // Startup
     window.addEventListener('load', () => {
+        
+    ['input', 'keyup', 'click', 'select'].forEach(evt => {
+        exprInput.addEventListener(evt, updateStatusBar);
+    });
+
+        applyFontSize(currentFontSize);
+        updateStatusBar();
         renderGutter();
         btnRun.click();
+        window.addEventListener("resize", () => { requestAnimationFrame(() => { renderTelemSparkline(); }); });
         setTimeout(() => {
             showToast("⚡ Welcome to KScript v2.0! [Ctrl+Enter] Run · [F5] Save · [F9] Load · [F1] Help", "info", 3500);
         }, 300);
