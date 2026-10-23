@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -17,7 +17,7 @@ commit_checkpoint: 15
 status: ready
 current_targets:
   kilo_creator: kweb://portal
-  kilo_graphics: KSpace
+  kilo_graphics: KTrader
   kilo_soundscape: KRogue
   kilo_tester: KBase
   kilo_usability: KBase
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-creator
-  app: kweb://darknet
-  timestamp: '2026-10-22T19:37:00-07:00'
+  agent: kilo-graphics
+  app: KSpace
+  timestamp: '2026-10-22T20:32:00-07:00'
 last_planner_run: '2026-10-23T01:35:00Z'
 ---
 
@@ -73,20 +73,20 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `kweb://portal`, `kweb://webring`, `kweb://warez`.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Target**: `KSpace`
-- **Primary Files**: `KiloOS/public/apps/kspace.html`
-- **Objective**: Space combat & celestial trader graphics overhaul: replace vector wireframes / primitive canvas assets with authentic Imagen 3 sprites, space stations, and seamless parallax starfields (<999 KB).
+- **Target**: `KTrader`
+- **Primary Files**: `KiloOS/public/apps/ktrader.html`
+- **Objective**: Space trader commodity & planetary docking graphics: replace vector trading post graphics and planet circles with production celestial assets and trader ship sprites (<999 KB).
 - **Action Steps**:
-  1. Inspect `KiloOS/public/apps/kspace.html` rendering routines for programmer art.
+  1. Inspect `KiloOS/public/apps/ktrader.html` rendering routines for programmer art.
   2. Generate sprites via 2-stage asset pipeline if appropriate (`generate_image` with solid `#FF00FF` -> `scripts/asset_pipeline.py`).
   3. Search for and eliminate any traveling border dots or rotating specular glints.
   4. Run `python scripts/check_icons.py` to audit icon uniqueness.
 - **Verification**: `cd KiloOS && npm run build`. Verify files < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_graphics` to `KTrader`.
+  - In frontmatter: advance `current_targets.kilo_graphics` to `KRogue`.
   - Set current_agent: kilo-soundscape.
-  - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTrader`, `KRogue`, `KBreakout`.
+  - Append terse execution log (<=6 lines), commit, and push.
+- **Upcoming Queue**: `KRogue`, `KBreakout`.
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Target**: `KRogue`
@@ -216,6 +216,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-22T20:32:00-07:00 — kilo-graphics: KSpace**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KSpace
+  - Asset Audit: All 13 production sprites and nebula background already integrated and rendering.
+  - Glint Audit: Zero rotating specular glints or traveling perimeter border dots (HTML & C).
+  - Verification: Native build clean; KiloOS Vite build clean; startup check PASS; byte-budget PASS.
+  - Handoff: Advanced graphics queue to KTrader; rotated agent to kilo-soundscape.
+
 - **2026-10-22T19:37:00-07:00 — kilo-creator: kweb://darknet (Deep Expansion & Anti-Potemkin Node)**
   - Status: PASS ✅ (All web files < 999 KB, 0 Vite errors, startup check clean).
   - Dead-Drop Key Exchange: Integrated ModP Group 1 Diffie-Hellman key exchange (prime 65521, gen 3), PGP armored public key export (.asc), and 1-click dead drop session deployment.
@@ -247,10 +254,3 @@ pm run build clean (560ms), 	est_app_startup knet PASS, file size 414.5 KB (< 99
   - Dual Parity & Build: Verified native `KCalc.exe` (28.0 KB < 999 KB) compiles cleanly via `build.bat`; web `kcalc.html` (254.5 KB < 999 KB).
   - Verification: `test_app_startup` PASS (0 errors, hit-test unblocked), KiloOS `npm run build` PASS (0 Vite errors).
   - Mature Quarantine: Promoted KCalc to Mature Applications archive; advanced kilo_qa to KSpace; rotated agent to kilo-expander.
-
-- **2026-10-22T15:34:00-07:00 — kilo-usability: KTerm (Ergonomics & Layout Polish, Mature Quarantine)**
-  - PASS ✅ (Responsive viewport scaling, font zoom sync, dual-target parity, promoted to Mature).
-  - Usability Polish: Added responsive overflow handling for toolbar actions & statusbar guide on narrow screens (<768px/<480px); synchronized prompt font scaling with terminal zoom.
-  - Verification: `test_app_startup` PASS (0 errors, 114.5 KB < 999 KB), `npm run build` PASS (0 Vite errors), `byte_budget_gate` PASS (all < 999 KB), `security_lint` PASS.
-  - Dual Parity: Native Win32 `KTerm.exe` builds cleanly via `build.bat` with min tracking bounds (560x360).
-  - Mature Quarantine: Promoted KTerm to Mature Applications archive; advanced usability queue to KBase; rotated agent to kilo-qa.

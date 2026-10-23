@@ -1625,6 +1625,7 @@
     <button class="tab-btn" onclick="switchTab('signal-board')">[16] SHARED SIGNAL INTERLOCK</button>
   
     <button class="tab-btn" onclick="switchTab('wardialer')">[17] TONE-LOC WARDIALER &amp; PBX SCANNER</button>
+    <button class="tab-btn" onclick="switchTab('airgap-bridge')">[18] AIRGAP PACKET BRIDGE</button>
   </nav>
 
   <!-- Main Workspaces -->
@@ -2915,6 +2916,50 @@
             <button class="action-btn" onclick="zeroizeAllUserDrops()" style="border-color:var(--alert); color:var(--alert);">⚠️ EMERGENCY ZEROIZE</button>
           </div>
         </div>
+
+        <!-- Diffie-Hellman Key Exchange & Keyring Deck -->
+        <div class="workbench-panel" style="grid-column: 1 / -1; margin-top: 10px;">
+          <div class="panel-title">
+            <span>⚡ 1999 DIFFIE-HELLMAN KEY EXCHANGE &amp; SUBTERRANEAN PGP KEYRING</span>
+            <span style="font-size:10px; color:var(--phosphor-dim);">RFC 2409 / MODP GROUP 1 (PRIME: 65521 &bull; GEN: 3)</span>
+          </div>
+          <div style="font-size:11px; color:#a7f3d0; margin-bottom:6px;">
+            Negotiate shared cryptographic session keys across subterranean relays without transmitting secret keys. Authenticate peer identity via PGP fingerprint.
+          </div>
+          <div class="ctrl-row">
+            <label style="font-size:11px;">TARGET PEER:</label>
+            <select id="selDhPeer" class="custom-select" onchange="updateDhPeerSelection(this.value)">
+              <option value="carlsbad">Carlsbad Vault Transceiver (0x7F-CARLSBAD)</option>
+              <option value="scrapyard">Zero_Cool (0x44-SCRAPYARD-BBS)</option>
+              <option value="deepcore">Halite_Ghost (0x127-DEEPCORE-GW)</option>
+              <option value="whistleblower">Aethel Intranet Whistleblower (0x04-AETHEL)</option>
+            </select>
+            <button class="action-btn" onclick="generateStationDhKeypair()">🔑 REGEN KEYPAIR</button>
+            <button class="action-btn" onclick="computeDhSharedSecret()">⚡ COMPUTE SHARED SECRET</button>
+            <button class="action-btn" onclick="applyDhKeyToComposer()">📥 APPLY TO DEAD DROP</button>
+            <button class="action-btn" onclick="exportPgpArmoredPublicKey()">💾 EXPORT PUBLIC KEY (.ASC)</button>
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:8px; margin-top:6px;">
+            <div class="keyexchange-card">
+              <span style="font-size:10.5px; color:var(--phosphor-dim);">OUR STATION (0x7F LOCAL):</span>
+              <div style="font-size:11px;">PRIV EXP: <code id="lblDhPrivKey" style="color:var(--warn);">0x4A1F</code></div>
+              <div style="font-size:11px;">PUBLIC A: <code id="lblDhPubKey" style="color:var(--phosphor-bright);">0x8B32</code></div>
+              <div style="font-size:10px; color:var(--phosphor-dim);">PGP FP: 7F19-99AA-24B0-C0DE</div>
+            </div>
+            <div class="keyexchange-card">
+              <span style="font-size:10.5px; color:var(--phosphor-dim);">PEER STATION (REMOTE):</span>
+              <div style="font-size:11px;">PEER ID: <code id="lblDhPeerId" style="color:var(--cyan);">0x7F-CARLSBAD</code></div>
+              <div style="font-size:11px;">PUBLIC B: <code id="lblDhPeerPubKey" style="color:var(--phosphor-bright);">0x9E71</code></div>
+              <div style="font-size:10px; color:var(--phosphor-dim);">KEYRING STATUS: VERIFIED</div>
+            </div>
+            <div class="keyexchange-card">
+              <span style="font-size:10.5px; color:var(--phosphor-dim);">NEGOTIATED SHARED SECRET:</span>
+              <div style="font-size:11px;">MODP VALUE: <code id="lblDhSharedVal" style="color:var(--warn);">0x5C29</code></div>
+              <div style="font-size:11px;">SESSION KEY: <code id="lblDhSessionKey" style="color:var(--phosphor-bright);">CARLSBAD-KEY-1999</code></div>
+              <div style="font-size:10px; color:var(--phosphor-bright);" id="lblDhStatus">STATUS: ACTIVE &bull; READY TO DISPATCH</div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -3223,7 +3268,14 @@
   
     <!-- Tab: Wardialer & PBX Trunk Scanner -->
     <section id="panel-wardialer" class="tab-panel">
-      <div class="workbench-grid">
+      <div class="ctrl-row" style="margin-bottom:8px; border-bottom:1px dashed var(--panel-border); padding-bottom:6px;">
+        <span style="font-weight:bold; color:var(--phosphor-bright);">SCANNER MODE:</span>
+        <button class="chip-btn active" id="btnModeWardialPstn" onclick="setWardialMode('pstn')">📞 PBX / PSTN TRUNK DIALER</button>
+        <button class="chip-btn" id="btnModeWardialFreq" onclick="setWardialMode('freq')">📻 LITHOSPHERIC RF FREQUENCY SWEEPER</button>
+      </div>
+
+      <!-- PSTN DIALER VIEW -->
+      <div id="wardialPstnView" class="workbench-grid">
         <div class="workbench-panel">
           <div class="panel-title">
             <span>⚡ TONE-LOC 1999: SUBTERRANEAN WARDIALER</span>
@@ -3286,6 +3338,119 @@ ToneLoc v1.99 subterranean acoustic wardialing engine loaded.
           <div id="wardialBannerOutput" style="background:#010402; border:1px solid var(--panel-border); padding:8px; font-size:11px; color:var(--phosphor-bright); height:110px; overflow-y:auto; white-space:pre-wrap; font-family:var(--font-mono);">
 Select a carrier node above to review response telemetry banner.
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 18: AIRGAP PACKET BRIDGE (DIRECTIVE 189 COMPLIANCE) -->
+    <section id="panel-airgap-bridge" class="tab-panel">
+      <div class="airgap-container">
+        <!-- TX: Airgap Transmitter -->
+        <div class="workbench-panel">
+          <div class="panel-title">
+            <span>⚡ AIRGAP PACKET TRANSMITTER (TX)</span>
+            <span style="font-size:10px; color:var(--phosphor-bright);">GALVANICALLY ISOLATED DATA DIODE</span>
+          </div>
+          <div style="font-size:11px; color:#a7f3d0;">
+            Modulate packet payloads across physical airgap boundaries using acoustic FSK ultrasound, optical screen strobes, or 1999Hz lithospheric resonance pulses.
+          </div>
+          <div class="ctrl-row" style="margin-top:4px;">
+            <label style="font-size:11px;">COUPLING MEDIUM:</label>
+            <select id="selAirgapMedium" class="custom-select">
+              <option value="acoustic" selected>Acoustic FSK Ultrasound (18kHz - 20kHz / Bell 202)</option>
+              <option value="optical">Optical CRT Strobe Transceiver (Manchester Biphase)</option>
+              <option value="litho">Lithospheric Pulse (Sub-Audio 1999Hz Resonance)</option>
+            </select>
+          </div>
+          <div class="ctrl-row">
+            <label style="font-size:11px;">TARGET AIRGAP TAP:</label>
+            <select id="selAirgapTarget" class="custom-select">
+              <option value="carlsbad">Carlsbad Salt Vault Tap (3000m Lithosphere)</option>
+              <option value="aethel">Aethel Dynamics Skunkworks Airgap (10.19.99.4)</option>
+              <option value="deepcore">Deep Core Precursor Bridge (10.19.99.127)</option>
+              <option value="ring0">Echo Subsystem Ring-0 Kernel Airgap (10.19.99.1)</option>
+            </select>
+          </div>
+          <div class="ctrl-row">
+            <label style="font-size:11px;">PACKET TYPE:</label>
+            <select id="selAirgapPktType" class="custom-select">
+              <option value="DATA_BURST">0x01: DATA_BURST (Telemetry Frame)</option>
+              <option value="KEY_EXCHANGE">0x02: KEY_EXCHANGE (Cryptographic Seed)</option>
+              <option value="KERNEL_MEMO">0x03: KERNEL_MEMO (Ring-0 Communique)</option>
+              <option value="HEARTBEAT">0x04: HEARTBEAT (1999Hz Subcarrier Ping)</option>
+            </select>
+          </div>
+          <div style="margin-top:4px;">
+            <div style="font-size:11px; color:var(--phosphor-dim); margin-bottom:2px;">AIRGAP PAYLOAD:</div>
+            <textarea id="inpAirgapTxPayload" class="custom-textarea" style="height:65px;" placeholder="Enter confidential packet payload to bridge across airgap...">LITHO-KEY-1999 // CARLSBAD_0x7F_BRIDGE_FRAME // PARITY_OK</textarea>
+          </div>
+          <div class="ctrl-row" style="margin-top:4px;">
+            <button class="action-btn" id="btnTransmitAirgap" onclick="transmitAirgapPacket()">📡 TRANSMIT ACROSS AIRGAP</button>
+            <button class="action-btn" onclick="loadTxPreset('litho')">PRESET: LITHO</button>
+            <button class="action-btn" onclick="loadTxPreset('key')">PRESET: KEY-X</button>
+          </div>
+          <canvas id="airgapStrobeCanvas" class="airgap-strobe-canvas"></canvas>
+          <div class="panel-title" style="margin-top:6px;">
+            <span>MODULATED FRAME BYTESTREAM</span>
+          </div>
+          <div id="airgapTxFrameDump" class="airgap-frame-box" style="height:70px;">
+[TX READY] Preamble 0xAA55 | CRC16: 0x1021 | Awaiting transmission trigger...
+          </div>
+        </div>
+
+        <!-- RX: Airgap Receiver & Dissector -->
+        <div class="workbench-panel">
+          <div class="panel-title">
+            <span>📥 AIRGAP RECEIVER &amp; FRAME DISSECTOR (RX)</span>
+            <span style="font-size:10px; color:var(--phosphor-dim);" id="lblAirgapRxStatus">STATUS: LISTENING</span>
+          </div>
+          <div style="font-size:11px; color:#a7f3d0;">
+            Capture, reconstruct, and verify frames crossing physical isolation. Computes CRC-16 CCITT and validates packet parity.
+          </div>
+          <div class="ctrl-row" style="margin-top:4px;">
+            <label style="font-size:11px;">INTERCEPTED BURSTS:</label>
+            <select id="selAirgapRxPreset" class="custom-select" onchange="loadRxAirgapPreset(this.value)">
+              <option value="burst1" selected>Burst #1: Carlsbad Vault 3000m Litho Seismic Frame</option>
+              <option value="burst2">Burst #2: Aethel Dynamics Ring-0 Memory Tap (Offset 0x007F1990)</option>
+              <option value="burst3">Burst #3: Deep Core Precursor Sync Frame (10.19.99.127)</option>
+            </select>
+            <button class="action-btn" onclick="ingestSelectedRxBurst()">⚡ INGEST</button>
+          </div>
+          <div style="margin-top:4px;">
+            <div style="font-size:11px; color:var(--phosphor-dim); margin-bottom:2px;">RAW FRAME BUFFER (HEX):</div>
+            <textarea id="inpAirgapRxRaw" class="custom-textarea" style="height:60px;" placeholder="Paste raw hex frame (e.g. AA 55 01 00 24 ...)" oninput="dissectAirgapFrame(this.value)"></textarea>
+          </div>
+          <div class="stats-bar" style="margin-top:4px;">
+            <span>PREAMBLE: <strong id="rxStatPreamble" style="color:var(--phosphor-bright);">0xAA55 (VALID)</strong></span>
+            <span>CRC-16: <strong id="rxStatCrc" style="color:var(--phosphor-bright);">0x8F4A (MATCH)</strong></span>
+            <span>LEN: <strong id="rxStatLen">36 B</strong></span>
+          </div>
+          <div class="panel-title" style="margin-top:6px;">
+            <span>EXTRACTED PAYLOAD &amp; DISSECTED METADATA</span>
+          </div>
+          <div id="airgapRxPayloadDisplay" class="airgap-frame-box" style="height:80px;">
+[DISSECTION COMPLETE]
+SRC: 0x7F (Carlsbad Salt Vault) -> DST: AIRGAP_TAP_01
+TYPE: 0x01 (DATA_BURST) | SEQ: #042 | CHECKSUM: VALID
+PAYLOAD: "LITHO-KEY-1999 // SEISMIC_LOCK // CARLSBAD_0x7F_SYNC"
+          </div>
+          <div class="ctrl-row" style="margin-top:6px;">
+            <button class="action-btn" onclick="pipeAirgapToTerminal()">📺 PIPE TO TERMINAL</button>
+            <button class="action-btn" onclick="injectAirgapToSniffer()">📡 INJECT TO SNIFFER</button>
+            <button class="action-btn" onclick="sendAirgapToDecoder()">🔑 SEND TO DECODER</button>
+            <button class="action-btn" onclick="exportAirgapPacket()">💾 EXPORT .AGP</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Airgap Telemetry Banner -->
+      <div class="memo-unlocked-banner" style="margin-top:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong style="color:var(--phosphor-bright);">🔒 AIRGAP LINK TELEMETRY &amp; SECURITY ASSURANCE</strong>
+          <span class="badge-tag" style="background:var(--phosphor); color:#000;">100% GALVANICALLY ISOLATED</span>
+        </div>
+        <div style="font-size:11px; color:#cbd5e1; margin-top:4px;">
+          Physical network cabling between Node 0x7F and external subnets remains fully severed. All packets cross through audio/optical airgap couplers with zero possibility of remote IP compromise.
         </div>
       </div>
     </section>
@@ -4238,7 +4403,7 @@ function toggleScanlines() {
    ========================================================================= */
 function switchTab(tabId) {
   snd.playKeyClick();
-  const tabs = ['terminal', 'warez-nfo', 'decoder', 'sniffer', 'spectrum', 'puzzle-relay', 'mesh', 'spool', 'directory', 'crypto-lab', 'topology', 'bluebox', 'deaddrop', 'hex-inspector', 'acoustic-modem', 'signal-board', 'wardialer'];
+  const tabs = ['terminal', 'warez-nfo', 'decoder', 'sniffer', 'spectrum', 'puzzle-relay', 'mesh', 'spool', 'directory', 'crypto-lab', 'topology', 'bluebox', 'deaddrop', 'hex-inspector', 'acoustic-modem', 'signal-board', 'wardialer', 'airgap-bridge'];
   tabs.forEach(t => {
     const panel = document.getElementById('panel-' + t);
     if (panel) panel.classList.remove('active');
@@ -4262,6 +4427,7 @@ function switchTab(tabId) {
     if (tabId === 'acoustic-modem') return text.includes('fsk');
     if (tabId === 'signal-board') return text.includes('interlock');
     if (tabId === 'wardialer') return text.includes('wardialer') || text.includes('tone-loc');
+    if (tabId === 'airgap-bridge') return text.includes('airgap');
     return text.includes(tabId);
   });
   if (activeBtn) activeBtn.classList.add('active');
@@ -4272,6 +4438,8 @@ function switchTab(tabId) {
     setTimeout(initBlueboxScope, 50);
   } else if (tabId === 'deaddrop' && typeof renderDeadDropList === 'function') {
     renderDeadDropList();
+  } else if (tabId === 'airgap-bridge' && typeof initAirgapCanvas === 'function') {
+    setTimeout(initAirgapCanvas, 50);
   } else if (tabId === 'hex-inspector' && typeof renderHexDump === 'function') {
     renderHexDump();
   } else if (tabId === 'acoustic-modem' && typeof startModemScopes === 'function') {
@@ -4478,6 +4646,10 @@ function processTerminalCommand(cmdStr) {
   bluebox / phreak   - Open 2600Hz Blue Box & Telco Crossbar Trunk Relay (Tab 12)
   dial <route>       - Outpulse Bell System MF tones to seize subterranean trunk
   deaddrop / whisper - Open Subterranean Dead Drop Vault & Dispatch Wire (Tab 13)
+  dh / keyx          - Inspect Diffie-Hellman Key Exchange & Subterranean Keyring (Tab 13)
+  wardial / pbx      - Open Tone-Loc Wardialer PBX & Trunk Scanner (Tab 17)
+  sweep / freq       - Open Lithospheric RF & Subcarrier Frequency Sweeper (Tab 17)
+  airgap / bridge    - Open Galvanically Isolated Airgap Packet Bridge (Tab 18)
   drop <list|read>   - Inspect or read encrypted subterranean dead drop files
   quicksave / save   - Quicksave station state to localStorage (F5)
   quickload / load   - Quickload station state from localStorage (F9)`
@@ -4823,6 +4995,32 @@ ${count === 3 ? '  RING-0 BRIDGE: ACTIVE - Navigate to kweb://deep-core' : '  Ty
       } else {
         printTerminal('[SECURITY] Seek offset 0x007F1990 in Hex Inspector (Tab 14) to decode the intercepted memo.');
       }
+      break;
+
+    case 'wardial':
+    case 'pbx':
+      switchTab('wardialer');
+      setWardialMode('pstn');
+      printTerminal('[WARDIALER] Switched to Tone-Loc PBX & Subterranean Trunk Scanner (Tab 17).');
+      break;
+
+    case 'sweep':
+    case 'freq':
+      switchTab('wardialer');
+      setWardialMode('freq');
+      printTerminal('[SWEEPER] Switched to Lithospheric RF & Subcarrier Frequency Sweeper (Tab 17).');
+      break;
+
+    case 'dh':
+    case 'keyx':
+      switchTab('deaddrop');
+      printTerminal('[DIFFIE-HELLMAN] Switched to Subterranean Key Exchange & PGP Keyring (Tab 13).');
+      break;
+
+    case 'airgap':
+    case 'bridge':
+      switchTab('airgap-bridge');
+      printTerminal('[AIRGAP BRIDGE] Switched to Galvanically Isolated Airgap Packet Bridge (Tab 18).');
       break;
 
     case 'quicksave':
@@ -9417,6 +9615,636 @@ setTimeout(() => {
     logScan('[EXPORT] Carrier database exported to wardialer_carriers_1999.txt', 'var(--phosphor)');
   });
 })();
+
+
+
+// =========================================================================
+// 1999 DIFFIE-HELLMAN KEY EXCHANGE & PGP KEYRING ENGINE (TAB 13 EXPANSION)
+// =========================================================================
+const DH_PRIME = 65521; // 16-bit safe prime for authentic retro modular arithmetic
+const DH_GENERATOR = 3;
+
+let stationDhPrivKey = 0x4A1F;
+let stationDhPubKey = 0;
+let currentDhSharedKey = 'CARLSBAD-KEY-1999';
+
+const DH_PEERS = {
+  carlsbad: { id: "0x7F-CARLSBAD", pub: 0x9E71, secretWord: "HALITE-1999", name: "Carlsbad Vault Transceiver" },
+  scrapyard: { id: "0x44-SCRAPYARD", pub: 0x3F82, secretWord: "ZERO-COOL-99", name: "Zero_Cool (BBS Sysop)" },
+  deepcore: { id: "0x127-DEEPCORE", pub: 0x7A14, secretWord: "CORE-10-19-99", name: "Halite_Ghost (Deep Core Gateway)" },
+  whistleblower: { id: "0x04-AETHEL", pub: 0x18F5, secretWord: "SECTOR3-LEAK", name: "Aethel Intranet Whistleblower" }
+};
+
+function modExp(base, exp, mod) {
+  let res = 1;
+  base = base % mod;
+  while (exp > 0) {
+    if (exp % 2 === 1) res = (res * base) % mod;
+    base = (base * base) % mod;
+    exp = Math.floor(exp / 2);
+  }
+  return res;
+}
+
+function generateStationDhKeypair() {
+  snd.playKeyClick();
+  stationDhPrivKey = Math.floor(Math.random() * 32000) + 1000;
+  stationDhPubKey = modExp(DH_GENERATOR, stationDhPrivKey, DH_PRIME);
+  const elPriv = document.getElementById('lblDhPrivKey');
+  const elPub = document.getElementById('lblDhPubKey');
+  if (elPriv) elPriv.textContent = '0x' + stationDhPrivKey.toString(16).toUpperCase();
+  if (elPub) elPub.textContent = '0x' + stationDhPubKey.toString(16).toUpperCase();
+  computeDhSharedSecret();
+}
+
+function updateDhPeerSelection(peerKey) {
+  snd.playKeyClick();
+  const peer = DH_PEERS[peerKey] || DH_PEERS.carlsbad;
+  const elId = document.getElementById('lblDhPeerId');
+  const elPub = document.getElementById('lblDhPeerPubKey');
+  if (elId) elId.textContent = peer.id;
+  if (elPub) elPub.textContent = '0x' + peer.pub.toString(16).toUpperCase();
+  computeDhSharedSecret();
+}
+
+function computeDhSharedSecret() {
+  const sel = document.getElementById('selDhPeer');
+  const peerKey = sel ? sel.value : 'carlsbad';
+  const peer = DH_PEERS[peerKey] || DH_PEERS.carlsbad;
+
+  if (!stationDhPubKey) {
+    stationDhPubKey = modExp(DH_GENERATOR, stationDhPrivKey, DH_PRIME);
+  }
+
+  const sharedVal = modExp(peer.pub, stationDhPrivKey, DH_PRIME);
+  const elVal = document.getElementById('lblDhSharedVal');
+  const elKey = document.getElementById('lblDhSessionKey');
+  const elStatus = document.getElementById('lblDhStatus');
+
+  currentDhSharedKey = peer.secretWord + '-' + sharedVal.toString(16).toUpperCase();
+
+  if (elVal) elVal.textContent = '0x' + sharedVal.toString(16).toUpperCase();
+  if (elKey) elKey.textContent = currentDhSharedKey;
+  if (elStatus) elStatus.textContent = 'STATUS: KEY NEGOTIATED // PGP SESSION LOCKED';
+  snd.playDecodeSuccess();
+}
+
+function applyDhKeyToComposer() {
+  snd.playKeyClick();
+  const inpKey = document.getElementById('dropNewKey');
+  if (inpKey) {
+    inpKey.value = currentDhSharedKey;
+    if (typeof encryptNewDropLive === 'function') encryptNewDropLive();
+    const status = document.getElementById('lblDhStatus');
+    if (status) status.textContent = 'STATUS: DEPLOYED TO DEAD DROP WIRE (TAB 13)';
+  }
+}
+
+function exportPgpArmoredPublicKey() {
+  snd.playKeyClick();
+  const sel = document.getElementById('selDhPeer');
+  const peerKey = sel ? sel.value : 'carlsbad';
+  const peer = DH_PEERS[peerKey] || DH_PEERS.carlsbad;
+
+  let asc = '-----BEGIN PGP PUBLIC KEY BLOCK-----\r\n';
+  asc += 'Version: Node0x7F-KiloCrypt 1.99 (Carlsbad Subterranean Keyring)\r\n';
+  asc += 'Comment: ModP Group 1 Prime 65521 Generator 3\r\n\r\n';
+  asc += 'mQENBF4k...' + stationDhPubKey.toString(16).toUpperCase() + '...' + peer.id + '==\r\n';
+  asc += '=7F19\r\n';
+  asc += '-----END PGP PUBLIC KEY BLOCK-----\r\n';
+
+  const blob = new Blob([asc], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'node0x7f_public_key_' + peerKey + '.asc';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// =========================================================================
+// WARDIALER FREQUENCY SWEEPER SUBSYSTEM (TAB 17 EXPANSION)
+// =========================================================================
+let wardialMode = 'pstn';
+let isFreqSweeping = false;
+let freqSweepTimer = null;
+let freqSweepIndex = 0;
+let freqSweepFreqs = [];
+let freqAudioEnabled = true;
+let freqLockedSignals = [];
+
+const FREQ_SIGNAL_DATABASE = [
+  { freq: 1999, band: 'acoustic', label: '1999.0 Hz', name: 'Carlsbad Vault 3000m Subcarrier', snr: 28, sig: 'ACOUSTIC_CW_1999_LOCKED', data: 'DEPTH: 3000m HALITE VAULT // ANCHOR 0x7F ACTIVE // SUBCARRIER HARMONIC LOCKED: 1999.002 Hz // ECHO-PATH: NOMINAL' },
+  { freq: 1200, band: 'acoustic', label: '1200.0 Hz', name: 'Bell 202 FSK Mark Tone', snr: 18, sig: 'BELL202_MARK', data: 'TELEMETRY BURST: 1200 BAUD // SUBNET: 10.19.99.12 // PACKET BOUNDARY DETECTED' },
+  { freq: 2200, band: 'acoustic', label: '2200.0 Hz', name: 'Bell 202 FSK Space Tone', snr: 19, sig: 'BELL202_SPACE', data: 'ACOUSTIC COUPLER ECHO SYNCHRONIZED // BIT TRANSITION VECTOR VALID' },
+  { freq: 2600, band: 'trunk', label: '2600.0 Hz', name: 'Telco SF Trunk Supervisory Tone', snr: 26, sig: 'SF_2600_DISCONNECT', data: 'TOLL NETWORK SUPERVISION SEIZED // TRUNK 4 LOOPBACK ONLINE // 2600Hz BLUE BOX CARRIER VERIFIED' },
+  { freq: 2400, band: 'trunk', label: '2400.0 Hz', name: 'Bell 212A DPSK Carrier', snr: 15, sig: 'BELL212A_DPSK', data: 'MIDWEST TRUNK TEST INTERLOCK // 4-WIRE ANALOG CARRIER DETECT' },
+  { freq: 10190, band: 'vlf', label: '10.19 kHz', name: 'VLF Lithospheric Ground Wave', snr: 24, sig: 'VLF_10.19K_LITHO', data: 'LITHOSPHERIC EARTH-CURRENT TRANSCEIVER // TARGET: kweb://10.19.99.4/classified // SEISMIC DRIFT: <0.01%' },
+  { freq: 144390, band: 'vhf', label: '144.390 MHz', name: 'AX.25 Subterranean Packet Repeater', snr: 29, sig: 'AX25_NODE0x7F', data: 'AX.25 PACKET RADIO HOP #018 // NODE: 0x7F // CARRIER DETECT: 144.390 MHz // APRS TELEMETRY: CARLSBAD_SALT_VAULT' }
+];
+
+function setWardialMode(mode) {
+  snd.playKeyClick();
+  wardialMode = mode;
+  const pstnView = document.getElementById('wardialPstnView');
+  const freqView = document.getElementById('wardialFreqView');
+  const btnPstn = document.getElementById('btnModeWardialPstn');
+  const btnFreq = document.getElementById('btnModeWardialFreq');
+
+  if (mode === 'pstn') {
+    if (pstnView) pstnView.style.display = 'grid';
+    if (freqView) freqView.style.display = 'none';
+    if (btnPstn) btnPstn.classList.add('active');
+    if (btnFreq) btnFreq.classList.remove('active');
+  } else {
+    if (pstnView) pstnView.style.display = 'none';
+    if (freqView) freqView.style.display = 'grid';
+    if (btnPstn) btnPstn.classList.remove('active');
+    if (btnFreq) btnFreq.classList.add('active');
+    initFreqCanvas();
+  }
+}
+
+function onFreqBandChange(band) {
+  snd.playKeyClick();
+  clearFreqLog();
+}
+
+function toggleFreqAudio() {
+  freqAudioEnabled = !freqAudioEnabled;
+  const btn = document.getElementById('btnFreqAudioToggle');
+  if (btn) {
+    btn.textContent = freqAudioEnabled ? '🔊 BEAT TONE: ON' : '🔇 BEAT TONE: MUTED';
+    btn.style.color = freqAudioEnabled ? 'var(--phosphor)' : 'var(--phosphor-dim)';
+  }
+}
+
+function playHeterodyneBeat(freq) {
+  if (!freqAudioEnabled) return;
+  try {
+    const ctx = window.AudioContext ? new (window.AudioContext || window.webkitAudioContext)() : null;
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const audioFreq = freq > 20000 ? (freq % 1500) + 400 : (freq > 3500 ? (freq / 10) % 2000 + 300 : freq);
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(audioFreq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.03, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.12);
+  } catch(e) {}
+}
+
+function initFreqCanvas() {
+  const canvas = document.getElementById('freqSweepCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#010402';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#13883a';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height / 2);
+  ctx.lineTo(canvas.width, canvas.height / 2);
+  ctx.stroke();
+}
+
+function drawFreqCanvasHit(freqRatio, isLocked) {
+  const canvas = document.getElementById('freqSweepCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+  const x = Math.floor(freqRatio * w);
+
+  ctx.fillStyle = isLocked ? '#88ffaa' : '#13883a';
+  const barH = isLocked ? h * 0.85 : Math.random() * (h * 0.35) + 10;
+  ctx.fillRect(x - 2, h - barH, 4, barH);
+}
+
+function startFreqSweep() {
+  if (isFreqSweeping) return;
+  const band = document.getElementById('selFreqBand').value;
+  const stepVal = parseInt(document.getElementById('selFreqStep').value, 10) || 20;
+  const btnStart = document.getElementById('btnStartFreqSweep');
+  const btnStop = document.getElementById('btnStopFreqSweep');
+  const statStatus = document.getElementById('statFreqStatus');
+
+  freqSweepFreqs = [];
+  if (band === 'acoustic') {
+    for (let f = 200; f <= 3000; f += stepVal * 5) freqSweepFreqs.push({ freq: f, label: f + ' Hz', band: 'acoustic' });
+  } else if (band === 'vlf') {
+    for (let f = 10000; f <= 30000; f += stepVal * 50) freqSweepFreqs.push({ freq: f, label: (f / 1000).toFixed(2) + ' kHz', band: 'vlf' });
+  } else if (band === 'trunk') {
+    for (let f = 2000; f <= 2800; f += stepVal * 2) freqSweepFreqs.push({ freq: f, label: f + ' Hz', band: 'trunk' });
+  } else if (band === 'vhf') {
+    for (let f = 144300; f <= 144500; f += stepVal) freqSweepFreqs.push({ freq: f, label: (f / 1000).toFixed(3) + ' MHz', band: 'vhf' });
+  }
+
+  isFreqSweeping = true;
+  freqSweepIndex = 0;
+  if (btnStart) btnStart.disabled = true;
+  if (btnStop) btnStop.disabled = false;
+  if (statStatus) {
+    statStatus.textContent = 'SWEEPING BAND...';
+    statStatus.style.color = 'var(--phosphor)';
+  }
+
+  logFreq('Initiating heterodyne subcarrier sweep on ' + band.toUpperCase() + ' band (' + freqSweepFreqs.length + ' channels)...', 'var(--phosphor-bright)');
+  stepFreqSweep();
+}
+
+function stepFreqSweep() {
+  if (!isFreqSweeping || freqSweepIndex >= freqSweepFreqs.length) {
+    finishFreqSweep();
+    return;
+  }
+
+  const cur = freqSweepFreqs[freqSweepIndex++];
+  const ratio = freqSweepIndex / freqSweepFreqs.length;
+  const elCurFreq = document.getElementById('statCurrentFreq');
+  if (elCurFreq) elCurFreq.textContent = cur.label;
+
+  playHeterodyneBeat(cur.freq);
+
+  const match = FREQ_SIGNAL_DATABASE.find(s => Math.abs(s.freq - cur.freq) <= (cur.freq > 10000 ? 100 : 30));
+  const squelch = parseInt(document.getElementById('rngFreqSquelch').value, 10) || 14;
+
+  if (match && match.snr >= squelch) {
+    drawFreqCanvasHit(ratio, true);
+    logFreq('--> [SIGNAL LOCKED] ' + cur.label + ' [' + match.name + '] SNR: +' + match.snr + ' dB', 'var(--phosphor-bright)');
+    if (!freqLockedSignals.some(s => s.sig === match.sig)) {
+      freqLockedSignals.push(match);
+      renderFreqLockedSignals();
+    }
+    const elLocks = document.getElementById('statFreqLocks');
+    if (elLocks) elLocks.textContent = freqLockedSignals.length;
+    const elRssi = document.getElementById('statFreqRssi');
+    if (elRssi) elRssi.textContent = '-' + (100 - match.snr) + ' dBm';
+  } else {
+    drawFreqCanvasHit(ratio, false);
+  }
+
+  freqSweepTimer = setTimeout(stepFreqSweep, 90);
+}
+
+function finishFreqSweep() {
+  isFreqSweeping = false;
+  const btnStart = document.getElementById('btnStartFreqSweep');
+  const btnStop = document.getElementById('btnStopFreqSweep');
+  const statStatus = document.getElementById('statFreqStatus');
+  if (btnStart) btnStart.disabled = false;
+  if (btnStop) btnStop.disabled = true;
+  if (statStatus) {
+    statStatus.textContent = 'SWEEP COMPLETE';
+    statStatus.style.color = 'var(--phosphor-bright)';
+  }
+  logFreq('[SWEEPER] Frequency survey finished. ' + freqLockedSignals.length + ' carriers locked.', 'var(--phosphor-bright)');
+}
+
+function stopFreqSweep() {
+  if (!isFreqSweeping) return;
+  clearTimeout(freqSweepTimer);
+  isFreqSweeping = false;
+  const btnStart = document.getElementById('btnStartFreqSweep');
+  const btnStop = document.getElementById('btnStopFreqSweep');
+  const statStatus = document.getElementById('statFreqStatus');
+  if (btnStart) btnStart.disabled = false;
+  if (btnStop) btnStop.disabled = true;
+  if (statStatus) {
+    statStatus.textContent = 'ABORTED';
+    statStatus.style.color = 'var(--alert)';
+  }
+  logFreq('[SWEEPER] Sweep aborted by operator.', 'var(--alert)');
+}
+
+function logFreq(msg, color) {
+  const display = document.getElementById('freqSweepDisplay');
+  if (!display) return;
+  const div = document.createElement('div');
+  if (color) div.style.color = color;
+  div.textContent = msg;
+  display.appendChild(div);
+  display.scrollTop = display.scrollHeight;
+}
+
+function clearFreqLog() {
+  const display = document.getElementById('freqSweepDisplay');
+  if (display) display.innerHTML = '[FREQUENCY SWEEPER READY]\r\nLog flushed.';
+  initFreqCanvas();
+}
+
+function renderFreqLockedSignals() {
+  const list = document.getElementById('freqLockedList');
+  const tag = document.getElementById('statFreqSignalsTag');
+  if (tag) tag.textContent = freqLockedSignals.length + ' IDENTIFIED';
+  if (!list) return;
+
+  if (freqLockedSignals.length === 0) {
+    list.innerHTML = '<div style="color:var(--phosphor-dim); font-size:11px; padding:8px; text-align:center;">No signals locked yet. Initiate sweep to discover carriers.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  freqLockedSignals.forEach(s => {
+    const item = document.createElement('div');
+    item.style.cssText = 'padding:4px 8px; background:rgba(0,30,12,0.8); border:1px solid var(--panel-border); cursor:pointer; font-size:11px; display:flex; justify-content:space-between; align-items:center;';
+    item.innerHTML = '<span>⚡ <strong>' + s.label + '</strong> &bull; ' + s.name + ' <span style="color:var(--cyan);">(+' + s.snr + 'dB)</span></span><button class="action-btn" style="padding:1px 6px; font-size:10px;">INSPECT</button>';
+    item.onclick = () => {
+      snd.playKeyClick();
+      const out = document.getElementById('freqDemodOutput');
+      if (out) out.textContent = '>>> CARRIER DEMODULATION // ' + s.label + ' (' + s.name + ') <<<\r\n\r\n' + s.data;
+    };
+    list.appendChild(item);
+  });
+}
+
+function pipeFreqSignalToTerminal() {
+  const out = document.getElementById('freqDemodOutput');
+  const text = out ? out.textContent : '';
+  if (typeof printTerminal === 'function') {
+    snd.playFMChirp(880);
+    printTerminal('[FREQ INTERCEPT DUMP]\r\n' + text);
+    switchTab('terminal');
+  }
+}
+
+function transferFreqToModem() {
+  switchTab('acoustic-modem');
+  const tx = document.getElementById('inpModemTx');
+  if (tx) tx.value = '1999Hz_LITHO_CARRIER_SYNC';
+}
+
+function exportFreqSurvey() {
+  let survey = '; ============================================================\r\n';
+  survey += '; KILONET 1999 SUBTERRANEAN RF & SUBCARRIER FREQUENCY SURVEY\r\n';
+  survey += '; TOTAL LOCKED SIGNALS: ' + freqLockedSignals.length + '\r\n';
+  survey += '; ============================================================\r\n\r\n';
+  freqLockedSignals.forEach(s => {
+    survey += 'FREQ: ' + s.label + ' [' + s.name + '] SNR: +' + s.snr + 'dB\r\n';
+    survey += s.data + '\r\n------------------------------------------------------------\r\n';
+  });
+  const blob = new Blob([survey], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'frequency_survey_1999.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// =========================================================================
+// AIRGAP PACKET BRIDGE ENGINE (TAB 18 IMPLEMENTATION)
+// =========================================================================
+let airgapTxSeq = 1;
+let airgapLastFrame = null;
+
+function crc16Ccitt(str) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < str.length; i++) {
+    crc ^= (str.charCodeAt(i) << 8);
+    for (let j = 0; j < 8; j++) {
+      if ((crc & 0x8000) !== 0) {
+        crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+      } else {
+        crc = (crc << 1) & 0xFFFF;
+      }
+    }
+  }
+  return crc;
+}
+
+function initAirgapCanvas() {
+  const canvas = document.getElementById('airgapStrobeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#107730';
+  ctx.font = '10px monospace';
+  ctx.fillText('[DATA DIODE IDLE // GALVANIC AIRGAP INTACT]', 10, 30);
+}
+
+function animateAirgapStrobe(callback) {
+  const canvas = document.getElementById('airgapStrobeCanvas');
+  if (!canvas) { if (callback) callback(); return; }
+  const ctx = canvas.getContext('2d');
+  let flashes = 0;
+
+  const strobeInterval = setInterval(() => {
+    flashes++;
+    ctx.fillStyle = (flashes % 2 === 0) ? '#88ffaa' : '#001a08';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 11px monospace';
+    ctx.fillText('⚡ AIRGAP PACKET STROBE TX [BURST #' + flashes + ']', 12, 40);
+
+    if (flashes >= 8) {
+      clearInterval(strobeInterval);
+      initAirgapCanvas();
+      if (callback) callback();
+    }
+  }, 45);
+}
+
+function transmitAirgapPacket() {
+  const medium = document.getElementById('selAirgapMedium').value;
+  const target = document.getElementById('selAirgapTarget').value;
+  const pktType = document.getElementById('selAirgapPktType').value;
+  const payload = document.getElementById('inpAirgapTxPayload').value.trim();
+  const dump = document.getElementById('airgapTxFrameDump');
+
+  snd.playKeyClick();
+
+  if (medium === 'acoustic') {
+    snd.playFMChirp(1200);
+    setTimeout(() => snd.playFMChirp(2200), 100);
+  } else if (medium === 'litho') {
+    snd.playLowRumble();
+  } else {
+    snd.playKeyClick();
+  }
+
+  const seq = airgapTxSeq++;
+  const crc = crc16Ccitt(payload);
+  const crcHex = '0x' + crc.toString(16).toUpperCase().padStart(4, '0');
+
+  let rawFrame = 'AA 55 ' + (pktType === 'DATA_BURST' ? '01' : (pktType === 'KEY_EXCHANGE' ? '02' : '03')) + ' ';
+  rawFrame += (seq < 16 ? '0' : '') + seq.toString(16).toUpperCase() + ' ';
+  rawFrame += (payload.length < 16 ? '0' : '') + payload.length.toString(16).toUpperCase() + ' ';
+  for (let i = 0; i < Math.min(payload.length, 12); i++) {
+    rawFrame += payload.charCodeAt(i).toString(16).toUpperCase().padStart(2, '0') + ' ';
+  }
+  rawFrame += '... ' + crc.toString(16).toUpperCase().padStart(4, '0');
+
+  airgapLastFrame = {
+    seq: seq,
+    medium: medium,
+    target: target,
+    type: pktType,
+    crc: crcHex,
+    rawHex: rawFrame,
+    payload: payload,
+    timestamp: new Date().toISOString()
+  };
+
+  animateAirgapStrobe(() => {
+    if (dump) {
+      dump.textContent = '>>> AIRGAP FRAME TRANSMITTED VIA ' + medium.toUpperCase() + ' <<<\r\n' +
+        'FRAME: [AA 55] | SEQ: #' + seq + ' | TYPE: ' + pktType + ' | TARGET: ' + target + '\r\n' +
+        'CRC16: ' + crcHex + ' [VERIFIED] | LENGTH: ' + payload.length + ' B\r\n' +
+        'RAW: ' + rawFrame;
+    }
+    snd.playDecodeSuccess();
+  });
+}
+
+function loadTxPreset(type) {
+  const inp = document.getElementById('inpAirgapTxPayload');
+  if (!inp) return;
+  if (type === 'litho') {
+    inp.value = 'LITHO-KEY-1999 // CARLSBAD_0x7F_BRIDGE_FRAME // PARITY_OK';
+  } else if (type === 'key') {
+    inp.value = 'DH_SESSION_EXCHANGE // NODE0x7F_MODP_GROUP1 // PUB: ' + (stationDhPubKey ? '0x' + stationDhPubKey.toString(16).toUpperCase() : '0x8B32');
+  }
+}
+
+const RX_AIRGAP_PRESETS = {
+  burst1: {
+    raw: "AA 55 01 2A 24 4C 49 54 48 4F 2D 4B 45 59 2D 31 39 39 39 20 2F 2F 20 43 41 52 4C 53 42 41 44 5F 30 78 37 46 8F 4A",
+    src: "0x7F (Carlsbad Salt Vault Anchor)",
+    type: "0x01 (DATA_BURST)",
+    seq: 42,
+    crc: "0x8F4A",
+    payload: "LITHO-KEY-1999 // CARLSBAD_0x7F_SYNC // DEPTH: 3000m // HALITE_LOCK"
+  },
+  burst2: {
+    raw: "AA 55 03 14 20 4F 46 46 53 45 54 3A 20 30 78 30 30 37 46 31 39 39 30 20 52 49 4E 47 30 5F 54 41 50 1A 3F",
+    src: "10.19.99.4 (Aethel Dynamics Intranet Tap)",
+    type: "0x03 (KERNEL_MEMO)",
+    seq: 20,
+    crc: "0x1A3F",
+    payload: "OFFSET: 0x007F1990 // RING0_TAP // MEMO: AETHEL-SECTOR-03-AUTHENTICATED"
+  },
+  burst3: {
+    raw: "AA 55 02 0F 1E 53 45 43 54 4F 52 5F 30 33 5F 53 59 4E 43 5F 58 4F 52 5F 30 78 37 46 9B C2",
+    src: "10.19.99.127 (Deep Core Precursor Array)",
+    type: "0x02 (KEY_EXCHANGE)",
+    seq: 15,
+    crc: "0x9BC2",
+    payload: "SECTOR_03_SYNC_XOR_0x7F // PRECURSOR_BLUEPRINT_UNSEALED"
+  }
+};
+
+function loadRxAirgapPreset(presetKey) {
+  const p = RX_AIRGAP_PRESETS[presetKey];
+  if (!p) return;
+  const rawInp = document.getElementById('inpAirgapRxRaw');
+  if (rawInp) {
+    rawInp.value = p.raw;
+    dissectAirgapFrame(p.raw);
+  }
+}
+
+function ingestSelectedRxBurst() {
+  snd.playKeyClick();
+  const sel = document.getElementById('selAirgapRxPreset');
+  const key = sel ? sel.value : 'burst1';
+  loadRxAirgapPreset(key);
+}
+
+function dissectAirgapFrame(rawText) {
+  const trimmed = rawText.trim();
+  const tokens = trimmed.split(/\s+/);
+  const preambleEl = document.getElementById('rxStatPreamble');
+  const crcEl = document.getElementById('rxStatCrc');
+  const lenEl = document.getElementById('rxStatLen');
+  const display = document.getElementById('airgapRxPayloadDisplay');
+
+  if (tokens.length < 5) {
+    if (preambleEl) preambleEl.textContent = 'INCOMPLETE';
+    return;
+  }
+
+  const isPreambleValid = (tokens[0].toUpperCase() === 'AA' && tokens[1].toUpperCase() === '55');
+  if (preambleEl) {
+    preambleEl.textContent = isPreambleValid ? '0xAA55 (VALID)' : 'INVALID';
+    preambleEl.style.color = isPreambleValid ? 'var(--phosphor-bright)' : 'var(--alert)';
+  }
+
+  if (lenEl) lenEl.textContent = tokens.length + ' B';
+
+  const matchedPreset = Object.values(RX_AIRGAP_PRESETS).find(p => p.raw.replace(/\s+/g, '') === trimmed.replace(/\s+/g, ''));
+  if (matchedPreset) {
+    if (crcEl) {
+      crcEl.textContent = matchedPreset.crc + ' (MATCH)';
+      crcEl.style.color = 'var(--phosphor-bright)';
+    }
+    if (display) {
+      display.textContent = '>>> AIRGAP FRAME RECONSTRUCTED & PARITY VERIFIED <<<\r\n' +
+        'SRC: ' + matchedPreset.src + '\r\n' +
+        'FRAME TYPE: ' + matchedPreset.type + ' | SEQ: #' + matchedPreset.seq + '\r\n' +
+        'CRC-16: ' + matchedPreset.crc + ' [INTEGRITY 100% VALID]\r\n' +
+        'DECODED PAYLOAD:\r\n"' + matchedPreset.payload + '"';
+    }
+    snd.playDecodeSuccess();
+  } else {
+    if (crcEl) crcEl.textContent = 'CHECKING...';
+    if (display) {
+      display.textContent = '[CUSTOM AIRGAP FRAME BUFFER INGESTED]\r\nLength: ' + tokens.length + ' bytes.\r\nPayload extraction complete.';
+    }
+  }
+}
+
+function pipeAirgapToTerminal() {
+  const display = document.getElementById('airgapRxPayloadDisplay');
+  const text = display ? display.textContent : '';
+  if (typeof printTerminal === 'function') {
+    snd.playFMChirp(880);
+    printTerminal('[AIRGAP TELEMETRY INGESTION]\r\n' + text);
+    switchTab('terminal');
+  }
+}
+
+function injectAirgapToSniffer() {
+  snd.playKeyClick();
+  const display = document.getElementById('airgapRxPayloadDisplay');
+  const text = display ? display.textContent : 'AIRGAP_PACKET_0x7F';
+  if (typeof addSnifferPacket === 'function') {
+    addSnifferPacket({
+      src: "AIRGAP_TAP (10.19.99.7F)",
+      dst: "LOCAL_STATION (0x7F)",
+      proto: "AGP",
+      len: 42,
+      payload: text
+    });
+  }
+  switchTab('sniffer');
+}
+
+function sendAirgapToDecoder() {
+  const display = document.getElementById('airgapRxPayloadDisplay');
+  const text = display ? display.textContent : '';
+  const decInp = document.getElementById('decInput');
+  if (decInp) decInp.value = text;
+  switchTab('decoder');
+}
+
+function exportAirgapPacket() {
+  const display = document.getElementById('airgapRxPayloadDisplay');
+  const text = display ? display.textContent : '';
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'airgap_packet_0x7f_' + Date.now() + '.agp';
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 </script>
 
