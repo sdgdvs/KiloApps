@@ -1489,6 +1489,7 @@
           <tr><td><span class="kbd-key">F9</span></td><td>Quickload studio state from local storage</td></tr>
           <tr><td><span class="kbd-key">1</span> &ndash; <span class="kbd-key">5</span></td><td>Switch tabs (1: Multi-Base, 2: 64-Bit Grid, 3: IEEE-754, 4: Varint, 5: History)</td></tr>
           <tr><td><span class="kbd-key">[</span> &amp; <span class="kbd-key">]</span></td><td>Cycle previous / next tab</td></tr>
+          <tr><td><span class="kbd-key">E</span></td><td>Swap 64-bit endianness in-place</td></tr>
           <tr><td><span class="kbd-key">Alt+C</span> or <span class="kbd-key">C</span></td><td>Copy active result or history table to clipboard</td></tr>
           <tr><td><span class="kbd-key">D</span></td><td>Load 1-click sample demo presets</td></tr>
           <tr><td><span class="kbd-key">X</span> or <span class="kbd-key">Del</span></td><td>Clear active input / reset tab</td></tr>
@@ -2064,6 +2065,41 @@
     };
   });
 
+  // Endianness Mode & In-Place Swap
+  function swapEndian64InPlace() {
+    const cur = parseBigIntFromBase(elDec.value, 10) || 0n;
+    const u64 = BigInt.asUintN(64, cur);
+    let swapped = 0n;
+    for (let i = 0n; i < 8n; i++) {
+      swapped = (swapped << 8n) | ((u64 >> (i * 8n)) & 0xFFn);
+    }
+    updateBasesFromValue(swapped, null);
+    bitboardVal = swapped & 0xFFFFFFFFFFFFFFFFn;
+    renderBitboard();
+    showToast('Swapped 64-bit endianness in-place');
+  }
+
+  function setEndianMode(mode) {
+    endianMode = mode === 'BE' ? 'BE' : 'LE';
+    const label = document.getElementById('endian-mode-label');
+    if (label) label.textContent = endianMode === 'LE' ? 'Little-Endian (LE)' : 'Big-Endian (BE)';
+    const summaryLabel = document.getElementById('summary-endian-text');
+    if (summaryLabel) summaryLabel.textContent = endianMode === 'LE' ? 'LE / x86' : 'BE / Network';
+  }
+
+  const btnToggleEndian = document.getElementById('btn-toggle-endian-mode');
+  if (btnToggleEndian) {
+    btnToggleEndian.onclick = () => {
+      setEndianMode(endianMode === 'LE' ? 'BE' : 'LE');
+      showToast(`Endian mode set to ${endianMode === 'LE' ? 'Little-Endian (LE / x86)' : 'Big-Endian (BE / Network)'}`);
+    };
+  }
+
+  const btnSwapEndianNow = document.getElementById('btn-swap-endian-now');
+  if (btnSwapEndianNow) {
+    btnSwapEndianNow.onclick = swapEndian64InPlace;
+  }
+
   // Endianness Swap Action Buttons
   const btnApplyE16 = document.getElementById('btn-apply-endian-16');
   if (btnApplyE16) {
@@ -2094,18 +2130,7 @@
 
   const btnApplyE64 = document.getElementById('btn-apply-endian-64');
   if (btnApplyE64) {
-    btnApplyE64.onclick = () => {
-      const cur = parseBigIntFromBase(elDec.value, 10) || 0n;
-      const u64 = BigInt.asUintN(64, cur);
-      let swapped = 0n;
-      for (let i = 0n; i < 8n; i++) {
-        swapped = (swapped << 8n) | ((u64 >> (i * 8n)) & 0xFFn);
-      }
-      updateBasesFromValue(swapped, null);
-      bitboardVal = swapped & 0xFFFFFFFFFFFFFFFFn;
-      renderBitboard();
-      showToast('Applied 64-bit swapped endian value');
-    };
+    btnApplyE64.onclick = swapEndian64InPlace;
   }
 
   elBin.addEventListener('input', (e) => handleBaseInput(e, 2));
@@ -2171,7 +2196,10 @@
   document.querySelectorAll('.btn-copy-field').forEach(btn => {
     btn.onclick = () => {
       const target = document.getElementById(btn.dataset.target);
-      if (target) copyToClipboard(target.value, btn.dataset.label || 'value');
+      if (target) {
+        const text = target.value !== undefined ? target.value : (target.textContent || '');
+        copyToClipboard(text, btn.dataset.label || 'value');
+      }
     };
   });
 
@@ -3435,6 +3463,18 @@ KBASE_VALUE dq ${hexShort}
     };
   }
 
+  // Granular Bitwise Mask Presets
+  document.querySelectorAll('.mask-preset').forEach(btn => {
+    btn.onclick = () => {
+      const maskInput = document.getElementById('mask-val-m');
+      const shiftInput = document.getElementById('mask-val-s');
+      if (maskInput && btn.dataset.m) maskInput.value = btn.dataset.m;
+      if (shiftInput && btn.dataset.s !== undefined) shiftInput.value = btn.dataset.s;
+      runMaskOperation('apply');
+      showToast(`Loaded Mask Preset: ${btn.textContent}`);
+    };
+  });
+
   // ==========================================
   // TAB 4: EXPORT & HISTORY
   // ==========================================
@@ -3514,6 +3554,7 @@ KBASE_VALUE dq ${hexShort}
     return {
       version: 1,
       activeTab: activeIdx >= 0 ? activeIdx : 0,
+      endianMode: endianMode,
       baseDec: elDec ? elDec.value : '',
       bitboardVal: (bitboardVal & 0xFFFFFFFFFFFFFFFFn).toString(16),
       customRadix: customRange ? parseInt(customRange.value, 10) : 36,
@@ -3549,6 +3590,9 @@ KBASE_VALUE dq ${hexShort}
 
   function loadKBaseStateFromObj(state) {
     if (!state || typeof state !== 'object') return false;
+    if (state.endianMode) {
+      setEndianMode(state.endianMode);
+    }
     if (state.history && Array.isArray(state.history)) {
       historyLog.length = 0;
       state.history.forEach(item => historyLog.push(item));
@@ -3902,10 +3946,21 @@ KBASE_VALUE dq ${hexShort}
         }
         return;
       }
+      if (e.key === 'e' || e.key === 'E') {
+        e.preventDefault();
+        swapEndian64InPlace();
+        return;
+      }
       if (e.key === 'd' || e.key === 'D') {
         e.preventDefault();
-        const firstPreset = document.querySelector('.base-preset');
-        if (firstPreset) firstPreset.click();
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab) {
+          const firstPreset = activeTab.querySelector('.base-preset, .bb-preset, .fp-preset, .q-preset, .mask-preset');
+          if (firstPreset) firstPreset.click();
+        } else {
+          const firstPreset = document.querySelector('.base-preset');
+          if (firstPreset) firstPreset.click();
+        }
         return;
       }
       if (e.key === 'x' || e.key === 'X' || e.key === 'Delete') {

@@ -849,7 +849,259 @@
             return audioCtx;
         }
 
-        // Genesis YM2612 2-Operator FM Synthesizer Voice
+        // =========================================================================
+        // SEGA GENESIS YM2612 2-OPERATOR FM SYNTHESIS & SNES SPC700 STEREO DELAY ENGINE
+        // Procedural Dungeon Soundscape, 6-Channel Voice Leading & 5:3 Swing Tracker
+        // =========================================================================
+
+        // Ch1: Hollow Flute / Dungeon Lead (Algorithm 2 analog, delayed vibrato)
+        function playDungeonLead(freq, duration = 0.32, vol = 0.22, enableEcho = true) {
+            if (audioMuted || !freq) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const t = ctx.currentTime;
+            try {
+                const op2 = ctx.createOscillator();
+                const op2Gain = ctx.createGain();
+                op2.type = 'sine';
+                op2.frequency.setValueAtTime(freq * 1.414, t); // Reedy flute / hollow harmonic ratio
+                const modDev = freq * 1.4;
+                op2Gain.gain.setValueAtTime(modDev, t);
+                op2Gain.gain.exponentialRampToValueAtTime(Math.max(0.1, freq * 0.12), t + duration * 0.7);
+                op2.connect(op2Gain);
+
+                const op1 = ctx.createOscillator();
+                const masterGain = ctx.createGain();
+                op1.type = 'sine';
+                op1.frequency.setValueAtTime(freq, t);
+                op2Gain.connect(op1.frequency);
+
+                // Delayed expressive vibrato on sustained notes
+                if (duration > 0.22) {
+                    const vib = ctx.createOscillator();
+                    const vibGain = ctx.createGain();
+                    vib.frequency.setValueAtTime(5.5, t); // 5.5 Hz vibrato rate
+                    vibGain.gain.setValueAtTime(0, t);
+                    vibGain.gain.setValueAtTime(0, t + 0.11); // 110ms delay before onset
+                    vibGain.gain.linearRampToValueAtTime(3.8, t + 0.22); // Ramp up to depth
+                    vib.connect(vibGain);
+                    vibGain.connect(op1.frequency);
+                    vib.start(t);
+                    vib.stop(t + duration);
+                }
+
+                masterGain.gain.setValueAtTime(0.001, t);
+                masterGain.gain.linearRampToValueAtTime(vol, t + 0.02); // 20ms gentle flute attack
+                masterGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+                op1.connect(masterGain);
+                masterGain.connect(musicGain || ctx.destination);
+                if (enableEcho && spcDelay) masterGain.connect(spcDelay);
+
+                op2.start(t); op1.start(t);
+                op2.stop(t + duration); op1.stop(t + duration);
+            } catch (e) {}
+        }
+
+        // Ch2: Counter-Melody Voice (DX7 / Rhodes E-Piano timbre, contrary motion)
+        function playCounterVoice(freq, duration = 0.28, vol = 0.18, enableEcho = true) {
+            if (audioMuted || !freq) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const t = ctx.currentTime;
+            try {
+                const op2 = ctx.createOscillator();
+                const op2Gain = ctx.createGain();
+                op2.type = 'sine';
+                op2.frequency.setValueAtTime(freq * 2.0, t); // 2:1 ratio for warm e-piano
+                op2Gain.gain.setValueAtTime(freq * 2.5, t);
+                op2Gain.gain.exponentialRampToValueAtTime(Math.max(0.1, freq * 0.15), t + 0.08); // fast decay
+                op2Gain.gain.exponentialRampToValueAtTime(0.01, t + duration);
+                op2.connect(op2Gain);
+
+                const op1 = ctx.createOscillator();
+                const masterGain = ctx.createGain();
+                op1.type = 'sine';
+                op1.frequency.setValueAtTime(freq, t);
+                op2Gain.connect(op1.frequency);
+
+                masterGain.gain.setValueAtTime(vol, t);
+                masterGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+                op1.connect(masterGain);
+                masterGain.connect(musicGain || ctx.destination);
+                if (enableEcho && spcDelay) masterGain.connect(spcDelay);
+
+                op2.start(t); op1.start(t);
+                op2.stop(t + duration); op1.stop(t + duration);
+            } catch (e) {}
+        }
+
+        // Ch3: Harmony Shell Voicings & Ambient Pads (3rd + 7th intervals only)
+        function playShellHarmony(freq, duration = 0.36, vol = 0.15, enableEcho = true) {
+            if (audioMuted || !freq) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const t = ctx.currentTime;
+            try {
+                const op2 = ctx.createOscillator();
+                const op2Gain = ctx.createGain();
+                op2.type = 'sine';
+                op2.frequency.setValueAtTime(freq * 0.5, t); // Sub-octave warmth
+                op2Gain.gain.setValueAtTime(freq * 1.2, t);
+                op2Gain.gain.exponentialRampToValueAtTime(Math.max(0.1, freq * 0.25), t + duration);
+                op2.connect(op2Gain);
+
+                const op1 = ctx.createOscillator();
+                const masterGain = ctx.createGain();
+                op1.type = 'sine';
+                op1.frequency.setValueAtTime(freq, t);
+                op2Gain.connect(op1.frequency);
+
+                masterGain.gain.setValueAtTime(0.001, t);
+                masterGain.gain.linearRampToValueAtTime(vol, t + 0.04);
+                masterGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+                op1.connect(masterGain);
+                masterGain.connect(musicGain || ctx.destination);
+                if (enableEcho && spcDelay) masterGain.connect(spcDelay);
+
+                op2.start(t); op1.start(t);
+                op2.stop(t + duration); op1.stop(t + duration);
+            } catch (e) {}
+        }
+
+        // Ch4: Melodic FM Slap / Sub-Bass (Punchy 2-op FM, strictly dry)
+        function playFMBass(freq, duration = 0.26, vol = 0.30) {
+            if (audioMuted || !freq) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const t = ctx.currentTime;
+            try {
+                const op2 = ctx.createOscillator();
+                const op2Gain = ctx.createGain();
+                op2.type = 'sine';
+                op2.frequency.setValueAtTime(freq * 2.0, t);
+                const modDev = freq * 3.2;
+                op2Gain.gain.setValueAtTime(modDev, t);
+                op2Gain.gain.exponentialRampToValueAtTime(0.1, t + 0.045); // Snappy slap transient
+                op2.connect(op2Gain);
+
+                const op1 = ctx.createOscillator();
+                const masterGain = ctx.createGain();
+                op1.type = 'triangle'; // Rich bottom end
+                op1.frequency.setValueAtTime(freq, t);
+                op2Gain.connect(op1.frequency);
+
+                masterGain.gain.setValueAtTime(vol, t);
+                masterGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+                op1.connect(masterGain);
+                // STRICTLY DRY: never connect bass to spcDelay to avoid low-end mud
+                masterGain.connect(musicGain || ctx.destination);
+
+                op2.start(t); op1.start(t);
+                op2.stop(t + duration); op1.stop(t + duration);
+            } catch (e) {}
+        }
+
+        // Ch5: FM Kick Body (Pitch sweep drop, strictly dry)
+        function playFMKick(vol = 0.30) {
+            if (audioMuted) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const t = ctx.currentTime;
+            try {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(135, t);
+                osc.frequency.exponentialRampToValueAtTime(42, t + 0.038);
+                osc.frequency.exponentialRampToValueAtTime(28, t + 0.12);
+
+                gain.gain.setValueAtTime(vol, t);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+
+                osc.connect(gain);
+                gain.connect(musicGain || ctx.destination);
+                osc.start(t);
+                osc.stop(t + 0.12);
+            } catch (e) {}
+        }
+
+        // Ch5: FM Snare / Subterranean Brush (Tonal body + noise burst)
+        function playFMSnare(vol = 0.22, filterFreq = 1200) {
+            if (audioMuted) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const t = ctx.currentTime;
+            try {
+                const op2 = ctx.createOscillator();
+                const op2Gain = ctx.createGain();
+                op2.type = 'sine';
+                op2.frequency.setValueAtTime(180 * 7.0, t);
+                op2Gain.gain.setValueAtTime(450, t);
+                op2Gain.gain.exponentialRampToValueAtTime(1, t + 0.04);
+                op2.connect(op2Gain);
+
+                const op1 = ctx.createOscillator();
+                const bodyGain = ctx.createGain();
+                op1.type = 'triangle';
+                op1.frequency.setValueAtTime(180, t);
+                op1.frequency.exponentialRampToValueAtTime(75, t + 0.07);
+                op2Gain.connect(op1.frequency);
+
+                bodyGain.gain.setValueAtTime(vol * 0.7, t);
+                bodyGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+                op1.connect(bodyGain);
+                bodyGain.connect(musicGain || ctx.destination);
+
+                op2.start(t); op1.start(t);
+                op2.stop(t + 0.08); op1.stop(t + 0.08);
+
+                playNoiseBurst(0.075, vol * 0.65, filterFreq);
+            } catch (e) {}
+        }
+
+        // Ch6: Inharmonic Metallic FM Hi-Hat (MUL ratio 11.0, swing groove)
+        function playFMHiHat(vol = 0.14, open = false) {
+            if (audioMuted) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const t = ctx.currentTime;
+            const dur = open ? 0.13 : 0.038;
+            try {
+                const op2 = ctx.createOscillator();
+                const op2Gain = ctx.createGain();
+                op2.type = 'sine';
+                op2.frequency.setValueAtTime(820 * 11.0, t);
+                op2Gain.gain.setValueAtTime(3200, t);
+                op2Gain.gain.exponentialRampToValueAtTime(1, t + dur);
+                op2.connect(op2Gain);
+
+                const op1 = ctx.createOscillator();
+                const hpf = ctx.createBiquadFilter();
+                hpf.type = 'highpass';
+                hpf.frequency.setValueAtTime(5800, t);
+
+                const gain = ctx.createGain();
+                op1.type = 'sine';
+                op1.frequency.setValueAtTime(820, t);
+                op2Gain.connect(op1.frequency);
+
+                gain.gain.setValueAtTime(vol, t);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+                op1.connect(hpf);
+                hpf.connect(gain);
+                gain.connect(musicGain || ctx.destination);
+
+                op2.start(t); op1.start(t);
+                op2.stop(t + dur); op1.stop(t + dur);
+            } catch (e) {}
+        }
+
+        // Universal Genesis YM2612 2-Operator FM Synthesizer Voice (SFX fallback)
         function playFM(carrierFreq, modRatio, modIndex, duration, vol = 0.25, type = 'sine', enableEcho = true, bus = 'sfx') {
             if (audioMuted) return;
             const ctx = initAudio();
@@ -857,7 +1109,6 @@
             const t = ctx.currentTime;
 
             try {
-                // Operator 2 (Modulator)
                 const op2 = ctx.createOscillator();
                 const op2Gain = ctx.createGain();
                 op2.type = type;
@@ -867,7 +1118,6 @@
                 op2Gain.gain.exponentialRampToValueAtTime(Math.max(0.1, modDev * 0.02), t + duration * 0.85);
                 op2.connect(op2Gain);
 
-                // Operator 1 (Carrier)
                 const op1 = ctx.createOscillator();
                 const masterGain = ctx.createGain();
                 op1.type = type;
@@ -931,13 +1181,13 @@
                     const now = Date.now();
                     if (now - lastStepSoundTime < 110) return;
                     lastStepSoundTime = now;
-                    // Muted stone/leather subterranean footstep
+                    // Subterranean stone footstep
                     playFM(65 + Math.random() * 8, 0.5, 0.8, 0.05, 0.08, 'triangle', false, 'sfx');
                     playNoiseBurst(0.04, 0.05, 450);
                 } else if (type === 'hit') {
-                    // Punchy blade strike (sharp 2-op FM transient + noise impact)
-                    playFM(175, 2.0, 3.2, 0.16, 0.30, 'sawtooth', false, 'sfx');
-                    playNoiseBurst(0.10, 0.22, 950);
+                    // Snappy blade strike transient
+                    playFM(185, 2.2, 3.4, 0.14, 0.30, 'sawtooth', false, 'sfx');
+                    playNoiseBurst(0.08, 0.24, 1100);
                 } else if (type === 'crit') {
                     // Heavy explosive critical strike stinger
                     playFM(120, 3.5, 4.5, 0.32, 0.40, 'sawtooth', true, 'sfx');
@@ -953,13 +1203,13 @@
                     playFM(85, 2.67, 3.0, 0.22, 0.35, 'sawtooth', false, 'sfx');
                     playNoiseBurst(0.14, 0.24, 400);
                 } else if (type === 'gold') {
-                    // Resonant high coin chime (G5 -> C6)
+                    // High resonant coin chime (G5 -> C6)
                     playFM(783.99, 3.5, 2.4, 0.18, 0.22, 'sine', true, 'sfx');
-                    setTimeout(() => playFM(1046.50, 3.5, 2.0, 0.28, 0.26, 'sine', true, 'sfx'), 60);
+                    setTimeout(() => playFM(1046.50, 3.5, 2.0, 0.28, 0.26, 'sine', true, 'sfx'), 55);
                 } else if (type === 'item') {
                     // Crystalline dual-tone pickup chime (E5 -> B5)
                     playFM(659.25, 2.0, 2.2, 0.25, 0.24, 'sine', true, 'sfx');
-                    setTimeout(() => playFM(987.77, 3.5, 2.5, 0.35, 0.24, 'sine', true, 'sfx'), 75);
+                    setTimeout(() => playFM(987.77, 3.5, 2.5, 0.35, 0.24, 'sine', true, 'sfx'), 70);
                 } else if (type === 'spell') {
                     // Mystical arcane FM glissando sweep with SPC700 stereo delay
                     playFM(440, 1.5, 3.2, 0.35, 0.28, 'sine', true, 'sfx');
@@ -1003,25 +1253,35 @@
         }
 
         // Procedural Modal Chiptune Music Sequencer (YM2612 2-Op + SPC700 Delay)
+        // 5:3 Rhythmic Swing-Tick Groove (~107 BPM eighth-note shuffle)
         function startMusicSequencer() {
-            if (seqTimer) clearInterval(seqTimer);
+            if (seqTimer) {
+                clearTimeout(seqTimer);
+                seqTimer = null;
+            }
             seqStep = 0;
-            seqTimer = setInterval(() => {
-                if (audioMuted || !audioCtx) return;
-                tickSequencerStep();
-            }, 280); // ~107 BPM eighth-note tracker step
+            scheduleBgmStep();
         }
 
         function stopMusicSequencer() {
             if (seqTimer) {
-                clearInterval(seqTimer);
+                clearTimeout(seqTimer);
                 seqTimer = null;
             }
         }
 
+        function scheduleBgmStep() {
+            if (audioMuted || !audioCtx) return;
+            tickSequencerStep();
+            const isEven = (seqStep % 2 === 0);
+            // 5:3 subtle swing shuffle: Even 175ms, Odd 105ms -> 280ms per beat pair
+            const nextDelay = isEven ? 175 : 105;
+            seqTimer = setTimeout(scheduleBgmStep, nextDelay);
+        }
+
         function tickSequencerStep() {
             if (document.hidden || !audioCtx) return;
-            const step = seqStep % 16;
+            const step = seqStep % 32;
             seqStep++;
 
             // Zone Patterns based on Dungeon Depth or Game State
@@ -1032,60 +1292,273 @@
             } else if (state === 2 || state === 3) {
                 return; // Dirge/Fanfare handled by stingers
             } else {
-                if (dlevel <= 3) zone = 0;      // Catacombs of Omen (D Minor)
-                else if (dlevel <= 6) zone = 1; // Sunken Crypts (E Dorian)
-                else if (dlevel <= 9) zone = 2; // Infernal Caverns (C Minor / Phrygian)
-                else zone = 3;                  // The Void Sanctuary (Ab Minor Cosmic)
+                if (dlevel <= 3) zone = 0;      // Catacombs of Omen (D Minor / D Phrygian)
+                else if (dlevel <= 6) zone = 1; // Sunken Crypts (E Dorian / Ancient Mode)
+                else if (dlevel <= 9) zone = 2; // Infernal Caverns (C Minor / Gothic March)
+                else zone = 3;                  // The Void Sanctuary (Ab Minor Astral Singularity)
             }
 
             const patterns = {
-                // Zone 0: Catacombs of Omen (D Minor Harmonic)
+                // Zone 0: Catacombs of Omen (D Minor / D Phrygian Andalusian Descent: Dm -> C -> Bb -> A7)
                 0: {
-                    bass: [73.42, 0, 73.42, 0, 87.31, 0, 73.42, 0, 58.27, 0, 58.27, 0, 55.00, 0, 65.41, 0],
-                    lead: [293.66, 0, 349.23, 0, 440.00, 0, 392.00, 0, 349.23, 0, 554.37, 0, 587.33, 440.00, 349.23, 0],
-                    bell: [0, 587.33, 0, 440.00, 0, 0, 523.25, 0, 0, 698.46, 0, 587.33, 0, 440.00, 0, 880.00]
+                    lead: [
+                        293.66, 0, 349.23, 0, 440.00, 0, 392.00, 0,
+                        349.23, 0, 329.63, 0, 293.66, 0, 0, 0,
+                        466.16, 0, 440.00, 0, 392.00, 0, 349.23, 0,
+                        311.13, 0, 277.18, 0, 293.66, 0, 0, 0
+                    ],
+                    counter: [
+                        0, 523.25, 0, 440.00, 0, 392.00, 0, 349.23,
+                        0, 261.63, 0, 293.66, 0, 329.63, 0, 349.23,
+                        0, 293.66, 0, 349.23, 0, 392.00, 0, 440.00,
+                        0, 392.00, 0, 349.23, 0, 329.63, 0, 277.18
+                    ],
+                    harmony: [
+                        349.23, 0, 0, 0, 523.25, 0, 0, 0,
+                        329.63, 0, 0, 0, 466.16, 0, 0, 0,
+                        293.66, 0, 0, 0, 440.00, 0, 0, 0,
+                        277.18, 0, 0, 0, 392.00, 0, 0, 0
+                    ],
+                    bass: [
+                        73.42, 0, 0, 0, 73.42, 0, 146.83, 0,
+                        65.41, 0, 0, 0, 65.41, 0, 130.81, 0,
+                        58.27, 0, 0, 0, 58.27, 0, 116.54, 0,
+                        55.00, 0, 0, 0, 55.00, 0, 138.59, 0
+                    ],
+                    kick: [
+                        1, 0, 0, 0, 0, 0, 0, 0,
+                        1, 0, 0, 0, 0, 0, 1, 0,
+                        1, 0, 0, 0, 0, 0, 0, 0,
+                        1, 0, 0, 0, 0, 0, 0, 0
+                    ],
+                    snare: [
+                        0, 0, 0, 0, 1, 0, 0, 0,
+                        0, 0, 0, 0, 1, 0, 0, 0,
+                        0, 0, 0, 0, 1, 0, 0, 0,
+                        0, 0, 0, 0, 1, 0, 0, 0
+                    ],
+                    hihat: [
+                        0, 1, 0, 1, 0, 1, 0, 1,
+                        0, 1, 0, 1, 0, 1, 0, 1,
+                        0, 1, 0, 1, 0, 1, 0, 1,
+                        0, 1, 0, 1, 0, 1, 0, 2
+                    ]
                 },
-                // Zone 1: Sunken Crypts (E Dorian Ancient Mode)
+                // Zone 1: Sunken Crypts (E Dorian Ancient Mode: Em7 -> D6 -> Cmaj7 -> Bm7)
                 1: {
-                    bass: [82.41, 0, 82.41, 0, 98.00, 0, 82.41, 0, 110.00, 0, 98.00, 0, 61.74, 0, 73.42, 0],
-                    lead: [329.63, 0, 392.00, 0, 493.88, 0, 554.37, 0, 587.33, 0, 493.88, 0, 392.00, 0, 329.63, 0],
-                    bell: [0, 659.25, 0, 0, 783.99, 0, 659.25, 0, 0, 987.77, 0, 783.99, 0, 659.25, 0, 587.33]
+                    lead: [
+                        329.63, 0, 392.00, 0, 493.88, 0, 554.37, 0,
+                        587.33, 0, 493.88, 0, 392.00, 0, 0, 0,
+                        523.25, 0, 493.88, 0, 392.00, 0, 329.63, 0,
+                        493.88, 0, 466.16, 0, 440.00, 0, 369.99, 0
+                    ],
+                    counter: [
+                        0, 587.33, 0, 493.88, 0, 392.00, 0, 329.63,
+                        0, 293.66, 0, 369.99, 0, 440.00, 0, 493.88,
+                        0, 329.63, 0, 392.00, 0, 493.88, 0, 523.25,
+                        0, 440.00, 0, 392.00, 0, 369.99, 0, 329.63
+                    ],
+                    harmony: [
+                        392.00, 0, 0, 0, 587.33, 0, 0, 0,
+                        369.99, 0, 0, 0, 493.88, 0, 0, 0,
+                        329.63, 0, 0, 0, 493.88, 0, 0, 0,
+                        493.88, 0, 0, 0, 440.00, 0, 0, 0
+                    ],
+                    bass: [
+                        82.41, 0, 0, 0, 82.41, 0, 164.81, 0,
+                        73.42, 0, 0, 0, 73.42, 0, 146.83, 0,
+                        65.41, 0, 0, 0, 65.41, 0, 130.81, 0,
+                        61.74, 0, 0, 0, 61.74, 0, 123.47, 0
+                    ],
+                    kick: [
+                        1, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0,
+                        1, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0
+                    ],
+                    snare: [
+                        0, 0, 0, 0, 0, 0, 0, 0,
+                        1, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0,
+                        1, 0, 0, 0, 0, 0, 0, 0
+                    ],
+                    hihat: [
+                        0, 1, 0, 1, 0, 1, 0, 1,
+                        0, 1, 0, 1, 0, 1, 0, 1,
+                        0, 1, 0, 1, 0, 1, 0, 1,
+                        0, 1, 0, 1, 0, 1, 0, 2
+                    ]
                 },
-                // Zone 2: Infernal Caverns (C Minor / Gothic March)
+                // Zone 2: Infernal Caverns (C Minor / Gothic March: Cm -> Abmaj7 -> Fm7 -> G7)
                 2: {
-                    bass: [65.41, 0, 65.41, 0, 69.30, 0, 65.41, 0, 49.00, 0, 51.91, 0, 65.41, 0, 77.78, 0],
-                    lead: [261.63, 0, 311.13, 0, 392.00, 0, 415.30, 0, 523.25, 0, 392.00, 0, 311.13, 415.30, 261.63, 0],
-                    bell: [0, 523.25, 0, 392.00, 0, 622.25, 0, 0, 0, 783.99, 0, 523.25, 0, 392.00, 0, 622.25]
+                    lead: [
+                        261.63, 0, 311.13, 0, 392.00, 0, 415.30, 0,
+                        523.25, 0, 415.30, 0, 392.00, 0, 311.13, 0,
+                        349.23, 0, 392.00, 0, 415.30, 0, 493.88, 0,
+                        523.25, 0, 493.88, 0, 392.00, 0, 261.63, 0
+                    ],
+                    counter: [
+                        0, 523.25, 0, 415.30, 0, 392.00, 0, 311.13,
+                        0, 261.63, 0, 311.13, 0, 349.23, 0, 392.00,
+                        0, 493.88, 0, 415.30, 0, 392.00, 0, 349.23,
+                        0, 392.00, 0, 349.23, 0, 311.13, 0, 293.66
+                    ],
+                    harmony: [
+                        311.13, 0, 0, 0, 466.16, 0, 0, 0,
+                        261.63, 0, 0, 0, 392.00, 0, 0, 0,
+                        415.30, 0, 0, 0, 523.25, 0, 0, 0,
+                        246.94, 0, 0, 0, 349.23, 0, 0, 0
+                    ],
+                    bass: [
+                        65.41, 0, 65.41, 0, 130.81, 0, 65.41, 0,
+                        51.91, 0, 51.91, 0, 103.83, 0, 51.91, 0,
+                        43.65, 0, 43.65, 0, 87.31, 0, 43.65, 0,
+                        49.00, 0, 49.00, 0, 98.00, 0, 123.47, 0
+                    ],
+                    kick: [
+                        1, 0, 0, 0, 1, 0, 0, 0,
+                        1, 0, 0, 0, 1, 0, 0, 0,
+                        1, 0, 0, 0, 1, 0, 0, 0,
+                        1, 0, 0, 0, 1, 0, 0, 0
+                    ],
+                    snare: [
+                        0, 0, 0, 0, 1, 0, 0, 0,
+                        0, 0, 0, 0, 1, 0, 0, 0,
+                        0, 0, 0, 0, 1, 0, 0, 0,
+                        0, 0, 0, 0, 1, 0, 0, 0
+                    ],
+                    hihat: [
+                        1, 1, 1, 1, 1, 1, 1, 1,
+                        1, 1, 1, 1, 1, 1, 1, 1,
+                        1, 1, 1, 1, 1, 1, 1, 1,
+                        1, 1, 1, 1, 1, 1, 1, 2
+                    ]
                 },
-                // Zone 3: The Void Sanctuary (Ab Minor Astral Singularity)
+                // Zone 3: The Void Sanctuary (Ab Minor Astral Singularity: Abm9 -> Gb6 -> Emaj7 -> Eb7)
                 3: {
-                    bass: [51.91, 0, 0, 51.91, 77.78, 0, 61.74, 0, 46.25, 0, 0, 46.25, 51.91, 0, 69.30, 0],
-                    lead: [415.30, 0, 493.88, 0, 622.25, 0, 659.25, 830.61, 0, 622.25, 0, 493.88, 415.30, 0, 622.25, 0],
-                    bell: [0, 830.61, 0, 622.25, 0, 0, 987.77, 0, 0, 1244.51, 0, 830.61, 0, 622.25, 0, 987.77]
+                    lead: [
+                        415.30, 0, 0, 493.88, 0, 0, 622.25, 0,
+                        587.33, 0, 0, 493.88, 0, 0, 415.30, 0,
+                        659.25, 0, 0, 622.25, 0, 0, 493.88, 0,
+                        830.61, 0, 0, 622.25, 0, 0, 415.30, 0
+                    ],
+                    counter: [
+                        0, 0, 622.25, 0, 0, 739.99, 0, 0,
+                        0, 0, 493.88, 0, 0, 587.33, 0, 0,
+                        0, 0, 493.88, 0, 0, 622.25, 0, 0,
+                        0, 0, 415.30, 0, 0, 523.25, 0, 0
+                    ],
+                    harmony: [
+                        493.88, 0, 0, 0, 739.99, 0, 0, 0,
+                        466.16, 0, 0, 0, 622.25, 0, 0, 0,
+                        415.30, 0, 0, 0, 622.25, 0, 0, 0,
+                        392.00, 0, 0, 0, 587.33, 0, 0, 0
+                    ],
+                    bass: [
+                        51.91, 0, 0, 0, 103.83, 0, 0, 0,
+                        46.25, 0, 0, 0, 92.50, 0, 0, 0,
+                        41.20, 0, 0, 0, 82.41, 0, 0, 0,
+                        38.89, 0, 0, 0, 77.78, 0, 0, 0
+                    ],
+                    kick: [
+                        1, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0,
+                        1, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0
+                    ],
+                    snare: [
+                        0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0
+                    ],
+                    hihat: [
+                        0, 0, 0, 0, 0, 0, 0, 1,
+                        0, 0, 0, 0, 0, 0, 0, 1,
+                        0, 0, 0, 0, 0, 0, 0, 1,
+                        0, 0, 0, 0, 0, 0, 0, 2
+                    ]
                 },
-                // Zone 4: Intro / Menu Theme (A Minor Contemplative Chime)
+                // Zone 4: Intro / Menu Theme (A Minor Contemplative Chime: Am -> G -> F -> E7)
                 4: {
-                    bass: [55.00, 0, 0, 0, 65.41, 0, 0, 0, 43.65, 0, 0, 0, 49.00, 0, 0, 0],
-                    lead: [220.00, 0, 261.63, 0, 329.63, 0, 261.63, 0, 174.61, 0, 220.00, 0, 246.94, 0, 196.00, 0],
-                    bell: [0, 440.00, 0, 0, 0, 523.25, 0, 0, 0, 349.23, 0, 0, 0, 493.88, 0, 0]
+                    lead: [
+                        220.00, 0, 261.63, 0, 329.63, 0, 440.00, 0,
+                        392.00, 0, 329.63, 0, 293.66, 0, 261.63, 0,
+                        349.23, 0, 329.63, 0, 261.63, 0, 220.00, 0,
+                        246.94, 0, 329.63, 0, 415.30, 0, 220.00, 0
+                    ],
+                    counter: [
+                        0, 440.00, 0, 392.00, 0, 329.63, 0, 261.63,
+                        0, 196.00, 0, 246.94, 0, 293.66, 0, 329.63,
+                        0, 220.00, 0, 261.63, 0, 293.66, 0, 349.23,
+                        0, 329.63, 0, 293.66, 0, 246.94, 0, 207.65
+                    ],
+                    harmony: [
+                        261.63, 0, 0, 0, 392.00, 0, 0, 0,
+                        246.94, 0, 0, 0, 349.23, 0, 0, 0,
+                        220.00, 0, 0, 0, 329.63, 0, 0, 0,
+                        207.65, 0, 0, 0, 293.66, 0, 0, 0
+                    ],
+                    bass: [
+                        55.00, 0, 0, 0, 110.00, 0, 0, 0,
+                        49.00, 0, 0, 0, 98.00, 0, 0, 0,
+                        43.65, 0, 0, 0, 87.31, 0, 0, 0,
+                        41.20, 0, 0, 0, 82.41, 0, 0, 0
+                    ],
+                    kick: [
+                        1, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0,
+                        1, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0
+                    ],
+                    snare: [
+                        0, 0, 0, 0, 0, 0, 0, 0,
+                        1, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0,
+                        1, 0, 0, 0, 0, 0, 0, 0
+                    ],
+                    hihat: [
+                        0, 1, 0, 0, 0, 1, 0, 0,
+                        0, 1, 0, 0, 0, 1, 0, 0,
+                        0, 1, 0, 0, 0, 1, 0, 0,
+                        0, 1, 0, 0, 0, 1, 0, 2
+                    ]
                 }
             };
 
             const pat = patterns[zone] || patterns[0];
 
-            // 1. Voice 1: Deep FM Sub-Bass (0.5 Modulator Ratio pluck)
-            if (pat.bass && pat.bass[step]) {
-                playFM(pat.bass[step], 0.5, 2.2, 0.35, 0.30, 'triangle', false, 'music');
-            }
-
-            // 2. Voice 2: Singing FM Lead (1.5 Modulator Ratio)
+            // 1. Voice 1 (Ch1): Singing Hollow Flute / Dungeon Lead (Algorithm 2 analog, delayed vibrato)
             if (pat.lead && pat.lead[step]) {
-                playFM(pat.lead[step], 1.5, 1.8, 0.30, 0.22, 'sine', true, 'music');
+                playDungeonLead(pat.lead[step], 0.32, 0.22, true);
             }
 
-            // 3. Voice 3: Crystalline Chime (3.5 Modulator Ratio + SPC700 delay)
-            if (pat.bell && pat.bell[step]) {
-                playFM(pat.bell[step], 3.5, 2.2, 0.40, 0.16, 'sine', true, 'music');
+            // 2. Voice 2 (Ch2): Rhodes / Counter-Melody Voice (Contrary motion & call-and-response)
+            if (pat.counter && pat.counter[step]) {
+                playCounterVoice(pat.counter[step], 0.28, 0.18, true);
+            }
+
+            // 3. Voice 3 (Ch3): Harmony Shell Voicings (3rd + 7th harmonic intervals)
+            if (pat.harmony && pat.harmony[step]) {
+                playShellHarmony(pat.harmony[step], 0.38, 0.15, true);
+            }
+
+            // 4. Voice 4 (Ch4): Melodic FM Bass (Strictly Dry, tight root/octave counterpoint)
+            if (pat.bass && pat.bass[step]) {
+                playFMBass(pat.bass[step], 0.26, 0.30);
+            }
+
+            // 5. Voice 5 (Ch5): FM Percussion Kick & Snare
+            if (pat.kick && pat.kick[step]) {
+                playFMKick(pat.kick[step] * 0.30);
+            }
+            if (pat.snare && pat.snare[step]) {
+                playFMSnare(pat.snare[step] * 0.22, 1200);
+            }
+
+            // 6. Voice 6 (Ch6): Inharmonic Metallic FM Hi-Hat
+            if (pat.hihat && pat.hihat[step]) {
+                playFMHiHat(pat.hihat[step] * 0.14, pat.hihat[step] > 1);
             }
         }
 

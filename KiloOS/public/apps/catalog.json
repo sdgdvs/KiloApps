@@ -51,9 +51,9 @@
     "id": "kbase",
     "title": "KBase",
     "folder": "System",
-    "webBytes": 161174,
+    "webBytes": 163495,
     "exeBytes": 27648,
-    "budgetPercent": 16.1
+    "budgetPercent": 16.4
   },
   {
     "id": "kbbs",
@@ -587,9 +587,9 @@
     "id": "krogue",
     "title": "KRogue",
     "folder": "Games",
-    "webBytes": 324116,
+    "webBytes": 344927,
     "exeBytes": 81408,
-    "budgetPercent": 32.4
+    "budgetPercent": 34.5
   },
   {
     "id": "krss",
@@ -652,7 +652,7 @@
     "title": "KSpace",
     "folder": "Games",
     "webBytes": 205255,
-    "exeBytes": 91136,
+    "exeBytes": 91648,
     "budgetPercent": 20.5
   },
   {
