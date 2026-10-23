@@ -84,6 +84,7 @@ def main() -> int:
     parser.add_argument("--app", required=True, help="Target app name (e.g. KTrader) or kweb:// URL")
     parser.add_argument("--build-native", action="store_true", help="Force native Win32 C build if build.bat exists")
     parser.add_argument("--skip-vite", action="store_true", help="Skip Vite npm run build if KiloOS/src was not modified")
+    parser.add_argument("--no-visual", action="store_true", help="Skip the headless visual/gameplay probe (scripts/visual_probe.py)")
     args = parser.parse_args()
 
     is_kweb, html_path, native_dir, exe_path = resolve_targets(args.app)
@@ -152,6 +153,31 @@ def main() -> int:
         else:
             print(f"[WEB NODE PASS] {html_path.name} structure verified.")
 
+    # 3b. Visual & gameplay probe (screenshots, trusted-input playtest, HEAD before/after sheet)
+    visual_summary = "skipped"
+    if not args.no_visual and html_path and html_path.exists():
+        uv_bin = shutil.which("uv")
+        if not uv_bin:
+            print("[VISUAL PROBE] skipped — uv not installed.")
+        else:
+            rel = html_path.relative_to(REPO_ROOT).as_posix()
+            v_cmd = [uv_bin, "run", "-q", "scripts/visual_probe.py", "--file", rel, "--compare-head"]
+            print(f"[VISUAL PROBE] {' '.join(v_cmd[1:])}")
+            v_res = subprocess.run(v_cmd, cwd=str(REPO_ROOT), capture_output=True, text=True, encoding="utf-8", errors="replace")
+            out_lines = [ln for ln in v_res.stdout.splitlines() if ln.strip()]
+            for ln in out_lines[1:]:
+                if not ln.startswith("VISUAL_PROBE_SUMMARY"):
+                    print(f"    {ln}")
+            summ = next((ln for ln in out_lines if ln.startswith("VISUAL_PROBE_SUMMARY")), "")
+            visual_summary = summ.split(":", 1)[1].strip() if summ else f"error (exit {v_res.returncode})"
+            if v_res.returncode == 1:
+                fails = [ln.replace("❌ FAIL  ", "") for ln in out_lines if ln.startswith("❌ FAIL")]
+                errors.append("Visual probe FAIL: " + ("; ".join(fails) or visual_summary))
+            elif v_res.returncode != 0:
+                print(f"[VISUAL PROBE] tool error (non-blocking): {(v_res.stderr or v_res.stdout).strip()[-300:]}")
+            else:
+                print(f"[VISUAL {visual_summary.split(' ')[0]}] {visual_summary}")
+
     # 4. Vite build check
     if not args.skip_vite:
         npm_bin = shutil.which("npm.cmd") or shutil.which("npm") or "npm.cmd"
@@ -179,7 +205,7 @@ def main() -> int:
     native_str = f", native {native_kb} KB" if native_kb is not None else ""
     print(
         f"\n✅ VERIFY_TURN_SUMMARY: Status: PASS ✅ "
-        f"(0 errors, web {web_kb} KB{native_str} < 999 KB; startup, Vite & security_lint PASS)."
+        f"(0 errors, web {web_kb} KB{native_str} < 999 KB; startup, Vite & security_lint PASS; visual {visual_summary})."
     )
     return 0
 

@@ -34,30 +34,69 @@ function parseArgs() {
   return opts;
 }
 
-// Simple byte-level comparison of two PNG files.
-// Returns a diff ratio [0,1] where 0 = identical, 1 = completely different.
-// This is a raw byte comparison — not perceptual, but effective for detecting
-// whether anything changed at all. For perceptual analysis, use vision_audit.py.
-function compareFiles(file1, file2) {
-  const buf1 = fs.readFileSync(file1);
-  const buf2 = fs.readFileSync(file2);
-
-  // If files are identical, fast path
-  if (buf1.equals(buf2)) return 0;
-
-  // Compare byte-by-byte up to the shorter length
-  const len = Math.min(buf1.length, buf2.length);
-  let diffBytes = 0;
-
-  for (let i = 0; i < len; i++) {
-    if (buf1[i] !== buf2[i]) diffBytes++;
+// Minimal zero-dependency PNG decoder (8-bit, non-interlaced: gray/RGB/RGBA/gray+alpha/palette).
+// Chrome's Page.captureScreenshot always emits 8-bit RGB(A) non-interlaced PNGs.
+function decodePng(file) {
+  const zlib = require('zlib');
+  const buf = fs.readFileSync(file);
+  let pos = 8, width = 0, height = 0, depth = 0, ctype = 0, interlace = 0, palette = null;
+  const idat = [];
+  while (pos < buf.length) {
+    const len = buf.readUInt32BE(pos);
+    const type = buf.toString('ascii', pos + 4, pos + 8);
+    const data = buf.subarray(pos + 8, pos + 8 + len);
+    if (type === 'IHDR') {
+      width = data.readUInt32BE(0); height = data.readUInt32BE(4);
+      depth = data[8]; ctype = data[9]; interlace = data[12];
+    } else if (type === 'PLTE') palette = data;
+    else if (type === 'IDAT') idat.push(data);
+    else if (type === 'IEND') break;
+    pos += 12 + len;
   }
+  if (depth !== 8 || interlace) throw new Error(`unsupported PNG (depth ${depth}, interlace ${interlace})`);
+  const ch = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 }[ctype];
+  const raw = zlib.inflateSync(Buffer.concat(idat));
+  const stride = width * ch;
+  const px = Buffer.alloc(stride * height);
+  for (let y = 0; y < height; y++) {
+    const f = raw[y * (stride + 1)];
+    const src = y * (stride + 1) + 1, dst = y * stride;
+    for (let x = 0; x < stride; x++) {
+      const a = x >= ch ? px[dst + x - ch] : 0;
+      const b = y ? px[dst - stride + x] : 0;
+      const c = x >= ch && y ? px[dst - stride + x - ch] : 0;
+      let v = raw[src + x];
+      if (f === 1) v += a;
+      else if (f === 2) v += b;
+      else if (f === 3) v += (a + b) >> 1;
+      else if (f === 4) { const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c); v += pa <= pb && pa <= pc ? a : (pb <= pc ? b : c); }
+      px[dst + x] = v & 255;
+    }
+  }
+  // Normalise to RGB
+  const rgb = Buffer.alloc(width * height * 3);
+  for (let i = 0, j = 0; i < width * height; i++, j += 3) {
+    const o = i * ch;
+    if (ctype === 3) { const k = px[o] * 3; rgb[j] = palette[k]; rgb[j + 1] = palette[k + 1]; rgb[j + 2] = palette[k + 2]; }
+    else if (ch <= 2) { rgb[j] = rgb[j + 1] = rgb[j + 2] = px[o]; }
+    else { rgb[j] = px[o]; rgb[j + 1] = px[o + 1]; rgb[j + 2] = px[o + 2]; }
+  }
+  return { width, height, rgb };
+}
 
-  // Account for size difference
-  diffBytes += Math.abs(buf1.length - buf2.length);
-  const totalBytes = Math.max(buf1.length, buf2.length);
-
-  return diffBytes / totalBytes;
+// Perceptual-ish pixel comparison of two PNG screenshots.
+// Returns the fraction [0,1] of pixels whose max channel delta exceeds `tol` (default 24/255),
+// ignoring compression noise. Different dimensions => 1.0 (layout changed).
+function compareFiles(file1, file2, tol = 24) {
+  const b1 = fs.readFileSync(file1), b2 = fs.readFileSync(file2);
+  if (b1.equals(b2)) return 0;
+  const a = decodePng(file1), b = decodePng(file2);
+  if (a.width !== b.width || a.height !== b.height) return 1;
+  let diff = 0;
+  for (let i = 0; i < a.rgb.length; i += 3) {
+    if (Math.abs(a.rgb[i] - b.rgb[i]) > tol || Math.abs(a.rgb[i + 1] - b.rgb[i + 1]) > tol || Math.abs(a.rgb[i + 2] - b.rgb[i + 2]) > tol) diff++;
+  }
+  return diff / (a.width * a.height);
 }
 
 function updateBaselines(appFilter) {
@@ -99,10 +138,8 @@ function runDiffAnalysis(threshold) {
   let newApps = 0;
 
   console.log('=== KiloApps Baseline Screenshot Diff Report ===\n');
-  console.log(`Threshold: ${(threshold * 100).toFixed(1)}% byte-level difference`);
-  console.log('Note: This is raw byte comparison on compressed PNGs — not perceptual.');
-  console.log('      Minor changes may be flagged due to PNG compression variance.');
-  console.log('      For perceptual analysis, use the kilo-vision-audit agent skill.\n');
+  console.log(`Threshold: ${(threshold * 100).toFixed(1)}% of pixels changed (decoded RGB, per-channel tolerance 24/255)`);
+  console.log('Per-app before/after review with heatmaps: uv run scripts/visual_probe.py --app <app> --compare-head\n');
 
   for (const file of screenshots) {
     const appName = file.replace('.png', '');

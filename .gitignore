@@ -52,6 +52,8 @@ docs/gallery/screenshots/
 docs/gallery/baselines/
 docs/gallery/diff_report.json
 docs/gallery/vision_scores.json
+docs/gallery/review/
+**/.__probe_head_*
 
 # Local rules backup
 .backup-rules/

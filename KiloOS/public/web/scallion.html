@@ -1,0 +1,2100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Scallion :: America's Finest Virtual News Source (1999 Edition)</title>
+<meta name="description" content="The Scallion (1999) - America's premier satirical broadsheet on the World Wide Web. Featuring Windows 2000 on 48,000 floppies, Ask A Sysadmin agony column, Infographic Lab, and Front-Page Headline Forge.">
+<style>
+  :root {
+    --scallion-green-dark: #0f3822;
+    --scallion-green: #1b5e34;
+    --scallion-green-light: #2e7d47;
+    --scallion-green-accent: #4ade80;
+    --scallion-paper: #fcfbf7;
+    --scallion-paper-dim: #f3f0e6;
+    --scallion-paper-dark: #e8e4d3;
+    --scallion-ink: #18181b;
+    --scallion-ink-muted: #52525b;
+    --scallion-ink-faint: #71717a;
+    --scallion-border: #27272a;
+    --scallion-border-light: #d4cfbd;
+    --scallion-red: #b91c1c;
+    --scallion-yellow: #fef08a;
+    --font-serif-headline: "Playfair Display", "Times New Roman", Georgia, serif;
+    --font-serif-body: "Georgia", "Times New Roman", Garamond, serif;
+    --font-sans: "Trebuchet MS", Tahoma, Arial, sans-serif;
+    --font-mono: "Courier New", Courier, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: #262c28;
+    color: var(--scallion-ink);
+    font-family: var(--font-serif-body);
+    font-size: 14px;
+    line-height: 1.5;
+    background-image: 
+      radial-gradient(#18221b 15%, transparent 16%),
+      radial-gradient(#1e2b22 15%, transparent 16%);
+    background-size: 32px 32px;
+    background-position: 0 0, 16px 16px;
+    padding: 12px 8px;
+    min-height: 100vh;
+  }
+
+  /* Paper Container */
+  .newspaper-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: var(--scallion-paper);
+    border: 3px double var(--scallion-border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 1px rgba(0, 0, 0, 0.7);
+    padding: 16px 20px 32px;
+    position: relative;
+  }
+
+  /* Top Weather / Dow Bar */
+  .top-telemetry-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    border-bottom: 1px solid var(--scallion-border);
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+    color: var(--scallion-ink-muted);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .telemetry-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .badge-retro {
+    background: #0f3822;
+    color: #4ade80;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-weight: bold;
+    border-radius: 2px;
+  }
+  .telemetry-tools {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .btn-telemetry {
+    background: var(--scallion-paper-dim);
+    border: 1px solid var(--scallion-border-light);
+    color: var(--scallion-ink);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 7px;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  .btn-telemetry:hover {
+    background: var(--scallion-green);
+    color: #fff;
+    border-color: var(--scallion-green-dark);
+  }
+
+  /* Masthead */
+  .masthead {
+    text-align: center;
+    border-bottom: 3px double var(--scallion-border);
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+  }
+  .masthead-sub-top {
+    font-family: var(--font-serif-headline);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--scallion-ink-muted);
+    margin-bottom: 4px;
+    font-style: italic;
+  }
+  .masthead-title-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+  }
+  .masthead-logo {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+  }
+  .masthead-title {
+    font-family: var(--font-serif-headline);
+    font-size: clamp(38px, 6vw, 68px);
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    line-height: 1;
+    color: var(--scallion-green-dark);
+    text-transform: uppercase;
+    text-shadow: 1px 1px 0px rgba(0,0,0,0.15);
+  }
+  .masthead-tagline {
+    font-family: var(--font-serif-body);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--scallion-ink-muted);
+    margin-top: 4px;
+  }
+  .masthead-date-row {
+    margin-top: 10px;
+    border-top: 1px solid var(--scallion-border);
+    border-bottom: 1px solid var(--scallion-border);
+    padding: 3px 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--scallion-ink);
+  }
+
+  /* Nav Tabs */
+  .scallion-nav {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    border-bottom: 2px solid var(--scallion-border);
+    padding: 6px 0;
+    margin-bottom: 16px;
+    background: var(--scallion-paper-dim);
+  }
+  .nav-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: bold;
+    padding: 5px 12px;
+    cursor: pointer;
+    color: var(--scallion-green-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.1s ease;
+  }
+  .nav-btn:hover {
+    background: var(--scallion-paper-dark);
+    border-color: var(--scallion-border-light);
+    color: var(--scallion-green);
+  }
+  .nav-btn.active {
+    background: var(--scallion-green);
+    color: #ffffff;
+    border-color: var(--scallion-green-dark);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+  }
+
+  /* Breaking Ticker */
+  .breaking-ticker {
+    background: #0f3822;
+    color: #fff;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    margin-bottom: 16px;
+    border: 1px solid #000;
+  }
+  .ticker-label {
+    background: var(--scallion-red);
+    color: #fff;
+    font-weight: bold;
+    padding: 2px 6px;
+    margin-right: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+    animation: blinker 1.4s infinite;
+  }
+  @keyframes blinker {
+    50% { opacity: 0.4; }
+  }
+  .ticker-content {
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    width: 100%;
+  }
+  .ticker-text {
+    display: inline-block;
+    animation: marquee 24s linear infinite;
+  }
+  @keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* Section Views */
+  .section-view {
+    display: none;
+  }
+  .section-view.active {
+    display: block;
+  }
+
+  /* Front Page Grid Layout */
+  .front-page-grid {
+    display: grid;
+    grid-template-columns: 2.2fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 860px) {
+    .front-page-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Lead Article Box */
+  .lead-article {
+    border-bottom: 2px solid var(--scallion-border-light);
+    padding-bottom: 18px;
+    margin-bottom: 18px;
+  }
+  .lead-kicker {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--scallion-red);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .lead-headline {
+    font-family: var(--font-serif-headline);
+    font-size: clamp(24px, 3.2vw, 36px);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    color: var(--scallion-ink);
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .lead-headline:hover {
+    color: var(--scallion-green);
+    text-decoration: underline;
+  }
+  .lead-subhead {
+    font-family: var(--font-serif-body);
+    font-size: 16px;
+    font-style: italic;
+    color: var(--scallion-ink-muted);
+    margin-bottom: 12px;
+    line-height: 1.35;
+  }
+  .article-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--scallion-ink-faint);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .lead-body {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #27272a;
+    text-align: justify;
+  }
+  .lead-body p {
+    margin-bottom: 12px;
+    text-indent: 1.5em;
+  }
+  .lead-body p:first-of-type {
+    text-indent: 0;
+  }
+  .lead-body p:first-of-type::first-letter {
+    font-family: var(--font-serif-headline);
+    font-size: 42px;
+    float: left;
+    line-height: 0.8;
+    padding-right: 6px;
+    padding-top: 4px;
+    font-weight: 900;
+    color: var(--scallion-green-dark);
+  }
+
+  .lead-toolbar {
+    margin-top: 14px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: var(--scallion-paper-dim);
+    padding: 6px 10px;
+    border: 1px solid var(--scallion-border-light);
+  }
+
+  /* Two Column Sub-Articles */
+  .sub-articles-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    border-bottom: 2px solid var(--scallion-border-light);
+    padding-bottom: 18px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 600px) {
+    .sub-articles-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .sub-article-card {
+    background: #ffffff;
+    border: 1px solid var(--scallion-border-light);
+    padding: 12px;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .sub-article-headline {
+    font-family: var(--font-serif-headline);
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.25;
+    margin-bottom: 8px;
+    color: var(--scallion-ink);
+    cursor: pointer;
+  }
+  .sub-article-headline:hover {
+    color: var(--scallion-green);
+    text-decoration: underline;
+  }
+  .sub-article-snippet {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--scallion-ink-muted);
+    margin-bottom: 10px;
+  }
+
+  /* Sidebar Layout */
+  .sidebar-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .sidebar-box {
+    background: #ffffff;
+    border: 1px solid var(--scallion-border);
+    padding: 12px;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.08);
+  }
+  .sidebar-title {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    background: var(--scallion-green-dark);
+    color: #fff;
+    padding: 4px 8px;
+    letter-spacing: 1px;
+    margin: -12px -12px 10px -12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Y2K Doom Clock / Panic Meter */
+  .panic-meter-wrap {
+    text-align: center;
+    padding: 6px 0;
+  }
+  .panic-gauge-svg {
+    width: 100%;
+    max-height: 110px;
+  }
+  .panic-level-label {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--scallion-red);
+    margin-top: 4px;
+  }
+  .panic-desc {
+    font-size: 12px;
+    color: var(--scallion-ink-muted);
+    font-style: italic;
+    margin-top: 4px;
+  }
+
+  /* Interactive Poll Box */
+  .poll-question {
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+  .poll-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .poll-opt-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    line-height: 1.3;
+  }
+  .poll-result-bar {
+    background: var(--scallion-paper-dark);
+    height: 14px;
+    border-radius: 2px;
+    margin-top: 2px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--scallion-border-light);
+  }
+  .poll-result-fill {
+    background: var(--scallion-green);
+    height: 100%;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+  .poll-result-pct {
+    position: absolute;
+    right: 4px;
+    top: 0;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    line-height: 14px;
+    font-weight: bold;
+    color: #111;
+  }
+
+  /* Ask A Sysadmin Layout */
+  .sysadmin-view {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 800px) {
+    .sysadmin-view {
+      grid-template-columns: 1fr;
+    }
+  }
+  .terminal-box {
+    background: #0d1117;
+    border: 2px solid #30363d;
+    color: #58a6ff;
+    padding: 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 4px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+    position: relative;
+    min-height: 240px;
+  }
+  .terminal-header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #30363d;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: #8b949e;
+  }
+  .terminal-output {
+    color: #3fb950;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Infographic Lab */
+  .infographic-card {
+    background: #ffffff;
+    border: 2px solid var(--scallion-border);
+    padding: 16px;
+    margin-bottom: 18px;
+    box-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+  }
+  .infographic-title {
+    font-family: var(--font-serif-headline);
+    font-size: 22px;
+    font-weight: 900;
+    text-transform: uppercase;
+    text-align: center;
+    border-bottom: 2px solid var(--scallion-border);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    color: var(--scallion-green-dark);
+  }
+  .chart-canvas-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 0;
+  }
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Headline Forge */
+  .forge-box {
+    background: #ffffff;
+    border: 2px solid var(--scallion-border);
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  .forge-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .forge-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .forge-group label {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: var(--scallion-ink-muted);
+  }
+  .forge-select, .form-input, .form-textarea {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    padding: 6px 8px;
+    border: 1px solid var(--scallion-border-light);
+    background: var(--scallion-paper);
+    color: var(--scallion-ink);
+  }
+  .forge-preview-paper {
+    background: #fffdf5;
+    border: 1px dashed var(--scallion-border);
+    padding: 16px;
+    margin-top: 14px;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.03);
+  }
+
+  /* Buttons */
+  .btn-scallion {
+    background: var(--scallion-green);
+    color: #ffffff;
+    border: 1px solid var(--scallion-green-dark);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: bold;
+    padding: 6px 14px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 2px;
+    transition: all 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-scallion:hover {
+    background: var(--scallion-green-dark);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  .btn-secondary {
+    background: var(--scallion-paper-dark);
+    color: var(--scallion-ink);
+    border: 1px solid var(--scallion-border-light);
+  }
+  .btn-secondary:hover {
+    background: #dad5c3;
+  }
+
+  /* Full Article Modal / Reader */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.active {
+    display: flex;
+  }
+  .modal-content {
+    background: var(--scallion-paper);
+    border: 3px double var(--scallion-border);
+    max-width: 760px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    position: relative;
+  }
+  .modal-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    background: var(--scallion-red);
+    color: #fff;
+    border: none;
+    font-weight: bold;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 28px;
+    text-align: center;
+  }
+
+  /* Toast Notification */
+  .toast-notice {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #0f3822;
+    color: #ffffff;
+    border: 2px solid #4ade80;
+    padding: 10px 18px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    z-index: 2000;
+    display: none;
+    animation: fadeIn 0.2s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Footer */
+  .newspaper-footer {
+    margin-top: 28px;
+    border-top: 3px double var(--scallion-border);
+    padding-top: 14px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--scallion-ink-muted);
+    font-family: var(--font-serif-body);
+  }
+  .footer-webring-links {
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .footer-webring-links a {
+    color: var(--scallion-green);
+    text-decoration: underline;
+  }
+  .footer-webring-links a:hover {
+    color: var(--scallion-red);
+  }
+</style>
+</head>
+<body>
+
+<div class="newspaper-container">
+
+  <!-- Top Telemetry & Controls -->
+  <div class="top-telemetry-bar">
+    <div class="telemetry-item">
+      <span>WEATHER: <strong>33°F &bull; OMINOUS OVERCAST</strong></span>
+      <span>&bull;</span>
+      <span>DOW: <strong style="color:var(--scallion-green);">11,497 (+420 DOT-COM EUPHORIA)</strong></span>
+    </div>
+    <div class="telemetry-tools">
+      <span class="badge-retro">KILONET VIRTUAL EDITION</span>
+      <button class="btn-telemetry" id="btnAudioToggle" onclick="toggleAudio()" title="Toggle Web Audio SFX">🔊 SFX [ON]</button>
+      <button class="btn-telemetry" onclick="exportFrontPageVfs()" title="Save current edition text to KiloOS VFS">💾 SAVE TO VFS</button>
+      <button class="btn-telemetry" onclick="printFrontPage()" title="Print broadsheet page">🖨️ PRINT</button>
+    </div>
+  </div>
+
+  <!-- Broadsheet Masthead -->
+  <header class="masthead">
+    <div class="masthead-sub-top">"Tu Quoque, Caesar!" &bull; America's Finest Virtual News Source Since 1756</div>
+    <div class="masthead-title-wrap">
+      <!-- Embedded Retro SVG Scallion Emblem -->
+      <svg class="masthead-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="46" fill="#1b5e34" stroke="#0f3822" stroke-width="4"/>
+        <!-- Bulb -->
+        <path d="M50 18 C30 18 20 38 20 58 C20 78 35 86 50 86 C65 86 80 78 80 58 C80 38 70 18 50 18 Z" fill="#fcfbf7" stroke="#0f3822" stroke-width="2.5"/>
+        <!-- Concentric Layers -->
+        <path d="M50 26 C36 26 28 42 28 58 C28 72 38 78 50 78 C62 78 72 72 72 58 C72 42 64 26 50 26 Z" fill="#d8f3dc" stroke="#2e7d47" stroke-width="2"/>
+        <path d="M50 36 C42 36 36 46 36 58 C36 68 42 72 50 72 C58 72 64 68 64 58 C64 46 58 36 50 36 Z" fill="#95d5b2" stroke="#1b5e34" stroke-width="2"/>
+        <circle cx="50" cy="58" r="6" fill="#1b5e34"/>
+        <!-- Green Sprouts -->
+        <path d="M48 18 C48 6 36 2 34 2 C36 8 44 14 46 18 Z" fill="#4ade80" stroke="#0f3822" stroke-width="1.5"/>
+        <path d="M52 18 C52 6 64 2 66 2 C64 8 56 14 54 18 Z" fill="#4ade80" stroke="#0f3822" stroke-width="1.5"/>
+        <path d="M50 18 L50 0 L52 0 L52 18 Z" fill="#74c69d"/>
+      </svg>
+      <h1 class="masthead-title">The Scallion</h1>
+      <svg class="masthead-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="46" fill="#1b5e34" stroke="#0f3822" stroke-width="4"/>
+        <path d="M50 18 C30 18 20 38 20 58 C20 78 35 86 50 86 C65 86 80 78 80 58 C80 38 70 18 50 18 Z" fill="#fcfbf7" stroke="#0f3822" stroke-width="2.5"/>
+        <path d="M50 26 C36 26 28 42 28 58 C28 72 38 78 50 78 C62 78 72 72 72 58 C72 42 64 26 50 26 Z" fill="#d8f3dc" stroke="#2e7d47" stroke-width="2"/>
+        <path d="M50 36 C42 36 36 46 36 58 C36 68 42 72 50 72 C58 72 64 68 64 58 C64 46 58 36 50 36 Z" fill="#95d5b2" stroke="#1b5e34" stroke-width="2"/>
+        <circle cx="50" cy="58" r="6" fill="#1b5e34"/>
+        <path d="M48 18 C48 6 36 2 34 2 C36 8 44 14 46 18 Z" fill="#4ade80" stroke="#0f3822" stroke-width="1.5"/>
+        <path d="M52 18 C52 6 64 2 66 2 C64 8 56 14 54 18 Z" fill="#4ade80" stroke="#0f3822" stroke-width="1.5"/>
+        <path d="M50 18 L50 0 L52 0 L52 18 Z" fill="#74c69d"/>
+      </svg>
+    </div>
+    <div class="masthead-tagline">"Non Est Lex In Cyber-Spatio" &bull; Published Weekly in Print, Daily on KiloNet</div>
+    <div class="masthead-date-row">
+      <span>VOL. XXXV, NO. 48</span>
+      <span>WEDNESDAY, DECEMBER 29, 1999</span>
+      <span>CLEARNET NODE: kweb://scallion</span>
+      <span>PRICE: $1.50 (FREE VIA TCP/IP)</span>
+    </div>
+  </header>
+
+  <!-- Navigation Bar -->
+  <nav class="scallion-nav" role="tablist">
+    <button class="nav-btn active" onclick="switchSection('frontpage', this)">📰 Front Page</button>
+    <button class="nav-btn" onclick="switchSection('sysadmin', this)">💻 Ask A Sysadmin</button>
+    <button class="nav-btn" onclick="switchSection('infographics', this)">📊 Infographic Lab</button>
+    <button class="nav-btn" onclick="switchSection('forge', this)">✍️ Headline Forge</button>
+    <button class="nav-btn" onclick="switchSection('opinion', this)">🗳️ Polls &amp; Op-Ed</button>
+    <button class="nav-btn" onclick="switchSection('classifieds', this)">📋 Classifieds '99</button>
+  </nav>
+
+  <!-- Live Marquee Ticker -->
+  <div class="breaking-ticker">
+    <div class="ticker-label">LATE WIRE</div>
+    <div class="ticker-content">
+      <span class="ticker-text" id="tickerText">
+        Y2K BUG THREAT LEVEL ELEVATED TO "PANIC IN AISLE 4" &bull; DOT-COM STARTUP PETPANTS.COM VALUED AT $4.2 BILLION BASED ON FOOSBALL REPUTATION &bull; AREA MAN REBOOTS GATEWAY 2000 TOWER WITH KICK TO BEZEL &bull; LINUX ENTHUSIAST INFORMS CASHIER LINUX CAN COMPILE COFFEE MACHINE DRIVER &bull; AOL 5.0 INSTALL DISK FOUND EMBEDDED IN MESOZOIC SEDIMENTARY ROCK &bull; SYSADMIN DECLARES ACCOUNTING DEPT "BIOLOGICALLY INCOMPATIBLE WITH PASSWORDS"
+      </span>
+    </div>
+  </div>
+
+  <!-- SECTION 1: FRONT PAGE -->
+  <main id="section-frontpage" class="section-view active">
+    <div class="front-page-grid">
+      
+      <!-- Primary Editorial Column -->
+      <div class="primary-column">
+
+        <!-- Top Lead Story -->
+        <article class="lead-article" id="mainLeadStory">
+          <div class="lead-kicker">🚨 SPECIAL ENTERPRISE HARDWARE DISPATCH</div>
+          <h2 class="lead-headline" onclick="openArticleModal('win2000')">
+            Microsoft Announces Windows 2000 Will Be Shipped On 48,000 3.5-Inch Floppy Disks
+          </h2>
+          <div class="lead-subhead">
+            "We heard our enterprise clients who refuse to install CD-ROM drives loud and clear," confirms VP of Optical Distrust.
+          </div>
+          <div class="article-meta">
+            <span>BY TAD SCHOENFELD, SCALLION IT DESK</span>
+            <span>&bull;</span>
+            <span>REDMOND, WA &bull; DEC 29, 1999</span>
+            <span>&bull;</span>
+            <span>READ TIME: 3 MIN</span>
+          </div>
+          <div class="lead-body">
+            <p>
+              In a stunning concession to corporate IT managers who still view optical laser discs as an "untested fad that summons static electricity," Microsoft Corporation announced Wednesday that the flagship release of Windows 2000 Professional will be distributed on forty-eight thousand 1.44-megabyte high-density 3.5-inch floppy disks.
+            </p>
+            <p>
+              The physical product will ship on a standard four-foot wooden freight pallet weighing approximately eight hundred and seventy pounds. According to Microsoft distribution director Greg Vender, standard automated installation is expected to take eighty-six consecutive hours of manual disk-swapping, provided Disk #27,419 does not suffer a catastrophic Cyclic Redundancy Check (CRC) error due to airborne biscuit crumbs.
+            </p>
+            <p>
+              "We understand that enterprise sysadmins pride themselves on physical endurance," Vender explained while demonstrating the reinforced steel pry-bar required to open Box 14. "When you insert Disk 38,912, that sense of artisan craftsmanship simply cannot be replicated by a five-minute CD-ROM spin-up."
+            </p>
+          </div>
+          <div class="lead-toolbar">
+            <button class="btn-scallion" onclick="openArticleModal('win2000')">📖 Read Full Story</button>
+            <button class="btn-scallion btn-secondary" onclick="saveArticleVfs('win2000')">💾 Clip Article to VFS</button>
+            <button class="btn-scallion btn-secondary" onclick="launchInKPad('win2000')">📝 Open in KPad</button>
+          </div>
+        </article>
+
+        <!-- Sub-Articles Grid -->
+        <div class="sub-articles-grid">
+          
+          <div class="sub-article-card">
+            <div>
+              <div class="lead-kicker" style="color:var(--scallion-green);">AUDIO &amp; HARDWARE</div>
+              <h3 class="sub-article-headline" onclick="openArticleModal('soundblaster')">
+                Programmer Spends Entire Weekend Configuring SoundBlaster 16 IRQ 7 Only To Realize Speakers Were Unplugged
+              </h3>
+              <p class="sub-article-snippet">
+                Thirty-eight consecutive hours of jumper needle-nose tweezers, CONFIG.SYS edits, and DMA conflicts culminated in the discovery of a loose 1/8" stereo jack.
+              </p>
+            </div>
+            <div class="lead-toolbar" style="margin-top:8px; padding:4px;">
+              <button class="btn-scallion btn-secondary" style="font-size:10px; padding:3px 8px;" onclick="openArticleModal('soundblaster')">Read Article</button>
+              <button class="btn-scallion btn-secondary" style="font-size:10px; padding:3px 8px;" onclick="saveArticleVfs('soundblaster')">Save VFS</button>
+            </div>
+          </div>
+
+          <div class="sub-article-card">
+            <div>
+              <div class="lead-kicker" style="color:var(--scallion-green);">WALL STREET &amp; VENTURE</div>
+              <h3 class="sub-article-headline" onclick="openArticleModal('dotcom')">
+                Dot-Com Startup Valued At $4.2B Consists Entirely Of Single Flaming GIF And A Foosball Table
+              </h3>
+              <p class="sub-article-snippet">
+                PetPants.com surges 480% in opening day trading despite having no inventory, no dogs, no pants, and a revenue forecast of negative $140 million.
+              </p>
+            </div>
+            <div class="lead-toolbar" style="margin-top:8px; padding:4px;">
+              <button class="btn-scallion btn-secondary" style="font-size:10px; padding:3px 8px;" onclick="openArticleModal('dotcom')">Read Article</button>
+              <button class="btn-scallion btn-secondary" style="font-size:10px; padding:3px 8px;" onclick="saveArticleVfs('dotcom')">Save VFS</button>
+            </div>
+          </div>
+
+          <div class="sub-article-card">
+            <div>
+              <div class="lead-kicker" style="color:var(--scallion-red);">CIVIL DEFENSE &amp; Y2K</div>
+              <h3 class="sub-article-headline" onclick="openArticleModal('creamedcorn')">
+                Man Trades Entire 401(k) For 12,000 Cans Of Creamed Corn And A Compound Crossbow
+              </h3>
+              <p class="sub-article-snippet">
+                "When the bank mainframes liquidate into toxic ozone on midnight, creamed corn will be the supreme global currency," insists Duluth resident Arthur Higgins.
+              </p>
+            </div>
+            <div class="lead-toolbar" style="margin-top:8px; padding:4px;">
+              <button class="btn-scallion btn-secondary" style="font-size:10px; padding:3px 8px;" onclick="openArticleModal('creamedcorn')">Read Article</button>
+              <button class="btn-scallion btn-secondary" style="font-size:10px; padding:3px 8px;" onclick="saveArticleVfs('creamedcorn')">Save VFS</button>
+            </div>
+          </div>
+
+          <div class="sub-article-card">
+            <div>
+              <div class="lead-kicker" style="color:var(--scallion-green);">WORKPLACE SURVEILLANCE</div>
+              <h3 class="sub-article-headline" onclick="openArticleModal('solitaire')">
+                Pentium III Serial Number Tracking Confirms Employee Played 38 Hours Of Desktop Solitaire
+              </h3>
+              <p class="sub-article-snippet">
+                Corporate audit proves network engineer achieved a personal best of 4,812 cards flipped while ostensibly debugging the Oracle payroll schema.
+              </p>
+            </div>
+            <div class="lead-toolbar" style="margin-top:8px; padding:4px;">
+              <button class="btn-scallion btn-secondary" style="font-size:10px; padding:3px 8px;" onclick="openArticleModal('solitaire')">Read Article</button>
+              <button class="btn-scallion btn-secondary" style="font-size:10px; padding:3px 8px;" onclick="saveArticleVfs('solitaire')">Save VFS</button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Secondary Sidebar Column -->
+      <aside class="sidebar-column">
+
+        <!-- Y2K Panic Threat Meter -->
+        <div class="sidebar-box">
+          <div class="sidebar-title">
+            <span>Y2K MILLENNIUM THREAT METER</span>
+            <span style="font-size:10px;">DEC '99</span>
+          </div>
+          <div class="panic-meter-wrap">
+            <svg class="panic-gauge-svg" viewBox="0 0 200 110">
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e5e7eb" stroke-width="18"/>
+              <path d="M 20 100 A 80 80 0 0 1 65 35" fill="none" stroke="#22c55e" stroke-width="18"/>
+              <path d="M 65 35 A 80 80 0 0 1 135 35" fill="none" stroke="#eab308" stroke-width="18"/>
+              <path d="M 135 35 A 80 80 0 0 1 180 100" fill="none" stroke="#ef4444" stroke-width="18"/>
+              <!-- Needle -->
+              <line id="needleLine" x1="100" y1="100" x2="160" y2="45" stroke="#18181b" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="100" cy="100" r="7" fill="#18181b"/>
+            </svg>
+            <div class="panic-level-label" id="panicLevelLabel">DEFCON 1: APOCALYPTIC PANIC</div>
+            <div class="panic-desc" id="panicDesc">Recommended Action: Barricade front porch; tape foil around microwave.</div>
+            <div style="margin-top:10px; display:flex; gap:6px; justify-content:center;">
+              <button class="btn-scallion btn-secondary" style="font-size:10px;" onclick="escalatePanic()">⚡ Escalate Panic</button>
+              <button class="btn-scallion btn-secondary" style="font-size:10px;" onclick="simulateMidnightGlitch()">🕛 Test 00:00</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Poll Box -->
+        <div class="sidebar-box">
+          <div class="sidebar-title">
+            <span>SCALLION GALLUP POLL</span>
+            <span>VOX POPULI</span>
+          </div>
+          <div class="poll-question">
+            "What is your primary contingency plan when the clock strikes midnight on December 31, 1999?"
+          </div>
+          <div class="poll-options" id="pollOptionsContainer">
+            <label class="poll-opt-label">
+              <input type="radio" name="y2kPoll" value="opt1" onchange="castVote('opt1')">
+              <span>Barricade basement with 800 lbs of creamed corn and a crossbow.</span>
+            </label>
+            <label class="poll-opt-label">
+              <input type="radio" name="y2kPoll" value="opt2" onchange="castVote('opt2')">
+              <span>Convert net worth to Pokémon holographic booster packs.</span>
+            </label>
+            <label class="poll-opt-label">
+              <input type="radio" name="y2kPoll" value="opt3" onchange="castVote('opt3')">
+              <span>Blame Accounting regardless of what fails.</span>
+            </label>
+            <label class="poll-opt-label">
+              <input type="radio" name="y2kPoll" value="opt4" onchange="castVote('opt4')">
+              <span>Reboot router 14 times while screaming in Latin.</span>
+            </label>
+          </div>
+          <!-- Results (shown after voting or persistent) -->
+          <div id="pollResultsContainer" style="display:none;">
+            <div style="font-size:11px; margin-bottom:4px; font-weight:bold;">TALLY RESULTS (TOTAL VOTES: <span id="pollVoteCount">1,842</span>):</div>
+            <div style="font-size:11px;">Basement Bunker &amp; Corn:</div>
+            <div class="poll-result-bar"><div class="poll-result-fill" id="bar1"></div><span class="poll-result-pct" id="pct1">0%</span></div>
+            <div style="font-size:11px; margin-top:4px;">Pokémon Currency:</div>
+            <div class="poll-result-bar"><div class="poll-result-fill" id="bar2"></div><span class="poll-result-pct" id="pct2">0%</span></div>
+            <div style="font-size:11px; margin-top:4px;">Blame Accounting:</div>
+            <div class="poll-result-bar"><div class="poll-result-fill" id="bar3"></div><span class="poll-result-pct" id="pct3">0%</span></div>
+            <div style="font-size:11px; margin-top:4px;">Latin Router Screaming:</div>
+            <div class="poll-result-bar"><div class="poll-result-fill" id="bar4"></div><span class="poll-result-pct" id="pct4">0%</span></div>
+            <div style="margin-top:10px; text-align:right;">
+              <button class="btn-scallion btn-secondary" style="font-size:10px;" onclick="resetPoll()">Reset Vote</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Today's Tech Horoscope -->
+        <div class="sidebar-box">
+          <div class="sidebar-title">
+            <span>SCALLION CYBER-HOROSCOPE</span>
+            <span>DEC 1999</span>
+          </div>
+          <div style="display:flex; gap:8px; margin-bottom:8px;">
+            <select id="horoscopeSelect" class="forge-select" style="flex:1;" onchange="updateHoroscope(this.value)">
+              <option value="aries">♈ Aries (Mar 21 - Apr 19)</option>
+              <option value="taurus">♉ Taurus (Apr 20 - May 20)</option>
+              <option value="gemini">♊ Gemini (May 21 - Jun 20)</option>
+              <option value="cancer">♋ Cancer (Jun 21 - Jul 22)</option>
+              <option value="leo">♌ Leo (Jul 23 - Aug 22)</option>
+              <option value="virgo" selected>♍ Virgo (Aug 23 - Sep 22)</option>
+              <option value="libra">♎ Libra (Sep 23 - Oct 22)</option>
+              <option value="scorpio">♏ Scorpio (Oct 23 - Nov 21)</option>
+              <option value="sagittarius">♐ Sagittarius (Nov 22 - Dec 21)</option>
+              <option value="capricorn">♑ Capricorn (Dec 22 - Jan 19)</option>
+              <option value="aquarius">♒ Aquarius (Jan 20 - Feb 18)</option>
+              <option value="pisces">♓ Pisces (Feb 19 - Mar 20)</option>
+            </select>
+          </div>
+          <div id="horoscopeText" style="font-size:12px; font-style:italic; line-height:1.45; color:var(--scallion-ink);">
+            "Jupiter enters your PCI bus. You will spend five hours explaining to your supervisor that the CD tray is not a retractable beverage saucer."
+          </div>
+        </div>
+
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- SECTION 2: ASK A SYSADMIN -->
+  <section id="section-sysadmin" class="section-view">
+    <div style="border-bottom:2px solid var(--scallion-border); padding-bottom:8px; margin-bottom:16px;">
+      <h2 style="font-family:var(--font-serif-headline); font-size:28px; color:var(--scallion-green-dark);">
+        Ask A Sysadmin: Agony In The Server Closet
+      </h2>
+      <div style="font-style:italic; color:var(--scallion-ink-muted);">
+        With Senior UNIX Architect &amp; Bastard Operator Emeritus, <strong>Gargoyle (UID 0)</strong>. Sarcasm standard since 1984.
+      </div>
+    </div>
+
+    <div class="sysadmin-view">
+      <!-- Submission Form -->
+      <div class="sidebar-box">
+        <div class="sidebar-title">SUBMIT TICKET TO THE VOID</div>
+        <p style="font-size:12px; margin-bottom:12px; color:var(--scallion-ink-muted);">
+          Before submitting, note: If your problem was caused by turning something off and on again, Gargoyle reserves the right to re-route your cubicle's electricity into a decorative water fountain.
+        </p>
+
+        <div class="forge-group" style="margin-bottom:10px;">
+          <label>Your Name / Department:</label>
+          <input type="text" id="sysUser" class="form-input" value="Dave from Accounting" placeholder="e.g. Karen from HR">
+        </div>
+
+        <div class="forge-group" style="margin-bottom:10px;">
+          <label>Sysadmin Mood Setting:</label>
+          <select id="sysMood" class="forge-select">
+            <option value="bofh">Cynical BOFH (Cruel &amp; Vindictive)</option>
+            <option value="jolt">Sleep-Deprived Jolt Cola Psychosis</option>
+            <option value="passive">Passive-Aggressive RTFM / RFC Quoter</option>
+            <option value="apocalyptic">Apocalyptic Y2K Prophet</option>
+          </select>
+        </div>
+
+        <div class="forge-group" style="margin-bottom:12px;">
+          <label>Describe Your Technical Predicament:</label>
+          <textarea id="sysQuestion" class="form-textarea" rows="4" placeholder="e.g. My monitor won't turn on and smells like burnt almonds..."></textarea>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn-scallion" onclick="generateSysadminAdvice()">⚡ Dispatch to Sysadmin</button>
+          <button class="btn-scallion btn-secondary" onclick="presetSysadminQuestion(1)">Sample: Coffee Holder</button>
+          <button class="btn-scallion btn-secondary" onclick="presetSysadminQuestion(2)">Sample: Casio Y2K</button>
+        </div>
+      </div>
+
+      <!-- Terminal Output Display -->
+      <div>
+        <div class="terminal-box" id="sysadminTerminal">
+          <div class="terminal-header">
+            <span>TTY: /dev/pts/4 &bull; HOST: gargoyle-alpha.kilonet.internal</span>
+            <span id="terminalStatus">STATUS: IDLE</span>
+          </div>
+          <div class="terminal-output" id="sysadminOutput">
+[SYSADMIN DISPATCH TERMINAL READY]
+&gt; Type your user inquiry into the form and press 'Dispatch'.
+&gt; WARNING: Rude or trivial questions will be forwarded to /dev/null with prejudice.
+          </div>
+        </div>
+
+        <div style="margin-top:10px; display:flex; gap:8px; justify-content:flex-end;">
+          <button class="btn-scallion btn-secondary" onclick="saveSysadminVfs()">💾 Save Advice to VFS</button>
+          <button class="btn-scallion btn-secondary" onclick="clearSysadminTerminal()">Clear Terminal</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: INFOGRAPHIC LAB -->
+  <section id="section-infographics" class="section-view">
+    <div style="border-bottom:2px solid var(--scallion-border); padding-bottom:8px; margin-bottom:16px;">
+      <h2 style="font-family:var(--font-serif-headline); font-size:28px; color:var(--scallion-green-dark);">
+        The Scallion Infographic Lab (1999 Edition)
+      </h2>
+      <div style="font-style:italic; color:var(--scallion-ink-muted);">
+        Rigorous statistical analysis verified by two guys looking at a spreadsheet through squinted eyes.
+      </div>
+    </div>
+
+    <!-- Chart 1: 56k Modem Bandwidth Allocation -->
+    <div class="infographic-card">
+      <div class="infographic-title">Where Does Your 56k Dial-Up Bandwidth Actually Go?</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+        <div style="font-family:var(--font-mono); font-size:12px;">
+          CONNECTION PROFILE:
+          <select id="modemSpeedSelect" class="forge-select" onchange="renderModemChart()">
+            <option value="56">56.0 kbps (V.90 Rock Solid)</option>
+            <option value="33.6">33.6 kbps (Noisy Copper Pair)</option>
+            <option value="28.8">28.8 kbps (Mom Picked Up Kitchen Phone)</option>
+            <option value="14.4">14.4 kbps (Prehistoric Screaming Modem)</option>
+          </select>
+        </div>
+        <button class="btn-scallion btn-secondary" onclick="exportModemChartVfs()">💾 Export Chart to VFS</button>
+      </div>
+
+      <div class="chart-canvas-wrap">
+        <canvas id="modemCanvas" width="680" height="260"></canvas>
+      </div>
+    </div>
+
+    <!-- Chart 2: Y2K Bunker Caloric & Defense Allocation -->
+    <div class="infographic-card">
+      <div class="infographic-title">Bunker Survivability Matrix: Duluth Emergency Index</div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:14px;">
+        <div class="forge-group">
+          <label>Creamed Corn (Pallets): <span id="cornVal">12</span></label>
+          <input type="range" id="cornSlider" min="1" max="50" value="12" oninput="updateBunkerSim()">
+        </div>
+        <div class="forge-group">
+          <label>Crossbow Bolts: <span id="boltVal">250</span></label>
+          <input type="range" id="boltSlider" min="10" max="1000" value="250" oninput="updateBunkerSim()">
+        </div>
+        <div class="forge-group">
+          <label>Jolt Cola (Crates): <span id="joltVal">18</span></label>
+          <input type="range" id="joltSlider" min="1" max="60" value="18" oninput="updateBunkerSim()">
+        </div>
+        <div class="forge-group">
+          <label>D-Cell Batteries: <span id="battVal">120</span></label>
+          <input type="range" id="battSlider" min="20" max="500" value="120" oninput="updateBunkerSim()">
+        </div>
+      </div>
+
+      <div class="chart-canvas-wrap">
+        <canvas id="bunkerCanvas" width="680" height="240"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4: HEADLINE FORGE -->
+  <section id="section-forge" class="section-view">
+    <div style="border-bottom:2px solid var(--scallion-border); padding-bottom:8px; margin-bottom:16px;">
+      <h2 style="font-family:var(--font-serif-headline); font-size:28px; color:var(--scallion-green-dark);">
+        The Scallion Front-Page Headline &amp; Story Forge
+      </h2>
+      <div style="font-style:italic; color:var(--scallion-ink-muted);">
+        Synthesize customized late-90s satirical tabloids, preview in vintage newsprint, and export directly to KiloOS VFS or KPad!
+      </div>
+    </div>
+
+    <div class="forge-box">
+      <div class="forge-controls">
+        <div class="forge-group">
+          <label>Headline Subject:</label>
+          <select id="forgeSubject" class="forge-select" onchange="buildCustomHeadline()">
+            <option value="Area Programmer">Area Programmer</option>
+            <option value="Microsoft Corporation">Microsoft Corporation</option>
+            <option value="Local Sysadmin">Local Sysadmin</option>
+            <option value="Dot-Com Billionaire">Dot-Com Billionaire</option>
+            <option value="Doomsday Prepper">Doomsday Prepper</option>
+            <option value="Beanie Baby Speculator">Beanie Baby Speculator</option>
+            <option value="14-Year-Old AOL User">14-Year-Old AOL User</option>
+            <option value="Netscape Engineer">Netscape Engineer</option>
+          </select>
+        </div>
+
+        <div class="forge-group">
+          <label>Action / Predicate:</label>
+          <select id="forgeAction" class="forge-select" onchange="buildCustomHeadline()">
+            <option value="Accidentally Deletes">Accidentally Deletes</option>
+            <option value="Spends 72 Hours Configuring">Spends 72 Hours Configuring</option>
+            <option value="Trades Life Savings For">Trades Life Savings For</option>
+            <option value="Declares Independence From">Declares Independence From</option>
+            <option value="Claims Divine Ownership Of">Claims Divine Ownership Of</option>
+            <option value="Trapped For 4 Days Inside">Trapped For 4 Days Inside</option>
+            <option value="Files $10 Billion Lawsuit Over">Files $10 Billion Lawsuit Over</option>
+          </select>
+        </div>
+
+        <div class="forge-group">
+          <label>1999 Target / Artifact:</label>
+          <select id="forgeTarget" class="forge-select" onchange="buildCustomHeadline()">
+            <option value="SoundBlaster 16 Drivers">SoundBlaster 16 Drivers</option>
+            <option value="Single Flaming Under-Construction GIF">Single Flaming Under-Construction GIF</option>
+            <option value="Entire Accounting Department">Entire Accounting Department</option>
+            <option value="AOL 5.0 CD-ROM Bulk Shipment">AOL 5.0 CD-ROM Bulk Shipment</option>
+            <option value="Unopened Can Of Y2K Creamed Corn">Unopened Can Of Y2K Creamed Corn</option>
+            <option value="Beowulf Cluster Built From Toasters">Beowulf Cluster Built From Toasters</option>
+            <option value="Subnet 10.19.99.0 Routing Table">Subnet 10.19.99.0 Routing Table</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+        <button class="btn-scallion" onclick="randomizeForge()">🎲 Randomize Headline</button>
+        <button class="btn-scallion btn-secondary" onclick="exportCustomHeadlineVfs()">💾 Save Clipping to VFS</button>
+        <button class="btn-scallion btn-secondary" onclick="sendCustomStoryToKPad()">📝 Open in KPad</button>
+      </div>
+
+      <!-- Live Vintage Broadsheet Preview -->
+      <div class="forge-preview-paper" id="forgePreviewBox">
+        <div style="font-family:var(--font-mono); font-size:11px; color:var(--scallion-red); font-weight:bold; margin-bottom:4px;">
+          ★ EXCLUSIVE WIRE SCOOP ★
+        </div>
+        <h3 id="forgePreviewHeadline" style="font-family:var(--font-serif-headline); font-size:24px; font-weight:900; line-height:1.2; margin-bottom:8px; color:var(--scallion-ink);">
+          Area Programmer Spends 72 Hours Configuring SoundBlaster 16 Drivers
+        </h3>
+        <div id="forgePreviewDateline" style="font-family:var(--font-mono); font-size:10px; color:var(--scallion-ink-muted); margin-bottom:8px;">
+          COLUMBUS, OH &bull; DEC 29, 1999 &bull; SPECIAL DISPATCH
+        </div>
+        <div id="forgePreviewBody" style="font-size:13px; line-height:1.5; color:#27272a;">
+          In an ordeal that witnesses described as "entirely preventable," local technology worker Marcus Vance exhausted three two-liter bottles of Mountain Dew and six bags of corn chips while attempting to resolve an IRQ 5 conflict, only to discover the device was never actually connected to the motherboard bus.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 5: OPINION & POLLS -->
+  <section id="section-opinion" class="section-view">
+    <div style="border-bottom:2px solid var(--scallion-border); padding-bottom:8px; margin-bottom:16px;">
+      <h2 style="font-family:var(--font-serif-headline); font-size:28px; color:var(--scallion-green-dark);">
+        Editorial Syndicate &amp; Letters To The Editor
+      </h2>
+      <div style="font-style:italic; color:var(--scallion-ink-muted);">
+        Uncensored, unmoderated, and largely incoherent commentary from across the 1999 Information Superhighway.
+      </div>
+    </div>
+
+    <div class="front-page-grid">
+      <!-- Letters Feed -->
+      <div>
+        <div class="sidebar-box" style="margin-bottom:16px;">
+          <div class="sidebar-title">VOICE OF THE CITIZENRY</div>
+          
+          <div style="border-bottom:1px solid var(--scallion-border-light); padding-bottom:10px; margin-bottom:10px;">
+            <div style="font-weight:bold; font-size:13px;">"Re: Windows 2000 on 48,000 Floppies"</div>
+            <div style="font-size:11px; color:var(--scallion-ink-muted); margin-bottom:4px;">From: Clyde Jenkins, Tulsa OK</div>
+            <p style="font-size:12px; line-height:1.4;">
+              Sir: Finally, a computing initiative with common sense! Floppy disks build moral character in young boys. My grandson spends all day clicking hyperlinks when he could be learning the value of manual diskette insertion.
+            </p>
+          </div>
+
+          <div style="border-bottom:1px solid var(--scallion-border-light); padding-bottom:10px; margin-bottom:10px;">
+            <div style="font-weight:bold; font-size:13px;">"Why Linux Will Replace The United States Government by March"</div>
+            <div style="font-size:11px; color:var(--scallion-ink-muted); margin-bottom:4px;">From: kernel_panic_99, MIT Dorms</div>
+            <p style="font-size:12px; line-height:1.4;">
+              If Congress were compiled using gcc with -O3 optimization flags, the national debt would be reduced by 40% due to efficient memory caching. Why is the mainstream press suppressing this?
+            </p>
+          </div>
+
+          <div id="userLettersContainer"></div>
+        </div>
+      </div>
+
+      <!-- Submit Letter Box -->
+      <div class="sidebar-box">
+        <div class="sidebar-title">PEN A LETTER TO THE EDITOR</div>
+        <div class="forge-group" style="margin-bottom:8px;">
+          <label>Your Alias / Town:</label>
+          <input type="text" id="letterAuthor" class="form-input" placeholder="e.g. Concerned Taxpayer, Ohio">
+        </div>
+        <div class="forge-group" style="margin-bottom:8px;">
+          <label>Letter Subject:</label>
+          <input type="text" id="letterSubject" class="form-input" placeholder="e.g. The Shameful Decline of Netscape">
+        </div>
+        <div class="forge-group" style="margin-bottom:10px;">
+          <label>Letter Content:</label>
+          <textarea id="letterBody" class="form-textarea" rows="4" placeholder="Express your passionate 1999 outrage here..."></textarea>
+        </div>
+        <button class="btn-scallion" onclick="submitUserLetter()">📬 Post Letter</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 6: CLASSIFIEDS '99 -->
+  <section id="section-classifieds" class="section-view">
+    <div style="border-bottom:2px solid var(--scallion-border); padding-bottom:8px; margin-bottom:16px;">
+      <h2 style="font-family:var(--font-serif-headline); font-size:28px; color:var(--scallion-green-dark);">
+        The Scallion Classifieds: Buy, Sell, Barter for Y2K
+      </h2>
+      <div style="font-style:italic; color:var(--scallion-ink-muted);">
+        Rates: $0.15 per word, or two cans of generic pinto beans.
+      </div>
+    </div>
+
+    <div class="sub-articles-grid">
+      <div class="sidebar-box">
+        <div class="sidebar-title">HARDWARE &amp; REAGENTS</div>
+        <div style="font-size:12px; line-height:1.5;">
+          <strong>FOR SALE: 14.4k Baud External Modem.</strong> Slightly charred from 72-hour continuous DOOM deathmatch. Screams at high pitch like wounded pterodactyl upon connect, but holds carrier lock. $12 OBO. Call Kevin at x441.
+          <hr style="margin:8px 0; border:none; border-top:1px dashed var(--scallion-border-light);">
+          <strong>BARTER: 16MB 72-Pin SIMM Memory.</strong> Will trade for two gallons of kerosene and a functional Walkman cassette player. Serious Y2K survivalists only.
+          <hr style="margin:8px 0; border:none; border-top:1px dashed var(--scallion-border-light);">
+          <strong>FREE TO GOOD HOME:</strong> 450 unopened America Online 5.0 installation CD-ROMs. Ideal for driveway repaving, bird scaring, or frisbee tournament.
+        </div>
+      </div>
+
+      <div class="sidebar-box">
+        <div class="sidebar-title">PERSONALS &amp; MISSED CONNECTIONS</div>
+        <div style="font-size:12px; line-height:1.5;">
+          <strong>SWF SEEKING SWM:</strong> You were the guy in CompUSA wearing the trenchcoat who explained the difference between AGP and PCI graphics while clutching an unboxed copy of Surreal Tournament. I was looking at mouse pads. Meet me by the demo Packard Bell.
+          <hr style="margin:8px 0; border:none; border-top:1px dashed var(--scallion-border-light);">
+          <strong>HELP WANTED: C/x86 Assembly Magician.</strong> Must be able to patch two-digit century dates inside compiled COBOL binaries without source code. Pay: $180/hour plus unlimited Mountain Dew.
+          <hr style="margin:8px 0; border:none; border-top:1px dashed var(--scallion-border-light);">
+          <strong>LOST:</strong> One ball from inside a Logitech 2-button trackball mouse. Last seen rolling down hall toward breakroom. Reward: half a turkey sandwich.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Full Story Reading Modal -->
+  <div class="modal-overlay" id="articleModal" onclick="closeArticleModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <button class="modal-close-btn" onclick="closeArticleModalDirect()">✕</button>
+      <div style="font-family:var(--font-mono); font-size:11px; color:var(--scallion-red); font-weight:bold; margin-bottom:6px;" id="modalKicker">
+        DISPATCH
+      </div>
+      <h2 id="modalTitle" style="font-family:var(--font-serif-headline); font-size:28px; line-height:1.2; font-weight:900; margin-bottom:8px; color:var(--scallion-ink);">
+        Headline Here
+      </h2>
+      <div id="modalMeta" style="font-family:var(--font-mono); font-size:10px; color:var(--scallion-ink-muted); margin-bottom:14px; text-transform:uppercase;">
+        DATELINE &bull; BY AUTHOR
+      </div>
+      <div id="modalBody" class="lead-body" style="font-size:14px; line-height:1.6;">
+        Article body text...
+      </div>
+      <div class="lead-toolbar" style="margin-top:20px;">
+        <button class="btn-scallion" onclick="saveCurrentModalVfs()">💾 Clip to KiloOS VFS</button>
+        <button class="btn-scallion btn-secondary" onclick="launchModalInKPad()">📝 Open in KPad</button>
+        <button class="btn-scallion btn-secondary" onclick="printModalArticle()">🖨️ Print Story</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div class="toast-notice" id="scallionToast">Saved to VFS</div>
+
+  <!-- Broadsheet Footer -->
+  <footer class="newspaper-footer">
+    <p>
+      &copy; 1999 The Scallion Editorial Syndicate &bull; Clearnet Virtual Destination <code>kweb://scallion</code> &bull; All Rights Reserved.
+    </p>
+    <p style="margin-top:4px;">
+      Proud Member of the KiloNet 1999 Hypermedia Consortium. Built strictly with Web 1.0 specifications under 250 KB budget.
+    </p>
+    <div class="footer-webring-links">
+      <a href="portal.html">🏠 kweb://portal</a>
+      <span>&bull;</span>
+      <a href="slashnet.html">📰 kweb://slashnet</a>
+      <span>&bull;</span>
+      <a href="cabled.html">⚡ kweb://cabled</a>
+      <span>&bull;</span>
+      <a href="trapster.html">🐱 kweb://trapster</a>
+      <span>&bull;</span>
+      <a href="webring.html">🌐 kweb://webring</a>
+      <span>&bull;</span>
+      <a href="cybercafe.html">☕ kweb://cybercafe</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+/**
+ * The Scallion: 1999 Satirical News Engine
+ * Interactive broadsheet, Ask A Sysadmin agony aunt terminal,
+ * Infographic Lab with canvas charts, Headline Forge, and VFS integration.
+ */
+
+// --- Safe Storage Helpers (per quality-standards.md) ---
+function safeGet(key, def) {
+  try {
+    const val = localStorage.getItem(key);
+    return val !== null ? JSON.parse(val) : def;
+  } catch (e) {
+    return def;
+  }
+}
+
+function safeSet(key, val) {
+  try {
+    localStorage.setItem(key, JSON.stringify(val));
+  } catch (e) {}
+}
+
+// --- Procedural Web Audio Engine ---
+let audioCtx = null;
+let soundEnabled = true;
+
+function initAudio() {
+  if (!audioCtx && (window.AudioContext || window.webkitAudioContext)) {
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioCtor();
+  }
+}
+
+function toggleAudio() {
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('btnAudioToggle');
+  if (btn) btn.textContent = soundEnabled ? '🔊 SFX [ON]' : '🔇 SFX [OFF]';
+  if (soundEnabled) playRetroSound(880, 0.06);
+}
+
+function playRetroSound(freq, duration, type) {
+  if (!soundEnabled) return;
+  try {
+    initAudio();
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch (e) {}
+}
+
+function playTeletypeSound() {
+  if (!soundEnabled) return;
+  const clicks = [1200, 1400, 950, 1100];
+  const freq = clicks[Math.floor(Math.random() * clicks.length)];
+  playRetroSound(freq, 0.03, 'square');
+}
+
+// --- Notification Toast ---
+function showToast(msg) {
+  const t = document.getElementById('scallionToast');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
+// --- VFS & KiloOS PostMessage Integration ---
+function saveToKiloVfs(vfsPath, contentStr) {
+  try {
+    window.parent.postMessage({
+      type: 'VFS_WRITE',
+      path: vfsPath,
+      data: contentStr,
+      requestId: 'vfs_' + Date.now()
+    }, '*');
+    window.parent.postMessage({
+      type: 'OS_NOTIFY',
+      title: 'The Scallion 1999',
+      message: 'Saved to VFS: ' + vfsPath
+    }, '*');
+    showToast('Saved to KiloOS VFS: ' + vfsPath);
+    playRetroSound(620, 0.08);
+  } catch (e) {
+    showToast('VFS Write Failed: ' + (e.message || e));
+  }
+}
+
+function launchKiloApp(appFile, args) {
+  try {
+    window.parent.postMessage({
+      type: 'LAUNCH_APP',
+      app: appFile,
+      args: args || {}
+    }, '*');
+    showToast('Launching ' + appFile + '...');
+    playRetroSound(740, 0.08);
+  } catch (e) {}
+}
+
+// --- Section Navigation ---
+function switchSection(secId, btnEl) {
+  playRetroSound(520, 0.04);
+  document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+  const target = document.getElementById('section-' + secId);
+  if (target) target.classList.add('active');
+  if (btnEl) btnEl.classList.add('active');
+
+  if (secId === 'infographics') {
+    setTimeout(() => {
+      renderModemChart();
+      updateBunkerSim();
+    }, 50);
+  }
+}
+
+// --- Satirical Articles Corpus ---
+const ARTICLES = {
+  win2000: {
+    kicker: "SPECIAL ENTERPRISE HARDWARE DISPATCH",
+    title: "Microsoft Announces Windows 2000 Will Be Shipped On 48,000 3.5-Inch Floppy Disks",
+    meta: "BY TAD SCHOENFELD, SCALLION IT DESK • REDMOND, WA • DEC 29, 1999",
+    body: `<p>In a stunning concession to corporate IT managers who still view optical laser discs as an "untested fad that summons static electricity," Microsoft Corporation announced Wednesday that the flagship release of Windows 2000 Professional will be distributed on forty-eight thousand 1.44-megabyte high-density 3.5-inch floppy disks.</p>
+    <p>The physical product will ship on a standard four-foot wooden freight pallet weighing approximately eight hundred and seventy pounds. According to Microsoft distribution director Greg Vender, standard automated installation is expected to take eighty-six consecutive hours of manual disk-swapping, provided Disk #27,419 does not suffer a catastrophic Cyclic Redundancy Check (CRC) error due to airborne biscuit crumbs.</p>
+    <p>"We understand that enterprise sysadmins pride themselves on physical endurance," Vender explained while demonstrating the reinforced steel pry-bar required to open Box 14. "When you insert Disk 38,912, that sense of artisan craftsmanship simply cannot be replicated by a five-minute CD-ROM spin-up."</p>
+    <p>Early beta testers reported mixed results. "My biceps have increased three inches in circumference from slapping magnetic media into the drive bay," remarked Hartford insurance sysadmin Kevin Murphy. "However, my cat knocked over the stack containing disks 14,000 through 18,200, and now the operating system thinks our primary display adapter is a 1982 daisy-wheel printer."</p>`
+  },
+  soundblaster: {
+    kicker: "AUDIO & HARDWARE INVESTIGATION",
+    title: "Programmer Spends Entire Weekend Configuring SoundBlaster 16 IRQ 7 Only To Realize Speakers Were Unplugged",
+    meta: "BY GORDON FLECK, HARDWARE BEAT • CUPERTINO, CA • DEC 29, 1999",
+    body: `<p>Bleary-eyed and surrounded by crumpled cans of Jolt Cola and discarded jumper caps, 26-year-old firmware engineer Marcus Vance collapsed onto his futon Sunday evening after thirty-eight grueling hours spent debugging his SoundBlaster 16 ASP, only to discover that the 1/8th-inch stereo patch cable was dangling harmlessly behind his oak-laminate workstation.</p>
+    <p>"I checked DMA channel 1, DMA channel 5, high-DMA 7, and recompiled the kernel twice under Linux 2.2," Vance whispered hoarsely while massaging his temples. "I even sacrificed a dead 486 DX2 processor to the SCSI gods by candlelight. Then my elbow brushed against the audio cable resting comfortably on the carpet."</p>
+    <p>Roommates confirmed that Vance spent approximately six hours arguing on Usenet newsgroup comp.sys.ibm.pc.soundcard that Creative Labs was deliberately orchestrating an international conspiracy against plug-and-play standards before noticing the green speaker jack was entirely unpopulated.</p>`
+  },
+  dotcom: {
+    kicker: "WALL STREET & VENTURE OBSURDITY",
+    title: "Dot-Com Startup Valued At $4.2B Consists Entirely Of Single Flaming GIF And A Foosball Table",
+    meta: "BY ARLO BENTON, FINANCIAL CORRESPONDENT • SILICON VALLEY, CA • DEC 29, 1999",
+    body: `<p>Wall Street analysts erupted in standing ovations Wednesday morning as PetPants.com, an internet venture with zero revenue, no customers, no manufacturing partners, and no dogs, concluded its Initial Public Offering at an astonishing $84 per share, establishing an aggregate market capitalization exceeding four billion dollars.</p>
+    <p>The company's corporate headquarters in downtown Palo Alto consists exclusively of a drafty former warehouse furnished with an imported aluminum foosball table, a tub of licorice ropes, and an unbranded Pentium 133 tower running an Apache web server that serves a solitary 4-frame animated graphic titled <em>under_construction_fire.gif</em>.</p>
+    <p>"Revenue is an antiquated twentieth-century metric that demonstrates a disturbing lack of vision," insisted 22-year-old CEO and founder Tyler Sterling. "Our business plan is to burn fifteen million dollars per quarter until the year 2014, at which point the internet will be declared mandatory by executive order."</p>`
+  },
+  creamedcorn: {
+    kicker: "CIVIL DEFENSE & APOCALYPTIC BARTER",
+    title: "Man Trades Entire 401(k) For 12,000 Cans Of Creamed Corn And A Compound Crossbow",
+    meta: "BY HAROLD PRATT, SPECIAL CORRESPONDENT • DULUTH, MN • DEC 29, 1999",
+    body: `<p>With fewer than seventy-two hours remaining before the millennium rollover, Duluth resident Arthur Higgins officially completed the structural fortification of his fruit cellar, having successfully liquidated his entire forty-year employer retirement portfolio in exchange for twelve pallets of generic creamed corn and a Barnett Commando crossbow.</p>
+    <p>"When the banking mainframes hit triple zeroes, your mutual funds won't keep you warm, and you can't eat a municipal bond certificate," Higgins declared while sharpening a steel-tipped hunting bolt. "Creamed corn has a shelf-life of four hundred years. It is carbohydrates, hydration, and a blunt defensive projectile all in one hermetically sealed tin cylinder."</p>
+    <p>Spouse Martha Higgins voiced moderate reservations. "I tried to explain to Arthur that our electric can opener will also cease functioning if the power grid collapses, but he told me real survivors open canned corn with their incisors."</p>`
+  },
+  solitaire: {
+    kicker: "WORKPLACE TELEMETRY SCANDAL",
+    title: "Pentium III Serial Number Tracking Confirms Employee Played 38 Hours Of Desktop Solitaire",
+    meta: "BY SPENCER REID, PRIVACY DESK • AUSTIN, TX • DEC 29, 1999",
+    body: `<p>Civil liberties advocates and office slackers alike expressed outrage Thursday after a routine forensic audit of Intel's controversial Processor Serial Number (PSN) telemetry revealed that corporate network admin Dave Kowalski was not, in fact, benchmarking SQL cluster throughput, but had engaged in thirty-eight consecutive hours of Windows Solitaire in Vegas scoring mode.</p>
+    <p>"The telemetry is unmistakable," confirmed senior auditor Eleanor Rigby. "Chip #0000-0672-0000-9842 was responsible for 14,200 mouse clicks on the card deck, sixty-four instances of 'Undo Move', and a single triumphant cascade of bouncing king-high decks across the SVGA monitor on Tuesday afternoon."</p>
+    <p>Kowalski defended his performance vigorously. "Solitaire is the only application on this machine that stress-tests the L2 cache without crashing the primary domain controller. If anything, the board of directors owes me a bonus for stress validation."</p>`
+  }
+};
+
+let activeModalId = 'win2000';
+
+function openArticleModal(articleId) {
+  playRetroSound(650, 0.05);
+  const data = ARTICLES[articleId] || ARTICLES.win2000;
+  activeModalId = articleId;
+
+  document.getElementById('modalKicker').textContent = data.kicker;
+  document.getElementById('modalTitle').textContent = data.title;
+  document.getElementById('modalMeta').textContent = data.meta;
+  document.getElementById('modalBody').innerHTML = data.body;
+
+  const m = document.getElementById('articleModal');
+  if (m) m.classList.add('active');
+}
+
+function closeArticleModalDirect() {
+  const m = document.getElementById('articleModal');
+  if (m) m.classList.remove('active');
+  playRetroSound(420, 0.04);
+}
+
+function closeArticleModal(e) {
+  if (e.target.id === 'articleModal') {
+    closeArticleModalDirect();
+  }
+}
+
+function saveArticleVfs(id) {
+  const data = ARTICLES[id];
+  if (!data) return;
+  const rawText = `=== THE SCALLION (1999) ===\n${data.kicker}\n${data.title}\n${data.meta}\n\n${data.body.replace(/<[^>]+>/g, '')}\n\n(c) 1999 The Scallion Editorial Syndicate`;
+  saveToKiloVfs(`/home/downloads/scallion_${id}.txt`, rawText);
+}
+
+function saveCurrentModalVfs() {
+  saveArticleVfs(activeModalId);
+}
+
+function launchInKPad(id) {
+  const data = ARTICLES[id];
+  if (!data) return;
+  const rawText = `${data.title}\n${data.meta}\n\n${data.body.replace(/<[^>]+>/g, '')}`;
+  launchKiloApp('kpad.html', { initialContent: rawText, title: data.title });
+}
+
+function launchModalInKPad() {
+  launchInKPad(activeModalId);
+}
+
+function printModalArticle() {
+  window.print();
+}
+
+function printFrontPage() {
+  window.print();
+}
+
+function exportFrontPageVfs() {
+  const text = `THE SCALLION - AMERICA'S FINEST VIRTUAL NEWS SOURCE\nWEDNESDAY, DECEMBER 29, 1999\n\nLEAD STORY: Microsoft Announces Windows 2000 Will Be Shipped On 48,000 Floppy Disks\n\n${ARTICLES.win2000.body.replace(/<[^>]+>/g, '')}\n\n---\n(c) 1999 The Scallion Editorial Syndicate\nkweb://scallion`;
+  saveToKiloVfs('/home/downloads/scallion_frontpage.txt', text);
+}
+
+// --- Y2K Panic Meter Engine ---
+let panicLevel = 3; // 1 to 4
+const PANIC_DATA = [
+  { label: "DEFCON 4: MILD DISREGARD", desc: "Action: Checking watch battery; giggling at doomsday pamphlets.", deg: 25 },
+  { label: "DEFCON 3: SUPERMARKET RUSH", desc: "Action: Stockpiling generic batteries and 2-liter Jolt Cola bottles.", deg: 70 },
+  { label: "DEFCON 2: BASEMENT FORTIFICATION", desc: "Action: Boarding windows; trading tech stocks for creamed corn.", deg: 125 },
+  { label: "DEFCON 1: APOCALYPTIC PANIC", desc: "Action: Barricading porch; wrapping foil around microwave oven.", deg: 165 }
+];
+
+function updatePanicDisplay() {
+  const d = PANIC_DATA[panicLevel];
+  const label = document.getElementById('panicLevelLabel');
+  const desc = document.getElementById('panicDesc');
+  const needle = document.getElementById('needleLine');
+  if (label) label.textContent = d.label;
+  if (desc) desc.textContent = d.desc;
+  if (needle) {
+    const rad = (180 - d.deg) * Math.PI / 180;
+    const nx = 100 + 65 * Math.cos(rad);
+    const ny = 100 - 65 * Math.sin(rad);
+    needle.setAttribute('x2', nx.toFixed(1));
+    needle.setAttribute('y2', ny.toFixed(1));
+  }
+}
+
+function escalatePanic() {
+  panicLevel = (panicLevel + 1) % 4;
+  updatePanicDisplay();
+  playRetroSound(850 + panicLevel * 150, 0.1, 'sawtooth');
+  showToast('Y2K Threat Meter Updated: ' + PANIC_DATA[panicLevel].label);
+}
+
+function simulateMidnightGlitch() {
+  playRetroSound(150, 0.4, 'sawtooth');
+  const body = document.body;
+  body.style.filter = 'invert(1) hue-rotate(180deg)';
+  setTimeout(() => {
+    body.style.filter = 'none';
+    showToast('00:00 SIMULATION: Microcode overflow averted. Clock set to 1900-01-01.');
+  }, 400);
+}
+
+// --- Scallion Poll State ---
+let pollVotes = safeGet('scallion_poll_votes', { opt1: 642, opt2: 310, opt3: 720, opt4: 170 });
+let userVoted = safeGet('scallion_user_voted', false);
+
+function renderPoll() {
+  if (userVoted) {
+    document.getElementById('pollOptionsContainer').style.display = 'none';
+    document.getElementById('pollResultsContainer').style.display = 'block';
+
+    const total = pollVotes.opt1 + pollVotes.opt2 + pollVotes.opt3 + pollVotes.opt4;
+    document.getElementById('pollVoteCount').textContent = total.toLocaleString();
+
+    const p1 = Math.round((pollVotes.opt1 / total) * 100);
+    const p2 = Math.round((pollVotes.opt2 / total) * 100);
+    const p3 = Math.round((pollVotes.opt3 / total) * 100);
+    const p4 = Math.round((pollVotes.opt4 / total) * 100);
+
+    document.getElementById('bar1').style.width = p1 + '%';
+    document.getElementById('pct1').textContent = p1 + '%';
+    document.getElementById('bar2').style.width = p2 + '%';
+    document.getElementById('pct2').textContent = p2 + '%';
+    document.getElementById('bar3').style.width = p3 + '%';
+    document.getElementById('pct3').textContent = p3 + '%';
+    document.getElementById('bar4').style.width = p4 + '%';
+    document.getElementById('pct4').textContent = p4 + '%';
+  } else {
+    document.getElementById('pollOptionsContainer').style.display = 'flex';
+    document.getElementById('pollResultsContainer').style.display = 'none';
+  }
+}
+
+function castVote(optKey) {
+  if (pollVotes[optKey] !== undefined) {
+    pollVotes[optKey]++;
+    userVoted = true;
+    safeSet('scallion_poll_votes', pollVotes);
+    safeSet('scallion_user_voted', true);
+    playRetroSound(780, 0.08);
+    showToast('Vote recorded in Scallion Gallup database.');
+    renderPoll();
+  }
+}
+
+function resetPoll() {
+  userVoted = false;
+  safeSet('scallion_user_voted', false);
+  renderPoll();
+}
+
+// --- Tech Horoscopes ---
+const HOROSCOPES = {
+  aries: "Aries: Mars dominates your IRQ 3. Beware of installing Netscape Communicator 4.7 over an existing dial-up script; a strange woman in Accounting will accuse you of sabotaging her macro.",
+  taurus: "Taurus: The bull in your Pentium tower desires a 128MB RAM upgrade. Refuse to lend your ZIP-100 drive to anyone who breathes through their mouth.",
+  gemini: "Gemini: Two distinct personalities battle for control of your autoexec.bat. One wants to play DOOM II; the other insists on learning Perl.",
+  cancer: "Cancer: Emotional sensitivity peaks during 28.8k file transfers. Do not weep when your download drops at 99%. Reconnect and pray.",
+  leo: "Leo: Your vanity will tempt you to purchase a gold-plated SCSI terminator. It will not make Surreal Tournament run faster, but your cubicle neighbors will be intimidated.",
+  virgo: "Virgo: Your meticulous nature will lead you to clean your mechanical mouse ball with rubbing alcohol. You will lose the rubber washer inside the chassis.",
+  libra: "Libra: Balance is achieved when the weight of your unread technical manuals matches the weight of your unopened Mountain Dew cans.",
+  scorpio: "Scorpio: A venomous sting awaits whoever touches the back of your server rack. Set the root password to something in Elvish.",
+  sagittarius: "Sagittarius: Your arrows of truth will fail to pierce the CEO's understanding of what an email attachment is.",
+  capricorn: "Capricorn: Hard work and discipline will earn you an extra half-hour in the computer lab before the janitor sweeps the room.",
+  aquarius: "Aquarius: You will attempt to explain the concept of an MP3 to your grandmother. She will offer you a hard butterscotch candy.",
+  pisces: "Pisces: You swim in an ocean of unrouted packets. Beware of ungrounded coaxial ethernet terminators."
+};
+
+function updateHoroscope(sign) {
+  const text = HOROSCOPES[sign] || HOROSCOPES.virgo;
+  const el = document.getElementById('horoscopeText');
+  if (el) el.textContent = `"${text}"`;
+  playRetroSound(580, 0.04);
+}
+
+// --- Ask A Sysadmin Engine ---
+let lastSysadminResponse = "";
+
+const SYSADMIN_PRESETS = {
+  1: { user: "Jennifer from Marketing", q: "Why does the little motorized coffee cup tray on the front of my Gateway tower keep retracting every time I set my mug down?", mood: "bofh" },
+  2: { user: "Walter from Compliance", q: "Can the Y2K millennial bug travel across the infrared port on my Casio digital watch and reset my microwave oven?", mood: "apocalyptic" }
+};
+
+function presetSysadminQuestion(num) {
+  const p = SYSADMIN_PRESETS[num];
+  if (!p) return;
+  document.getElementById('sysUser').value = p.user;
+  document.getElementById('sysQuestion').value = p.q;
+  document.getElementById('sysMood').value = p.mood;
+  playRetroSound(600, 0.04);
+}
+
+function generateSysadminAdvice() {
+  const user = document.getElementById('sysUser').value.trim() || "Anonymous User";
+  const question = document.getElementById('sysQuestion').value.trim();
+  const mood = document.getElementById('sysMood').value;
+  const outEl = document.getElementById('sysadminOutput');
+  const statusEl = document.getElementById('terminalStatus');
+
+  if (!question) {
+    showToast('Please type a technical predicament first!');
+    return;
+  }
+
+  statusEl.textContent = "STATUS: PARSING USER TICKET...";
+  outEl.textContent = `[INCOMING TICKET FROM: ${user}]\n[SUBJECT: User Predicament]\nProcessing question through BOFH filter...\n`;
+
+  let response = "";
+  if (mood === 'bofh') {
+    response = `Dear ${user}:
+First of all, how did you acquire my internal extension? I explicitly routed that DID to an unmonitored fax tone in 1996.
+
+Regarding your query ("${question}"):
+The problem is situated precisely between the back of your chair and the front of your spacebar. I have taken the liberty of de-authorizing your token ring adapter and converting your corporate email mailbox into a tar archive stored on a tape currently soaking in lukewarm tap water.
+
+RECOMMENDATION: Pack your personal belongings into a cardboard box and inform HR that you have decided to pursue a quiet career in organic turnip cultivation.
+
+-- Gargoyle (UID 0)`;
+  } else if (mood === 'jolt') {
+    response = `HELLO ${user} CAN YOU HEAR THE 1999HZ BUS FREQUENCY???
+I have consumed four liters of Jolt Cola and haven't slept since Thursday afternoon. The hard drive read heads are tapping out morse code messages from the Department of Transportation.
+
+To solve your issue ("${question}"):
+You must open the chassis, remove the CMOS battery, rub it vigorously against a synthetic carpet, and whisper the first sixteen lines of the x86 opcodes manual into the secondary IDE port. IF YOU SMELL OZONE, THAT MEANS IT IS WORKING.
+
+-- Gargoyle (Jolt Level: 140mg/dL)`;
+  } else if (mood === 'passive') {
+    response = `Dear ${user}:
+Per RFC 1925 (The Twelve Networking Truths), specifically Rule 2: "It is always possible to aggrandize problems by adding more layers of indirection."
+
+Had you consulted the manual page for 'common_sense(8)', section 4, paragraph B, you would have observed that your question ("${question}") is addressed in detail under the heading: "Things That Anyone Over The Age Of Six Ought To Understand."
+
+Please read RFC 821, RFC 1035, and the complete source code of sendmail 8.9 before submitting another ticket.
+
+-- Gargoyle (Systems Architect)`;
+  } else {
+    // apocalyptic
+    response = `Dear ${user}:
+Why are you worrying about "${question}" when civilization has fewer than seventy-two hours of electrical coherence remaining?
+
+At 00:00:01 on Saturday, every bank database in the Western hemisphere will simultaneously default to the reign of Charlemagne. Traffic lights will shoot sparks; automatic bread makers will turn hostile.
+
+RECOMMENDATION: Disregard your computer. Go to the supply room, requisition all the D-cell batteries and generic creamed corn, and barricade yourself under desk #4.
+
+-- Gargoyle (Millennium Defense Division)`;
+  }
+
+  lastSysadminResponse = response;
+
+  // Teletype typewriter simulation
+  let idx = 0;
+  outEl.textContent = `[TICKET #${Math.floor(Math.random()*9000)+1000} RESOLUTION]\n`;
+  const timer = setInterval(() => {
+    if (idx < response.length) {
+      outEl.textContent += response.charAt(idx);
+      if (idx % 4 === 0) playTeletypeSound();
+      idx++;
+    } else {
+      clearInterval(timer);
+      statusEl.textContent = "STATUS: RESOLVED (TICKET CLOSED)";
+      playRetroSound(740, 0.08);
+      showToast('Sysadmin advice generated.');
+    }
+  }, 10);
+}
+
+function saveSysadminVfs() {
+  if (!lastSysadminResponse) {
+    showToast('No sysadmin response generated yet!');
+    return;
+  }
+  const content = `=== THE SCALLION: ASK A SYSADMIN COLUMN ===\n\n${lastSysadminResponse}\n\n(c) 1999 The Scallion Editorial Syndicate`;
+  saveToKiloVfs('/home/downloads/sysadmin_advice.txt', content);
+}
+
+function clearSysadminTerminal() {
+  document.getElementById('sysadminOutput').textContent = "[SYSADMIN DISPATCH TERMINAL READY]\n> Awaiting user ticket input...";
+  document.getElementById('terminalStatus').textContent = "STATUS: IDLE";
+  lastSysadminResponse = "";
+  playRetroSound(400, 0.04);
+}
+
+// --- Canvas Infographics ---
+function renderModemChart() {
+  const canvas = document.getElementById('modemCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const speed = parseFloat(document.getElementById('modemSpeedSelect').value) || 56.0;
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Print border
+  ctx.strokeStyle = '#27272a';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+
+  // Data slices
+  const slices = [
+    { label: "Looping Animated GIFs", pct: 45, color: "#1b5e34" },
+    { label: "Corrupted Packets (Phone Pickup)", pct: 25, color: "#b91c1c" },
+    { label: "Punch-The-Monkey Banner Ads", pct: 18, color: "#d97706" },
+    { label: "Actual Usable HTML Data", pct: 8, color: "#2563eb" },
+    { label: "Static / Acoustic Carrier Hiss", pct: 4, color: "#4b5563" }
+  ];
+
+  // Draw Pie
+  const cx = 140;
+  const cy = 130;
+  const r = 95;
+  let startAngle = -Math.PI / 2;
+
+  slices.forEach(s => {
+    const angle = (s.pct / 100) * (Math.PI * 2);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startAngle, startAngle + angle);
+    ctx.closePath();
+    ctx.fillStyle = s.color;
+    ctx.fill();
+    ctx.strokeStyle = '#fcfbf7';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    startAngle += angle;
+  });
+
+  // Center circle cutout for vintage donut look
+  ctx.beginPath();
+  ctx.arc(cx, cy, 32, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.strokeStyle = '#27272a';
+  ctx.stroke();
+
+  ctx.fillStyle = '#18181b';
+  ctx.font = 'bold 11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(speed + 'k', cx, cy + 4);
+
+  // Legend
+  ctx.textAlign = 'left';
+  let legY = 48;
+  slices.forEach(s => {
+    ctx.fillStyle = s.color;
+    ctx.fillRect(280, legY - 10, 14, 14);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(280, legY - 10, 14, 14);
+
+    ctx.fillStyle = '#18181b';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillText(`${s.label} (${s.pct}%)`, 305, legY + 2);
+
+    // Calc kbps
+    const kbs = ((speed * s.pct) / 100).toFixed(1);
+    ctx.fillStyle = '#52525b';
+    ctx.font = '10px monospace';
+    ctx.fillText(`Allocation: ~${kbs} kbps`, 305, legY + 16);
+
+    legY += 38;
+  });
+}
+
+function exportModemChartVfs() {
+  const speed = document.getElementById('modemSpeedSelect').value;
+  const txt = `=== THE SCALLION INFOGRAPHIC: 56K BANDWIDTH ALLOCATION ===\nProfile: ${speed} kbps\n\n- Looping Animated GIFs: 45%\n- Corrupted Packets (Someone Picked Up Kitchen Phone): 25%\n- Punch-The-Monkey Banner Ads: 18%\n- Actual Usable HTML Data: 8%\n- Static & Acoustic Line Hiss: 4%\n\nConclusion: 92% of telephone infrastructure is dedicated to neon hamster animations.\n(c) 1999 The Scallion Infographic Lab`;
+  saveToKiloVfs('/home/downloads/scallion_modem_chart.txt', txt);
+}
+
+function updateBunkerSim() {
+  const corn = parseInt(document.getElementById('cornSlider').value);
+  const bolts = parseInt(document.getElementById('boltSlider').value);
+  const jolt = parseInt(document.getElementById('joltSlider').value);
+  const batt = parseInt(document.getElementById('battSlider').value);
+
+  document.getElementById('cornVal').textContent = corn;
+  document.getElementById('boltVal').textContent = bolts;
+  document.getElementById('joltVal').textContent = jolt;
+  document.getElementById('battVal').textContent = batt;
+
+  const canvas = document.getElementById('bunkerCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#27272a';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+
+  // Survival Score calculation
+  const score = Math.min(100, Math.round((corn * 1.5) + (bolts * 0.08) + (jolt * 0.8) + (batt * 0.1)));
+
+  // Bars
+  const metrics = [
+    { name: "Creamed Corn (Calories)", val: (corn / 50) * 100, color: "#eab308" },
+    { name: "Crossbow Defensibility", val: (bolts / 1000) * 100, color: "#b91c1c" },
+    { name: "Caffeine Endurance", val: (jolt / 60) * 100, color: "#2563eb" },
+    { name: "Flashlight Illumination", val: (batt / 500) * 100, color: "#16a34a" }
+  ];
+
+  ctx.fillStyle = '#18181b';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillText("BUNKER RESOURCE READINESS:", 24, 32);
+
+  let y = 60;
+  metrics.forEach(m => {
+    ctx.fillStyle = '#27272a';
+    ctx.font = '11px monospace';
+    ctx.fillText(m.name, 24, y);
+
+    // Bar bg
+    ctx.fillStyle = '#e8e4d3';
+    ctx.fillRect(24, y + 6, 400, 16);
+    ctx.strokeStyle = '#27272a';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(24, y + 6, 400, 16);
+
+    // Fill
+    const fw = (m.val / 100) * 400;
+    ctx.fillStyle = m.color;
+    ctx.fillRect(24, y + 6, fw, 16);
+
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText(Math.round(m.val) + '%', 435, y + 18);
+
+    y += 38;
+  });
+
+  // Overall Score Badge
+  ctx.fillStyle = '#0f3822';
+  ctx.fillRect(490, 50, 160, 140);
+  ctx.strokeStyle = '#4ade80';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(490, 50, 160, 140);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText("SURVIVABILITY:", 570, 75);
+
+  ctx.font = '900 38px monospace';
+  ctx.fillStyle = score > 60 ? '#4ade80' : '#f87171';
+  ctx.fillText(score + '%', 570, 120);
+
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#d8f3dc';
+  const rating = score > 75 ? "BUNKER READY" : score > 45 ? "NEEDS MORE CORN" : "DOOMED";
+  ctx.fillText(rating, 570, 150);
+  ctx.textAlign = 'left';
+}
+
+// --- Headline Forge Engine ---
+const FORGE_DATA = {
+  stories: [
+    "In an ordeal that witnesses described as entirely preventable, three local technology workers exhausted twelve bags of corn chips while attempting to resolve an IRQ 5 conflict.",
+    "Corporate executives voiced unwavering enthusiasm this morning despite an aggregate financial loss of four hundred million dollars, citing 'extremely viral click metrics'.",
+    "Spokespersons confirmed that the emergency procedures manual had been accidentally printed in Wingdings font, resulting in widespread confusion among basement survivors.",
+    "Civil liberties organizations voiced immediate alarm after discovery that telemetry gathered during Solitaire matches was being cross-referenced with employee lunch breaks."
+  ]
+};
+
+function buildCustomHeadline() {
+  const subj = document.getElementById('forgeSubject').value;
+  const act = document.getElementById('forgeAction').value;
+  const target = document.getElementById('forgeTarget').value;
+
+  const headline = `${subj} ${act} ${target}`;
+  document.getElementById('forgePreviewHeadline').textContent = headline;
+
+  const body = `${subj} generated widespread bewilderment today after taking sudden executive action to ${act.toLowerCase()} ${target}. Observers in the vicinity described the scene as 'classic late-nineties hypermedia behavior.'`;
+  document.getElementById('forgePreviewBody').textContent = body;
+  playRetroSound(700, 0.04);
+}
+
+function randomizeForge() {
+  const sList = document.getElementById('forgeSubject').options;
+  const aList = document.getElementById('forgeAction').options;
+  const tList = document.getElementById('forgeTarget').options;
+
+  document.getElementById('forgeSubject').selectedIndex = Math.floor(Math.random() * sList.length);
+  document.getElementById('forgeAction').selectedIndex = Math.floor(Math.random() * aList.length);
+  document.getElementById('forgeTarget').selectedIndex = Math.floor(Math.random() * tList.length);
+
+  buildCustomHeadline();
+  showToast('Synthesized random front-page headline.');
+}
+
+function exportCustomHeadlineVfs() {
+  const headline = document.getElementById('forgePreviewHeadline').textContent;
+  const body = document.getElementById('forgePreviewBody').textContent;
+  const txt = `=== THE SCALLION EXCLUSIVE FRONT-PAGE CLIPPING ===\n${headline}\nDATELINE: DEC 29, 1999\n\n${body}\n\n(c) 1999 The Scallion Headline Forge`;
+  saveToKiloVfs('/home/downloads/scallion_custom_scoop.txt', txt);
+}
+
+function sendCustomStoryToKPad() {
+  const headline = document.getElementById('forgePreviewHeadline').textContent;
+  const body = document.getElementById('forgePreviewBody').textContent;
+  launchKiloApp('kpad.html', {
+    title: headline,
+    initialContent: `${headline}\n${'='.repeat(headline.length)}\n\n${body}\n\n[Reported by The Scallion 1999 Wire Service]`
+  });
+}
+
+// --- Letters to Editor Engine ---
+let userLetters = safeGet('scallion_user_letters', []);
+
+function renderUserLetters() {
+  const container = document.getElementById('userLettersContainer');
+  if (!container) return;
+  container.innerHTML = '';
+  userLetters.forEach(l => {
+    const div = document.createElement('div');
+    div.style.borderBottom = '1px solid var(--scallion-border-light)';
+    div.style.paddingBottom = '10px';
+    div.style.marginBottom = '10px';
+    div.innerHTML = `
+      <div style="font-weight:bold; font-size:13px;">"${escapeHtml(l.subject)}"</div>
+      <div style="font-size:11px; color:var(--scallion-ink-muted); margin-bottom:4px;">From: ${escapeHtml(l.author)} &bull; Rec'd via KiloNet</div>
+      <p style="font-size:12px; line-height:1.4;">${escapeHtml(l.body)}</p>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function submitUserLetter() {
+  const author = document.getElementById('letterAuthor').value.trim() || "Anonymous Reader";
+  const subject = document.getElementById('letterSubject').value.trim() || "Concerning Your Latest Issue";
+  const body = document.getElementById('letterBody').value.trim();
+
+  if (!body) {
+    showToast('Please type your letter content first!');
+    return;
+  }
+
+  userLetters.unshift({ author, subject, body, date: new Date().toISOString() });
+  if (userLetters.length > 8) userLetters.pop();
+  safeSet('scallion_user_letters', userLetters);
+
+  document.getElementById('letterAuthor').value = '';
+  document.getElementById('letterSubject').value = '';
+  document.getElementById('letterBody').value = '';
+
+  renderUserLetters();
+  playRetroSound(680, 0.08);
+  showToast('Letter accepted by Scallion Editorial Syndicate.');
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// --- Initialization ---
+window.addEventListener('DOMContentLoaded', () => {
+  renderPoll();
+  renderUserLetters();
+  updatePanicDisplay();
+  buildCustomHeadline();
+});
+</script>
+</body>
+</html>
