@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ current_targets:
   kilo_graphics: KRogue
   kilo_soundscape: KQuest
   kilo_tester: KConverter
-  kilo_usability: KConverter
+  kilo_usability: KTrader
   kilo_qa: KHex
   kilo_expander: KCipher
 virtual_web_target: kweb://slashnet
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
-  app: KPass
-  timestamp: '2026-10-23T07:51:18-07:00'
+  agent: kilo-usability
+  app: KConverter
+  timestamp: '2026-10-23T08:08:50-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -140,11 +140,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KConverter`
+- **Active Target**: `KTrader`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Responsive 14-category selector layout on compact viewports, keyboard category/unit traversal, clear `[F1/H]` shortcut pill, and focus trapping. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | Space trader market table ergonomics: responsive commodity columns, `[1-9]`/`[B]`/`[S]` quick-trade hotkeys, HiDPI star map scaling, and docking modal focus trap. |
 | `KClip` | `KiloOS/public/apps/kclip.html`, `KClip/main.c` | Compact toolbar wrapping, keyboard snippet navigation (`ArrowUp/Down`, `Enter` to copy), high-contrast diff/hex tabs, and modal focus restoration. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Side-by-side plaintext/ciphertext responsive split pane, HiDPI frequency chart crispness, one-click copy/swap ergonomics, and `[F1/H]` help overlay. |
@@ -154,6 +153,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KHash` | `KiloOS/public/apps/khash.html`, `KHash/main.c` | Multi-digest comparison table responsiveness, one-click hash verification badge, HMAC toggle ergonomics, and keyboard shortcuts. |
 | `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Encrypted container tree navigation, responsive hex/file inspector split, clear lock/unlock status banner, and modal focus trapping. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
+| `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Responsive 14-category selector layout on compact viewports, keyboard category/unit traversal, clear `[F1/H]` shortcut pill, and focus trapping. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KHex`
@@ -235,6 +235,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T08:08:50-07:00 — kilo-usability: KConverter (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 129.6 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - Layout & Responsive: Horizontal touch-scrolling for 14 category tabs and quick preset chips on <=640px viewports.
+  - Keyboard Navigation: ArrowLeft/Right/Up/Down, Home/End traversal across all 14 physical categories.
+  - Accessibility & Ergonomics: Help modal Tab focus trapping with focus restoration, Area preset addition, and persistent shortcut statusbar.
+  - Handoff: Advanced `kilo-usability` to `KTrader`; rotated active agent to `kilo-qa`.
+
 - **2026-10-23T07:51:18-07:00 — kilo-tester: KPass (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 139.1 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS).
   - UI & Hotkey Audit: Password generator (4 modes), entropy visualizer, AES vault lock/unlock modals, Esc dismissal, F1/F5/F9, and input focus guards verified.
@@ -258,11 +265,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - 1-Command Automation: Added `scripts/verify_turn.py` and `scripts/advance_turn.py` (plus `scripts/check_sizes.py` alias), cutting post-edit verification and queue handoff from 7-9 tool calls down to 2 deterministic calls.
   - Orchestrator Hardening: Fixed pre-flight auto-skip regex bug so `orchestrate.py` fast-forwards past Mature/inappropriate targets in-place and dispatches immediately in the same slot; added post-turn uncommitted work salvage and prompt Mission Spec injection.
   - Phase VI Direction: Reworked `next_work.md` into 7 staggered 10-target Mission Pipeline Tables launching **Phase VI: System Convergence** (KiloOS VFS/IPC cross-app mesh, RFMS co-op/duel multiplayer across deep games, and 6 canonical 1999 `kweb://` destinations).
-
-- **2026-10-23T07:12:00-07:00 — kilo-creator: kweb://portal (KiloAuctions '99 Hardware Auction Block & Web Portal Expansion)**
-  - KiloAuctions '99 Suite: Built authentic 1999 auction block featuring 12 vintage lots (Voodoo 3, SB Live! Platinum, Zip 250, Surreal Tournament '99, ThinkPad 770X, Gravis UltraSound, Palm V, Roland SC-55mkII) with live bids, proxy increments, and anti-sniping protection.
-  - Interactive Commerce: Implemented Dot-Com Venture capital wallet ($2,500 budget), "Buy-It-Now" instant checkout, custom user gear listing modal, watchlist toggles, and live countdown timer ticker.
-  - Gavel Synthesis & Bill of Sale: Added dual-strike wooden gavel sound via procedural Web Audio API, plus downloadable ASCII Bill of Sale & escrow certificate generator.
-  - Directory & Search Alignment: Linked KiloAuctions into quick bar, tab row, search index, and registered missing fleet apps (`kquarantine`, `kcontribute`) to achieve 100% fleet search coverage.
-  - Verification: Startup test PASS (670.4 KB < 999 KB, 0 JS errors, hit-test unblocked), Vite build clean (929ms), security lint PASS.
-  - Queue Handoff: Advanced `kilo_creator` and `virtual_web_target` to `kweb://slashnet`; rotated active agent to `kilo-graphics`.

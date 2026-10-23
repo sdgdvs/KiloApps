@@ -963,7 +963,7 @@ void ShowHelpDialog(HWND hwnd) {
         "  - History Log    : Conversion audit trail with export to text\r\n"
         "  - Smart Parser   : Evaluates phrases like '100 km/h to m/s' or '50 psi to bar'\r\n"
         "  - State Save/Load: Full quicksave (F5) and quickload (F9) persistence\r\n\r\n"
-        "PHYSICAL CATEGORIES (9 total):\r\n"
+        "PHYSICAL CATEGORIES (14 total):\r\n"
         "  Length, Weight, Temperature, Data Storage, Speed, Area, Volume, Time, Pressure, Data Rate, Angle / GPS, Audio Pitch, Energy, Power",
         "KConverter Pro Help", MB_OK | MB_ICONINFORMATION);
 }

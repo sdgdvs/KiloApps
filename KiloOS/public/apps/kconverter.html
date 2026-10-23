@@ -287,6 +287,53 @@
     align-items: center;
   }
 
+  /* Usability Shortcut Status Bar */
+  .statusbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .statusbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .status-indicator {
+    color: #4ade80;
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+  .status-dim {
+    color: var(--text-secondary);
+  }
+  .statusbar-shortcuts {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .status-key kbd {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    padding: 1px 4px;
+    font-family: inherit;
+    font-size: 10px;
+    color: var(--accent-blue);
+  }
+  .cat-tab, .preset-chip, .btn-sm, button {
+    touch-action: manipulation;
+  }
+
   /* Accessibility focus ring */
   button:focus-visible, input:focus-visible, select:focus-visible, .nav-tab:focus-visible, .cat-tab:focus-visible {
     outline: 2px solid var(--accent-blue);
@@ -295,17 +342,20 @@
 
   @media (max-width: 640px) {
     .app-container {
-      padding: 10px;
+      padding: 8px;
       gap: 8px;
     }
     .header {
       flex-direction: column;
       align-items: stretch;
-      gap: 10px;
+      gap: 8px;
+      padding: 8px 10px;
     }
     .controls-bar {
       justify-content: space-between;
+      flex-wrap: wrap;
       width: 100%;
+      gap: 6px;
     }
     .convert-grid {
       grid-template-columns: 1fr;
@@ -315,13 +365,38 @@
     }
     .nav-tabs {
       padding: 3px;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
     }
     .nav-tab {
       padding: 5px 8px;
-      font-size: 12px;
+      font-size: 11px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .cat-tabs {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      padding-bottom: 6px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .cat-tab {
+      flex-shrink: 0;
+      white-space: nowrap;
     }
     .quick-presets-bar {
       padding: 6px 8px;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+    }
+    .preset-chip {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .statusbar-shortcuts .status-key:nth-child(n+4) {
+      display: none;
     }
   }
 
@@ -897,7 +972,7 @@
             </div>
           </div>
           <div class="tutorial-body">
-            Fast, high-precision engineering & unit conversion across <strong>9 physical categories</strong>, real-time <strong>Batch tables</strong>, natural language <strong>Smart Expression Parser</strong>, and <strong>Custom scale factors</strong>.
+            Fast, high-precision engineering & unit conversion across <strong>14 physical categories</strong>, real-time <strong>Batch tables</strong>, natural language <strong>Smart Expression Parser</strong>, and <strong>Custom scale factors</strong>.
             <div class="tutorial-shortcuts">
               <span><kbd>1</kbd>–<kbd>6</kbd> Modes</span>
               <span><kbd>X</kbd>/<kbd>S</kbd> Swap</span>
@@ -923,6 +998,7 @@
           <button class="btn-sm preset-chip" onclick="applyPreset('speed', 100, 'kph', 'mph')">🚗 100 km/h ➔ mph</button>
           <button class="btn-sm preset-chip" onclick="applyPreset('weight', 1, 'kg', 'lb')">⚖️ 1 kg ➔ lb</button>
           <button class="btn-sm preset-chip" onclick="applyPreset('length', 1, 'm', 'ft')">📏 1 m ➔ ft</button>
+          <button class="btn-sm preset-chip" onclick="applyPreset('area', 1, 'sqm', 'sqft')">📐 1 m² ➔ ft²</button>
           <button class="btn-sm preset-chip" onclick="applyPreset('data', 1, 'gb', 'mb')">💾 1 GB ➔ MB</button>
           <button class="btn-sm preset-chip" onclick="applyPreset('datarate', 100, 'mbps', 'mbs')">🌐 100 Mbps ➔ MB/s</button>
           <button class="btn-sm preset-chip" onclick="applyPreset('coord', 180, 'deg', 'rad')">🧭 180° ➔ rad</button>
@@ -1136,6 +1212,21 @@
         </div>
       </section>
     </main>
+    <!-- Usability Shortcut Status Bar -->
+    <footer class="statusbar" id="appStatusBar" role="contentinfo" aria-label="Status and Quick Shortcuts">
+      <div class="statusbar-left">
+        <span class="status-indicator">● READY</span>
+        <span class="status-dim" id="statusDimText">Dimension: [L] Length</span>
+      </div>
+      <div class="statusbar-shortcuts">
+        <span class="status-key"><kbd>F1</kbd>/<kbd>H</kbd> Guide</span>
+        <span class="status-key"><kbd>F5</kbd>/<kbd>F9</kbd> Save/Load</span>
+        <span class="status-key"><kbd>1</kbd>–<kbd>6</kbd> Modes</span>
+        <span class="status-key"><kbd>X</kbd>/<kbd>S</kbd> Swap</span>
+        <span class="status-key"><kbd>P</kbd> Pin Fav</span>
+        <span class="status-key"><kbd>C</kbd> Copy</span>
+      </div>
+    </footer>
   </div>
 
   <!-- Help Modal Dialog -->
@@ -2110,6 +2201,30 @@
       if (toastTimer) clearTimeout(toastTimer);
     }
 
+    function trapModalFocus(e) {
+      const modal = document.getElementById('helpModal');
+      if (!modal || !modal.classList.contains('open')) return;
+      if (e.key !== 'Tab') return;
+      
+      const focusables = modal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      if (focusables.length === 0) return;
+      
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      
+      if (e.shiftKey) {
+        if (document.activeElement === first || !modal.contains(document.activeElement)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last || !modal.contains(document.activeElement)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
     let lastActiveElement = null;
     function toggleHelpModal(forceOpen) {
       const modal = document.getElementById('helpModal');
@@ -2197,6 +2312,7 @@
       container.innerHTML = '';
       customCatSel.innerHTML = '';
 
+      const catKeys = Object.keys(categories);
       for (const [key, name] of Object.entries(categories)) {
         const catBtn = document.createElement('div');
         const isActive = (key === currentCategory);
@@ -2210,6 +2326,30 @@
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             selectCategory(key);
+          } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            const idx = catKeys.indexOf(key);
+            const nextKey = catKeys[(idx + 1) % catKeys.length];
+            selectCategory(nextKey);
+            const allTabs = container.querySelectorAll('.cat-tab');
+            if (allTabs[(idx + 1) % catKeys.length]) allTabs[(idx + 1) % catKeys.length].focus();
+          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const idx = catKeys.indexOf(key);
+            const prevKey = catKeys[(idx - 1 + catKeys.length) % catKeys.length];
+            selectCategory(prevKey);
+            const allTabs = container.querySelectorAll('.cat-tab');
+            if (allTabs[(idx - 1 + catKeys.length) % catKeys.length]) allTabs[(idx - 1 + catKeys.length) % catKeys.length].focus();
+          } else if (e.key === 'Home') {
+            e.preventDefault();
+            selectCategory(catKeys[0]);
+            const allTabs = container.querySelectorAll('.cat-tab');
+            if (allTabs[0]) allTabs[0].focus();
+          } else if (e.key === 'End') {
+            e.preventDefault();
+            selectCategory(catKeys[catKeys.length - 1]);
+            const allTabs = container.querySelectorAll('.cat-tab');
+            if (allTabs[catKeys.length - 1]) allTabs[catKeys.length - 1].focus();
           }
         };
         container.appendChild(catBtn);
@@ -2228,6 +2368,9 @@
         t.classList.toggle('active', active);
         t.setAttribute('aria-selected', active ? 'true' : 'false');
       });
+      const dimLabel = categoryDimensions[catKey] || categories[catKey] || catKey;
+      const sDim = document.getElementById('statusDimText');
+      if (sDim) sDim.innerText = `Dimension: ${dimLabel}`;
       populateDropdowns();
       convert();
       renderBatch();
