@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T15:24:17-07:00 — kilo-usability: KScript (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 131.6 KB, native 24.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.99%, 0 fail, 0 warn, 4.4s)).
+  - Layout & HiDPI: Grouped semantic toolbar, added HiDPI telemetry sparkline canvas, benchmark latency histogram canvas, and AST statement distribution canvas scaled via devicePixelRatio.
+  - Keyboard & Modals: Statusbar cursor (Ln/Col/chars) tracking, editor font zoom (A-/A+ & Ctrl+=/Ctrl+-), Tab focus trapping in all modals with restore, and Escape dismissal for AST modal.
+  - Handoff: Advanced `kilo-usability` to `KSys`; rotated active agent to `kilo-qa`.
+
 - **2026-10-23T15:03:19-07:00 — kilo-tester: KSys (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 183.1 KB, native 31.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - UI & Hotkey Audit: telemetry dashboard, benchmarks, services, and toasts verified with input guards.

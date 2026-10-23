@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -27,7 +27,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://rfc-archive
   kilo_graphics: KCyber
-  kilo_soundscape: KWizard
+  kilo_soundscape: KVoid
   kilo_tester: KScript
   kilo_usability: KSys
   kilo_qa: KMech
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KVoid
-  timestamp: '2026-10-23T16:26:00-07:00'
+  agent: kilo-soundscape
+  app: KWizard
+  timestamp: '2026-10-23T16:40:39-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -108,11 +108,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Active Target**: `KWizard`
+- **Active Target**: `KVoid`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
@@ -122,6 +121,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Compose bridge alert & deep-space exploration 6-channel FM suite (Lydian `#4` pad + tactical Phrygian Dominant combat march, sonar/shield/warp earcons). |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Compose mystical alchemical workshop 6-channel suite (Dorian/Lydian celesta bells, warm glass pad, bubbling FM cauldron transients, transmutation fanfare stingers). |
 | `KFarm` | `KiloOS/public/apps/kfarm.html` | Compose pastoral 16-bit harvest & seasonal town 6-channel suite (Major pentatonic / Mixolydian acoustic FM guitar, warm marimba counter-melody, brushed snare groove, harvest earcons). |
+| `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Active Target**: `KScript`
@@ -224,6 +224,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T16:40:39-07:00 — kilo-soundscape: KWizard (The Arcane Spire Duel — YM2612/SPC700 Chiptune Suite)**
+  - Status: PASS ✅ (0 errors, web 150.2 KB, native 12.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 20.72%, HEAD Δ 2.03%, 0 fail, 0 warn, 13.9s)).
+  - Composition: D Harmonic Minor, 6-channel contrary counterpoint, 3rd/7th shell voicings, 5:3 swing-tick groove.
+  - Patches & DSP: Harpsichord/flute FM lead with 180ms delayed vibrato, 2-Op FM walking bass, selective 200ms SPC700 stereo delay, pyromancy/cryomancy/electromancy elemental earcons.
+  - Handoff: Advanced `kilo-soundscape` to `KVoid`; rotated active agent to `kilo-tester`.
+
 - **2026-10-23T16:26:00-07:00 — kilo-graphics: KVoid (Gravitational Singularity Lensing & Void Survival Visuals)**
   - Status: PASS ✅ (0 errors, web 132.4 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.92%, HEAD Δ 8.68%)).
   - Deep void survival visual overhaul: relativistic gravitational singularity lensing, accretion disk Doppler beaming, cosmic nebula layer, and drifting derelict hull debris.
@@ -247,9 +253,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, ktrader_tutorialSeen flag, Escape modal dismissals, and Arrow/Space scroll prevention.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, visibilitychange timer hygiene, and sync build.
   - Mature Quarantine & Handoff: Promoted `KTrader` to Mature archive; advanced `kilo-qa` to `KMech`; next agent `kilo-expander`.
-
-- **2026-10-23T15:24:17-07:00 — kilo-usability: KScript (Usability, Responsive Layout & Ergonomics Polish)**
-  - Status: PASS ✅ (0 errors, web 131.6 KB, native 24.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.99%, 0 fail, 0 warn, 4.4s)).
-  - Layout & HiDPI: Grouped semantic toolbar, added HiDPI telemetry sparkline canvas, benchmark latency histogram canvas, and AST statement distribution canvas scaled via devicePixelRatio.
-  - Keyboard & Modals: Statusbar cursor (Ln/Col/chars) tracking, editor font zoom (A-/A+ & Ctrl+=/Ctrl+-), Tab focus trapping in all modals with restore, and Escape dismissal for AST modal.
-  - Handoff: Advanced `kilo-usability` to `KSys`; rotated active agent to `kilo-qa`.
