@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -26,7 +26,7 @@ commit_checkpoint: 12
 status: ready
 current_targets:
   kilo_creator: kweb://scallion
-  kilo_graphics: KStarship
+  kilo_graphics: KAlchemy
   kilo_soundscape: KAlchemy
   kilo_tester: KDB
   kilo_usability: KCipher
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://cabled
-  timestamp: '2026-10-23T12:51:05-07:00'
+  agent: kilo-graphics
+  app: KStarship
+  timestamp: '2026-10-23T13:06:33-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -93,11 +93,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KStarship`
+- **Active Target**: `KAlchemy`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
@@ -107,6 +106,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTrader` | `KiloOS/public/apps/ktrader.html` | Space trader commodity & planetary docking visual upgrade: replace primitive planet circles and station shapes with multi-layered celestial bodies, orbital spaceport sprites, ship hull silhouettes, and eliminate any perimeter glints. |
 | `KRogue` | `KiloOS/public/apps/krogue.html` | Subterranean roguelike visual polish: crisp tile/entity sprite rendering, atmospheric torchlight vignette, boss monster visual distinction, and perimeter glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
+| `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KAlchemy`
@@ -229,6 +229,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T13:06:33-07:00 — kilo-graphics: KStarship (Starship Bridge, Schematics & Nebula Parallax Upgrade)**
+  - Status: PASS ✅ (web 187.6 KB, native 143.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - Added interactive top-down starship hull subsystem schematic HUD with real-time deflector shield, weapon, engine, and reactor telemetry.
+  - Integrated 3-tier volumetric parallax nebulae, multi-depth starfields, tactical enemy cruiser silhouettes on sector map and encounter preview.
+  - Verified complete elimination of traveling perimeter glints across tactical display.
+  - Handoff: Advanced `kilo-graphics` to `KAlchemy`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-23T12:51:05-07:00 — kilo-creator: kweb://cabled (Cabled Magazine 1999 Neon Edition)**
   - Status: PASS ✅ (0 errors, web 98.4 KB < 999 KB; startup, Vite & security_lint PASS).
   - Implemented late-90s cyber-magazine with Y2K Readiness Audit, Dot-Com IPO Bubble Simulator, Jargon Watch generator, and Hype-vs-Reality matrix.
@@ -252,9 +259,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Keyboard & Navigation: Added clip card ArrowUp/Down navigation, Enter to copy snippet, Tab modal focus trapping, and modal focus restoration.
   - Diff & Tabs: Added high-contrast Diff View tab comparing active clip with previous buffer, enhanced hex/html/image tabs with crisp contrast.
   - Mature Quarantine & Handoff: Promoted `KClip` to Mature archive; advanced `kilo-usability` to `KCipher`; next agent `kilo-qa`.
-
-- **2026-10-23T11:50:34-07:00 — kilo-tester: KCipher (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS ✅ (0 errors, web 153.9 KB, native 12.0 KB < 999 KB; startup, Vite & security_lint PASS).
-  - UI & Hotkey Audit: Verified workbench AES/XOR/Vigenere/ROT13/RSA toy, frequency histogram, modals, Escape dismissal, and key input guards.
-  - Repairs: Wrapped startup quicksave check in try/catch, added SELECT to hotkey ignore list, and refined VFS open fallback.
-  - Handoff: Advanced `kilo-tester` to `KDB`; rotated active agent to `kilo-usability`.
