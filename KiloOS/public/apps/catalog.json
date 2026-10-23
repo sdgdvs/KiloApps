@@ -515,9 +515,9 @@
     "id": "kpass",
     "title": "KPass",
     "folder": "System",
-    "webBytes": 135006,
+    "webBytes": 143042,
     "exeBytes": 25600,
-    "budgetPercent": 13.5
+    "budgetPercent": 14.3
   },
   {
     "id": "kping",
@@ -651,9 +651,9 @@
     "id": "kspace",
     "title": "KSpace",
     "folder": "Games",
-    "webBytes": 205255,
-    "exeBytes": 91648,
-    "budgetPercent": 20.5
+    "webBytes": 202033,
+    "exeBytes": 92160,
+    "budgetPercent": 20.2
   },
   {
     "id": "kstardredge",

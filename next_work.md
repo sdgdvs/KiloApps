@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -21,7 +21,7 @@ current_targets:
   kilo_soundscape: KBreakout
   kilo_tester: KPass
   kilo_usability: KTrader
-  kilo_qa: KSpace
+  kilo_qa: KTrader
   kilo_expander: KConverter
 virtual_web_target: kweb://portal
 virtual_web_rotation:
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-usability
-  app: KPass
-  timestamp: '2026-10-23T01:36:00-07:00'
+  agent: kilo-qa
+  app: KSpace
+  timestamp: '2026-10-23T03:32:00-07:00'
 last_planner_run: '2026-10-23T01:35:00Z'
 ---
 
@@ -120,7 +120,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In frontmatter: advance `current_targets.kilo_tester` to `KTrader`.
   - Set `current_agent: kilo-usability`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTrader`, `KSpace`.
+- **Upcoming Queue**: `KTrader`, `KRogue`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Target**: `KTrader`
@@ -132,28 +132,28 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   3. Ensure high-contrast accessibility, crisp font rendering, and responsive controls.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KSpace`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KRogue`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KSpace`, `KRogue`.
+- **Upcoming Queue**: `KRogue`, `KTrader`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Target**: `KSpace`
-- **Primary Files**: `KiloOS/public/apps/kspace.html`, `apps/kspace/main.c` (if present)
+- **Target**: `KTrader`
+- **Primary Files**: `KiloOS/public/apps/ktrader.html`, `apps/ktrader/main.c` (if present)
 - **Objective**: Pass 5 QA audit: verify space trader mechanics, cargo manifests, celestial navigation, F5 quicksave & F9 quickload persistence, modal dismissals, and dual Win32 native client parity (<999 KB).
 - **Action Steps**:
   1. State Persistence: F5 quicksave & F9 quickload capturing complete ship state, credits, cargo, and location without data loss.
   2. First-run Tutorial: Onboarding displays once on fresh sessions, never on restored saves.
   3. Modal Dismissals: Modals dismiss cleanly with Escape, Enter, or Close button.
-  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/kspace/` or `KSpace/` (if present) and verify web build.
+  4. Dual Parity & Build: Compile Win32 native client via `cmd.exe /c build.bat` in `apps/ktrader/` or `KTrader/` (if present) and verify web build.
 - **Verification**:
-  - `uv run scripts/test_app_startup.py --app KSpace`
-  - `cd KiloOS && npm run build` (0 Vite errors, `kspace.html` < 999 KB)
+  - `uv run scripts/test_app_startup.py --app KTrader`
+  - `cd KiloOS && npm run build` (0 Vite errors, `ktrader.html` < 999 KB)
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_qa` to `KTrader`.
+  - In frontmatter: advance `current_targets.kilo_qa` to `KPass`.
   - Set current_agent: kilo-expander.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTrader`, `KPass`.
+- **Upcoming Queue**: `KPass`, `KRogue`.
 
 ### 7. Feature Expander Queue (`kilo-expander`)
 - **Target**: `KConverter`
@@ -180,6 +180,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KSpace** | `KiloOS/public/apps/kspace.html` | Pass 5 (2026-10-23) | Action / Deep Space Shooter | 6-chassis space shooter, 12 enemy archetypes, 3 boss flagships, F5/F9 state persistence, first-run tutorial integrity, replay telemetry, dual Win32 native client parity. |
 | **KBase** | `KiloOS/public/apps/kbase.html` | Pass 5+ (2026-10-23) | Dev / Radix Converter | Full multi-base studio (radix 2-36, BCD, Gray, Base32/58/64, ULEB/SLEB128, IEEE-754, bitboard matrix), F5/F9 state, export suite (CSV/MD/JSON), dual Win32 C parity. |
 | **KTowers** | `KiloOS/public/apps/ktowers.html` | Pass 6+ (2026-10-08) | Puzzle / Strategy | Feature-complete Tower of Hanoi variant; full state persistence, responsive controls, zero glints. |
 | **KDarts** | `KiloOS/public/apps/kdarts.html` | Pass 6+ (2026-10-08) | Sports / Arcade | Complete physics simulation, scoring engine, audio effects, and UI persistence. |
@@ -217,6 +218,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T03:32:00-07:00 — kilo-qa: KSpace (Pass 5 QA & Mature Quarantine)**
+  - Status: PASS ✅ (0 runtime errors, startup check clean 197.3 KB, Vite build clean in 612ms).
+  - Quicksave/Quickload: Complete F5/F9 state persistence (chassis, wave, boss, heat, pylons, drones) verified in HTML & Win32 C.
+  - Tutorial & Modals: First-run onboarding integrity validated; Escape/Enter/Space dismissals clean across all overlays.
+  - Parity & Builds: Win32 C compiles clean (92 KB); byte-budget PASS; security lint PASS.
+  - Mature Quarantine: Promoted KSpace to Mature Applications table; purged from active queues per Director mandate.
+  - Handoff: Advanced kilo-qa to KTrader; rotated active agent to kilo-expander.
 - **2026-10-23T01:36:00-07:00 — kilo-usability: KPass (Usability, High-Contrast Entropy & Focus Trapping)**
   - Status: PASS ✅ (0 runtime errors, startup check clean 139.7 KB, Vite build clean in 539ms).
   - Usability & Layout: Compact window wrap support, responsive strength container with 100% width meter bar on narrow screens.
@@ -245,12 +253,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint Audit: Zero rotating specular glints or traveling perimeter border dots (HTML & C).
   - Verification: Native build clean; KiloOS Vite build clean; startup check PASS; byte-budget PASS.
   - Handoff: Advanced graphics queue to KTrader; rotated agent to kilo-soundscape.
-- **2026-10-22T19:37:00-07:00 — kilo-creator: kweb://darknet (Deep Expansion & Anti-Potemkin Node)**
-  - Status: PASS ✅ (All web files < 999 KB, 0 Vite errors, startup check clean).
-  - Dead-Drop Key Exchange: Integrated ModP Group 1 Diffie-Hellman key exchange (prime 65521, gen 3), PGP armored public key export (.asc), and 1-click dead drop session deployment.
-  - Frequency Sweeper: Added Tone-Loc RF & subcarrier sweeper (100Hz-3kHz, VLF 10-30kHz, 144MHz packet radio) with heterodyne beat audio & waterfall hits.
-  - Airgap Packet Bridge: Created Tab 18 with optical strobe canvas, acoustic FSK coupling, CRC-16 CCITT dissection, preset bursts & terminal/sniffer injection.
-  - Verification: 
-npm run build clean (560ms), test_app_startup knet PASS, file size 414.5 KB (< 999 KB).
-  - Handoff: Advanced creator queue to kweb://portal, rotated agent to kilo-graphics.
-

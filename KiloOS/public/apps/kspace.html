@@ -25,7 +25,7 @@ window.addEventListener('load', () => {
     }, 400);
 });
 window.addEventListener('beforeunload', () => {
-  if (gameState === STATE_PLAYING || gameState === STATE_PAUSED) {
+  if (typeof gameState !== 'undefined' && (gameState === STATE_PLAYING || gameState === STATE_PAUSED)) {
     if (typeof saveGameState === 'function') saveGameState();
   }
 });
@@ -733,6 +733,13 @@ window.addEventListener('beforeunload', () => {
       escort: escort,
       pathGatesActive: pathGatesActive,
       pathGatesY: pathGatesY,
+      heatGauge: heatGauge,
+      spectralPhaseTimer: spectralPhaseTimer,
+      playerChassis: playerChassis,
+      dreadCoreMeltdown: dreadCoreMeltdown,
+      meltdownTimer: meltdownTimer,
+      shieldPylons: shieldPylons.map(py => ({ active: !!py.active, hp: py.hp, maxHp: py.maxHp })),
+      laserBarriers: laserBarriers.map(lb => ({ active: !!lb.active, x: lb.x, y: lb.y, vx: lb.vx, len: lb.len })),
       enemies: enemies.slice(0, 30),
       powerups: powerups.slice(0, 20)
     };
@@ -740,6 +747,8 @@ window.addEventListener('beforeunload', () => {
     if (!ok) {
       delete saveObj.enemies;
       delete saveObj.powerups;
+      delete saveObj.laserBarriers;
+      delete saveObj.shieldPylons;
       ok = safeSetStorage('kspace_save', saveObj);
     }
     if (ok) {
@@ -801,6 +810,26 @@ window.addEventListener('beforeunload', () => {
       else escort = { active: false, x: 0, y: 0, dy: 0, hp: 0, maxHp: 0 };
       pathGatesActive = !!saveObj.pathGatesActive;
       pathGatesY = saveObj.pathGatesY || 0;
+      heatGauge = typeof saveObj.heatGauge === 'number' ? saveObj.heatGauge : 0;
+      spectralPhaseTimer = typeof saveObj.spectralPhaseTimer === 'number' ? saveObj.spectralPhaseTimer : 0;
+      if (typeof saveObj.playerChassis === 'number' && saveObj.playerChassis >= 0 && saveObj.playerChassis <= 2) {
+        playerChassis = saveObj.playerChassis;
+        safeSetStorage('kspace_chassis', String(playerChassis));
+      }
+      dreadCoreMeltdown = !!saveObj.dreadCoreMeltdown;
+      meltdownTimer = typeof saveObj.meltdownTimer === 'number' ? saveObj.meltdownTimer : 0;
+      if (Array.isArray(saveObj.shieldPylons) && saveObj.shieldPylons.length >= 2) {
+        shieldPylons[0].active = !!saveObj.shieldPylons[0].active;
+        shieldPylons[0].hp = typeof saveObj.shieldPylons[0].hp === 'number' ? saveObj.shieldPylons[0].hp : 80;
+        shieldPylons[1].active = !!saveObj.shieldPylons[1].active;
+        shieldPylons[1].hp = typeof saveObj.shieldPylons[1].hp === 'number' ? saveObj.shieldPylons[1].hp : 80;
+      }
+      if (Array.isArray(saveObj.laserBarriers) && saveObj.laserBarriers.length >= 2) {
+        laserBarriers[0].active = !!saveObj.laserBarriers[0].active;
+        if (typeof saveObj.laserBarriers[0].x === 'number') laserBarriers[0].x = saveObj.laserBarriers[0].x;
+        laserBarriers[1].active = !!saveObj.laserBarriers[1].active;
+        if (typeof saveObj.laserBarriers[1].x === 'number') laserBarriers[1].x = saveObj.laserBarriers[1].x;
+      }
 
       drones = [];
       for (let i = 0; i < droneCount; i++) {

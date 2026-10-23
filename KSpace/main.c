@@ -94,6 +94,11 @@ typedef struct {
     int pathGatesActive, eliteSquadActive, eliteSquadTimer;
     float heatGauge;
     int spectralPhaseTimer;
+    int playerChassis;
+    int meltdownTimer;
+    int pylonActive[2], pylonHp[2];
+    int barrierActive[2];
+    float barrierX[2], barrierVx[2];
 } SaveState;
 
 // --- CAMPAIGN EXPANSION (6 DISTINCT SECTORS & SIGNATURE MECHANICS) ---
@@ -738,6 +743,17 @@ void SaveGameState() {
     s.eliteSquadTimer = eliteSquadTimer;
     s.heatGauge = heatGauge;
     s.spectralPhaseTimer = spectralPhaseTimer;
+    s.playerChassis = playerChassis;
+    s.meltdownTimer = meltdownTimer;
+    for (int i = 0; i < 2; i++) {
+        s.pylonActive[i] = shieldPylons[i].active;
+        s.pylonHp[i] = shieldPylons[i].hp;
+    }
+    for (int i = 0; i < 2; i++) {
+        s.barrierActive[i] = laserBarriers[i].active;
+        s.barrierX[i] = laserBarriers[i].x;
+        s.barrierVx[i] = laserBarriers[i].vx;
+    }
 
     HANDLE hFile = CreateFileA("kspace_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -757,6 +773,7 @@ void SaveGameState() {
 
 int LoadGameState() {
     SaveState s;
+    memset(&s, 0, sizeof(SaveState));
     int success = 0;
     HANDLE hFile = CreateFileA("kspace_save.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -833,6 +850,22 @@ int LoadGameState() {
         eliteSquadTimer = s.eliteSquadTimer;
         heatGauge = s.heatGauge;
         spectralPhaseTimer = s.spectralPhaseTimer;
+        if (s.playerChassis >= 0 && s.playerChassis <= 2) {
+            playerChassis = s.playerChassis;
+            p.maxHp = playerChassis == 1 ? 4 : 3;
+            maxShields = playerChassis == 1 ? 4 : 3;
+            maxBombs = playerChassis == 1 ? 4 : 3;
+        }
+        meltdownTimer = s.meltdownTimer;
+        for (int i = 0; i < 2; i++) {
+            shieldPylons[i].active = s.pylonActive[i];
+            if (s.pylonHp[i] > 0) shieldPylons[i].hp = s.pylonHp[i];
+        }
+        for (int i = 0; i < 2; i++) {
+            laserBarriers[i].active = s.barrierActive[i];
+            if (s.barrierX[i] > 0.0f) laserBarriers[i].x = s.barrierX[i];
+            if (s.barrierVx[i] != 0.0f) laserBarriers[i].vx = s.barrierVx[i];
+        }
 
         for (int i = 0; i < MAX_ENEMIES; i++) e[i].active = 0;
         for (int i = 0; i < MAX_BULLETS; i++) b[i].active = 0;
