@@ -9802,7 +9802,7 @@ function simulateTrafficBurst() {
 
   const logBody = document.getElementById('trafficLogBody');
   if (logBody) {
-    const nodes = ['kweb://portal', 'kweb://slashnet', 'kweb://trapster', 'kweb://cybercafe', 'kweb://users/~neon_rider', 'kweb://asm-temple', 'kweb://warez', 'kweb://geocities'];
+    const nodes = ['kweb://portal', 'kweb://slashnet', 'kweb://cabled', 'kweb://trapster', 'kweb://cybercafe', 'kweb://users/~neon_rider', 'kweb://asm-temple', 'kweb://warez', 'kweb://geocities'];
     const fromNode = nodes[Math.floor(Math.random() * nodes.length)];
     let toNode = nodes[Math.floor(Math.random() * nodes.length)];
     while (toNode === fromNode) toNode = nodes[Math.floor(Math.random() * nodes.length)];
@@ -9831,7 +9831,7 @@ function executeCgiQuery() {
   let body = '';
 
   if (sel.indexOf('action=random') !== -1) {
-    const candidates = ['/web/portal.html', '/web/cybercafe.html', '/web/geocities.html', '/web/warez.html', '/web/asm_temple.html', '/web/users/neon_rider.html'];
+    const candidates = ['/web/portal.html', '/web/cabled.html', '/web/cybercafe.html', '/web/geocities.html', '/web/warez.html', '/web/asm_temple.html', '/web/users/neon_rider.html'];
     location = candidates[Math.floor(Math.random() * candidates.length)];
     body = 'Status: 302 Moved Temporarily\nLocation: ' + location + '\nX-Ring-Algorithm: PseudoRandom-Mersenne\nSet-Cookie: RING_VISITED=' + location + '; path=/\n\nRedirecting client to next random consortium destination...';
   } else if (sel.indexOf('action=next') !== -1) {

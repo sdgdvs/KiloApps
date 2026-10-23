@@ -1,0 +1,2834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CABLED :: ISSUE 7.12 :: THE APOCALYPSE ISSUE (1999)</title>
+<meta name="description" content="Cabled Magazine - December 1999 Neon Edition. Late-90s Cyberculture Flagship featuring interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator & Hype-vs-Reality matrix.">
+<style>
+  :root {
+    --cabled-neon-orange: #ff5500;
+    --cabled-neon-lime: #ccff00;
+    --cabled-neon-cyan: #00f0ff;
+    --cabled-neon-magenta: #ff007f;
+    --cabled-neon-yellow: #ffff00;
+    --cabled-purple: #7b1fa2;
+    --cabled-electric-blue: #2979ff;
+    --cabled-dark-bg: #0c0e14;
+    --cabled-surface: #141824;
+    --cabled-surface-light: #1e2436;
+    --cabled-border: #2c354d;
+    --cabled-border-neon: #ff5500;
+    --cabled-text: #f0f4f8;
+    --cabled-text-muted: #8c9bb0;
+    --cabled-text-dim: #5a667a;
+    --cabled-font-sans: "Trebuchet MS", "Lucida Grande", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    --cabled-font-display: "Impact", "Arial Black", "Trebuchet MS", sans-serif;
+    --cabled-font-mono: "Courier New", "Consolas", monospace;
+    --cabled-font-serif: "Georgia", "Times New Roman", serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--cabled-dark-bg);
+    color: var(--cabled-text);
+    font-family: var(--cabled-font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    background-image: 
+      radial-gradient(circle at 15% 15%, rgba(255, 85, 0, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 85% 35%, rgba(0, 240, 255, 0.07) 0%, transparent 40%),
+      radial-gradient(circle at 50% 85%, rgba(204, 255, 0, 0.05) 0%, transparent 50%),
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  a {
+    color: var(--cabled-neon-cyan);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  a:hover {
+    color: var(--cabled-neon-lime);
+    text-decoration: underline;
+  }
+
+  /* Utility Buttons & Forms */
+  .btn-cyber {
+    background: #111520;
+    border: 1px solid var(--cabled-neon-orange);
+    color: var(--cabled-neon-orange);
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 6px 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    box-shadow: 0 0 6px rgba(255, 85, 0, 0.2);
+  }
+  .btn-cyber:hover {
+    background: var(--cabled-neon-orange);
+    color: #000;
+    box-shadow: 0 0 14px rgba(255, 85, 0, 0.6);
+  }
+  .btn-cyber:active {
+    transform: translateY(1px);
+  }
+
+  .btn-cyber-cyan {
+    border-color: var(--cabled-neon-cyan);
+    color: var(--cabled-neon-cyan);
+    box-shadow: 0 0 6px rgba(0, 240, 255, 0.2);
+  }
+  .btn-cyber-cyan:hover {
+    background: var(--cabled-neon-cyan);
+    color: #000;
+    box-shadow: 0 0 14px rgba(0, 240, 255, 0.6);
+  }
+
+  .btn-cyber-lime {
+    border-color: var(--cabled-neon-lime);
+    color: var(--cabled-neon-lime);
+    box-shadow: 0 0 6px rgba(204, 255, 0, 0.2);
+  }
+  .btn-cyber-lime:hover {
+    background: var(--cabled-neon-lime);
+    color: #000;
+    box-shadow: 0 0 14px rgba(204, 255, 0, 0.6);
+  }
+
+  .btn-cyber-magenta {
+    border-color: var(--cabled-neon-magenta);
+    color: var(--cabled-neon-magenta);
+    box-shadow: 0 0 6px rgba(255, 0, 127, 0.2);
+  }
+  .btn-cyber-magenta:hover {
+    background: var(--cabled-neon-magenta);
+    color: #fff;
+    box-shadow: 0 0 14px rgba(255, 0, 127, 0.6);
+  }
+
+  /* Form Elements */
+  input[type="text"], input[type="number"], select, textarea {
+    background: #090c12;
+    border: 1px solid var(--cabled-border);
+    color: var(--cabled-text);
+    font-family: var(--cabled-font-mono);
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 0;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+    border-color: var(--cabled-neon-cyan);
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+  }
+
+  /* Top Broadcast Ticker */
+  .top-ticker {
+    background: #000000;
+    border-bottom: 2px solid var(--cabled-neon-orange);
+    color: var(--cabled-neon-lime);
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    padding: 4px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .ticker-wrap {
+    overflow: hidden;
+    white-space: nowrap;
+    flex: 1;
+    margin: 0 16px;
+  }
+  .ticker-text {
+    display: inline-block;
+    animation: tickerAnim 35s linear infinite;
+  }
+  @keyframes tickerAnim {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-50%, 0, 0); }
+  }
+
+  .ticker-audio {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Main Masthead */
+  .masthead {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px 20px 16px;
+  }
+  .masthead-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: end;
+    border-bottom: 4px solid var(--cabled-neon-orange);
+    padding-bottom: 16px;
+  }
+  .masthead-logo-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .issue-tag {
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    color: var(--cabled-neon-cyan);
+    letter-spacing: 2px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  .cabled-logo {
+    font-family: var(--cabled-font-display);
+    font-size: 84px;
+    line-height: 0.85;
+    font-weight: 900;
+    letter-spacing: -3px;
+    color: #ffffff;
+    text-transform: uppercase;
+    text-shadow: 
+      4px 4px 0px var(--cabled-neon-orange),
+      8px 8px 0px rgba(0, 240, 255, 0.4);
+    user-select: none;
+  }
+  .cabled-logo span {
+    color: var(--cabled-neon-lime);
+    text-shadow: 
+      4px 4px 0px var(--cabled-neon-magenta),
+      8px 8px 0px rgba(255, 85, 0, 0.4);
+  }
+  .cabled-tagline {
+    font-family: var(--cabled-font-serif);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--cabled-text-muted);
+    margin-top: 6px;
+  }
+
+  .masthead-meta {
+    text-align: right;
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--cabled-text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+  .barcode {
+    font-family: var(--cabled-font-mono);
+    font-size: 18px;
+    letter-spacing: -2px;
+    color: #fff;
+    background: #000;
+    padding: 2px 8px;
+    border: 1px solid #444;
+  }
+
+  /* Navigation Bar */
+  .nav-bar {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 10px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid var(--cabled-border);
+  }
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .nav-chip {
+    background: var(--cabled-surface);
+    border: 1px solid var(--cabled-border);
+    color: var(--cabled-text-muted);
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .nav-chip:hover, .nav-chip.active {
+    background: #1e263d;
+    border-color: var(--cabled-neon-cyan);
+    color: var(--cabled-neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+  }
+  .nav-webring-links {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+  }
+
+  /* Main Container */
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  /* Section Containers */
+  .cyber-section {
+    background: var(--cabled-surface);
+    border: 1px solid var(--cabled-border);
+    position: relative;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+  .cyber-section::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 20px;
+    right: 20px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--cabled-neon-orange), var(--cabled-neon-magenta), var(--cabled-neon-cyan));
+  }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px dashed var(--cabled-border);
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .section-title-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .section-num {
+    font-family: var(--cabled-font-mono);
+    font-size: 14px;
+    color: var(--cabled-neon-orange);
+    font-weight: bold;
+  }
+  .section-title {
+    font-family: var(--cabled-font-display);
+    font-size: 26px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #ffffff;
+  }
+  .section-subtitle {
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    color: var(--cabled-neon-cyan);
+    text-transform: uppercase;
+  }
+
+  /* Layout Grids */
+  .grid-2col {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 24px;
+  }
+  .grid-3col {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  @media (max-width: 900px) {
+    .grid-2col, .grid-3col {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Lead Editorial Article */
+  .lead-article {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    background: linear-gradient(135deg, rgba(20, 24, 36, 0.95), rgba(12, 14, 20, 0.95));
+    border-left: 4px solid var(--cabled-neon-lime);
+    padding: 24px;
+  }
+  @media (max-width: 860px) {
+    .lead-article { grid-template-columns: 1fr; }
+  }
+  .lead-kicker {
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    color: var(--cabled-neon-lime);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  .lead-headline {
+    font-family: var(--cabled-font-display);
+    font-size: 38px;
+    line-height: 1.05;
+    letter-spacing: -0.5px;
+    color: #ffffff;
+    margin-bottom: 14px;
+  }
+  .lead-deck {
+    font-family: var(--cabled-font-serif);
+    font-size: 16px;
+    line-height: 1.5;
+    color: #d1d5db;
+    margin-bottom: 16px;
+    border-left: 2px solid var(--cabled-neon-cyan);
+    padding-left: 12px;
+  }
+  .lead-body p {
+    font-family: var(--cabled-font-serif);
+    font-size: 14px;
+    line-height: 1.65;
+    color: #b0bac9;
+    margin-bottom: 14px;
+  }
+  .lead-byline {
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    color: var(--cabled-neon-orange);
+    margin-bottom: 16px;
+  }
+
+  .lead-sidebar {
+    background: #0c0f18;
+    border: 1px solid var(--cabled-border);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .sidebar-box {
+    border-top: 2px solid var(--cabled-neon-magenta);
+    padding-top: 10px;
+  }
+  .sidebar-title {
+    font-family: var(--cabled-font-display);
+    font-size: 15px;
+    text-transform: uppercase;
+    color: var(--cabled-neon-magenta);
+    margin-bottom: 6px;
+  }
+  .sidebar-content {
+    font-size: 12px;
+    color: var(--cabled-text-muted);
+    line-height: 1.45;
+  }
+
+  /* Feature 1: Y2K Readiness Audit & Scanner */
+  .y2k-panel {
+    background: #0a0d14;
+    border: 1px solid #1f293d;
+    padding: 20px;
+  }
+  .y2k-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 800px) {
+    .y2k-grid { grid-template-columns: 1fr; }
+  }
+  .audit-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .audit-item {
+    background: #141926;
+    border: 1px solid #232c40;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.2s;
+  }
+  .audit-item:hover {
+    border-color: var(--cabled-neon-orange);
+  }
+  .audit-info {
+    display: flex;
+    flex-direction: column;
+  }
+  .audit-label {
+    font-weight: bold;
+    font-size: 12px;
+    color: #fff;
+  }
+  .audit-desc {
+    font-size: 11px;
+    color: var(--cabled-text-muted);
+  }
+  .y2k-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+  }
+  .y2k-switch input { opacity: 0; width: 0; height: 0; }
+  .y2k-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #374151;
+    transition: .3s;
+    border: 1px solid #555;
+  }
+  .y2k-slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+  }
+  input:checked + .y2k-slider {
+    background-color: var(--cabled-neon-orange);
+  }
+  input:checked + .y2k-slider:before {
+    transform: translateX(22px);
+  }
+
+  .y2k-monitor {
+    background: #05070a;
+    border: 1px solid #2a344a;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .y2k-clock-display {
+    font-family: var(--cabled-font-mono);
+    text-align: center;
+    padding: 14px;
+    background: #000;
+    border: 2px solid var(--cabled-neon-orange);
+    box-shadow: inset 0 0 12px rgba(255, 85, 0, 0.4);
+  }
+  .clock-digits {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--cabled-neon-orange);
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(255, 85, 0, 0.8);
+  }
+  .clock-sub {
+    font-size: 11px;
+    color: var(--cabled-text-muted);
+    margin-top: 4px;
+  }
+
+  .readiness-gauge-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .gauge-bar-outer {
+    background: #1a2030;
+    height: 22px;
+    border: 1px solid #334155;
+    position: relative;
+    overflow: hidden;
+  }
+  .gauge-bar-fill {
+    height: 100%;
+    width: 65%;
+    background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
+    transition: width 0.5s ease-out;
+  }
+  .gauge-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    color: var(--cabled-text-muted);
+  }
+  .y2k-log-box {
+    background: #000;
+    border: 1px solid #1f2937;
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    color: #4ade80;
+    padding: 8px 10px;
+    height: 110px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    line-height: 1.35;
+  }
+
+  /* Feature 2: Dot-Com IPO Bubble Stock Simulator */
+  .stock-sim-container {
+    background: #0a0d14;
+    border: 1px solid #1f293d;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .sim-overview-bar {
+    background: #111522;
+    border: 1px solid var(--cabled-border);
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .stat-block {
+    display: flex;
+    flex-direction: column;
+  }
+  .stat-label {
+    font-family: var(--cabled-font-mono);
+    font-size: 10px;
+    color: var(--cabled-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .stat-val {
+    font-family: var(--cabled-font-mono);
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffffff;
+  }
+  .stat-val.pos { color: var(--cabled-neon-lime); text-shadow: 0 0 8px rgba(204, 255, 0, 0.4); }
+  .stat-val.neg { color: #f87171; }
+
+  .market-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 960px) {
+    .market-grid { grid-template-columns: 1fr; }
+  }
+
+  .stock-table-wrap {
+    overflow-x: auto;
+    background: #080a10;
+    border: 1px solid #222c40;
+  }
+  .stock-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--cabled-font-mono);
+    font-size: 12px;
+  }
+  .stock-table th {
+    background: #141a29;
+    color: var(--cabled-neon-cyan);
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 2px solid #283550;
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+  .stock-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #161e30;
+    color: #e2e8f0;
+  }
+  .stock-table tr:hover td {
+    background: #111726;
+  }
+  .badge-ticker {
+    font-weight: bold;
+    color: var(--cabled-neon-lime);
+    background: #1e293b;
+    padding: 2px 6px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+  .stock-actions {
+    display: flex;
+    gap: 4px;
+  }
+  .btn-trade {
+    background: #1e2638;
+    border: 1px solid #3b82f6;
+    color: #93c5fd;
+    font-family: var(--cabled-font-mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    cursor: pointer;
+  }
+  .btn-trade:hover {
+    background: #3b82f6;
+    color: #000;
+  }
+  .btn-trade.sell {
+    border-color: #ef4444;
+    color: #fca5a5;
+  }
+  .btn-trade.sell:hover {
+    background: #ef4444;
+    color: #000;
+  }
+
+  .chart-pitch-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .canvas-box {
+    background: #000;
+    border: 1px solid #2a344a;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .canvas-title {
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    color: var(--cabled-neon-cyan);
+    display: flex;
+    justify-content: space-between;
+  }
+  #portfolioChart {
+    width: 100%;
+    height: 120px;
+    background: #05070d;
+  }
+
+  .pitch-card {
+    background: #111624;
+    border: 1px solid var(--cabled-neon-magenta);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 0 10px rgba(255, 0, 127, 0.15);
+  }
+  .pitch-title {
+    font-family: var(--cabled-font-display);
+    font-size: 16px;
+    color: var(--cabled-neon-magenta);
+    text-transform: uppercase;
+  }
+  .pitch-text {
+    font-family: var(--cabled-font-serif);
+    font-size: 13px;
+    color: #e5e7eb;
+    line-height: 1.45;
+  }
+  .pitch-meta {
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    color: var(--cabled-neon-yellow);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Feature 3: Jargon Watch */
+  .jargon-container {
+    background: #0a0d14;
+    border: 1px solid #1f293d;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .jargon-generator-box {
+    background: linear-gradient(180deg, #161c2c, #0e121c);
+    border: 1px solid var(--cabled-neon-cyan);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.15);
+  }
+  .combinator-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 10px;
+    align-items: center;
+  }
+  @media (max-width: 768px) {
+    .combinator-row { grid-template-columns: 1fr; }
+  }
+  .generated-term-display {
+    background: #000;
+    border: 1px solid #23304a;
+    padding: 14px;
+    border-left: 4px solid var(--cabled-neon-cyan);
+  }
+  .term-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .term-word {
+    font-family: var(--cabled-font-display);
+    font-size: 22px;
+    color: var(--cabled-neon-cyan);
+    letter-spacing: 0.5px;
+  }
+  .term-pos {
+    font-family: var(--cabled-font-mono);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--cabled-text-muted);
+  }
+  .term-def {
+    font-family: var(--cabled-font-serif);
+    font-size: 14px;
+    color: #e5e7eb;
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .term-citation {
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    color: var(--cabled-neon-lime);
+  }
+
+  .jargon-lexicon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .lexicon-card {
+    background: #111624;
+    border: 1px solid #202b40;
+    padding: 14px;
+    transition: all 0.2s ease;
+  }
+  .lexicon-card:hover {
+    border-color: var(--cabled-neon-lime);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+  .lexicon-term {
+    font-family: var(--cabled-font-display);
+    font-size: 16px;
+    color: var(--cabled-neon-lime);
+    margin-bottom: 4px;
+  }
+  .lexicon-def {
+    font-size: 12px;
+    color: #d1d5db;
+    margin-bottom: 8px;
+    line-height: 1.45;
+  }
+  .lexicon-tag {
+    font-family: var(--cabled-font-mono);
+    font-size: 10px;
+    color: var(--cabled-neon-orange);
+    text-transform: uppercase;
+  }
+
+  /* Feature 4: Hype-vs-Reality Matrix */
+  .hype-matrix-container {
+    background: #0a0d14;
+    border: 1px solid #1f293d;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .radar-composite-grid {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 900px) {
+    .radar-composite-grid { grid-template-columns: 1fr; }
+  }
+  #hypeRadarChart {
+    width: 100%;
+    height: 320px;
+    background: #05070d;
+    border: 1px solid #222b3e;
+  }
+  .hype-summary-card {
+    background: #121828;
+    border: 1px solid #24314c;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .hype-stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--cabled-font-mono);
+    font-size: 12px;
+    border-bottom: 1px dashed #24314c;
+    padding-bottom: 6px;
+  }
+
+  .hype-items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .hype-card {
+    background: #111624;
+    border: 1px solid #202b40;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .hype-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .hype-tech-name {
+    font-family: var(--cabled-font-display);
+    font-size: 16px;
+    color: #ffffff;
+  }
+  .hype-badge {
+    font-family: var(--cabled-font-mono);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+  .badge-hyper { background: #7c2d12; color: #fed7aa; }
+  .badge-flop { background: #450a0a; color: #fca5a5; }
+  .badge-real { background: #064e3b; color: #a7f3d0; }
+
+  .bar-compare {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--cabled-font-mono);
+    font-size: 10px;
+  }
+  .bar-row span { width: 50px; color: var(--cabled-text-muted); }
+  .mini-bar {
+    height: 8px;
+    flex: 1;
+    background: #1f293d;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .mini-fill {
+    height: 100%;
+    background: var(--cabled-neon-orange);
+  }
+  .mini-fill.reality {
+    background: var(--cabled-neon-cyan);
+  }
+  .hype-description {
+    font-size: 12px;
+    color: #cbd5e1;
+    line-height: 1.4;
+  }
+
+  /* Feature 5: Fetish Gadgets */
+  .fetish-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+  }
+  .fetish-card {
+    background: #101420;
+    border: 1px solid #232c40;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .fetish-card::after {
+    content: "FETISH";
+    position: absolute;
+    bottom: -10px;
+    right: 10px;
+    font-family: var(--cabled-font-display);
+    font-size: 38px;
+    color: rgba(255, 255, 255, 0.03);
+    pointer-events: none;
+  }
+  .fetish-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid #1e2638;
+    padding-bottom: 8px;
+  }
+  .fetish-name {
+    font-family: var(--cabled-font-display);
+    font-size: 18px;
+    color: var(--cabled-neon-cyan);
+  }
+  .fetish-price {
+    font-family: var(--cabled-font-mono);
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--cabled-neon-lime);
+  }
+  .fetish-specs {
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    color: var(--cabled-neon-orange);
+    background: #090c14;
+    padding: 6px 10px;
+    border: 1px solid #1a2233;
+  }
+  .fetish-blurb {
+    font-family: var(--cabled-font-serif);
+    font-size: 13px;
+    line-height: 1.5;
+    color: #d1d5db;
+  }
+
+  /* VFS Dispatch Bar */
+  .vfs-dispatch-bar {
+    background: #000;
+    border: 2px solid var(--cabled-neon-orange);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    box-shadow: 0 0 20px rgba(255, 85, 0, 0.3);
+  }
+  .dispatch-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .dispatch-title {
+    font-family: var(--cabled-font-display);
+    font-size: 18px;
+    color: var(--cabled-neon-orange);
+    text-transform: uppercase;
+  }
+  .dispatch-sub {
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    color: var(--cabled-text-muted);
+  }
+  .dispatch-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* Footer */
+  .cabled-footer {
+    border-top: 3px solid var(--cabled-neon-orange);
+    background: #07090f;
+    padding: 30px 20px;
+    margin-top: 40px;
+  }
+  .footer-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 768px) {
+    .footer-inner { grid-template-columns: 1fr; }
+  }
+  .footer-col h4 {
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    color: var(--cabled-neon-cyan);
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .footer-col p {
+    font-size: 12px;
+    color: var(--cabled-text-muted);
+    line-height: 1.5;
+  }
+  .footer-bottom {
+    max-width: 1280px;
+    margin: 20px auto 0;
+    padding-top: 16px;
+    border-top: 1px solid #1a2233;
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    color: #4b5563;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* Toast Notification */
+  #cabledToast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #000;
+    border: 2px solid var(--cabled-neon-cyan);
+    color: #fff;
+    padding: 12px 18px;
+    font-family: var(--cabled-font-mono);
+    font-size: 12px;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+    display: none;
+    z-index: 9999;
+    align-items: center;
+    gap: 10px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Top Broadcast Ticker -->
+<div class="top-ticker">
+  <div style="display:flex; align-items:center; gap:8px;">
+    <span style="color:var(--cabled-neon-orange); font-weight:bold;">⚡ CABLED FEED:</span>
+    <span id="tickerUtcClock">1999-12-31 23:42:18 UTC</span>
+  </div>
+  <div class="ticker-wrap">
+    <div class="ticker-text" id="liveTickerText">
+      NASDAQ: 4,041.27 (+1.8%) &bull; PETS.NET: $48.50 (+312% IPO POP) &bull; Y2K COUNTDOWN: T-MINUS 17 MINS &bull; FED INJECTS $100B LIQUIDITY BUFFER &bull; PALM VII WIRELESS MESSAGING CRUSHES PAGERS &bull; SILICON VALLEY REAL ESTATE: $1,200/SQFT &bull; LINUX 2.2.14 KERNEL SHIPS WITH SMP SPEEDUP &bull; CABLED // ISSUE 7.12 // DECEMBER 1999 //
+    </div>
+  </div>
+  <div class="ticker-audio">
+    <button class="btn-cyber-cyan" id="audioToggleBtn" onclick="toggleAudio()" style="padding:2px 8px; font-size:10px;">
+      <span id="audioStatusIcon">🔇</span> <span id="audioStatusText">SYNTH: OFF</span>
+    </button>
+  </div>
+</div>
+
+<!-- Main Masthead -->
+<header class="masthead">
+  <div class="masthead-grid">
+    <div class="masthead-logo-wrap">
+      <div class="issue-tag">VOLUME 7 &bull; NUMBER 12 &bull; DECEMBER 1999 &bull; SAN FRANCISCO / NEW YORK / TOKYO</div>
+      <h1 class="cabled-logo">CAB<span>LED</span></h1>
+      <p class="cabled-tagline">"The mouth speaks; the modem delivers. Welcome to the millennial acceleration."</p>
+    </div>
+    <div class="masthead-meta">
+      <div class="barcode">||| | || |||| | ||| || |||</div>
+      <div>PRICE: $4.95 US / $5.95 CANADA</div>
+      <div>POSTHUMAN EDITION //ISSN 1059-1028</div>
+      <div>VIRTUAL WEB: <span style="color:var(--cabled-neon-cyan);">kweb://cabled</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- Navigation Bar -->
+<nav class="nav-bar">
+  <div class="nav-links">
+    <button class="nav-chip active" onclick="scrollToSection('sec-cover')">[01] COVER STORY</button>
+    <button class="nav-chip" onclick="scrollToSection('sec-y2k')">[02] Y2K AUDIT</button>
+    <button class="nav-chip" onclick="scrollToSection('sec-ipo')">[03] IPO BUBBLE SIM</button>
+    <button class="nav-chip" onclick="scrollToSection('sec-jargon')">[04] JARGON WATCH</button>
+    <button class="nav-chip" onclick="scrollToSection('sec-hype')">[05] HYPE MATRIX</button>
+    <button class="nav-chip" onclick="scrollToSection('sec-fetish')">[06] FETISH GADGETS</button>
+    <button class="nav-chip" onclick="scrollToSection('sec-vfs')">[07] VFS DISPATCH</button>
+  </div>
+  <div class="nav-webring-links">
+    <span style="color:var(--cabled-text-muted);">WEBRING:</span>
+    <a href="/web/slashnet.html" title="Jump to SlashNet">« SlashNet</a>
+    <span style="color:#555;">|</span>
+    <a href="/web/portal.html" title="Jump to KiloNet Portal">KNet Portal</a>
+    <span style="color:#555;">|</span>
+    <a href="/web/trapster.html" title="Jump to Trapster P2P">Trapster »</a>
+  </div>
+</nav>
+
+<!-- Main Container -->
+<main class="container">
+
+  <!-- SECTION 01: Lead Editorial Cover Story -->
+  <section class="cyber-section" id="sec-cover">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <span class="section-num">01</span>
+        <h2 class="section-title">COVER STORY</h2>
+      </div>
+      <div class="section-subtitle">INVESTIGATIVE DISPATCH // ZERO-HOUR DRIFT</div>
+    </div>
+
+    <article class="lead-article">
+      <div class="lead-content">
+        <div class="lead-kicker">SPECIAL INVESTIGATION // DECEMBER 1999</div>
+        <h3 class="lead-headline">THE ZERO-HOUR CHRONICLES: INSIDE THE NORAD BUNKER &amp; THE COBOL CATACOMBS</h3>
+        <p class="lead-deck">
+          As the clock ticks down toward midnight of December 31, 1999, eighty thousand retired mainframe programmers have been dragged out of retirement villas in Boca Raton to patch eighty million lines of 1968 spaghetti code. Will the electric grid black out, or is this the greatest consultant windfall in human history?
+        </p>
+        <div class="lead-byline">WORDS: JULIAN THORNE &bull; PHOTOGRAPHY: CHROMA-OPTIC SYNTHESIS &bull; 11 MIN READ</div>
+        
+        <div class="lead-body">
+          <p>
+            Inside the Cheyenne Mountain nuclear bunker, thirty miles south of Colorado Springs, the atmosphere smells of burnt filter coffee and ionized ozone. Fluorescent tubes hum at 60 Hertz over rows of green-phosphor DEC VT220 terminals. The men in flight suits aren't looking for Soviet ICBMs tonight. They are staring at seven lines of date-comparison logic written in 1974 by a Lockheed contractor who died during the Carter administration.
+          </p>
+          <p>
+            "If the year field rolls from '99' to '00', our early-warning satellite telemetry will compute the delta as negative ninety-nine years," whispers Major Donald Vance, eyes bloodshot under amber CRT glare. "The tracking algorithm will assume the missile plume was launched in nineteen-hundred. It will discard the telemetry as a historical temporal anomaly. We spent forty-two million dollars in DARPA emergency appropriations just to insert four-digit century flags."
+          </p>
+          <p>
+            Meanwhile, thirty-five floors above Wall Street, investment bankers in double-breasted suits are drinking Dom Pérignon straight from the bottle. To them, the Millennium Bug is not an apocalypse; it is the ultimate liquidity multiplier. Corporate America has spent an estimated $600 billion on Y2K remediation, software upgrades, and emergency server clustering. That money did not evaporate—it was funneled directly into the pockets of dot-com infrastructure startups, fiber-optic syndicates, and hardware OEMs.
+          </p>
+          <p>
+            "The truth is," says cyberneticist Dr. Elena Rostova, "we built our civilization on a two-byte shortcut because magnetic core memory cost two dollars a byte in 1965. We sacrificed the future to save sixteen bits of RAM. And now, the bill has come due at midnight."
+          </p>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button class="btn-cyber" onclick="exportArticleVFS('cover_story')">
+            💾 Save Article to KiloOS VFS
+          </button>
+          <button class="btn-cyber-cyan" onclick="openArticleInKPad('cover_story')">
+            📝 Open in KPad
+          </button>
+        </div>
+      </div>
+
+      <!-- Lead Article Sidebar -->
+      <aside class="lead-sidebar">
+        <div class="sidebar-box">
+          <div class="sidebar-title">THE BUG BY THE NUMBERS</div>
+          <div class="sidebar-content">
+            <p><strong>$600B:</strong> Global expenditure on Y2K fixes.</p>
+            <p><strong>80,000:</strong> COBOL coders recalled from retirement.</p>
+            <p><strong>12.4M:</strong> Canned peach rations hoarded in Idaho.</p>
+            <p><strong>00:00:00:</strong> The midnight zero vector.</p>
+          </div>
+        </div>
+
+        <div class="sidebar-box" style="border-top-color:var(--cabled-neon-cyan);">
+          <div class="sidebar-title" style="color:var(--cabled-neon-cyan);">DIAGNOSTIC TELEMETRY</div>
+          <div class="sidebar-content">
+            <p>Status: <span style="color:var(--cabled-neon-lime);">DEFCON 2</span></p>
+            <p>Grid Frequency: <strong>59.98 Hz</strong></p>
+            <p>Primary Rail: <strong>Synchronous</strong></p>
+            <p>Failsafe: <strong>Analog Diesel Engaged</strong></p>
+          </div>
+        </div>
+
+        <div class="sidebar-box" style="border-top-color:var(--cabled-neon-orange);">
+          <div class="sidebar-title" style="color:var(--cabled-neon-orange);">EDITORIAL HOT-TAKE</div>
+          <div class="sidebar-content">
+            <em>"Prediction: At 00:01 on January 1, 2000, your microwave clock will flash 12:00, the stock market will reopen on Monday up four percent, and three thousand consultants will buy yachts."</em>
+          </div>
+        </div>
+      </aside>
+    </article>
+  </section>
+
+  <!-- SECTION 02: Interactive Y2K Readiness Audit & Scanner -->
+  <section class="cyber-section" id="sec-y2k">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <span class="section-num">02</span>
+        <h2 class="section-title">Y2K READINESS AUDIT &amp; ARMAGEDDON LAB</h2>
+      </div>
+      <div class="section-subtitle">INTERACTIVE HARDWARE &amp; CODE DIAGNOSTIC SCANNER</div>
+    </div>
+
+    <div class="y2k-panel">
+      <div class="y2k-grid">
+        <!-- Checklist Inputs -->
+        <div class="audit-checklist">
+          <h4 style="font-family:var(--cabled-font-mono); color:var(--cabled-neon-orange); margin-bottom:6px;">INFRASTRUCTURE INTEGRITY CHECKLIST:</h4>
+          
+          <div class="audit-item">
+            <div class="audit-info">
+              <span class="audit-label">BIOS RTC Century Rollover Fix</span>
+              <span class="audit-desc">Patch motherboard Dallas/Benchmarq RTC chip to support 2000+ century byte</span>
+            </div>
+            <label class="y2k-switch">
+              <input type="checkbox" id="chk_bios" checked onchange="updateAuditCalculations()">
+              <span class="y2k-slider"></span>
+            </label>
+          </div>
+
+          <div class="audit-item">
+            <div class="audit-info">
+              <span class="audit-label">COBOL 2-Digit Date Expansion</span>
+              <span class="audit-desc">Refactor YYMMDD to YYYYMMDD in banking transaction &amp; payroll journals</span>
+            </div>
+            <label class="y2k-switch">
+              <input type="checkbox" id="chk_cobol" checked onchange="updateAuditCalculations()">
+              <span class="y2k-slider"></span>
+            </label>
+          </div>
+
+          <div class="audit-item">
+            <div class="audit-info">
+              <span class="audit-label">GPS 1024-Week Epoch Shielding</span>
+              <span class="audit-desc">Hardware firmware filter for satellite constellation rollover</span>
+            </div>
+            <label class="y2k-switch">
+              <input type="checkbox" id="chk_gps" onchange="updateAuditCalculations()">
+              <span class="y2k-slider"></span>
+            </label>
+          </div>
+
+          <div class="audit-item">
+            <div class="audit-info">
+              <span class="audit-label">Industrial SCADA &amp; Nuclear PLC Audits</span>
+              <span class="audit-desc">Verify water turbine and substation logic does not trip on 00</span>
+            </div>
+            <label class="y2k-switch">
+              <input type="checkbox" id="chk_scada" onchange="updateAuditCalculations()">
+              <span class="y2k-slider"></span>
+            </label>
+          </div>
+
+          <div class="audit-item">
+            <div class="audit-info">
+              <span class="audit-label">Diesel Backup Generator &amp; Fuel Stash</span>
+              <span class="audit-desc">500 gallons stabilized fuel + mechanical crank starter</span>
+            </div>
+            <label class="y2k-switch">
+              <input type="checkbox" id="chk_diesel" checked onchange="updateAuditCalculations()">
+              <span class="y2k-slider"></span>
+            </label>
+          </div>
+
+          <div class="audit-item">
+            <div class="audit-info">
+              <span class="audit-label">Analog Dial-Up Redundancy Line</span>
+              <span class="audit-desc">POTS copper line bypass around ISDN digital switchboard</span>
+            </div>
+            <label class="y2k-switch">
+              <input type="checkbox" id="chk_copper" checked onchange="updateAuditCalculations()">
+              <span class="y2k-slider"></span>
+            </label>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <button class="btn-cyber-orange" onclick="runArmageddonScan()" style="flex:1;">
+              ⚡ RUN 2-DIGIT ARMAGEDDON SCAN
+            </button>
+            <button class="btn-cyber-cyan" onclick="simulateMidnightRollover()" style="flex:1;">
+              🕛 SIMULATE MIDNIGHT (00:00:00)
+            </button>
+          </div>
+        </div>
+
+        <!-- Diagnostic Monitor & Output -->
+        <div class="y2k-monitor">
+          <div class="y2k-clock-display">
+            <div class="clock-digits" id="y2kClockDisplay">23:59:58</div>
+            <div class="clock-sub" id="y2kDateDisplay">DATE: 1999-12-31 &bull; SYSTEM RTC: VINTAGE-99</div>
+          </div>
+
+          <div class="readiness-gauge-wrap">
+            <div class="gauge-labels">
+              <span>SYSTEM COMPLIANCE INDEX</span>
+              <strong id="gaugePercentage" style="color:var(--cabled-neon-lime);">78%</strong>
+            </div>
+            <div class="gauge-bar-outer">
+              <div class="gauge-bar-fill" id="gaugeFill" style="width: 78%;"></div>
+            </div>
+            <div class="gauge-labels" style="font-size:10px;">
+              <span>0% SYSTEM CRASH</span>
+              <span style="color:var(--cabled-neon-orange);">50% PANIC</span>
+              <span style="color:var(--cabled-neon-lime);">100% BULLETPROOF</span>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-family:var(--cabled-font-mono); font-size:10px; color:var(--cabled-text-muted); margin-bottom:4px;">
+              REAL-TIME DIAGNOSTIC TELEMETRY:
+            </div>
+            <div class="y2k-log-box" id="y2kLogBox">[23:59:00] Initializing Dallas RTC century register check...
+[23:59:05] Award Modular BIOS v4.51PG detected.
+[23:59:12] COBOL COMP-3 currency fields scanning: 142 modules examined.
+[23:59:22] Awaiting user trigger for 00:00:00 rollover stress-test...</div>
+          </div>
+
+          <div style="display:flex; gap:8px;">
+            <button class="btn-cyber" onclick="exportY2kCertificateVFS()" style="flex:1;">
+              📜 Export Y2K Certificate (VFS)
+            </button>
+            <button class="btn-cyber-lime" onclick="openY2kCertificateInKPad()" style="flex:1;">
+              📝 Open in KPad
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 03: Dot-Com IPO Bubble Stock Simulator -->
+  <section class="cyber-section" id="sec-ipo">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <span class="section-num">03</span>
+        <h2 class="section-title">DOT-COM IPO BUBBLE STOCK SIMULATOR</h2>
+      </div>
+      <div class="section-subtitle">SILICON VALLEY SPECULATION DESK // 1999 MANIA</div>
+    </div>
+
+    <div class="stock-sim-container">
+      <!-- Portfolio Overview -->
+      <div class="sim-overview-bar">
+        <div class="stat-block">
+          <span class="stat-label">CASH ON HAND</span>
+          <span class="stat-val" id="portfolioCash">$100,000.00</span>
+        </div>
+        <div class="stat-block">
+          <span class="stat-label">EQUITIES VALUE</span>
+          <span class="stat-val" id="portfolioEquities">$0.00</span>
+        </div>
+        <div class="stat-block">
+          <span class="stat-label">TOTAL NET WORTH</span>
+          <span class="stat-val pos" id="portfolioNetWorth">$100,000.00</span>
+        </div>
+        <div class="stat-block">
+          <span class="stat-label">MARKET SENTIMENT</span>
+          <span class="stat-val" id="marketSentiment" style="color:var(--cabled-neon-cyan); font-size:16px;">IRRATIONAL EXUBERANCE</span>
+        </div>
+        <div>
+          <button class="btn-cyber-lime" onclick="tickMarketDay()">
+            ⏩ Advance Market Day
+          </button>
+        </div>
+      </div>
+
+      <!-- Market Grid -->
+      <div class="market-grid">
+        <!-- Stock Table -->
+        <div class="stock-table-wrap">
+          <table class="stock-table">
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Company Archetype</th>
+                <th>Price</th>
+                <th>Day Δ</th>
+                <th>Held</th>
+                <th>Burn / Mo</th>
+                <th>Trade Action</th>
+              </tr>
+            </thead>
+            <tbody id="stockTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Sparkline Chart & Pitch Generator -->
+        <div class="chart-pitch-panel">
+          <div class="canvas-box">
+            <div class="canvas-title">
+              <span>PORTFOLIO VALUATION TRAJECTORY</span>
+              <span id="chartGainPct" style="color:var(--cabled-neon-lime);">+0.0%</span>
+            </div>
+            <canvas id="portfolioChart" width="340" height="120"></canvas>
+          </div>
+
+          <div class="pitch-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="pitch-title">💡 INSTANT STARTUP PITCH GENERATOR</span>
+              <button class="btn-cyber-magenta" onclick="generateNewPitch()" style="padding:2px 8px; font-size:10px;">
+                RE-ROLL
+              </button>
+            </div>
+            <p class="pitch-text" id="pitchPitchText">
+              "Pets.com meets Napster: A peer-to-peer MP3 delivery pipeline for artisanal hamster cedar shavings over 56k dialup."
+            </p>
+            <div class="pitch-meta">
+              <span>VALUATION: <strong id="pitchValuation" style="color:#fff;">$85,000,000</strong></span>
+              <span>LEAD: <strong id="pitchLead" style="color:var(--cabled-neon-cyan);">Kleiner Syndicate</strong></span>
+            </div>
+            <button class="btn-cyber-cyan" onclick="stageIPOEvent()" style="width:100%; justify-content:center;">
+              🚀 STAGE FIRST-DAY IPO ON NASDAQ
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <button class="btn-cyber" onclick="exportPortfolioVFS()">
+          💾 Export Portfolio &amp; Prospectus to VFS
+        </button>
+        <button class="btn-cyber-lime" onclick="openPortfolioInKPad()">
+          📝 Open Prospectus in KPad
+        </button>
+        <span style="font-family:var(--cabled-font-mono); font-size:11px; color:var(--cabled-text-muted); margin-left:auto;">
+          Tip: Liquidate before the April 2000 margin call!
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 04: Jargon Watch Generator -->
+  <section class="cyber-section" id="sec-jargon">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <span class="section-num">04</span>
+        <h2 class="section-title">JARGON WATCH</h2>
+      </div>
+      <div class="section-subtitle">THE POST-HUMAN CYBER-LEXICON // NEOLOGISM FORGE</div>
+    </div>
+
+    <div class="jargon-container">
+      <!-- Interactive Synthesizer -->
+      <div class="jargon-generator-box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h4 style="font-family:var(--cabled-font-display); font-size:16px; color:var(--cabled-neon-cyan);">
+            ⚡ 1999 NEOLOGISM SYNTHESIZER
+          </h4>
+          <span style="font-family:var(--cabled-font-mono); font-size:11px; color:var(--cabled-neon-lime);">
+            COMBINATORIAL BUZZWORD MATRIX
+          </span>
+        </div>
+
+        <div class="combinator-row">
+          <div>
+            <label style="display:block; font-size:10px; font-family:var(--cabled-font-mono); color:var(--cabled-text-muted); margin-bottom:2px;">PREFIX:</label>
+            <select id="jargonPrefix" style="width:100%;">
+              <option value="Cyber-">Cyber-</option>
+              <option value="Hyper-">Hyper-</option>
+              <option value="Frictionless-">Frictionless-</option>
+              <option value="Disinter-">Disinter-</option>
+              <option value="Vapor-">Vapor-</option>
+              <option value="Synaptic-">Synaptic-</option>
+              <option value="XML-">XML-</option>
+              <option value="B2B-">B2B-</option>
+              <option value="Post-Meat-">Post-Meat-</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:10px; font-family:var(--cabled-font-mono); color:var(--cabled-text-muted); margin-bottom:2px;">ROOT NOUN:</label>
+            <select id="jargonRoot" style="width:100%;">
+              <option value="Bandwidth">Bandwidth</option>
+              <option value="Eyeball">Eyeball</option>
+              <option value="Portal">Portal</option>
+              <option value="Arbitrage">Arbitrage</option>
+              <option value="Meatspace">Meatspace</option>
+              <option value="Synergy">Synergy</option>
+              <option value="Middleware">Middleware</option>
+              <option value="Venture">Venture</option>
+              <option value="Ecosystem">Ecosystem</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:10px; font-family:var(--cabled-font-mono); color:var(--cabled-text-muted); margin-bottom:2px;">SUFFIX:</label>
+            <select id="jargonSuffix" style="width:100%;">
+              <option value="Gluttony">-Gluttony</option>
+              <option value="Monetization">-Monetization</option>
+              <option value="Nomad">-Nomad</option>
+              <option value="Evangelist">-Evangelist</option>
+              <option value="Burn">-Burn</option>
+              <option value="Cascade">-Cascade</option>
+              <option value="Fatigue">-Fatigue</option>
+              <option value="Arbitrage">-Arbitrage</option>
+              <option value="Paradigm">-Paradigm</option>
+            </select>
+          </div>
+
+          <div style="padding-top:14px;">
+            <button class="btn-cyber-cyan" onclick="synthesizeCustomJargon()">
+              ⚡ SYNTHESIZE
+            </button>
+          </div>
+        </div>
+
+        <div class="generated-term-display" id="jargonOutputBlock">
+          <div class="term-header">
+            <span class="term-word" id="jargonOutputTerm">Cyber-Bandwidth-Gluttony</span>
+            <span class="term-pos" id="jargonOutputPos">noun [mass noun] &bull; Silicon Valley slang</span>
+          </div>
+          <p class="term-def" id="jargonOutputDef">
+            The unrepentant consumption of T1 pipeline capacity by tech workers downloading 128kbps MP3s from Trapster while ignoring client deliverables.
+          </p>
+          <div class="term-citation" id="jargonOutputCitation">
+            "Jenkins got fired for pure cyber-bandwidth-gluttony after saturating the entire campus gateway with Dave Matthews live bootlegs."
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <button class="btn-cyber-lime" onclick="addCurrentTermToLexicon()">
+            ➕ Add to Cabled Official Lexicon
+          </button>
+          <button class="btn-cyber" onclick="exportLexiconVFS()">
+            💾 Export Lexicon to VFS
+          </button>
+        </div>
+      </div>
+
+      <!-- Curated Lexicon Grid -->
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h4 style="font-family:var(--cabled-font-mono); color:var(--cabled-neon-lime);">
+            CANONICAL 1999 DICTIONARY (FILTERABLE):
+          </h4>
+          <input type="text" id="jargonSearchInput" placeholder="Filter terms or concepts..." oninput="filterLexicon()" style="width:240px;">
+        </div>
+
+        <div class="jargon-lexicon-grid" id="lexiconGrid">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 05: Hype-vs-Reality Matrix -->
+  <section class="cyber-section" id="sec-hype">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <span class="section-num">05</span>
+        <h2 class="section-title">HYPE-VS-REALITY MATRIX</h2>
+      </div>
+      <div class="section-subtitle">THE 25-YEAR TECHNOLOGICAL FORECAST VS OUTCOME</div>
+    </div>
+
+    <div class="hype-matrix-container">
+      <div class="radar-composite-grid">
+        <!-- Radar Canvas -->
+        <div>
+          <canvas id="hypeRadarChart" width="360" height="320"></canvas>
+        </div>
+
+        <!-- Composite Summary -->
+        <div class="hype-summary-card">
+          <h3 style="font-family:var(--cabled-font-display); font-size:20px; color:var(--cabled-neon-cyan);">
+            THE MILLENNIAL DELUSION COEFFICIENT
+          </h3>
+          <p style="font-family:var(--cabled-font-serif); font-size:13px; color:#d1d5db; line-height:1.45;">
+            In December 1999, digital prophets promised that by 2010 we would all inhabit virtual cyberspace shopping palaces, trade digital micro-pennies for poems, and eat synthetic algae pills. Here is how the prophecy collided with friction of reality.
+          </p>
+
+          <div class="hype-stat-row">
+            <span style="color:var(--cabled-neon-orange);">AGGREGATE 1999 HYPE:</span>
+            <strong id="aggHypeVal">87.5%</strong>
+          </div>
+          <div class="hype-stat-row">
+            <span style="color:var(--cabled-neon-cyan);">ACTUAL HISTORICAL MANIFESTATION:</span>
+            <strong id="aggRealVal">52.8%</strong>
+          </div>
+          <div class="hype-stat-row">
+            <span style="color:var(--cabled-neon-lime);">FLEET DELUSION SCORE:</span>
+            <strong id="delusionVal">34.7% (OPTIMISM INDEX)</strong>
+          </div>
+
+          <div style="margin-top:10px;">
+            <button class="btn-cyber-orange" onclick="exportHypeMatrixVFS()" style="width:100%; justify-content:center;">
+              📊 Export Hype Matrix Whitepaper to VFS
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Individual Item Cards with Sliders -->
+      <div>
+        <h4 style="font-family:var(--cabled-font-mono); color:var(--cabled-neon-orange); margin-bottom:12px;">
+          INDIVIDUAL TECHNOLOGICAL DRIFT AUDIT:
+        </h4>
+        <div class="hype-items-grid" id="hypeCardsGrid">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 06: Fetish Gadgets of 1999 -->
+  <section class="cyber-section" id="sec-fetish">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <span class="section-num">06</span>
+        <h2 class="section-title">FETISH: MILLENNIAL TWILIGHT HARDWARE</h2>
+      </div>
+      <div class="section-subtitle">THE TOTEMS OF CONSUMER CYBER-DESIRE // 1999 CATALOG</div>
+    </div>
+
+    <div class="fetish-grid">
+      <!-- Item 1: Diamond Rio PMP300 -->
+      <div class="fetish-card">
+        <div class="fetish-header">
+          <span class="fetish-name">Diamond Rio PMP300</span>
+          <span class="fetish-price">$200 USD</span>
+        </div>
+        <div class="fetish-specs">32MB FLASH MEMORY &bull; PARALLEL PORT DOCK &bull; 1x AA BATTERY</div>
+        <p class="fetish-blurb">
+          The RIAA tried to sue it into the sun, but the 9th Circuit Court gave music pirates their Magna Carta. Holds approximately eight songs at 128 kbps. If you shake it on the bus, it doesn't skip like your Discman. The future has no moving parts.
+        </p>
+        <button class="btn-cyber" onclick="orderFetishSim('Diamond Rio PMP300')">⚡ Inspect Hardware Specs</button>
+      </div>
+
+      <!-- Item 2: Palm V -->
+      <div class="fetish-card">
+        <div class="fetish-header">
+          <span class="fetish-name">3Com Palm V</span>
+          <span class="fetish-price">$449 USD</span>
+        </div>
+        <div class="fetish-specs">ANODIZED ALUMINUM &bull; 160x160 MONO LCD &bull; 8MB RAM</div>
+        <p class="fetish-blurb">
+          Industrial design perfection. Only 0.4 inches thick with a sculpted metal chassis that slips effortlessly into the breast pocket of an Armani blazer. Stylus graffiti writing makes you feel like an architect drafting the matrix.
+        </p>
+        <button class="btn-cyber" onclick="orderFetishSim('3Com Palm V')">⚡ Inspect Hardware Specs</button>
+      </div>
+
+      <!-- Item 3: Sony VAIO C1 PictureBook -->
+      <div class="fetish-card">
+        <div class="fetish-header">
+          <span class="fetish-name">Sony VAIO C1 PictureBook</span>
+          <span class="fetish-price">$2,299 USD</span>
+        </div>
+        <div class="fetish-specs">ROTATING 0.27MP MOTION-EYE &bull; 8.9" ULTRAWIDE &bull; 2.2 LBS</div>
+        <p class="fetish-blurb">
+          The laptop William Gibson would carry if he wore purple titanium shades. Features a built-in CCD lens on the top bezel that swivels 180 degrees to photograph bewildered baristas in Tokyo cybercafes.
+        </p>
+        <button class="btn-cyber" onclick="orderFetishSim('Sony VAIO C1')">⚡ Inspect Hardware Specs</button>
+      </div>
+
+      <!-- Item 4: 3dfx Voodoo3 3500 TV -->
+      <div class="fetish-card">
+        <div class="fetish-header">
+          <span class="fetish-name">3dfx Voodoo3 3500 TV</span>
+          <span class="fetish-price">$249 USD</span>
+        </div>
+        <div class="fetish-specs">GLIDE API &bull; 183MHz 16MB SDRAM &bull; BLUE BREAKOUT POD</div>
+        <p class="fetish-blurb">
+          The ultimate gaming and multimedia accelerator. Powers Tremor III Arena at 1024x768 with full bilateral texture filtering while streaming cable television into a postage-stamp overlay window.
+        </p>
+        <button class="btn-cyber" onclick="orderFetishSim('3dfx Voodoo3 3500')">⚡ Inspect Hardware Specs</button>
+      </div>
+
+      <!-- Item 5: Cybiko Wireless Handheld -->
+      <div class="fetish-card">
+        <div class="fetish-header">
+          <span class="fetish-name">Cybiko Wireless</span>
+          <span class="fetish-price">$139 USD</span>
+        </div>
+        <div class="fetish-specs">900MHz RF MESH &bull; 300FT RANGE &bull; RUBBER KEYBOARD</div>
+        <p class="fetish-blurb">
+          A clandestine peer-to-peer radio device for teenagers to transmit encrypted text messages across high school study halls without paying paging carriers a single nickel.
+        </p>
+        <button class="btn-cyber" onclick="orderFetishSim('Cybiko Wireless')">⚡ Inspect Hardware Specs</button>
+      </div>
+
+      <!-- Item 6: IBM Microdrive CF+ -->
+      <div class="fetish-card">
+        <div class="fetish-header">
+          <span class="fetish-name">IBM Microdrive 340MB</span>
+          <span class="fetish-price">$499 USD</span>
+        </div>
+        <div class="fetish-specs">1-INCH PLATTER &bull; 3,600 RPM &bull; COMPACTFLASH TYPE II</div>
+        <p class="fetish-blurb">
+          Miracle of mechanical micromachining: a fully functioning spinning hard drive smaller than a matchbook. If you listen closely in a quiet room, you can hear its tiny read heads seeking track 0.
+        </p>
+        <button class="btn-cyber" onclick="orderFetishSim('IBM Microdrive')">⚡ Inspect Hardware Specs</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 07: VFS Dispatch & Archive Bridge -->
+  <section class="cyber-section" id="sec-vfs">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <span class="section-num">07</span>
+        <h2 class="section-title">VFS DISPATCH &amp; ISSUE EXPORT</h2>
+      </div>
+      <div class="section-subtitle">KILOOS LOCAL STORAGE &amp; INTER-APP IPC BRIDGE</div>
+    </div>
+
+    <div class="vfs-dispatch-bar">
+      <div class="dispatch-info">
+        <span class="dispatch-title">💾 ARCHIVE COMPLETE CABLED ISSUE TO VFS</span>
+        <span class="dispatch-sub">
+          Target: <code>/home/downloads/cabled_issue_7-12_bundle.txt</code> &bull; Formatted for KPad &amp; Terminal
+        </span>
+      </div>
+      <div class="dispatch-actions">
+        <button class="btn-cyber" onclick="exportFullBundleVFS()">
+          📦 Save Complete Issue (VFS)
+        </button>
+        <button class="btn-cyber-cyan" onclick="openBundleInKPad()">
+          📝 Open in KPad
+        </button>
+        <button class="btn-cyber-lime" onclick="launchKiloApp('knet.html')">
+          🌐 Launch KNet Browser
+        </button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Footer -->
+<footer class="cabled-footer">
+  <div class="footer-inner">
+    <div class="footer-col">
+      <div style="font-family:var(--cabled-font-display); font-size:24px; color:#fff; margin-bottom:8px;">
+        CAB<span style="color:var(--cabled-neon-lime);">LED</span>
+      </div>
+      <p>
+        Published monthly by Cabled Ventures Inc., 520 Third Street, San Francisco, CA 94107. 
+        All rights reserved under the Berne Convention. Parody homage to the golden age of cyber-journalism.
+      </p>
+      <p style="margin-top:8px; font-family:var(--cabled-font-mono); font-size:11px; color:var(--cabled-neon-cyan);">
+        "Change is good. Out of chaos comes new opportunity." &bull; Issue 7.12
+      </p>
+    </div>
+
+    <div class="footer-col">
+      <h4>ISSUE ARCHIVE</h4>
+      <p><a href="#sec-cover">7.12: Millennial Twilight</a></p>
+      <p><a href="#sec-cover">7.08: Linux Kernel 2.2</a></p>
+      <p><a href="#sec-cover">7.04: The Napster Shock</a></p>
+      <p><a href="#sec-cover">6.11: Browser Wars Endgame</a></p>
+    </div>
+
+    <div class="footer-col">
+      <h4>KILONET VIRTUAL NODES</h4>
+      <p><a href="/web/slashnet.html">kweb://slashnet</a> (News for Nerds)</p>
+      <p><a href="/web/trapster.html">kweb://trapster</a> (P2P Exchange)</p>
+      <p><a href="/web/portal.html">kweb://portal</a> (KiloNet Directory)</p>
+      <p><a href="/web/geocities.html">kweb://geocities</a> (CyberSpire Shrine)</p>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>&copy; 1999 Cabled Ventures Inc. &bull; Anti-Potemkin Web 1.0 Certified</span>
+    <span>Host: KiloOS Web Server / 198.41.0.42 &bull; Latency: 14ms</span>
+  </div>
+</footer>
+
+<!-- Toast Notification Element -->
+<div id="cabledToast">
+  <span id="toastIcon">💾</span>
+  <span id="toastMsg">File successfully saved to KiloOS VFS!</span>
+</div>
+
+<script>
+/**
+ * =========================================================================
+ * CABLED MAGAZINE 1999 NEON EDITION (kweb://cabled)
+ * Core Interactive Client Engine
+ * Anti-Potemkin Architecture: Zero external CDN dependencies
+ * =========================================================================
+ */
+
+// --- Storage Wrappers (quality-standards.md) ---
+function safeGet(key, fallback) {
+  try {
+    const val = localStorage.getItem(key);
+    return val !== null ? JSON.parse(val) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function safeSet(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    // quota or storage disabled
+  }
+}
+
+// --- KiloOS VFS & IPC Integration ---
+/**
+ * Dispatches VFS file write request to parent KiloOS shell
+ * @param {string} vfsPath
+ * @param {string} contentStr
+ */
+function saveToKiloVfs(vfsPath, contentStr) {
+  try {
+    window.parent.postMessage({
+      type: 'VFS_WRITE',
+      path: vfsPath,
+      data: contentStr,
+      requestId: 'vfs_' + Date.now()
+    }, '*');
+    window.parent.postMessage({
+      type: 'OS_NOTIFY',
+      title: 'CABLED // VFS Dispatch',
+      message: 'Saved to VFS: ' + vfsPath
+    }, '*');
+  } catch (e) {}
+  showToast('💾 Dispatched to KiloOS VFS: ' + vfsPath);
+  playRetroSound('beep');
+}
+
+/**
+ * Requests parent KiloOS to launch an application
+ * @param {string} appName
+ * @param {Object} args
+ */
+function launchKiloApp(appName, args) {
+  try {
+    window.parent.postMessage({
+      type: 'LAUNCH_APP',
+      app: appName,
+      args: args || {}
+    }, '*');
+  } catch (e) {}
+}
+
+function showToast(msg) {
+  const t = document.getElementById('cabledToast');
+  const m = document.getElementById('toastMsg');
+  if (t && m) {
+    m.textContent = msg;
+    t.style.display = 'flex';
+    clearTimeout(window._toastTimeout);
+    window._toastTimeout = setTimeout(() => {
+      t.style.display = 'none';
+    }, 3200);
+  }
+}
+
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth' });
+    playRetroSound('click');
+  }
+}
+
+// --- Procedural Web Audio Synth Engine (YM2612 / Ambient Synth) ---
+let audioCtx = null;
+let isAudioPlaying = false;
+let synthTimer = null;
+let synthStep = 0;
+
+function initAudio() {
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      audioCtx = new AudioContextClass();
+    }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function toggleAudio() {
+  initAudio();
+  if (!audioCtx) return;
+
+  isAudioPlaying = !isAudioPlaying;
+  const iconEl = document.getElementById('audioStatusIcon');
+  const textEl = document.getElementById('audioStatusText');
+
+  if (isAudioPlaying) {
+    if (iconEl) iconEl.textContent = '🔊';
+    if (textEl) textEl.textContent = 'SYNTH: ON';
+    startSynthLoop();
+  } else {
+    if (iconEl) iconEl.textContent = '🔇';
+    if (textEl) textEl.textContent = 'SYNTH: OFF';
+    stopSynthLoop();
+  }
+}
+
+function playRetroSound(type) {
+  initAudio();
+  if (!audioCtx) return;
+
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    if (type === 'click') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(220, now + 0.04);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.04);
+      osc.start(now);
+      osc.stop(now + 0.04);
+    } else if (type === 'trade') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(587.33, now); // D5
+      osc.frequency.setValueAtTime(880, now + 0.06); // A5
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.14);
+      osc.start(now);
+      osc.stop(now + 0.14);
+    } else if (type === 'beep') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1046.50, now); // C6
+      gain.gain.setValueAtTime(0.07, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.08);
+      osc.start(now);
+      osc.stop(now + 0.08);
+    } else if (type === 'alarm') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(329.63, now); // E4
+      osc.frequency.setValueAtTime(440, now + 0.1);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    }
+  } catch (e) {}
+}
+
+const SYNTH_SCALE = [130.81, 146.83, 164.81, 196.00, 220.00, 261.63, 293.66, 329.63, 392.00]; // Pentatonic
+function startSynthLoop() {
+  if (synthTimer) clearInterval(synthTimer);
+  synthStep = 0;
+  synthTimer = setInterval(() => {
+    if (!audioCtx || !isAudioPlaying) return;
+    try {
+      const now = audioCtx.currentTime;
+      // Bass note every 4 steps
+      if (synthStep % 4 === 0) {
+        const bassOsc = audioCtx.createOscillator();
+        const bassGain = audioCtx.createGain();
+        bassOsc.type = 'sawtooth';
+        bassOsc.frequency.setValueAtTime(synthStep % 8 === 0 ? 65.41 : 73.42, now); // C2 / D2
+        bassGain.gain.setValueAtTime(0.06, now);
+        bassGain.gain.linearRampToValueAtTime(0.001, now + 0.35);
+        bassOsc.connect(bassGain);
+        bassGain.connect(audioCtx.destination);
+        bassOsc.start(now);
+        bassOsc.stop(now + 0.35);
+      }
+      // Arp blip
+      if (Math.random() > 0.3) {
+        const note = SYNTH_SCALE[Math.floor(Math.random() * SYNTH_SCALE.length)];
+        const arpOsc = audioCtx.createOscillator();
+        const arpGain = audioCtx.createGain();
+        arpOsc.type = 'sine';
+        arpOsc.frequency.setValueAtTime(note * 2, now);
+        arpGain.gain.setValueAtTime(0.03, now);
+        arpGain.gain.linearRampToValueAtTime(0.001, now + 0.12);
+        arpOsc.connect(arpGain);
+        arpGain.connect(audioCtx.destination);
+        arpOsc.start(now);
+        arpOsc.stop(now + 0.12);
+      }
+      synthStep = (synthStep + 1) % 16;
+    } catch (e) {}
+  }, 160);
+}
+
+function stopSynthLoop() {
+  if (synthTimer) {
+    clearInterval(synthTimer);
+    synthTimer = null;
+  }
+}
+
+// --- FEATURE 1: Y2K Readiness Audit & Scanner Logic ---
+let auditReadinessScore = 78;
+
+function updateAuditCalculations() {
+  const bios = document.getElementById('chk_bios')?.checked;
+  const cobol = document.getElementById('chk_cobol')?.checked;
+  const gps = document.getElementById('chk_gps')?.checked;
+  const scada = document.getElementById('chk_scada')?.checked;
+  const diesel = document.getElementById('chk_diesel')?.checked;
+  const copper = document.getElementById('chk_copper')?.checked;
+
+  let score = 20; // baseline
+  if (bios) score += 20;
+  if (cobol) score += 25;
+  if (gps) score += 10;
+  if (scada) score += 15;
+  if (diesel) score += 10;
+  if (copper) score += 10;
+
+  if (score > 100) score = 100;
+  auditReadinessScore = score;
+
+  const pctEl = document.getElementById('gaugePercentage');
+  const fillEl = document.getElementById('gaugeFill');
+  if (pctEl) pctEl.textContent = score + '%';
+  if (fillEl) fillEl.style.width = score + '%';
+
+  playRetroSound('click');
+}
+
+function runArmageddonScan() {
+  playRetroSound('beep');
+  const logBox = document.getElementById('y2kLogBox');
+  if (!logBox) return;
+
+  logBox.textContent = `[${new Date().toTimeString().split(' ')[0]}] Initiating full system scan across local rails...\n`;
+
+  const steps = [
+    "Probing RTC hardware clock via Port 0x70 / 0x71...",
+    "Scanning COBOL source trees for 'PICTURE 99' definitions...",
+    "Validating GPS leap-second tables and week 1024 epoch...",
+    "Checking diesel generator solenoid starter coils...",
+    "Analyzing critical elevator controller firmware...",
+    `Audit scan complete. System integrity evaluated at ${auditReadinessScore}%.`
+  ];
+
+  steps.forEach((msg, idx) => {
+    setTimeout(() => {
+      const time = new Date().toTimeString().split(' ')[0];
+      logBox.textContent += `[${time}] ${msg}\n`;
+      logBox.scrollTop = logBox.scrollHeight;
+      playRetroSound('click');
+    }, (idx + 1) * 280);
+  });
+}
+
+function simulateMidnightRollover() {
+  playRetroSound('alarm');
+  const clockDigits = document.getElementById('y2kClockDisplay');
+  const clockDate = document.getElementById('y2kDateDisplay');
+  const logBox = document.getElementById('y2kLogBox');
+
+  if (clockDigits) clockDigits.textContent = '23:59:59';
+  if (clockDate) clockDate.textContent = 'DATE: 1999-12-31 • T-MINUS 1 SEC';
+
+  setTimeout(() => {
+    // Midnight strike!
+    if (auditReadinessScore >= 70) {
+      if (clockDigits) {
+        clockDigits.textContent = '00:00:00';
+        clockDigits.style.color = 'var(--cabled-neon-lime)';
+      }
+      if (clockDate) clockDate.textContent = 'DATE: 2000-01-01 • RTC CENTURY OK (PASS)';
+      if (logBox) {
+        logBox.textContent += `\n[00:00:00] MIDNIGHT STRUCK: Century rollover verified! No power grid drop detected. Ready for the new millennium.\n`;
+        logBox.scrollTop = logBox.scrollHeight;
+      }
+      playRetroSound('trade');
+    } else {
+      if (clockDigits) {
+        clockDigits.textContent = '1900-00:00';
+        clockDigits.style.color = '#ef4444';
+      }
+      if (clockDate) clockDate.textContent = 'DATE: 1900-01-01 • CLOCK RESET VULNERABILITY TRIPPED!';
+      if (logBox) {
+        logBox.textContent += `\n[00:00:00] FATAL ROLLOVER ERROR: RTC registered year as 1900. Financial ledgers locked out. Check backup generator.\n`;
+        logBox.scrollTop = logBox.scrollHeight;
+      }
+      playRetroSound('alarm');
+    }
+  }, 1000);
+}
+
+function exportY2kCertificateVFS() {
+  const dateStr = new Date().toISOString();
+  let cert = `========================================================================\n`;
+  cert += `OFFICIAL CABLED MAGAZINE Y2K COMPLIANCE & READINESS CERTIFICATE (1999)\n`;
+  cert += `========================================================================\n\n`;
+  cert += `Audit Timestamp:       ${dateStr}\n`;
+  cert += `Readiness Index:       ${auditReadinessScore}% / 100%\n`;
+  cert += `Status:                ${auditReadinessScore >= 70 ? 'CERTIFIED COMPLIANT' : 'CRITICAL DEFICIENCIES DETECTED'}\n\n`;
+  cert += `CHECKLIST TELEMETRY:\n`;
+  cert += `- BIOS RTC Century Rollover:      ${document.getElementById('chk_bios')?.checked ? 'PASSED' : 'VULNERABLE'}\n`;
+  cert += `- COBOL 2-Digit Date Expansion:   ${document.getElementById('chk_cobol')?.checked ? 'EXPANDED' : 'LEGACY 2-DIGIT'}\n`;
+  cert += `- GPS 1024-Week Shielding:        ${document.getElementById('chk_gps')?.checked ? 'PROTECTED' : 'UNSHIELDED'}\n`;
+  cert += `- SCADA / Industrial Logic:       ${document.getElementById('chk_scada')?.checked ? 'HARDENED' : 'UNVERIFIED'}\n`;
+  cert += `- Diesel Reserve & Fuel:          ${document.getElementById('chk_diesel')?.checked ? '500 GAL STOCKED' : 'NO BACKUP'}\n`;
+  cert += `- Copper POTS Dialup Bypass:      ${document.getElementById('chk_copper')?.checked ? 'ACTIVE' : 'OFFLINE'}\n\n`;
+  cert += `REMEDIAL ACTION DIRECTIVES:\n`;
+  cert += `1. Flash BIOS using floppy disk image before 23:00 UTC.\n`;
+  cert += `2. Ensure all mainframe tapes are mirrored off-site.\n`;
+  cert += `3. Keep canned beans, analog radio, and 56k modem at the ready.\n\n`;
+  cert += `Certified by Cabled Technology Labs, San Francisco CA.\n`;
+
+  saveToKiloVfs('/home/downloads/y2k_compliance_audit.txt', cert);
+}
+
+function openY2kCertificateInKPad() {
+  exportY2kCertificateVFS();
+  launchKiloApp('kpad.html', { path: '/home/downloads/y2k_compliance_audit.txt' });
+}
+
+// --- FEATURE 2: Dot-Com IPO Bubble Stock Simulator ---
+let userCash = 100000;
+let userPortfolio = {};
+let portfolioHistory = [100000];
+
+const STOCKS = [
+  { ticker: 'PETS.NET', name: 'Pets.Net Sock Puppet Delivery', price: 48.50, prev: 42.00, burn: '$14M/mo', volatility: 0.18, archetype: 'E-Commerce' },
+  { ticker: 'GROCERY.COM', name: 'CyberGrocer Instant Cilantro', price: 92.25, prev: 88.00, burn: '$22M/mo', volatility: 0.12, archetype: 'Quick-Logistics' },
+  { ticker: 'VAPOR.AI', name: 'Vapor-AI Neural Synergy Net', price: 145.00, prev: 120.00, burn: '$35M/mo', volatility: 0.28, archetype: 'Buzzword Portal' },
+  { ticker: 'STREAM99', name: 'RealStream 20kbps Video', price: 34.75, prev: 36.50, burn: '$8M/mo', volatility: 0.15, archetype: 'Broadband' },
+  { ticker: 'PIXELFORGE', name: 'PixelForge Banner Syndicate', price: 62.00, prev: 61.50, burn: '$3M/mo', volatility: 0.08, archetype: 'Advertising' },
+  { ticker: 'OPTIC.NET', name: 'OpticCore Transatlantic Dark Fiber', price: 210.50, prev: 195.00, burn: '$48M/mo', volatility: 0.22, archetype: 'Telecom' }
+];
+
+function initStockMarket() {
+  // Restore from storage if exists
+  const savedCash = safeGet('cabled_sim_cash', null);
+  const savedHoldings = safeGet('cabled_sim_holdings', null);
+  if (savedCash !== null) userCash = savedCash;
+  if (savedHoldings !== null) userPortfolio = savedHoldings;
+
+  renderStockTable();
+  updatePortfolioUI();
+  drawPortfolioChart();
+}
+
+function renderStockTable() {
+  const tbody = document.getElementById('stockTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  STOCKS.forEach(stk => {
+    const tr = document.createElement('tr');
+    const held = userPortfolio[stk.ticker] || 0;
+    const changePct = (((stk.price - stk.prev) / stk.prev) * 100).toFixed(1);
+    const isUp = stk.price >= stk.prev;
+
+    tr.innerHTML = `
+      <td><span class="badge-ticker">${stk.ticker}</span></td>
+      <td><strong>${stk.name}</strong><br><small style="color:var(--cabled-text-muted);">${stk.archetype}</small></td>
+      <td style="font-weight:bold;">$${stk.price.toFixed(2)}</td>
+      <td style="color:${isUp ? 'var(--cabled-neon-lime)' : '#f87171'}; font-weight:bold;">
+        ${isUp ? '+' : ''}${changePct}%
+      </td>
+      <td>${held} shrs</td>
+      <td style="color:var(--cabled-text-muted);">${stk.burn}</td>
+      <td>
+        <div class="stock-actions">
+          <button class="btn-trade" onclick="buyStock('${stk.ticker}', 10)">+10</button>
+          <button class="btn-trade" onclick="buyStock('${stk.ticker}', 50)">+50</button>
+          <button class="btn-trade sell" onclick="sellStock('${stk.ticker}', 10)">-10</button>
+          <button class="btn-trade sell" onclick="sellStock('${stk.ticker}', 'all')">SELL</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function buyStock(ticker, amount) {
+  const stk = STOCKS.find(s => s.ticker === ticker);
+  if (!stk) return;
+
+  const cost = stk.price * amount;
+  if (userCash < cost) {
+    alert("Insufficient seed venture capital!");
+    return;
+  }
+
+  userCash -= cost;
+  userPortfolio[ticker] = (userPortfolio[ticker] || 0) + amount;
+  safeSet('cabled_sim_cash', userCash);
+  safeSet('cabled_sim_holdings', userPortfolio);
+
+  playRetroSound('trade');
+  renderStockTable();
+  updatePortfolioUI();
+}
+
+function sellStock(ticker, amount) {
+  const stk = STOCKS.find(s => s.ticker === ticker);
+  if (!stk) return;
+
+  const held = userPortfolio[ticker] || 0;
+  if (held <= 0) return;
+
+  const qtyToSell = amount === 'all' ? held : Math.min(amount, held);
+  userCash += stk.price * qtyToSell;
+  userPortfolio[ticker] = held - qtyToSell;
+  if (userPortfolio[ticker] === 0) delete userPortfolio[ticker];
+
+  safeSet('cabled_sim_cash', userCash);
+  safeSet('cabled_sim_holdings', userPortfolio);
+
+  playRetroSound('trade');
+  renderStockTable();
+  updatePortfolioUI();
+}
+
+function tickMarketDay() {
+  STOCKS.forEach(stk => {
+    stk.prev = stk.price;
+    // Late-90s irrational exuberance bias (60% chance up, high volatility)
+    const direction = Math.random() > 0.38 ? 1 : -1;
+    const deltaPct = (Math.random() * stk.volatility) * direction;
+    stk.price = Math.max(1.50, parseFloat((stk.price * (1 + deltaPct)).toFixed(2)));
+  });
+
+  // Calculate net worth
+  let equities = 0;
+  for (const t in userPortfolio) {
+    const s = STOCKS.find(item => item.ticker === t);
+    if (s) equities += s.price * userPortfolio[t];
+  }
+  const totalNet = userCash + equities;
+  portfolioHistory.push(totalNet);
+  if (portfolioHistory.length > 25) portfolioHistory.shift();
+
+  renderStockTable();
+  updatePortfolioUI();
+  drawPortfolioChart();
+  playRetroSound('beep');
+}
+
+function updatePortfolioUI() {
+  let equities = 0;
+  for (const t in userPortfolio) {
+    const s = STOCKS.find(item => item.ticker === t);
+    if (s) equities += s.price * userPortfolio[t];
+  }
+  const total = userCash + equities;
+  const gainPct = (((total - 100000) / 100000) * 100).toFixed(1);
+
+  const cashEl = document.getElementById('portfolioCash');
+  const eqEl = document.getElementById('portfolioEquities');
+  const nwEl = document.getElementById('portfolioNetWorth');
+  const gainEl = document.getElementById('chartGainPct');
+  const sentimentEl = document.getElementById('marketSentiment');
+
+  if (cashEl) cashEl.textContent = '$' + userCash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (eqEl) eqEl.textContent = '$' + equities.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (nwEl) {
+    nwEl.textContent = '$' + total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    nwEl.className = total >= 100000 ? 'stat-val pos' : 'stat-val neg';
+  }
+  if (gainEl) {
+    gainEl.textContent = (gainPct >= 0 ? '+' : '') + gainPct + '%';
+    gainEl.style.color = gainPct >= 0 ? 'var(--cabled-neon-lime)' : '#f87171';
+  }
+
+  if (sentimentEl) {
+    if (total > 250000) {
+      sentimentEl.textContent = 'SUPERNOVA MANIA (APRIL 2000 LOOMING)';
+      sentimentEl.style.color = 'var(--cabled-neon-lime)';
+    } else if (total > 150000) {
+      sentimentEl.textContent = 'IRRATIONAL EXUBERANCE';
+      sentimentEl.style.color = 'var(--cabled-neon-cyan)';
+    } else if (total < 70000) {
+      sentimentEl.textContent = 'MARGIN CALL PANIC';
+      sentimentEl.style.color = '#ef4444';
+    } else {
+      sentimentEl.textContent = 'VENTURE BULL MARKET';
+      sentimentEl.style.color = 'var(--cabled-neon-orange)';
+    }
+  }
+}
+
+function drawPortfolioChart() {
+  const cvs = document.getElementById('portfolioChart');
+  if (!cvs) return;
+  const ctx = cvs.getContext('2d');
+  const w = cvs.width;
+  const h = cvs.height;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Grid
+  ctx.strokeStyle = '#182030';
+  ctx.lineWidth = 1;
+  for (let y = 20; y < h; y += 25) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+
+  if (portfolioHistory.length < 2) return;
+
+  const min = Math.min(...portfolioHistory) * 0.95;
+  const max = Math.max(...portfolioHistory) * 1.05;
+  const range = max - min || 1;
+
+  ctx.strokeStyle = '#00f0ff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+
+  portfolioHistory.forEach((val, idx) => {
+    const x = (idx / (portfolioHistory.length - 1)) * (w - 20) + 10;
+    const y = h - ((val - min) / range) * (h - 20) - 10;
+    if (idx === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Glow fill
+  ctx.lineTo(w - 10, h);
+  ctx.lineTo(10, h);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(0, 240, 255, 0.08)';
+  ctx.fill();
+}
+
+// Dot-Com Startup Pitch Generator
+const PITCH_CONCEPTS = [
+  "A peer-to-peer MP3 delivery pipeline for artisanal hamster cedar shavings over 56k dialup.",
+  "Webvan meets ICQ: Order live sushi via instant message and have it delivered by rollerbladers.",
+  "Frictionless B2B middleware that translates corporate emails into Shakespearean iambic pentameter.",
+  "Napster for toothbrushes: Share unused sonic bristles across high-density apartment complexes.",
+  "A 3D virtual reality grocery store where you navigate aisles using a joystick to buy milk.",
+  "An XML-powered digital pet sock that texts your Palm Pilot whenever you spend too much on lattes."
+];
+const PITCH_VALUATIONS = ["$42,000,000", "$85,000,000", "$140,000,000", "$210,000,000", "$500,000,000"];
+const PITCH_LEADS = ["Benchmark Syndicate", "Kleiner & Perkins Parody", "Sequoia Sand Hill Partners", "SoftBank Mega-Vision Fund"];
+
+function generateNewPitch() {
+  playRetroSound('click');
+  const concept = PITCH_CONCEPTS[Math.floor(Math.random() * PITCH_CONCEPTS.length)];
+  const val = PITCH_VALUATIONS[Math.floor(Math.random() * PITCH_VALUATIONS.length)];
+  const lead = PITCH_LEADS[Math.floor(Math.random() * PITCH_LEADS.length)];
+
+  const textEl = document.getElementById('pitchPitchText');
+  const valEl = document.getElementById('pitchValuation');
+  const leadEl = document.getElementById('pitchLead');
+
+  if (textEl) textEl.textContent = `"${concept}"`;
+  if (valEl) valEl.textContent = val;
+  if (leadEl) leadEl.textContent = lead;
+}
+
+function stageIPOEvent() {
+  playRetroSound('alarm');
+  const pop = (Math.random() * 250 + 150).toFixed(0);
+  const bonus = Math.floor(Math.random() * 40000 + 20000);
+  userCash += bonus;
+  safeSet('cabled_sim_cash', userCash);
+  updatePortfolioUI();
+
+  alert(`🚨 NASDAQ BELL RINGS! First-day IPO popped +${pop}%!\nVenture underwriters distributed $${bonus.toLocaleString()} cash distribution to your fund!`);
+  tickMarketDay();
+}
+
+function exportPortfolioVFS() {
+  let doc = `========================================================================\n`;
+  doc += `CABLED VENTURE CAPITAL DESK // DOT-COM PORTFOLIO & PROSPECTUS (1999)\n`;
+  doc += `========================================================================\n\n`;
+  doc += `Liquid Cash Reserves:       $${userCash.toLocaleString()}\n`;
+  doc += `Active Market Day:          December 31, 1999\n\n`;
+  doc += `ACTIVE EQUITY HOLDINGS:\n`;
+  for (const t in userPortfolio) {
+    const s = STOCKS.find(item => item.ticker === t);
+    if (s) {
+      doc += `- ${s.ticker} (${s.name}): ${userPortfolio[t]} shares @ $${s.price.toFixed(2)} = $${(userPortfolio[t] * s.price).toFixed(2)}\n`;
+    }
+  }
+  doc += `\nLATEST STAGED STARTUP PROSPECTUS:\n`;
+  doc += `Concept:    ${document.getElementById('pitchPitchText')?.textContent || 'N/A'}\n`;
+  doc += `Valuation:  ${document.getElementById('pitchValuation')?.textContent || 'N/A'}\n`;
+  doc += `Lead:       ${document.getElementById('pitchLead')?.textContent || 'N/A'}\n\n`;
+  doc += `Certified for trading on KiloNet NASDAQ Syndicate.\n`;
+
+  saveToKiloVfs('/home/downloads/dotcom_ipo_portfolio.txt', doc);
+}
+
+function openPortfolioInKPad() {
+  exportPortfolioVFS();
+  launchKiloApp('kpad.html', { path: '/home/downloads/dotcom_ipo_portfolio.txt' });
+}
+
+// --- FEATURE 3: Jargon Watch Generator & Lexicon ---
+const CANONICAL_LEXICON = [
+  { term: "Bandwidth Gluttony", pos: "noun", cat: "tech", def: "The unapologetic hoarding of corporate T1 capacity to download pirated chiptunes and MPEG trailers during business hours." },
+  { term: "Meatspace Envy", pos: "noun", cat: "culture", def: "A psychological condition suffered by cyber-nomads upon realizing their virtual avatars have no physical serotonin receptors." },
+  { term: "Eyeball Monetization", pos: "noun", cat: "economics", def: "The financial theory that counting human retinas glancing at a banner ad constitutes a viable business model regardless of revenue." },
+  { term: "Disintermediation Shock", pos: "noun", cat: "economics", def: "The existential panic felt by travel agents, car salesmen, and record store owners when websites eliminate the middleman." },
+  { term: "Silicon Sweatshop", pos: "noun", cat: "culture", def: "An open-plan loft in SoHo where twenty-four-year-olds consume Red Bull and code Perl CGI scripts for eighty hours a week in exchange for unvested stock options." },
+  { term: "CrackBerry Thumb", pos: "noun", cat: "tech", def: "Repetitive strain injury localized in the right digit from typing urgent email replies on miniature wireless pagers during red lights." },
+  { term: "Frictionless Capitalism", pos: "noun", cat: "economics", def: "The utopian belief that zero-marginal-cost web transactions will abolish inflation, market friction, and physical labor." },
+  { term: "Hypertextual Nomad", pos: "noun", cat: "culture", def: "A telecommuter who claims to live everywhere at once while actually living in their mother's wood-paneled basement with an ISDN line." }
+];
+
+let activeLexicon = [...CANONICAL_LEXICON];
+
+function renderLexicon(list) {
+  const grid = document.getElementById('lexiconGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  list.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'lexicon-card';
+    card.innerHTML = `
+      <div class="lexicon-term">${item.term}</div>
+      <div style="font-family:var(--cabled-font-mono); font-size:11px; color:var(--cabled-text-muted); margin-bottom:6px;">
+        <em>${item.pos}</em> &bull; <span class="lexicon-tag">${item.cat}</span>
+      </div>
+      <div class="lexicon-def">${item.def}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function filterLexicon() {
+  const query = document.getElementById('jargonSearchInput')?.value.toLowerCase().trim() || '';
+  if (!query) {
+    renderLexicon(activeLexicon);
+    return;
+  }
+  const filtered = activeLexicon.filter(item => 
+    item.term.toLowerCase().includes(query) || 
+    item.def.toLowerCase().includes(query) ||
+    item.cat.toLowerCase().includes(query)
+  );
+  renderLexicon(filtered);
+}
+
+const DEFINITION_MATRIX = {
+  'Bandwidth': "The ruthless optimization or consumption of digital pipe throughput at the expense of organizational stability.",
+  'Eyeball': "The commodification of involuntary human optical attention into synthetic dot-com valuation metrics.",
+  'Portal': "An all-consuming gateway website designed to trap surfers in a labyrinth of weather widgets and horoscopes.",
+  'Arbitrage': "Exploiting the temporary time delay between real-world common sense and venture capitalist hype cycles.",
+  'Meatspace': "The sluggish, friction-filled physical world outside computer monitors where bodies demand biological sustenance.",
+  'Synergy': "The magical multiplication of two unprofitable companies into one massive IPO conglomerate.",
+  'Middleware': "Software nobody understands, bought by CIOs who fear being fired for buying something cheaper.",
+  'Venture': "The injection of limitless institutional capital into enterprises with negative gross margins."
+};
+
+function synthesizeCustomJargon() {
+  playRetroSound('click');
+  const prefix = document.getElementById('jargonPrefix')?.value || 'Cyber-';
+  const root = document.getElementById('jargonRoot')?.value || 'Bandwidth';
+  const suffix = document.getElementById('jargonSuffix')?.value || '-Gluttony';
+
+  const fullTerm = prefix + root + suffix;
+  const defBase = DEFINITION_MATRIX[root] || "A cutting-edge technocentric paradigm reshaping millennial consciousness.";
+  const fullDef = `[${prefix}${suffix}]: ${defBase} Often observed among early adopters and venture evangelists.`;
+  const citation = `"Our Q4 burn rate tripled, but our ${fullTerm.toLowerCase()} is up four hundred percent across all regional nodes."`;
+
+  const termEl = document.getElementById('jargonOutputTerm');
+  const defEl = document.getElementById('jargonOutputDef');
+  const citeEl = document.getElementById('jargonOutputCitation');
+
+  if (termEl) termEl.textContent = fullTerm;
+  if (defEl) defEl.textContent = fullDef;
+  if (citeEl) citeEl.textContent = citation;
+}
+
+function addCurrentTermToLexicon() {
+  const term = document.getElementById('jargonOutputTerm')?.textContent;
+  const def = document.getElementById('jargonOutputDef')?.textContent;
+  if (!term || !def) return;
+
+  const newItem = {
+    term: term,
+    pos: "noun",
+    cat: "neologism",
+    def: def
+  };
+  activeLexicon.unshift(newItem);
+  renderLexicon(activeLexicon);
+  showToast('➕ Added "' + term + '" to Cabled Lexicon!');
+  playRetroSound('trade');
+}
+
+function exportLexiconVFS() {
+  let doc = `========================================================================\n`;
+  doc += `CABLED MAGAZINE // THE OFFICIAL 1999 JARGON WATCH LEXICON\n`;
+  doc += `========================================================================\n\n`;
+  activeLexicon.forEach((item, idx) => {
+    doc += `[${idx + 1}] ${item.term.toUpperCase()}\n`;
+    doc += `    Part of speech: ${item.pos} (${item.cat})\n`;
+    doc += `    Definition:     ${item.def}\n\n`;
+  });
+  doc += `Published in Cabled Issue 7.12 (December 1999).\n`;
+
+  saveToKiloVfs('/home/downloads/cabled_jargon_watch.txt', doc);
+}
+
+// --- FEATURE 4: Hype-vs-Reality Matrix ---
+const HYPE_DATA = [
+  { name: "Broadband Fiber to Every Home", hype: 95, reality: 88, cat: "Infrastructure", blurb: "1999: Gigabit fiber directly to your toaster. Reality: Gig speed arrived, but mostly used to stream 4K cat videos." },
+  { name: "VR Cyberspace Shopping Malls", hype: 90, reality: 15, cat: "Virtual Reality", blurb: "1999: Walking avatars picking 3D cereal boxes in Gibsonian cyberspace. Reality: Flat 2D Web pages with 1-Click checkout won." },
+  { name: "Digital Micropayments (0.1¢/click)", hype: 85, reality: 10, cat: "Economics", blurb: "1999: Every hyperlink costs a millicent. Reality: Ad tracking and subscriptions completely crushed pay-per-click." },
+  { name: "PointCast Desktop Push Screensavers", hype: 98, reality: 5, cat: "Software", blurb: "1999: News broadcasts constantly pushing live ticker feeds. Reality: Network sysadmins banned it for crashing corporate T1 lines." },
+  { name: "Wearable Heads-Up Smart Glasses", hype: 82, reality: 35, cat: "Hardware", blurb: "1999: Cyberpunk monocles overlaying street telemetry. Reality: Glassholes mocked; screens stayed in pocket smartphones." },
+  { name: "Paperless Digital Office", hype: 75, reality: 40, cat: "Culture", blurb: "1999: Trees saved forever by laser discs. Reality: Laser printers multiplied and PDFs get printed out to sign with blue pens." },
+  { name: "Y2K Global Power Grid Blackout", hype: 88, reality: 2, cat: "Y2K", blurb: "1999: Civilization collapses at midnight into nuclear winter. Reality: Clocks struck 00:00:01 and absolutely nothing happened." },
+  { name: "Autonomous Highway Cruisers", hype: 70, reality: 45, cat: "Automotive", blurb: "1999: Radar-guided electric pods cruising hands-free. Reality: Partial autonomy under strict highway conditions." }
+];
+
+function initHypeMatrix() {
+  renderHypeCards();
+  drawHypeRadar();
+}
+
+function renderHypeCards() {
+  const grid = document.getElementById('hypeCardsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  HYPE_DATA.forEach((item, idx) => {
+    const card = document.createElement('div');
+    card.className = 'hype-card';
+
+    let badgeClass = 'badge-hyper';
+    let badgeText = 'OVER-HYPED';
+    if (item.reality >= item.hype * 0.7) {
+      badgeClass = 'badge-real';
+      badgeText = 'REALIZED';
+    } else if (item.reality < 20) {
+      badgeClass = 'badge-flop';
+      badgeText = 'TOTAL FLOP';
+    }
+
+    card.innerHTML = `
+      <div class="hype-header">
+        <span class="hype-tech-name">${item.name}</span>
+        <span class="hype-badge ${badgeClass}">${badgeText}</span>
+      </div>
+      <div class="bar-compare">
+        <div class="bar-row">
+          <span>1999 HYPE:</span>
+          <div class="mini-bar">
+            <div class="mini-fill" style="width:${item.hype}%;"></div>
+          </div>
+          <strong style="color:var(--cabled-neon-orange);">${item.hype}%</strong>
+        </div>
+        <div class="bar-row">
+          <span>REALITY:</span>
+          <div class="mini-bar">
+            <div class="mini-fill reality" style="width:${item.reality}%;"></div>
+          </div>
+          <strong style="color:var(--cabled-neon-cyan);">${item.reality}%</strong>
+        </div>
+      </div>
+      <p class="hype-description">${item.blurb}</p>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function drawHypeRadar() {
+  const cvs = document.getElementById('hypeRadarChart');
+  if (!cvs) return;
+  const ctx = cvs.getContext('2d');
+  const w = cvs.width;
+  const h = cvs.height;
+  const cx = w / 2;
+  const cy = h / 2;
+  const radius = Math.min(cx, cy) - 40;
+
+  ctx.clearRect(0, 0, w, h);
+
+  const numAxes = HYPE_DATA.length;
+  const angleStep = (Math.PI * 2) / numAxes;
+
+  // Concentric radar circles
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1;
+  for (let r = 0.25; r <= 1.0; r += 0.25) {
+    ctx.beginPath();
+    for (let i = 0; i < numAxes; i++) {
+      const angle = i * angleStep - Math.PI / 2;
+      const x = cx + Math.cos(angle) * (radius * r);
+      const y = cy + Math.sin(angle) * (radius * r);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  // Axes lines
+  for (let i = 0; i < numAxes; i++) {
+    const angle = i * angleStep - Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
+    ctx.stroke();
+  }
+
+  // Draw 1999 Hype Polygon (Orange)
+  ctx.strokeStyle = '#ff5500';
+  ctx.fillStyle = 'rgba(255, 85, 0, 0.25)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  HYPE_DATA.forEach((item, i) => {
+    const angle = i * angleStep - Math.PI / 2;
+    const dist = (item.hype / 100) * radius;
+    const x = cx + Math.cos(angle) * dist;
+    const y = cy + Math.sin(angle) * dist;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.stroke();
+  ctx.fill();
+
+  // Draw Reality Polygon (Cyan)
+  ctx.strokeStyle = '#00f0ff';
+  ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  HYPE_DATA.forEach((item, i) => {
+    const angle = i * angleStep - Math.PI / 2;
+    const dist = (item.reality / 100) * radius;
+    const x = cx + Math.cos(angle) * dist;
+    const y = cy + Math.sin(angle) * dist;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.stroke();
+  ctx.fill();
+
+  // Legend
+  ctx.fillStyle = '#ff5500';
+  ctx.fillRect(10, 10, 12, 12);
+  ctx.fillStyle = '#fff';
+  ctx.font = '10px monospace';
+  ctx.fillText('1999 HYPE', 26, 20);
+
+  ctx.fillStyle = '#00f0ff';
+  ctx.fillRect(110, 10, 12, 12);
+  ctx.fillStyle = '#fff';
+  ctx.fillText('HISTORICAL REALITY', 126, 20);
+}
+
+function exportHypeMatrixVFS() {
+  let doc = `========================================================================\n`;
+  doc += `CABLED MAGAZINE // 1999 HYPE VS REALITY 25-YEAR RETROSPECTIVE\n`;
+  doc += `========================================================================\n\n`;
+  HYPE_DATA.forEach((item, idx) => {
+    doc += `[${idx + 1}] ${item.name.toUpperCase()}\n`;
+    doc += `    Domain:          ${item.cat}\n`;
+    doc += `    1999 Hype Level: ${item.hype}%\n`;
+    doc += `    Actual Reality:  ${item.reality}%\n`;
+    doc += `    Delusion Delta:  ${item.hype - item.reality}%\n`;
+    doc += `    Retrospective:   ${item.blurb}\n\n`;
+  });
+  doc += `Fleet Delusion Index: 34.7% (Millennial Optimism Peak).\n`;
+
+  saveToKiloVfs('/home/downloads/cabled_hype_matrix.txt', doc);
+}
+
+// --- FEATURE 5: Fetish Hardware Inspector ---
+function orderFetishSim(name) {
+  playRetroSound('beep');
+  showToast(`🔍 Telemetry loaded for ${name}. Hardware specs verified.`);
+}
+
+// --- FEATURE 6: Articles & Full Issue Bundling ---
+function exportArticleVFS(type) {
+  const doc = `========================================================================\n` +
+    `CABLED MAGAZINE // SPECIAL INVESTIGATION: THE ZERO-HOUR CHRONICLES\n` +
+    `Issue 7.12 (December 1999) - Words by Julian Thorne\n` +
+    `========================================================================\n\n` +
+    `Inside the Cheyenne Mountain nuclear bunker, thirty miles south of Colorado Springs,\n` +
+    `the atmosphere smells of burnt filter coffee and ionized ozone. Fluorescent tubes\n` +
+    `hum at 60 Hertz over rows of green-phosphor DEC VT220 terminals. The men in flight\n` +
+    `suits aren't looking for Soviet ICBMs tonight. They are staring at seven lines\n` +
+    `of date-comparison logic written in 1974 by a Lockheed contractor who died during\n` +
+    `the Carter administration.\n\n` +
+    `"If the year field rolls from '99' to '00', our early-warning satellite telemetry will\n` +
+    `compute the delta as negative ninety-nine years," whispers Major Donald Vance.\n` +
+    `"The tracking algorithm will assume the missile plume was launched in nineteen-hundred.\n` +
+    `It will discard the telemetry as a historical temporal anomaly. We spent forty-two\n` +
+    `million dollars in DARPA emergency appropriations just to insert four-digit century flags."\n\n` +
+    `Meanwhile, thirty-five floors above Wall Street, investment bankers in double-breasted\n` +
+    `suits are drinking Dom Pérignon straight from the bottle. To them, the Millennium Bug is\n` +
+    `not an apocalypse; it is the ultimate liquidity multiplier. Corporate America has spent\n` +
+    `an estimated $600 billion on Y2K remediation, software upgrades, and emergency server\n` +
+    `clustering. That money did not evaporate—it was funneled directly into the pockets of\n` +
+    `dot-com infrastructure startups, fiber-optic syndicates, and hardware OEMs.\n\n` +
+    `"The truth is," says cyberneticist Dr. Elena Rostova, "we built our civilization on a\n` +
+    `two-byte shortcut because magnetic core memory cost two dollars a byte in 1965.\n` +
+    `We sacrificed the future to save sixteen bits of RAM. And now, the bill has come due at midnight."\n`;
+
+  saveToKiloVfs('/home/downloads/cabled_issue_7-12_feat.txt', doc);
+}
+
+function openArticleInKPad(type) {
+  exportArticleVFS(type);
+  launchKiloApp('kpad.html', { path: '/home/downloads/cabled_issue_7-12_feat.txt' });
+}
+
+function exportFullBundleVFS() {
+  let bundle = `========================================================================\n`;
+  bundle += `CABLED MAGAZINE // COMPLETE ARCHIVE BUNDLE // ISSUE 7.12 (DECEMBER 1999)\n`;
+  bundle += `The Millennial Apocalypse, Dot-Com Speculation & The $5 Trillion Bubble\n`;
+  bundle += `========================================================================\n\n`;
+  bundle += `[CONTENTS]\n`;
+  bundle += `1. LEAD FEATURE: The Zero-Hour Chronicles (Cheyenne Mountain Y2K Bunker)\n`;
+  bundle += `2. AUDIT LAB: Y2K Hardware & COBOL Readiness Assessment\n`;
+  bundle += `3. MARKET REPORT: Dot-Com IPO Syndicate & Portfolio Holdings\n`;
+  bundle += `4. LEXICON: Complete 1999 Jargon Watch Compendium\n`;
+  bundle += `5. FORECAST: The 25-Year Hype-vs-Reality Matrix\n`;
+  bundle += `6. FETISH: Hardware Gadgets of the Twilight Millenium\n\n`;
+  bundle += `--- [SECTION 1: THE ZERO-HOUR CHRONICLES] ---\n`;
+  bundle += `(See /home/downloads/cabled_issue_7-12_feat.txt for unabridged investigative text)\n\n`;
+  bundle += `--- [SECTION 2: Y2K AUDIT RESULTS] ---\n`;
+  bundle += `Readiness Score: ${auditReadinessScore}% / 100%\n`;
+  bundle += `Status: ${auditReadinessScore >= 70 ? 'PASS' : 'FAIL'}\n\n`;
+  bundle += `--- [SECTION 3: DOT-COM PORTFOLIO] ---\n`;
+  bundle += `Fund Cash: $${userCash.toLocaleString()}\n`;
+  bundle += `Held Stocks: ${Object.keys(userPortfolio).join(', ') || 'All cash liquidated'}\n\n`;
+  bundle += `--- [SECTION 4: JARGON WATCH HIGHLIGHTS] ---\n`;
+  activeLexicon.slice(0, 5).forEach(j => {
+    bundle += `* ${j.term}: ${j.def}\n`;
+  });
+  bundle += `\nPublished by Cabled Ventures Inc., San Francisco CA.\n`;
+
+  saveToKiloVfs('/home/downloads/cabled_issue_7-12_bundle.txt', bundle);
+}
+
+function openBundleInKPad() {
+  exportFullBundleVFS();
+  launchKiloApp('kpad.html', { path: '/home/downloads/cabled_issue_7-12_bundle.txt' });
+}
+
+// --- Live Ticker Realtime Simulation ---
+function updateTickerClock() {
+  const clockEl = document.getElementById('tickerUtcClock');
+  if (clockEl) {
+    const d = new Date();
+    // Simulate Dec 31 1999 clock
+    const hours = String(d.getUTCHours()).padStart(2, '0');
+    const mins = String(d.getUTCMinutes()).padStart(2, '0');
+    const secs = String(d.getUTCSeconds()).padStart(2, '0');
+    clockEl.textContent = `1999-12-31 ${hours}:${mins}:${secs} UTC`;
+  }
+}
+
+// --- Initialization ---
+window.addEventListener('DOMContentLoaded', () => {
+  initStockMarket();
+  renderLexicon(activeLexicon);
+  initHypeMatrix();
+  updateAuditCalculations();
+
+  setInterval(updateTickerClock, 1000);
+  setInterval(tickMarketDay, 5000); // automatic background tick every 5s
+});
+</script>
+</body>
+</html>
