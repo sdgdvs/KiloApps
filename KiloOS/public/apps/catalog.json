@@ -155,9 +155,9 @@
     "id": "kclip",
     "title": "KClip",
     "folder": "System",
-    "webBytes": 202489,
+    "webBytes": 211952,
     "exeBytes": 22016,
-    "budgetPercent": 20.3
+    "budgetPercent": 21.2
   },
   {
     "id": "kclock",
@@ -219,9 +219,9 @@
     "id": "kconverter",
     "title": "KConverter",
     "folder": "System",
-    "webBytes": 134273,
+    "webBytes": 134728,
     "exeBytes": 34304,
-    "budgetPercent": 13.4
+    "budgetPercent": 13.5
   },
   {
     "id": "kcosmic",

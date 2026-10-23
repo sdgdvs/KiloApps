@@ -22,6 +22,7 @@ HWND hPingBtn;
 HWND hScanBtn;
 HWND hExportBtn;
 HWND hClearBtn;
+HWND hSpoolBtn;
 HWND hFilterEdit;
 HWND hContentEdit;
 HBRUSH g_hEditBgBrush = NULL;
@@ -45,6 +46,7 @@ void RunMeshRadar();
 BOOL QuickSaveState(HWND hwnd);
 BOOL QuickLoadState(HWND hwnd);
 void CheckFirstRunTutorial(HWND hwnd);
+void SpoolPageToVfs();
 
 void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
@@ -601,7 +603,161 @@ void RunMeshRadar() {
     MessageBeep(MB_OK);
 }
 
+
+void SpoolPageToVfs() {
+    CreateDirectoryA("downloads", NULL);
+    char urlBuf[256] = {0};
+    GetWindowTextA(hUrlEdit, urlBuf, sizeof(urlBuf) - 1);
+    if (urlBuf[0] == '\0') lstrcpyA(urlBuf, "portal");
+
+    char baseName[64] = "page";
+    const char* p = urlBuf;
+    if (strncmp(p, "kweb://", 7) == 0) p += 7;
+    else if (strncmp(p, "kweb:", 5) == 0) p += 5;
+    else if (strncmp(p, "http://", 7) == 0) p += 7;
+    else if (strncmp(p, "https://", 8) == 0) p += 8;
+
+    int bi = 0;
+    while (*p && *p != '/' && *p != '?' && *p != '#' && bi < 40) {
+        char c = *p++;
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '-') {
+            baseName[bi++] = c;
+        } else {
+            baseName[bi++] = '_';
+        }
+    }
+    baseName[bi] = '\0';
+    if (bi == 0) lstrcpyA(baseName, "page");
+
+    char filePath[MAX_PATH];
+    wsprintfA(filePath, "downloads\\%s.html", baseName);
+
+    int textLen = GetWindowTextLengthA(hContentEdit);
+    char* textBuf = (char*)malloc(textLen + 1024);
+    if (!textBuf) return;
+    GetWindowTextA(hContentEdit, textBuf, textLen + 1);
+
+    HANDLE hFile = CreateFileA(filePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, textBuf, textLen, &written, NULL);
+        CloseHandle(hFile);
+
+        char notify[512];
+        wsprintfA(notify,
+            "\r\n========================================================================\r\n"
+            "★ KILOOS VFS SPOOL SUCCESSFUL // /home/downloads/%s.html\r\n"
+            "  Saved %d bytes from active buffer to VFS downloads spool.\r\n"
+            "  Local Path: %s\r\n"
+            "========================================================================\r\n",
+            baseName, written, filePath);
+        AppendContent(notify);
+        AddTrafficLog("VFS", filePath, "SPOOLED", 10, written);
+        MessageBeep(MB_OK);
+    }
+    free(textBuf);
+}
+
 void ShowVirtualWeb(const char* site) {
+    } else if (lstrcmpiA(site, "slashnet") == 0 || lstrcmpiA(site, "kweb:slashnet") == 0 || lstrcmpiA(site, "kweb://slashnet") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "★ SLASHNET: NEWS FOR NERDS. STUFF THAT MATTERS. (1999) ★\r\n"
+            "========================================================================\r\n"
+            "[HEADLINE] Linux Kernel 2.2.14 Released with Enhanced SMP Scalability\r\n"
+            "Posted by CmdrTaco on Friday December 10, 1999 11:42AM\r\n"
+            "from the penguin-power-rules dept.\r\n\r\n"
+            "\"Linus has tagged Linux 2.2.14 for immediate FTP deployment. Early benchmarks\r\n"
+            "show massive improvements in raw network throughput and IP masquerading...\"\r\n\r\n"
+            "[FEATURED DISCUSSIONS & KARMA MODERATION]\r\n"
+            "  • (+5 Insightful) Beowulf clusters vs Sun Enterprise 450 server banks\r\n"
+            "  • (+4 Interesting) Y2K bug mitigations on DEC Alpha Unix workstations\r\n"
+            "  • (+5 Informative) Building retro C apps under the 999 KB size ceiling\r\n"
+            "  • (-1 Troll) \"Windows 2000 will destroy open-source by March 2000\"\r\n\r\n"
+            "------------------------------------------------------------------------\r\n"
+            "SlashNet Poll: Will your ISP survive the New Year stroke of midnight?\r\n"
+            "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "trapster") == 0 || lstrcmpiA(site, "kweb:trapster") == 0 || lstrcmpiA(site, "kweb://trapster") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "🐱 TRAPSTER P2P CHIPTUNE & TRACKER EXCHANGER v1.0b (1999) 🐱\r\n"
+            "========================================================================\r\n"
+            "Status: Online | 4,219 Users Sharing 38,402 FastTracker II / MOD files\r\n"
+            "Bandwidth: 142.8 GB/day | Protocol: Trapster Swarm v1.99\r\n"
+            "------------------------------------------------------------------------\r\n\r\n"
+            "HOT CHIPTUNE & TRACKER SWARM DOWNLOADS:\r\n"
+            "  [1] necro_groove_99.mod         (FastTracker 2) - 182 KB [Speed: 56.4 KB/s]\r\n"
+            "  [2] lithospheric_subcarrier.s3m (ScreamTracker 3) - 245 KB [Speed: 112 KB/s]\r\n"
+            "  [3] carlsbad_salt_reflections.xm (Extended Mod) - 310 KB [Speed: 44.1 KB/s]\r\n"
+            "  [4] chip_arpeggio_overdrive.it   (Impulse Tracker) - 198 KB [Speed: 89.2 KB/s]\r\n\r\n"
+            "------------------------------------------------------------------------\r\n"
+            "Peer Nodes: 127 connected | Spool track files to /home/downloads/ with [Spool]\r\n"
+            "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "cabled") == 0 || lstrcmpiA(site, "kweb:cabled") == 0 || lstrcmpiA(site, "kweb://cabled") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "⚡ CABLED MAGAZINE // NEON 1999 CYBERSPACE EDITION ⚡\r\n"
+            "========================================================================\r\n"
+            "\"The Millennial Frontier: Fiber, Silicon, and the Autonomous Web\"\r\n"
+            "------------------------------------------------------------------------\r\n\r\n"
+            "[COVER STORY] DOT-COM FEVER: Silicon Valley's Trillion-Dollar Bet\r\n"
+            "Every company adding '.com' to their letterhead sees stock value soar 400%.\r\n"
+            "Is it the dawn of a frictionless global market, or the century's largest bubble?\r\n\r\n"
+            "[JARGON WATCH - DECEMBER 1999]:\r\n"
+            "  • Bandwidth Pig    : Users downloading full-motion video clips over T1 lines\r\n"
+            "  • Palmtop Commuter : Workers typing emails on monochrome Palm Pilot cradles\r\n"
+            "  • Y2K Survivalist  : Sysadmins hoarding dry rations and 9-track backup tapes\r\n\r\n"
+            "[CABLED READINESS AUDIT]:\r\n"
+            "  KiloApps fleet status: 100% Y2K Compliant. Strict 999 KB ceiling preserved.\r\n"
+            "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "scallion") == 0 || lstrcmpiA(site, "kweb:scallion") == 0 || lstrcmpiA(site, "kweb://scallion") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "🧅 THE SCALLION: AMERICA'S FINEST RETRO NEWS SOURCE (1999) 🧅\r\n"
+            "========================================================================\r\n"
+            "Vol. XXXV, No. 49 | \"News Without Fear, Grammar, or Substantive Research\"\r\n"
+            "------------------------------------------------------------------------\r\n\r\n"
+            "[TOP STORIES TODAY]:\r\n"
+            "  • Nation's Sysadmins Prepare for Y2K by Taking Two-Week Vacations in Fiji\r\n"
+            "  • Man Downloads MP3 File Over 28.8k Modem; Grandchildren Plan to Listen\r\n"
+            "  • Area Software Startup Valued at $4.2B Despite Possessing Zero Computers\r\n"
+            "  • New 'Universal Serial Bus' Cable Alleged to Work on Third Attempt\r\n\r\n"
+            "[ASK A SYSADMIN - WITH DAVE]:\r\n"
+            "  Q: \"Why is my computer making a buzzing Morse sound when I dial my ISP?\"\r\n"
+            "  A: \"Because the copper wires are singing you the digital song of the future.\"\r\n"
+            "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "demoscene") == 0 || lstrcmpiA(site, "kweb:demoscene") == 0 || lstrcmpiA(site, "kweb://demoscene") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "💾 ASSEMBLY '99 DEMOSCENE PARTY VAULT // 64K INTRO ARCHIVE 💾\r\n"
+            "========================================================================\r\n"
+            "Compocenter: Helsinki Arena // Party Year: 1999 // Entries: 142 Demos\r\n"
+            "------------------------------------------------------------------------\r\n\r\n"
+            "TOP 64K INTRO COMPETITION RESULTS:\r\n"
+            "  #1 [9,420 pts] \"Viper 1999\" by Farbrausch     - Pure x86 + Software 3D\r\n"
+            "  #2 [8,890 pts] \"Neon Horizon\" by Future Crew  - Dual Copper + Plasma\r\n"
+            "  #3 [8,150 pts] \"Lithosphere\" by Pulse Labs     - 1999 Hz FM Audio Synth\r\n\r\n"
+            "[DEMO ENGINE HARDWARE PROFILE]:\r\n"
+            "  Resolution: 320x240 @ 60 Hz VGA Mode 13h | Memory Footprint: < 65,536 Bytes\r\n"
+            "  Assembly rule: Strict 999 KB ceiling and zero glints strictly observed!\r\n"
+            "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "rfc_archive") == 0 || lstrcmpiA(site, "rfc-archive") == 0 || lstrcmpiA(site, "kweb:rfc_archive") == 0 || lstrcmpiA(site, "kweb:rfc-archive") == 0 || lstrcmpiA(site, "kweb://rfc-archive") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "📜 IETF 1999 LIVING RFC ARCHIVE & PROTOCOL WORKBENCH 📜\r\n"
+            "========================================================================\r\n"
+            "Internet Engineering Task Force // Request for Comments Repository\r\n"
+            "------------------------------------------------------------------------\r\n\r\n"
+            "FEATURED CANONICAL RFC MEMORANDA:\r\n"
+            "  • RFC 1149: Standard for the Transmission of IP Datagrams on Avian Carriers\r\n"
+            "    Status: EXPERIMENTAL | MTU: 256 bytes per pigeon | Packet Loss: High in Rain\r\n"
+            "  • RFC 2324: Hyper Text Coffee Pot Control Protocol (HTCPCP/1.0)\r\n"
+            "    Status: INFORMATIONAL | Response Code: 418 I'm a teapot\r\n"
+            "  • RFC 1918: Address Allocation for Private Internets (10.0.0.0/8, 192.168.0.0/16)\r\n"
+            "    Status: BEST CURRENT PRACTICE | Scope: Isolated Intranets & Subnets\r\n\r\n"
+            "------------------------------------------------------------------------\r\n"
+            "Protocol State Stepper: TCP 3-Way Handshake [SYN -> SYN/ACK -> ACK] Ready.\r\n"
+            "========================================================================\r\n");
     if (lstrcmpiA(site, "portal") == 0 || lstrcmpiA(site, "kweb:portal") == 0 || lstrcmpiA(site, "kweb://portal") == 0) {
         SetWindowTextA(hContentEdit,
             "========================================================================\r\n"
@@ -921,6 +1077,40 @@ void FetchUrl(HWND hwnd, BOOL addToHistory) {
         return;
     }
 
+    if (lstrcmpiA(url, "slashnet") == 0 || lstrcmpiA(url, "kweb:slashnet") == 0 || lstrcmpiA(url, "kweb://slashnet") == 0) {
+        ShowVirtualWeb("slashnet");
+        AddTrafficLog("KWEB", "kweb://slashnet", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "trapster") == 0 || lstrcmpiA(url, "kweb:trapster") == 0 || lstrcmpiA(url, "kweb://trapster") == 0) {
+        ShowVirtualWeb("trapster");
+        AddTrafficLog("KWEB", "kweb://trapster", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "cabled") == 0 || lstrcmpiA(url, "kweb:cabled") == 0 || lstrcmpiA(url, "kweb://cabled") == 0) {
+        ShowVirtualWeb("cabled");
+        AddTrafficLog("KWEB", "kweb://cabled", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "scallion") == 0 || lstrcmpiA(url, "kweb:scallion") == 0 || lstrcmpiA(url, "kweb://scallion") == 0) {
+        ShowVirtualWeb("scallion");
+        AddTrafficLog("KWEB", "kweb://scallion", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "demoscene") == 0 || lstrcmpiA(url, "kweb:demoscene") == 0 || lstrcmpiA(url, "kweb://demoscene") == 0) {
+        ShowVirtualWeb("demoscene");
+        AddTrafficLog("KWEB", "kweb://demoscene", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "rfc-archive") == 0 || lstrcmpiA(url, "rfc_archive") == 0 || lstrcmpiA(url, "kweb:rfc-archive") == 0 || lstrcmpiA(url, "kweb://rfc-archive") == 0 || lstrcmpiA(url, "kweb:rfc_archive") == 0) {
+        ShowVirtualWeb("rfc_archive");
+        AddTrafficLog("KWEB", "kweb://rfc-archive", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "spool") == 0 || lstrcmpiA(url, "vfs:spool") == 0 || lstrcmpiA(url, "save") == 0) {
+        SpoolPageToVfs();
+        return;
+    }
     if (lstrcmpiA(url, "portal") == 0 || lstrcmpiA(url, "kweb:portal") == 0 || lstrcmpiA(url, "kweb://portal") == 0) {
         ShowVirtualWeb("portal");
         AddTrafficLog("KWEB", "kweb://portal", "OK", 10, 1024);
@@ -1293,16 +1483,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBookmarks, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"Bookmarks...");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:portal");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:slashnet");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:trapster");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:cabled");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:scallion");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:demoscene");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:rfc-archive");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:webring");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:geocities");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:cybercafe");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:neon_rider");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:asm_temple");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:warez");
-            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:darknet");
-            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:echo_subsystem");
-            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:classified");
-            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:echoes");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"cidr:10.19.99.0/24");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"cidr:192.168.1.0/24");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"bench");
@@ -1342,7 +1534,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hLogSummaryBtn = CreateWindowEx(0, "BUTTON", "Logs [L]", WS_CHILD | WS_VISIBLE, 330, 42, 70, 24, hwnd, (HMENU)9, NULL, NULL);
             SendMessage(hLogSummaryBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hFilterEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 405, 42, W - 415, 24, hwnd, NULL, NULL, NULL);
+            hSpoolBtn = CreateWindowEx(0, "BUTTON", "Spool [VFS]", WS_CHILD | WS_VISIBLE, 405, 42, 85, 24, hwnd, (HMENU)15, NULL, NULL);
+            SendMessage(hSpoolBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hFilterEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 495, 42, W - 505, 24, hwnd, NULL, NULL, NULL);
             SendMessage(hFilterEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             g_OldFilterEditProc = (WNDPROC)SetWindowLongPtrA(hFilterEdit, GWLP_WNDPROC, (LONG_PTR)FilterEditSubclass);
 
@@ -1431,6 +1626,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DisplayLogSummary();
             } else if (wmId == 10) { // Help
                 ShowHelpDialog(hwnd);
+            } else if (wmId == 15) { // Spool to VFS
+                SpoolPageToVfs();
             }
             break;
         }
@@ -1467,8 +1664,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hLogSummaryBtn = GetDlgItem(hwnd, 9);
             if (hLogSummaryBtn) MoveWindow(hLogSummaryBtn, 330, 42, 70, 24, TRUE);
             
-            int filterWidth = (nw > 415) ? (nw - 415) : 10;
-            if (hFilterEdit) MoveWindow(hFilterEdit, 405, 42, filterWidth, 24, TRUE);
+            if (hSpoolBtn) MoveWindow(hSpoolBtn, 405, 42, 85, 24, TRUE);
+            
+            int filterWidth = (nw > 505) ? (nw - 505) : 10;
+            if (hFilterEdit) MoveWindow(hFilterEdit, 495, 42, filterWidth, 24, TRUE);
 
             int cw = (nw > 20) ? (nw - 20) : 10;
             int ch = (nh > 84) ? (nh - 84) : 10;

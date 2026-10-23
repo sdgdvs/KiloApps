@@ -603,6 +603,7 @@
     <button class="btn" id="btnMute" title="Toggle Audio Synthesizer (M)">🔊 Audio [M]</button>
     <button class="btn" id="btnQuickSave" title="Quick Save Session State (F5)">💾 Save [F5]</button>
     <button class="btn" id="btnQuickLoad" title="Quick Load Session State (F9)">📂 Load [F9]</button>
+    <button class="btn" id="btnSpoolVfs" title="Save Page/Spool to KiloOS VFS (/home/downloads/)">💾 Spool VFS</button>
     <button class="btn" id="btnBack" title="Back (Alt+Left)" disabled>&lt; [Alt+←]</button>
     <button class="btn" id="btnForward" title="Forward (Alt+Right)" disabled>&gt; [Alt+→]</button>
     <input type="text" class="input-url" id="urlInput" value="/web/portal.html" placeholder="Enter URL or target host (e.g. kweb://portal, /web/portal.html, hex:http://example.com)..." />
@@ -612,15 +613,16 @@
         <option value="kweb://portal">🏠 KiloNet 1999 Web Portal</option>
         <option value="kweb://slashnet">📰 SlashNet: News for Nerds</option>
         <option value="kweb://trapster">🐱 Trapster P2P Chiptune Swarm</option>
+        <option value="kweb://cabled">⚡ Cabled Magazine (1999 Edition)</option>
+        <option value="kweb://scallion">🧅 The Scallion: Satirical News</option>
+        <option value="kweb://demoscene">💾 Assembly '99 Demoscene Vault</option>
+        <option value="kweb://rfc-archive">📜 Living RFC Archive Workbench</option>
         <option value="kweb://webring">🌐 Central Webring Hub</option>
         <option value="kweb://geocities">✨ CyberSpire Retro Shrine &amp; MOD Vault</option>
         <option value="kweb://cybercafe">☕ CyberCafe '99 (BBS &amp; ASCII Lounge)</option>
         <option value="kweb://users/~neon_rider">⚡ ~neon_rider (ASM &amp; Demoscene)</option>
         <option value="kweb://asm-temple">⚡ x86 ASM Temple &amp; Opcode Shrine</option>
         <option value="kweb://warez">💾 Warez &amp; Cracktro Vault</option>
-        <option value="kweb://echo-subsystem.net">🔬 Echo Subsystem Acoustic Labs</option>
-        <option value="kweb://10.19.99.4/classified">🔒 10.19.99.4 Corporate Leak</option>
-        <option value="kweb://deep-core">⚡ Deep Core Ghost Terminal</option>
       </optgroup>
       <optgroup label="🚀 KiloApps Fleet">
         <option value="/apps/contribute.html">🚀 Fleet Contributor Guide</option>
@@ -676,6 +678,7 @@
           <button class="btn-chip" id="btnViewRendered" style="background:rgba(56,189,248,0.25); border-color:#38bdf8; font-weight:700;">🌐 Rendered View</button>
           <button class="btn-chip" id="btnViewSource">📄 Raw Source</button>
           <button class="btn-chip" id="btnViewHex">🔢 Hex View</button>
+          <button class="btn-chip" id="btnInspectorSpoolVfs" title="Save Page/Spool to KiloOS VFS (/home/downloads/)" style="color:#34d399; border-color:rgba(52, 211, 153, 0.4); font-weight:700;">💾 Spool to VFS</button>
           <span id="httpStatusBadge" class="badge badge-success">HTTP 200 OK</span>
         </div>
       </div>
@@ -695,10 +698,11 @@
           <button class="btn-chip" data-url="kweb://cybercafe" style="color:#fbbf24; border-color:rgba(251, 191, 36, 0.4);">☕ CyberCafe</button>
           <button class="btn-chip" data-url="kweb://users/~neon_rider" style="color:#00ffcc; border-color:rgba(0, 255, 204, 0.4);">⚡ ~neon_rider</button>
           <button class="btn-chip" data-url="kweb://asm-temple" style="color:#fbbf24; border-color:rgba(245, 158, 11, 0.4);">⚡ ASM Temple</button>
+          <button class="btn-chip" data-url="kweb://cabled" style="color:#38bdf8; border-color:rgba(56, 189, 248, 0.4);">⚡ Cabled</button>
+          <button class="btn-chip" data-url="kweb://scallion" style="color:#4ade80; border-color:rgba(74, 222, 128, 0.4);">🧅 Scallion</button>
+          <button class="btn-chip" data-url="kweb://demoscene" style="color:#f43f5e; border-color:rgba(244, 63, 94, 0.4);">💾 Demoscene</button>
+          <button class="btn-chip" data-url="kweb://rfc-archive" style="color:#fcd34d; border-color:rgba(252, 211, 77, 0.4);">📜 RFC Archive</button>
           <button class="btn-chip" data-url="kweb://warez" style="color:#e879f9; border-color:rgba(232, 121, 249, 0.4);">💾 Warez</button>
-          <button class="btn-chip" data-url="kweb://echo-subsystem.net" style="color:#a78bfa; border-color:rgba(167, 139, 250, 0.4);">🔬 Echo Subsystem</button>
-          <button class="btn-chip" data-url="kweb://10.19.99.4/classified" style="color:#f59e0b; border-color:rgba(245, 158, 11, 0.4);">🔒 10.19.99.4</button>
-          <button class="btn-chip" data-url="kweb://deep-core" style="color:#22ff66; border-color:rgba(34, 255, 102, 0.4);">⚡ Deep Core</button>
           <span style="font-size:11px; color:var(--text-muted); font-weight:700; margin-left:6px;">FLEET:</span>
           <button class="btn-chip" data-url="/apps/contribute.html" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🚀 Contributor</button>
           <button class="btn-chip" data-url="ping:8.8.8.8">📡 Ping</button>
@@ -711,6 +715,7 @@
           <button class="btn-chip" data-url="kweb://darknet" style="color:#34d399; border-color:rgba(52, 211, 153, 0.4);">👁️ Darknet</button>
           <button class="btn-chip" data-url="kweb://10.19.99.4/classified" style="color:#f59e0b; border-color:rgba(245, 158, 11, 0.4);">🔒 10.19.99.4</button>
           <button class="btn-chip" data-url="kweb://deep-core" style="color:#22ff66; border-color:rgba(34, 255, 102, 0.4);">⚡ Deep Core</button>
+          <button class="btn-chip" data-url="kweb://echo-subsystem.net" style="color:#a78bfa; border-color:rgba(167, 139, 250, 0.4);">🔬 Echo Subsystem</button>
           <button class="btn-chip" data-url="/apps/kdirector.html" style="color:#fbbf24; border-color:rgba(251, 191, 36, 0.4);">🏛️ KDirector</button>
           <button class="btn-chip" data-url="echoes" style="color:#c084fc; border-color:rgba(192, 132, 252, 0.4);">🌌 Echoes</button>
           <button class="btn-chip" id="btnAdminLock" style="color:#ef4444; margin-left:auto; font-size:11px;" title="Lock Admin Session">Lock [✕]</button>
@@ -1551,6 +1556,10 @@
 
   const btnQuickSave = document.getElementById('btnQuickSave');
   if (btnQuickSave) btnQuickSave.onclick = quickSave;
+  const btnSpoolVfs = document.getElementById('btnSpoolVfs');
+  if (btnSpoolVfs) btnSpoolVfs.onclick = spoolCurrentPageToVfs;
+  const btnInspectorSpoolVfs = document.getElementById('btnInspectorSpoolVfs');
+  if (btnInspectorSpoolVfs) btnInspectorSpoolVfs.onclick = spoolCurrentPageToVfs;
   const btnQuickLoad = document.getElementById('btnQuickLoad');
   if (btnQuickLoad) btnQuickLoad.onclick = quickLoad;
 
@@ -1791,6 +1800,14 @@
       return;
     }
 
+    if ((e.ctrlKey && e.key === 's') || (e.altKey && e.key.toLowerCase() === 's')) {
+      const activeTabBtn = document.querySelector('.tab-btn.active');
+      if (activeTabBtn && activeTabBtn.dataset.tab === 'tab-http') {
+        e.preventDefault();
+        spoolCurrentPageToVfs();
+        return;
+      }
+    }
     if (e.key === 'F5') {
       e.preventDefault();
       quickSave();
@@ -2087,6 +2104,92 @@
     return out;
   }
 
+
+  /* =========================================================
+     KILOOS VFS & CROSS-APP IPC BRIDGE (Phase VI System Convergence)
+     ========================================================= */
+  const KiloVFS = {
+    write(path, data) {
+      try {
+        const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
+        window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: `Saved to VFS: ${path}` }, '*');
+      } catch (e) {}
+    },
+    read(path, cb) {
+      const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      const handler = (e) => {
+        if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+          window.removeEventListener('message', handler);
+          cb(e.data.data, e.data.path);
+        }
+      };
+      window.addEventListener('message', handler);
+      try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+    },
+    openPicker(cb) {
+      const reqId = 'open_' + Date.now();
+      const handler = (e) => {
+        if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+          window.removeEventListener('message', handler);
+          if (e.data.path) KiloVFS.read(e.data.path, cb);
+        }
+      };
+      window.addEventListener('message', handler);
+      try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
+    },
+    launchApp(targetApp, path = '') {
+      try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+    }
+  };
+
+  function spoolCurrentPageToVfs() {
+    initAudio();
+    playNavChime();
+    const curUrl = urlInput.value.trim() || '/web/portal.html';
+    
+    // Determine friendly filename for /home/downloads/
+    let baseName = 'page';
+    try {
+      if (curUrl.startsWith('kweb://')) {
+        baseName = curUrl.replace('kweb://', '').split(/[/?#]/)[0] || 'kweb_page';
+      } else if (curUrl.startsWith('/web/') || curUrl.startsWith('/apps/')) {
+        const parts = curUrl.split('/');
+        baseName = parts[parts.length - 1].split(/[?#]/)[0] || 'local_page';
+      } else if (curUrl.includes('://')) {
+        const parsed = new URL(curUrl);
+        const lastPart = parsed.pathname.split('/').filter(Boolean).pop();
+        baseName = lastPart ? lastPart.split(/[?#]/)[0] : parsed.hostname;
+      } else {
+        baseName = curUrl.replace(/[^a-zA-Z0-9_-]/g, '_');
+      }
+    } catch (e) {
+      baseName = 'page';
+    }
+    
+    if (!baseName || baseName === '/' || baseName === '.') baseName = 'page';
+    baseName = baseName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    if (!baseName.endsWith('.html') && !baseName.endsWith('.txt') && !baseName.endsWith('.json')) {
+      baseName += '.html';
+    }
+
+    const vfsPath = '/home/downloads/' + baseName;
+    let content = currentRawText;
+    if (!content || content.startsWith('Error fetching source:')) {
+      content = `<!DOCTYPE html>\n<!-- Saved from KNet Spooler: ${curUrl} at ${new Date().toISOString()} -->\n<html>\n<head>\n  <title>${document.title} - Spooled: ${curUrl}</title>\n  <style>body{font-family:monospace;background:#030712;color:#38bdf8;padding:24px;}</style>\n</head>\n<body>\n  <h2>KNet Spooled Snapshot</h2>\n  <p><strong>URL:</strong> ${curUrl}</p>\n  <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>\n  <hr/>\n  <div id="content">\n${content || '(Empty payload)'}\n  </div>\n</body>\n</html>`;
+    }
+
+    KiloVFS.write(vfsPath, content);
+    showToast(`💾 Spooled page to KiloOS VFS: ${vfsPath}`, 'success', 5000);
+    if (footerStatus) footerStatus.textContent = `Spooled to VFS: ${vfsPath} (${content.length} bytes)`;
+    addTrafficLog('VFS', vfsPath, 'SPOOLED', 200, 5, content.length, content);
+
+    // If running standalone outside KiloOS shell, also download file
+    if (window.parent === window) {
+      downloadFile(content, baseName, 'text/html');
+    }
+  }
+
   // HTTP Inspector Logic
   async function fetchUrl(url, addToHistory = true) {
     if (!url) return;
@@ -2144,6 +2247,11 @@
         const calcBtn = document.getElementById('btnCalcSubnet');
         if (calcBtn) calcBtn.click();
       }
+      return;
+    }
+
+    if (url.toLowerCase() === 'spool' || url.toLowerCase() === 'save' || url.toLowerCase() === 'kweb://spool' || url.toLowerCase() === 'vfs:spool') {
+      spoolCurrentPageToVfs();
       return;
     }
 
@@ -2218,6 +2326,14 @@
       url = '/web/trapster.html';
     } else if (url.toLowerCase() === 'kweb://slashnet' || url.toLowerCase() === 'slashnet' || url.toLowerCase() === 'kweb://slashdot' || url.toLowerCase() === 'slashdot' || url.toLowerCase() === 'kweb://slashnet.org' || url.toLowerCase() === 'slashnet.org') {
       url = '/web/slashnet.html';
+    } else if (url.toLowerCase() === 'kweb://cabled' || url.toLowerCase() === 'cabled' || url.toLowerCase() === 'kweb://cabled.com' || url.toLowerCase() === 'kweb://cabled.html' || url.toLowerCase() === 'kweb://wired' || url.toLowerCase() === 'wired') {
+      url = '/web/cabled.html';
+    } else if (url.toLowerCase() === 'kweb://scallion' || url.toLowerCase() === 'scallion' || url.toLowerCase() === 'kweb://thescallion' || url.toLowerCase() === 'thescallion' || url.toLowerCase() === 'kweb://scallion.html' || url.toLowerCase() === 'kweb://onion' || url.toLowerCase() === 'onion') {
+      url = '/web/scallion.html';
+    } else if (url.toLowerCase() === 'kweb://demoscene' || url.toLowerCase() === 'demoscene' || url.toLowerCase() === 'kweb://assembly99' || url.toLowerCase() === 'assembly99' || url.toLowerCase() === 'kweb://demoscene.html' || url.toLowerCase() === 'kweb://scene99' || url.toLowerCase() === 'scene99') {
+      url = '/web/demoscene.html';
+    } else if (url.toLowerCase() === 'kweb://rfc-archive' || url.toLowerCase() === 'rfc-archive' || url.toLowerCase() === 'kweb://rfc_archive' || url.toLowerCase() === 'rfc_archive' || url.toLowerCase() === 'kweb://rfc' || url.toLowerCase() === 'rfc' || url.toLowerCase() === 'kweb://rfc-archive.html' || url.toLowerCase() === 'kweb://ietf' || url.toLowerCase() === 'ietf') {
+      url = '/web/rfc_archive.html';
     } else if (url.toLowerCase() === 'kweb://webring' || url.toLowerCase() === 'webring') {
       url = '/web/webring.html';
     } else if (url.toLowerCase() === 'kweb://geocities' || url.toLowerCase() === 'geocities' || url.toLowerCase().startsWith('kweb://geocities') || url.toLowerCase().startsWith('geocities.com') || url.toLowerCase().startsWith('http://geocities.com') || url.toLowerCase().startsWith('http://www.geocities.com') || url.toLowerCase().startsWith('www.geocities.com')) {
@@ -2247,6 +2363,10 @@
     } else if (url.toLowerCase().startsWith('kweb://users/')) {
       const uClean = url.slice(13).replace('~', '');
       url = '/web/users/' + uClean + (uClean.endsWith('.html') ? '' : '.html');
+    } else if (url.toLowerCase().startsWith('kweb://')) {
+      let clean = url.slice(7).replace(/\/$/, '');
+      if (!clean.endsWith('.html')) clean += '.html';
+      url = '/web/' + clean;
     }
 
     urlInput.value = url;
