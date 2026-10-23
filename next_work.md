@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -20,7 +20,7 @@ current_targets:
   kilo_graphics: KTrader
   kilo_soundscape: KBreakout
   kilo_tester: KPass
-  kilo_usability: KPass
+  kilo_usability: KTrader
   kilo_qa: KSpace
   kilo_expander: KConverter
 virtual_web_target: kweb://portal
@@ -37,9 +37,9 @@ virtual_web_rotation:
 - kweb://deep-core
 - kweb://darknet
 last_run:
-  agent: kilo-tester
-  app: KBase
-  timestamp: '2026-10-23T00:36:00-07:00'
+  agent: kilo-usability
+  app: KPass
+  timestamp: '2026-10-23T01:36:00-07:00'
 last_planner_run: '2026-10-23T01:35:00Z'
 ---
 
@@ -123,19 +123,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**: `KTrader`, `KSpace`.
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Target**: `KPass`
-- **Primary File**: `KiloOS/public/apps/kpass.html`
-- **Objective**: Credential vault UX and ergonomics: clean responsive layout across compact windows, high-contrast entropy meter, clear modal focus trapping, and keyboard navigation.
+- **Target**: `KTrader`
+- **Primary File**: `KiloOS/public/apps/ktrader.html`
+- **Objective**: Space trader market interface usability: compact responsive pricing table, clear transaction hotkeys, docking prompt focus trapping, and HiDPI canvas alignment.
 - **Action Steps**:
   1. Inspect layout adaptability across standard and compact window dimensions.
   2. Verify keyboard navigation, shortcut discoverability, and focus trapping.
   3. Ensure high-contrast accessibility, crisp font rendering, and responsive controls.
 - **Verification**: `cd KiloOS && npm run build`. File size < 999 KB.
 - **Handoff**:
-  - In frontmatter: advance `current_targets.kilo_usability` to `KTrader`.
+  - In frontmatter: advance `current_targets.kilo_usability` to `KSpace`.
   - Set `current_agent: kilo-qa`.
   - Append terse execution log (≤6 lines), commit, and push.
-- **Upcoming Queue**: `KTrader`, `KSpace`.
+- **Upcoming Queue**: `KSpace`, `KRogue`.
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Target**: `KSpace`
@@ -217,6 +217,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T01:36:00-07:00 — kilo-usability: KPass (Usability, High-Contrast Entropy & Focus Trapping)**
+  - Status: PASS ✅ (0 runtime errors, startup check clean 139.7 KB, Vite build clean in 539ms).
+  - Usability & Layout: Compact window wrap support, responsive strength container with 100% width meter bar on narrow screens.
+  - Entropy Meter: High-contrast entropy badge and accessibility text indicating exact bits, tier rating, and color-coded indicator.
+  - Modal Focus Trapping: Added focus trap loops & focus restoration for Help, Edit, Delete, Tutorial, and Lock modals.
+  - Keyboard Navigation: Vault list keyboard traversal (ArrowUp/Down, Enter/c to copy pass, u for user, e for edit, Del for delete).
+  - Parity & Builds: Win32 C builds clean (25 KB); dual parity verified; security lint ALL PASS.
+  - Handoff: Advanced kilo-usability to KTrader; rotated active agent to kilo-qa.
 - **2026-10-23T00:36:00-07:00 — kilo-tester: KBase (Interactive UI Audit & Mature Quarantine)**
   - Status: PASS ✅ (0 runtime errors, 137 UI buttons, 37 presets, full keyboard shortcut suite verified).
   - Interactive Audit: Verified endian toggle/swap [E], bitmask presets [D], text copy [C], radix 2-36, IEEE-754, ULEB/SLEB128, and F5/F9 state persistence.
@@ -243,12 +251,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Frequency Sweeper: Added Tone-Loc RF & subcarrier sweeper (100Hz-3kHz, VLF 10-30kHz, 144MHz packet radio) with heterodyne beat audio & waterfall hits.
   - Airgap Packet Bridge: Created Tab 18 with optical strobe canvas, acoustic FSK coupling, CRC-16 CCITT dissection, preset bursts & terminal/sniffer injection.
   - Verification: 
-pm run build clean (560ms), 	est_app_startup knet PASS, file size 414.5 KB (< 999 KB).
+npm run build clean (560ms), test_app_startup knet PASS, file size 414.5 KB (< 999 KB).
   - Handoff: Advanced creator queue to kweb://portal, rotated agent to kilo-graphics.
-- **2026-10-22T18:35:00-07:00 — kilo-planner: 24-Hour Fleet Planning & Queue Rework**
-  - Status: PASS ✅ (0 errors, 105 apps audited, rotation schedule & active queues refreshed).
-  - Queue Health: Purged non-existent `KRacer` and quarantined mature app `KMaze` from active/upcoming queues; advanced `virtual_web_target` to `kweb://darknet`.
-  - Target Allocations: Creator -> `kweb://darknet`, Graphics -> `KSpace`, Soundscape -> `KRogue`, Tester -> `KBase`, Usability -> `KBase`, QA -> `KSpace`, Expander -> `KConverter`.
-  - Icon Uniqueness: Verified 105 apps in App.jsx via `check_icons.py` (0 missing, 0 shared paths, 0 duplicate SHA256 hashes).
-  - Startup Verification: Verified `KSpace`, `KConverter`, `KBase`, `KTrader`, `KRogue`, `KBreakout`, `KQuest` startup tests all PASS.
-  - Handoff & Compaction: Set `current_agent: kilo-creator`, `next_agent: kilo-graphics`, updated `last_planner_run`, rotated logs.
+

@@ -34,7 +34,7 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #555;
   }
-  button:focus-visible, input:focus-visible, select:focus-visible, .btn-mode:focus-visible, .btn-preset:focus-visible, .audit-metric-card:focus-visible, .vault-pass:focus-visible, .display:focus-visible, .tab:focus-visible, .tab-help:focus-visible, .help-hint:focus-visible, .history-header:focus-visible, .vault-notes:focus-visible, .btn-micro:focus-visible, .btn-clear-search:focus-visible, input[type="range"]:focus-visible, input[type="checkbox"]:focus-visible {
+  button:focus-visible, input:focus-visible, select:focus-visible, .btn-mode:focus-visible, .btn-preset:focus-visible, .audit-metric-card:focus-visible, .vault-pass:focus-visible, .display:focus-visible, .tab:focus-visible, .tab-help:focus-visible, .help-hint:focus-visible, .history-header:focus-visible, .vault-notes:focus-visible, .btn-micro:focus-visible, .btn-clear-search:focus-visible, input[type="range"]:focus-visible, input[type="checkbox"]:focus-visible, .vault-item:focus-visible {
     outline: 2px solid #e74c3c !important;
     outline-offset: 2px;
     box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.4) !important;
@@ -171,26 +171,44 @@
     background: #252525;
     border-radius: 6px;
     border: 1px solid #333;
+    gap: 8px;
   }
   .strength-bar-bg {
     flex: 1;
     height: 8px;
-    background: #333;
+    background: #141414;
     border-radius: 4px;
-    margin: 0 12px;
+    margin: 0 6px;
     overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
   }
   .strength-bar-fill {
     height: 100%;
     width: 0%;
     background: #e74c3c;
-    transition: width 0.3s, background-color 0.3s;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
   }
   .strength-text {
     font-size: 12px;
     font-weight: bold;
-    color: #aaa;
+    color: #e0e0e0;
     transition: color 0.3s;
+    white-space: nowrap;
+  }
+  .strength-text#lblEntropy {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #181818;
+    border: 1px solid #444;
+    color: #f1f1f1;
+    letter-spacing: 0.2px;
+    transition: all 0.25s ease;
+  }
+  .vault-item:focus-visible {
+    border-left-color: #2ecc71 !important;
+    background: #333 !important;
   }
   .controls {
     display: flex;
@@ -717,6 +735,16 @@
     .content {
       padding: 10px 12px;
     }
+    .strength-container {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .strength-bar-bg {
+      order: 3;
+      width: 100%;
+      flex: 1 1 100%;
+      margin: 4px 0 0 0;
+    }
     .mode-pills {
       flex-wrap: wrap;
       gap: 4px;
@@ -849,6 +877,7 @@
         <div>&bull; Esc = Close Modals / Clear Search / Reset Filters</div>
         <div>&bull; Ctrl+S = Save Credential | Ctrl+G = Generate | Ctrl+C = Copy Password</div>
         <div>&bull; Alt+L = Lock Vault | Alt+J = JSON | Alt+E = CSV | Alt+M = Markdown | Alt+B = Backup | Alt+I = Import</div>
+        <div>&bull; Vault Navigation: &darr;/&uarr; Browse items | Enter/'c' = Copy pass | 'u' = Copy user | 'e' = Edit | Del = Delete</div>
       </div>
       <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
         <button id="btnQuicksaveHelp" style="background: #333; border-color: #444; color: #ddd;" title="Save quicksave snapshot [F5]">Save [F5]</button>
@@ -1112,7 +1141,7 @@
     </div>
     <div class="vault-status-bar">
       <span id="lblVaultStatus">0 items in vault</span>
-      <span style="font-size:11px; color:#666;">Click password to copy &bull; Double-click item to copy</span>
+      <span style="font-size:11px; color:#888;">&darr;/&uarr; Browse &bull; Enter/'c' Copy &bull; 'u' User &bull; 'e' Edit &bull; Del Delete</span>
     </div>
     <div class="vault-list" id="vaultList">
       <!-- Vault items go here -->
@@ -1490,7 +1519,7 @@
       if (tutStepIndicator) tutStepIndicator.innerText = `Step ${currentTutStep} of ${TUTORIAL_STEPS.length}`;
       if (btnTutPrev) btnTutPrev.style.display = currentTutStep > 1 ? 'inline-block' : 'none';
       if (btnTutNext) btnTutNext.innerText = currentTutStep === TUTORIAL_STEPS.length ? "Finish" : "Next \u2192";
-      tutorialOverlay.style.display = 'flex';
+      openModal(tutorialOverlay, btnTutNext);
     }
 
     function advanceTutorial() {
@@ -1508,8 +1537,8 @@
     }
 
     function closeTutorial() {
-      if (tutorialOverlay) {
-        tutorialOverlay.style.display = 'none';
+      if (tutorialOverlay && tutorialOverlay.style.display === 'flex') {
+        closeModal(tutorialOverlay);
       }
       safeSetStorage('kpass_tutorialSeen', '1');
     }
@@ -1862,18 +1891,65 @@
         if (e.key === 'ArrowLeft') { tabVault.focus(); switchTab('vault'); }
     });
 
+    let lastActiveFocus = null;
+
+    function openModal(modalEl, initialFocusEl) {
+        if (!modalEl) return;
+        lastActiveFocus = document.activeElement;
+        modalEl.style.display = 'flex';
+        if (initialFocusEl && typeof initialFocusEl.focus === 'function') {
+            setTimeout(() => initialFocusEl.focus(), 25);
+        }
+    }
+
+    function closeModal(modalEl) {
+        if (!modalEl) return;
+        modalEl.style.display = 'none';
+        if (lastActiveFocus && typeof lastActiveFocus.focus === 'function' && document.body.contains(lastActiveFocus)) {
+            lastActiveFocus.focus();
+        }
+    }
+
+    function trapFocus(e, container) {
+        if (e.key !== 'Tab') return;
+        const focusables = Array.from(container.querySelectorAll(
+            'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )).filter(el => el.offsetParent !== null);
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey) {
+            if (document.activeElement === first || !container.contains(document.activeElement)) {
+                e.preventDefault();
+                last.focus();
+            }
+        } else {
+            if (document.activeElement === last || !container.contains(document.activeElement)) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+    }
+
     function toggleHelp(show) {
         if (show === undefined) {
             show = helpOverlay.style.display !== 'flex';
         }
-        helpOverlay.style.display = show ? 'flex' : 'none';
+        if (show) {
+            closeTutorial();
+            editModal.style.display = 'none';
+            deleteModal.style.display = 'none';
+            openModal(helpOverlay, btnCloseHelp);
+        } else {
+            closeModal(helpOverlay);
+        }
     }
 
     function closeModals() {
         toggleHelp(false);
         closeTutorial();
-        editModal.style.display = 'none';
-        deleteModal.style.display = 'none';
+        closeModal(editModal);
+        closeModal(deleteModal);
         editingIndex = -1;
         deletingIndex = -1;
     }
@@ -1895,7 +1971,7 @@
     });
 
     // Edit modal listeners
-    btnCancelEdit.addEventListener('click', () => { editModal.style.display = 'none'; editingIndex = -1; });
+    btnCancelEdit.addEventListener('click', () => { closeModal(editModal); editingIndex = -1; });
     btnSaveEdit.addEventListener('click', async () => {
         if (editingIndex < 0 || editingIndex >= vault.length) return;
         const newLabel = editLabel.value.trim();
@@ -1930,7 +2006,7 @@
     });
 
     // Delete modal listeners
-    btnCancelDelete.addEventListener('click', () => { deleteModal.style.display = 'none'; deletingIndex = -1; });
+    btnCancelDelete.addEventListener('click', () => { closeModal(deleteModal); deletingIndex = -1; });
     btnConfirmDelete.addEventListener('click', async () => {
         if (deletingIndex < 0 || deletingIndex >= vault.length) return;
         vault.splice(deletingIndex, 1);
@@ -1951,13 +2027,103 @@
 
     // Global Key Listener
     document.addEventListener('keydown', (e) => {
+        // Modal Focus Trapping
+        if (lockScreen && lockScreen.style.display !== 'none') {
+            if (e.key === 'Tab') {
+                trapFocus(e, lockScreen);
+                return;
+            }
+        }
+        if (tutorialOverlay && tutorialOverlay.style.display === 'flex') {
+            if (e.key === 'Tab') {
+                trapFocus(e, tutorialOverlay);
+                return;
+            }
+            if (e.key === 'Escape') {
+                closeTutorial();
+                return;
+            }
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                advanceTutorial();
+                return;
+            }
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevTutorial();
+                return;
+            }
+            if (e.key === 'Enter' || e.key === ' ') {
+                if (e.target === btnTutPrev) {
+                    e.preventDefault();
+                    prevTutorial();
+                    return;
+                }
+                if (e.target === btnTutClose) {
+                    e.preventDefault();
+                    closeTutorial();
+                    return;
+                }
+                e.preventDefault();
+                advanceTutorial();
+                return;
+            }
+            return;
+        }
+
+        if (helpOverlay && helpOverlay.style.display === 'flex') {
+            if (e.key === 'Tab') {
+                trapFocus(e, helpOverlay);
+                return;
+            }
+            if (e.key === 'Escape') {
+                toggleHelp(false);
+                return;
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                toggleHelp(false);
+                return;
+            }
+            return;
+        }
+
+        if (editModal && editModal.style.display === 'flex') {
+            if (e.key === 'Tab') {
+                trapFocus(e, editModal);
+                return;
+            }
+            if (e.key === 'Escape') {
+                closeModal(editModal);
+                editingIndex = -1;
+                return;
+            }
+        }
+
+        if (deleteModal && deleteModal.style.display === 'flex') {
+            if (e.key === 'Tab') {
+                trapFocus(e, deleteModal);
+                return;
+            }
+            if (e.key === 'Escape') {
+                closeModal(deleteModal);
+                deletingIndex = -1;
+                return;
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                btnConfirmDelete.click();
+                return;
+            }
+        }
+
         if (e.key === 'F1') {
             e.preventDefault();
             toggleHelp();
             return;
         }
 
-        if (tutorialOverlay && tutorialOverlay.style.display === 'flex') {
+        if (false) {
             if (e.key === 'Escape') {
                 closeTutorial();
                 return;
@@ -2340,7 +2506,7 @@
 
     function calcStrength(pass) {
         if(!pass || pass === '...') {
-            return { rating: "-", entropy: 0, pct: 0, color: "#e74c3c" };
+            return { rating: "-", entropy: 0, pct: 0, color: "#888888" };
         }
         let pool = 0;
         if(/[A-Z]/.test(pass)) pool += 26;
@@ -2370,11 +2536,17 @@
             lblStrength.innerText = "Strength: " + info.rating;
             lblStrength.style.color = info.color;
         }
-        if (lblEntropy) lblEntropy.innerText = info.entropy + " bits";
+        if (lblEntropy) {
+            lblEntropy.innerText = info.entropy + " bits (" + info.rating + ")";
+            lblEntropy.style.color = info.color;
+            lblEntropy.style.borderColor = info.color;
+            lblEntropy.title = "Calculated Information Entropy: " + info.entropy + " bits (" + info.rating + ")";
+        }
         if (barStrength) {
             barStrength.style.width = info.pct + "%";
             barStrength.style.backgroundColor = info.color;
             barStrength.setAttribute('aria-valuenow', String(info.pct));
+            barStrength.setAttribute('aria-valuetext', info.rating + ", " + info.entropy + " bits of entropy");
         }
         return info;
     }
@@ -2607,6 +2779,13 @@
         btnClearSearch.style.display = vaultSearch.value ? 'block' : 'none';
         renderVault();
     });
+    vaultSearch.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const firstItem = vaultList.querySelector('.vault-item');
+            if (firstItem) firstItem.focus();
+        }
+    });
     btnClearSearch.addEventListener('click', () => {
         vaultSearch.value = '';
         btnClearSearch.style.display = 'none';
@@ -2694,12 +2873,15 @@
             const isRevealed = revealedKeys.has(realIndex);
             const div = document.createElement('div');
             div.className = 'vault-item';
+            div.setAttribute('tabindex', '0');
+            div.setAttribute('role', 'listitem');
+            div.setAttribute('aria-label', `Credential: ${item.label || 'Untitled'}`);
 
             let badgesHtml = `<span class="vault-category">${escapeHtml(item.category || 'Other')}</span>`;
             if (item.entropy < 50) {
-                badgesHtml += `<span class="vault-badge weak">Weak</span>`;
+                badgesHtml += `<span class="vault-badge weak" title="Entropy: ${item.entropy} bits">Weak (${item.entropy}b)</span>`;
             } else {
-                badgesHtml += `<span class="vault-badge">${escapeHtml(item.strength || 'Saved')}</span>`;
+                badgesHtml += `<span class="vault-badge" title="Entropy: ${item.entropy} bits">${escapeHtml(item.strength || 'Saved')} (${item.entropy}b)</span>`;
             }
             if (item.isReused) {
                 badgesHtml += `<span class="vault-badge reused" title="Password reused across multiple accounts">Reused</span>`;
@@ -2795,8 +2977,7 @@
                 editCat.value = vault[realIndex].category || 'Personal';
                 editPass.value = vault[realIndex].pass || '';
                 editNotes.value = vault[realIndex].notes || '';
-                editModal.style.display = 'flex';
-                editLabel.focus();
+                openModal(editModal, editLabel);
             });
 
             const itemCopyBtn = div.querySelector('.btn-copy');
@@ -2811,8 +2992,42 @@
                 deletingIndex = realIndex;
                 const entryLabel = vault[realIndex].label ? `"${vault[realIndex].label}"` : 'this credential';
                 deletePrompt.textContent = `Are you sure you want to delete ${entryLabel}?`;
-                deleteModal.style.display = 'flex';
-                btnConfirmDelete.focus();
+                openModal(deleteModal, btnConfirmDelete);
+            });
+
+            // Keyboard navigation on vault item
+            div.addEventListener('keydown', (e) => {
+                if (e.target !== div && ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const next = div.nextElementSibling;
+                    if (next && next.classList.contains('vault-item')) next.focus();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const prev = div.previousElementSibling;
+                    if (prev && prev.classList.contains('vault-item')) {
+                        prev.focus();
+                    } else if (vaultSearch) {
+                        vaultSearch.focus();
+                    }
+                } else if (e.key === 'c' || e.key === 'Enter') {
+                    if (e.target === div || e.target.classList.contains('vault-pass')) {
+                        e.preventDefault();
+                        copyText(item.pass, "Vault password copied!");
+                    }
+                } else if (e.key === 'u' && item.username) {
+                    e.preventDefault();
+                    copyText(item.username, "Username copied!");
+                } else if (e.key === 'e') {
+                    e.preventDefault();
+                    div.querySelector('.btn-edit').click();
+                } else if (e.key === 'Delete' || e.key === 'd') {
+                    e.preventDefault();
+                    div.querySelector('.btn-del').click();
+                } else if (e.key === ' ') {
+                    e.preventDefault();
+                    div.querySelector('.btn-reveal').click();
+                }
             });
 
             vaultList.appendChild(div);
