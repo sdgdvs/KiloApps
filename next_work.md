@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ current_targets:
   kilo_creator: kweb://cabled
   kilo_graphics: KStarship
   kilo_soundscape: KAlchemy
-  kilo_tester: KCipher
+  kilo_tester: KDB
   kilo_usability: KClip
   kilo_qa: KConverter
   kilo_expander: KNet
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KStarship
-  timestamp: '2026-10-23T11:41:14-07:00'
+  agent: kilo-tester
+  app: KCipher
+  timestamp: '2026-10-23T11:50:34-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -125,17 +125,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Compose bridge alert & deep-space exploration 6-channel FM suite (Lydian `#4` pad + tactical Phrygian Dominant combat march, sonar/shield/warp earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KCipher`
+- **Active Target**: `KDB`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Audit cipher workbench (AES/XOR/Vigenère/ROT13/RSA toy), frequency histogram, key input guards, and VFS import/export. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Audit SQL/table workbench, schema builder, query filter, chart modals, CSV/JSON/VFS export, and Escape modal dismissals. |
 | `KClip` | `KiloOS/public/apps/kclip.html`, `KClip/main.c` | Audit clipboard manager, 12 text transformation pipelines, regex find/replace bar (`Ctrl+H`), and F5/F9 persistence; promote to Mature if clean. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 | `KConverter` | `KiloOS/public/apps/kconverter.html`, `KConverter/main.c` | Audit all 14 dimensional conversion categories, engineering notation toggle, reciprocal swap, presets, and F5/F9 persistence. |
+| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Audit cipher workbench (AES/XOR/Vigenère/ROT13/RSA toy), frequency histogram, key input guards, and VFS import/export. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KClip`
@@ -233,6 +233,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T11:50:34-07:00 — kilo-tester: KCipher (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 153.9 KB, native 12.0 KB < 999 KB; startup, Vite & security_lint PASS).
+  - UI & Hotkey Audit: Verified workbench AES/XOR/Vigenere/ROT13/RSA toy, frequency histogram, modals, Escape dismissal, and key input guards.
+  - Repairs: Wrapped startup quicksave check in try/catch, added SELECT to hotkey ignore list, and refined VFS open fallback.
+  - Handoff: Advanced `kilo-tester` to `KDB`; rotated active agent to `kilo-usability`.
+
 - **2026-10-23T11:41:14-07:00 — kilo-soundscape: KStarship (Sector Vanguard & Red Alert — YM2612/SPC700 FM Soundscape Suite)**
   - Status: PASS ✅ (0 errors, web 171.1 KB, native 143.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - Composition: D Lydian (#4 G#) exploration & D Phrygian Dominant combat march, 6-channel counterpoint, shell voicings, 5:3 swing groove.
@@ -258,9 +264,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Commodity Futures Ledger: Implemented 8-commodity forward contracts (Long/Short, 20% margin, 3/5/8 jump expiry, early liquidation, cumulative P&L tracking, and jump auto-settlement).
   - RFMS Multiplayer & Cargo Duel: Wired retro_multiplayer.js with explicit Connect gate, 25s solo AI fallback vs Vance Orion, 10-jump net worth race for 2,500 cr bounty, and live Syndicate Ticker tape.
   - Handoff: Advanced `kilo-expander` to `KNet`; rotated active agent to `kilo-creator`.
-
-- **2026-10-23T10:50:55-07:00 — kilo-qa: KFont (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 226.2 KB, native 31.5 KB < 999 KB; startup, Vite & security_lint PASS).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, custom glyph bitmap matrix persistence, kfont_tutorialSeen flag, and Escape modal dismissals.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, VK_ESCAPE focus blur, and visibilitychange rAF pause.
-  - Mature Quarantine & Handoff: Promoted `KFont` to Mature archive; advanced `kilo-qa` to `KConverter`; next agent `kilo-expander`.

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T10:50:55-07:00 — kilo-qa: KFont (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 226.2 KB, native 31.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, custom glyph bitmap matrix persistence, kfont_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, VK_ESCAPE focus blur, and visibilitychange rAF pause.
+  - Mature Quarantine & Handoff: Promoted `KFont` to Mature archive; advanced `kilo-qa` to `KConverter`; next agent `kilo-expander`.
+
 - **2026-10-23T10:42:03-07:00 — kilo-usability: KTrader (KTrader Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS (0 errors, web 118.8 KB, native 25.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - Ergonomics: Responsive market table, price trend indicators, and [1-8]/[B]/[S]/[D] quick-trade hotkeys.

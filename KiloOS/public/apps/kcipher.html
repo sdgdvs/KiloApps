@@ -3194,9 +3194,11 @@
       stegoEngine.drawPreset('plasma');
 
       // Check if quicksave exists for splash button
-      if (localStorage.getItem('kcipher_quicksave')) {
-        document.getElementById('btnSplashContinue').disabled = false;
-      }
+      try {
+        if (localStorage.getItem('kcipher_quicksave')) {
+          document.getElementById('btnSplashContinue').disabled = false;
+        }
+      } catch (e) {}
 
       // Splash Buttons
       document.getElementById('btnSplashClose')?.addEventListener('click', () => {
@@ -3401,29 +3403,28 @@
 
       // VFS & IPC Integration Handlers
       document.getElementById('btnVFSOpen')?.addEventListener('click', () => {
-        KiloVFS.openPicker((data, path) => {
-          if (data) {
-            elements.inputText.value = data;
-            runEncrypt();
-            showToast(`Loaded from VFS: ${path || 'file'}`);
-            audio.playDecrypt();
-          }
-        });
-        setTimeout(() => {
-          if (!elements.inputText.value) {
-            const path = prompt("Enter KiloOS VFS path to read (e.g. /home/crypto/message.enc):", "/home/crypto/message.enc");
-            if (path) {
-              KiloVFS.read(path, (data) => {
-                if (data) {
-                  elements.inputText.value = data;
-                  runEncrypt();
-                  showToast(`Loaded: ${path}`);
-                  audio.playDecrypt();
-                }
-              });
+        if (window.parent && window.parent !== window) {
+          KiloVFS.openPicker((data, path) => {
+            if (data) {
+              elements.inputText.value = data;
+              runEncrypt();
+              showToast(`Loaded from VFS: ${path || 'file'}`);
+              audio.playDecrypt();
             }
+          });
+        } else {
+          const path = prompt("Enter KiloOS VFS path to read (e.g. /home/crypto/message.enc):", "/home/crypto/message.enc");
+          if (path) {
+            KiloVFS.read(path, (data) => {
+              if (data) {
+                elements.inputText.value = data;
+                runEncrypt();
+                showToast(`Loaded: ${path}`);
+                audio.playDecrypt();
+              }
+            });
           }
-        }, 250);
+        }
       });
 
       document.getElementById('btnVFSSave')?.addEventListener('click', () => {
@@ -4051,7 +4052,7 @@
           return;
         }
 
-        if ((e.key === 'h' || e.key === 'H') && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+        if ((e.key === 'h' || e.key === 'H') && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
           e.preventDefault();
           showTutorialStep(1);
           return;
