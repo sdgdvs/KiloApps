@@ -2321,12 +2321,48 @@
           checkClimax();
         }
       }
+      if (dataStr.includes('KANOMALY_SIGNAL_V1') || (e.data.path && e.data.path.includes('anomaly_capture.sig'))) {
+        printLine('[VFS INGRESS] Subterranean signal frame intercepted from ' + (e.data.path || '/sys/anomaly_capture.sig') + '!', 'cyan');
+        try {
+          const sigJson = typeof e.data.data === 'string' ? JSON.parse(e.data.data) : e.data.data;
+          if (sigJson && sigJson.lockedAnomaly) {
+            printLine(`[DSP DECODER] Intercepted payload signature: "${sigJson.lockedAnomaly.sig}"`, 'system');
+            printLine(`[DSP DECODER] Origin Station: ${sigJson.station ? sigJson.station.name : 'Unknown'} (${sigJson.receiver ? sigJson.receiver.tunedFreqKhz : '?'} kHz)`, 'dim');
+            for (const s of state.sectors) {
+              if (s.status !== 'BREACHED') {
+                const matchedKey = s.keys.find(k => sigJson.lockedAnomaly.sig.includes(k) || (sigJson.lockedAnomaly.lore && sigJson.lockedAnomaly.lore.includes(k)));
+                if (matchedKey) {
+                  s.status = 'BREACHED';
+                  renderHUD();
+                  printLine(`[SECTOR DECRYPTED] Anomaly signal cross-correlated with ${s.name} (${matchedKey})!`, 'success');
+                  logTelemetry(`Sector ${s.id} breached via subterranean anomaly demodulation.`);
+                  saveState(false);
+                  checkClimax();
+                  break;
+                }
+              }
+            }
+          }
+        } catch(err) {}
+      }
     } else if (e.data.type === 'VFS_CHANGED') {
-      if (e.data.path === '/sys/alpha.sys' || (typeof e.data.path === 'string' && e.data.path.startsWith('/home/crypto/'))) {
-        window.parent.postMessage({ type: 'VFS_READ', path: '/sys/alpha.sys', requestId: 'kmatrix_check_' + Date.now() }, '*');
+      if (e.data.path === '/sys/alpha.sys' || e.data.path === '/sys/anomaly_capture.sig' || (typeof e.data.path === 'string' && e.data.path.startsWith('/home/crypto/'))) {
+        window.parent.postMessage({ type: 'VFS_READ', path: e.data.path, requestId: 'kmatrix_check_' + Date.now() }, '*');
       }
     }
   });
+
+  const checkHashRoute = () => {
+    const hash = (window.location.hash || '').replace(/^#/, '');
+    if (hash.startsWith('/') || hash.startsWith('vfs:')) {
+      const vfsPath = hash.replace(/^vfs:/, '');
+      try {
+        window.parent.postMessage({ type: 'VFS_READ', path: vfsPath, requestId: 'kmatrix_hash_' + Date.now() }, '*');
+      } catch(e) {}
+    }
+  };
+  checkHashRoute();
+  window.addEventListener('hashchange', checkHashRoute);
 
   try {
     window.parent.postMessage({ type: 'VFS_READ', path: '/sys/alpha.sys', requestId: 'kmatrix_init_' + Date.now() }, '*');

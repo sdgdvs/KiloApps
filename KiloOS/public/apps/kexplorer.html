@@ -1033,6 +1033,10 @@
       if (lower.endsWith('.pdf')) {
         return 'kread';
       }
+      // Subterranean Signal Captures & Telemetry -> KAnomaly
+      if (lower.endsWith('.sig')) {
+        return 'kanomaly';
+      }
       // Executable Cartridges
       if (lower.endsWith('.exe')) {
         if (lower === 'quarantine.exe') return 'kquarantine';

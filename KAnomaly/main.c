@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <shellapi.h>
 
 void* __cdecl memset(void* p, int c, size_t sz) {
     char* pb = (char*)p;
@@ -64,6 +65,9 @@ static void k_itoa(int val, char* buf) {
 #define ID_BTN_CLEAR_LOG    114
 #define ID_EDIT_LOG         115
 #define ID_BTN_EXPORT_SIG   116
+#define ID_BTN_LAUNCH_KHEX  117
+#define ID_BTN_LAUNCH_KMATRIX 118
+#define ID_BTN_IMPORT_SIG   119
 
 #define TIMER_TICK          1
 
@@ -620,6 +624,69 @@ static void ExportSignalFrame(void) {
     AppendLog("[SIGNAL EXPORT] Intercepted signal written to anomaly_capture.sig");
 }
 
+static void LoadSignalFrame(const char* filename) {
+    HANDLE hFile = CreateFileA(filename ? filename : "anomaly_capture.sig", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        AppendLog("[SIGNAL IMPORT] No existing anomaly_capture.sig found.");
+        return;
+    }
+    char buf[2048];
+    DWORD bytesRead = 0;
+    if (ReadFile(hFile, buf, sizeof(buf) - 1, &bytesRead, NULL) && bytesRead > 0) {
+        buf[bytesRead] = '\0';
+        const char* pFreq = NULL;
+        for (int i = 0; i < (int)bytesRead - 11; i++) {
+            if (buf[i] == 'F' && buf[i+1] == 'R' && buf[i+2] == 'E' && buf[i+3] == 'Q') {
+                pFreq = &buf[i + 11];
+                break;
+            }
+        }
+        if (pFreq) {
+            int whole = 0, frac = 0;
+            while (*pFreq >= '0' && *pFreq <= '9') {
+                whole = whole * 10 + (*pFreq - '0');
+                pFreq++;
+            }
+            if (*pFreq == '.') {
+                pFreq++;
+                if (*pFreq >= '0' && *pFreq <= '9') {
+                    frac = (*pFreq - '0') * 10;
+                    pFreq++;
+                    if (*pFreq >= '0' && *pFreq <= '9') {
+                        frac += (*pFreq - '0');
+                    }
+                }
+            }
+            int centi = whole * 100 + frac;
+            if (centi >= 100 && centi <= 12000) {
+                g_freq_centikhz = centi;
+            }
+        }
+        CheckSignalLock();
+        InvalidateRect(g_hwnd, NULL, FALSE);
+        AppendLog("[SIGNAL IMPORT] Restored subterranean frame from anomaly_capture.sig");
+    }
+    CloseHandle(hFile);
+}
+
+static void LaunchKHex(void) {
+    ExportSignalFrame();
+    HINSTANCE hRes = ShellExecuteA(NULL, "open", "KHex.exe", "anomaly_capture.sig", NULL, SW_SHOWNORMAL);
+    if ((INT_PTR)hRes <= 32) {
+        ShellExecuteA(NULL, "open", "..\\KHex\\KHex.exe", "anomaly_capture.sig", NULL, SW_SHOWNORMAL);
+    }
+    AppendLog("[CROSS-APP IPC] Dispatched anomaly_capture.sig to KHex Byte Editor [F2]");
+}
+
+static void LaunchKMatrix(void) {
+    ExportSignalFrame();
+    HINSTANCE hRes = ShellExecuteA(NULL, "open", "KMatrix.exe", "anomaly_capture.sig", NULL, SW_SHOWNORMAL);
+    if ((INT_PTR)hRes <= 32) {
+        ShellExecuteA(NULL, "open", "..\\KMatrix\\KMatrix.exe", "anomaly_capture.sig", NULL, SW_SHOWNORMAL);
+    }
+    AppendLog("[CROSS-APP IPC] Dispatched anomaly_capture.sig to KMatrix Disassembler [F3]");
+}
+
 static void ShowHelp(HWND hwnd) {
     MessageBoxA(
         hwnd,
@@ -627,6 +694,8 @@ static void ShowHelp(HWND hwnd) {
         "Operation: Deep Lithosphere Acoustic & VLF Interception\n\n"
         "CONTROLS & SHORTCUTS:\n"
         "  [F1] Help / Operator Manual\n"
+        "  [F2] Export & Launch KHex Byte Editor\n"
+        "  [F3] Export & Launch KMatrix Disassembler\n"
         "  [F5] Quicksave session to kanomaly.dat\n"
         "  [F9] Quickload session from kanomaly.dat\n"
         "  [Space] Toggle Auto-Sweep frequency scan\n"
@@ -635,10 +704,12 @@ static void ShowHelp(HWND hwnd) {
         "  [Station] Cycle through 6 global subterranean observatories\n"
         "  [Bandwidth] Adjust filter passband (50Hz / 250Hz / 1kHz)\n"
         "  [Mode] Switch demodulator (AM, FSK, CW, SSTV, TEL)\n"
-        "  [Triangulate] Compute anomaly epicenter coordinates\n\n"
+        "  [Triangulate] Compute anomaly epicenter coordinates\n"
+        "  [SIG Exp] Export signal frame to anomaly_capture.sig\n\n"
         "OBJECTIVE:\n"
         "  Tune through the lithospheric noise floor to lock and decode\n"
-        "  all 12 subterranean anomalies and uncover the hidden ARG relay!",
+        "  anomalous subterranean carriers, then route captures to\n"
+        "  KHex and KMatrix for forensic cryptanalysis.\n",
         "KAnomaly Operator Manual",
         MB_OK | MB_ICONINFORMATION
     );
@@ -665,13 +736,16 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             CreateWindowA("BUTTON", "+1k >>", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 262, 10, 50, 24, hwnd, (HMENU)ID_BTN_FREQ_UP_L, NULL, NULL);
             CreateWindowA("BUTTON", "Sweep", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 316, 10, 50, 24, hwnd, (HMENU)ID_BTN_SWEEP, NULL, NULL);
 
-            CreateWindowA("BUTTON", "Mode", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 370, 10, 48, 24, hwnd, (HMENU)ID_BTN_MODE, NULL, NULL);
-            CreateWindowA("BUTTON", "Filter", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 422, 10, 48, 24, hwnd, (HMENU)ID_BTN_BANDWIDTH, NULL, NULL);
-            CreateWindowA("BUTTON", "Triangulate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 474, 10, 80, 24, hwnd, (HMENU)ID_BTN_TRIANGULATE, NULL, NULL);
-            CreateWindowA("BUTTON", "Export SIG", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 558, 10, 78, 24, hwnd, (HMENU)ID_BTN_EXPORT_SIG, NULL, NULL);
-            CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 640, 10, 68, 24, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
-            CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 712, 10, 68, 24, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
-            CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 784, 10, 68, 24, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            CreateWindowA("BUTTON", "Mode", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 360, 10, 44, 24, hwnd, (HMENU)ID_BTN_MODE, NULL, NULL);
+            CreateWindowA("BUTTON", "Filter", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 406, 10, 44, 24, hwnd, (HMENU)ID_BTN_BANDWIDTH, NULL, NULL);
+            CreateWindowA("BUTTON", "Triangulate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 452, 10, 72, 24, hwnd, (HMENU)ID_BTN_TRIANGULATE, NULL, NULL);
+            CreateWindowA("BUTTON", "SIG Exp", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 526, 10, 56, 24, hwnd, (HMENU)ID_BTN_EXPORT_SIG, NULL, NULL);
+            CreateWindowA("BUTTON", "SIG Imp", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 584, 10, 56, 24, hwnd, (HMENU)ID_BTN_IMPORT_SIG, NULL, NULL);
+            CreateWindowA("BUTTON", "->KHex [F2]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 642, 10, 74, 24, hwnd, (HMENU)ID_BTN_LAUNCH_KHEX, NULL, NULL);
+            CreateWindowA("BUTTON", "->KMatrix [F3]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 718, 10, 84, 24, hwnd, (HMENU)ID_BTN_LAUNCH_KMATRIX, NULL, NULL);
+            CreateWindowA("BUTTON", "F5", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 804, 10, 28, 24, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+            CreateWindowA("BUTTON", "F9", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 834, 10, 28, 24, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
+            CreateWindowA("BUTTON", "?", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 864, 10, 24, 24, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             // Log Console (Bottom full width)
             g_hEditLog = CreateWindowExA(
@@ -690,6 +764,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             AppendLog("=== KANOMALY v1.0.0: SUBTERRANEAN SIGNAL ANALYZER INITIALIZED ===");
             AppendLog("Lithosphere Acoustic & Electromagnetic Observatory Network online.");
             AppendLog("Array: 6 Geophone probes calibrated. Ready for RF/Seismic sweep.");
+            AppendLog("Cross-App IPC Bridge: [F2] -> KHex  |  [F3] -> KMatrix  |  [SIG Exp/Imp]");
 
             SetTimer(hwnd, TIMER_TICK, 50, NULL);
             CheckSignalLock();
@@ -789,6 +864,15 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 case ID_BTN_EXPORT_SIG:
                     ExportSignalFrame();
                     break;
+                case ID_BTN_IMPORT_SIG:
+                    LoadSignalFrame("anomaly_capture.sig");
+                    break;
+                case ID_BTN_LAUNCH_KHEX:
+                    LaunchKHex();
+                    break;
+                case ID_BTN_LAUNCH_KMATRIX:
+                    LaunchKMatrix();
+                    break;
                 case ID_BTN_SAVE:
                     QuickSaveState();
                     break;
@@ -813,6 +897,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
         case WM_KEYDOWN: {
             if (wParam == VK_F1) { ShowHelp(hwnd); return 0; }
+            if (wParam == VK_F2) { LaunchKHex(); return 0; }
+            if (wParam == VK_F3) { LaunchKMatrix(); return 0; }
             if (wParam == VK_F5) { QuickSaveState(); return 0; }
             if (wParam == VK_F9) { QuickLoadState(); return 0; }
             if (wParam == VK_SPACE) {
@@ -896,6 +982,8 @@ void __cdecl MainEntry(void) {
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
             if (msg.wParam == VK_F1) { ShowHelp(hwnd); continue; }
+            if (msg.wParam == VK_F2) { LaunchKHex(); continue; }
+            if (msg.wParam == VK_F3) { LaunchKMatrix(); continue; }
             if (msg.wParam == VK_F5) { QuickSaveState(); continue; }
             if (msg.wParam == VK_F9) { QuickLoadState(); continue; }
             if (msg.wParam == VK_SPACE) {

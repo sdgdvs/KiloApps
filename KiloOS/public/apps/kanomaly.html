@@ -732,6 +732,7 @@
       <button class="kbtn" id="btnImportJson">IMPORT</button>
       <button class="kbtn" id="btnMeshModal" title="Distributed Geophone Network (RFMS)">🌐 MESH</button>
       <button class="kbtn alert" id="btnVfsExportHeader" title="Export Signal Frame to KiloOS VFS (/sys/anomaly_capture.sig)">💾 VFS SIG</button>
+      <button class="kbtn" id="btnVfsLoadHeader" title="Load Demodulated Signal Frame from KiloOS VFS (/sys/anomaly_capture.sig)">📂 LOAD SIG</button>
       <button class="kbtn alert" id="btnHelpModal">HELP [F1]</button>
     </div>
   </header>
@@ -964,11 +965,13 @@
         </div>
 
         <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px;">
-          <button class="kbtn alert" id="btnVfsSaveSig" title="Save Demodulated Signal Frame to KiloOS VFS">💾 SAVE TO VFS (/sys/anomaly_capture.sig)</button>
+          <button class="kbtn alert" id="btnVfsSaveSig" title="Save Demodulated Signal Frame to KiloOS VFS (/sys/anomaly_capture.sig)">💾 SAVE TO VFS</button>
+          <button class="kbtn" id="btnVfsLoadSig" title="Load Demodulated Signal Frame from KiloOS VFS (/sys/anomaly_capture.sig)">📂 LOAD FROM VFS</button>
+          <button class="kbtn" id="btnVfsOpenPicker" title="Open Signal Frame (.sig) from VFS File Picker">📁 VFS BROWSE...</button>
           <button class="kbtn" id="btnIpcKHex" title="Open Signal Stream in KHex Byte Editor">📡 SEND TO KHEX</button>
           <button class="kbtn" id="btnIpcKMatrix" title="Open Signal Stream in KMatrix Disassembler">🌐 SEND TO KMATRIX</button>
           <button class="kbtn" id="btnCopyAscii" title="Copy ASCII Stream to Clipboard">📋 COPY ASCII</button>
-          <button class="kbtn warn" id="btnCopyTelemetryReport" title="Copy Full Diagnostic Telemetry Report to Clipboard">📊 COPY TELEMETRY REPORT</button>
+          <button class="kbtn warn" id="btnCopyTelemetryReport" title="Copy Full Diagnostic Telemetry Report to Clipboard">📊 COPY REPORT</button>
         </div>
 
         <div style="font-weight: bold; font-size: 11px; color: var(--cyan);">RAW STREAM HEX DUMP:</div>
@@ -1431,6 +1434,17 @@
     },
     launchApp: function(targetApp, path) {
       try { window.parent.postMessage({ type: "OS_LAUNCH_APP", targetApp: targetApp, path: path || "" }, "*"); } catch (e) {}
+    },
+    openPicker: function(cb) {
+      var reqId = "open_" + Date.now();
+      var handler = function(e) {
+        if (e.data && e.data.type === "VFS_SHOW_OPEN_DONE" && e.data.requestId === reqId) {
+          window.removeEventListener("message", handler);
+          if (e.data.path) KiloVFS.read(e.data.path, cb);
+        }
+      };
+      window.addEventListener("message", handler);
+      try { window.parent.postMessage({ type: "VFS_SHOW_OPEN", requestId: reqId }, "*"); } catch (e) {}
     }
   };
 
@@ -2655,6 +2669,98 @@
   var btnVfsHdr = document.getElementById("btnVfsExportHeader");
   if (btnVfsHdr) btnVfsHdr.addEventListener("click", exportSignalToVfs);
 
+  function loadSignalFromVfs(targetPath) {
+    var p = targetPath || "/sys/anomaly_capture.sig";
+    logTerminal("[VFS] Requesting signal file " + p + "...", "cyan");
+    KiloVFS.read(p, function(data, readPath) {
+      if (!data) {
+        logTerminal("[VFS ERROR] File not found or empty: " + (readPath || p), "alert");
+        return;
+      }
+      try {
+        var parsed = (typeof data === "string") ? JSON.parse(data) : data;
+        if (!parsed) {
+          logTerminal("[VFS WARN] Empty signal frame in " + (readPath || p), "amber");
+          return;
+        }
+        if (parsed.station && parsed.station.id) {
+          for (var i = 0; i < STATIONS.length; i++) {
+            if (STATIONS[i].id === parsed.station.id) {
+              state.stationIdx = i;
+              updateStationInfo();
+              break;
+            }
+          }
+        }
+        if (parsed.receiver) {
+          if (typeof parsed.receiver.tunedFreqKhz === "number") {
+            state.freq = parsed.receiver.tunedFreqKhz;
+            updateFreqDisplay();
+          }
+          if (parsed.receiver.demodMode) {
+            state.demodMode = parsed.receiver.demodMode;
+            document.querySelectorAll(".mode-btn").forEach(function(b) {
+              b.classList.toggle("active", b.dataset.mode === state.demodMode);
+            });
+          }
+          if (typeof parsed.receiver.bandwidthHz === "number") {
+            state.bandwidth = parsed.receiver.bandwidthHz;
+            document.querySelectorAll(".bw-btn").forEach(function(b) {
+              b.classList.toggle("active", parseInt(b.dataset.bw, 10) === state.bandwidth);
+            });
+          }
+        }
+        if (parsed.telemetryStream && parsed.telemetryStream.asciiStream) {
+          var box = document.getElementById("asciiStreamBox");
+          if (box) box.textContent = parsed.telemetryStream.asciiStream;
+        }
+        checkSignalLock();
+        logTerminal("[VFS INGRESS] Signal frame successfully loaded from " + (readPath || p), "alert");
+        if (state.lockedAnomaly) {
+          logTerminal("  >> Carrier Locked: " + state.lockedAnomaly.name + " [" + state.lockedAnomaly.id + "]", "cyan");
+        }
+        playUiClick(880);
+      } catch (err) {
+        logTerminal("[VFS ERROR] Corrupted signal frame: " + err.message, "alert");
+      }
+    });
+  }
+
+  var btnVfsLoadSig = document.getElementById("btnVfsLoadSig");
+  if (btnVfsLoadSig) {
+    btnVfsLoadSig.addEventListener("click", function() {
+      loadSignalFromVfs("/sys/anomaly_capture.sig");
+    });
+  }
+
+  var btnVfsLoadHdr = document.getElementById("btnVfsLoadHeader");
+  if (btnVfsLoadHdr) {
+    btnVfsLoadHdr.addEventListener("click", function() {
+      loadSignalFromVfs("/sys/anomaly_capture.sig");
+    });
+  }
+
+  var btnVfsPicker = document.getElementById("btnVfsOpenPicker");
+  if (btnVfsPicker) {
+    btnVfsPicker.addEventListener("click", function() {
+      KiloVFS.openPicker(function(data, path) {
+        if (path) loadSignalFromVfs(path);
+      });
+    });
+  }
+
+  function checkUrlVfsRoute() {
+    var hash = (window.location.hash || "").replace(/^#/, "");
+    if (hash.startsWith("vfs:") || hash.startsWith("/")) {
+      var sigPath = hash.replace(/^vfs:/, "");
+      if (sigPath) {
+        logTerminal("[VFS ROUTE] Ingress request for " + sigPath, "cyan");
+        loadSignalFromVfs(sigPath);
+      }
+    }
+  }
+  window.addEventListener("hashchange", checkUrlVfsRoute);
+
   var btnKHex = document.getElementById("btnIpcKHex");
   if (btnKHex) {
     btnKHex.addEventListener("click", function() {
@@ -2961,6 +3067,7 @@
   updateStationInfo();
   updateCatalogUI();
   resizeCanvases();
+  checkUrlVfsRoute();
   logTerminal("=== KANOMALY v1.0.0 INITIALIZED ===", "alert");
   logTerminal("Lithosphere Geophone Array online. Ready for signal interception.", "dim");
 

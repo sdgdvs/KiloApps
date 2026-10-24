@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -35,7 +35,7 @@ current_targets:
   kilo_tester: KSys
   kilo_usability: KScript
   kilo_qa: KTodo
-  kilo_expander: KAnomaly
+  kilo_expander: KSynth
   kilo_review: KMech
 virtual_web_target: kweb://slashnet
 virtual_web_rotation:
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KFlash
-  timestamp: '2026-10-24T14:06:25-07:00'
+  agent: kilo-expander
+  app: KAnomaly
+  timestamp: '2026-10-24T14:24:57-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -157,11 +157,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KClock` | `KiloOS/public/apps/kclock.html`, `KClock/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, world time offsets, alarm trigger verification, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KAnomaly`
+- **Active Target**: `KSynth`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
@@ -169,6 +168,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
+| `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KMech`
@@ -273,6 +273,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T14:24:57-07:00 — kilo-expander: KAnomaly (Phase VI VFS Signal Bridge & Cross-App Forensic Dispatch)**
+  - Status: PASS ✅ (0 errors, web 118.8 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Added two-way KiloOS VFS Signal Bridge (/sys/anomaly_capture.sig): VFS save, VFS load, picker ingress, and URL hash routing.
+  - Cross-app IPC dispatch to KHex and KMatrix with native Win32 C parity ([F2]/[F3]/ShellExecute) and .sig file association.
+  - Handoff: Advanced `kilo-expander` to `KSynth`; rotated active agent to `kilo-review`.
+
 - **2026-10-24T14:06:25-07:00 — kilo-qa: KFlash (Pass 5 QA, Leitner Scheduling & Mature Graduation)**
   - Status: PASS ✅ (0 errors, web 117.5 KB, native 136.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.4%, HEAD Δ 0.12%, 0 fail, 0 warn, 7.5s)).
   - Leitner Spaced Repetition: Implemented 5-box spaced repetition math, rating hotkeys [1-4], Box breakdown in Stats modal, and due-card filter in HTML and Win32 C.
@@ -298,7 +304,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Composition: D Phrygian / Whole-tone with Lydian Horizon shift, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
   - Patches & DSP: 2-Op FM hollow lead w/ 180ms delayed vibrato, glass chime solo, sub-bass drone, cavernous 260ms SPC700 delay, Geiger & hull-stress earcons.
   - Handoff: Advanced `kilo-soundscape` to `KCyber`; rotated active agent to `kilo-tester`.
-
-- **2026-10-24T13:20:56-07:00 — kilo-graphics: KStellar (Skip — Asset Suitability)**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KStellar.
-  - Handoff: Advanced `kilo-graphics` to `KSanctuary`; rotated active agent to `kilo-soundscape`.
