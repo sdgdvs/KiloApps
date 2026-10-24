@@ -149,11 +149,119 @@ def clean_task_triggers_boundary(task_name: str = TASK_NAME):
         log(f"Warning checking task triggers boundary: {e}")
 
 
+def atomic_write_json(path: Path, data: dict):
+    """Writes JSON atomically via temp file + fsync + os.replace to prevent NTFS NUL-byte corruption on power loss."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    payload = json.dumps(data, indent=2)
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        f.write(payload)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp_path, path)
+
+
+def _detect_fallback_node_id() -> str:
+    """Detects node identity without reading SESSION_FILE (used for self-healing SESSION_FILE)."""
+    cfg_file = REPO_ROOT / ".agents" / "dashboard_config.json"
+    if cfg_file.exists():
+        try:
+            raw = cfg_file.read_text(encoding="utf-8-sig", errors="replace").replace("\x00", "").strip()
+            if raw:
+                cfg = json.loads(raw)
+                if cfg.get("node_id") in NODE_PROFILES:
+                    return cfg["node_id"]
+        except Exception:
+            pass
+
+    import socket
+    h = socket.gethostname().upper()
+    if "DESKTOP-HSSS709" in h:
+        return "pc_b"
+    if "12900K" in h:
+        return "pc_c"
+    if "P10700" in h:
+        return "pc_a"
+
+    try:
+        res = subprocess.run(["git", "config", "user.name"], cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=2)
+        if res.returncode == 0:
+            uname = res.stdout.strip().lower()
+            if "anonymous1" in uname or "kiloapps" in uname:
+                return "pc_c"
+            if "sdgdvs" in uname:
+                return "pc_a"
+            if "anonymous2" in uname:
+                return "pc_b"
+    except Exception:
+        pass
+
+    return "pc_b"
+
+
+def load_session_data(node_id: str = "", auto_heal: bool = True) -> dict:
+    """Reads SESSION_FILE safely and auto-heals if corrupted (e.g. NTFS NUL bytes after unclean shutdown)."""
+    if not SESSION_FILE.exists():
+        return {}
+    try:
+        raw = SESSION_FILE.read_text(encoding="utf-8-sig", errors="replace").replace("\x00", "").strip()
+        if raw:
+            data = json.loads(raw)
+            if isinstance(data, dict):
+                return data
+    except Exception as e:
+        if not auto_heal:
+            return {}
+        log(f"[SELF-HEAL] Detected corrupted session file ({e}). Reconstructing from fleet node state...")
+
+    if not auto_heal:
+        return {}
+
+    resolved_node = node_id or _detect_fallback_node_id()
+    profile = NODE_PROFILES.get(resolved_node, NODE_PROFILES["pc_c"])
+    node_file = FLEET_NODES_DIR / f"node_{resolved_node.replace('pc_', '')}.json"
+    node_data = {}
+    if node_file.exists():
+        try:
+            n_raw = node_file.read_text(encoding="utf-8-sig", errors="replace").replace("\x00", "").strip()
+            if n_raw:
+                node_data = json.loads(n_raw)
+        except Exception:
+            pass
+
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    today_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
+    recovered = {
+        "node_id": resolved_node,
+        "session_start": node_data.get("session_start") or now_iso,
+        "session_end": node_data.get("session_end"),
+        "session_limit_enabled": bool(node_data.get("session_limit_enabled", False)),
+        "timer_enabled": bool(node_data.get("timer_enabled", False)),
+        "duration_hours": 0.0,
+        "max_turns_estimate": 0,
+        "turns_executed": int(node_data.get("turns_executed", 0)),
+        "turns_today": int(node_data.get("turns_today", 0)),
+        "last_turn_date": today_str,
+        "minutes": node_data.get("schedule_minutes") or profile["minutes"],
+        "task_name": TASK_NAME,
+        "status": node_data.get("status", "active"),
+        "last_turn_timestamp": node_data.get("last_turn_timestamp") or now_iso,
+    }
+    try:
+        atomic_write_json(SESSION_FILE, recovered)
+        log(f"[SELF-HEAL] Reconstructed clean {SESSION_FILE.name} for {resolved_node} (turns_executed={recovered['turns_executed']}).")
+    except Exception as write_err:
+        log(f"Warning: Failed to write self-healed session file: {write_err}")
+    return recovered
+
+
 def ensure_continuous_scheduler(node_id: str):
     """Respects session limits when user_managed is set; only auto-heals if explicitly in continuous mode."""
     if SESSION_FILE.exists():
         try:
-            s_data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+            s_data = load_session_data(node_id=node_id, auto_heal=True)
+            if not s_data:
+                return
             # If the session is user-managed (quota-controlled), do NOT override limits
             if s_data.get("user_managed", False):
                 log("[SESSION] User-managed quota mode active. Skipping continuous self-healing.")
@@ -165,7 +273,7 @@ def ensure_continuous_scheduler(node_id: str):
                     s_data["status"] = "active"
                     needs_save = True
                 if needs_save:
-                    SESSION_FILE.write_text(json.dumps(s_data, indent=2), encoding="utf-8")
+                    atomic_write_json(SESSION_FILE, s_data)
                     log("[MIGRATION] Reset expired status to active (continuous mode, no user quota).")
         except Exception as e:
             log(f"Warning verifying session continuous state: {e}")
@@ -181,7 +289,7 @@ def check_session_timer() -> bool:
         return True
 
     try:
-        data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+        data = load_session_data(auto_heal=True)
         
         # If timer is not explicitly enabled, fleet runs continuously
         if not data.get("session_limit_enabled", False):
@@ -203,7 +311,7 @@ def check_session_timer() -> bool:
             log(f"[SESSION EXPIRED] Timed session ended at {end_str}. Halting execution until user requests more time.")
             data["status"] = "expired"
             try:
-                SESSION_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+                atomic_write_json(SESSION_FILE, data)
             except Exception:
                 pass
             disable_scheduled_task()
@@ -222,12 +330,12 @@ def record_turn_in_session():
     if not SESSION_FILE.exists():
         return
     try:
-        data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+        data = load_session_data(auto_heal=True)
         data["turns_executed"] = data.get("turns_executed", 0) + 1
         data["turns_today"] = data.get("turns_today", 0) + 1
         data["last_turn_timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
         data["last_turn_date"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
-        SESSION_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        atomic_write_json(SESSION_FILE, data)
         log(f"[SESSION] Turn #{data['turns_executed']} recorded (today: {data['turns_today']}).")
     except Exception as e:
         log(f"Warning: Failed to update session timer turn count: {e}")
@@ -238,7 +346,7 @@ def check_daily_turn_cap() -> bool:
     if not SESSION_FILE.exists():
         return True
     try:
-        data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+        data = load_session_data(auto_heal=True)
         max_per_day = data.get("max_turns_per_day", 0)
         if max_per_day <= 0:
             return True  # No cap configured
@@ -250,7 +358,7 @@ def check_daily_turn_cap() -> bool:
         if last_date != today_str:
             data["turns_today"] = 0
             data["last_turn_date"] = today_str
-            SESSION_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+            atomic_write_json(SESSION_FILE, data)
             log(f"[QUOTA] Daily counter reset for {today_str}.")
 
         turns_today = data.get("turns_today", 0)
@@ -271,47 +379,13 @@ def get_current_node_id() -> str:
     # 1. Local session file
     if SESSION_FILE.exists():
         try:
-            s_data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+            s_data = load_session_data(auto_heal=False)
             if s_data.get("node_id") in NODE_PROFILES:
                 return s_data["node_id"]
         except Exception:
             pass
 
-    # 2. Local dashboard config
-    cfg_file = REPO_ROOT / ".agents" / "dashboard_config.json"
-    if cfg_file.exists():
-        try:
-            cfg = json.loads(cfg_file.read_text(encoding="utf-8-sig"))
-            if cfg.get("node_id") in NODE_PROFILES:
-                return cfg["node_id"]
-        except Exception:
-            pass
-
-    # 3. Hostname hint
-    import socket
-    h = socket.gethostname().upper()
-    if "DESKTOP-HSSS709" in h:
-        return "pc_b"
-    if "12900K" in h:
-        return "pc_c"
-    if "P10700" in h:
-        return "pc_a"
-
-    # 4. Git user configuration
-    try:
-        res = subprocess.run(["git", "config", "user.name"], cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=2)
-        if res.returncode == 0:
-            uname = res.stdout.strip().lower()
-            if "anonymous1" in uname or "kiloapps" in uname:
-                return "pc_c"
-            if "sdgdvs" in uname:
-                return "pc_a"
-            if "anonymous2" in uname:
-                return "pc_b"
-    except Exception:
-        pass
-
-    return "pc_b"
+    return _detect_fallback_node_id()
 
 
 def check_and_handle_remote_commands(node_id: str) -> bool:
@@ -320,7 +394,10 @@ def check_and_handle_remote_commands(node_id: str) -> bool:
     if not node_file.exists():
         return True
     try:
-        data = json.loads(node_file.read_text(encoding="utf-8-sig"))
+        raw = node_file.read_text(encoding="utf-8-sig", errors="replace").replace("\x00", "").strip()
+        if not raw:
+            return True
+        data = json.loads(raw)
         cmd = data.get("remote_command", "none")
         if cmd == "stop":
             log(f"[REMOTE CONTROL] Received remote 'stop' command. Disabling Windows Scheduled Task on {node_id}.")
@@ -328,12 +405,12 @@ def check_and_handle_remote_commands(node_id: str) -> bool:
             data["status"] = "stopped"
             data["remote_command"] = "none"
             data["last_heartbeat"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-            node_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+            atomic_write_json(node_file, data)
             if SESSION_FILE.exists():
                 try:
-                    s_data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+                    s_data = load_session_data(node_id=node_id, auto_heal=True)
                     s_data["status"] = "stopped"
-                    SESSION_FILE.write_text(json.dumps(s_data, indent=2), encoding="utf-8")
+                    atomic_write_json(SESSION_FILE, s_data)
                 except Exception:
                     pass
             return False
@@ -365,7 +442,12 @@ def broadcast_node_heartbeat(node_id: str, status: str = "active", target: str =
         import socket
         data = {}
         if node_file.exists():
-            data = json.loads(node_file.read_text(encoding="utf-8-sig"))
+            try:
+                n_raw = node_file.read_text(encoding="utf-8-sig", errors="replace").replace("\x00", "").strip()
+                if n_raw:
+                    data = json.loads(n_raw)
+            except Exception:
+                data = {}
         profile = NODE_PROFILES.get(node_id, NODE_PROFILES["pc_a"])
         data["node_id"] = node_id
         data["name"] = profile["name"]
@@ -377,17 +459,18 @@ def broadcast_node_heartbeat(node_id: str, status: str = "active", target: str =
         if target:
             data["current_target"] = target
         if SESSION_FILE.exists():
-            s_data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
-            data["turns_executed"] = s_data.get("turns_executed", 0)
-            data["session_end"] = s_data.get("session_end")
-            data["session_start"] = s_data.get("session_start")
-            data["session_limit_enabled"] = s_data.get("session_limit_enabled", False)
-            data["timer_enabled"] = s_data.get("session_limit_enabled", False)
+            s_data = load_session_data(node_id=node_id, auto_heal=True)
+            if s_data:
+                data["turns_executed"] = s_data.get("turns_executed", data.get("turns_executed", 0))
+                data["session_end"] = s_data.get("session_end")
+                data["session_start"] = s_data.get("session_start", data.get("session_start"))
+                data["session_limit_enabled"] = s_data.get("session_limit_enabled", False)
+                data["timer_enabled"] = s_data.get("session_limit_enabled", False)
         else:
             data["session_end"] = None
             data["session_limit_enabled"] = False
             data["timer_enabled"] = False
-        node_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        atomic_write_json(node_file, data)
     except Exception as e:
         log(f"Warning updating fleet node status: {e}")
 
@@ -842,11 +925,13 @@ def handle_preflight_skip(agent: str, targets: dict, frontmatter: dict, node_id:
         t_low = target.lower()
         skip_reason = ""
 
-        if t_low in mature_set and agent != "kilo-review":
+        spec_hint = extract_target_mission_spec(target, agent)
+        is_argon_fix = "[ARGON REVIEW]" in spec_hint
+        if t_low in mature_set and agent != "kilo-review" and not is_argon_fix:
             skip_reason = f"{target} is already in Mature Applications quarantine"
-        elif agent == "kilo-graphics" and (t_low in INAPPROPRIATE_IMAGEN_TARGETS or "(skip)" in t_low):
+        elif agent == "kilo-graphics" and not is_argon_fix and (t_low in INAPPROPRIATE_IMAGEN_TARGETS or "(skip)" in t_low):
             skip_reason = f"Imagen 3 asset replacement not appropriate for {target}"
-        elif agent == "kilo-soundscape" and (t_low in INAPPROPRIATE_SOUNDSCAPE_TARGETS or "(skip)" in t_low):
+        elif agent == "kilo-soundscape" and not is_argon_fix and (t_low in INAPPROPRIATE_SOUNDSCAPE_TARGETS or "(skip)" in t_low):
             skip_reason = f"Procedural soundscape not appropriate for {target}"
 
         if not skip_reason:

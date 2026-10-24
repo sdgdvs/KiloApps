@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T13:54:27-07:00 — kilo-usability: KFarm (Responsive Viewport Compaction & WASD/Arrow Grid Ergonomics)**
+  - Status: PASS ✅ (0 errors, web 118.3 KB, native 128.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.23%, input 51.74%, HEAD Δ 45.32%, 0 fail, 0 warn, 10.8s)).
+  - Layout: Eliminated 197px vertical overflow (reduced to x0/y0px at 640x743) by compacting container, margins, and grouping primary, shop, and utility button toolbars.
+  - Toast & Input: Relocated #kfarmToast to top-right to prevent button occlusion; wired Arrow/WASD + Enter to navigate grid cursor and trigger tile actions in both web and Win32 C.
+  - Mature Quarantine & Handoff: Promoted `KFarm` to Mature archive; advanced `kilo-usability` to `KScript`; next agent `kilo-qa`.
+
 - **2026-10-24T13:42:17-07:00 — kilo-tester: KFarm (Fix loadGame TypeError, 3x3 AoE seed planting & Mill [W] hotkey parity)**
   - Fixed fatal TypeError in loadGame() by declaring chickensList/cowsList with let
   - Enabled 3x3 AoE seed planting in both HTML and Win32 C when tools are upgraded
