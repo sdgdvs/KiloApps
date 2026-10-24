@@ -1502,13 +1502,20 @@
         },
         openPicker(cb) {
             const reqId = 'open_' + Date.now();
+            let cleaned = false;
             const handler = (e) => {
                 if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                    cleaned = true;
                     window.removeEventListener('message', handler);
                     if (e.data.path) KiloVFS.read(e.data.path, cb);
                 }
             };
             window.addEventListener('message', handler);
+            setTimeout(() => {
+                if (!cleaned) {
+                    window.removeEventListener('message', handler);
+                }
+            }, 30000);
             try {
                 window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
             } catch(e) {}
@@ -1970,6 +1977,8 @@ endif
 
     function loadPreset(name) {
         if (PRESETS[name]) {
+            activeStepper = null;
+            activeStepLine = -1;
             exprInput.value = PRESETS[name];
             safeStorageSet('kscript_code_v2', exprInput.value);
             renderGutter();
@@ -1977,6 +1986,7 @@ endif
             btnRun.click();
         }
     }
+    window.loadPreset = loadPreset;
 
     // Toast Notifications
     function showToast(message, type = 'info', duration = 2500) {

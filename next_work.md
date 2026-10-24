@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ current_targets:
   kilo_creator: kweb://demoscene
   kilo_graphics: KAlchemy
   kilo_soundscape: KAlchemy
-  kilo_tester: KScript
+  kilo_tester: KSteno
   kilo_usability: KSteno
   kilo_qa: KMatrix
   kilo_expander: KScript
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KStarship
-  timestamp: '2026-10-24T08:17:13-07:00'
+  agent: kilo-tester
+  app: KScript
+  timestamp: '2026-10-24T08:35:39-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -126,11 +126,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Compose bridge alert & deep-space exploration 6-channel FM suite (Lydian `#4` pad + tactical Phrygian Dominant combat march, sonar/shield/warp earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KScript`
+- **Active Target**: `KSteno`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | Audit matrix rain visualizer, subterranean codebook decrypter, frequency waterfall, and audio telemetry. |
 | `KJournal` | `KiloOS/public/apps/kjournal.html`, `KJournal/main.c` | Audit daily entry editor, mood tags, markdown rendering, password lock, and calendar navigation. |
@@ -138,6 +137,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KHabit` | `KiloOS/public/apps/khabit.html`, `KHabit/main.c` | Audit habit tracker streaks, completion heatmaps, daily reminder alerts, and keyboard shortcuts. |
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Audit flashcard deck manager, spaced repetition algorithm, flip animations, and deck import/export. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
+| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KSteno`
@@ -243,6 +243,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T08:35:39-07:00 — kilo-tester: KScript (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS (0 errors, web 152.5 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.27%, HEAD Delta 0.01%, 0 fail, 0 warn, 9.3s)).
+  - UI & Hotkey Audit: Verified script IDE controls, AST/linter modal, breakpoint stepper, telemetry sparkline, and F5/F9 state persistence.
+  - Repairs: Attached window.loadPreset, reset active stepper on preset selection, and added timeout listener guard to VFS open picker.
+  - Handoff: Advanced `kilo-tester` to `KSteno`; rotated active agent to `kilo-usability`.
+
 - **2026-10-24T08:17:13-07:00 — kilo-soundscape: KStarship (Sector Vanguard & Red Alert — 6-Channel YM2612/SPC700 FM Suite)**
   - Status: PASS ✅ (0 errors, web 192.9 KB, native 143.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - Ch4 Bass: strictly < C3 (130.81Hz) slap bass in octaves 1/2 with 2-Op FM punch.
@@ -267,9 +273,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Enhanced File Area modal & door game exporters with direct VFS mesh actions to download ANSI .NFO/.TXT files to /home/bbs/ and launch KPad [P] or KHex [X] via OS_LAUNCH_APP.
   - Dual Win32 C parity: added 6-bulletin interactive File Area dialog (IDD_FILEAREA 6000), local bbs/ disk sync, and ShellExecuteA KPad/KHex inspection.
   - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-creator`.
-
-- **2026-10-24T05:35:29-07:00 — kilo-qa: KVault (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS (0 errors, web 292.0 KB, native 21.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, kvault_tutorialSeen flag, safeStorage wrappers, and Escape modal dismissals.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, autolock, tree navigator, and visibilitychange timer cleanup.
-  - Mature Quarantine & Handoff: Promoted `KVault` to Mature archive; advanced `kilo-qa` to `KMatrix`; next agent `kilo-expander`.
