@@ -1454,12 +1454,12 @@
             if (!completions || !Array.isArray(completions) || completions.length === 0) return 0;
             
             const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            const todayStr = getTodayStr();
             const uniqueDates = Array.from(new Set(completions))
-                .filter(s => typeof s === 'string' && dateRegex.test(s))
+                .filter(s => typeof s === 'string' && dateRegex.test(s) && s <= todayStr)
                 .sort((a, b) => b.localeCompare(a));
                 
             if (uniqueDates.length === 0) return 0;
-            const todayStr = getTodayStr();
             
             const parseDateOnly = (s) => {
                 const parts = s.split('-').map(Number);
@@ -1944,6 +1944,8 @@
                     sort: sortSelect ? sortSelect.value : 'none',
                     color: currentColor,
                     sound: soundEnabled,
+                    reminders: reminderEnabled,
+                    filterPendingOnly: filterPendingOnly,
                     search: searchInput ? searchInput.value : '',
                     tutorialSeen: safeGet('khabit_tutorialSeen', '0')
                 };
@@ -1981,32 +1983,15 @@
                     if (payload.sound !== undefined) {
                         soundEnabled = Boolean(payload.sound);
                         safeSet('khabit_sound', soundEnabled ? '1' : '0');
-                        if (audioToggle) if (reminderToggle) {
-            reminderToggle.checked = reminderEnabled;
-            reminderToggle.addEventListener('change', () => {
-                reminderEnabled = reminderToggle.checked;
-                safeSet('khabit_reminders', reminderEnabled ? '1' : '0');
-                renderHabits();
-            });
-        }
-
-        if (reminderFocusBtn) {
-            reminderFocusBtn.addEventListener('click', () => {
-                filterPendingOnly = !filterPendingOnly;
-                renderHabits();
-            });
-        }
-
-        if (reminderDismissBtn) {
-            reminderDismissBtn.addEventListener('click', () => {
-                const today = getTodayStr();
-                safeSet('khabit_reminder_dismissed_' + today, '1');
-                if (reminderBanner) reminderBanner.style.display = 'none';
-                showToast("Reminder dismissed for today.");
-            });
-        }
-
-        audioToggle.checked = soundEnabled;
+                        if (audioToggle) audioToggle.checked = soundEnabled;
+                    }
+                    if (payload.reminders !== undefined) {
+                        reminderEnabled = Boolean(payload.reminders);
+                        safeSet('khabit_reminders', reminderEnabled ? '1' : '0');
+                        if (reminderToggle) reminderToggle.checked = reminderEnabled;
+                    }
+                    if (payload.filterPendingOnly !== undefined) {
+                        filterPendingOnly = Boolean(payload.filterPendingOnly);
                     }
                     if (payload.search !== undefined && searchInput) {
                         searchInput.value = payload.search;
@@ -2330,6 +2315,31 @@
             safeSet('khabit_sound', soundEnabled ? '1' : '0');
             if (soundEnabled) playSound('check');
         });
+
+        if (reminderToggle) {
+            reminderToggle.checked = reminderEnabled;
+            reminderToggle.addEventListener('change', () => {
+                reminderEnabled = reminderToggle.checked;
+                safeSet('khabit_reminders', reminderEnabled ? '1' : '0');
+                renderHabits();
+            });
+        }
+
+        if (reminderFocusBtn) {
+            reminderFocusBtn.addEventListener('click', () => {
+                filterPendingOnly = !filterPendingOnly;
+                renderHabits();
+            });
+        }
+
+        if (reminderDismissBtn) {
+            reminderDismissBtn.addEventListener('click', () => {
+                const today = getTodayStr();
+                safeSet('khabit_reminder_dismissed_' + today, '1');
+                if (reminderBanner) reminderBanner.style.display = 'none';
+                showToast("Reminder dismissed for today.");
+            });
+        }
 
         // Add / Edit Modal Controls
         cancelBtn.addEventListener('click', closeModal);

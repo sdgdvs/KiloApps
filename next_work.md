@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_soundscape: KVoid
   kilo_tester: KFlash
   kilo_usability: KScript
-  kilo_qa: KHabit
+  kilo_qa: KFlash
   kilo_expander: KStarForge
   kilo_review: KFarm
 virtual_web_target: kweb://deep-core
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KFlash
-  timestamp: '2026-10-24T12:37:29-07:00'
+  agent: kilo-qa
+  app: KHabit
+  timestamp: '2026-10-24T12:41:08-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -137,7 +137,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
-| `KHabit` | `KiloOS/public/apps/khabit.html`, `KHabit/main.c` | Audit habit tracker streaks, completion heatmaps, daily reminder alerts, and keyboard shortcuts. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KScript`
@@ -151,11 +150,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Large card flip touch/keyboard ergonomics (`Space` to flip, `1-4` for ratings), responsive progress bar, and deck picker drawer. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KHabit`
+- **Active Target**: `KFlash`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KHabit` | `KiloOS/public/apps/khabit.html`, `KHabit/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, streak calculation edge-cases, first-run tutorial tips, dual Win32 C parity, and promote to Mature table. |
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Leitner box scheduling math, deck import integrity, dual Win32 C parity, and promote to Mature table. |
 | `KTodo` | `KiloOS/public/apps/ktodo.html`, `KTodo/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, tag filtering, first-run tutorial tips, dual Win32 C parity, and promote to Mature table. |
 | `KTimer` | `KiloOS/public/apps/ktimer.html`, `KTimer/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, lap export verification, sound alert toggle, dual Win32 C parity, and promote to Mature table. |
@@ -221,6 +219,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KHabit** | `KiloOS/public/apps/khabit.html` | Pass 5+ (2026-10-24) | Office / Productivity | Feature-complete sovereign habit tracker with streak calculations, 28-day completion heatmap, daily reminder banner, YM2612 FM audio, F5/F9 state persistence, and dual Win32 C parity. |
 | **KBudget** | `KiloOS/public/apps/kbudget.html` | Pass 5+ (2026-10-24) | Office / Productivity | Comprehensive retro budget ledger with category allocation pie charts, multi-currency switching, monthly goals, CSV/JSON VFS integration, F5/F9 snapshot persistence, and dual Win32 C parity. |
 | **KFarm** | `KiloOS/public/apps/kfarm.html` | Pass 5+ (2026-10-24) | Games / Simulation | Feature-complete 1999 pastoral farming sim; crop cycles, livestock, market upgrades, YM2612 2-Op FM / SPC700 soundscape, F5/F9 persistence, dual Win32 C parity. |
 | **KJournal** | `KiloOS/public/apps/kjournal.html` | Pass 5+ (2026-10-24) | Productivity / Writing & Journal | Complete encrypted retro journal workstation with rich markdown preview, mood tags, PIN lock, calendar navigator, F5/F9 persistence, and dual Win32 C parity. |
@@ -276,6 +275,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T12:41:08-07:00 — kilo-qa: KHabit (Pass 5 QA, Dual Parity & Mature Graduation)**
+  - Status: PASS ✅ (0 errors, web 98.8 KB, native 170.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.2%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.8s)).
+  - Streak & Edge Cases: Fixed DST/future date ISO edge case, preserved streak history on check toggle/undo in C and JS.
+  - State & Tutorial: Restored clean F5/F9 state snapshots, fixed misplaced settings event bindings, and validated tutorial/dismissal integrity.
+  - Dual Parity: Verified full Web HTML and Win32 C native build parity with local time calendar calculations.
+  - Mature Quarantine & Handoff: Promoted `KHabit` to Mature archive; advanced `kilo-qa` to `KFlash`; next agent `kilo-expander`.
+
 - **2026-10-24T12:37:29-07:00 — kilo-usability: KFlash (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 110.5 KB, native 141.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Ergonomics & Ratings: 1-4 rating system (Again, Hard, Good, Easy) with keyboard/touch shortcuts [1-4, G/R] and active card tap feedback.
@@ -299,7 +305,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Composition: D Harmonic Minor, 6-channel contrary counterpoint, 3rd/7th shell voicings, 5:3 swing-tick groove.
   - Patches & DSP: Harpsichord/flute FM lead with 180ms delayed vibrato, 2-Op FM walking bass, selective 200ms SPC700 stereo delay, pyromancy/cryomancy/electromancy elemental earcons, card/shield/turn stingers.
   - Handoff: Advanced `kilo-soundscape` to `KVoid`; rotated active agent to `kilo-tester`.
-
-- **2026-10-24T12:02:42-07:00 — kilo-graphics: KCyber (Skip — Asset Suitability)**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KCyber.
-  - Handoff: Advanced `kilo-graphics` to `KStellar`; rotated active agent to `kilo-soundscape`.

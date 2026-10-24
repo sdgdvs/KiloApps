@@ -59,8 +59,14 @@ void SaveSettings() {
 }
 
 int GetDaysSinceEpoch() {
-    time_t t = time(NULL);
-    return (int)(t / (60 * 60 * 24));
+    time_t now = time(NULL);
+    struct tm *lt = localtime(&now);
+    if (!lt) return (int)(now / (60 * 60 * 24));
+    int y = lt->tm_year + 1900;
+    int m = lt->tm_mon + 1;
+    int d = lt->tm_mday;
+    if (m < 3) { y--; m += 12; }
+    return 365*y + y/4 - y/100 + y/400 + (153*m - 457)/5 + d - 306;
 }
 
 void LoadHabits() {
@@ -98,7 +104,7 @@ void SaveHabits() {
 void CheckStreaks() {
     int today = GetDaysSinceEpoch();
     for (int i=0; i<habitCount; i++) {
-        if (today - habits[i].last_check_day > 1 && habits[i].streak > 0) {
+        if (habits[i].last_check_day > 0 && today - habits[i].last_check_day > 1 && habits[i].streak > 0) {
             habits[i].streak = 0;
         }
     }
@@ -235,12 +241,18 @@ void CheckFirstRun(HWND hwnd) {
         }
         if (habitCount <= 0) {
             MessageBox(hwnd,
-                "Welcome to KHabit Tracker!\n\n"
-                "• Type a habit name and click '+ New' (or press Enter)\n"
-                "• Select a habit and press Space to toggle daily checkmark\n"
-                "• Set categories and streak target milestones\n"
-                "• Press F5 to QuickSave, F9 to QuickLoad state\n"
-                "• Press F1 anytime for help and keyboard shortcuts",
+                "Welcome to KHabit Tracker!
+
+"
+                "- Type a habit name and click '+ New' (or press Enter)
+"
+                "- Select a habit and press Space to toggle daily checkmark
+"
+                "- Set categories and streak target milestones
+"
+                "- Press F5 to QuickSave, F9 to QuickLoad state
+"
+                "- Press F1 anytime for help and keyboard shortcuts",
                 "KHabit Quick Tour", MB_OK | MB_ICONINFORMATION);
         }
     } else {
@@ -602,9 +614,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         }
                         habits[original_idx].last_check_day = today;
                     } else {
-                        // Undo check off
-                        habits[original_idx].last_check_day = 0; // rough undo
-                        if(habits[original_idx].streak > 0) habits[original_idx].streak--;
+                        // Undo check off preserving prior streak
+                        if (habits[original_idx].streak > 1) {
+                            habits[original_idx].streak--;
+                            habits[original_idx].last_check_day = today - 1;
+                        } else {
+                            habits[original_idx].streak = 0;
+                            habits[original_idx].last_check_day = 0;
+                        }
                     }
                     SaveHabits();
                     UpdateList();
