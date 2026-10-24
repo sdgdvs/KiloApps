@@ -235,6 +235,15 @@
     gap: 10px;
     flex-wrap: wrap;
   }
+  button.kbtn:focus-visible,
+  select.kselect:focus-visible,
+  .tab-btn:focus-visible,
+  .freq-readout:focus-visible {
+    outline: 2px solid var(--phosphor);
+    outline-offset: 1px;
+    box-shadow: 0 0 8px var(--phosphor-glow);
+  }
+
   .freq-readout {
     font-size: 18px;
     font-weight: bold;
@@ -246,6 +255,89 @@
     letter-spacing: 1px;
     min-width: 140px;
     text-align: center;
+    cursor: ew-resize;
+    user-select: none;
+    position: relative;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .freq-readout:hover {
+    border-color: var(--amber);
+    box-shadow: 0 0 8px rgba(255, 170, 0, 0.3);
+  }
+  .freq-readout:focus-visible {
+    outline: 2px solid var(--amber) !important;
+    border-color: var(--amber);
+    box-shadow: 0 0 10px rgba(255, 170, 0, 0.6) !important;
+  }
+
+  .waterfall-hover-pill {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: bold;
+    pointer-events: none;
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 6px rgba(51, 204, 255, 0.3);
+    z-index: 10;
+  }
+  .waterfall-tuning-hint {
+    position: absolute;
+    bottom: 6px;
+    left: 8px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid var(--border);
+    color: var(--phosphor-dim);
+    padding: 1px 6px;
+    font-size: 9px;
+    pointer-events: none;
+    letter-spacing: 0.5px;
+    z-index: 10;
+  }
+
+  .confidence-meter-bg {
+    width: 100%;
+    height: 6px;
+    background: #000;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .confidence-meter-fill {
+    height: 100%;
+    background: var(--phosphor);
+    box-shadow: 0 0 6px var(--phosphor);
+    transition: width 0.15s ease-out;
+  }
+  .confidence-meter-fill.alert {
+    background: var(--alert);
+    box-shadow: 0 0 6px var(--alert);
+  }
+  .confidence-meter-fill.warn {
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  @media (max-width: 820px) {
+    #app { padding: 4px; gap: 4px; }
+    .display-col-side { display: none !important; }
+    .display-col-main { flex: 1 !important; }
+    .decoder-grid { grid-template-columns: 1fr !important; }
+    .scope-fft-container { height: 95px; }
+    .tuner-bar { padding: 4px 6px; gap: 6px; }
+  }
+  @media (max-width: 580px) {
+    header { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .header-right { width: 100%; justify-content: flex-end; }
+    .nav-tabs { flex-wrap: wrap; }
+    .tab-btn { font-size: 11px; padding: 4px; }
+    .tuner-bar { flex-direction: column; align-items: stretch; }
+    .tuner-group { justify-content: space-between; }
+    .freq-readout { width: 100%; }
   }
   .tuner-group {
     display: flex;
@@ -597,7 +689,7 @@
       <span class="tuner-label">FREQ:</span>
       <button class="kbtn" id="btnFreqDownL">&lt;&lt; -1k</button>
       <button class="kbtn" id="btnFreqDownS">&lt; -0.1k</button>
-      <div class="freq-readout" id="freqDisplay">10.19 kHz</div>
+      <div class="freq-readout" id="freqDisplay" tabindex="0" role="slider" aria-label="Receiver Frequency Tuner" aria-valuemin="1.0" aria-valuemax="120.0" aria-valuenow="10.19" aria-valuetext="10.19 kHz" title="Tuner: [Left/Right] +/-0.1k | [Shift+Left/Right] +/-0.01k | [Ctrl+Left/Right] +/-1k | [Wheel] Precision Tune | Click/Drag Waterfall">10.19 kHz</div>
       <button class="kbtn" id="btnFreqUpS">+0.1k &gt;</button>
       <button class="kbtn" id="btnFreqUpL">+1k &gt;&gt;</button>
       <button class="kbtn warn" id="btnSweepToggle">SWEEP [SPACE]</button>
@@ -634,8 +726,10 @@
           <span>LITHOSPHERE WATERFALL SPECTROGRAM (TIME vs FREQUENCY)</span>
           <span style="font-size: 10px; color: var(--cyan);" id="spanWaterfallStats">60 FPS // BUFFER: 420x240 // PHOSPHOR P1</span>
         </div>
-        <div class="canvas-wrap">
-          <canvas id="waterfallCanvas" class="display-canvas"></canvas>
+        <div class="canvas-wrap" id="waterfallWrap">
+          <canvas id="waterfallCanvas" class="display-canvas" style="touch-action: none; cursor: crosshair;"></canvas>
+          <div id="waterfallHoverPill" class="waterfall-hover-pill" style="display: none;"></div>
+          <div class="waterfall-tuning-hint">CLICK / DRAG TO TUNE // WHEEL: +/-0.05k (SHIFT: +/-0.01k)</div>
         </div>
       </div>
 
@@ -717,7 +811,7 @@
         <span id="decoderLockLabel" style="color: var(--alert); font-weight: bold;">CARRIER LOCKED</span>
       </div>
       <div style="padding: 10px; display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;" class="decoder-grid">
           <div class="telemetry-card" style="border: 1px solid var(--border);">
             <div class="telemetry-row"><span class="telemetry-label">CARRIER LOCK:</span><span class="telemetry-value" id="decMetricLock">98.4%</span></div>
             <div class="telemetry-row"><span class="telemetry-label">SIGNAL-TO-NOISE:</span><span class="telemetry-value" id="decMetricSnr">+24 dB</span></div>
@@ -725,6 +819,15 @@
             <div class="telemetry-row"><span class="telemetry-label">MODULATION INDEX:</span><span class="telemetry-value" id="decMetricMod">1.42 (FSK)</span></div>
             <div class="telemetry-row"><span class="telemetry-label">DETECTED FREQ:</span><span class="telemetry-value" id="decMetricFreq">10.19 kHz</span></div>
             <div class="telemetry-row"><span class="telemetry-label">FREQ OFFSET (Δf):</span><span class="telemetry-value" id="decMetricOffset">0.00 kHz</span></div>
+            <div class="telemetry-row" style="flex-direction: column; gap: 4px; border-bottom: none; margin-top: 4px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span class="telemetry-label">CARRIER CONFIDENCE:</span>
+                <span class="telemetry-value" id="decMetricConfidence">99.4%</span>
+              </div>
+              <div class="confidence-meter-bg">
+                <div class="confidence-meter-fill alert" id="decMetricConfidenceBar" style="width: 99.4%;"></div>
+              </div>
+            </div>
           </div>
           <div class="telemetry-card" style="border: 1px solid var(--border);">
             <div class="telemetry-row"><span class="telemetry-label">PACKET PREAMBLE:</span><span class="telemetry-value" id="decMetricPreamble">0x7F1999 (VALID)</span></div>
@@ -732,6 +835,7 @@
             <div class="telemetry-row"><span class="telemetry-label">STRATA DEPTH FIX:</span><span class="telemetry-value" id="decMetricDepth">3,420 m</span></div>
             <div class="telemetry-row"><span class="telemetry-label">TRANSMISSION ORIGIN:</span><span class="telemetry-value" id="decMetricOrigin">10.19.99.4 [SUB-7F]</span></div>
             <div class="telemetry-row"><span class="telemetry-label">LUDONARRATIVE LORE:</span><span class="telemetry-value" id="decMetricLore" style="color: var(--amber);">ACTIVE</span></div>
+            <div class="telemetry-row"><span class="telemetry-label">DEMOD PROTOCOL:</span><span class="telemetry-value" id="decMetricProto" style="color: var(--cyan);">BELL-202 SUBTERRANEAN</span></div>
           </div>
         </div>
 
@@ -740,6 +844,7 @@
           <button class="kbtn" id="btnIpcKHex" title="Open Signal Stream in KHex Byte Editor">📡 SEND TO KHEX</button>
           <button class="kbtn" id="btnIpcKMatrix" title="Open Signal Stream in KMatrix Disassembler">🌐 SEND TO KMATRIX</button>
           <button class="kbtn" id="btnCopyAscii" title="Copy ASCII Stream to Clipboard">📋 COPY ASCII</button>
+          <button class="kbtn warn" id="btnCopyTelemetryReport" title="Copy Full Diagnostic Telemetry Report to Clipboard">📊 COPY TELEMETRY REPORT</button>
         </div>
 
         <div style="font-weight: bold; font-size: 11px; color: var(--cyan);">RAW STREAM HEX DUMP:</div>
@@ -1288,10 +1393,18 @@
   }
 
   function updateTunerDisplay() {
-    document.getElementById("freqDisplay").textContent = state.freq.toFixed(2) + " kHz";
+    var freqEl = document.getElementById("freqDisplay");
+    if (freqEl) {
+      freqEl.textContent = state.freq.toFixed(2) + " kHz";
+      freqEl.setAttribute("aria-valuenow", state.freq.toFixed(2));
+      freqEl.setAttribute("aria-valuetext", state.freq.toFixed(2) + " kHz");
+    }
     document.getElementById("footFreq").textContent = state.freq.toFixed(2) + " kHz";
     document.getElementById("footMode").textContent = state.demodMode;
     document.getElementById("footBw").textContent = state.bandwidth + " Hz";
+
+    var peakEl = document.getElementById("spanPeakFreq");
+    if (peakEl) peakEl.textContent = "PEAK: " + state.freq.toFixed(2) + " kHz";
 
     var lockBox = document.getElementById("lockStatusBox");
     var footStatus = document.getElementById("footStatus");
@@ -1308,6 +1421,8 @@
     var decDepth = document.getElementById("decMetricDepth");
     var decOrigin = document.getElementById("decMetricOrigin");
     var decLore = document.getElementById("decMetricLore");
+    var decConf = document.getElementById("decMetricConfidence");
+    var decBar = document.getElementById("decMetricConfidenceBar");
 
     if (state.carrierLocked && state.lockedAnomaly) {
       var anom = state.lockedAnomaly;
@@ -1324,8 +1439,12 @@
       var diffKhz = +(state.freq - anom.freq).toFixed(2);
 
       if (decLock) decLock.textContent = "99.4% (CARRIER SYNCHRONIZED)";
-      if (decSnr) decSnr.textContent = "+" + state.snrDb + " dB";
-      if (decDoppler) decDoppler.textContent = (diffKhz < 0 ? "-" : "+") + (Math.abs(diffKhz) * 0.12).toFixed(3) + " Hz/s";
+      if (decSnr) decSnr.textContent = "+" + state.snrDb + " dB (HIGH CONFIDENCE)";
+      if (decDoppler) {
+        var sign = diffKhz < 0 ? "-" : "+";
+        var shiftType = diffKhz < 0 ? " [RED SHIFT]" : " [BLUE SHIFT]";
+        decDoppler.textContent = sign + (Math.abs(diffKhz) * 0.12).toFixed(3) + " Hz/s" + shiftType;
+      }
       if (decMod) decMod.textContent = anom.mode + " / " + state.demodMode;
       if (decFreq) decFreq.textContent = anom.freq.toFixed(2) + " kHz";
       if (decOffset) decOffset.textContent = (diffKhz >= 0 ? "+" : "") + diffKhz + " kHz";
@@ -1336,6 +1455,11 @@
       if (decLore) {
         decLore.textContent = anom.name.toUpperCase();
         decLore.style.color = "var(--amber)";
+      }
+      if (decConf) decConf.textContent = "99.4% [LOCK SOLID]";
+      if (decBar) {
+        decBar.style.width = "99.4%";
+        decBar.className = "confidence-meter-fill alert";
       }
     } else {
       lockBox.className = "lock-indicator";
@@ -1348,17 +1472,22 @@
 
       if (decLock) decLock.textContent = "0.0% (PASSBAND SEARCHING)";
       if (decSnr) decSnr.textContent = "-4 dB (NOISE FLOOR)";
-      if (decDoppler) decDoppler.textContent = "0.000 Hz/s";
+      if (decDoppler) decDoppler.textContent = "0.000 Hz/s (STATIC NOISE)";
       if (decMod) decMod.textContent = state.demodMode + " (AWAITING LOCK)";
       if (decFreq) decFreq.textContent = state.freq.toFixed(2) + " kHz";
       if (decOffset) decOffset.textContent = "0.00 kHz";
-      if (decPreamble) decPreamble.textContent = "NONE / STATIC";
+      if (decPreamble) decPreamble.textContent = "NONE / STATIC NOISE";
       if (decCrc) decCrc.textContent = "AWAITING LOCK";
       if (decDepth) decDepth.textContent = STATIONS[state.stationIdx].depth.toLocaleString() + " m";
       if (decOrigin) decOrigin.textContent = "Lithosphere Ambient Noise";
       if (decLore) {
         decLore.textContent = "STANDBY";
         decLore.style.color = "var(--phosphor-dim)";
+      }
+      if (decConf) decConf.textContent = "3.2% [SEARCHING]";
+      if (decBar) {
+        decBar.style.width = "3.2%";
+        decBar.className = "confidence-meter-fill";
       }
     }
   }
@@ -1472,19 +1601,26 @@
     wfCtx.imageSmoothingEnabled = false;
     wfCtx.drawImage(offCanvas, 0, 0, wfCanvas.width, wfCanvas.height);
 
-    // Draw Reticle Line & Bandpass Bracket Overlay (HiDPI crisp scaling)
+    // Draw Reticle Line, Bandpass Bracket Overlay & Subterranean Graticule (HiDPI crisp scaling)
     var dpr = window.devicePixelRatio || 1;
-    wfCtx.strokeStyle = "rgba(255, 60, 60, 0.85)";
-    wfCtx.lineWidth = Math.max(1, Math.round(dpr));
     var cx = wfCanvas.width / 2;
+
+    // 1. Passband bracket filled backdrop
+    var bwPx = (state.bandwidth === 50 ? 16 : (state.bandwidth === 250 ? 44 : 110)) * dpr;
+    wfCtx.fillStyle = "rgba(51, 204, 255, 0.08)";
+    wfCtx.fillRect(cx - bwPx / 2, 0, bwPx, wfCanvas.height);
+
+    // 2. Center Reticle Line (Carrier Target)
+    wfCtx.strokeStyle = state.carrierLocked ? "rgba(255, 60, 60, 0.95)" : "rgba(255, 60, 60, 0.75)";
+    wfCtx.lineWidth = Math.max(1, Math.round(1.5 * dpr));
     wfCtx.beginPath();
     wfCtx.moveTo(cx, 0);
     wfCtx.lineTo(cx, wfCanvas.height);
     wfCtx.stroke();
 
-    // Bandpass brackets
-    var bwPx = (state.bandwidth === 50 ? 16 : (state.bandwidth === 250 ? 44 : 110)) * dpr;
-    wfCtx.strokeStyle = "rgba(51, 204, 255, 0.7)";
+    // 3. Bandpass Brackets (Dashed)
+    wfCtx.strokeStyle = "rgba(51, 204, 255, 0.8)";
+    wfCtx.lineWidth = Math.max(1, Math.round(dpr));
     wfCtx.setLineDash([4 * dpr, 4 * dpr]);
     wfCtx.beginPath();
     wfCtx.moveTo(cx - bwPx / 2, 0);
@@ -1493,6 +1629,65 @@
     wfCtx.lineTo(cx + bwPx / 2, wfCanvas.height);
     wfCtx.stroke();
     wfCtx.setLineDash([]);
+
+    // 4. Subterranean Frequency Ruler Graticule along Top (HiDPI crisp text & ticks)
+    var rulerH = Math.round(18 * dpr);
+    wfCtx.fillStyle = "rgba(6, 14, 10, 0.85)";
+    wfCtx.fillRect(0, 0, wfCanvas.width, rulerH);
+    wfCtx.strokeStyle = "rgba(32, 96, 56, 0.8)";
+    wfCtx.lineWidth = Math.max(1, Math.round(dpr));
+    wfCtx.beginPath();
+    wfCtx.moveTo(0, rulerH);
+    wfCtx.lineTo(wfCanvas.width, rulerH);
+    wfCtx.stroke();
+
+    // Minor & Major frequency ticks across +/- 3.0 kHz
+    var spanKhz = 3.0;
+    var halfW = wfCanvas.width / 2;
+    wfCtx.font = Math.round(9 * dpr) + "px 'Consolas', 'Courier New', monospace";
+    wfCtx.textAlign = "center";
+    wfCtx.textBaseline = "middle";
+
+    for (var fOffset = -2.5; fOffset <= 2.5; fOffset += 0.5) {
+      if (Math.abs(fOffset) < 0.01) continue;
+      var tx = cx + (fOffset / spanKhz) * halfW;
+      var isMajor = Math.abs(fOffset % 1.0) < 0.01;
+      var tickH = isMajor ? (8 * dpr) : (4 * dpr);
+
+      wfCtx.strokeStyle = isMajor ? "rgba(51, 255, 102, 0.6)" : "rgba(32, 96, 56, 0.6)";
+      wfCtx.beginPath();
+      wfCtx.moveTo(tx, rulerH - tickH);
+      wfCtx.lineTo(tx, rulerH);
+      wfCtx.stroke();
+
+      if (isMajor && tx > 40 * dpr && tx < wfCanvas.width - 40 * dpr) {
+        wfCtx.fillStyle = "rgba(51, 255, 102, 0.75)";
+        var sign = fOffset > 0 ? "+" : "";
+        wfCtx.fillText(sign + fOffset.toFixed(1) + "k", tx, rulerH / 2);
+      }
+    }
+
+    // Center frequency badge
+    wfCtx.fillStyle = state.carrierLocked ? "#ff3344" : "#ffaa00";
+    wfCtx.fillText("f0 " + state.freq.toFixed(2) + " kHz", cx, rulerH / 2);
+
+    // 5. Geological Depth / Time history ticks along right edge
+    var strataTicks = [
+      { frac: 0.25, label: "T-4s" },
+      { frac: 0.50, label: "T-8s" },
+      { frac: 0.75, label: "T-12s" }
+    ];
+    wfCtx.textAlign = "right";
+    wfCtx.fillStyle = "rgba(51, 204, 255, 0.5)";
+    strataTicks.forEach(function(st) {
+      var ty = Math.round(wfCanvas.height * st.frac);
+      wfCtx.strokeStyle = "rgba(51, 204, 255, 0.4)";
+      wfCtx.beginPath();
+      wfCtx.moveTo(wfCanvas.width - (10 * dpr), ty);
+      wfCtx.lineTo(wfCanvas.width, ty);
+      wfCtx.stroke();
+      wfCtx.fillText(st.label, wfCanvas.width - (12 * dpr), ty);
+    });
   }
 
   function renderScopeAndFft() {
@@ -2115,8 +2310,17 @@
     document.getElementById("helpModal").classList.remove("active");
   });
 
-  // Keyboard Shortcuts
+  // Keyboard Shortcuts with Enhanced Precision & Ergonomics
   window.addEventListener("keydown", function(e) {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") {
+      if (e.key === "Escape") {
+        document.querySelectorAll(".modal-overlay").forEach(function(m) {
+          m.classList.remove("active");
+        });
+      }
+      return;
+    }
+
     if (e.key === "F1" || e.key === "h" || e.key === "H") {
       e.preventDefault();
       document.getElementById("helpModal").classList.toggle("active");
@@ -2138,7 +2342,7 @@
       quickLoadState();
       return;
     }
-    if (e.code === "Space" && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+    if (e.code === "Space") {
       e.preventDefault();
       document.getElementById("btnSweepToggle").click();
       return;
@@ -2147,29 +2351,55 @@
       document.getElementById("btnAudioToggle").click();
       return;
     }
-    if (e.key >= "1" && e.key <= "4" && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+    if (e.key >= "1" && e.key <= "4") {
       var tabIdx = parseInt(e.key, 10) - 1;
       if (tabButtons[tabIdx]) tabButtons[tabIdx].click();
       return;
     }
     if (e.key === "ArrowLeft") {
       e.preventDefault();
-      stepFrequency(e.shiftKey ? -0.01 : -0.10);
+      var stepL = e.ctrlKey ? -1.0 : (e.shiftKey ? -0.01 : (e.altKey ? -0.50 : -0.10));
+      stepFrequency(stepL);
       return;
     }
     if (e.key === "ArrowRight") {
       e.preventDefault();
-      stepFrequency(e.shiftKey ? 0.01 : 0.10);
+      var stepR = e.ctrlKey ? 1.0 : (e.shiftKey ? 0.01 : (e.altKey ? 0.50 : 0.10));
+      stepFrequency(stepR);
       return;
     }
     if (e.key === "ArrowUp") {
       e.preventDefault();
-      stepFrequency(1.0);
+      stepFrequency(e.shiftKey || e.ctrlKey ? 5.0 : 1.0);
       return;
     }
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      stepFrequency(-1.0);
+      stepFrequency(e.shiftKey || e.ctrlKey ? -5.0 : -1.0);
+      return;
+    }
+    if (e.key === "PageUp") {
+      e.preventDefault();
+      stepFrequency(5.0);
+      return;
+    }
+    if (e.key === "PageDown") {
+      e.preventDefault();
+      stepFrequency(-5.0);
+      return;
+    }
+    if (e.key === "Home") {
+      e.preventDefault();
+      state.freq = 1.0;
+      checkSignalLock();
+      playUiClick(300);
+      return;
+    }
+    if (e.key === "End") {
+      e.preventDefault();
+      state.freq = 120.0;
+      checkSignalLock();
+      playUiClick(600);
       return;
     }
   });
@@ -2249,19 +2479,91 @@
     });
   }
 
-  // --- Frequency Tuner Mouse Wheel Precision ---
+  // --- Frequency Tuner Mouse Wheel Precision & Waterfall Click-to-Tune ---
   function attachWheelTuner(el) {
     if (!el) return;
     el.addEventListener("wheel", function(e) {
       e.preventDefault();
       var delta = e.deltaY < 0 ? 1 : -1;
-      var step = e.shiftKey ? 0.01 : (e.ctrlKey ? 1.0 : 0.05);
+      var step = e.shiftKey ? 0.01 : (e.ctrlKey ? 1.0 : (e.altKey ? 0.50 : 0.05));
       stepFrequency(+(delta * step).toFixed(2));
     }, { passive: false });
   }
   attachWheelTuner(document.getElementById("freqDisplay"));
   attachWheelTuner(document.querySelector(".tuner-bar"));
   attachWheelTuner(document.getElementById("waterfallCanvas"));
+
+  // Interactive Waterfall Tuning & Scrubbing
+  var wfPill = document.getElementById("waterfallHoverPill");
+  var isWfDragging = false;
+
+  function getWfFreqAtClientX(clientX) {
+    var rect = wfCanvas.getBoundingClientRect();
+    var relX = clientX - rect.left;
+    var frac = (relX - rect.width / 2) / (rect.width / 2);
+    var offsetKhz = frac * 3.0; // +/- 3.0 kHz span
+    return +(state.freq + offsetKhz).toFixed(2);
+  }
+
+  wfCanvas.addEventListener("mousemove", function(e) {
+    var targetFreq = getWfFreqAtClientX(e.clientX);
+    targetFreq = Math.max(1.0, Math.min(120.0, targetFreq));
+    if (wfPill) {
+      wfPill.style.display = "block";
+      wfPill.textContent = "POINTER: " + targetFreq.toFixed(2) + " kHz";
+    }
+    if (isWfDragging) {
+      state.freq = targetFreq;
+      checkSignalLock();
+    }
+  });
+
+  wfCanvas.addEventListener("mouseleave", function() {
+    isWfDragging = false;
+    if (wfPill) wfPill.style.display = "none";
+  });
+
+  wfCanvas.addEventListener("mousedown", function(e) {
+    if (e.button !== 0) return;
+    isWfDragging = true;
+    var targetFreq = getWfFreqAtClientX(e.clientX);
+    state.freq = Math.max(1.0, Math.min(120.0, targetFreq));
+    checkSignalLock();
+    playUiClick(520);
+  });
+
+  window.addEventListener("mouseup", function() {
+    isWfDragging = false;
+  });
+
+  // Copy Full Diagnostic Telemetry Report
+  var btnCopyReport = document.getElementById("btnCopyTelemetryReport");
+  if (btnCopyReport) {
+    btnCopyReport.addEventListener("click", function() {
+      var station = STATIONS[state.stationIdx];
+      var anom = state.lockedAnomaly;
+      var lines = [
+        "=== KANOMALY LITHOSPHERE TELEMETRY RECORD ===",
+        "TIMESTAMP: " + new Date().toISOString(),
+        "RECEIVER FREQUENCY: " + state.freq.toFixed(2) + " kHz",
+        "DEMODULATION: " + state.demodMode + " (BW: " + state.bandwidth + " Hz)",
+        "STATION: " + station.id + " (" + station.name + ", " + station.depth + "m, " + station.strata + ")",
+        "CARRIER STATUS: " + (state.carrierLocked && anom ? ("LOCKED [" + anom.id + " - " + anom.name + "]") : "NO CARRIER / AMBIENT"),
+        "SNR: " + (state.carrierLocked ? ("+" + state.snrDb + " dB") : "-4 dB"),
+        "DOPPLER DRIFT: " + (document.getElementById("decMetricDoppler") || {}).textContent,
+        "PREAMBLE: " + (document.getElementById("decMetricPreamble") || {}).textContent,
+        "CRC32: " + (document.getElementById("decMetricCrc") || {}).textContent,
+        "ORIGIN: " + (document.getElementById("decMetricOrigin") || {}).textContent,
+        "ASCII PAYLOAD: " + ((document.getElementById("asciiStreamBox") || {}).textContent || "NONE"),
+        "============================================"
+      ];
+      var report = lines.join("\n");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(report);
+      }
+      logTerminal("[CLIPBOARD] Full forensic telemetry record copied.", "cyan");
+    });
+  }
 
   // --- RFMS Multiplayer Geophone Mesh ---
   var meshState = {

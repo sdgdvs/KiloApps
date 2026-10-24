@@ -801,7 +801,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
         case WM_MOUSEWHEEL: {
             short zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
-            int step = (GetKeyState(VK_SHIFT) & 0x8000) ? 1 : 10;
+            int step = (GetKeyState(VK_CONTROL) & 0x8000) ? 100 : ((GetKeyState(VK_SHIFT) & 0x8000) ? 1 : 10);
             if (zDelta > 0) StepFrequency(step);
             else if (zDelta < 0) StepFrequency(-step);
             InvalidateRect(hwnd, NULL, FALSE);
@@ -818,13 +818,13 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 return 0;
             }
             if (wParam == VK_LEFT) {
-                int step = (GetKeyState(VK_SHIFT) & 0x8000) ? -1 : -10;
+                int step = (GetKeyState(VK_CONTROL) & 0x8000) ? -100 : ((GetKeyState(VK_SHIFT) & 0x8000) ? -1 : -10);
                 StepFrequency(step);
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
             if (wParam == VK_RIGHT) {
-                int step = (GetKeyState(VK_SHIFT) & 0x8000) ? 1 : 10;
+                int step = (GetKeyState(VK_CONTROL) & 0x8000) ? 100 : ((GetKeyState(VK_SHIFT) & 0x8000) ? 1 : 10);
                 StepFrequency(step);
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
