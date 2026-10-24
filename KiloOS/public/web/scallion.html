@@ -1070,8 +1070,9 @@
           </div>
         </div>
 
-        <div style="margin-top:10px; display:flex; gap:8px; justify-content:flex-end;">
+        <div style="margin-top:10px; display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
           <button class="btn-scallion btn-secondary" onclick="saveSysadminVfs()">💾 Save Advice to VFS</button>
+          <button class="btn-scallion btn-secondary" onclick="openSysadminInKPad()">📝 Open in KPad</button>
           <button class="btn-scallion btn-secondary" onclick="clearSysadminTerminal()">Clear Terminal</button>
         </div>
       </div>
@@ -1103,6 +1104,7 @@
           </select>
         </div>
         <button class="btn-scallion btn-secondary" onclick="exportModemChartVfs()">💾 Export Chart to VFS</button>
+        <button class="btn-scallion btn-secondary" onclick="openModemChartInKPad()">📝 Open in KPad</button>
       </div>
 
       <div class="chart-canvas-wrap">
@@ -1134,6 +1136,10 @@
 
       <div class="chart-canvas-wrap">
         <canvas id="bunkerCanvas" width="680" height="240"></canvas>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+        <button class="btn-scallion btn-secondary" onclick="exportBunkerVfs()">💾 Export Matrix to VFS</button>
+        <button class="btn-scallion btn-secondary" onclick="openBunkerInKPad()">📝 Open in KPad</button>
       </div>
     </div>
   </section>
@@ -1460,12 +1466,27 @@ function saveToKiloVfs(vfsPath, contentStr) {
 
 function launchKiloApp(appFile, args) {
   try {
+    const targetApp = (appFile || '').replace('.html', '').toLowerCase();
+    const vfsPath = (args && args.path) || (args && args.vfsPath) || '';
+    window.parent.postMessage({
+      type: 'OS_LAUNCH_APP',
+      appId: targetApp,
+      targetApp: targetApp,
+      path: vfsPath,
+      args: args || {}
+    }, '*');
+    window.parent.postMessage({
+      type: 'KILO_LAUNCH_APP',
+      targetApp: targetApp,
+      path: vfsPath,
+      args: args || {}
+    }, '*');
     window.parent.postMessage({
       type: 'LAUNCH_APP',
       app: appFile,
       args: args || {}
     }, '*');
-    showToast('Launching ' + appFile + '...');
+    showToast('Launching ' + (targetApp.toUpperCase() || appFile) + '...');
     playRetroSound(740, 0.08);
   } catch (e) {}
 }
@@ -1898,10 +1919,54 @@ function renderModemChart() {
   });
 }
 
+function openSysadminInKPad() {
+  if (!lastSysadminResponse) {
+    showToast('No sysadmin response generated yet!');
+    return;
+  }
+  const content = `=== THE SCALLION: ASK A SYSADMIN COLUMN ===\n\n${lastSysadminResponse}\n\n(c) 1999 The Scallion Editorial Syndicate`;
+  const vfsPath = '/home/downloads/sysadmin_advice.txt';
+  saveToKiloVfs(vfsPath, content);
+  launchKiloApp('kpad.html', {
+    title: 'Ask A Sysadmin Dispatch',
+    initialContent: content,
+    path: vfsPath
+  });
+}
+
 function exportModemChartVfs() {
   const speed = document.getElementById('modemSpeedSelect').value;
   const txt = `=== THE SCALLION INFOGRAPHIC: 56K BANDWIDTH ALLOCATION ===\nProfile: ${speed} kbps\n\n- Looping Animated GIFs: 45%\n- Corrupted Packets (Someone Picked Up Kitchen Phone): 25%\n- Punch-The-Monkey Banner Ads: 18%\n- Actual Usable HTML Data: 8%\n- Static & Acoustic Line Hiss: 4%\n\nConclusion: 92% of telephone infrastructure is dedicated to neon hamster animations.\n(c) 1999 The Scallion Infographic Lab`;
   saveToKiloVfs('/home/downloads/scallion_modem_chart.txt', txt);
+}
+
+function openModemChartInKPad() {
+  exportModemChartVfs();
+  const vfsPath = '/home/downloads/scallion_modem_chart.txt';
+  launchKiloApp('kpad.html', {
+    title: '56K Bandwidth Allocation',
+    path: vfsPath
+  });
+}
+
+function exportBunkerVfs() {
+  const corn = document.getElementById('cornSlider') ? document.getElementById('cornSlider').value : 12;
+  const bolts = document.getElementById('boltSlider') ? document.getElementById('boltSlider').value : 250;
+  const jolt = document.getElementById('joltSlider') ? document.getElementById('joltSlider').value : 18;
+  const batt = document.getElementById('battSlider') ? document.getElementById('battSlider').value : 120;
+  const score = Math.min(100, Math.round((parseInt(corn) * 1.5) + (parseInt(bolts) * 0.08) + (parseInt(jolt) * 0.8) + (parseInt(batt) * 0.1)));
+  const rating = score > 75 ? 'BUNKER READY' : score > 45 ? 'NEEDS MORE CORN' : 'DOOMED';
+  const txt = `=== THE SCALLION INFOGRAPHIC: BUNKER SURVIVABILITY MATRIX ===\nLocation: Duluth Emergency Index (Y2K Prepper Edition)\n\nReadiness Score: ${score}% [${rating}]\n\nInventory Manifest:\n- Creamed Corn: ${corn} pallets\n- Crossbow Bolts: ${bolts} units\n- Jolt Cola: ${jolt} crates\n- D-Cell Batteries: ${batt} cells\n\nSurvival Verdict: ${rating === 'BUNKER READY' ? 'Sufficient calories and caffeine to withstand millennium bug.' : 'Critical vulnerability in corn-to-bolt ratios. Restock immediately.'}\n\n(c) 1999 The Scallion Infographic Lab`;
+  saveToKiloVfs('/home/downloads/scallion_bunker_matrix.txt', txt);
+}
+
+function openBunkerInKPad() {
+  exportBunkerVfs();
+  const vfsPath = '/home/downloads/scallion_bunker_matrix.txt';
+  launchKiloApp('kpad.html', {
+    title: 'Bunker Survivability Matrix',
+    path: vfsPath
+  });
 }
 
 function updateBunkerSim() {

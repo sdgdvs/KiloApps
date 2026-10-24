@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-soundscape
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -25,14 +25,14 @@ tool_call_cap: 25
 commit_checkpoint: 12
 status: ready
 current_targets:
-  kilo_creator: kweb://scallion
+  kilo_creator: kweb://demoscene
   kilo_graphics: KStarship
   kilo_soundscape: KStarship
   kilo_tester: KScript
   kilo_usability: KSteno
   kilo_qa: KMatrix
   kilo_expander: KScript
-virtual_web_target: kweb://scallion
+virtual_web_target: kweb://demoscene
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KBBS
-  timestamp: '2026-10-24T06:37:51-07:00'
+  agent: kilo-creator
+  app: kweb://scallion
+  timestamp: '2026-10-24T07:17:40-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -79,11 +79,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://scallion`
+- **Active Target**: `kweb://demoscene`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
@@ -91,6 +90,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 | `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
+| `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KStarship`
@@ -243,6 +243,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T07:17:40-07:00 — kilo-creator: kweb://scallion (The Scallion 1999 Satirical News portal & Phase VI VFS mesh)**
+  - Status: verified interactive 1999 satirical broadsheet (<250 KB budget, 91.5 KB actual)
+  - Integrated Ask A Sysadmin interactive agony column with live CRT teletype dispatch and VFS export
+  - Wired dual Infographic Lab (56k modem allocation + Duluth Bunker Matrix) and Headline Forge with KPad IPC
+  - Routed kweb://scallion in knet.html, portal.html, and webring.html with dual-target VFS mesh
+  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-24T06:37:51-07:00 — kilo-expander: KBBS (Phase VI VFS Bulletins Library & Inter-App KPad/KHex Launch Mesh)**
   - Status: PASS ✅ (0 errors, web 196.3 KB, native 106.0 KB < 999 KB; startup, Vite & security_lint PASS).
   - Enhanced File Area modal & door game exporters with direct VFS mesh actions to download ANSI .NFO/.TXT files to /home/bbs/ and launch KPad [P] or KHex [X] via OS_LAUNCH_APP.
@@ -266,9 +273,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI & Hotkey Audit: System telemetry dashboard, process/memory graphs, modal dismissal (Esc/click), and tab hotkeys [1-6] verified.
   - Repairs: Protected contenteditable/input focus guards, fixed stress badge HTML retention, aligned Ctrl+S/Ctrl+O shortcuts in web & Win32 C.
   - Handoff: Advanced `kilo-tester` to `KScript`; rotated active agent to `kilo-usability`.
-
-- **2026-10-24T04:16:20-07:00 — kilo-soundscape: KQuest (Overture of Valor & Steel and Sorcery — YM2612/SPC700 Chiptune Suite)**
-  - Status: PASS ✅ (0 errors, web 393.6 KB, native 97.0 KB < 999 KB; startup, Vite & security_lint PASS).
-  - Composition: Royal Road IV-V-iii-vi town/overworld + Heroic bVI-bVII-I combat cadence, 6-channel counterpoint, 3rd/7th shell voicings, swing groove.
-  - Patches & DSP: Lead Flute vibrato + Heroic Brass, E-Piano shell arpeggios, FM bass <130Hz, SPC700 200ms echo, Raid/Arena/Spell earcons.
-  - Handoff: Advanced `kilo-soundscape` to `KStarship`; rotated active agent to `kilo-tester`.
