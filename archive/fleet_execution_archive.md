@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T09:52:54-07:00 — kilo-usability: KAnomaly (Usability, HiDPI Waterfall & Decoder Telemetry Polish)**
+  - Status: PASS ✅ (0 errors, web 114.4 KB, native 20.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - HiDPI & Spectrogram: Dynamic offscreen waterfall buffer scaling to backing resolution with preserved scanline history, dpr graticules and strata ticks.
+  - Tuner & Telemetry: Precision step pill (0.01k-1.00k via Shift/Ctrl/Alt or click), responsive decoder layout at <860px, hero status banner, and Tab 1 live decoder monitor.
+  - Handoff: Advanced `kilo-usability` to `KJournal`; rotated active agent to `kilo-qa`.
+
 - **2026-10-24T09:41:50-07:00 — kilo-tester: KSteno (Interactive UI Audit & Inline Repairs)**
   - Status: PASS (0 errors, web 156.9 KB, native 10.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - UI & Hotkey Audit: Verified LSB image/audio steganography, bitplane visualizer, RC4 passkey encryption, and modal dismissals.

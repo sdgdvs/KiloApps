@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -27,7 +27,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://webring
   kilo_graphics: KCyber
-  kilo_soundscape: KFarm
+  kilo_soundscape: KWizard
   kilo_tester: KBudget
   kilo_usability: KBudget
   kilo_qa: KBudget
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KVoid
-  timestamp: '2026-10-24T10:38:38-07:00'
+  agent: kilo-soundscape
+  app: KFarm
+  timestamp: '2026-10-24T10:49:54-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -101,7 +101,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
-| `KFarm` | `KiloOS/public/apps/kfarm.html` | Pastoral farm & seasonal crops visual polish: pixel art crop growth stages, seasonal tile transitions, livestock sprites, and glint sweep. |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
 | `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
@@ -110,11 +109,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Active Target**: `KFarm`
+- **Active Target**: `KWizard`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFarm` | `KiloOS/public/apps/kfarm.html` | Compose pastoral 16-bit harvest & seasonal town 6-channel suite (Major pentatonic / Mixolydian acoustic FM guitar, warm marimba counter-melody, brushed snare groove, harvest earcons). |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
@@ -185,6 +183,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KFarm** | `KiloOS/public/apps/kfarm.html` | Pass 5+ (2026-10-24) | Games / Simulation | Feature-complete 1999 pastoral farming sim; crop cycles, livestock, market upgrades, YM2612 2-Op FM / SPC700 soundscape, F5/F9 persistence, dual Win32 C parity. |
 | **KJournal** | `KiloOS/public/apps/kjournal.html` | Pass 5+ (2026-10-24) | Productivity / Writing & Journal | Complete encrypted retro journal workstation with rich markdown preview, mood tags, PIN lock, calendar navigator, F5/F9 persistence, and dual Win32 C parity. |
 | **KMatrix** | `KiloOS/public/apps/kmatrix.html` | Pass 5+ (2026-10-24) | System / Security | Master forensic terminal & ARG climax with matrix digital rain visualizer, subterranean codebook decrypter, RF frequency waterfall, YM2612/SPC700 telemetry, F5/F9 state persistence, and dual Win32 C parity. |
 | **KVault** | `KiloOS/public/apps/kvault.html` | Pass 5+ (2026-10-24) | System / Security | Comprehensive client-side encrypted password & secret manager with AES-GCM/PBKDF2/WebCrypto, tree navigator, KeePass/CSV/ASCII export/import, F5/F9 state snapshots, and Win32 C parity. |
@@ -238,6 +237,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T10:49:54-07:00 — kilo-soundscape: KFarm (Pass 5 Complete & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 119.5 KB, native 132.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Audio Suite: 6-channel YM2612 FM / SPC700 soundscape, 5:3 swing groove, 9 SFX earcons, and Mute [M] controls verified.
+  - Mature Quarantine & Handoff: Promoted `KFarm` to Mature archive; advanced `kilo-soundscape` to `KWizard`; next agent `kilo-tester`.
+
 - **2026-10-24T10:38:38-07:00 — kilo-graphics: KVoid (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KVoid.
   - Handoff: Advanced `kilo-graphics` to `KCyber`; rotated active agent to `kilo-soundscape`.
@@ -259,9 +263,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload snapshots, kjournal_tutorialSeen flag, and Escape modal dismissals.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer/autosave cleanup.
   - Mature Quarantine & Handoff: Promoted `KJournal` to Mature archive; advanced `kilo-qa` to `KBudget`; next agent `kilo-expander`.
-
-- **2026-10-24T09:52:54-07:00 — kilo-usability: KAnomaly (Usability, HiDPI Waterfall & Decoder Telemetry Polish)**
-  - Status: PASS ✅ (0 errors, web 114.4 KB, native 20.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - HiDPI & Spectrogram: Dynamic offscreen waterfall buffer scaling to backing resolution with preserved scanline history, dpr graticules and strata ticks.
-  - Tuner & Telemetry: Precision step pill (0.01k-1.00k via Shift/Ctrl/Alt or click), responsive decoder layout at <860px, hero status banner, and Tab 1 live decoder monitor.
-  - Handoff: Advanced `kilo-usability` to `KJournal`; rotated active agent to `kilo-qa`.
