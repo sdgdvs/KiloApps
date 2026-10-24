@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ current_targets:
   kilo_graphics: KStellar
   kilo_soundscape: KCyber
   kilo_tester: KCipher
-  kilo_usability: KSteno
+  kilo_usability: KHash
   kilo_qa: KPac
   kilo_expander: KQuest
 virtual_web_target: kweb://webring
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KSteno
-  timestamp: '2026-10-23T18:17:03-07:00'
+  timestamp: '2026-10-23T18:24:44-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -134,17 +134,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KSteno`
+- **Active Target**: `KHash`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
 | `KHash` | `KiloOS/public/apps/khash.html`, `KHash/main.c` | Multi-digest comparison table responsiveness, one-click hash verification badge, HMAC toggle ergonomics, and keyboard shortcuts. |
 | `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Encrypted container tree navigation, responsive hex/file inspector split, clear lock/unlock status banner, and modal focus trapping. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Side-by-side plaintext/ciphertext responsive split pane, HiDPI frequency chart crispness, one-click copy/swap ergonomics, and `[F1/H]` help overlay. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
+| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KPac`
@@ -224,6 +224,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T18:24:44-07:00 — kilo-usability: KSteno (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 146.2 KB, native 10.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.5%, HEAD Δ 0.95%, 0 fail, 0 warn, 13.2s)).
+  - Layout & HiDPI: Responsive viewport wrapping for image/audio/text/steganalysis/deaddrop grids; HiDPI devicePixelRatio backing on audio waveform and chi-square curve canvases with requestAnimationFrame resize.
+  - Keyboard & Modals: F1/H help, M mute, 1-5 mode switching, accessible Tab focus trapping in modal dialogs, Escape dismissal with focus restoration, and statusbar shortcuts pill.
+  - Handoff: Advanced `kilo-usability` to `KHash`; rotated active agent to `kilo-qa`.
+
 - **2026-10-23T18:17:03-07:00 — kilo-tester: KSteno (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 144.4 KB, native 10.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.5%, HEAD Δ 0.0%, 0 fail, 0 warn, 13.7s)).
   - UI & Hotkey Audit: Verified image/audio LSB steganography, bitplane visualizer, passkey encryption, and modal dismissals.
@@ -248,11 +254,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added RFC 793 TCP state stepper with dual-host registers, ASCII ladder diagram, and KiloOS VFS RFC/.txt export.
   - Registered kweb://rfc-archive in KNet bookmarks and resolver, and linked in Portal and Central Webring Hub.
   - Handoff: Advanced `kilo-creator` to `kweb://webring`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-23T17:23:51-07:00 — kilo-expander: KSteno (KSteno Phase VI VFS/IPC Carrier Pipeline & Steganalysis)**
-  - Status: PASS ✅ (0 errors, web 143.2 KB, native 10.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Phase VI KiloOS VFS mesh: Open/Save carrier files in /home/media/, export Chi-Square reports to /home/work/.
-  - Cross-App IPC: Added 'Send to KCipher' for cryptanalysis pipeline and 'Inspect in KHex' binary bridge.
-  - No-Autostart Connect Gate: Replaced boot WebSocket connection with on-demand Firebase dead-drop relay.
-  - Dual Win32 C parity: Added file export/import routines (Export File / Load Cover) in KSteno.exe.
-  - Handoff: Advanced `kilo-expander` to `KQuest`; rotated active agent to `kilo-creator`.

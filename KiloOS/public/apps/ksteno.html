@@ -680,6 +680,88 @@
       to { transform: translateX(0); opacity: 1; }
     }
   </style>
+  <style>
+    /* Usability, Accessibility & Responsive Refinements */
+    :focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 1px;
+    }
+
+    button:focus-visible,
+    .btn:focus-visible,
+    .tool-btn:focus-visible,
+    .tab-btn:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+
+    button, .btn, .tool-btn, .tab-btn {
+      touch-action: manipulation;
+    }
+
+    canvas.carrier-canvas {
+      touch-action: none;
+    }
+
+    .status-shortcuts-pill {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 3px;
+      color: var(--primary);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 860px) {
+      .image-panel-grid,
+      .audio-panel-grid,
+      .text-panel-grid,
+      .steganalysis-grid,
+      .dead-drop-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .canvas-viewport {
+        min-height: 260px;
+      }
+      .nav-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        flex-wrap: nowrap;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .nav-tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .toolbar-actions {
+        flex-wrap: wrap;
+      }
+      footer {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .status-left, .status-right {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      header {
+        padding: 4px 8px;
+        gap: 6px;
+      }
+      .brand span.ver {
+        display: none;
+      }
+      .modal-window {
+        width: 96%;
+        max-height: 92vh;
+      }
+    }
+  </style>
 </head>
 <body data-theme="cyber">
 
@@ -739,7 +821,7 @@
             <button class="btn btn-sm" id="btn-preset-fractal">Mandelbrot</button>
             <button class="btn btn-sm" id="btn-preset-nebula">Deep Space</button>
             <button class="btn btn-sm" id="btn-preset-crt">CRT Noise</button>
-            <button class="btn btn-sm" id="btn-preset-dither">Sunset Dither</button>
+            <button class="btn btn-sm" id="btn-preset-dither">Sunset Dither</button>
             <button class="btn btn-sm" id="btn-img-vfs-open" title="Open carrier image from KiloOS VFS (/home/media/)">📂 Open VFS</button>
             <label class="btn btn-sm" style="margin-left:auto; cursor:pointer;">
               📁 Upload Image <input type="file" id="image-file-input" accept="image/*" style="display:none;">
@@ -815,21 +897,21 @@
           </div>
 
           <div style="display:flex; gap:6px;">
-            <button class="btn btn-sm" id="btn-img-download" style="flex:1;">💾 Save PNG</button>
-            <button class="btn btn-sm" id="btn-img-vfs-save" style="flex:1;">💾 Save to VFS</button>
-            <button class="btn btn-sm" id="btn-img-inspect-hex" style="flex:1;">🔍 Open in KHex</button>
+            <button class="btn btn-sm" id="btn-img-download" style="flex:1;">💾 Save PNG</button>
+            <button class="btn btn-sm" id="btn-img-vfs-save" style="flex:1;">💾 Save to VFS</button>
+            <button class="btn btn-sm" id="btn-img-inspect-hex" style="flex:1;">🔍 Open in KHex</button>
             <button class="btn btn-sm" id="btn-img-revert" style="flex:1;">🔄 Clean Carrier</button>
           </div>
 
           <!-- Extraction Output -->
-          <div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-              <label style="font-size:11px; font-weight:600; color:var(--text-muted);">Extracted Message:</label>
-              <div style="display:flex; gap:4px;">
-                <button class="btn btn-sm" id="btn-img-save-payload-vfs" title="Save extracted secret to VFS (/home/work/steno_extracted.txt)">💾 Save to VFS</button>
-                <button class="btn btn-sm btn-accent" id="btn-img-send-kcipher" title="Send secret payload to KCipher for cryptanalysis">🔐 Send to KCipher</button>
-              </div>
-            </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+              <label style="font-size:11px; font-weight:600; color:var(--text-muted);">Extracted Message:</label>
+              <div style="display:flex; gap:4px;">
+                <button class="btn btn-sm" id="btn-img-save-payload-vfs" title="Save extracted secret to VFS (/home/work/steno_extracted.txt)">💾 Save to VFS</button>
+                <button class="btn btn-sm btn-accent" id="btn-img-send-kcipher" title="Send secret payload to KCipher for cryptanalysis">🔐 Send to KCipher</button>
+              </div>
+            </div>
             <div id="img-extract-output" class="text-preview-box" style="height:90px;" placeholder="Extracted text will appear here..."></div>
           </div>
         </div>
@@ -869,7 +951,7 @@
             <button class="btn btn-sm" id="btn-synth-modem">1999 Modem Handshake</button>
             <button class="btn btn-sm" id="btn-synth-fm">Genesis FM Drone</button>
             <button class="btn btn-sm" id="btn-synth-cassette">Cassette Hiss</button>
-            <button class="btn btn-sm" id="btn-synth-pulsar">SPC700 Pulsar</button>
+            <button class="btn btn-sm" id="btn-synth-pulsar">SPC700 Pulsar</button>
             <button class="btn btn-sm" id="btn-audio-vfs-open" title="Open audio WAV carrier from KiloOS VFS">📂 Open VFS WAV</button>
             <label class="btn btn-sm" style="margin-left:auto; cursor:pointer;">
               📁 Upload WAV <input type="file" id="audio-file-input" accept=".wav,audio/wav" style="display:none;">
@@ -907,19 +989,19 @@
           </div>
 
           <div style="display:flex; gap:6px;">
-            <button class="btn btn-sm" id="btn-audio-download" style="flex:1;">💾 Download WAV</button>
-            <button class="btn btn-sm" id="btn-audio-vfs-save" style="flex:1;">💾 Save to VFS</button>
+            <button class="btn btn-sm" id="btn-audio-download" style="flex:1;">💾 Download WAV</button>
+            <button class="btn btn-sm" id="btn-audio-vfs-save" style="flex:1;">💾 Save to VFS</button>
             <button class="btn btn-sm" id="btn-audio-revert" style="flex:1;">🔄 Clean Audio</button>
           </div>
 
-          <div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-              <label style="font-size:11px; font-weight:600; color:var(--text-muted);">Extracted Audio Payload:</label>
-              <div style="display:flex; gap:4px;">
-                <button class="btn btn-sm" id="btn-audio-save-payload-vfs" title="Save extracted audio payload to VFS">💾 Save to VFS</button>
-                <button class="btn btn-sm btn-accent" id="btn-audio-send-kcipher" title="Send extracted audio payload to KCipher">🔐 Send to KCipher</button>
-              </div>
-            </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+              <label style="font-size:11px; font-weight:600; color:var(--text-muted);">Extracted Audio Payload:</label>
+              <div style="display:flex; gap:4px;">
+                <button class="btn btn-sm" id="btn-audio-save-payload-vfs" title="Save extracted audio payload to VFS">💾 Save to VFS</button>
+                <button class="btn btn-sm btn-accent" id="btn-audio-send-kcipher" title="Send extracted audio payload to KCipher">🔐 Send to KCipher</button>
+              </div>
+            </div>
             <div id="audio-extract-output" class="text-preview-box" style="height:90px;" placeholder="Decoded audio secret will appear here..."></div>
           </div>
         </div>
@@ -943,7 +1025,7 @@
             <button class="btn btn-sm" id="btn-text-preset-isp">1999 ISP Statement</button>
             <button class="btn btn-sm" id="btn-text-preset-nfo">FLARELIGHT NFO</button>
             <button class="btn btn-sm" id="btn-text-preset-y2k">Y2K Directive</button>
-            <button class="btn btn-sm" id="btn-text-preset-tournament">Surreal Tournament</button>
+            <button class="btn btn-sm" id="btn-text-preset-tournament">Surreal Tournament</button>
             <button class="btn btn-sm" id="btn-text-vfs-open" title="Load cover text from KiloOS VFS (/home/docs/)">📂 Load from VFS</button>
           </div>
 
@@ -984,19 +1066,19 @@
           </div>
 
           <div style="display:flex; gap:6px;">
-            <button class="btn btn-sm" id="btn-text-copy" style="flex:1;">📋 Copy Stego Text</button>
-            <button class="btn btn-sm" id="btn-text-download" style="flex:1;">💾 Save Stego Text</button>
+            <button class="btn btn-sm" id="btn-text-copy" style="flex:1;">📋 Copy Stego Text</button>
+            <button class="btn btn-sm" id="btn-text-download" style="flex:1;">💾 Save Stego Text</button>
             <button class="btn btn-sm" id="btn-text-vfs-save" style="flex:1;">💾 Save to VFS</button>
           </div>
 
-          <div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-              <label style="font-size:11px; font-weight:600; color:var(--text-muted);">Extracted Secret Message:</label>
-              <div style="display:flex; gap:4px;">
-                <button class="btn btn-sm" id="btn-text-save-payload-vfs" title="Save extracted secret to VFS">💾 Save to VFS</button>
-                <button class="btn btn-sm btn-accent" id="btn-text-send-kcipher" title="Send secret payload to KCipher">🔐 Send to KCipher</button>
-              </div>
-            </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+              <label style="font-size:11px; font-weight:600; color:var(--text-muted);">Extracted Secret Message:</label>
+              <div style="display:flex; gap:4px;">
+                <button class="btn btn-sm" id="btn-text-save-payload-vfs" title="Save extracted secret to VFS">💾 Save to VFS</button>
+                <button class="btn btn-sm btn-accent" id="btn-text-send-kcipher" title="Send secret payload to KCipher">🔐 Send to KCipher</button>
+              </div>
+            </div>
             <div id="text-extract-output" class="text-preview-box" style="height:90px;" placeholder="Decoded message will appear here..."></div>
           </div>
         </div>
@@ -1071,9 +1153,9 @@
           </div>
 
           <div style="font-size:11px; color:var(--text-muted); line-height:1.4; border-top:1px solid var(--border); padding-top:6px;">
-            <div style="display:flex; gap:6px; margin-bottom:8px;">
-            <button class="btn btn-sm btn-primary" id="btn-steg-vfs-report" style="flex:1;">📊 Export χ² Report to VFS (/home/work/)</button>
-          </div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;">
+            <button class="btn btn-sm btn-primary" id="btn-steg-vfs-report" style="flex:1;">📊 Export χ² Report to VFS (/home/work/)</button>
+          </div>
           <strong>Theory:</strong> Westfeld-Pfitzmann Pairs of Values (PoVs) test evaluates equalization between 2k and 2k+1 pixel values. Natural images show asymmetry; LSB injection forces asymptotic symmetry.
           </div>
         </div>
@@ -1094,7 +1176,7 @@
                 <option value="subrosa">#sub-rosa-99</option>
                 <option value="cypher">#cypher-cadre</option>
               </select>
-              <button class="btn btn-sm btn-primary" id="btn-connect-relay" title="Connect to Live Firebase Dead-Drop Relay">⚡ Connect to Live Relay</button>
+              <button class="btn btn-sm btn-primary" id="btn-connect-relay" title="Connect to Live Firebase Dead-Drop Relay">⚡ Connect to Live Relay</button>
               <button class="btn btn-sm" id="btn-refresh-feed">🔄 Refresh</button>
             </div>
           </div>
@@ -1165,7 +1247,7 @@
   <footer>
     <div class="status-left">
       <span style="display:flex; align-items:center; gap:6px;">
-        <span class="status-indicator offline" id="net-indicator"></span>
+        <span class="status-indicator offline" id="net-indicator"></span>
         <span id="net-status-text">Network: Offline Simulation Mode</span>
       </span>
       <span>|</span>
@@ -1175,7 +1257,7 @@
     <div class="status-right">
       <span id="status-op-name">Operative: Agent-99</span>
       <span>|</span>
-      <span>F1: Manual | F5: Save | F9: Load</span>
+      <span class="status-shortcuts-pill" title="Keyboard Shortcuts">[F1/H] Help | [F5/F9] Save/Load | [M] Mute | [1-5] Modes</span>
     </div>
   </footer>
 
@@ -1184,6 +1266,7 @@
     <div class="modal-window">
       <div class="modal-header">
         <span>👁️ KSTENO — COVERT CARRIER SUITE v1.0.0</span>
+        <button class="tool-btn" id="btn-splash-close" aria-label="Close splash">✕ Esc</button>
       </div>
       <div class="modal-body">
         <div style="text-align:center; padding:10px 0;">
@@ -1257,7 +1340,8 @@
 
         <h3 style="color:var(--warning);">4. Keyboard Shortcuts</h3>
         <ul style="padding-left:18px; line-height:1.6;">
-          <li><strong>F1:</strong> Toggle Field Manual</li>
+          <li><strong>F1 / H:</strong> Toggle Field Manual</li>
+          <li><strong>M:</strong> Toggle Procedural Audio Mute</li>
           <li><strong>F5:</strong> Quick Save session state to localStorage</li>
           <li><strong>F9:</strong> Quick Load saved session</li>
           <li><strong>Esc:</strong> Close active dialog or modal</li>
@@ -2007,30 +2091,40 @@
     let abListeningMode = 'clean'; // 'clean' or 'stego'
 
     function renderAudioWaveform() {
-      const w = audioCanvas.width = audioCanvas.offsetWidth || 500;
-      const h = audioCanvas.height = audioCanvas.offsetHeight || 220;
+      const dpr = window.devicePixelRatio || 1;
+      const cssW = audioCanvas.offsetWidth || 500;
+      const cssH = audioCanvas.offsetHeight || 220;
+      if (audioCanvas.width !== Math.round(cssW * dpr) || audioCanvas.height !== Math.round(cssH * dpr)) {
+        audioCanvas.width = Math.round(cssW * dpr);
+        audioCanvas.height = Math.round(cssH * dpr);
+      }
+      audioCtxCvs.save();
+      audioCtxCvs.scale(dpr, dpr);
       audioCtxCvs.fillStyle = '#040810';
-      audioCtxCvs.fillRect(0, 0, w, h);
+      audioCtxCvs.fillRect(0, 0, cssW, cssH);
 
       // Grid lines
       audioCtxCvs.strokeStyle = '#162440';
       audioCtxCvs.lineWidth = 1;
       audioCtxCvs.beginPath();
-      audioCtxCvs.moveTo(0, h / 2);
-      audioCtxCvs.lineTo(w, h / 2);
+      audioCtxCvs.moveTo(0, cssH / 2);
+      audioCtxCvs.lineTo(cssW, cssH / 2);
       audioCtxCvs.stroke();
 
       const samples = (abListeningMode === 'stego' && stegoAudioSamples) ? stegoAudioSamples : audioSamples;
-      if (!samples || samples.length === 0) return;
+      if (!samples || samples.length === 0) {
+        audioCtxCvs.restore();
+        return;
+      }
 
       audioCtxCvs.strokeStyle = (abListeningMode === 'stego' ? '#ff9f1c' : '#00d2ff');
       audioCtxCvs.lineWidth = 1.5;
       audioCtxCvs.beginPath();
 
-      const step = Math.ceil(samples.length / w);
-      const amp = h / 2 * 0.85;
+      const step = Math.ceil(samples.length / cssW);
+      const amp = cssH / 2 * 0.85;
 
-      for (let i = 0; i < w; i++) {
+      for (let i = 0; i < cssW; i++) {
         let min = 1.0;
         let max = -1.0;
         for (let j = 0; j < step; j++) {
@@ -2042,6 +2136,7 @@
         audioCtxCvs.lineTo(i, (1 + max) * amp);
       }
       audioCtxCvs.stroke();
+      audioCtxCvs.restore();
     }
 
     // Generate Procedural WAVs
@@ -2593,38 +2688,49 @@
       showToast("Steganalysis scan completed", "info");
     }
 
+    let lastChisqProb = 0;
     function drawChiSquareCurve(prob) {
-      const w = chisqCanvas.width = chisqCanvas.offsetWidth || 370;
-      const h = chisqCanvas.height = chisqCanvas.offsetHeight || 160;
+      if (prob !== undefined) lastChisqProb = prob;
+      const curProb = lastChisqProb;
+      const dpr = window.devicePixelRatio || 1;
+      const cssW = chisqCanvas.offsetWidth || 370;
+      const cssH = chisqCanvas.offsetHeight || 160;
+      if (chisqCanvas.width !== Math.round(cssW * dpr) || chisqCanvas.height !== Math.round(cssH * dpr)) {
+        chisqCanvas.width = Math.round(cssW * dpr);
+        chisqCanvas.height = Math.round(cssH * dpr);
+      }
+      chisqCtx.save();
+      chisqCtx.scale(dpr, dpr);
       chisqCtx.fillStyle = '#000';
-      chisqCtx.fillRect(0, 0, w, h);
+      chisqCtx.fillRect(0, 0, cssW, cssH);
 
       // Grid
       chisqCtx.strokeStyle = '#1e3258';
       chisqCtx.lineWidth = 1;
-      for (let y = 20; y < h; y += 30) {
-        chisqCtx.beginPath(); chisqCtx.moveTo(0, y); chisqCtx.lineTo(w, y); chisqCtx.stroke();
+      for (let y = 20; y < cssH; y += 30) {
+        chisqCtx.beginPath(); chisqCtx.moveTo(0, y); chisqCtx.lineTo(cssW, y); chisqCtx.stroke();
       }
 
       // Curve
-      chisqCtx.strokeStyle = prob > 70 ? '#ef4444' : '#00d2ff';
+      chisqCtx.strokeStyle = curProb > 70 ? '#ef4444' : '#00d2ff';
       chisqCtx.lineWidth = 2;
       chisqCtx.beginPath();
-      chisqCtx.moveTo(20, h - 20);
+      chisqCtx.moveTo(20, cssH - 20);
 
-      const targetH = (h - 40) * (prob / 100);
-      for (let x = 20; x < w - 20; x += 5) {
-        const prog = (x - 20) / (w - 40);
-        const y = h - 20 - (targetH * Math.pow(prog, 0.5));
+      const targetH = (cssH - 40) * (curProb / 100);
+      for (let x = 20; x < cssW - 20; x += 5) {
+        const prog = (x - 20) / (cssW - 40);
+        const y = cssH - 20 - (targetH * Math.pow(prog, 0.5));
         chisqCtx.lineTo(x, y);
       }
       chisqCtx.stroke();
 
       // Label
       chisqCtx.fillStyle = '#8ca3c7';
-      chisqCtx.font = '10px Consolas';
+      chisqCtx.font = '10px Consolas, monospace';
       chisqCtx.fillText("χ² Probability Curve (PoVs)", 24, 18);
-      chisqCtx.fillText(`P = ${prob.toFixed(1)}%`, w - 75, 18);
+      chisqCtx.fillText(`P = ${curProb.toFixed(1)}%`, cssW - 75, 18);
+      chisqCtx.restore();
     }
 
     /* ==========================================================================
@@ -2756,8 +2862,8 @@
       document.getElementById('btn-connect-relay')?.addEventListener('click', () => {
         initFirebaseIntegration(true);
       });
-
-      initFirebaseIntegration(false);
+
+      initFirebaseIntegration(false);
       checkIncomingVFSLaunch();
     };
 
@@ -3142,7 +3248,7 @@
         }
       } catch (e) {}
     }
-
+
     /* ==========================================================================
        10. STATE PERSISTENCE (Quicksave F5 & Quickload F9)
        ========================================================================== */
@@ -3204,6 +3310,27 @@
        11. EVENT LISTENERS & DOM HOOKUPS
        ========================================================================== */
     window.addEventListener('DOMContentLoaded', () => {
+      let modalFocusRestore = null;
+
+      function openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        modalFocusRestore = document.activeElement;
+        modal.style.display = 'flex';
+        const focusable = modal.querySelector('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        if (focusable) focusable.focus();
+      }
+
+      function closeModal(modalId) {
+        const modal = typeof modalId === 'string' ? document.getElementById(modalId) : modalId;
+        if (!modal) return;
+        modal.style.display = 'none';
+        if (modalFocusRestore && typeof modalFocusRestore.focus === 'function') {
+          modalFocusRestore.focus();
+          modalFocusRestore = null;
+        }
+      }
+
       // 1. Navigation Tabs
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -3235,14 +3362,37 @@
         showToast(sound.enabled ? "Audio Enabled" : "Audio Muted", "info");
       });
 
-      // 4. Keyboard Shortcuts
+      // 4. Keyboard Shortcuts & Modal Focus Trap
       window.addEventListener('keydown', (e) => {
+        // Modal tab focus trapping
+        const activeModal = Array.from(document.querySelectorAll('.modal-overlay'))
+          .find(m => m.style.display === 'flex' || (window.getComputedStyle(m).display !== 'none' && m.offsetWidth > 0));
+
+        if (activeModal && e.key === 'Tab') {
+          const focusables = Array.from(activeModal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+            .filter(el => el.offsetWidth > 0 && el.offsetHeight > 0);
+          if (focusables.length > 0) {
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        }
+
         const isInput = document.activeElement && 
           ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
 
-        if (e.key === 'F1') {
+        if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H' || e.key === '?') && !isInput && !e.ctrlKey && !e.metaKey && !e.altKey)) {
           e.preventDefault();
-          document.getElementById('modal-manual').style.display = 'flex';
+          openModal('modal-manual');
+        } else if ((e.key === 'm' || e.key === 'M') && !isInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+          document.getElementById('btn-audio-toggle').click();
         } else if (e.key === 'F5') {
           e.preventDefault();
           quickSaveSession();
@@ -3260,11 +3410,25 @@
             checkFirstRunTutorial();
           }
           document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+          if (modalFocusRestore && typeof modalFocusRestore.focus === 'function') {
+            modalFocusRestore.focus();
+            modalFocusRestore = null;
+          }
         } else if ((e.altKey && e.key >= '1' && e.key <= '5') || (!isInput && !e.ctrlKey && !e.metaKey && !e.altKey && e.key >= '1' && e.key <= '5')) {
           const tabs = document.querySelectorAll('.tab-btn');
           const idx = parseInt(e.key, 10) - 1;
           if (tabs[idx]) tabs[idx].click();
         }
+      });
+
+      // Responsive HiDPI Canvas Resize Handling
+      let resizeRaf = null;
+      window.addEventListener('resize', () => {
+        if (resizeRaf) cancelAnimationFrame(resizeRaf);
+        resizeRaf = requestAnimationFrame(() => {
+          renderAudioWaveform();
+          drawChiSquareCurve();
+        });
       });
 
       // 5. Image Preset Handlers
@@ -3439,44 +3603,52 @@
       });
 
       // 11. Modal Controls
+      const splashClose = document.getElementById('btn-splash-close');
+      if (splashClose) {
+        splashClose.addEventListener('click', () => {
+          closeModal('modal-splash');
+          checkFirstRunTutorial();
+        });
+      }
+
       document.getElementById('btn-splash-start').addEventListener('click', () => {
-        document.getElementById('modal-splash').style.display = 'none';
+        closeModal('modal-splash');
         sound.playClick();
         checkFirstRunTutorial();
       });
       document.getElementById('btn-splash-load').addEventListener('click', () => {
-        document.getElementById('modal-splash').style.display = 'none';
+        closeModal('modal-splash');
         quickLoadSession();
       });
       document.getElementById('btn-splash-manual').addEventListener('click', () => {
-        document.getElementById('modal-manual').style.display = 'flex';
+        openModal('modal-manual');
       });
 
       document.getElementById('btn-manual').addEventListener('click', () => {
-        document.getElementById('modal-manual').style.display = 'flex';
+        openModal('modal-manual');
       });
       document.getElementById('btn-manual-close').addEventListener('click', () => {
-        document.getElementById('modal-manual').style.display = 'none';
+        closeModal('modal-manual');
       });
       document.getElementById('btn-manual-ok').addEventListener('click', () => {
-        document.getElementById('modal-manual').style.display = 'none';
+        closeModal('modal-manual');
       });
 
       document.getElementById('btn-quicksave').addEventListener('click', quickSaveSession);
       document.getElementById('btn-quickload').addEventListener('click', quickLoadSession);
 
       document.getElementById('btn-settings').addEventListener('click', () => {
-        document.getElementById('modal-settings').style.display = 'flex';
+        openModal('modal-settings');
       });
       document.getElementById('btn-settings-close').addEventListener('click', () => {
-        document.getElementById('modal-settings').style.display = 'none';
+        closeModal('modal-settings');
       });
       document.getElementById('btn-settings-save').addEventListener('click', () => {
         const handle = document.getElementById('setting-handle-input').value;
         document.getElementById('operative-handle').value = handle;
         document.getElementById('status-op-name').textContent = `Operative: ${handle}`;
         sound.enabled = document.getElementById('setting-sound-enabled').checked;
-        document.getElementById('modal-settings').style.display = 'none';
+        closeModal('modal-settings');
         showToast("Settings updated", "success");
       });
 
@@ -3487,10 +3659,10 @@
             if (overlay.id === 'modal-tutorial') {
               closeTutorial();
             } else if (overlay.id === 'modal-splash') {
-              overlay.style.display = 'none';
+              closeModal(overlay);
               checkFirstRunTutorial();
             } else {
-              overlay.style.display = 'none';
+              closeModal(overlay);
             }
           }
         });
