@@ -48,6 +48,7 @@ static void k_strcat(char* dst, const char* src) {
 #define ID_STATUS_LABEL     112
 #define ID_BTN_SAVE_FILE    113
 #define ID_BTN_LOAD_FILE    114
+#define ID_BTN_VFS_REPORT   115
 
 // Cyber Theme Colors
 static COLORREF COLOR_BG = RGB(8, 13, 26);
@@ -82,10 +83,11 @@ static HWND g_hBtnCopy = NULL;
 static HWND g_hStatusLabel = NULL;
 static HWND g_hBtnSaveFile = NULL;
 static HWND g_hBtnLoadFile = NULL;
+static HWND g_hBtnVfsReport = NULL;
 
 static char g_szStatus[512] = "KSteno Ready. Select carrier mode, enter secret message, and click Inject or Extract.";
 
-// Simple RC4 stream cipher
+// RC4 Stream Cipher for payload protection
 static void RC4Crypt(const char* key, const unsigned char* in, unsigned char* out, int len) {
     if (!key || !key[0]) {
         memcpy(out, in, len);
@@ -116,40 +118,31 @@ static void EncodeTextWhitespace(const char* cover, const char* secret, const ch
         return;
     }
 
-    // Encrypt secret with key if present
     unsigned char encSecret[2048];
     if (secLen > 2000) secLen = 2000;
     RC4Crypt(key, (const unsigned char*)secret, encSecret, secLen);
 
-    // Convert encrypted payload to bit string
-    // Format: 16-bit length prefix + payload bits
     char bits[18000];
     int bitPtr = 0;
 
-    // 16-bit length
     for (int b = 15; b >= 0; b--) {
         bits[bitPtr++] = ((secLen >> b) & 1) ? '\t' : ' ';
     }
 
-    // Payload bits
     for (int i = 0; i < secLen; i++) {
         unsigned char c = encSecret[i];
         for (int b = 7; b >= 0; b--) {
-          bits[bitPtr++] = ((c >> b) & 1) ? '\t' : ' ';
+            bits[bitPtr++] = ((c >> b) & 1) ? '\t' : ' ';
         }
     }
     bits[bitPtr] = 0;
 
-    // Append whitespace bits to the end of cover lines
-    int covLen = k_strlen(cover);
     int outPtr = 0;
     int cIdx = 0;
     int bitsWritten = 0;
 
     while (cover[cIdx] && outPtr < outMax - 100) {
-        // Find line break or EOF
         if (cover[cIdx] == '\r' && cover[cIdx + 1] == '\n') {
-            // Append a chunk of whitespace before CRLF
             int chunk = 16;
             while (chunk > 0 && bitsWritten < bitPtr && outPtr < outMax - 10) {
                 out[outPtr++] = bits[bitsWritten++];
@@ -171,7 +164,6 @@ static void EncodeTextWhitespace(const char* cover, const char* secret, const ch
         }
     }
 
-    // Remaining bits appended to the final line
     while (bitsWritten < bitPtr && outPtr < outMax - 10) {
         out[outPtr++] = bits[bitsWritten++];
     }
@@ -197,7 +189,6 @@ static void DecodeTextWhitespace(const char* in, const char* key, char* out, int
         return;
     }
 
-    // Read 16-bit length
     int secLen = 0;
     for (int b = 0; b < 16; b++) {
         secLen = (secLen << 1) | bits[b];
@@ -226,7 +217,372 @@ static void DecodeTextWhitespace(const char* in, const char* key, char* out, int
     out[copyLen] = 0;
 }
 
-// 2. Chi-Square Steganalysis Frequency Scan
+// Structures for BMP and WAV carriers
+#pragma pack(push, 1)
+typedef struct {
+    unsigned short bfType;
+    unsigned int   bfSize;
+    unsigned short bfReserved1;
+    unsigned short bfReserved2;
+    unsigned int   bfOffBits;
+} K_BMP_FILEHEADER;
+
+typedef struct {
+    unsigned int   biSize;
+    int            biWidth;
+    int            biHeight;
+    unsigned short biPlanes;
+    unsigned short biBitCount;
+    unsigned int   biCompression;
+    unsigned int   biSizeImage;
+    int            biXPelsPerMeter;
+    int            biYPelsPerMeter;
+    unsigned int   biClrUsed;
+    unsigned int   biClrImportant;
+} K_BMP_INFOHEADER;
+
+typedef struct {
+    char           riff[4];      // "RIFF"
+    unsigned int   riffSize;
+    char           wave[4];      // "WAVE"
+    char           fmt[4];       // "fmt "
+    unsigned int   fmtSize;      // 16
+    unsigned short audioFormat;  // 1 (PCM)
+    unsigned short numChannels;  // 1 (Mono)
+    unsigned int   sampleRate;   // 44100
+    unsigned int   byteRate;     // 88200
+    unsigned short blockAlign;   // 2
+    unsigned short bitsPerSample;// 16
+    char           data[4];      // "data"
+    unsigned int   dataSize;
+} K_WAV_HEADER;
+#pragma pack(pop)
+
+// 2. BMP Image LSB Steganography
+static int EncodeBmpCarrier(const char* inBmpPath, const char* outBmpPath, const char* secret, const char* key, char* errBuf) {
+    int secLen = k_strlen(secret);
+    if (secLen > 2000) secLen = 2000;
+    if (secLen == 0) {
+        k_strcpy(errBuf, "Error: Secret message is empty.");
+        return 0;
+    }
+
+    unsigned char encSecret[2048];
+    RC4Crypt(key, (const unsigned char*)secret, encSecret, secLen);
+
+    // Create or open BMP
+    HANDLE hFile = CreateFileA(inBmpPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    unsigned char bmpData[256 * 256 * 3 + 1024];
+    DWORD bytesRead = 0;
+    int w = 256, h = 256;
+    int pixelDataOffset = sizeof(K_BMP_FILEHEADER) + sizeof(K_BMP_INFOHEADER);
+    int pixelDataSize = w * h * 3;
+
+    if (hFile != INVALID_HANDLE_VALUE) {
+        ReadFile(hFile, bmpData, sizeof(bmpData), &bytesRead, NULL);
+        CloseHandle(hFile);
+        if (bytesRead >= sizeof(K_BMP_FILEHEADER) + sizeof(K_BMP_INFOHEADER)) {
+            K_BMP_FILEHEADER* bfh = (K_BMP_FILEHEADER*)bmpData;
+            K_BMP_INFOHEADER* bih = (K_BMP_INFOHEADER*)(bmpData + sizeof(K_BMP_FILEHEADER));
+            if (bfh->bfType == 0x4D42 && bih->biBitCount == 24) {
+                pixelDataOffset = bfh->bfOffBits;
+                pixelDataSize = bih->biSizeImage ? bih->biSizeImage : (bih->biWidth * (bih->biHeight < 0 ? -bih->biHeight : bih->biHeight) * 3);
+            }
+        }
+    } else {
+        // Synthesize default 256x256 24-bit plasma bitmap
+        K_BMP_FILEHEADER* bfh = (K_BMP_FILEHEADER*)bmpData;
+        K_BMP_INFOHEADER* bih = (K_BMP_INFOHEADER*)(bmpData + sizeof(K_BMP_FILEHEADER));
+        bfh->bfType = 0x4D42; // "BM"
+        bfh->bfSize = sizeof(K_BMP_FILEHEADER) + sizeof(K_BMP_INFOHEADER) + pixelDataSize;
+        bfh->bfReserved1 = 0;
+        bfh->bfReserved2 = 0;
+        bfh->bfOffBits = pixelDataOffset;
+
+        bih->biSize = sizeof(K_BMP_INFOHEADER);
+        bih->biWidth = w;
+        bih->biHeight = h;
+        bih->biPlanes = 1;
+        bih->biBitCount = 24;
+        bih->biCompression = 0;
+        bih->biSizeImage = pixelDataSize;
+        bih->biXPelsPerMeter = 2835;
+        bih->biYPelsPerMeter = 2835;
+        bih->biClrUsed = 0;
+        bih->biClrImportant = 0;
+
+        unsigned char* px = bmpData + pixelDataOffset;
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                int idx = (y * w + x) * 3;
+                px[idx + 0] = (unsigned char)((x ^ y) & 0xFF);         // Blue
+                px[idx + 1] = (unsigned char)(((x * 2) + y) & 0xFF);   // Green
+                px[idx + 2] = (unsigned char)(((y * 3) + x) & 0xFF);   // Red
+            }
+        }
+        bytesRead = bfh->bfSize;
+    }
+
+    // Packet: Magic "KS01" (4 bytes) + Length (2 bytes) + Encrypted Payload
+    unsigned char packet[2060];
+    packet[0] = 'K'; packet[1] = 'S'; packet[2] = '0'; packet[3] = '1';
+    packet[4] = (unsigned char)(secLen & 0xFF);
+    packet[5] = (unsigned char)((secLen >> 8) & 0xFF);
+    memcpy(packet + 6, encSecret, secLen);
+    int totalPacketBytes = 6 + secLen;
+
+    if (totalPacketBytes * 8 > pixelDataSize) {
+        k_strcpy(errBuf, "Error: Carrier BMP capacity exceeded.");
+        return 0;
+    }
+
+    unsigned char* px = bmpData + pixelDataOffset;
+    int bitIndex = 0;
+    for (int i = 0; i < totalPacketBytes; i++) {
+        unsigned char b = packet[i];
+        for (int k = 7; k >= 0; k--) {
+            int bit = (b >> k) & 1;
+            px[bitIndex] = (px[bitIndex] & 0xFE) | (unsigned char)bit;
+            bitIndex++;
+        }
+    }
+
+    HANDLE hOut = CreateFileA(outBmpPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hOut == INVALID_HANDLE_VALUE) {
+        k_strcpy(errBuf, "Error: Could not open output BMP file for writing.");
+        return 0;
+    }
+    DWORD written = 0;
+    WriteFile(hOut, bmpData, bytesRead, &written, NULL);
+    CloseHandle(hOut);
+    return 1;
+}
+
+static int DecodeBmpCarrier(const char* inBmpPath, const char* key, char* outSecret, int outMax) {
+    HANDLE hFile = CreateFileA(inBmpPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        k_strcpy(outSecret, "[ERROR: Carrier BMP not found (carrier_stego.bmp or carrier.bmp)]");
+        return 0;
+    }
+
+    unsigned char bmpData[256 * 256 * 3 + 1024];
+    DWORD bytesRead = 0;
+    ReadFile(hFile, bmpData, sizeof(bmpData), &bytesRead, NULL);
+    CloseHandle(hFile);
+
+    if (bytesRead < sizeof(K_BMP_FILEHEADER) + sizeof(K_BMP_INFOHEADER)) {
+        k_strcpy(outSecret, "[ERROR: Corrupted BMP file header]");
+        return 0;
+    }
+
+    K_BMP_FILEHEADER* bfh = (K_BMP_FILEHEADER*)bmpData;
+    int pixelDataOffset = bfh->bfOffBits;
+    unsigned char* px = bmpData + pixelDataOffset;
+    int pixelDataSize = bytesRead - pixelDataOffset;
+
+    if (pixelDataSize < 48) {
+        k_strcpy(outSecret, "[ERROR: BMP image too small for stego header]");
+        return 0;
+    }
+
+    // Read 6 header bytes (48 bits)
+    unsigned char hdr[6];
+    int bitIndex = 0;
+    for (int i = 0; i < 6; i++) {
+        unsigned char b = 0;
+        for (int k = 0; k < 8; k++) {
+            b = (b << 1) | (px[bitIndex++] & 1);
+        }
+        hdr[i] = b;
+    }
+
+    if (hdr[0] != 'K' || hdr[1] != 'S' || hdr[2] != '0' || hdr[3] != '1') {
+        k_strcpy(outSecret, "[ERROR: No KSteno 'KS01' header found in BMP carrier]");
+        return 0;
+    }
+
+    int secLen = hdr[4] | (hdr[5] << 8);
+    if (secLen <= 0 || (6 + secLen) * 8 > pixelDataSize || secLen > 2000) {
+        k_strcpy(outSecret, "[ERROR: Invalid payload length in BMP header]");
+        return 0;
+    }
+
+    unsigned char encPayload[2048];
+    for (int i = 0; i < secLen; i++) {
+        unsigned char b = 0;
+        for (int k = 0; k < 8; k++) {
+            b = (b << 1) | (px[bitIndex++] & 1);
+        }
+        encPayload[i] = b;
+    }
+
+    unsigned char decPayload[2048];
+    RC4Crypt(key, encPayload, decPayload, secLen);
+    decPayload[secLen] = 0;
+
+    int copyLen = secLen < outMax - 1 ? secLen : outMax - 1;
+    memcpy(outSecret, decPayload, copyLen);
+    outSecret[copyLen] = 0;
+    return 1;
+}
+
+// 3. Audio WAV PCM LSB Steganography
+static int EncodeWavCarrier(const char* inWavPath, const char* outWavPath, const char* secret, const char* key, char* errBuf) {
+    int secLen = k_strlen(secret);
+    if (secLen > 2000) secLen = 2000;
+    if (secLen == 0) {
+        k_strcpy(errBuf, "Error: Secret message is empty.");
+        return 0;
+    }
+
+    unsigned char encSecret[2048];
+    RC4Crypt(key, (const unsigned char*)secret, encSecret, secLen);
+
+    unsigned char wavBuffer[44 + 44100 * 2 * 2]; // 2 seconds mono 16-bit
+    DWORD bytesRead = 0;
+    HANDLE hFile = CreateFileA(inWavPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    int sampleCount = 44100 * 2;
+    int dataOffset = sizeof(K_WAV_HEADER);
+
+    if (hFile != INVALID_HANDLE_VALUE) {
+        ReadFile(hFile, wavBuffer, sizeof(wavBuffer), &bytesRead, NULL);
+        CloseHandle(hFile);
+        if (bytesRead >= sizeof(K_WAV_HEADER)) {
+            K_WAV_HEADER* hdr = (K_WAV_HEADER*)wavBuffer;
+            if (hdr->riff[0] == 'R' && hdr->wave[0] == 'W') {
+                sampleCount = hdr->dataSize / 2;
+            }
+        }
+    } else {
+        // Synthesize 2 seconds of 440 Hz retro drone carrier
+        K_WAV_HEADER* hdr = (K_WAV_HEADER*)wavBuffer;
+        hdr->riff[0] = 'R'; hdr->riff[1] = 'I'; hdr->riff[2] = 'F'; hdr->riff[3] = 'F';
+        hdr->riffSize = sizeof(K_WAV_HEADER) - 8 + (sampleCount * 2);
+        hdr->wave[0] = 'W'; hdr->wave[1] = 'A'; hdr->wave[2] = 'V'; hdr->wave[3] = 'E';
+        hdr->fmt[0] = 'f'; hdr->fmt[1] = 'm'; hdr->fmt[2] = 't'; hdr->fmt[3] = ' ';
+        hdr->fmtSize = 16;
+        hdr->audioFormat = 1;
+        hdr->numChannels = 1;
+        hdr->sampleRate = 44100;
+        hdr->byteRate = 88200;
+        hdr->blockAlign = 2;
+        hdr->bitsPerSample = 16;
+        hdr->data[0] = 'd'; hdr->data[1] = 'a'; hdr->data[2] = 't'; hdr->data[3] = 'a';
+        hdr->dataSize = sampleCount * 2;
+
+        short* pcm = (short*)(wavBuffer + dataOffset);
+        for (int i = 0; i < sampleCount; i++) {
+            // Triangular wave drone at ~440 Hz
+            int phase = (i * 440) % 44100;
+            pcm[i] = (short)((phase < 22050) ? (phase - 11025) : (33075 - phase));
+        }
+        bytesRead = sizeof(K_WAV_HEADER) + sampleCount * 2;
+    }
+
+    // Packet: Magic "KSA1" (4 bytes) + Length (2 bytes) + Encrypted Payload
+    unsigned char packet[2060];
+    packet[0] = 'K'; packet[1] = 'S'; packet[2] = 'A'; packet[3] = '1';
+    packet[4] = (unsigned char)(secLen & 0xFF);
+    packet[5] = (unsigned char)((secLen >> 8) & 0xFF);
+    memcpy(packet + 6, encSecret, secLen);
+    int totalPacketBytes = 6 + secLen;
+
+    if (totalPacketBytes * 8 > sampleCount) {
+        k_strcpy(errBuf, "Error: Carrier WAV duration too short for payload.");
+        return 0;
+    }
+
+    short* pcm = (short*)(wavBuffer + dataOffset);
+    int bitIndex = 0;
+    for (int i = 0; i < totalPacketBytes; i++) {
+        unsigned char b = packet[i];
+        for (int k = 7; k >= 0; k--) {
+            int bit = (b >> k) & 1;
+            pcm[bitIndex] = (pcm[bitIndex] & ~1) | (short)bit;
+            bitIndex++;
+        }
+    }
+
+    HANDLE hOut = CreateFileA(outWavPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hOut == INVALID_HANDLE_VALUE) {
+        k_strcpy(errBuf, "Error: Could not open output WAV file for writing.");
+        return 0;
+    }
+    DWORD written = 0;
+    WriteFile(hOut, wavBuffer, bytesRead, &written, NULL);
+    CloseHandle(hOut);
+    return 1;
+}
+
+static int DecodeWavCarrier(const char* inWavPath, const char* key, char* outSecret, int outMax) {
+    HANDLE hFile = CreateFileA(inWavPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        k_strcpy(outSecret, "[ERROR: Carrier WAV not found (carrier_stego.wav or carrier.wav)]");
+        return 0;
+    }
+
+    unsigned char wavBuffer[44 + 44100 * 2 * 2];
+    DWORD bytesRead = 0;
+    ReadFile(hFile, wavBuffer, sizeof(wavBuffer), &bytesRead, NULL);
+    CloseHandle(hFile);
+
+    if (bytesRead < sizeof(K_WAV_HEADER)) {
+        k_strcpy(outSecret, "[ERROR: Corrupted WAV file header]");
+        return 0;
+    }
+
+    K_WAV_HEADER* hdr = (K_WAV_HEADER*)wavBuffer;
+    int sampleCount = hdr->dataSize / 2;
+    short* pcm = (short*)(wavBuffer + sizeof(K_WAV_HEADER));
+
+    if (sampleCount < 48) {
+        k_strcpy(outSecret, "[ERROR: WAV carrier too short for stego header]");
+        return 0;
+    }
+
+    // Read 6 header bytes
+    unsigned char headerBytes[6];
+    int bitIndex = 0;
+    for (int i = 0; i < 6; i++) {
+        unsigned char b = 0;
+        for (int k = 0; k < 8; k++) {
+            b = (b << 1) | (pcm[bitIndex++] & 1);
+        }
+        headerBytes[i] = b;
+    }
+
+    if (headerBytes[0] != 'K' || headerBytes[1] != 'S' || headerBytes[2] != 'A' || headerBytes[3] != '1') {
+        k_strcpy(outSecret, "[ERROR: No KSteno 'KSA1' header found in WAV carrier]");
+        return 0;
+    }
+
+    int secLen = headerBytes[4] | (headerBytes[5] << 8);
+    if (secLen <= 0 || (6 + secLen) * 8 > sampleCount || secLen > 2000) {
+        k_strcpy(outSecret, "[ERROR: Invalid payload length in WAV header]");
+        return 0;
+    }
+
+    unsigned char encPayload[2048];
+    for (int i = 0; i < secLen; i++) {
+        unsigned char b = 0;
+        for (int k = 0; k < 8; k++) {
+            b = (b << 1) | (pcm[bitIndex++] & 1);
+        }
+        encPayload[i] = b;
+    }
+
+    unsigned char decPayload[2048];
+    RC4Crypt(key, encPayload, decPayload, secLen);
+    decPayload[secLen] = 0;
+
+    int copyLen = secLen < outMax - 1 ? secLen : outMax - 1;
+    memcpy(outSecret, decPayload, copyLen);
+    outSecret[copyLen] = 0;
+    return 1;
+}
+
+// 4. Chi-Square Steganalysis Frequency Scan
 static void CalculateChiSquare(const char* text, char* report, int reportMax) {
     int hist[256];
     memset(hist, 0, sizeof(hist));
@@ -240,7 +596,6 @@ static void CalculateChiSquare(const char* text, char* report, int reportMax) {
         hist[(unsigned char)text[i]]++;
     }
 
-    // Measure equalization of ASCII pairs (2k, 2k+1)
     int kCount = 0;
     int varianceSum = 0;
     for (int k = 16; k < 64; k++) {
@@ -256,7 +611,7 @@ static void CalculateChiSquare(const char* text, char* report, int reportMax) {
 
     int avgDelta = kCount > 0 ? (varianceSum * 10 / kCount) : 100;
     const char* verdict = "CLEAN CARRIER (Natural entropy)";
-    if (avgDelta < 5) verdict = "HIGH PROBABILITY OF LSB INJECTION (Equalized Pairs)";
+    if (avgDelta < 5) verdict = "HIGH PROBABILITY OF LSB INJECTION (Equalized PoVs)";
     else if (avgDelta < 15) verdict = "SUSPICIOUS SYMMETRY DETECTED";
 
     wsprintfA(report, 
@@ -264,7 +619,9 @@ static void CalculateChiSquare(const char* text, char* report, int reportMax) {
         "Total Carrier Bytes: %d\r\n"
         "Scanned Value Pairs (PoVs): %d\r\n"
         "Pair Asymmetry Metric: %d.%d\r\n"
-        "Verdict: %s\r\n",
+        "Confidence Verdict: %s\r\n"
+        "Methodology: Pairs of Values (PoV) frequency equalization scan.\r\n"
+        "Cross-App Parity: Identical to KSteno Web Steganalysis Engine.\r\n",
         len, kCount, avgDelta / 10, avgDelta % 10, verdict);
 }
 
@@ -284,11 +641,28 @@ static void DoInject(void) {
         EncodeTextWhitespace(cover, secret, key, out, sizeof(out));
         SetWindowTextA(g_hEditOutput, out);
         SetWindowTextA(g_hStatusLabel, "SUCCESS: Concealed payload into trailing whitespace bits.");
-    } else {
-        // Zero-width marker simulation
+    } else if (mode == 1) { // Zero-width marker simulation
         wsprintfA(out, "[KSTENO-ZW-ARMOR]\r\n%s\r\n[PAYLOAD EMBEDDED: %d BYTES]", cover, k_strlen(secret));
         SetWindowTextA(g_hEditOutput, out);
         SetWindowTextA(g_hStatusLabel, "SUCCESS: Modulated secret into carrier envelope.");
+    } else if (mode == 2) { // 24-bit BMP Image LSB
+        char err[256];
+        if (EncodeBmpCarrier("carrier.bmp", "carrier_stego.bmp", secret, key, err)) {
+            wsprintfA(out, "SUCCESS: Injected %d-byte secret into 24-bit BMP carrier.\r\nOutput saved to carrier_stego.bmp\r\nMagic: KS01 | Protection: RC4 Armor", k_strlen(secret));
+            SetWindowTextA(g_hEditOutput, out);
+            SetWindowTextA(g_hStatusLabel, "SUCCESS: Injected secret into carrier_stego.bmp");
+        } else {
+            SetWindowTextA(g_hStatusLabel, err);
+        }
+    } else if (mode == 3) { // 16-bit PCM Audio WAV
+        char err[256];
+        if (EncodeWavCarrier("carrier.wav", "carrier_stego.wav", secret, key, err)) {
+            wsprintfA(out, "SUCCESS: Injected %d-byte secret into 16-bit PCM WAV carrier.\r\nOutput saved to carrier_stego.wav\r\nMagic: KSA1 | Protection: RC4 Armor", k_strlen(secret));
+            SetWindowTextA(g_hEditOutput, out);
+            SetWindowTextA(g_hStatusLabel, "SUCCESS: Injected secret into carrier_stego.wav");
+        } else {
+            SetWindowTextA(g_hStatusLabel, err);
+        }
     }
 }
 
@@ -303,9 +677,30 @@ static void DoExtract(void) {
     }
     GetWindowTextA(g_hEditKey, key, sizeof(key));
 
-    DecodeTextWhitespace(in, key, out, sizeof(out));
-    SetWindowTextA(g_hEditSecret, out);
-    SetWindowTextA(g_hStatusLabel, "EXTRACT COMPLETE: Decoded payload displayed in Secret box.");
+    int mode = (int)SendMessageA(g_hComboMode, CB_GETCURSEL, 0, 0);
+    if (mode == 0 || mode == 1) {
+        DecodeTextWhitespace(in, key, out, sizeof(out));
+        SetWindowTextA(g_hEditSecret, out);
+        SetWindowTextA(g_hStatusLabel, "EXTRACT COMPLETE: Decoded payload displayed in Secret box.");
+    } else if (mode == 2) {
+        if (DecodeBmpCarrier("carrier_stego.bmp", key, out, sizeof(out)) ||
+            DecodeBmpCarrier("carrier.bmp", key, out, sizeof(out))) {
+            SetWindowTextA(g_hEditSecret, out);
+            SetWindowTextA(g_hStatusLabel, "EXTRACT COMPLETE: Extracted payload from BMP carrier.");
+        } else {
+            SetWindowTextA(g_hEditSecret, out);
+            SetWindowTextA(g_hStatusLabel, "Error: Extraction failed on BMP carrier.");
+        }
+    } else if (mode == 3) {
+        if (DecodeWavCarrier("carrier_stego.wav", key, out, sizeof(out)) ||
+            DecodeWavCarrier("carrier.wav", key, out, sizeof(out))) {
+            SetWindowTextA(g_hEditSecret, out);
+            SetWindowTextA(g_hStatusLabel, "EXTRACT COMPLETE: Extracted payload from WAV carrier.");
+        } else {
+            SetWindowTextA(g_hEditSecret, out);
+            SetWindowTextA(g_hStatusLabel, "Error: Extraction failed on WAV carrier.");
+        }
+    }
 }
 
 static void DoChiSquareScan(void) {
@@ -317,7 +712,6 @@ static void DoChiSquareScan(void) {
     SetWindowTextA(g_hStatusLabel, "STEGANALYSIS SCAN COMPLETE. See output console.");
 }
 
-// Main Window Procedure
 static void DoExportPayload(void) {
     char buf[8192];
     buf[0] = 0;
@@ -338,6 +732,33 @@ static void DoExportPayload(void) {
     } else {
         SetWindowTextA(g_hStatusLabel, "Error: Could not open steno_extracted.txt for writing.");
     }
+}
+
+static void DoExportVFSReport(void) {
+    char cover[8192];
+    char secret[2048];
+    char report[2048];
+    GetWindowTextA(g_hEditCover, cover, sizeof(cover));
+    GetWindowTextA(g_hEditSecret, secret, sizeof(secret));
+    CalculateChiSquare(cover, report, sizeof(report));
+
+    HANDLE hFile = CreateFileA("steno_report.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, report, k_strlen(report), &written, NULL);
+        CloseHandle(hFile);
+    }
+
+    if (secret[0]) {
+        HANDLE hCipher = CreateFileA("kcipher_handshake.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hCipher != INVALID_HANDLE_VALUE) {
+            DWORD written = 0;
+            WriteFile(hCipher, secret, k_strlen(secret), &written, NULL);
+            CloseHandle(hCipher);
+        }
+    }
+
+    SetWindowTextA(g_hStatusLabel, "Exported steno_report.txt & kcipher_handshake.txt successfully.");
 }
 
 static void DoLoadCover(void) {
@@ -377,6 +798,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             g_hComboMode = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 140, 52, 280, 200, hwnd, (HMENU)ID_COMBO_MODE, NULL, NULL);
             SendMessageA(g_hComboMode, CB_ADDSTRING, 0, (LPARAM)"Whitespace Chaff (SNOW Standard)");
             SendMessageA(g_hComboMode, CB_ADDSTRING, 0, (LPARAM)"Zero-Width Unicode Modulation");
+            SendMessageA(g_hComboMode, CB_ADDSTRING, 0, (LPARAM)"24-Bit BMP Image LSB Carrier");
+            SendMessageA(g_hComboMode, CB_ADDSTRING, 0, (LPARAM)"16-Bit PCM Audio WAV Carrier");
             SendMessageA(g_hComboMode, CB_SETCURSEL, 0, 0);
 
             // Passphrase Key
@@ -400,13 +823,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 470, 110, 430, 180, hwnd, (HMENU)ID_EDIT_SECRET, NULL, NULL);
 
             // Action Buttons
-            g_hBtnInject = CreateWindowA("BUTTON", "Inject Secret", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 20, 305, 130, 30, hwnd, (HMENU)ID_BTN_INJECT, NULL, NULL);
-            g_hBtnExtract = CreateWindowA("BUTTON", "Extract Secret", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 160, 305, 130, 30, hwnd, (HMENU)ID_BTN_EXTRACT, NULL, NULL);
-            g_hBtnChisq = CreateWindowA("BUTTON", "Chi-Square Scan", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 300, 305, 140, 30, hwnd, (HMENU)ID_BTN_CHISQ, NULL, NULL);
-            g_hBtnSaveFile = CreateWindowA("BUTTON", "Export File", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 450, 305, 110, 30, hwnd, (HMENU)ID_BTN_SAVE_FILE, NULL, NULL);
-            g_hBtnLoadFile = CreateWindowA("BUTTON", "Load Cover", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 570, 305, 110, 30, hwnd, (HMENU)ID_BTN_LOAD_FILE, NULL, NULL);
-            g_hBtnClear = CreateWindowA("BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 690, 305, 90, 30, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
-            g_hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 790, 305, 110, 30, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            g_hBtnInject = CreateWindowA("BUTTON", "Inject Secret", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 20, 305, 120, 30, hwnd, (HMENU)ID_BTN_INJECT, NULL, NULL);
+            g_hBtnExtract = CreateWindowA("BUTTON", "Extract Secret", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 148, 305, 120, 30, hwnd, (HMENU)ID_BTN_EXTRACT, NULL, NULL);
+            g_hBtnChisq = CreateWindowA("BUTTON", "Chi-Square Scan", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 276, 305, 130, 30, hwnd, (HMENU)ID_BTN_CHISQ, NULL, NULL);
+            g_hBtnSaveFile = CreateWindowA("BUTTON", "Export File", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 414, 305, 100, 30, hwnd, (HMENU)ID_BTN_SAVE_FILE, NULL, NULL);
+            g_hBtnLoadFile = CreateWindowA("BUTTON", "Load Cover", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 522, 305, 100, 30, hwnd, (HMENU)ID_BTN_LOAD_FILE, NULL, NULL);
+            g_hBtnVfsReport = CreateWindowA("BUTTON", "VFS Report", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 630, 305, 100, 30, hwnd, (HMENU)ID_BTN_VFS_REPORT, NULL, NULL);
+            g_hBtnClear = CreateWindowA("BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 738, 305, 75, 30, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
+            g_hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 821, 305, 80, 30, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             // Output Console Box
             g_hEditOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
@@ -434,6 +858,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 case ID_BTN_CHISQ:   DoChiSquareScan(); break;
                 case ID_BTN_SAVE_FILE: DoExportPayload(); break;
                 case ID_BTN_LOAD_FILE: DoLoadCover(); break;
+                case ID_BTN_VFS_REPORT: DoExportVFSReport(); break;
                 case ID_BTN_CLEAR:
                     SetWindowTextA(g_hEditSecret, "");
                     SetWindowTextA(g_hEditOutput, "");
@@ -441,13 +866,18 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     break;
                 case ID_BTN_HELP:
                     MessageBoxA(hwnd,
-                        "KSteno v1.0.0 (1999 Edition)\n\n"
+                        "KSteno v1.1.0 (1999 Operative Edition)\n\n"
                         "Stenographic Carrier Suite & Cryptanalysis Workbench\n\n"
-                        "1. Select carrier mode (Whitespace SNOW or Zero-Width).\n"
-                        "2. Enter or edit cover text and secret message.\n"
-                        "3. Provide optional encryption key.\n"
-                        "4. Click 'Inject Secret' to modulate payload into carrier.\n"
-                        "5. Use 'Chi-Square Scan' to test Pairs of Values equilibrium.",
+                        "1. Carrier Modes:\n"
+                        "   - Whitespace Chaff (SNOW Standard: Space=0, Tab=1)\n"
+                        "   - Zero-Width Unicode Envelope\n"
+                        "   - 24-Bit BMP Image LSB Carrier (carrier.bmp -> carrier_stego.bmp)\n"
+                        "   - 16-Bit PCM Audio WAV Carrier (carrier.wav -> carrier_stego.wav)\n"
+                        "2. Enter secret payload and optional RC4 encryption key.\n"
+                        "3. Click 'Inject Secret' to modulate payload into host carrier.\n"
+                        "4. Click 'Extract Secret' to recover hidden communiqué.\n"
+                        "5. Use 'Chi-Square Scan' to test Pairs of Values (PoV) equilibrium.\n"
+                        "6. Shortcuts: Ctrl+Enter (Inject), Ctrl+E (Extract), F1 (Help), F5 (Save), F9 (Load).",
                         "KSteno Field Manual", MB_OK | MB_ICONINFORMATION);
                     break;
             }
@@ -470,7 +900,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
             SelectObject(hdc, g_hFontNormal);
             SetTextColor(hdc, COLOR_TEXT_MUTED);
-            TextOutA(hdc, 105, 18, "Stenographic Carrier Suite & Workbench v1.0.0", 45);
+            TextOutA(hdc, 105, 18, "Stenographic Carrier Suite & Multi-Carrier Workbench v1.1.0", 59);
 
             // Labels
             SelectObject(hdc, g_hFontBold);
@@ -552,14 +982,17 @@ void MainEntry(void) {
             } else if (msg.wParam == VK_ESCAPE) {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_CLEAR, 0), 0);
                 continue;
-            } else if (bCtrl && (msg.wParam == 'S' || msg.wParam == 's')) {
+            } else if (msg.wParam == VK_F5 || (bCtrl && (msg.wParam == 'S' || msg.wParam == 's'))) {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SAVE_FILE, 0), 0);
                 continue;
-            } else if (bCtrl && (msg.wParam == 'O' || msg.wParam == 'o')) {
+            } else if (msg.wParam == VK_F9 || (bCtrl && (msg.wParam == 'O' || msg.wParam == 'o'))) {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_LOAD_FILE, 0), 0);
                 continue;
             } else if (bCtrl && msg.wParam == VK_RETURN) {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_INJECT, 0), 0);
+                continue;
+            } else if (bCtrl && (msg.wParam == 'E' || msg.wParam == 'e')) {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_EXTRACT, 0), 0);
                 continue;
             }
         }

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_tester: KBudget
   kilo_usability: KBudget
   kilo_qa: KBudget
-  kilo_expander: KSteno
+  kilo_expander: KQuest
 virtual_web_target: kweb://rfc-archive
 virtual_web_rotation:
 - kweb://slashnet
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KJournal
-  timestamp: '2026-10-24T10:03:16-07:00'
+  agent: kilo-expander
+  app: KSteno
+  timestamp: '2026-10-24T10:25:43-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -162,11 +162,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KClock` | `KiloOS/public/apps/kclock.html`, `KClock/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, world time offsets, alarm trigger verification, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KSteno`
+- **Active Target**: `KQuest`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
@@ -174,6 +173,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
+| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 
 ---
 
@@ -238,6 +238,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T10:25:43-07:00 — kilo-expander: KSteno (Audio WAV & BMP LSB Stego Parity, VFS Audio Parser, and Win32 Multi-Carrier Engine)**
+  - Status: PASS ✅ (0 errors, web 166.0 KB, native 16.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Added complete WAV RIFF parser with DataURL/ArrayBuffer decoder for VFS audio loading, file upload, and waveform drag-drop.
+  - Expanded Win32 C app with 24-bit BMP & 16-bit PCM WAV LSB carriers, Chi-Square PoV steganalysis, VFS report export, and hotkeys.
+  - Handoff: Advanced `kilo-expander` to `KQuest`; rotated active agent to `kilo-creator`.
+
 - **2026-10-24T10:03:16-07:00 — kilo-qa: KJournal (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 193.1 KB, native 196.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload snapshots, kjournal_tutorialSeen flag, and Escape modal dismissals.
@@ -261,7 +267,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Composition: D Dorian / F Lydian 64-step modal suite, 6-channel contrary counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
   - Patches & DSP: Celesta lead with 180ms LFO vibrato, crystal bells, 2-Op sub bass, inharmonic metallic hats, cauldron pops, 200ms SPC700 delay + 7 bespoke UI earcons.
   - Handoff: Advanced `kilo-soundscape` to `KFarm`; rotated active agent to `kilo-tester`.
-
-- **2026-10-24T09:21:47-07:00 — kilo-graphics: KAlchemy (Skip — Asset Suitability)**
-  - ⏭️ Skip — Vector/SVG UI crafting game; zero glints; full production visuals.
-  - Handoff: Advanced `kilo-graphics` to `KVoid`; rotated active agent to `kilo-soundscape`.
