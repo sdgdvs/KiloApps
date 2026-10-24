@@ -706,11 +706,23 @@
     .status-shortcuts-pill {
       background: var(--surface-2);
       border: 1px solid var(--border);
-      padding: 1px 6px;
+      padding: 2px 8px;
       border-radius: 3px;
       color: var(--primary);
       font-size: 10px;
       white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .status-shortcuts-pill:hover,
+    .status-shortcuts-pill:focus-visible {
+      background: var(--surface-hover);
+      border-color: var(--border-focus);
+      color: #fff;
+      outline: 2px solid var(--border-focus);
+      outline-offset: 1px;
     }
 
     @media (max-width: 860px) {
@@ -1257,12 +1269,12 @@
     <div class="status-right">
       <span id="status-op-name">Operative: Agent-99</span>
       <span>|</span>
-      <span class="status-shortcuts-pill" title="Keyboard Shortcuts">[F1/H] Help | [F5/F9] Save/Load | [M] Mute | [1-5] Modes</span>
+      <span class="status-shortcuts-pill" id="status-shortcuts-pill" role="button" tabindex="0" title="Click to view Field Manual and Shortcuts [F1/H]">[F1/H] Help | [F5/F9] Save/Load | [M] Mute | [1-5] Modes</span>
     </div>
   </footer>
 
   <!-- START SPLASH SCREEN MODAL -->
-  <div class="modal-overlay" id="modal-splash">
+  <div class="modal-overlay" id="modal-splash" role="dialog" aria-modal="true" aria-label="KSteno Covert Carrier Suite">
     <div class="modal-window">
       <div class="modal-header">
         <span>👁️ KSTENO — COVERT CARRIER SUITE v1.0.0</span>
@@ -1304,7 +1316,7 @@
   </div>
 
   <!-- FIRST-RUN TUTORIAL MODAL -->
-  <div class="modal-overlay" id="modal-tutorial" style="display:none;">
+  <div class="modal-overlay" id="modal-tutorial" style="display:none;" role="dialog" aria-modal="true" aria-label="Operative Onboarding Tutorial">
     <div class="modal-window">
       <div class="modal-header">
         <span id="tut-title">OPERATIVE ONBOARDING (STEP 1 OF 4)</span>
@@ -1322,7 +1334,7 @@
   </div>
 
   <!-- FIELD MANUAL MODAL -->
-  <div class="modal-overlay" id="modal-manual" style="display:none;">
+  <div class="modal-overlay" id="modal-manual" style="display:none;" role="dialog" aria-modal="true" aria-label="KSteno Operative Field Manual">
     <div class="modal-window" style="max-width:700px;">
       <div class="modal-header">
         <span>📖 KSTENO OPERATIVE FIELD MANUAL (F1)</span>
@@ -1355,7 +1367,7 @@
   </div>
 
   <!-- SETTINGS MODAL -->
-  <div class="modal-overlay" id="modal-settings" style="display:none;">
+  <div class="modal-overlay" id="modal-settings" style="display:none;" role="dialog" aria-modal="true" aria-label="KSteno Settings">
     <div class="modal-window" style="max-width:450px;">
       <div class="modal-header">
         <span>⚙️ KSTENO SETTINGS</span>
@@ -3396,6 +3408,36 @@
           }
         }
 
+        // Global Ctrl+S / Ctrl+O ergonomic shortcuts
+        if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+          e.preventDefault();
+          quickSaveSession();
+          return;
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'o' || e.key === 'O')) {
+          e.preventDefault();
+          quickLoadSession();
+          return;
+        }
+
+        // Ctrl+Enter in payload inputs triggers active embed/injection
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('data-tab');
+          if (activeTab === 'tab-image') {
+            e.preventDefault();
+            document.getElementById('btn-img-embed')?.click();
+            return;
+          } else if (activeTab === 'tab-audio') {
+            e.preventDefault();
+            document.getElementById('btn-audio-embed')?.click();
+            return;
+          } else if (activeTab === 'tab-text') {
+            e.preventDefault();
+            document.getElementById('btn-text-embed')?.click();
+            return;
+          }
+        }
+
         const isInput = document.activeElement && 
           ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
 
@@ -3650,6 +3692,17 @@
       document.getElementById('btn-manual-ok').addEventListener('click', () => {
         closeModal('modal-manual');
       });
+
+      const shortcutsPill = document.getElementById('status-shortcuts-pill');
+      if (shortcutsPill) {
+        shortcutsPill.addEventListener('click', () => openModal('modal-manual'));
+        shortcutsPill.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openModal('modal-manual');
+          }
+        });
+      }
 
       document.getElementById('btn-quicksave').addEventListener('click', quickSaveSession);
       document.getElementById('btn-quickload').addEventListener('click', quickLoadSession);

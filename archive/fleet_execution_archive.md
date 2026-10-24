@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T06:37:51-07:00 — kilo-expander: KBBS (Phase VI VFS Bulletins Library & Inter-App KPad/KHex Launch Mesh)**
+  - Status: PASS ✅ (0 errors, web 196.3 KB, native 106.0 KB < 999 KB; startup, Vite & security_lint PASS).
+  - Enhanced File Area modal & door game exporters with direct VFS mesh actions to download ANSI .NFO/.TXT files to /home/bbs/ and launch KPad [P] or KHex [X] via OS_LAUNCH_APP.
+  - Dual Win32 C parity: added 6-bulletin interactive File Area dialog (IDD_FILEAREA 6000), local bbs/ disk sync, and ShellExecuteA KPad/KHex inspection.
+  - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-creator`.
+
 - **2026-10-24T05:35:29-07:00 — kilo-qa: KVault (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS (0 errors, web 292.0 KB, native 21.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kvault_tutorialSeen flag, safeStorage wrappers, and Escape modal dismissals.

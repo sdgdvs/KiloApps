@@ -544,6 +544,25 @@ void MainEntry(void) {
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            BOOL bCtrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+            if (msg.wParam == VK_F1) {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HELP, 0), 0);
+                continue;
+            } else if (msg.wParam == VK_ESCAPE) {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_CLEAR, 0), 0);
+                continue;
+            } else if (bCtrl && (msg.wParam == 'S' || msg.wParam == 's')) {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SAVE_FILE, 0), 0);
+                continue;
+            } else if (bCtrl && (msg.wParam == 'O' || msg.wParam == 'o')) {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_LOAD_FILE, 0), 0);
+                continue;
+            } else if (bCtrl && msg.wParam == VK_RETURN) {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_INJECT, 0), 0);
+                continue;
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
