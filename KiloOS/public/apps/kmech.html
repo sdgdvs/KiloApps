@@ -430,6 +430,16 @@
             animation: idle-bob 2.2s infinite ease-in-out;
             transition: filter 0.2s;
         }
+        .mech-sprite-elem {
+            image-rendering: -moz-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            object-fit: contain;
+            display: inline-block;
+            vertical-align: middle;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
         .mech-sprite.attacking {
             animation: anim-attack 0.22s ease-out;
         }
@@ -2048,329 +2058,83 @@
             }
         }
 
-        /* ==================== PROCEDURAL SPRITE RENDERERS ==================== */
-        function getPlayerMechSVG(size = 90) {
-            const isHeavy = equipArm === 1;
-            const isLight = equipArm === 2;
-            const isNano = equipArm === 3;
-            const hasShield = equipSpec === 2;
-            const hasJets = equipSpec === 1;
-            const hasOverdrive = equipSpec === 3;
-            const hasNanodrones = equipSpec === 4;
+        /* ==================== CHROMA-KEYED SPRITE RENDERERS ==================== */
+        const KMECH_SPRITES = {};
+        function initKMechSprites() {
+            const keys = [
+                'mech_player_standard', 'mech_player_heavy', 'mech_player_light', 'mech_player_nano',
+                'mech_enemy_scout', 'mech_enemy_goliath', 'mech_enemy_interceptor',
+                'mech_enemy_titan', 'mech_enemy_dreadnought', 'mech_enemy_overlord'
+            ];
+            keys.forEach(k => {
+                const img = new Image();
+                img.src = `../assets/sprites/kmech/${k}.png`;
+                img.onload = () => { KMECH_SPRITES[k] = { img, loaded: true }; };
+                img.onerror = () => {
+                    const fb = new Image();
+                    fb.src = `assets/sprites/kmech/${k}.png`;
+                    fb.onload = () => { KMECH_SPRITES[k] = { img: fb, loaded: true }; };
+                };
+            });
+        }
+        initKMechSprites();
+
+        function getPlayerMechSprite(size = 90) {
+            let spriteKey = 'mech_player_standard';
+            if (equipArm === 1) spriteKey = 'mech_player_heavy';
+            else if (equipArm === 2) spriteKey = 'mech_player_light';
+            else if (equipArm === 3) spriteKey = 'mech_player_nano';
+
             const heatRatio = playerStats.heat / playerStats.maxHeat;
+            let glow = 'rgba(0, 255, 136, 0.4)';
+            if (heatRatio > 0.8) glow = 'rgba(255, 51, 0, 0.85)';
+            else if (heatRatio > 0.5) glow = 'rgba(255, 170, 0, 0.65)';
 
-            const primaryColor = isHeavy ? "#00ff88" : (isLight ? "#33ffaa" : (isNano ? "#00e5ff" : "#00ff66"));
-            const armorFill = isHeavy ? "#0d3318" : (isLight ? "#0a2614" : (isNano ? "#082828" : "#114020"));
-            const visorColor = heatRatio > 0.8 ? "#ff3300" : (heatRatio > 0.5 ? "#ffaa00" : (isNano ? "#00ffff" : "#00ffea"));
-
-            let wpnSvg = '';
-            if (equipWpn === 0) { // Pulse Laser
-                wpnSvg = `
-                    <g transform="translate(76, 46)">
-                        <rect x="0" y="0" width="12" height="5" fill="#1b4d2b" stroke="${primaryColor}" stroke-width="1"/>
-                        <rect x="12" y="1" width="8" height="3" fill="#00ffff" stroke="#00e5ff" stroke-width="0.8"/>
-                        <line x1="20" y1="2.5" x2="25" y2="2.5" stroke="#00ffff" stroke-width="1.8"/>
-                        <circle cx="8" cy="2.5" r="1.5" fill="#00ffff"/>
-                    </g>`;
-            } else if (equipWpn === 1) { // Heavy Gauss Cannon
-                wpnSvg = `
-                    <g transform="translate(74, 43)">
-                        <rect x="0" y="0" width="14" height="8" fill="#14331c" stroke="${primaryColor}" stroke-width="1.2"/>
-                        <rect x="14" y="2" width="16" height="4" fill="#33553a" stroke="${primaryColor}" stroke-width="1"/>
-                        <rect x="27" y="0.5" width="5" height="7" fill="#ffaa00"/>
-                        <circle cx="6" cy="4" r="2.5" fill="#ffaa00"/>
-                    </g>`;
-            } else if (equipWpn === 2) { // Twin Autocannons
-                wpnSvg = `
-                    <g transform="translate(75, 43)">
-                        <rect x="0" y="0" width="10" height="9" fill="#1b4d2b" stroke="${primaryColor}" stroke-width="1"/>
-                        <rect x="10" y="0.5" width="13" height="2.5" fill="#ff9900" stroke="#ffaa00" stroke-width="0.8"/>
-                        <rect x="10" y="6" width="13" height="2.5" fill="#ff9900" stroke="#ffaa00" stroke-width="0.8"/>
-                        <circle cx="5" cy="4.5" r="1.5" fill="#ffaa00"/>
-                    </g>`;
-            } else if (equipWpn === 3) { // Plasma Mortar
-                wpnSvg = `
-                    <g transform="translate(73, 42)">
-                        <rect x="0" y="0" width="12" height="10" fill="#201133" stroke="#cc44ff" stroke-width="1.2"/>
-                        <circle cx="16" cy="5" r="5" fill="#8800cc" stroke="#e066ff" stroke-width="1"/>
-                        <circle cx="16" cy="5" r="2.5" fill="#ffffff"/>
-                        <rect x="21" y="3" width="7" height="4" fill="#550088" stroke="#e066ff" stroke-width="0.8"/>
-                    </g>`;
-            } else if (equipWpn === 4) { // EMP Arc Disruptor
-                wpnSvg = `
-                    <g transform="translate(74, 42)">
-                        <rect x="0" y="0" width="12" height="9" fill="#0d2833" stroke="#00e5ff" stroke-width="1.2"/>
-                        <rect x="12" y="1" width="6" height="7" fill="#005577" stroke="#00ffff" stroke-width="0.8"/>
-                        <line x1="18" y1="2" x2="26" y2="1" stroke="#00ffff" stroke-width="1.5"/>
-                        <line x1="18" y1="7" x2="26" y2="8" stroke="#00ffff" stroke-width="1.5"/>
-                        <circle cx="6" cy="4.5" r="2" fill="#00ffff"/>
-                    </g>`;
-            } else if (equipWpn === 5) { // Particle Beam Lance
-                wpnSvg = `
-                    <g transform="translate(72, 41)">
-                        <rect x="0" y="2" width="16" height="7" fill="#0a3028" stroke="#00ffff" stroke-width="1.2"/>
-                        <rect x="16" y="3" width="14" height="5" fill="#005544" stroke="#00e5ff" stroke-width="1"/>
-                        <line x1="18" y1="1" x2="18" y2="10" stroke="#00ffff" stroke-width="1.2"/>
-                        <line x1="24" y1="1" x2="24" y2="10" stroke="#00ffff" stroke-width="1.2"/>
-                        <polygon points="30,2 38,5.5 30,9" fill="#00e5ff" stroke="#ffffff" stroke-width="0.8"/>
-                        <circle cx="8" cy="5.5" r="2.5" fill="#00ffff"/>
-                    </g>`;
-            } else { // Swarm Cluster Missiles
-                wpnSvg = `
-                    <g transform="translate(72, 38)">
-                        <rect x="0" y="0" width="16" height="15" fill="#2d1f05" stroke="#ffaa00" stroke-width="1.2"/>
-                        <circle cx="4" cy="4" r="2" fill="#ff3300" stroke="#ffff00" stroke-width="0.6"/>
-                        <circle cx="11" cy="4" r="2" fill="#ff3300" stroke="#ffff00" stroke-width="0.6"/>
-                        <circle cx="4" cy="11" r="2" fill="#ff3300" stroke="#ffff00" stroke-width="0.6"/>
-                        <circle cx="11" cy="11" r="2" fill="#ff3300" stroke="#ffff00" stroke-width="0.6"/>
-                    </g>`;
-            }
-
-            let specialSvg = '';
-            if (hasJets) {
-                specialSvg = `
-                    <g>
-                        <!-- Jump Jet Thrusters -->
-                        <path d="M24,25 L18,18 L24,14 Z" fill="#008855" stroke="#00ffaa" stroke-width="1"/>
-                        <path d="M76,25 L82,18 L76,14 Z" fill="#008855" stroke="#00ffaa" stroke-width="1"/>
-                        <polygon points="17,17 12,14 16,19" fill="#00ffff" opacity="0.85"/>
-                        <polygon points="83,17 88,14 84,19" fill="#00ffff" opacity="0.85"/>
-                    </g>`;
-            } else if (hasShield) {
-                specialSvg = `
-                    <polygon points="50,4 88,22 88,72 50,96 12,72 12,22" 
-                             fill="rgba(0, 255, 255, 0.08)" stroke="#00ffff" stroke-width="1.2" stroke-dasharray="4,2" opacity="0.85">
-                        <animate attributeName="opacity" values="0.6;0.95;0.6" dur="2s" repeatCount="indefinite"/>
-                    </polygon>`;
-            } else if (hasOverdrive) {
-                specialSvg = `
-                    <g>
-                        <rect x="20" y="18" width="6" height="12" fill="#ff2200" stroke="#ffaa00" stroke-width="0.8"/>
-                        <rect x="74" y="18" width="6" height="12" fill="#ff2200" stroke="#ffaa00" stroke-width="0.8"/>
-                        <line x1="23" y1="18" x2="23" y2="12" stroke="#ff5500" stroke-width="1.5"/>
-                        <line x1="77" y1="18" x2="77" y2="12" stroke="#ff5500" stroke-width="1.5"/>
-                    </g>`;
-            } else if (hasNanodrones) {
-                specialSvg = `
-                    <g>
-                        <circle cx="22" cy="20" r="4" fill="#003318" stroke="#00ff88" stroke-width="1"/>
-                        <circle cx="78" cy="20" r="4" fill="#003318" stroke="#00ff88" stroke-width="1"/>
-                        <circle cx="16" cy="18" r="1.5" fill="#77ffaa"/>
-                        <circle cx="84" cy="18" r="1.5" fill="#77ffaa"/>
-                    </g>`;
-            }
-
-            let headWidth = isHeavy ? 24 : (isLight ? 16 : 20);
-            let torsoPoints = isHeavy ? "24,28 76,28 68,66 32,66" : (isLight ? "34,28 66,28 58,62 42,62" : "28,28 72,28 64,64 36,64");
-
-            return `
-            <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
-                <defs>
-                    <linearGradient id="pTorsoGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stop-color="#1f592f"/>
-                        <stop offset="100%" stop-color="#0a2612"/>
-                    </linearGradient>
-                </defs>
-                ${specialSvg}
-                <g stroke="${primaryColor}" stroke-width="1.5" fill="${armorFill}">
-                    <!-- Legs & Greaves -->
-                    <path d="M38,64 L30,84 L18,88 L26,94 L42,94 L42,86 L40,64" fill="${armorFill}" stroke-width="1.5"/>
-                    <path d="M62,64 L70,84 L82,88 L74,94 L58,94 L58,86 L60,64" fill="${armorFill}" stroke-width="1.5"/>
-                    <!-- Knee caps -->
-                    <rect x="28" y="74" width="12" height="6" fill="#00aa44" stroke="${primaryColor}" stroke-width="1"/>
-                    <rect x="60" y="74" width="12" height="6" fill="#00aa44" stroke="${primaryColor}" stroke-width="1"/>
-
-                    <!-- Left Arm (Shield/Sub) -->
-                    <path d="M28,34 L12,48 L14,70 L22,66 L20,48 L32,38" fill="${armorFill}" stroke-width="1.5"/>
-                    <rect x="8" y="55" width="8" height="14" fill="#00aa44" stroke="${primaryColor}" stroke-width="1"/>
-
-                    <!-- Main Torso Chassis -->
-                    <polygon points="${torsoPoints}" fill="url(#pTorsoGrad)" stroke="${primaryColor}" stroke-width="1.8"/>
-                    <rect x="42" y="36" width="16" height="18" fill="#002b11" stroke="${primaryColor}" stroke-width="1"/>
-                    <!-- Core Power Reactor -->
-                    <circle cx="50" cy="45" r="4.5" fill="${visorColor}" stroke="#ffffff" stroke-width="0.8"/>
-
-                    <!-- Head & Cockpit -->
-                    <rect x="${50 - headWidth/2}" y="12" width="${headWidth}" height="16" fill="${armorFill}" stroke="${primaryColor}" stroke-width="1.5" rx="2"/>
-                    <polygon points="${50 - headWidth/2 + 3},18 ${50 + headWidth/2 - 3},18 ${50 + headWidth/2 - 5},24 ${50 - headWidth/2 + 5},24" fill="${visorColor}" stroke="#ffffff" stroke-width="0.6"/>
-                    <line x1="50" y1="12" x2="50" y2="7" stroke="${primaryColor}" stroke-width="1.2"/>
-                    <circle cx="50" cy="6" r="1.5" fill="${visorColor}"/>
-
-                    <!-- Shoulder Pauldrons -->
-                    <polygon points="22,28 34,26 30,40 18,36" fill="#00aa44" stroke="${primaryColor}" stroke-width="1.2"/>
-                    <polygon points="78,28 66,26 70,40 82,36" fill="#00aa44" stroke="${primaryColor}" stroke-width="1.2"/>
-
-                    <!-- Right Weapon Arm -->
-                    <path d="M72,34 L82,46 L82,62 L74,60 L76,46 L68,38" fill="${armorFill}" stroke-width="1.5"/>
-                </g>
-                ${wpnSvg}
-            </svg>`;
+            const armName = (typeof armors !== 'undefined' && armors[equipArm]) ? armors[equipArm].name : 'Chassis';
+            return `<img class="mech-sprite-elem" src="../assets/sprites/kmech/${spriteKey}.png" onerror="if(this.src.indexOf('/assets/')!==-1){this.src='assets/sprites/kmech/${spriteKey}.png';}" width="${size}" height="${size}" alt="Player ${armName}" style="filter: drop-shadow(0 0 6px ${glow});">`;
         }
+        const getPlayerMechSVG = getPlayerMechSprite;
 
-        function getEnemyMechSVG(size = 90) {
-            let enemyType = 0; // 0=Scout, 1=Goliath, 2=Interceptor, 3=Titan, 4=Dreadnought, 5=Overlord
-            if (battleCount >= 12) enemyType = 5;
-            else if (battleCount >= 9) enemyType = 4;
-            else if (battleCount >= 7) enemyType = 3;
-            else if (battleCount >= 5) enemyType = 2;
-            else if (battleCount >= 3) enemyType = 1;
+        function getEnemyMechSprite(size = 90) {
+            let spriteKey = 'mech_enemy_scout';
+            let name = 'Scout Raider';
+            let glow = 'rgba(255, 51, 51, 0.5)';
 
-            const primaryRed = "#ff3333";
-            const darkRed = "#4a0808";
-            const enemyEye = "#ffff00";
-
-            if (enemyType === 0) { // Scout Raider (Battle 1-2)
-                return `
-                <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
-                    <g stroke="${primaryRed}" stroke-width="1.5" fill="${darkRed}">
-                        <path d="M38,62 L22,76 L34,92 L20,94" stroke-width="1.5" fill="none"/>
-                        <path d="M62,62 L78,76 L66,92 L80,94" stroke-width="1.5" fill="none"/>
-                        <polygon points="30,28 70,28 60,62 40,62" stroke-width="1.8"/>
-                        <polygon points="34,14 22,6 32,20" fill="#aa1111"/>
-                        <polygon points="66,14 78,6 68,20" fill="#aa1111"/>
-                        <circle cx="50" cy="20" r="10" stroke-width="1.5"/>
-                        <path d="M43,20 L57,20" stroke="${enemyEye}" stroke-width="2.5"/>
-                        <line x1="24" y1="36" x2="8" y2="56" stroke-width="2"/>
-                        <line x1="8" y1="56" x2="4" y2="70" stroke="${primaryRed}" stroke-width="2.5"/>
-                        <line x1="76" y1="36" x2="92" y2="56" stroke-width="2"/>
-                        <line x1="92" y1="56" x2="96" y2="70" stroke="${primaryRed}" stroke-width="2.5"/>
-                        <circle cx="50" cy="44" r="3.5" fill="${enemyEye}"/>
-                    </g>
-                </svg>`;
-            } else if (enemyType === 1) { // Assault Goliath (Battle 3-4)
-                return `
-                <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
-                    <g stroke="${primaryRed}" stroke-width="1.6" fill="${darkRed}">
-                        <path d="M36,64 L26,84 L14,94 L38,94 L40,64" stroke-width="1.5"/>
-                        <path d="M64,64 L74,84 L86,94 L62,94 L60,64" stroke-width="1.5"/>
-                        <polygon points="22,26 78,26 68,66 32,66" stroke-width="2"/>
-                        <rect x="14" y="16" width="16" height="12" fill="#220000" stroke="${primaryRed}" stroke-width="1.2"/>
-                        <circle cx="18" cy="20" r="1.5" fill="#ffaa00"/>
-                        <circle cx="26" cy="20" r="1.5" fill="#ffaa00"/>
-                        <circle cx="18" cy="25" r="1.5" fill="#ffaa00"/>
-                        <circle cx="26" cy="25" r="1.5" fill="#ffaa00"/>
-                        <rect x="40" y="12" width="20" height="14" stroke-width="1.5" rx="2"/>
-                        <polygon points="43,17 57,17 55,22 45,22" fill="${enemyEye}"/>
-                        <rect x="76" y="32" width="10" height="26" fill="#330000"/>
-                        <rect x="78" y="58" width="6" height="16" fill="#ff2222"/>
-                        <rect x="14" y="34" width="8" height="24"/>
-                        <circle cx="18" cy="62" r="5" fill="#ff2222"/>
-                    </g>
-                </svg>`;
-            } else if (enemyType === 2) { // Stealth Interceptor (Battle 5-6)
-                return `
-                <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
-                    <g stroke="#ff00aa" stroke-width="1.6" fill="#300520">
-                        <!-- Swept Aerodynamic Delta Wings -->
-                        <polygon points="28,32 4,14 16,50 26,42" fill="#500835" stroke="#ff00aa" stroke-width="1.4"/>
-                        <polygon points="72,32 96,14 84,50 74,42" fill="#500835" stroke="#ff00aa" stroke-width="1.4"/>
-                        <!-- Agile Greaves -->
-                        <path d="M38,64 L28,84 L22,94 L36,94 L42,66"/>
-                        <path d="M62,64 L72,84 L78,94 L64,94 L58,66"/>
-                        <!-- Sleek Torso Plating -->
-                        <polygon points="28,26 72,26 62,64 38,64" stroke-width="1.8"/>
-                        <!-- Cockpit Visor -->
-                        <polygon points="42,14 58,14 54,24 46,24" fill="#00ffff" stroke="#ffffff" stroke-width="0.8"/>
-                        <!-- Dual Arc Disruptors -->
-                        <rect x="10" y="48" width="6" height="20" fill="#200020" stroke="#00ffff" stroke-width="1"/>
-                        <rect x="84" y="48" width="6" height="20" fill="#200020" stroke="#00ffff" stroke-width="1"/>
-                        <!-- Stealth Shimmer Core -->
-                        <circle cx="50" cy="44" r="4" fill="#ff00aa"/>
-                        <circle cx="50" cy="44" r="2" fill="#ffffff"/>
-                    </g>
-                </svg>`;
-            } else if (enemyType === 3) { // Siege Titan (Battle 7-8)
-                return `
-                <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
-                    <g stroke="${primaryRed}" stroke-width="1.8" fill="${darkRed}">
-                        <!-- Quad Legs Base -->
-                        <path d="M30,64 L12,84 L8,94 L26,94 L36,66"/>
-                        <path d="M70,64 L88,84 L92,94 L74,94 L64,66"/>
-                        <!-- Massive Fortress Torso -->
-                        <polygon points="16,24 84,24 74,68 26,68" fill="#380505" stroke-width="2.2"/>
-                        <!-- Exhaust Smoke Stacks -->
-                        <rect x="22" y="8" width="6" height="16" fill="#220000"/>
-                        <rect x="72" y="8" width="6" height="16" fill="#220000"/>
-                        <!-- Horned Armor Crest -->
-                        <polygon points="34,22 28,6 40,16" fill="#ff2222"/>
-                        <polygon points="66,22 72,6 60,16" fill="#ff2222"/>
-                        <!-- Central Cyclops Eye -->
-                        <circle cx="50" cy="18" r="8" fill="#110000" stroke="${primaryRed}" stroke-width="1.5"/>
-                        <circle cx="50" cy="18" r="3.5" fill="#ffff00"/>
-                        <!-- Quad Cannons -->
-                        <rect x="8" y="32" width="10" height="30" fill="#220000"/>
-                        <rect x="6" y="62" width="6" height="14" fill="#ff3333"/>
-                        <rect x="82" y="32" width="10" height="30" fill="#220000"/>
-                        <rect x="88" y="62" width="6" height="14" fill="#ff3333"/>
-                        <!-- Central Shield Matrix -->
-                        <rect x="42" y="36" width="16" height="20" fill="#220000" stroke="#ff8800" stroke-width="1.2"/>
-                        <line x1="45" y1="46" x2="55" y2="46" stroke="#ff3333" stroke-width="2"/>
-                    </g>
-                </svg>`;
-            } else if (enemyType === 4) { // Dreadnought Behemoth (Battle 9-11)
-                return `
-                <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
-                    <g stroke="#ff2244" stroke-width="1.8" fill="#38060e">
-                        <!-- Heavy Reinforced Bipedal Pillars -->
-                        <path d="M32,64 L16,84 L12,96 L32,96 L38,66" fill="#200307"/>
-                        <path d="M68,64 L84,84 L88,96 L68,96 L62,66" fill="#200307"/>
-                        <!-- Heavy Armored Torso -->
-                        <polygon points="18,24 82,24 72,66 28,66" fill="#440812" stroke="#ff2244" stroke-width="2"/>
-                        <!-- Shoulder Command Armor Plates -->
-                        <polygon points="18,24 6,12 22,12" fill="#aa1133"/>
-                        <polygon points="82,24 94,12 78,12" fill="#aa1133"/>
-                        <!-- Twin Heavy Command Railguns -->
-                        <rect x="4" y="24" width="12" height="34" fill="#1a0205" stroke="#ff2244" stroke-width="1.2"/>
-                        <rect x="84" y="24" width="12" height="34" fill="#1a0205" stroke="#ff2244" stroke-width="1.2"/>
-                        <line x1="10" y1="58" x2="10" y2="70" stroke="#ff5555" stroke-width="2.5"/>
-                        <line x1="90" y1="58" x2="90" y2="70" stroke="#ff5555" stroke-width="2.5"/>
-                        <!-- Visor Bar -->
-                        <rect x="36" y="14" width="28" height="12" fill="#200307" stroke="#ff2244" stroke-width="1.4" rx="2"/>
-                        <rect x="40" y="18" width="20" height="4" fill="#ffff00"/>
-                        <!-- Reactor Core -->
-                        <circle cx="50" cy="45" r="5" fill="#ff0044" stroke="#ffffff" stroke-width="0.8"/>
-                    </g>
-                </svg>`;
-            } else { // Apex Overlord (Battle 12+)
-                return `
-                <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
-                    <polygon points="50,2 94,22 94,76 50,98 6,76 6,22" 
-                             fill="rgba(255, 0, 80, 0.08)" stroke="#ff0055" stroke-width="1.2" stroke-dasharray="4,2" opacity="0.85">
-                        <animate attributeName="opacity" values="0.6;0.95;0.6" dur="1.5s" repeatCount="indefinite"/>
-                    </polygon>
-                    <g stroke="#ff0033" stroke-width="2" fill="#260404">
-                        <!-- Fortress Greaves -->
-                        <path d="M26,62 L10,84 L6,96 L30,96 L38,66" fill="#180202"/>
-                        <path d="M74,62 L90,84 L94,96 L70,96 L62,66" fill="#180202"/>
-                        <!-- Apex Torso Plating -->
-                        <polygon points="14,22 86,22 76,68 24,68" fill="#300505" stroke="#ff2200" stroke-width="2.2"/>
-                        <!-- Void Core Cyclops Eye -->
-                        <circle cx="50" cy="38" r="9" fill="#0d0000" stroke="#ff0044" stroke-width="1.8"/>
-                        <circle cx="50" cy="38" r="4.5" fill="#ff00ff">
-                            <animate attributeName="r" values="3.5;5.5;3.5" dur="1s" repeatCount="indefinite"/>
-                        </circle>
-                        <!-- Command Horn Spikes -->
-                        <polygon points="26,20 18,4 34,14" fill="#ff0044"/>
-                        <polygon points="74,20 82,4 66,14" fill="#ff0044"/>
-                        <!-- Heavy Dual Batteries -->
-                        <rect x="6" y="28" width="12" height="36" fill="#110000" stroke="#ff0033"/>
-                        <rect x="82" y="28" width="12" height="36" fill="#110000" stroke="#ff0033"/>
-                        <rect x="8" y="64" width="8" height="12" fill="#ff4400"/>
-                        <rect x="84" y="64" width="8" height="12" fill="#ff4400"/>
-                    </g>
-                </svg>`;
+            if (battleCount >= 12) {
+                spriteKey = 'mech_enemy_overlord';
+                name = 'Apex Overlord';
+                glow = 'rgba(255, 0, 80, 0.85)';
+            } else if (battleCount >= 9) {
+                spriteKey = 'mech_enemy_dreadnought';
+                name = 'Dreadnought Behemoth';
+                glow = 'rgba(255, 34, 68, 0.7)';
+            } else if (battleCount >= 7) {
+                spriteKey = 'mech_enemy_titan';
+                name = 'Siege Titan';
+                glow = 'rgba(255, 68, 68, 0.7)';
+            } else if (battleCount >= 5) {
+                spriteKey = 'mech_enemy_interceptor';
+                name = 'Stealth Interceptor';
+                glow = 'rgba(255, 0, 170, 0.7)';
+            } else if (battleCount >= 3) {
+                spriteKey = 'mech_enemy_goliath';
+                name = 'Assault Goliath';
+                glow = 'rgba(255, 85, 0, 0.6)';
             }
+
+            return `<img class="mech-sprite-elem" src="../assets/sprites/kmech/${spriteKey}.png" onerror="if(this.src.indexOf('/assets/')!==-1){this.src='assets/sprites/kmech/${spriteKey}.png';}" width="${size}" height="${size}" alt="${name}" style="filter: drop-shadow(0 0 6px ${glow});">`;
         }
+        const getEnemyMechSVG = getEnemyMechSprite;
 
         function updateMechVisuals() {
             const hangarWrap = document.getElementById('hangar-mech-svg-wrap');
-            if (hangarWrap) hangarWrap.innerHTML = getPlayerMechSVG(120);
+            if (hangarWrap) hangarWrap.innerHTML = getPlayerMechSprite(110);
 
             const playerContainer = document.getElementById('player-mech-container');
-            if (playerContainer) playerContainer.innerHTML = getPlayerMechSVG(90);
+            if (playerContainer) playerContainer.innerHTML = getPlayerMechSprite(90);
 
             const enemyContainer = document.getElementById('enemy-mech-container');
-            if (enemyContainer) enemyContainer.innerHTML = getEnemyMechSVG(90);
+            if (enemyContainer) enemyContainer.innerHTML = getEnemyMechSprite(90);
 
             // Update Hangar badges
             const wpnBadge = document.getElementById('hangar-wpn-badge');

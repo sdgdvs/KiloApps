@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T14:06:25-07:00 — kilo-qa: KFlash (Pass 5 QA, Leitner Scheduling & Mature Graduation)**
+  - Status: PASS ✅ (0 errors, web 117.5 KB, native 136.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.4%, HEAD Δ 0.12%, 0 fail, 0 warn, 7.5s)).
+  - Leitner Spaced Repetition: Implemented 5-box spaced repetition math, rating hotkeys [1-4], Box breakdown in Stats modal, and due-card filter in HTML and Win32 C.
+  - Deck Import & UI: Added UTF-8 BOM stripping, JSON array/object fallback, CSV header skipping, and relocated deck drawer before script tag.
+  - State & Parity: Verified F5/F9 state persistence, kflash_tutorialSeen flag, and clean Win32 native C compilation (<999 KB).
+  - Mature Quarantine & Handoff: Promoted `KFlash` to Mature archive; advanced `kilo-qa` to `KTodo`; next agent `kilo-expander`.
+
 - **2026-10-24T13:54:27-07:00 — kilo-usability: KFarm (Responsive Viewport Compaction & WASD/Arrow Grid Ergonomics)**
   - Status: PASS ✅ (0 errors, web 118.3 KB, native 128.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.23%, input 51.74%, HEAD Δ 45.32%, 0 fail, 0 warn, 10.8s)).
   - Layout: Eliminated 197px vertical overflow (reduced to x0/y0px at 640x743) by compacting container, margins, and grouping primary, shop, and utility button toolbars.

@@ -27,9 +27,9 @@
     "id": "kanomaly",
     "title": "KAnomaly",
     "folder": "System",
-    "webBytes": 117107,
-    "exeBytes": 20992,
-    "budgetPercent": 11.7
+    "webBytes": 118516,
+    "exeBytes": 22016,
+    "budgetPercent": 11.9
   },
   {
     "id": "kasteroids",
@@ -275,7 +275,7 @@
     "id": "kexplorer",
     "title": "File Browser",
     "folder": "System",
-    "webBytes": 55006,
+    "webBytes": 55139,
     "exeBytes": null,
     "budgetPercent": 5.5
   },
@@ -291,9 +291,9 @@
     "id": "kflash",
     "title": "KFlash",
     "folder": "Office",
-    "webBytes": 115390,
-    "exeBytes": 137728,
-    "budgetPercent": 11.6
+    "webBytes": 120284,
+    "exeBytes": 139264,
+    "budgetPercent": 12.0
   },
   {
     "id": "kfleet",
@@ -419,7 +419,7 @@
     "id": "kmatrix",
     "title": "KMatrix",
     "folder": "System",
-    "webBytes": 89786,
+    "webBytes": 89412,
     "exeBytes": 17920,
     "budgetPercent": 9.0
   },
@@ -435,9 +435,9 @@
     "id": "kmech",
     "title": "KMech",
     "folder": "Games",
-    "webBytes": 163685,
+    "webBytes": 142478,
     "exeBytes": 34304,
-    "budgetPercent": 16.4
+    "budgetPercent": 14.3
   },
   {
     "id": "kmedia",

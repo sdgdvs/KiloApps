@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ commit_checkpoint: 12
 status: ready
 current_targets:
   kilo_creator: kweb://trapster
-  kilo_graphics: KMech
+  kilo_graphics: KSanctuary
   kilo_soundscape: KCyber
   kilo_tester: KMech
   kilo_usability: KMech
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://slashnet
-  timestamp: '2026-10-24T14:40:16-07:00'
+  agent: kilo-graphics
+  app: KMech
+  timestamp: '2026-10-24T14:53:18-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -98,11 +98,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KMech`
+- **Active Target**: `KSanctuary`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Replace forbidden code-generated SVG mech primitives (getPlayerMechSVG and getEnemyMechSVG) with Imagen 3 2-stage chroma-keyed sprites for player chassis and enemy mech tiers. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
@@ -113,6 +112,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
+| `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Replace forbidden code-generated SVG mech primitives (getPlayerMechSVG and getEnemyMechSVG) with Imagen 3 2-stage chroma-keyed sprites for player chassis and enemy mech tiers. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KCyber`
@@ -276,6 +276,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T14:53:18-07:00 — kilo-graphics: KMech (Chroma-Keyed Mech Sprites & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 139.1 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Replaced SVG geometric primitives with 10 32-bit RGBA chroma-keyed sprites (player chassis & enemy tiers) with JSON coordinate atlases.
+  - Verified zero perimeter glints/border dots and dual-target Web & Win32 C compilation.
+  - Handoff: Advanced `kilo-graphics` to `KSanctuary`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-24T14:46:55-07:00 — kilo-adhoc: Orchestrator (Session File NTFS NUL-Byte Self-Healing & Atomic Writes)**
   - Diagnosed 3 orchestrator warnings (Expecting value: line 1 column 1 (char 0)): .agents/scheduler_session.json was zero-filled (486 NUL bytes) after an unclean shutdown during non-atomic write_text() at 2026-10-24T05:40:41Z.
   - Added tomic_write_json() (	mp + os.fsync + os.replace) and load_session_data() auto-healing in scripts/orchestrate.py, restored .agents/scheduler_session.json and .agents/fleet_nodes/node_c.json telemetry (351 turns), and exempted [ARGON REVIEW] specs from pre-flight skip lists.
@@ -297,10 +303,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added two-way KiloOS VFS Signal Bridge (/sys/anomaly_capture.sig): VFS save, VFS load, picker ingress, and URL hash routing.
   - Cross-app IPC dispatch to KHex and KMatrix with native Win32 C parity ([F2]/[F3]/ShellExecute) and .sig file association.
   - Handoff: Advanced `kilo-expander` to `KSynth`; rotated active agent to `kilo-review`.
-
-- **2026-10-24T14:06:25-07:00 — kilo-qa: KFlash (Pass 5 QA, Leitner Scheduling & Mature Graduation)**
-  - Status: PASS ✅ (0 errors, web 117.5 KB, native 136.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.4%, HEAD Δ 0.12%, 0 fail, 0 warn, 7.5s)).
-  - Leitner Spaced Repetition: Implemented 5-box spaced repetition math, rating hotkeys [1-4], Box breakdown in Stats modal, and due-card filter in HTML and Win32 C.
-  - Deck Import & UI: Added UTF-8 BOM stripping, JSON array/object fallback, CSV header skipping, and relocated deck drawer before script tag.
-  - State & Parity: Verified F5/F9 state persistence, kflash_tutorialSeen flag, and clean Win32 native C compilation (<999 KB).
-  - Mature Quarantine & Handoff: Promoted `KFlash` to Mature archive; advanced `kilo-qa` to `KTodo`; next agent `kilo-expander`.
