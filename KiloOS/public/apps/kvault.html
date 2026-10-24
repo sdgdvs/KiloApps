@@ -871,6 +871,154 @@
             box-shadow: 0 2px 6px rgba(108, 92, 231, 0.35);
         }
 
+        /* High-Visibility Lock/Unlock Security Status Banner */
+        .status-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 14px;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            font-size: 12px;
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            border: 1px solid var(--glass-border);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .status-banner.locked {
+            background: linear-gradient(90deg, rgba(255, 71, 87, 0.16), rgba(255, 165, 2, 0.08));
+            border-color: rgba(255, 71, 87, 0.35);
+            color: #ff6b81;
+        }
+
+        .status-banner.unlocked {
+            background: linear-gradient(90deg, rgba(46, 213, 115, 0.16), rgba(108, 92, 231, 0.12));
+            border-color: rgba(46, 213, 115, 0.35);
+            color: #2ed573;
+        }
+
+        .banner-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .banner-icon {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .banner-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .banner-title {
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .banner-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .banner-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .banner-pill {
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+        }
+
+        /* High-Contrast Tree & Modal Focus Rings */
+        .tree-nav-node:focus-visible,
+        .tree-folder-title:focus-visible,
+        .tree-subfolder-title:focus-visible,
+        .tree-item-row:focus-visible {
+            outline: 2px solid var(--primary-accent) !important;
+            outline-offset: 1px !important;
+            box-shadow: 0 0 8px rgba(108, 92, 231, 0.5) !important;
+        }
+
+        /* Responsive Hex/File Inspector Split */
+        .inspector-mode-bar {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--glass-border);
+            flex-wrap: wrap;
+        }
+
+        .inspector-split-layout {
+            display: flex;
+            gap: 16px;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .inspector-pane-fields {
+            flex: 1.2;
+            min-width: 250px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .inspector-pane-hex {
+            flex: 1;
+            min-width: 270px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            border-left: 1px solid var(--glass-border);
+            padding-left: 12px;
+        }
+
+        .hex-inspector-box {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 11px;
+            line-height: 1.45;
+            color: #00f2fe;
+            overflow-x: auto;
+            white-space: pre;
+            user-select: text;
+            margin: 0;
+            flex: 1;
+        }
+
+        @media (max-width: 820px) {
+            .inspector-split-layout {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .inspector-pane-hex {
+                border-left: none;
+                border-top: 1px solid var(--glass-border);
+                padding-left: 0;
+                padding-top: 12px;
+                min-height: 180px;
+            }
+        }
+
         /* Archive Tree Hierarchy & Responsive Document Preview Pane */
         .vault-tree-container {
             display: flex;
@@ -1133,6 +1281,21 @@
             </div>
         </div>
         
+        <!-- High-Visibility Lock / Unlock Security Status Banner -->
+        <div id="vault-status-banner" class="status-banner locked" role="status" aria-live="polite">
+            <div class="banner-left">
+                <span class="banner-icon" id="banner-icon">🔒</span>
+                <div class="banner-text">
+                    <span class="banner-title" id="banner-title">VAULT LOCKED &amp; ENCRYPTED</span>
+                    <span class="banner-sub" id="banner-sub">PBKDF2-SHA256 &amp; AES-GCM Local Defense &bull; In-Memory Keys Scrubbed</span>
+                </div>
+            </div>
+            <div class="banner-right" id="banner-right">
+                <span class="banner-pill" id="banner-profile-pill">🛡️ Primary Vault</span>
+                <button class="btn secondary" id="banner-lock-btn" style="display:none; padding:4px 10px; font-size:11px;" onclick="lockVault()" aria-label="Lock Vault">🔒 Lock [Ctrl+L]</button>
+            </div>
+        </div>
+
         <!-- Content Area -->
         <div class="content" style="flex:1; display:flex; flex-direction:column;">
             
@@ -1828,6 +1991,8 @@
             const badge = document.getElementById('header-profile-badge');
             if (badge) badge.textContent = `[${prof.name}]`;
             document.title = `KVault [${prof.name}] - Secure Storage`;
+            const bannerPill = document.getElementById('banner-profile-pill');
+            if (bannerPill) bannerPill.textContent = `${prof.icon} ${prof.name}`;
         }
 
         async function switchProfile(newIdx, promptSave = true) {
@@ -2195,6 +2360,36 @@
                     count.textContent = `${activeCount} secret${activeCount === 1 ? '' : 's'}`;
                 }
             }
+
+            // High-Visibility Lock/Unlock Security Status Banner
+            const banner = document.getElementById('vault-status-banner');
+            const bannerIcon = document.getElementById('banner-icon');
+            const bannerTitle = document.getElementById('banner-title');
+            const bannerSub = document.getElementById('banner-sub');
+            const bannerLockBtn = document.getElementById('banner-lock-btn');
+            const bannerPill = document.getElementById('banner-profile-pill');
+            const prof = typeof getActiveProfile === 'function' ? getActiveProfile() : null;
+            const profName = prof ? `${prof.icon} ${prof.name}` : '🛡️ Primary Vault';
+
+            if (banner) {
+                if (isUnlocked) {
+                    banner.classList.remove('locked');
+                    banner.classList.add('unlocked');
+                    if (bannerIcon) bannerIcon.textContent = '🔓';
+                    if (bannerTitle) bannerTitle.textContent = 'VAULT SESSION ACTIVE & DECRYPTED';
+                    const activeCount = vaultData.filter(s => !s.trash).length;
+                    if (bannerSub) bannerSub.textContent = `Profile: ${profName} • ${activeCount} item${activeCount === 1 ? '' : 's'} loaded • Auto-lock armed`;
+                    if (bannerLockBtn) bannerLockBtn.style.display = 'inline-flex';
+                } else {
+                    banner.classList.remove('unlocked');
+                    banner.classList.add('locked');
+                    if (bannerIcon) bannerIcon.textContent = '🔒';
+                    if (bannerTitle) bannerTitle.textContent = 'VAULT LOCKED & ENCRYPTED';
+                    if (bannerSub) bannerSub.textContent = 'PBKDF2-SHA256 & AES-GCM Local Defense • In-Memory Keys Scrubbed';
+                    if (bannerLockBtn) bannerLockBtn.style.display = 'none';
+                }
+            }
+            if (bannerPill) bannerPill.textContent = profName;
         }
 
         // --- Safe Storage Helpers ---
@@ -2831,17 +3026,59 @@
             }
         }
 
+        let treeInspectorMode = safeStorageGet('kvault_inspector_mode', 'split');
+
+        function setInspectorMode(mode) {
+            treeInspectorMode = mode;
+            safeStorageSet('kvault_inspector_mode', mode);
+            if (selectedTreeItemId) {
+                renderTreePreview(selectedTreeItemId);
+            }
+        }
+
+        function generateHexDump(dataStr) {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(dataStr);
+            const maxBytes = Math.min(bytes.length, 1024);
+            const lines = [];
+            for (let i = 0; i < maxBytes; i += 16) {
+                const offset = i.toString(16).padStart(8, '0');
+                let hexPart = '';
+                let asciiPart = '';
+                for (let j = 0; j < 16; j++) {
+                    if (j === 8) hexPart += ' ';
+                    if (i + j < maxBytes) {
+                        const b = bytes[i + j];
+                        hexPart += b.toString(16).padStart(2, '0').toUpperCase() + ' ';
+                        asciiPart += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+                    } else {
+                        hexPart += '   ';
+                    }
+                }
+                lines.push(`${offset}  ${hexPart} |${asciiPart}|`);
+            }
+            if (bytes.length > maxBytes) {
+                lines.push(`... [${bytes.length - maxBytes} more bytes omitted for performance] ...`);
+            }
+            return lines.join('\n');
+        }
+
         function toggleTreeFolder(folderId, ev) {
             if (ev) ev.stopPropagation();
             playSound('click');
-            if (expandedTreeFolders.has(folderId)) {
+            const isOpen = expandedTreeFolders.has(folderId);
+            if (isOpen) {
                 expandedTreeFolders.delete(folderId);
             } else {
                 expandedTreeFolders.add(folderId);
             }
             const el = document.getElementById(folderId);
             if (el) {
-                el.classList.toggle('open', expandedTreeFolders.has(folderId));
+                el.classList.toggle('open', !isOpen);
+                const header = el.querySelector('.tree-folder-title, .tree-subfolder-title');
+                if (header) {
+                    header.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
+                }
             }
         }
 
@@ -2850,6 +3087,8 @@
             document.querySelectorAll('.tree-folder, .tree-subfolder').forEach(el => {
                 el.classList.add('open');
                 if (el.id) expandedTreeFolders.add(el.id);
+                const header = el.querySelector('.tree-folder-title, .tree-subfolder-title');
+                if (header) header.setAttribute('aria-expanded', 'true');
             });
             showNotification("Expanded all archive folders");
         }
@@ -2858,6 +3097,8 @@
             playSound('click');
             document.querySelectorAll('.tree-folder, .tree-subfolder').forEach(el => {
                 el.classList.remove('open');
+                const header = el.querySelector('.tree-folder-title, .tree-subfolder-title');
+                if (header) header.setAttribute('aria-expanded', 'false');
             });
             expandedTreeFolders.clear();
             showNotification("Collapsed all archive folders");
@@ -2878,25 +3119,70 @@
             renderTreePreview(id);
         }
 
-        function handleTreeItemKeyDown(e, itemId) {
-            const rows = Array.from(document.querySelectorAll('.tree-item-row'));
-            const idx = rows.findIndex(r => r.getAttribute('data-item-id') === itemId);
+        function handleTreeNavKeyDown(e, id, type) {
+            const visibleNodes = Array.from(document.querySelectorAll('#tree-nodes-list .tree-nav-node'))
+                .filter(n => n.offsetParent !== null);
+            const currIdx = visibleNodes.indexOf(document.activeElement);
+
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                if (idx < rows.length - 1) {
-                    const nextId = rows[idx + 1].getAttribute('data-item-id');
-                    selectTreeItem(nextId);
+                if (currIdx >= 0 && currIdx < visibleNodes.length - 1) {
+                    visibleNodes[currIdx + 1].focus();
                 }
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                if (idx > 0) {
-                    const prevId = rows[idx - 1].getAttribute('data-item-id');
-                    selectTreeItem(prevId);
+                if (currIdx > 0) {
+                    visibleNodes[currIdx - 1].focus();
+                }
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                if (type === 'folder' || type === 'subfolder') {
+                    const container = document.getElementById(id);
+                    if (container && !container.classList.contains('open')) {
+                        toggleTreeFolder(id);
+                    } else if (currIdx >= 0 && currIdx < visibleNodes.length - 1) {
+                        visibleNodes[currIdx + 1].focus();
+                    }
+                }
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                if (type === 'folder' || type === 'subfolder') {
+                    const container = document.getElementById(id);
+                    if (container && container.classList.contains('open')) {
+                        toggleTreeFolder(id);
+                    } else {
+                        const parentFolder = container ? container.closest('.tree-folder') : null;
+                        if (parentFolder && parentFolder.id !== id) {
+                            const parentHeader = parentFolder.querySelector('.tree-folder-title');
+                            if (parentHeader) parentHeader.focus();
+                        }
+                    }
+                } else if (type === 'item') {
+                    const itemEl = document.getElementById('tree-item-' + id);
+                    const parent = itemEl ? (itemEl.closest('.tree-subfolder') || itemEl.closest('.tree-folder')) : null;
+                    if (parent) {
+                        const header = parent.querySelector('.tree-subfolder-title, .tree-folder-title');
+                        if (header) header.focus();
+                    }
                 }
             } else if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                selectTreeItem(itemId);
+                if (type === 'folder' || type === 'subfolder') {
+                    toggleTreeFolder(id);
+                } else {
+                    selectTreeItem(id);
+                }
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                if (visibleNodes.length > 0) visibleNodes[0].focus();
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                if (visibleNodes.length > 0) visibleNodes[visibleNodes.length - 1].focus();
             }
+        }
+
+        function handleTreeItemKeyDown(e, itemId) {
+            handleTreeNavKeyDown(e, itemId, 'item');
         }
 
         function renderTreePreview(id) {
@@ -3237,6 +3523,39 @@
                 `;
             }
 
+            const payloadStr = JSON.stringify(s, null, 2);
+            const hexDump = generateHexDump(payloadStr);
+            const byteSize = new TextEncoder().encode(payloadStr).length;
+
+            const inspectorBarHtml = `
+                <div class="inspector-mode-bar">
+                    <span style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Inspector:</span>
+                    <button class="pill-btn ${treeInspectorMode === 'fields' ? 'active' : ''}" onclick="setInspectorMode('fields')" title="View Decrypted Fields">📄 Fields</button>
+                    <button class="pill-btn ${treeInspectorMode === 'hex' ? 'active' : ''}" onclick="setInspectorMode('hex')" title="Raw Container Hex Stream">🔍 Hex</button>
+                    <button class="pill-btn ${treeInspectorMode === 'split' ? 'active' : ''}" onclick="setInspectorMode('split')" title="Responsive Side-by-Side Split">🌓 Split View</button>
+                    <button class="btn secondary" style="padding:2px 8px; font-size:10px; margin-left:auto;" onclick="copySecret('${escapeHtml(payloadStr).replace(/'/g, "\\'")}', 'Copied raw JSON!')">📋 Copy Raw</button>
+                    <span style="font-size:11px; color:var(--text-muted);">${byteSize} bytes</span>
+                </div>
+            `;
+
+            const hexBoxHtml = `
+                <div class="inspector-pane-hex" style="${treeInspectorMode === 'fields' ? 'display:none;' : ''}">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Container Hex Stream</span>
+                        <span style="font-size:10px; color:#00f2fe; font-family:monospace;">AES-256 Record</span>
+                    </div>
+                    <pre class="hex-inspector-box" aria-label="Hexadecimal Record Inspector">${escapeHtml(hexDump)}</pre>
+                </div>
+            `;
+
+            const fieldsBoxHtml = `
+                <div class="inspector-pane-fields" style="${treeInspectorMode === 'hex' ? 'display:none;' : ''}">
+                    ${fieldsHtml}
+                    ${totpHtml}
+                    ${notesHtml}
+                </div>
+            `;
+
             previewContent.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; gap:12px; flex-wrap:wrap;">
                     <div>
@@ -3254,10 +3573,10 @@
                 </div>
                 ${copyBarHtml ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.08);">${copyBarHtml}</div>` : ''}
                 ${tagsHtml ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">${tagsHtml}</div>` : ''}
-                <div style="flex:1; overflow-y:auto;">
-                    ${fieldsHtml}
-                    ${totpHtml}
-                    ${notesHtml}
+                ${inspectorBarHtml}
+                <div class="inspector-split-layout">
+                    ${fieldsBoxHtml}
+                    ${hexBoxHtml}
                 </div>
                 <div style="margin-top:auto; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); flex-wrap:wrap; gap:8px;">
                     <span>Item ID: <code>${escapeHtml(s.id)}</code></span>
@@ -3312,7 +3631,7 @@
                     const isSel = selectedTreeItemId === s.id;
                     const icon = (catMeta[s.category] || catMeta.General).icon;
                     itemsHtml += `
-                        <div class="tree-item-row ${isSel ? 'selected' : ''}" 
+                        <div class="tree-item-row tree-nav-node ${isSel ? 'selected' : ''}" 
                              id="tree-item-${s.id}" 
                              data-item-id="${s.id}" 
                              tabindex="0" 
@@ -3330,7 +3649,15 @@
                 });
 
                 folderEl.innerHTML = `
-                    <div class="tree-folder-title" onclick="toggleTreeFolder('${folderId}', event)">
+                    <div class="tree-folder-title tree-nav-node" 
+                         tabindex="0" 
+                         role="treeitem" 
+                         aria-expanded="${isOpen ? 'true' : 'false'}"
+                         id="${folderId}-header"
+                         data-node-type="folder"
+                         data-node-id="${folderId}"
+                         onclick="toggleTreeFolder('${folderId}', event)"
+                         onkeydown="handleTreeNavKeyDown(event, '${folderId}', 'folder')">
                         <span><span class="tree-folder-chevron">▶</span> 🗑️ Trash Archive</span>
                         <span class="pill-badge">${filtered.length}</span>
                     </div>
@@ -3369,7 +3696,7 @@
                         catItems.forEach(s => {
                             const isSel = selectedTreeItemId === s.id;
                             itemsHtml += `
-                                <div class="tree-item-row ${isSel ? 'selected' : ''}" 
+                                <div class="tree-item-row tree-nav-node ${isSel ? 'selected' : ''}" 
                                      id="tree-item-${s.id}" 
                                      data-item-id="${s.id}" 
                                      tabindex="0" 
@@ -3391,7 +3718,15 @@
 
                         subfoldersHtml += `
                             <div class="tree-subfolder ${isSubOpen ? 'open' : ''}" id="${subId}">
-                                <div class="tree-subfolder-title" onclick="toggleTreeFolder('${subId}', event)">
+                                <div class="tree-subfolder-title tree-nav-node" 
+                                     tabindex="0" 
+                                     role="treeitem" 
+                                     aria-expanded="${isSubOpen ? 'true' : 'false'}"
+                                     id="${subId}-header"
+                                     data-node-type="subfolder"
+                                     data-node-id="${subId}"
+                                     onclick="toggleTreeFolder('${subId}', event)"
+                                     onkeydown="handleTreeNavKeyDown(event, '${subId}', 'subfolder')">
                                     <span><span class="tree-folder-chevron">▶</span> ${meta.icon} ${meta.label}</span>
                                     <span class="pill-badge" style="font-size:10px;">${catItems.length}</span>
                                 </div>
@@ -3401,7 +3736,15 @@
                     });
 
                     compFolder.innerHTML = `
-                        <div class="tree-folder-title" onclick="toggleTreeFolder('${compFolderId}', event)">
+                        <div class="tree-folder-title tree-nav-node" 
+                             tabindex="0" 
+                             role="treeitem" 
+                             aria-expanded="${isCompOpen ? 'true' : 'false'}"
+                             id="${compFolderId}-header"
+                             data-node-type="folder"
+                             data-node-id="${compFolderId}"
+                             onclick="toggleTreeFolder('${compFolderId}', event)"
+                             onkeydown="handleTreeNavKeyDown(event, '${compFolderId}', 'folder')">
                             <span><span class="tree-folder-chevron">▶</span> 📁 ${escapeHtml(comp)}</span>
                             <span class="pill-badge">${compItems.length}</span>
                         </div>
@@ -5209,53 +5552,187 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
             }
         }
 
-        // --- Modals Management ---
-        function showHelp() {
-            clearToasts();
-            playSound('click');
-            const modal = document.getElementById('help-modal');
-            if (modal) {
-                modal.style.display = 'flex';
-                setTimeout(() => modal.classList.add('active'), 10);
-            }
+                // --- Cipher Workbench & Cryptographic Hasher ---
+        function openCipherWorkbenchModal() {
+            openModal('cipher-modal');
+            updateCipherSuiteUI();
         }
-        function closeHelp() {
-            clearToasts();
-            const modal = document.getElementById('help-modal');
-            if (modal) {
-                modal.classList.remove('active');
-                modal.style.display = 'none';
+
+        function closeCipherWorkbenchModal() {
+            closeModal('cipher-modal');
+        }
+
+        function updateCipherSuiteUI() {
+            const suite = document.getElementById('cipher-suite-select').value;
+            const keyGroup = document.getElementById('cipher-key-group');
+            const btnEnc = document.getElementById('cipher-btn-encrypt');
+            const btnDec = document.getElementById('cipher-btn-decrypt');
+            const btnHash = document.getElementById('cipher-btn-hash');
+            const isHash = suite.startsWith('SHA');
+            if (keyGroup) keyGroup.style.display = isHash ? 'none' : 'block';
+            if (btnEnc) btnEnc.style.display = isHash ? 'none' : 'inline-flex';
+            if (btnDec) btnDec.style.display = isHash ? 'none' : 'inline-flex';
+            if (btnHash) btnHash.style.display = isHash ? 'inline-flex' : 'none';
+        }
+
+        async function executeCipherAction(action) {
+            const suite = document.getElementById('cipher-suite-select').value;
+            const key = document.getElementById('cipher-key-input').value;
+            const input = document.getElementById('cipher-input-text').value;
+            const outElem = document.getElementById('cipher-output-text');
+            const metaElem = document.getElementById('cipher-meta-info');
+
+            if (!input) {
+                showNotification("Please enter input payload", "error");
+                return;
+            }
+
+            try {
+                if (suite === 'SHA-256' || suite === 'SHA-1') {
+                    const encoder = new TextEncoder();
+                    const data = encoder.encode(input);
+                    const algo = suite === 'SHA-1' ? 'SHA-1' : 'SHA-256';
+                    const hashBuffer = await crypto.subtle.digest(algo, data);
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    const hex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                    outElem.value = hex;
+                    metaElem.textContent = `${suite} Digest (${hashArray.length} bytes / ${hex.length * 4} bits)`;
+                    playSound('success');
+                    return;
+                }
+
+                if (!key) {
+                    showNotification("Passphrase or key required", "error");
+                    return;
+                }
+
+                if (suite === 'XOR-STREAM') {
+                    let result = '';
+                    for (let i = 0; i < input.length; i++) {
+                        const k = key.charCodeAt(i % key.length);
+                        const c = input.charCodeAt(i) ^ k;
+                        result += String.fromCharCode(c);
+                    }
+                    if (action === 'encrypt') {
+                        outElem.value = btoa(unescape(encodeURIComponent(result)));
+                        metaElem.textContent = `XOR-STREAM Base64 Encoded (${outElem.value.length} chars)`;
+                    } else {
+                        try {
+                            const raw = decodeURIComponent(escape(atob(input)));
+                            let dec = '';
+                            for (let i = 0; i < raw.length; i++) {
+                                dec += String.fromCharCode(raw.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+                            }
+                            outElem.value = dec;
+                            metaElem.textContent = `XOR-STREAM Decrypted Plaintext (${dec.length} chars)`;
+                        } catch(e) {
+                            outElem.value = result;
+                            metaElem.textContent = `XOR-STREAM Raw Decrypted (${result.length} chars)`;
+                        }
+                    }
+                    playSound('success');
+                } else {
+                    if (action === 'encrypt') {
+                        const enc = await encryptData(input, key);
+                        outElem.value = JSON.stringify(enc, null, 2);
+                        metaElem.textContent = `AES-GCM-256 Encrypted Payload (${enc.data.length} b64 chars, IV: ${enc.iv.length} chars)`;
+                    } else {
+                        let parsed = null;
+                        try { parsed = JSON.parse(input); } catch(e) {}
+                        if (parsed && parsed.data && parsed.iv) {
+                            const dec = await decryptData(parsed, key);
+                            outElem.value = dec;
+                            metaElem.textContent = `AES-GCM-256 Decrypted Plaintext (${dec.length} chars)`;
+                        } else {
+                            outElem.value = "Error: Input must be valid JSON with 'data' and 'iv' fields for AES-GCM";
+                            metaElem.textContent = "Decryption error";
+                            return;
+                        }
+                    }
+                    playSound('success');
+                }
+            } catch(err) {
+                playSound('error');
+                outElem.value = "Cryptographic error: " + (err.message || err);
+                metaElem.textContent = "Operation failed";
             }
         }
 
-        function showTutorial() {
+        function clearCipherWorkbench() {
+            document.getElementById('cipher-input-text').value = '';
+            document.getElementById('cipher-output-text').value = '';
+            document.getElementById('cipher-meta-info').textContent = 'Ready.';
+        }
+
+        function copyCipherOutput() {
+            const out = document.getElementById('cipher-output-text').value;
+            if (out) copySecret(out, 'Copied cipher output!');
+        }
+
+        // --- Accessible Modal Focus Trapping ---
+        let previousModalFocus = null;
+
+        function openModal(modalId) {
             clearToasts();
             playSound('click');
-            const modal = document.getElementById('tutorial-modal');
-            if (modal) {
-                modal.style.display = 'flex';
-                setTimeout(() => modal.classList.add('active'), 10);
-            }
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            previousModalFocus = document.activeElement;
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('active');
+                const focusables = Array.from(modal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+                    .filter(el => el.offsetParent !== null);
+                if (focusables.length > 0) {
+                    focusables[0].focus();
+                }
+            }, 20);
+        }
+
+        function closeModal(modalId) {
+            clearToasts();
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                if (previousModalFocus && typeof previousModalFocus.focus === 'function') {
+                    previousModalFocus.focus();
+                }
+            }, 200);
+        }
+
+        // --- Modals Management ---
+        function showHelp() {
+            openModal('help-modal');
+        }
+        function closeHelp() {
+            closeModal('help-modal');
+        }
+
+        function showTutorial() {
+            openModal('tutorial-modal');
         }
         function dismissTutorial() {
-            clearToasts();
-            const modal = document.getElementById('tutorial-modal');
-            if (modal) {
-                modal.classList.remove('active');
-                modal.style.display = 'none';
-            }
+            closeModal('tutorial-modal');
             safeStorageSet('kvault_tutorialSeen', '1');
             const passInput = document.getElementById('master-password');
             if (passInput) passInput.focus();
         }
 
-        // Modal outside click handlers
+        // Modal outside click handlers with focus restore
         document.querySelectorAll('.modal-overlay').forEach(modal => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     clearToasts();
                     modal.classList.remove('active');
                     modal.style.display = 'none';
+                    if (modal.id === 'tutorial-modal') {
+                        safeStorageSet('kvault_tutorialSeen', '1');
+                    }
+                    if (previousModalFocus && typeof previousModalFocus.focus === 'function') {
+                        previousModalFocus.focus();
+                    }
                 }
             });
         });
@@ -5264,6 +5741,23 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
         document.addEventListener('keydown', (e) => {
             const activeModal = document.querySelector('.modal-overlay.active') || document.querySelector('.modal-overlay[style*="display: flex"]');
             if (activeModal) {
+                // Focus Trap: cycle Tab inside active modal
+                if (e.key === 'Tab') {
+                    const focusables = Array.from(activeModal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+                        .filter(el => el.offsetParent !== null);
+                    if (focusables.length > 0) {
+                        const first = focusables[0];
+                        const last = focusables[focusables.length - 1];
+                        if (e.shiftKey && (document.activeElement === first || !focusables.includes(document.activeElement))) {
+                            e.preventDefault();
+                            last.focus();
+                        } else if (!e.shiftKey && document.activeElement === last) {
+                            e.preventDefault();
+                            first.focus();
+                        }
+                    }
+                    return;
+                }
                 if (e.key === 'Escape') {
                     e.preventDefault();
                     clearToasts();
@@ -5271,6 +5765,9 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                     activeModal.style.display = 'none';
                     if (activeModal.id === 'tutorial-modal') {
                         safeStorageSet('kvault_tutorialSeen', '1');
+                    }
+                    if (previousModalFocus && typeof previousModalFocus.focus === 'function') {
+                        previousModalFocus.focus();
                     }
                     return;
                 }
@@ -5330,11 +5827,17 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                 } else if (e.key === 'g' || e.key === 'G') {
                     e.preventDefault();
                     openGeneratorModal(false);
+                } else if (e.key === 'h' || e.key === 'H') {
+                    e.preventDefault();
+                    openCipherWorkbenchModal();
                 }
             } else if (!hasModifier && !e.altKey && !e.shiftKey) {
                 if (e.key === 'F1') {
                     e.preventDefault();
                     showHelp();
+                } else if (e.key === 'F4') {
+                    e.preventDefault();
+                    openCipherWorkbenchModal();
                 } else if (e.key === 'F5') {
                     e.preventDefault();
                     quicksaveState();
