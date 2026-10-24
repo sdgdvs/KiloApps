@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -26,7 +26,7 @@ commit_checkpoint: 12
 status: ready
 current_targets:
   kilo_creator: kweb://cabled
-  kilo_graphics: KRogue
+  kilo_graphics: KBreakout
   kilo_soundscape: KBreakout
   kilo_tester: KSteno
   kilo_usability: KScript
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://trapster
-  timestamp: '2026-10-23T22:40:31-07:00'
+  agent: kilo-graphics
+  app: KRogue
+  timestamp: '2026-10-23T23:13:11-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -93,11 +93,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KRogue`
+- **Active Target**: `KBreakout`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KRogue` | `KiloOS/public/apps/krogue.html` | Subterranean roguelike visual polish: crisp tile/entity sprite rendering, atmospheric torchlight vignette, boss monster visual distinction, and perimeter glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
@@ -106,6 +105,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
+| `KRogue` | `KiloOS/public/apps/krogue.html` | Subterranean roguelike visual polish: crisp tile/entity sprite rendering, atmospheric torchlight vignette, boss monster visual distinction, and perimeter glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KBreakout`
@@ -222,6 +222,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T23:13:11-07:00 — kilo-graphics: KRogue (Skip — Asset Suitability)**
+  - ⏭️ Skip — Imagen 3 assets already integrated for KRogue.
+  - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-23T22:40:31-07:00 — kilo-creator: kweb://trapster (Trapster P2P Chiptune & Tracker Exchange v1.0b)**
   - Status: PASS ✅ (0 errors, web 95.9 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Searchable 1999 P2P node directory, simulated 56k/T1 download queue & live YM2612/SPC700 chiptune previewer.
@@ -246,9 +250,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Tuner & Keyboard Ergonomics: Multi-tier precision ArrowLeft/Right (Ctrl 1.0k / Alt 0.5k / Normal 0.1k / Shift 0.01k), Up/Down, PageUp/Down, Home/End, wheel scaling, and ARIA slider focus.
   - Decoder Telemetry: Formatted diagnostic telemetry report copy, dynamic carrier confidence progress bar, Doppler drift direction vectors, and responsive grid wrapping.
   - Handoff: Advanced `kilo-usability` to `KCipher`; rotated active agent to `kilo-qa`.
-
-- **2026-10-23T22:04:53-07:00 — kilo-tester: KScript (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS ✅ (0 errors, web 146.4 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.27%, HEAD Δ 0.0%, 0 fail, 0 warn, 9.0s)).
-  - UI & Hotkey Audit: Verified script IDE, AST/console runner, sample presets, breakpoint stepper, modal focus traps, Escape dismissal, and F5/F9 state persistence.
-  - Repairs: Wrapped all raw localStorage calls with safeStorageGet/safeStorageSet/safeStorageGetJSON for VFS cache, font sizing, and macro persistence.
-  - Handoff: Advanced `kilo-tester` to `KSteno`; rotated active agent to `kilo-usability`.
