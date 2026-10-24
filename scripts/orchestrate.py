@@ -457,13 +457,19 @@ def parse_frontmatter(content: str) -> dict:
     except ImportError:
         pass
 
-    # Fallback line-by-line parser for simple key-value YAML
+    # Fallback line-by-line parser for simple key-value and list YAML
     data = {}
-    current_dict = data
     current_key = None
     for line in raw_yaml.splitlines():
         line = line.rstrip()
         if not line or line.startswith("#"):
+            continue
+        if line.lstrip().startswith("- ") and current_key:
+            item = line.lstrip()[2:].strip().strip("'\"")
+            if isinstance(data.get(current_key), dict) and not data[current_key]:
+                data[current_key] = []
+            if isinstance(data.get(current_key), list):
+                data[current_key].append(item)
             continue
         if line.startswith("  ") and current_key:
             # Sub-key
@@ -684,15 +690,36 @@ INAPPROPRIATE_SOUNDSCAPE_TARGETS = {
 }
 
 
-def extract_target_mission_spec(target: str) -> str:
-    """Extracts the 1-line mission spec for `target` from next_work.md pipeline tables."""
+def extract_target_mission_spec(target: str, agent: str = "") -> str:
+    """Extracts the 1-line mission spec for `target` from next_work.md pipeline tables (scoped to `agent`'s section first)."""
     if not target or not NEXT_WORK_FILE.exists():
         return ""
     try:
         import re
         content = NEXT_WORK_FILE.read_text(encoding="utf-8", errors="replace")
         escaped = re.escape(target.strip())
-        m = re.search(rf"^\|\s*[`*]*{escaped}[`*]*\s*\|\s*([^|\n]+)\|\s*([^|\n]+)\|", content, re.MULTILINE | re.IGNORECASE)
+        row_pat = rf"^\|\s*[`*]*{escaped}[`*]*\s*\|\s*([^|\n]+)\|\s*([^|\n]+)\|"
+
+        # 1. Search inside `agent`'s dedicated section first so per-agent [ARGON REVIEW] specs are matched
+        section_headers = {
+            "kilo-creator": r"### 1\.",
+            "kilo-graphics": r"### 2\.",
+            "kilo-soundscape": r"### 3\.",
+            "kilo-tester": r"### 4\.",
+            "kilo-usability": r"### 5\.",
+            "kilo-qa": r"### 6\.",
+            "kilo-expander": r"### 7\.",
+            "kilo-review": r"### 8\.",
+        }
+        if agent in section_headers:
+            sec_m = re.search(rf"{section_headers[agent]}[^\n]*\n(.*?)(?=\n### \d|\n---|\n## |\Z)", content, re.DOTALL)
+            if sec_m:
+                m_sec = re.search(row_pat, sec_m.group(1), re.MULTILINE | re.IGNORECASE)
+                if m_sec:
+                    return f" [Target Files: {m_sec.group(1).strip()} | Mission Spec: {m_sec.group(2).strip()}]"
+
+        # 2. Fallback to global search
+        m = re.search(row_pat, content, re.MULTILINE | re.IGNORECASE)
         if m:
             files_col = m.group(1).strip()
             spec_col = m.group(2).strip()
@@ -704,7 +731,7 @@ def extract_target_mission_spec(target: str) -> str:
 
 def build_agent_prompt(agent: str, targets: dict) -> str:
     target = str(targets.get(agent.replace("-", "_"), "the next app in queue"))
-    spec_hint = extract_target_mission_spec(target)
+    spec_hint = extract_target_mission_spec(target, agent)
     if agent == "kilo-tester":
         return (
             f"Activate skill 'kilo-tester'. "
@@ -764,6 +791,13 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
             f"Verify with `python scripts/verify_turn.py --app {target}`, advance queue with `python scripts/advance_turn.py`, and git commit/push. Process 1 app only then STOP."
             + TOKEN_EFFICIENCY_SUFFIX
         )
+    elif agent == "kilo-review":
+        return (
+            f"Activate skill 'kilo-review'. "
+            f"Perform Gemini 4 Argon visual, feature, gameplay, and usability critic pass for target app '{target}' per next_work.md.{spec_hint} "
+            f"Run `uv run scripts/visual_probe.py --app {target}`, inspect `docs/gallery/review/{target.lower()}/sheet.png` via `view_file`, audit the app's HTML/JS for visual clipping, dead/Potemkin features, gameplay flaws, and UX friction, and inject surgical fix specs into Flash queues via `python scripts/advance_turn.py --agent kilo-review --app {target} --inject-fix \"<target_agent>:{target}:<Surgical Fix Spec>\" ...`, then git commit/push. Do NOT edit app source directly—diagnose and dispatch to Flash! Process 1 app only then STOP."
+            + TOKEN_EFFICIENCY_SUFFIX
+        )
     elif agent == "kilo-planner":
         return (
             "Activate skill 'kilo-planner'. "
@@ -786,6 +820,7 @@ def handle_preflight_skip(agent: str, targets: dict, frontmatter: dict, node_id:
     Instead of wasting the scheduled turn slot, advances `targets[fm_target_key]` in-place to the
     next valid target in `next_work.md` and returns False so `orchestrate.py` immediately dispatches
     the agent on the valid target!
+    Note: `kilo-review` intentionally audits Mature apps, so Mature quarantine is not skipped for `kilo-review`.
     """
     try:
         from scripts.advance_turn import advance_section_and_pick_next, get_mature_apps
@@ -807,7 +842,7 @@ def handle_preflight_skip(agent: str, targets: dict, frontmatter: dict, node_id:
         t_low = target.lower()
         skip_reason = ""
 
-        if t_low in mature_set:
+        if t_low in mature_set and agent != "kilo-review":
             skip_reason = f"{target} is already in Mature Applications quarantine"
         elif agent == "kilo-graphics" and (t_low in INAPPROPRIATE_IMAGEN_TARGETS or "(skip)" in t_low):
             skip_reason = f"Imagen 3 asset replacement not appropriate for {target}"
@@ -823,7 +858,7 @@ def handle_preflight_skip(agent: str, targets: dict, frontmatter: dict, node_id:
             agent=agent,
             completed_app=target,
             mature_set=mature_set,
-            quarantined=(t_low in mature_set),
+            quarantined=(t_low in mature_set and agent != "kilo-review"),
         )
         if not next_target or next_target.lower() == t_low:
             break
@@ -847,6 +882,50 @@ def handle_preflight_skip(agent: str, targets: dict, frontmatter: dict, node_id:
             log(f"Warning persisting pre-flight target fast-forward: {e}")
 
     return False
+
+
+def rotate_past_failed_argon_turn(failed_agent: str, failed_target: str) -> tuple[str, dict]:
+    """
+    When `kilo-review` (running on Gemini 4 Argon) fails (e.g., Pro node Argon quota exhausted),
+    auto-rotates `current_agent` in `next_work.md` to the next Flash agent in `agent_rotation`
+    while keeping `failed_target` at the top of `kilo-review`'s queue for the next cycle.
+    Returns (next_flash_agent, updated_frontmatter).
+    """
+    try:
+        subprocess.run(["git", "checkout", "--", "."], cwd=str(REPO_ROOT), capture_output=True)
+        content = NEXT_WORK_FILE.read_text(encoding="utf-8", errors="replace")
+        parts = content.split("---", 2)
+        if len(parts) >= 3:
+            import yaml
+            fm = yaml.safe_load(parts[1]) or {}
+            rotation = fm.get("agent_rotation") or [
+                "kilo-creator", "kilo-graphics", "kilo-soundscape",
+                "kilo-tester", "kilo-usability", "kilo-qa", "kilo-expander", "kilo-review",
+            ]
+            curr_idx = rotation.index(failed_agent) if failed_agent in rotation else 0
+            next_agent = rotation[(curr_idx + 1) % len(rotation)]
+            if next_agent == failed_agent and len(rotation) > 1:
+                next_agent = rotation[(curr_idx + 2) % len(rotation)]
+            next_idx = rotation.index(next_agent) if next_agent in rotation else 0
+            after_next = rotation[(next_idx + 1) % len(rotation)]
+
+            fm["current_agent"] = next_agent
+            fm["next_agent"] = after_next
+            fm["status"] = "ready"
+            new_fm_str = yaml.dump(fm, sort_keys=False, allow_unicode=True).strip()
+            new_content = f"---\n{new_fm_str}\n---" + parts[2]
+            NEXT_WORK_FILE.write_text(new_content, encoding="utf-8")
+            subprocess.run(["git", "add", "next_work.md"], cwd=str(REPO_ROOT), capture_output=True)
+            subprocess.run(
+                ["git", "commit", "-m", f"chore(orchestrator): auto-rotate past failed {failed_agent} Argon turn ({failed_target})"],
+                cwd=str(REPO_ROOT),
+                capture_output=True,
+            )
+            log(f"[ARGON FALLBACK] Auto-rotated current_agent '{failed_agent}' -> '{next_agent}' (kept '{failed_target}' queued for next Argon rotation).")
+            return next_agent, fm
+    except Exception as e:
+        log(f"Error in rotate_past_failed_argon_turn: {e}")
+    return "kilo-tester", {}
 
 
 def write_turn_receipt(agent: str, model: str, duration: float, returncode: int, target: str = "") -> Path:
@@ -888,7 +967,7 @@ def write_turn_receipt(agent: str, model: str, duration: float, returncode: int,
 def main():
     parser = argparse.ArgumentParser(description="KiloApps Fleet Master Orchestrator")
     parser.add_argument("--dry-run", action="store_true", help="Inspect and validate without executing agy")
-    parser.add_argument("--force-agent", type=str, help="Override active agent (e.g. kilo-tester, kilo-qa, kilo-creator)")
+    parser.add_argument("--force-agent", type=str, help="Override active agent (e.g. kilo-tester, kilo-qa, kilo-creator, kilo-review)")
     parser.add_argument("--no-receipt", action="store_true", help="Skip emitting turn receipt")
     parser.add_argument("--ignore-window", action="store_true", help="Bypass remote fleet contributor window guard")
     parser.add_argument("--ignore-session", action="store_true", help="Bypass 24-hour session timer check")
@@ -984,106 +1063,140 @@ def main():
         else:
             agent = args.force_agent or frontmatter.get("current_agent", "kilo-tester")
 
-        status = frontmatter.get("status", "ready")
-        model = os.environ.get("AGY_MODEL") or frontmatter.get("model", "gemini-3.8-flash-high")
+        # Up to 2 attempts: if attempt 0 is an Argon turn (`kilo-review`) that fails due to quota exhaustion,
+        # auto-rotate `current_agent` to the next Flash agent and immediately execute that Flash agent in attempt 1!
+        for dispatch_attempt in range(2):
+            status = frontmatter.get("status", "ready")
+            fm_agent_models = frontmatter.get("agent_models")
+            if os.environ.get("AGY_MODEL"):
+                model = os.environ.get("AGY_MODEL")
+            elif isinstance(fm_agent_models, dict) and agent in fm_agent_models:
+                model = str(fm_agent_models[agent]).strip()
+            else:
+                model = frontmatter.get("model", "gemini-3.8-flash-high")
 
-        # Selective effort: creative/deep generative agents run high effort;
-        # structured audit/verification/testing agents run medium effort to prevent runaway reasoning loops.
-        CREATIVE_AGENTS = {"kilo-creator", "kilo-expander", "kilo-soundscape", "kilo-planner"}
-        fm_effort = frontmatter.get("effort", "selective")
-        if os.environ.get("AGY_EFFORT"):
-            effort = os.environ.get("AGY_EFFORT")
-        elif isinstance(frontmatter.get("agent_efforts"), dict) and agent in frontmatter["agent_efforts"]:
-            effort = frontmatter["agent_efforts"][agent]
-        elif fm_effort in ("high", "medium", "low"):
-            effort = fm_effort
-        else:
-            effort = "high" if agent in CREATIVE_AGENTS else "medium"
+            # Selective effort: creative/deep generative/critic agents run high effort;
+            # structured audit/verification/testing agents run medium effort to prevent runaway reasoning loops.
+            CREATIVE_AGENTS = {"kilo-creator", "kilo-expander", "kilo-soundscape", "kilo-planner", "kilo-review"}
+            fm_effort = frontmatter.get("effort", "selective")
+            if os.environ.get("AGY_EFFORT"):
+                effort = os.environ.get("AGY_EFFORT")
+            elif isinstance(frontmatter.get("agent_efforts"), dict) and agent in frontmatter["agent_efforts"]:
+                effort = frontmatter["agent_efforts"][agent]
+            elif fm_effort in ("high", "medium", "low"):
+                effort = fm_effort
+            else:
+                effort = "high" if agent in CREATIVE_AGENTS else "medium"
 
-        # Align model identifier with effort for Gemini 3.8 Flash to prevent CLI conflict
-        if model.startswith("gemini-3.8-flash") and effort in ("high", "medium", "low"):
-            model = f"gemini-3.8-flash-{effort}"
+            # Align model identifier with effort for Gemini 3.8 Flash & Gemini 4 Argon to prevent CLI conflict
+            if model.startswith("gemini-3.8-flash") and effort in ("high", "medium", "low"):
+                model = f"gemini-3.8-flash-{effort}"
+            elif model.startswith("gemini-4-argon") and effort in ("high", "medium", "low"):
+                model = f"gemini-4-argon-{effort}"
 
-        timeout_min = int(
-            os.environ.get("AGY_TIMEOUT")
-            or (frontmatter.get("agent_timeouts", {}).get(agent) if isinstance(frontmatter.get("agent_timeouts"), dict) else None)
-            or frontmatter.get("timeout_minutes", 8)
-        )
-        targets = frontmatter.get("current_targets", {})
-        if isinstance(targets, str):
-            targets = {}
+            timeout_min = int(
+                os.environ.get("AGY_TIMEOUT")
+                or (frontmatter.get("agent_timeouts", {}).get(agent) if isinstance(frontmatter.get("agent_timeouts"), dict) else None)
+                or frontmatter.get("timeout_minutes", 8)
+            )
+            targets = frontmatter.get("current_targets", {})
+            if isinstance(targets, str):
+                targets = {}
 
-        log(f"Queue State: agent='{agent}', status='{status}', model='{model}', effort='{effort}', timeout={timeout_min}m")
+            log(f"Queue State: agent='{agent}', status='{status}', model='{model}', effort='{effort}', timeout={timeout_min}m")
 
-        if status != "ready" and not args.force_agent and not should_run_planner:
-            log(f"Task status is '{status}' (not 'ready'). Skipping dispatch.")
-            return
+            if status != "ready" and not args.force_agent and not should_run_planner:
+                log(f"Task status is '{status}' (not 'ready'). Skipping dispatch.")
+                return
 
-        # Pre-flight auto-skip check: avoid spending millions of tokens on known skip targets
-        if not args.dry_run and not args.force_agent and handle_preflight_skip(agent, targets, frontmatter, node_id):
-            return
+            # Pre-flight auto-skip check: avoid spending millions of tokens on known skip targets
+            if not args.dry_run and not args.force_agent and handle_preflight_skip(agent, targets, frontmatter, node_id):
+                return
 
-        prompt = build_agent_prompt(agent, targets)
-        agy_bin = find_agy_executable()
+            prompt = build_agent_prompt(agent, targets)
+            agy_bin = find_agy_executable()
 
-        cmd = [
-            agy_bin,
-            "--add-dir",
-            str(REPO_ROOT),
-            "-p",
-            prompt,
-            "--model",
-            model,
-            "--effort",
-            effort,
-            "--dangerously-skip-permissions",
-            f"--print-timeout={timeout_min}m",
-        ]
+            cmd = [
+                agy_bin,
+                "--add-dir",
+                str(REPO_ROOT),
+                "-p",
+                prompt,
+                "--model",
+                model,
+                "--effort",
+                effort,
+                "--dangerously-skip-permissions",
+                f"--print-timeout={timeout_min}m",
+            ]
 
-        log(f"Prepared Command: {' '.join(cmd)}")
+            log(f"Prepared Command: {' '.join(cmd)}")
 
-        if args.dry_run:
-            log("Dry-run mode enabled: Skipping CLI execution.")
-            return
+            if args.dry_run:
+                log("Dry-run mode enabled: Skipping CLI execution.")
+                return
 
-        log(f"Spawning agent execution via agy (timeout: {timeout_min}m)...")
-        start_time = datetime.datetime.now()
+            log(f"Spawning agent execution via agy (timeout: {timeout_min}m)...")
+            start_time = datetime.datetime.now()
 
-        # Execute agy
-        process = subprocess.run(
-            cmd,
-            cwd=str(REPO_ROOT),
-            text=True,
-            capture_output=True,
-        )
-
-        duration = (datetime.datetime.now() - start_time).total_seconds()
-        log(f"Agent finished in {duration:.1f}s with exit code {process.returncode}.")
-
-        if process.stdout:
-            stdout_sample = process.stdout.strip()[-500:]
-            log(f"Stdout (tail):\n{stdout_sample}")
-        if process.stderr:
-            stderr_sample = process.stderr.strip()[-500:]
-            log(f"Stderr (tail):\n{stderr_sample}")
-
-        target_app = str(targets.get(agent.replace("-", "_"), ""))
-        if not args.no_receipt:
-            write_turn_receipt(
-                agent=agent,
-                model=model,
-                duration=duration,
-                returncode=process.returncode,
-                target=target_app,
+            # Execute agy
+            process = subprocess.run(
+                cmd,
+                cwd=str(REPO_ROOT),
+                text=True,
+                capture_output=True,
             )
 
-        if process.returncode != 0:
-            log(f"Agent turn exited with non-zero code {process.returncode}. Investigation required.")
-            broadcast_node_heartbeat(node_id, status="error", target=target_app)
-        else:
-            log("Agent turn completed successfully.")
-            record_turn_in_session()
-            broadcast_node_heartbeat(node_id, status="active", target=target_app)
+            duration = (datetime.datetime.now() - start_time).total_seconds()
+            log(f"Agent finished in {duration:.1f}s with exit code {process.returncode}.")
+
+            if process.stdout:
+                stdout_sample = process.stdout.strip()[-500:]
+                log(f"Stdout (tail):\n{stdout_sample}")
+            if process.stderr:
+                stderr_sample = process.stderr.strip()[-500:]
+                log(f"Stderr (tail):\n{stderr_sample}")
+
+            target_app = str(targets.get(agent.replace("-", "_"), ""))
+            if not args.no_receipt:
+                write_turn_receipt(
+                    agent=agent,
+                    model=model,
+                    duration=duration,
+                    returncode=process.returncode,
+                    target=target_app,
+                )
+
+            # Check if an Argon review turn failed (e.g., Pro node ran out of Argon quota)
+            is_argon_turn = (agent == "kilo-review" or "argon" in model.lower())
+            argon_did_not_advance = False
+            if is_argon_turn and process.returncode == 0:
+                try:
+                    post_fm = parse_frontmatter(NEXT_WORK_FILE.read_text(encoding="utf-8", errors="replace"))
+                    if post_fm.get("current_agent") == agent:
+                        argon_did_not_advance = True
+                        log(f"Warning: {agent} exited 0 but did not advance current_agent in next_work.md.")
+                except Exception:
+                    pass
+
+            if is_argon_turn and (process.returncode != 0 or argon_did_not_advance) and dispatch_attempt == 0 and not args.force_agent:
+                log(
+                    f"[ARGON QUOTA/FAILURE FALLBACK] {agent} ({model}) failed to complete (code={process.returncode}). "
+                    f"Auto-rotating to next Flash agent and dispatching immediately in the same tick!"
+                )
+                agent, new_fm = rotate_past_failed_argon_turn(agent, target_app)
+                if new_fm:
+                    frontmatter = new_fm
+                    continue
+
+            if process.returncode != 0:
+                log(f"Agent turn exited with non-zero code {process.returncode}. Investigation required.")
+                broadcast_node_heartbeat(node_id, status="error", target=target_app)
+            else:
+                log("Agent turn completed successfully.")
+                record_turn_in_session()
+                broadcast_node_heartbeat(node_id, status="active", target=target_app)
+            break
 
         # Post-agent Git check: ensure unpushed commits and node state are synchronized to remote
         if process.returncode == 0 and not args.dry_run:
