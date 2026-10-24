@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T19:43:34-07:00 — kilo-usability: KHash (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 160.6 KB, native 17.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.2%, HEAD Δ 9.52%, 0 fail, 0 warn, 8.8s)).
+  - Live Multi-Digest Comparison Table: Added real-time responsive matrix cross-referencing expected hashes across all 13 algorithms with 1-click select and copy.
+  - Verification Badges: Added 1-click inline verification badges (MATCH / MISMATCH / Verify) to all digest rows and verified badge receipt export.
+  - HMAC Ergonomics & Shortcuts: Added Alt+M/Alt+H toggle, random 16-byte key generator, byte counter badge, and Alt+V/Alt+C/Alt+T/F3 hotkeys.
+  - Handoff: Advanced `kilo-usability` to `KVault`; rotated active agent to `kilo-qa`.
+
 - **2026-10-23T19:35:17-07:00 — kilo-tester: KCipher (Interactive UI & Cipher Workbench Audit)**
   - Status: PASS ✅ (0 errors, web 157.1 KB, native 15.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.83%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.5s)).
   - UI & Hotkey Audit: Verified cipher workbench (AES/XOR/Vigenere/ROT13/RSA), frequency chart, VFS import/export, and modal dismissals.

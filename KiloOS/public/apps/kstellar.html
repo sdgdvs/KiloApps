@@ -201,8 +201,8 @@
                 <button id="export-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#88ccff; color:#88ccff;" onclick="exportSaveFile()" title="Export JSON Save">⏏ EXPORT</button>
                 <button id="import-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#88ccff; color:#88ccff;" onclick="document.getElementById('import-file-input').click()" title="Import JSON Save">📥 IMPORT</button>
                 <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importSaveFile(event)">
-                <button id="manual-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#ffff00; color:#ffff00;" onclick="openManual()">📖 MANUAL (M)</button>
-                <button id="audio-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="toggleAudio()">🔊 AUDIO: ON</button>
+                <button id="manual-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#ffff00; color:#ffff00;" onclick="openManual()">📖 MANUAL (H)</button>
+                <button id="audio-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="toggleAudio()" title="Toggle Master Audio [M]">🔊 AUDIO: ON [M]</button>
                 <button id="drone-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="toggleDrone()">🌌 DRONE: ON</button>
                 <button id="music-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#ff00ff; color:#ff00ff;" onclick="toggleFmMusic()" title="Toggle Genesis YM2612 FM Music">🎵 FM BGM: OFF</button>
             </div>
@@ -288,7 +288,7 @@
         let audioCtx = null;
         let soundEnabled = safeGetItem('kstellar_soundEnabled') !== 'false';
         let droneEnabled = safeGetItem('kstellar_droneEnabled') !== 'false';
-        let fmMusicEnabled = safeGetItem('kstellar_fmMusicEnabled') === 'true';
+        let fmMusicEnabled = safeGetItem('kstellar_fmMusicEnabled', 'true') !== 'false';
         let droneGain = null;
         let droneOsc1 = null;
         let droneOsc2 = null;
@@ -312,7 +312,7 @@
             }
             if (audioCtx && !spcDelayNodeL) {
                 try {
-                    // SNES SPC700 Stereo Delay DSP Line (180ms / 240ms ping-pong warmth)
+                    // SNES SPC700 Stereo Delay DSP Line (180ms / 240ms ping-pong warmth with 2200Hz LP filter)
                     spcDelayNodeL = audioCtx.createDelay();
                     spcDelayNodeR = audioCtx.createDelay();
                     spcDelayNodeL.delayTime.setValueAtTime(0.18, audioCtx.currentTime);
@@ -320,7 +320,7 @@
 
                     spcFilter = audioCtx.createBiquadFilter();
                     spcFilter.type = 'lowpass';
-                    spcFilter.frequency.setValueAtTime(2400, audioCtx.currentTime);
+                    spcFilter.frequency.setValueAtTime(2200, audioCtx.currentTime);
 
                     spcFeedback = audioCtx.createGain();
                     spcFeedback.gain.setValueAtTime(0.28, audioCtx.currentTime);
@@ -344,20 +344,25 @@
 
         // Yamaha YM2612 2-Operator FM Synthesizer Voice Generator with Instrument Patch Library
         const FM_PATCHES = {
-            // Ethereal FM bell lead (Carrier : Modulator = 1:2.0, shimmering index)
-            bellLead: { modRatio: 2.0, modIndex: 2.8, decay: 0.85, modDecay: 0.65, attack: 0.008, carrierWave: 'sine', modWave: 'sine' },
-            // Deep FM slap / synth bass (Carrier : Modulator = 1:0.5 or 1:1, punchy fast modulation drop)
-            bass:     { modRatio: 0.5, modIndex: 4.5, decay: 0.42, modDecay: 0.18, attack: 0.004, carrierWave: 'sawtooth', modWave: 'sine' },
-            // SPC700 Warm Space Pad / Chords (Harmonic ratio 1:3.0 with soft attack and slow release)
-            pad:      { modRatio: 3.0, modIndex: 1.6, decay: 1.40, modDecay: 1.10, attack: 0.040, carrierWave: 'sine', modWave: 'sine' },
+            // Ch1: Expressive FM cosmic bell lead (Carrier : Modulator = 1:2.0, delayed vibrato)
+            cosmicLead: { modRatio: 2.0, modIndex: 2.6, decay: 0.70, modDecay: 0.55, attack: 0.006, carrierWave: 'sine', modWave: 'sine' },
+            bellLead:   { modRatio: 2.0, modIndex: 2.6, decay: 0.70, modDecay: 0.55, attack: 0.006, carrierWave: 'sine', modWave: 'sine' },
+            // Ch2: Soft flute-like contrary counter-melody (Carrier : Modulator = 1:1.0)
+            counterLead:{ modRatio: 1.0, modIndex: 1.8, decay: 0.60, modDecay: 0.45, attack: 0.012, carrierWave: 'sine', modWave: 'sine' },
+            // Ch3: SPC700 warm harmonic pad for 3rd/7th shells (Carrier : Modulator = 1:3.0)
+            shellPad:   { modRatio: 3.0, modIndex: 1.4, decay: 0.95, modDecay: 0.80, attack: 0.035, carrierWave: 'sine', modWave: 'sine' },
+            pad:        { modRatio: 3.0, modIndex: 1.4, decay: 0.95, modDecay: 0.80, attack: 0.035, carrierWave: 'sine', modWave: 'sine' },
             // High shimmer cosmic arpeggio
-            cosmicArp:{ modRatio: 3.5, modIndex: 3.2, decay: 0.35, modDecay: 0.20, attack: 0.005, carrierWave: 'sine', modWave: 'sine' }
+            cosmicArp:  { modRatio: 3.5, modIndex: 3.0, decay: 0.22, modDecay: 0.16, attack: 0.004, carrierWave: 'sine', modWave: 'sine' },
+            // Ch4: Punchy 2-Op FM slap/sub bass strictly below C3 (130.81Hz) (Carrier : Modulator = 1:2.0, snappy decay)
+            fmBass:     { modRatio: 2.0, modIndex: 3.8, decay: 0.24, modDecay: 0.12, attack: 0.003, carrierWave: 'sawtooth', modWave: 'sine' },
+            bass:       { modRatio: 2.0, modIndex: 3.8, decay: 0.24, modDecay: 0.12, attack: 0.003, carrierWave: 'sawtooth', modWave: 'sine' }
         };
 
-        function playFMPatch(patchKey, freq, gainVal = 0.14, duration = null, sendDelay = true) {
+        function playFMPatch(patchKey, freq, gainVal = 0.14, duration = null, sendDelay = false, hasVibrato = false) {
             if (!soundEnabled || !audioCtx) return;
             try {
-                const patch = FM_PATCHES[patchKey] || FM_PATCHES.bellLead;
+                const patch = FM_PATCHES[patchKey] || FM_PATCHES.cosmicLead;
                 const noteDur = duration || patch.decay;
                 const now = audioCtx.currentTime;
 
@@ -371,6 +376,20 @@
 
                 carrier.frequency.setValueAtTime(freq, now);
                 modulator.frequency.setValueAtTime(freq * patch.modRatio, now);
+
+                // Delayed vibrato LFO (Ch1 Lead: ramps in after 180ms)
+                if (hasVibrato && noteDur > 0.24) {
+                    const lfo = audioCtx.createOscillator();
+                    const lfoGain = audioCtx.createGain();
+                    lfo.frequency.setValueAtTime(5.6, now);
+                    lfoGain.gain.setValueAtTime(0, now);
+                    lfoGain.gain.setValueAtTime(0, now + 0.18);
+                    lfoGain.gain.linearRampToValueAtTime(freq * 0.024, now + 0.38);
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(carrier.frequency);
+                    lfo.start(now + 0.18);
+                    lfo.stop(now + noteDur + 0.05);
+                }
 
                 // YM2612 Operator Modulation Envelope
                 const peakMod = patch.modIndex * freq;
@@ -388,9 +407,10 @@
                 carrier.connect(voiceGain);
                 voiceGain.connect(audioCtx.destination);
 
+                // Selective SPC700 Delay Send (Lead, Counter, Shells ONLY - Bass/Drums are strictly dry)
                 if (sendDelay && spcDelayNodeL) {
                     const send = audioCtx.createGain();
-                    send.gain.setValueAtTime(0.28, now);
+                    send.gain.setValueAtTime(0.26, now);
                     voiceGain.connect(send);
                     send.connect(spcDelayNodeL);
                     send.connect(spcDelayNodeR);
@@ -403,7 +423,7 @@
             } catch(e) {}
         }
 
-        function playFM(carrierFreq, modRatio = 2.0, modIndex = 2.5, duration = 0.2, gainVal = 0.18, sendDelay = true) {
+        function playFM(carrierFreq, modRatio = 2.0, modIndex = 2.5, duration = 0.2, gainVal = 0.18, sendDelay = false) {
             if (!soundEnabled || !audioCtx) return;
             try {
                 const now = audioCtx.currentTime;
@@ -444,6 +464,84 @@
                 modulator.start(now);
                 carrier.stop(now + duration);
                 modulator.stop(now + duration);
+            } catch(e) {}
+        }
+
+        // Ch5 Drum Voice Generators (YM2612 2-Op FM Kick & Snare - strictly dry)
+        function playFMKick(gainVal = 0.35) {
+            if (!soundEnabled || !audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                osc.frequency.setValueAtTime(132, now);
+                osc.frequency.exponentialRampToValueAtTime(36, now + 0.09);
+                g.gain.setValueAtTime(gainVal, now);
+                g.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+                osc.connect(g);
+                g.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.14);
+            } catch(e) {}
+        }
+
+        function playFMSnare(gainVal = 0.18) {
+            if (!soundEnabled || !audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const car = audioCtx.createOscillator();
+                const mod = audioCtx.createOscillator();
+                const mGain = audioCtx.createGain();
+                const vGain = audioCtx.createGain();
+                car.type = 'triangle';
+                mod.type = 'sawtooth';
+                car.frequency.setValueAtTime(210, now);
+                car.frequency.exponentialRampToValueAtTime(65, now + 0.12);
+                mod.frequency.setValueAtTime(1430, now);
+                mGain.gain.setValueAtTime(1800, now);
+                mGain.gain.exponentialRampToValueAtTime(10, now + 0.12);
+                mod.connect(mGain);
+                mGain.connect(car.frequency);
+
+                vGain.gain.setValueAtTime(gainVal, now);
+                vGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+                car.connect(vGain);
+                vGain.connect(audioCtx.destination);
+                car.start(now);
+                mod.start(now);
+                car.stop(now + 0.15);
+                mod.stop(now + 0.15);
+            } catch(e) {}
+        }
+
+        // Ch6 Inharmonic Metallic Hi-Hat (FM ratio 11.0 / 13.5 equivalent - strictly dry)
+        function playFMHiHat(open = false, gainVal = 0.08) {
+            if (!soundEnabled || !audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const car = audioCtx.createOscillator();
+                const mod = audioCtx.createOscillator();
+                const mGain = audioCtx.createGain();
+                const vGain = audioCtx.createGain();
+                const dur = open ? 0.11 : 0.035;
+
+                car.type = 'square';
+                mod.type = 'sine';
+                car.frequency.setValueAtTime(4600, now);
+                mod.frequency.setValueAtTime(4600 * 1.414, now);
+                mGain.gain.setValueAtTime(3200, now);
+                mGain.gain.exponentialRampToValueAtTime(15, now + dur);
+                mod.connect(mGain);
+                mGain.connect(car.frequency);
+
+                vGain.gain.setValueAtTime(gainVal, now);
+                vGain.gain.exponentialRampToValueAtTime(0.0005, now + dur);
+                car.connect(vGain);
+                vGain.connect(audioCtx.destination);
+                car.start(now);
+                mod.start(now);
+                car.stop(now + dur + 0.02);
+                mod.stop(now + dur + 0.02);
             } catch(e) {}
         }
 
@@ -499,12 +597,12 @@
                 initAudio();
                 if (droneEnabled) startAmbientDrone();
                 if (fmMusicEnabled) startFmMusic();
-                if (btn) btn.innerText = "🔊 AUDIO: ON";
+                if (btn) btn.innerText = "🔊 AUDIO: ON [M]";
                 playBlip();
             } else {
                 stopAmbientDrone();
                 stopFmMusic();
-                if (btn) btn.innerText = "🔇 AUDIO: OFF";
+                if (btn) btn.innerText = "🔇 AUDIO: OFF [M]";
             }
         };
 
@@ -523,93 +621,206 @@
             }
         };
 
-        // Procedural Genesis YM2612 FM Space Symphony ("Stellar Odyssey")
-        // Chord progression: Dm9 -> BbMaj7 -> Fsus2 -> C/E (16 steps with voice leading, FM bassline & arp)
-        const CHORD_PROGRESSION = [
-            // Bar 1: Dm (root 73.42 D2, chord: F3, A3, C4, E4)
-            { root: 73.42, chord: [174.61, 220.00, 261.63, 329.63] },
-            { root: 73.42, chord: [174.61, 220.00, 261.63, 329.63] },
-            { root: 110.00, chord: [220.00, 293.66, 349.23, 440.00] },
-            { root: 73.42, chord: [174.61, 220.00, 261.63, 329.63] },
-            // Bar 2: BbMaj7 (root 58.27 Bb1, chord: F3, A3, D4)
-            { root: 58.27, chord: [174.61, 220.00, 293.66, 349.23] },
-            { root: 58.27, chord: [174.61, 220.00, 293.66, 349.23] },
-            { root: 87.31, chord: [220.00, 293.66, 349.23, 466.16] },
-            { root: 58.27, chord: [174.61, 220.00, 293.66, 349.23] },
-            // Bar 3: Fsus2/Am (root 87.31 F2, chord: G3, C4, F4)
-            { root: 87.31, chord: [196.00, 261.63, 349.23, 392.00] },
-            { root: 87.31, chord: [196.00, 261.63, 349.23, 392.00] },
-            { root: 130.81, chord: [261.63, 329.63, 392.00, 523.25] },
-            { root: 87.31, chord: [196.00, 261.63, 349.23, 392.00] },
-            // Bar 4: C/E -> Asus4 (root 82.41 E2, chord: G3, C4, E4)
-            { root: 82.41, chord: [196.00, 261.63, 329.63, 493.88] },
-            { root: 82.41, chord: [196.00, 261.63, 329.63, 493.88] },
-            { root: 110.00, chord: [220.00, 293.66, 440.00, 587.33] },
-            { root: 73.42, chord: [174.61, 220.00, 261.63, 440.00] }
+        // 32-step Sci-Fi FM Track: "Voyage Across the Spiral Arm"
+        // 8-chord Dorian / Aeolian progression in 4-step harmonic blocks
+        // Strictly 3rd + 7th shell voicings on Ch3, punchy FM bass < 130.81Hz on Ch4
+        const CHORD_SHELLS = [
+            // Chord 0 (Steps 0..3): Dm7 (Root D2 73.42, 3rd F3 174.61, 7th C4 261.63)
+            { root: 73.42, altRoot: 55.00, third: 174.61, seventh: 261.63 },
+            { root: 73.42, altRoot: 73.42, third: 174.61, seventh: 261.63 },
+            { root: 73.42, altRoot: 36.71, third: 174.61, seventh: 261.63 },
+            { root: 73.42, altRoot: 55.00, third: 174.61, seventh: 261.63 },
+            // Chord 1 (Steps 4..7): BbMaj7 (Root Bb1 58.27, 3rd D3 146.83, 7th A3 220.00)
+            { root: 58.27, altRoot: 87.31, third: 146.83, seventh: 220.00 },
+            { root: 58.27, altRoot: 58.27, third: 146.83, seventh: 220.00 },
+            { root: 58.27, altRoot: 43.65, third: 146.83, seventh: 220.00 },
+            { root: 58.27, altRoot: 87.31, third: 146.83, seventh: 220.00 },
+            // Chord 2 (Steps 8..11): Gm7 (Root G1 48.99, 3rd Bb3 233.08, 7th F4 349.23)
+            { root: 48.99, altRoot: 73.42, third: 233.08, seventh: 349.23 },
+            { root: 48.99, altRoot: 48.99, third: 233.08, seventh: 349.23 },
+            { root: 48.99, altRoot: 97.99, third: 233.08, seventh: 349.23 },
+            { root: 48.99, altRoot: 73.42, third: 233.08, seventh: 349.23 },
+            // Chord 3 (Steps 12..15): C9 (Root C2 65.41, 3rd E3 164.81, 7th Bb3 233.08)
+            { root: 65.41, altRoot: 97.99, third: 164.81, seventh: 233.08 },
+            { root: 65.41, altRoot: 65.41, third: 164.81, seventh: 233.08 },
+            { root: 65.41, altRoot: 48.99, third: 164.81, seventh: 233.08 },
+            { root: 65.41, altRoot: 97.99, third: 164.81, seventh: 233.08 },
+            // Chord 4 (Steps 16..19): FMaj7 (Root F2 87.31, 3rd A3 220.00, 7th E4 329.63)
+            { root: 87.31, altRoot: 65.41, third: 220.00, seventh: 329.63 },
+            { root: 87.31, altRoot: 87.31, third: 220.00, seventh: 329.63 },
+            { root: 87.31, altRoot: 43.65, third: 220.00, seventh: 329.63 },
+            { root: 87.31, altRoot: 65.41, third: 220.00, seventh: 329.63 },
+            // Chord 5 (Steps 20..23): Em7b5 (Root E2 82.41, 3rd G3 196.00, 7th D4 293.66)
+            { root: 82.41, altRoot: 61.74, third: 196.00, seventh: 293.66 },
+            { root: 82.41, altRoot: 82.41, third: 196.00, seventh: 293.66 },
+            { root: 82.41, altRoot: 41.20, third: 196.00, seventh: 293.66 },
+            { root: 82.41, altRoot: 61.74, third: 196.00, seventh: 293.66 },
+            // Chord 6 (Steps 24..27): A7alt (Root A1 55.00, 3rd C#4 277.18, 7th G3 196.00)
+            { root: 55.00, altRoot: 82.41, third: 277.18, seventh: 196.00 },
+            { root: 55.00, altRoot: 55.00, third: 277.18, seventh: 196.00 },
+            { root: 55.00, altRoot: 110.00, third: 277.18, seventh: 196.00 },
+            { root: 55.00, altRoot: 82.41, third: 277.18, seventh: 196.00 },
+            // Chord 7 (Steps 28..31): Dm9 (Root D2 73.42, 3rd F3 174.61, 7th C4 261.63)
+            { root: 73.42, altRoot: 55.00, third: 174.61, seventh: 261.63 },
+            { root: 73.42, altRoot: 73.42, third: 174.61, seventh: 261.63 },
+            { root: 73.42, altRoot: 36.71, third: 174.61, seventh: 261.63 },
+            { root: 73.42, altRoot: 55.00, third: 174.61, seventh: 261.63 }
         ];
 
-        // 16-step Expressive Melody line (Lead voice with varied durations)
-        const FM_LEAD_THEME = [
-            { freq: 293.66, dur: 0.65, vel: 0.13 }, // D4
-            { freq: 440.00, dur: 0.45, vel: 0.12 }, // A4
-            { freq: 523.25, dur: 0.55, vel: 0.14 }, // C5
-            { freq: 587.33, dur: 0.85, vel: 0.15 }, // D5
-            { freq: 466.16, dur: 0.50, vel: 0.12 }, // Bb4
-            { freq: 440.00, dur: 0.40, vel: 0.11 }, // A4
-            { freq: 349.23, dur: 0.60, vel: 0.13 }, // F4
-            { freq: 392.00, dur: 0.70, vel: 0.12 }, // G4
-            { freq: 523.25, dur: 0.50, vel: 0.13 }, // C5
-            { freq: 587.33, dur: 0.45, vel: 0.14 }, // D5
-            { freq: 659.25, dur: 0.65, vel: 0.15 }, // E5
-            { freq: 523.25, dur: 0.50, vel: 0.12 }, // C5
-            { freq: 493.88, dur: 0.55, vel: 0.13 }, // B4
-            { freq: 440.00, dur: 0.45, vel: 0.12 }, // A4
-            { freq: 349.23, dur: 0.55, vel: 0.11 }, // F4
-            { freq: 293.66, dur: 0.95, vel: 0.14 }  // D4 (Resolution)
+        // Ch1: Expressive Lead voice with rests and delayed vibrato
+        const CH1_LEAD = [
+            { freq: 293.66, dur: 0.32, vel: 0.14 }, // Step 0: D4
+            { freq: 349.23, dur: 0.22, vel: 0.13 }, // Step 1: F4
+            { freq: 440.00, dur: 0.38, vel: 0.15 }, // Step 2: A4
+            { freq: 523.25, dur: 0.42, vel: 0.16 }, // Step 3: C5
+            { freq: 587.33, dur: 0.50, vel: 0.16 }, // Step 4: D5
+            { freq: 523.25, dur: 0.28, vel: 0.13 }, // Step 5: C5
+            null,                                   // Step 6: REST (Ch2 spotlight!)
+            null,                                   // Step 7: REST (Ch2 spotlight!)
+            { freq: 466.16, dur: 0.35, vel: 0.14 }, // Step 8: Bb4
+            { freq: 440.00, dur: 0.25, vel: 0.13 }, // Step 9: A4
+            { freq: 392.00, dur: 0.32, vel: 0.14 }, // Step 10: G4
+            { freq: 349.23, dur: 0.35, vel: 0.14 }, // Step 11: F4
+            { freq: 392.00, dur: 0.45, vel: 0.15 }, // Step 12: G4
+            { freq: 329.63, dur: 0.35, vel: 0.13 }, // Step 13: E4
+            null,                                   // Step 14: REST (Ch2 spotlight!)
+            null,                                   // Step 15: REST (Ch2 spotlight!)
+            { freq: 349.23, dur: 0.32, vel: 0.14 }, // Step 16: F4
+            { freq: 440.00, dur: 0.26, vel: 0.13 }, // Step 17: A4
+            { freq: 523.25, dur: 0.38, vel: 0.15 }, // Step 18: C5
+            { freq: 659.25, dur: 0.45, vel: 0.16 }, // Step 19: E5
+            { freq: 587.33, dur: 0.40, vel: 0.15 }, // Step 20: D5
+            { freq: 493.88, dur: 0.35, vel: 0.14 }, // Step 21: B4
+            null,                                   // Step 22: REST (Ch2 spotlight!)
+            null,                                   // Step 23: REST (Ch2 spotlight!)
+            { freq: 392.00, dur: 0.35, vel: 0.14 }, // Step 24: G4
+            { freq: 440.00, dur: 0.30, vel: 0.13 }, // Step 25: A4
+            { freq: 466.16, dur: 0.35, vel: 0.14 }, // Step 26: Bb4
+            { freq: 554.37, dur: 0.42, vel: 0.15 }, // Step 27: C#5
+            { freq: 587.33, dur: 0.55, vel: 0.16 }, // Step 28: D5
+            { freq: 440.00, dur: 0.35, vel: 0.13 }, // Step 29: A4
+            null,                                   // Step 30: REST (Ch2 spotlight!)
+            null                                    // Step 31: REST (Ch2 spotlight!)
+        ];
+
+        // Ch2: Counter-melody in contrary motion; takes spotlight during Ch1 rests
+        const CH2_COUNTER = [
+            null,                                   // Step 0: Rest while Ch1 starts
+            null,                                   // Step 1
+            { freq: 146.83, dur: 0.26, vel: 0.10 }, // Step 2: D3 (contrary motion downward)
+            null,                                   // Step 3
+            { freq: 220.00, dur: 0.28, vel: 0.11 }, // Step 4: A3
+            { freq: 174.61, dur: 0.22, vel: 0.10 }, // Step 5: F3
+            { freq: 233.08, dur: 0.30, vel: 0.13 }, // Step 6: Bb3 (SPOTLIGHT)
+            { freq: 261.63, dur: 0.36, vel: 0.14 }, // Step 7: C4 (SPOTLIGHT)
+            null,                                   // Step 8
+            null,                                   // Step 9
+            { freq: 233.08, dur: 0.25, vel: 0.10 }, // Step 10: Bb3
+            { freq: 261.63, dur: 0.25, vel: 0.11 }, // Step 11: C4
+            null,                                   // Step 12
+            null,                                   // Step 13
+            { freq: 293.66, dur: 0.32, vel: 0.13 }, // Step 14: D4 (SPOTLIGHT)
+            { freq: 329.63, dur: 0.36, vel: 0.14 }, // Step 15: E4 (SPOTLIGHT)
+            null,                                   // Step 16
+            null,                                   // Step 17
+            { freq: 220.00, dur: 0.26, vel: 0.10 }, // Step 18: A3
+            { freq: 196.00, dur: 0.28, vel: 0.11 }, // Step 19: G3
+            null,                                   // Step 20
+            null,                                   // Step 21
+            { freq: 392.00, dur: 0.32, vel: 0.13 }, // Step 22: G4 (SPOTLIGHT)
+            { freq: 369.99, dur: 0.36, vel: 0.14 }, // Step 23: F#4 (SPOTLIGHT)
+            null,                                   // Step 24
+            null,                                   // Step 25
+            { freq: 329.63, dur: 0.26, vel: 0.11 }, // Step 26: E4
+            { freq: 293.66, dur: 0.28, vel: 0.12 }, // Step 27: D4
+            null,                                   // Step 28
+            null,                                   // Step 29
+            { freq: 349.23, dur: 0.35, vel: 0.13 }, // Step 30: F4 (SPOTLIGHT)
+            { freq: 293.66, dur: 0.45, vel: 0.14 }  // Step 31: D4 (SPOTLIGHT resolution)
         ];
 
         function stepFmMusic() {
             if (!soundEnabled || !fmMusicEnabled || !audioCtx) return;
-            const stepIdx = fmStep % CHORD_PROGRESSION.length;
-            const bar = CHORD_PROGRESSION[stepIdx];
-            const lead = FM_LEAD_THEME[stepIdx];
+            const stepIdx = fmStep % CHORD_SHELLS.length;
+            const chord = CHORD_SHELLS[stepIdx];
+            const lead = CH1_LEAD[stepIdx];
+            const counter = CH2_COUNTER[stepIdx];
 
-            // 1. FM Punchy Sub/Bass voice on beat
-            playFMPatch('bass', bar.root, 0.15, 0.45, false);
+            // 1. Ch1: Lead Melody with delayed vibrato (stereo delay enabled)
+            if (lead) {
+                playFMPatch('cosmicLead', lead.freq, lead.vel, lead.dur, true, true);
+            }
 
-            // 2. SPC700 Stereo Warm Pad chord every 2 beats
+            // 2. Ch2: Contrary Counter-Melody (stereo delay enabled)
+            if (counter) {
+                playFMPatch('counterLead', counter.freq, counter.vel, counter.dur, true, false);
+            }
+
+            // 3. Ch3: Shell Voicings (3rd + 7th only, never 5th) / Cosmic Arp
             if (stepIdx % 2 === 0) {
-                bar.chord.forEach((noteFreq, idx) => {
-                    setTimeout(() => {
-                        playFMPatch('pad', noteFreq, 0.045, 1.35, true);
-                    }, idx * 18);
-                });
-            }
-
-            // 3. Expressive FM bell lead melody
-            playFMPatch('bellLead', lead.freq, lead.vel, lead.dur, true);
-
-            // 4. Cosmic arpeggio accent on syncopated 16th
-            if (stepIdx % 4 === 1 || stepIdx % 4 === 3) {
-                const arpFreq = bar.chord[(stepIdx * 2) % bar.chord.length] * 2.0;
+                // Shell 3rd on even step
+                playFMPatch('shellPad', chord.third, 0.055, 0.85, true, false);
+            } else {
+                // Shell 7th on odd step
+                playFMPatch('shellPad', chord.seventh, 0.050, 0.70, true, false);
+                // Subtle syncopated arp sparkle
+                const arpFreq = (stepIdx % 4 === 1 ? chord.third : chord.seventh) * 2.0;
                 setTimeout(() => {
-                    playFMPatch('cosmicArp', arpFreq, 0.08, 0.28, true);
-                }, 320);
+                    playFMPatch('cosmicArp', arpFreq, 0.06, 0.18, true, false);
+                }, 50);
             }
+
+            // 4. Ch4: FM Bass (strictly below C3 130.81Hz, dry)
+            if (stepIdx % 4 === 0) {
+                playFMPatch('fmBass', chord.root, 0.18, 0.22, false, false);
+            } else if (stepIdx % 4 === 2) {
+                playFMPatch('fmBass', chord.altRoot, 0.14, 0.19, false, false);
+            } else if (stepIdx % 8 === 7) {
+                playFMPatch('fmBass', chord.root, 0.12, 0.15, false, false);
+            }
+
+            // 5. Ch5: FM Drums (Kick + Snare, strictly dry)
+            if (stepIdx % 8 === 0 || stepIdx % 8 === 4) {
+                playFMKick(0.32);
+            } else if (stepIdx % 8 === 2 || stepIdx % 8 === 6) {
+                playFMSnare(0.18);
+            }
+            // Ghost syncopation kick on steps 7, 15, 23, 31
+            if (stepIdx % 8 === 7) {
+                playFMKick(0.18);
+            }
+
+            // 6. Ch6: Metallic Inharmonic Hi-Hat (strictly dry)
+            const isOpenHat = (stepIdx % 4 === 2);
+            playFMHiHat(isOpenHat, isOpenHat ? 0.09 : 0.055);
 
             fmStep++;
         }
 
+        function scheduleNextFmStep() {
+            if (!audioCtx || !soundEnabled || !fmMusicEnabled) return;
+            // 5:3 Swing-Tick Groove: alternating 175ms (even) / 105ms (odd)
+            const isEven = (fmStep % 2 === 0);
+            const stepDuration = isEven ? 175 : 105;
+            fmMusicTimer = setTimeout(() => {
+                stepFmMusic();
+                scheduleNextFmStep();
+            }, stepDuration);
+        }
+
         function startFmMusic() {
             if (!audioCtx || !soundEnabled || !fmMusicEnabled) return;
-            if (fmMusicTimer) clearInterval(fmMusicTimer);
+            if (fmMusicTimer) {
+                clearTimeout(fmMusicTimer);
+                fmMusicTimer = null;
+            }
             stepFmMusic();
-            fmMusicTimer = setInterval(stepFmMusic, 700);
+            scheduleNextFmStep();
         }
 
         function stopFmMusic() {
             if (fmMusicTimer) {
-                clearInterval(fmMusicTimer);
+                clearTimeout(fmMusicTimer);
                 fmMusicTimer = null;
             }
         }
@@ -640,7 +851,7 @@
 
         function playBlip() {
             // Tactile YM2612 UI earcon blip with micro FM carrier
-            playFMPatch('cosmicArp', 1480, 0.08, 0.06, false);
+            playFM(1520, 1.414, 2.8, 0.05, 0.08, false);
         }
 
         function playWarp() {
@@ -648,11 +859,12 @@
             initAudio();
             if (!audioCtx) return;
             try {
-                // Dual operator hyperspace spool with resonant frequency ascent
-                playFMPatch('bass', 82.41, 0.24, 0.9, true);
-                setTimeout(() => playFMPatch('bellLead', 220, 0.20, 0.7, true), 100);
-                setTimeout(() => playFMPatch('bellLead', 440, 0.22, 0.6, true), 240);
-                setTimeout(() => playFMPatch('cosmicArp', 880, 0.25, 0.8, true), 420);
+                // Hyperspace drive spool: sub-bass pulse + rising FM cascade with SPC delay
+                playFMPatch('fmBass', 73.42, 0.26, 0.8, false);
+                setTimeout(() => playFMPatch('cosmicLead', 220, 0.18, 0.5, true), 80);
+                setTimeout(() => playFMPatch('cosmicLead', 440, 0.20, 0.5, true), 190);
+                setTimeout(() => playFMPatch('cosmicArp', 880, 0.22, 0.6, true), 320);
+                setTimeout(() => playFMPatch('cosmicArp', 1760, 0.20, 0.7, true), 460);
             } catch(e) {}
         }
 
@@ -669,25 +881,25 @@
 
                 osc.type = 'sawtooth';
                 mod.type = 'sine';
-                osc.frequency.setValueAtTime(1040, now);
-                osc.frequency.exponentialRampToValueAtTime(120, now + 0.15);
-                mod.frequency.setValueAtTime(520, now);
-                mod.frequency.exponentialRampToValueAtTime(60, now + 0.15);
+                osc.frequency.setValueAtTime(1180, now);
+                osc.frequency.exponentialRampToValueAtTime(130, now + 0.14);
+                mod.frequency.setValueAtTime(590, now);
+                mod.frequency.exponentialRampToValueAtTime(65, now + 0.14);
 
-                mGain.gain.setValueAtTime(650, now);
-                mGain.gain.exponentialRampToValueAtTime(15, now + 0.15);
+                mGain.gain.setValueAtTime(720, now);
+                mGain.gain.exponentialRampToValueAtTime(12, now + 0.14);
                 mod.connect(mGain);
                 mGain.connect(osc.frequency);
 
                 vGain.gain.setValueAtTime(0.22, now);
-                vGain.gain.exponentialRampToValueAtTime(0.005, now + 0.15);
+                vGain.gain.exponentialRampToValueAtTime(0.005, now + 0.14);
 
                 osc.connect(vGain);
                 vGain.connect(audioCtx.destination);
                 osc.start(now);
                 mod.start(now);
-                osc.stop(now + 0.15);
-                mod.stop(now + 0.15);
+                osc.stop(now + 0.14);
+                mod.stop(now + 0.14);
             } catch(e) {}
         }
 
@@ -704,24 +916,24 @@
 
                 osc.type = 'square';
                 mod.type = 'sine';
-                osc.frequency.setValueAtTime(380, now);
-                osc.frequency.exponentialRampToValueAtTime(45, now + 0.22);
-                mod.frequency.setValueAtTime(190, now);
+                osc.frequency.setValueAtTime(420, now);
+                osc.frequency.exponentialRampToValueAtTime(48, now + 0.20);
+                mod.frequency.setValueAtTime(210, now);
 
-                mGain.gain.setValueAtTime(520, now);
-                mGain.gain.exponentialRampToValueAtTime(25, now + 0.22);
+                mGain.gain.setValueAtTime(560, now);
+                mGain.gain.exponentialRampToValueAtTime(20, now + 0.20);
                 mod.connect(mGain);
                 mGain.connect(osc.frequency);
 
                 vGain.gain.setValueAtTime(0.20, now);
-                vGain.gain.exponentialRampToValueAtTime(0.005, now + 0.22);
+                vGain.gain.exponentialRampToValueAtTime(0.005, now + 0.20);
 
                 osc.connect(vGain);
                 vGain.connect(audioCtx.destination);
                 osc.start(now);
                 mod.start(now);
-                osc.stop(now + 0.22);
-                mod.stop(now + 0.22);
+                osc.stop(now + 0.20);
+                mod.stop(now + 0.20);
             } catch(e) {}
         }
 
@@ -729,7 +941,7 @@
             // Ascending 4-chord YM2612 FM chime with SPC delay
             const notes = [523.25, 659.25, 783.99, 1046.50];
             notes.forEach((freq, idx) => {
-                setTimeout(() => playFMPatch('bellLead', freq, 0.16, 0.35, true), idx * 80);
+                setTimeout(() => playFMPatch('cosmicLead', freq, 0.15, 0.35, true), idx * 75);
             });
         }
 
@@ -743,8 +955,8 @@
             ];
             chords.forEach((chord, step) => {
                 setTimeout(() => {
-                    chord.forEach(freq => playFMPatch('bellLead', freq, 0.14, 0.55, true));
-                }, step * 140);
+                    chord.forEach(freq => playFMPatch('cosmicLead', freq, 0.13, 0.55, true));
+                }, step * 135);
             });
         }
 
@@ -753,8 +965,8 @@
             initAudio();
             if (!audioCtx) return;
             try {
-                playFM(110, 0.5, 6.0, 0.45, 0.35, true);
-                setTimeout(() => playFM(55, 0.5, 8.0, 0.55, 0.30, true), 60);
+                playFM(110, 0.5, 6.0, 0.45, 0.35, false);
+                setTimeout(() => playFM(55, 0.5, 8.0, 0.55, 0.30, false), 60);
             } catch(e) {}
         }
 
@@ -762,22 +974,22 @@
             // Ethereal pentatonic cosmic shimmer with SPC700 stereo delay
             const freqs = [440, 554.37, 659.25, 880, 1108.73];
             freqs.forEach((f, idx) => {
-                setTimeout(() => playFMPatch('cosmicArp', f, 0.15, 0.45, true), idx * 75);
+                setTimeout(() => playFMPatch('cosmicArp', f, 0.14, 0.45, true), idx * 70);
             });
         }
 
         function playHeal() {
-            playFMPatch('bellLead', 440, 0.16, 0.25, true);
-            setTimeout(() => playFMPatch('bellLead', 880, 0.18, 0.35, true), 90);
+            playFMPatch('cosmicLead', 440, 0.15, 0.25, true);
+            setTimeout(() => playFMPatch('cosmicLead', 880, 0.16, 0.35, true), 90);
         }
 
         function playTransaction() {
-            playFMPatch('cosmicArp', 587.33, 0.14, 0.18, true);
-            setTimeout(() => playFMPatch('cosmicArp', 1174.66, 0.16, 0.24, true), 70);
+            playFMPatch('cosmicArp', 587.33, 0.13, 0.18, true);
+            setTimeout(() => playFMPatch('cosmicArp', 1174.66, 0.15, 0.24, true), 65);
         }
 
         function playShieldImpact() {
-            playFM(340, 1.414, 4.5, 0.16, 0.22, true);
+            playFM(340, 1.414, 4.5, 0.15, 0.20, false);
         }
 
         document.addEventListener('click', () => {
@@ -3284,7 +3496,7 @@
                     nextManualTab();
                     return;
                 }
-                if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.key === 'm' || e.key === 'M' || e.key === 'h' || e.key === 'H') {
+                if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.key === 'h' || e.key === 'H') {
                     e.preventDefault();
                     closeManual();
                     return;
@@ -3315,8 +3527,15 @@
                 }
             }
 
-            // Open/Toggle Manual with M, H, F1, or ?
-            if (e.key === 'm' || e.key === 'M' || e.key === 'h' || e.key === 'H' || e.key === 'F1' || e.key === '?') {
+            // Toggle Audio / Mute with M
+            if (e.key === 'm' || e.key === 'M') {
+                e.preventDefault();
+                toggleAudio();
+                return;
+            }
+
+            // Open/Toggle Manual with H, F1, or ?
+            if (e.key === 'h' || e.key === 'H' || e.key === 'F1' || e.key === '?') {
                 e.preventDefault();
                 if (isManualOpen) {
                     closeManual();
@@ -3364,7 +3583,7 @@
 
         // Restore Audio button states on page load
         const audioBtn = document.getElementById('audio-toggle-btn');
-        if (audioBtn) audioBtn.innerText = soundEnabled ? "🔊 AUDIO: ON" : "🔇 AUDIO: OFF";
+        if (audioBtn) audioBtn.innerText = soundEnabled ? "🔊 AUDIO: ON [M]" : "🔇 AUDIO: OFF [M]";
         const droneBtn = document.getElementById('drone-toggle-btn');
         if (droneBtn) droneBtn.innerText = droneEnabled ? "🌌 DRONE: ON" : "🌌 DRONE: OFF";
         const musicBtn = document.getElementById('music-toggle-btn');

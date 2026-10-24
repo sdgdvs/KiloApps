@@ -419,9 +419,9 @@
     "id": "kmatrix",
     "title": "KMatrix",
     "folder": "System",
-    "webBytes": 82513,
+    "webBytes": 84487,
     "exeBytes": 15360,
-    "budgetPercent": 8.3
+    "budgetPercent": 8.5
   },
   {
     "id": "kmaze",
@@ -603,7 +603,7 @@
     "id": "ksanctuary",
     "title": "KSanctuary",
     "folder": "Games",
-    "webBytes": 460775,
+    "webBytes": 460761,
     "exeBytes": 264192,
     "budgetPercent": 46.1
   },
