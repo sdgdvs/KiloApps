@@ -674,6 +674,91 @@
     }
   }
 
+  /* Focus Rings & Accessibility */
+  :focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+  }
+  button, .btn, .quick-chip, .tab-btn, .svc-chip {
+    touch-action: manipulation;
+  }
+  button:active, .btn:active, .quick-chip:active {
+    transform: translateY(1px);
+  }
+
+  /* Usability Status Bar */
+  .statusbar {
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    padding: 4px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    gap: 8px;
+    z-index: 50;
+    user-select: none;
+  }
+
+  .statusbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .statusbar-indicator {
+    color: var(--accent-green);
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+
+  .statusbar-msg {
+    color: var(--text-main);
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .statusbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .sb-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .sb-pill kbd {
+    background: #334155;
+    color: #fff;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-family: Consolas, monospace;
+    font-size: 9px;
+  }
+
+  @media (max-width: 700px) {
+    .statusbar-right .sb-pill:not(:first-child):not(:nth-child(2)) {
+      display: none;
+    }
+  }
+
   /* Custom Scrollbars */
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: var(--bg-primary); }
@@ -1332,6 +1417,22 @@
     </section>
   </main>
 
+  <!-- Usability Ergonomics Status Bar -->
+  <footer id="ksys-statusbar" class="statusbar" role="status" aria-live="polite">
+    <div class="statusbar-left">
+      <span class="statusbar-indicator">● READY</span>
+      <span id="sb-status" class="statusbar-msg">KSys Diagnostic Telemetry Workstation Active</span>
+    </div>
+    <div class="statusbar-right">
+      <span class="sb-pill"><kbd>F1/H</kbd> Help</span>
+      <span class="sb-pill"><kbd>F5/F9</kbd> Save/Load</span>
+      <span class="sb-pill"><kbd>Shift+M</kbd> Sound</span>
+      <span class="sb-pill"><kbd>1-6</kbd> Tabs</span>
+      <span class="sb-pill"><kbd>Esc</kbd> Dismiss</span>
+    </div>
+  </footer>
+
+
 <script>
   // Global State & Event Logs
   const startTime = Date.now();
@@ -1725,6 +1826,8 @@
     };
 
     container.appendChild(toast);
+    const sbStatus = document.getElementById('sb-status');
+    if (sbStatus) sbStatus.textContent = message;
     setTimeout(dismiss, duration);
   }
 
@@ -1781,6 +1884,24 @@
     copyReportToClipboard();
   }
 
+  let activeModalTrigger = null;
+
+  function getActiveOpenModal() {
+    const modals = ['help-modal', 'service-modal', 'add-service-modal'];
+    for (const id of modals) {
+      const el = document.getElementById(id);
+      if (el && el.style.display !== 'none') return el;
+    }
+    return null;
+  }
+
+  function restoreModalFocus() {
+    if (activeModalTrigger && typeof activeModalTrigger.focus === 'function' && document.body.contains(activeModalTrigger)) {
+      try { activeModalTrigger.focus(); } catch (e) {}
+      activeModalTrigger = null;
+    }
+  }
+
   // Modal Controls
   function isAnyModalOpen() {
     const modals = ['help-modal', 'service-modal', 'add-service-modal'];
@@ -1797,6 +1918,7 @@
 
   function showHelp() {
     clearToasts();
+    activeModalTrigger = document.activeElement;
     const hm = document.getElementById('help-modal');
     if (!hm) return;
     hm.style.display = 'flex';
@@ -1809,6 +1931,7 @@
     const hm = document.getElementById('help-modal');
     if (hm) hm.style.display = 'none';
     safeSetStorage('ksys_tutorialSeen', '1');
+    restoreModalFocus();
   }
   function resetTutorialFlag() {
     safeSetStorage('ksys_tutorialSeen', null);
@@ -1827,6 +1950,7 @@
   }
   function closeAddServiceModal() {
     document.getElementById('add-service-modal').style.display = 'none';
+    restoreModalFocus();
   }
 
   function getActiveTabId() {
@@ -2075,8 +2199,28 @@
       return;
     }
 
-    // Modal active handling
+    // Modal active handling & Focus Trapping
     if (isAnyModalOpen()) {
+      const activeModal = getActiveOpenModal();
+      if (activeModal && e.key === 'Tab') {
+        const focusables = Array.from(activeModal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')).filter(el => el.offsetParent !== null);
+        if (focusables.length > 0) {
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (e.shiftKey) {
+            if (document.activeElement === first || !activeModal.contains(document.activeElement)) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last || !activeModal.contains(document.activeElement)) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+          return;
+        }
+      }
       if (e.key === 'Escape') {
         e.preventDefault();
         closeAllModals();
@@ -3285,6 +3429,7 @@
     document.getElementById('modal-svc-mem').textContent = svc.mem;
     document.getElementById('modal-svc-desc').textContent = svc.desc;
 
+    activeModalTrigger = document.activeElement;
     document.getElementById('service-modal').style.display = 'flex';
     setTimeout(() => {
       const btn = document.getElementById('btnServiceClose');
@@ -3294,6 +3439,7 @@
 
   function closeServiceModal() {
     document.getElementById('service-modal').style.display = 'none';
+    restoreModalFocus();
   }
 
   function refreshServices() {
@@ -3303,6 +3449,7 @@
   }
 
   function addCustomService() {
+    activeModalTrigger = document.activeElement;
     document.getElementById('add-svc-name').value = '';
     document.getElementById('add-svc-disp').value = '';
     document.getElementById('add-service-modal').style.display = 'flex';
@@ -3556,8 +3703,9 @@
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
 
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
 
     ctx.clearRect(0, 0, w, h);
@@ -4275,10 +4423,14 @@
       }
     }
 
+    let resizeTimer = null;
     window.addEventListener('resize', () => {
-      if (getActiveTabId() === 'services') {
-        updateTelemetrySparklines();
-      }
+      if (resizeTimer) cancelAnimationFrame(resizeTimer);
+      resizeTimer = requestAnimationFrame(() => {
+        if (getActiveTabId() === 'services') {
+          updateTelemetrySparklines();
+        }
+      });
     });
 
     timerUptime = setInterval(updateUptime, 1000);
