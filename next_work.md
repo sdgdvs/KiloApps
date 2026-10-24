@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-review
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,11 +32,11 @@ current_targets:
   kilo_creator: kweb://deep-core
   kilo_graphics: KStellar
   kilo_soundscape: KVoid
-  kilo_tester: KFlash
-  kilo_usability: KScript
+  kilo_tester: KFarm
+  kilo_usability: KFarm
   kilo_qa: KFlash
   kilo_expander: KAnomaly
-  kilo_review: KFarm
+  kilo_review: KMech
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
 - kweb://slashnet
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KStarForge
-  timestamp: '2026-10-24T12:50:28-07:00'
+  agent: kilo-review
+  app: KFarm
+  timestamp: '2026-10-24T13:03:36-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -129,20 +129,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KFlash`
+- **Active Target**: `KFarm`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KFarm` | `KiloOS/public/apps/kfarm.html`, `KFarm/main.c` | **[ARGON REVIEW]:** Fix fatal TypeError in loadGame() caused by reassigning const chickensList/cowsList, enable 3x3 AoE seed planting when toolsUpgraded is active, allow Wheat in Winter (seasons [0,2,3]) so Winter is playable, and fix Mill button [W] hotkey label parity in kfarm.html and KFarm/main.c. |
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Audit flashcard deck manager, spaced repetition algorithm, flip animations, and deck import/export. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KScript`
+- **Active Target**: `KFarm`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KFarm` | `KiloOS/public/apps/kfarm.html`, `KFarm/main.c` | **[ARGON REVIEW]:** Eliminate 197px vertical overflow at 640x743 by compacting .container and grouping seed/shop/utility buttons so all controls fit in-viewport without clipping, move #kfarmToast to top-right so it never covers buttons, and wire Arrow/WASD + Enter to navigate hoverGridX/hoverGridY and trigger tile actions. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -174,11 +176,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
-- **Active Target**: `KFarm`
+- **Active Target**: `KMech`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFarm` | `KiloOS/public/apps/kfarm.html`, `KFarm/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): run `visual_probe.py --app KFarm`, inspect `sheet.png` + HTML/JS for layout clipping, dead/Potemkin market/livestock controls, gameplay balance, and UX friction; inject surgical fixes into Flash queues via `advance_turn.py --inject-fix`. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + tactical mech arena HUD, heat/limb targeting responsiveness, and modal/viewport clipping; inject fixes via `--inject-fix`. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + 12-system star chart, commodity futures table, pirate combat loop, and shipyard ergonomics; inject fixes via `--inject-fix`. |
 | `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + cyber-arcade maze viewport, campaign/editor controls, and input responsiveness; inject fixes via `--inject-fix`. |
@@ -208,6 +209,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | Argon Visual, Feature & Usability Review (Active Audit): inspect `sheet.png` + 4X galaxy map, diplomacy/fleet panels, and turn progression UX; inject fixes via `--inject-fix`. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Argon Visual, Feature & Usability Review (Active Audit): inspect `sheet.png` + starship hull blueprint grid, skirmish simulator, and VFS controls; inject fixes via `--inject-fix`. |
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Argon Visual, Feature & Usability Review (Active Audit): inspect `sheet.png` + JRPG overworld/combat viewport, party HUD, and inventory ergonomics; inject fixes via `--inject-fix`. |
+| `KFarm` | `KiloOS/public/apps/kfarm.html`, `KFarm/main.c` | [Argon Audited 2026-10-24: Fixes queued -> kilo-tester, kilo-usability] Visual, feature & usability review. |
 
 ---
 
@@ -221,7 +223,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 |---|---|---|---|---|
 | **KHabit** | `KiloOS/public/apps/khabit.html` | Pass 5+ (2026-10-24) | Office / Productivity | Feature-complete sovereign habit tracker with streak calculations, 28-day completion heatmap, daily reminder banner, YM2612 FM audio, F5/F9 state persistence, and dual Win32 C parity. |
 | **KBudget** | `KiloOS/public/apps/kbudget.html` | Pass 5+ (2026-10-24) | Office / Productivity | Comprehensive retro budget ledger with category allocation pie charts, multi-currency switching, monthly goals, CSV/JSON VFS integration, F5/F9 snapshot persistence, and dual Win32 C parity. |
-| **KFarm** | `KiloOS/public/apps/kfarm.html` | Pass 5+ (2026-10-24) | Games / Simulation | Feature-complete 1999 pastoral farming sim; crop cycles, livestock, market upgrades, YM2612 2-Op FM / SPC700 soundscape, F5/F9 persistence, dual Win32 C parity. |
 | **KJournal** | `KiloOS/public/apps/kjournal.html` | Pass 5+ (2026-10-24) | Productivity / Writing & Journal | Complete encrypted retro journal workstation with rich markdown preview, mood tags, PIN lock, calendar navigator, F5/F9 persistence, and dual Win32 C parity. |
 | **KMatrix** | `KiloOS/public/apps/kmatrix.html` | Pass 5+ (2026-10-24) | System / Security | Master forensic terminal & ARG climax with matrix digital rain visualizer, subterranean codebook decrypter, RF frequency waterfall, YM2612/SPC700 telemetry, F5/F9 state persistence, and dual Win32 C parity. |
 | **KVault** | `KiloOS/public/apps/kvault.html` | Pass 5+ (2026-10-24) | System / Security | Comprehensive client-side encrypted password & secret manager with AES-GCM/PBKDF2/WebCrypto, tree navigator, KeePass/CSV/ASCII export/import, F5/F9 state snapshots, and Win32 C parity. |
@@ -275,6 +276,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T13:03:36-07:00 — kilo-review: KFarm (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 640x743 and audited kfarm.html + KFarm/main.c).
+  - Visual/UX Findings: 197px vertical overflow at 640x743 slices Upgrade Tools button in half and hides all 11 livestock/artisanal/system buttons below fold; bottom-right toast overlaps action buttons; Arrow/WASD keys are a dead no-op stub instead of moving the grid cursor.
+  - Feature/Bug Findings: loadGame() crashes with TypeError by reassigning const chickensList and cowsList; 3x3 Upgraded Tools fails to plant in 3x3; Winter season (season 3) has zero plantable crops; loadGame() resets Mill shortcut label to [M] instead of [W].
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KFarm`, `kilo-tester`->`KFarm`] (un-quarantined `KFarm` from Mature); advanced `kilo-review` to `KMech`; next agent `kilo-creator`.
+
 - **2026-10-24T12:50:28-07:00 — kilo-expander: KStarForge (Phase VI RFMS Blueprint Exchange & Fleet Skirmish)**
   - Status: PASS ✅ (0 errors, web 314.1 KB, native 30.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.83%, HEAD Δ 0.09%, 0 fail, 0 warn, 14.0s)).
   - Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrated retro_multiplayer.js for online ship blueprint sharing & tactical test skirmish with explicit Connect gate and 25s AI fallback.
@@ -299,9 +306,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Ergonomics & Ratings: 1-4 rating system (Again, Hard, Good, Easy) with keyboard/touch shortcuts [1-4, G/R] and active card tap feedback.
   - Responsive Layout & Drawer: Responsive deck progress strip and slide-out Deck Picker Drawer [D] for study pack switching and search.
   - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
-
-- **2026-10-24T12:24:37-07:00 — kilo-tester: KHabit (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS ✅ (0 errors, web 98.2 KB, native 170.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.2%, HEAD Δ 3.45%, 0 fail, 0 warn, 8.9s)).
-  - UI & Hotkeys: Audited habit streaks, added 28-day activity heatmap, daily reminder banner with filter toggle, fixed arrow key input trap, added '/' hotkey.
-  - Parity & Builds: Clean Win32 C compilation with MSVC struct fix, updated dashboard progress text and stats; zero security/trademark defects.
-  - Handoff: Advanced `kilo-tester` to `KFlash`; rotated active agent to `kilo-usability`.
