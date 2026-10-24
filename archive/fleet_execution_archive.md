@@ -4,6 +4,10 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T14:46:55-07:00 — kilo-adhoc: Orchestrator (Session File NTFS NUL-Byte Self-Healing & Atomic Writes)**
+  - Diagnosed 3 orchestrator warnings (Expecting value: line 1 column 1 (char 0)): .agents/scheduler_session.json was zero-filled (486 NUL bytes) after an unclean shutdown during non-atomic write_text() at 2026-10-24T05:40:41Z.
+  - Added tomic_write_json() (	mp + os.fsync + os.replace) and load_session_data() auto-healing in scripts/orchestrate.py, restored .agents/scheduler_session.json and .agents/fleet_nodes/node_c.json telemetry (351 turns), and exempted [ARGON REVIEW] specs from pre-flight skip lists.
+
 - **2026-10-24T14:40:16-07:00 — kilo-creator: kweb://slashnet (SlashNet 1999 Web Destination with Terminal Hotkeys & VFS)**
   - Status: PASS ✅ (0 errors, web 87.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Added interactive keyboard hotkeys (J/K story jumping, S/B/L/P/V views, 0-5 quick threshold, ? help modal).

@@ -24,18 +24,30 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 100%;
             user-select: none;
-            overflow-x: hidden;
+            overflow: hidden;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html {
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         #game-container {
             width: 100%;
-            max-width: 650px;
-            min-height: 520px;
+            max-width: 636px;
+            height: 100%;
+            max-height: 498px;
             border: 2px solid #00ff66;
             border-radius: 6px;
             box-shadow: 0 0 20px rgba(0, 255, 100, 0.35), inset 0 0 20px rgba(0, 255, 100, 0.12);
-            padding: 16px;
+            padding: 6px 10px;
+            box-sizing: border-box;
             position: relative;
             background: linear-gradient(180deg, rgba(0, 15, 5, 0.96) 0%, rgba(2, 8, 3, 0.98) 100%);
             display: flex;
@@ -73,9 +85,12 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid rgba(0, 255, 100, 0.5);
-            padding-bottom: 6px;
-            margin-bottom: 8px;
+            padding-bottom: 4px;
+            margin-bottom: 4px;
             position: relative;
+            white-space: nowrap;
+            overflow: hidden;
+            flex-shrink: 0;
         }
         .header-bar::after {
             content: '';
@@ -90,24 +105,26 @@
         h1, h2 {
             margin: 0;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            font-size: 17px;
+            letter-spacing: 1.5px;
+            font-size: 15px;
             color: #00ff88;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
+            white-space: nowrap;
         }
         .btn-help-top {
             background: rgba(0, 35, 15, 0.8);
             border: 1px solid #00ff88;
             color: #00ffaa;
             font-family: inherit;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
-            padding: 3px 8px;
+            padding: 2px 6px;
             cursor: pointer;
             border-radius: 3px;
             transition: all 0.2s;
+            white-space: nowrap;
         }
         .btn-help-top:hover {
             background: #00ff88;
@@ -116,10 +133,15 @@
         }
         .quick-hint {
             text-align: center;
-            font-size: 11px;
+            font-size: 10px;
             color: #8cfaab;
-            margin-bottom: 8px;
-            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 13px;
+            flex-shrink: 0;
         }
 
         /* Garage Hangar Diagnostics Bay */
@@ -128,15 +150,16 @@
             background: radial-gradient(circle at 50% 50%, rgba(0, 35, 15, 0.7) 0%, rgba(0, 10, 5, 0.9) 100%);
             border: 1px solid #00aa55;
             border-radius: 4px;
-            padding: 8px;
-            margin-bottom: 8px;
-            gap: 12px;
+            padding: 6px 8px;
+            margin-bottom: 5px;
+            gap: 10px;
             position: relative;
             box-shadow: inset 0 0 15px rgba(0, 255, 100, 0.15);
+            flex-shrink: 0;
         }
         .hangar-viewport {
-            width: 140px;
-            height: 125px;
+            width: 130px;
+            height: 110px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -203,63 +226,65 @@
         .stats {
             display: flex;
             justify-content: space-around;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             gap: 6px;
+            flex-shrink: 0;
         }
         .stat-box {
             border: 1px solid #00aa55;
-            padding: 5px 4px;
+            padding: 3px 4px;
             text-align: center;
             flex: 1;
             background-color: rgba(0, 30, 15, 0.5);
             border-radius: 3px;
         }
         .stat-label {
-            font-size: 10px;
+            font-size: 9px;
             color: #78c990;
         }
         .stat-val {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
             color: #00ff88;
         }
         .equip-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-            margin-bottom: 8px;
+            gap: 5px;
+            margin-bottom: 5px;
+            flex-shrink: 0;
         }
         .equip-card {
             text-align: center;
             background: rgba(0, 25, 10, 0.6);
             border: 1px solid #007733;
-            padding: 5px 4px;
+            padding: 3px 2px;
             border-radius: 3px;
         }
         .equip-label {
             font-size: 9px;
             color: #6ebb82;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
             text-transform: uppercase;
         }
         .btn {
             background-color: #031408;
             color: #00ff88;
             border: 1px solid #00cc66;
-            padding: 6px 10px;
+            padding: 4px 8px;
             cursor: pointer;
             text-transform: uppercase;
             font-family: 'Courier New', Courier, monospace;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
-            margin: 2px;
+            margin: 1px;
             border-radius: 3px;
             box-shadow: 0 0 5px rgba(0, 255, 100, 0.3);
             transition: all 0.15s ease-in-out;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
+            gap: 4px;
         }
         .btn:hover {
             background-color: #00ff88;
@@ -296,34 +321,98 @@
             justify-content: center;
             flex-wrap: wrap;
             margin-top: auto;
-            gap: 4px;
+            gap: 3px;
+            flex-shrink: 0;
         }
         #garage-info {
             text-align: center;
-            font-size: 11px;
-            min-height: 26px;
-            line-height: 13px;
+            font-size: 10px;
+            min-height: 22px;
+            line-height: 12px;
             color: #bbf8cd;
-            margin: 4px 0;
-            padding: 4px;
+            margin: 2px 0 4px 0;
+            padding: 2px 4px;
             background: rgba(0, 30, 15, 0.4);
             border: 1px dashed #008844;
-            border-radius: 3px;
+            flex-shrink: 0;
         }
         #log {
             flex: 1;
-            min-height: 85px;
-            max-height: 110px;
+            min-height: 52px;
+            max-height: 80px;
             border: 1px solid #007733;
-            padding: 6px 8px;
+            padding: 4px 8px;
             overflow-y: auto;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             background-color: rgba(0, 15, 8, 0.95);
             color: #00ff88;
             font-size: 11px;
             line-height: 14px;
             border-radius: 3px;
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+        .target-pills-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 5px;
+            padding: 2px 6px;
+            background: rgba(0, 25, 12, 0.75);
+            border: 1px solid #005522;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .target-pills-title {
+            font-size: 10px;
+            font-weight: bold;
+            color: #00ffaa;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .target-pills-list {
+            display: flex;
+            gap: 4px;
+            flex-wrap: nowrap;
+        }
+        .target-pill {
+            background: rgba(0, 35, 15, 0.85);
+            border: 1px solid #007733;
+            color: #7acc99;
+            font-family: inherit;
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .target-pill:hover {
+            border-color: #00ff88;
+            color: #ffffff;
+            box-shadow: 0 0 6px rgba(0, 255, 136, 0.4);
+        }
+        .target-pill.active {
+            background: #004d22;
+            border-color: #00ff88;
+            color: #00ffff;
+            font-weight: bold;
+            box-shadow: 0 0 8px rgba(0, 255, 136, 0.6), inset 0 0 4px rgba(0, 255, 136, 0.3);
+        }
+        .target-pill .pill-chance {
+            font-size: 9px;
+            color: #ffff55;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0 3px;
+            border-radius: 3px;
+        }
+        .target-pill.active .pill-chance {
+            color: #00ffff;
+            background: rgba(0, 30, 20, 0.8);
         }
 
         /* Battle Arena Display */
@@ -450,17 +539,17 @@
             animation: anim-damage 0.45s;
         }
 
-        /* Toast Notifications - Top Safe Zone (Clears action buttons) */
+        /* Toast Notifications - Bottom Safe Zone (Clears headers/hints) */
         #toast-container {
             position: absolute;
-            top: 44px;
+            bottom: 46px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 1500;
             display: flex;
-            flex-direction: column;
+            flex-direction: column-reverse;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             pointer-events: none;
             max-width: 90%;
             width: max-content;
@@ -469,12 +558,12 @@
             background: rgba(0, 20, 10, 0.95);
             border: 1px solid #00ff88;
             color: #00ffaa;
-            padding: 6px 12px;
+            padding: 5px 12px;
             font-size: 11px;
             line-height: 14px;
             border-radius: 4px;
             box-shadow: 0 0 12px rgba(0, 255, 100, 0.5);
-            animation: toastIn 0.25s ease-out, toastOut 0.25s ease-in 2.75s forwards;
+            animation: toastIn 0.22s ease-out, toastOut 0.22s ease-in 2.4s forwards;
             pointer-events: auto;
             cursor: pointer;
             text-align: center;
@@ -490,12 +579,12 @@
             box-shadow: 0 0 10px rgba(255, 50, 50, 0.5);
         }
         @keyframes toastIn {
-            from { opacity: 0; transform: translateY(-10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes toastOut {
             from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 0; transform: translateY(8px); }
         }
 
         /* Modal Dialog Styles */
@@ -615,7 +704,7 @@
         <div id="screen-garage" class="screen active">
             <div class="header-bar">
                 <h1>⚡ KMech Garage</h1>
-                <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
+                <div style="display:flex; gap:4px; flex-wrap:nowrap; align-items:center;">
                     <button class="btn-help-top btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound [M]">🔊 Audio</button>
                     <button class="btn-help-top" onclick="openTelemetryModal()" title="Telemetry Save & Backup [F2]">[F2] Backup</button>
                     <button class="btn-help-top" onclick="quickSave()" title="Quicksave [F5]">[F5] Save</button>
@@ -710,7 +799,7 @@
         <div id="screen-battle" class="screen">
             <div class="header-bar">
                 <h2>⚔️ Combat Zone</h2>
-                <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
+                <div style="display:flex; gap:4px; flex-wrap:nowrap; align-items:center;">
                     <button class="btn-help-top btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound [M]">🔊 Audio</button>
                     <button class="btn-help-top" onclick="openTelemetryModal()" title="Telemetry Save & Backup [F2]">[F2] Backup</button>
                     <button class="btn-help-top" onclick="quickSave()" title="Quicksave [F5]">[F5] Save</button>
@@ -743,6 +832,11 @@
                         <div class="bar-container"><div id="enemy-heat-bar" class="bar heat-bar"></div></div>
                     </div>
                 </div>
+            </div>
+
+            <div class="target-pills-bar" id="target-pills-bar" role="radiogroup" aria-label="Subsystem Target Selector">
+                <span class="target-pills-title">TARGET [T]:</span>
+                <div class="target-pills-list" id="target-pills-list"></div>
             </div>
 
             <div id="log"></div>
@@ -2173,6 +2267,20 @@
         const fxCanvas = document.getElementById('combat-fx-canvas');
         const fxCtx = fxCanvas ? fxCanvas.getContext('2d') : null;
 
+        function resizeCombatCanvas() {
+            if (!fxCanvas) return;
+            const arena = document.getElementById('battle-arena');
+            const rect = arena ? arena.getBoundingClientRect() : fxCanvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            const w = Math.round(rect.width || 618);
+            const h = Math.round(rect.height || 140);
+            if (w > 0 && h > 0 && (fxCanvas.width !== Math.round(w * dpr) || fxCanvas.height !== Math.round(h * dpr))) {
+                fxCanvas.width = Math.round(w * dpr);
+                fxCanvas.height = Math.round(h * dpr);
+            }
+        }
+        window.addEventListener('resize', resizeCombatCanvas);
+
         let particles = [];
         let shockwaves = [];
         let projectiles = [];
@@ -2288,7 +2396,12 @@
         // 60 FPS animation loop for canvas FX & Screen Shake
         function updateCombatFX() {
             if (!fxCtx || !fxCanvas) return;
-            fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+            const dpr = window.devicePixelRatio || 1;
+            const cssW = fxCanvas.width / dpr;
+            const cssH = fxCanvas.height / dpr;
+            fxCtx.save();
+            fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            fxCtx.clearRect(0, 0, cssW, cssH);
 
             // Update & Render Projectiles
             for (let i = projectiles.length - 1; i >= 0; i--) {
@@ -2495,6 +2608,8 @@
                 screenShake = 0;
             }
 
+            fxCtx.restore();
+
             if (!document.hidden) {
                 fxAnimId = requestAnimationFrame(updateCombatFX);
             } else {
@@ -2530,12 +2645,51 @@
         });
 
         /* ==================== GAME LOGIC & CONTROLS ==================== */
+        function selectTargetLimb(idx) {
+            if (idx < 0 || idx >= limbs.length) return;
+            currentTargetLimb = idx;
+            updateTargetUI();
+            playSound('servo');
+            const l = limbs[currentTargetLimb];
+            const hitPct = Math.min(95, Math.round((l.chance + ((playerLevel - 1) * 0.05)) * 100));
+            showToast(`Target: ${l.name} (${hitPct}% Hit, ${l.mult}x Dmg)`, 1500);
+        }
+
         function toggleTarget() {
             currentTargetLimb = (currentTargetLimb + 1) % limbs.length;
-            const tgtName = limbs[currentTargetLimb].name;
-            document.getElementById('btn-target').innerHTML = `<span class="key-badge">T</span> TGT: ${tgtName}`;
+            updateTargetUI();
             playSound('servo');
-            showToast(`Target set to ${tgtName} (${limbs[currentTargetLimb].mult}x Dmg)`, 1800);
+            const l = limbs[currentTargetLimb];
+            const hitPct = Math.min(95, Math.round((l.chance + ((playerLevel - 1) * 0.05)) * 100));
+            showToast(`Target: ${l.name} (${hitPct}% Hit, ${l.mult}x Dmg)`, 1500);
+        }
+
+        function renderTargetPills() {
+            const list = document.getElementById('target-pills-list');
+            if (!list) return;
+            list.innerHTML = '';
+            limbs.forEach((l, idx) => {
+                const hitChance = Math.min(95, Math.round((l.chance + ((playerLevel - 1) * 0.05)) * 100));
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'target-pill' + (idx === currentTargetLimb ? ' active' : '');
+                btn.setAttribute('role', 'radio');
+                btn.setAttribute('aria-checked', idx === currentTargetLimb ? 'true' : 'false');
+                btn.title = `${l.name}: ${hitChance}% Hit, ${l.mult}x Damage`;
+                btn.innerHTML = `${l.name} <span class="pill-chance">${hitChance}%</span>`;
+                btn.onclick = () => selectTargetLimb(idx);
+                list.appendChild(btn);
+            });
+        }
+
+        function updateTargetUI() {
+            const tgtName = limbs[currentTargetLimb].name;
+            const hitPct = Math.min(95, Math.round((limbs[currentTargetLimb].chance + ((playerLevel - 1) * 0.05)) * 100));
+            const btn = document.getElementById('btn-target');
+            if (btn) {
+                btn.innerHTML = `<span class="key-badge">T</span> TGT: ${tgtName} (${hitPct}%)`;
+            }
+            renderTargetPills();
         }
 
         function getCurrentScreen() {
@@ -2558,6 +2712,8 @@
             } else if (id === 'battle') {
                 setBgmMode('combat');
                 if (soundEnabled && !bgmRunning) startBgm('combat');
+                resizeCombatCanvas();
+                updateTargetUI();
             } else if (id === 'garage') {
                 setBgmMode('hangar');
                 if (soundEnabled && !bgmRunning) startBgm('hangar');
@@ -2779,6 +2935,7 @@
             document.getElementById('log').innerHTML = '';
             document.getElementById('battle-actions').style.display = 'flex';
             document.getElementById('post-battle-actions').style.display = 'none';
+            updateTargetUI();
             logMsg(`Battle #${battleCount} Initiated! Hostile mech detected.`);
             playSound('alarm');
             playSound('stomp');
@@ -3248,15 +3405,18 @@
                         returnToGarage();
                     }
                 } else {
-                    if (key === 'a' || e.key === ' ' || key === '1') {
+                    if (key === 'a' || e.key === ' ') {
                         e.preventDefault();
                         actionAttack();
-                    } else if (key === 'd' || key === '2') {
+                    } else if (key === 'd') {
                         e.preventDefault();
                         actionDefend();
                     } else if (key === 't') {
                         e.preventDefault();
                         toggleTarget();
+                    } else if (key >= '1' && key <= '5') {
+                        e.preventDefault();
+                        selectTargetLimb(parseInt(key, 10) - 1);
                     }
                 }
             }

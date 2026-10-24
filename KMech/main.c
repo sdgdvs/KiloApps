@@ -1732,7 +1732,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 if (gameState == STATE_BATTLE) {
                     char targetText[64];
-                    wsprintfA(targetText, "TGT: %s [T]", limbNames[currentTargetLimb]);
+                    int curHitPct = (int)((limbHitChance[currentTargetLimb] + ((playerLevel - 1) * 0.05f)) * 100);
+                    if (curHitPct > 95) curHitPct = 95;
+                    wsprintfA(targetText, "TGT: %s (%d%%) [T]", limbNames[currentTargetLimb], curHitPct);
                     DrawButton(memDC, &rectTarget, targetText);
                     DrawButton(memDC, &rectAttack, "Attack [A/Space]");
                     DrawButton(memDC, &rectDefend, "Defend [D]");
