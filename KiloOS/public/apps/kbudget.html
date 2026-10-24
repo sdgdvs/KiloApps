@@ -458,6 +458,19 @@
                     <h3>Expenses</h3>
                     <p class="text-danger" id="total-expense">-$0.00</p>
                 </div>
+                <div class="summary-card" id="budget-goal-card" style="cursor: pointer;" onclick="openSettingsModal()" title="Click to adjust monthly budget goal">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <h3 style="margin-bottom: 0;">Monthly Budget</h3>
+                        <span id="budget-goal-status" style="font-size: 0.75rem; color: #94a3b8;">No goal</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 0.35rem;">
+                        <p id="budget-goal-display" style="font-size: 1.05rem; font-weight: 600; color: #f1f5f9; margin: 0;">$0.00</p>
+                        <span id="budget-goal-remaining" style="font-size: 0.8rem; color: #94a3b8;"></span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 0.45rem;">
+                        <div id="budget-goal-bar" style="background: #10b981; height: 100%; width: 0%; transition: width 0.3s, background-color 0.3s;"></div>
+                    </div>
+                </div>
             </div>
             <h3 style="font-size: 1rem; margin-top: 1.5rem; color: #cbd5e1; font-weight: 500;">Expenses by Category</h3>
             <div id="chart-container">
@@ -556,7 +569,18 @@
             <form id="settings-form">
                 <div class="form-group">
                     <label for="currency-symbol">Currency Symbol</label>
+                    <div style="display: flex; gap: 0.4rem; margin-bottom: 0.5rem;">
+                        <button type="button" class="btn btn-outline" style="flex: 1; padding: 4px 6px; color: white; font-size: 0.85rem;" onclick="setCurrencyPreset('$')">$ USD</button>
+                        <button type="button" class="btn btn-outline" style="flex: 1; padding: 4px 6px; color: white; font-size: 0.85rem;" onclick="setCurrencyPreset('€')">€ EUR</button>
+                        <button type="button" class="btn btn-outline" style="flex: 1; padding: 4px 6px; color: white; font-size: 0.85rem;" onclick="setCurrencyPreset('£')">£ GBP</button>
+                        <button type="button" class="btn btn-outline" style="flex: 1; padding: 4px 6px; color: white; font-size: 0.85rem;" onclick="setCurrencyPreset('¥')">¥ JPY</button>
+                    </div>
                     <input type="text" id="currency-symbol" class="form-control" required placeholder="$">
+                </div>
+                <div class="form-group">
+                    <label for="budget-goal-input" id="budget-goal-label">Monthly Expense Budget Target</label>
+                    <input type="number" id="budget-goal-input" class="form-control" min="0" step="any" placeholder="0 (disabled)">
+                    <small style="color: #94a3b8; font-size: 0.75rem;">Set a spending target to monitor monthly expenditure pace.</small>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-outline" onclick="closeSettingsModal()">Cancel</button>
@@ -631,6 +655,14 @@
                     </div>
                 </div>
                 <div>
+                    <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: #cbd5e1;">KiloOS Virtual Filesystem (VFS)</h3>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-outline" style="flex: 1; min-width: 120px; color: white;" onclick="exportToVFS('csv'); closeDataModal();">Save CSV to VFS</button>
+                        <button type="button" class="btn btn-outline" style="flex: 1; min-width: 120px; color: white;" onclick="exportToVFS('json'); closeDataModal();">Backup to VFS</button>
+                        <button type="button" class="btn btn-outline" style="flex: 1; min-width: 120px; color: white;" onclick="importFromVFS(); closeDataModal();">Open from VFS</button>
+                    </div>
+                </div>
+                <div>
                     <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: #cbd5e1;">Presets &amp; Reset</h3>
                     <div style="display: flex; gap: 0.5rem;">
                         <button type="button" class="btn btn-outline" style="flex: 1; color: white;" onclick="loadSampleData(); closeDataModal();">Sample Demo</button>
@@ -701,6 +733,7 @@
         } catch(e) {
             currencySymbol = '$';
         }
+        let budgetGoal = parseFloat(safeGet('kbudget_goal', 0)) || 0;
         let editingTransactionId = null;
         let currentPage = 1;
         const itemsPerPage = 20;
@@ -842,9 +875,23 @@
             updateCategories();
         }
 
+        function setCurrencyPreset(sym) {
+            if (currencyInput) {
+                currencyInput.value = sym;
+            }
+        }
+
         function openSettingsModal() {
             settingsModal.classList.add('active');
             currencyInput.value = currencySymbol;
+            const goalInput = document.getElementById('budget-goal-input');
+            if (goalInput) {
+                goalInput.value = budgetGoal > 0 ? budgetGoal : '';
+            }
+            const goalLabel = document.getElementById('budget-goal-label');
+            if (goalLabel) {
+                goalLabel.textContent = `Monthly Expense Budget Target (${currencySymbol})`;
+            }
         }
 
         function closeSettingsModal() {
@@ -907,6 +954,7 @@
                 const snapshot = {
                     version: 1,
                     currency: currencySymbol,
+                    budgetGoal: budgetGoal,
                     transactions: transactions,
                     search: document.getElementById('search-input')?.value || '',
                     filterType: document.getElementById('filter-type-select')?.value || 'all',
@@ -940,6 +988,10 @@
                         if (currencyInput) currencyInput.value = currencySymbol;
                         if (amountLabel) amountLabel.textContent = `Amount (${currencySymbol})`;
                     }
+                    if (snapshot.budgetGoal !== undefined) {
+                        budgetGoal = parseFloat(snapshot.budgetGoal) || 0;
+                        safeSet('kbudget_goal', budgetGoal);
+                    }
                     if (snapshot.search !== undefined) {
                         const searchEl = document.getElementById('search-input');
                         if (searchEl) searchEl.value = snapshot.search;
@@ -967,15 +1019,75 @@
             }
         }
 
-        function exportJSON() {
+        function getJSONString() {
             const data = {
                 app: 'KBudget',
                 version: 1,
                 currency: currencySymbol,
+                budgetGoal: budgetGoal,
                 exportedAt: new Date().toISOString(),
                 transactions: transactions
             };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            return JSON.stringify(data, null, 2);
+        }
+
+        function parseAndLoadJSON(text) {
+            try {
+                const parsed = JSON.parse(text);
+                let list = [];
+                if (Array.isArray(parsed)) {
+                    list = parsed;
+                } else if (parsed && Array.isArray(parsed.transactions)) {
+                    list = parsed.transactions;
+                    if (parsed.currency) {
+                        currencySymbol = String(parsed.currency).trim() || '$';
+                        safeSet('kbudget_currency', currencySymbol);
+                        if (currencyInput) currencyInput.value = currencySymbol;
+                        if (amountLabel) amountLabel.textContent = `Amount (${currencySymbol})`;
+                    }
+                    if (parsed.budgetGoal !== undefined) {
+                        budgetGoal = parseFloat(parsed.budgetGoal) || 0;
+                        safeSet('kbudget_goal', budgetGoal);
+                    }
+                } else {
+                    throw new Error("Invalid format. Expected JSON array or object with transactions.");
+                }
+
+                let count = 0;
+                list.forEach(item => {
+                    const amt = parseFloat(item.amount);
+                    if (!isNaN(amt) && amt > 0) {
+                        transactions.push({
+                            id: String(item.id || (Date.now() + Math.random().toString().slice(2, 6))),
+                            type: item.type === 'income' ? 'income' : 'expense',
+                            amount: Math.round(amt * 100) / 100,
+                            category: item.category ? String(item.category).trim() : 'Other',
+                            date: item.date || new Date().toLocaleDateString('en-CA'),
+                            description: item.description ? String(item.description).trim() : (item.category || 'Transaction')
+                        });
+                        count++;
+                    }
+                });
+
+                if (count > 0) {
+                    transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    saveTransactions();
+                            currentPage = 1;
+                    render();
+                    showToast(`Imported ${count} transactions from JSON!`, "success");
+                    return true;
+                } else {
+                    showToast("No valid transactions found in JSON.", "danger");
+                    return false;
+                }
+            } catch (err) {
+                showToast("JSON Import error: " + err.message, "danger");
+                return false;
+            }
+        }
+
+        function exportJSON() {
+            const blob = new Blob([getJSONString()], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
@@ -996,51 +1108,7 @@
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onload = event => {
-                    try {
-                        const parsed = JSON.parse(event.target.result);
-                        let list = [];
-                        if (Array.isArray(parsed)) {
-                            list = parsed;
-                        } else if (parsed && Array.isArray(parsed.transactions)) {
-                            list = parsed.transactions;
-                            if (parsed.currency) {
-                                currencySymbol = String(parsed.currency).trim() || '$';
-                                localStorage.setItem('kbudget_currency', currencySymbol);
-                                if (currencyInput) currencyInput.value = currencySymbol;
-                                if (amountLabel) amountLabel.textContent = `Amount (${currencySymbol})`;
-                            }
-                        } else {
-                            throw new Error("Invalid format. Expected JSON array or object with transactions.");
-                        }
-
-                        let count = 0;
-                        list.forEach(item => {
-                            const amt = parseFloat(item.amount);
-                            if (!isNaN(amt) && amt > 0) {
-                                transactions.push({
-                                    id: String(item.id || (Date.now() + Math.random().toString().slice(2, 6))),
-                                    type: item.type === 'income' ? 'income' : 'expense',
-                                    amount: Math.round(amt * 100) / 100,
-                                    category: item.category ? String(item.category).trim() : 'Other',
-                                    date: item.date || new Date().toLocaleDateString('en-CA'),
-                                    description: item.description ? String(item.description).trim() : (item.category || 'Transaction')
-                                });
-                                count++;
-                            }
-                        });
-
-                        if (count > 0) {
-                            transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-                            saveTransactions();
-                            currentPage = 1;
-                            render();
-                            showToast(`Imported ${count} transactions from JSON!`, "success");
-                        } else {
-                            showToast("No valid transactions found in JSON.", "danger");
-                        }
-                    } catch (err) {
-                        showToast("JSON Import error: " + err.message, "danger");
-                    }
+                    parseAndLoadJSON(event.target.result);
                 };
                 reader.readAsText(file);
             };
@@ -1105,7 +1173,7 @@
             }
         }
 
-        function exportCSV() {
+        function getCSVString() {
             let csvContent = "is_income,amount,category,date,description\n";
             transactions.forEach(t => {
                 let is_income = t.type === 'income' ? 1 : 0;
@@ -1115,16 +1183,63 @@
                 let row = `${is_income},${t.amount},${cat},${date},${desc}`;
                 csvContent += row + "\n";
             });
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            return csvContent;
+        }
+
+        function parseAndLoadCSV(text) {
+            const lines = text.split(/\r?\n/);
+            let imported = 0;
+            if (lines.length > 1) {
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    const parts = line.split(',');
+                    if (parts.length >= 4) {
+                        const firstCol = parts[0].trim().toLowerCase();
+                        const is_income = firstCol === '1' || firstCol === 'income' || firstCol === 'true';
+                        const amount = parseFloat(parts[1]);
+                        const category = parts[2].trim() || 'Other';
+                        const date = parts[3].trim();
+                        const description = parts.slice(4).join(',').trim();
+                        
+                        if (!isNaN(amount) && amount > 0) {
+                            transactions.push({
+                                id: Date.now().toString() + Math.random().toString().slice(2, 6),
+                                type: is_income ? 'income' : 'expense',
+                                amount: Math.round(amount * 100) / 100,
+                                category: category,
+                                date: date,
+                                description: description
+                            });
+                            imported++;
+                        }
+                    }
+                }
+            }
+            if (imported > 0) {
+                transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                saveTransactions();
+                currentPage = 1;
+                render();
+                showToast(`Imported ${imported} transactions!`, "success");
+                return true;
+            } else {
+                showToast("No valid transactions found in CSV.", "danger");
+                return false;
+            }
+        }
+
+        function exportCSV() {
+            const blob = new Blob([getCSVString()], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
-            link.setAttribute("download", "kbudget_export.csv");
+            link.setAttribute("download", `kbudget_export_${new Date().toLocaleDateString('en-CA')}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-            showToast("Exported CSV successfully!", "success");
+            showToast("Exported CSV file!", "success");
         }
 
         function importCSV() {
@@ -1136,49 +1251,92 @@
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onload = event => {
-                    const text = event.target.result;
-                    const lines = text.split(/\r?\n/);
-                    let imported = 0;
-                    if (lines.length > 1) {
-                        for (let i = 1; i < lines.length; i++) {
-                            const line = lines[i].trim();
-                            if (!line) continue;
-                            const parts = line.split(',');
-                            if (parts.length >= 4) {
-                                const firstCol = parts[0].trim().toLowerCase();
-                                const is_income = firstCol === '1' || firstCol === 'income' || firstCol === 'true';
-                                const amount = parseFloat(parts[1]);
-                                const category = parts[2].trim() || 'Other';
-                                const date = parts[3].trim();
-                                const description = parts.slice(4).join(',').trim();
-                                
-                                if (!isNaN(amount) && amount > 0) {
-                                    transactions.push({
-                                        id: Date.now().toString() + Math.random().toString().slice(2, 6),
-                                        type: is_income ? 'income' : 'expense',
-                                        amount: Math.round(amount * 100) / 100,
-                                        category: category,
-                                        date: date,
-                                        description: description
-                                    });
-                                    imported++;
-                                }
-                            }
-                        }
-                    }
-                    if (imported > 0) {
-                        transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-                        saveTransactions();
-                        currentPage = 1;
-                        render();
-                        showToast(`Imported ${imported} transactions!`, "success");
-                    } else {
-                        showToast("No valid transactions found in CSV.", "danger");
-                    }
+                    parseAndLoadCSV(event.target.result);
                 };
                 reader.readAsText(file);
             };
             input.click();
+        }
+
+        // KiloOS VFS Integration
+        const KiloVFS = {
+            write(path, data) {
+                try {
+                    const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                    window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
+                    window.parent.postMessage({ type: 'OS_NOTIFY', title: 'KBudget', message: `Saved to VFS: ${path}` }, '*');
+                    showToast(`Saved to VFS: ${path} ✅`, 'success');
+                    return true;
+                } catch (e) {
+                    showToast('Failed to save to VFS: ' + e.message, 'danger');
+                    return false;
+                }
+            },
+            read(path, cb) {
+                const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                const handler = (e) => {
+                    if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                        window.removeEventListener('message', handler);
+                        cb(e.data.data, e.data.path);
+                    }
+                };
+                window.addEventListener('message', handler);
+                try {
+                    window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
+                } catch (e) {}
+            },
+            openPicker(cb) {
+                const reqId = 'open_' + Date.now();
+                const handler = (e) => {
+                    if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                        window.removeEventListener('message', handler);
+                        if (e.data.path) {
+                            KiloVFS.read(e.data.path, cb);
+                        }
+                    }
+                };
+                window.addEventListener('message', handler);
+                try {
+                    window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
+                } catch (e) {
+                    showToast('VFS open error', 'danger');
+                }
+            }
+        };
+
+        function exportToVFS(format) {
+            const isIframe = window.parent && window.parent !== window;
+            if (!isIframe) {
+                showToast('VFS only active inside KiloOS. Downloading locally...', 'info');
+                if (format === 'csv') exportCSV();
+                else exportJSON();
+                return;
+            }
+            const dateStr = new Date().toISOString().slice(0, 10);
+            if (format === 'csv') {
+                KiloVFS.write(`documents/kbudget_${dateStr}.csv`, getCSVString());
+            } else {
+                KiloVFS.write(`documents/kbudget_backup_${dateStr}.json`, getJSONString());
+            }
+        }
+
+        function importFromVFS() {
+            const isIframe = window.parent && window.parent !== window;
+            if (!isIframe) {
+                showToast('VFS only active inside KiloOS. Use local file import.', 'warning');
+                return;
+            }
+            KiloVFS.openPicker((content, path) => {
+                if (!content) {
+                    showToast('No file data returned from VFS.', 'warning');
+                    return;
+                }
+                if (path && path.toLowerCase().endsWith('.json')) {
+                    parseAndLoadJSON(content);
+                } else {
+                    parseAndLoadCSV(content);
+                }
+            });
         }
 
         function loadSampleData() {
@@ -1324,6 +1482,51 @@
             
             document.getElementById('total-income').textContent = '+' + formatCurrency(income);
             document.getElementById('total-expense').textContent = '-' + formatCurrency(expense);
+
+            // Budget Goal Computation (Current Month & Overall Pace)
+            const now = new Date();
+            const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            let monthExpense = 0;
+            transactions.forEach(t => {
+                if (t.type === 'expense' && t.date && String(t.date).startsWith(currentMonthPrefix)) {
+                    monthExpense += t.amount;
+                }
+            });
+
+            const goalDisplay = document.getElementById('budget-goal-display');
+            const goalStatus = document.getElementById('budget-goal-status');
+            const goalRemaining = document.getElementById('budget-goal-remaining');
+            const goalBar = document.getElementById('budget-goal-bar');
+
+            if (goalDisplay && goalStatus && goalRemaining && goalBar) {
+                if (budgetGoal > 0) {
+                    goalDisplay.textContent = formatCurrency(budgetGoal);
+                    const percent = Math.round((monthExpense / budgetGoal) * 100);
+                    goalStatus.textContent = `${percent}% used (${formatCurrency(monthExpense)})`;
+                    goalBar.style.width = Math.min(100, Math.max(0, percent)) + '%';
+                    if (monthExpense > budgetGoal) {
+                        const over = monthExpense - budgetGoal;
+                        goalRemaining.textContent = `${formatCurrency(over)} over`;
+                        goalRemaining.style.color = '#ef4444';
+                        goalBar.style.backgroundColor = '#ef4444';
+                        goalStatus.style.color = '#ef4444';
+                    } else {
+                        const left = budgetGoal - monthExpense;
+                        goalRemaining.textContent = `${formatCurrency(left)} left`;
+                        goalRemaining.style.color = '#94a3b8';
+                        const warn = percent >= 80;
+                        goalStatus.style.color = warn ? '#f59e0b' : '#10b981';
+                        goalBar.style.backgroundColor = warn ? '#f59e0b' : '#10b981';
+                    }
+                } else {
+                    goalDisplay.textContent = 'None';
+                    goalStatus.textContent = 'Click to set';
+                    goalStatus.style.color = '#94a3b8';
+                    goalRemaining.textContent = '';
+                    goalBar.style.width = '0%';
+                    goalBar.style.backgroundColor = '#10b981';
+                }
+            }
 
             const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / itemsPerPage));
             if (currentPage > totalPages) currentPage = totalPages;
@@ -1488,7 +1691,11 @@
         settingsForm.addEventListener('submit', (e) => {
             e.preventDefault();
             currencySymbol = (currencyInput.value || '$').trim() || '$';
-            localStorage.setItem('kbudget_currency', currencySymbol);
+            safeSet('kbudget_currency', currencySymbol);
+            const goalInput = document.getElementById('budget-goal-input');
+            const gVal = parseFloat(goalInput ? goalInput.value : 0);
+            budgetGoal = (!isNaN(gVal) && gVal >= 0) ? Math.round(gVal * 100) / 100 : 0;
+            safeSet('kbudget_goal', budgetGoal);
             amountLabel.textContent = `Amount (${currencySymbol})`;
             closeSettingsModal();
             render();
@@ -1524,7 +1731,8 @@
 
         // Keyboard Shortcuts
         document.addEventListener('keydown', (e) => {
-            const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName);
+            const activeEl = document.activeElement;
+            const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target?.tagName) || (activeEl && ['INPUT', 'SELECT', 'TEXTAREA'].includes(activeEl.tagName));
             
             // Global Hotkeys (even when in inputs)
             if (e.key === 'Escape') {

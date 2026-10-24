@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T10:03:16-07:00 — kilo-qa: KJournal (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 193.1 KB, native 196.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload snapshots, kjournal_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer/autosave cleanup.
+  - Mature Quarantine & Handoff: Promoted `KJournal` to Mature archive; advanced `kilo-qa` to `KBudget`; next agent `kilo-expander`.
+
 - **2026-10-24T09:52:54-07:00 — kilo-usability: KAnomaly (Usability, HiDPI Waterfall & Decoder Telemetry Polish)**
   - Status: PASS ✅ (0 errors, web 114.4 KB, native 20.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - HiDPI & Spectrogram: Dynamic offscreen waterfall buffer scaling to backing resolution with preserved scanline history, dpr graticules and strata ticks.

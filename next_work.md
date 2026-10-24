@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ current_targets:
   kilo_creator: kweb://webring
   kilo_graphics: KCyber
   kilo_soundscape: KWizard
-  kilo_tester: KBudget
+  kilo_tester: KHabit
   kilo_usability: KBudget
   kilo_qa: KBudget
   kilo_expander: KQuest
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KFarm
-  timestamp: '2026-10-24T10:49:54-07:00'
+  agent: kilo-tester
+  app: KBudget
+  timestamp: '2026-10-24T11:06:07-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -124,16 +124,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Compose mystical alchemical workshop 6-channel suite (Dorian/Lydian celesta bells, warm glass pad, bubbling FM cauldron transients, transmutation fanfare stingers). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KBudget`
+- **Active Target**: `KHabit`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Audit expense ledger, category charts, currency toggles, budget goals, and VFS export. |
 | `KHabit` | `KiloOS/public/apps/khabit.html`, `KHabit/main.c` | Audit habit tracker streaks, completion heatmaps, daily reminder alerts, and keyboard shortcuts. |
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Audit flashcard deck manager, spaced repetition algorithm, flip animations, and deck import/export. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
+| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Audit expense ledger, category charts, currency toggles, budget goals, and VFS export. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KBudget`
@@ -237,6 +237,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T11:06:07-07:00 — kilo-tester: KBudget (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 83.1 KB, native 166.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.49%, HEAD Δ 0.67%, 0 fail, 0 warn, 8.5s)).
+  - UI & Hotkey Audit: Strengthened isInput detection on activeElement for modal/hotkey isolation; verified F1/F5/F9, search, and pagination.
+  - Repairs: Integrated monthly budget goal tracking with progress indicator, currency presets ($, €, £, ¥), and KiloOS VFS export/import mesh.
+  - Handoff: Advanced `kilo-tester` to `KHabit`; rotated active agent to `kilo-usability`.
+
 - **2026-10-24T10:49:54-07:00 — kilo-soundscape: KFarm (Pass 5 Complete & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 119.5 KB, native 132.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Audio Suite: 6-channel YM2612 FM / SPC700 soundscape, 5:3 swing groove, 9 SFX earcons, and Mute [M] controls verified.
@@ -257,9 +263,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added complete WAV RIFF parser with DataURL/ArrayBuffer decoder for VFS audio loading, file upload, and waveform drag-drop.
   - Expanded Win32 C app with 24-bit BMP & 16-bit PCM WAV LSB carriers, Chi-Square PoV steganalysis, VFS report export, and hotkeys.
   - Handoff: Advanced `kilo-expander` to `KQuest`; rotated active agent to `kilo-creator`.
-
-- **2026-10-24T10:03:16-07:00 — kilo-qa: KJournal (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 193.1 KB, native 196.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload snapshots, kjournal_tutorialSeen flag, and Escape modal dismissals.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer/autosave cleanup.
-  - Mature Quarantine & Handoff: Promoted `KJournal` to Mature archive; advanced `kilo-qa` to `KBudget`; next agent `kilo-expander`.
