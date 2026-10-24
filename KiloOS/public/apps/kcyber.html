@@ -1099,55 +1099,125 @@
       ctx.fillStyle = hGrad;
       ctx.fillRect(0, horizonY - 14, canvas.width, 30);
 
-      // Distant Cyberspace Skyline / Network Topology Silhouettes
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+      // Distant Cyberspace Skyline / Isometric Node Towers
       const skylineNodes = [
-        { x: 12, w: 14, h: 22 },
-        { x: 30, w: 10, h: 32 },
-        { x: 44, w: 16, h: 26 },
-        { x: 68, w: 12, h: 36 },
-        { x: 100, w: 15, h: 34 },
-        { x: 120, w: 10, h: 24 },
-        { x: 134, w: 18, h: 30 },
-        { x: 156, w: 12, h: 18 }
+        { x: 10, w: 14, h: 24, d: 5 },
+        { x: 28, w: 11, h: 34, d: 4 },
+        { x: 44, w: 16, h: 28, d: 5 },
+        { x: 66, w: 13, h: 38, d: 4 },
+        { x: 96, w: 15, h: 36, d: 5 },
+        { x: 116, w: 12, h: 26, d: 4 },
+        { x: 132, w: 18, h: 32, d: 5 },
+        { x: 154, w: 12, h: 20, d: 4 }
       ];
       for (let i = 0; i < skylineNodes.length; i++) {
         const sn = skylineNodes[i];
-        ctx.fillRect(sn.x, horizonY - sn.h, sn.w, sn.h);
+        const tx = sn.x;
+        const tw = sn.w;
+        const th = sn.h;
+        const td = sn.d;
+        const ty = horizonY - th;
+
+        // Front Face (Shaded Server Monolith)
+        const frontGrad = ctx.createLinearGradient(tx, ty, tx, horizonY);
+        frontGrad.addColorStop(0, 'rgba(10, 32, 22, 0.95)');
+        frontGrad.addColorStop(1, 'rgba(0, 10, 5, 0.98)');
+        ctx.fillStyle = frontGrad;
+        ctx.fillRect(tx, ty, tw, th);
         ctx.strokeStyle = gridColor;
         ctx.lineWidth = 1;
-        ctx.strokeRect(sn.x, horizonY - sn.h, sn.w, sn.h);
+        ctx.strokeRect(tx, ty, tw, th);
 
-        // Tower rooftop antenna beacon diode
-        if ((animTick + i * 5) % 16 < 8) {
+        // Right Isometric Extrusion Wall
+        ctx.fillStyle = 'rgba(0, 14, 8, 0.96)';
+        ctx.beginPath();
+        ctx.moveTo(tx + tw, ty);
+        ctx.lineTo(tx + tw + td, ty - td);
+        ctx.lineTo(tx + tw + td, horizonY - td);
+        ctx.lineTo(tx + tw, horizonY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Top Isometric Roof Facet
+        ctx.fillStyle = 'rgba(18, 50, 28, 0.9)';
+        ctx.beginPath();
+        ctx.moveTo(tx, ty);
+        ctx.lineTo(tx + td, ty - td);
+        ctx.lineTo(tx + tw + td, ty - td);
+        ctx.lineTo(tx + tw, ty);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Server Node Horizontal Telemetry Bus Lines
+        const busLines = Math.floor(th / 7);
+        for (let b = 1; b <= busLines; b++) {
+          const by = ty + b * 6;
+          const isLedLit = ((animTick + i * 4 + b * 2) % 12) < 5;
+          ctx.fillStyle = isLedLit ? hudColor : 'rgba(0, 80, 40, 0.4)';
+          ctx.fillRect(tx + 2, by, tw - 4, 1.5);
+        }
+
+        // Rooftop Telemetry Antenna Mast & Pulse Beacon
+        const antX = tx + Math.floor(tw / 2);
+        const antTopY = ty - td - 5;
+        ctx.strokeStyle = gridColor;
+        ctx.beginPath();
+        ctx.moveTo(antX, ty);
+        ctx.lineTo(antX, antTopY);
+        ctx.stroke();
+
+        if ((animTick + i * 5) % 14 < 7) {
           ctx.fillStyle = hudColor;
-          ctx.fillRect(sn.x + Math.floor(sn.w / 2) - 1, horizonY - sn.h - 3, 2, 2);
+          ctx.fillRect(antX - 1, antTopY - 1, 2.5, 2.5);
         }
       }
 
       // 3D Perspective Cyberspace Grid Floor
-      ctx.strokeStyle = gridColor;
       ctx.lineWidth = 1;
 
       // Longitudinal perspective rays converging at vanishing point (cx, horizonY)
-      const rayBottomOffsets = [-90, -65, -42, -22, 0, 22, 42, 65, 90];
+      const rayBottomOffsets = [-92, -68, -45, -24, 0, 24, 45, 68, 92];
       for (let r = 0; r < rayBottomOffsets.length; r++) {
+        const xBottom = cx + rayBottomOffsets[r] * 1.8;
+        const rayGrad = ctx.createLinearGradient(cx, horizonY, xBottom, canvas.height);
+        rayGrad.addColorStop(0, 'rgba(0, 255, 100, 0.05)');
+        rayGrad.addColorStop(0.3, gridColor);
+        rayGrad.addColorStop(1, hudColor);
+        ctx.strokeStyle = rayGrad;
         ctx.beginPath();
         ctx.moveTo(cx, horizonY);
-        ctx.lineTo(cx + rayBottomOffsets[r] * 1.8, canvas.height);
+        ctx.lineTo(xBottom, canvas.height);
         ctx.stroke();
       }
 
-      // Transverse horizontal grid lines moving towards the camera
-      const numRungs = 5;
-      const speed = 0.008;
+      // Transverse horizontal grid lines moving towards the camera with quadratic depth
+      const numRungs = 6;
+      const speed = 0.0075;
       for (let r = 0; r < numRungs; r++) {
         const phase = ((animTick * speed + r / numRungs) % 1.0);
         const py = horizonY + Math.pow(phase, 2.2) * (canvas.height - horizonY);
+        const rungAlpha = Math.min(1.0, Math.pow(phase, 1.5) * 0.85 + 0.1);
+        ctx.strokeStyle = (gridColor.startsWith('rgba')
+          ? gridColor.replace(/[\d\.]+\)$/, rungAlpha.toFixed(2) + ')')
+          : hudColor);
+        ctx.lineWidth = phase > 0.6 ? 1.5 : 1;
         ctx.beginPath();
         ctx.moveTo(6, py);
         ctx.lineTo(canvas.width - 6, py);
         ctx.stroke();
+
+        // Node vertex intersection glimmers (matrix data crossings)
+        if (phase > 0.45) {
+          ctx.fillStyle = hudColor;
+          for (let ri = 1; ri < rayBottomOffsets.length - 1; ri += 2) {
+            const rx = cx + rayBottomOffsets[ri] * 1.8 * phase;
+            if (rx > 10 && rx < canvas.width - 10) {
+              ctx.fillRect(rx - 0.75, py - 0.75, 1.5, 1.5);
+            }
+          }
+        }
       }
 
       // Digital Matrix Rain / Hex Data Motes in Background
@@ -1217,116 +1287,167 @@
       ctx.fill();
       ctx.globalAlpha = 1.0;
 
-      // 2. Animated Sprites
+      // 2. Animated Sprites — IC Guardian Constructs & Cybernetic Payloads
       if (hacking_node) {
-        // --- MAIN ENEMY: ICE DAEMON ---
-        const pulse = 1.0 + Math.sin(animTick * 0.09) * 0.12;
-        const glitchX = (Math.random() < 0.08 ? (Math.random() - 0.5) * 6 : 0);
+        // --- IC GUARDIAN CONSTRUCT ---
+        const pulse = 1.0 + Math.sin(animTick * 0.09) * 0.1;
+        const glitchX = (Math.random() < 0.06 ? (Math.random() - 0.5) * 5 : 0);
 
         if (ice_frozen_ticks > 0) {
-          // Frozen Crystalline Barrier
-          ctx.strokeStyle = '#00e5ff';
-          ctx.fillStyle = 'rgba(0, 40, 70, 0.7)';
-          ctx.lineWidth = 2;
+          // CRYOGENIC STASIS LATTICE (Frozen ICE Construct)
+          ctx.save();
+          ctx.translate(cx + glitchX, cy);
 
-          // Outer frost snowflake ring
+          // Cryogenic Stasis Containment Hexagon
+          ctx.strokeStyle = 'rgba(0, 229, 255, 0.4)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const rad = i * (Math.PI / 3);
+            const px = Math.cos(rad) * 48;
+            const py = Math.sin(rad) * 48;
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.stroke();
+
+          // Outer Cryo-Prisms at Vertices
           for (let a = 0; a < 6; a++) {
-            const rad = (animTick * 0.02) + a * (Math.PI / 3);
-            const fx = cx + Math.cos(rad) * 45;
-            const fy = cy + Math.sin(rad) * 45;
+            const rad = a * (Math.PI / 3);
+            const fx = Math.cos(rad) * 44;
+            const fy = Math.sin(rad) * 44;
+
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(cx, cy);
+            ctx.moveTo(0, 0);
             ctx.lineTo(fx, fy);
             ctx.stroke();
 
-            // Diamond crystal at tip
+            // Diamond Frost Spike
+            ctx.fillStyle = 'rgba(0, 229, 255, 0.8)';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.arc(fx, fy, 4, 0, Math.PI * 2);
+            ctx.moveTo(fx, fy - 6);
+            ctx.lineTo(fx + 4, fy);
+            ctx.lineTo(fx, fy + 6);
+            ctx.lineTo(fx - 4, fy);
+            ctx.closePath();
             ctx.fill();
             ctx.stroke();
           }
 
-          // Frozen Core
+          // Frozen Inner Core Facets
+          ctx.fillStyle = 'rgba(0, 35, 60, 0.9)';
+          ctx.strokeStyle = '#00e5ff';
+          ctx.lineWidth = 2;
           ctx.beginPath();
           for (let i = 0; i < 6; i++) {
             const ang = i * (Math.PI / 3) + (Math.PI / 6);
-            const r = 28;
-            const px = cx + Math.cos(ang) * r;
-            const py = cy + Math.sin(ang) * r;
+            const r = 26;
+            const px = Math.cos(ang) * r;
+            const py = Math.sin(ang) * r;
             if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
           }
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
 
-          // Frozen Stun Badge
+          // Internal Frost Fracture Lines
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-16, -10); ctx.lineTo(0, 4); ctx.lineTo(14, -8);
+          ctx.moveTo(0, 4); ctx.lineTo(-4, 18);
+          ctx.stroke();
+
+          ctx.restore();
+
+          // Frozen Stasis Telemetry Badge
           ctx.fillStyle = '#00e5ff';
           ctx.font = 'bold 9px monospace';
           ctx.textAlign = 'center';
-          ctx.fillText('BLINDED', cx, cy + 50);
+          ctx.fillText('[STASIS // BLINDED]', cx, cy + 48);
 
         } else if (hacking_node === '06') {
-          // PHANTOM ICE: Violet Stealth Shroud Blades & Polyhedral Phase Core
-          const shardCount = 4;
-          for (let s = 0; s < shardCount; s++) {
-            const sAngle = (animTick * 0.03) + s * ((Math.PI * 2) / shardCount);
-            const sDist = 42 * pulse;
-            const sx = cx + glitchX + Math.cos(sAngle) * sDist;
-            const sy = cy + Math.sin(sAngle) * sDist;
+          // PHANTOM IC GUARDIAN CONSTRUCT (Void-Phase Stealth Sentinel)
+          ctx.save();
+          ctx.translate(cx + glitchX, cy);
+          ctx.scale(pulse, pulse);
 
-            // Violet Phase Link
-            ctx.strokeStyle = 'rgba(208, 0, 255, 0.4)';
+          // Tactical Phasing Escort Drones (Fixed Flank Formation)
+          const droneOffsets = [
+            { x: -44, y: -14 },
+            { x: 44, y: -14 },
+            { x: -36, y: 22 },
+            { x: 36, y: 22 }
+          ];
+          for (let d = 0; d < droneOffsets.length; d++) {
+            const dPos = droneOffsets[d];
+            // High-voltage phase tether filament
+            ctx.strokeStyle = 'rgba(208, 0, 255, 0.35)';
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(cx + glitchX, cy);
-            ctx.lineTo(sx, sy);
+            ctx.moveTo(0, 0);
+            ctx.lineTo(dPos.x, dPos.y);
             ctx.stroke();
 
-            // Diamond Stealth Shard
+            // Stealth Prism Drone
             ctx.save();
-            ctx.translate(sx, sy);
-            ctx.rotate(sAngle + Math.PI / 4);
-            ctx.fillStyle = '#b000ff';
+            ctx.translate(dPos.x, dPos.y);
+            ctx.fillStyle = '#9900dd';
             ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1.5;
+            ctx.lineWidth = 1.2;
             ctx.beginPath();
-            ctx.moveTo(0, -9);
-            ctx.lineTo(6, 0);
-            ctx.lineTo(0, 9);
-            ctx.lineTo(-6, 0);
+            ctx.moveTo(0, -7);
+            ctx.lineTo(5, 0);
+            ctx.lineTo(0, 7);
+            ctx.lineTo(-5, 0);
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
             ctx.restore();
           }
 
-          // Central Phantom Polyhedral Core
-          ctx.save();
-          ctx.translate(cx + glitchX, cy);
-          ctx.scale(pulse, pulse);
-
+          // Central Obsidian Polyhedral Armor Shell
           ctx.strokeStyle = '#d000ff';
-          ctx.fillStyle = 'rgba(38, 0, 52, 0.88)';
+          const phantomGrad = ctx.createLinearGradient(0, -32, 0, 32);
+          phantomGrad.addColorStop(0, 'rgba(45, 0, 60, 0.95)');
+          phantomGrad.addColorStop(1, 'rgba(15, 0, 22, 0.98)');
+          ctx.fillStyle = phantomGrad;
           ctx.lineWidth = 2.5;
+
           ctx.beginPath();
-          ctx.moveTo(0, -30);
-          ctx.lineTo(26, -10);
-          ctx.lineTo(26, 14);
-          ctx.lineTo(0, 30);
-          ctx.lineTo(-26, 14);
-          ctx.lineTo(-26, -10);
+          ctx.moveTo(0, -32);
+          ctx.lineTo(26, -12);
+          ctx.lineTo(26, 16);
+          ctx.lineTo(0, 32);
+          ctx.lineTo(-26, 16);
+          ctx.lineTo(-26, -12);
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
 
-          // Violet Aperture Visor
-          ctx.fillStyle = '#0a0012';
+          // Lateral Armored Vanes
+          ctx.fillStyle = 'rgba(180, 0, 240, 0.3)';
+          ctx.strokeStyle = '#b000ff';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-26, -12); ctx.lineTo(-34, -4); ctx.lineTo(-26, 8); ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(26, -12); ctx.lineTo(34, -4); ctx.lineTo(26, 8); ctx.closePath();
+          ctx.fill(); ctx.stroke();
+
+          // Violet Aperture Visor Slit
+          ctx.fillStyle = '#080010';
           ctx.fillRect(-18, -4, 36, 8);
           ctx.strokeStyle = '#e066ff';
-          ctx.lineWidth = 1;
+          ctx.lineWidth = 1.2;
           ctx.strokeRect(-18, -4, 36, 8);
 
-          // Sweeping Purple Scanning Eye
+          // Sweeping Quantum Optic Scanner
           const eyeX = Math.sin(animTick * 0.08) * 12;
           ctx.fillStyle = '#ff00ee';
           ctx.beginPath();
@@ -1336,54 +1457,66 @@
           ctx.restore();
 
         } else {
-          // ACTIVE ICE DAEMON: Orbiting Razor Defense Shards & Pulsing Core
-          const shardCount = 6;
-          for (let s = 0; s < shardCount; s++) {
-            const sAngle = (animTick * 0.04) + s * ((Math.PI * 2) / shardCount);
-            const sDist = 44 * pulse;
-            const sx = cx + glitchX + Math.cos(sAngle) * sDist;
-            const sy = cy + Math.sin(sAngle) * sDist;
+          // MILITARY SENTINEL IC GUARDIAN CONSTRUCT (Active Threat Entity)
+          ctx.save();
+          ctx.translate(cx + glitchX, cy);
+          ctx.scale(pulse, pulse);
 
-            // Connecting Laser Link
-            ctx.strokeStyle = 'rgba(255, 50, 50, 0.35)';
+          // Flanking Tactical Sentinel Interceptors (Tactical Escort Formation)
+          const interceptors = [
+            { x: -46, y: -16 },
+            { x: 46, y: -16 },
+            { x: -40, y: 20 },
+            { x: 40, y: 20 }
+          ];
+          for (let s = 0; s < interceptors.length; s++) {
+            const inc = interceptors[s];
+
+            // Tactical Laser Tether Conduit
+            ctx.strokeStyle = 'rgba(255, 40, 40, 0.4)';
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(cx + glitchX, cy);
-            ctx.lineTo(sx, sy);
+            ctx.moveTo(0, 0);
+            ctx.lineTo(inc.x, inc.y);
             ctx.stroke();
 
-            // Razor Shard (triangular polygon pointing outward)
+            // Interceptor Barb Construct
             ctx.save();
-            ctx.translate(sx, sy);
-            ctx.rotate(sAngle + Math.PI / 2);
-            ctx.fillStyle = '#ff1122';
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1.5;
+            ctx.translate(inc.x, inc.y);
+            ctx.fillStyle = '#cc0015';
+            ctx.strokeStyle = '#ff9999';
+            ctx.lineWidth = 1.2;
             ctx.beginPath();
-            ctx.moveTo(0, -9);
-            ctx.lineTo(5, 5);
-            ctx.lineTo(0, 2);
-            ctx.lineTo(-5, 5);
+            ctx.moveTo(0, -8);
+            ctx.lineTo(6, 4);
+            ctx.lineTo(0, 1);
+            ctx.lineTo(-6, 4);
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
             ctx.restore();
           }
 
-          // Central Demonic ICE Polygon
-          ctx.save();
-          ctx.translate(cx + glitchX, cy);
-          ctx.scale(pulse, pulse);
+          // Holographic Tactical Target Reticle (Subtle Threat Matrix)
+          ctx.strokeStyle = 'rgba(255, 50, 50, 0.35)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(0, 0, 40, 0, Math.PI * 2);
+          ctx.stroke();
 
-          // Outer Hazard Shield
-          ctx.strokeStyle = '#ff3333';
-          ctx.fillStyle = 'rgba(120, 0, 0, 0.85)';
+          // Main Guardian Armored Sentinel Chassis
+          const demonGrad = ctx.createLinearGradient(0, -30, 0, 30);
+          demonGrad.addColorStop(0, 'rgba(160, 15, 20, 0.95)');
+          demonGrad.addColorStop(1, 'rgba(40, 0, 5, 0.98)');
+          ctx.fillStyle = demonGrad;
+          ctx.strokeStyle = '#ff2222';
           ctx.lineWidth = 2.5;
+
           ctx.beginPath();
           const octVerts = 8;
           for (let i = 0; i < octVerts; i++) {
             const rad = i * ((Math.PI * 2) / octVerts);
-            const r = (i % 2 === 0) ? 28 : 18;
+            const r = (i % 2 === 0) ? 29 : 20;
             const px = Math.cos(rad) * r;
             const py = Math.sin(rad) * r;
             if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
@@ -1392,23 +1525,33 @@
           ctx.fill();
           ctx.stroke();
 
-          // Inner Visor Slit
-          ctx.fillStyle = '#000000';
-          ctx.fillRect(-18, -4, 36, 8);
-          ctx.strokeStyle = '#ff6666';
+          // Lateral Armor Flange Plates
+          ctx.fillStyle = 'rgba(80, 0, 10, 0.9)';
+          ctx.strokeStyle = '#ff5555';
           ctx.lineWidth = 1;
-          ctx.strokeRect(-18, -4, 36, 8);
-
-          // Sweeping Laser Eye
-          const eyeX = Math.sin(animTick * 0.08) * 12;
-          ctx.fillStyle = '#ff0000';
           ctx.beginPath();
-          ctx.arc(eyeX, 0, 3, 0, Math.PI * 2);
+          ctx.moveTo(-20, -18); ctx.lineTo(-30, 0); ctx.lineTo(-20, 18); ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(20, -18); ctx.lineTo(30, 0); ctx.lineTo(20, 18); ctx.closePath();
+          ctx.fill(); ctx.stroke();
+
+          // Inner Optic Visor Slot
+          ctx.fillStyle = '#0a0002';
+          ctx.fillRect(-18, -5, 36, 10);
+          ctx.strokeStyle = '#ff6666';
+          ctx.lineWidth = 1.2;
+          ctx.strokeRect(-18, -5, 36, 10);
+
+          // Sweeping Laser Optical Eye
+          const eyeX = Math.sin(animTick * 0.08) * 12;
+          ctx.fillStyle = '#ff1100';
+          ctx.beginPath();
+          ctx.arc(eyeX, 0, 3.5, 0, Math.PI * 2);
           ctx.fill();
 
           ctx.restore();
         }
-
       } else if (connected_node) {
         // --- KEY ITEM: CLASSIFIED DATA CORE / PAYLOAD ---
         const bobY = Math.sin(animTick * 0.05) * 5;

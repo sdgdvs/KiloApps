@@ -1308,26 +1308,68 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 FillRect(memDC, &hudBox, hudBg);
                 DeleteObject(hudBg);
 
-                // Distant Cyberspace Skyline Silhouettes
+                // Distant Cyberspace Skyline — Isometric Node Towers
                 HBRUSH skyB = CreateSolidBrush(skylineColor);
+                HBRUSH skySideB = CreateSolidBrush(RGB(GetRValue(skylineColor) * 2 / 3, GetGValue(skylineColor) * 2 / 3, GetBValue(skylineColor) * 2 / 3));
+                HBRUSH skyTopB = CreateSolidBrush(RGB(min(255, GetRValue(skylineColor) + 20), min(255, GetGValue(skylineColor) + 30), min(255, GetBValue(skylineColor) + 20)));
                 HPEN skyP = CreatePen(PS_SOLID, 1, gridColor);
-                HGDIOBJ oldSkyB = SelectObject(memDC, skyB);
                 HGDIOBJ oldSkyP = SelectObject(memDC, skyP);
-                static const int skyX[7] = { 10, 28, 44, 66, 96, 114, 132 };
+                static const int skyX[7] = { 8, 26, 44, 66, 96, 114, 132 };
                 static const int skyW[7] = { 12, 10, 14, 12, 12, 10, 14 };
-                static const int skyH[7] = { 18, 25, 20, 28, 24, 17, 23 };
+                static const int skyH[7] = { 18, 26, 20, 28, 24, 18, 23 };
+                static const int skyD[7] = { 4, 3, 4, 3, 4, 3, 4 };
                 for (int t = 0; t < 7; t++) {
                     int tx = vx + skyX[t];
                     int tw = skyW[t];
                     int th = skyH[t];
-                    Rectangle(memDC, tx, horizonY - th, tx + tw, horizonY);
+                    int td = skyD[t];
+                    int ty = horizonY - th;
+
+                    // Front Face
+                    HGDIOBJ oldB = SelectObject(memDC, skyB);
+                    Rectangle(memDC, tx, ty, tx + tw, horizonY);
+
+                    // Right Isometric Wall
+                    SelectObject(memDC, skySideB);
+                    POINT sidePts[4] = {
+                        { tx + tw, ty },
+                        { tx + tw + td, ty - td },
+                        { tx + tw + td, horizonY - td },
+                        { tx + tw, horizonY }
+                    };
+                    Polygon(memDC, sidePts, 4);
+
+                    // Top Isometric Roof
+                    SelectObject(memDC, skyTopB);
+                    POINT topPts[4] = {
+                        { tx, ty },
+                        { tx + td, ty - td },
+                        { tx + tw + td, ty - td },
+                        { tx + tw, ty }
+                    };
+                    Polygon(memDC, topPts, 4);
+                    SelectObject(memDC, oldB);
+
+                    // Server Node Telemetry LEDs
+                    for (int by = ty + 4; by < horizonY - 2; by += 5) {
+                        if (((g_animTick + t * 3 + by) & 4) != 0) {
+                            SetPixel(memDC, tx + 2, by, hudColor);
+                            SetPixel(memDC, tx + 3, by, hudColor);
+                        }
+                    }
+
+                    // Rooftop Antenna Mast & Pulse Beacon
+                    int antX = tx + tw / 2;
+                    MoveToEx(memDC, antX, ty, NULL);
+                    LineTo(memDC, antX, ty - td - 4);
                     if (((g_animTick + t * 4) & 8) != 0) {
-                        SetPixel(memDC, tx + tw / 2, horizonY - th - 2, hudColor);
+                        SetPixel(memDC, antX, ty - td - 5, hudColor);
                     }
                 }
-                SelectObject(memDC, oldSkyB);
                 SelectObject(memDC, oldSkyP);
                 DeleteObject(skyB);
+                DeleteObject(skySideB);
+                DeleteObject(skyTopB);
                 DeleteObject(skyP);
 
                 // 3D Perspective Cyberspace Grid Floor
@@ -1507,35 +1549,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         DeleteObject(eyeBrush);
 
                     } else {
-                        // ACTIVE ICE DAEMON: Orbiting Razor Shards & Demonic Core
-                        // 6 Orbiting Razor Defense Shards
-                        HPEN shardPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                        HBRUSH shardBrush = CreateSolidBrush(RGB(255, 30, 30));
-                        HPEN linkPen = CreatePen(PS_SOLID, 1, RGB(180, 20, 20));
+                        // MILITARY SENTINEL IC GUARDIAN CONSTRUCT (Active Threat Entity)
+                        // 4 Tactical Escort Sentinel Interceptors (Formation Guard)
+                        HPEN shardPen = CreatePen(PS_SOLID, 1, RGB(255, 180, 180));
+                        HBRUSH shardBrush = CreateSolidBrush(RGB(200, 10, 20));
+                        HPEN linkPen = CreatePen(PS_SOLID, 1, RGB(160, 20, 20));
 
-                        for (int s = 0; s < 6; s++) {
-                            int sAngle = (g_animTick * 2) + (s * 5);
-                            int sDist = 42 + pulse;
-                            int sx = cx + glitch + (FastCos(sAngle) * sDist) / 128;
-                            int sy = cy + (FastSin(sAngle) * sDist) / 128;
+                        static const int incX[4] = { -40, 40, -34, 34 };
+                        static const int incY[4] = { -14, -14, 18, 18 };
+                        for (int s = 0; s < 4; s++) {
+                            int sx = cx + glitch + incX[s];
+                            int sy = cy + incY[s];
 
-                            // Laser Link
+                            // Tactical Tether Link
                             SelectObject(memDC, linkPen);
                             MoveToEx(memDC, cx + glitch, cy, NULL);
                             LineTo(memDC, sx, sy);
 
-                            // Triangular Razor Shard
+                            // Sentinel Interceptor Barb
                             SelectObject(memDC, shardPen);
                             SelectObject(memDC, shardBrush);
-                            int tipX = sx + (FastCos(sAngle) * 7) / 128;
-                            int tipY = sy + (FastSin(sAngle) * 7) / 128;
-                            int perpA = sAngle + 8;
-                            POINT sPts[3] = {
-                                { tipX, tipY },
-                                { sx + (FastCos(perpA) * 5) / 128, sy + (FastSin(perpA) * 5) / 128 },
-                                { sx - (FastCos(perpA) * 5) / 128, sy - (FastSin(perpA) * 5) / 128 }
+                            POINT sPts[4] = {
+                                { sx, sy - 6 },
+                                { sx + 5, sy + 3 },
+                                { sx, sy },
+                                { sx - 5, sy + 3 }
                             };
-                            Polygon(memDC, sPts, 3);
+                            Polygon(memDC, sPts, 4);
                         }
                         DeleteObject(shardPen);
                         DeleteObject(shardBrush);
