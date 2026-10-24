@@ -728,8 +728,8 @@
             </div>
             <div style="color: #c9d1d9; font-size: 0.9rem; line-height: 1.5;">
                 <p><strong>Card Basics</strong><br/>Click "+ Add Card" [A] to create a card. Use "Edit" [E] to modify the current card and "Delete" [Del] to remove it.</p>
-                <p><strong>Navigation & Study</strong><br/>Flip cards with Space/Enter or [↑/↓]. Rate cards with "Got It" [1/G] or "Needs Review" [2/R]. Navigate with [←/→].</p>
-                <p><strong>Review Mode & Filtering</strong><br/>Search cards with [Ctrl+F]. Check "Review Only" to isolate review cards. Click "Shuffle" [S] to randomize.</p>
+                <p><strong>Navigation & Study</strong><br/>Flip cards with Space/Enter or [↑/↓]. Rate cards with [1-4] Leitner Spaced Repetition: Again [1/R] (Box 1), Hard [2] (-1 Box), Good [3/G] (+1 Box), Easy [4] (+2 Boxes). Navigate with [←/→].</p>
+                <p><strong>Review Mode & Filtering</strong><br/>Search cards with [Ctrl+F]. Check "Review Only" to isolate review and overdue Leitner cards. Click "Shuffle" [S] to randomize.</p>
                 <p><strong>Import & Export</strong><br/>Export your deck to JSON or CSV without dialog traps. Import JSON or CSV anytime.</p>
                 <p><strong>Quicksave & State</strong><br/>Press [F5] anytime to quicksave deck state snapshot. Press [F9] to restore it.</p>
                 <p><strong>Keyboard Shortcuts Reference</strong><br/>
@@ -758,6 +758,28 @@
             </div>
         </div>
     </div>
+
+    <!-- Deck Picker Drawer -->
+    <div class="deck-drawer-backdrop" id="deckDrawerBackdrop"></div>
+    <aside class="deck-drawer" id="deckDrawer" aria-label="Deck Picker Drawer">
+        <div class="drawer-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.05rem; font-weight:700; color:#58a6ff;">📚 Deck Picker</span>
+                <span id="drawerDeckCount" style="font-size:0.75rem; background:rgba(88,166,255,0.15); color:#58a6ff; padding:2px 6px; border-radius:10px;">Packs</span>
+            </div>
+            <button class="modal-close-btn" id="btnCloseDrawer" title="Close (Esc)">&times;</button>
+        </div>
+        <div class="drawer-search">
+            <input type="text" id="drawerSearchInput" placeholder="Filter decks... [D]" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:6px; color:#fff; padding:6px 10px; font-family:'Inter',sans-serif; font-size:0.85rem;">
+        </div>
+        <div class="drawer-deck-list" id="drawerDeckList">
+            <!-- Dynamic pack entries -->
+        </div>
+        <div class="drawer-footer">
+            <button class="btn btn-primary" id="btnDrawerNewDeck" style="flex:1; justify-content:center;">+ New Deck</button>
+            <button class="btn" id="btnDrawerImport" style="justify-content:center;">Import</button>
+        </div>
+    </aside>
 
     <script>
         const SAMPLE_PACKS = {
@@ -1328,13 +1350,18 @@
             }
         }
 
+        const LEITNER_INTERVALS = [1, 2, 4, 7, 14]; // Intervals in days for Boxes 1-5
+
         function updateFilteredIndices() {
             filteredIndices = [];
             const query = searchQuery.toLowerCase();
             const reviewOnly = chkReviewOnly.checked;
+            const now = Date.now();
             for (let i = 0; i < deck.length; i++) {
-                let matchesSearch = !query || (deck[i].front && deck[i].front.toLowerCase().includes(query)) || (deck[i].back && deck[i].back.toLowerCase().includes(query));
-                let matchesReview = !reviewOnly || deck[i].status === 'review';
+                const card = deck[i];
+                let matchesSearch = !query || (card.front && card.front.toLowerCase().includes(query)) || (card.back && card.back.toLowerCase().includes(query));
+                let isDue = card.status === 'review' || (card.box === 1 && card.status !== 'known') || (typeof card.nextReview === 'number' && card.nextReview <= now);
+                let matchesReview = !reviewOnly || isDue;
                 if (matchesSearch && matchesReview) {
                     filteredIndices.push(i);
                 }
@@ -1372,11 +1399,13 @@
             cardFront.textContent = card.front;
             cardBack.textContent = card.back;
             
-            let statusIndicator = "";
-            if (card.rating === 1 || (card.status === 'review' && !card.rating)) statusIndicator = " <span style='color:#da3633; font-weight:600;'>● Again [1]</span>";
-            else if (card.rating === 2) statusIndicator = " <span style='color:#d29922; font-weight:600;'>● Hard [2]</span>";
-            else if (card.rating === 3 || (card.status === 'known' && !card.rating)) statusIndicator = " <span style='color:#3fb950; font-weight:600;'>✓ Good [3]</span>";
-            else if (card.rating === 4) statusIndicator = " <span style='color:#58a6ff; font-weight:600;'>★ Easy [4]</span>";
+            const boxNum = (typeof card.box === 'number' && card.box >= 1 && card.box <= 5) ? card.box : 1;
+            const boxBadge = ` <span style="background:rgba(88,166,255,0.15); color:#58a6ff; font-weight:600; padding:1px 6px; border-radius:4px; font-size:0.75rem;">[Box ${boxNum}/5]</span>`;
+            let statusIndicator = boxBadge;
+            if (card.rating === 1 || (card.status === 'review' && !card.rating)) statusIndicator += " <span style='color:#da3633; font-weight:600;'>● Again [1]</span>";
+            else if (card.rating === 2) statusIndicator += " <span style='color:#d29922; font-weight:600;'>● Hard [2]</span>";
+            else if (card.rating === 3 || (card.status === 'known' && !card.rating)) statusIndicator += " <span style='color:#3fb950; font-weight:600;'>✓ Good [3]</span>";
+            else if (card.rating === 4) statusIndicator += " <span style='color:#58a6ff; font-weight:600;'>★ Easy [4]</span>";
             
             deckInfos.forEach(el => el.innerHTML = `Card ${currentIndex + 1}/${displayedCount}${statusIndicator}`);
             
@@ -1408,23 +1437,37 @@
         function handleStudyRating(ratingOrStatus) {
             if (filteredIndices.length === 0) return;
             const realIndex = filteredIndices[currentIndex];
+            const targetCard = deck[realIndex];
+            const curBox = (typeof targetCard.box === 'number' && targetCard.box >= 1 && targetCard.box <= 5) ? targetCard.box : 1;
             let status = 'known';
             let rating = 3;
+            let nextBox = curBox;
+
             if (ratingOrStatus === 1 || ratingOrStatus === 'again' || ratingOrStatus === 'review') {
                 status = 'review';
                 rating = 1;
+                nextBox = 1; // Leitner reset to Box 1
             } else if (ratingOrStatus === 2 || ratingOrStatus === 'hard') {
                 status = 'review';
                 rating = 2;
+                nextBox = Math.max(1, curBox - 1); // Leitner demotion by 1
             } else if (ratingOrStatus === 3 || ratingOrStatus === 'good' || ratingOrStatus === 'known') {
                 status = 'known';
                 rating = 3;
+                nextBox = Math.min(5, curBox + 1); // Leitner promotion by 1
             } else if (ratingOrStatus === 4 || ratingOrStatus === 'easy') {
                 status = 'known';
                 rating = 4;
+                nextBox = Math.min(5, curBox + 2); // Leitner promotion by 2
             }
-            deck[realIndex].status = status;
-            deck[realIndex].rating = rating;
+
+            const intervalDays = LEITNER_INTERVALS[nextBox - 1] || 1;
+            targetCard.status = status;
+            targetCard.rating = rating;
+            targetCard.box = nextBox;
+            targetCard.interval = intervalDays;
+            targetCard.nextReview = Date.now() + (intervalDays * 86400000);
+
             saveDeck();
             playSound(status === 'known' ? 'known' : 'review');
             resetCardFlip();
@@ -2092,10 +2135,14 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
+                    let rawText = e.target.result;
+                    if (typeof rawText === 'string' && rawText.charCodeAt(0) === 0xFEFF) {
+                        rawText = rawText.slice(1);
+                    }
                     let importedDeck = [];
-                    if (file.name.endsWith('.csv')) {
-                        const text = e.target.result;
-                        const lines = text.split('\n');
+                    const isCsv = file.name.toLowerCase().endsWith('.csv') || (file.type && file.type.includes('csv'));
+                    if (isCsv) {
+                        const lines = rawText.split(/\r\n|\n|\r/);
                         for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
                             const line = lines[lineIndex];
                             if (!line.trim()) continue;
@@ -2103,22 +2150,39 @@
                             if (parts.length >= 2) {
                                 let front = parts[0].trim();
                                 let back = parts.slice(1).join(',').trim();
-                                if (front.startsWith('"') && front.endsWith('"')) front = front.substring(1, front.length - 1);
-                                if (back.startsWith('"') && back.endsWith('"')) back = back.substring(1, back.length - 1);
-                                if (lineIndex === 0 && front.toLowerCase() === 'front' && back.toLowerCase() === 'back') {
+                                if (front.startsWith('"') && front.endsWith('"') && front.length >= 2) front = front.substring(1, front.length - 1);
+                                if (back.startsWith('"') && back.endsWith('"') && back.length >= 2) back = back.substring(1, back.length - 1);
+                                if (lineIndex === 0 && (front.toLowerCase() === 'front' || front.toLowerCase() === 'question') && (back.toLowerCase() === 'back' || back.toLowerCase() === 'answer')) {
                                     continue;
                                 }
                                 if (front || back) {
-                                    importedDeck.push({ front, back });
+                                    importedDeck.push({ front, back, box: 1, interval: 1 });
                                 }
                             }
                         }
                     } else {
-                        importedDeck = JSON.parse(e.target.result);
-                        if (!Array.isArray(importedDeck)) throw new Error("Invalid JSON format");
+                        let parsed = JSON.parse(rawText);
+                        let rawList = Array.isArray(parsed) ? parsed : (parsed && (parsed.deck || parsed.cards || []));
+                        if (!Array.isArray(rawList)) throw new Error("Invalid JSON format: expected array or deck object");
+                        for (const item of rawList) {
+                            if (!item || typeof item !== 'object') continue;
+                            const front = String(item.front !== undefined ? item.front : (item.question || item.q || '')).trim();
+                            const back = String(item.back !== undefined ? item.back : (item.answer || item.a || '')).trim();
+                            if (front || back) {
+                                importedDeck.push({
+                                    front,
+                                    back,
+                                    box: (typeof item.box === 'number' && item.box >= 1 && item.box <= 5) ? Math.floor(item.box) : 1,
+                                    status: (item.status === 'known' || item.status === 'review') ? item.status : undefined,
+                                    rating: (typeof item.rating === 'number' && item.rating >= 1 && item.rating <= 4) ? item.rating : undefined,
+                                    interval: typeof item.interval === 'number' ? item.interval : 1,
+                                    nextReview: typeof item.nextReview === 'number' ? item.nextReview : undefined
+                                });
+                            }
+                        }
                     }
                     if (importedDeck.length === 0) {
-                        showToast("⚠️ No cards found in file", "warning");
+                        showToast("⚠️ No valid cards found in file", "warning");
                         return;
                     }
 
@@ -2242,10 +2306,13 @@
             let review = 0;
             let unstudied = 0;
 
+            const boxCounts = [0, 0, 0, 0, 0];
             deck.forEach(card => {
                 if (card.status === 'known') known++;
                 else if (card.status === 'review') review++;
                 else unstudied++;
+                const b = (typeof card.box === 'number' && card.box >= 1 && card.box <= 5) ? card.box : 1;
+                boxCounts[b - 1]++;
             });
 
             const mastery = total > 0 ? ((known / total) * 100).toFixed(1) : 0;
@@ -2255,6 +2322,14 @@
                 <div style="display: flex; justify-content: space-between;"><span>Got It (Known):</span> <strong style="color: #3fb950;">${known}</strong></div>
                 <div style="display: flex; justify-content: space-between;"><span>Needs Review:</span> <strong style="color: #d29922;">${review}</strong></div>
                 <div style="display: flex; justify-content: space-between;"><span>Unstudied:</span> <strong>${unstudied}</strong></div>
+                <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div style="font-weight: 600; font-size: 0.85rem; color: #8b949e; margin-bottom: 6px;">Leitner Spaced Repetition Distribution:</div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.82rem;"><span>Box 1 (Daily Review):</span> <strong>${boxCounts[0]}</strong></div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.82rem;"><span>Box 2 (Every 2 Days):</span> <strong>${boxCounts[1]}</strong></div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.82rem;"><span>Box 3 (Every 4 Days):</span> <strong>${boxCounts[2]}</strong></div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.82rem;"><span>Box 4 (Every 7 Days):</span> <strong>${boxCounts[3]}</strong></div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.82rem;"><span>Box 5 (Mastered · 14 Days):</span> <strong style="color: #3fb950;">${boxCounts[4]}</strong></div>
+                </div>
                 <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
                 <div style="display: flex; justify-content: space-between; font-size: 1.1rem;"><span>Mastery:</span> <strong style="color: #58a6ff;">${mastery}%</strong></div>
             `;
@@ -2264,14 +2339,18 @@
         });
 
         document.getElementById('btnResetProgress').addEventListener('click', () => {
-            if (confirm('Reset all study progress (Known / Review tags) for this deck?')) {
+            if (confirm('Reset all study progress (Known / Review tags & Leitner box levels) for this deck?')) {
                 deck.forEach(card => {
                     delete card.status;
+                    delete card.rating;
+                    delete card.interval;
+                    delete card.nextReview;
+                    card.box = 1;
                 });
                 saveDeck();
                 renderCard();
                 btnStats.click();
-                showToast('🔄 Study progress reset', 'info');
+                showToast('🔄 Study progress & Leitner boxes reset', 'info');
             }
         });
 
@@ -2324,28 +2403,6 @@
             }
         });
     </script>
-    <!-- Deck Picker Drawer -->
-    <div class="deck-drawer-backdrop" id="deckDrawerBackdrop"></div>
-    <aside class="deck-drawer" id="deckDrawer" aria-label="Deck Picker Drawer">
-        <div class="drawer-header">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:1.05rem; font-weight:700; color:#58a6ff;">📚 Deck Picker</span>
-                <span id="drawerDeckCount" style="font-size:0.75rem; background:rgba(88,166,255,0.15); color:#58a6ff; padding:2px 6px; border-radius:10px;">Packs</span>
-            </div>
-            <button class="modal-close-btn" id="btnCloseDrawer" title="Close (Esc)">&times;</button>
-        </div>
-        <div class="drawer-search">
-            <input type="text" id="drawerSearchInput" placeholder="Filter decks... [D]" style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:6px; color:#fff; padding:6px 10px; font-family:'Inter',sans-serif; font-size:0.85rem;">
-        </div>
-        <div class="drawer-deck-list" id="drawerDeckList">
-            <!-- Dynamic pack entries -->
-        </div>
-        <div class="drawer-footer">
-            <button class="btn btn-primary" id="btnDrawerNewDeck" style="flex:1; justify-content:center;">+ New Deck</button>
-            <button class="btn" id="btnDrawerImport" style="justify-content:center;">Import</button>
-        </div>
-    </aside>
-
 </body>
 </html>
 

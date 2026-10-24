@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,9 +32,9 @@ current_targets:
   kilo_creator: kweb://slashnet
   kilo_graphics: KSanctuary
   kilo_soundscape: KCyber
-  kilo_tester: KFlash
+  kilo_tester: KSys
   kilo_usability: KScript
-  kilo_qa: KFlash
+  kilo_qa: KTodo
   kilo_expander: KAnomaly
   kilo_review: KMech
 virtual_web_target: kweb://slashnet
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KFarm
-  timestamp: '2026-10-24T13:54:27-07:00'
+  agent: kilo-qa
+  app: KFlash
+  timestamp: '2026-10-24T14:06:25-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -129,11 +129,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KFlash`
+- **Active Target**: `KSys`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Audit flashcard deck manager, spaced repetition algorithm, flip animations, and deck import/export. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -147,14 +146,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
-| `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Large card flip touch/keyboard ergonomics (`Space` to flip, `1-4` for ratings), responsive progress bar, and deck picker drawer. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KFlash`
+- **Active Target**: `KTodo`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Leitner box scheduling math, deck import integrity, dual Win32 C parity, and promote to Mature table. |
 | `KTodo` | `KiloOS/public/apps/ktodo.html`, `KTodo/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, tag filtering, first-run tutorial tips, dual Win32 C parity, and promote to Mature table. |
 | `KTimer` | `KiloOS/public/apps/ktimer.html`, `KTimer/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, lap export verification, sound alert toggle, dual Win32 C parity, and promote to Mature table. |
 | `KClock` | `KiloOS/public/apps/kclock.html`, `KClock/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, world time offsets, alarm trigger verification, dual Win32 C parity, and promote to Mature table. |
@@ -219,6 +216,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KFlash** | `KiloOS/public/apps/kflash.html` | Pass 5+ (2026-10-24) | Education / Spaced Repetition | Complete flashcard & Leitner spaced repetition study workstation with 5 boxes, 1-4 rating math, deck drawer, sample packs, JSON/CSV import/export, F5/F9 persistence, and dual Win32 C parity. |
 | **KFarm** | `KiloOS/public/apps/kfarm.html` | Pass 5+ (2026-10-24) | Simulation / Farming | Pastoral farming simulator; 4 crops, livestock, artisanal machines, YM2612 audio, 3x3 AoE tool, in-viewport compact layout, WASD/Arrow keyboard grid navigation, dual Win32 C parity, F5/F9 state. |
 | **KHabit** | `KiloOS/public/apps/khabit.html` | Pass 5+ (2026-10-24) | Office / Productivity | Feature-complete sovereign habit tracker with streak calculations, 28-day completion heatmap, daily reminder banner, YM2612 FM audio, F5/F9 state persistence, and dual Win32 C parity. |
 | **KBudget** | `KiloOS/public/apps/kbudget.html` | Pass 5+ (2026-10-24) | Office / Productivity | Comprehensive retro budget ledger with category allocation pie charts, multi-currency switching, monthly goals, CSV/JSON VFS integration, F5/F9 snapshot persistence, and dual Win32 C parity. |
@@ -275,6 +273,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T14:06:25-07:00 — kilo-qa: KFlash (Pass 5 QA, Leitner Scheduling & Mature Graduation)**
+  - Status: PASS ✅ (0 errors, web 117.5 KB, native 136.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.4%, HEAD Δ 0.12%, 0 fail, 0 warn, 7.5s)).
+  - Leitner Spaced Repetition: Implemented 5-box spaced repetition math, rating hotkeys [1-4], Box breakdown in Stats modal, and due-card filter in HTML and Win32 C.
+  - Deck Import & UI: Added UTF-8 BOM stripping, JSON array/object fallback, CSV header skipping, and relocated deck drawer before script tag.
+  - State & Parity: Verified F5/F9 state persistence, kflash_tutorialSeen flag, and clean Win32 native C compilation (<999 KB).
+  - Mature Quarantine & Handoff: Promoted `KFlash` to Mature archive; advanced `kilo-qa` to `KTodo`; next agent `kilo-expander`.
+
 - **2026-10-24T13:54:27-07:00 — kilo-usability: KFarm (Responsive Viewport Compaction & WASD/Arrow Grid Ergonomics)**
   - Status: PASS ✅ (0 errors, web 118.3 KB, native 128.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.23%, input 51.74%, HEAD Δ 45.32%, 0 fail, 0 warn, 10.8s)).
   - Layout: Eliminated 197px vertical overflow (reduced to x0/y0px at 640x743) by compacting container, margins, and grouping primary, shop, and utility button toolbars.
@@ -297,9 +302,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-24T13:20:56-07:00 — kilo-graphics: KStellar (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KStellar.
   - Handoff: Advanced `kilo-graphics` to `KSanctuary`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-24T13:15:54-07:00 — kilo-creator: kweb://deep-core (Tier 3 Ghost Node VFS & KMatrix Passkey Mesh Verification)**
-  - Status: PASS ✅ (0 errors, web 299.1 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.76%, 0 fail, 0 warn, 4.8s)).
-  - Connected Ghost Node terminal to KiloOS VFS (/sys/alpha.sys & /home/crypto/) writing Inode 0x1999 and penultimate fragment 1999-ARCH.
-  - Verified diegetic routing in KNet, hidden transit echoes in Webring, and automated breach trigger for KMatrix Sector 04.
-  - Handoff: Advanced `kilo-creator` to `kweb://slashnet`; rotated active agent to `kilo-graphics`.

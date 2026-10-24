@@ -62,6 +62,9 @@ typedef struct {
     char front[256];
     char back[256];
     int status;
+    int box;
+    int rating;
+    time_t nextReview;
 } FlashCard;
 
 typedef struct {
@@ -118,6 +121,45 @@ void SetNativeToast(const char* msg, int durationMs) {
 void SaveDeck(void);
 void UpdateFilteredIndices(void);
 void UpdateCardDisplay(void);
+void ApplyLeitnerRating(int rating);
+
+static const int s_leitnerDays[5] = { 1, 2, 4, 7, 14 };
+
+void ApplyLeitnerRating(int rating) {
+    if (filteredCount <= 0) return;
+    int idx = filteredIndices[currentIndex];
+    int curBox = (deck[idx].box >= 1 && deck[idx].box <= 5) ? deck[idx].box : 1;
+    time_t now = time(NULL);
+
+    if (rating == 1) {
+        deck[idx].status = 2; // review
+        deck[idx].rating = 1;
+        deck[idx].box = 1;
+        deck[idx].nextReview = now + 86400;
+    } else if (rating == 2) {
+        deck[idx].status = 2; // review
+        deck[idx].rating = 2;
+        deck[idx].box = (curBox > 1) ? curBox - 1 : 1;
+        deck[idx].nextReview = now + 86400;
+    } else if (rating == 3) {
+        deck[idx].status = 1; // known
+        deck[idx].rating = 3;
+        deck[idx].box = (curBox < 5) ? curBox + 1 : 5;
+        deck[idx].nextReview = now + (time_t)(s_leitnerDays[deck[idx].box - 1] * 86400);
+    } else if (rating == 4) {
+        deck[idx].status = 1; // known
+        deck[idx].rating = 4;
+        deck[idx].box = (curBox < 4) ? curBox + 2 : 5;
+        deck[idx].nextReview = now + (time_t)(s_leitnerDays[deck[idx].box - 1] * 86400);
+    }
+
+    SaveDeck();
+    isFlipped = 0;
+    if (currentIndex < filteredCount - 1) {
+        currentIndex++;
+    }
+    UpdateCardDisplay();
+}
 
 void QuicksaveDeckNative(void) {
     QuickSaveState qss;
@@ -156,6 +198,9 @@ void QuickloadDeckNative(void) {
 
     deckCount = qss.deckCount;
     memcpy(deck, qss.deck, sizeof(FlashCard) * deckCount);
+    for (int i = 0; i < deckCount; i++) {
+        if (deck[i].box < 1 || deck[i].box > 5) deck[i].box = 1;
+    }
     SaveDeck();
 
     FILE *tf = fopen("kflash_tutorial.dat", "wb");
@@ -188,6 +233,9 @@ void LoadDeck() {
         fread(&deckCount, sizeof(int), 1, f);
         fread(deck, sizeof(FlashCard), deckCount, f);
         fclose(f);
+        for (int i = 0; i < deckCount; i++) {
+            if (deck[i].box < 1 || deck[i].box > 5) deck[i].box = 1;
+        }
     } else {
         strcpy(deck[0].front, "Welcome to KFlash!");
         strcpy(deck[0].back, "This is a quick tutorial. Press Space or click the card to flip it.");
@@ -200,6 +248,12 @@ void LoadDeck() {
         strcpy(deck[4].front, "Import, Export & Samples");
         strcpy(deck[4].back, "Use 'Export' to save your deck to a file, 'Import' to load one, or 'Load Sample' to try pre-made decks!");
         deckCount = 5;
+        for (int i = 0; i < 5; i++) {
+            deck[i].status = 0;
+            deck[i].box = 1;
+            deck[i].rating = 0;
+            deck[i].nextReview = 0;
+        }
     }
 }
 
@@ -225,8 +279,12 @@ void UpdateFilteredIndices() {
     }
     
     filteredCount = 0;
+    time_t now = time(NULL);
     for (int i = 0; i < deckCount; i++) {
-        if (reviewOnly && deck[i].status != 2) continue;
+        if (reviewOnly) {
+            int isDue = (deck[i].status == 2) || (deck[i].box == 1 && deck[i].status != 1) || (deck[i].nextReview > 0 && deck[i].nextReview <= now);
+            if (!isDue) continue;
+        }
 
         if (strlen(query) == 0) {
             filteredIndices[filteredCount++] = i;
@@ -361,22 +419,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
                     handled = 1;
                 } else if (msg.wParam == '1' || msg.wParam == 'R') {
                     if (isFlipped) {
-                        SendMessage(g_hwnd, WM_COMMAND, ID_BTN_REVIEW, 0);
+                        ApplyLeitnerRating(1);
                         handled = 1;
                     }
                 } else if (msg.wParam == '2') {
                     if (isFlipped) {
-                        SendMessage(g_hwnd, WM_COMMAND, ID_BTN_REVIEW, 0);
+                        ApplyLeitnerRating(2);
                         handled = 1;
                     }
                 } else if (msg.wParam == '3' || msg.wParam == 'G') {
                     if (isFlipped) {
-                        SendMessage(g_hwnd, WM_COMMAND, ID_BTN_GOTIT, 0);
+                        ApplyLeitnerRating(3);
                         handled = 1;
                     }
                 } else if (msg.wParam == '4') {
                     if (isFlipped) {
-                        SendMessage(g_hwnd, WM_COMMAND, ID_BTN_GOTIT, 0);
+                        ApplyLeitnerRating(4);
                         handled = 1;
                     }
                 } else if (msg.wParam == 'D') {
@@ -556,8 +614,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (filteredCount == 0) {
                 strcpy(info, "0/0");
             } else {
-                int st = deck[filteredIndices[currentIndex]].status;
-                sprintf(info, "Card %d/%d %s", currentIndex + 1, filteredCount, st == 1 ? "[Known]" : (st == 2 ? "[Review]" : ""));
+                int realIndex = filteredIndices[currentIndex];
+                int st = deck[realIndex].status;
+                int bx = (deck[realIndex].box >= 1 && deck[realIndex].box <= 5) ? deck[realIndex].box : 1;
+                const char* stStr = (st == 1) ? "[Known]" : (st == 2 ? "[Review]" : "");
+                sprintf(info, "Card %d/%d [Box %d/5] %s", currentIndex + 1, filteredCount, bx, stStr);
             }
             RECT rcInfo = { rcCard.left + 20, rcCard.top + 20, rcCard.right - 20, rcCard.top + 40 };
             DrawText(hdcMem, info, -1, &rcInfo, DT_LEFT | DT_TOP | DT_SINGLELINE);
@@ -648,30 +709,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                     break;
                 case ID_BTN_GOTIT:
-                    if (filteredCount > 0) {
-                        deck[filteredIndices[currentIndex]].status = 1;
-                        SaveDeck();
-                        if (currentIndex < filteredCount - 1) {
-                            currentIndex++;
-                            isFlipped = 0;
-                        } else {
-                            isFlipped = 0;
-                        }
-                        UpdateCardDisplay();
-                    }
+                    ApplyLeitnerRating(3);
                     break;
                 case ID_BTN_REVIEW:
-                    if (filteredCount > 0) {
-                        deck[filteredIndices[currentIndex]].status = 2;
-                        SaveDeck();
-                        if (currentIndex < filteredCount - 1) {
-                            currentIndex++;
-                            isFlipped = 0;
-                        } else {
-                            isFlipped = 0;
-                        }
-                        UpdateCardDisplay();
-                    }
+                    ApplyLeitnerRating(1);
                     break;
                 case ID_BTN_STATS:
                     DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_STATS), hwnd, StatsProc);
@@ -722,21 +763,43 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             }
                             if (replace) deckCount = 0;
                             char line[1024];
+                            int lineNum = 0;
                             while (fgets(line, sizeof(line), f) && deckCount < 100) {
+                                lineNum++;
+                                char* cr = strchr(line, '\r'); if (cr) *cr = '\0';
+                                char* nl = strchr(line, '\n'); if (nl) *nl = '\0';
                                 char* comma = strchr(line, ',');
                                 if (comma) {
                                     *comma = '\0';
                                     char* front = line;
                                     char* back = comma + 1;
-                                    char* nl = strchr(back, '\n');
-                                    if (nl) *nl = '\0';
-                                    if(front[0]=='\"') { front++; front[strlen(front)-1]='\0'; }
-                                    if(back[0]=='\"') { back++; back[strlen(back)-1]='\0'; }
-                                    strncpy(deck[deckCount].front, front, 255);
-                                    deck[deckCount].front[255] = '\0';
-                                    strncpy(deck[deckCount].back, back, 255);
-                                    deck[deckCount].back[255] = '\0';
-                                    deckCount++;
+                                    while (*front == ' ') front++;
+                                    while (*back == ' ') back++;
+                                    int flen = (int)strlen(front);
+                                    int blen = (int)strlen(back);
+                                    if (flen >= 2 && front[0] == '"' && front[flen - 1] == '"') {
+                                        front[flen - 1] = '\0';
+                                        front++;
+                                    }
+                                    if (blen >= 2 && back[0] == '"' && back[blen - 1] == '"') {
+                                        back[blen - 1] = '\0';
+                                        back++;
+                                    }
+                                    if (lineNum == 1 && (_stricmp(front, "front") == 0 || _stricmp(front, "question") == 0) &&
+                                                        (_stricmp(back, "back") == 0 || _stricmp(back, "answer") == 0)) {
+                                        continue;
+                                    }
+                                    if (strlen(front) > 0 || strlen(back) > 0) {
+                                        strncpy(deck[deckCount].front, front, 255);
+                                        deck[deckCount].front[255] = '\0';
+                                        strncpy(deck[deckCount].back, back, 255);
+                                        deck[deckCount].back[255] = '\0';
+                                        deck[deckCount].status = 0;
+                                        deck[deckCount].box = 1;
+                                        deck[deckCount].rating = 0;
+                                        deck[deckCount].nextReview = 0;
+                                        deckCount++;
+                                    }
                                 }
                             }
                             fclose(f);
@@ -963,6 +1026,9 @@ INT_PTR CALLBACK HelpProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                            "Card Basics\r\nUse '+Add' [A] to create, 'Edit' [E] to modify, 'Del' [Del] to remove.\r\n\r\n"
                            "Navigation & Study\r\nSpace / Enter: Flip card. Left / Right: Prev / Next.\r\n1 / G: Got It (known). 2 / R: Needs Review.\r\n\r\n"
                            "Quicksave & State Persistence\r\n[F5]: Quicksave snapshot (kflash.sav).\r\n[F9]: Quickload snapshot.\r\n\r\n"
+                   "Leitner Spaced Repetition:\r\n"
+                   "[1/R] Again (Box 1)  [2] Hard (-1 Box)\r\n"
+                   "[3/G] Good (+1 Box)   [4] Easy (+2 Boxes)\r\n\r\n"
                            "Import & Export\r\nExport to CSV. Import CSV/JSON decks. 'Smpls' for pre-made packs.\r\n\r\n"
                            "Review & Filter\r\nSearch filter [Ctrl+F]. Check 'Review Only'. 'Shuf' to shuffle.");
             return (INT_PTR)TRUE;
