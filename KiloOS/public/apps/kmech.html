@@ -1828,6 +1828,7 @@
                 equipSpec,
                 playerHp: playerStats.hp,
                 playerHeat: playerStats.heat,
+                soundEnabled: soundEnabled ? 1 : 0,
                 inBattle,
                 enemyStats: inBattle ? {
                     maxHp: enemyStats.maxHp,
@@ -1852,6 +1853,11 @@
             battleCount = typeof d.battleCount === 'number' ? Math.max(1, Math.floor(d.battleCount)) : 1;
             playerLevel = typeof d.playerLevel === 'number' ? Math.max(1, Math.min(20, Math.floor(d.playerLevel))) : 1;
             playerXp = typeof d.playerXp === 'number' ? Math.max(0, Math.floor(d.playerXp)) : 0;
+            if (typeof d.soundEnabled === 'number' || typeof d.soundEnabled === 'boolean') {
+                soundEnabled = !!d.soundEnabled;
+                safeSetStorage('kmech_sound', soundEnabled ? '1' : '0');
+                updateSoundButton();
+            }
             equipWpn = (typeof d.equipWpn === 'number' ? Math.floor(d.equipWpn) : 0) % weapons.length;
             if (equipWpn < 0) equipWpn = 0;
             equipArm = (typeof d.equipArm === 'number' ? Math.floor(d.equipArm) : 0) % armors.length;
@@ -2722,9 +2728,39 @@
                 screenShake = 0;
             }
 
-            requestAnimationFrame(updateCombatFX);
+            if (!document.hidden) {
+                fxAnimId = requestAnimationFrame(updateCombatFX);
+            } else {
+                fxAnimId = null;
+            }
         }
-        requestAnimationFrame(updateCombatFX);
+        let fxAnimId = requestAnimationFrame(updateCombatFX);
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (fxAnimId) {
+                    cancelAnimationFrame(fxAnimId);
+                    fxAnimId = null;
+                }
+                if (audioCtx && audioCtx.state === 'running') {
+                    audioCtx.suspend();
+                }
+                if (bgmTimer) {
+                    clearTimeout(bgmTimer);
+                    bgmTimer = null;
+                }
+            } else {
+                if (!fxAnimId) {
+                    fxAnimId = requestAnimationFrame(updateCombatFX);
+                }
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                if (soundEnabled && bgmRunning && !bgmTimer) {
+                    scheduleBgmStep();
+                }
+            }
+        });
 
         /* ==================== GAME LOGIC & CONTROLS ==================== */
         function toggleTarget() {

@@ -426,13 +426,23 @@ void QuickLoadNative() {
                 playerHeatGen = weapons[equipWpn].heatGen;
                 playerStats.atk = weapons[equipWpn].atk;
                 playerStats.heat = data.playerHeat;
+                if (playerStats.heat < 0) playerStats.heat = 0;
+                if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
 
                 MarkTutorialSeen();
 
                 if (data.version >= 3 && readBytes == sizeof(data) && data.inBattle && data.enemyHp > 0 && playerStats.hp > 0) {
                     gameState = STATE_BATTLE;
-                    enemyStats.hp = data.enemyHp;
-                    enemyStats.heat = data.enemyHeat;
+                    int tierIdx = (battleCount - 1) / 2;
+                    if (tierIdx >= NUM_ENEMY_TIERS) tierIdx = NUM_ENEMY_TIERS - 1;
+                    int tierScale = (battleCount - 1);
+                    enemyStats.maxHp = enemyTiers[tierIdx].hp + (tierScale * 6);
+                    enemyStats.atk = enemyTiers[tierIdx].atk + (tierScale * 1);
+                    enemyStats.def = enemyTiers[tierIdx].def + (tierScale / 2);
+                    enemyStats.maxHeat = enemyTiers[tierIdx].maxHeat + (tierScale * 4);
+                    enemyStats.hp = data.enemyHp > enemyStats.maxHp ? enemyStats.maxHp : data.enemyHp;
+                    enemyStats.heat = data.enemyHeat > enemyStats.maxHeat ? enemyStats.maxHeat : data.enemyHeat;
+                    if (enemyStats.heat < 0) enemyStats.heat = 0;
                     currentTargetLimb = data.targetLimb % 5;
                     for (int i = 0; i < 5; i++) {
                         playerLimbDamage[i] = data.playerLimbDmg[i];

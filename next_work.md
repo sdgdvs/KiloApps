@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ current_targets:
   kilo_soundscape: KVoid
   kilo_tester: KSteno
   kilo_usability: KSteno
-  kilo_qa: KMech
+  kilo_qa: KPac
   kilo_expander: KSteno
 virtual_web_target: kweb://rfc-archive
 virtual_web_rotation:
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KSys
-  timestamp: '2026-10-23T17:05:52-07:00'
+  agent: kilo-qa
+  app: KMech
+  timestamp: '2026-10-23T17:17:23-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -147,11 +147,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KMech`
+- **Active Target**: `KPac`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | Pass 5 QA: verify mech chassis loadout, heat/armor state, arena progression F5/F9 persistence + dual Win32 C build (`KMech.exe` <999 KB). |
 | `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | Pass 5 QA: verify campaign progression, maze editor, RFMS duel solo fallback, F5/F9 persistence + dual Win32 C build (`KPac.exe` <999 KB); promote to Mature if complete. |
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Pass 5 QA: verify deck state, move undo stack, scoring, F5/F9 persistence + dual Win32 C build (`KSolitaire.exe` <999 KB); promote to Mature if complete. |
 
@@ -179,6 +178,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KMech** | `KiloOS/public/apps/kmech.html` | Pass 5+ (2026-10-23) | Games / Sci-Fi | Tactical turn-based mech skirmish arena with chassis/weapon loadouts, heat/armor management, limb targeting, F5/F9 state persistence, and dual Win32 C parity. |
 | **KTrader** | `KiloOS/public/apps/ktrader.html` | Pass 5+ (2026-10-23) | Strategy / Space Simulation | Complete space trading & planetary commerce simulation; 12 planetary systems, commodity futures ledger, shipyard upgrades, pirate combat, dual Win32 native client parity, full F5/F9 state persistence. |
 | **KDB** | `KiloOS/public/apps/kdb.html` | Pass 5+ (2026-10-23) | Productivity / Database & SQL | Enterprise relational table & SQL studio with multi-table schema designer, ER diagram, index simulator, VFS mount/export (/home/data/), KGraph IPC plotting, F5/F9 persistence, and dual Win32 C parity. |
 | **KConverter** | `KiloOS/public/apps/kconverter.html` | Pass 5+ (2026-10-23) | Productivity / Math & Units | High-precision engineering and dimensional unit converter across 14 physical categories with Smart Expression Parser, Batch tables, custom factors, F5/F9 persistence, and dual Win32 C parity. |
@@ -224,6 +224,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T17:17:23-07:00 — kilo-qa: KMech (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 159.8 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.16%, input 15.15%, HEAD Δ 0.08%, 0 fail, 0 warn, 8.4s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kmech_tutorialSeen flag, audio persistence, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, battle state scaling/clamping recovery, and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KMech` to Mature archive; advanced `kilo-qa` to `KPac`; next agent `kilo-expander`.
+
 - **2026-10-23T17:05:52-07:00 — kilo-usability: KSys (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 187.6 KB, native 31.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Ergonomics: Added persistent footer statusbar with live telemetry/toast updates and discoverable shortcut pills [F1/H, F5/F9, Shift+M, 1-6, Esc].
@@ -248,9 +254,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Deep void survival visual overhaul: relativistic gravitational singularity lensing, accretion disk Doppler beaming, cosmic nebula layer, and drifting derelict hull debris.
   - Integrated anomaly silhouettes (Spectre/Phantom and Void Archon dread titan) with procedural fallbacks; verified clean glint-free surfaces.
   - Handoff: Advanced `kilo-graphics` to `KCyber`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-23T16:07:06-07:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Party Vault)**
-  - Status: PASS ✅ (0 errors, web 84.4 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 38.61%, input 38.16%, 0 fail, 0 warn, 6.4s)).
-  - Created Assembly '99 Demoscene Party Vault (kweb://demoscene) with real-time 64K intro Canvas switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs).
-  - Implemented ANSI .NFO viewer/studio with VFS save, party compo voting board, and 6-channel YM2612 FM / SPC700 soundtracker jukebox; linked in KNet, Portal & Webring.
-  - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.
