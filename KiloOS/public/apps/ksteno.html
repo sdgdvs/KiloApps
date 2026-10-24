@@ -3061,8 +3061,13 @@
       try {
         const seen = localStorage.getItem('ksteno_tutorialSeen');
         if (!seen) {
-          document.getElementById('modal-tutorial').style.display = 'flex';
-          showTutorialStep(0);
+          const modal = document.getElementById('modal-tutorial');
+          if (modal) {
+            modal.style.display = 'flex';
+            showTutorialStep(0);
+            const focusable = modal.querySelector('button:not([disabled])');
+            if (focusable) focusable.focus();
+          }
         }
       } catch (e) {}
     }
@@ -3296,6 +3301,13 @@
         if (state.audioPayload !== undefined) document.getElementById('audio-payload-input').value = state.audioPayload;
         if (state.textCover !== undefined) document.getElementById('cover-text-input').value = state.textCover;
         if (state.textPayload !== undefined) document.getElementById('text-payload-input').value = state.textPayload;
+        if (state.soundEnabled !== undefined) {
+          sound.enabled = !!state.soundEnabled;
+          const btn = document.getElementById('btn-audio-toggle');
+          if (btn) btn.textContent = sound.enabled ? '🔊 Audio' : '🔇 Muted';
+          const settingSound = document.getElementById('setting-sound-enabled');
+          if (settingSound) settingSound.checked = sound.enabled;
+        }
 
         updateCapacityUI();
         updateAudioCapacityUI();
@@ -3400,19 +3412,24 @@
           e.preventDefault();
           quickLoadSession();
         } else if (e.key === 'Escape') {
+          const settings = document.getElementById('modal-settings');
+          const manual = document.getElementById('modal-manual');
           const tut = document.getElementById('modal-tutorial');
           const splash = document.getElementById('modal-splash');
-          if (tut && tut.style.display !== 'none') {
+
+          if (settings && settings.style.display !== 'none') {
+            closeModal('modal-settings');
+          } else if (manual && manual.style.display !== 'none') {
+            closeModal('modal-manual');
+          } else if (tut && tut.style.display !== 'none') {
             closeTutorial();
-          }
-          if (splash && splash.style.display !== 'none') {
-            splash.style.display = 'none';
+          } else if (splash && splash.style.display !== 'none') {
+            closeModal('modal-splash');
             checkFirstRunTutorial();
-          }
-          document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
-          if (modalFocusRestore && typeof modalFocusRestore.focus === 'function') {
-            modalFocusRestore.focus();
-            modalFocusRestore = null;
+          } else {
+            document.querySelectorAll('.modal-overlay').forEach(m => {
+              if (m.style.display !== 'none') closeModal(m);
+            });
           }
         } else if ((e.altKey && e.key >= '1' && e.key <= '5') || (!isInput && !e.ctrlKey && !e.metaKey && !e.altKey && e.key >= '1' && e.key <= '5')) {
           const tabs = document.querySelectorAll('.tab-btn');
