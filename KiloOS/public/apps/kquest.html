@@ -3360,6 +3360,33 @@
             });
             break;
 
+          case 'raid': // Grand War-Horn & Co-Op Tavern Raid Fanfare
+            [N.D3, N.A3, N.D4, N.Fsharp4, N.A4, N.D5].forEach((f, idx) => {
+              setTimeout(() => {
+                if (!this.muted) {
+                  this.playHeroicBrass(f, 0.28, 0.17);
+                  if (idx === 0 || idx === 3) this.playKick();
+                  if (idx === 5) {
+                    this.playFMBass(N.D2, 0.65, 0.24);
+                    this.playSnare();
+                  }
+                }
+              }, idx * 70);
+            });
+            break;
+
+          case 'arena': // Guild Arena Duel Blade Clash & Inharmonic FM Stinger
+            this.playFM(420, 7.3, 5.8, 0.18, 'sawtooth', true, 0.22, now);
+            this.playFM(840, 11.2, 4.5, 0.15, 'sine', true, 0.18, now + 0.02);
+            setTimeout(() => {
+              if (!this.muted) {
+                this.playCrystalBell(N.D6, 0.25, 0.14);
+                this.playFMBass(N.A1, 0.45, 0.20);
+                this.playSnare();
+              }
+            }, 60);
+            break;
+
           default:
             this.playFM(440, 1.0, 1.0, 0.1, 'sine', false, 0.12, now);
         }
