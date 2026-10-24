@@ -8,7 +8,7 @@
 
 HWND hMainWnd = NULL;
 HWND hInput, hOutput, hMemory, hRegexFind, hRegexRep;
-HWND hBtnRun, hBtnLoad, hBtnSave, hBtnStep, hBtnBench, hBtnRec, hBtnPlay, hBtnRep, hBtnHelp, hBtnClear;
+HWND hBtnRun, hBtnLoad, hBtnSave, hBtnStep, hBtnBench, hBtnRec, hBtnPlay, hBtnRep, hBtnHelp, hBtnClear, hBtnVfs;
 HWND hBtnQS, hBtnQL;
 
 #define MAX_VARS 256
@@ -113,7 +113,7 @@ int MathPow(int base, int exp) {
 // ==========================================
 // Virtual Filesystem (VFS) Emulation
 // ==========================================
-#define MAX_VFS_FILES 16
+#define MAX_VFS_FILES 32
 #define MAX_VFS_PATH 64
 #define MAX_VFS_DATA 2048
 
@@ -153,6 +153,36 @@ int VfsWrite(const char* path, const char* data) {
     g_vfsFiles[idx].data[dLen] = '\0';
     g_vfsFiles[idx].size = dLen;
     return dLen;
+}
+
+int VfsAppend(const char* path, const char* data) {
+    int idx = VfsFind(path);
+    if (idx == -1) return VfsWrite(path, data);
+    int curLen = g_vfsFiles[idx].size;
+    int dLen = 0;
+    while (data[dLen] && curLen + dLen < MAX_VFS_DATA - 1) {
+        g_vfsFiles[idx].data[curLen + dLen] = data[dLen];
+        dLen++;
+    }
+    g_vfsFiles[idx].data[curLen + dLen] = '\0';
+    g_vfsFiles[idx].size = curLen + dLen;
+    return curLen + dLen;
+}
+
+int VfsDelete(const char* path) {
+    int idx = VfsFind(path);
+    if (idx == -1) return 0;
+    for (int i = idx; i < g_vfsCount - 1; i++) {
+        g_vfsFiles[i] = g_vfsFiles[i + 1];
+    }
+    g_vfsCount--;
+    return 1;
+}
+
+int VfsCopy(const char* src, const char* dst) {
+    int sIdx = VfsFind(src);
+    if (sIdx == -1) return 0;
+    return VfsWrite(dst, g_vfsFiles[sIdx].data);
 }
 
 const char* VfsRead(const char* path) {
@@ -242,10 +272,48 @@ void SkipWhitespace(const char** p) {
     }
 }
 
+void ParseStringOrExpr(const char** p, char* outStr, int maxLen, int* outInt) {
+    SkipWhitespace(p);
+    outStr[0] = '\0';
+    if (**p == '\"') {
+        (*p)++;
+        int len = 0;
+        while (**p != '\0' && **p != '\"' && **p != '\r' && **p != '\n' && len < maxLen - 1) {
+            if (**p == '\\' && *(*p + 1) != '\0') {
+                (*p)++;
+                if (**p == 'n') outStr[len++] = '\n';
+                else if (**p == 't') outStr[len++] = '\t';
+                else outStr[len++] = **p;
+                (*p)++;
+            } else {
+                outStr[len++] = *(*p)++;
+            }
+        }
+        if (**p == '\"') (*p)++;
+        outStr[len] = '\0';
+        if (outInt) *outInt = len;
+    } else {
+        int val = ParseExpr(p);
+        if (outInt) *outInt = val;
+        wsprintfA(outStr, "%d", val);
+    }
+}
+
 int ParsePrimary(const char** p) {
     nodeCount++;
     SkipWhitespace(p);
     if (**p == '\0') return 0;
+
+    // String literals
+    if (**p == '\"') {
+        (*p)++;
+        int hash = 5381;
+        while (**p != '\0' && **p != '\"' && **p != '\r' && **p != '\n') {
+            hash = ((hash << 5) + hash) + (unsigned char)(*(*p)++);
+        }
+        if (**p == '\"') (*p)++;
+        return hash & 0x7FFFFFFF;
+    }
 
     // Parentheses
     if (**p == '(') {
@@ -302,18 +370,24 @@ int ParsePrimary(const char** p) {
         // Check if function call
         if (**p == '(') {
             (*p)++; // eat '('
+            char sArg1[MAX_VFS_PATH] = {0};
+            char sArg2[MAX_VFS_DATA] = {0};
+            char sArg3[64] = {0};
             int arg1 = 0, arg2 = 0, arg3 = 0;
+
             SkipWhitespace(p);
-            if (**p != ')') arg1 = ParseExpr(p);
+            if (**p != ')') {
+                ParseStringOrExpr(p, sArg1, sizeof(sArg1), &arg1);
+            }
             SkipWhitespace(p);
             if (**p == ',') {
                 (*p)++;
-                arg2 = ParseExpr(p);
+                ParseStringOrExpr(p, sArg2, sizeof(sArg2), &arg2);
                 SkipWhitespace(p);
             }
             if (**p == ',') {
                 (*p)++;
-                arg3 = ParseExpr(p);
+                ParseStringOrExpr(p, sArg3, sizeof(sArg3), &arg3);
                 SkipWhitespace(p);
             }
             if (**p == ')') (*p)++;
@@ -327,9 +401,33 @@ int ParsePrimary(const char** p) {
             if (StrEqualCase(ident, "sign")) return MathSign(arg1);
             if (StrEqualCase(ident, "rand")) return MathRand(arg1, arg2);
             if (StrEqualCase(ident, "pow")) return MathPow(arg1, arg2);
-            if (StrEqualCase(ident, "vfs_exists") || StrEqualCase(ident, "vfs.exists")) return (arg1 >= 0 && arg1 < g_vfsCount) ? 1 : 0;
-            if (StrEqualCase(ident, "vfs_size") || StrEqualCase(ident, "vfs.size")) return (arg1 >= 0 && arg1 < g_vfsCount) ? g_vfsFiles[arg1].size : 0;
+
+            // Phase VI VFS Scripting APIs
+            if (StrEqualCase(ident, "vfs_exists") || StrEqualCase(ident, "vfs.exists")) {
+                if (sArg1[0]) return VfsExists(sArg1);
+                return (arg1 >= 0 && arg1 < g_vfsCount) ? 1 : 0;
+            }
+            if (StrEqualCase(ident, "vfs_size") || StrEqualCase(ident, "vfs.size")) {
+                if (sArg1[0]) return VfsSize(sArg1);
+                return (arg1 >= 0 && arg1 < g_vfsCount) ? g_vfsFiles[arg1].size : 0;
+            }
             if (StrEqualCase(ident, "vfs_count") || StrEqualCase(ident, "vfs.count")) return g_vfsCount;
+            if (StrEqualCase(ident, "vfs_write") || StrEqualCase(ident, "vfs.write")) {
+                return VfsWrite(sArg1, sArg2);
+            }
+            if (StrEqualCase(ident, "vfs_append") || StrEqualCase(ident, "vfs.append")) {
+                return VfsAppend(sArg1, sArg2);
+            }
+            if (StrEqualCase(ident, "vfs_read") || StrEqualCase(ident, "vfs.read")) {
+                const char* data = VfsRead(sArg1);
+                return StrLen(data);
+            }
+            if (StrEqualCase(ident, "vfs_delete") || StrEqualCase(ident, "vfs.delete")) {
+                return VfsDelete(sArg1);
+            }
+            if (StrEqualCase(ident, "vfs_copy") || StrEqualCase(ident, "vfs.copy")) {
+                return VfsCopy(sArg1, sArg2);
+            }
             return arg1;
         }
 
@@ -1124,17 +1222,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnQS    = CreateWindowEx(0, "BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE, S(288), S(8), S(72), S(26), hwnd, (HMENU)11, NULL, NULL);
             hBtnQL    = CreateWindowEx(0, "BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE, S(364), S(8), S(72), S(26), hwnd, (HMENU)12, NULL, NULL);
             hBtnBench = CreateWindowEx(0, "BUTTON", "Bench [F6]", WS_CHILD | WS_VISIBLE, S(440), S(8), S(76), S(26), hwnd, (HMENU)10, NULL, NULL);
-            hBtnLoad  = CreateWindowEx(0, "BUTTON", "Imp [^O]", WS_CHILD | WS_VISIBLE, S(520), S(8), S(68), S(26), hwnd, (HMENU)2, NULL, NULL);
-            hBtnSave  = CreateWindowEx(0, "BUTTON", "Exp [^S]", WS_CHILD | WS_VISIBLE, S(592), S(8), S(68), S(26), hwnd, (HMENU)3, NULL, NULL);
-            hBtnClear = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE, S(664), S(8), S(56), S(26), hwnd, (HMENU)9, NULL, NULL);
-            hBtnHelp  = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, S(724), S(8), S(68), S(26), hwnd, (HMENU)8, NULL, NULL);
+            hBtnLoad  = CreateWindowEx(0, "BUTTON", "Imp [^O]", WS_CHILD | WS_VISIBLE, S(480), S(8), S(60), S(26), hwnd, (HMENU)2, NULL, NULL);
+            hBtnSave  = CreateWindowEx(0, "BUTTON", "Exp [^S]", WS_CHILD | WS_VISIBLE, S(542), S(8), S(60), S(26), hwnd, (HMENU)3, NULL, NULL);
+            hBtnVfs   = CreateWindowEx(0, "BUTTON", "VFS [Alt+V]", WS_CHILD | WS_VISIBLE, S(604), S(8), S(78), S(26), hwnd, (HMENU)13, NULL, NULL);
+            hBtnClear = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE, S(684), S(8), S(48), S(26), hwnd, (HMENU)9, NULL, NULL);
+            hBtnHelp  = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, S(734), S(8), S(60), S(26), hwnd, (HMENU)8, NULL, NULL);
 
             hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(796), S(9), S(56), S(24), hwnd, NULL, NULL, NULL);
             hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(856), S(9), S(56), S(24), hwnd, NULL, NULL, NULL);
             hBtnRep    = CreateWindowEx(0, "BUTTON", "Rep", WS_CHILD | WS_VISIBLE, S(916), S(8), S(46), S(26), hwnd, (HMENU)7, NULL, NULL);
 
-            HWND hwnds[] = {hBtnRec, hBtnPlay, hBtnStep, hBtnRun, hBtnQS, hBtnQL, hBtnBench, hBtnLoad, hBtnSave, hBtnClear, hRegexFind, hRegexRep, hBtnRep, hBtnHelp};
-            for (int i = 0; i < 14; i++) SendMessage(hwnds[i], WM_SETFONT, (WPARAM)hFont, TRUE);
+            HWND hwnds[] = {hBtnRec, hBtnPlay, hBtnStep, hBtnRun, hBtnQS, hBtnQL, hBtnBench, hBtnLoad, hBtnSave, hBtnVfs, hBtnClear, hRegexFind, hRegexRep, hBtnRep, hBtnHelp};
+            for (int i = 0; i < 15; i++) SendMessage(hwnds[i], WM_SETFONT, (WPARAM)hFont, TRUE);
 
             oldFindProc = (WNDPROC)SetWindowLongPtr(hRegexFind, GWLP_WNDPROC, (LONG_PTR)FindEditProc);
             oldRepProc  = (WNDPROC)SetWindowLongPtr(hRegexRep, GWLP_WNDPROC, (LONG_PTR)RepEditProc);

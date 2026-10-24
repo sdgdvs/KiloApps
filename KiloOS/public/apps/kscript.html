@@ -959,8 +959,11 @@
             </div>
             <div class="toolbar-divider" aria-hidden="true"></div>
             <div class="toolbar-group" role="group" aria-label="KiloOS VFS Mesh">
-                <button id="btnVfsManager" type="button" style="background:#0284c7" title="KiloOS VFS Script Manager (/home/scripts/)">
-                    <span>🌐 VFS</span>
+                <button id="btnVfsManager" type="button" style="background:#0284c7" title="KiloOS VFS Script Manager [Alt+V] (/home/scripts/)">
+                    <span>🌐 VFS</span> <span class="btn-key">Alt+V</span>
+                </button>
+                <button id="btnVfsOpen" type="button" style="background:#0891b2" title="Open Script from KiloOS VFS Picker">
+                    <span>📂 VFS Open</span>
                 </button>
                 <button id="btnVfsSaveQuick" type="button" style="background:#0369a1" title="Save Script to VFS (/home/scripts/)">
                     <span>💾 VFS Save</span>
@@ -1134,7 +1137,8 @@
                 <li><strong>Variables:</strong> Multi-character identifiers (e.g. <code>counter = 10</code>, <code>mask = 0xFF</code>, <code>total_sum = 0</code>).</li>
                 <li><strong>Literals:</strong> Decimal (<code>100</code>), Hex (<code>0x1F</code>, <code>0xFF00</code>), Binary (<code>0b1010</code>), Octal (<code>0o77</code>).</li>
                 <li><strong>Operators:</strong> Arithmetic (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code>, <code>**</code>), Bitwise (<code>&</code>, <code>|</code>, <code>^</code>, <code>~</code>, <code><<</code>, <code>>></code>), Comparison (<code>==</code>, <code>!=</code>, <code><</code>, <code><=</code>, <code>></code>, <code>>=</code>), Logical (<code>&&</code>, <code>||</code>, <code>!</code>).</li>
-                <li><strong>Built-in Functions:</strong> <code>abs(x)</code>, <code>min(a,b)</code>, <code>max(a,b)</code>, <code>clamp(x,lo,hi)</code>, <code>sqrt(x)</code>, <code>gcd(a,b)</code>, <code>fact(n)</code>, <code>rand(min,max)</code>, <code>hex(x)</code>, <code>bin(x)</code>.</li>
+                <li><strong>Built-in Functions:</strong> <code>abs(x)</code>, <code>min(a,b)</code>, <code>max(a,b)</code>, <code>clamp(x,lo,hi)</code>, <code>sqrt(x)</code>, <code>gcd(a,b)</code>, <code>fact(n)</code>, <code>rand(min,max)</code>, <code>hex(x)</code>, <code>bin(x)</code>.</li>
+                <li><strong>KiloOS VFS Mesh:</strong> <code>vfs_read(path)</code>, <code>vfs_write(path, data)</code>, <code>vfs_append(path, data)</code>, <code>vfs_exists(path)</code>, <code>vfs_size(path)</code>, <code>vfs_list(prefix)</code>, <code>vfs_copy(src, dst)</code>, <code>vfs_delete(path)</code>, <code>os_launch(app, path)</code>.</li>
                 <li><strong>Control Flow:</strong> <code>if &lt;cond&gt; ... elif ... else ... endif</code>, <code>while &lt;cond&gt; ... endwhile</code>, <code>loop &lt;n&gt; ... endloop</code>.</li>
                 <li><strong>Console:</strong> <code>print "Label:", expr1, expr2</code>.</li>
                 <li><strong>Comments:</strong> <code>// This is a line comment</code>.</li>
@@ -1152,7 +1156,8 @@
                     <tr><td>Step Statement</td><td><span class="kbd">F10</span> / <span class="kbd">Alt+S</span></td><td>Step statement-by-statement with active line highlight</td></tr>
                     <tr><td>Continue Run</td><td><span class="kbd">F8</span></td><td>Run until next breakpoint is reached</td></tr>
                     <tr><td>Benchmark</td><td><span class="kbd">F6</span></td><td>Execute iterations benchmark with latency analysis</td></tr>
-                    <tr><td>AST & Linter</td><td><span class="kbd">Alt+T</span></td><td>Inspect syntax tree & static linter diagnostics</td></tr>
+                    <tr><td>AST & Linter</td><td><span class="kbd">Alt+T</span></td><td>Inspect syntax tree & static linter diagnostics</td></tr>
+                    <tr><td>VFS Script Manager</td><td><span class="kbd">Alt+V</span></td><td>Open KiloOS VFS Script Manager (/home/scripts/)</td></tr>
                     <tr><td>Toggle Breakpoint</td><td><span class="kbd">Click Gutter</span></td><td>Set / clear breakpoint on line</td></tr>
                     <tr><td>Save Script File</td><td><span class="kbd">Ctrl+S</span></td><td>Save .ksc script file or state dump</td></tr>
                     <tr><td>Import Script File</td><td><span class="kbd">Ctrl+O</span></td><td>Load .ksc or .txt script file</td></tr>
@@ -1299,6 +1304,7 @@
         <div style="display:flex; gap:10px; margin-bottom:12px; align-items:center;">
             <input type="text" id="vfsSaveFilename" placeholder="/home/scripts/myscript.ks" style="flex:1; background:#090d16; border:1px solid var(--glass-border); color:#f8fafc; padding:6px 10px; border-radius:6px; font-family:monospace; font-size:12px;" value="/home/scripts/myscript.ks" />
             <button type="button" id="btnVfsSaveCommit" style="background:#0284c7; padding:6px 14px; font-size:12px;">💾 Save Active</button>
+            <button type="button" id="btnVfsOpenPickerModal" style="background:#0891b2; padding:6px 14px; font-size:12px;" title="Pick and open any file from KiloOS VFS">📂 VFS Picker</button>
             <button type="button" id="btnVfsHexLaunch" style="background:#7c3aed; padding:6px 14px; font-size:12px;" title="Save and inspect in KHex via OS_LAUNCH_APP">🔍 In KHex</button>
         </div>
         <div style="background:#090d16; border:1px solid var(--glass-border); border-radius:8px; padding:10px; max-height:260px; overflow-y:auto;">
@@ -1634,7 +1640,9 @@ print "Final total:", total`;
     const vfsModal = document.getElementById('vfsModal');
     const vfsModalClose = document.getElementById('vfsModalClose');
     const btnVfsModalCloseBottom = document.getElementById('btnVfsModalCloseBottom');
-    const btnVfsManager = document.getElementById('btnVfsManager');
+    const btnVfsManager = document.getElementById('btnVfsManager');
+    const btnVfsOpen = document.getElementById('btnVfsOpen');
+    const btnVfsOpenPickerModal = document.getElementById('btnVfsOpenPickerModal');
     const btnVfsSaveQuick = document.getElementById('btnVfsSaveQuick');
     const btnLaunchKHex = document.getElementById('btnLaunchKHex');
     const btnVfsSaveCommit = document.getElementById('btnVfsSaveCommit');
@@ -1671,6 +1679,7 @@ print "Final total:", total`;
                 <div class="vfs-file-actions">
                     <button type="button" class="vfs-btn-sm" style="background:#0284c7;" data-action="load" data-path="${filePath}">Load</button>
                     <button type="button" class="vfs-btn-sm" style="background:#7c3aed;" data-action="khex" data-path="${filePath}">Hex</button>
+                    <button type="button" class="vfs-btn-sm" style="background:#0d9488;" data-action="kpad" data-path="${filePath}">Pad</button>
                     <button type="button" class="vfs-btn-sm" style="background:#ef4444;" data-action="del" data-path="${filePath}">Del</button>
                 </div>
             `;
@@ -1688,6 +1697,11 @@ print "Final total:", total`;
             row.querySelector('[data-action="khex"]').onclick = () => {
                 KiloVFS.launchApp('khex', filePath);
                 showToast(`Opening "${filePath}" in KHex...`, "info");
+            };
+
+            row.querySelector('[data-action="kpad"]').onclick = () => {
+                KiloVFS.launchApp('kpad', filePath);
+                showToast(`Opening "${filePath}" in KPad...`, "info");
             };
 
             row.querySelector('[data-action="del"]').onclick = () => {
@@ -1746,6 +1760,33 @@ print "Final total:", total`;
             KiloVFS.write(path, exprInput.value, false);
             KiloVFS.launchApp('khex', path);
             showToast("Saved & opened in KHex", "info");
+        };
+    }
+
+    if (btnVfsOpen) {
+        btnVfsOpen.onclick = () => {
+            KiloVFS.openPicker((data, path) => {
+                if (data !== undefined && data !== null) {
+                    exprInput.value = data;
+                    renderGutter();
+                    showToast(`Loaded "${path}" from VFS`, "success");
+                    btnRun.click();
+                }
+            });
+        };
+    }
+
+    if (btnVfsOpenPickerModal) {
+        btnVfsOpenPickerModal.onclick = () => {
+            KiloVFS.openPicker((data, path) => {
+                if (data !== undefined && data !== null) {
+                    exprInput.value = data;
+                    renderGutter();
+                    showToast(`Loaded "${path}" from VFS`, "success");
+                    closeModal(vfsModal);
+                    btnRun.click();
+                }
+            });
         };
     }
 
@@ -2112,6 +2153,12 @@ endif
             applyFontSize(13);
             return;
         }
+        if (e.altKey && !e.ctrlKey && (e.key === 'v' || e.key === 'V')) {
+            e.preventDefault();
+            if (vfsModal.classList.contains('active')) closeModal(vfsModal);
+            else btnVfsManager.click();
+            return;
+        }
         if (e.key === 'F5') {
             e.preventDefault();
             quicksaveState();
@@ -2227,6 +2274,32 @@ endif
         'vfs.list': (prefix = '') => KiloVFS.listSync(String(prefix)),
         vfs_delete: (path) => KiloVFS.deleteSync(String(path)) ? 1 : 0,
         'vfs.delete': (path) => KiloVFS.deleteSync(String(path)) ? 1 : 0,
+        vfs_copy: (src, dst) => {
+            const data = KiloVFS.readSync(String(src));
+            return KiloVFS.writeSync(String(dst), data);
+        },
+        'vfs.copy': (src, dst) => {
+            const data = KiloVFS.readSync(String(src));
+            return KiloVFS.writeSync(String(dst), data);
+        },
+        vfs_count: (prefix = '') => KiloVFS.listSync(String(prefix)).length,
+        'vfs.count': (prefix = '') => KiloVFS.listSync(String(prefix)).length,
+        os_launch: (app, path = '') => {
+            KiloVFS.launchApp(String(app), String(path));
+            return 1;
+        },
+        'os.launch': (app, path = '') => {
+            KiloVFS.launchApp(String(app), String(path));
+            return 1;
+        },
+        os_notify: (title, msg) => {
+            try { window.parent.postMessage({ type: 'OS_NOTIFY', title: String(title), message: String(msg) }, '*'); } catch(e) {}
+            return 1;
+        },
+        'os.notify': (title, msg) => {
+            try { window.parent.postMessage({ type: 'OS_NOTIFY', title: String(title), message: String(msg) }, '*'); } catch(e) {}
+            return 1;
+        },
         str: (x) => String(x),
         int: (x) => parseInt(x, 10) || 0,
         time: () => Date.now()
@@ -2755,7 +2828,11 @@ endif
                     arg = arg.trim();
                     if (!arg) return "";
                     try {
-                        return parseExpression(arg, vars, nodeCounter);
+                        const val = parseExpression(arg, vars, nodeCounter);
+                        if (Array.isArray(val) || (typeof val === 'object' && val !== null)) {
+                            return JSON.stringify(val);
+                        }
+                        return val;
                     } catch(e) {
                         return `<Err: ${e.message}>`;
                     }
