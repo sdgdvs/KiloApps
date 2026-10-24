@@ -3776,6 +3776,19 @@ const DEFAULT_RING_NODES = [
     tags: "echo,acoustic,lab,hydrophone,1999hz,sigint,sonogram,beamformer,carlsbad,salado,steganography,squid,tomograph"
   },
   {
+    id: "#022",
+    num: 22,
+    name: "IETF 1999 Living RFC Workbench",
+    handle: "RFC_Editor",
+    category: "tech",
+    url: "/web/rfc_archive.html",
+    desc: "Living protocol laboratory: interactive RFC 1149 carrier pigeon packet simulator, RFC 2324 HTCPCP coffee pot console (418 I'm a teapot), RFC 793 TCP state stepper, and KiloOS VFS RFC export.",
+    tech: "HTML 4.01 / Web Audio / RFC 1149 Engine / HTCPCP Console / TCP Stepper / VFS IPC",
+    badgeLabel: "IETF RFCs",
+    latency: 18,
+    tags: "ietf,rfc,rfc1149,rfc2324,rfc793,tcp,htcpcp,avian,carrier,protocol,coffee,vfs"
+  },
+  {
     id: "#021",
     num: 21,
     name: "Assembly '99 Demoscene Party Vault",
@@ -9815,7 +9828,7 @@ function simulateTrafficBurst() {
 
   const logBody = document.getElementById('trafficLogBody');
   if (logBody) {
-    const nodes = ['kweb://portal', 'kweb://slashnet', 'kweb://cabled', 'kweb://scallion', 'kweb://demoscene', 'kweb://trapster', 'kweb://cybercafe', 'kweb://users/~neon_rider', 'kweb://asm-temple', 'kweb://warez', 'kweb://geocities'];
+    const nodes = ['kweb://portal', 'kweb://slashnet', 'kweb://cabled', 'kweb://scallion', 'kweb://demoscene', 'kweb://rfc-archive', 'kweb://trapster', 'kweb://cybercafe', 'kweb://users/~neon_rider', 'kweb://asm-temple', 'kweb://warez', 'kweb://geocities'];
     const fromNode = nodes[Math.floor(Math.random() * nodes.length)];
     let toNode = nodes[Math.floor(Math.random() * nodes.length)];
     while (toNode === fromNode) toNode = nodes[Math.floor(Math.random() * nodes.length)];
