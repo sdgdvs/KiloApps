@@ -353,6 +353,100 @@ void UpdateTitle(HWND hwnd) {
     SetWindowText(hwnd, title);
 }
 
+void InteractTile(HWND hwnd, int cx, int cy) {
+    if (time_of_day == 1) return;
+    if (cx < 0 || cx >= GRID_COLS || cy < 0 || cy >= GRID_ROWS) return;
+    int c_idx = cy * GRID_COLS + cx;
+    int action = -1; // 0=till, 1=plant, 2=water, 3=harvest
+    
+    if (grid[c_idx].type == 0) action = 0;
+    else if (grid[c_idx].type == 1) action = 1;
+    else if (grid[c_idx].type == 2) {
+        int req = (weather == 2) ? 2 : 1;
+        if (grid[c_idx].watered < req) action = 2;
+    }
+    else if (grid[c_idx].type == 3) action = 3;
+    
+    if (action == -1) return;
+    
+    PlaySoundEffect(action);
+    
+    int is_aoe = tools_upgraded;
+    int min_x = is_aoe ? (cx > 0 ? cx - 1 : 0) : cx;
+    int max_x = is_aoe ? (cx < GRID_COLS - 1 ? cx + 1 : GRID_COLS - 1) : cx;
+    int min_y = is_aoe ? (cy > 0 ? cy - 1 : 0) : cy;
+    int max_y = is_aoe ? (cy < GRID_ROWS - 1 ? cy + 1 : GRID_ROWS - 1) : cy;
+    
+    const char* sNames[4] = {"Wheat", "Corn", "Tomato", "Pumpkin"};
+    int planted_count = 0;
+    int out_of_season = 0;
+    int low_funds = 0;
+    for (int y = min_y; y <= max_y; y++) {
+        for (int x = min_x; x <= max_x; x++) {
+            int idx = y * GRID_COLS + x;
+            int px = OFFSET_X + x * CELL_SIZE + CELL_SIZE / 2;
+            int py = OFFSET_Y + y * CELL_SIZE + CELL_SIZE / 2;
+            if (action == 0 && grid[idx].type == 0) {
+                grid[idx].type = 1;
+                SpawnParticles((float)px, (float)py, RGB(93, 64, 55), 10);
+                shake_amount += 5.0f;
+                ShowNativeToast("Tilled soil!", 0);
+                SaveGame();
+            } else if (action == 1 && grid[idx].type == 1) {
+                if ((crop_seasons[selected_seed] & (1 << current_season)) != 0) {
+                    if (money >= seed_costs[selected_seed]) {
+                        money -= seed_costs[selected_seed];
+                        grid[idx].type = 2; grid[idx].growth = 0; grid[idx].cropType = selected_seed;
+                        SpawnParticles((float)px, (float)py, RGB(139, 195, 74), 10);
+                        planted_count++;
+                    } else {
+                        low_funds = 1;
+                    }
+                } else {
+                    out_of_season = 1;
+                }
+            } else if (action == 2 && grid[idx].type == 2) {
+                int req = (weather == 2) ? 2 : 1;
+                if (grid[idx].watered < req) {
+                    grid[idx].watered++;
+                    SpawnWaterParticles((float)px, (float)py, 20);
+                    ShowNativeToast("Watered crops!", 0);
+                    SaveGame();
+                }
+            } else if (action == 3 && grid[idx].type == 3) {
+                money += sell_values[grid[idx].cropType];
+                int cType = grid[idx].cropType;
+                grid[idx].type = 1; grid[idx].watered = 0;
+                SpawnExplosionParticles((float)px, (float)py, cType);
+                shake_amount += 15.0f;
+                char hBuf[64];
+                wsprintf(hBuf, "Harvested %s! (+$%d)", sNames[cType], sell_values[cType]);
+                ShowNativeToast(hBuf, 0);
+                SaveGame();
+            }
+        }
+    }
+    if (action == 1) {
+        if (planted_count > 0) {
+            char pBuf[64];
+            if (planted_count > 1) {
+                wsprintf(pBuf, "Planted %dx %s (-$%d)", planted_count, sNames[selected_seed], seed_costs[selected_seed] * planted_count);
+            } else {
+                wsprintf(pBuf, "Planted %s (-$%d)", sNames[selected_seed], seed_costs[selected_seed]);
+            }
+            ShowNativeToast(pBuf, 0);
+            SaveGame();
+        } else if (out_of_season) {
+            ShowNativeToast("Cannot plant: Out of season!", 1);
+            MessageBeep(MB_ICONERROR);
+        } else if (low_funds) {
+            ShowNativeToast("Cannot plant: Low funds!", 1);
+            MessageBeep(MB_ICONERROR);
+        }
+    }
+    UpdateTitle(hwnd);
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
@@ -441,11 +535,36 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             UpdateTitle(hwnd);
             return 0;
         case WM_KEYDOWN:
-            if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
+            if (wParam == VK_UP || wParam == 'W' || wParam == 'w') {
+                if (hover_cx < 0 || hover_cy < 0) { hover_cx = 4; hover_cy = 4; }
+                else if (hover_cy > 0) hover_cy--;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            } else if (wParam == VK_DOWN || wParam == 'S' || wParam == 's') {
+                if (hover_cx < 0 || hover_cy < 0) { hover_cx = 4; hover_cy = 4; }
+                else if (hover_cy < GRID_ROWS - 1) hover_cy++;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            } else if (wParam == VK_LEFT || wParam == 'A' || wParam == 'a') {
+                if (hover_cx < 0 || hover_cy < 0) { hover_cx = 4; hover_cy = 4; }
+                else if (hover_cx > 0) hover_cx--;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            } else if (wParam == VK_RIGHT || wParam == 'D' || wParam == 'd') {
+                if (hover_cx < 0 || hover_cy < 0) { hover_cx = 4; hover_cy = 4; }
+                else if (hover_cx < GRID_COLS - 1) hover_cx++;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            } else if (wParam == VK_RETURN) {
+                if (hover_cx < 0 || hover_cy < 0) { hover_cx = 4; hover_cy = 4; }
+                InteractTile(hwnd, hover_cx, hover_cy);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            } else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                 SendMessage(hwnd, WM_COMMAND, 14, 0);
             } else if (wParam == VK_SPACE) {
                 SendMessage(hwnd, WM_COMMAND, 1, 0);
-            } else if (wParam == 'S' || wParam == 's' || wParam == VK_F5) {
+            } else if (wParam == VK_F5) {
                 SendMessage(hwnd, WM_COMMAND, 15, 0);
             } else if (wParam == 'L' || wParam == 'l' || wParam == VK_F9) {
                 SendMessage(hwnd, WM_COMMAND, 17, 0);
@@ -461,8 +580,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SendMessage(hwnd, WM_COMMAND, 8, 0);
             } else if (wParam == 'K' || wParam == 'k') {
                 if (!has_scarecrow) SendMessage(hwnd, WM_COMMAND, 10, 0);
-            } else if (wParam == 'W' || wParam == 'w' || wParam == 'M' || wParam == 'm') {
-                if (!has_mill) SendMessage(hwnd, WM_COMMAND, 11, 0);
             } else if (wParam == 'Y' || wParam == 'y') {
                 if (!has_mayo_maker) SendMessage(hwnd, WM_COMMAND, 12, 0);
             } else if (wParam == 'E' || wParam == 'e') {
@@ -928,97 +1045,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (pt.x < OFFSET_X || pt.y < OFFSET_Y) return 0;
             int cx = (pt.x - OFFSET_X) / CELL_SIZE;
             int cy = (pt.y - OFFSET_Y) / CELL_SIZE;
-            if (cx >= 0 && cx < GRID_COLS && cy >= 0 && cy < GRID_ROWS) {
-                int c_idx = cy * GRID_COLS + cx;
-                int action = -1; // 0=till, 1=plant, 2=water, 3=harvest
-                
-                if (grid[c_idx].type == 0) action = 0;
-                else if (grid[c_idx].type == 1) action = 1;
-                else if (grid[c_idx].type == 2) {
-                    int req = (weather == 2) ? 2 : 1;
-                    if (grid[c_idx].watered < req) action = 2;
-                }
-                else if (grid[c_idx].type == 3) action = 3;
-                
-                if (action == -1) return 0;
-                
-                PlaySoundEffect(action);
-                
-                int is_aoe = tools_upgraded;
-                int min_x = is_aoe ? (cx > 0 ? cx - 1 : 0) : cx;
-                int max_x = is_aoe ? (cx < GRID_COLS - 1 ? cx + 1 : GRID_COLS - 1) : cx;
-                int min_y = is_aoe ? (cy > 0 ? cy - 1 : 0) : cy;
-                int max_y = is_aoe ? (cy < GRID_ROWS - 1 ? cy + 1 : GRID_ROWS - 1) : cy;
-                
-                const char* sNames[4] = {"Wheat", "Corn", "Tomato", "Pumpkin"};
-                int planted_count = 0;
-                int out_of_season = 0;
-                int low_funds = 0;
-                for (int y = min_y; y <= max_y; y++) {
-                    for (int x = min_x; x <= max_x; x++) {
-                        int idx = y * GRID_COLS + x;
-                        int px = OFFSET_X + x * CELL_SIZE + CELL_SIZE / 2;
-                        int py = OFFSET_Y + y * CELL_SIZE + CELL_SIZE / 2;
-                        if (action == 0 && grid[idx].type == 0) {
-                            grid[idx].type = 1;
-                            SpawnParticles((float)px, (float)py, RGB(93, 64, 55), 10);
-                            shake_amount += 5.0f;
-                            ShowNativeToast("Tilled soil!", 0);
-                            SaveGame();
-                        } else if (action == 1 && grid[idx].type == 1) {
-                            if ((crop_seasons[selected_seed] & (1 << current_season)) != 0) {
-                                if (money >= seed_costs[selected_seed]) {
-                                    money -= seed_costs[selected_seed];
-                                    grid[idx].type = 2; grid[idx].growth = 0; grid[idx].cropType = selected_seed;
-                                    SpawnParticles((float)px, (float)py, RGB(139, 195, 74), 10);
-                                    planted_count++;
-                                } else {
-                                    low_funds = 1;
-                                }
-                            } else {
-                                out_of_season = 1;
-                            }
-                        } else if (action == 2 && grid[idx].type == 2) {
-                            int req = (weather == 2) ? 2 : 1;
-                            if (grid[idx].watered < req) {
-                                grid[idx].watered++;
-                                SpawnWaterParticles((float)px, (float)py, 20);
-                                ShowNativeToast("Watered crops!", 0);
-                                SaveGame();
-                            }
-                        } else if (action == 3 && grid[idx].type == 3) {
-                            money += sell_values[grid[idx].cropType];
-                            int cType = grid[idx].cropType;
-                            grid[idx].type = 1; grid[idx].watered = 0;
-                            SpawnExplosionParticles((float)px, (float)py, cType);
-                            shake_amount += 15.0f;
-                            char hBuf[64];
-                            wsprintf(hBuf, "Harvested %s! (+$%d)", sNames[cType], sell_values[cType]);
-                            ShowNativeToast(hBuf, 0);
-                            SaveGame();
-                        }
-                    }
-                }
-                if (action == 1) {
-                    if (planted_count > 0) {
-                        char pBuf[64];
-                        if (planted_count > 1) {
-                            wsprintf(pBuf, "Planted %dx %s (-$%d)", planted_count, sNames[selected_seed], seed_costs[selected_seed] * planted_count);
-                        } else {
-                            wsprintf(pBuf, "Planted %s (-$%d)", sNames[selected_seed], seed_costs[selected_seed]);
-                        }
-                        ShowNativeToast(pBuf, 0);
-                        SaveGame();
-                    } else if (out_of_season) {
-                        ShowNativeToast("Cannot plant: Out of season!", 1);
-                        MessageBeep(MB_ICONERROR);
-                    } else if (low_funds) {
-                        ShowNativeToast("Cannot plant: Low funds!", 1);
-                        MessageBeep(MB_ICONERROR);
-                    }
-                }
-                UpdateTitle(hwnd);
-            }
+            hover_cx = cx;
+            hover_cy = cy;
+            InteractTile(hwnd, cx, cy);
+            InvalidateRect(hwnd, NULL, FALSE);
             return 0;
         }
         case WM_ERASEBKGND:
@@ -1707,6 +1737,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     while (GetMessage(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
             WPARAM wp = msg.wParam;
+            if (wp == VK_UP || wp == VK_DOWN || wp == VK_LEFT || wp == VK_RIGHT || wp == VK_RETURN ||
+                wp == 'W' || wp == 'w' || wp == 'A' || wp == 'a' || wp == 'S' || wp == 's' || wp == 'D' || wp == 'd') {
+                SendMessage(hwnd, WM_KEYDOWN, wp, msg.lParam);
+                continue;
+            }
             if (wp == VK_F1 || wp == 'H' || wp == 'h') {
                 SendMessage(hwnd, WM_COMMAND, 14, 0);
                 continue;
@@ -1720,7 +1755,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
                 SendMessage(hwnd, WM_COMMAND, seedCmd, 0);
                 continue;
             }
-            if (wp == 'S' || wp == 's' || wp == VK_F5) {
+            if (wp == VK_F5) {
                 SendMessage(hwnd, WM_COMMAND, 15, 0);
                 continue;
             }
@@ -1750,10 +1785,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
             }
             if (wp == 'K' || wp == 'k') {
                 if (!has_scarecrow) SendMessage(hwnd, WM_COMMAND, 10, 0);
-                continue;
-            }
-            if (wp == 'W' || wp == 'w' || wp == 'M' || wp == 'm') {
-                if (!has_mill) SendMessage(hwnd, WM_COMMAND, 11, 0);
                 continue;
             }
             if (wp == 'Y' || wp == 'y') {

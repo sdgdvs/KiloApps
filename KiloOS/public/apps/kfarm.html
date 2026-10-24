@@ -6,41 +6,68 @@
     <title>KFarm</title>
     <style>
         body { 
-            margin: 0; padding: 12px; 
+            margin: 0; padding: 4px; 
             background-color: #87CEEB; /* Sunny sky blue */
             color: #4E342E; /* Earthy dark brown */
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
             user-select: none;
-            display: flex; justify-content: center; align-items: center; 
+            display: flex; justify-content: center; align-items: flex-start; 
             min-height: 100vh; overflow-y: auto; 
             box-sizing: border-box;
         }
         .container {
             background-color: #FFF3E0; /* Warm sunny white */
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-            border: 4px solid #8D6E63;
-            max-width: 580px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+            border: 3px solid #8D6E63;
+            max-width: 610px;
             width: 100%;
             box-sizing: border-box;
-            margin: auto;
+            margin: 0 auto;
         }
         canvas { 
             background-color: #8BC34A; 
-            border: 4px solid #5D4037; 
-            border-radius: 8px;
+            border: 3px solid #5D4037; 
+            border-radius: 6px;
             cursor: pointer; 
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.25);
             display: block;
             margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+            aspect-ratio: 1/1;
         }
-        h2 { margin: 0 0 10px 0; text-align: center; text-transform: uppercase; letter-spacing: 2px; text-shadow: 1px 1px 0px #FFCC80; }
-        p { margin: 15px 0 0 0; text-align: center; font-weight: bold; font-size: 14px; }
+        h2 { 
+            margin: 0 0 2px 0; 
+            text-align: center; 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px; 
+            font-size: 15px; 
+            line-height: 1.2;
+            text-shadow: 1px 1px 0px #FFCC80; 
+        }
+        .stats-bar {
+            text-align: center; 
+            margin-bottom: 3px; 
+            font-weight: bold; 
+            font-size: 11px; 
+            line-height: 1.2;
+            color: #5D4037;
+        }
+        .hint-bar { 
+            margin: 3px 0 4px 0; 
+            text-align: center; 
+            font-weight: bold; 
+            font-size: 11px; 
+            line-height: 1.2;
+            color: #4E342E;
+        }
         button {
             transition: filter 0.15s ease, transform 0.1s ease;
+            box-sizing: border-box;
         }
         button:hover:not(:disabled) {
             filter: brightness(1.12);
@@ -57,23 +84,24 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 6px;
-            margin-bottom: 8px;
+            gap: 4px;
+            margin-bottom: 4px;
         }
         .seed-card-label {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 10px;
+            gap: 4px;
+            padding: 3px 7px;
             background: #EDE0D4;
             border: 2px solid #BCAAA4;
-            border-radius: 6px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 600;
             color: #4E342E;
             transition: all 0.15s ease;
             user-select: none;
+            line-height: 1.15;
         }
         .seed-card-label:hover {
             background: #EFEBE9;
@@ -88,24 +116,48 @@
             background: #E8F5E9;
             border-color: #4CAF50;
             color: #1B5E20;
-            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.25);
+            box-shadow: 0 2px 5px rgba(76, 175, 80, 0.22);
         }
         .seed-card-label input[type="radio"] {
             accent-color: #2E7D32;
             cursor: pointer;
             margin: 0;
         }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+        .btn-primary {
+            padding: 5px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+        .btn-compact {
+            padding: 3px 7px;
+            font-size: 11px;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
         .toast-notify {
             position: fixed;
-            bottom: 24px;
-            right: 20px;
-            transform: translateY(8px);
+            top: 12px;
+            right: 12px;
+            transform: translateY(-8px);
             background-color: rgba(62, 39, 35, 0.96);
             color: #FFF3E0;
-            padding: 9px 14px;
-            border-radius: 8px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.35);
-            font-size: 13px;
+            padding: 7px 12px;
+            border-radius: 7px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+            font-size: 12px;
             font-weight: bold;
             z-index: 1000;
             pointer-events: none;
@@ -113,12 +165,12 @@
             opacity: 0;
             transition: opacity 0.2s ease, transform 0.2s ease;
             border: 2px solid #81C784;
-            max-width: min(380px, calc(100vw - 32px));
+            max-width: min(360px, calc(100vw - 24px));
             text-align: left;
             display: flex;
             align-items: center;
-            gap: 10px;
-            line-height: 1.35;
+            gap: 8px;
+            line-height: 1.3;
         }
         .toast-notify.visible {
             opacity: 1;
@@ -132,11 +184,11 @@
             background: rgba(255,255,255,0.15);
             border: none;
             color: #FFF3E0;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 4px;
+            padding: 2px 5px;
+            border-radius: 3px;
             line-height: 1;
             flex-shrink: 0;
         }
@@ -149,36 +201,38 @@
 <body>
     <div class="container">
         <h2>KFarm - <span id="seasonSpan">Spring</span>, Day <span id="daySpan">1</span> | <span id="weatherSpan">Clear</span> | $<span id="moneySpan">50</span></h2>
-        <div style="text-align: center; margin-bottom: 10px; font-weight: bold; color: #5D4037;">
+        <div class="stats-bar">
             🐔 Chickens: <span id="chickensSpan">0</span> | 🐄 Cows: <span id="cowsSpan">0</span> | 🧍 Scarecrow: <span id="scarecrowSpan">No</span>
         </div>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <p>Click: Grass(Till) &rarr; Soil(Plant) &rarr; 🌱(Water) &rarr; 🌾(Harvest) | <span style="color:#2196F3;">Shortcuts: [1-4] Seeds, [Space] Sleep, [H/F1] Almanac</span></p>
-        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:15px;">
-            <div class="seed-selector-group">
-                <label class="seed-card-label selected"><input type="radio" name="seed" value="0" checked> [1] Wheat (-$5) [Sp/Fa/Wi]</label>
-                <label class="seed-card-label"><input type="radio" name="seed" value="1"> [2] Corn (-$10) [Su]</label>
-                <label class="seed-card-label"><input type="radio" name="seed" value="2"> [3] Tomato (-$15) [Su/Fa]</label>
-                <label class="seed-card-label"><input type="radio" name="seed" value="3"> [4] Pumpkin (-$25) [Fa]</label>
-            </div>
-            <button id="sleepBtn" onclick="nextDay()" style="padding:10px 20px; font-size:16px; background-color:#FF9800; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Sleep [Space]</button>
-            <button id="upgradeBtn" onclick="buyUpgrade()" style="padding:10px 20px; font-size:16px; background-color:#4CAF50; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Fertilizer ($100) [F]</button>
-            <button id="upgradeToolsBtn" onclick="buyToolsUpgrade()" style="padding:10px 20px; font-size:16px; background-color:#2196F3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Upgrade Tools ($200) [T]</button>
+        <div class="hint-bar">
+            Click / [Arrows/WASD+Enter]: Till &rarr; Plant &rarr; Water &rarr; Harvest | [Space] Sleep | [H] Almanac
         </div>
-        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:10px;">
-            <button onclick="buyChicken()" style="padding:5px 10px; font-size:14px; background-color:#FFC107; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Chicken ($50) [C]</button>
-            <button onclick="buyCow()" style="padding:5px 10px; font-size:14px; background-color:#795548; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Buy Cow ($150) [O]</button>
-            <button id="scarecrowBtn" onclick="buyScarecrow()" style="padding:5px 10px; font-size:14px; background-color:#607D8B; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Buy Scarecrow ($100) [K]</button>
+        <div class="seed-selector-group">
+            <label class="seed-card-label selected"><input type="radio" name="seed" value="0" checked> [1] Wheat (-$5) [Sp/Fa/Wi]</label>
+            <label class="seed-card-label"><input type="radio" name="seed" value="1"> [2] Corn (-$10) [Su]</label>
+            <label class="seed-card-label"><input type="radio" name="seed" value="2"> [3] Tomato (-$15) [Su/Fa]</label>
+            <label class="seed-card-label"><input type="radio" name="seed" value="3"> [4] Pumpkin (-$25) [Fa]</label>
         </div>
-        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:10px;">
-            <button id="millBtn" onclick="buyMill()" style="padding:5px 10px; font-size:14px; background-color:#D7CCC8; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Mill ($150) [W]</button>
-            <button id="mayoBtn" onclick="buyMayoMaker()" style="padding:5px 10px; font-size:14px; background-color:#FFF9C4; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Mayo Maker ($100) [Y]</button>
-            <button id="cheeseBtn" onclick="buyCheesePress()" style="padding:5px 10px; font-size:14px; background-color:#FFE082; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Cheese Press ($200) [E]</button>
-            <button id="soundToggleBtn" onclick="toggleAudio()" style="padding:5px 10px; font-size:14px; background-color:#8E24AA; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">🔊 Sound: ON [M]</button>
-            <button onclick="showHelp()" style="padding:5px 10px; font-size:14px; background-color:#2196F3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Almanac [H / F1]</button>
-            <button id="saveBtn" onclick="saveGame(true)" style="padding:5px 10px; font-size:14px; background-color:#4CAF50; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Save [F5/S]</button>
-            <button id="loadBtn" onclick="loadGame(true)" style="padding:5px 10px; font-size:14px; background-color:#00897B; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Load [F9/L]</button>
-            <button id="resetBtn" onclick="promptReset()" style="padding:5px 10px; font-size:14px; background-color:#D32F2F; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Reset [R]</button>
+        <div class="btn-group">
+            <button id="sleepBtn" onclick="nextDay()" class="btn-primary" style="background-color:#FF9800; box-shadow: 0 2px 4px rgba(0,0,0,0.12);">Sleep [Space]</button>
+            <button id="upgradeBtn" onclick="buyUpgrade()" class="btn-primary" style="background-color:#4CAF50; box-shadow: 0 2px 4px rgba(0,0,0,0.12);">Fertilizer ($100) [F]</button>
+            <button id="upgradeToolsBtn" onclick="buyToolsUpgrade()" class="btn-primary" style="background-color:#2196F3; box-shadow: 0 2px 4px rgba(0,0,0,0.12);">Upgrade Tools ($200) [T]</button>
+        </div>
+        <div class="btn-group">
+            <button onclick="buyChicken()" class="btn-compact" style="background-color:#FFC107; color:#3E2723;">Buy Chicken ($50) [C]</button>
+            <button onclick="buyCow()" class="btn-compact" style="background-color:#795548; color:white;">Buy Cow ($150) [O]</button>
+            <button id="scarecrowBtn" onclick="buyScarecrow()" class="btn-compact" style="background-color:#607D8B; color:white;">Buy Scarecrow ($100) [K]</button>
+            <button id="millBtn" onclick="buyMill()" class="btn-compact" style="background-color:#D7CCC8; color:#3E2723;">Buy Mill ($150) [W]</button>
+            <button id="mayoBtn" onclick="buyMayoMaker()" class="btn-compact" style="background-color:#FFF9C4; color:#3E2723;">Buy Mayo Maker ($100) [Y]</button>
+            <button id="cheeseBtn" onclick="buyCheesePress()" class="btn-compact" style="background-color:#FFE082; color:#3E2723;">Buy Cheese Press ($200) [E]</button>
+        </div>
+        <div class="btn-group" style="margin-bottom:0;">
+            <button id="soundToggleBtn" onclick="toggleAudio()" class="btn-compact" style="background-color:#8E24AA; color:white;">🔊 Sound: ON [M]</button>
+            <button onclick="showHelp()" class="btn-compact" style="background-color:#2196F3; color:white;">Almanac [H / F1]</button>
+            <button id="saveBtn" onclick="saveGame(true)" class="btn-compact" style="background-color:#4CAF50; color:white;">Save [F5]</button>
+            <button id="loadBtn" onclick="loadGame(true)" class="btn-compact" style="background-color:#00897B; color:white;">Load [F9]</button>
+            <button id="resetBtn" onclick="promptReset()" class="btn-compact" style="background-color:#D32F2F; color:white;">Reset [R]</button>
         </div>
     </div>
     <div id="helpModal" onclick="if(event && event.target===this) hideHelp();" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:100; justify-content:center; align-items:center;">
@@ -203,21 +257,22 @@
                 🌧️ Rain: Auto-waters crops<br>
                 🏜️ Drought: Need 2 water<br>
                 🐦 Crows: Can eat crops (Buy a Scarecrow!)</p>
-                <p style="text-align:left; background:rgba(141,110,99,0.15); padding:10px 14px; border-radius:6px; line-height: 1.6;"><strong>Keyboard Shortcuts:</strong><br>
+                <p style="text-align:left; background:rgba(141,110,99,0.15); padding:8px 12px; border-radius:6px; line-height: 1.5; font-size:13px;"><strong>Keyboard Shortcuts:</strong><br>
+                <strong>[Arrows / WASD]</strong>: Navigate Farm Grid Cursor<br>
+                <strong>[Enter]</strong>: Action on Tile (Till / Plant / Water / Harvest)<br>
                 <strong>[1] - [4]</strong>: Select Seed (Wheat, Corn, Tomato, Pumpkin)<br>
-                <strong>[Space]</strong>: Sleep / Next Day<br>
+                <strong>[Space]</strong>: Sleep / Advance Day<br>
                 <strong>[H] or [F1]</strong>: Toggle Farmer's Almanac<br>
                 <strong>[F]</strong>: Buy Fertilizer ($100)<br>
                 <strong>[T]</strong>: Upgrade Tools 3x3 ($200)<br>
                 <strong>[C]</strong>: Buy Chicken ($50)<br>
                 <strong>[O]</strong>: Buy Cow ($150)<br>
                 <strong>[K]</strong>: Buy Scarecrow ($100)<br>
-                <strong>[W]</strong>: Buy Mill ($150)<br>
-                <strong>[M]</strong>: Toggle Sound / Mute<br>
                 <strong>[Y]</strong>: Buy Mayo Maker ($100)<br>
                 <strong>[E]</strong>: Buy Cheese Press ($200)<br>
-                <strong>[F5] / [S]</strong>: Quicksave Farm<br>
-                <strong>[F9] / [L]</strong>: Quickload Farm<br>
+                <strong>[M]</strong>: Toggle Sound / Mute<br>
+                <strong>[F5]</strong>: Quicksave Farm<br>
+                <strong>[F9]</strong>: Quickload Farm<br>
                 <strong>[R]</strong>: Reset Farm<br>
                 <strong>[Esc]</strong>: Close Dialogs / Modals</p>
             </div>
@@ -289,10 +344,6 @@
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey || e.altKey || e.metaKey) return;
             ensureAudioRunning();
-            if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-                e.preventDefault();
-                return;
-            }
             const modal = document.getElementById('helpModal');
             const isModalOpen = (modal && modal.style.display === 'flex');
             const resetModal = document.getElementById('resetModal');
@@ -337,6 +388,57 @@
                 return;
             }
 
+            // Arrow / WASD Grid Navigation
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                e.preventDefault();
+                if (hoverGridX < 0 || hoverGridY < 0) {
+                    hoverGridX = 4;
+                    hoverGridY = 4;
+                } else {
+                    hoverGridY = Math.max(0, hoverGridY - 1);
+                }
+                return;
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                e.preventDefault();
+                if (hoverGridX < 0 || hoverGridY < 0) {
+                    hoverGridX = 4;
+                    hoverGridY = 4;
+                } else {
+                    hoverGridY = Math.min(ROWS - 1, hoverGridY + 1);
+                }
+                return;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                e.preventDefault();
+                if (hoverGridX < 0 || hoverGridY < 0) {
+                    hoverGridX = 4;
+                    hoverGridY = 4;
+                } else {
+                    hoverGridX = Math.max(0, hoverGridX - 1);
+                }
+                return;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                e.preventDefault();
+                if (hoverGridX < 0 || hoverGridY < 0) {
+                    hoverGridX = 4;
+                    hoverGridY = 4;
+                } else {
+                    hoverGridX = Math.min(COLS - 1, hoverGridX + 1);
+                }
+                return;
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (hoverGridX < 0 || hoverGridY < 0) {
+                    hoverGridX = 4;
+                    hoverGridY = 4;
+                }
+                interactTile(hoverGridX, hoverGridY);
+                return;
+            }
+
             if (e.key === 'F5') {
                 e.preventDefault();
                 saveGame(true);
@@ -360,16 +462,6 @@
                     updateSeedLabelSelection();
                     showToast(`Selected seed: [${e.key}] ${cropData[idx].name} ($${cropData[idx].cost})`);
                 }
-                return;
-            }
-            if (e.key === 's' || e.key === 'S') {
-                e.preventDefault();
-                saveGame(true);
-                return;
-            }
-            if (e.key === 'l' || e.key === 'L') {
-                e.preventDefault();
-                loadGame(true);
                 return;
             }
             if (e.key === 'r' || e.key === 'R') {
@@ -405,11 +497,6 @@
             if (e.key === 'm' || e.key === 'M') {
                 e.preventDefault();
                 toggleAudio();
-                return;
-            }
-            if (e.key === 'w' || e.key === 'W') {
-                e.preventDefault();
-                buyMill();
                 return;
             }
             if (e.key === 'y' || e.key === 'Y') {
@@ -1163,8 +1250,8 @@
         const dpr = window.devicePixelRatio || 1;
         canvas.width = 400 * dpr;
         canvas.height = 400 * dpr;
-        canvas.style.width = '400px';
-        canvas.style.height = '400px';
+        canvas.style.width = '380px';
+        canvas.style.height = '380px';
         const ctx = canvas.getContext('2d');
         ctx.scale(dpr, dpr);
         const COLS = 10;
@@ -2475,122 +2562,127 @@
             }
         }, { passive: false });
 
-        canvas.addEventListener('mousedown', (e) => {
+        function interactTile(cx, cy) {
             ensureAudioRunning();
             if (timeOfDay === 'night') return;
+            if (cx < 0 || cx >= COLS || cy < 0 || cy >= ROWS) return;
+            
+            const centerCell = grid[cy * COLS + cx];
+            let action = '';
+            if (centerCell.type === 0) action = 'till';
+            else if (centerCell.type === 1) action = 'plant';
+            else if (centerCell.type === 2) {
+                const req = weather === 'Drought' ? 2 : 1;
+                if (centerCell.watered < req) {
+                    action = 'water';
+                } else {
+                    showToast(`🌱 Already watered today! Growth: ${centerCell.growth}/${cropData[centerCell.cropType].growthTime}d`);
+                    return;
+                }
+            }
+            else if (centerCell.type === 3) action = 'harvest';
+            
+            if (!action) return;
+            
+            playSound(action);
+            
+            const isAoE = toolsUpgraded;
+            
+            const minX = isAoE ? Math.max(0, cx - 1) : cx;
+            const maxX = isAoE ? Math.min(COLS - 1, cx + 1) : cx;
+            const minY = isAoE ? Math.max(0, cy - 1) : cy;
+            const maxY = isAoE ? Math.min(ROWS - 1, cy + 1) : cy;
+            
+            let totalHarvested = 0;
+            let totalVal = 0;
+            let lastCropType = 0;
+            let didWater = false;
+            let didTill = false;
+            let plantedCount = 0;
+            let outOfSeason = false;
+            let lowFunds = false;
+
+            const seedInput = document.querySelector('input[name="seed"]:checked');
+            const cType = seedInput ? parseInt(seedInput.value) : 0;
+            const currentSeason = Math.floor((day - 1) / 7) % 4;
+
+            for (let y = minY; y <= maxY; y++) {
+                for (let x = minX; x <= maxX; x++) {
+                    const cell = grid[y * COLS + x];
+                    if (action === 'till' && cell.type === 0) {
+                        cell.type = 1;
+                        spawnParticles(x * CELL_SIZE, y * CELL_SIZE, '#5D4037', 10);
+                        didTill = true;
+                    } else if (action === 'plant' && cell.type === 1) {
+                        if (!cropData[cType].seasons.includes(currentSeason)) {
+                            outOfSeason = true;
+                        } else if (money < cropData[cType].cost) {
+                            lowFunds = true;
+                        } else {
+                            money -= cropData[cType].cost;
+                            cell.type = 2;
+                            cell.growth = 0;
+                            cell.cropType = cType;
+                            spawnParticles(x * CELL_SIZE, y * CELL_SIZE, '#8BC34A', 10);
+                            plantedCount++;
+                        }
+                    } else if (action === 'water' && cell.type === 2) {
+                        const req = weather === 'Drought' ? 2 : 1;
+                        if (cell.watered < req) {
+                            cell.watered = (cell.watered || 0) + 1;
+                            spawnWaterParticles(x * CELL_SIZE + CELL_SIZE/2, y * CELL_SIZE + CELL_SIZE/2);
+                            didWater = true;
+                        }
+                    } else if (action === 'harvest' && cell.type === 3) {
+                        const val = cropData[cell.cropType].value;
+                        const cType = cell.cropType;
+                        money += val;
+                        totalVal += val;
+                        totalHarvested++;
+                        lastCropType = cType;
+                        cell.type = 1;
+                        cell.watered = 0;
+                        spawnExplosion(x * CELL_SIZE, y * CELL_SIZE, cType);
+                    }
+                }
+            }
+
+            if (action === 'plant') {
+                if (plantedCount > 0) {
+                    updateMoney();
+                    showToast(plantedCount > 1 ? `Planted ${plantedCount}x ${cropData[cType].name} (-$${cropData[cType].cost * plantedCount})` : `Planted ${cropData[cType].name} (-$${cropData[cType].cost})`);
+                    saveGame();
+                } else if (outOfSeason) {
+                    showToast(`⚠️ ${cropData[cType].name} cannot be planted in ${seasons[currentSeason]}!`, true);
+                } else if (lowFunds) {
+                    showToast(`⚠️ Need $${cropData[cType].cost} for ${cropData[cType].name} seed (You have $${money})`, true);
+                }
+            }
+
+            if (totalHarvested > 0) {
+                updateMoney();
+                shakeAmount = Math.min(shakeAmount + 12, 20);
+                showToast(totalHarvested === 1 ? `🌾 Harvested ${cropData[lastCropType].name} (+$${totalVal})!` : `🌾 Harvested ${totalHarvested} crops (+$${totalVal})!`);
+                saveGame();
+            }
+            if (didTill) {
+                shakeAmount = Math.min(shakeAmount + 5, 15);
+                saveGame();
+            }
+            if (didWater) {
+                saveGame();
+            }
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
             const rect = canvas.getBoundingClientRect();
             const scaleX = 400 / (rect.width || 400);
             const scaleY = 400 / (rect.height || 400);
             const cx = Math.floor(((e.clientX - rect.left) * scaleX) / CELL_SIZE);
             const cy = Math.floor(((e.clientY - rect.top) * scaleY) / CELL_SIZE);
-            
-            if (cx >= 0 && cx < COLS && cy >= 0 && cy < ROWS) {
-                const centerCell = grid[cy * COLS + cx];
-                let action = '';
-                if (centerCell.type === 0) action = 'till';
-                else if (centerCell.type === 1) action = 'plant';
-                else if (centerCell.type === 2) {
-                    const req = weather === 'Drought' ? 2 : 1;
-                    if (centerCell.watered < req) {
-                        action = 'water';
-                    } else {
-                        showToast(`🌱 Already watered today! Growth: ${centerCell.growth}/${cropData[centerCell.cropType].growthTime}d`);
-                        return;
-                    }
-                }
-                else if (centerCell.type === 3) action = 'harvest';
-                
-                if (!action) return;
-                
-                playSound(action);
-                
-                const isAoE = toolsUpgraded;
-                
-                const minX = isAoE ? Math.max(0, cx - 1) : cx;
-                const maxX = isAoE ? Math.min(COLS - 1, cx + 1) : cx;
-                const minY = isAoE ? Math.max(0, cy - 1) : cy;
-                const maxY = isAoE ? Math.min(ROWS - 1, cy + 1) : cy;
-                
-                let totalHarvested = 0;
-                let totalVal = 0;
-                let lastCropType = 0;
-                let didWater = false;
-                let didTill = false;
-                let plantedCount = 0;
-                let outOfSeason = false;
-                let lowFunds = false;
-
-                const seedInput = document.querySelector('input[name="seed"]:checked');
-                const cType = seedInput ? parseInt(seedInput.value) : 0;
-                const currentSeason = Math.floor((day - 1) / 7) % 4;
-
-                for (let y = minY; y <= maxY; y++) {
-                    for (let x = minX; x <= maxX; x++) {
-                        const cell = grid[y * COLS + x];
-                        if (action === 'till' && cell.type === 0) {
-                            cell.type = 1;
-                            spawnParticles(x * CELL_SIZE, y * CELL_SIZE, '#5D4037', 10);
-                            didTill = true;
-                        } else if (action === 'plant' && cell.type === 1) {
-                            if (!cropData[cType].seasons.includes(currentSeason)) {
-                                outOfSeason = true;
-                            } else if (money < cropData[cType].cost) {
-                                lowFunds = true;
-                            } else {
-                                money -= cropData[cType].cost;
-                                cell.type = 2;
-                                cell.growth = 0;
-                                cell.cropType = cType;
-                                spawnParticles(x * CELL_SIZE, y * CELL_SIZE, '#8BC34A', 10);
-                                plantedCount++;
-                            }
-                        } else if (action === 'water' && cell.type === 2) {
-                            const req = weather === 'Drought' ? 2 : 1;
-                            if (cell.watered < req) {
-                                cell.watered = (cell.watered || 0) + 1;
-                                spawnWaterParticles(x * CELL_SIZE + CELL_SIZE/2, y * CELL_SIZE + CELL_SIZE/2);
-                                didWater = true;
-                            }
-                        } else if (action === 'harvest' && cell.type === 3) {
-                            const val = cropData[cell.cropType].value;
-                            const cType = cell.cropType;
-                            money += val;
-                            totalVal += val;
-                            totalHarvested++;
-                            lastCropType = cType;
-                            cell.type = 1;
-                            cell.watered = 0;
-                            spawnExplosion(x * CELL_SIZE, y * CELL_SIZE, cType);
-                        }
-                    }
-                }
-
-                if (action === 'plant') {
-                    if (plantedCount > 0) {
-                        updateMoney();
-                        showToast(plantedCount > 1 ? `Planted ${plantedCount}x ${cropData[cType].name} (-$${cropData[cType].cost * plantedCount})` : `Planted ${cropData[cType].name} (-$${cropData[cType].cost})`);
-                        saveGame();
-                    } else if (outOfSeason) {
-                        showToast(`⚠️ ${cropData[cType].name} cannot be planted in ${seasons[currentSeason]}!`, true);
-                    } else if (lowFunds) {
-                        showToast(`⚠️ Need $${cropData[cType].cost} for ${cropData[cType].name} seed (You have $${money})`, true);
-                    }
-                }
-
-                if (totalHarvested > 0) {
-                    updateMoney();
-                    shakeAmount = Math.min(shakeAmount + 12, 20);
-                    showToast(totalHarvested === 1 ? `🌾 Harvested ${cropData[lastCropType].name} (+$${totalVal})!` : `🌾 Harvested ${totalHarvested} crops (+$${totalVal})!`);
-                    saveGame();
-                }
-                if (didTill) {
-                    shakeAmount = Math.min(shakeAmount + 5, 15);
-                    saveGame();
-                }
-                if (didWater) {
-                    saveGame();
-                }
-            }
+            hoverGridX = cx;
+            hoverGridY = cy;
+            interactTile(cx, cy);
         });
         
         function nextDay() {

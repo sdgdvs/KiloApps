@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_graphics: KSanctuary
   kilo_soundscape: KCyber
   kilo_tester: KFlash
-  kilo_usability: KFarm
+  kilo_usability: KScript
   kilo_qa: KFlash
   kilo_expander: KAnomaly
   kilo_review: KMech
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KFarm
-  timestamp: '2026-10-24T13:42:17-07:00'
+  timestamp: '2026-10-24T13:54:27-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -137,14 +137,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
-| `KFarm` | `KiloOS/public/apps/kfarm.html`, `KFarm/main.c` | **[ARGON REVIEW]:** Fix fatal TypeError in loadGame() caused by reassigning const chickensList/cowsList, enable 3x3 AoE seed planting when toolsUpgraded is active, allow Wheat in Winter (seasons [0,2,3]) so Winter is playable, and fix Mill button [W] hotkey label parity in kfarm.html and KFarm/main.c. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KFarm`
+- **Active Target**: `KScript`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFarm` | `KiloOS/public/apps/kfarm.html`, `KFarm/main.c` | **[ARGON REVIEW]:** Eliminate 197px vertical overflow at 640x743 by compacting .container and grouping seed/shop/utility buttons so all controls fit in-viewport without clipping, move #kfarmToast to top-right so it never covers buttons, and wire Arrow/WASD + Enter to navigate hoverGridX/hoverGridY and trigger tile actions. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -221,6 +219,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KFarm** | `KiloOS/public/apps/kfarm.html` | Pass 5+ (2026-10-24) | Simulation / Farming | Pastoral farming simulator; 4 crops, livestock, artisanal machines, YM2612 audio, 3x3 AoE tool, in-viewport compact layout, WASD/Arrow keyboard grid navigation, dual Win32 C parity, F5/F9 state. |
 | **KHabit** | `KiloOS/public/apps/khabit.html` | Pass 5+ (2026-10-24) | Office / Productivity | Feature-complete sovereign habit tracker with streak calculations, 28-day completion heatmap, daily reminder banner, YM2612 FM audio, F5/F9 state persistence, and dual Win32 C parity. |
 | **KBudget** | `KiloOS/public/apps/kbudget.html` | Pass 5+ (2026-10-24) | Office / Productivity | Comprehensive retro budget ledger with category allocation pie charts, multi-currency switching, monthly goals, CSV/JSON VFS integration, F5/F9 snapshot persistence, and dual Win32 C parity. |
 | **KJournal** | `KiloOS/public/apps/kjournal.html` | Pass 5+ (2026-10-24) | Productivity / Writing & Journal | Complete encrypted retro journal workstation with rich markdown preview, mood tags, PIN lock, calendar navigator, F5/F9 persistence, and dual Win32 C parity. |
@@ -276,6 +275,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T13:54:27-07:00 — kilo-usability: KFarm (Responsive Viewport Compaction & WASD/Arrow Grid Ergonomics)**
+  - Status: PASS ✅ (0 errors, web 118.3 KB, native 128.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.23%, input 51.74%, HEAD Δ 45.32%, 0 fail, 0 warn, 10.8s)).
+  - Layout: Eliminated 197px vertical overflow (reduced to x0/y0px at 640x743) by compacting container, margins, and grouping primary, shop, and utility button toolbars.
+  - Toast & Input: Relocated #kfarmToast to top-right to prevent button occlusion; wired Arrow/WASD + Enter to navigate grid cursor and trigger tile actions in both web and Win32 C.
+  - Mature Quarantine & Handoff: Promoted `KFarm` to Mature archive; advanced `kilo-usability` to `KScript`; next agent `kilo-qa`.
+
 - **2026-10-24T13:42:17-07:00 — kilo-tester: KFarm (Fix loadGame TypeError, 3x3 AoE seed planting & Mill [W] hotkey parity)**
   - Fixed fatal TypeError in loadGame() by declaring chickensList/cowsList with let
   - Enabled 3x3 AoE seed planting in both HTML and Win32 C when tools are upgraded
@@ -298,9 +303,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Connected Ghost Node terminal to KiloOS VFS (/sys/alpha.sys & /home/crypto/) writing Inode 0x1999 and penultimate fragment 1999-ARCH.
   - Verified diegetic routing in KNet, hidden transit echoes in Webring, and automated breach trigger for KMatrix Sector 04.
   - Handoff: Advanced `kilo-creator` to `kweb://slashnet`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-24T13:03:36-07:00 — kilo-review: KFarm (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 640x743 and audited kfarm.html + KFarm/main.c).
-  - Visual/UX Findings: 197px vertical overflow at 640x743 slices Upgrade Tools button in half and hides all 11 livestock/artisanal/system buttons below fold; bottom-right toast overlaps action buttons; Arrow/WASD keys are a dead no-op stub instead of moving the grid cursor.
-  - Feature/Bug Findings: loadGame() crashes with TypeError by reassigning const chickensList and cowsList; 3x3 Upgraded Tools fails to plant in 3x3; Winter season (season 3) has zero plantable crops; loadGame() resets Mill shortcut label to [M] instead of [W].
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KFarm`, `kilo-tester`->`KFarm`] (un-quarantined `KFarm` from Mature); advanced `kilo-review` to `KMech`; next agent `kilo-creator`.

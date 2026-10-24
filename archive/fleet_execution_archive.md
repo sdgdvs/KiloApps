@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T13:03:36-07:00 — kilo-review: KFarm (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 640x743 and audited kfarm.html + KFarm/main.c).
+  - Visual/UX Findings: 197px vertical overflow at 640x743 slices Upgrade Tools button in half and hides all 11 livestock/artisanal/system buttons below fold; bottom-right toast overlaps action buttons; Arrow/WASD keys are a dead no-op stub instead of moving the grid cursor.
+  - Feature/Bug Findings: loadGame() crashes with TypeError by reassigning const chickensList and cowsList; 3x3 Upgraded Tools fails to plant in 3x3; Winter season (season 3) has zero plantable crops; loadGame() resets Mill shortcut label to [M] instead of [W].
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KFarm`, `kilo-tester`->`KFarm`] (un-quarantined `KFarm` from Mature); advanced `kilo-review` to `KMech`; next agent `kilo-creator`.
+
 - **2026-10-24T12:50:28-07:00 — kilo-expander: KStarForge (Phase VI RFMS Blueprint Exchange & Fleet Skirmish)**
   - Status: PASS ✅ (0 errors, web 314.1 KB, native 30.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.83%, HEAD Δ 0.09%, 0 fail, 0 warn, 14.0s)).
   - Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrated retro_multiplayer.js for online ship blueprint sharing & tactical test skirmish with explicit Connect gate and 25s AI fallback.
