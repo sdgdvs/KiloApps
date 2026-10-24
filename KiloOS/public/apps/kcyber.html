@@ -2691,10 +2691,12 @@
                spawnBurst(90, 80, 35, 'bit', '#00ffff');
                spawnBurst(90, 80, 20, 'star', '#ffffff');
                printLine(`Download complete. Data value: ${file.value} credits.`);
-               playAccessGranted();
+               playCreditChime();
                if (active_mission && active_mission.file.toLowerCase() === file.name.toLowerCase() && active_mission.node === connected_node) {
-                 printLine(`CONTRACT COMPLETE! Reward transferred.`);
+                 player_credits += active_mission.reward;
+                 printLine(`CONTRACT COMPLETE! Reward transferred (+${active_mission.reward} cr).`);
                  active_mission = null;
+                 playAccessGranted();
                }
                file.name = "empty";
              } else {

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T14:24:57-07:00 — kilo-expander: KAnomaly (Phase VI VFS Signal Bridge & Cross-App Forensic Dispatch)**
+  - Status: PASS ✅ (0 errors, web 118.8 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Added two-way KiloOS VFS Signal Bridge (/sys/anomaly_capture.sig): VFS save, VFS load, picker ingress, and URL hash routing.
+  - Cross-app IPC dispatch to KHex and KMatrix with native Win32 C parity ([F2]/[F3]/ShellExecute) and .sig file association.
+  - Handoff: Advanced `kilo-expander` to `KSynth`; rotated active agent to `kilo-review`.
+
 - **2026-10-24T14:06:25-07:00 — kilo-qa: KFlash (Pass 5 QA, Leitner Scheduling & Mature Graduation)**
   - Status: PASS ✅ (0 errors, web 117.5 KB, native 136.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.4%, HEAD Δ 0.12%, 0 fail, 0 warn, 7.5s)).
   - Leitner Spaced Repetition: Implemented 5-box spaced repetition math, rating hotkeys [1-4], Box breakdown in Stats modal, and due-card filter in HTML and Win32 C.
