@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_tester: KSys
   kilo_usability: KVault
   kilo_qa: KSolitaire
-  kilo_expander: KStarForge
+  kilo_expander: KAnomaly
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
 - kweb://slashnet
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KSolitaire
-  timestamp: '2026-10-23T19:49:13-07:00'
+  agent: kilo-expander
+  app: KStarForge
+  timestamp: '2026-10-23T20:10:03-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -153,11 +153,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 |---|---|---|
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KStarForge`
+- **Active Target**: `KAnomaly`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Phase VI VFS & IPC Mesh: add KiloOS VFS Open/Save (`/home/crypto/*.enc`), `"Inspect Ciphertext in KHex"` IPC launch (`OS_LAUNCH_APP`), multi-stage cipher chaining pipeline, and dual Win32 C parity. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
@@ -165,6 +164,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
+| `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 
 ---
 
@@ -224,6 +224,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T20:10:03-07:00 — kilo-expander: KStarForge (Phase VI RFMS Blueprint Exchange & Fleet Skirmish)**
+  - Status: PASS ✅ (0 errors, web 314.0 KB, native 30.0 KB < 999 KB; startup, Vite & security_lint PASS).
+  - Integrated retro_multiplayer.js with explicit connect gate, 25s AI fallback, real-time blueprint sharing, and tactical skirmish proving grounds.
+  - Wired KiloOS VFS /home/blueprints/ save/load/picker mesh + cross-app KHex/KPad launch and dual Win32 C parity ([E]/[L] BP file, [K] skirmish).
+  - Handoff: Advanced `kilo-expander` to `KAnomaly`; rotated active agent to `kilo-creator`.
+
 - **2026-10-23T19:49:13-07:00 — kilo-qa: KSolitaire (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 157.1 KB, native 48.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 65.12%, 0 fail, 0 warn, 7.4s)).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, ksolitaire_tutorialSeen flag, and Escape modal dismissals.
@@ -248,11 +254,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Composition: D-Dorian breakbeat, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
   - Patches & DSP: 303 acid FM bass (<C3), digital bells, shell pad, Amen breakbeat, 210ms SPC700 stereo delay, ICE breach & cyber earcons.
   - Handoff: Advanced `kilo-soundscape` to `KStellar`; rotated active agent to `kilo-tester`.
-
-- **2026-10-23T19:05:35-07:00 — kilo-graphics: KStellar (4X Stellar Empire Map Visual Upgrade & Glint Sweep)**
-  - Status: PASS ✅ (0 errors, web 179.4 KB, native 157.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.72%, HEAD Δ 6.67%, 0 fail, 0 warn, 12.4s)).
-  - Replaced programmer art with 4X astrophysics star spectral classes (O, B, A, F, G, K, M, Pulsar) with multi-stop coronas, prominences, and diffraction spikes.
-  - Rendered perspective orbital ringworld megastructures with rotating biosphere quadrants and structural spokes.
-  - Integrated roaming galaxy fleets (Federation cruisers, merchant bulk haulers, pirate raiders) and command flagship sprite.
-  - Completed glint sweep: zero perimeter border dots or rotating specular glints.
-  - Handoff: Advanced `kilo-graphics` to `KSanctuary`; rotated active agent to `kilo-soundscape`.

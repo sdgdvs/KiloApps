@@ -147,9 +147,9 @@
     "id": "kcipher",
     "title": "KCipher",
     "folder": "System",
-    "webBytes": 160261,
-    "exeBytes": 12288,
-    "budgetPercent": 16.0
+    "webBytes": 160910,
+    "exeBytes": 15872,
+    "budgetPercent": 16.1
   },
   {
     "id": "kclip",
@@ -235,9 +235,9 @@
     "id": "kcyber",
     "title": "KCyber",
     "folder": "Games",
-    "webBytes": 106472,
+    "webBytes": 118649,
     "exeBytes": 34304,
-    "budgetPercent": 10.7
+    "budgetPercent": 11.9
   },
   {
     "id": "kdarts",
@@ -363,9 +363,9 @@
     "id": "khash",
     "title": "KHash",
     "folder": "System",
-    "webBytes": 144433,
+    "webBytes": 164437,
     "exeBytes": 17920,
-    "budgetPercent": 14.5
+    "budgetPercent": 16.5
   },
   {
     "id": "khex",
@@ -667,9 +667,9 @@
     "id": "kstarforge",
     "title": "KStarForge",
     "folder": "Games",
-    "webBytes": 277213,
-    "exeBytes": 30208,
-    "budgetPercent": 27.7
+    "webBytes": 321539,
+    "exeBytes": 30720,
+    "budgetPercent": 32.2
   },
   {
     "id": "kstarship",

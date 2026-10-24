@@ -260,6 +260,7 @@ typedef struct {
     int flightWave;
     int waveCountdown;
     int currentTemplate;
+    int isSkirmishMode;
 } GameContext;
 
 static GameContext g_game;
@@ -503,6 +504,7 @@ static void InitGame() {
     g_game.drydockProgress = 0;
     g_game.toastTimer = 0;
     g_game.flightWave = 1;
+    g_game.isSkirmishMode = 0;
     g_game.waveCountdown = 0;
     g_game.currentTemplate = 0;
 
@@ -520,6 +522,7 @@ static void InitFlightSim() {
     p->currentHp = g_game.stats.totalHp > 0 ? g_game.stats.totalHp : 100;
     p->currentShield = g_game.stats.maxShields;
     g_game.flightWave = 1;
+    g_game.isSkirmishMode = 0;
     g_game.waveCountdown = 0;
 
     for (int i = 0; i < MAX_ASTEROIDS; i++) {
@@ -646,14 +649,22 @@ static void StepFlightSim() {
                     d->hp -= pr->damage;
                     if (d->hp <= 0) {
                         d->active = 0;
-                        int bounty = (d->droneType == 1 ? 250 : (d->droneType == 2 ? 150 : 120));
-                        int repGain = (d->droneType == 1 ? 4 : 2);
-                        g_game.economy.credits += bounty;
-                        g_game.economy.reputation += repGain;
-                        if (d->droneType == 1) SetToast("MARAUDER BRUTE DESTROYED! +250$C");
-                        else if (d->droneType == 2) SetToast("ROGUE SENTRY NEUTRALIZED! +150$C");
-                        else SetToast("SYNDICATE VIPER DESTROYED! +120$C");
-                        PlaySfx(11);
+                        if (g_game.isSkirmishMode && k == 0) {
+                            g_game.economy.credits += 1000;
+                            g_game.economy.reputation += 50;
+                            SetToast("SKIRMISH VICTORY! RIVAL FLAGSHIP DESTROYED (+1000$C, +50 REP)");
+                            PlaySfx(9);
+                            g_game.isSkirmishMode = 0;
+                        } else {
+                            int bounty = (d->droneType == 1 ? 250 : (d->droneType == 2 ? 150 : 120));
+                            int repGain = (d->droneType == 1 ? 4 : 2);
+                            g_game.economy.credits += bounty;
+                            g_game.economy.reputation += repGain;
+                            if (d->droneType == 1) SetToast("MARAUDER BRUTE DESTROYED! +250$C");
+                            else if (d->droneType == 2) SetToast("ROGUE SENTRY NEUTRALIZED! +150$C");
+                            else SetToast("SYNDICATE VIPER DESTROYED! +120$C");
+                            PlaySfx(11);
+                        }
                     }
                     break;
                 }
@@ -819,6 +830,54 @@ static void StepFlightSim() {
 }
 
 /* Save / Load */
+
+/* Blueprint File Mesh & Tactical Skirmish (Win32 Parity) */
+static void SaveBlueprintFile() {
+    HANDLE hFile = CreateFileA("kstarforge.bp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bytesWritten;
+        WriteFile(hFile, g_game.grid, sizeof(g_game.grid), &bytesWritten, NULL);
+        CloseHandle(hFile);
+        SetToast("BLUEPRINT EXPORTED: kstarforge.bp [E]");
+        PlaySfx(7);
+    }
+}
+
+static void LoadBlueprintFile() {
+    HANDLE hFile = CreateFileA("kstarforge.bp", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bytesRead;
+        ReadFile(hFile, g_game.grid, sizeof(g_game.grid), &bytesRead, NULL);
+        CloseHandle(hFile);
+        RecalculateStats();
+        SetToast("BLUEPRINT IMPORTED: kstarforge.bp [L]");
+        PlaySfx(8);
+    } else {
+        SetToast("NO BLUEPRINT FILE FOUND (kstarforge.bp)");
+    }
+}
+
+static void StartTacticalSkirmish() {
+    g_game.state = STATE_FLIGHT;
+    InitFlightSim();
+    g_game.isSkirmishMode = 1;
+    for (int k = 0; k < MAX_DRONES; k++) {
+        g_game.drones[k].active = 0;
+    }
+    EnemyDrone* d = &g_game.drones[0];
+    d->active = 1;
+    d->droneType = 1; /* Heavy Flagship */
+    d->hp = 500;
+    d->maxHp = 500;
+    d->x = 420.0f;
+    d->y = 90.0f;
+    d->vx = 0.0f;
+    d->vy = 0.0f;
+    d->shootTimer = 25;
+    SetToast("TACTICAL FLEET SKIRMISH: RIVAL FLAGSHIP ENGAGED [K]");
+    PlaySfx(5);
+}
+
 static void SaveGame() {
     HANDLE hFile = CreateFileA("kstarforge.sav", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -1370,13 +1429,19 @@ static void DrawGame(HDC hdc, RECT* rc) {
         for (int k = 0; k < MAX_DRONES; k++) {
             if (g_game.drones[k].active) activeHostiles++;
         }
-        wsprintfA(hBuf, "WAVE: %d (HOSTILES: %d) | HULL: %d HP | SHIELD: %d | HEAT: %d%% | SPD: %d m/s",
-            g_game.flightWave, activeHostiles, p->currentHp, p->currentShield, (int)p->heat, speedVal);
-        SetTextColor(memDC, RGB(0, 240, 255));
+        if (g_game.isSkirmishMode) {
+            wsprintfA(hBuf, "[TACTICAL FLEET SKIRMISH // RIVAL FLAGSHIP] | HULL: %d HP | SHIELD: %d | HEAT: %d%% | SPD: %d m/s",
+                p->currentHp, p->currentShield, (int)p->heat, speedVal);
+            SetTextColor(memDC, RGB(255, 180, 50));
+        } else {
+            wsprintfA(hBuf, "WAVE: %d (HOSTILES: %d) | HULL: %d HP | SHIELD: %d | HEAT: %d%% | SPD: %d m/s",
+                g_game.flightWave, activeHostiles, p->currentHp, p->currentShield, (int)p->heat, speedVal);
+            SetTextColor(memDC, RGB(0, 240, 255));
+        }
         TextOutA(memDC, 20, 80, hBuf, lstrlenA(hBuf));
 
         SetTextColor(memDC, RGB(180, 200, 220));
-        TextOutA(memDC, 20, rc->bottom - 30, "[W/S] Thrust/Retro | [A/D] Steering | [SPACE] Fire | [E] Mining Beam | [ESC] Dock", 81);
+        TextOutA(memDC, 20, rc->bottom - 30, "[W/S] Thrust | [A/D] Steer | [SPACE] Fire | [E] Mine | [K] Skirmish | [ESC] Dock", 80);
     }
     else if (g_game.state == STATE_CONTRACTS) {
         /* Faction Contracts */
@@ -1454,7 +1519,7 @@ static void DrawGame(HDC hdc, RECT* rc) {
     FillRect(memDC, &statRc, statBrush);
     DeleteObject(statBrush);
     SetTextColor(memDC, RGB(100, 140, 180));
-    const char* statusBarText = "[F1/H] Manual  [T] Templates  [M] Mute  [S] Sym  [R] Reset  [F5] Save  [F9] Load  [LMB] Place  [RMB] Erase";
+    const char* statusBarText = "[F1/H] Manual  [T] Templates  [E/L] BP  [K] Skirmish  [M] Mute  [S] Sym  [F5/F9] Save/Load  [LMB/RMB] Build";
     TextOutA(memDC, 12, rc->bottom - 18, statusBarText, lstrlenA(statusBarText));
 
     /* Onscreen Toast */
@@ -1538,6 +1603,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 g_game.symmetryMode = !g_game.symmetryMode;
                 SetToast(g_game.symmetryMode ? "SYMMETRY: ON" : "SYMMETRY: OFF");
                 PlaySfx(1);
+            } else if (wParam == 'E' && g_game.state == STATE_BLUEPRINT) {
+                SaveBlueprintFile();
+            } else if (wParam == 'L' && g_game.state == STATE_BLUEPRINT) {
+                LoadBlueprintFile();
+            } else if (wParam == 'K') {
+                StartTacticalSkirmish();
             } else if (wParam == 'R' && g_game.state == STATE_BLUEPRINT) {
                 ResetShipGrid();
                 SetToast("SHIP BLUEPRINT RESET");

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KStarForge - Deep-Space Shipyard Engineering Sim</title>
+    <script src="../assets/js/retro_multiplayer.js"></script>
     <style>
         :root {
             --bg-void: #060a14;
@@ -1015,6 +1016,8 @@
             <button class="btn" id="btn-quicksave" title="Quicksave [F5]">💾 F5 Save</button>
             <button class="btn" id="btn-quickload" title="Quickload [F9]">📂 F9 Load</button>
             <button class="btn" id="btn-audio-toggle" title="Toggle Sound [M / Shift+M]">🔊 Audio [M]</button>
+            <button class="btn" id="btn-vfs-blueprints" title="KiloOS VFS Blueprint Mesh [/home/blueprints/] [V]">📁 VFS Mesh [V]</button>
+            <button class="btn" id="btn-rfms-multiplayer" style="border-color: #38bdf8; color: #38bdf8;" title="RFMS Online Fleet Blueprint Exchange & Skirmish [G]">🌐 Subnet [G]</button>
             <button class="btn" id="btn-settings-open">⚙ Settings</button>
             <button class="btn" id="btn-help-open" title="Yard Operations Manual & Controls [F1 / H]">? Help [F1]</button>
         </div>
@@ -1238,6 +1241,7 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 6px; margin-top: 4px;">
+                    <button class="btn" id="btn-hud-skirmish" style="pointer-events: auto; padding: 3px 8px; font-size: 11px; border-color: #f59e0b; color: #f59e0b;" title="Engage Tactical Fleet Skirmish against Rival Pilot / AI Flagship">⚔️ Skirmish [K]</button>
                     <button class="btn btn-primary" id="btn-flight-dock" style="pointer-events: auto; padding: 3px 8px; font-size: 11px;">⮐ Dock [ESC]</button>
                     <button class="btn" id="btn-toggle-flight-touch" style="pointer-events: auto; padding: 3px 8px; font-size: 11px;" title="Toggle On-Screen Touch Controls">🎮 Touch HUD</button>
                 </div>
@@ -1532,6 +1536,149 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary" id="btn-settings-done">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KiloOS VFS Blueprint Mesh Modal -->
+    <div class="modal-overlay" id="vfs-blueprint-modal" style="display: none;">
+        <div class="modal-box" style="width: 640px;">
+            <div class="modal-header">
+                <span class="modal-title">📁 KILOOS VFS BLUEPRINT MESH [/home/blueprints/]</span>
+                <button class="btn" id="btn-vfs-close" style="padding: 2px 6px;">✕</button>
+            </div>
+            <div style="padding: 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto;">
+                <p style="font-size: 12px; color: var(--text-normal); line-height: 1.5;">
+                    Persist ship CAD schematics directly to the KiloOS Virtual Filesystem (VFS) to share designs across KiloApps workstations (<code>KPad</code>, <code>KHex</code>, and <code>File Browser</code>).
+                </p>
+
+                <!-- Save to VFS -->
+                <div style="background: rgba(8, 14, 28, 0.6); padding: 12px; border: 1px solid var(--border-dim); border-radius: 4px;">
+                    <span style="font-size: 11px; font-weight: bold; color: var(--accent-cyan); display: block; margin-bottom: 6px;">EXPORT ACTIVE BLUEPRINT TO VFS</span>
+                    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                        <span style="color: var(--text-dim); font-size: 11px;">/home/blueprints/</span>
+                        <input type="text" id="vfs-save-filename" value="vanguard_mk2.json" style="flex: 1; background: #080d19; color: #38bdf8; border: 1px solid var(--border-dim); border-radius: 4px; padding: 6px 8px; font-family: var(--font-mono); font-size: 11px;">
+                        <button class="btn btn-primary" id="btn-vfs-save-action">💾 Write to VFS</button>
+                    </div>
+                    <div style="font-size: 10px; color: var(--text-dim);">
+                        Exports full CAD schema (Hull, Deflectors, Reactor, Thrusters, Weapons, and Grid coordinates) as a canonical KiloOS VFS asset.
+                    </div>
+                </div>
+
+                <!-- Load from VFS -->
+                <div style="background: rgba(8, 14, 28, 0.6); padding: 12px; border: 1px solid var(--border-dim); border-radius: 4px;">
+                    <span style="font-size: 11px; font-weight: bold; color: var(--accent-amber); display: block; margin-bottom: 6px;">IMPORT BLUEPRINT FROM VFS</span>
+                    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                        <span style="color: var(--text-dim); font-size: 11px;">Path:</span>
+                        <input type="text" id="vfs-load-path" value="/home/blueprints/vanguard_mk2.json" style="flex: 1; background: #080d19; color: #f59e0b; border: 1px solid var(--border-dim); border-radius: 4px; padding: 6px 8px; font-family: var(--font-mono); font-size: 11px;">
+                        <button class="btn" id="btn-vfs-load-action">📂 Load Path</button>
+                        <button class="btn" id="btn-vfs-picker-action" title="Open KiloOS File Dialog">🗂 VFS Picker</button>
+                    </div>
+                </div>
+
+                <!-- Cross-App Workstation IPC Launch -->
+                <div style="background: rgba(8, 14, 28, 0.6); padding: 12px; border: 1px solid var(--border-dim); border-radius: 4px;">
+                    <span style="font-size: 11px; font-weight: bold; color: #a855f7; display: block; margin-bottom: 6px;">CROSS-APP WORKSTATION INSPECTION</span>
+                    <p style="font-size: 11px; color: var(--text-dim); margin-bottom: 8px;">
+                        Write active blueprint to VFS and launch an external diagnostic workstation in KiloOS:
+                    </p>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button class="btn" id="btn-vfs-launch-khex" title="Inspect raw binary and hexadecimal blueprint buffer">🔍 Send to KHex Workstation</button>
+                        <button class="btn" id="btn-vfs-launch-kpad" title="Open blueprint JSON in KPad text editor">📝 Inspect in KPad Editor</button>
+                        <button class="btn" id="btn-vfs-launch-kexplorer" title="Browse /home/blueprints/ in KiloOS File Manager">🗂 Open in File Browser</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="btn-vfs-done">Close [Esc]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RFMS Online Blueprint Exchange & Fleet Skirmish Modal -->
+    <div class="modal-overlay" id="rfms-fleet-modal" style="display: none;">
+        <div class="modal-box" style="width: 700px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="modal-title">🌐 RFMS ONLINE FLEET EXCHANGE & SKIRMISH</span>
+                    <span id="rfms-status-badge" style="font-size: 10px; padding: 2px 6px; border-radius: 3px; background: rgba(100,116,139,0.3); border: 1px solid var(--border-dim); color: var(--text-dim);">STANDALONE (OFFLINE)</span>
+                </div>
+                <button class="btn" id="btn-rfms-close" style="padding: 2px 6px;">✕</button>
+            </div>
+            <div style="padding: 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; max-height: 80vh;">
+                <!-- Call Sign & Gateway Controls -->
+                <div style="background: rgba(8, 14, 28, 0.6); padding: 12px; border: 1px solid var(--border-dim); border-radius: 4px;">
+                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 180px;">
+                            <label style="font-size: 10px; color: var(--accent-cyan); display: block; margin-bottom: 4px;">PILOT CALL SIGN:</label>
+                            <input type="text" id="rfms-callsign-input" value="Architect_1999" maxlength="20" style="width: 100%; background: #080d19; color: #fff; border: 1px solid var(--border-dim); border-radius: 4px; padding: 5px 8px; font-family: var(--font-mono); font-size: 11px;">
+                        </div>
+                        <div style="flex: 1; min-width: 180px;">
+                            <label style="font-size: 10px; color: var(--accent-amber); display: block; margin-bottom: 4px;">ROOM CODE:</label>
+                            <div style="display: flex; gap: 4px;">
+                                <input type="text" id="rfms-room-input" placeholder="KSF-XXXX" style="width: 100%; background: #080d19; color: #f59e0b; border: 1px solid var(--border-dim); border-radius: 4px; padding: 5px 8px; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;">
+                                <button class="btn" id="btn-rfms-join-code" style="font-size: 11px;">Join</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connect Gate Actions -->
+                    <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center;">
+                        <button class="btn btn-primary" id="btn-rfms-quickmatch" style="border-color: #38bdf8; color: #38bdf8; font-weight: bold;">⚡ Quick Match (25s AI Fallback)</button>
+                        <button class="btn" id="btn-rfms-host">🛡 Host Subnet Room</button>
+                        <button class="btn" id="btn-rfms-disconnect" style="display: none; border-color: #ef4444; color: #ef4444;">❌ Disconnect</button>
+                        <button class="btn" id="btn-rfms-instant-ai" style="font-size: 11px; color: #94a3b8;">🤖 Engage AI Competitor Now</button>
+                        <span id="rfms-timer-display" style="font-size: 11px; color: #f59e0b; display: none;">⏱ Fallback in 25s</span>
+                    </div>
+                </div>
+
+                <!-- Active Blueprint Sync -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <!-- My Blueprint -->
+                    <div style="background: rgba(8, 14, 28, 0.6); padding: 12px; border: 1px solid var(--border-dim); border-radius: 4px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <span style="font-size: 11px; font-weight: bold; color: var(--accent-cyan); display: block; margin-bottom: 6px;">YOUR ACTIVE VESSEL SPEC</span>
+                            <div id="rfms-my-spec-preview" style="font-size: 11px; line-height: 1.6; color: var(--text-normal);">
+                                Class: <strong style="color: #38bdf8;">CORVETTE</strong><br>
+                                Hull / Shield: <strong>450 HP / 300 SP</strong><br>
+                                Firepower / Thrust: <strong>60 DPS / 180 kN</strong><br>
+                                Mass: <strong>140 TONS</strong>
+                            </div>
+                        </div>
+                        <button class="btn" id="btn-rfms-broadcast-bp" style="margin-top: 10px; border-color: #06b6d4; color: #06b6d4;">📡 Broadcast Blueprint to Peer</button>
+                    </div>
+
+                    <!-- Peer Blueprint -->
+                    <div style="background: rgba(8, 14, 28, 0.6); padding: 12px; border: 1px solid var(--border-dim); border-radius: 4px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span style="font-size: 11px; font-weight: bold; color: var(--accent-amber);">INCOMING PEER VESSEL SPEC</span>
+                                <span id="rfms-peer-callsign" style="font-size: 10px; color: var(--text-dim);">No peer connected</span>
+                            </div>
+                            <div id="rfms-peer-spec-preview" style="font-size: 11px; line-height: 1.6; color: var(--text-dim);">
+                                Connect to a peer or fallback to AI competitor to inspect naval architecture.
+                            </div>
+                        </div>
+                        <button class="btn" id="btn-rfms-load-peer-bp" style="margin-top: 10px; border-color: #f59e0b; color: #f59e0b;" disabled>📥 Load Peer Blueprint into Yard</button>
+                    </div>
+                </div>
+
+                <!-- Tactical Fleet Skirmish Proving Grounds -->
+                <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.8)); padding: 12px; border: 1px solid var(--accent-orange); border-radius: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-size: 12px; font-weight: bold; color: var(--accent-orange);">⚔️ PROVING GROUNDS TACTICAL SKIRMISH</span>
+                        <span style="font-size: 10px; color: #fdba74;">SHIELDS & WEAPONS HOT</span>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-normal); margin-bottom: 10px; line-height: 1.5;">
+                        Deploy your active ship into direct dogfight combat against the peer's ship (or AI Flagship). Test maneuverability, reactor heat tolerance, shield regeneration, and weapon convergence in a live simulated orbital arena!
+                    </p>
+                    <button class="btn btn-primary" id="btn-rfms-launch-skirmish" style="width: 100%; padding: 8px; font-size: 12px; border-color: var(--accent-orange); background: #c2410c; color: #fff;">
+                        🚀 Launch Tactical Skirmish Proving Grounds
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="btn-rfms-done">Close Desk [Esc]</button>
             </div>
         </div>
     </div>
@@ -3596,6 +3743,111 @@
 
         function updateFlightSim() {
             if (!flightSim.active) return;
+
+            // Update Tactical Skirmish Combatant
+            if (flightSim.skirmish && flightSim.skirmish.active) {
+                const sk = flightSim.skirmish;
+                const p = flightSim.player;
+                const parent = flightCanvas.parentElement;
+                const simW = parent ? (parent.clientWidth || 800) : 800;
+                const simH = parent ? (parent.clientHeight || 600) : 600;
+
+                if (sk.isAi) {
+                    const dx = p.x - sk.x;
+                    const dy = p.y - sk.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const targetAngle = Math.atan2(dy, dx);
+
+                    // Smooth rotation towards player
+                    let diffAngle = targetAngle - sk.angle;
+                    while (diffAngle < -Math.PI) diffAngle += Math.PI * 2;
+                    while (diffAngle > Math.PI) diffAngle -= Math.PI * 2;
+                    sk.angle += diffAngle * 0.05;
+
+                    // Flanking maneuver
+                    if (dist > 220) {
+                        sk.vx += Math.cos(sk.angle) * 0.12;
+                        sk.vy += Math.sin(sk.angle) * 0.12;
+                    } else if (dist < 140) {
+                        sk.vx -= Math.cos(sk.angle) * 0.10;
+                        sk.vy -= Math.sin(sk.angle) * 0.10;
+                    } else {
+                        // Lateral orbit
+                        sk.vx += -Math.sin(sk.angle) * 0.14;
+                        sk.vy += Math.cos(sk.angle) * 0.14;
+                    }
+                    sk.vx *= 0.96;
+                    sk.vy *= 0.96;
+                    sk.x += sk.vx;
+                    sk.y += sk.vy;
+
+                    // Bound to arena
+                    sk.x = Math.max(40, Math.min(simW - 40, sk.x));
+                    sk.y = Math.max(40, Math.min(simH - 40, sk.y));
+
+                    // Fire weapons
+                    sk.shootTimer--;
+                    if (sk.shootTimer <= 0 && dist < 500) {
+                        sk.shootTimer = 40 + Math.floor(Math.random() * 25);
+                        flightSim.projectiles.push({
+                            x: sk.x + Math.cos(sk.angle) * 20,
+                            y: sk.y + Math.sin(sk.angle) * 20,
+                            vx: Math.cos(sk.angle) * 4.5,
+                            vy: Math.sin(sk.angle) * 4.5,
+                            damage: 22,
+                            isEnemy: true,
+                            life: 100,
+                            color: '#ef4444'
+                        });
+                        audio.playLaser?.();
+                    }
+                }
+
+                // Check player projectiles vs rival skirmish ship
+                for (let i = flightSim.projectiles.length - 1; i >= 0; i--) {
+                    const pr = flightSim.projectiles[i];
+                    if (pr && !pr.isEnemy && pr.life > 0) {
+                        const pdx = pr.x - sk.x;
+                        const pdy = pr.y - sk.y;
+                        if (pdx * pdx + pdy * pdy < 750) {
+                            pr.life = 0;
+                            if (sk.shield > 0) {
+                                sk.shield -= pr.damage || 25;
+                                if (sk.shield < 0) {
+                                    sk.hull += sk.shield;
+                                    sk.shield = 0;
+                                }
+                            } else {
+                                sk.hull -= pr.damage || 25;
+                            }
+                            // Spawn impact spark
+                            for (let s = 0; s < 4; s++) {
+                                flightSim.particles.push({
+                                    x: pr.x, y: pr.y,
+                                    vx: (Math.random() - 0.5) * 3,
+                                    vy: (Math.random() - 0.5) * 3,
+                                    color: '#38bdf8',
+                                    life: 15
+                                });
+                            }
+
+                            if (sk.hull <= 0) {
+                                sk.hull = 0;
+                                sk.active = false;
+                                state.credits += 1000;
+                                state.reputation += 50;
+                                updateUI();
+                                showToast(`🏆 TACTICAL VICTORY! DEFEATED ${sk.pilotName} (+1,000$C, +50 REP)`);
+                                audio.playSuccess?.();
+                                if (starforgeMultiplayer.rm && starforgeMultiplayer.status === 'connected') {
+                                    starforgeMultiplayer.rm.sendMove({ type: 'SKIRMISH_DEFEAT' });
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
             const p = flightSim.player;
             const s = state.stats;
 
@@ -4225,6 +4477,77 @@
             fCtx.fillRect(plx - 1.5, ply - 1.5, 3, 3);
 
             fCtx.restore();
+
+            // Render Tactical Skirmish Rival Vessel & HUD Banner
+            if (flightSim.skirmish && flightSim.skirmish.active) {
+                const sk = flightSim.skirmish;
+                fCtx.save();
+                fCtx.translate(sk.x, sk.y);
+                fCtx.rotate(sk.angle);
+
+                // Engine flame
+                fCtx.fillStyle = '#f97316';
+                fCtx.beginPath();
+                fCtx.moveTo(-10, 18);
+                fCtx.lineTo(0, 28 + Math.random() * 8);
+                fCtx.lineTo(10, 18);
+                fCtx.fill();
+
+                // Heavy hull polygon
+                fCtx.fillStyle = '#b91c1c';
+                fCtx.strokeStyle = '#f87171';
+                fCtx.lineWidth = 2;
+                fCtx.beginPath();
+                fCtx.moveTo(0, -22);
+                fCtx.lineTo(18, 14);
+                fCtx.lineTo(8, 18);
+                fCtx.lineTo(-8, 18);
+                fCtx.lineTo(-18, 14);
+                fCtx.closePath();
+                fCtx.fill();
+                fCtx.stroke();
+
+                // Shield bubble
+                if (sk.shield > 0) {
+                    fCtx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+                    fCtx.lineWidth = 1.5;
+                    fCtx.beginPath();
+                    fCtx.arc(0, 0, 28, 0, Math.PI * 2);
+                    fCtx.stroke();
+                }
+                fCtx.restore();
+
+                // Callsign label over ship
+                fCtx.fillStyle = '#f59e0b';
+                fCtx.font = '10px monospace';
+                fCtx.textAlign = 'center';
+                fCtx.fillText(`[⚔️ ${sk.pilotName} // ${sk.rivalName}]`, sk.x, sk.y - 34);
+
+                // Top Skirmish HUD Banner
+                const bW = 420;
+                const bH = 28;
+                const bX = (simW - bW) / 2;
+                const bY = 12;
+                fCtx.fillStyle = 'rgba(8, 14, 28, 0.85)';
+                fCtx.strokeStyle = '#f59e0b';
+                fCtx.lineWidth = 1;
+                fCtx.fillRect(bX, bY, bW, bH);
+                fCtx.strokeRect(bX, bY, bW, bH);
+
+                // Shield meter
+                const shdPct = Math.max(0, Math.min(1, sk.shield / (sk.maxShield || 1)));
+                fCtx.fillStyle = '#0284c7';
+                fCtx.fillRect(bX + 8, bY + 16, (bW - 16) * 0.48 * shdPct, 8);
+
+                // Hull meter
+                const hpPct = Math.max(0, Math.min(1, sk.hull / (sk.maxHull || 1)));
+                fCtx.fillStyle = '#dc2626';
+                fCtx.fillRect(bX + bW / 2 + 2, bY + 16, (bW - 16) * 0.48 * hpPct, 8);
+
+                fCtx.fillStyle = '#f8fafc';
+                fCtx.font = '10px monospace';
+                fCtx.fillText(`RIVAL: ${sk.pilotName} | SHD ${sk.shield} | HULL ${sk.hull}`, bX + bW / 2, bY + 11);
+            }
         }
 
         /* Animation Main Loop */
@@ -5802,6 +6125,616 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                     drawDrydockScene();
                 }
                 hiddenTimestamp = null;
+            }
+        });
+
+
+        /* ==========================================================================
+           PHASE VI KILOOS VFS & RFMS MULTIPLAYER MESH INTEGRATION
+           ========================================================================== */
+        const KiloVFS = {
+            write(path, data) {
+                try {
+                    window.parent.postMessage({ type: 'VFS_WRITE', path, data: typeof data === 'string' ? data : JSON.stringify(data, null, 2), requestId: 'w_' + Date.now() }, '*');
+                    window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: `Saved to VFS: ${path}` }, '*');
+                } catch (e) {}
+            },
+            read(path, cb) {
+                const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                const handler = (e) => {
+                    if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                        window.removeEventListener('message', handler);
+                        cb(e.data.data, e.data.path);
+                    }
+                };
+                window.addEventListener('message', handler);
+                try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+            },
+            openPicker(cb) {
+                const reqId = 'open_' + Date.now();
+                const handler = (e) => {
+                    if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                        window.removeEventListener('message', handler);
+                        if (e.data.path) KiloVFS.read(e.data.path, cb);
+                    }
+                };
+                window.addEventListener('message', handler);
+                try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
+            },
+            launchApp(targetApp, path = '') {
+                try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+            }
+        };
+
+        const starforgeVFS = {
+            saveActiveBlueprint(filename) {
+                if (!filename) filename = 'vanguard_mk2.json';
+                if (!filename.endsWith('.json') && !filename.endsWith('.ksf')) filename += '.json';
+                const fullPath = filename.startsWith('/') ? filename : ('/home/blueprints/' + filename);
+                const payload = {
+                    format: 'kstarforge-blueprint',
+                    version: '1.0',
+                    blueprintCode: starforgeExpansion.generateBlueprintCode(),
+                    stats: state.stats,
+                    grid: window.shipGrid || [],
+                    timestamp: new Date().toISOString()
+                };
+                KiloVFS.write(fullPath, payload);
+                showToast('BLUEPRINT SAVED TO VFS: ' + fullPath);
+                audio.playSuccess?.();
+            },
+            loadBlueprintFromPath(path) {
+                if (!path) path = '/home/blueprints/vanguard_mk2.json';
+                KiloVFS.read(path, (content) => {
+                    if (!content) {
+                        showToast('NO DATA FOUND AT: ' + path);
+                        return;
+                    }
+                    if (starforgeExpansion.loadBlueprintCode(content)) {
+                        showToast('LOADED FROM VFS: ' + path);
+                        audio.playSuccess?.();
+                        document.getElementById('vfs-blueprint-modal').style.display = 'none';
+                    }
+                });
+            },
+            openPicker() {
+                KiloVFS.openPicker((content, path) => {
+                    if (content && starforgeExpansion.loadBlueprintCode(content)) {
+                        showToast('VFS BLUEPRINT LOADED: ' + (path || 'Selected file'));
+                        audio.playSuccess?.();
+                        document.getElementById('vfs-blueprint-modal').style.display = 'none';
+                    }
+                });
+            },
+            launchWorkstation(targetApp) {
+                const fname = 'active_spec.json';
+                const path = '/home/blueprints/' + fname;
+                this.saveActiveBlueprint(fname);
+                KiloVFS.launchApp(targetApp, path);
+                showToast(`LAUNCHING ${targetApp.toUpperCase()} WITH BLUEPRINT CAD`);
+            }
+        };
+
+        const starforgeMultiplayer = {
+            rm: null,
+            status: 'idle',
+            pilotName: '',
+            peerName: '',
+            peerBlueprint: null,
+            peerStats: null,
+            fallbackTimer: null,
+            remainingSeconds: 25,
+
+            init() {
+                if (this.pilotName) return;
+                const stored = localStorage.getItem('kstarforge_pilot_name');
+                this.pilotName = stored || ('Architect_' + Math.floor(1000 + Math.random() * 9000));
+                const callInput = document.getElementById('rfms-callsign-input');
+                if (callInput) callInput.value = this.pilotName;
+            },
+
+            saveCallsign() {
+                const callInput = document.getElementById('rfms-callsign-input');
+                if (callInput && callInput.value.trim()) {
+                    this.pilotName = callInput.value.trim();
+                    localStorage.setItem('kstarforge_pilot_name', this.pilotName);
+                }
+            },
+
+            updateStatusBadge(text, color) {
+                const badge = document.getElementById('rfms-status-badge');
+                if (badge) {
+                    badge.textContent = text;
+                    badge.style.color = color;
+                    badge.style.borderColor = color;
+                }
+                const pill = document.getElementById('btn-rfms-multiplayer');
+                if (pill) {
+                    pill.style.borderColor = color;
+                    pill.style.color = color;
+                }
+            },
+
+            startQuickMatch() {
+                this.saveCallsign();
+                this.init();
+                if (typeof RetroMultiplayer === 'undefined') {
+                    showToast('RFMS SUB-SYSTEM UNAVAILABLE — ENGAGING AI RIVAL');
+                    this.activateAiRival('Aegis AI Fleet Architect');
+                    return;
+                }
+
+                this.status = 'searching';
+                this.updateStatusBadge('SEARCHING (25s FALLBACK)...', '#f59e0b');
+                document.getElementById('btn-rfms-disconnect').style.display = 'inline-block';
+                document.getElementById('btn-rfms-quickmatch').disabled = true;
+
+                const timerDisplay = document.getElementById('rfms-timer-display');
+                if (timerDisplay) {
+                    timerDisplay.style.display = 'inline';
+                    timerDisplay.textContent = '⏱ Fallback in 25s';
+                }
+                this.remainingSeconds = 25;
+                if (this.fallbackTimer) clearInterval(this.fallbackTimer);
+                this.fallbackTimer = setInterval(() => {
+                    this.remainingSeconds--;
+                    if (timerDisplay) timerDisplay.textContent = `⏱ Fallback in ${this.remainingSeconds}s`;
+                    if (this.remainingSeconds <= 0) {
+                        clearInterval(this.fallbackTimer);
+                        this.fallbackTimer = null;
+                        if (this.status === 'searching') {
+                            this.activateAiRival('Aegis AI Fleet Architect');
+                        }
+                    }
+                }, 1000);
+
+                try {
+                    this.rm = new RetroMultiplayer({
+                        gameId: 'kstarforge',
+                        prefix: 'KSF',
+                        playerName: this.pilotName,
+                        soloTimeoutMs: 25000,
+                        onOpponentJoin: (peer) => {
+                            if (this.fallbackTimer) {
+                                clearInterval(this.fallbackTimer);
+                                this.fallbackTimer = null;
+                            }
+                            this.status = 'connected';
+                            this.peerName = (peer && peer.name) || 'Rival Pilot';
+                            this.updateStatusBadge(`CONNECTED: ${this.peerName}`, '#10b981');
+                            if (timerDisplay) timerDisplay.style.display = 'none';
+                            showToast(`PEER CONNECTED: ${this.peerName}`);
+                            audio.playSuccess?.();
+                            this.broadcastBlueprint();
+                        },
+                        onOpponentLeave: () => {
+                            showToast('PEER DISCONNECTED — SWITCHING TO AI COMPETITOR');
+                            this.activateAiRival('Corsair AI Flagship');
+                        },
+                        onMove: (data) => {
+                            this.handlePeerMessage(data);
+                        },
+                        onSoloFallback: () => {
+                            if (this.status === 'searching') {
+                                this.activateAiRival('Aegis AI Fleet Architect');
+                            }
+                        }
+                    });
+
+                    this.rm.quickMatch({
+                        blueprint: starforgeExpansion.generateBlueprintCode(),
+                        stats: state.stats
+                    }).then(res => {
+                        if (res && res.success && res.slot === 'p2' && this.rm.opponent) {
+                            if (this.fallbackTimer) {
+                                clearInterval(this.fallbackTimer);
+                                this.fallbackTimer = null;
+                            }
+                            this.status = 'connected';
+                            this.peerName = this.rm.opponent;
+                            this.updateStatusBadge(`CONNECTED: ${this.peerName}`, '#10b981');
+                            if (timerDisplay) timerDisplay.style.display = 'none';
+                            showToast(`JOINED PEER: ${this.peerName}`);
+                            audio.playSuccess?.();
+                            this.broadcastBlueprint();
+                        }
+                    }).catch(err => {
+                        console.warn('[KStarForge] QuickMatch offline fallback:', err);
+                        this.activateAiRival('Aegis AI Fleet Architect');
+                    });
+                } catch (e) {
+                    console.warn('[KStarForge] RetroMultiplayer err:', e);
+                    this.activateAiRival('Aegis AI Fleet Architect');
+                }
+            },
+
+            hostRoom() {
+                this.saveCallsign();
+                this.init();
+                if (typeof RetroMultiplayer === 'undefined') {
+                    this.activateAiRival('Aegis AI Fleet Architect');
+                    return;
+                }
+                this.status = 'searching';
+                document.getElementById('btn-rfms-disconnect').style.display = 'inline-block';
+                try {
+                    this.rm = new RetroMultiplayer({
+                        gameId: 'kstarforge',
+                        prefix: 'KSF',
+                        playerName: this.pilotName,
+                        soloTimeoutMs: 25000,
+                        onOpponentJoin: (peer) => {
+                            this.status = 'connected';
+                            this.peerName = (peer && peer.name) || 'Rival Pilot';
+                            this.updateStatusBadge(`CONNECTED: ${this.peerName}`, '#10b981');
+                            showToast(`PEER JOINED ROOM: ${this.peerName}`);
+                            audio.playSuccess?.();
+                            this.broadcastBlueprint();
+                        },
+                        onMove: (data) => this.handlePeerMessage(data),
+                        onSoloFallback: () => this.activateAiRival('Aegis AI Fleet Architect')
+                    });
+                    this.rm.hostRoom().then(res => {
+                        if (res && res.roomId) {
+                            const roomInp = document.getElementById('rfms-room-input');
+                            if (roomInp) roomInp.value = res.roomId;
+                            this.updateStatusBadge(`HOSTING ROOM: ${res.roomId}`, '#38bdf8');
+                            showToast(`ROOM HOSTED: ${res.roomId} (WAITING FOR PILOT)`);
+                        }
+                    });
+                } catch (e) {
+                    this.activateAiRival('Aegis AI Fleet Architect');
+                }
+            },
+
+            joinRoom() {
+                const roomInp = document.getElementById('rfms-room-input');
+                const code = roomInp ? roomInp.value.trim().toUpperCase() : '';
+                if (!code) {
+                    showToast('ENTER ROOM CODE TO JOIN');
+                    return;
+                }
+                this.saveCallsign();
+                this.init();
+                if (typeof RetroMultiplayer === 'undefined') {
+                    this.activateAiRival('Aegis AI Fleet Architect');
+                    return;
+                }
+                try {
+                    this.rm = new RetroMultiplayer({
+                        gameId: 'kstarforge',
+                        prefix: 'KSF',
+                        playerName: this.pilotName,
+                        soloTimeoutMs: 25000,
+                        onOpponentJoin: (peer) => {
+                            this.status = 'connected';
+                            this.peerName = (peer && peer.name) || 'Rival Pilot';
+                            this.updateStatusBadge(`CONNECTED: ${this.peerName}`, '#10b981');
+                            this.broadcastBlueprint();
+                        },
+                        onMove: (data) => this.handlePeerMessage(data),
+                        onSoloFallback: () => this.activateAiRival('Aegis AI Fleet Architect')
+                    });
+                    this.rm.joinRoom(code).then(res => {
+                        if (res && res.success) {
+                            this.status = 'connected';
+                            this.peerName = this.rm.opponent || 'Host Pilot';
+                            this.updateStatusBadge(`CONNECTED: ${this.peerName}`, '#10b981');
+                            showToast(`JOINED ROOM: ${code}`);
+                            this.broadcastBlueprint();
+                        } else {
+                            showToast('UNABLE TO JOIN ROOM — ENTERING AI SIMULATION');
+                            this.activateAiRival('Aegis AI Fleet Architect');
+                        }
+                    });
+                } catch (e) {
+                    this.activateAiRival('Aegis AI Fleet Architect');
+                }
+            },
+
+            disconnect() {
+                if (this.fallbackTimer) {
+                    clearInterval(this.fallbackTimer);
+                    this.fallbackTimer = null;
+                }
+                if (this.rm) {
+                    try { this.rm.leaveRoom(); } catch (e) {}
+                    this.rm = null;
+                }
+                this.status = 'idle';
+                this.peerName = '';
+                this.peerBlueprint = null;
+                this.peerStats = null;
+                this.updateStatusBadge('STANDALONE (OFFLINE)', 'var(--text-dim)');
+                document.getElementById('btn-rfms-disconnect').style.display = 'none';
+                document.getElementById('btn-rfms-quickmatch').disabled = false;
+                document.getElementById('rfms-timer-display').style.display = 'none';
+                document.getElementById('btn-rfms-load-peer-bp').disabled = true;
+                document.getElementById('rfms-peer-callsign').textContent = 'No peer connected';
+                document.getElementById('rfms-peer-spec-preview').innerHTML = 'Connect to a peer or fallback to AI competitor to inspect naval architecture.';
+                showToast('DISCONNECTED FROM RFMS SUBNET');
+            },
+
+            activateAiRival(aiName = 'Aegis AI Fleet Architect') {
+                if (this.fallbackTimer) {
+                    clearInterval(this.fallbackTimer);
+                    this.fallbackTimer = null;
+                }
+                this.status = 'ai';
+                this.peerName = aiName;
+                this.updateStatusBadge(`AI COMPETITOR: ${aiName}`, '#a855f7');
+                document.getElementById('btn-rfms-disconnect').style.display = 'inline-block';
+                document.getElementById('btn-rfms-quickmatch').disabled = false;
+                document.getElementById('rfms-timer-display').style.display = 'none';
+
+                // Archetype blueprint
+                const presets = ['interceptor', 'dreadnought', 'harvester'];
+                const chosen = presets[Math.floor(Math.random() * presets.length)];
+                const archetypeNames = {
+                    interceptor: 'Void Interceptor Mk.II (Rival Spec)',
+                    dreadnought: 'Aegis Dreadnought Flagship',
+                    harvester: 'Solar Harvester Rig Mk.III'
+                };
+
+                this.peerBlueprint = chosen;
+                this.peerStats = {
+                    shipName: archetypeNames[chosen] || 'Aegis Elite Hull',
+                    hull: chosen === 'dreadnought' ? 950 : (chosen === 'interceptor' ? 420 : 650),
+                    shields: chosen === 'dreadnought' ? 600 : (chosen === 'interceptor' ? 250 : 380),
+                    dps: chosen === 'dreadnought' ? 140 : (chosen === 'interceptor' ? 110 : 45),
+                    mass: chosen === 'dreadnought' ? 320 : (chosen === 'interceptor' ? 90 : 210),
+                    thrust: chosen === 'dreadnought' ? 450 : (chosen === 'interceptor' ? 380 : 260)
+                };
+
+                this.renderPeerBlueprintPreview();
+                showToast(`25s FALLBACK: CONNECTED TO ${aiName}`);
+                audio.playClick?.();
+            },
+
+            broadcastBlueprint() {
+                const bpCode = starforgeExpansion.generateBlueprintCode();
+                const s = state.stats;
+                const payload = {
+                    type: 'BLUEPRINT_SHARE',
+                    pilot: this.pilotName,
+                    shipName: 'Architect ' + (s.hp > 600 ? 'Dreadnought' : 'Vessel'),
+                    blueprintCode: bpCode,
+                    stats: {
+                        shipName: 'Architect ' + (s.hp > 600 ? 'Dreadnought' : 'Vessel'),
+                        hull: s.hp || 450,
+                        shields: s.shields || 300,
+                        dps: s.dps || 60,
+                        mass: s.mass || 140,
+                        thrust: s.thrust || 180
+                    }
+                };
+
+                if (this.rm && this.status === 'connected') {
+                    this.rm.sendMove(payload);
+                    showToast('BLUEPRINT BROADCAST TO ' + this.peerName);
+                } else {
+                    showToast('BLUEPRINT BROADCAST TO LOCAL SUBNET BUFFER');
+                }
+            },
+
+            handlePeerMessage(msg) {
+                if (!msg) return;
+                if (msg.type === 'BLUEPRINT_SHARE') {
+                    this.peerName = msg.pilot || this.peerName || 'Peer Pilot';
+                    this.peerBlueprint = msg.blueprintCode;
+                    this.peerStats = msg.stats;
+                    this.renderPeerBlueprintPreview();
+                    showToast(`RECEIVED BLUEPRINT FROM ${this.peerName}`);
+                    audio.playSuccess?.();
+                } else if (msg.type === 'SKIRMISH_STATE') {
+                    if (flightSim.skirmish && flightSim.skirmish.active && !flightSim.skirmish.isAi) {
+                        flightSim.skirmish.x = msg.x;
+                        flightSim.skirmish.y = msg.y;
+                        flightSim.skirmish.angle = msg.angle;
+                        flightSim.skirmish.hull = msg.hp;
+                        flightSim.skirmish.shield = msg.shield;
+                    }
+                } else if (msg.type === 'SKIRMISH_FIRE') {
+                    if (flightSim.skirmish && flightSim.skirmish.active) {
+                        flightSim.projectiles.push({
+                            x: msg.x,
+                            y: msg.y,
+                            vx: msg.vx,
+                            vy: msg.vy,
+                            damage: 25,
+                            isEnemy: true,
+                            life: 90,
+                            color: '#f97316'
+                        });
+                    }
+                } else if (msg.type === 'SKIRMISH_DEFEAT') {
+                    showToast('RIVAL VESSEL NEUTRALIZED! TACTICAL VICTORY');
+                    state.credits += 1000;
+                    state.reputation += 50;
+                    updateUI();
+                    audio.playSuccess?.();
+                }
+            },
+
+            renderPeerBlueprintPreview() {
+                const callEl = document.getElementById('rfms-peer-callsign');
+                if (callEl) callEl.textContent = `Pilot: ${this.peerName}`;
+                const prev = document.getElementById('rfms-peer-spec-preview');
+                const st = this.peerStats || {};
+                if (prev) {
+                    prev.innerHTML = `
+                        Vessel: <strong style="color: #f59e0b;">${st.shipName || 'Custom Hull'}</strong><br>
+                        Hull / Shield: <strong>${st.hull || 500} HP / ${st.shields || 300} SP</strong><br>
+                        Firepower / Thrust: <strong>${st.dps || 80} DPS / ${st.thrust || 200} kN</strong><br>
+                        Mass: <strong>${st.mass || 150} TONS</strong>
+                    `;
+                }
+                const btnLoad = document.getElementById('btn-rfms-load-peer-bp');
+                if (btnLoad) btnLoad.disabled = false;
+            },
+
+            loadPeerBlueprintIntoYard() {
+                if (!this.peerBlueprint) {
+                    showToast('NO PEER BLUEPRINT AVAILABLE');
+                    return;
+                }
+                if (typeof this.peerBlueprint === 'string' && ['interceptor', 'dreadnought', 'harvester'].includes(this.peerBlueprint)) {
+                    starforgeExpansion.loadPreset(this.peerBlueprint);
+                    showToast(`LOADED PEER ARCHETYPE (${this.peerBlueprint.toUpperCase()}) INTO YARD`);
+                    audio.playSuccess?.();
+                    document.getElementById('rfms-fleet-modal').style.display = 'none';
+                } else if (starforgeExpansion.loadBlueprintCode(this.peerBlueprint)) {
+                    showToast(`PEER BLUEPRINT LOADED INTO YARD GRID!`);
+                    audio.playSuccess?.();
+                    document.getElementById('rfms-fleet-modal').style.display = 'none';
+                }
+            },
+
+            launchTacticalSkirmish() {
+                document.getElementById('rfms-fleet-modal').style.display = 'none';
+                document.querySelector('.nav-btn[data-target="flight-view"]')?.click();
+
+                const st = this.peerStats || {
+                    shipName: 'Corsair Elite Flagship',
+                    hull: 600,
+                    shields: 400
+                };
+
+                flightSim.skirmish = {
+                    active: true,
+                    isAi: this.status !== 'connected',
+                    rivalName: st.shipName || 'Rival Flagship',
+                    pilotName: this.peerName || 'Aegis AI Architect',
+                    hull: st.hull || 500,
+                    maxHull: st.hull || 500,
+                    shield: st.shields || 300,
+                    maxShield: st.shields || 300,
+                    x: flightCanvas.width ? flightCanvas.width / 2 : 400,
+                    y: 90,
+                    vx: 0,
+                    vy: 0,
+                    angle: Math.PI / 2,
+                    shootTimer: 35
+                };
+
+                showToast(`⚔️ TACTICAL SKIRMISH ENGAGED VS ${flightSim.skirmish.pilotName}`);
+                audio.playClick?.();
+            }
+        };
+
+
+        // --- VFS Mesh & RFMS Event Affordances ---
+        document.getElementById('btn-vfs-blueprints')?.addEventListener('click', () => {
+            audio.playClick?.();
+            closeAllModals();
+            document.getElementById('vfs-blueprint-modal').style.display = 'flex';
+        });
+
+        document.getElementById('btn-vfs-close')?.addEventListener('click', () => {
+            document.getElementById('vfs-blueprint-modal').style.display = 'none';
+        });
+        document.getElementById('btn-vfs-done')?.addEventListener('click', () => {
+            document.getElementById('vfs-blueprint-modal').style.display = 'none';
+        });
+
+        document.getElementById('btn-vfs-save-action')?.addEventListener('click', () => {
+            const fname = document.getElementById('vfs-save-filename')?.value?.trim();
+            starforgeVFS.saveActiveBlueprint(fname);
+        });
+
+        document.getElementById('btn-vfs-load-action')?.addEventListener('click', () => {
+            const p = document.getElementById('vfs-load-path')?.value?.trim();
+            starforgeVFS.loadBlueprintFromPath(p);
+        });
+
+        document.getElementById('btn-vfs-picker-action')?.addEventListener('click', () => {
+            starforgeVFS.openPicker();
+        });
+
+        document.getElementById('btn-vfs-launch-khex')?.addEventListener('click', () => {
+            starforgeVFS.launchWorkstation('khex');
+        });
+        document.getElementById('btn-vfs-launch-kpad')?.addEventListener('click', () => {
+            starforgeVFS.launchWorkstation('kpad');
+        });
+        document.getElementById('btn-vfs-launch-kexplorer')?.addEventListener('click', () => {
+            starforgeVFS.launchWorkstation('kexplorer');
+        });
+
+        // RFMS Subnet modal actions
+        document.getElementById('btn-rfms-multiplayer')?.addEventListener('click', () => {
+            audio.playClick?.();
+            closeAllModals();
+            starforgeMultiplayer.init();
+            const s = state.stats;
+            const mySpec = document.getElementById('rfms-my-spec-preview');
+            if (mySpec) {
+                mySpec.innerHTML = `
+                    Class: <strong style="color: #38bdf8;">${document.getElementById('ship-class-badge')?.textContent || 'CORVETTE'}</strong><br>
+                    Hull / Shield: <strong>${s.hp || 450} HP / ${s.shields || 300} SP</strong><br>
+                    Firepower / Thrust: <strong>${s.dps || 60} DPS / ${s.thrust || 180} kN</strong><br>
+                    Mass: <strong>${s.mass || 140} TONS</strong>
+                `;
+            }
+            document.getElementById('rfms-fleet-modal').style.display = 'flex';
+        });
+
+        document.getElementById('btn-rfms-close')?.addEventListener('click', () => {
+            document.getElementById('rfms-fleet-modal').style.display = 'none';
+        });
+        document.getElementById('btn-rfms-done')?.addEventListener('click', () => {
+            document.getElementById('rfms-fleet-modal').style.display = 'none';
+        });
+
+        document.getElementById('btn-rfms-quickmatch')?.addEventListener('click', () => {
+            starforgeMultiplayer.startQuickMatch();
+        });
+
+        document.getElementById('btn-rfms-host')?.addEventListener('click', () => {
+            starforgeMultiplayer.hostRoom();
+        });
+
+        document.getElementById('btn-rfms-join-code')?.addEventListener('click', () => {
+            starforgeMultiplayer.joinRoom();
+        });
+
+        document.getElementById('btn-rfms-disconnect')?.addEventListener('click', () => {
+            starforgeMultiplayer.disconnect();
+        });
+
+        document.getElementById('btn-rfms-instant-ai')?.addEventListener('click', () => {
+            starforgeMultiplayer.activateAiRival('Aegis AI Fleet Architect');
+        });
+
+        document.getElementById('btn-rfms-broadcast-bp')?.addEventListener('click', () => {
+            starforgeMultiplayer.broadcastBlueprint();
+        });
+
+        document.getElementById('btn-rfms-load-peer-bp')?.addEventListener('click', () => {
+            starforgeMultiplayer.loadPeerBlueprintIntoYard();
+        });
+
+        document.getElementById('btn-rfms-launch-skirmish')?.addEventListener('click', () => {
+            starforgeMultiplayer.launchTacticalSkirmish();
+        });
+
+        document.getElementById('btn-hud-skirmish')?.addEventListener('click', () => {
+            if (starforgeMultiplayer.status !== 'connected' && starforgeMultiplayer.status !== 'ai') {
+                starforgeMultiplayer.activateAiRival('Corsair AI Flagship');
+            }
+            starforgeMultiplayer.launchTacticalSkirmish();
+        });
+
+        // Key shortcuts for VFS [V], Subnet [G], and Skirmish [K]
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            const key = e.key.toLowerCase();
+            if (key === 'v') {
+                document.getElementById('btn-vfs-blueprints')?.click();
+            } else if (key === 'g') {
+                document.getElementById('btn-rfms-multiplayer')?.click();
+            } else if (key === 'k') {
+                document.getElementById('btn-hud-skirmish')?.click();
             }
         });
 
