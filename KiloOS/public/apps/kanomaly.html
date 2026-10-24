@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KAnomaly - Subterranean Signal Analyzer v1.0.0</title>
+<script src="../assets/js/retro_multiplayer.js"></script>
 <style>
   :root {
     --bg-main: #060e0a;
@@ -564,6 +565,8 @@
       <button class="kbtn" id="btnLoadState" title="Quickload [F9]">LOAD [F9]</button>
       <button class="kbtn" id="btnExportJson">EXPORT</button>
       <button class="kbtn" id="btnImportJson">IMPORT</button>
+      <button class="kbtn" id="btnMeshModal" title="Distributed Geophone Network (RFMS)">🌐 MESH</button>
+      <button class="kbtn alert" id="btnVfsExportHeader" title="Export Signal Frame to KiloOS VFS (/sys/anomaly_capture.sig)">💾 VFS SIG</button>
       <button class="kbtn alert" id="btnHelpModal">HELP [F1]</button>
     </div>
   </header>
@@ -720,20 +723,30 @@
             <div class="telemetry-row"><span class="telemetry-label">SIGNAL-TO-NOISE:</span><span class="telemetry-value" id="decMetricSnr">+24 dB</span></div>
             <div class="telemetry-row"><span class="telemetry-label">DOPPLER DRIFT:</span><span class="telemetry-value" id="decMetricDoppler">-0.02 Hz/s</span></div>
             <div class="telemetry-row"><span class="telemetry-label">MODULATION INDEX:</span><span class="telemetry-value" id="decMetricMod">1.42 (FSK)</span></div>
+            <div class="telemetry-row"><span class="telemetry-label">DETECTED FREQ:</span><span class="telemetry-value" id="decMetricFreq">10.19 kHz</span></div>
+            <div class="telemetry-row"><span class="telemetry-label">FREQ OFFSET (Δf):</span><span class="telemetry-value" id="decMetricOffset">0.00 kHz</span></div>
           </div>
           <div class="telemetry-card" style="border: 1px solid var(--border);">
             <div class="telemetry-row"><span class="telemetry-label">PACKET PREAMBLE:</span><span class="telemetry-value" id="decMetricPreamble">0x7F1999 (VALID)</span></div>
             <div class="telemetry-row"><span class="telemetry-label">FRAME INTEGRITY:</span><span class="telemetry-value" id="decMetricCrc">CRC32 OK</span></div>
+            <div class="telemetry-row"><span class="telemetry-label">STRATA DEPTH FIX:</span><span class="telemetry-value" id="decMetricDepth">3,420 m</span></div>
             <div class="telemetry-row"><span class="telemetry-label">TRANSMISSION ORIGIN:</span><span class="telemetry-value" id="decMetricOrigin">10.19.99.4 [SUB-7F]</span></div>
-            <div class="telemetry-row"><span class="telemetry-label">LUDONARRATIVE CONSONANCE:</span><span class="telemetry-value" id="decMetricLore" style="color: var(--amber);">ACTIVE</span></div>
+            <div class="telemetry-row"><span class="telemetry-label">LUDONARRATIVE LORE:</span><span class="telemetry-value" id="decMetricLore" style="color: var(--amber);">ACTIVE</span></div>
           </div>
         </div>
 
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px;">
+          <button class="kbtn alert" id="btnVfsSaveSig" title="Save Demodulated Signal Frame to KiloOS VFS">💾 SAVE TO VFS (/sys/anomaly_capture.sig)</button>
+          <button class="kbtn" id="btnIpcKHex" title="Open Signal Stream in KHex Byte Editor">📡 SEND TO KHEX</button>
+          <button class="kbtn" id="btnIpcKMatrix" title="Open Signal Stream in KMatrix Disassembler">🌐 SEND TO KMATRIX</button>
+          <button class="kbtn" id="btnCopyAscii" title="Copy ASCII Stream to Clipboard">📋 COPY ASCII</button>
+        </div>
+
         <div style="font-weight: bold; font-size: 11px; color: var(--cyan);">RAW STREAM HEX DUMP:</div>
-        <div class="terminal-box" id="hexStreamBox" style="height: 140px; font-family: 'Consolas', monospace; font-size: 11px;"></div>
+        <div class="terminal-box" id="hexStreamBox" style="height: 120px; font-family: 'Consolas', monospace; font-size: 11px;"></div>
 
         <div style="font-weight: bold; font-size: 11px; color: var(--cyan);">DECODED ASCII TELEMETRY STREAM:</div>
-        <div class="terminal-box" id="asciiStreamBox" style="height: 120px; font-family: 'Consolas', monospace; font-size: 12px; color: var(--phosphor);"></div>
+        <div class="terminal-box" id="asciiStreamBox" style="height: 100px; font-family: 'Consolas', monospace; font-size: 12px; color: var(--phosphor);"></div>
       </div>
     </div>
 
@@ -840,6 +853,42 @@
   </footer>
 </div>
 
+<!-- Lithosphere Geophone Network Modal (RFMS) -->
+<div class="modal-overlay" id="meshModal">
+  <div class="modal-box" style="max-width: 540px;">
+    <div class="modal-header">
+      <span>DISTRIBUTED GEOPHONE SENSOR MESH (RFMS)</span>
+      <button class="kbtn alert" id="btnCloseMesh">✕</button>
+    </div>
+    <div class="modal-body" style="display: flex; flex-direction: column; gap: 10px;">
+      <p style="font-size: 11px; color: var(--phosphor-dim);">
+        Connect to the distributed deep-borehole seismic sensor mesh. Peer stations share live carrier locks, harmonic sweep telemetry, and triangulation vectors.
+      </p>
+      <div style="background: rgba(0,0,0,0.5); border: 1px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--cyan);">MESH STATUS:</span>
+          <span id="meshStatusText" style="color: var(--amber); font-weight: bold;">OFFLINE (LOCAL ARRAY)</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--cyan);">NETWORK PEERS:</span>
+          <span id="meshPeerCount">0 stations linked</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--cyan);">SHARED CARRIERS:</span>
+          <span id="meshSharedCount">0 signals in pool</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="kbtn active" id="btnMeshConnect" style="flex: 1;">CONNECT TO SEISMIC MESH</button>
+        <button class="kbtn" id="btnMeshBroadcast" style="flex: 1;" disabled>BROADCAST CURRENT LOCK</button>
+      </div>
+      <div style="font-size: 10px; color: var(--amber);">
+        * Note: Offline mode active by default. If no peers are detected after 25s, connection automatically bridges to Simulated Deep Crust Node (BH-09 Kola Sub-Ring).
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Operator Manual Modal -->
 <div class="modal-overlay" id="helpModal">
   <div class="modal-box">
@@ -863,15 +912,20 @@
       <p style="margin-bottom: 10px;">
         12 subterranean anomalies exist within the lithospheric static. Decoded packets reveal darknet node relays (e.g. <code>10.19.99.4</code> from Carlsbad Bunker 0x7F) and anomalous clock cycles (<code>FLEET_CYCLE_1999</code>). When cataloging anomalies, use the Triangulation Map to pinpoint the epicenter!
       </p>
-      <h3 style="color: var(--cyan); margin-bottom: 6px;">4. Keyboard Shortcuts</h3>
+      <h3 style="color: var(--cyan); margin-bottom: 6px;">4. Precision Tuning, VFS Mesh & Shortcuts</h3>
       <p>
+        <code>[←] / [→]</code> — Fine Frequency Step (&plusmn;0.10 kHz)<br>
+        <code>[Shift + ←/→]</code> — Ultra-Fine Precision Tuning (&plusmn;0.01 kHz)<br>
+        <code>[↑] / [↓]</code> — Fast Band Step (&plusmn;1.00 kHz)<br>
+        <code>[Mouse Wheel]</code> — Continuous Precision Dial Tuning<br>
         <code>[F1]</code> or <code>[H]</code> — Open/Close Operator Manual<br>
         <code>[F5]</code> — Quicksave State to Local Storage<br>
         <code>[F9]</code> — Quickload State from Local Storage<br>
         <code>[Space]</code> — Toggle Auto-Sweep Frequency Sweep<br>
         <code>[1] - [4]</code> — Switch Navigation Tabs<br>
         <code>[M]</code> — Toggle Procedural Audio Mute<br>
-        <code>[Esc]</code> — Dismiss any open dialog / tutorial
+        <code>[Esc]</code> — Dismiss any open dialog / tutorial<br>
+        <em>VFS & IPC: Intercepted signals export directly to <code>/sys/anomaly_capture.sig</code> for analysis in KHex or KMatrix.</em>
       </p>
     </div>
     <div class="modal-footer">
@@ -1126,13 +1180,46 @@
   offCtx.fillStyle = "#000";
   offCtx.fillRect(0, 0, WF_COLS, WF_ROWS);
 
-  // Resize handling
+  // KiloOS VFS & Cross-App IPC Bridge (graceful no-op when standalone)
+  var KiloVFS = {
+    write: function(path, data) {
+      try {
+        var content = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+        window.parent.postMessage({ type: "VFS_WRITE", path: path, data: content, requestId: "w_" + Date.now() }, "*");
+        window.parent.postMessage({ type: "OS_NOTIFY", title: document.title, message: "Saved to VFS: " + path }, "*");
+      } catch (e) {}
+    },
+    read: function(path, cb) {
+      var reqId = "r_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+      var handler = function(e) {
+        if (e.data && e.data.type === "VFS_READ_DONE" && e.data.requestId === reqId) {
+          window.removeEventListener("message", handler);
+          cb(e.data.data, e.data.path);
+        }
+      };
+      window.addEventListener("message", handler);
+      try { window.parent.postMessage({ type: "VFS_READ", path: path, requestId: reqId }, "*"); } catch (e) {}
+    },
+    launchApp: function(targetApp, path) {
+      try { window.parent.postMessage({ type: "OS_LAUNCH_APP", targetApp: targetApp, path: path || "" }, "*"); } catch (e) {}
+    }
+  };
+
+  // Resize handling with HiDPI support
   function resizeCanvases() {
+    var dpr = window.devicePixelRatio || 1;
     var canvases = [wfCanvas, scopeCanvas, fftCanvas, triCanvas];
     canvases.forEach(function(c) {
       if (c && c.parentElement) {
-        c.width = c.parentElement.clientWidth;
-        c.height = c.parentElement.clientHeight;
+        var rect = c.parentElement.getBoundingClientRect();
+        var w = Math.floor(rect.width);
+        var h = Math.floor(rect.height);
+        if (w > 0 && h > 0) {
+          c.width = Math.round(w * dpr);
+          c.height = Math.round(h * dpr);
+          c.style.width = w + "px";
+          c.style.height = h + "px";
+        }
       }
     });
   }
@@ -1209,6 +1296,19 @@
     var lockBox = document.getElementById("lockStatusBox");
     var footStatus = document.getElementById("footStatus");
 
+    // Update Decoder tab labels & comprehensive telemetry metrics
+    var decLock = document.getElementById("decMetricLock");
+    var decSnr = document.getElementById("decMetricSnr");
+    var decDoppler = document.getElementById("decMetricDoppler");
+    var decMod = document.getElementById("decMetricMod");
+    var decFreq = document.getElementById("decMetricFreq");
+    var decOffset = document.getElementById("decMetricOffset");
+    var decPreamble = document.getElementById("decMetricPreamble");
+    var decCrc = document.getElementById("decMetricCrc");
+    var decDepth = document.getElementById("decMetricDepth");
+    var decOrigin = document.getElementById("decMetricOrigin");
+    var decLore = document.getElementById("decMetricLore");
+
     if (state.carrierLocked && state.lockedAnomaly) {
       var anom = state.lockedAnomaly;
       lockBox.className = "lock-indicator locked";
@@ -1219,9 +1319,24 @@
       // Update Decoder tab labels
       document.getElementById("decoderLockLabel").textContent = "CARRIER LOCKED: " + anom.id;
       document.getElementById("decoderLockLabel").style.color = "var(--alert)";
-      document.getElementById("decMetricLock").textContent = "99.4%";
-      document.getElementById("decMetricSnr").textContent = "+" + state.snrDb + " dB";
-      document.getElementById("decMetricOrigin").textContent = anom.sig.indexOf("10.19") !== -1 ? "10.19.99.4 [SUB-7F]" : "Lithosphere Waveguide";
+
+      var curStation = STATIONS[state.stationIdx];
+      var diffKhz = +(state.freq - anom.freq).toFixed(2);
+
+      if (decLock) decLock.textContent = "99.4% (CARRIER SYNCHRONIZED)";
+      if (decSnr) decSnr.textContent = "+" + state.snrDb + " dB";
+      if (decDoppler) decDoppler.textContent = (diffKhz < 0 ? "-" : "+") + (Math.abs(diffKhz) * 0.12).toFixed(3) + " Hz/s";
+      if (decMod) decMod.textContent = anom.mode + " / " + state.demodMode;
+      if (decFreq) decFreq.textContent = anom.freq.toFixed(2) + " kHz";
+      if (decOffset) decOffset.textContent = (diffKhz >= 0 ? "+" : "") + diffKhz + " kHz";
+      if (decPreamble) decPreamble.textContent = "0x7F1999 [VALID]";
+      if (decCrc) decCrc.textContent = "CRC32 PASS (MATCH)";
+      if (decDepth) decDepth.textContent = curStation.depth.toLocaleString() + " m (" + curStation.strata + ")";
+      if (decOrigin) decOrigin.textContent = anom.sig.indexOf("10.19") !== -1 ? "10.19.99.4 [SUB-7F CARLSBAD]" : (curStation.id + " // " + curStation.name);
+      if (decLore) {
+        decLore.textContent = anom.name.toUpperCase();
+        decLore.style.color = "var(--amber)";
+      }
     } else {
       lockBox.className = "lock-indicator";
       lockBox.textContent = "[ STANDBY // TUNING PASSBAND ]";
@@ -1230,8 +1345,21 @@
 
       document.getElementById("decoderLockLabel").textContent = "NO CARRIER";
       document.getElementById("decoderLockLabel").style.color = "var(--phosphor-dim)";
-      document.getElementById("decMetricLock").textContent = "0.0%";
-      document.getElementById("decMetricSnr").textContent = "-4 dB";
+
+      if (decLock) decLock.textContent = "0.0% (PASSBAND SEARCHING)";
+      if (decSnr) decSnr.textContent = "-4 dB (NOISE FLOOR)";
+      if (decDoppler) decDoppler.textContent = "0.000 Hz/s";
+      if (decMod) decMod.textContent = state.demodMode + " (AWAITING LOCK)";
+      if (decFreq) decFreq.textContent = state.freq.toFixed(2) + " kHz";
+      if (decOffset) decOffset.textContent = "0.00 kHz";
+      if (decPreamble) decPreamble.textContent = "NONE / STATIC";
+      if (decCrc) decCrc.textContent = "AWAITING LOCK";
+      if (decDepth) decDepth.textContent = STATIONS[state.stationIdx].depth.toLocaleString() + " m";
+      if (decOrigin) decOrigin.textContent = "Lithosphere Ambient Noise";
+      if (decLore) {
+        decLore.textContent = "STANDBY";
+        decLore.style.color = "var(--phosphor-dim)";
+      }
     }
   }
 
@@ -1344,9 +1472,10 @@
     wfCtx.imageSmoothingEnabled = false;
     wfCtx.drawImage(offCanvas, 0, 0, wfCanvas.width, wfCanvas.height);
 
-    // Draw Reticle Line & Bandpass Bracket Overlay
+    // Draw Reticle Line & Bandpass Bracket Overlay (HiDPI crisp scaling)
+    var dpr = window.devicePixelRatio || 1;
     wfCtx.strokeStyle = "rgba(255, 60, 60, 0.85)";
-    wfCtx.lineWidth = 1;
+    wfCtx.lineWidth = Math.max(1, Math.round(dpr));
     var cx = wfCanvas.width / 2;
     wfCtx.beginPath();
     wfCtx.moveTo(cx, 0);
@@ -1354,9 +1483,9 @@
     wfCtx.stroke();
 
     // Bandpass brackets
-    var bwPx = (state.bandwidth === 50 ? 16 : (state.bandwidth === 250 ? 44 : 110));
+    var bwPx = (state.bandwidth === 50 ? 16 : (state.bandwidth === 250 ? 44 : 110)) * dpr;
     wfCtx.strokeStyle = "rgba(51, 204, 255, 0.7)";
-    wfCtx.setLineDash([4, 4]);
+    wfCtx.setLineDash([4 * dpr, 4 * dpr]);
     wfCtx.beginPath();
     wfCtx.moveTo(cx - bwPx / 2, 0);
     wfCtx.lineTo(cx - bwPx / 2, wfCanvas.height);
@@ -2023,7 +2152,216 @@
       if (tabButtons[tabIdx]) tabButtons[tabIdx].click();
       return;
     }
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      stepFrequency(e.shiftKey ? -0.01 : -0.10);
+      return;
+    }
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      stepFrequency(e.shiftKey ? 0.01 : 0.10);
+      return;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      stepFrequency(1.0);
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      stepFrequency(-1.0);
+      return;
+    }
   });
+
+  // --- VFS & IPC Handlers ---
+  function exportSignalToVfs() {
+    var station = STATIONS[state.stationIdx];
+    var payload = {
+      format: "KANOMALY_SIGNAL_V1",
+      timestamp: new Date().toISOString(),
+      station: {
+        id: station.id,
+        name: station.name,
+        depth_m: station.depth,
+        strata: station.strata,
+        lat: station.lat,
+        lon: station.lon
+      },
+      receiver: {
+        tunedFreqKhz: state.freq,
+        demodMode: state.demodMode,
+        bandwidthHz: state.bandwidth,
+        carrierLocked: state.carrierLocked,
+        snrDb: state.snrDb
+      },
+      lockedAnomaly: state.lockedAnomaly ? {
+        id: state.lockedAnomaly.id,
+        name: state.lockedAnomaly.name,
+        freq: state.lockedAnomaly.freq,
+        mode: state.lockedAnomaly.mode,
+        sig: state.lockedAnomaly.sig,
+        lore: state.lockedAnomaly.lore
+      } : null,
+      telemetryStream: {
+        hexDump: hexBytes.slice(-32),
+        asciiStream: (document.getElementById("asciiStreamBox") || {}).textContent || ""
+      }
+    };
+    var path = "/sys/anomaly_capture.sig";
+    KiloVFS.write(path, payload);
+    logTerminal("[VFS EXPORT] Intercepted signal written to " + path, "alert");
+    return path;
+  }
+
+  var btnVfsSave = document.getElementById("btnVfsSaveSig");
+  if (btnVfsSave) btnVfsSave.addEventListener("click", exportSignalToVfs);
+
+  var btnVfsHdr = document.getElementById("btnVfsExportHeader");
+  if (btnVfsHdr) btnVfsHdr.addEventListener("click", exportSignalToVfs);
+
+  var btnKHex = document.getElementById("btnIpcKHex");
+  if (btnKHex) {
+    btnKHex.addEventListener("click", function() {
+      var path = exportSignalToVfs();
+      KiloVFS.launchApp("khex", path);
+      logTerminal("[IPC LAUNCH] Opening " + path + " in KHex Byte Editor...", "cyan");
+    });
+  }
+
+  var btnKMatrix = document.getElementById("btnIpcKMatrix");
+  if (btnKMatrix) {
+    btnKMatrix.addEventListener("click", function() {
+      var path = exportSignalToVfs();
+      KiloVFS.launchApp("kmatrix", path);
+      logTerminal("[IPC LAUNCH] Opening " + path + " in KMatrix Disassembler...", "cyan");
+    });
+  }
+
+  var btnCopyStream = document.getElementById("btnCopyAscii");
+  if (btnCopyStream) {
+    btnCopyStream.addEventListener("click", function() {
+      var text = (document.getElementById("asciiStreamBox") || {}).textContent || "";
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      }
+      logTerminal("[CLIPBOARD] Decoded ASCII telemetry stream copied.", "dim");
+    });
+  }
+
+  // --- Frequency Tuner Mouse Wheel Precision ---
+  function attachWheelTuner(el) {
+    if (!el) return;
+    el.addEventListener("wheel", function(e) {
+      e.preventDefault();
+      var delta = e.deltaY < 0 ? 1 : -1;
+      var step = e.shiftKey ? 0.01 : (e.ctrlKey ? 1.0 : 0.05);
+      stepFrequency(+(delta * step).toFixed(2));
+    }, { passive: false });
+  }
+  attachWheelTuner(document.getElementById("freqDisplay"));
+  attachWheelTuner(document.querySelector(".tuner-bar"));
+  attachWheelTuner(document.getElementById("waterfallCanvas"));
+
+  // --- RFMS Multiplayer Geophone Mesh ---
+  var meshState = {
+    active: false,
+    peers: 0,
+    rfms: null,
+    sharedCount: 0
+  };
+
+  var btnMeshOpen = document.getElementById("btnMeshModal");
+  if (btnMeshOpen) {
+    btnMeshOpen.addEventListener("click", function() {
+      document.getElementById("meshModal").classList.add("active");
+    });
+  }
+  var btnMeshClose = document.getElementById("btnCloseMesh");
+  if (btnMeshClose) {
+    btnMeshClose.addEventListener("click", function() {
+      document.getElementById("meshModal").classList.remove("active");
+    });
+  }
+
+  var btnMeshConn = document.getElementById("btnMeshConnect");
+  var btnMeshBrd = document.getElementById("btnMeshBroadcast");
+  var meshStatus = document.getElementById("meshStatusText");
+  var meshPeers = document.getElementById("meshPeerCount");
+  var meshShared = document.getElementById("meshSharedCount");
+
+  if (btnMeshConn) {
+    btnMeshConn.addEventListener("click", function() {
+      if (meshState.active) {
+        meshState.active = false;
+        meshStatus.textContent = "OFFLINE (LOCAL ARRAY)";
+        meshStatus.style.color = "var(--amber)";
+        btnMeshConn.textContent = "CONNECT TO SEISMIC MESH";
+        if (btnMeshBrd) btnMeshBrd.disabled = true;
+        logTerminal("[SEISMIC MESH] Disconnected from distributed borehole network.", "dim");
+        return;
+      }
+
+      meshStatus.textContent = "NEGOTIATING PEER HANDSHAKE...";
+      meshStatus.style.color = "var(--cyan)";
+      btnMeshConn.disabled = true;
+
+      if (window.RetroMultiplayer) {
+        meshState.rfms = window.RetroMultiplayer.createSession({
+          room: "kanomaly-lithosphere-mesh",
+          soloTimeoutMs: 25000,
+          onSoloFallback: function() {
+            meshStatus.textContent = "SIMULATED DEEP CRUST NODE [BH-09]";
+            meshStatus.style.color = "var(--phosphor)";
+            if (meshPeers) meshPeers.textContent = "1 node linked (Simulated Autonomous Relay)";
+            logTerminal("[SEISMIC MESH] Solo fallback: Linked to Kola BH-09 Autonomous Echo Node.", "warn");
+          },
+          onPeerJoin: function(peer) {
+            meshState.peers++;
+            if (meshPeers) meshPeers.textContent = meshState.peers + " station(s) linked";
+            logTerminal("[SEISMIC MESH] Remote geophone linked: " + ((peer && peer.id) || "Peer Probe"), "alert");
+          },
+          onMessage: function(msg) {
+            if (msg && msg.type === "ANOMALY_BEACON") {
+              meshState.sharedCount++;
+              if (meshShared) meshShared.textContent = meshState.sharedCount + " signals in pool";
+              logTerminal("[MESH INCOMING] Remote probe locked " + msg.anomalyId + " @ " + msg.freq.toFixed(2) + " kHz!", "alert");
+            }
+          }
+        });
+      }
+
+      setTimeout(function() {
+        meshState.active = true;
+        btnMeshConn.disabled = false;
+        btnMeshConn.textContent = "DISCONNECT FROM MESH";
+        if (btnMeshBrd) btnMeshBrd.disabled = false;
+        if (meshStatus.textContent.indexOf("SIMULATED") === -1) {
+          meshStatus.textContent = "ONLINE // GLOBAL MESH ACTIVE";
+          meshStatus.style.color = "var(--phosphor)";
+        }
+        logTerminal("[SEISMIC MESH] Connected to RFMS Lithosphere Geophone Network.", "alert");
+      }, 600);
+    });
+  }
+
+  if (btnMeshBrd) {
+    btnMeshBrd.addEventListener("click", function() {
+      if (!meshState.active) return;
+      var anom = state.lockedAnomaly;
+      var payload = {
+        type: "ANOMALY_BEACON",
+        anomalyId: anom ? anom.id : "NOISE_FLOOR",
+        freq: state.freq,
+        stationId: STATIONS[state.stationIdx].id,
+        timestamp: Date.now()
+      };
+      if (meshState.rfms && typeof meshState.rfms.broadcast === "function") {
+        meshState.rfms.broadcast(payload);
+      }
+      logTerminal("[SEISMIC MESH] Broadcasted frequency telemetry (" + state.freq.toFixed(2) + " kHz) to peer mesh.", "cyan");
+    });
+  }
 
   // Initialize
   updateStationInfo();

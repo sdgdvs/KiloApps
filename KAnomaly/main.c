@@ -63,6 +63,7 @@ static void k_itoa(int val, char* buf) {
 #define ID_BTN_TRIANGULATE  113
 #define ID_BTN_CLEAR_LOG    114
 #define ID_EDIT_LOG         115
+#define ID_BTN_EXPORT_SIG   116
 
 #define TIMER_TICK          1
 
@@ -164,6 +165,7 @@ static void UpdateTelemetryUI(void);
 static void CheckSignalLock(void);
 static void QuickSaveState(void);
 static void QuickLoadState(void);
+static void ExportSignalFrame(void);
 static void ShowHelp(HWND hwnd);
 
 // Simple pseudo-random generator
@@ -564,6 +566,57 @@ static void QuickLoadState(void) {
     AppendLog("[STATE PERSISTENCE] Session restored from kanomaly.dat [F9]");
 }
 
+static void ExportSignalFrame(void) {
+    HANDLE hFile = CreateFileA(
+        "anomaly_capture.sig",
+        GENERIC_WRITE,
+        0,
+        NULL,
+        CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL,
+        NULL
+    );
+    if (hFile == INVALID_HANDLE_VALUE) {
+        AppendLog("[SIGNAL EXPORT ERROR] Unable to open anomaly_capture.sig");
+        return;
+    }
+
+    char buf[1024];
+    char fstr[32];
+    FormatFreq(g_freq_centikhz, fstr);
+
+    k_strcpy(buf, "--- KANOMALY SUBTERRANEAN SIGNAL FRAME ---\r\n");
+    k_strcat(buf, "STATION: ");
+    k_strcat(buf, g_stations[g_curr_station].name);
+    k_strcat(buf, "\r\nSTRATA: ");
+    k_strcat(buf, g_stations[g_curr_station].strata);
+    k_strcat(buf, "\r\nFREQUENCY: ");
+    k_strcat(buf, fstr);
+    k_strcat(buf, "\r\nMODE: ");
+    k_strcat(buf, g_mode_names[g_mode_idx]);
+    k_strcat(buf, "\r\nBANDWIDTH: ");
+    k_strcat(buf, g_bandwidth_names[g_bandwidth_idx]);
+    k_strcat(buf, "\r\nCARRIER LOCK: ");
+    if (g_carrier_locked && g_locked_anom_idx >= 0) {
+        k_strcat(buf, "YES (");
+        k_strcat(buf, g_anomalies[g_locked_anom_idx].id);
+        k_strcat(buf, " - ");
+        k_strcat(buf, g_anomalies[g_locked_anom_idx].name);
+        k_strcat(buf, ")\r\nPAYLOAD: ");
+        k_strcat(buf, g_anomalies[g_locked_anom_idx].decoded_sig);
+        k_strcat(buf, "\r\nLORE: ");
+        k_strcat(buf, g_anomalies[g_locked_anom_idx].lore);
+        k_strcat(buf, "\r\n");
+    } else {
+        k_strcat(buf, "NO (STANDBY // AMBIENT NOISE FLOOR)\r\n");
+    }
+
+    DWORD written;
+    WriteFile(hFile, buf, (DWORD)k_strlen(buf), &written, NULL);
+    CloseHandle(hFile);
+    AppendLog("[SIGNAL EXPORT] Intercepted signal written to anomaly_capture.sig");
+}
+
 static void ShowHelp(HWND hwnd) {
     MessageBoxA(
         hwnd,
@@ -601,20 +654,21 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             g_hFontSmall = CreateFontA(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
 
             // Buttons Toolbar
-            CreateWindowA("BUTTON", "< Stn", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 10, 50, 24, hwnd, (HMENU)ID_BTN_STATION_PREV, NULL, NULL);
-            CreateWindowA("BUTTON", "Stn >", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 65, 10, 50, 24, hwnd, (HMENU)ID_BTN_STATION_NEXT, NULL, NULL);
-            CreateWindowA("BUTTON", "<< -1k", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 125, 10, 55, 24, hwnd, (HMENU)ID_BTN_FREQ_DOWN_L, NULL, NULL);
-            CreateWindowA("BUTTON", "< -0.1k", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 185, 10, 55, 24, hwnd, (HMENU)ID_BTN_FREQ_DOWN_S, NULL, NULL);
-            CreateWindowA("BUTTON", "+0.1k >", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 245, 10, 55, 24, hwnd, (HMENU)ID_BTN_FREQ_UP_S, NULL, NULL);
-            CreateWindowA("BUTTON", "+1k >>", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 305, 10, 55, 24, hwnd, (HMENU)ID_BTN_FREQ_UP_L, NULL, NULL);
-            CreateWindowA("BUTTON", "Sweep", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 370, 10, 60, 24, hwnd, (HMENU)ID_BTN_SWEEP, NULL, NULL);
+            CreateWindowA("BUTTON", "< Stn", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 8, 10, 46, 24, hwnd, (HMENU)ID_BTN_STATION_PREV, NULL, NULL);
+            CreateWindowA("BUTTON", "Stn >", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 56, 10, 46, 24, hwnd, (HMENU)ID_BTN_STATION_NEXT, NULL, NULL);
+            CreateWindowA("BUTTON", "<< -1k", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 106, 10, 50, 24, hwnd, (HMENU)ID_BTN_FREQ_DOWN_L, NULL, NULL);
+            CreateWindowA("BUTTON", "< -0.1k", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 158, 10, 50, 24, hwnd, (HMENU)ID_BTN_FREQ_DOWN_S, NULL, NULL);
+            CreateWindowA("BUTTON", "+0.1k >", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 210, 10, 50, 24, hwnd, (HMENU)ID_BTN_FREQ_UP_S, NULL, NULL);
+            CreateWindowA("BUTTON", "+1k >>", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 262, 10, 50, 24, hwnd, (HMENU)ID_BTN_FREQ_UP_L, NULL, NULL);
+            CreateWindowA("BUTTON", "Sweep", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 316, 10, 50, 24, hwnd, (HMENU)ID_BTN_SWEEP, NULL, NULL);
 
-            CreateWindowA("BUTTON", "Mode", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 440, 10, 55, 24, hwnd, (HMENU)ID_BTN_MODE, NULL, NULL);
-            CreateWindowA("BUTTON", "Filter", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 500, 10, 55, 24, hwnd, (HMENU)ID_BTN_BANDWIDTH, NULL, NULL);
-            CreateWindowA("BUTTON", "Triangulate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 565, 10, 85, 24, hwnd, (HMENU)ID_BTN_TRIANGULATE, NULL, NULL);
-            CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 660, 10, 70, 24, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
-            CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 735, 10, 70, 24, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
-            CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 810, 10, 70, 24, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            CreateWindowA("BUTTON", "Mode", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 370, 10, 48, 24, hwnd, (HMENU)ID_BTN_MODE, NULL, NULL);
+            CreateWindowA("BUTTON", "Filter", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 422, 10, 48, 24, hwnd, (HMENU)ID_BTN_BANDWIDTH, NULL, NULL);
+            CreateWindowA("BUTTON", "Triangulate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 474, 10, 80, 24, hwnd, (HMENU)ID_BTN_TRIANGULATE, NULL, NULL);
+            CreateWindowA("BUTTON", "Export SIG", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 558, 10, 78, 24, hwnd, (HMENU)ID_BTN_EXPORT_SIG, NULL, NULL);
+            CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 640, 10, 68, 24, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+            CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 712, 10, 68, 24, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
+            CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 784, 10, 68, 24, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             // Log Console (Bottom full width)
             g_hEditLog = CreateWindowExA(
@@ -729,6 +783,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 case ID_BTN_TRIANGULATE:
                     DoTriangulation();
                     break;
+                case ID_BTN_EXPORT_SIG:
+                    ExportSignalFrame();
+                    break;
                 case ID_BTN_SAVE:
                     QuickSaveState();
                     break;
@@ -742,12 +799,43 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             break;
         }
 
+        case WM_MOUSEWHEEL: {
+            short zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+            int step = (GetKeyState(VK_SHIFT) & 0x8000) ? 1 : 10;
+            if (zDelta > 0) StepFrequency(step);
+            else if (zDelta < 0) StepFrequency(-step);
+            InvalidateRect(hwnd, NULL, FALSE);
+            return 0;
+        }
+
         case WM_KEYDOWN: {
             if (wParam == VK_F1) { ShowHelp(hwnd); return 0; }
             if (wParam == VK_F5) { QuickSaveState(); return 0; }
             if (wParam == VK_F9) { QuickLoadState(); return 0; }
             if (wParam == VK_SPACE) {
                 g_is_sweeping = !g_is_sweeping;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_LEFT) {
+                int step = (GetKeyState(VK_SHIFT) & 0x8000) ? -1 : -10;
+                StepFrequency(step);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_RIGHT) {
+                int step = (GetKeyState(VK_SHIFT) & 0x8000) ? 1 : 10;
+                StepFrequency(step);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_UP) {
+                StepFrequency(100);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_DOWN) {
+                StepFrequency(-100);
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
@@ -809,6 +897,10 @@ void __cdecl MainEntry(void) {
             if (msg.wParam == VK_F9) { QuickLoadState(); continue; }
             if (msg.wParam == VK_SPACE) {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SWEEP, 0), 0);
+                continue;
+            }
+            if (msg.wParam == VK_LEFT || msg.wParam == VK_RIGHT || msg.wParam == VK_UP || msg.wParam == VK_DOWN) {
+                SendMessageA(hwnd, WM_KEYDOWN, msg.wParam, msg.lParam);
                 continue;
             }
         }

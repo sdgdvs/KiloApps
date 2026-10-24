@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T20:33:57-07:00 — kilo-graphics: KSanctuary (Vault Cutaway Visual Polish, Aspect Calibration & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 441.2 KB, native 258.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Audited visual assets: retro CRT vector UI, SVG room/dweller badges, and pixel cutaway canvas.
+  - Calibrated canvas aspect ratio (620:140) to eliminate distortion; eliminated audio init mutual recursion.
+  - Zero specular glints or traveling border dots verified across HTML and C.
+  - Handoff: Advanced `kilo-graphics` to `KSubmarine`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-23T20:20:55-07:00 — kilo-creator: kweb://deep-core (Phase VI VFS Bridge & KMatrix Passkey Verification)**
   - Status: PASS ✅ (0 errors, web 299.1 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Connected Tier 3 Ghost Node terminal to KiloOS VFS (/sys/alpha.sys & /home/crypto/).
