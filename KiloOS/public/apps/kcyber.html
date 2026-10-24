@@ -232,7 +232,7 @@
       <button class="deck-btn" onclick="toggleHelp()" title="Runner's Reference Manual [F1]">Help [F1]</button>
       <button class="deck-btn" onclick="showTutorial()" title="Deck Orientation Briefing">Briefing</button>
       <button class="deck-btn" onclick="processCommand('reboot')" title="Reboot Deck">Reboot</button>
-      <button class="deck-btn" id="audio-toggle-btn" onclick="toggleAudio()" title="Toggle FM Soundscape">BGM: ON</button>
+      <button class="deck-btn" id="audio-toggle-btn" onclick="toggleAudio()" title="Toggle FM Soundscape [M / Alt+M]">BGM: ON</button>
       <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="handleImportFile(event)">
     </div>
   </div>
@@ -323,15 +323,30 @@
 
     // =========================================================================
     // PROCEDURAL FM SYNTHESIS SOUNDSCAPE (YM2612 2-Op / SPC700 Architecture)
+    // 6-Channel Cyberpunk Netrunner Suite: Dorian Acid FM Bass, Amen Breakbeat,
+    // Cold Digital Bell Counterpoint, Shell Voicings, and Selective SPC700 Stereo Delay.
     // =========================================================================
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
     let masterGain = null;
     let masterFilter = null;
+    let snesDelayNode = null;
+    let snesFilterNode = null;
+    let snesFeedbackNode = null;
+
     let bgmTimer = null;
     let bgmEnabled = true;
     let bgmStep = 0;
-    let bgmBar = 0;
+
+    // Pitch constants (Hz)
+    const P_D1 = 36.71, P_F1 = 43.65, P_G1 = 49.00, P_A1 = 55.00, P_BB1 = 58.27, P_C2 = 65.41, P_CS2 = 69.30, P_D2 = 73.42, P_F2 = 87.31, P_G2 = 98.00, P_A2 = 110.00, P_BB2 = 116.54, P_C3 = 130.81;
+    const P_D4 = 293.66, P_E4 = 329.63, P_F4 = 349.23, P_G4 = 392.00, P_A4 = 440.00, P_BB4 = 466.16, P_C5 = 523.25, P_CS5 = 554.37;
+    const P_D5 = 587.33, P_E5 = 659.25, P_F5 = 698.46, P_G5 = 783.99, P_A5 = 880.00, P_BB5 = 932.33, P_C6 = 1046.50, P_D6 = 1174.66, P_E6 = 1318.51;
+
+    try {
+      const savedAudio = localStorage.getItem('kcyber_audio_bgm');
+      if (savedAudio !== null) bgmEnabled = savedAudio === '1';
+    } catch (e) {}
 
     try {
       audioCtx = new AudioContext();
@@ -347,11 +362,30 @@
       try {
         masterFilter = audioCtx.createBiquadFilter();
         masterFilter.type = 'lowpass';
-        masterFilter.frequency.setValueAtTime(3600, audioCtx.currentTime);
-        masterFilter.Q.setValueAtTime(1.4, audioCtx.currentTime);
+        masterFilter.frequency.setValueAtTime(3800, audioCtx.currentTime);
+        masterFilter.Q.setValueAtTime(1.2, audioCtx.currentTime);
 
         masterGain = audioCtx.createGain();
         masterGain.gain.setValueAtTime(bgmEnabled ? 0.85 : 0.0, audioCtx.currentTime);
+
+        // SNES SPC700 Stereo Feedback Delay (210ms, 2200Hz LP filter, 0.28 feedback)
+        snesDelayNode = audioCtx.createDelay();
+        snesDelayNode.delayTime.setValueAtTime(0.210, audioCtx.currentTime);
+
+        snesFilterNode = audioCtx.createBiquadFilter();
+        snesFilterNode.type = 'lowpass';
+        snesFilterNode.frequency.setValueAtTime(2200, audioCtx.currentTime);
+
+        snesFeedbackNode = audioCtx.createGain();
+        snesFeedbackNode.gain.setValueAtTime(0.28, audioCtx.currentTime);
+
+        // Delay loop routing
+        snesDelayNode.connect(snesFilterNode);
+        snesFilterNode.connect(snesFeedbackNode);
+        snesFeedbackNode.connect(snesDelayNode);
+
+        // Feed filtered delay output into master filter
+        snesFilterNode.connect(masterFilter);
 
         masterFilter.connect(masterGain);
         masterGain.connect(audioCtx.destination);
@@ -393,9 +427,23 @@
           carrier.frequency.exponentialRampToValueAtTime(Math.max(20, opt.freqSlide), t0 + duration);
         }
 
+        // Expressive Delayed Vibrato LFO (ramps in after 180ms for Lead voicing)
+        if (opt.vibrato && duration > 0.22) {
+          const lfo = audioCtx.createOscillator();
+          const lfoGain = audioCtx.createGain();
+          lfo.frequency.setValueAtTime(5.8, t0);
+          lfoGain.gain.setValueAtTime(0, t0);
+          lfoGain.gain.setValueAtTime(0, t0 + 0.18);
+          lfoGain.gain.linearRampToValueAtTime(cFreq * 0.035, t0 + duration);
+          lfo.connect(lfoGain);
+          lfoGain.connect(carrier.frequency);
+          lfo.start(t0);
+          lfo.stop(t0 + duration);
+        }
+
         const depthHz = cFreq * modDepth;
         modGain.gain.setValueAtTime(depthHz, t0);
-        modGain.gain.exponentialRampToValueAtTime(Math.max(1, depthHz * 0.05), t0 + decay);
+        modGain.gain.exponentialRampToValueAtTime(Math.max(1, depthHz * 0.04), t0 + decay);
 
         modulator.connect(carrier.frequency);
 
@@ -405,6 +453,16 @@
 
         carrier.connect(carrierGain);
         carrierGain.connect(masterFilter);
+
+        // Selective SPC700 Stereo Delay Send
+        if (opt.sendToDelay && snesDelayNode) {
+          try {
+            const dSend = audioCtx.createGain();
+            dSend.gain.setValueAtTime(0.38, t0);
+            carrierGain.connect(dSend);
+            dSend.connect(snesDelayNode);
+          } catch (e) {}
+        }
 
         modulator.start(t0);
         carrier.start(t0);
@@ -432,6 +490,7 @@
         const bq = audioCtx.createBiquadFilter();
         bq.type = opt.filterType || 'bandpass';
         bq.frequency.setValueAtTime(filterFreq, t0);
+        if (opt.Q) bq.Q.setValueAtTime(opt.Q, t0);
 
         const g = audioCtx.createGain();
         g.gain.setValueAtTime(vol, t0);
@@ -451,19 +510,113 @@
       playFM(freq, 1.0, 0.4, duration, vol, { carrierType: type });
     }
 
+    // --- HARDWARE CHIPTUNE FM INSTRUMENT PATCHES (YM2612 & SPC700 CORE) ---
+
+    // Channel 1: Cyberpunk Lead (Sawtooth-in-Sine FM, expressively shaped, delayed vibrato, SPC700 delay)
+    function playCyberLead(freq, dur, vol = 0.12, vibrato = true) {
+      playFM(freq, 2.0, 1.25, dur, vol, {
+        carrierType: 'sawtooth',
+        modType: 'sine',
+        attack: 0.015,
+        decay: dur * 0.85,
+        vibrato: vibrato,
+        sendToDelay: true
+      });
+    }
+
+    // Channel 2: Cold Digital Bell Counter-Melody (High-MUL bell chime in contrary motion, SPC700 delay)
+    function playDigitalBell(freq, dur, vol = 0.11) {
+      playFM(freq, 3.5, 3.2, dur, vol, {
+        carrierType: 'sine',
+        modType: 'sine',
+        attack: 0.003,
+        decay: dur * 0.45,
+        sendToDelay: true
+      });
+    }
+
+    // Channel 3: Matrix Shell Voicings (Strictly 3rd + 7th intervals only, soft FM pad swell, SPC700 delay)
+    function playShellChord(freq3rd, freq7th, dur, vol = 0.05) {
+      playFM(freq3rd, 1.0, 0.45, dur, vol, {
+        carrierType: 'triangle',
+        modType: 'sine',
+        attack: 0.03,
+        decay: dur * 0.9,
+        sendToDelay: true
+      });
+      playFM(freq7th, 1.0, 0.45, dur, vol * 0.9, {
+        carrierType: 'sine',
+        modType: 'sine',
+        attack: 0.03,
+        decay: dur * 0.9,
+        sendToDelay: true
+      });
+    }
+
+    // Channel 4: 303 Dorian Acid FM Bass (strictly below C3 130.81Hz, punchy fast mod decay, heat modulation)
+    function playAcidBass(freq, dur, vol = 0.16) {
+      const f = Math.min(130.0, freq);
+      const heatMod = (typeof player_heat === 'number') ? (player_heat / 100) : 0;
+      const depth = 2.0 + heatMod * 2.2;
+      playFM(f, 1.0, depth, dur, vol, {
+        carrierType: 'sawtooth',
+        modType: 'sine',
+        attack: 0.005,
+        decay: Math.min(dur, 0.22),
+        sendToDelay: false
+      });
+    }
+
+    // Channel 5: FM Pitch-Drop Kick (135Hz -> 36Hz)
+    function playFmKick(vol = 0.24) {
+      playFM(135, 0.5, 1.2, 0.12, vol, {
+        carrierType: 'sine',
+        modType: 'sine',
+        freqSlide: 36,
+        attack: 0.002,
+        decay: 0.08,
+        sendToDelay: false
+      });
+    }
+
+    // Channel 5: Bandpass Noise Snare (high-MUL body snap)
+    function playFmSnare(vol = 0.16) {
+      playNoiseBurst(0.12, vol, 2200, { filterType: 'bandpass', Q: 2.5 });
+      playFM(175, 1.5, 1.0, 0.08, vol * 0.7, { freqSlide: 80, sendToDelay: false });
+    }
+
+    // Channel 6: Inharmonic Metallic FM Hi-Hat
+    function playFmHiHat(vol = 0.07, isOpen = false) {
+      const dur = isOpen ? 0.14 : 0.035;
+      playFM(520, 11.0, 4.8, dur, vol, {
+        carrierType: 'sine',
+        modType: 'sine',
+        attack: 0.001,
+        decay: dur * 0.6,
+        sendToDelay: false
+      });
+      playNoiseBurst(dur * 0.7, vol * 0.6, 7500, { filterType: 'highpass' });
+    }
+
+    // Channel 6 Accent: Cybernetic Glitch Tick
+    function playGlitchTick(vol = 0.05) {
+      playNoiseBurst(0.015, vol, 4800, { filterType: 'highpass' });
+    }
+
     // --- REFINED YM2612 / SPC700 UI EARCONS & ACTION STINGERS ---
     function playKeyClack() {
       playFM(1200, 2.0, 0.8, 0.02, 0.015, { carrierType: 'triangle' });
     }
 
     function playAccessGranted() {
-      // Heroic FM Crystal Stinger (D-Dorian Pentatonic Chime D5 -> F5 -> A5 -> D6)
-      const notes = [587.33, 698.46, 880.00, 1174.66];
+      // Heroic FM Crystal Stinger (D-Dorian Pentatonic Chime D5 -> F5 -> A5 -> D6 through SPC700 delay)
+      const notes = [P_D5, P_F5, P_A5, P_D6];
       notes.forEach((f, idx) => {
-        playFM(f, 2.76, 1.8, 0.28, 0.11, {
-          timeOffset: idx * 0.065,
+        playFM(f, 3.5, 2.2, 0.32, 0.10, {
+          timeOffset: idx * 0.06,
           carrierType: 'sine',
-          modType: 'sine'
+          modType: 'sine',
+          sendToDelay: true
         });
       });
       playNoiseBurst(0.09, 0.03, 3200, { filterType: 'highpass' });
@@ -494,6 +647,51 @@
       }
     }
 
+    function playIceBreach() {
+      // Screaming FM sync alert for active ICE breach
+      playFM(880, 5.4, 6.0, 0.26, 0.22, {
+        carrierType: 'sawtooth',
+        modType: 'sine',
+        freqSlide: 220,
+        sendToDelay: true
+      });
+      playNoiseBurst(0.18, 0.08, 1200, { filterType: 'highpass' });
+    }
+
+    function playCloakStinger() {
+      // Ethereal phase shift / stealth shimmer
+      [P_A4, P_D5, P_A5].forEach((f, idx) => {
+        playFM(f, 2.0, 0.8, 0.35, 0.08, {
+          timeOffset: idx * 0.05,
+          carrierType: 'sine',
+          modType: 'sine',
+          sendToDelay: true
+        });
+      });
+      playNoiseBurst(0.15, 0.04, 3800, { filterType: 'bandpass' });
+    }
+
+    function playSlowStinger() {
+      // Sluggish tape-stop pitch-dive stinger
+      playFM(440, 1.5, 2.0, 0.42, 0.14, {
+        carrierType: 'sawtooth',
+        modType: 'sine',
+        freqSlide: 110
+      });
+    }
+
+    function playCreditChime() {
+      // Triple-tone crystalline siphon chime
+      [P_C6, P_E6, P_G5 * 2].forEach((f, idx) => {
+        playFM(f, 3.5, 1.8, 0.25, 0.09, {
+          timeOffset: idx * 0.05,
+          carrierType: 'sine',
+          modType: 'sine',
+          sendToDelay: true
+        });
+      });
+    }
+
     function playDialup() {
       // 1999 Cyberdeck Handshake & Matrix Carrier Lock
       playFM(941, 1.0, 0.5, 0.08, 0.08);
@@ -514,7 +712,8 @@
         playFM(f, 3.5, 1.2, 0.35, 0.09, {
           timeOffset: idx * 0.04,
           carrierType: 'sine',
-          modType: 'sine'
+          modType: 'sine',
+          sendToDelay: true
         });
       });
     }
@@ -524,78 +723,152 @@
       playFM(1480, 4.0, 2.5, 0.18, 0.12, {
         carrierType: 'sine',
         modType: 'triangle',
-        freqSlide: 740
+        freqSlide: 740,
+        sendToDelay: true
       });
       playNoiseBurst(0.06, 0.03, 4200, { timeOffset: 0.02, filterType: 'highpass' });
     }
 
-    // --- PROCEDURAL FM BGM ENGINE (Cyberpunk Matrix Soundscape) ---
-    // Mode: D-Dorian / D-Minor (Progression: Dm9 -> Bbmaj7 -> Gm7 -> Asus4)
-    const BGM_CHORDS = [
-      { bass: 73.42, roots: [146.83, 220.0, 261.63, 329.63], name: 'Dm9' },
-      { bass: 58.27, roots: [116.54, 233.08, 293.66, 349.23], name: 'Bbmaj7' },
-      { bass: 48.99, roots: [97.99, 196.0, 293.66, 349.23], name: 'Gm7' },
-      { bass: 55.00, roots: [110.0, 220.0, 293.66, 329.63], name: 'Asus4' }
-    ];
-
+    // --- PROCEDURAL FM BGM ENGINE (6-Channel YM2612/SPC700 Cyberpunk Netrunner Suite) ---
+    // Mode: D-Dorian (Dm9 -> Bbmaj7 -> Gm9 -> Asus4 / A7alt)
     function tickBGM() {
       if (!bgmEnabled || !audioCtx || audioCtx.state !== 'running') return;
 
-      const currentChord = BGM_CHORDS[bgmBar % BGM_CHORDS.length];
-      const stepInBar = bgmStep % 16;
+      const s = bgmStep % 64;
       const isCombat = Boolean(ice_interval);
-      const heatFactor = Math.min(1.0, player_heat / 100);
 
-      // 1. FM Bass Voice (Snappy YM2612 2-Op Slap / Sub-Bass)
-      if (stepInBar === 0 || stepInBar === 6 || stepInBar === 10 || (isCombat && stepInBar === 14)) {
-        const bassFreq = currentChord.bass * (stepInBar === 10 ? 1.5 : 1.0);
-        playFM(bassFreq, 1.0, 1.8 + heatFactor * 1.2, 0.22, 0.14, {
-          carrierType: 'sawtooth',
-          modType: 'sine'
-        });
+      // --- CHANNEL 1: LEAD MELODY (Vocal phrasing, delayed vibrato LFO, rests for Ch2) ---
+      if (s === 0) playCyberLead(P_D5, 0.35, 0.13, true);
+      else if (s === 4) playCyberLead(P_F5, 0.28, 0.12, false);
+      else if (s === 8) playCyberLead(P_E5, 0.32, 0.13, true);
+      else if (s === 12) playCyberLead(P_D5, 0.22, 0.12, false);
+      // Steps 14-22: Lead rests, giving spotlight to Ch2 Counter-Melody
+      else if (s === 24) playCyberLead(P_A5, 0.40, 0.14, true);
+      else if (s === 28) playCyberLead(P_G5, 0.26, 0.12, false);
+      else if (s === 30) playCyberLead(P_F5, 0.32, 0.13, true);
+      else if (s === 32) playCyberLead(P_BB5, 0.38, 0.14, true);
+      else if (s === 36) playCyberLead(P_C6, 0.30, 0.13, false);
+      else if (s === 40) playCyberLead(P_D6, 0.42, 0.15, true); // Climax crying lead
+      // Steps 42-47: Lead rests for Ch2 contrary cascade
+      else if (s === 48) playCyberLead(P_E5, 0.32, 0.13, true);
+      else if (s === 52) playCyberLead(P_D5, 0.28, 0.12, false);
+      else if (s === 56) playCyberLead(P_CS5, 0.32, 0.13, true); // Chromatic Altered Dorian tension
+      else if (s === 60) playCyberLead(P_D5, 0.45, 0.14, true); // Cadence resolution
+
+      // --- CHANNEL 2: COUNTER-MELODY (Cold Digital Bells - Contrary Motion & Solo Spotlight) ---
+      if (s === 6) playDigitalBell(P_A5, 0.20, 0.09);
+      // Ch2 Solo Spotlight during Ch1 rest (Steps 14-22)
+      else if (s === 14) playDigitalBell(P_A5, 0.24, 0.11);
+      else if (s === 16) playDigitalBell(P_C6, 0.28, 0.12);
+      else if (s === 18) playDigitalBell(P_D6, 0.30, 0.13);
+      else if (s === 20) playDigitalBell(P_E6, 0.35, 0.14); // Crystalline peak
+      else if (s === 22) playDigitalBell(P_D6, 0.28, 0.12);
+      else if (s === 26) playDigitalBell(P_D5, 0.24, 0.10);
+      // Ch2 Contrary Cascade during Ch1 rest (Steps 42-46)
+      else if (s === 42) playDigitalBell(P_G5, 0.25, 0.11);
+      else if (s === 44) playDigitalBell(P_F5, 0.25, 0.11);
+      else if (s === 46) playDigitalBell(P_D5, 0.28, 0.12);
+      else if (s === 50) playDigitalBell(P_A5, 0.22, 0.10);
+      else if (s === 54) playDigitalBell(P_G5, 0.22, 0.10);
+      else if (s === 58) playDigitalBell(P_E5, 0.24, 0.11);
+      else if (s === 62) playDigitalBell(P_C6, 0.35, 0.13);
+
+      // --- CHANNEL 3: HARMONY (Shell Voicings strictly 3rd + 7th, no 5th doubling) ---
+      // Bar 0 (Dm9: F4 3rd + C5 7th)
+      if (s === 0 || s === 6 || s === 10) playShellChord(P_F4, P_C5, 0.65, 0.05);
+      // Bar 1 (Bbmaj7: D4 3rd + A4 7th)
+      else if (s === 16 || s === 22 || s === 26) playShellChord(P_D4, P_A4, 0.65, 0.05);
+      // Bar 2 (Gm9: Bb4 3rd + F5 7th)
+      else if (s === 32 || s === 38 || s === 42) playShellChord(P_BB4, P_F5, 0.65, 0.05);
+      // Bar 3 (Asus4 / A7alt: G4 7th + D5 4th -> G4 7th + CS5 3rd)
+      else if (s === 48 || s === 52) playShellChord(P_G4, P_D5, 0.55, 0.05);
+      else if (s === 56 || s === 60) playShellChord(P_G4, P_CS5, 0.65, 0.05);
+
+      // --- CHANNEL 4: 303 DORIAN ACID FM BASS (Strictly below C3 130.81Hz, heat modulated) ---
+      // Bar 0 (Dm)
+      if (s === 0) playAcidBass(P_D2, 0.22);
+      else if (s === 3) playAcidBass(P_D2, 0.18);
+      else if (s === 6) playAcidBass(P_F2, 0.24);
+      else if (s === 10) playAcidBass(P_D1, 0.30); // Deep sub-bass punch
+      else if (s === 12) playAcidBass(P_C2, 0.18);
+      else if (s === 14) playAcidBass(P_D2, 0.20);
+      // Bar 1 (Bb)
+      else if (s === 16) playAcidBass(P_BB1, 0.24);
+      else if (s === 19) playAcidBass(P_F2, 0.18);
+      else if (s === 22) playAcidBass(P_BB2, 0.22);
+      else if (s === 26) playAcidBass(P_A1, 0.20);
+      else if (s === 28) playAcidBass(P_BB1, 0.18);
+      else if (s === 30) playAcidBass(P_C2, 0.20);
+      // Bar 2 (Gm)
+      else if (s === 32) playAcidBass(P_G1, 0.24);
+      else if (s === 35) playAcidBass(P_G2, 0.18);
+      else if (s === 38) playAcidBass(P_BB1, 0.22);
+      else if (s === 42) playAcidBass(P_C2, 0.20);
+      else if (s === 44) playAcidBass(P_G1, 0.18);
+      else if (s === 46) playAcidBass(P_F1, 0.20);
+      // Bar 3 (A7alt)
+      else if (s === 48) playAcidBass(P_A1, 0.24);
+      else if (s === 51) playAcidBass(P_E2, 0.18);
+      else if (s === 54) playAcidBass(P_G2, 0.22);
+      else if (s === 58) playAcidBass(P_A1, 0.20);
+      else if (s === 60) playAcidBass(P_C2, 0.18);
+      else if (s === 62) playAcidBass(P_CS2, 0.22); // Chromatic bass walkup
+
+      // --- CHANNEL 5: PERCUSSION (FM Pitch-Drop Kick + Bandpass Snare Breakbeat) ---
+      // Syncopated Breakbeat Kicks
+      if (s === 0 || s === 6 || s === 10 || s === 16 || s === 22 || s === 26 || s === 32 || s === 35 || s === 42 || s === 48 || s === 54 || s === 58) {
+        playFmKick(isCombat ? 0.28 : 0.23);
+      }
+      // Main Snare Hits
+      if (s === 4 || s === 12 || s === 20 || s === 28 || s === 36 || s === 44 || s === 52 || s === 60) {
+        playFmSnare(isCombat ? 0.19 : 0.15);
+      }
+      // Syncopated Ghost Snares & Rolls
+      if (s === 7 || s === 15 || s === 23 || s === 31 || s === 46 || s === 47 || s === 61 || s === 62 || s === 63) {
+        playFmSnare(0.08);
       }
 
-      // 2. Ambient FM Cyber Drone / Pad (Slow chord root swells every 8 steps)
-      if (stepInBar === 0 || stepInBar === 8) {
-        const padFreq = currentChord.roots[stepInBar === 0 ? 0 : 1];
-        playFM(padFreq, 2.01, 0.45, 1.1, 0.045, {
-          carrierType: 'sine',
-          modType: 'sine',
-          attack: 0.15,
-          decay: 0.95
-        });
+      // --- CHANNEL 6: INHARMONIC HI-HATS & EARCON ACCENTS ---
+      // Closed Hi-Hats on even steps
+      if (s % 2 === 0 && s !== 14 && s !== 30 && s !== 46 && s !== 62) {
+        playFmHiHat(0.065, false);
+      }
+      // Open Hi-Hats
+      if (s === 14 || s === 30 || s === 46 || s === 62) {
+        playFmHiHat(0.085, true);
+      }
+      // Glitch tick earcons on syncopated 16th subdivisions
+      if (s === 9 || s === 25 || s === 41 || s === 57) {
+        playGlitchTick(0.04);
       }
 
-      // 3. Generative FM Lead / Arpeggiator (Dorian Chiptune Arps)
-      if (stepInBar % 2 === 0 || (heatFactor > 0.4 && stepInBar % 2 === 1)) {
-        const noteIdx = (stepInBar + bgmBar) % currentChord.roots.length;
-        const arpFreq = currentChord.roots[noteIdx] * (isCombat ? 2.0 : 1.5);
-        playFM(arpFreq, 3.5, 0.8 + (heatFactor * 0.9), 0.12, 0.04, {
-          carrierType: 'triangle',
-          modType: 'sine'
-        });
-      }
+      bgmStep = (bgmStep + 1) % 64;
+    }
 
-      // 4. Subtle SPC700 Bandpass Hi-Hat
-      if (stepInBar % 4 === 2) {
-        playNoiseBurst(0.025, 0.02 + heatFactor * 0.02, 6500, { filterType: 'highpass' });
-      }
+    // Swing-Tick Groove Engine (5:3 alternating step durations)
+    function scheduleNextBgmStep() {
+      if (!bgmEnabled) return;
+      const isCombat = Boolean(ice_interval);
+      const baseMs = isCombat ? 88 : 110;
+      // 5:3 swing feel: even steps are longer, odd steps shorter
+      const stepDur = (bgmStep % 2 === 0) ? Math.round(baseMs * 1.25) : Math.round(baseMs * 0.75);
 
-      bgmStep++;
-      if (bgmStep % 16 === 0) {
-        bgmBar++;
-      }
+      bgmTimer = setTimeout(() => {
+        tickBGM();
+        scheduleNextBgmStep();
+      }, stepDur);
     }
 
     function startBGM() {
-      if (bgmTimer) clearInterval(bgmTimer);
-      const tempoMs = ice_interval ? 105 : 125;
-      bgmTimer = setInterval(tickBGM, tempoMs);
+      stopBGM();
+      if (!bgmEnabled) return;
+      ensureAudio();
+      scheduleNextBgmStep();
     }
 
     function stopBGM() {
       if (bgmTimer) {
-        clearInterval(bgmTimer);
+        clearTimeout(bgmTimer);
         bgmTimer = null;
       }
     }
@@ -609,8 +882,13 @@
         masterGain.gain.setValueAtTime(bgmEnabled ? 0.85 : 0.0, audioCtx.currentTime);
       }
       try { localStorage.setItem('kcyber_audio_bgm', bgmEnabled ? '1' : '0'); } catch (e) {}
+      if (bgmEnabled) {
+        startBGM();
+      } else {
+        stopBGM();
+      }
       if (typeof showToast === 'function') {
-        showToast(bgmEnabled ? 'FM Soundscape Enabled' : 'FM Soundscape Muted');
+        showToast(bgmEnabled ? 'FM Soundscape Enabled [M]' : 'FM Soundscape Muted [M]');
       }
     }
 
@@ -1008,9 +1286,11 @@
       if (hacking_node) {
         if (ice_frozen_ticks > 0) {
           ice_frozen_ticks--;
+          playGlitchTick(0.06);
           printLine(`[${ice_name}] ICE is blinded...`);
           spawnBurst(90, 80, 15, 'star', '#00e5ff');
         } else {
+          playIceBreach();
           playAlarm();
           player_mem -= ice_damage;
           shakeAmount = 12;
@@ -2177,6 +2457,7 @@
           if (tool_cloak > 0) {
             tool_cloak--;
             ice_frozen_ticks += 2;
+            playCloakStinger();
             spawnBurst(90, 80, 25, 'star', '#00e5ff');
             spawnBurst(90, 80, 20, 'spark', '#00ffff');
             printLine(`[CLOAK] Activated. ${tool_cloak} remaining. ICE blinded for 2 cycles.`);
@@ -2189,6 +2470,7 @@
         if (guess === 'slow') {
           if (tool_slow > 0) {
             tool_slow--;
+            playSlowStinger();
             spawnBurst(90, 80, 25, 'spark', '#ffff00');
             printLine(`[SLOW] Activated. ${tool_slow} remaining. Trace speed halved.`);
             if (ice_interval) clearInterval(ice_interval);
@@ -2756,7 +3038,13 @@
     });
 
     window.addEventListener('keydown', (e) => {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+      if ((e.altKey && (e.key === 'm' || e.key === 'M')) ||
+          ((e.key === 'm' || e.key === 'M') && document.activeElement !== cmdInput && !e.ctrlKey)) {
+        e.preventDefault();
+        toggleAudio();
+        return;
+      }
       if (e.key === 'F5') {
         e.preventDefault();
         quickSave();
@@ -2820,6 +3108,8 @@
     printLine("Loading modules... OK");
     printLine("Initializing memory... OK");
     printLine("Type 'help' for a list of commands.");
+    const audioBtn = document.getElementById('audio-toggle-btn');
+    if (audioBtn) audioBtn.textContent = bgmEnabled ? 'BGM: ON' : 'BGM: OFF';
     requestAnimationFrame(renderLoop);
 
     const hasSave = !!safeGetStorage('kcyber_save');
