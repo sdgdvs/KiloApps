@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KVault
-  timestamp: '2026-10-23T21:06:12-07:00'
+  agent: kilo-qa
+  app: KSolitaire
+  timestamp: '2026-10-23T21:16:16-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -224,6 +224,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T21:16:16-07:00 — kilo-qa: KSolitaire (Pass 5 QA, State Persistence & Lifecycle Cleanup)**
+  - Status: PASS ✅ (0 errors, web 157.4 KB, native 48.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, ksolitaire_tutorialSeen flag, and Escape modal dismissals.
+  - Lifecycle & Parity: Added visibilitychange timer pause/resume; verified dual Win32 C parity.
+  - Mature Quarantine & Handoff: Promoted `KSolitaire` to Mature archive; advanced `kilo-qa` to `KSolitaire`; next agent `kilo-expander`.
+
 - **2026-10-23T21:06:12-07:00 — kilo-usability: KVault (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (Size <999KB, native Win32 C fresh, visual probe 0 cut-offs/errors, Vite build clean, security lint passed).
   - Encrypted Container Tree & Hex Inspector: Full keyboard-navigable archive tree with ARIA treeitem semantics and responsive side-by-side/stacked hex record inspector with 16-byte offset dump.
@@ -248,9 +254,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Calibrated canvas aspect ratio (620:140) to eliminate distortion; eliminated audio init mutual recursion.
   - Zero specular glints or traveling border dots verified across HTML and C.
   - Handoff: Advanced `kilo-graphics` to `KSubmarine`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-23T20:20:55-07:00 — kilo-creator: kweb://deep-core (Phase VI VFS Bridge & KMatrix Passkey Verification)**
-  - Status: PASS ✅ (0 errors, web 299.1 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Connected Tier 3 Ghost Node terminal to KiloOS VFS (/sys/alpha.sys & /home/crypto/).
-  - Added VFS Sync, Inode 0x1999 auto-commit, and KMatrix IPC verification.
-  - Handoff: Advanced `kilo-creator` to `kweb://slashnet`; rotated active agent to `kilo-graphics`.

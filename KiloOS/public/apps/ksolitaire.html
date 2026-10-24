@@ -3636,16 +3636,25 @@ function initFXSystem() {
     fxAnimId = requestAnimationFrame(fxLoop);
   }
 
+  let wasTimerRunningOnHide = false;
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       if (fxAnimId) {
         cancelAnimationFrame(fxAnimId);
         fxAnimId = null;
       }
+      if (timerInterval) {
+        wasTimerRunningOnHide = true;
+        stopTimer();
+      }
     } else {
       if (!fxAnimId) {
         resizeFX();
         fxAnimId = requestAnimationFrame(fxLoop);
+      }
+      if (wasTimerRunningOnHide && !gameWon) {
+        wasTimerRunningOnHide = false;
+        startTimer();
       }
     }
   });
