@@ -441,6 +441,9 @@
   .cat-demoscene { background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid #db2777; }
   .cat-tools { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #d97706; }
   .cat-apps { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #059669; }
+  .cat-news { background: rgba(52, 211, 153, 0.2); color: #34d399; border: 1px solid #059669; }
+  .cat-media { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #9333ea; }
+  .cat-tech { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid #0284c7; }
   .status-dot {
     display: inline-block;
     width: 8px;
@@ -1837,6 +1840,12 @@
               <option value="voyager">Preset 8: Web Voyager Ringmaster (Gold/Cyan)</option>
               <option value="darknet">Preset 9: Subterranean Node 0x7F (Phosphor Black)</option>
               <option value="custom">Preset 10: Custom User Specification</option>
+              <option value="slashnet">Preset 11: SlashNet '99 (News for Nerds)</option>
+              <option value="trapster">Preset 12: Trapster P2P (Chiptune Swarm)</option>
+              <option value="cabled">Preset 13: Cabled Magazine (Cyber Wired)</option>
+              <option value="scallion">Preset 14: The Scallion (Satire '99)</option>
+              <option value="demoscene">Preset 15: Assembly '99 (Demoscene Vault)</option>
+              <option value="rfc">Preset 16: IETF Living RFC Workbench</option>
             </select>
           </div>
 
@@ -1964,6 +1973,25 @@
       <div class="badge-studio-grid">
         <!-- Controls Column -->
         <div>
+          <div class="form-group">
+            <label class="form-label" for="badgeNodeSelect">LOAD MEMBER SITE PRESET</label>
+            <select class="form-control" id="badgeNodeSelect" onchange="applyMemberNodePreset(this.value)">
+              <option value="">-- Choose Canonical Member Site --</option>
+              <option value="#001">#001: KiloNet 1999 Web Portal</option>
+              <option value="#002">#002: CyberSpire Retro Shrine</option>
+              <option value="#003">#003: 0xRELEASE Scene Vault</option>
+              <option value="#004">#004: ~neon_rider ASM Shrine</option>
+              <option value="#005">#005: Temple of x86 Opcodes</option>
+              <option value="#006">#006: CyberCafe '99 BBS</option>
+              <option value="#021">#021: Assembly '99 Demoscene Vault</option>
+              <option value="#022">#022: IETF Living RFC Workbench</option>
+              <option value="#023">#023: SlashNet: News for Nerds</option>
+              <option value="#024">#024: Trapster P2P Chiptune Swarm</option>
+              <option value="#025">#025: Cabled Magazine (1999 Edition)</option>
+              <option value="#026">#026: The Scallion (Satirical News)</option>
+            </select>
+          </div>
+
           <div class="form-group">
             <label class="form-label" for="badgeStyleSelect">BADGE STYLE VARIANT</label>
             <select class="form-control" id="badgeStyleSelect" onchange="updateBadgePreview()">
@@ -3763,32 +3791,6 @@ const DEFAULT_RING_NODES = [
     tags: "darknet,terminal,packet,sniffer,subterranean,forensics,hex,memory,modem,fsk,interlock,nfo,stego,warez,cryptography,feistel,rc4,pgp,otp,bluebox,phreaking,deaddrop"
   },
   {
-    id: "#019",
-    num: 19,
-    name: "Echo Subsystem Acoustic Research Lab (ESARL)",
-    handle: "Acoustic_SysAdmin",
-    category: "tools",
-    url: "/web/echo_subsystem.html",
-    desc: "Lithospheric piezo-acoustic array, 1999Hz harmonic decoders, SIGINT beamformer grid, Helmholtz cavity resonator, 4-track analog tape deck & Cryogenic SQUID Magnetometer.",
-    tech: "YM2612 2-Op FM / SPC700 Delay / Real-time 2D Sonogram / Lithospheric Array / RF-SQUID Tomograph",
-    badgeLabel: "ECHO-SUBSYSTEM",
-    latency: 14,
-    tags: "echo,acoustic,lab,hydrophone,1999hz,sigint,sonogram,beamformer,carlsbad,salado,steganography,squid,tomograph"
-  },
-  {
-    id: "#022",
-    num: 22,
-    name: "IETF 1999 Living RFC Workbench",
-    handle: "RFC_Editor",
-    category: "tech",
-    url: "/web/rfc_archive.html",
-    desc: "Living protocol laboratory: interactive RFC 1149 carrier pigeon packet simulator, RFC 2324 HTCPCP coffee pot console (418 I'm a teapot), RFC 793 TCP state stepper, and KiloOS VFS RFC export.",
-    tech: "HTML 4.01 / Web Audio / RFC 1149 Engine / HTCPCP Console / TCP Stepper / VFS IPC",
-    badgeLabel: "IETF RFCs",
-    latency: 18,
-    tags: "ietf,rfc,rfc1149,rfc2324,rfc793,tcp,htcpcp,avian,carrier,protocol,coffee,vfs"
-  },
-  {
     id: "#021",
     num: 21,
     name: "Assembly '99 Demoscene Party Vault",
@@ -3800,6 +3802,71 @@ const DEFAULT_RING_NODES = [
     badgeLabel: "ASSEMBLY '99",
     latency: 25,
     tags: "demoscene,assembly99,64k,plasma,rotozoom,starfield,copper,metaballs,nfo,chiptune,ym2612,compo,voting,helsinki"
+  },
+  {
+    id: "#022",
+    num: 22,
+    name: "IETF 1999 Living RFC Workbench",
+    handle: "RFC_Editor",
+    category: "tools",
+    url: "/web/rfc_archive.html",
+    desc: "Living protocol laboratory: interactive RFC 1149 carrier pigeon packet simulator, RFC 2324 HTCPCP coffee pot console (418 I'm a teapot), RFC 793 TCP state stepper, and KiloOS VFS RFC export.",
+    tech: "HTML 4.01 / Web Audio / RFC 1149 Engine / HTCPCP Console / TCP Stepper / VFS IPC",
+    badgeLabel: "IETF RFCs",
+    latency: 18,
+    tags: "ietf,rfc,rfc1149,rfc2324,rfc793,tcp,htcpcp,avian,carrier,protocol,coffee,vfs"
+  },
+  {
+    id: "#023",
+    num: 23,
+    name: "SlashNet: News for Nerds (1999)",
+    handle: "CmdrTaco_99",
+    category: "community",
+    url: "/web/slashnet.html",
+    desc: "Open tech news bulletin: community karma moderation (-1 Troll to +5 Insightful), threaded discussions, Beowulf cluster benchmark calculator & Linux 2.2 kernel compile simulator.",
+    tech: "HTML 4.01 / Karma Moderation / Beowulf Benchmark / Linux 2.2 Sim / VFS Article Export",
+    badgeLabel: "SLASHNET '99",
+    latency: 21,
+    tags: "slashnet,news,nerds,karma,beowulf,linux,kernel,moderation,discussion,tech,vfs"
+  },
+  {
+    id: "#024",
+    num: 24,
+    name: "Trapster P2P Chiptune Swarm v1.0b",
+    handle: "NapsterCat_99",
+    category: "demoscene",
+    url: "/web/trapster.html",
+    desc: "Decentralized peer-to-peer MP3 & MOD audio exchange, simulated 56k/T1 download queue, live YM2612 FM chiptune & tracker player, and KiloOS VFS /home/music/ audio export.",
+    tech: "P2P Swarm Engine / YM2612 2-Op FM / Tracker Audio / VFS IPC / Web Audio",
+    badgeLabel: "TRAPSTER P2P",
+    latency: 33,
+    tags: "trapster,p2p,napster,mp3,mod,chiptune,tracker,swarm,music,sharing,vfs"
+  },
+  {
+    id: "#025",
+    num: 25,
+    name: "Cabled Magazine 1999 Cyber Edition",
+    handle: "Editor_Cabled",
+    category: "community",
+    url: "/web/cabled.html",
+    desc: "1999 cyberculture journal with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, and Hype-vs-Reality matrix.",
+    tech: "HTML 4.01 / Y2K Audit Matrix / Dot-Com IPO Simulator / Jargon Watch / VFS IPC",
+    badgeLabel: "CABLED MAG",
+    latency: 24,
+    tags: "cabled,wired,magazine,cyberculture,y2k,ipo,dotcom,jargon,venture,technology,vfs"
+  },
+  {
+    id: "#026",
+    num: 26,
+    name: "The Scallion: 1999 Satirical News",
+    handle: "SatireBureau",
+    category: "community",
+    url: "/web/scallion.html",
+    desc: "The premier satirical news wire of 1999, featuring deadpan Y2K bunker alerts, Ask A Sysadmin interactive column, breaking parody wire dispatches & Infographic Forge.",
+    tech: "HTML 4.01 / Satire Wire / Ask A Sysadmin / Infographic Forge / VFS IPC",
+    badgeLabel: "THE SCALLION",
+    latency: 27,
+    tags: "scallion,onion,satire,humor,sysadmin,y2k,news,parody,headlines,infographic,vfs"
   },
   {
     id: "#020",
@@ -5199,8 +5266,68 @@ const BADGE_PRESETS = {
     palette: "cyan",
     bevel: "raised",
     pattern: "split_h"
+  },
+  slashnet: {
+    top: "SLASHNET '99",
+    bottom: "NEWS 4 NERDS",
+    glyph: "pc",
+    palette: "green",
+    bevel: "raised",
+    pattern: "split_h"
+  },
+  trapster: {
+    top: "TRAPSTER P2P",
+    bottom: "SWARM AUDIO",
+    glyph: "cd",
+    palette: "cyan",
+    bevel: "neon",
+    pattern: "scanlines"
+  },
+  cabled: {
+    top: "CABLED MAG",
+    bottom: "CYBER WIRED",
+    glyph: "bolt",
+    palette: "amber",
+    bevel: "raised",
+    pattern: "split_v"
+  },
+  scallion: {
+    top: "THE SCALLION",
+    bottom: "SATIRE '99",
+    glyph: "alien",
+    palette: "win95",
+    bevel: "inset",
+    pattern: "dither"
+  },
+  demoscene: {
+    top: "ASSEMBLY '99",
+    bottom: "64K INTRO",
+    glyph: "floppy",
+    palette: "purple",
+    bevel: "neon",
+    pattern: "scanlines"
+  },
+  rfc: {
+    top: "IETF RFC 1149",
+    bottom: "AVIAN CARRIER",
+    glyph: "globe",
+    palette: "netscape",
+    bevel: "raised",
+    pattern: "solid"
   }
 };
+
+function applyMemberNodePreset(nodeId) {
+  if (!nodeId) return;
+  const node = ringNodes.find(n => n.id === nodeId);
+  if (!node) return;
+  const titleEl = document.getElementById('badgeSiteTitle');
+  const idEl = document.getElementById('badgeRingId');
+  if (titleEl) titleEl.value = node.name;
+  if (idEl) idEl.value = node.id;
+  if (typeof updateBadgePreview === 'function') updateBadgePreview();
+  if (typeof showNoticeToast === 'function') showNoticeToast(`Loaded node preset: ${node.name} (${node.id})`);
+}
 
 const BADGE_PALETTES = {
   cyan: { bgDark: "#07101f", bgLight: "#0e1e38", border: "#38bdf8", accent: "#38bdf8", textTop: "#94a3b8", textBottom: "#ffffff" },
@@ -6374,6 +6501,9 @@ function drawTopologyMap(canvas, ctx) {
     else if (node.category === 'demoscene') nodeColor = "#f472b6";
     else if (node.category === 'tools') nodeColor = "#fbbf24";
     else if (node.category === 'apps') nodeColor = "#34d399";
+    else if (node.category === 'news') nodeColor = "#34d399";
+    else if (node.category === 'media') nodeColor = "#a78bfa";
+    else if (node.category === 'tech') nodeColor = "#38bdf8";
 
     ctx.fillStyle = isHovered ? "#ffffff" : nodeColor;
     ctx.strokeStyle = isHovered ? nodeColor : "#070b16";
@@ -7471,6 +7601,84 @@ const DEFAULT_COMMUNITY_BADGES = [
     bevel: "neon",
     cheers: 39,
     createdAt: Date.now() - 3600000 * 2
+  },
+  {
+    id: "comm_slashnet",
+    title: "SLASHNET NEWS '99",
+    author: "CmdrTaco_99",
+    url: "/web/slashnet.html",
+    topText: "SLASHNET '99",
+    bottomText: "NEWS 4 NERDS",
+    glyph: "pc",
+    palette: "green",
+    bevel: "raised",
+    cheers: 64,
+    createdAt: Date.now() - 3600000 * 15
+  },
+  {
+    id: "comm_trapster",
+    title: "TRAPSTER P2P SWARM",
+    author: "NapsterCat_99",
+    url: "/web/trapster.html",
+    topText: "TRAPSTER P2P",
+    bottomText: "SWARM AUDIO",
+    glyph: "cd",
+    palette: "cyan",
+    bevel: "neon",
+    cheers: 58,
+    createdAt: Date.now() - 3600000 * 10
+  },
+  {
+    id: "comm_cabled",
+    title: "CABLED MAGAZINE '99",
+    author: "Editor_Cabled",
+    url: "/web/cabled.html",
+    topText: "CABLED MAG",
+    bottomText: "CYBER WIRED",
+    glyph: "bolt",
+    palette: "amber",
+    bevel: "raised",
+    cheers: 42,
+    createdAt: Date.now() - 3600000 * 8
+  },
+  {
+    id: "comm_scallion",
+    title: "THE SCALLION WIRE",
+    author: "SatireBureau",
+    url: "/web/scallion.html",
+    topText: "THE SCALLION",
+    bottomText: "SATIRE '99",
+    glyph: "alien",
+    palette: "win95",
+    bevel: "inset",
+    cheers: 49,
+    createdAt: Date.now() - 3600000 * 5
+  },
+  {
+    id: "comm_demoscene",
+    title: "ASSEMBLY '99 VAULT",
+    author: "FLARELIGHT_Crew",
+    url: "/web/demoscene.html",
+    topText: "ASSEMBLY '99",
+    bottomText: "64K INTRO",
+    glyph: "floppy",
+    palette: "purple",
+    bevel: "neon",
+    cheers: 77,
+    createdAt: Date.now() - 3600000 * 3
+  },
+  {
+    id: "comm_rfc",
+    title: "IETF RFC 1149 BENCH",
+    author: "RFC_Editor",
+    url: "/web/rfc_archive.html",
+    topText: "IETF RFCs",
+    bottomText: "AVIAN CARRIER",
+    glyph: "globe",
+    palette: "netscape",
+    bevel: "raised",
+    cheers: 36,
+    createdAt: Date.now() - 3600000 * 1
   }
 ];
 
@@ -8200,6 +8408,12 @@ function loadSurfBookmarks() {
     } else {
       surfBookmarks = [
         { id: "#001", name: "KiloNet 1999 Web Portal", url: "/web/portal.html" },
+        { id: "#023", name: "SlashNet: News for Nerds", url: "/web/slashnet.html" },
+        { id: "#024", name: "Trapster P2P Swarm", url: "/web/trapster.html" },
+        { id: "#025", name: "Cabled Magazine '99", url: "/web/cabled.html" },
+        { id: "#026", name: "The Scallion Satire", url: "/web/scallion.html" },
+        { id: "#021", name: "Assembly '99 Vault", url: "/web/demoscene.html" },
+        { id: "#022", name: "IETF RFC Workbench", url: "/web/rfc_archive.html" },
         { id: "#002", name: "CyberSpire Retro Shrine", url: "/web/geocities.html" },
         { id: "#003", name: "0xRELEASE Scene Vault", url: "/web/warez.html" }
       ];
@@ -8838,11 +9052,48 @@ window.addEventListener('DOMContentLoaded', () => {
     window.onFirebaseReady();
   }
 
-  // Check URL parameters for direct random warp trigger
+  // Check URL parameters for direct random warp trigger and 1999 RingMaster traversal actions
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('warp') === 'random') {
+  const ringAction = urlParams.get('action');
+  const targetId = urlParams.get('id') || urlParams.get('node');
+
+  if (urlParams.get('warp') === 'random' || ringAction === 'random') {
     switchTab('tab-teleport');
     triggerStagedWarp();
+  } else if (ringAction === 'next' || ringAction === 'prev' || ringAction === 'skip') {
+    const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+    let matchedIdx = 0;
+    if (targetId) {
+      const cleanId = targetId.toLowerCase().replace(/^(kweb:\/\/|\/web\/)/, '').replace(/\.html$/, '');
+      const foundIdx = visibleNodes.findIndex(n => 
+        n.id.toLowerCase() === targetId.toLowerCase() ||
+        n.id.replace('#', '') === targetId ||
+        n.url.toLowerCase().includes(cleanId) ||
+        n.name.toLowerCase().includes(cleanId)
+      );
+      if (foundIdx !== -1) matchedIdx = foundIdx;
+    }
+    const step = ringAction === 'next' ? 1 : ringAction === 'skip' ? 2 : -1;
+    currentSurfIndex = (matchedIdx + step + visibleNodes.length) % visibleNodes.length;
+    switchTab('tab-surf');
+    renderSurfViewport();
+    const dest = visibleNodes[currentSurfIndex];
+    if (typeof showNoticeToast === 'function') {
+      showNoticeToast(`Ring Traversal [${ringAction.toUpperCase()}]: Hop to ${dest.name} (${dest.id})`);
+    }
+  } else if (ringAction === 'list' || ringAction === 'directory') {
+    switchTab('tab-directory');
+  } else if (ringAction === 'stats') {
+    if (targetId) {
+      const node = ringNodes.find(n => n.id.toLowerCase() === targetId.toLowerCase() || n.id.replace('#', '') === targetId || n.url.includes(targetId));
+      if (node) openNodeModal(node.id);
+      else switchTab('tab-stats');
+    } else {
+      switchTab('tab-stats');
+    }
+  } else if (targetId && !ringAction) {
+    const node = ringNodes.find(n => n.id.toLowerCase() === targetId.toLowerCase() || n.id.replace('#', '') === targetId || n.url.includes(targetId));
+    if (node) openNodeModal(node.id);
   }
 });
 
@@ -9857,7 +10108,7 @@ function executeCgiQuery() {
   let body = '';
 
   if (sel.indexOf('action=random') !== -1) {
-    const candidates = ['/web/portal.html', '/web/cabled.html', '/web/scallion.html', '/web/cybercafe.html', '/web/geocities.html', '/web/warez.html', '/web/asm_temple.html', '/web/users/neon_rider.html'];
+    const candidates = ['/web/portal.html', '/web/slashnet.html', '/web/trapster.html', '/web/cabled.html', '/web/scallion.html', '/web/demoscene.html', '/web/rfc_archive.html', '/web/cybercafe.html', '/web/geocities.html', '/web/warez.html', '/web/asm_temple.html', '/web/users/neon_rider.html'];
     location = candidates[Math.floor(Math.random() * candidates.length)];
     body = 'Status: 302 Moved Temporarily\nLocation: ' + location + '\nX-Ring-Algorithm: PseudoRandom-Mersenne\nSet-Cookie: RING_VISITED=' + location + '; path=/\n\nRedirecting client to next random consortium destination...';
   } else if (sel.indexOf('action=next') !== -1) {
