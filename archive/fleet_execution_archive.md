@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T14:34:02-07:00 — kilo-review: KMech (Argon Visual, Feature & Usability Review (Mature Audit))**
+  - Status: AUDIT COMPLETE — un-quarantined KMech from Mature Applications and queued surgical fixes across kilo-usability, kilo-tester, kilo-graphics, and kilo-expander.
+  - Visual & Layout Findings (640x503 sheet.png): 37px vertical overflow clips bottom action buttons ([S] Sell Salvage, [F1] Manual) and bottom HUD corners; .header-bar wraps title and [F1] Manual onto 2 rows; #toast-container (top:44px) overlaps wrapped header and .quick-hint; player/enemy mechs use forbidden SVG geometric primitives.
+  - Gameplay & Feature Findings: #garage-rank never updates on level-up (stuck on Cadet); Head/Cockpit strike logs message but lacks enemyStunned stun effect promised in Manual; saved career (kmech_save) is not auto-restored on boot; #modal-telemetry lacks KiloOS VFS postMessage integration.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KMech`, `kilo-tester`->`KMech`, `kilo-graphics`->`KMech`, `kilo-expander`->`KMech`] (un-quarantined `KMech` from Mature); advanced `kilo-review` to `KTrader`; next agent `kilo-creator`.
+
 - **2026-10-24T14:24:57-07:00 — kilo-expander: KAnomaly (Phase VI VFS Signal Bridge & Cross-App Forensic Dispatch)**
   - Status: PASS ✅ (0 errors, web 118.8 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Added two-way KiloOS VFS Signal Bridge (/sys/anomaly_capture.sig): VFS save, VFS load, picker ingress, and URL hash routing.

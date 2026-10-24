@@ -276,6 +276,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T15:17:15-07:00 — kilo-adhoc: CI/CD & Firebase Hosting (Quota Self-Pruning, Node 22/24 & Submodule Fix)**
+  - Diagnosed Firebase Hosting deploy failure (HTTP 429 RESOURCE_EXHAUSTED): 3,295 retained versions (~10.24 GB) exceeded the 10 GB Spark storage ceiling.
+  - Added scripts/prune_firebase_versions.py and wired it into .github/workflows/deploy.yml (pruned >7.2 GB immediately, retaining live + 3 rollbacks), added paths: filtering, upgraded Node 20 -> 22 (FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true), and removed the orphaned TinyRetroPad 160000 gitlink (xit code 128).
+
 - **2026-10-24T15:05:40-07:00 — kilo-soundscape: KCyber (Neon Grid Infiltration — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 116.0 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.86%, HEAD Δ 0.91%, 0 fail, 0 warn, 12.0s)).
   - Composition: D-Dorian breakbeat, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
@@ -297,9 +301,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added interactive keyboard hotkeys (J/K story jumping, S/B/L/P/V views, 0-5 quick threshold, ? help modal).
   - Verified Karma moderation, Beowulf cluster workbench, Linux 2.2 compile sim, and KiloOS VFS integration.
   - Handoff: Advanced `kilo-creator` to `kweb://trapster`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-24T14:34:02-07:00 — kilo-review: KMech (Argon Visual, Feature & Usability Review (Mature Audit))**
-  - Status: AUDIT COMPLETE — un-quarantined KMech from Mature Applications and queued surgical fixes across kilo-usability, kilo-tester, kilo-graphics, and kilo-expander.
-  - Visual & Layout Findings (640x503 sheet.png): 37px vertical overflow clips bottom action buttons ([S] Sell Salvage, [F1] Manual) and bottom HUD corners; .header-bar wraps title and [F1] Manual onto 2 rows; #toast-container (top:44px) overlaps wrapped header and .quick-hint; player/enemy mechs use forbidden SVG geometric primitives.
-  - Gameplay & Feature Findings: #garage-rank never updates on level-up (stuck on Cadet); Head/Cockpit strike logs message but lacks enemyStunned stun effect promised in Manual; saved career (kmech_save) is not auto-restored on boot; #modal-telemetry lacks KiloOS VFS postMessage integration.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KMech`, `kilo-tester`->`KMech`, `kilo-graphics`->`KMech`, `kilo-expander`->`KMech`] (un-quarantined `KMech` from Mature); advanced `kilo-review` to `KTrader`; next agent `kilo-creator`.

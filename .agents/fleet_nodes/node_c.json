@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 352,
+  "turns_executed": 353,
   "last_turn_timestamp": "2026-10-24T21:40:30.162095+00:00",
-  "last_heartbeat": "2026-10-24T21:53:35.491525+00:00",
-  "current_target": "KMech",
+  "last_heartbeat": "2026-10-24T22:05:59.505438+00:00",
+  "current_target": "KCyber",
   "remote_command": "none"
 }

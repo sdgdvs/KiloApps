@@ -4,6 +4,14 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "KiloOS/**"
+      - "scripts/prune_firebase_versions.py"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   build-and-deploy:
@@ -18,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Algorithmic Security Lint & Trademark Check
         run: python scripts/security_lint.py
@@ -35,6 +43,11 @@ jobs:
         run: |
           cd KiloOS
           npm run build
+
+      - name: Prune Old Firebase Hosting Versions
+        env:
+          FIREBASE_SERVICE_ACCOUNT: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_KILOAPPS }}"
+        run: python scripts/prune_firebase_versions.py --keep 3 --max-pages 5 --max-delete 50 --workers 8
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
