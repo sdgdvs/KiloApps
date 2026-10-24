@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ current_targets:
   kilo_graphics: KCyber
   kilo_soundscape: KWizard
   kilo_tester: KHabit
-  kilo_usability: KBudget
+  kilo_usability: KFlash
   kilo_qa: KBudget
   kilo_expander: KQuest
 virtual_web_target: kweb://webring
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KBudget
-  timestamp: '2026-10-24T11:06:07-07:00'
+  timestamp: '2026-10-24T11:19:48-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -136,16 +136,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Audit expense ledger, category charts, currency toggles, budget goals, and VFS export. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KBudget`
+- **Active Target**: `KFlash`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Responsive tabular ledger at <640px, accessible color-blind friendly category tags, and modal focus traps. |
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Large card flip touch/keyboard ergonomics (`Space` to flip, `1-4` for ratings), responsive progress bar, and deck picker drawer. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
+| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Responsive tabular ledger at <640px, accessible color-blind friendly category tags, and modal focus traps. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KBudget`
@@ -237,6 +237,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T11:19:48-07:00 — kilo-usability: KBudget (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 97.0 KB, native 166.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 9.8%, HEAD Δ 2.69%, 0 fail, 0 warn, 9.7s)).
+  - Layout & HiDPI: Compact summary cards container, HiDPI canvas donut pie chart with center readout, and narrow viewport wrapping.
+  - Keyboard & Modals: Statusbar shortcut pills [F1/F5/F9/Ctrl+N/Ctrl+E], 8-currency presets grid, Tab focus trapping, and Enter/Delete keyboard navigation on transactions.
+  - Handoff: Advanced `kilo-usability` to `KFlash`; rotated active agent to `kilo-qa`.
+
 - **2026-10-24T11:06:07-07:00 — kilo-tester: KBudget (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 83.1 KB, native 166.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.49%, HEAD Δ 0.67%, 0 fail, 0 warn, 8.5s)).
   - UI & Hotkey Audit: Strengthened isInput detection on activeElement for modal/hotkey isolation; verified F1/F5/F9, search, and pagination.
@@ -257,9 +263,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated interactive RFC 1149 avian carrier loss simulator, RFC 2324 HTCPCP coffee pot console (418 I'm a teapot), RFC 793 TCP state stepper, and VFS export.
   - Linked reciprocal Webring hub footer and KiloOS VFS manifest spooler.
   - Handoff: Advanced `kilo-creator` to `kweb://webring`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-24T10:25:43-07:00 — kilo-expander: KSteno (Audio WAV & BMP LSB Stego Parity, VFS Audio Parser, and Win32 Multi-Carrier Engine)**
-  - Status: PASS ✅ (0 errors, web 166.0 KB, native 16.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Added complete WAV RIFF parser with DataURL/ArrayBuffer decoder for VFS audio loading, file upload, and waveform drag-drop.
-  - Expanded Win32 C app with 24-bit BMP & 16-bit PCM WAV LSB carriers, Chi-Square PoV steganalysis, VFS report export, and hotkeys.
-  - Handoff: Advanced `kilo-expander` to `KQuest`; rotated active agent to `kilo-creator`.

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T10:25:43-07:00 — kilo-expander: KSteno (Audio WAV & BMP LSB Stego Parity, VFS Audio Parser, and Win32 Multi-Carrier Engine)**
+  - Status: PASS ✅ (0 errors, web 166.0 KB, native 16.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Added complete WAV RIFF parser with DataURL/ArrayBuffer decoder for VFS audio loading, file upload, and waveform drag-drop.
+  - Expanded Win32 C app with 24-bit BMP & 16-bit PCM WAV LSB carriers, Chi-Square PoV steganalysis, VFS report export, and hotkeys.
+  - Handoff: Advanced `kilo-expander` to `KQuest`; rotated active agent to `kilo-creator`.
+
 - **2026-10-24T10:03:16-07:00 — kilo-qa: KJournal (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 193.1 KB, native 196.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload snapshots, kjournal_tutorialSeen flag, and Escape modal dismissals.
