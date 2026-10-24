@@ -555,9 +555,9 @@
     "id": "kquest",
     "title": "KQuest",
     "folder": "Games",
-    "webBytes": 353218,
+    "webBytes": 401942,
     "exeBytes": 99328,
-    "budgetPercent": 35.4
+    "budgetPercent": 40.2
   },
   {
     "id": "kradio",
@@ -683,9 +683,9 @@
     "id": "kstellar",
     "title": "KStellar",
     "folder": "Games",
-    "webBytes": 163352,
+    "webBytes": 183747,
     "exeBytes": 160768,
-    "budgetPercent": 16.4
+    "budgetPercent": 18.4
   },
   {
     "id": "ksteno",

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -26,7 +26,7 @@ commit_checkpoint: 12
 status: ready
 current_targets:
   kilo_creator: kweb://deep-core
-  kilo_graphics: KStellar
+  kilo_graphics: KSanctuary
   kilo_soundscape: KCyber
   kilo_tester: KCipher
   kilo_usability: KHash
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://webring
-  timestamp: '2026-10-23T18:53:29-07:00'
+  agent: kilo-graphics
+  app: KStellar
+  timestamp: '2026-10-23T19:05:35-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -93,11 +93,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KStellar`
+- **Active Target**: `KSanctuary`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 | `KRogue` | `KiloOS/public/apps/krogue.html` | Subterranean roguelike visual polish: crisp tile/entity sprite rendering, atmospheric torchlight vignette, boss monster visual distinction, and perimeter glint sweep. |
@@ -106,6 +105,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
+| `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KCyber`
@@ -224,6 +224,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T19:05:35-07:00 — kilo-graphics: KStellar (4X Stellar Empire Map Visual Upgrade & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 179.4 KB, native 157.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.72%, HEAD Δ 6.67%, 0 fail, 0 warn, 12.4s)).
+  - Replaced programmer art with 4X astrophysics star spectral classes (O, B, A, F, G, K, M, Pulsar) with multi-stop coronas, prominences, and diffraction spikes.
+  - Rendered perspective orbital ringworld megastructures with rotating biosphere quadrants and structural spokes.
+  - Integrated roaming galaxy fleets (Federation cruisers, merchant bulk haulers, pirate raiders) and command flagship sprite.
+  - Completed glint sweep: zero perimeter border dots or rotating specular glints.
+  - Handoff: Advanced `kilo-graphics` to `KSanctuary`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-23T18:53:29-07:00 — kilo-creator: kweb://webring (Canonical Node Integration & Traversal Mesh)**
   - Status: PASS (0 errors, web 413.3 KB < 999 KB; startup, Vite & security_lint PASS).
   - Integrated slashnet, trapster, cabled, scallion, demoscene, and rfc-archive into RingMaster topology map, live HUD telemetry, and 88x31 badge presets.
@@ -247,9 +255,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Layout & HiDPI: Responsive viewport wrapping for image/audio/text/steganalysis/deaddrop grids; HiDPI devicePixelRatio backing on audio waveform and chi-square curve canvases with requestAnimationFrame resize.
   - Keyboard & Modals: F1/H help, M mute, 1-5 mode switching, accessible Tab focus trapping in modal dialogs, Escape dismissal with focus restoration, and statusbar shortcuts pill.
   - Handoff: Advanced `kilo-usability` to `KHash`; rotated active agent to `kilo-qa`.
-
-- **2026-10-23T18:17:03-07:00 — kilo-tester: KSteno (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS ✅ (0 errors, web 144.4 KB, native 10.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.5%, HEAD Δ 0.0%, 0 fail, 0 warn, 13.7s)).
-  - UI & Hotkey Audit: Verified image/audio LSB steganography, bitplane visualizer, passkey encryption, and modal dismissals.
-  - Repairs: Fixed numeric hotkeys 1-5 with input focus guards, ensured Escape properly dismisses splash/tutorial/manual/settings, and added backdrop click dismissal on modal overlays.
-  - Handoff: Advanced `kilo-tester` to `KCipher`; rotated active agent to `kilo-usability`.

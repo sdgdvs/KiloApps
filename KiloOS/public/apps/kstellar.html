@@ -86,19 +86,18 @@
         h2, h3 { margin-top: 0; color: #00ffcc; text-shadow: 0 0 8px #00ffcc; }
         .system {
             position: absolute;
-            width: 16px;
-            height: 16px;
-            background-color: #00ff00;
-            box-shadow: 0 0 10px #00ff00;
+            width: 26px;
+            height: 26px;
+            background-color: transparent;
             border-radius: 50%;
             cursor: pointer;
             transform: translate(-50%, -50%);
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s;
             z-index: 5;
         }
         .system:hover {
-            box-shadow: 0 0 25px #00ffcc;
-            transform: translate(-50%, -50%) scale(1.6);
+            box-shadow: 0 0 14px #00ffff, inset 0 0 6px #00ffff;
+            transform: translate(-50%, -50%) scale(1.2);
         }
         .system-label {
             position: absolute;
@@ -797,14 +796,83 @@
         const sysNames = ["Aegis", "Borealis", "Cygnus", "Draco", "Eridanus", "Fenrir", "Goliath", "Helios", "Icarus", "Juno", "Krypton", "Lyra", "Orion", "Pegasus", "Rigel", "Sirius", "Taurus", "Ursa", "Vega", "Wolf"];
         const sectorNames = ["Alpha", "Beta", "Gamma", "Delta", "Omega"];
 
+        // --- Star Spectral Classifications (4X Astrophysics Model) ---
+        const spectralClasses = {
+            'O': { class: 'O5V', name: 'Blue Supergiant', temp: '34,000 K', coreColor: '#ffffff', innerColor: '#aaccff', outerColor: '#2b75ff', coronaColor: 'rgba(50, 130, 255, 0.35)', flareColor: '#99ccff', radius: 14, flares: 6, spikes: true },
+            'B': { class: 'B2IV', name: 'Blue-White Subgiant', temp: '19,200 K', coreColor: '#f4f9ff', innerColor: '#8ec5ff', outerColor: '#307ae8', coronaColor: 'rgba(60, 140, 240, 0.30)', flareColor: '#b0d8ff', radius: 12, flares: 5, spikes: true },
+            'A': { class: 'A0V', name: 'White Main Sequence', temp: '9,800 K', coreColor: '#ffffff', innerColor: '#e0ecff', outerColor: '#7baaff', coronaColor: 'rgba(150, 200, 255, 0.28)', flareColor: '#ffffff', radius: 11, flares: 4, spikes: true },
+            'F': { class: 'F5V', name: 'Yellow-White Dwarf', temp: '6,600 K', coreColor: '#fffff2', innerColor: '#fff0a6', outerColor: '#d6a828', coronaColor: 'rgba(240, 210, 110, 0.26)', flareColor: '#ffea88', radius: 10, flares: 4, spikes: false },
+            'G': { class: 'G2V', name: 'Yellow Dwarf (Sol-type)', temp: '5,780 K', coreColor: '#fffbe0', innerColor: '#ffd738', outerColor: '#ff7700', coronaColor: 'rgba(255, 170, 20, 0.32)', flareColor: '#ffa834', radius: 10, flares: 5, spikes: false },
+            'K': { class: 'K3V', name: 'Orange Dwarf', temp: '4,400 K', coreColor: '#ffe8cc', innerColor: '#ff9922', outerColor: '#c84400', coronaColor: 'rgba(255, 110, 20, 0.28)', flareColor: '#ff7530', radius: 9, flares: 3, spikes: false },
+            'M': { class: 'M4V', name: 'Red Dwarf', temp: '3,100 K', coreColor: '#ffd0d0', innerColor: '#e03030', outerColor: '#800808', coronaColor: 'rgba(220, 30, 30, 0.26)', flareColor: '#ee4444', radius: 8, flares: 3, spikes: false },
+            'Pulsar': { class: 'PSR-X1', name: 'Magnetar / Pulsar', temp: '1,500,000 K', coreColor: '#ffffff', innerColor: '#00ffff', outerColor: '#cc00ff', coronaColor: 'rgba(0, 255, 255, 0.45)', flareColor: '#ff00ff', radius: 7, flares: 4, spikes: true, pulsar: true }
+        };
+
+        function ensureSystemVisuals(sys) {
+            if (!sys.spectralType) {
+                if (sys.id === 1) {
+                    sys.spectralType = "G";
+                } else if (sys.phenomenon === "Black Hole" || sys.phenomenon === "Ion Storm") {
+                    sys.spectralType = "Pulsar";
+                } else if (sys.phenomenon === "Solar Flare") {
+                    sys.spectralType = (sys.id % 2 === 0) ? "O" : "B";
+                } else if (sys.phenomenon === "Alien Monolith") {
+                    sys.spectralType = "A";
+                } else {
+                    const specDist = ["M", "M", "K", "K", "G", "F", "A", "B", "O"];
+                    sys.spectralType = specDist[(sys.id * 7 + (sys.name ? sys.name.length : 5)) % specDist.length];
+                }
+            }
+            if (sys.hasRingworld === undefined) {
+                if (sys.id === 1) {
+                    sys.hasRingworld = true;
+                    sys.ringworldName = "Sol Progenitor Orbital Ring";
+                    sys.ringworldClass = "Cradle Megastructure";
+                    sys.ringRadius = 26;
+                    sys.ringTilt = -0.38;
+                } else if (sys.economy === "Tech Hub" || sys.phenomenon === "Alien Monolith" || sys.id === 7 || sys.id === 15) {
+                    sys.hasRingworld = true;
+                    sys.ringworldName = `${sys.name} Orbital Ringworld`;
+                    sys.ringworldClass = (sys.phenomenon === "Alien Monolith") ? "Precursor Biosphere Ring" : "High-Tech Orbital Ring";
+                    sys.ringRadius = 24;
+                    sys.ringTilt = (sys.id % 2 === 0) ? 0.38 : -0.34;
+                } else {
+                    sys.hasRingworld = false;
+                }
+            }
+        }
+
+        // Active 4X Roaming Galaxy Fleets Simulation
+        let galaxyFleets = [
+            { id: 'fed-1', name: '7th Strike Flotilla', faction: 'Federation', type: 'cruiser', color: '#00ffff', originId: 1, targetId: 2, progress: 0.15, speed: 0.0006 },
+            { id: 'fed-2', name: 'Aegis Vanguard Wing', faction: 'Federation', type: 'cruiser', color: '#00ffff', originId: 5, targetId: 8, progress: 0.65, speed: 0.0005 },
+            { id: 'fed-3', name: 'Core Peacekeeper Fleet', faction: 'Federation', type: 'cruiser', color: '#00ffff', originId: 12, targetId: 1, progress: 0.40, speed: 0.0007 },
+            { id: 'trn-1', name: 'Bulk Hauler "Titan Mule"', faction: 'Traders', type: 'freighter', color: '#ffaa00', originId: 1, targetId: 4, progress: 0.30, speed: 0.00045, cargo: '120T Minerals' },
+            { id: 'trn-2', name: 'Hyper-Conveyance #9', faction: 'Traders', type: 'freighter', color: '#ffaa00', originId: 3, targetId: 6, progress: 0.75, speed: 0.0005, cargo: '85T Food' },
+            { id: 'trn-3', name: 'Stellar Express V', faction: 'Traders', type: 'freighter', color: '#ffaa00', originId: 7, targetId: 9, progress: 0.50, speed: 0.00048, cargo: '60T Tech' },
+            { id: 'trn-4', name: 'Deep Rim Merchant #12', faction: 'Traders', type: 'freighter', color: '#ffaa00', originId: 11, targetId: 14, progress: 0.10, speed: 0.00042, cargo: '90T Medicine' },
+            { id: 'pir-1', name: 'Blood Corsair Wolfpack', faction: 'Pirates', type: 'raider', color: '#ff3344', originId: 10, targetId: 13, progress: 0.20, speed: 0.0008 },
+            { id: 'pir-2', name: 'Void Scythe Marauder', faction: 'Pirates', type: 'raider', color: '#ff3344', originId: 16, targetId: 18, progress: 0.82, speed: 0.00075 },
+            { id: 'pir-3', name: 'Reaper Strike Skiff', faction: 'Pirates', type: 'raider', color: '#ff3344', originId: 20, targetId: 15, progress: 0.45, speed: 0.0007 }
+        ];
+
         function generateGalaxy() {
             systems = [];
-            systems.push({
+            const solSys = {
                 id: 1, name: "Sol", sector: "Alpha", x: 50, y: 50, 
-                desc: "Cradle of humanity. Highly developed planetary system.", economy: "Trading Hub", 
+                desc: "Cradle of humanity. Highly developed planetary system with ancient Progenitor orbital ring infrastructure.", economy: "Trading Hub", 
                 phenomenon: "None",
+                spectralType: "G",
+                hasRingworld: true,
+                ringworldName: "Sol Progenitor Orbital Ring",
+                ringworldClass: "Cradle Megastructure",
+                ringRadius: 26,
+                ringTilt: -0.38,
                 market: {food: 20, minerals: 40, tech: 150, medicine: 60}
-            });
+            };
+            ensureSystemVisuals(solSys);
+            systems.push(solSys);
+
             for (let i = 2; i <= 30; i++) {
                 let sec = sectorNames[Math.floor(Math.random() * sectorNames.length)];
                 let namePrefix = sysNames[Math.floor(Math.random() * sysNames.length)];
@@ -819,7 +887,7 @@
                     const pList = ["Black Hole", "Solar Flare", "Derelict Salvage", "Alien Monolith", "Ion Storm"];
                     phenom = pList[Math.floor((i / 3)) % pList.length];
                 }
-                systems.push({
+                const newSys = {
                     id: i,
                     name: `${namePrefix} ${nameSuffix}`,
                     sector: sec,
@@ -834,7 +902,9 @@
                         tech: Math.floor(baseTech * eco.techMult),
                         medicine: Math.floor(baseMed * eco.medMult)
                     }
-                });
+                };
+                ensureSystemVisuals(newSys);
+                systems.push(newSys);
             }
         }
         generateGalaxy();
@@ -1811,6 +1881,29 @@
                 </div>`;
             }
 
+            ensureSystemVisuals(sys);
+            const spec = spectralClasses[sys.spectralType] || spectralClasses['G'];
+            let ringBadge = "";
+            if (sys.hasRingworld) {
+                ringBadge = `<div style="margin: 6px 0; padding: 6px 8px; border: 1px solid #00ffff; color: #00ffff; background: rgba(0,30,45,0.6); font-size: 11px;">
+                    <strong>[🪐 MEGASTRUCTURE DETECTED]</strong><br>${sys.ringworldName} (${sys.ringworldClass || 'Orbital Ring'})
+                </div>`;
+            }
+
+            let spectralBadge = `<div style="display:flex; align-items:center; gap:8px; margin: 4px 0 8px 0; font-size: 11px; color:#cceeff; background:rgba(0,15,25,0.6); padding:4px 8px; border-left:3px solid ${spec.coreColor};">
+                <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${spec.coreColor}; box-shadow:0 0 6px ${spec.outerColor};"></span>
+                <span><strong>SPECTRAL:</strong> Class ${spec.class} (${spec.name}) • ${spec.temp}</span>
+            </div>`;
+
+            const localFleets = galaxyFleets.filter(f => f.targetId === sys.id || f.originId === sys.id);
+            let fleetTrafficHtml = "";
+            if (localFleets.length > 0) {
+                const fltList = localFleets.map(f => `<span style="color:${f.color}; font-size:11px;">• ${f.name} [${f.faction}]</span>`).join("<br>");
+                fleetTrafficHtml = `<div style="margin:6px 0; background:rgba(0,10,20,0.5); padding:4px 8px; border:1px solid rgba(0,255,204,0.25);">
+                    <strong style="color:#00ffcc; font-size:11px;">ORBITAL TRAFFIC:</strong><br>${fltList}
+                </div>`;
+            }
+
             let headerArt = `
                 <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px; padding:8px; border:1px solid rgba(0,255,204,0.4); background:rgba(0,10,20,0.6);">
                     ${getPlanetSvg(sys)}
@@ -1822,8 +1915,11 @@
             `;
 
             let html = headerArt + `
+                ${spectralBadge}
+                ${ringBadge}
                 <p style="font-size:13px; line-height:1.4; margin:4px 0 8px 0;">${sys.desc}</p>
                 ${phenomBadge}
+                ${fleetTrafficHtml}
                 <p style="font-size:12px; color:#aaa; margin:4px 0;"><strong>Telemetry:</strong> X:${sys.x} Y:${sys.y}</p>
             `;
             
@@ -2114,14 +2210,12 @@
                     mapEl.appendChild(ring);
                 }
 
+                ensureSystemVisuals(sys);
                 const dot = document.createElement('div');
                 dot.className = 'system';
                 dot.style.left = sys.x + '%';
                 dot.style.top = sys.y + '%';
-                
-                let eco = economyTypes.find(e => e.name === sys.economy) || economyTypes[0];
-                dot.style.backgroundColor = sys.id === currentSystemId ? '#00ffff' : eco.color;
-                dot.style.boxShadow = `0 0 10px ${sys.id === currentSystemId ? '#00ffff' : eco.color}`;
+                dot.title = `${sys.name} [Class ${(spectralClasses[sys.spectralType]||{}).class || 'G2V'} • ${sys.economy}]`;
                 
                 const label = document.createElement('div');
                 label.className = 'system-label';
@@ -2228,30 +2322,162 @@
                 }
             }
 
-            // Draw glowing stellar coronas and targeting reticle brackets
+            // --- 4X Stellar Empire Map Visuals: Spectral Class Stars, Prominences, Ringworlds ---
             systems.forEach(sys => {
+                ensureSystemVisuals(sys);
+                const spec = spectralClasses[sys.spectralType] || spectralClasses['G'];
                 const sx = sys.x * mw / 100;
                 const sy = sys.y * mh / 100;
-                const coronaColor = sys.id === 1 ? 'rgba(255, 220, 80, 0.25)' : 
-                    (sys.economy === 'Agricultural' ? 'rgba(80, 255, 120, 0.18)' :
-                    (sys.economy === 'Mining' ? 'rgba(255, 160, 60, 0.18)' :
-                    (sys.economy === 'Industrial' ? 'rgba(255, 80, 60, 0.18)' :
-                    (sys.economy === 'Tech Hub' ? 'rgba(0, 230, 255, 0.22)' : 'rgba(255, 80, 255, 0.18)'))));
 
-                const coronaGrad = mapCtx.createRadialGradient(sx, sy, 2, sx, sy, 16);
-                coronaGrad.addColorStop(0, coronaColor);
+                // 1. Orbital Ringworld (Back Arc - drawn behind star photosphere)
+                if (sys.hasRingworld) {
+                    const ringRadius = sys.ringRadius || 24;
+                    const ringRy = ringRadius * 0.38;
+                    const tilt = sys.ringTilt || -0.35;
+                    mapCtx.save();
+                    mapCtx.translate(sx, sy);
+                    mapCtx.rotate(tilt);
+
+                    // Rear structural arc
+                    mapCtx.strokeStyle = 'rgba(0, 200, 220, 0.35)';
+                    mapCtx.lineWidth = 2.5;
+                    mapCtx.beginPath();
+                    mapCtx.ellipse(0, 0, ringRadius, ringRy, 0, Math.PI, Math.PI * 2, false);
+                    mapCtx.stroke();
+                    mapCtx.restore();
+                }
+
+                // 2. Radiant Multi-Stop Stellar Corona
+                const coronaRad = spec.radius * 3.2;
+                const coronaGrad = mapCtx.createRadialGradient(sx, sy, spec.radius * 0.35, sx, sy, coronaRad);
+                coronaGrad.addColorStop(0, spec.coronaColor);
+                coronaGrad.addColorStop(0.4, spec.coronaColor.replace('0.3', '0.12').replace('0.2', '0.08'));
                 coronaGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
                 mapCtx.fillStyle = coronaGrad;
                 mapCtx.beginPath();
-                mapCtx.arc(sx, sy, 16, 0, Math.PI * 2);
+                mapCtx.arc(sx, sy, coronaRad, 0, Math.PI * 2);
                 mapCtx.fill();
 
-                // Targeted HUD Reticle Brackets for selected system
+                // 3. Animated Solar Prominence Flares
+                for (let f = 0; f < spec.flares; f++) {
+                    const flareAngle = (f / spec.flares) * Math.PI * 2 + Math.sin(animFrameTime * 1.8 + f * 1.7 + sys.id) * 0.25;
+                    const flareReach = spec.radius + 3 + Math.sin(animFrameTime * 3.5 + f * 2.3 + sys.id) * 3.2;
+                    const fx = sx + Math.cos(flareAngle) * flareReach;
+                    const fy = sy + Math.sin(flareAngle) * flareReach;
+                    mapCtx.save();
+                    mapCtx.strokeStyle = spec.flareColor;
+                    mapCtx.lineWidth = 1.2;
+                    mapCtx.beginPath();
+                    mapCtx.moveTo(sx + Math.cos(flareAngle - 0.22) * spec.radius, sy + Math.sin(flareAngle - 0.22) * spec.radius);
+                    mapCtx.quadraticCurveTo(fx, fy, sx + Math.cos(flareAngle + 0.22) * spec.radius, sy + Math.sin(flareAngle + 0.22) * spec.radius);
+                    mapCtx.stroke();
+                    mapCtx.restore();
+                }
+
+                // 4. Star Core (Photosphere Multi-Stop Gradient)
+                const coreGrad = mapCtx.createRadialGradient(sx, sy, 0, sx, sy, spec.radius);
+                coreGrad.addColorStop(0, spec.coreColor);
+                coreGrad.addColorStop(0.45, spec.innerColor);
+                coreGrad.addColorStop(0.85, spec.outerColor);
+                coreGrad.addColorStop(1.0, spec.outerColor);
+                mapCtx.fillStyle = coreGrad;
+                mapCtx.beginPath();
+                mapCtx.arc(sx, sy, spec.radius, 0, Math.PI * 2);
+                mapCtx.fill();
+
+                // 5. Astronomical Diffraction Spikes (O, B, A, Pulsar)
+                if (spec.spikes) {
+                    const spLen = spec.radius * 2.2;
+                    mapCtx.save();
+                    mapCtx.strokeStyle = spec.coreColor;
+                    mapCtx.globalAlpha = 0.45 + Math.sin(animFrameTime * 3 + sys.id) * 0.15;
+                    mapCtx.lineWidth = 1;
+                    mapCtx.beginPath();
+                    mapCtx.moveTo(sx - spLen, sy); mapCtx.lineTo(sx + spLen, sy);
+                    mapCtx.moveTo(sx, sy - spLen); mapCtx.lineTo(sx, sy + spLen);
+                    mapCtx.stroke();
+                    mapCtx.restore();
+                }
+
+                // 6. Relativistic Polar Radiation Beams (Pulsar / Magnetar)
+                if (spec.pulsar) {
+                    const pAngle = animFrameTime * 0.8 + sys.id;
+                    mapCtx.save();
+                    mapCtx.translate(sx, sy);
+                    mapCtx.rotate(pAngle);
+                    const beamGrad = mapCtx.createLinearGradient(0, -36, 0, 36);
+                    beamGrad.addColorStop(0, 'rgba(0, 255, 255, 0)');
+                    beamGrad.addColorStop(0.2, 'rgba(0, 255, 255, 0.7)');
+                    beamGrad.addColorStop(0.5, '#ffffff');
+                    beamGrad.addColorStop(0.8, 'rgba(200, 0, 255, 0.7)');
+                    beamGrad.addColorStop(1, 'rgba(200, 0, 255, 0)');
+                    mapCtx.strokeStyle = beamGrad;
+                    mapCtx.lineWidth = 2.5;
+                    mapCtx.beginPath();
+                    mapCtx.moveTo(0, -40); mapCtx.lineTo(0, 40);
+                    mapCtx.stroke();
+                    mapCtx.strokeStyle = 'rgba(0, 255, 255, 0.25)';
+                    mapCtx.lineWidth = 1;
+                    mapCtx.beginPath(); mapCtx.ellipse(0, 0, 14, 24, 0, 0, Math.PI * 2); mapCtx.stroke();
+                    mapCtx.restore();
+                }
+
+                // 7. Orbital Ringworld (Front Arc - passes in front of star with rotating habitat panels)
+                if (sys.hasRingworld) {
+                    const ringRadius = sys.ringRadius || 24;
+                    const ringRy = ringRadius * 0.38;
+                    const tilt = sys.ringTilt || -0.35;
+                    mapCtx.save();
+                    mapCtx.translate(sx, sy);
+                    mapCtx.rotate(tilt);
+
+                    // Structural spoke tethers connecting ring to central orbital docking hub
+                    const spokeRot = (animFrameTime * 0.15) % Math.PI;
+                    mapCtx.strokeStyle = 'rgba(0, 255, 204, 0.35)';
+                    mapCtx.lineWidth = 1;
+                    mapCtx.beginPath();
+                    mapCtx.moveTo(-Math.cos(spokeRot) * ringRadius, -Math.sin(spokeRot) * ringRy);
+                    mapCtx.lineTo(Math.cos(spokeRot) * ringRadius, Math.sin(spokeRot) * ringRy);
+                    mapCtx.stroke();
+
+                    // Front structural rim
+                    mapCtx.strokeStyle = '#00ffff';
+                    mapCtx.lineWidth = 1.8;
+                    mapCtx.beginPath();
+                    mapCtx.ellipse(0, 0, ringRadius, ringRy, 0, 0, Math.PI, false);
+                    mapCtx.stroke();
+                    mapCtx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+                    mapCtx.lineWidth = 1;
+                    mapCtx.beginPath();
+                    mapCtx.ellipse(0, 0, ringRadius - 1.8, ringRy - 0.8, 0, 0, Math.PI, false);
+                    mapCtx.stroke();
+
+                    // Rotating habitat quadrants along front ring
+                    const numSegments = 10;
+                    const segAngle = Math.PI / numSegments;
+                    const rotOffset = (animFrameTime * 0.18) % (segAngle * 2);
+                    for (let s = 0; s < numSegments; s++) {
+                        const aStart = s * segAngle + rotOffset;
+                        if (aStart < 0 || aStart > Math.PI - 0.05) continue;
+                        const aEnd = Math.min(Math.PI, aStart + segAngle * 0.72);
+                        const segColor = (s % 3 === 0) ? '#00ff88' : ((s % 3 === 1) ? '#ffcc00' : '#00ffff');
+                        mapCtx.save();
+                        mapCtx.strokeStyle = segColor;
+                        mapCtx.lineWidth = 2.6;
+                        mapCtx.beginPath();
+                        mapCtx.ellipse(0, 0, ringRadius - 1, ringRy - 0.4, 0, aStart, aEnd, false);
+                        mapCtx.stroke();
+                        mapCtx.restore();
+                    }
+                    mapCtx.restore();
+                }
+
+                // 8. Targeted HUD Reticle Brackets for selected system
                 if (sys.id === selectedSystem) {
                     mapCtx.save();
                     mapCtx.strokeStyle = '#00ffff';
                     mapCtx.lineWidth = 1.5;
-                    const bSize = 12;
+                    const bSize = 14;
                     mapCtx.beginPath();
                     // Top-left
                     mapCtx.moveTo(sx - bSize, sy - bSize + 5);
@@ -2292,7 +2518,87 @@
                 }
             }
 
-            // Draw Animated Player Ship Sprite on current system
+            // --- 4X Roaming Galactic Fleets Simulation Rendering ---
+            galaxyFleets.forEach(flt => {
+                const s1 = systems.find(s => s.id === flt.originId) || systems[0];
+                const s2 = systems.find(s => s.id === flt.targetId) || systems[1];
+                flt.progress += flt.speed;
+                if (flt.progress >= 1.0) {
+                    flt.progress = 0;
+                    flt.originId = flt.targetId;
+                    // Pick next destination system
+                    const candidates = systems.filter(s => s.id !== flt.originId);
+                    const nextSys = candidates[Math.floor(Math.random() * candidates.length)];
+                    flt.targetId = nextSys ? nextSys.id : 1;
+                }
+
+                const gx = s1.x + (s2.x - s1.x) * flt.progress;
+                const gy = s1.y + (s2.y - s1.y) * flt.progress;
+                const fx = gx * mw / 100;
+                const fy = gy * mh / 100;
+                const heading = Math.atan2((s2.y - s1.y) * mh, (s2.x - s1.x) * mw);
+
+                mapCtx.save();
+                mapCtx.translate(fx, fy);
+                mapCtx.rotate(heading);
+
+                if (flt.type === 'freighter') {
+                    // Trader Bulk Hauler: Modular cargo containers & amber thrusters
+                    mapCtx.fillStyle = '#ff8800';
+                    mapCtx.beginPath();
+                    mapCtx.moveTo(-10, -3); mapCtx.lineTo(-15 - Math.random() * 4, 0); mapCtx.lineTo(-10, 3);
+                    mapCtx.fill();
+                    // Cargo pods
+                    mapCtx.fillStyle = '#d48800';
+                    mapCtx.fillRect(-8, -5, 12, 10);
+                    mapCtx.strokeStyle = '#ffaa00';
+                    mapCtx.lineWidth = 1;
+                    mapCtx.strokeRect(-8, -5, 12, 10);
+                    // Bridge module
+                    mapCtx.fillStyle = '#ffffff';
+                    mapCtx.fillRect(4, -2, 3, 4);
+                } else if (flt.type === 'cruiser') {
+                    // Federation Cruiser: Sleek arrow hull & blue hyperdrive trail
+                    mapCtx.fillStyle = '#00ffff';
+                    mapCtx.beginPath();
+                    mapCtx.moveTo(-8, -2); mapCtx.lineTo(-16 - Math.random() * 5, 0); mapCtx.lineTo(-8, 2);
+                    mapCtx.fill();
+                    // Arrowhead command fuselage
+                    mapCtx.fillStyle = '#005577';
+                    mapCtx.strokeStyle = '#00ffff';
+                    mapCtx.lineWidth = 1.2;
+                    mapCtx.beginPath();
+                    mapCtx.moveTo(10, 0); mapCtx.lineTo(-6, -6); mapCtx.lineTo(-3, 0); mapCtx.lineTo(-6, 6);
+                    mapCtx.closePath();
+                    mapCtx.fill();
+                    mapCtx.stroke();
+                } else {
+                    // Pirate Raider: Jagged swept-wing with crimson wake
+                    mapCtx.fillStyle = '#ff3344';
+                    mapCtx.beginPath();
+                    mapCtx.moveTo(-6, -2); mapCtx.lineTo(-13 - Math.random() * 4, 0); mapCtx.lineTo(-6, 2);
+                    mapCtx.fill();
+                    // Razor wing dagger
+                    mapCtx.fillStyle = '#440505';
+                    mapCtx.strokeStyle = '#ff3344';
+                    mapCtx.lineWidth = 1.2;
+                    mapCtx.beginPath();
+                    mapCtx.moveTo(8, 0); mapCtx.lineTo(-5, -5); mapCtx.lineTo(-7, 0); mapCtx.lineTo(-5, 5);
+                    mapCtx.closePath();
+                    mapCtx.fill();
+                    mapCtx.stroke();
+                }
+                mapCtx.restore();
+
+                // Faint tactical designation
+                mapCtx.font = "9px 'Courier New', monospace";
+                mapCtx.fillStyle = flt.color;
+                mapCtx.globalAlpha = 0.65;
+                mapCtx.fillText(flt.name.split(' ')[0], fx + 8, fy - 4);
+                mapCtx.globalAlpha = 1.0;
+            });
+
+            // --- Draw Animated Player Command Flagship on Current System ---
             const curSys = systems.find(s => s.id === currentSystemId);
             if (curSys) {
                 const px = curSys.x * mw / 100;
@@ -2309,35 +2615,57 @@
                 mapCtx.stroke();
                 mapCtx.restore();
 
-                // Pulsing radar ring
-                const ringRad = 14 + Math.sin(animFrameTime * 4) * 3;
+                // Pulsing tactical radar ring
+                const ringRad = 15 + Math.sin(animFrameTime * 4) * 3;
                 mapCtx.save();
                 mapCtx.strokeStyle = 'rgba(0, 255, 255, 0.7)';
                 mapCtx.lineWidth = 1.5;
                 mapCtx.beginPath();
                 mapCtx.arc(px, py, ringRad, 0, Math.PI * 2);
                 mapCtx.stroke();
+                mapCtx.restore();
 
-                // Player ship arrowhead vector sprite
-                mapCtx.translate(px, py - 18);
+                // 4X Command Flagship Sprite
+                mapCtx.save();
+                mapCtx.translate(px, py - 20);
                 const bob = Math.sin(animFrameTime * 5) * 2;
                 mapCtx.translate(0, bob);
 
-                // Engine flame
-                mapCtx.fillStyle = '#ff8800';
+                // Dual Ion Engine Plasma Exhaust
+                mapCtx.fillStyle = '#00ffff';
+                const flm = 8 + Math.random() * 5;
                 mapCtx.beginPath();
-                mapCtx.moveTo(-3, 6);
-                mapCtx.lineTo(0, 12 + Math.random() * 4);
-                mapCtx.lineTo(3, 6);
+                mapCtx.moveTo(-4, 7); mapCtx.lineTo(-4, 7 + flm); mapCtx.lineTo(-2, 7);
+                mapCtx.moveTo(2, 7); mapCtx.lineTo(4, 7 + flm); mapCtx.lineTo(4, 7);
                 mapCtx.fill();
 
-                // Cyan ship fuselage
+                // Armored Command Battlecruiser Chassis
+                mapCtx.fillStyle = '#002838';
+                mapCtx.strokeStyle = '#00ffcc';
+                mapCtx.lineWidth = 1.4;
+                mapCtx.beginPath();
+                mapCtx.moveTo(0, -9);       // Sensor prow
+                mapCtx.lineTo(6, -2);      // Starboard shoulder
+                mapCtx.lineTo(8, 5);       // Starboard warp nacelle
+                mapCtx.lineTo(4, 7);       // Starboard engine block
+                mapCtx.lineTo(0, 4);       // Central keel
+                mapCtx.lineTo(-4, 7);      // Port engine block
+                mapCtx.lineTo(-8, 5);      // Port warp nacelle
+                mapCtx.lineTo(-6, -2);     // Port shoulder
+                mapCtx.closePath();
+                mapCtx.fill();
+                mapCtx.stroke();
+
+                // Command Bridge Superstructure
                 mapCtx.fillStyle = '#00ffff';
                 mapCtx.beginPath();
-                mapCtx.moveTo(0, -7);
-                mapCtx.lineTo(6, 6);
-                mapCtx.lineTo(0, 3);
-                mapCtx.lineTo(-6, 6);
+                mapCtx.ellipse(0, -1, 2, 4, 0, 0, Math.PI * 2);
+                mapCtx.fill();
+
+                // Gold Command Chevron
+                mapCtx.fillStyle = '#ffcc00';
+                mapCtx.beginPath();
+                mapCtx.moveTo(0, 1); mapCtx.lineTo(3, 3); mapCtx.lineTo(0, 2); mapCtx.lineTo(-3, 3);
                 mapCtx.closePath();
                 mapCtx.fill();
 
