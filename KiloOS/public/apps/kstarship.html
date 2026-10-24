@@ -607,6 +607,7 @@
     // 6 Channels: Ch1 Lead, Ch2 Counter-Melody, Ch3 Shell Arp & Ambient Pad, Ch4 Slap Bass (<C3), Ch5 Kick/Snare, Ch6 Metallic Hats/Stingers
 
     // Note frequencies (Hz)
+    const C1 = 32.70, Csharp1 = 34.65, D1 = 36.71, Eb1 = 38.89, E1 = 41.20, F1 = 43.65, Fsharp1 = 46.25, G1 = 49.00, Gsharp1 = 51.91, A1 = 55.00, Bb1 = 58.27, B1 = 61.74;
     const C2 = 65.41, Csharp2 = 69.30, D2 = 73.42, Eb2 = 77.78, E2 = 82.41, F2 = 87.31, Fsharp2 = 92.50, G2 = 98.00, Gsharp2 = 103.83, A2 = 110.00, Bb2 = 116.54, B2 = 123.47;
     const C3 = 130.81, Csharp3 = 138.59, D3 = 146.83, Eb3 = 155.56, E3 = 164.81, F3 = 174.61, Fsharp3 = 185.00, G3 = 196.00, Gsharp3 = 207.65, A3 = 220.00, Bb3 = 233.08, B3 = 246.94;
     const C4 = 261.63, Csharp4 = 277.18, D4 = 293.66, Eb4 = 311.13, E4 = 329.63, F4 = 349.23, Fsharp4 = 369.99, G4 = 392.00, Gsharp4 = 415.30, A4 = 440.00, Bb4 = 466.16, B4 = 493.88;
@@ -856,11 +857,14 @@
           osc.start(now);
           osc.stop(now + 0.13);
         } else if (drum === 'snare') {
-          playFM('square', 'sawtooth', 210, 2.5, 4.5, 0.11, 0.07, 0.15, true, { target: 88, time: 0.08 });
+          // Strictly dry FM snare: pitch-drop body + high-MUL noise burst
+          playFM('square', 'sawtooth', 190, 4.33, 6.2, 0.12, 0.065, 0.18, false, { target: 65, time: 0.06 });
         } else if (drum === 'hat') {
-          playFM('square', 'sawtooth', 4800, 1.48, 2.8, 0.035, 0.025, 0.08, false);
+          // Strictly dry metallic inharmonic FM closed hi-hat (YM2612 ratio 11.0)
+          playFM('square', 'sawtooth', 360, 11.0, 7.8, 0.038, 0.022, 0.10, false);
         } else if (drum === 'openhat') {
-          playFM('sawtooth', 'square', 3900, 1.62, 3.2, 0.16, 0.12, 0.09, true);
+          // Strictly dry metallic inharmonic FM open hi-hat (YM2612 ratio 13.5)
+          playFM('sawtooth', 'square', 340, 13.5, 8.5, 0.18, 0.10, 0.11, false);
         }
       } catch (e) {}
     }
@@ -903,14 +907,14 @@
     ];
 
     const EXP_BASS = [
-      // Pattern 0: D root/octave drive
-      D2, 0, D3, D2, 0, D3, D2, 0, Csharp3, 0, Csharp3, Csharp2, B2, 0, Csharp3, 0,
+      // Pattern 0: D root/octave drive (strictly < C3 = 130.81Hz)
+      D1, 0, D2, D1, 0, D2, D1, 0, Csharp2, 0, Csharp2, Csharp1, B1, 0, Csharp2, 0,
       // Pattern 1: G pump
-      G2, 0, G3, G2, 0, G3, G2, 0, Fsharp2, 0, Fsharp2, G2, A2, 0, B2, 0,
+      G1, 0, G2, G1, 0, G2, G1, 0, Fsharp1, 0, Fsharp1, G1, A1, 0, B1, 0,
       // Pattern 2: Bm syncopation
-      B2, 0, B2, B2, 0, B2, Csharp3, 0, D3, 0, B2, 0, A2, 0, G2, Fsharp2,
+      B1, 0, B2, B1, 0, B2, Csharp2, 0, D2, 0, B1, 0, A1, 0, G1, Fsharp1,
       // Pattern 3: A cadence build
-      A2, 0, A3, A2, 0, A3, A2, 0, B2, 0, A2, 0, G2, 0, Fsharp2, E2
+      A1, 0, A2, A1, 0, A2, A1, 0, B1, 0, A1, 0, G1, 0, Fsharp1, E1
     ];
 
     const EXP_PADS = [
@@ -955,14 +959,14 @@
     ];
 
     const CMB_BASS = [
-      // Pattern 0: Galloping Phrygian bass
-      D2, D2, 0, D2, Eb2, 0, D2, 0, D2, D2, 0, D2, Fsharp2, 0, Eb2, 0,
+      // Pattern 0: Galloping Phrygian bass (strictly < C3 = 130.81Hz)
+      D1, D1, 0, D2, Eb1, 0, D2, 0, D1, D1, 0, D2, Fsharp1, 0, Eb2, 0,
       // Pattern 1: Heavy drive
-      G2, 0, G2, G2, Fsharp2, 0, Eb2, 0, D2, D2, 0, D2, C2, 0, Eb2, 0,
+      G1, 0, G2, G1, Fsharp1, 0, Eb2, 0, D1, D1, 0, D2, C2, 0, Eb2, 0,
       // Pattern 2: Syncopated march
-      Eb2, 0, Eb2, Eb2, 0, Eb2, Fsharp2, 0, G2, 0, G2, Fsharp2, Eb2, 0, D2, 0,
+      Eb1, 0, Eb2, Eb1, 0, Eb2, Fsharp1, 0, G1, 0, G2, Fsharp1, Eb1, 0, D1, 0,
       // Pattern 3: Final surge
-      D2, D2, 0, D2, Eb2, 0, D2, 0, D2, 0, C2, 0, D2, 0, D2, 0
+      D1, D1, 0, D2, Eb1, 0, D2, 0, D1, 0, C2, 0, D1, 0, D2, 0
     ];
 
     const CMB_PADS = [
@@ -4373,6 +4377,7 @@
             return;
         }
         if (state.modalOpen) return;
+        playChime();
         const desc = document.getElementById('modal-desc');
         const actions = document.getElementById('modal-actions');
         
@@ -4415,6 +4420,7 @@
             return;
         }
         if (state.modalOpen) return;
+        playChime();
         const desc = document.getElementById('modal-desc');
         const actions = document.getElementById('modal-actions');
         
@@ -4593,9 +4599,11 @@
           ok = safeSetStorage('kstarship_save', data);
         }
         if (ok) {
+          playChime();
           if (showFeedback) showToast('Game state saved (F5)!');
           return true;
         } else {
+          playAlarm();
           if (showFeedback) showToast('⚠️ Storage quota full: save failed!');
           return false;
         }
