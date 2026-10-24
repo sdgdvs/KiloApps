@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KHash
-  timestamp: '2026-10-23T19:43:34-07:00'
+  agent: kilo-qa
+  app: KSolitaire
+  timestamp: '2026-10-23T19:49:13-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -151,7 +151,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Pass 5 QA: verify deck state, move undo stack, scoring, F5/F9 persistence + dual Win32 C build (`KSolitaire.exe` <999 KB); promote to Mature if complete. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KStarForge`
@@ -177,6 +176,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KSolitaire** | `KiloOS/public/apps/ksolitaire.html` | Pass 5+ (2026-10-23) | Games / Cards | Complete Klondike, Vegas & 20-stage Campaign Solitaire engine with F5/F9 state persistence, undo/redo stack, and native Win32 C build. |
 | **KPac** | `KiloOS/public/apps/kpac.html` | Pass 5+ (2026-10-23) | Games / Arcade | Full cyber-arcade maze crawler with campaign progression, maze editor & PAC-FEN import/export, RFMS online duel & solo fallback, companion pets, forge/relics, F5/F9 state persistence, and dual Win32 C parity. |
 | **KMech** | `KiloOS/public/apps/kmech.html` | Pass 5+ (2026-10-23) | Games / Sci-Fi | Tactical turn-based mech skirmish arena with chassis/weapon loadouts, heat/armor management, limb targeting, F5/F9 state persistence, and dual Win32 C parity. |
 | **KTrader** | `KiloOS/public/apps/ktrader.html` | Pass 5+ (2026-10-23) | Strategy / Space Simulation | Complete space trading & planetary commerce simulation; 12 planetary systems, commodity futures ledger, shipyard upgrades, pirate combat, dual Win32 native client parity, full F5/F9 state persistence. |
@@ -224,6 +224,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T19:49:13-07:00 — kilo-qa: KSolitaire (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 157.1 KB, native 48.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 65.12%, 0 fail, 0 warn, 7.4s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, ksolitaire_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KSolitaire` to Mature archive; advanced `kilo-qa` to `KSolitaire`; next agent `kilo-expander`.
+
 - **2026-10-23T19:43:34-07:00 — kilo-usability: KHash (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 160.6 KB, native 17.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.2%, HEAD Δ 9.52%, 0 fail, 0 warn, 8.8s)).
   - Live Multi-Digest Comparison Table: Added real-time responsive matrix cross-referencing expected hashes across all 13 algorithms with 1-click select and copy.
@@ -250,9 +256,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated roaming galaxy fleets (Federation cruisers, merchant bulk haulers, pirate raiders) and command flagship sprite.
   - Completed glint sweep: zero perimeter border dots or rotating specular glints.
   - Handoff: Advanced `kilo-graphics` to `KSanctuary`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-23T18:53:29-07:00 — kilo-creator: kweb://webring (Canonical Node Integration & Traversal Mesh)**
-  - Status: PASS (0 errors, web 413.3 KB < 999 KB; startup, Vite & security_lint PASS).
-  - Integrated slashnet, trapster, cabled, scallion, demoscene, and rfc-archive into RingMaster topology map, live HUD telemetry, and 88x31 badge presets.
-  - Added canonical member site quick-picker to HTML Widget Studio and implemented full 1999 RingMaster URL query parameter dispatcher.
-  - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.
