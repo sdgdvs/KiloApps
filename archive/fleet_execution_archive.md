@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T12:37:29-07:00 — kilo-usability: KFlash (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 110.5 KB, native 141.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Ergonomics & Ratings: 1-4 rating system (Again, Hard, Good, Easy) with keyboard/touch shortcuts [1-4, G/R] and active card tap feedback.
+  - Responsive Layout & Drawer: Responsive deck progress strip and slide-out Deck Picker Drawer [D] for study pack switching and search.
+  - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
+
 - **2026-10-24T12:36:59-07:00 — kilo-usability: KFlash (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 104.9 KB, native 141.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Ergonomics & Ratings: 1-4 rating system (Again, Hard, Good, Easy) with keyboard/touch shortcuts [1-4, G/R] and active card tap feedback.

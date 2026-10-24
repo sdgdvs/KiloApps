@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ commit_checkpoint: 12
 status: ready
 current_targets:
   kilo_creator: kweb://slashnet
-  kilo_graphics: KStellar
+  kilo_graphics: KSanctuary
   kilo_soundscape: KVoid
   kilo_tester: KFarm
   kilo_usability: KFarm
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://deep-core
-  timestamp: '2026-10-24T13:15:54-07:00'
+  agent: kilo-graphics
+  app: KStellar
+  timestamp: '2026-10-24T13:20:56-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -98,11 +98,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KStellar`
+- **Active Target**: `KSanctuary`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
@@ -112,6 +111,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
+| `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KVoid`
@@ -276,6 +276,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T13:20:56-07:00 — kilo-graphics: KStellar (Skip — Asset Suitability)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KStellar.
+  - Handoff: Advanced `kilo-graphics` to `KSanctuary`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-24T13:15:54-07:00 — kilo-creator: kweb://deep-core (Tier 3 Ghost Node VFS & KMatrix Passkey Mesh Verification)**
   - Status: PASS ✅ (0 errors, web 299.1 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.76%, 0 fail, 0 warn, 4.8s)).
   - Connected Ghost Node terminal to KiloOS VFS (/sys/alpha.sys & /home/crypto/) writing Inode 0x1999 and penultimate fragment 1999-ARCH.
@@ -300,9 +304,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Restored clean F5/F9 state snapshots, fixed misplaced settings event bindings, and validated tutorial/dismissal integrity.
   - Dual Parity: Verified full Web HTML and Win32 C native build parity with local time calendar calculations.
   - Mature Quarantine & Handoff: Promoted `KHabit` to Mature archive; advanced `kilo-qa` to `KFlash`; next agent `kilo-expander`.
-
-- **2026-10-24T12:37:29-07:00 — kilo-usability: KFlash (Usability, Responsive Layout & Ergonomics Polish)**
-  - Status: PASS ✅ (0 errors, web 110.5 KB, native 141.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Ergonomics & Ratings: 1-4 rating system (Again, Hard, Good, Easy) with keyboard/touch shortcuts [1-4, G/R] and active card tap feedback.
-  - Responsive Layout & Drawer: Responsive deck progress strip and slide-out Deck Picker Drawer [D] for study pack switching and search.
-  - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
