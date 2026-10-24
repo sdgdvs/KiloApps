@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ current_targets:
   kilo_soundscape: KWizard
   kilo_tester: KHabit
   kilo_usability: KFlash
-  kilo_qa: KBudget
+  kilo_qa: KHabit
   kilo_expander: KQuest
 virtual_web_target: kweb://webring
 virtual_web_rotation:
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
+  agent: kilo-qa
   app: KBudget
-  timestamp: '2026-10-24T11:25:09-07:00'
+  timestamp: '2026-10-24T11:37:08-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -133,7 +133,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
-| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Audit expense ledger, category charts, currency toggles, budget goals, and VFS export. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KFlash`
@@ -145,14 +144,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
-| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Responsive tabular ledger at <640px, accessible color-blind friendly category tags, and modal focus traps. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KBudget`
+- **Active Target**: `KHabit`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, currency calculation accuracy, export verification, dual Win32 C parity, and promote to Mature table. |
 | `KHabit` | `KiloOS/public/apps/khabit.html`, `KHabit/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, streak calculation edge-cases, first-run tutorial tips, dual Win32 C parity, and promote to Mature table. |
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Leitner box scheduling math, deck import integrity, dual Win32 C parity, and promote to Mature table. |
 | `KTodo` | `KiloOS/public/apps/ktodo.html`, `KTodo/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, tag filtering, first-run tutorial tips, dual Win32 C parity, and promote to Mature table. |
@@ -183,6 +180,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KBudget** | `KiloOS/public/apps/kbudget.html` | Pass 5+ (2026-10-24) | Office / Productivity | Comprehensive retro budget ledger with category allocation pie charts, multi-currency switching, monthly goals, CSV/JSON VFS integration, F5/F9 snapshot persistence, and dual Win32 C parity. |
 | **KFarm** | `KiloOS/public/apps/kfarm.html` | Pass 5+ (2026-10-24) | Games / Simulation | Feature-complete 1999 pastoral farming sim; crop cycles, livestock, market upgrades, YM2612 2-Op FM / SPC700 soundscape, F5/F9 persistence, dual Win32 C parity. |
 | **KJournal** | `KiloOS/public/apps/kjournal.html` | Pass 5+ (2026-10-24) | Productivity / Writing & Journal | Complete encrypted retro journal workstation with rich markdown preview, mood tags, PIN lock, calendar navigator, F5/F9 persistence, and dual Win32 C parity. |
 | **KMatrix** | `KiloOS/public/apps/kmatrix.html` | Pass 5+ (2026-10-24) | System / Security | Master forensic terminal & ARG climax with matrix digital rain visualizer, subterranean codebook decrypter, RF frequency waterfall, YM2612/SPC700 telemetry, F5/F9 state persistence, and dual Win32 C parity. |
@@ -237,6 +235,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T11:37:08-07:00 — kilo-qa: KBudget (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 106.9 KB, native 167.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kbudget_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Added monthly budget goal tracking, Alt+C currency toggle, and visibilitychange lifecycle pause.
+  - Mature Quarantine & Handoff: Promoted `KBudget` to Mature archive; advanced `kilo-qa` to `KHabit`; next agent `kilo-expander`.
+
 - **2026-10-24T11:25:09-07:00 — kilo-usability: KBudget (Usability, HiDPI Canvas & Keyboard/VFS Ergonomics Polish)**
   - Status: PASS (0 errors, web 108.9 KB, native 166.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Layout & Canvas: HiDPI interactive expense pie chart with dynamic slice hover, center donut preview, and legend filtering.
@@ -260,7 +264,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (0 errors, web 119.5 KB, native 132.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Audio Suite: 6-channel YM2612 FM / SPC700 soundscape, 5:3 swing groove, 9 SFX earcons, and Mute [M] controls verified.
   - Mature Quarantine & Handoff: Promoted `KFarm` to Mature archive; advanced `kilo-soundscape` to `KWizard`; next agent `kilo-tester`.
-
-- **2026-10-24T10:38:38-07:00 — kilo-graphics: KVoid (Skip — Asset Suitability)**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KVoid.
-  - Handoff: Advanced `kilo-graphics` to `KCyber`; rotated active agent to `kilo-soundscape`.

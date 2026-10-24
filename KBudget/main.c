@@ -32,13 +32,41 @@ HWND hBtnSave, hBtnLoad, hBtnHelp;
 HWND hStatus;
 HWND hSearchEdit;
 HWND hSortCombo;
-HWND hLblTotal, hLblIncome, hLblExpense;
+HWND hLblTotal, hLblIncome, hLblExpense, hLblGoal;
 HWND hBtnPrev, hBtnNext, hLblPage;
 
 HBRUSH hbgBrush;
 HFONT hFont;
 
 char currency_symbol[8] = "$";
+double budget_goal = 0.0;
+
+static const char *kCurrencies[] = {"$", "EUR ", "GBP ", "JPY ", "CHF "};
+#define NUM_CURRENCIES 5
+
+void SaveSettings();
+void UpdateUI();
+void ShowNativeStatus(const char* msg);
+
+void CycleCurrency() {
+    int curIdx = 0;
+    for (int i = 0; i < NUM_CURRENCIES; i++) {
+        if (strcmp(currency_symbol, kCurrencies[i]) == 0) {
+            curIdx = (i + 1) % NUM_CURRENCIES;
+            break;
+        }
+    }
+    if (curIdx == 0 && strcmp(currency_symbol, kCurrencies[0]) != 0) {
+        curIdx = 1;
+    }
+    strncpy(currency_symbol, kCurrencies[curIdx], sizeof(currency_symbol) - 1);
+    currency_symbol[sizeof(currency_symbol) - 1] = '\0';
+    SaveSettings();
+    UpdateUI();
+    char msg[64];
+    snprintf(msg, sizeof(msg), " Currency switched to %s [Alt+C / C]", currency_symbol);
+    ShowNativeStatus(msg);
+}
 
 #define KBUDGET_QUICKSAVE_MAGIC 0x47445542 // "BUDG"
 
@@ -59,6 +87,7 @@ void ShowHelp(HWND hwnd) {
         "- Ctrl+F: Focus the search box\n"
         "- Ctrl+S: Export ledger to CSV spreadsheet\n"
         "- Ctrl+O: Import ledger from CSV spreadsheet\n"
+        "- Alt+C or C: Cycle currency symbol ($ / EUR / GBP / JPY / CHF)\n"
         "- Delete: Delete selected transaction\n"
         "- Left / Right Arrow: Previous / Next page\n"
         "- Esc: Close active dialogs\n\n"
@@ -76,7 +105,7 @@ void NativeQuickSave(HWND hwnd) {
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
         DWORD magic = KBUDGET_QUICKSAVE_MAGIC;
-        DWORD version = 1;
+        DWORD version = 2;
         int sortType = hSortCombo ? (int)SendMessage(hSortCombo, CB_GETCURSEL, 0, 0) : 0;
         char searchBuf[128] = {0};
         if (hSearchEdit) {
@@ -90,6 +119,7 @@ void NativeQuickSave(HWND hwnd) {
         WriteFile(hFile, &current_page, sizeof(current_page), &written, NULL);
         WriteFile(hFile, &sortType, sizeof(sortType), &written, NULL);
         WriteFile(hFile, searchBuf, sizeof(searchBuf), &written, NULL);
+        WriteFile(hFile, &budget_goal, sizeof(budget_goal), &written, NULL);
         if (num_transactions > 0) {
             WriteFile(hFile, transactions, sizeof(Transaction) * num_transactions, &written, NULL);
         }
@@ -125,7 +155,7 @@ void NativeQuickLoad(HWND hwnd) {
     ReadFile(hFile, &magic, sizeof(magic), &readBytes, NULL);
     ReadFile(hFile, &version, sizeof(version), &readBytes, NULL);
 
-    if (magic != KBUDGET_QUICKSAVE_MAGIC || version != 1) {
+    if (magic != KBUDGET_QUICKSAVE_MAGIC || (version != 1 && version != 2)) {
         CloseHandle(hFile);
         ShowNativeStatus(" Invalid or corrupt kbudget_quicksave.dat format!");
         return;
@@ -160,6 +190,13 @@ void NativeQuickLoad(HWND hwnd) {
     ReadFile(hFile, searchBuf, sizeof(searchBuf), &readBytes, NULL);
     if (hSearchEdit) {
         SetWindowTextA(hSearchEdit, searchBuf);
+    }
+
+    if (version >= 2) {
+        ReadFile(hFile, &budget_goal, sizeof(budget_goal), &readBytes, NULL);
+        if (budget_goal < 0) budget_goal = 0;
+    } else {
+        budget_goal = 0;
     }
 
     num_transactions = count;
@@ -231,6 +268,7 @@ void SaveSettings() {
         if (hFile != INVALID_HANDLE_VALUE) {
             DWORD bytesWritten;
             WriteFile(hFile, currency_symbol, sizeof(currency_symbol), &bytesWritten, NULL);
+            WriteFile(hFile, &budget_goal, sizeof(budget_goal), &bytesWritten, NULL);
             CloseHandle(hFile);
         }
     }
@@ -245,6 +283,11 @@ void LoadSettings() {
         if (hFile != INVALID_HANDLE_VALUE) {
             DWORD bytesRead;
             ReadFile(hFile, currency_symbol, sizeof(currency_symbol), &bytesRead, NULL);
+            if (ReadFile(hFile, &budget_goal, sizeof(budget_goal), &bytesRead, NULL) && bytesRead == sizeof(budget_goal)) {
+                if (budget_goal < 0) budget_goal = 0;
+            } else {
+                budget_goal = 0;
+            }
             CloseHandle(hFile);
         }
     }
@@ -355,6 +398,14 @@ void UpdateUI() {
     
     snprintf(sumBuf, sizeof(sumBuf), "Expenses: -%s%.2f", currency_symbol, total_expense);
     SetWindowText(hLblExpense, sumBuf);
+
+    if (budget_goal > 0) {
+        double pct = (total_expense / budget_goal) * 100.0;
+        snprintf(sumBuf, sizeof(sumBuf), "Goal: %s%.2f (%.0f%%)", currency_symbol, budget_goal, pct);
+    } else {
+        snprintf(sumBuf, sizeof(sumBuf), "Budget Goal: None");
+    }
+    if (hLblGoal) SetWindowText(hLblGoal, sumBuf);
     InvalidateRect(hMainWnd, NULL, TRUE);
 }
 
@@ -420,10 +471,21 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
     switch (uMsg) {
         case WM_INITDIALOG:
             SetDlgItemText(hwndDlg, IDC_CURRENCY_EDIT, currency_symbol);
+            if (budget_goal > 0) {
+                char goalBuf[32];
+                snprintf(goalBuf, sizeof(goalBuf), "%.2f", budget_goal);
+                SetDlgItemText(hwndDlg, IDC_GOAL_EDIT, goalBuf);
+            } else {
+                SetDlgItemText(hwndDlg, IDC_GOAL_EDIT, "");
+            }
             return TRUE;
         case WM_COMMAND:
             if (LOWORD(wParam) == IDOK) {
                 GetDlgItemText(hwndDlg, IDC_CURRENCY_EDIT, currency_symbol, sizeof(currency_symbol));
+                char goalBuf[32] = {0};
+                GetDlgItemText(hwndDlg, IDC_GOAL_EDIT, goalBuf, sizeof(goalBuf));
+                budget_goal = atof(goalBuf);
+                if (budget_goal < 0) budget_goal = 0;
                 SaveSettings();
                 UpdateUI();
                 EndDialog(hwndDlg, IDOK);
@@ -556,32 +618,34 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             
             hLblTotal = CreateWindow("STATIC", "Total Balance: $0.00", WS_CHILD | WS_VISIBLE,
-                20, 15, 205, 20, hwnd, NULL, NULL, NULL);
+                20, 15, 205, 18, hwnd, NULL, NULL, NULL);
             hLblIncome = CreateWindow("STATIC", "Income: +$0.00", WS_CHILD | WS_VISIBLE,
-                20, 38, 205, 20, hwnd, NULL, NULL, NULL);
+                20, 33, 205, 18, hwnd, NULL, NULL, NULL);
             hLblExpense = CreateWindow("STATIC", "Expenses: -$0.00", WS_CHILD | WS_VISIBLE,
-                20, 61, 205, 20, hwnd, NULL, NULL, NULL);
+                20, 51, 205, 18, hwnd, NULL, NULL, NULL);
+            hLblGoal = CreateWindow("STATIC", "Budget Goal: None", WS_CHILD | WS_VISIBLE,
+                20, 69, 205, 18, hwnd, NULL, NULL, NULL);
                 
             hBtnAdd = CreateWindow("BUTTON", "+ New (Ctrl+N)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 90, 205, 28, hwnd, (HMENU)1, NULL, NULL);
+                20, 92, 205, 26, hwnd, (HMENU)1, NULL, NULL);
             HWND hBtnEdit = CreateWindow("BUTTON", "Edit", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 122, 100, 28, hwnd, (HMENU)6, NULL, NULL);
+                20, 120, 100, 26, hwnd, (HMENU)6, NULL, NULL);
             HWND hBtnDel = CreateWindow("BUTTON", "Delete", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                125, 122, 100, 28, hwnd, (HMENU)7, NULL, NULL);
+                125, 120, 100, 26, hwnd, (HMENU)7, NULL, NULL);
             hBtnSave = CreateWindow("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 154, 100, 28, hwnd, (HMENU)12, NULL, NULL);
+                20, 148, 100, 26, hwnd, (HMENU)12, NULL, NULL);
             hBtnLoad = CreateWindow("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                125, 154, 100, 28, hwnd, (HMENU)13, NULL, NULL);
+                125, 148, 100, 26, hwnd, (HMENU)13, NULL, NULL);
             HWND hBtnImp = CreateWindow("BUTTON", "Import CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 186, 100, 28, hwnd, (HMENU)2, NULL, NULL);
+                20, 176, 100, 26, hwnd, (HMENU)2, NULL, NULL);
             HWND hBtnExp = CreateWindow("BUTTON", "Export CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                125, 186, 100, 28, hwnd, (HMENU)3, NULL, NULL);
+                125, 176, 100, 26, hwnd, (HMENU)3, NULL, NULL);
             hBtnSettings = CreateWindow("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 218, 100, 28, hwnd, (HMENU)5, NULL, NULL);
+                20, 204, 100, 26, hwnd, (HMENU)5, NULL, NULL);
             HWND hBtnPrint = CreateWindow("BUTTON", "Print", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                125, 218, 100, 28, hwnd, (HMENU)11, NULL, NULL);
+                125, 204, 100, 26, hwnd, (HMENU)11, NULL, NULL);
             hBtnHelp = CreateWindow("BUTTON", "Help & Guide [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 250, 205, 28, hwnd, (HMENU)14, NULL, NULL);
+                20, 232, 205, 26, hwnd, (HMENU)14, NULL, NULL);
                 
             hSearchEdit = CreateWindow("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
                 250, 15, 340, 25, hwnd, (HMENU)4, NULL, NULL);
@@ -605,7 +669,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 490, 330, 100, 28, hwnd, (HMENU)10, NULL, NULL);
 
             hStatus = CreateWindowExA(0, "STATIC",
-                " Ready | F1: Help | F5: Save | F9: Load | Ctrl+N: New | Ctrl+F: Search | Ctrl+S: Export",
+                " Ready | F1: Help | F5: Save | F9: Load | Ctrl+N: New | Alt+C: Cur | Ctrl+F: Search | Ctrl+S: Export",
                 WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 545, 760, 20, hwnd, (HMENU)300, NULL, NULL);
             
             SendMessage(hSearchEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -613,6 +677,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hLblTotal, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hLblIncome, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hLblExpense, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hLblGoal, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnDel, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -883,7 +948,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             BOOL isEdit = (_stricmp(className, "EDIT") == 0);
             BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 
-            if (msg.wParam == VK_F5) {
+            BOOL alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+            if ((alt && (msg.wParam == 'C' || msg.wParam == 'c')) || (!isEdit && (msg.wParam == 'C' || msg.wParam == 'c'))) {
+                CycleCurrency();
+                bHandled = TRUE;
+            } else if (msg.wParam == VK_F5) {
                 NativeQuickSave(hMainWnd);
                 bHandled = TRUE;
             } else if (msg.wParam == VK_F9) {

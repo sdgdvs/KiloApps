@@ -2326,6 +2326,16 @@
             render();
         });
 
+        // Lifecycle & Resource Hygiene: pause/cleanup on tab hidden
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (toastTimeout) {
+                    clearTimeout(toastTimeout);
+                    toastTimeout = null;
+                }
+            }
+        });
+
         // Enter/Space accessibility on budget goal card and shortcut pills
         const budgetCard = document.getElementById('budget-goal-card');
         if (budgetCard) {
