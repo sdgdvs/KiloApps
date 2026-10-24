@@ -27,9 +27,9 @@
     "id": "kanomaly",
     "title": "KAnomaly",
     "folder": "System",
-    "webBytes": 91125,
-    "exeBytes": 20480,
-    "budgetPercent": 9.1
+    "webBytes": 105419,
+    "exeBytes": 20992,
+    "budgetPercent": 10.6
   },
   {
     "id": "kasteroids",
@@ -75,9 +75,9 @@
     "id": "kbreakout",
     "title": "KBreakout",
     "folder": "Games",
-    "webBytes": 186793,
+    "webBytes": 190688,
     "exeBytes": 55808,
-    "budgetPercent": 18.7
+    "budgetPercent": 19.1
   },
   {
     "id": "kbudget",
@@ -123,9 +123,9 @@
     "id": "kchatserver",
     "title": "KChat Server",
     "folder": "Network",
-    "webBytes": 24901,
+    "webBytes": 24241,
     "exeBytes": 13824,
-    "budgetPercent": 2.5
+    "budgetPercent": 2.4
   },
   {
     "id": "kchess",
@@ -147,9 +147,9 @@
     "id": "kcipher",
     "title": "KCipher",
     "folder": "System",
-    "webBytes": 160910,
-    "exeBytes": 15872,
-    "budgetPercent": 16.1
+    "webBytes": 162959,
+    "exeBytes": 18432,
+    "budgetPercent": 16.3
   },
   {
     "id": "kclip",
@@ -187,9 +187,9 @@
     "id": "kcolosseum",
     "title": "KColosseum",
     "folder": "Games",
-    "webBytes": 284183,
+    "webBytes": 277303,
     "exeBytes": 39424,
-    "budgetPercent": 28.4
+    "budgetPercent": 27.8
   },
   {
     "id": "kconnect4",
@@ -211,9 +211,9 @@
     "id": "kcontribute",
     "title": "KContribute",
     "folder": "System",
-    "webBytes": 34529,
+    "webBytes": 35721,
     "exeBytes": 159232,
-    "budgetPercent": 3.5
+    "budgetPercent": 3.6
   },
   {
     "id": "kconverter",
@@ -251,9 +251,9 @@
     "id": "kdb",
     "title": "KDB",
     "folder": "Dev",
-    "webBytes": 220421,
+    "webBytes": 226304,
     "exeBytes": 67584,
-    "budgetPercent": 22.1
+    "budgetPercent": 22.7
   },
   {
     "id": "kdirector",
@@ -275,9 +275,9 @@
     "id": "kexplorer",
     "title": "File Browser",
     "folder": "System",
-    "webBytes": 55006,
+    "webBytes": 56480,
     "exeBytes": null,
-    "budgetPercent": 5.5
+    "budgetPercent": 5.7
   },
   {
     "id": "kfarm",
@@ -299,9 +299,9 @@
     "id": "kfleet",
     "title": "KFleet",
     "folder": "System",
-    "webBytes": 78600,
+    "webBytes": 81022,
     "exeBytes": 18432,
-    "budgetPercent": 7.9
+    "budgetPercent": 8.1
   },
   {
     "id": "kfont",
@@ -403,9 +403,9 @@
     "id": "kmandel",
     "title": "KMandel",
     "folder": "Media",
-    "webBytes": 125681,
+    "webBytes": 128759,
     "exeBytes": 22016,
-    "budgetPercent": 12.6
+    "budgetPercent": 12.9
   },
   {
     "id": "kmatch3",
@@ -467,9 +467,9 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 203533,
+    "webBytes": 198898,
     "exeBytes": 45056,
-    "budgetPercent": 20.4
+    "budgetPercent": 19.9
   },
   {
     "id": "knetmap",
@@ -523,9 +523,9 @@
     "id": "kping",
     "title": "KPing",
     "folder": "System",
-    "webBytes": 179903,
+    "webBytes": 175838,
     "exeBytes": 47616,
-    "budgetPercent": 18.0
+    "budgetPercent": 17.6
   },
   {
     "id": "kpomodoro",
@@ -547,9 +547,9 @@
     "id": "kquarantine",
     "title": "Q\u0337u\u0337a\u0337r\u0337a\u0337n\u0337t\u0337i\u0337n\u0337e\u0337",
     "folder": "Hidden",
-    "webBytes": 14459,
+    "webBytes": 14831,
     "exeBytes": null,
-    "budgetPercent": 1.4
+    "budgetPercent": 1.5
   },
   {
     "id": "kquest",
@@ -603,15 +603,15 @@
     "id": "ksanctuary",
     "title": "KSanctuary",
     "folder": "Games",
-    "webBytes": 460761,
+    "webBytes": 451809,
     "exeBytes": 264192,
-    "budgetPercent": 46.1
+    "budgetPercent": 45.2
   },
   {
     "id": "kscript",
     "title": "KScript",
     "folder": "Dev",
-    "webBytes": 154266,
+    "webBytes": 153869,
     "exeBytes": 25600,
     "budgetPercent": 15.4
   },
@@ -651,9 +651,9 @@
     "id": "kspace",
     "title": "KSpace",
     "folder": "Games",
-    "webBytes": 207269,
+    "webBytes": 202033,
     "exeBytes": 92160,
-    "budgetPercent": 20.7
+    "budgetPercent": 20.2
   },
   {
     "id": "kstardredge",
@@ -667,17 +667,17 @@
     "id": "kstarforge",
     "title": "KStarForge",
     "folder": "Games",
-    "webBytes": 321539,
+    "webBytes": 328288,
     "exeBytes": 30720,
-    "budgetPercent": 32.2
+    "budgetPercent": 32.9
   },
   {
     "id": "kstarship",
     "title": "KStarship",
     "folder": "Games",
-    "webBytes": 192129,
+    "webBytes": 196982,
     "exeBytes": 146944,
-    "budgetPercent": 19.2
+    "budgetPercent": 19.7
   },
   {
     "id": "kstellar",
@@ -691,17 +691,17 @@
     "id": "ksteno",
     "title": "KSteno",
     "folder": "System",
-    "webBytes": 149723,
+    "webBytes": 154236,
     "exeBytes": 10240,
-    "budgetPercent": 15.0
+    "budgetPercent": 15.4
   },
   {
     "id": "ksubmarine",
     "title": "KSubmarine",
     "folder": "Games",
-    "webBytes": 459440,
+    "webBytes": 501544,
     "exeBytes": 257536,
-    "budgetPercent": 46.0
+    "budgetPercent": 50.2
   },
   {
     "id": "ksudoku",
@@ -739,9 +739,9 @@
     "id": "ktaskmgr",
     "title": "Task Manager",
     "folder": "System",
-    "webBytes": 50896,
+    "webBytes": 52417,
     "exeBytes": null,
-    "budgetPercent": 5.1
+    "budgetPercent": 5.2
   },
   {
     "id": "kterm",
@@ -787,7 +787,7 @@
     "id": "ktrader",
     "title": "KTrader",
     "folder": "Games",
-    "webBytes": 184293,
+    "webBytes": 184289,
     "exeBytes": 26624,
     "budgetPercent": 18.4
   },
@@ -811,9 +811,9 @@
     "id": "kvoid",
     "title": "KVoid",
     "folder": "Games",
-    "webBytes": 140708,
+    "webBytes": 143848,
     "exeBytes": 31232,
-    "budgetPercent": 14.1
+    "budgetPercent": 14.4
   },
   {
     "id": "kwizard",

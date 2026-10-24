@@ -30,7 +30,7 @@ current_targets:
   kilo_soundscape: KQuest
   kilo_tester: KSys
   kilo_usability: KScript
-  kilo_qa: None (Queue Exhausted)
+  kilo_qa: KHash
   kilo_expander: KNet
 virtual_web_target: kweb://cabled
 virtual_web_rotation:
@@ -55,7 +55,7 @@ last_run:
   agent: kilo-tester
   app: KSteno
   timestamp: '2026-10-24T00:17:29-07:00'
-last_planner_run: '2026-10-23T07:15:00Z'
+last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
 # KiloApps Master Fleet Work & Queue State (`Phase VI: System Convergence`)
@@ -105,7 +105,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
-| `KRogue` | `KiloOS/public/apps/krogue.html` | Subterranean roguelike visual polish: crisp tile/entity sprite rendering, atmospheric torchlight vignette, boss monster visual distinction, and perimeter glint sweep. |
+| `KFarm` | `KiloOS/public/apps/kfarm.html` | Pastoral farm & seasonal crops visual polish: pixel art crop growth stages, seasonal tile transitions, livestock sprites, and glint sweep. |
+| `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
+| `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KQuest`
@@ -131,6 +133,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
+| `KHash` | `KiloOS/public/apps/khash.html`, `KHash/main.c` | Audit multi-hash workbench (MD5/SHA1/SHA256/CRC32), HMAC key generator, hash comparison, and file drag-and-drop. |
+| `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Audit encrypted vault tree navigator, master passkey auth, file import/export, and modal dismissals. |
+| `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | Audit matrix rain visualizer, subterranean codebook decrypter, frequency waterfall, and audio telemetry. |
+| `KJournal` | `KiloOS/public/apps/kjournal.html`, `KJournal/main.c` | Audit daily entry editor, mood tags, markdown rendering, password lock, and calendar navigation. |
+| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Audit expense ledger, category charts, currency toggles, budget goals, and VFS export. |
+| `KHabit` | `KiloOS/public/apps/khabit.html`, `KHabit/main.c` | Audit habit tracker streaks, completion heatmaps, daily reminder alerts, and keyboard shortcuts. |
+| `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Audit flashcard deck manager, spaced repetition algorithm, flip animations, and deck import/export. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KScript`
@@ -143,12 +152,26 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KHash` | `KiloOS/public/apps/khash.html`, `KHash/main.c` | Multi-digest comparison table responsiveness, one-click hash verification badge, HMAC toggle ergonomics, and keyboard shortcuts. |
 | `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Encrypted container tree navigation, responsive hex/file inspector split, clear lock/unlock status banner, and modal focus trapping. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
+| `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | Responsive dual-column cipher pane, HiDPI green phosphor CRT glow canvas scaling, and keyboard shortcut pill indicators. |
+| `KJournal` | `KiloOS/public/apps/kjournal.html`, `KJournal/main.c` | Responsive split entry list and markdown editor, line-length readability clamp, and clear save indicator. |
+| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Responsive tabular ledger at <640px, accessible color-blind friendly category tags, and modal focus traps. |
+| `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Large card flip touch/keyboard ergonomics (`Space` to flip, `1-4` for ratings), responsive progress bar, and deck picker drawer. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: None (Queue Exhausted — Awaiting Planner Replenishment)
+- **Active Target**: `KHash`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KHash` | `KiloOS/public/apps/khash.html`, `KHash/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, first-run tutorial tips, HMAC verification, dual Win32 C parity, and promote to Mature table. |
+| `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, AES container integrity, export suite, dual Win32 C parity, and promote to Mature table. |
+| `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, signal demodulation check, first-run tutorial tips, dual Win32 C parity, and promote to Mature table. |
+| `KJournal` | `KiloOS/public/apps/kjournal.html`, `KJournal/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, encryption key safety, first-run tutorial tips, dual Win32 C parity, and promote to Mature table. |
+| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, currency calculation accuracy, export verification, dual Win32 C parity, and promote to Mature table. |
+| `KHabit` | `KiloOS/public/apps/khabit.html`, `KHabit/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, streak calculation edge-cases, first-run tutorial tips, dual Win32 C parity, and promote to Mature table. |
+| `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Leitner box scheduling math, deck import integrity, dual Win32 C parity, and promote to Mature table. |
+| `KTodo` | `KiloOS/public/apps/ktodo.html`, `KTodo/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, tag filtering, first-run tutorial tips, dual Win32 C parity, and promote to Mature table. |
+| `KTimer` | `KiloOS/public/apps/ktimer.html`, `KTimer/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, lap export verification, sound alert toggle, dual Win32 C parity, and promote to Mature table. |
+| `KClock` | `KiloOS/public/apps/kclock.html`, `KClock/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, world time offsets, alarm trigger verification, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KNet`
@@ -162,6 +185,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
+| `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Phase VI VFS Integration: Allow saving/loading encrypted vault containers (`.kvlt`) directly to/from KiloOS VFS (`/home/crypto/`) and inter-op with KCipher. |
+| `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | Phase VI Subterranean Bridge: Ingest decoded signal frames from KAnomaly (`/sys/anomaly_capture.sig`) via VFS and export decrypted intelligence logs. |
+| `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
 
 ---
 
