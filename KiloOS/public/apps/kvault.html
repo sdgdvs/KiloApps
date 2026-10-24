@@ -2614,12 +2614,12 @@
             for (const key in theme) {
                 document.documentElement.style.setProperty(key, theme[key]);
             }
-            try { localStorage.setItem('kvault_theme', themeName); } catch(e){}
+            safeStorageSet('kvault_theme', themeName);
         }
 
         function updateAutoLock() {
             autoLockTimeout = parseInt(document.getElementById('auto-lock-select').value) || 0;
-            try { localStorage.setItem('kvault_autolock', autoLockTimeout); } catch(e){}
+            safeStorageSet('kvault_autolock', autoLockTimeout);
             resetIdleTimer();
         }
 
@@ -2644,7 +2644,7 @@
 
         function initAuthView() {
             let savedTheme = 'dark';
-            try { savedTheme = localStorage.getItem('kvault_theme') || 'dark'; } catch(e){}
+            savedTheme = safeStorageGet('kvault_theme', 'dark');
             const themeSel = document.getElementById('theme-select');
             if (themeSel) {
                 themeSel.value = savedTheme;
@@ -2652,7 +2652,7 @@
             }
 
             let savedAutoLock = null;
-            try { savedAutoLock = localStorage.getItem('kvault_autolock'); } catch(e){}
+            savedAutoLock = safeStorageGet('kvault_autolock', null);
             if (savedAutoLock !== null) {
                 autoLockTimeout = parseInt(savedAutoLock);
                 const sel = document.getElementById('auto-lock-select');
@@ -2665,7 +2665,7 @@
             renderCompartmentTabs();
 
             let stored = null;
-            try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
+            stored = safeStorageGet(STORAGE_KEY, null);
             if (stored) {
                 document.getElementById('auth-title').innerText = "Unlock Vault";
                 document.getElementById('auth-desc').innerText = "Enter your master password to decrypt your credentials.";
@@ -2696,7 +2696,7 @@
             }
 
             let stored = null;
-            try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
+            stored = safeStorageGet(STORAGE_KEY, null);
             const errElem = document.getElementById('auth-error');
             if (errElem) errElem.style.display = 'none';
 
@@ -2801,7 +2801,7 @@
                 storedSalt = salt;
             } else {
                 let stored = null;
-                try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
+                stored = safeStorageGet(STORAGE_KEY, null);
                 if (stored) {
                     try {
                         const parsed = JSON.parse(stored);
@@ -2822,7 +2822,7 @@
                 vault: encryptedVault
             };
             try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+                safeStorageSet(STORAGE_KEY, JSON.stringify(payload));
             } catch(e) {
                 showNotification("Error saving to local storage", "error");
             }
@@ -4992,7 +4992,7 @@
         async function exportEncryptedJSON() {
             closeExportModal();
             let stored = null;
-            try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
+            stored = safeStorageGet(STORAGE_KEY, null);
             if (!stored) {
                 showNotification("Vault is empty or not initialized", "error");
                 return;
@@ -5105,7 +5105,7 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
         async function exportArmoredASCII() {
             closeExportModal();
             let stored = null;
-            try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
+            stored = safeStorageGet(STORAGE_KEY, null);
             if (!stored) {
                 showNotification("Vault is empty or not initialized", "error");
                 return;
@@ -5434,7 +5434,7 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                 await saveVaultToStorage();
             }
             let stored = null;
-            try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
+            stored = safeStorageGet(STORAGE_KEY, null);
             if (!stored) {
                 showNotification("Vault is empty or not configured", "error");
                 return;
@@ -5730,6 +5730,9 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                     if (modal.id === 'tutorial-modal') {
                         safeStorageSet('kvault_tutorialSeen', '1');
                     }
+                    if (modal.id === 'confirm-modal') {
+                        pendingConfirmAction = null;
+                    }
                     if (previousModalFocus && typeof previousModalFocus.focus === 'function') {
                         previousModalFocus.focus();
                     }
@@ -5765,6 +5768,9 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                     activeModal.style.display = 'none';
                     if (activeModal.id === 'tutorial-modal') {
                         safeStorageSet('kvault_tutorialSeen', '1');
+                    }
+                    if (activeModal.id === 'confirm-modal') {
+                        pendingConfirmAction = null;
                     }
                     if (previousModalFocus && typeof previousModalFocus.focus === 'function') {
                         previousModalFocus.focus();
