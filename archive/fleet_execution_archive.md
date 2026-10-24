@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T01:31:34-07:00 — kilo-qa: KHash (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 160.6 KB, native 17.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.31%, 0 fail, 0 warn, 4.6s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, khash_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KHash` to Mature archive; advanced `kilo-qa` to `KVault`; next agent `kilo-expander`.
+
 - **2026-10-24T01:19:39-07:00 — kilo-usability: KScript (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 152.2 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.27%, HEAD Δ 0.0%, 0 fail, 0 warn, 9.2s)).
   - Layout & HiDPI: Connected missing AST statement distribution canvas in modal with HiDPI setup and dynamic resize re-rendering.

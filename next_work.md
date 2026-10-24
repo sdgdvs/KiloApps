@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ current_targets:
   kilo_creator: kweb://scallion
   kilo_graphics: KStarship
   kilo_soundscape: KStarship
-  kilo_tester: KSys
+  kilo_tester: KScript
   kilo_usability: KSys
   kilo_qa: KVault
   kilo_expander: KBBS
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KQuest
-  timestamp: '2026-10-24T04:16:20-07:00'
+  agent: kilo-tester
+  app: KSys
+  timestamp: '2026-10-24T04:34:32-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -126,11 +126,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KQuest` | `KiloOS/public/apps/kquest.html` | Compose overworld & battle 6-channel JRPG chiptune suite (Royal Road `IV-V-iii-vi` town/overworld + Heroic `bVI-bVII-I` combat cadence, E-Piano & flute counterpoint, SPC700 echo) + spell/quest earcons. |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KSys`
+- **Active Target**: `KScript`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 | `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Audit encrypted vault tree navigator, master passkey auth, file import/export, and modal dismissals. |
@@ -139,6 +138,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Audit expense ledger, category charts, currency toggles, budget goals, and VFS export. |
 | `KHabit` | `KiloOS/public/apps/khabit.html`, `KHabit/main.c` | Audit habit tracker streaks, completion heatmaps, daily reminder alerts, and keyboard shortcuts. |
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Audit flashcard deck manager, spaced repetition algorithm, flip animations, and deck import/export. |
+| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KSys`
@@ -246,6 +246,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T04:34:32-07:00 — kilo-tester: KSys (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (web 192.2 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - UI & Hotkey Audit: System telemetry dashboard, process/memory graphs, modal dismissal (Esc/click), and tab hotkeys [1-6] verified.
+  - Repairs: Protected contenteditable/input focus guards, fixed stress badge HTML retention, aligned Ctrl+S/Ctrl+O shortcuts in web & Win32 C.
+  - Handoff: Advanced `kilo-tester` to `KScript`; rotated active agent to `kilo-usability`.
+
 - **2026-10-24T04:16:20-07:00 — kilo-soundscape: KQuest (Overture of Valor & Steel and Sorcery — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 393.6 KB, native 97.0 KB < 999 KB; startup, Vite & security_lint PASS).
   - Composition: Royal Road IV-V-iii-vi town/overworld + Heroic bVI-bVII-I combat cadence, 6-channel counterpoint, 3rd/7th shell voicings, swing groove.
@@ -268,9 +274,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added Save Page/Spool to KiloOS VFS (/home/downloads/) across web and native Win32 C client with non-CRT memory allocation.
   - Routed new canonical kweb:// parodies (slashnet, trapster, cabled, scallion, demoscene, rfc-archive, deep-core) across web & Win32 C.
   - Handoff: Advanced `kilo-expander` to `KBBS`; rotated active agent to `kilo-creator`.
-
-- **2026-10-24T01:31:34-07:00 — kilo-qa: KHash (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 160.6 KB, native 17.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.31%, 0 fail, 0 warn, 4.6s)).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, khash_tutorialSeen flag, and Escape modal dismissals.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup.
-  - Mature Quarantine & Handoff: Promoted `KHash` to Mature archive; advanced `kilo-qa` to `KVault`; next agent `kilo-expander`.

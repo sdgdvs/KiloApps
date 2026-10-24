@@ -1673,7 +1673,27 @@ void MainEntry() {
         if (msg.message == WM_KEYDOWN) {
             BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
             BOOL alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
-            if (!ctrl && !alt) {
+            if (ctrl && !alt) {
+                if (msg.wParam == 'S' || msg.wParam == 's') {
+                    if (SaveStateToFile("ksys.dat")) {
+                        MarkTutorialSeen();
+                        ShowNativeToast(hwnd, "★ Diagnostics snapshot quicksaved to ksys.dat [Ctrl+S]");
+                    } else {
+                        ShowNativeToast(hwnd, "⚠ Failed to quicksave diagnostics snapshot");
+                    }
+                    continue;
+                } else if (msg.wParam == 'O' || msg.wParam == 'o') {
+                    if (LoadStateFromFile("ksys.dat")) {
+                        MarkTutorialSeen();
+                        if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, g_CurrentTab);
+                        UpdateView();
+                        ShowNativeToast(hwnd, "★ Diagnostics snapshot quickloaded from ksys.dat [Ctrl+O]");
+                    } else {
+                        ShowNativeToast(hwnd, "⚠ No quicksave snapshot found (ksys.dat)");
+                    }
+                    continue;
+                }
+            } else if (!ctrl && !alt) {
                 if (msg.wParam >= '1' && msg.wParam <= '6') {
                     int newTab = (int)(msg.wParam - '1');
                     g_CurrentTab = newTab;

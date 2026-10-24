@@ -2183,7 +2183,11 @@
     // Input/Textarea handling
     const activeTag = document.activeElement ? document.activeElement.tagName : '';
     const targetTag = e.target ? e.target.tagName : '';
-    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(targetTag) || ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag)) {
+    const isEditing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(targetTag) ||
+                      ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag) ||
+                      Boolean(document.activeElement && document.activeElement.isContentEditable) ||
+                      Boolean(e.target && e.target.isContentEditable);
+    if (isEditing) {
       if (e.key === 'Escape') {
         closeAllModals();
         clearToasts();
@@ -2283,6 +2287,20 @@
       e.preventDefault();
       toggleAudio();
       return;
+    }
+
+    // Ctrl+S / Ctrl+O Workstation Ergonomics
+    if (e.ctrlKey && !e.altKey && !e.metaKey) {
+      if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        quicksaveSnapshot();
+        return;
+      }
+      if (e.key === 'o' || e.key === 'O') {
+        e.preventDefault();
+        triggerImportJson();
+        return;
+      }
     }
 
     // Guard all shortcuts against browser modifier keys (Ctrl/Alt/Meta)
@@ -2712,7 +2730,7 @@
         btn.style.borderColor = 'var(--accent-red)';
         btn.style.color = 'var(--accent-red)';
       }
-      if (chip) chip.textContent = '🔥 Stress: ACTIVE [B]';
+      if (chip) chip.innerHTML = '🔥 Stress: ACTIVE <kbd>[B]</kbd>';
       if (statusText) statusText.textContent = 'Continuous diagnostic stress loop active (running burn-in calculations)...';
       logEvent('WARN', 'Continuous diagnostic stress test loop initiated.');
       showToast('Continuous stress test initiated [Press B to toggle off]', 'warn');
@@ -2738,6 +2756,7 @@
         if (cpuVal) cpuVal.textContent = `${simulatedLoad}.0%`;
 
         if (btn) btn.textContent = `🔥 Stress Mode: ACTIVE (Cycle ${stressCycleCount}) [B]`;
+        if (chip) chip.innerHTML = `🔥 Stress: C#${stressCycleCount} <kbd>[B]</kbd>`;
         if (statusText) statusText.textContent = `Continuous stress loop active (Cycle #${stressCycleCount} | Simulated Core Load: ${simulatedLoad}%).`;
       }, 1200);
     } else {
@@ -2750,7 +2769,7 @@
         btn.style.borderColor = 'var(--accent-amber)';
         btn.style.color = 'var(--accent-amber)';
       }
-      if (chip) chip.textContent = '🔥 Stress Mode [B]';
+      if (chip) chip.innerHTML = '🔥 Stress Mode <kbd>[B]</kbd>';
       if (statusText) statusText.textContent = `Stress test halted after ${stressCycleCount} cycles. System nominal.`;
       logEvent('INFO', `Continuous diagnostic stress test terminated after ${stressCycleCount} cycles.`);
       showToast(`Stress test terminated (${stressCycleCount} cycles completed).`, 'info');
