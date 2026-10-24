@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ current_targets:
   kilo_soundscape: KQuest
   kilo_tester: KSys
   kilo_usability: KSys
-  kilo_qa: KHash
+  kilo_qa: KVault
   kilo_expander: KNet
 virtual_web_target: kweb://cabled
 virtual_web_rotation:
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KScript
-  timestamp: '2026-10-24T01:19:39-07:00'
+  agent: kilo-qa
+  app: KHash
+  timestamp: '2026-10-24T01:31:34-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -133,7 +133,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
-| `KHash` | `KiloOS/public/apps/khash.html`, `KHash/main.c` | Audit multi-hash workbench (MD5/SHA1/SHA256/CRC32), HMAC key generator, hash comparison, and file drag-and-drop. |
 | `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Audit encrypted vault tree navigator, master passkey auth, file import/export, and modal dismissals. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | Audit matrix rain visualizer, subterranean codebook decrypter, frequency waterfall, and audio telemetry. |
 | `KJournal` | `KiloOS/public/apps/kjournal.html`, `KJournal/main.c` | Audit daily entry editor, mood tags, markdown rendering, password lock, and calendar navigation. |
@@ -148,7 +147,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 |---|---|---|
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
-| `KHash` | `KiloOS/public/apps/khash.html`, `KHash/main.c` | Multi-digest comparison table responsiveness, one-click hash verification badge, HMAC toggle ergonomics, and keyboard shortcuts. |
 | `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Encrypted container tree navigation, responsive hex/file inspector split, clear lock/unlock status banner, and modal focus trapping. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | Responsive dual-column cipher pane, HiDPI green phosphor CRT glow canvas scaling, and keyboard shortcut pill indicators. |
@@ -158,11 +156,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KHash`
+- **Active Target**: `KVault`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KHash` | `KiloOS/public/apps/khash.html`, `KHash/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, first-run tutorial tips, HMAC verification, dual Win32 C parity, and promote to Mature table. |
 | `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, AES container integrity, export suite, dual Win32 C parity, and promote to Mature table. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, signal demodulation check, first-run tutorial tips, dual Win32 C parity, and promote to Mature table. |
 | `KJournal` | `KiloOS/public/apps/kjournal.html`, `KJournal/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, encryption key safety, first-run tutorial tips, dual Win32 C parity, and promote to Mature table. |
@@ -199,6 +196,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KHash** | `KiloOS/public/apps/khash.html` | Pass 5+ (2026-10-24) | Security / Cryptography | Complete multi-algorithm checksum workstation (MD5, SHA1, SHA256, CRC32, Adler32, FNV-1a, Murmur3, CRC16), HMAC key generation, byte forensics/entropy, F5/F9 persistence, and dual Win32 C parity. |
 | **KCipher** | `KiloOS/public/apps/kcipher.html` | Pass 5+ (2026-10-23) | Security / Cryptography | Complete cryptographic suite: 10 ciphers (AES/RSA/RC4/XOR/classical), multi-stage pipeline, frequency/IoC cryptanalysis, LSB stego, VFS Open/Save, KHex/KSteno IPC mesh, and dual Win32 C parity. |
 | **KSolitaire** | `KiloOS/public/apps/ksolitaire.html` | Pass 5+ (2026-10-23) | Games / Cards | Complete Klondike, Vegas & 20-stage Campaign Solitaire engine with F5/F9 state persistence, undo/redo stack, and native Win32 C build. |
 | **KPac** | `KiloOS/public/apps/kpac.html` | Pass 5+ (2026-10-23) | Games / Arcade | Full cyber-arcade maze crawler with campaign progression, maze editor & PAC-FEN import/export, RFMS online duel & solo fallback, companion pets, forge/relics, F5/F9 state persistence, and dual Win32 C parity. |
@@ -248,6 +246,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T01:31:34-07:00 — kilo-qa: KHash (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 160.6 KB, native 17.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.31%, 0 fail, 0 warn, 4.6s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, khash_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KHash` to Mature archive; advanced `kilo-qa` to `KVault`; next agent `kilo-expander`.
+
 - **2026-10-24T01:19:39-07:00 — kilo-usability: KScript (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 152.2 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.27%, HEAD Δ 0.0%, 0 fail, 0 warn, 9.2s)).
   - Layout & HiDPI: Connected missing AST statement distribution canvas in modal with HiDPI setup and dynamic resize re-rendering.
@@ -269,9 +273,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-23T23:13:11-07:00 — kilo-graphics: KRogue (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 assets already integrated for KRogue.
   - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-23T22:40:31-07:00 — kilo-creator: kweb://trapster (Trapster P2P Chiptune & Tracker Exchange v1.0b)**
-  - Status: PASS ✅ (0 errors, web 95.9 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Searchable 1999 P2P node directory, simulated 56k/T1 download queue & live YM2612/SPC700 chiptune previewer.
-  - KiloOS VFS .mod/.trk save to /home/music/, KNet/portal/webring routing & global hotkey navigation.
-  - Handoff: Advanced `kilo-creator` to `kweb://cabled`; rotated active agent to `kilo-graphics`.
