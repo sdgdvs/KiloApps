@@ -1445,7 +1445,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
 
             LogEvent("INFO", "KSys Workstation Diagnostics initialized");
-            ShowNativeToast(hwnd, "Welcome to KSys! Tabs: [1-5] | [F5] Save | [F9] Load | [F1] Help");
+            ShowNativeToast(hwnd, "Welcome to KSys! Tabs: [1-6] | [F5] Save | [F9] Load | [F1] Help");
             UpdateView();
             SetTimer(hwnd, 1, 1000, NULL);
             break;
@@ -1598,6 +1598,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hBtnRam)  MoveWindow(hBtnRam, 125, nh - 68, 105, 26, TRUE);
             if (hBtnDisk) MoveWindow(hBtnDisk, 240, nh - 68, 105, 26, TRUE);
             if (hBtnAll)  MoveWindow(hBtnAll, 355, nh - 68, 110, 26, TRUE);
+            if (hBtnStress) MoveWindow(hBtnStress, 475, nh - 68, 120, 26, TRUE);
+
+            if (hBtnHexSrc)   MoveWindow(hBtnHexSrc, 10, nh - 68, 105, 26, TRUE);
+            if (hBtnHexPrev)  MoveWindow(hBtnHexPrev, 125, nh - 68, 120, 26, TRUE);
+            if (hBtnHexNext)  MoveWindow(hBtnHexNext, 255, nh - 68, 120, 26, TRUE);
+            if (hBtnHexReset) MoveWindow(hBtnHexReset, 385, nh - 68, 120, 26, TRUE);
 
             if (hBtnSvcRefresh) MoveWindow(hBtnSvcRefresh, 10, nh - 68, 120, 26, TRUE);
             if (hBtnSvcFilter)  MoveWindow(hBtnSvcFilter, 140, nh - 68, 180, 26, TRUE);

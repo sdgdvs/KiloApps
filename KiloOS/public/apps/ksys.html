@@ -783,8 +783,10 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; font-family: Consolas, monospace;">
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">1 - 6</kbd> Switch Tabs 1 to 6</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">← / →</kbd> Cycle Tabs (Global)</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">/</kbd> Quick Focus Search / Filter</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">F1 / H</kbd> Open this Help Dialog</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">Esc</kbd> Dismiss Dialogs / Clear Search</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">Shift+M</kbd> Mute / Unmute Audio</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">F5</kbd> Quicksave Snapshot</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">F9</kbd> Quickload Snapshot</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">R</kbd> Refresh Live Telemetry</div>
@@ -1428,6 +1430,8 @@
     </div>
     <div class="statusbar-right">
       <span class="sb-pill"><kbd>F1/H</kbd> Help</span>
+      <span class="sb-pill"><kbd>/</kbd> Filter</span>
+      <span class="sb-pill"><kbd>B</kbd> Stress</span>
       <span class="sb-pill"><kbd>F5/F9</kbd> Save/Load</span>
       <span class="sb-pill"><kbd>Shift+M</kbd> Sound</span>
       <span class="sb-pill"><kbd>1-6</kbd> Tabs</span>
@@ -2312,6 +2316,27 @@
       if (e.key === '5') { switchTab('export'); return; }
       if (e.key === '6') { switchTab('hex'); return; }
       if (e.key.toLowerCase() === 'x') { switchTab('hex'); return; }
+      if (e.key === '/') {
+        e.preventDefault();
+        const activeTab = getActiveTabId();
+        if (activeTab === 'services') {
+          const input = document.getElementById('svc-search-input');
+          if (input) { input.focus(); input.select(); }
+        } else if (activeTab === 'logs') {
+          const input = document.getElementById('log-search');
+          if (input) { input.focus(); input.select(); }
+        } else if (activeTab === 'hex') {
+          const input = document.getElementById('hex-search-pattern');
+          if (input) { input.focus(); input.select(); }
+        } else {
+          switchTab('services');
+          setTimeout(() => {
+            const input = document.getElementById('svc-search-input');
+            if (input) { input.focus(); input.select(); }
+          }, 30);
+        }
+        return;
+      }
       if (e.key.toLowerCase() === 'g') { runNetworkProbe(); return; }
       if (e.key.toLowerCase() === 'p') {
         const activeTab = getActiveTabId();
@@ -2758,6 +2783,17 @@
         if (btn) btn.textContent = `🔥 Stress Mode: ACTIVE (Cycle ${stressCycleCount}) [B]`;
         if (chip) chip.innerHTML = `🔥 Stress: C#${stressCycleCount} <kbd>[B]</kbd>`;
         if (statusText) statusText.textContent = `Continuous stress loop active (Cycle #${stressCycleCount} | Simulated Core Load: ${simulatedLoad}%).`;
+        const sbInd = document.querySelector('.statusbar-indicator');
+        const sbMsg = document.getElementById('sb-status');
+        if (sbInd) {
+          sbInd.textContent = '🔥 STRESS ACTIVE';
+          sbInd.style.color = 'var(--accent-red)';
+        }
+        if (sbMsg) {
+          sbMsg.textContent = `Continuous Diagnostic Stress Loop (Cycle #${stressCycleCount} | Core Load: ${simulatedLoad}%)`;
+        }
+        const cpuBar = document.getElementById('cpu-bench-progress');
+        if (cpuBar) cpuBar.style.width = `${simulatedLoad}%`;
       }, 1200);
     } else {
       if (stressInterval) {
@@ -2771,6 +2807,17 @@
       }
       if (chip) chip.innerHTML = '🔥 Stress Mode <kbd>[B]</kbd>';
       if (statusText) statusText.textContent = `Stress test halted after ${stressCycleCount} cycles. System nominal.`;
+      const sbInd = document.querySelector('.statusbar-indicator');
+      const sbMsg = document.getElementById('sb-status');
+      if (sbInd) {
+        sbInd.textContent = '● READY';
+        sbInd.style.color = 'var(--accent-green)';
+      }
+      if (sbMsg) {
+        sbMsg.textContent = `Stress test halted after ${stressCycleCount} cycles. System nominal.`;
+      }
+      const cpuBar = document.getElementById('cpu-bench-progress');
+      if (cpuBar) cpuBar.style.width = '0%';
       logEvent('INFO', `Continuous diagnostic stress test terminated after ${stressCycleCount} cycles.`);
       showToast(`Stress test terminated (${stressCycleCount} cycles completed).`, 'info');
       if (typeof playYm2612Sfx === 'function') playYm2612Sfx('beep');
@@ -3806,16 +3853,30 @@
     canvas.height = Math.floor(h * dpr);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
+    ctx.imageSmoothingEnabled = true;
 
     ctx.clearRect(0, 0, w, h);
-    ctx.beginPath();
+
+    // Subtle horizontal diagnostic telemetry gridlines (25%, 50%, 75%)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+    ctx.lineWidth = 1;
+    [0.25, 0.5, 0.75].forEach(fraction => {
+      const y = Math.floor(h * fraction);
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    });
 
     const maxVal = Math.max(10, Math.max(...data));
     const step = w / Math.max(1, data.length - 1);
+    const latestVal = data.length > 0 ? data[data.length - 1] : 0;
 
+    // Draw sparkline trace
+    ctx.beginPath();
     data.forEach((val, idx) => {
       const x = idx * step;
-      const y = h - (val / maxVal) * (h - 6) - 3;
+      const y = h - (val / maxVal) * (h - 8) - 4;
       if (idx === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
@@ -3828,8 +3889,41 @@
     ctx.lineTo(w, h);
     ctx.lineTo(0, h);
     ctx.closePath();
-    ctx.fillStyle = color === '#38bdf8' ? 'rgba(56, 189, 248, 0.1)' : 'rgba(192, 132, 252, 0.1)';
+    ctx.fillStyle = (color === '#38bdf8') ? 'rgba(56, 189, 248, 0.12)' : (color === '#f87171') ? 'rgba(248, 113, 113, 0.18)' : 'rgba(192, 132, 252, 0.12)';
     ctx.fill();
+
+    // Glowing endpoint dot at latest telemetry reading
+    if (data.length > 0) {
+      const lastX = (data.length - 1) * step;
+      const lastY = h - (latestVal / maxVal) * (h - 8) - 4;
+
+      ctx.beginPath();
+      ctx.arc(lastX, lastY, 3, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      // Outer halo
+      ctx.beginPath();
+      ctx.arc(lastX, lastY, 5.5, 0, Math.PI * 2);
+      ctx.fillStyle = (color === '#38bdf8') ? 'rgba(56, 189, 248, 0.35)' : (color === '#f87171') ? 'rgba(248, 113, 113, 0.45)' : 'rgba(192, 132, 252, 0.35)';
+      ctx.fill();
+    }
+
+    // High-craft diagnostic telemetry corner annotation
+    const isCpu = canvasId.includes('cpu');
+    const unit = isCpu ? '%' : ' MB';
+    const label = isCpu ? (isStressActive ? '🔥 BURN-IN PEAK: ' + maxVal.toFixed(0) + unit : 'PEAK: ' + maxVal.toFixed(0) + unit) : 'PEAK: ' + maxVal.toFixed(0) + unit;
+
+    ctx.font = '600 9px Consolas, monospace';
+    ctx.fillStyle = (color === '#f87171') ? 'rgba(248, 113, 113, 0.85)' : 'rgba(148, 163, 184, 0.8)';
+    ctx.textAlign = 'right';
+    ctx.fillText(label, w - 8, 12);
+
+    // Accessibility attributes update
+    canvas.setAttribute('role', 'img');
+    const telemType = isCpu ? 'CPU Load' : 'Memory Heap';
+    canvas.setAttribute('aria-label', telemType + ' telemetry graph: current ' + latestVal + unit + ', peak ' + maxVal + unit);
+    canvas.title = telemType + ' Telemetry: ' + latestVal + unit + ' (Peak: ' + maxVal + unit + ')';
   }
 
   // System Report Export Generator
