@@ -2327,6 +2327,23 @@ function selectTrack(idx) {
   const npText = document.getElementById('nowPlayingText');
   if (npText) npText.textContent = `NOW PLAYING: ${trk.name} (${trk.tempo} BPM)`;
 
+  if (idx === 3) {
+    try {
+      const raw = localStorage.getItem('knet_subterranean_signals');
+      const sigs = raw ? JSON.parse(raw) : {};
+      sigs['subterranean_demoscene'] = {
+        source: 'assembly99_vault',
+        label: "Assembly '99 Demoscene #021",
+        ip: '194.109.13.99',
+        frequency: 1999,
+        timestamp: Date.now(),
+        status: 'LOCKED'
+      };
+      localStorage.setItem('knet_subterranean_signals', JSON.stringify(sigs));
+      showToast('1999Hz Subcarrier Resonance synchronized with Subterranean Mesh!');
+    } catch (e) {}
+  }
+
   if (isBgmPlaying) {
     if (bgmTimer) clearInterval(bgmTimer);
     const intervalMs = Math.round((60000 / trk.tempo) / 4);
