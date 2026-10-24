@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T14:53:18-07:00 — kilo-graphics: KMech (Chroma-Keyed Mech Sprites & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 139.1 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Replaced SVG geometric primitives with 10 32-bit RGBA chroma-keyed sprites (player chassis & enemy tiers) with JSON coordinate atlases.
+  - Verified zero perimeter glints/border dots and dual-target Web & Win32 C compilation.
+  - Handoff: Advanced `kilo-graphics` to `KSanctuary`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-24T14:46:55-07:00 — kilo-adhoc: Orchestrator (Session File NTFS NUL-Byte Self-Healing & Atomic Writes)**
   - Diagnosed 3 orchestrator warnings (Expecting value: line 1 column 1 (char 0)): .agents/scheduler_session.json was zero-filled (486 NUL bytes) after an unclean shutdown during non-atomic write_text() at 2026-10-24T05:40:41Z.
   - Added tomic_write_json() (	mp + os.fsync + os.replace) and load_session_data() auto-healing in scripts/orchestrate.py, restored .agents/scheduler_session.json and .agents/fleet_nodes/node_c.json telemetry (351 turns), and exempted [ARGON REVIEW] specs from pre-flight skip lists.

@@ -3397,6 +3397,12 @@
       cleanupResources();
     });
 
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        autoSaveSession();
+      }
+    });
+
     // Auto-dismiss toast when any input or select receives focus
     document.addEventListener('focusin', (e) => {
       if (e.target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) {

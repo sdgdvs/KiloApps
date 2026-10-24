@@ -145,13 +145,7 @@ void StripTagsFromText(char* dest, const char* src, int maxLen) {
                 continue;
             }
         }
-        if (src[i] == '#' && (i == 0 || src[i-1] == ' ')) {
-            char nextC = src[i + 1];
-            if ((nextC >= 'a' && nextC <= 'z') || (nextC >= 'A' && nextC <= 'Z')) {
-                while (src[i] && src[i] != ' ' && src[i] != '\t') i++;
-                continue;
-            }
-        }
+        // Retain #tags in task text so user can search and filter by #tag
         dest[outIdx++] = src[i++];
     }
     dest[outIdx] = '\0';
@@ -381,7 +375,7 @@ void ShowHelpDialog(HWND hwnd) {
         "  - Priorities: High, Med, Low and Due Date (YYYY-MM-DD)\n"
         "  - '+ Checklist': Add subtasks to selected task\n"
         "  - Double-click a task in list to toggle completion\n"
-        "  - Search & Filter by status and category dropdowns",
+        "  - Search & Filter by status, category, or #tag in search box",
         "KTodo Help", MB_OK | MB_ICONINFORMATION);
 }
 

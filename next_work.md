@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KSys
   kilo_usability: KScript
-  kilo_qa: KTodo
+  kilo_qa: KTimer
   kilo_expander: KMech
   kilo_review: KTrader
 virtual_web_target: kweb://trapster
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KMech
-  timestamp: '2026-10-24T16:19:24-07:00'
+  agent: kilo-qa
+  app: KTodo
+  timestamp: '2026-10-24T16:33:52-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -151,11 +151,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Eliminate 37px vertical overflow at 640x503 by removing min-height:520px on #game-container and tightening body/container padding so bottom action buttons and HUD corners fit in-viewport; keep .header-bar and .quick-hint single-line; reposition #toast-container so it never overlaps header/hints; add interactive limb-target selector pills with hit% and HiDPI scaling on #combat-fx-canvas. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KTodo`
+- **Active Target**: `KTimer`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KTodo` | `KiloOS/public/apps/ktodo.html`, `KTodo/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, tag filtering, first-run tutorial tips, dual Win32 C parity, and promote to Mature table. |
 | `KTimer` | `KiloOS/public/apps/ktimer.html`, `KTimer/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, lap export verification, sound alert toggle, dual Win32 C parity, and promote to Mature table. |
 | `KClock` | `KiloOS/public/apps/kclock.html`, `KClock/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, world time offsets, alarm trigger verification, dual Win32 C parity, and promote to Mature table. |
 
@@ -220,6 +219,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KTodo** | `KiloOS/public/apps/ktodo.html` | Pass 5+ (2026-10-24) | Office / Productivity | Complete productivity task manager with multi-tab boards, F5/F9 persistence, dynamic tag filtering, dual Win32 C parity, and real-time RTDB collab. |
 | **KFlash** | `KiloOS/public/apps/kflash.html` | Pass 5+ (2026-10-24) | Education / Spaced Repetition | Complete flashcard & Leitner spaced repetition study workstation with 5 boxes, 1-4 rating math, deck drawer, sample packs, JSON/CSV import/export, F5/F9 persistence, and dual Win32 C parity. |
 | **KFarm** | `KiloOS/public/apps/kfarm.html` | Pass 5+ (2026-10-24) | Simulation / Farming | Pastoral farming simulator; 4 crops, livestock, artisanal machines, YM2612 audio, 3x3 AoE tool, in-viewport compact layout, WASD/Arrow keyboard grid navigation, dual Win32 C parity, F5/F9 state. |
 | **KHabit** | `KiloOS/public/apps/khabit.html` | Pass 5+ (2026-10-24) | Office / Productivity | Feature-complete sovereign habit tracker with streak calculations, 28-day completion heatmap, daily reminder banner, YM2612 FM audio, F5/F9 state persistence, and dual Win32 C parity. |
@@ -276,6 +276,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T16:33:52-07:00 — kilo-qa: KTodo (Pass 5 QA, Dual Parity & Mature Graduation)**
+  - Status: PASS (0 errors, web 127.5 KB, native 23.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, ktodo_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, tag preservation in markdown import, and visibilitychange autoSaveSession.
+  - Mature Quarantine & Handoff: Promoted `KTodo` to Mature archive; advanced `kilo-qa` to `KTimer`; next agent `kilo-expander`.
+
 - **2026-10-24T16:19:24-07:00 — kilo-usability: KMech (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 150.2 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.1%, input 13.9%, HEAD Δ 20.67%, 0 fail, 0 warn, 9.1s)).
   - Layout & HiDPI: Zero 37px vertical overflow at 640x503, single-line header/hints, toast repositioned to bottom safe zone, devicePixelRatio scaling on #combat-fx-canvas.
@@ -298,9 +304,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Composition: D-Dorian breakbeat, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
   - Patches & DSP: 303 acid FM bass (<C3), digital bells, shell pad, Amen breakbeat, 210ms SPC700 stereo delay, crystalline credit siphon & cyber earcons.
   - Handoff: Advanced `kilo-soundscape` to `KStellar`; rotated active agent to `kilo-tester`.
-
-- **2026-10-24T14:53:18-07:00 — kilo-graphics: KMech (Chroma-Keyed Mech Sprites & Glint Sweep)**
-  - Status: PASS ✅ (0 errors, web 139.1 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Replaced SVG geometric primitives with 10 32-bit RGBA chroma-keyed sprites (player chassis & enemy tiers) with JSON coordinate atlases.
-  - Verified zero perimeter glints/border dots and dual-target Web & Win32 C compilation.
-  - Handoff: Advanced `kilo-graphics` to `KSanctuary`; rotated active agent to `kilo-soundscape`.
