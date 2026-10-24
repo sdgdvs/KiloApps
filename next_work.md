@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_graphics: KStellar
   kilo_soundscape: KVoid
   kilo_tester: KFlash
-  kilo_usability: KFlash
+  kilo_usability: KScript
   kilo_qa: KHabit
   kilo_expander: KStarForge
   kilo_review: KFarm
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
-  app: KHabit
-  timestamp: '2026-10-24T12:24:37-07:00'
+  agent: kilo-usability
+  app: KFlash
+  timestamp: '2026-10-24T12:37:29-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -140,15 +140,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KHabit` | `KiloOS/public/apps/khabit.html`, `KHabit/main.c` | Audit habit tracker streaks, completion heatmaps, daily reminder alerts, and keyboard shortcuts. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KFlash`
+- **Active Target**: `KScript`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Large card flip touch/keyboard ergonomics (`Space` to flip, `1-4` for ratings), responsive progress bar, and deck picker drawer. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
+| `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Large card flip touch/keyboard ergonomics (`Space` to flip, `1-4` for ratings), responsive progress bar, and deck picker drawer. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KHabit`
@@ -276,6 +276,18 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T12:37:29-07:00 — kilo-usability: KFlash (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 110.5 KB, native 141.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Ergonomics & Ratings: 1-4 rating system (Again, Hard, Good, Easy) with keyboard/touch shortcuts [1-4, G/R] and active card tap feedback.
+  - Responsive Layout & Drawer: Responsive deck progress strip and slide-out Deck Picker Drawer [D] for study pack switching and search.
+  - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
+
+- **2026-10-24T12:36:59-07:00 — kilo-usability: KFlash (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 104.9 KB, native 141.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Ergonomics & Ratings: 1-4 rating system (Again, Hard, Good, Easy) with keyboard/touch shortcuts [1-4, G/R] and active card tap feedback.
+  - Responsive Layout & Drawer: Responsive deck progress strip and slide-out Deck Picker Drawer [D] for study pack switching and search.
+  - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
+
 - **2026-10-24T12:24:37-07:00 — kilo-tester: KHabit (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 98.2 KB, native 170.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.2%, HEAD Δ 3.45%, 0 fail, 0 warn, 8.9s)).
   - UI & Hotkeys: Audited habit streaks, added 28-day activity heatmap, daily reminder banner with filter toggle, fixed arrow key input trap, added '/' hotkey.
@@ -291,16 +303,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-24T12:02:42-07:00 — kilo-graphics: KCyber (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KCyber.
   - Handoff: Advanced `kilo-graphics` to `KStellar`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-24T11:55:28-07:00 — kilo-creator: kweb://webring (Integrated canonical nodes & VFS in Central Webring Hub)**
-  - Status: PASS ✅ (0 errors, web 414.9 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) into RingMaster topology map with golden glowing aura, canonical category filter, and telemetry HUD.
-  - Enhanced badge generator and HTML webring widgets with direct KiloOS VFS export (/home/downloads/webring_widget.html and badge_88x31.html).
-  - Upgraded bidirectional ring traversal and CGI simulator (/cgi-bin/ringmaster.pl) to dynamically route hops across canonical destinations.
-  - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-24T11:42:25-07:00 — kilo-expander: KQuest (KQuest Phase VI VFS Chronicle & Hero Dossier Export + Win32 C Parity)**
-  - Status: PASS ✅ (0 errors, web 395.4 KB, native 98.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Enhanced VFS & IPC mesh: added Combat Chronicle export (/home/docs/kquest_chronicle.txt) and KPad dossier inspection to Replays & Achievements views.
-  - Dual-target Win32 C parity: added ExportHeroSheetToFile writing kquest_hero_sheet.txt directly from achievements menu.
-  - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-creator`.

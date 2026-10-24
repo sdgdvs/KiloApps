@@ -359,16 +359,29 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
                 } else if (msg.wParam == VK_F1 || msg.wParam == 'H') {
                     SendMessage(g_hwnd, WM_COMMAND, ID_BTN_HELP, 0);
                     handled = 1;
-                } else if (msg.wParam == '1' || msg.wParam == 'G') {
-                    if (isFlipped) {
-                        SendMessage(g_hwnd, WM_COMMAND, ID_BTN_GOTIT, 0);
-                        handled = 1;
-                    }
-                } else if (msg.wParam == '2' || msg.wParam == 'R') {
+                } else if (msg.wParam == '1' || msg.wParam == 'R') {
                     if (isFlipped) {
                         SendMessage(g_hwnd, WM_COMMAND, ID_BTN_REVIEW, 0);
                         handled = 1;
                     }
+                } else if (msg.wParam == '2') {
+                    if (isFlipped) {
+                        SendMessage(g_hwnd, WM_COMMAND, ID_BTN_REVIEW, 0);
+                        handled = 1;
+                    }
+                } else if (msg.wParam == '3' || msg.wParam == 'G') {
+                    if (isFlipped) {
+                        SendMessage(g_hwnd, WM_COMMAND, ID_BTN_GOTIT, 0);
+                        handled = 1;
+                    }
+                } else if (msg.wParam == '4') {
+                    if (isFlipped) {
+                        SendMessage(g_hwnd, WM_COMMAND, ID_BTN_GOTIT, 0);
+                        handled = 1;
+                    }
+                } else if (msg.wParam == 'D') {
+                    SendMessage(g_hwnd, WM_COMMAND, ID_BTN_LOAD_SAMPLE, 0);
+                    handled = 1;
                 } else if (msg.wParam == 'A') {
                     SendMessage(g_hwnd, WM_COMMAND, ID_BTN_ADD, 0);
                     handled = 1;
@@ -568,6 +581,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             
             DrawText(hdcMem, textToDraw, -1, &rcText, DT_CENTER | DT_VCENTER | DT_WORDBREAK);
+
+            if (filteredCount > 0) {
+                int pct = ((currentIndex + 1) * 100) / filteredCount;
+                int barWidth = ((rcCard.right - rcCard.left - 4) * pct) / 100;
+                RECT rcProg = { rcCard.left + 2, rcCard.bottom - 8, rcCard.left + 2 + barWidth, rcCard.bottom - 4 };
+                HBRUSH hProgBrush = CreateSolidBrush(RGB(88, 166, 255));
+                FillRect(hdcMem, &rcProg, hProgBrush);
+                DeleteObject(hProgBrush);
+            }
 
             SelectObject(hdcMem, hOldBrush);
             SelectObject(hdcMem, hOldPen);
