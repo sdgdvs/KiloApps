@@ -54,7 +54,7 @@ virtual_web_rotation:
 last_run:
   agent: kilo-usability
   app: KBudget
-  timestamp: '2026-10-24T11:19:48-07:00'
+  timestamp: '2026-10-24T11:25:09-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -237,6 +237,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T11:25:09-07:00 — kilo-usability: KBudget (Usability, HiDPI Canvas & Keyboard/VFS Ergonomics Polish)**
+  - Status: PASS (0 errors, web 108.9 KB, native 166.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Layout & Canvas: HiDPI interactive expense pie chart with dynamic slice hover, center donut preview, and legend filtering.
+  - Ergonomics: Added header currency toggle and statusbar pill [Alt+C], active filter banner with 1-click clear, and arrow navigation.
+  - VFS & Shortcuts: Integrated smart Ctrl+S / Ctrl+O VFS handlers with OS_NOTIFY and fallback, plus budget goal quick presets.
+  - Handoff: Advanced `kilo-usability` to `KFlash`; rotated active agent to `kilo-qa`.
+
 - **2026-10-24T11:19:48-07:00 — kilo-usability: KBudget (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 97.0 KB, native 166.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 9.8%, HEAD Δ 2.69%, 0 fail, 0 warn, 9.7s)).
   - Layout & HiDPI: Compact summary cards container, HiDPI canvas donut pie chart with center readout, and narrow viewport wrapping.
@@ -257,9 +264,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-24T10:38:38-07:00 — kilo-graphics: KVoid (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KVoid.
   - Handoff: Advanced `kilo-graphics` to `KCyber`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-24T10:33:34-07:00 — kilo-creator: kweb://rfc-archive (IETF 1999 Living RFC Workbench)**
-  - Status: PASS ✅ (0 errors, web 76.8 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.02%, input 2.37%, HEAD Δ 0.44%, 0 fail, 0 warn, 11.7s)).
-  - Integrated interactive RFC 1149 avian carrier loss simulator, RFC 2324 HTCPCP coffee pot console (418 I'm a teapot), RFC 793 TCP state stepper, and VFS export.
-  - Linked reciprocal Webring hub footer and KiloOS VFS manifest spooler.
-  - Handoff: Advanced `kilo-creator` to `kweb://webring`; rotated active agent to `kilo-graphics`.

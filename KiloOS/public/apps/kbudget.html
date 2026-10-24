@@ -53,9 +53,15 @@
 
         .header-actions {
             display: flex;
-            gap: 0.4rem;
+            gap: 0.3rem;
             align-items: center;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+        }
+
+        .header-actions .btn {
+            padding: 0.35rem 0.55rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
         }
 
         .btn {
@@ -571,10 +577,11 @@
             <button class="btn btn-outline" style="color: white" onclick="openHelpModal()" title="Help &amp; Shortcuts [F1 / H]">Help [F1]</button>
             <button class="btn btn-outline" style="color: white" onclick="quicksaveState()" title="Quicksave Snapshot [F5]">💾 Save [F5]</button>
             <button class="btn btn-outline" style="color: white" onclick="quickloadState()" title="Quickload Snapshot [F9]">📂 Load [F9]</button>
+            <button class="btn btn-outline" style="color: white" id="currency-toggle-btn" onclick="cycleCurrency()" title="Cycle Currency Symbol [Alt+C]">Cur: $ ▾</button>
             <button class="btn btn-outline" style="color: white" onclick="openDataModal()" title="Import / Export Data (CSV &amp; JSON)">Data ▾</button>
             <button class="btn btn-outline" style="color: white" onclick="openSettingsModal()" title="Settings">Settings</button>
             <button class="btn btn-outline" style="color: white" onclick="window.print()" title="Print Ledger">Print</button>
-            <button class="btn" onclick="openModal()" title="Add Transaction [Ctrl+N]">+ New Transaction</button>
+            <button class="btn" onclick="openModal()" title="Add Transaction [Ctrl+N]">+ New</button>
         </div>
     </header>
     
@@ -634,6 +641,10 @@
                     <option value="amount-asc">Amount (Lowest First)</option>
                 </select>
             </div>
+            <div id="active-filter-bar" style="display: none; align-items: center; justify-content: space-between; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; padding: 0.35rem 0.65rem; margin-bottom: 0.5rem; font-size: 0.82rem;">
+                <span id="active-filter-label" style="color: #93c5fd; font-weight: 500;"></span>
+                <button type="button" onclick="clearFilters()" style="background: transparent; border: none; color: #93c5fd; cursor: pointer; font-size: 0.8rem; text-decoration: underline; padding: 2px 6px;" title="Clear filter (Esc)">Clear Filter (Esc)</button>
+            </div>
             <div style="display: flex; justify-content: space-between; padding: 0.35rem 0.75rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; border-bottom: 1px solid var(--glass-border); margin-bottom: 0.5rem;">
                 <span>Description &amp; Category</span>
                 <span style="margin-right: 4.5rem;">Amount</span>
@@ -657,6 +668,7 @@
             <span class="shortcut-pill" onclick="openHelpModal()" title="Help &amp; Shortcuts [F1 / H]" tabindex="0" role="button"><kbd>F1</kbd> Help</span>
             <span class="shortcut-pill" onclick="quicksaveState()" title="Quicksave Snapshot [F5]" tabindex="0" role="button"><kbd>F5</kbd> Save</span>
             <span class="shortcut-pill" onclick="quickloadState()" title="Quickload Snapshot [F9]" tabindex="0" role="button"><kbd>F9</kbd> Load</span>
+            <span class="shortcut-pill" onclick="cycleCurrency()" title="Cycle Currency [Alt+C]" tabindex="0" role="button" id="status-cur-pill"><kbd>Alt+C</kbd> $</span>
             <span class="shortcut-pill" onclick="openModal()" title="Add Transaction [Ctrl+N]" tabindex="0" role="button"><kbd>Ctrl+N</kbd> +New</span>
             <span class="shortcut-pill" onclick="openDataModal()" title="Import / Export VFS [Ctrl+E]" tabindex="0" role="button"><kbd>Ctrl+E</kbd> VFS</span>
         </div>
@@ -732,6 +744,13 @@
                 </div>
                 <div class="form-group">
                     <label for="budget-goal-input" id="budget-goal-label">Monthly Expense Budget Target</label>
+                    <div style="display: flex; gap: 0.35rem; margin-bottom: 0.45rem; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-outline" style="padding: 0.2rem 0.55rem; font-size: 0.75rem; color: white;" onclick="setGoalPreset(0)">None</button>
+                        <button type="button" class="btn btn-outline" style="padding: 0.2rem 0.55rem; font-size: 0.75rem; color: white;" onclick="setGoalPreset(500)">500</button>
+                        <button type="button" class="btn btn-outline" style="padding: 0.2rem 0.55rem; font-size: 0.75rem; color: white;" onclick="setGoalPreset(1000)">1,000</button>
+                        <button type="button" class="btn btn-outline" style="padding: 0.2rem 0.55rem; font-size: 0.75rem; color: white;" onclick="setGoalPreset(2500)">2,500</button>
+                        <button type="button" class="btn btn-outline" style="padding: 0.2rem 0.55rem; font-size: 0.75rem; color: white;" onclick="setGoalPreset(5000)">5,000</button>
+                    </div>
                     <input type="number" id="budget-goal-input" class="form-control" min="0" step="any" placeholder="0 (disabled)">
                     <small style="color: #94a3b8; font-size: 0.75rem;">Set a spending target to monitor monthly expenditure pace.</small>
                 </div>
@@ -759,7 +778,11 @@
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">F5</kbd></td><td>Quicksave Snapshot</td></tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">F9</kbd></td><td>Quickload Snapshot</td></tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">F1</kbd> / <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">H</kbd></td><td>Help &amp; Shortcuts Guide</td></tr>
-                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Ctrl + S</kbd></td><td>Export CSV File</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Alt + C</kbd> / <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">C</kbd></td><td>Cycle Currency Symbol</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Ctrl + E</kbd></td><td>VFS &amp; Data Hub</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">&uarr; / &darr;</kbd></td><td>Navigate Ledger Rows</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Enter / Del</kbd></td><td>Edit / Delete Selected Item</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Ctrl + S</kbd></td><td>Save to VFS / Export CSV</td></tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Ctrl + O</kbd></td><td>Import CSV File</td></tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">&larr; / &rarr;</kbd></td><td>Previous / Next Page</td></tr>
                         <tr><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Esc</kbd></td><td>Close Active Modal</td></tr>
@@ -939,7 +962,7 @@
             // Set default date to today in local timezone
             dateInput.value = new Date().toLocaleDateString('en-CA');
             updateCategories();
-            amountLabel.textContent = `Amount (${currencySymbol})`;
+            updateCurrencyLabels();
             render();
 
             // First-run tutorial flag check: never interrupt restored sessions
@@ -1098,10 +1121,47 @@
             releaseModalFocus();
         }
 
+        const CURRENCY_LIST = ['$', '€', '£', '¥', 'C$', 'A$', 'CHF', 'kr'];
+
+        function cycleCurrency() {
+            let curIdx = CURRENCY_LIST.indexOf(currencySymbol);
+            if (curIdx === -1) curIdx = 0;
+            else curIdx = (curIdx + 1) % CURRENCY_LIST.length;
+            setCurrency(CURRENCY_LIST[curIdx]);
+            showToast(`Currency changed to ${currencySymbol}`, 'info');
+        }
+
+        function setCurrency(sym) {
+            currencySymbol = String(sym || '$').trim() || '$';
+            safeSet('kbudget_currency', currencySymbol);
+            updateCurrencyLabels();
+            render();
+        }
+
+        function updateCurrencyLabels() {
+            const curToggleBtn = document.getElementById('currency-toggle-btn');
+            if (curToggleBtn) curToggleBtn.textContent = `Cur: ${currencySymbol} ▾`;
+            const curPill = document.getElementById('status-cur-pill');
+            if (curPill) curPill.innerHTML = `<kbd>Alt+C</kbd> ${currencySymbol}`;
+            if (amountLabel) amountLabel.textContent = `Amount (${currencySymbol})`;
+            const goalLabel = document.getElementById('budget-goal-label');
+            if (goalLabel) goalLabel.textContent = `Monthly Expense Budget Target (${currencySymbol})`;
+            if (currencyInput) currencyInput.value = currencySymbol;
+            highlightActiveCurrencyBtn();
+        }
+
         function setCurrencyPreset(sym) {
             if (currencyInput) {
                 currencyInput.value = sym;
                 highlightActiveCurrencyBtn();
+            }
+        }
+
+        function setGoalPreset(val) {
+            const goalInput = document.getElementById('budget-goal-input');
+            if (goalInput) {
+                goalInput.value = val > 0 ? val : '';
+                goalInput.focus();
             }
         }
 
@@ -1667,6 +1727,20 @@
             updateSearchClearBtn();
             const searchTerm = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
             const filterType = document.getElementById('filter-type-select')?.value || 'all';
+            
+            const filterBar = document.getElementById('active-filter-bar');
+            const filterLabel = document.getElementById('active-filter-label');
+            if (filterBar && filterLabel) {
+                if (searchTerm || filterType !== 'all') {
+                    filterBar.style.display = 'flex';
+                    const parts = [];
+                    if (searchTerm) parts.push(`Search: "${searchTerm}"`);
+                    if (filterType !== 'all') parts.push(`Type: ${filterType}`);
+                    filterLabel.textContent = `Filter active: ${parts.join(' | ')}`;
+                } else {
+                    filterBar.style.display = 'none';
+                }
+            }
             let filteredTransactions = transactions.filter(t => {
                 if (filterType !== 'all' && t.type !== filterType) return false;
                 if (!searchTerm) return true;
@@ -1815,12 +1889,24 @@
                     el.setAttribute('role', 'listitem');
                     el.setAttribute('aria-label', `${t.description}, ${sign}${formatCurrency(t.amount)}, ${t.category}, ${formatDate(t.date)}`);
                     el.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') {
+                        if (e.key === 'Enter' || e.key.toLowerCase() === 'e') {
                             e.preventDefault();
                             openModal(encodeURIComponent(t.id));
                         } else if (e.key === 'Delete') {
                             e.preventDefault();
                             deleteTransaction(encodeURIComponent(t.id));
+                        } else if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const next = el.nextElementSibling;
+                            if (next && next.classList.contains('transaction-item')) {
+                                next.focus();
+                            }
+                        } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            const prev = el.previousElementSibling;
+                            if (prev && prev.classList.contains('transaction-item')) {
+                                prev.focus();
+                            }
                         }
                     });
                     el.innerHTML = `
@@ -1848,10 +1934,61 @@
             updateStatusbar(balance, income, expense, filteredTransactions.length);
         }
 
+        let currentChartSlices = [];
+        let hoveredSliceCat = null;
+        let cachedChartTotalExpense = 0;
+
+        function drawChartCenter(slice) {
+            const canvas = document.getElementById('pie-chart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.scale(dpr, dpr);
+            
+            const centerX = 100;
+            const centerY = 100;
+            const radius = 90;
+
+            // Donut hole cutout for crisp ergonomic readout
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 0.46, 0, 2 * Math.PI);
+            ctx.fillStyle = '#111e38';
+            ctx.fill();
+            ctx.strokeStyle = slice ? (slice.color || '#3b82f6') : 'rgba(255, 255, 255, 0.12)';
+            ctx.lineWidth = slice ? 2 : 1.5;
+            ctx.stroke();
+
+            if (slice) {
+                ctx.fillStyle = slice.color || '#3b82f6';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold 9.5px Inter, system-ui, sans-serif';
+                const catShort = slice.cat.length > 8 ? slice.cat.substring(0, 7) + '…' : slice.cat;
+                ctx.fillText(catShort.toUpperCase(), centerX, centerY - 9);
+                ctx.fillStyle = '#f8fafc';
+                ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+                ctx.fillText(`${formatCurrency(slice.val)}`, centerX, centerY + 3);
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '8.5px Inter, system-ui, sans-serif';
+                ctx.fillText(`${slice.pct}% share`, centerX, centerY + 15);
+            } else {
+                ctx.fillStyle = '#94a3b8';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = '10px Inter, system-ui, sans-serif';
+                ctx.fillText('EXPENSES', centerX, centerY - 7);
+                ctx.fillStyle = '#f8fafc';
+                ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+                ctx.fillText(`${currencySymbol}${cachedChartTotalExpense >= 10000 ? (Math.round(cachedChartTotalExpense / 1000) + 'k') : cachedChartTotalExpense.toFixed(0)}`, centerX, centerY + 8);
+            }
+        }
+
         function renderChart(categoryTotals, totalExpense) {
             const canvas = document.getElementById('pie-chart');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
+            cachedChartTotalExpense = totalExpense;
             
             // HiDPI sharp rendering with devicePixelRatio scaling
             const dpr = window.devicePixelRatio || 1;
@@ -1869,6 +2006,7 @@
             const centerX = 100;
             const centerY = 100;
             const radius = 90;
+            currentChartSlices = [];
             
             if (totalExpense === 0) {
                 ctx.beginPath();
@@ -1882,21 +2020,29 @@
                 ctx.textBaseline = 'middle';
                 ctx.font = '12px Inter, system-ui, sans-serif';
                 ctx.fillText('No expenses to chart', centerX, centerY);
+                const legendEl = document.getElementById('category-legend');
+                if (legendEl) legendEl.innerHTML = '<span style="color:#64748b; font-size:0.75rem; text-align:center;">No categorized expenses</span>';
                 return;
             }
 
             const colors = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef'];
             let startAngle = -0.5 * Math.PI;
-            
             let colorIdx = 0;
+            
             for (const [cat, val] of Object.entries(categoryTotals)) {
                 if (val > 0) {
                     const sliceAngle = (val / totalExpense) * 2 * Math.PI;
+                    const endAngle = startAngle + sliceAngle;
+                    const pct = Math.round((val / totalExpense) * 100);
+                    const color = colors[colorIdx % colors.length];
+
+                    currentChartSlices.push({ cat, val, startAngle, endAngle, color, pct });
+
                     ctx.beginPath();
                     ctx.moveTo(centerX, centerY);
-                    ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
+                    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
                     ctx.closePath();
-                    ctx.fillStyle = colors[colorIdx % colors.length];
+                    ctx.fillStyle = color;
                     ctx.fill();
                     
                     const midAngle = startAngle + sliceAngle / 2;
@@ -1906,35 +2052,68 @@
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.font = 'bold 10px Inter, system-ui, sans-serif';
-                    const percentage = Math.round((val / totalExpense) * 100) + '%';
                     if (val / totalExpense > 0.08) {
                         ctx.fillText(cat.substring(0,3), labelX, labelY - 5);
-                        ctx.fillText(percentage, labelX, labelY + 6);
+                        ctx.fillText(pct + '%', labelX, labelY + 6);
                     }
                     
-                    startAngle += sliceAngle;
+                    startAngle = endAngle;
                     colorIdx++;
                 }
             }
 
-            // Donut hole cutout for crisp ergonomic readout
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius * 0.45, 0, 2 * Math.PI);
-            ctx.fillStyle = '#111e38';
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
+            // Draw initial center readout
+            drawChartCenter(null);
 
-            // Center metric text
-            ctx.fillStyle = '#94a3b8';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.font = '10px Inter, system-ui, sans-serif';
-            ctx.fillText('EXPENSES', centerX, centerY - 7);
-            ctx.fillStyle = '#f8fafc';
-            ctx.font = 'bold 11px Inter, system-ui, sans-serif';
-            ctx.fillText(`${currencySymbol}${totalExpense >= 10000 ? (Math.round(totalExpense / 1000) + 'k') : totalExpense.toFixed(0)}`, centerX, centerY + 8);
+            // Canvas interactive slice hover
+            canvas.onmousemove = function(e) {
+                if (currentChartSlices.length === 0) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const dx = x - 100;
+                const dy = y - 100;
+                const dist = Math.hypot(dx, dy);
+                if (dist >= 38 && dist <= 95) {
+                    let angle = Math.atan2(dy, dx);
+                    if (angle < -0.5 * Math.PI) angle += 2 * Math.PI;
+                    const hit = currentChartSlices.find(s => {
+                        let sa = s.startAngle;
+                        let ea = s.endAngle;
+                        while (sa < -0.5 * Math.PI) { sa += 2 * Math.PI; ea += 2 * Math.PI; }
+                        return angle >= sa && angle <= ea;
+                    });
+                    if (hit) {
+                        canvas.style.cursor = 'pointer';
+                        canvas.title = `${hit.cat}: ${formatCurrency(hit.val)} (${hit.pct}%) - Click to filter`;
+                        if (hoveredSliceCat !== hit.cat) {
+                            hoveredSliceCat = hit.cat;
+                            drawChartCenter(hit);
+                        }
+                        return;
+                    }
+                }
+                canvas.style.cursor = 'default';
+                canvas.title = 'Expenses by Category';
+                if (hoveredSliceCat !== null) {
+                    hoveredSliceCat = null;
+                    drawChartCenter(null);
+                }
+            };
+
+            canvas.onmouseleave = function() {
+                canvas.style.cursor = 'default';
+                if (hoveredSliceCat !== null) {
+                    hoveredSliceCat = null;
+                    drawChartCenter(null);
+                }
+            };
+
+            canvas.onclick = function() {
+                if (hoveredSliceCat) {
+                    filterByCategory(hoveredSliceCat);
+                }
+            };
 
             const legendEl = document.getElementById('category-legend');
             if (legendEl) {
@@ -1944,10 +2123,26 @@
                     if (val > 0) {
                         const pct = Math.round((val / totalExpense) * 100);
                         const row = document.createElement('div');
+                        row.tabIndex = 0;
+                        row.setAttribute('role', 'button');
+                        row.setAttribute('aria-label', `Filter by ${escapeHtml(cat)}: ${formatCurrency(val)}`);
                         row.style.cssText = 'display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 3px 6px; border-radius: 4px; cursor: pointer; transition: background 0.2s;';
                         row.title = `Click to filter by ${escapeHtml(cat)}`;
-                        row.onmouseenter = () => { row.style.background = 'rgba(255,255,255,0.08)'; };
-                        row.onmouseleave = () => { row.style.background = 'rgba(255,255,255,0.03)'; };
+                        const matchSlice = currentChartSlices.find(s => s.cat === cat);
+                        row.onmouseenter = () => {
+                            row.style.background = 'rgba(255,255,255,0.08)';
+                            if (matchSlice) drawChartCenter(matchSlice);
+                        };
+                        row.onmouseleave = () => {
+                            row.style.background = 'rgba(255,255,255,0.03)';
+                            drawChartCenter(null);
+                        };
+                        row.onkeydown = (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                filterByCategory(cat);
+                            }
+                        };
                         row.onclick = () => filterByCategory(cat);
                         row.innerHTML = `
                             <div style="display: flex; align-items: center; gap: 6px;">
@@ -2067,6 +2262,12 @@
                 return;
             }
 
+            if (e.altKey && e.key.toLowerCase() === 'c') {
+                e.preventDefault();
+                cycleCurrency();
+                return;
+            }
+
             if (e.ctrlKey) {
                 switch(e.key.toLowerCase()) {
                     case 'n':
@@ -2080,11 +2281,19 @@
                         break;
                     case 's':
                         e.preventDefault();
-                        exportCSV();
+                        if (window.parent !== window) {
+                            exportToVFS('csv');
+                        } else {
+                            exportCSV();
+                        }
                         break;
                     case 'o':
                         e.preventDefault();
-                        importCSV();
+                        if (window.parent !== window) {
+                            importFromVFS();
+                        } else {
+                            importCSV();
+                        }
                         break;
                     case 'e':
                         e.preventDefault();
@@ -2099,6 +2308,9 @@
                 } else if (e.key === 'h' || e.key === 'H' || e.key === '?') {
                     e.preventDefault();
                     openHelpModal();
+                } else if (e.key === 'c' || e.key === 'C') {
+                    e.preventDefault();
+                    cycleCurrency();
                 } else if (e.key === 'ArrowLeft') {
                     e.preventDefault();
                     changePage(-1);
