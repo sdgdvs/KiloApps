@@ -1661,7 +1661,11 @@
       }
 
       if (decrypt) {
-        return new TextDecoder().decode(new Uint8Array(outBytes));
+        try {
+          return new TextDecoder().decode(new Uint8Array(outBytes));
+        } catch (e) {
+          return outBytes.map(b => String.fromCharCode(b)).join('');
+        }
       } else {
         if (format === 'hex') {
           return outBytes.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -1697,9 +1701,9 @@
     }
 
     function modInverse(e, phi) {
+      if (phi <= 1 || gcd(e, phi) !== 1) return 0;
       let [m0, y, x] = [phi, 0, 1];
-      if (phi === 1) return 0;
-      while (e > 1) {
+      while (e > 1 && phi > 0) {
         const q = Math.floor(e / phi);
         let t = phi;
         phi = e % phi;
@@ -1729,6 +1733,10 @@
       const n = p * q;
       const phi = (p - 1) * (q - 1);
       const d = modInverse(e, phi);
+
+      if (decrypt && !d) {
+        return '⚠ Invalid RSA Keypair: e and (p-1)*(q-1) must be coprime.';
+      }
 
       if (!decrypt) {
         // Encrypt characters to space-separated integers
@@ -1921,7 +1929,11 @@
       }
 
       if (decrypt) {
-        return new TextDecoder().decode(new Uint8Array(outBytes));
+        try {
+          return new TextDecoder().decode(new Uint8Array(outBytes));
+        } catch (e) {
+          return outBytes.map(b => String.fromCharCode(b)).join('');
+        }
       } else {
         if (format === 'hex') {
           return outBytes.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -1961,7 +1973,11 @@
       }
 
       if (decrypt) {
-        return new TextDecoder().decode(new Uint8Array(outBytes));
+        try {
+          return new TextDecoder().decode(new Uint8Array(outBytes));
+        } catch (e) {
+          return outBytes.map(b => String.fromCharCode(b)).join('');
+        }
       } else {
         if (format === 'hex') {
           return outBytes.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -1978,7 +1994,7 @@
        ========================================================= */
 
     function calculateStats(text) {
-      if (!text) return { ioc: 0, entropy: 0, counts: {}, totalAlpha: 0 };
+      if (!text) return { ioc: 0, entropy: 0, counts: {}, totalAlpha: 0, chi2: 0 };
       const counts = {};
       let totalAlpha = 0;
       const upper = text.toUpperCase();
@@ -4063,7 +4079,7 @@
         if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
           e.preventDefault();
           if (e.shiftKey) {
-            document.getElementById('btnExportJson')?.click();
+            document.getElementById('btnExportJSON')?.click();
           } else {
             document.getElementById('btnVFSSave')?.click();
           }
@@ -4071,7 +4087,11 @@
         }
         if (e.ctrlKey && (e.key === 'o' || e.key === 'O')) {
           e.preventDefault();
-          document.getElementById('btnVFSOpen')?.click();
+          if (e.shiftKey) {
+            document.getElementById('btnImportJSON')?.click();
+          } else {
+            document.getElementById('btnVFSOpen')?.click();
+          }
           return;
         }
 

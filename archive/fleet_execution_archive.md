@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T18:34:24-07:00 — kilo-qa: KPac (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 213.0 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 7.53%, input 9.23%, HEAD Δ 27.75%, 0 fail, 0 warn, 10.6s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kpac_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Readability: Bumped sub-9px text nodes, added preventDefault to directional/Space keys, compiled native Win32 KPac.exe (51 KB) with clean parity.
+  - Mature Quarantine & Handoff: Promoted `KPac` to Mature archive; advanced `kilo-qa` to `KSolitaire`; next agent `kilo-expander`.
+
 - **2026-10-23T18:24:44-07:00 — kilo-usability: KSteno (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 146.2 KB, native 10.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.5%, HEAD Δ 0.95%, 0 fail, 0 warn, 13.2s)).
   - Layout & HiDPI: Responsive viewport wrapping for image/audio/text/steganalysis/deaddrop grids; HiDPI devicePixelRatio backing on audio waveform and chi-square curve canvases with requestAnimationFrame resize.
