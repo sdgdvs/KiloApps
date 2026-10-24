@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ current_targets:
   kilo_soundscape: KCyber
   kilo_tester: KCipher
   kilo_usability: KHash
-  kilo_qa: KPac
+  kilo_qa: KSolitaire
   kilo_expander: KQuest
 virtual_web_target: kweb://webring
 virtual_web_rotation:
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KSteno
-  timestamp: '2026-10-23T18:24:44-07:00'
+  agent: kilo-qa
+  app: KPac
+  timestamp: '2026-10-23T18:34:24-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -147,11 +147,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KPac`
+- **Active Target**: `KSolitaire`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | Pass 5 QA: verify campaign progression, maze editor, RFMS duel solo fallback, F5/F9 persistence + dual Win32 C build (`KPac.exe` <999 KB); promote to Mature if complete. |
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Pass 5 QA: verify deck state, move undo stack, scoring, F5/F9 persistence + dual Win32 C build (`KSolitaire.exe` <999 KB); promote to Mature if complete. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
@@ -178,6 +177,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KPac** | `KiloOS/public/apps/kpac.html` | Pass 5+ (2026-10-23) | Games / Arcade | Full cyber-arcade maze crawler with campaign progression, maze editor & PAC-FEN import/export, RFMS online duel & solo fallback, companion pets, forge/relics, F5/F9 state persistence, and dual Win32 C parity. |
 | **KMech** | `KiloOS/public/apps/kmech.html` | Pass 5+ (2026-10-23) | Games / Sci-Fi | Tactical turn-based mech skirmish arena with chassis/weapon loadouts, heat/armor management, limb targeting, F5/F9 state persistence, and dual Win32 C parity. |
 | **KTrader** | `KiloOS/public/apps/ktrader.html` | Pass 5+ (2026-10-23) | Strategy / Space Simulation | Complete space trading & planetary commerce simulation; 12 planetary systems, commodity futures ledger, shipyard upgrades, pirate combat, dual Win32 native client parity, full F5/F9 state persistence. |
 | **KDB** | `KiloOS/public/apps/kdb.html` | Pass 5+ (2026-10-23) | Productivity / Database & SQL | Enterprise relational table & SQL studio with multi-table schema designer, ER diagram, index simulator, VFS mount/export (/home/data/), KGraph IPC plotting, F5/F9 persistence, and dual Win32 C parity. |
@@ -224,6 +224,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T18:34:24-07:00 — kilo-qa: KPac (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 213.0 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 7.53%, input 9.23%, HEAD Δ 27.75%, 0 fail, 0 warn, 10.6s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kpac_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Readability: Bumped sub-9px text nodes, added preventDefault to directional/Space keys, compiled native Win32 KPac.exe (51 KB) with clean parity.
+  - Mature Quarantine & Handoff: Promoted `KPac` to Mature archive; advanced `kilo-qa` to `KSolitaire`; next agent `kilo-expander`.
+
 - **2026-10-23T18:24:44-07:00 — kilo-usability: KSteno (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 146.2 KB, native 10.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.5%, HEAD Δ 0.95%, 0 fail, 0 warn, 13.2s)).
   - Layout & HiDPI: Responsive viewport wrapping for image/audio/text/steganalysis/deaddrop grids; HiDPI devicePixelRatio backing on audio waveform and chi-square curve canvases with requestAnimationFrame resize.
@@ -247,10 +253,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented 3D isometric node towers, enhanced matrix perspective grid with quadratic rungs and node glimmers.
   - Overhauled IC guardian constructs with armored composite chassis, tactical escort formation, and glint sweep.
   - Handoff: Advanced `kilo-graphics` to `KStellar`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-23T17:38:30-07:00 — kilo-creator: kweb://rfc-archive (IETF 1999 Living RFC Workbench & Protocol Lab)**
-  - Status: PASS ✅ (0 errors, web 72.8 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.02%, input 2.05%, 0 fail, 0 warn, 6.0s)).
-  - Designed and implemented IETF 1999 Living RFC Workbench with interactive RFC 1149 CPIP carrier pigeon simulator and RFC 2324 HTCPCP coffee pot console (418 I'm a teapot).
-  - Added RFC 793 TCP state stepper with dual-host registers, ASCII ladder diagram, and KiloOS VFS RFC/.txt export.
-  - Registered kweb://rfc-archive in KNet bookmarks and resolver, and linked in Portal and Central Webring Hub.
-  - Handoff: Advanced `kilo-creator` to `kweb://webring`; rotated active agent to `kilo-graphics`.
