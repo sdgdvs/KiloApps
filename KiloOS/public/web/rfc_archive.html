@@ -472,6 +472,7 @@
       <div class="telemetry-item"><div class="pulse-dot"></div> STACK: <span class="val">IPv4/TCP/CPIP</span></div>
       <div class="telemetry-item">NODE: <span class="val">ietf.kilonet.org</span></div>
       <div class="telemetry-item">VFS: <span class="val">/home/downloads/</span></div>
+      <button class="btn btn-sm btn-amber" id="btnSpoolAllVfs" title="Spool complete RFC archive manifest to KiloOS VFS">💾 Spool VFS</button>
       <button class="btn btn-sm" id="btnAudioMute" title="Toggle Synthesizer Audio">🔊 Audio ON</button>
       <button class="btn btn-sm" id="btnToggleCrt" title="Toggle CRT Scanline Overlay">📺 CRT</button>
     </div>
@@ -799,6 +800,39 @@ Click "Next Step" or "Auto-Run Scenario" to advance TCP state transitions.</div>
     </div>
   </section>
 
+  <!-- 1999 Consortium Webring & Network Hub Footer -->
+  <footer class="panel" style="text-align: center; margin-top: 24px; padding: 18px 16px; border-top: 2px solid var(--border-bright);">
+    <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+      INTERNET ENGINEERING TASK FORCE (IETF) // LIVING RFC PROTOCOL WORKBENCH (1999) &bull; <code>kweb://rfc-archive</code>
+    </div>
+    <div style="font-family: var(--font-mono); font-size: 11px; color: var(--amber-glow); margin-bottom: 12px; display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
+      <span>[ <a href="/web/webring.html?action=prev&from=rfc-archive" style="color:var(--cyan-term); text-decoration:none;">&laquo; Prev Hub</a> ]</span>
+      <span style="font-weight:bold; color:#fff;">🕸️ KiloNet 1999 RingMaster Consortium Hub #022 🕸️</span>
+      <span>[ <a href="/web/webring.html?action=random" style="color:var(--cyan-term); text-decoration:none;">Random Site 🎲</a> ]</span>
+      <span>[ <a href="/web/webring.html?action=next&from=rfc-archive" style="color:var(--cyan-term); text-decoration:none;">Next Hub &raquo;</a> ]</span>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11px;">
+      <a href="/web/portal.html" style="color:var(--cyan-term); text-decoration:underline;">🏠 kweb://portal</a>
+      <span style="color:var(--border-color);">&bull;</span>
+      <a href="/web/slashnet.html" style="color:var(--cyan-term); text-decoration:underline;">📰 kweb://slashnet</a>
+      <span style="color:var(--border-color);">&bull;</span>
+      <a href="/web/cabled.html" style="color:var(--cyan-term); text-decoration:underline;">⚡ kweb://cabled</a>
+      <span style="color:var(--border-color);">&bull;</span>
+      <a href="/web/scallion.html" style="color:var(--cyan-term); text-decoration:underline;">🧅 kweb://scallion</a>
+      <span style="color:var(--border-color);">&bull;</span>
+      <a href="/web/demoscene.html" style="color:var(--cyan-term); text-decoration:underline;">💾 kweb://demoscene</a>
+      <span style="color:var(--border-color);">&bull;</span>
+      <a href="/web/trapster.html" style="color:var(--cyan-term); text-decoration:underline;">🐱 kweb://trapster</a>
+      <span style="color:var(--border-color);">&bull;</span>
+      <a href="/web/cybercafe.html" style="color:var(--cyan-term); text-decoration:underline;">☕ kweb://cybercafe</a>
+      <span style="color:var(--border-color);">&bull;</span>
+      <a href="/web/webring.html" style="color:var(--cyan-term); text-decoration:underline;">🌐 kweb://webring</a>
+    </div>
+    <div style="margin-top: 10px; font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">
+      RFC Editor Notice: Compliance with RFC 1149 (CPIP), RFC 2324 (HTCPCP), RFC 793 (TCP), and RFC 2549 (QoS) strictly verified. Zero external assets.
+    </div>
+  </footer>
+
 </main>
 
 <div id="toast">🔔 Toast message</div>
@@ -981,6 +1015,29 @@ btnToggleCrt.addEventListener('click', () => {
   crtOverlay.classList.toggle('disabled');
   showToast(crtOverlay.classList.contains('disabled') ? 'CRT filter disabled' : 'CRT scanlines enabled');
 });
+
+// Spool All Manifest to VFS
+const btnSpoolAllVfs = document.getElementById('btnSpoolAllVfs');
+if (btnSpoolAllVfs) {
+  btnSpoolAllVfs.addEventListener('click', () => {
+    const manifest = `IETF LIVING RFC WORKBENCH MANIFEST
+Version: 1999.10.24-RELEASE
+Node: ietf.kilonet.org [198.32.0.10]
+Standards Included:
+ - RFC 768: User Datagram Protocol
+ - RFC 791: Internet Protocol
+ - RFC 793: Transmission Control Protocol (Interactive Stepper)
+ - RFC 1149: Standard for Transmission of IP on Avian Carriers (CPIP Simulator)
+ - RFC 2324: Hyper Text Coffee Pot Control Protocol (HTCPCP Console, 418 I'm a teapot)
+ - RFC 2549: IP over Avian Carriers with Quality of Service
+ - RFC 2616: Hypertext Transfer Protocol -- HTTP/1.1
+ - RFC 1999: Millennium ARPANET IMP #04 Telemetry
+VFS Export Root: /home/downloads/
+Generated: ${new Date().toISOString()}
+`;
+    saveToKiloVfs('/home/downloads/ietf_workbench_manifest.txt', manifest);
+  });
+}
 
 
 /* =====================================================================
