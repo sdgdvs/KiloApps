@@ -2305,10 +2305,12 @@
                 if (playerShield >= dmg) {
                     playerShield -= dmg;
                     spawnFloater(w * 0.22, h * 0.45, `ABSORBED ${dmg}`, '#60a5fa');
+                    playSound('shield');
                     dmg = 0;
                 } else {
                     dmg -= playerShield;
                     spawnFloater(w * 0.22, h * 0.45, `SHIELD BROKEN`, '#60a5fa');
+                    playSound('shield');
                     playerShield = 0;
                 }
             }
@@ -2317,6 +2319,7 @@
             if (dmg > 0) {
                 playerHp -= dmg;
                 playerHurtTimer = 0.25;
+                playSound('damage');
                 const txt = dmg >= 8 ? `CRIT -${dmg} HP!` : `-${dmg} HP`;
                 const col = dmg >= 8 ? '#facc15' : '#ef4444';
                 spawnFloater(w * 0.22, h * 0.45, txt, col);
@@ -2371,10 +2374,12 @@
                 if (opponentShield >= dmg) {
                     opponentShield -= dmg;
                     spawnFloater(w * 0.78, h * 0.45, `ABSORBED ${dmg}`, '#60a5fa');
+                    playSound('shield');
                     dmg = 0;
                 } else {
                     dmg -= opponentShield;
                     spawnFloater(w * 0.78, h * 0.45, `SHIELD BROKEN`, '#60a5fa');
+                    playSound('shield');
                     opponentShield = 0;
                 }
             }
@@ -2383,6 +2388,7 @@
             if (dmg > 0) {
                 opponentHp -= dmg;
                 oppHurtTimer = 0.25;
+                playSound('damage');
                 const txt = dmg >= 8 ? `CRIT -${dmg} HP!` : `-${dmg} HP`;
                 const col = dmg >= 8 ? '#facc15' : '#ef4444';
                 spawnFloater(w * 0.78, h * 0.45, txt, col);
@@ -2492,6 +2498,7 @@
                 card.onclick = () => {
                     if (gameState !== 0) return;
                     if (playerFreeze > 0) {
+                        playSound('no_mana');
                         arenaBannerMsg = "You are frozen and cannot cast spells!";
                         arenaBannerColor = "#38bdf8";
                         return;
@@ -2587,6 +2594,7 @@
                             }
                         }, 250);
                     } else {
+                        playSound('no_mana');
                         arenaBannerMsg = `Not enough mana for ${cardData.name}!`;
                         arenaBannerColor = "#f87171";
                     }
@@ -2616,6 +2624,7 @@
             if (isOpponent) {
                 opponentCards.push(randomCard);
             } else {
+                playSound('card_draw');
                 updatePlayerHandHotkeys();
                 updateManaDisplay();
             }
@@ -2761,6 +2770,7 @@
 
         endTurnBtn.onclick = () => {
             if (gameState === 0) {
+                playSound('turn_end');
                 if (playerFreeze > 0) playerFreeze--;
                 
                 if (opponentMaxMana < 10) opponentMaxMana++;
@@ -2790,6 +2800,7 @@
                 }
                 
                 if (gameState === 0) {
+                    playSound('turn_start');
                     if (playerMaxMana < 10) playerMaxMana++;
                     playerMana = playerMaxMana + playerOvercharge;
                     if (playerOvercharge > 0) {

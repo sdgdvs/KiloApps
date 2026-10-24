@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T11:25:09-07:00 — kilo-usability: KBudget (Usability, HiDPI Canvas & Keyboard/VFS Ergonomics Polish)**
+  - Status: PASS (0 errors, web 108.9 KB, native 166.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Layout & Canvas: HiDPI interactive expense pie chart with dynamic slice hover, center donut preview, and legend filtering.
+  - Ergonomics: Added header currency toggle and statusbar pill [Alt+C], active filter banner with 1-click clear, and arrow navigation.
+  - VFS & Shortcuts: Integrated smart Ctrl+S / Ctrl+O VFS handlers with OS_NOTIFY and fallback, plus budget goal quick presets.
+  - Handoff: Advanced `kilo-usability` to `KFlash`; rotated active agent to `kilo-qa`.
+
 - **2026-10-24T11:19:48-07:00 — kilo-usability: KBudget (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 97.0 KB, native 166.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 9.8%, HEAD Δ 2.69%, 0 fail, 0 warn, 9.7s)).
   - Layout & HiDPI: Compact summary cards container, HiDPI canvas donut pie chart with center readout, and narrow viewport wrapping.

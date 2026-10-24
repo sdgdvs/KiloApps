@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://deep-core
   kilo_graphics: KStellar
-  kilo_soundscape: KWizard
+  kilo_soundscape: KVoid
   kilo_tester: KHabit
   kilo_usability: KFlash
   kilo_qa: KHabit
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KCyber
-  timestamp: '2026-10-24T12:02:42-07:00'
+  agent: kilo-soundscape
+  app: KWizard
+  timestamp: '2026-10-24T12:17:49-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -114,11 +114,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Active Target**: `KWizard`
+- **Active Target**: `KVoid`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
@@ -127,6 +126,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KQuest` | `KiloOS/public/apps/kquest.html` | Compose overworld & battle 6-channel JRPG chiptune suite (Royal Road `IV-V-iii-vi` town/overworld + Heroic `bVI-bVII-I` combat cadence, E-Piano & flute counterpoint, SPC700 echo) + spell/quest earcons. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Compose bridge alert & deep-space exploration 6-channel FM suite (Lydian `#4` pad + tactical Phrygian Dominant combat march, sonar/shield/warp earcons). |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Compose mystical alchemical workshop 6-channel suite (Dorian/Lydian celesta bells, warm glass pad, bubbling FM cauldron transients, transmutation fanfare stingers). |
+| `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Active Target**: `KHabit`
@@ -276,6 +276,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T12:17:49-07:00 — kilo-soundscape: KWizard (The Arcane Spire Duel — YM2612/SPC700 Chiptune Suite)**
+  - Status: PASS ✅ (0 errors, web 150.7 KB, native 12.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 20.76%, HEAD Δ 0.7%, 0 fail, 0 warn, 15.2s)).
+  - Composition: D Harmonic Minor, 6-channel contrary counterpoint, 3rd/7th shell voicings, 5:3 swing-tick groove.
+  - Patches & DSP: Harpsichord/flute FM lead with 180ms delayed vibrato, 2-Op FM walking bass, selective 200ms SPC700 stereo delay, pyromancy/cryomancy/electromancy elemental earcons, card/shield/turn stingers.
+  - Handoff: Advanced `kilo-soundscape` to `KVoid`; rotated active agent to `kilo-tester`.
+
 - **2026-10-24T12:02:42-07:00 — kilo-graphics: KCyber (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KCyber.
   - Handoff: Advanced `kilo-graphics` to `KStellar`; rotated active agent to `kilo-soundscape`.
@@ -298,10 +304,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kbudget_tutorialSeen flag, and Escape modal dismissals.
   - Dual Parity & Lifecycle: Added monthly budget goal tracking, Alt+C currency toggle, and visibilitychange lifecycle pause.
   - Mature Quarantine & Handoff: Promoted `KBudget` to Mature archive; advanced `kilo-qa` to `KHabit`; next agent `kilo-expander`.
-
-- **2026-10-24T11:25:09-07:00 — kilo-usability: KBudget (Usability, HiDPI Canvas & Keyboard/VFS Ergonomics Polish)**
-  - Status: PASS (0 errors, web 108.9 KB, native 166.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Layout & Canvas: HiDPI interactive expense pie chart with dynamic slice hover, center donut preview, and legend filtering.
-  - Ergonomics: Added header currency toggle and statusbar pill [Alt+C], active filter banner with 1-click clear, and arrow navigation.
-  - VFS & Shortcuts: Integrated smart Ctrl+S / Ctrl+O VFS handlers with OS_NOTIFY and fallback, plus budget goal quick presets.
-  - Handoff: Advanced `kilo-usability` to `KFlash`; rotated active agent to `kilo-qa`.
