@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T08:51:05-07:00 — kilo-qa: KMatrix (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS (web 87.7 KB, native 17.5 KB < 999 KB; startup, Vite, security_lint & visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, safeGet/safeSet storage safety, tutorialSeen flag, and modal Escape dismissals.
+  - Dual Parity & Features: Implemented subterranean codebook decrypter and RF frequency waterfall in both Web HTML and Win32 C.
+  - Mature Quarantine & Handoff: Promoted `KMatrix` to Mature archive; advanced `kilo-qa` to `KJournal`; next agent `kilo-expander`.
+
 - **2026-10-24T08:41:48-07:00 — kilo-usability: KSteno (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 152.9 KB, native 10.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Layout & HiDPI: Preserved crisp pixelated carrier backing, HiDPI audio/chi-square canvas scaling on resize.

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ current_targets:
   kilo_creator: kweb://rfc-archive
   kilo_graphics: KVoid
   kilo_soundscape: KFarm
-  kilo_tester: KSteno
+  kilo_tester: KJournal
   kilo_usability: KAnomaly
   kilo_qa: KJournal
   kilo_expander: KSteno
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KAlchemy
-  timestamp: '2026-10-24T09:35:35-07:00'
+  agent: kilo-tester
+  app: KSteno
+  timestamp: '2026-10-24T09:41:50-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -126,17 +126,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Compose mystical alchemical workshop 6-channel suite (Dorian/Lydian celesta bells, warm glass pad, bubbling FM cauldron transients, transmutation fanfare stingers). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KSteno`
+- **Active Target**: `KJournal`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 | `KJournal` | `KiloOS/public/apps/kjournal.html`, `KJournal/main.c` | Audit daily entry editor, mood tags, markdown rendering, password lock, and calendar navigation. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Audit expense ledger, category charts, currency toggles, budget goals, and VFS export. |
 | `KHabit` | `KiloOS/public/apps/khabit.html`, `KHabit/main.c` | Audit habit tracker streaks, completion heatmaps, daily reminder alerts, and keyboard shortcuts. |
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Audit flashcard deck manager, spaced repetition algorithm, flip animations, and deck import/export. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
+| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KAnomaly`
@@ -240,6 +240,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T09:41:50-07:00 — kilo-tester: KSteno (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS (0 errors, web 156.9 KB, native 10.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - UI & Hotkey Audit: Verified LSB image/audio steganography, bitplane visualizer, RC4 passkey encryption, and modal dismissals.
+  - Repairs: Fixed modal focus stack restoration on close, hardened Escape dismissal via computed style, and suppressed background hotkeys during open modal dialogs.
+  - Handoff: Advanced `kilo-tester` to `KJournal`; rotated active agent to `kilo-usability`.
+
 - **2026-10-24T09:35:35-07:00 — kilo-soundscape: KAlchemy (The Hermetic Transmutation — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 274.7 KB, native 68.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.5%, HEAD Δ 0.01%, 0 fail, 0 warn, 14.3s)).
   - Composition: D Dorian / F Lydian 64-step modal suite, 6-channel contrary counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
@@ -262,9 +268,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated KiloOS VFS mesh APIs (vfs_read, vfs_write, vfs_append, vfs_exists, vfs_size, vfs_copy, vfs_delete, os_launch, os_notify), VFS Open Picker toolbar integration, and KPad/KHex cross-launch actions.
   - Native Win32 C parity: expanded VFS table to 32 slots, implemented string literal parsing for VFS functions, added VFS [Alt+V] toolbar button and explorer modal dialog.
   - Handoff: Advanced `kilo-expander` to `KSteno`; rotated active agent to `kilo-creator`.
-
-- **2026-10-24T08:51:05-07:00 — kilo-qa: KMatrix (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS (web 87.7 KB, native 17.5 KB < 999 KB; startup, Vite, security_lint & visual PASS).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, safeGet/safeSet storage safety, tutorialSeen flag, and modal Escape dismissals.
-  - Dual Parity & Features: Implemented subterranean codebook decrypter and RF frequency waterfall in both Web HTML and Win32 C.
-  - Mature Quarantine & Handoff: Promoted `KMatrix` to Mature archive; advanced `kilo-qa` to `KJournal`; next agent `kilo-expander`.
