@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -26,7 +26,7 @@ commit_checkpoint: 12
 status: ready
 current_targets:
   kilo_creator: kweb://trapster
-  kilo_graphics: KSubmarine
+  kilo_graphics: KRogue
   kilo_soundscape: KSubmarine
   kilo_tester: KScript
   kilo_usability: KAnomaly
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://slashnet
-  timestamp: '2026-10-23T21:32:13-07:00'
+  agent: kilo-graphics
+  app: KSubmarine
+  timestamp: '2026-10-23T21:39:22-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -93,11 +93,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KSubmarine`
+- **Active Target**: `KRogue`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 | `KRogue` | `KiloOS/public/apps/krogue.html` | Subterranean roguelike visual polish: crisp tile/entity sprite rendering, atmospheric torchlight vignette, boss monster visual distinction, and perimeter glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
@@ -106,6 +105,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
+| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KSubmarine`
@@ -224,6 +224,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T21:39:22-07:00 — kilo-graphics: KSubmarine (Skip — Asset Suitability)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate; tactical vector HUD already integrated.
+  - Handoff: Advanced `kilo-graphics` to `KRogue`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-23T21:32:13-07:00 — kilo-creator: kweb://slashnet (SlashNet 1999 News & Beowulf Supercluster Destination)**
   - Status: PASS (0 errors, web 83.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 72.26%, 0 fail, 0 warn, 4.7s)).
   - Interactive karma moderation (-1 to +5), threshold filtering, Beowulf cluster calculator, Linux 2.2 compile sim & VFS export.
@@ -247,9 +251,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Encrypted Container Tree & Hex Inspector: Full keyboard-navigable archive tree with ARIA treeitem semantics and responsive side-by-side/stacked hex record inspector with 16-byte offset dump.
   - Security Banner & Modals: High-visibility locked/unlocked security status banner with instant lock control, plus accessible modal focus trapping (Tab/Shift-Tab cycling and Escape dismissal).
   - Handoff: Advanced `kilo-usability` to `KAnomaly`; rotated active agent to `kilo-qa`.
-
-- **2026-10-23T20:52:24-07:00 — kilo-tester: KSys (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS ✅ (0 errors, web 191.6 KB, native 37.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 7.02%, HEAD Δ 0.9%, 0 fail, 0 warn, 8.9s)).
-  - UI & Hotkey Audit: Input guards strengthened for active inputs/textareas, modal/backdrop dismissal clears toasts, [B] hotkey added.
-  - Repairs: Implemented continuous diagnostic stress test loop with live burn-in telemetry and audio SFX; repaired Win32 C parity with Tab 6 Hex explorer, all 6 benchmark outputs, stress toggle parity, and full 1-6 keyboard navigation.
-  - Handoff: Advanced `kilo-tester` to `KScript`; rotated active agent to `kilo-usability`.
