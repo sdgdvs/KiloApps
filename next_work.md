@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ current_targets:
   kilo_graphics: KSanctuary
   kilo_soundscape: KStellar
   kilo_tester: KSys
-  kilo_usability: KHash
+  kilo_usability: KVault
   kilo_qa: KSolitaire
   kilo_expander: KStarForge
 virtual_web_target: kweb://deep-core
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
-  app: KCipher
-  timestamp: '2026-10-23T19:35:17-07:00'
+  agent: kilo-usability
+  app: KHash
+  timestamp: '2026-10-23T19:43:34-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -134,17 +134,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Audit cipher workbench (AES/XOR/Vigenère/ROT13/RSA toy), frequency histogram, key input guards, and VFS import/export. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KHash`
+- **Active Target**: `KVault`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KHash` | `KiloOS/public/apps/khash.html`, `KHash/main.c` | Multi-digest comparison table responsiveness, one-click hash verification badge, HMAC toggle ergonomics, and keyboard shortcuts. |
 | `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Encrypted container tree navigation, responsive hex/file inspector split, clear lock/unlock status banner, and modal focus trapping. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Side-by-side plaintext/ciphertext responsive split pane, HiDPI frequency chart crispness, one-click copy/swap ergonomics, and `[F1/H]` help overlay. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
+| `KHash` | `KiloOS/public/apps/khash.html`, `KHash/main.c` | Multi-digest comparison table responsiveness, one-click hash verification badge, HMAC toggle ergonomics, and keyboard shortcuts. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KSolitaire`
@@ -224,6 +224,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T19:43:34-07:00 — kilo-usability: KHash (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 160.6 KB, native 17.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.2%, HEAD Δ 9.52%, 0 fail, 0 warn, 8.8s)).
+  - Live Multi-Digest Comparison Table: Added real-time responsive matrix cross-referencing expected hashes across all 13 algorithms with 1-click select and copy.
+  - Verification Badges: Added 1-click inline verification badges (MATCH / MISMATCH / Verify) to all digest rows and verified badge receipt export.
+  - HMAC Ergonomics & Shortcuts: Added Alt+M/Alt+H toggle, random 16-byte key generator, byte counter badge, and Alt+V/Alt+C/Alt+T/F3 hotkeys.
+  - Handoff: Advanced `kilo-usability` to `KVault`; rotated active agent to `kilo-qa`.
+
 - **2026-10-23T19:35:17-07:00 — kilo-tester: KCipher (Interactive UI & Cipher Workbench Audit)**
   - Status: PASS ✅ (0 errors, web 157.1 KB, native 15.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.83%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.5s)).
   - UI & Hotkey Audit: Verified cipher workbench (AES/XOR/Vigenere/ROT13/RSA), frequency chart, VFS import/export, and modal dismissals.
@@ -249,9 +256,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated slashnet, trapster, cabled, scallion, demoscene, and rfc-archive into RingMaster topology map, live HUD telemetry, and 88x31 badge presets.
   - Added canonical member site quick-picker to HTML Widget Studio and implemented full 1999 RingMaster URL query parameter dispatcher.
   - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-23T18:44:14-07:00 — kilo-expander: KQuest (Phase VI RFMS Co-Op Tavern & Guild Arena + VFS Character Sheet)**
-  - Status: PASS ✅ (0 errors, web 392.5 KB, native 97.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 16.05%, HEAD Δ 10.04%, 0 fail, 0 warn, 12.0s)).
-  - Integrated Retro Firebase Multiplayer Service (RFMS v2.0) with explicit connect gate and 25s Mandate 12 solo AI fallback for Tavern Co-Op Raid against Ignis World-Eater and 1v1 Guild Arena Duels.
-  - Added KiloOS VFS mesh integration for /home/saves/kquest_hero.json & text character sheet export with one-click KPad inspection launch.
-  - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-creator`.

@@ -84,7 +84,7 @@ static HWND g_hBtnLoad = NULL;
 static HWND g_hBtnClear = NULL;
 static HWND g_hStatusLabel = NULL;
 
-static char g_szStatus[256] = "KHash Ready. Enter payload, browse file, or press [F1/H] for Help.";
+static char g_szStatus[256] = "KHash Ready. [F1/H] Help | [F3] Verify | [F5/F9] State | [Enter] Hash | [Esc] Clear";
 static char g_szCrc16[16] = "0000";
 static char g_szCrc32[16] = "00000000";
 static char g_szAdler32[16] = "00000001";
@@ -685,6 +685,10 @@ void __cdecl MainEntry(void) {
         if (msg.message == WM_KEYDOWN) {
             if (msg.wParam == VK_F1 || ((msg.wParam == 'H' || msg.wParam == 'h') && msg.hwnd != g_hEditInput && msg.hwnd != g_hEditExpected)) {
                 ShowHelp(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F3) {
+                VerifyIntegrity();
                 continue;
             }
             if (msg.wParam == VK_F5) {

@@ -1048,6 +1048,157 @@
         margin-bottom: 2px;
       }
     }
+    /* Multi-Digest Comparison Table & Usability Polish */
+    .table-responsive {
+      overflow-x: auto;
+      width: 100%;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      background: var(--surface);
+    }
+
+    .comparison-table th {
+      background: var(--card-bg);
+      padding: 6px 8px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .comparison-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .comparison-table tr:hover td {
+      background: var(--surface-hover);
+    }
+
+    .comparison-digest {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      word-break: break-all;
+      user-select: text;
+      cursor: pointer;
+      color: var(--text);
+    }
+
+    .comparison-digest:hover {
+      color: var(--primary);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .badge-match {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+
+    .badge-mismatch {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+
+    .badge-neutral {
+      background: rgba(148, 163, 184, 0.15);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .badge-length-diff {
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--primary);
+      border: 1px solid var(--border);
+    }
+
+    .badge-verify-btn {
+      cursor: pointer;
+      font-size: 10px;
+      padding: 2px 6px;
+      transition: transform 0.1s, opacity 0.1s;
+    }
+
+    .badge-verify-btn:hover {
+      opacity: 0.9;
+      transform: scale(1.04);
+    }
+
+    .badge-btn-verified {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      font-weight: bold;
+      font-size: 11px;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: transform 0.1s;
+    }
+
+    .badge-btn-verified:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+    }
+
+    .hmac-key-badge {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      padding: 2px 5px;
+      white-space: nowrap;
+    }
+
+    .shortcut-banner {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 3px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      overflow-x: auto;
+      white-space: nowrap;
+      gap: 8px;
+    }
+
+    .kbd-hint {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 0 3px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--primary);
+      margin-left: 2px;
+    }
   </style>
 </head>
 <body data-theme="dark">
@@ -1078,6 +1229,12 @@
     </div>
   </header>
 
+  <!-- Keyboard Shortcuts & Quick Status Banner -->
+  <div class="shortcut-banner">
+    <span>⌨️ Shortcuts: <b>[1-6]</b> Tabs • <b>[Alt+V]</b> Verifier • <b>[Alt+M]</b> HMAC Mode • <b>[Alt+C]</b> Copy All • <b>[Alt+T]</b> Theme • <b>[F1/H]</b> Help • <b>[F5/F9]</b> State</span>
+    <span id="quickHmacStatus" style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted);">HMAC: OFF</span>
+  </div>
+
   <!-- Navigation Tabs -->
   <nav class="k-tabs" role="tablist" aria-label="KHash Workstation Sections">
     <button class="tab-btn active" role="tab" aria-selected="true" data-tab="tabText">🔤 [1] Text Digest</button>
@@ -1107,14 +1264,19 @@
       </div>
     </div>
 
-    <div class="format-group">
-      <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+    <div class="format-group hmac-controls">
+      <label class="hmac-toggle-label" style="display:flex; align-items:center; gap:6px; cursor:pointer;" title="Toggle Keyed-Hash Message Authentication Code (Alt+M / Alt+H)">
         <input type="checkbox" id="checkHmacEnable">
-        <span class="format-label">HMAC Mode</span>
+        <span class="format-label">HMAC Mode <kbd class="kbd-hint">Alt+M</kbd></span>
       </label>
-      <input type="text" id="inputHmacKey" class="input-box" placeholder="Secret Key..." style="width:140px; min-height:initial; padding:2px 6px; font-size:11px; display:none;">
-      <button class="btn btn-sm" id="btnCopyAll">📋 Copy All</button>
-      <button class="btn btn-sm" id="btnClearAll">🧹 Clear</button>
+      <div id="hmacInputWrap" style="display:none; align-items:center; gap:4px;">
+        <input type="text" id="inputHmacKey" class="input-box" placeholder="Secret Key..." style="width:140px; min-height:initial; padding:2px 6px; font-size:11px;" title="HMAC Secret Key (press Enter to apply)">
+        <button class="btn btn-sm" id="btnHmacGenKey" title="Generate random 16-byte cryptographically secure key">🎲 Gen</button>
+        <button class="btn btn-sm" id="btnHmacClearKey" title="Clear secret key">✕</button>
+        <span class="hmac-key-badge" id="hmacKeyBadge">0 B</span>
+      </div>
+      <button class="btn btn-sm" id="btnCopyAll" title="Copy all active calculated digests to clipboard [Alt+C]">📋 Copy All</button>
+      <button class="btn btn-sm" id="btnClearAll" title="Clear text payload and digests">🧹 Clear</button>
     </div>
   </div>
 
@@ -1202,6 +1364,39 @@
       <div class="card" id="verifyDiffCard" style="display:none;">
         <div class="card-title"><span>Character-by-Character Mismatch Diff</span></div>
         <div class="diff-display" id="verifyDiffOutput"></div>
+      </div>
+
+      <!-- Multi-Digest Live Comparison Table -->
+      <div class="card" id="verifyComparisonCard" style="margin-top:10px;">
+        <div class="card-title">
+          <span style="display:flex; align-items:center; gap:6px;">
+            <span>Live Multi-Digest Comparison Table</span>
+            <span class="algo-tag tag-crypto" id="verifySummaryBadge">13 Algorithms Active</span>
+          </span>
+          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+            <button class="btn btn-sm" id="btnVerifyPasteClipboard" title="Read hash from clipboard and compare across all algorithms">📋 Compare Clipboard</button>
+            <button class="btn btn-sm" id="btnCopyVerifyCert" title="Copy structured verification report to clipboard">📄 Copy Report</button>
+          </div>
+        </div>
+        <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">
+          Instant matrix cross-referencing your target hash across every calculated cryptographic and checksum algorithm in real-time.
+        </div>
+        <div class="table-responsive" style="overflow-x:auto; width:100%; border:1px solid var(--border); border-radius:4px;">
+          <table class="comparison-table" id="verifyComparisonTable">
+            <thead>
+              <tr>
+                <th style="padding:6px 8px; width:125px;">Algorithm</th>
+                <th style="padding:6px 8px; width:75px;">Bitness</th>
+                <th style="padding:6px 8px;">Calculated Digest</th>
+                <th style="padding:6px 8px; width:125px; text-align:center;">Match Status</th>
+                <th style="padding:6px 8px; width:105px; text-align:right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="verifyComparisonBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -1472,13 +1667,18 @@
       </div>
       <div class="modal-body">
         <div style="font-weight:bold; color:var(--accent);">⌨️ Keyboard Shortcuts</div>
-        <div style="display:grid; grid-template-columns:120px 1fr; gap:6px; font-family:var(--font-mono); font-size:11px;">
+        <div style="display:grid; grid-template-columns:130px 1fr; gap:6px; font-family:var(--font-mono); font-size:11px;">
           <div><b>1 – 6</b></div><div>Switch tabs (Text, File, Verify, Manifest, Benchmarks, Forensics)</div>
+          <div><b>Alt + V</b></div><div>Switch to Integrity Verifier tab & focus target checksum</div>
+          <div><b>Alt + M / H</b></div><div>Toggle HMAC Mode & focus secret key input</div>
+          <div><b>Alt + C</b></div><div>Copy all active calculated digests to clipboard</div>
+          <div><b>Alt + T</b></div><div>Cycle visual theme (Slate, Win98, Amber, Matrix)</div>
+          <div><b>Ctrl + Enter</b></div><div>Recalculate checksums and avalanche metrics</div>
           <div><b>F1 / ? / H</b></div><div>Toggle this Help & Reference modal</div>
           <div><b>F5</b></div><div>Quicksave state to local storage</div>
           <div><b>F9</b></div><div>Quickload state from local storage</div>
           <div><b>Enter</b></div><div>Confirm / dismiss active modal dialog</div>
-          <div><b>Esc</b></div><div>Dismiss any active modal dialog or backdrop</div>
+          <div><b>Esc</b></div><div>Dismiss any active modal dialog, toast, or backdrop</div>
         </div>
 
         <div style="font-weight:bold; color:var(--accent); margin-top:8px;">🛡️ Algorithm Reference</div>
@@ -2111,17 +2311,90 @@
 
     const checkHmac = document.getElementById('checkHmacEnable');
     const inputHmacKey = document.getElementById('inputHmacKey');
+    const hmacInputWrap = document.getElementById('hmacInputWrap');
+    const hmacKeyBadge = document.getElementById('hmacKeyBadge');
+    const btnHmacGenKey = document.getElementById('btnHmacGenKey');
+    const btnHmacClearKey = document.getElementById('btnHmacClearKey');
+
+    function toggleHmacMode(forceState) {
+      const targetState = (forceState !== undefined) ? forceState : !checkHmac.checked;
+      checkHmac.checked = targetState;
+      APP_STATE.hmacEnabled = targetState;
+      if (hmacInputWrap) {
+        hmacInputWrap.style.display = targetState ? 'inline-flex' : 'none';
+      }
+      const quickHmac = document.getElementById('quickHmacStatus');
+      const byteLen = new TextEncoder().encode(APP_STATE.hmacKey || '').length;
+      if (quickHmac) {
+        quickHmac.textContent = targetState ? `HMAC: ON (${byteLen} B)` : 'HMAC: OFF';
+        quickHmac.style.color = targetState ? 'var(--primary)' : 'var(--text-muted)';
+      }
+      if (targetState) {
+        if (!APP_STATE.hmacKey) {
+          inputHmacKey.focus();
+          showToast('HMAC Mode enabled — enter secret key');
+        } else {
+          showToast('HMAC Mode enabled');
+        }
+      } else {
+        showToast('HMAC Mode disabled');
+      }
+      computeTextDigests();
+    }
+
     checkHmac.addEventListener('change', (e) => {
       sfxClick();
-      APP_STATE.hmacEnabled = e.target.checked;
-      inputHmacKey.style.display = e.target.checked ? 'block' : 'none';
-      computeTextDigests();
+      toggleHmacMode(e.target.checked);
     });
 
     inputHmacKey.addEventListener('input', (e) => {
       APP_STATE.hmacKey = e.target.value;
+      const byteLen = new TextEncoder().encode(e.target.value).length;
+      if (hmacKeyBadge) hmacKeyBadge.textContent = `${byteLen} B`;
+      const quickHmac = document.getElementById('quickHmacStatus');
+      if (quickHmac && APP_STATE.hmacEnabled) {
+        quickHmac.textContent = `HMAC: ON (${byteLen} B)`;
+      }
       computeTextDigests();
     });
+
+    inputHmacKey.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        inputHmacKey.blur();
+        sfxClick();
+        showToast('HMAC key applied');
+      }
+    });
+
+    if (btnHmacGenKey) {
+      btnHmacGenKey.addEventListener('click', () => {
+        sfxClick();
+        const randBytes = new Uint8Array(16);
+        window.crypto.getRandomValues(randBytes);
+        const hexKey = Array.from(randBytes, b => b.toString(16).padStart(2, '0')).join('');
+        inputHmacKey.value = hexKey;
+        APP_STATE.hmacKey = hexKey;
+        if (hmacKeyBadge) hmacKeyBadge.textContent = '16 B';
+        const quickHmac = document.getElementById('quickHmacStatus');
+        if (quickHmac && APP_STATE.hmacEnabled) quickHmac.textContent = 'HMAC: ON (16 B)';
+        computeTextDigests();
+        showToast('Generated random 16-byte HMAC key');
+      });
+    }
+
+    if (btnHmacClearKey) {
+      btnHmacClearKey.addEventListener('click', () => {
+        sfxClick();
+        inputHmacKey.value = '';
+        APP_STATE.hmacKey = '';
+        if (hmacKeyBadge) hmacKeyBadge.textContent = '0 B';
+        const quickHmac = document.getElementById('quickHmacStatus');
+        if (quickHmac && APP_STATE.hmacEnabled) quickHmac.textContent = 'HMAC: ON (0 B)';
+        computeTextDigests();
+        showToast('Cleared HMAC secret key');
+      });
+    }
 
     // Theme selector
     const themeSelect = document.getElementById('themeSelect');
@@ -2270,22 +2543,37 @@
     function refreshTextDigestUI() {
       const grid = document.getElementById('textAlgoGrid');
       grid.innerHTML = '';
+      const expClean = (document.getElementById('verifyExpected')?.value || '').trim().replace(/[^0-9a-fA-F]/g, '').toLowerCase();
 
       ALGO_METADATA.forEach(algo => {
         const rawHex = APP_STATE.calculatedDigests[algo.id] || '----------------';
         const formatted = formatDigest(rawHex, APP_STATE.formatMode, APP_STATE.hexCase);
+        const rawClean = rawHex.toLowerCase();
 
+        let verifyBtnHtml = '';
+        if (expClean && rawClean && !rawClean.includes('-')) {
+          if (rawClean === expClean) {
+            verifyBtnHtml = `<button class="btn btn-sm badge-verify-btn badge-match" title="Matches target checksum! Click to inspect in Verifier">✅ MATCH</button>`;
+          } else if (rawClean.length === expClean.length) {
+            verifyBtnHtml = `<button class="btn btn-sm badge-verify-btn badge-mismatch" title="Same length (${algo.bits}-bit) but mismatch. Click to diff">⚠️ MISMATCH</button>`;
+          }
+        }
+        if (!verifyBtnHtml) {
+          verifyBtnHtml = `<button class="btn btn-sm btnVerifyOne" title="Verify in Tab 3 [Alt+V]">⚖️</button>`;
+        }
+
+        const isHmac = (APP_STATE.hmacEnabled && ['md5','sha1','sha256','sha384','sha512'].includes(algo.id));
         const card = document.createElement('div');
         card.className = 'algo-card';
         card.innerHTML = `
           <div class="algo-header">
-            <span class="algo-name">${algo.name} ${APP_STATE.hmacEnabled ? '(HMAC)' : ''}</span>
+            <span class="algo-name">${algo.name} ${isHmac ? '(HMAC)' : ''}</span>
             <span class="algo-tag ${algo.tagClass}">${algo.tag} • ${algo.bits}-bit</span>
           </div>
           <div class="algo-val-row">
             <div class="algo-val" title="Click to copy" style="cursor:pointer;">${formatted}</div>
             <button class="btn btn-sm btnCopyOne" title="Copy digest">📋</button>
-            <button class="btn btn-sm btnVerifyOne" title="Verify in Tab 3">⚖️</button>
+            ${verifyBtnHtml}
           </div>
         `;
 
@@ -2307,15 +2595,20 @@
         card.querySelector('.algo-val').addEventListener('click', (e) => copyFn(e));
 
         // Send to Verifier tab
-        card.querySelector('.btnVerifyOne').addEventListener('click', () => {
-          sfxClick();
-          document.getElementById('verifyCalculated').value = formatted;
-          switchTab('tabVerify');
-          runVerification();
-        });
+        const verifyBtn = card.querySelector('.btnVerifyOne') || card.querySelector('.badge-verify-btn');
+        if (verifyBtn) {
+          verifyBtn.addEventListener('click', () => {
+            sfxClick();
+            document.getElementById('verifyCalculated').value = formatted;
+            switchTab('tabVerify');
+            runVerification(true);
+          });
+        }
 
         grid.appendChild(card);
       });
+
+      renderMultiDigestComparisonTable();
     }
 
     document.getElementById('textPayload').addEventListener('input', () => {
@@ -2644,7 +2937,19 @@
       if (expClean === calcClean) {
         if (expClean.length >= 8) sfxMatch();
         banner.className = 'verify-banner banner-match';
-        banner.innerHTML = `<span>✅ INTEGRITY VERIFIED: Checksums match perfectly! (${expClean.length * 4}-bit ${detectAlgorithmByLength(expClean.length)})</span>`;
+        banner.innerHTML = `
+          <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:8px;">
+            <span>✅ INTEGRITY VERIFIED: Checksums match perfectly! (${expClean.length * 4}-bit ${detectAlgorithmByLength(expClean.length)})</span>
+            <button class="badge-btn-verified" id="btnVerifyCertBadge" title="Click to copy verified badge receipt">🏅 VERIFIED BADGE [Click to Copy]</button>
+          </div>
+        `;
+        const certBadge = document.getElementById('btnVerifyCertBadge');
+        if (certBadge) {
+          certBadge.addEventListener('click', () => {
+            sfxClick();
+            document.getElementById('btnCopyVerifyCert')?.click();
+          });
+        }
         diffCard.style.display = 'none';
       } else {
         if (playMismatchAudio || (expClean.length === calcClean.length && expClean.length >= 8)) {
@@ -2678,6 +2983,142 @@
         }
         diffOut.innerHTML = diffHtml;
       }
+
+      renderMultiDigestComparisonTable();
+    }
+
+    function renderMultiDigestComparisonTable() {
+      const tbody = document.getElementById('verifyComparisonBody');
+      if (!tbody) return;
+      const expRaw = (document.getElementById('verifyExpected')?.value || '').trim();
+      const expClean = expRaw.replace(/[^0-9a-fA-F]/g, '').toLowerCase();
+
+      let html = '';
+      let matchCount = 0;
+
+      ALGO_METADATA.forEach(algo => {
+        const rawHex = (APP_STATE.calculatedDigests[algo.id] || '').toLowerCase();
+        const formatted = rawHex ? formatDigest(rawHex, APP_STATE.formatMode, APP_STATE.hexCase) : '—';
+        let statusBadge = '';
+        let rowClass = '';
+
+        if (!rawHex || rawHex.includes('-')) {
+          statusBadge = '<span class="status-badge badge-neutral">⚪ No Output</span>';
+        } else if (!expClean) {
+          statusBadge = '<span class="status-badge badge-neutral">⚪ Ready</span>';
+        } else if (rawHex === expClean) {
+          matchCount++;
+          rowClass = 'style="background:rgba(16,185,129,0.15);"';
+          statusBadge = '<span class="status-badge badge-match">✅ MATCH</span>';
+        } else if (rawHex.length === expClean.length) {
+          statusBadge = '<span class="status-badge badge-mismatch">❌ MISMATCH</span>';
+        } else {
+          statusBadge = `<span class="status-badge badge-length-diff">${algo.bits}b</span>`;
+        }
+
+        const isHmac = (APP_STATE.hmacEnabled && ['md5','sha1','sha256','sha384','sha512'].includes(algo.id));
+        const algoDisplay = `${algo.name}${isHmac ? ' <span class="algo-tag tag-crypto" style="font-size:8px;">HMAC</span>' : ''}`;
+
+        html += `
+          <tr ${rowClass}>
+            <td style="padding:6px 8px; font-weight:600; color:var(--text);">${algoDisplay}</td>
+            <td style="padding:6px 8px; font-family:var(--font-mono); font-size:10px; color:var(--text-muted);">${algo.bits}-bit</td>
+            <td style="padding:6px 8px;"><div class="comparison-digest" title="Click to copy digest" data-digest="${formatted}">${formatted}</div></td>
+            <td style="padding:6px 8px; text-align:center;">${statusBadge}</td>
+            <td style="padding:6px 8px; text-align:right;">
+              <button class="btn btn-sm btnTableSelect" data-digest="${formatted}" title="Use as calculated candidate">⚖️ Use</button>
+              <button class="btn btn-sm btnTableCopy" data-digest="${formatted}" title="Copy digest">📋</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+
+      tbody.querySelectorAll('.btnTableSelect').forEach(btn => {
+        btn.addEventListener('click', () => {
+          sfxClick();
+          document.getElementById('verifyCalculated').value = btn.dataset.digest;
+          runVerification(true);
+          showToast('Applied digest to verifier');
+        });
+      });
+
+      tbody.querySelectorAll('.btnTableCopy').forEach(btn => {
+        btn.addEventListener('click', () => {
+          sfxClick();
+          navigator.clipboard.writeText(btn.dataset.digest).then(() => showToast('Copied digest'));
+        });
+      });
+
+      tbody.querySelectorAll('.comparison-digest').forEach(el => {
+        el.addEventListener('click', () => {
+          sfxClick();
+          navigator.clipboard.writeText(el.dataset.digest || el.textContent).then(() => showToast('Copied digest'));
+        });
+      });
+
+      const summaryBadge = document.getElementById('verifySummaryBadge');
+      if (summaryBadge) {
+        if (matchCount > 0) {
+          summaryBadge.className = 'algo-tag tag-crypto';
+          summaryBadge.textContent = `${matchCount} MATCH FOUND`;
+        } else if (expClean) {
+          summaryBadge.className = 'algo-tag tag-legacy';
+          summaryBadge.textContent = 'Comparing...';
+        } else {
+          summaryBadge.className = 'algo-tag tag-checksum';
+          summaryBadge.textContent = `${ALGO_METADATA.length} Algorithms Active`;
+        }
+      }
+    }
+
+    const btnVerifyPasteClipboard = document.getElementById('btnVerifyPasteClipboard');
+    if (btnVerifyPasteClipboard) {
+      btnVerifyPasteClipboard.addEventListener('click', async () => {
+        try {
+          sfxClick();
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            document.getElementById('verifyExpected').value = text.trim();
+            runVerification(false);
+            showToast('Loaded clipboard into target checksum');
+          }
+        } catch (e) {
+          showToast('Clipboard read unavailable');
+        }
+      });
+    }
+
+    const btnCopyVerifyCert = document.getElementById('btnCopyVerifyCert');
+    if (btnCopyVerifyCert) {
+      btnCopyVerifyCert.addEventListener('click', () => {
+        sfxClick();
+        const expRaw = document.getElementById('verifyExpected').value.trim();
+        const calcRaw = document.getElementById('verifyCalculated').value.trim();
+        const expClean = expRaw.replace(/[^0-9a-fA-F]/g, '').toLowerCase();
+        const calcClean = calcRaw.replace(/[^0-9a-fA-F]/g, '').toLowerCase();
+        const isMatch = (expClean && calcClean && expClean === calcClean);
+        const report = [
+          '======================================================',
+          '        KHASH CRYPTOGRAPHIC INTEGRITY VERIFICATION',
+          '======================================================',
+          `Timestamp:      ${new Date().toISOString()}`,
+          `Status:         ${isMatch ? 'PASSED (INTEGRITY VERIFIED ✅)' : 'UNVERIFIED / MISMATCH ⚠️'}`,
+          `Expected Hash:  ${expRaw || 'None'}`,
+          `Candidate Hash: ${calcRaw || 'None'}`,
+          `HMAC Mode:      ${APP_STATE.hmacEnabled ? 'ENABLED' : 'DISABLED'}`,
+          '------------------------------------------------------',
+          'Active Calculated Digests:',
+          `CRC32:   ${APP_STATE.calculatedDigests['crc32'] || 'N/A'}`,
+          `MD5:     ${APP_STATE.calculatedDigests['md5'] || 'N/A'}`,
+          `SHA-1:   ${APP_STATE.calculatedDigests['sha1'] || 'N/A'}`,
+          `SHA-256: ${APP_STATE.calculatedDigests['sha256'] || 'N/A'}`,
+          `SHA-512: ${APP_STATE.calculatedDigests['sha512'] || 'N/A'}`,
+          '======================================================'
+        ].join('\r\n');
+        navigator.clipboard.writeText(report).then(() => showToast('Copied Verification Certificate'));
+      });
     }
 
     // --- Tab 4: Manifest Generator & Batch Verifier ---
@@ -3597,6 +4038,51 @@
     window.addEventListener('keydown', (e) => {
       const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
       const isEditing = (activeTag === 'input' || activeTag === 'textarea');
+
+      // Global Alt shortcuts
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        const k = e.key.toLowerCase();
+        if (k === 'v') {
+          e.preventDefault();
+          switchTab('tabVerify');
+          const verifyExp = document.getElementById('verifyExpected');
+          if (verifyExp) verifyExp.focus();
+          showToast('Switched to Integrity Verifier [Alt+V]');
+          return;
+        }
+        if (k === 'm' || k === 'h') {
+          e.preventDefault();
+          toggleHmacMode();
+          return;
+        }
+        if (k === 'c') {
+          e.preventDefault();
+          document.getElementById('btnCopyAll')?.click();
+          return;
+        }
+        if (k === 't') {
+          e.preventDefault();
+          sfxClick();
+          const themes = ['dark', 'win98', 'amber', 'matrix'];
+          const curr = document.body.getAttribute('data-theme') || 'dark';
+          const nextIdx = (themes.indexOf(curr) + 1) % themes.length;
+          const nextTheme = themes[nextIdx];
+          document.body.setAttribute('data-theme', nextTheme);
+          const sel = document.getElementById('themeSelect');
+          if (sel) sel.value = nextTheme;
+          try { localStorage.setItem('khash_theme', nextTheme); } catch (err) {}
+          showToast(`Theme: ${nextTheme} [Alt+T]`);
+          return;
+        }
+      }
+
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        sfxClick();
+        computeTextDigests();
+        showToast('Recalculated digests [Ctrl+Enter]');
+        return;
+      }
 
       if (e.key === 'F1' || (!isEditing && (e.key === '?' || e.key === 'h' || e.key === 'H'))) {
         e.preventDefault();
