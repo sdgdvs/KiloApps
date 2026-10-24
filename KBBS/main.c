@@ -2,8 +2,10 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <commdlg.h>
+#include <shellapi.h>
 
 #pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "kernel32.lib")
 #pragma comment(lib, "gdi32.lib")
@@ -1258,6 +1260,15 @@ void StreamAnsiString(const char* str);
 #define IDC_COMP_SUBJ  5103
 #define IDC_COMP_BODY  5104
 
+#define IDD_FILEAREA   6000
+#define IDC_FILE_LIST  6001
+#define IDC_FILE_VIEW  6002
+#define IDC_FILE_DL    6003
+#define IDC_FILE_KPAD  6004
+#define IDC_FILE_KHEX  6005
+#define IDC_FILE_STRM  6006
+#define IDC_FILE_SYNC  6007
+
 struct BbsMessage {
     int id;
     int area;
@@ -2056,13 +2067,16 @@ void RunDoorGameStream(int choice) {
         StreamAnsiString("\x1B[1;32m(F)orest Hunt  (I)nn & Tavern  (A)rmory  (B)ank  (Q)uit\r\n");
         StreamAnsiString("\x1B[1;36m-> You enter the dark forest... A Forest Goblin appears!\r\n");
         StreamAnsiString("\x1B[1;33m-> You strike the goblin! +35 Gold! [Saved to kbbs_door.dat]\r\n\x1B[0m");
+        CreateDirectoryA("bbs", NULL);
         HANDLE hStats = CreateFileA("lord_player.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
         if (hStats != INVALID_HANDLE_VALUE) {
             char rep[256];
             wsprintfA(rep, "L.O.R.D. Character Record\r\nLevel: %d\r\nHP: %d/%d\r\nGold: %d\r\nBank: %d\r\nFights: %d\r\n",
                 gDoorState.lordLevel, gDoorState.lordHp, gDoorState.lordMaxHp, gDoorState.lordGold, gDoorState.lordBank, gDoorState.lordFights);
             DWORD wr = 0; WriteFile(hStats, rep, my_strlen(rep), &wr, NULL); CloseHandle(hStats);
-            StreamAnsiString("\x1B[1;32m[Exported character record to lord_player.txt]\r\n\x1B[0m");
+            StreamAnsiString("\x1B[1;32m[Exported character record to bbs/lord_player.txt]\r\n\x1B[0m");
+            HANDLE hBbs = CreateFileA("bbs\\lord_player.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+            if (hBbs != INVALID_HANDLE_VALUE) { WriteFile(hBbs, rep, my_strlen(rep), &wr, NULL); CloseHandle(hBbs); }
         }
     } else {
         gDoorState.twSector = (gDoorState.twSector % 10) + 1;
@@ -2077,66 +2091,214 @@ void RunDoorGameStream(int choice) {
         StreamAnsiString("\x1B[1;35m(W)arp Sector  (P)ort Trade  (C)ombat Pirates  (Q)uit\r\n");
         wsprintfA(statBuf, "\x1B[1;32m-> Warping to Sector %d... Space Port detected! +$250 Credits! [Saved]\r\n\x1B[0m", gDoorState.twSector);
         StreamAnsiString(statBuf);
+        CreateDirectoryA("bbs", NULL);
         HANDLE hMan = CreateFileA("tw_manifest.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
         if (hMan != INVALID_HANDLE_VALUE) {
             char rep[256];
             wsprintfA(rep, "TradeWars Flight Manifest\r\nSector: %d\r\nCredits: $%d\r\nHolds: %d\r\nShields: %d%%\r\n",
                 gDoorState.twSector, gDoorState.twCredits, gDoorState.twHolds, gDoorState.twShields);
             DWORD wr = 0; WriteFile(hMan, rep, my_strlen(rep), &wr, NULL); CloseHandle(hMan);
-            StreamAnsiString("\x1B[1;32m[Exported flight manifest to tw_manifest.txt]\r\n\x1B[0m");
+            StreamAnsiString("\x1B[1;32m[Exported flight manifest to bbs/tw_manifest.txt]\r\n\x1B[0m");
+            HANDLE hBbs = CreateFileA("bbs\\tw_manifest.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+            if (hBbs != INVALID_HANDLE_VALUE) { WriteFile(hBbs, rep, my_strlen(rep), &wr, NULL); CloseHandle(hBbs); }
         }
     }
 }
 
-void RunFileAreaStream(HWND hwnd) {
-    int choice = MessageBoxA(hwnd,
-        "KBBS ANSI File Area & Bulletins\n\n"
-        "[YES] = Download & Stream ACID-99.NFO (Demoscene 1999)\n"
-        "[NO]  = Download & Stream LORD_REF.TXT (L.O.R.D. Strategy)\n"
-        "[CANCEL] = Return to terminal screen",
-        "KBBS File Area & Bulletins [F]", MB_YESNOCANCEL | MB_ICONINFORMATION);
-    
-    if (choice == IDYES) {
-        ClearScreen();
-        const char* nfo = 
-            "================================================================================\r\n"
-            "ACiD PRODUCTIONS '99 PRESENTS: KiloBBS Station v2.5 Telecomm Suite\r\n"
-            "Pack Date: August 31, 1999 | Distribution: KiloOS VFS /home/bbs/\r\n"
-            "Artists  : Merlin, CyberPhreak | Target: ANSI.SYS, CP437, Zmodem-8K\r\n"
-            "================================================================================\r\n"
-            "Official ANSI release bulletin for KiloBBS. Includes EchoNet conferences,\r\n"
-            "online door games (L.O.R.D. and TradeWars), and CP437 font rasterizer.\r\n"
-            "* Respect: iCE, Razor 1999, The Humble Guys, Future Crew *\r\n";
-        HANDLE hFile = CreateFileA("ACID-99.NFO", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hFile != INVALID_HANDLE_VALUE) {
-            DWORD wr = 0;
-            WriteFile(hFile, nfo, my_strlen(nfo), &wr, NULL);
-            CloseHandle(hFile);
-        }
-        StreamAnsiString("\x1B[1;36m[Downloaded ACID-99.NFO to disk]\r\n\x1B[0m");
-        StreamAnsiString(nfo);
-        SetStatusText("Downloaded ACID-99.NFO to disk (KBBS File Area)");
-    } else if (choice == IDNO) {
-        ClearScreen();
-        const char* lord = 
-            "================================================================================\r\n"
-            "LEGEND OF THE RED DRAGON (L.O.R.D.) - COMPLETE WARRIOR COMPENDIUM v3.26\r\n"
-            "Author: DragonSlayer [1:100/42.12] | BBS Conference: Area 3\r\n"
-            "================================================================================\r\n"
-            "1. Forest Fights: Level 1 monsters drop 25-65g. Save 250g for Level 2!\r\n"
-            "2. Weapons: Stick (0g) -> Iron Blade (50g) -> Steel Longsword (150g)\r\n"
-            "3. Armor  : Rags (0g) -> Leather Armor (75g) -> Chainmail (175g)\r\n"
-            "4. Royal Bank: Always deposit excess gold before ending turn!\r\n";
-        HANDLE hFile = CreateFileA("LORD_REF.TXT", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hFile != INVALID_HANDLE_VALUE) {
-            DWORD wr = 0;
-            WriteFile(hFile, lord, my_strlen(lord), &wr, NULL);
-            CloseHandle(hFile);
-        }
-        StreamAnsiString("\x1B[1;35m[Downloaded LORD_REF.TXT to disk]\r\n\x1B[0m");
-        StreamAnsiString(lord);
-        SetStatusText("Downloaded LORD_REF.TXT to disk (KBBS File Area)");
+typedef struct {
+    const char* filename;
+    const char* title;
+    const char* content;
+} BBS_BULLETIN;
+
+static const BBS_BULLETIN gBulletins[] = {
+    {
+        "ACID-99.NFO",
+        "ACiD '99 Artpack Release NFO",
+        "================================================================================\r\n"
+        "ACiD PRODUCTIONS '99 PRESENTS: KiloBBS Station v2.5 Telecomm Suite\r\n"
+        "Pack Date: August 31, 1999 | Distribution: KiloOS VFS /home/bbs/\r\n"
+        "Artists  : Merlin, CyberPhreak | Target: ANSI.SYS, CP437, Zmodem-8K\r\n"
+        "================================================================================\r\n"
+        "Official ANSI release bulletin for KiloBBS. Includes EchoNet conferences,\r\n"
+        "online door games (L.O.R.D. and TradeWars), and CP437 font rasterizer.\r\n"
+        "* Respect: iCE, Razor 1999, The Humble Guys, Renaissance, Future Crew *\r\n"
+    },
+    {
+        "LORD_REF.TXT",
+        "L.O.R.D. Strategy & Boss Compendium",
+        "================================================================================\r\n"
+        "LEGEND OF THE RED DRAGON (L.O.R.D.) - COMPLETE WARRIOR COMPENDIUM v3.26\r\n"
+        "Author: DragonSlayer [1:100/42.12] | BBS Conference: Area 3 (Door Games)\r\n"
+        "================================================================================\r\n"
+        "1. Daily Forest Tactics: Expend fights before Tavern. Save 250g for Level 2!\r\n"
+        "2. Weapon Smith: Stick (0g) -> Iron Blade (50g) -> Steel Longsword (150g)\r\n"
+        "3. Royal Armory: Rags (0g) -> Leather Armor (75g) -> Chainmail (175g)\r\n"
+        "4. Royal Bank: Deposit every coin before logging off to prevent night theft!\r\n"
+    },
+    {
+        "TW2015.NFO",
+        "TradeWars 2015 Sector Route Specs",
+        "================================================================================\r\n"
+        "TRADEWARS 2015 - STARFLEET COMMODITY & SECTOR TRADE ROUTE SPEC\r\n"
+        "SysOp Node: Starport Exchange (2:201/33.0) | Author: SectorTrader\r\n"
+        "================================================================================\r\n"
+        "1. Triangular Arbitrage: Buy Ore at Sector 7 ($12) -> Sell at Sector 1 ($48).\r\n"
+        "2. Equipment Loop: Buy Equipment at Sector 1 ($180) -> Sell at Sector 7 ($320).\r\n"
+        "3. Hazard Zone: Sector 4 (Hazard Nebula) has 45% pirate encounter chance!\r\n"
+        "4. Shields: Keep shields >= 50% via starport recharge before warp jumps.\r\n"
+    },
+    {
+        "ECHONET.TXT",
+        "FidoNet Zone 1 Topology RFC",
+        "================================================================================\r\n"
+        "FIDONET ZONE 1 TECHNICAL TOPOLOGY & ZONE MAIL HOUR (ZMH) STANDARD\r\n"
+        "Document: RFC-99-ECHO-Z1 | Audience: SysOps and NetMail Operators\r\n"
+        "================================================================================\r\n"
+        "1. Zone 1 utilizes distributed hub-and-spoke packet (.PKT) forwarding.\r\n"
+        "2. Zone Mail Hour: Daily 03:00 to 04:00 UTC modems enter batch mailer mode.\r\n"
+        "3. Nodes: 1:100/42.0 (KiloBBS Hub), 1:249/106.1 (Acid Node), 2:201/33.0 (Starport)\r\n"
+    },
+    {
+        "ANSI-ART.TXT",
+        "ANSI.SYS Codes & TheDraw Guide",
+        "================================================================================\r\n"
+        "ANSI.SYS ESCAPE CODES & CP437 THE-DRAW PALETTE REFERENCE\r\n"
+        "Author: CyberPhreak [1:249/106.1]\r\n"
+        "================================================================================\r\n"
+        "Cursor: ESC[<row>;<col>H (move) | ESC[2J (clear) | ESC[K (clear line)\r\n"
+        "Colors: 0=Reset, 1=Bold, 30-37=FG colors, 40-47=BG colors\r\n"
+        "Glyphs: 219 (0xDB) Full block, 220 Lower half, 223 Upper half, 176-178 Shading\r\n"
+    },
+    {
+        "CLASSIF.NFO",
+        "Restricted Node 10.19.99.4 Packet",
+        "================================================================================\r\n"
+        "RESTRICTED BULLETIN - CLASSIFIED AUTONOMOUS PACKET INTERCEPT\r\n"
+        "Origin: 10.19.99.4 | Trace: Zone 1 ZMH NetMail Bypass Relay\r\n"
+        "================================================================================\r\n"
+        "INTERCEPT LOG: Scheduled ZMH poll detected unlisted handshake from 10.19.99.4.\r\n"
+        "HEX-SIGNATURE: 0x4B 0x49 0x4C 0x4F 0x2D 0x4D 0x45 0x53 0x48 0x2D 0x39 0x39\r\n"
+        "Inspect in KHex to examine raw binary byte streams and cryptographic salts.\r\n"
     }
+};
+#define NUM_BULLETINS (sizeof(gBulletins) / sizeof(gBulletins[0]))
+
+static void SaveBulletinToFile(int idx) {
+    if (idx < 0 || idx >= NUM_BULLETINS) return;
+    CreateDirectoryA("bbs", NULL);
+    char path1[128];
+    char path2[128];
+    wsprintfA(path1, "bbs\\%s", gBulletins[idx].filename);
+    wsprintfA(path2, "%s", gBulletins[idx].filename);
+    
+    HANDLE h1 = CreateFileA(path1, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h1 != INVALID_HANDLE_VALUE) {
+        DWORD wr = 0;
+        WriteFile(h1, gBulletins[idx].content, my_strlen(gBulletins[idx].content), &wr, NULL);
+        CloseHandle(h1);
+    }
+    HANDLE h2 = CreateFileA(path2, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h2 != INVALID_HANDLE_VALUE) {
+        DWORD wr = 0;
+        WriteFile(h2, gBulletins[idx].content, my_strlen(gBulletins[idx].content), &wr, NULL);
+        CloseHandle(h2);
+    }
+}
+
+static void LaunchViewer(HWND hwnd, const char* appExe, const char* fallbackExe, const char* filePath) {
+    HINSTANCE hInst = ShellExecuteA(hwnd, "open", appExe, filePath, NULL, SW_SHOWNORMAL);
+    if ((INT_PTR)hInst <= 32 && fallbackExe) {
+        ShellExecuteA(hwnd, "open", fallbackExe, filePath, NULL, SW_SHOWNORMAL);
+    }
+}
+
+INT_PTR CALLBACK FileAreaProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        case WM_INITDIALOG: {
+            HWND hList = GetDlgItem(hdlg, IDC_FILE_LIST);
+            for (int i = 0; i < NUM_BULLETINS; i++) {
+                char entry[128];
+                wsprintfA(entry, "%s - %s", gBulletins[i].filename, gBulletins[i].title);
+                SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)entry);
+            }
+            SendMessageA(hList, LB_SETCURSEL, 0, 0);
+            SetDlgItemTextA(hdlg, IDC_FILE_VIEW, gBulletins[0].content);
+            return TRUE;
+        }
+        case WM_COMMAND: {
+            int id = LOWORD(wParam);
+            int code = HIWORD(wParam);
+            HWND hList = GetDlgItem(hdlg, IDC_FILE_LIST);
+            int curSel = (int)SendMessageA(hList, LB_GETCURSEL, 0, 0);
+            if (curSel < 0 || curSel >= NUM_BULLETINS) curSel = 0;
+
+            if (id == IDC_FILE_LIST && code == LBN_SELCHANGE) {
+                SetDlgItemTextA(hdlg, IDC_FILE_VIEW, gBulletins[curSel].content);
+                return TRUE;
+            }
+            if (id == IDC_FILE_DL) {
+                SaveBulletinToFile(curSel);
+                char status[128];
+                wsprintfA(status, "Downloaded %s to bbs/ (VFS Mesh)", gBulletins[curSel].filename);
+                SetStatusText(status);
+                char msgBuf[256];
+                wsprintfA(msgBuf, "Bulletin %s downloaded to bbs/ and current directory.\nDirect VFS mesh export ready for KPad/KHex inspection.", gBulletins[curSel].filename);
+                MessageBoxA(hdlg, msgBuf, "KBBS File Area", MB_OK | MB_ICONINFORMATION);
+                return TRUE;
+            }
+            if (id == IDC_FILE_KPAD) {
+                SaveBulletinToFile(curSel);
+                char path[128];
+                wsprintfA(path, "bbs\\%s", gBulletins[curSel].filename);
+                LaunchViewer(hdlg, "KPad.exe", "notepad.exe", path);
+                char status[128];
+                wsprintfA(status, "Opened %s in KPad text editor", gBulletins[curSel].filename);
+                SetStatusText(status);
+                return TRUE;
+            }
+            if (id == IDC_FILE_KHEX) {
+                SaveBulletinToFile(curSel);
+                char path[128];
+                wsprintfA(path, "bbs\\%s", gBulletins[curSel].filename);
+                LaunchViewer(hdlg, "KHex.exe", "notepad.exe", path);
+                char status[128];
+                wsprintfA(status, "Opened %s in KHex binary inspector", gBulletins[curSel].filename);
+                SetStatusText(status);
+                return TRUE;
+            }
+            if (id == IDC_FILE_STRM) {
+                ClearScreen();
+                StreamAnsiString("\x1B[1;36m[Streaming Bulletin: ");
+                StreamAnsiString(gBulletins[curSel].filename);
+                StreamAnsiString("]\x1B[0m\r\n");
+                StreamAnsiString(gBulletins[curSel].content);
+                char status[128];
+                wsprintfA(status, "Streamed %s to terminal screen", gBulletins[curSel].filename);
+                SetStatusText(status);
+                EndDialog(hdlg, 1);
+                return TRUE;
+            }
+            if (id == IDC_FILE_SYNC) {
+                for (int i = 0; i < NUM_BULLETINS; i++) {
+                    SaveBulletinToFile(i);
+                }
+                SetStatusText("Synchronized all 6 bulletins to bbs/ folder (VFS Mesh)");
+                MessageBoxA(hdlg, "All 6 ANSI & TXT bulletins successfully synchronized to bbs/ folder!\nInspect in KPad or KHex anytime.", "KBBS VFS Sync", MB_OK | MB_ICONINFORMATION);
+                return TRUE;
+            }
+            if (id == 1 || id == 2) {
+                EndDialog(hdlg, 0);
+                return TRUE;
+            }
+            break;
+        }
+    }
+    return FALSE;
+}
+
+void RunFileAreaStream(HWND hwnd) {
+    DialogBoxParamA(GetModuleHandleA(NULL), MAKEINTRESOURCEA(IDD_FILEAREA), hwnd, FileAreaProc, 0);
 }
 
 void CheckFirstRunTutorial(HWND hwnd) {

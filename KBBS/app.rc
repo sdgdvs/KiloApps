@@ -58,7 +58,7 @@ BEGIN
     PUSHBUTTON      "Cancel", 2, 90, 115, 50, 14
 END
 
-4000 DIALOGEX 0, 0, 260, 220
+4000 DIALOGEX 0, 0, 260, 230
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "KBBS - Help & Quick Reference Guide"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
@@ -70,13 +70,14 @@ BEGIN
     LTEXT           "[G]           : Door Games Mini-Suite (LORD & TradeWars)", -1, 10, 64, 240, 8
     LTEXT           "[A]           : ANSI Art & Color Viewer with Baud Playback", -1, 10, 78, 240, 8
     LTEXT           "[E]           : BBS Message Base & FidoNet EchoMail Reader", -1, 10, 92, 240, 8
-    LTEXT           "[S]           : Display & Palette Settings (Blink, Fonts)", -1, 10, 106, 240, 8
-    LTEXT           "[C]           : Toggle Session Log Capture (.txt / .ans)", -1, 10, 120, 240, 8
-    LTEXT           "[F1] or [H]   : Show this Help & Shortcuts Reference", -1, 10, 134, 240, 8
-    LTEXT           "DL / UL       : XMODEM & ZMODEM file transfer protocols", -1, 10, 148, 240, 8
-    LTEXT           "Shift+PgUp/Dn : Scroll terminal scrollback buffer", -1, 10, 162, 240, 8
-    LTEXT           "Mouse Drag    : Select & copy CP437 text to clipboard", -1, 10, 176, 240, 8
-    DEFPUSHBUTTON   "Got It", 1, 105, 196, 50, 14
+    LTEXT           "[F]           : File Area & ANSI Bulletins Library (VFS Mesh)", -1, 10, 106, 240, 8
+    LTEXT           "[S]           : Display & Palette Settings (Blink, Fonts)", -1, 10, 120, 240, 8
+    LTEXT           "[C]           : Toggle Session Log Capture (.txt / .ans)", -1, 10, 134, 240, 8
+    LTEXT           "[F1] or [H]   : Show this Help & Shortcuts Reference", -1, 10, 148, 240, 8
+    LTEXT           "DL / UL       : XMODEM & ZMODEM file transfer protocols", -1, 10, 162, 240, 8
+    LTEXT           "Shift+PgUp/Dn : Scroll terminal scrollback buffer", -1, 10, 176, 240, 8
+    LTEXT           "Mouse Drag    : Select & copy CP437 text to clipboard", -1, 10, 190, 240, 8
+    DEFPUSHBUTTON   "Got It", 1, 105, 206, 50, 14
 END
 
 5000 DIALOGEX 0, 0, 360, 230
@@ -112,4 +113,21 @@ BEGIN
     EDITTEXT        5104, 10, 58, 260, 105, ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
     DEFPUSHBUTTON   "Post", 1, 165, 168, 50, 16
     PUSHBUTTON      "Cancel", 2, 220, 168, 50, 16
+END
+
+6000 DIALOGEX 0, 0, 360, 230
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "KBBS File Area & ANSI Bulletins Library (VFS Mesh)"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "ANSI Bulletins & Releases:", -1, 5, 8, 110, 8
+    LISTBOX         6001, 5, 20, 140, 175, LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Bulletin Header & Content Preview:", -1, 150, 8, 150, 8
+    EDITTEXT        6002, 150, 20, 205, 175, ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL
+    PUSHBUTTON      "Download", 6003, 5, 204, 50, 16
+    PUSHBUTTON      "KPad", 6004, 60, 204, 45, 16
+    PUSHBUTTON      "KHex", 6005, 110, 204, 45, 16
+    PUSHBUTTON      "Stream", 6006, 160, 204, 50, 16
+    PUSHBUTTON      "Sync All", 6007, 215, 204, 50, 16
+    DEFPUSHBUTTON   "Close", 1, 305, 204, 50, 16
 END

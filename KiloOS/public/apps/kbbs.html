@@ -382,11 +382,13 @@
                         <!-- Rendered via JS -->
                     </div>
                 </div>
-                <div style="padding: 10px 16px; border-top: 1px solid #27272a; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3);">
+                <div style="padding: 10px 16px; border-top: 1px solid #27272a; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); flex-wrap: wrap; gap: 8px;">
                     <span id="fileAreaStatusCount" style="font-size: 11px; color: #a1a1aa;">Direct KiloOS VFS integration at /home/bbs/</span>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn-sub" onclick="streamSelectedBulletin()">Stream to Terminal Screen [T]</button>
-                        <button class="btn-action" onclick="saveSelectedBulletinToVFS()">Download to VFS [V]</button>
+                    <div style="display:flex; gap:8px; flex-wrap: wrap;">
+                        <button class="btn-sub" onclick="streamSelectedBulletin()" title="Stream selected ANSI bulletin to terminal screen [T]">Stream [T]</button>
+                        <button class="btn-sub" onclick="saveSelectedBulletinToVFS('kpad')" title="Save to /home/bbs/ and launch KPad text editor [P]">📝 KPad [P]</button>
+                        <button class="btn-sub" onclick="saveSelectedBulletinToVFS('khex')" title="Save to /home/bbs/ and inspect in KHex [X]">🔍 KHex [X]</button>
+                        <button class="btn-action" onclick="saveSelectedBulletinToVFS()" title="Download to /home/bbs/ in KiloOS VFS [V]">💾 Download to VFS [V]</button>
                     </div>
                 </div>
             </div>
@@ -842,6 +844,7 @@ SEND:"secret\r"'></textarea>
                 <ul style="padding-left:18px; margin-top:6px; display:flex; flex-direction:column; gap:5px;">
                     <li><strong>EchoNet Message Base [E]</strong>: Read and post messages across 5 conference areas, reply with quotes, or export .MSG files.</li>
                     <li><strong>ANSI Art Viewer [A]</strong>: Watch classic ANSI art animate at authentic modem baud rates (2400 to 57.6k bps).</li>
+                    <li><strong>File Area & ANSI Bulletins [F]</strong>: Download ANSI <code>.NFO</code> and <code>.TXT</code> files to KiloOS VFS (<code>/home/bbs/</code>) and launch <strong>KPad</strong> [P] or <strong>KHex</strong> [X] to inspect them.</li>
                     <li><strong>File Transfers</strong>: Download and upload files via <strong>XMODEM</strong> and <strong>ZMODEM</strong> protocols.</li>
                     <li><strong>Macros [M]</strong>: Set automated Alt+Key macro sequences and auto-login scripts.</li>
                 </ul>
@@ -855,6 +858,7 @@ SEND:"secret\r"'></textarea>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">Ctrl + 0</kbd></div><div>Reset terminal font zoom (16px)</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">F5</kbd></div><div>Quicksave all state & screen</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">F9</kbd></div><div>Quickload all state & screen</div>
+                    <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">F</kbd></div><div>Open File Area & Bulletins (VFS Mesh)</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">D</kbd></div><div>Open Dialing Directory</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">G</kbd></div><div>Open Door Games Suite</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">A</kbd></div><div>Open ANSI Art Gallery</div>
@@ -931,7 +935,7 @@ SEND:"secret\r"'></textarea>
             "  | . \\/ // /___/ /_/ / /_/ / /_/ /___/ /  \r\n" +
             "  |_|\\_\\___/_____/\\____/_____/_____//____/   \x1B[1;35m[Press F1 or 'H' for Help]\r\n" +
             "\x1B[1;36m==============================================================================\r\n\x1B[0;37m" +
-            "Ready to connect. Press [D] for Directory, [G] for Door Games, or [F1] for Help.\r\n\r\n";
+            "Ready to connect. Press [F] for File Area & Bulletins, [D] for Directory, [G] for Door Games, or [F1] for Help.\r\n\r\n";
         processData(welcomeBanner);
 
         // Backdrop click to dismiss modals
@@ -3301,10 +3305,10 @@ Authorized SysOps: Archive to KiloOS VFS path /home/bbs/CLASSIF.NFO immediately.
                     ${escapeHTML(file.desc)}
                 </p>
                 <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
-                    <button class="btn-action" style="background:#0284c7;" onclick="saveSelectedBulletinToVFS()">💾 Download to VFS</button>
-                    <button class="btn-sub" onclick="saveSelectedBulletinToVFS('kpad')">📝 Open in KPad</button>
-                    <button class="btn-sub" onclick="saveSelectedBulletinToVFS('khex')">🔍 Inspect in KHex</button>
-                    <button class="btn-sub" onclick="streamSelectedBulletin()">🖥️ Terminal View</button>
+                    <button class="btn-action" style="background:#0284c7;" onclick="saveSelectedBulletinToVFS()">💾 Download to VFS [V]</button>
+                    <button class="btn-sub" onclick="saveSelectedBulletinToVFS('kpad')">📝 Open in KPad [P]</button>
+                    <button class="btn-sub" onclick="saveSelectedBulletinToVFS('khex')">🔍 Inspect in KHex [X]</button>
+                    <button class="btn-sub" onclick="streamSelectedBulletin()">🖥️ Terminal View [T]</button>
                     <button class="btn-secondary" onclick="downloadSelectedBulletinBlob()">📥 Local File</button>
                 </div>
             </div>
