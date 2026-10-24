@@ -27,9 +27,9 @@
     "id": "kanomaly",
     "title": "KAnomaly",
     "folder": "System",
-    "webBytes": 75764,
-    "exeBytes": 19456,
-    "budgetPercent": 7.6
+    "webBytes": 91125,
+    "exeBytes": 20480,
+    "budgetPercent": 9.1
   },
   {
     "id": "kasteroids",
@@ -643,7 +643,7 @@
     "id": "ksolitaire",
     "title": "KSolitaire",
     "folder": "Games",
-    "webBytes": 160912,
+    "webBytes": 161168,
     "exeBytes": 49152,
     "budgetPercent": 16.1
   },
@@ -683,9 +683,9 @@
     "id": "kstellar",
     "title": "KStellar",
     "folder": "Games",
-    "webBytes": 183747,
+    "webBytes": 196487,
     "exeBytes": 160768,
-    "budgetPercent": 18.4
+    "budgetPercent": 19.7
   },
   {
     "id": "ksteno",
@@ -723,9 +723,9 @@
     "id": "ksys",
     "title": "KSys",
     "folder": "System",
-    "webBytes": 192123,
-    "exeBytes": 32256,
-    "budgetPercent": 19.2
+    "webBytes": 196169,
+    "exeBytes": 37888,
+    "budgetPercent": 19.6
   },
   {
     "id": "ktask",
@@ -803,9 +803,9 @@
     "id": "kvault",
     "title": "KVault",
     "folder": "System",
-    "webBytes": 274808,
+    "webBytes": 298951,
     "exeBytes": 22016,
-    "budgetPercent": 27.5
+    "budgetPercent": 29.9
   },
   {
     "id": "kvoid",
