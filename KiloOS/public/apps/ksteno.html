@@ -3237,6 +3237,9 @@
 
       // 4. Keyboard Shortcuts
       window.addEventListener('keydown', (e) => {
+        const isInput = document.activeElement && 
+          ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+
         if (e.key === 'F1') {
           e.preventDefault();
           document.getElementById('modal-manual').style.display = 'flex';
@@ -3247,8 +3250,17 @@
           e.preventDefault();
           quickLoadSession();
         } else if (e.key === 'Escape') {
+          const tut = document.getElementById('modal-tutorial');
+          const splash = document.getElementById('modal-splash');
+          if (tut && tut.style.display !== 'none') {
+            closeTutorial();
+          }
+          if (splash && splash.style.display !== 'none') {
+            splash.style.display = 'none';
+            checkFirstRunTutorial();
+          }
           document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
-        } else if (e.altKey && e.key >= '1' && e.key <= '5') {
+        } else if ((e.altKey && e.key >= '1' && e.key <= '5') || (!isInput && !e.ctrlKey && !e.metaKey && !e.altKey && e.key >= '1' && e.key <= '5')) {
           const tabs = document.querySelectorAll('.tab-btn');
           const idx = parseInt(e.key, 10) - 1;
           if (tabs[idx]) tabs[idx].click();
@@ -3466,6 +3478,22 @@
         sound.enabled = document.getElementById('setting-sound-enabled').checked;
         document.getElementById('modal-settings').style.display = 'none';
         showToast("Settings updated", "success");
+      });
+
+      // Modal backdrop click dismissal
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) {
+            if (overlay.id === 'modal-tutorial') {
+              closeTutorial();
+            } else if (overlay.id === 'modal-splash') {
+              overlay.style.display = 'none';
+              checkFirstRunTutorial();
+            } else {
+              overlay.style.display = 'none';
+            }
+          }
+        });
       });
 
       // Tutorial Next / Prev

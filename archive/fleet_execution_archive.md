@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T17:17:23-07:00 — kilo-qa: KMech (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 159.8 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.16%, input 15.15%, HEAD Δ 0.08%, 0 fail, 0 warn, 8.4s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kmech_tutorialSeen flag, audio persistence, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, battle state scaling/clamping recovery, and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KMech` to Mature archive; advanced `kilo-qa` to `KPac`; next agent `kilo-expander`.
+
 - **2026-10-23T17:05:52-07:00 — kilo-usability: KSys (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 187.6 KB, native 31.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Ergonomics: Added persistent footer statusbar with live telemetry/toast updates and discoverable shortcut pills [F1/H, F5/F9, Shift+M, 1-6, Esc].

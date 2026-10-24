@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ current_targets:
   kilo_creator: kweb://webring
   kilo_graphics: KStellar
   kilo_soundscape: KCyber
-  kilo_tester: KSteno
+  kilo_tester: KCipher
   kilo_usability: KSteno
   kilo_qa: KPac
   kilo_expander: KQuest
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KVoid
-  timestamp: '2026-10-23T18:05:24-07:00'
+  agent: kilo-tester
+  app: KSteno
+  timestamp: '2026-10-23T18:17:03-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -124,14 +124,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KSteno`
+- **Active Target**: `KCipher`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Audit cipher workbench (AES/XOR/Vigenère/ROT13/RSA toy), frequency histogram, key input guards, and VFS import/export. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
+| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KSteno`
@@ -224,6 +224,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T18:17:03-07:00 — kilo-tester: KSteno (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 144.4 KB, native 10.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.5%, HEAD Δ 0.0%, 0 fail, 0 warn, 13.7s)).
+  - UI & Hotkey Audit: Verified image/audio LSB steganography, bitplane visualizer, passkey encryption, and modal dismissals.
+  - Repairs: Fixed numeric hotkeys 1-5 with input focus guards, ensured Escape properly dismisses splash/tutorial/manual/settings, and added backdrop click dismissal on modal overlays.
+  - Handoff: Advanced `kilo-tester` to `KCipher`; rotated active agent to `kilo-usability`.
+
 - **2026-10-23T18:05:24-07:00 — kilo-soundscape: KVoid (Event Horizon Protocol — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 137.4 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Composition: D Phrygian / Whole-tone with Lydian Horizon shift, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
@@ -250,9 +256,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - No-Autostart Connect Gate: Replaced boot WebSocket connection with on-demand Firebase dead-drop relay.
   - Dual Win32 C parity: Added file export/import routines (Export File / Load Cover) in KSteno.exe.
   - Handoff: Advanced `kilo-expander` to `KQuest`; rotated active agent to `kilo-creator`.
-
-- **2026-10-23T17:17:23-07:00 — kilo-qa: KMech (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 159.8 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.16%, input 15.15%, HEAD Δ 0.08%, 0 fail, 0 warn, 8.4s)).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, kmech_tutorialSeen flag, audio persistence, and Escape modal dismissals.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, battle state scaling/clamping recovery, and visibilitychange timer cleanup.
-  - Mature Quarantine & Handoff: Promoted `KMech` to Mature archive; advanced `kilo-qa` to `KPac`; next agent `kilo-expander`.
