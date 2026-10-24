@@ -227,7 +227,7 @@ void SpawnWaterParticles(float targetX, float targetY, int count) {
 int current_day = 1;
 int time_of_day = 0; // 0=Day, 1=Night
 int current_season = 0; // 0=Spring, 1=Summer, 2=Fall, 3=Winter
-int crop_seasons[4] = {5, 2, 6, 4}; // Bitmasks: Wheat(0,2)->5, Corn(1)->2, Tomato(1,2)->6, Pumpkin(2)->4
+int crop_seasons[4] = {13, 2, 6, 4}; // Bitmasks: Wheat(0,2,3)->13, Corn(1)->2, Tomato(1,2)->6, Pumpkin(2)->4
 const char* season_names[4] = {"Spring", "Summer", "Fall", "Winter"};
 int growth_times[4] = {2, 3, 4, 5};
 int sell_values[4] = {10, 20, 30, 50};
@@ -379,7 +379,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hUpgradeBtn = CreateWindow("BUTTON", "Fertilizer ($100) [F]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 S(285), S(435), S(125), S(28), hwnd, (HMENU) 6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
-            hSeedBtns[0] = CreateWindow("BUTTON", "[1] Wheat (-$5) [Sp/Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
+            hSeedBtns[0] = CreateWindow("BUTTON", "[1] Wheat (-$5) [Sp/Fa/Wi]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
                 S(10), S(470), S(145), S(20), hwnd, (HMENU) 2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSeedBtns[1] = CreateWindow("BUTTON", "[2] Corn (-$10) [Su]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
                 S(160), S(470), S(145), S(20), hwnd, (HMENU) 3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
@@ -395,7 +395,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             hBuyScarecrowBtn = CreateWindow("BUTTON", "Scarecrow ($100) [K]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 S(10), S(520), S(130), S(22), hwnd, (HMENU) 10, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hMillBtn = CreateWindow("BUTTON", "Mill ($150) [M]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+            hMillBtn = CreateWindow("BUTTON", "Mill ($150) [W]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 S(145), S(520), S(125), S(22), hwnd, (HMENU) 11, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hMayoBtn = CreateWindow("BUTTON", "Mayo ($100) [Y]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 S(275), S(520), S(135), S(22), hwnd, (HMENU) 12, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
@@ -461,7 +461,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SendMessage(hwnd, WM_COMMAND, 8, 0);
             } else if (wParam == 'K' || wParam == 'k') {
                 if (!has_scarecrow) SendMessage(hwnd, WM_COMMAND, 10, 0);
-            } else if (wParam == 'M' || wParam == 'm') {
+            } else if (wParam == 'W' || wParam == 'w' || wParam == 'M' || wParam == 'm') {
                 if (!has_mill) SendMessage(hwnd, WM_COMMAND, 11, 0);
             } else if (wParam == 'Y' || wParam == 'y') {
                 if (!has_mayo_maker) SendMessage(hwnd, WM_COMMAND, 12, 0);
@@ -621,7 +621,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     "Click Planted Crop -> Water (Daily!)\n"
                     "Click Grown Crop -> Harvest for Profit!\n\n"
                     "CROPS:\n"
-                    "[1] Wheat: 2 days, $10 base ($25 with Mill), Spring/Fall\n"
+                    "[1] Wheat: 2 days, $10 base ($25 with Mill), Spring/Fall/Winter\n"
                     "[2] Corn: 3 days, $20 base, Summer\n"
                     "[3] Tomato: 4 days, $30 base, Summer/Fall\n"
                     "[4] Pumpkin: 5 days, $50 base, Fall\n\n"
@@ -645,7 +645,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     "[C]: Buy Chicken ($50)\n"
                     "[O]: Buy Cow ($150)\n"
                     "[K]: Buy Scarecrow ($100)\n"
-                    "[M]: Buy Mill ($150)\n"
+                    "[W]: Buy Mill ($150)\n"
                     "[Y]: Buy Mayo Maker ($100)\n"
                     "[E]: Buy Cheese Press ($200)\n"
                     "[F5] / [S]: Quicksave Farm\n"
@@ -666,7 +666,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     EnableWindow(hBuyScarecrowBtn, !has_scarecrow);
                     SetWindowText(hBuyScarecrowBtn, has_scarecrow ? "Scarecrow (Owned)" : "Scarecrow ($100) [K]");
                     EnableWindow(hMillBtn, !has_mill);
-                    SetWindowText(hMillBtn, has_mill ? "Mill (Owned)" : "Mill ($150) [M]");
+                    SetWindowText(hMillBtn, has_mill ? "Mill (Owned)" : "Mill ($150) [W]");
                     EnableWindow(hMayoBtn, !has_mayo_maker);
                     SetWindowText(hMayoBtn, has_mayo_maker ? "Mayo Maker (Owned)" : "Mayo ($100) [Y]");
                     EnableWindow(hCheeseBtn, !has_cheese_press);
@@ -709,7 +709,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     EnableWindow(hBuyScarecrowBtn, TRUE);
                     SetWindowText(hBuyScarecrowBtn, "Scarecrow ($100) [K]");
                     EnableWindow(hMillBtn, TRUE);
-                    SetWindowText(hMillBtn, "Mill ($150) [M]");
+                    SetWindowText(hMillBtn, "Mill ($150) [W]");
                     EnableWindow(hMayoBtn, TRUE);
                     SetWindowText(hMayoBtn, "Mayo ($100) [Y]");
                     EnableWindow(hCheeseBtn, TRUE);
@@ -944,13 +944,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 
                 PlaySoundEffect(action);
                 
-                int is_aoe = tools_upgraded && (action == 0 || action == 2 || action == 3);
+                int is_aoe = tools_upgraded;
                 int min_x = is_aoe ? (cx > 0 ? cx - 1 : 0) : cx;
                 int max_x = is_aoe ? (cx < GRID_COLS - 1 ? cx + 1 : GRID_COLS - 1) : cx;
                 int min_y = is_aoe ? (cy > 0 ? cy - 1 : 0) : cy;
                 int max_y = is_aoe ? (cy < GRID_ROWS - 1 ? cy + 1 : GRID_ROWS - 1) : cy;
                 
                 const char* sNames[4] = {"Wheat", "Corn", "Tomato", "Pumpkin"};
+                int planted_count = 0;
+                int out_of_season = 0;
+                int low_funds = 0;
                 for (int y = min_y; y <= max_y; y++) {
                     for (int x = min_x; x <= max_x; x++) {
                         int idx = y * GRID_COLS + x;
@@ -962,18 +965,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             shake_amount += 5.0f;
                             ShowNativeToast("Tilled soil!", 0);
                             SaveGame();
-                        } else if (action == 1 && x == cx && y == cy && grid[idx].type == 1) {
-                            if ((crop_seasons[selected_seed] & (1 << current_season)) != 0 && money >= seed_costs[selected_seed]) {
-                                money -= seed_costs[selected_seed];
-                                grid[idx].type = 2; grid[idx].growth = 0; grid[idx].cropType = selected_seed;
-                                SpawnParticles((float)px, (float)py, RGB(139, 195, 74), 10);
-                                char pBuf[64];
-                                wsprintf(pBuf, "Planted %s (-$%d)", sNames[selected_seed], seed_costs[selected_seed]);
-                                ShowNativeToast(pBuf, 0);
-                                SaveGame();
+                        } else if (action == 1 && grid[idx].type == 1) {
+                            if ((crop_seasons[selected_seed] & (1 << current_season)) != 0) {
+                                if (money >= seed_costs[selected_seed]) {
+                                    money -= seed_costs[selected_seed];
+                                    grid[idx].type = 2; grid[idx].growth = 0; grid[idx].cropType = selected_seed;
+                                    SpawnParticles((float)px, (float)py, RGB(139, 195, 74), 10);
+                                    planted_count++;
+                                } else {
+                                    low_funds = 1;
+                                }
                             } else {
-                                ShowNativeToast("Cannot plant: Out of season or low funds!", 1);
-                                MessageBeep(MB_ICONERROR);
+                                out_of_season = 1;
                             }
                         } else if (action == 2 && grid[idx].type == 2) {
                             int req = (weather == 2) ? 2 : 1;
@@ -994,6 +997,24 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             ShowNativeToast(hBuf, 0);
                             SaveGame();
                         }
+                    }
+                }
+                if (action == 1) {
+                    if (planted_count > 0) {
+                        char pBuf[64];
+                        if (planted_count > 1) {
+                            wsprintf(pBuf, "Planted %dx %s (-$%d)", planted_count, sNames[selected_seed], seed_costs[selected_seed] * planted_count);
+                        } else {
+                            wsprintf(pBuf, "Planted %s (-$%d)", sNames[selected_seed], seed_costs[selected_seed]);
+                        }
+                        ShowNativeToast(pBuf, 0);
+                        SaveGame();
+                    } else if (out_of_season) {
+                        ShowNativeToast("Cannot plant: Out of season!", 1);
+                        MessageBeep(MB_ICONERROR);
+                    } else if (low_funds) {
+                        ShowNativeToast("Cannot plant: Low funds!", 1);
+                        MessageBeep(MB_ICONERROR);
                     }
                 }
                 UpdateTitle(hwnd);
@@ -1731,7 +1752,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
                 if (!has_scarecrow) SendMessage(hwnd, WM_COMMAND, 10, 0);
                 continue;
             }
-            if (wp == 'M' || wp == 'm') {
+            if (wp == 'W' || wp == 'w' || wp == 'M' || wp == 'm') {
                 if (!has_mill) SendMessage(hwnd, WM_COMMAND, 11, 0);
                 continue;
             }

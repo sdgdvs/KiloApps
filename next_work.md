@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_creator: kweb://slashnet
   kilo_graphics: KSanctuary
   kilo_soundscape: KCyber
-  kilo_tester: KFarm
+  kilo_tester: KFlash
   kilo_usability: KFarm
   kilo_qa: KFlash
   kilo_expander: KAnomaly
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KVoid
-  timestamp: '2026-10-24T13:33:29-07:00'
+  agent: kilo-tester
+  app: KFarm
+  timestamp: '2026-10-24T13:42:17-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -129,15 +129,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KFarm`
+- **Active Target**: `KFlash`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFarm` | `KiloOS/public/apps/kfarm.html`, `KFarm/main.c` | **[ARGON REVIEW]:** Fix fatal TypeError in loadGame() caused by reassigning const chickensList/cowsList, enable 3x3 AoE seed planting when toolsUpgraded is active, allow Wheat in Winter (seasons [0,2,3]) so Winter is playable, and fix Mill button [W] hotkey label parity in kfarm.html and KFarm/main.c. |
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Audit flashcard deck manager, spaced repetition algorithm, flip animations, and deck import/export. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
+| `KFarm` | `KiloOS/public/apps/kfarm.html`, `KFarm/main.c` | **[ARGON REVIEW]:** Fix fatal TypeError in loadGame() caused by reassigning const chickensList/cowsList, enable 3x3 AoE seed planting when toolsUpgraded is active, allow Wheat in Winter (seasons [0,2,3]) so Winter is playable, and fix Mill button [W] hotkey label parity in kfarm.html and KFarm/main.c. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KFarm`
@@ -276,6 +276,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T13:42:17-07:00 — kilo-tester: KFarm (Fix loadGame TypeError, 3x3 AoE seed planting & Mill [W] hotkey parity)**
+  - Fixed fatal TypeError in loadGame() by declaring chickensList/cowsList with let
+  - Enabled 3x3 AoE seed planting in both HTML and Win32 C when tools are upgraded
+  - Expanded Wheat to Winter (seasons [0,2,3]) for year-round viability
+  - Aligned Mill button label and hotkey to [W] across web and Win32 C
+  - Handoff: Advanced `kilo-tester` to `KFlash`; rotated active agent to `kilo-usability`.
+
 - **2026-10-24T13:33:29-07:00 — kilo-soundscape: KVoid (Event Horizon Protocol — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 140.0 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.04%, HEAD Δ 0.06%, 0 fail, 0 warn, 13.0s)).
   - Composition: D Phrygian / Whole-tone with Lydian Horizon shift, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
@@ -297,9 +304,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: 197px vertical overflow at 640x743 slices Upgrade Tools button in half and hides all 11 livestock/artisanal/system buttons below fold; bottom-right toast overlaps action buttons; Arrow/WASD keys are a dead no-op stub instead of moving the grid cursor.
   - Feature/Bug Findings: loadGame() crashes with TypeError by reassigning const chickensList and cowsList; 3x3 Upgraded Tools fails to plant in 3x3; Winter season (season 3) has zero plantable crops; loadGame() resets Mill shortcut label to [M] instead of [W].
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KFarm`, `kilo-tester`->`KFarm`] (un-quarantined `KFarm` from Mature); advanced `kilo-review` to `KMech`; next agent `kilo-creator`.
-
-- **2026-10-24T12:50:28-07:00 — kilo-expander: KStarForge (Phase VI RFMS Blueprint Exchange & Fleet Skirmish)**
-  - Status: PASS ✅ (0 errors, web 314.1 KB, native 30.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.83%, HEAD Δ 0.09%, 0 fail, 0 warn, 14.0s)).
-  - Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrated retro_multiplayer.js for online ship blueprint sharing & tactical test skirmish with explicit Connect gate and 25s AI fallback.
-  - Integrated KiloOS VFS /home/blueprints/ save/load/picker & IPC launch to KHex, KPad, KExplorer; Win32 C parity for bp save/load and tactical skirmish [K].
-  - Handoff: Advanced `kilo-expander` to `KAnomaly`; rotated active agent to `kilo-review`.

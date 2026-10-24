@@ -156,7 +156,7 @@
         <p>Click: Grass(Till) &rarr; Soil(Plant) &rarr; 🌱(Water) &rarr; 🌾(Harvest) | <span style="color:#2196F3;">Shortcuts: [1-4] Seeds, [Space] Sleep, [H/F1] Almanac</span></p>
         <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:15px;">
             <div class="seed-selector-group">
-                <label class="seed-card-label selected"><input type="radio" name="seed" value="0" checked> [1] Wheat (-$5) [Sp/Fa]</label>
+                <label class="seed-card-label selected"><input type="radio" name="seed" value="0" checked> [1] Wheat (-$5) [Sp/Fa/Wi]</label>
                 <label class="seed-card-label"><input type="radio" name="seed" value="1"> [2] Corn (-$10) [Su]</label>
                 <label class="seed-card-label"><input type="radio" name="seed" value="2"> [3] Tomato (-$15) [Su/Fa]</label>
                 <label class="seed-card-label"><input type="radio" name="seed" value="3"> [4] Pumpkin (-$25) [Fa]</label>
@@ -191,7 +191,7 @@
                 Click a planted seed to <strong>Water</strong> it (do this daily!).<br>
                 Click a fully grown crop to <strong>Harvest</strong> and earn money.</p>
                 <p style="text-align:left;"><strong>Crops:</strong><br>
-                🌾 Wheat: Grow 2d, Base Val $10 (Mill: $25), Spring/Fall<br>
+                🌾 Wheat: Grow 2d, Base Val $10 (Mill: $25), Spring/Fall/Winter<br>
                 🌽 Corn: Grow 3d, Base Val $20, Summer<br>
                 🍅 Tomato: Grow 4d, Base Val $30, Summer/Fall<br>
                 🎃 Pumpkin: Grow 5d, Base Val $50, Fall</p>
@@ -1173,7 +1173,7 @@
         const grid = Array.from({length: COLS * ROWS}, () => ({ type: 0, watered: false, growth: 0, cropType: 0 }));
         const seasons = ['Spring', 'Summer', 'Fall', 'Winter'];
         const cropData = [
-            { name: 'Wheat', emoji: '🌾', growthTime: 2, value: 10, cost: 5, seasons: [0, 2] },
+            { name: 'Wheat', emoji: '🌾', growthTime: 2, value: 10, cost: 5, seasons: [0, 2, 3] },
             { name: 'Corn', emoji: '🌽', growthTime: 3, value: 20, cost: 10, seasons: [1] },
             { name: 'Tomato', emoji: '🍅', growthTime: 4, value: 30, cost: 15, seasons: [1, 2] },
             { name: 'Pumpkin', emoji: '🎃', growthTime: 5, value: 50, cost: 25, seasons: [2] }
@@ -1216,12 +1216,12 @@
         }));
 
         // Roaming animals
-        const chickensList = [
+        let chickensList = [
             { x: 40, y: 35, tx: 70, ty: 50, dir: 1, peck: 0, moveTimer: 30 },
             { x: 350, y: 340, tx: 320, ty: 360, dir: -1, peck: 0, moveTimer: 70 },
             { x: 330, y: 60, tx: 360, ty: 80, dir: 1, peck: 0, moveTimer: 110 }
         ];
-        const cowsList = [
+        let cowsList = [
             { x: 60, y: 340, tx: 90, ty: 350, dir: 1, chew: 0, moveTimer: 50 },
             { x: 340, y: 200, tx: 310, ty: 220, dir: -1, chew: 0, moveTimer: 120 }
         ];
@@ -1611,7 +1611,7 @@
                 cropData[0].value = hasMill ? 25 : 10;
                 const millBtn = document.getElementById('millBtn');
                 if (millBtn) {
-                    millBtn.innerText = hasMill ? 'Mill (Owned)' : 'Buy Mill ($150) [M]';
+                    millBtn.innerText = hasMill ? 'Mill (Owned)' : 'Buy Mill ($150) [W]';
                     millBtn.style.backgroundColor = hasMill ? '#9E9E9E' : '#D7CCC8';
                     millBtn.disabled = hasMill;
                 }
@@ -2402,7 +2402,7 @@
                         tip = `Out of Season (${cropData[cType].name})`;
                         tipColor = '#FF8A80';
                     } else {
-                        tip = `Plant ${cropData[cType].name} (-$${cropData[cType].cost})`;
+                        tip = isAoE ? `Plant ${cropData[cType].name} (3x3)` : `Plant ${cropData[cType].name} (-$${cropData[cType].cost})`;
                     }
                 } else if (cell.type === 2) {
                     const req = weather === 'Drought' ? 2 : 1;
@@ -2504,7 +2504,7 @@
                 
                 playSound(action);
                 
-                const isAoE = toolsUpgraded && (action === 'till' || action === 'water' || action === 'harvest');
+                const isAoE = toolsUpgraded;
                 
                 const minX = isAoE ? Math.max(0, cx - 1) : cx;
                 const maxX = isAoE ? Math.min(COLS - 1, cx + 1) : cx;
@@ -2516,6 +2516,13 @@
                 let lastCropType = 0;
                 let didWater = false;
                 let didTill = false;
+                let plantedCount = 0;
+                let outOfSeason = false;
+                let lowFunds = false;
+
+                const seedInput = document.querySelector('input[name="seed"]:checked');
+                const cType = seedInput ? parseInt(seedInput.value) : 0;
+                const currentSeason = Math.floor((day - 1) / 7) % 4;
 
                 for (let y = minY; y <= maxY; y++) {
                     for (let x = minX; x <= maxX; x++) {
@@ -2524,23 +2531,18 @@
                             cell.type = 1;
                             spawnParticles(x * CELL_SIZE, y * CELL_SIZE, '#5D4037', 10);
                             didTill = true;
-                        } else if (action === 'plant' && x === cx && y === cy && cell.type === 1) {
-                            const seedInput = document.querySelector('input[name="seed"]:checked');
-                            const cType = seedInput ? parseInt(seedInput.value) : 0;
-                            const currentSeason = Math.floor((day - 1) / 7) % 4;
+                        } else if (action === 'plant' && cell.type === 1) {
                             if (!cropData[cType].seasons.includes(currentSeason)) {
-                                showToast(`⚠️ ${cropData[cType].name} cannot be planted in ${seasons[currentSeason]}!`, true);
+                                outOfSeason = true;
                             } else if (money < cropData[cType].cost) {
-                                showToast(`⚠️ Need $${cropData[cType].cost} for ${cropData[cType].name} seed (You have $${money})`, true);
+                                lowFunds = true;
                             } else {
                                 money -= cropData[cType].cost;
-                                updateMoney();
                                 cell.type = 2;
                                 cell.growth = 0;
                                 cell.cropType = cType;
                                 spawnParticles(x * CELL_SIZE, y * CELL_SIZE, '#8BC34A', 10);
-                                showToast(`Planted ${cropData[cType].name} (-$${cropData[cType].cost})`);
-                                saveGame();
+                                plantedCount++;
                             }
                         } else if (action === 'water' && cell.type === 2) {
                             const req = weather === 'Drought' ? 2 : 1;
@@ -2560,6 +2562,18 @@
                             cell.watered = 0;
                             spawnExplosion(x * CELL_SIZE, y * CELL_SIZE, cType);
                         }
+                    }
+                }
+
+                if (action === 'plant') {
+                    if (plantedCount > 0) {
+                        updateMoney();
+                        showToast(plantedCount > 1 ? `Planted ${plantedCount}x ${cropData[cType].name} (-$${cropData[cType].cost * plantedCount})` : `Planted ${cropData[cType].name} (-$${cropData[cType].cost})`);
+                        saveGame();
+                    } else if (outOfSeason) {
+                        showToast(`⚠️ ${cropData[cType].name} cannot be planted in ${seasons[currentSeason]}!`, true);
+                    } else if (lowFunds) {
+                        showToast(`⚠️ Need $${cropData[cType].cost} for ${cropData[cType].name} seed (You have $${money})`, true);
                     }
                 }
 
