@@ -814,6 +814,134 @@
             font-size: 0.78rem;
             color: var(--text-secondary);
         }
+        /* Reminder Alert Banner */
+        .reminder-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            background: rgba(139, 92, 246, 0.12);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            animation: toast-in 0.25s ease-out;
+            gap: 10px;
+        }
+
+        .reminder-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: #f8fafc;
+        }
+
+        .reminder-icon {
+            font-size: 1.15rem;
+            display: inline-block;
+        }
+
+        .reminder-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            border-radius: 6px;
+        }
+
+        /* Heatmap Section */
+        .heatmap-section {
+            margin-top: 14px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+        }
+
+        .heatmap-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .heatmap-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.22);
+            z-index: 5;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+        }
+
+        .heatmap-cell.level-0 { background: rgba(255, 255, 255, 0.04); }
+        .heatmap-cell.level-1 { background: rgba(139, 92, 246, 0.25); border-color: rgba(139, 92, 246, 0.35); }
+        .heatmap-cell.level-2 { background: rgba(139, 92, 246, 0.50); border-color: rgba(139, 92, 246, 0.60); }
+        .heatmap-cell.level-3 { background: rgba(139, 92, 246, 0.75); border-color: rgba(139, 92, 246, 0.85); }
+        .heatmap-cell.level-4 {
+            background: var(--accent-color);
+            border-color: #fff;
+            box-shadow: 0 0 8px var(--accent-color);
+        }
+        .heatmap-cell.today {
+            outline: 2px solid #fbbf24;
+            outline-offset: 1px;
+        }
+
+        .heatmap-labels {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            margin-bottom: 4px;
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .heatmap-legend {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+            margin-top: 10px;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-box {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
 
         /* Responsive Media Queries */
         @media (max-width: 768px) {
@@ -908,6 +1036,16 @@
                 </div>
             </div>
             
+            <div class="reminder-banner" id="reminder-banner" style="display: none;" role="region" aria-label="Daily habit reminder">
+                <div class="reminder-content">
+                    <span class="reminder-icon">⏰</span>
+                    <span id="reminder-message">Daily Reminder: 0 habits pending today. Keep your streak alive!</span>
+                </div>
+                <div class="reminder-actions">
+                    <button class="btn btn-sm" id="reminder-focus-btn" title="Toggle view of pending habits">Filter Pending</button>
+                    <button class="btn btn-sm" id="reminder-dismiss-btn" title="Dismiss today's reminder">✕</button>
+                </div>
+            </div>
             <div class="habit-list" id="habit-list">
                 <!-- Habits will be injected here via JS -->
             </div>
@@ -918,7 +1056,8 @@
             <div class="footer-shortcuts">
                 <span><kbd>Space</kbd> Check</span>
                 <span><kbd>1-9</kbd> Select</span>
-                <span><kbd>E</kbd> Edit</span>
+                <span><kbd>/</kbd> Search</span>
+                <span><kbd>S</kbd> Stats</span>
                 <span><kbd>F5</kbd> Save</span>
                 <span><kbd>F9</kbd> Load</span>
                 <span><kbd>F1</kbd> Guide</span>
@@ -946,10 +1085,11 @@
                     <div><kbd>1 - 9</kbd> Select #1-#9</div>
                     <div><kbd>E</kbd> Edit Habit</div>
                     <div><kbd>↑ / ↓</kbd> Navigate</div>
+                    <div><kbd>/</kbd> Focus Search</div>
                     <div><kbd>Delete</kbd> Delete Habit</div>
                     <div><kbd>F5</kbd> QuickSave</div>
                     <div><kbd>F9</kbd> QuickLoad</div>
-                    <div><kbd>S</kbd> Statistics</div>
+                    <div><kbd>S</kbd> Stats & Heatmap</div>
                     <div><kbd>Esc</kbd> Close / Clear</div>
                     <div><kbd>F1 / ?</kbd> Help Guide</div>
                 </div>
@@ -1002,6 +1142,13 @@
                     <input type="checkbox" id="audio-toggle" checked style="width: auto; cursor: pointer;">
                 </label>
                 <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">Procedural 2-operator FM synthesis chimes for streaks, completions, and milestones.</p>
+            </div>
+            <div class="input-group" style="margin-top: 14px;">
+                <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                    <span>Daily Reminder Alerts</span>
+                    <input type="checkbox" id="reminder-toggle" checked style="width: auto; cursor: pointer;">
+                </label>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">Displays alert banner when incomplete habits remain for today.</p>
             </div>
             <div class="input-group" style="margin-top: 20px; border-top: 1px solid var(--glass-border); padding-top: 16px;">
                 <label>Sovereign Data Management</label>
@@ -1124,6 +1271,8 @@
         let selectedHabitIndex = -1;
         let lastDeletedHabit = null;
         let soundEnabled = String(safeGet('khabit_sound', '1')) !== '0';
+        let reminderEnabled = String(safeGet('khabit_reminders', '1')) !== '0';
+        let filterPendingOnly = false;
         const STORAGE_KEY = 'khabit_data';
         const QUICKSAVE_KEY = 'khabit_quicksave';
 
@@ -1142,6 +1291,11 @@
         const toastContainer = document.getElementById('toast-container');
         const audioToggle = document.getElementById('audio-toggle');
         const checkTutorialSeen = document.getElementById('checkTutorialSeen');
+        const reminderBanner = document.getElementById('reminder-banner');
+        const reminderMsg = document.getElementById('reminder-message');
+        const reminderFocusBtn = document.getElementById('reminder-focus-btn');
+        const reminderDismissBtn = document.getElementById('reminder-dismiss-btn');
+        const reminderToggle = document.getElementById('reminder-toggle');
 
         const modal = document.getElementById('add-modal');
         const modalTitle = document.getElementById('modal-title');
@@ -1295,11 +1449,16 @@
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         };
 
-        // DST-safe streak calculation
+        // DST-safe streak calculation with ISO validation
         const calculateStreak = (completions) => {
-            if (!completions || completions.length === 0) return 0;
+            if (!completions || !Array.isArray(completions) || completions.length === 0) return 0;
             
-            const uniqueDates = Array.from(new Set(completions)).sort((a, b) => b.localeCompare(a));
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            const uniqueDates = Array.from(new Set(completions))
+                .filter(s => typeof s === 'string' && dateRegex.test(s))
+                .sort((a, b) => b.localeCompare(a));
+                
+            if (uniqueDates.length === 0) return 0;
             const todayStr = getTodayStr();
             
             const parseDateOnly = (s) => {
@@ -1312,7 +1471,7 @@
             const diffMs = todayDate.getTime() - latestDate.getTime();
             const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
             
-            if (diffDays > 1) return 0; // Streak broken
+            if (diffDays > 1) return 0; // Streak broken: last completion was before yesterday
             
             let streak = 0;
             let checkDate = new Date(latestDate);
@@ -1429,13 +1588,34 @@
             }
             historyChart.innerHTML = chartHtml;
 
+            // Daily Reminder Alert Evaluation
+            const pendingToday = totalHabits - completedToday;
+            if (reminderBanner) {
+                const isDismissedToday = String(safeGet('khabit_reminder_dismissed_' + today, '0')) === '1';
+                if (reminderEnabled && pendingToday > 0 && !isDismissedToday) {
+                    reminderBanner.style.display = 'flex';
+                    if (reminderMsg) {
+                        reminderMsg.textContent = `Daily Reminder: ${pendingToday} habit${pendingToday > 1 ? 's' : ''} remaining today. Keep your streak alive!`;
+                    }
+                    if (reminderFocusBtn) {
+                        reminderFocusBtn.textContent = filterPendingOnly ? 'Show All' : 'Filter Pending';
+                        reminderFocusBtn.classList.toggle('btn-primary', filterPendingOnly);
+                    }
+                } else {
+                    reminderBanner.style.display = 'none';
+                }
+            }
+
             // Filter & Render Cards
             const searchTerm = searchInput.value.trim().toLowerCase();
-            const filteredHabits = habits.filter(h =>
+            let filteredHabits = habits.filter(h =>
                 (h.name && h.name.toLowerCase().includes(searchTerm)) ||
                 (h.category && h.category.toLowerCase().includes(searchTerm)) ||
                 (h.description && h.description.toLowerCase().includes(searchTerm))
             );
+            if (filterPendingOnly) {
+                filteredHabits = filteredHabits.filter(h => !h.completions || !h.completions.includes(today));
+            }
 
             habitListEl.innerHTML = '';
 
@@ -1801,7 +1981,32 @@
                     if (payload.sound !== undefined) {
                         soundEnabled = Boolean(payload.sound);
                         safeSet('khabit_sound', soundEnabled ? '1' : '0');
-                        if (audioToggle) audioToggle.checked = soundEnabled;
+                        if (audioToggle) if (reminderToggle) {
+            reminderToggle.checked = reminderEnabled;
+            reminderToggle.addEventListener('change', () => {
+                reminderEnabled = reminderToggle.checked;
+                safeSet('khabit_reminders', reminderEnabled ? '1' : '0');
+                renderHabits();
+            });
+        }
+
+        if (reminderFocusBtn) {
+            reminderFocusBtn.addEventListener('click', () => {
+                filterPendingOnly = !filterPendingOnly;
+                renderHabits();
+            });
+        }
+
+        if (reminderDismissBtn) {
+            reminderDismissBtn.addEventListener('click', () => {
+                const today = getTodayStr();
+                safeSet('khabit_reminder_dismissed_' + today, '1');
+                if (reminderBanner) reminderBanner.style.display = 'none';
+                showToast("Reminder dismissed for today.");
+            });
+        }
+
+        audioToggle.checked = soundEnabled;
                     }
                     if (payload.search !== undefined && searchInput) {
                         searchInput.value = payload.search;
@@ -1969,6 +2174,56 @@
 
             const completionRate = totalActive > 0 ? Math.round((completedToday / totalActive) * 100) : 0;
 
+            // 28-day Completion Heatmap Generation
+            let heatmapCellsHtml = '';
+            for (let i = 27; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                const isToday = dStr === today;
+                
+                let complOnDate = 0;
+                habits.forEach(h => {
+                    if (h.completions && h.completions.includes(dStr)) complOnDate++;
+                });
+                
+                const pct = totalActive > 0 ? Math.round((complOnDate / totalActive) * 100) : 0;
+                let level = 0;
+                if (complOnDate > 0) {
+                    if (pct <= 25) level = 1;
+                    else if (pct <= 50) level = 2;
+                    else if (pct <= 75) level = 3;
+                    else level = 4;
+                }
+                
+                const dayName = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                heatmapCellsHtml += `<div class="heatmap-cell level-${level} ${isToday ? 'today' : ''}" title="${dayName}: ${complOnDate}/${totalActive} completed (${pct}%)" role="img" aria-label="${dayName}: ${complOnDate} of ${totalActive} habits completed"></div>`;
+            }
+
+            const heatmapHtml = `
+                <div class="heatmap-section">
+                    <div class="heatmap-header">
+                        <span class="heatmap-title">📅 28-Day Completion Heatmap</span>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">${totalCompletionsAllTime} lifetime checks</span>
+                    </div>
+                    <div class="heatmap-labels">
+                        <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                    </div>
+                    <div class="heatmap-grid">
+                        ${heatmapCellsHtml}
+                    </div>
+                    <div class="heatmap-legend">
+                        <span>Less</span>
+                        <div class="legend-box" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);"></div>
+                        <div class="legend-box" style="background: rgba(139, 92, 246, 0.25);"></div>
+                        <div class="legend-box" style="background: rgba(139, 92, 246, 0.50);"></div>
+                        <div class="legend-box" style="background: rgba(139, 92, 246, 0.75);"></div>
+                        <div class="legend-box" style="background: var(--accent-color);"></div>
+                        <span>More</span>
+                    </div>
+                </div>
+            `;
+
             statsContent.innerHTML = `
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -2002,6 +2257,7 @@
                         <span class="stat-sub">${highestAvg >= 0 ? highestAvg.toFixed(1) : 0} avg streak</span>
                     </div>
                 </div>
+                ${heatmapHtml}
             `;
             closeAllModals();
             statsModal.classList.add('active');
@@ -2213,26 +2469,43 @@
                 }
             }
 
-            // Navigation
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                if (selectedHabitIndex < 0) {
+            // Navigation & Hotkeys (Input focus protected)
+            if (!isInputFocused) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (selectedHabitIndex < 0) {
+                        selectedHabitIndex = 0;
+                    } else {
+                        selectedHabitIndex = (selectedHabitIndex + 1) % cards.length;
+                    }
+                    updateSelection();
+                    if (cards[selectedHabitIndex]) cards[selectedHabitIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (selectedHabitIndex <= 0) {
+                        selectedHabitIndex = cards.length - 1;
+                    } else {
+                        selectedHabitIndex = selectedHabitIndex - 1;
+                    }
+                    updateSelection();
+                    if (cards[selectedHabitIndex]) cards[selectedHabitIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                } else if (e.key === 'Home') {
+                    e.preventDefault();
                     selectedHabitIndex = 0;
-                } else {
-                    selectedHabitIndex = (selectedHabitIndex + 1) % cards.length;
-                }
-                updateSelection();
-                if (cards[selectedHabitIndex]) cards[selectedHabitIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                if (selectedHabitIndex <= 0) {
+                    updateSelection();
+                    if (cards[0]) cards[0].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                } else if (e.key === 'End') {
+                    e.preventDefault();
                     selectedHabitIndex = cards.length - 1;
-                } else {
-                    selectedHabitIndex = selectedHabitIndex - 1;
-                }
-                updateSelection();
-                if (cards[selectedHabitIndex]) cards[selectedHabitIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-            } else if (e.key === ' ' && !isInputFocused) {
+                    updateSelection();
+                    if (cards[selectedHabitIndex]) cards[selectedHabitIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                } else if (e.key === '/') {
+                    e.preventDefault();
+                    if (searchInput) {
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                } else if (e.key === ' ') {
                 if (selectedHabitIndex >= 0 && selectedHabitIndex < cards.length) {
                     e.preventDefault();
                     const btn = cards[selectedHabitIndex].querySelector('.check-btn');
@@ -2250,6 +2523,7 @@
                     const btn = cards[selectedHabitIndex].querySelector('.delete-btn');
                     if (btn) btn.click();
                 }
+            }
             }
         });
 

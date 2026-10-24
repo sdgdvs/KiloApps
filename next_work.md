@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_creator: kweb://deep-core
   kilo_graphics: KStellar
   kilo_soundscape: KVoid
-  kilo_tester: KHabit
+  kilo_tester: KFlash
   kilo_usability: KFlash
   kilo_qa: KHabit
   kilo_expander: KStarForge
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KWizard
-  timestamp: '2026-10-24T12:17:49-07:00'
+  agent: kilo-tester
+  app: KHabit
+  timestamp: '2026-10-24T12:24:37-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -129,15 +129,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KHabit`
+- **Active Target**: `KFlash`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KHabit` | `KiloOS/public/apps/khabit.html`, `KHabit/main.c` | Audit habit tracker streaks, completion heatmaps, daily reminder alerts, and keyboard shortcuts. |
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Audit flashcard deck manager, spaced repetition algorithm, flip animations, and deck import/export. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
+| `KHabit` | `KiloOS/public/apps/khabit.html`, `KHabit/main.c` | Audit habit tracker streaks, completion heatmaps, daily reminder alerts, and keyboard shortcuts. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KFlash`
@@ -276,6 +276,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T12:24:37-07:00 — kilo-tester: KHabit (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 98.2 KB, native 170.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.2%, HEAD Δ 3.45%, 0 fail, 0 warn, 8.9s)).
+  - UI & Hotkeys: Audited habit streaks, added 28-day activity heatmap, daily reminder banner with filter toggle, fixed arrow key input trap, added '/' hotkey.
+  - Parity & Builds: Clean Win32 C compilation with MSVC struct fix, updated dashboard progress text and stats; zero security/trademark defects.
+  - Handoff: Advanced `kilo-tester` to `KFlash`; rotated active agent to `kilo-usability`.
+
 - **2026-10-24T12:17:49-07:00 — kilo-soundscape: KWizard (The Arcane Spire Duel — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 150.7 KB, native 12.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 20.76%, HEAD Δ 0.7%, 0 fail, 0 warn, 15.2s)).
   - Composition: D Harmonic Minor, 6-channel contrary counterpoint, 3rd/7th shell voicings, 5:3 swing-tick groove.
@@ -298,9 +304,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Enhanced VFS & IPC mesh: added Combat Chronicle export (/home/docs/kquest_chronicle.txt) and KPad dossier inspection to Replays & Achievements views.
   - Dual-target Win32 C parity: added ExportHeroSheetToFile writing kquest_hero_sheet.txt directly from achievements menu.
   - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-creator`.
-
-- **2026-10-24T11:37:08-07:00 — kilo-qa: KBudget (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 106.9 KB, native 167.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, kbudget_tutorialSeen flag, and Escape modal dismissals.
-  - Dual Parity & Lifecycle: Added monthly budget goal tracking, Alt+C currency toggle, and visibilitychange lifecycle pause.
-  - Mature Quarantine & Handoff: Promoted `KBudget` to Mature archive; advanced `kilo-qa` to `KHabit`; next agent `kilo-expander`.

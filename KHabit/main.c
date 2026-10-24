@@ -469,9 +469,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SetTextColor(hdc, RGB(240, 240, 240));
             SelectObject(hdc, hFont);
             
-            char progText[64];
+            char progText[96];
             int pct = total > 0 ? (completedToday * 100 / total) : 0;
-            sprintf(progText, "Daily Progress: %d / %d (%d%%)", completedToday, total, pct);
+            int remaining = total - completedToday;
+            if (remaining > 0) {
+                sprintf(progText, "Progress: %d/%d (%d%%) - %d pending", completedToday, total, pct, remaining);
+            } else if (total > 0) {
+                sprintf(progText, "Progress: %d/%d (100%%) - All Done!", completedToday, total);
+            } else {
+                sprintf(progText, "Daily Progress: 0 / 0 (0%%)");
+            }
             RECT rcText = {35, 64, 280, 84};
             DrawText(hdc, progText, -1, &rcText, DT_SINGLELINE | DT_VCENTER);
             
@@ -691,13 +698,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 }
                 
+                int todayDay = GetDaysSinceEpoch();
+                int complToday = 0;
+                for (int i = 0; i < habitCount; i++) {
+                    if (habits[i].last_check_day == todayDay) complToday++;
+                }
+                int remToday = totalActive - complToday;
                 char statsStr[512];
                 sprintf(statsStr, 
                         "Total Active Habits: %d\n"
+                        "Today's Progress: %d / %d (%d pending)\n"
                         "Total Mastered Habits: %d\n"
                         "Longest Active Streak: %d\n"
                         "Most Consistent Category: %s (%.1f avg streak)",
-                        totalActive, totalMastered, longestStreak, mostConsistent, highestAvg >= 0 ? highestAvg : 0.0f);
+                        totalActive, complToday, totalActive, remToday > 0 ? remToday : 0,
+                        totalMastered, longestStreak, mostConsistent, highestAvg >= 0 ? highestAvg : 0.0f);
                         
                 MessageBox(hwnd, statsStr, "Detailed Statistics", MB_OK | MB_ICONINFORMATION);
             } else if (wmId == ID_BTN_SETTINGS && wmEvent == BN_CLICKED) {
@@ -780,14 +795,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     const char CLASS_NAME[] = "KHabitWindowClass";
 
-    WNDCLASS wc = { };
+    WNDCLASS wc = { 0 };
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
 
     RegisterClass(&wc);
 
-    WNDCLASS wcSet = { };
+    WNDCLASS wcSet = { 0 };
     wcSet.lpfnWndProc = SettingsProc;
     wcSet.hInstance = hInstance;
     wcSet.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
@@ -804,7 +819,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     ShowWindow(hwnd, nCmdShow);
 
-    MSG msg = { };
+    MSG msg = { 0 };
     while (GetMessage(&msg, NULL, 0, 0)) {
         BOOL bHandled = FALSE;
         if (msg.message == WM_KEYDOWN) {

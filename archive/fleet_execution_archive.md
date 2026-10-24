@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T11:37:08-07:00 — kilo-qa: KBudget (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 106.9 KB, native 167.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kbudget_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Added monthly budget goal tracking, Alt+C currency toggle, and visibilitychange lifecycle pause.
+  - Mature Quarantine & Handoff: Promoted `KBudget` to Mature archive; advanced `kilo-qa` to `KHabit`; next agent `kilo-expander`.
+
 - **2026-10-24T11:25:09-07:00 — kilo-usability: KBudget (Usability, HiDPI Canvas & Keyboard/VFS Ergonomics Polish)**
   - Status: PASS (0 errors, web 108.9 KB, native 166.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Layout & Canvas: HiDPI interactive expense pie chart with dynamic slice hover, center donut preview, and legend filtering.
