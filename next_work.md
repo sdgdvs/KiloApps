@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -26,7 +26,7 @@ commit_checkpoint: 12
 status: ready
 current_targets:
   kilo_creator: kweb://slashnet
-  kilo_graphics: KSanctuary
+  kilo_graphics: KSubmarine
   kilo_soundscape: KStellar
   kilo_tester: KSys
   kilo_usability: KVault
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://deep-core
-  timestamp: '2026-10-23T20:20:55-07:00'
+  agent: kilo-graphics
+  app: KSanctuary
+  timestamp: '2026-10-23T20:33:57-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -93,11 +93,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KSanctuary`
+- **Active Target**: `KSubmarine`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 | `KRogue` | `KiloOS/public/apps/krogue.html` | Subterranean roguelike visual polish: crisp tile/entity sprite rendering, atmospheric torchlight vignette, boss monster visual distinction, and perimeter glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
@@ -106,6 +105,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
+| `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -224,6 +224,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T20:33:57-07:00 — kilo-graphics: KSanctuary (Vault Cutaway Visual Polish, Aspect Calibration & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 441.2 KB, native 258.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Audited visual assets: retro CRT vector UI, SVG room/dweller badges, and pixel cutaway canvas.
+  - Calibrated canvas aspect ratio (620:140) to eliminate distortion; eliminated audio init mutual recursion.
+  - Zero specular glints or traveling border dots verified across HTML and C.
+  - Handoff: Advanced `kilo-graphics` to `KSubmarine`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-23T20:20:55-07:00 — kilo-creator: kweb://deep-core (Phase VI VFS Bridge & KMatrix Passkey Verification)**
   - Status: PASS ✅ (0 errors, web 299.1 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Connected Tier 3 Ghost Node terminal to KiloOS VFS (/sys/alpha.sys & /home/crypto/).
@@ -248,9 +255,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verification Badges: Added 1-click inline verification badges (MATCH / MISMATCH / Verify) to all digest rows and verified badge receipt export.
   - HMAC Ergonomics & Shortcuts: Added Alt+M/Alt+H toggle, random 16-byte key generator, byte counter badge, and Alt+V/Alt+C/Alt+T/F3 hotkeys.
   - Handoff: Advanced `kilo-usability` to `KVault`; rotated active agent to `kilo-qa`.
-
-- **2026-10-23T19:35:17-07:00 — kilo-tester: KCipher (Interactive UI & Cipher Workbench Audit)**
-  - Status: PASS ✅ (0 errors, web 157.1 KB, native 15.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.83%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.5s)).
-  - UI & Hotkey Audit: Verified cipher workbench (AES/XOR/Vigenere/ROT13/RSA), frequency chart, VFS import/export, and modal dismissals.
-  - Repairs: Fixed Ctrl+Shift+S button ID mismatch, wired Ctrl+Shift+O JSON import, patched modInverse infinite loop guard on non-coprime RSA keys, and hardened TextDecoder fallbacks.
-  - Handoff: Advanced `kilo-tester` to `KSys`; rotated active agent to `kilo-usability`.

@@ -1972,7 +1972,7 @@
                                 SENSORS ONLINE &bull; 60 FPS CUTAWAY
                             </span>
                         </div>
-                        <canvas id="vault-cutaway-canvas" width="620" height="140" style="width:100%; height:140px; display:block; cursor:pointer; image-rendering:pixelated; background:#060a07;"></canvas>
+                        <canvas id="vault-cutaway-canvas" width="620" height="140" style="width:100%; aspect-ratio:620/140; height:auto; display:block; cursor:pointer; image-rendering:pixelated; background:#060a07;"></canvas>
                         <div id="vault-canvas-tooltip" style="position:absolute; pointer-events:none; background:rgba(10,18,12,0.92); border:1px solid var(--border-corner); padding:3px 7px; font-size:9px; color:var(--text-bright); border-radius:2px; display:none; z-index:10; box-shadow:0 0 8px rgba(0,0,0,0.8);"></div>
                     </div>
 
@@ -2969,9 +2969,7 @@
             if (audioCtx && audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
-            if (soundEnabled && musicEnabled && !isBgmRunning) {
-                startBgm();
-            }
+
         }
 
         // --- YM2612 2-Op FM Synthesizer Core ---
@@ -3229,9 +3227,12 @@
 
         function startBgm() {
             if (isBgmRunning || !soundEnabled || !musicEnabled) return;
-            initAudio();
-            if (!audioCtx) return;
             isBgmRunning = true;
+            initAudio();
+            if (!audioCtx) {
+                isBgmRunning = false;
+                return;
+            }
             nextBgmTime = audioCtx.currentTime + 0.05;
             if (bgmTimer) clearInterval(bgmTimer);
             bgmTimer = setInterval(scheduleBgmStep, 50);
