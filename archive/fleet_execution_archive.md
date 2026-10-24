@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T21:16:16-07:00 — kilo-qa: KSolitaire (Pass 5 QA, State Persistence & Lifecycle Cleanup)**
+  - Status: PASS ✅ (0 errors, web 157.4 KB, native 48.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, ksolitaire_tutorialSeen flag, and Escape modal dismissals.
+  - Lifecycle & Parity: Added visibilitychange timer pause/resume; verified dual Win32 C parity.
+  - Mature Quarantine & Handoff: Promoted `KSolitaire` to Mature archive; advanced `kilo-qa` to `KSolitaire`; next agent `kilo-expander`.
+
 - **2026-10-23T21:06:12-07:00 — kilo-usability: KVault (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (Size <999KB, native Win32 C fresh, visual probe 0 cut-offs/errors, Vite build clean, security lint passed).
   - Encrypted Container Tree & Hex Inspector: Full keyboard-navigable archive tree with ARIA treeitem semantics and responsive side-by-side/stacked hex record inspector with 16-byte offset dump.

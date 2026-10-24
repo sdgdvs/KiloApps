@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ current_targets:
   kilo_creator: kweb://trapster
   kilo_graphics: KRogue
   kilo_soundscape: KBreakout
-  kilo_tester: KScript
+  kilo_tester: KSteno
   kilo_usability: KAnomaly
   kilo_qa: KSolitaire
   kilo_expander: KCipher
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KSubmarine
-  timestamp: '2026-10-23T21:52:30-07:00'
+  agent: kilo-tester
+  app: KScript
+  timestamp: '2026-10-23T22:04:53-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -124,14 +124,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Compose abyssal sonar & trench descent 6-channel suite (Suspended `sus2/Maj7` cascade, muffled low-pass SPC700 echo, warm sine sub-bass, hydrophone ping earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KScript`
+- **Active Target**: `KSteno`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Audit cipher workbench (AES/XOR/Vigenère/ROT13/RSA toy), frequency histogram, key input guards, and VFS import/export. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
+| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KAnomaly`
@@ -224,6 +224,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T22:04:53-07:00 — kilo-tester: KScript (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 146.4 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.27%, HEAD Δ 0.0%, 0 fail, 0 warn, 9.0s)).
+  - UI & Hotkey Audit: Verified script IDE, AST/console runner, sample presets, breakpoint stepper, modal focus traps, Escape dismissal, and F5/F9 state persistence.
+  - Repairs: Wrapped all raw localStorage calls with safeStorageGet/safeStorageSet/safeStorageGetJSON for VFS cache, font sizing, and macro persistence.
+  - Handoff: Advanced `kilo-tester` to `KSteno`; rotated active agent to `kilo-usability`.
+
 - **2026-10-23T21:52:30-07:00 — kilo-soundscape: KSubmarine (Aquatic Horizon & Bathysphere Trenches — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 489.8 KB, native 251.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Composition: F-Maj drift, G-Dorian descent, D-Phrygian vents, Bb-Min hadal chasm, E-Min combat, 6-ch counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
@@ -245,9 +251,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented KiloOS VFS signal export (/sys/anomaly_capture.sig) and cross-app launch IPC (KHex, KMatrix).
   - Added HiDPI waterfall scaling, mouse wheel & ArrowLeft/Right tuning precision, clear decoder telemetry, and RFMS geophone mesh.
   - Handoff: Advanced `kilo-expander` to `KCipher`; rotated active agent to `kilo-creator`.
-
-- **2026-10-23T21:16:16-07:00 — kilo-qa: KSolitaire (Pass 5 QA, State Persistence & Lifecycle Cleanup)**
-  - Status: PASS ✅ (0 errors, web 157.4 KB, native 48.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, ksolitaire_tutorialSeen flag, and Escape modal dismissals.
-  - Lifecycle & Parity: Added visibilitychange timer pause/resume; verified dual Win32 C parity.
-  - Mature Quarantine & Handoff: Promoted `KSolitaire` to Mature archive; advanced `kilo-qa` to `KSolitaire`; next agent `kilo-expander`.

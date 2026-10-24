@@ -1383,12 +1383,9 @@
         cache: {},
         init() {
             try {
-                const raw = localStorage.getItem('kiloos_vfs_state_v2');
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (parsed && typeof parsed === 'object') {
-                        this.cache = Object.assign({}, parsed);
-                    }
+                const parsed = safeStorageGetJSON('kiloos_vfs_state_v2', null);
+                if (parsed && typeof parsed === 'object') {
+                    this.cache = Object.assign({}, parsed);
                 }
             } catch(e) {}
             // Seed standard scripts if missing
@@ -1416,9 +1413,7 @@
             } catch(e) {}
         },
         saveToStorage() {
-            try {
-                localStorage.setItem('kiloos_vfs_state_v2', JSON.stringify(this.cache));
-            } catch(e) {}
+            safeStorageSet('kiloos_vfs_state_v2', this.cache);
         },
         write(path, data, notify = true) {
             const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
@@ -1465,13 +1460,10 @@
         readSync(path) {
             if (this.cache.hasOwnProperty(path)) return this.cache[path];
             try {
-                const raw = localStorage.getItem('kiloos_vfs_state_v2');
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (parsed && parsed[path] !== undefined) {
-                        this.cache[path] = parsed[path];
-                        return parsed[path];
-                    }
+                const parsed = safeStorageGetJSON('kiloos_vfs_state_v2', null);
+                if (parsed && parsed[path] !== undefined) {
+                    this.cache[path] = parsed[path];
+                    return parsed[path];
                 }
             } catch(e) {}
             return "";
@@ -1741,9 +1733,9 @@ print "Final total:", total`;
     // Initialize KiloVFS on boot
     KiloVFS.init();
 
-    // Initialize code from localStorage
+    // Initialize code from safe storage
     try {
-        const savedCode = localStorage.getItem('kscript_code_v2') || localStorage.getItem('kscript_code');
+        const savedCode = safeStorageGet('kscript_code_v2') || safeStorageGet('kscript_code');
         exprInput.value = (savedCode && savedCode.trim().length > 0) ? savedCode : DEFAULT_SCRIPT;
     } catch(e) {
         exprInput.value = DEFAULT_SCRIPT;
@@ -1967,7 +1959,7 @@ endif
     function loadPreset(name) {
         if (PRESETS[name]) {
             exprInput.value = PRESETS[name];
-            try { localStorage.setItem('kscript_code_v2', exprInput.value); } catch(e) {}
+            safeStorageSet('kscript_code_v2', exprInput.value);
             renderGutter();
             showToast("Loaded preset: " + name, "info");
             btnRun.click();
@@ -2052,7 +2044,7 @@ endif
             statusBadge.textContent = "READY";
             statusBadge.className = "status-badge";
         }
-        try { localStorage.setItem('kscript_code_v2', exprInput.value); } catch(e) {}
+        safeStorageSet('kscript_code_v2', exprInput.value);
     });
 
     // Global Hotkeys
@@ -3172,7 +3164,7 @@ endif
     // Font size zoom controls
     let currentFontSize = 13;
     try {
-        const savedFs = parseInt(localStorage.getItem('kscript_fontsize'), 10);
+        const savedFs = parseInt(safeStorageGet('kscript_fontsize', '13'), 10);
         if (savedFs >= 10 && savedFs <= 22) currentFontSize = savedFs;
     } catch(e) {}
 
@@ -3184,7 +3176,7 @@ endif
         const zoomLevelEl = document.getElementById('zoomLevel');
         if (zoomLevelEl) zoomLevelEl.textContent = `${currentFontSize}px`;
         renderGutter();
-        try { localStorage.setItem('kscript_fontsize', currentFontSize.toString()); } catch(e) {}
+        safeStorageSet('kscript_fontsize', currentFontSize.toString());
     }
 
     document.getElementById('btnZoomIn')?.addEventListener('click', () => applyFontSize(currentFontSize + 1));
@@ -3544,8 +3536,8 @@ endif
 
     // Macro Engine
     try {
-        const savedMacro = localStorage.getItem('kscript_macro_v2');
-        if (savedMacro) macroKeys = JSON.parse(savedMacro);
+        const savedMacro = safeStorageGetJSON('kscript_macro_v2', null);
+        if (savedMacro && Array.isArray(savedMacro)) macroKeys = savedMacro;
     } catch(e) {}
 
     exprInput.addEventListener('keydown', (e) => {
@@ -3569,7 +3561,7 @@ endif
             btnRec.innerHTML = '<span>⏺ Rec</span> <span class="btn-key">Alt+M</span>';
             statusBadge.textContent = "READY";
             statusBadge.className = "status-badge";
-            try { localStorage.setItem('kscript_macro_v2', JSON.stringify(macroKeys)); } catch(e) {}
+            safeStorageSet('kscript_macro_v2', macroKeys);
             showToast(`Macro saved (${macroKeys.length} keys).`, "success");
         }
     };
