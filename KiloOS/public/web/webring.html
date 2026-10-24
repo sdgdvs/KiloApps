@@ -1578,7 +1578,7 @@
   <div class="ticker-wrap">
     <span class="ticker-badge">WEBRING BULLETIN</span>
     <div class="ticker-content">
-      ★ KILONET WEBRING CONSORTIUM (1999) • 14 VERIFIED HYPERMEDIA &amp; FLEET NODES • RANDOM TELEPORTER ACTIVE • ZERO BROKEN LINKS • SUBMIT YOUR RETRO HOME PAGE • BEST VIEWED IN KNET BROWSER 800x600 ★
+      ★ KILONET WEBRING CONSORTIUM (1999) • 24 VERIFIED HYPERMEDIA &amp; FLEET NODES • RANDOM TELEPORTER ACTIVE • ZERO BROKEN LINKS • SUBMIT YOUR RETRO HOME PAGE • BEST VIEWED IN KNET BROWSER 800x600 ★
     </div>
   </div>
 
@@ -1600,7 +1600,7 @@
       </div>
       <div class="counter-box">
         <div class="counter-label">ACTIVE NODES</div>
-        <div class="counter-odometer" id="activeNodesCount" style="color:var(--cyan);">18</div>
+        <div class="counter-odometer" id="activeNodesCount" style="color:var(--cyan);">24</div>
       </div>
       <div class="counter-box" id="presenceCounterBox" onclick="openVoyagerModal()" style="cursor:pointer;" title="Click to view live Web Voyagers cruising the Ring">
         <div class="counter-label">VOYAGERS ONLINE</div>
@@ -1761,6 +1761,21 @@
           <button class="btn-teleport alt" id="btnAbortWarp" onclick="abortWarp()" style="display:none; border-color:var(--magenta); color:#f472b6;">
             <span>🛑</span> Abort Warp
           </button>
+        </div>
+
+        <!-- Canonical 1999 Node Direct Jump Deck -->
+        <div style="margin-top:16px; padding-top:12px; border-top:1px dashed var(--border-med); text-align:center;">
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--amber-bright); margin-bottom:8px; text-transform:uppercase;">
+            ★ DIRECT WARP TO CANONICAL 1999 DESTINATIONS ★
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center;">
+            <button class="pill-btn" onclick="directWarpToNode('#021')" style="color:#f472b6; border-color:rgba(244,114,182,0.5);">💾 Assembly '99</button>
+            <button class="pill-btn" onclick="directWarpToNode('#024')" style="color:#38bdf8; border-color:rgba(56,189,248,0.5);">💿 Trapster P2P</button>
+            <button class="pill-btn" onclick="directWarpToNode('#023')" style="color:#34d399; border-color:rgba(52,211,153,0.5);">📰 SlashNet '99</button>
+            <button class="pill-btn" onclick="directWarpToNode('#025')" style="color:#fbbf24; border-color:rgba(251,191,36,0.5);">⚡ Cabled Mag</button>
+            <button class="pill-btn" onclick="directWarpToNode('#026')" style="color:#4ade80; border-color:rgba(74,222,128,0.5);">🧅 The Scallion</button>
+            <button class="pill-btn" onclick="directWarpToNode('#022')" style="color:#a78bfa; border-color:rgba(167,139,250,0.5);">📜 Living RFC Bench</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1929,6 +1944,9 @@
             <button class="btn-action" onclick="copyBadgeCss()" style="padding:6px; font-size:11px;">
               <span>📋</span> Copy Pure CSS Button
             </button>
+            <button class="btn-action" onclick="saveBadgeToVfs()" style="padding:6px; font-size:11px; grid-column: span 2; background:#0f172a; border-color:var(--cyan); color:var(--cyan);">
+              <span>💾</span> Save 88x31 Badge to KiloOS VFS (/home/downloads/badge_88x31.html)
+            </button>
             <button class="btn-teleport" onclick="openPublishBadgeModal()" style="grid-column: span 2; background:linear-gradient(180deg, #10b981 0%, #059669 100%); border-color:#34d399;">
               <span>🌐</span> Publish to Live Community Button Exchange
             </button>
@@ -2035,6 +2053,9 @@
             <button class="btn-teleport alt" onclick="downloadBadgeFile()">
               <span>💾</span> Download badge.html
             </button>
+            <button class="btn-teleport alt" onclick="saveWidgetToVfs()" style="background:#0f172a; border-color:var(--cyan); color:var(--cyan);">
+              <span>💾</span> Save to KiloOS VFS
+            </button>
           </div>
         </div>
 
@@ -2074,13 +2095,13 @@
 
       <!-- Diagnostic Console Output -->
       <div class="diag-terminal" id="diagConsole">[SYSTEM READY] KiloNet Webring Diagnostic Daemon v2.4 initialized.
-Click 'Run Full Ring Diagnostic' to probe all 18 active ring nodes.</div>
+Click 'Run Full Ring Diagnostic' to probe all 24 active ring nodes.</div>
 
       <!-- Stats Bar -->
       <div class="diag-stats-bar">
         <div><strong>Ring Continuity:</strong> <span id="diagContinuity" style="color:var(--green-bright);">UNTESTED</span></div>
         <div><strong>Average Latency:</strong> <span id="diagLatency" style="color:var(--cyan);">-- ms</span></div>
-        <div><strong>Widget Tags Detected:</strong> <span id="diagTags" style="color:var(--amber-bright);">-- / 18</span></div>
+        <div><strong>Widget Tags Detected:</strong> <span id="diagTags" style="color:var(--amber-bright);">-- / 24</span></div>
         <div><strong>Daemon Status:</strong> <span id="diagStatus" style="color:var(--text-muted);">Idle</span></div>
       </div>
 
@@ -2603,7 +2624,7 @@ Tune dial to match lithospheric harmonic frequency to isolate transit frames.
         </div>
       </div>
       <div class="panel-desc">
-        Visualizes the bidirectional closed-loop ring architecture connecting all 18 active consortium nodes and 2 physical transponder offsets. Hover over any node to inspect directional neighbor routing (Prev / Next), click any node for deep telemetry analysis, or switch between Circular Ring Loop, Hub &amp; Spoke Star, and Latency Radar ping sweep modes.
+        Visualizes the bidirectional closed-loop ring architecture connecting all 24 active consortium nodes and 1 physical transponder offset. Hover over any node to inspect directional neighbor routing (Prev / Next), click any node for deep telemetry analysis, or switch between Circular Ring Loop, Hub &amp; Spoke Star, and Latency Radar ping sweep modes.
       </div>
 
       <!-- Topology Controls Bar -->
@@ -2613,6 +2634,13 @@ Tune dial to match lithospheric harmonic frequency to isolate transit frames.
           <button class="pill-btn active" id="btnTopoModeRing" onclick="setTopologyMode('ring')">Circular Ring</button>
           <button class="pill-btn" id="btnTopoModeStar" onclick="setTopologyMode('star')">Hub &amp; Spoke Star</button>
           <button class="pill-btn" id="btnTopoModeRadar" onclick="setTopologyMode('radar')">Latency Radar</button>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <label style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--text-muted);">FILTER:</label>
+          <button class="pill-btn active" id="btnTopoFilterAll" onclick="setTopologyFilter('all')">All (25)</button>
+          <button class="pill-btn" id="btnTopoFilterCanonical" onclick="setTopologyFilter('canonical')" style="color:var(--amber-bright); border-color:rgba(251,191,36,0.5);">★ Canonical Web (6)</button>
+          <button class="pill-btn" id="btnTopoFilterDemo" onclick="setTopologyFilter('demoscene')">Demoscene</button>
+          <button class="pill-btn" id="btnTopoFilterComm" onclick="setTopologyFilter('community')">Community</button>
         </div>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
           <label style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--text-muted);">ORBIT SPEED:</label>
@@ -2633,7 +2661,7 @@ Tune dial to match lithospheric harmonic frequency to isolate transit frames.
       <!-- Topology Telemetry Bar -->
       <div class="diag-stats-bar">
         <div><strong>Ring Topology:</strong> <span style="color:var(--green-bright);">CLOSED UNBROKEN LOOP</span></div>
-        <div><strong>Total Nodes:</strong> <span id="topoNodeCount" style="color:var(--cyan);">20 (18 Active, 2 Unresolved)</span></div>
+        <div><strong>Total Nodes:</strong> <span id="topoNodeCount" style="color:var(--cyan);">25 (24 Active, 1 Dormant)</span></div>
         <div><strong>Propagation Delay:</strong> <span id="topoPropDelay" style="color:var(--amber-bright);">~24 ms/hop</span></div>
         <div><strong>Selected Node:</strong> <span id="topoSellabel" style="color:var(--text-primary);">None (Hover to inspect)</span></div>
       </div>
@@ -3301,9 +3329,17 @@ Monitoring transit sessions...
         <div style="display:flex; gap:8px; margin-bottom:12px;">
           <select id="cgiQueryPreset" style="flex:1; padding:6px; background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-med); border-radius:3px; font-family:var(--font-mono); font-size:12px;">
             <option value="action=next&id=knet-portal">GET /cgi-bin/ringmaster.pl?action=next&amp;id=knet-portal</option>
-            <option value="action=prev&id=knet-portal">GET /cgi-bin/ringmaster.pl?action=prev&amp;id=knet-portal</option>
+            <option value="action=next&id=slashnet">GET /cgi-bin/ringmaster.pl?action=next&amp;id=slashnet (News for Nerds)</option>
+            <option value="action=next&id=trapster">GET /cgi-bin/ringmaster.pl?action=next&amp;id=trapster (P2P Swarm)</option>
+            <option value="action=next&id=cabled">GET /cgi-bin/ringmaster.pl?action=next&amp;id=cabled (Cyber Mag)</option>
+            <option value="action=next&id=scallion">GET /cgi-bin/ringmaster.pl?action=next&amp;id=scallion (Satire Wire)</option>
+            <option value="action=next&id=demoscene">GET /cgi-bin/ringmaster.pl?action=next&amp;id=demoscene (Assembly '99)</option>
+            <option value="action=next&id=rfc-archive">GET /cgi-bin/ringmaster.pl?action=next&amp;id=rfc-archive (IETF Bench)</option>
+            <option value="action=prev&id=slashnet">GET /cgi-bin/ringmaster.pl?action=prev&amp;id=slashnet</option>
             <option value="action=random">GET /cgi-bin/ringmaster.pl?action=random</option>
             <option value="action=stats&id=cybercafe">GET /cgi-bin/ringmaster.pl?action=stats&amp;id=cybercafe</option>
+            <option value="action=stats&id=slashnet">GET /cgi-bin/ringmaster.pl?action=stats&amp;id=slashnet</option>
+            <option value="action=stats&id=demoscene">GET /cgi-bin/ringmaster.pl?action=stats&amp;id=demoscene</option>
             <option value="action=list">GET /cgi-bin/ringmaster.pl?action=list</option>
           </select>
           <button class="btn btn-primary" onclick="executeCgiQuery()">🚀 Send CGI Request</button>
@@ -3526,29 +3562,32 @@ Ringmaster CGI Ready. Select a query and click [Send CGI Request] to probe.</div
     appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
   };
 
-  try {
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    window.fb = {
-      app,
-      db,
-      ref,
-      set,
-      get,
-      push,
-      onValue,
-      onChildAdded,
-      off,
-      remove,
-      serverTimestamp,
-      onDisconnect
-    };
-    if (typeof window.onFirebaseReady === 'function') {
-      window.onFirebaseReady();
+  window.connectFirebaseRtdb = function() {
+    if (window.fb) return;
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      window.fb = {
+        app,
+        db,
+        ref,
+        set,
+        get,
+        push,
+        onValue,
+        onChildAdded,
+        off,
+        remove,
+        serverTimestamp,
+        onDisconnect
+      };
+      if (typeof window.onFirebaseReady === 'function') {
+        window.onFirebaseReady();
+      }
+    } catch (err) {
+      console.warn("Firebase RTDB init error:", err);
     }
-  } catch (err) {
-    console.warn("Firebase RTDB init error:", err);
-  }
+  };
 </script>
 
 <script>
@@ -3633,6 +3672,84 @@ const DEFAULT_RING_NODES = [
     badgeLabel: "CYBERCAFE",
     latency: 29,
     tags: "cybercafe,bbs,forum,ascii,chat,lounge,irc,mirc,jukebox,lan,overclock,guestbook,cctv,radio,shoutcast,equalizer"
+  },
+  {
+    id: "#021",
+    num: 21,
+    name: "Assembly '99 Demoscene Party Vault",
+    handle: "FLARELIGHT_Crew",
+    category: "demoscene",
+    url: "/web/demoscene.html",
+    desc: "Real-time 64K intro Canvas effect switcher (multi-sine plasma, affine rotozoom, 3D starfield, Amiga copper bars, metaballs), ANSI .NFO studio with KiloOS VFS save, and live party voting board.",
+    tech: "HTML 4.01 / Mode 13h Canvas / YM2612 2-Op FM / SPC700 Delay / ANSI Studio / VFS IPC",
+    badgeLabel: "ASSEMBLY '99",
+    latency: 25,
+    tags: "demoscene,assembly99,64k,plasma,rotozoom,starfield,copper,metaballs,nfo,chiptune,ym2612,compo,voting,helsinki"
+  },
+  {
+    id: "#024",
+    num: 24,
+    name: "Trapster P2P Chiptune Swarm v1.0b",
+    handle: "NapsterCat_99",
+    category: "demoscene",
+    url: "/web/trapster.html",
+    desc: "Decentralized peer-to-peer MP3 & MOD audio exchange, simulated 56k/T1 download queue, live YM2612 FM chiptune & tracker player, and KiloOS VFS /home/music/ audio export.",
+    tech: "P2P Swarm Engine / YM2612 2-Op FM / Tracker Audio / VFS IPC / Web Audio",
+    badgeLabel: "TRAPSTER P2P",
+    latency: 33,
+    tags: "trapster,p2p,napster,mp3,mod,chiptune,tracker,swarm,music,sharing,vfs"
+  },
+  {
+    id: "#023",
+    num: 23,
+    name: "SlashNet: News for Nerds (1999)",
+    handle: "CmdrTaco_99",
+    category: "community",
+    url: "/web/slashnet.html",
+    desc: "Open tech news bulletin: community karma moderation (-1 Troll to +5 Insightful), threaded discussions, Beowulf cluster benchmark calculator & Linux 2.2 kernel compile simulator.",
+    tech: "HTML 4.01 / Karma Moderation / Beowulf Benchmark / Linux 2.2 Sim / VFS Article Export",
+    badgeLabel: "SLASHNET '99",
+    latency: 21,
+    tags: "slashnet,news,nerds,karma,beowulf,linux,kernel,moderation,discussion,tech,vfs"
+  },
+  {
+    id: "#025",
+    num: 25,
+    name: "Cabled Magazine 1999 Cyber Edition",
+    handle: "Editor_Cabled",
+    category: "community",
+    url: "/web/cabled.html",
+    desc: "1999 cyberculture journal with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, and Hype-vs-Reality matrix.",
+    tech: "HTML 4.01 / Y2K Audit Matrix / Dot-Com IPO Simulator / Jargon Watch / VFS IPC",
+    badgeLabel: "CABLED MAG",
+    latency: 24,
+    tags: "cabled,wired,magazine,cyberculture,y2k,ipo,dotcom,jargon,venture,technology,vfs"
+  },
+  {
+    id: "#026",
+    num: 26,
+    name: "The Scallion: 1999 Satirical News",
+    handle: "SatireBureau",
+    category: "community",
+    url: "/web/scallion.html",
+    desc: "The premier satirical news wire of 1999, featuring deadpan Y2K bunker alerts, Ask A Sysadmin interactive column, breaking parody wire dispatches & Infographic Forge.",
+    tech: "HTML 4.01 / Satire Wire / Ask A Sysadmin / Infographic Forge / VFS IPC",
+    badgeLabel: "THE SCALLION",
+    latency: 27,
+    tags: "scallion,onion,satire,humor,sysadmin,y2k,news,parody,headlines,infographic,vfs"
+  },
+  {
+    id: "#022",
+    num: 22,
+    name: "IETF 1999 Living RFC Workbench",
+    handle: "RFC_Editor",
+    category: "tools",
+    url: "/web/rfc_archive.html",
+    desc: "Living protocol laboratory: interactive RFC 1149 carrier pigeon packet simulator, RFC 2324 HTCPCP coffee pot console (418 I'm a teapot), RFC 793 TCP state stepper, and KiloOS VFS RFC export.",
+    tech: "HTML 4.01 / Web Audio / RFC 1149 Engine / HTCPCP Console / TCP Stepper / VFS IPC",
+    badgeLabel: "IETF RFCs",
+    latency: 18,
+    tags: "ietf,rfc,rfc1149,rfc2324,rfc793,tcp,htcpcp,avian,carrier,protocol,coffee,vfs"
   },
   {
     id: "#007",
@@ -3789,84 +3906,6 @@ const DEFAULT_RING_NODES = [
     badgeLabel: "DARKNET 0x7F",
     latency: 7,
     tags: "darknet,terminal,packet,sniffer,subterranean,forensics,hex,memory,modem,fsk,interlock,nfo,stego,warez,cryptography,feistel,rc4,pgp,otp,bluebox,phreaking,deaddrop"
-  },
-  {
-    id: "#021",
-    num: 21,
-    name: "Assembly '99 Demoscene Party Vault",
-    handle: "FLARELIGHT_Crew",
-    category: "demoscene",
-    url: "/web/demoscene.html",
-    desc: "Real-time 64K intro Canvas effect switcher (multi-sine plasma, affine rotozoom, 3D starfield, Amiga copper bars, metaballs), ANSI .NFO studio with KiloOS VFS save, and live party voting board.",
-    tech: "HTML 4.01 / Mode 13h Canvas / YM2612 2-Op FM / SPC700 Delay / ANSI Studio / VFS IPC",
-    badgeLabel: "ASSEMBLY '99",
-    latency: 25,
-    tags: "demoscene,assembly99,64k,plasma,rotozoom,starfield,copper,metaballs,nfo,chiptune,ym2612,compo,voting,helsinki"
-  },
-  {
-    id: "#022",
-    num: 22,
-    name: "IETF 1999 Living RFC Workbench",
-    handle: "RFC_Editor",
-    category: "tools",
-    url: "/web/rfc_archive.html",
-    desc: "Living protocol laboratory: interactive RFC 1149 carrier pigeon packet simulator, RFC 2324 HTCPCP coffee pot console (418 I'm a teapot), RFC 793 TCP state stepper, and KiloOS VFS RFC export.",
-    tech: "HTML 4.01 / Web Audio / RFC 1149 Engine / HTCPCP Console / TCP Stepper / VFS IPC",
-    badgeLabel: "IETF RFCs",
-    latency: 18,
-    tags: "ietf,rfc,rfc1149,rfc2324,rfc793,tcp,htcpcp,avian,carrier,protocol,coffee,vfs"
-  },
-  {
-    id: "#023",
-    num: 23,
-    name: "SlashNet: News for Nerds (1999)",
-    handle: "CmdrTaco_99",
-    category: "community",
-    url: "/web/slashnet.html",
-    desc: "Open tech news bulletin: community karma moderation (-1 Troll to +5 Insightful), threaded discussions, Beowulf cluster benchmark calculator & Linux 2.2 kernel compile simulator.",
-    tech: "HTML 4.01 / Karma Moderation / Beowulf Benchmark / Linux 2.2 Sim / VFS Article Export",
-    badgeLabel: "SLASHNET '99",
-    latency: 21,
-    tags: "slashnet,news,nerds,karma,beowulf,linux,kernel,moderation,discussion,tech,vfs"
-  },
-  {
-    id: "#024",
-    num: 24,
-    name: "Trapster P2P Chiptune Swarm v1.0b",
-    handle: "NapsterCat_99",
-    category: "demoscene",
-    url: "/web/trapster.html",
-    desc: "Decentralized peer-to-peer MP3 & MOD audio exchange, simulated 56k/T1 download queue, live YM2612 FM chiptune & tracker player, and KiloOS VFS /home/music/ audio export.",
-    tech: "P2P Swarm Engine / YM2612 2-Op FM / Tracker Audio / VFS IPC / Web Audio",
-    badgeLabel: "TRAPSTER P2P",
-    latency: 33,
-    tags: "trapster,p2p,napster,mp3,mod,chiptune,tracker,swarm,music,sharing,vfs"
-  },
-  {
-    id: "#025",
-    num: 25,
-    name: "Cabled Magazine 1999 Cyber Edition",
-    handle: "Editor_Cabled",
-    category: "community",
-    url: "/web/cabled.html",
-    desc: "1999 cyberculture journal with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, and Hype-vs-Reality matrix.",
-    tech: "HTML 4.01 / Y2K Audit Matrix / Dot-Com IPO Simulator / Jargon Watch / VFS IPC",
-    badgeLabel: "CABLED MAG",
-    latency: 24,
-    tags: "cabled,wired,magazine,cyberculture,y2k,ipo,dotcom,jargon,venture,technology,vfs"
-  },
-  {
-    id: "#026",
-    num: 26,
-    name: "The Scallion: 1999 Satirical News",
-    handle: "SatireBureau",
-    category: "community",
-    url: "/web/scallion.html",
-    desc: "The premier satirical news wire of 1999, featuring deadpan Y2K bunker alerts, Ask A Sysadmin interactive column, breaking parody wire dispatches & Infographic Forge.",
-    tech: "HTML 4.01 / Satire Wire / Ask A Sysadmin / Infographic Forge / VFS IPC",
-    badgeLabel: "THE SCALLION",
-    latency: 27,
-    tags: "scallion,onion,satire,humor,sysadmin,y2k,news,parody,headlines,infographic,vfs"
   },
   {
     id: "#020",
@@ -4627,6 +4666,10 @@ function switchTab(targetId) {
       pane.classList.remove('active');
     }
   });
+
+  if (targetId === 'tab-guestbook' || targetId === 'tab-community' || targetId === 'tab-badge') {
+    if (typeof window.connectFirebaseRtdb === 'function') window.connectFirebaseRtdb();
+  }
 
   if (typeof updateVoyagerPresenceTab === 'function') {
     updateVoyagerPresenceTab(targetId);
@@ -6182,6 +6225,33 @@ function initBaudBenchmark() {
    12. INTERACTIVE CONSORTIUM TOPOLOGY MAP ENGINE
    ========================================================================= */
 let topoMode = 'ring';
+let topoFilter = 'all';
+const CANONICAL_IDS = new Set(['#021', '#024', '#023', '#025', '#026', '#022']);
+const CANONICAL_GLYPHS = {
+  '#021': '💾',
+  '#024': '💿',
+  '#023': '📰',
+  '#025': '⚡',
+  '#026': '🧅',
+  '#022': '📜'
+};
+
+function setTopologyFilter(filter) {
+  topoFilter = filter;
+  if (typeof playSfx === 'function') playSfx('click');
+  const allBtn = document.getElementById('btnTopoFilterAll');
+  const canonBtn = document.getElementById('btnTopoFilterCanonical');
+  const demoBtn = document.getElementById('btnTopoFilterDemo');
+  const commBtn = document.getElementById('btnTopoFilterComm');
+  if (allBtn) allBtn.classList.toggle('active', filter === 'all');
+  if (canonBtn) canonBtn.classList.toggle('active', filter === 'canonical');
+  if (demoBtn) demoBtn.classList.toggle('active', filter === 'demoscene');
+  if (commBtn) commBtn.classList.toggle('active', filter === 'community');
+  if (typeof showNoticeToast === 'function') {
+    showNoticeToast(`Topology Filter: ${filter === 'canonical' ? 'Canonical 1999 Fleet (6 Sites)' : filter.toUpperCase()}`);
+  }
+}
+
 let topoSpeed = 1;
 let topoDir = 1; // 1 = clockwise, -1 = counter
 let topoAnimFrame = null;
@@ -6316,6 +6386,9 @@ function initTopologyMap() {
           if (found.node.isDead) {
             hudEl.innerHTML = `<span style="color:var(--amber-bright); font-weight:bold;">${found.node.name} (${found.node.id})</span> • Latency: ${found.node.latency}ms [ANOMALOUS / 1999Hz] • Gateway: echo-gw-07.kilonet.internal`;
             playFmTone(1999, 1.0, 0.3, 0.08, 0.04, true);
+          } else if (CANONICAL_IDS.has(found.node.id)) {
+            hudEl.innerHTML = `<span style="color:var(--amber-bright); font-weight:bold;">★ ${found.node.name} (${found.node.id})</span> <span style="color:var(--green-bright); font-size:10px;">[CANONICAL 1999 DESTINATION]</span> • Latency: ${found.node.latency}ms • Cat: ${found.node.category.toUpperCase()}`;
+            playFmTone(660, 1.2, 0.2, 0.06, 0.05, false);
           } else {
             hudEl.innerHTML = `<span style="color:var(--cyan); font-weight:bold;">${found.node.name} (${found.node.id})</span> • Latency: ${found.node.latency}ms • Cat: ${found.node.category.toUpperCase()}`;
           }
@@ -6458,7 +6531,18 @@ function drawTopologyMap(canvas, ctx) {
     const node = ringNodes[i];
 
     const isHovered = topoHoverNode && topoHoverNode.index === i;
-    const nodeR = isHovered ? 13 : 9;
+    const isCanonical = CANONICAL_IDS.has(node.id);
+    const nodeR = isHovered ? (isCanonical ? 15 : 13) : (isCanonical ? 11 : 9);
+
+    let isMatchFilter = true;
+    if (topoFilter === 'canonical') isMatchFilter = isCanonical;
+    else if (topoFilter === 'demoscene') isMatchFilter = (node.category === 'demoscene');
+    else if (topoFilter === 'community') isMatchFilter = (node.category === 'community');
+
+    ctx.save();
+    if (!isMatchFilter) {
+      ctx.globalAlpha = 0.20;
+    }
 
     if (node.isDead) {
       const nodeColor = isHovered ? "#fbbf24" : "rgba(245, 158, 11, 0.45)";
@@ -6493,6 +6577,7 @@ function drawTopologyMap(canvas, ctx) {
       const lx = cx + labelDist * Math.cos(a);
       const ly = cy + labelDist * Math.sin(a);
       ctx.fillText("???", lx, ly);
+      ctx.restore();
       continue;
     }
 
@@ -6505,8 +6590,17 @@ function drawTopologyMap(canvas, ctx) {
     else if (node.category === 'media') nodeColor = "#a78bfa";
     else if (node.category === 'tech') nodeColor = "#38bdf8";
 
+    // Golden aura for canonical nodes
+    if (isCanonical) {
+      ctx.strokeStyle = isHovered ? "#fde047" : "rgba(251, 191, 36, 0.8)";
+      ctx.lineWidth = isHovered ? 3 : 1.8;
+      ctx.beginPath();
+      ctx.arc(nx, ny, nodeR + 4, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
     ctx.fillStyle = isHovered ? "#ffffff" : nodeColor;
-    ctx.strokeStyle = isHovered ? nodeColor : "#070b16";
+    ctx.strokeStyle = isHovered ? (isCanonical ? "#fbbf24" : nodeColor) : "#070b16";
     ctx.lineWidth = isHovered ? 3 : 2;
 
     ctx.beginPath();
@@ -6514,13 +6608,23 @@ function drawTopologyMap(canvas, ctx) {
     ctx.fill();
     ctx.stroke();
 
+    // Canonical icon glyph in node center
+    if (isCanonical && CANONICAL_GLYPHS[node.id]) {
+      ctx.font = isHovered ? "11px sans-serif" : "9px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(CANONICAL_GLYPHS[node.id], nx, ny);
+    }
+
     // Node ID Label
-    ctx.fillStyle = isHovered ? "#fbbf24" : "#94a3b8";
-    ctx.font = isHovered ? "bold 10px monospace" : "9px monospace";
+    ctx.fillStyle = isHovered ? "#fbbf24" : (isCanonical ? "#fef08a" : "#94a3b8");
+    ctx.font = isHovered ? "bold 10px monospace" : (isCanonical ? "bold 9px monospace" : "9px monospace");
     const labelDist = radius + (isHovered ? 26 : 20);
     const lx = cx + labelDist * Math.cos(a);
     const ly = cy + labelDist * Math.sin(a);
     ctx.fillText(node.id, lx, ly);
+
+    ctx.restore();
   }
 }
 
@@ -7505,9 +7609,96 @@ function openNodeModal(nodeId) {
       &laquo; Prev: <a href="${prevNode.url}" style="color:var(--cyan);">${prevNode.name} (${prevNode.id})</a><br>
       &raquo; Next: <a href="${nextNode.url}" style="color:var(--cyan);">${nextNode.name} (${nextNode.id})</a>
     </div>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
+      <a href="${node.url}" class="btn-teleport" style="padding:6px 12px; font-size:11px; text-decoration:none;">
+        <span>🚀</span> Visit Site Directly
+      </a>
+      <button class="btn-action" onclick="closeNodeModal(); surfToNode('${node.id}');" style="padding:6px 12px; font-size:11px;">
+        <span>🏄</span> Open in Netscape Surfer
+      </button>
+      <button class="btn-action" onclick="closeNodeModal(); triggerTracerouteForNode('${node.id}');" style="padding:6px 12px; font-size:11px;">
+        <span>🛰️</span> Run Traceroute
+      </button>
+      <button class="btn-action" onclick="exportNodeVfsCard('${node.id}')" style="padding:6px 12px; font-size:11px;">
+        <span>💾</span> Export VFS Manifest
+      </button>
+    </div>
   `;
 
   modal.classList.add('open');
+}
+
+function surfToNode(nodeId) {
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  const idx = visibleNodes.findIndex(n => n.id === nodeId);
+  if (idx !== -1) {
+    currentSurfIndex = idx;
+    switchTab('tab-surf');
+    renderSurfViewport();
+  }
+}
+
+function directWarpToNode(nodeId) {
+  const node = ringNodes.find(n => n.id === nodeId);
+  if (!node) return;
+  if (typeof playSfx === 'function') playSfx('warp');
+  logNodeVisit(node.id);
+  window.location.href = node.url;
+}
+
+function saveToKiloVfs(vfsPath, contentStr, notifyMsg) {
+  try {
+    window.parent.postMessage({
+      type: 'VFS_WRITE',
+      path: vfsPath,
+      data: contentStr,
+      requestId: 'vfs_' + Date.now()
+    }, '*');
+    window.parent.postMessage({
+      type: 'OS_NOTIFY',
+      title: 'KiloNet Webring',
+      message: notifyMsg || ('Saved to VFS: ' + vfsPath)
+    }, '*');
+  } catch (e) {
+    console.warn("VFS postMessage failed:", e);
+  }
+  if (typeof showNoticeToast === 'function') {
+    showNoticeToast(notifyMsg || `Saved to KiloOS VFS: ${vfsPath}`);
+  }
+}
+
+function exportNodeVfsCard(nodeId) {
+  const node = ringNodes.find(n => n.id === nodeId);
+  if (!node) return;
+  const manifest = JSON.stringify({
+    consortium: "KiloNet 1999 Webring",
+    nodeId: node.id,
+    name: node.name,
+    category: node.category,
+    handle: node.handle,
+    url: node.url,
+    latency: node.latency,
+    tech: node.tech,
+    tags: node.tags,
+    exportedAt: new Date().toISOString()
+  }, null, 2);
+  saveToKiloVfs(`/home/downloads/node_${node.id.replace('#', '')}.json`, manifest, `Exported ${node.name} metadata to VFS!`);
+}
+
+function saveWidgetToVfs() {
+  const codeArea = document.getElementById('badgeSnippetOutput');
+  const content = codeArea ? codeArea.value : '';
+  if (!content) return;
+  saveToKiloVfs('/home/downloads/webring_widget.html', content, 'Webring widget saved to /home/downloads/webring_widget.html');
+}
+
+function saveBadgeToVfs() {
+  const canvas = document.getElementById('badge88Canvas');
+  const dataUri = canvas ? canvas.toDataURL('image/png') : '';
+  const topText = (document.getElementById('badge88TopText').value || "MEMBER OF").toUpperCase();
+  const bottomText = (document.getElementById('badge88BottomText').value || "KILONET '99").toUpperCase();
+  const htmlDoc = `<!DOCTYPE html>\n<html>\n<head><title>88x31 Micro Button</title></head>\n<body style="background:#0a0d14;color:#f1f5f9;font-family:monospace;padding:20px;text-align:center;">\n<h3>KiloNet 1999 88x31 Button: ${topText} - ${bottomText}</h3>\n<img src="${dataUri}" width="88" height="31" alt="${topText} ${bottomText}" style="image-rendering:pixelated;border:1px solid #38bdf8;">\n<p>Direct Base64 Data URI:</p>\n<textarea style="width:90%;height:100px;">${dataUri}</textarea>\n</body>\n</html>`;
+  saveToKiloVfs('/home/downloads/badge_88x31.html', htmlDoc, '88x31 badge saved to /home/downloads/badge_88x31.html');
 }
 
 function closeNodeModal() {
@@ -7944,6 +8135,7 @@ function copyCommBadgeEmbed() {
 /* Voyager Presence Functions */
 function openVoyagerModal() {
   playSfx('click');
+  if (typeof window.connectFirebaseRtdb === 'function') window.connectFirebaseRtdb();
   const handleInput = document.getElementById('voyagerHandleInput');
   if (handleInput) handleInput.value = userCallsign;
   renderVoyagersList();
@@ -9023,6 +9215,20 @@ function copyAsciiCertificate() {
   }
 }
 
+function resolveNodeMatch(query) {
+  if (!query) return -1;
+  const q = String(query).toLowerCase().trim();
+  const cleanQ = q.replace(/^(kweb:\/\/|\/web\/)/, '').replace(/\.html$/, '').replace(/^#/, '');
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  return visibleNodes.findIndex(n => {
+    const nid = n.id.toLowerCase().replace('#', '');
+    const nnum = String(n.num);
+    const nurl = n.url.toLowerCase().replace(/^(kweb:\/\/|\/web\/)/, '').replace(/\.html$/, '');
+    const nname = n.name.toLowerCase();
+    return nid === cleanQ || nnum === cleanQ || nurl === cleanQ || nurl.includes(cleanQ) || cleanQ.includes(nurl) || nname.includes(cleanQ);
+  });
+}
+
 /* =========================================================================
    16. INITIALIZATION ON PAGE LOAD
    ========================================================================= */
@@ -9055,7 +9261,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Check URL parameters for direct random warp trigger and 1999 RingMaster traversal actions
   const urlParams = new URLSearchParams(window.location.search);
   const ringAction = urlParams.get('action');
-  const targetId = urlParams.get('id') || urlParams.get('node');
+  const targetId = urlParams.get('id') || urlParams.get('node') || urlParams.get('from') || urlParams.get('site');
 
   if (urlParams.get('warp') === 'random' || ringAction === 'random') {
     switchTab('tab-teleport');
@@ -9064,20 +9270,21 @@ window.addEventListener('DOMContentLoaded', () => {
     const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
     let matchedIdx = 0;
     if (targetId) {
-      const cleanId = targetId.toLowerCase().replace(/^(kweb:\/\/|\/web\/)/, '').replace(/\.html$/, '');
-      const foundIdx = visibleNodes.findIndex(n => 
-        n.id.toLowerCase() === targetId.toLowerCase() ||
-        n.id.replace('#', '') === targetId ||
-        n.url.toLowerCase().includes(cleanId) ||
-        n.name.toLowerCase().includes(cleanId)
-      );
+      const foundIdx = resolveNodeMatch(targetId);
       if (foundIdx !== -1) matchedIdx = foundIdx;
     }
     const step = ringAction === 'next' ? 1 : ringAction === 'skip' ? 2 : -1;
     currentSurfIndex = (matchedIdx + step + visibleNodes.length) % visibleNodes.length;
+    const dest = visibleNodes[currentSurfIndex];
+
+    if (urlParams.get('direct') === '1' || urlParams.get('warp') === '1') {
+      logNodeVisit(dest.id);
+      window.location.href = dest.url;
+      return;
+    }
+
     switchTab('tab-surf');
     renderSurfViewport();
-    const dest = visibleNodes[currentSurfIndex];
     if (typeof showNoticeToast === 'function') {
       showNoticeToast(`Ring Traversal [${ringAction.toUpperCase()}]: Hop to ${dest.name} (${dest.id})`);
     }
@@ -9085,15 +9292,15 @@ window.addEventListener('DOMContentLoaded', () => {
     switchTab('tab-directory');
   } else if (ringAction === 'stats') {
     if (targetId) {
-      const node = ringNodes.find(n => n.id.toLowerCase() === targetId.toLowerCase() || n.id.replace('#', '') === targetId || n.url.includes(targetId));
-      if (node) openNodeModal(node.id);
+      const idx = resolveNodeMatch(targetId);
+      if (idx !== -1) openNodeModal(ringNodes[idx].id);
       else switchTab('tab-stats');
     } else {
       switchTab('tab-stats');
     }
   } else if (targetId && !ringAction) {
-    const node = ringNodes.find(n => n.id.toLowerCase() === targetId.toLowerCase() || n.id.replace('#', '') === targetId || n.url.includes(targetId));
-    if (node) openNodeModal(node.id);
+    const idx = resolveNodeMatch(targetId);
+    if (idx !== -1) openNodeModal(ringNodes[idx].id);
   }
 });
 
@@ -10107,25 +10314,42 @@ function executeCgiQuery() {
   let location = '/web/cybercafe.html';
   let body = '';
 
-  if (sel.indexOf('action=random') !== -1) {
-    const candidates = ['/web/portal.html', '/web/slashnet.html', '/web/trapster.html', '/web/cabled.html', '/web/scallion.html', '/web/demoscene.html', '/web/rfc_archive.html', '/web/cybercafe.html', '/web/geocities.html', '/web/warez.html', '/web/asm_temple.html', '/web/users/neon_rider.html'];
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  const qParams = new URLSearchParams(sel);
+  const act = qParams.get('action') || 'random';
+  const targetId = qParams.get('id');
+
+  if (act === 'random') {
+    const candidates = visibleNodes.map(n => n.url);
     location = candidates[Math.floor(Math.random() * candidates.length)];
-    body = 'Status: 302 Moved Temporarily\nLocation: ' + location + '\nX-Ring-Algorithm: PseudoRandom-Mersenne\nSet-Cookie: RING_VISITED=' + location + '; path=/\n\nRedirecting client to next random consortium destination...';
-  } else if (sel.indexOf('action=next') !== -1) {
-    location = '/web/geocities.html';
-    body = 'Status: 302 Moved Temporarily\nLocation: ' + location + '\nX-Ring-Hop: +1\n\nAdvancing clockwise along ring orbit...';
-  } else if (sel.indexOf('action=prev') !== -1) {
-    location = '/web/users/neon_rider.html';
-    body = 'Status: 302 Moved Temporarily\nLocation: ' + location + '\nX-Ring-Hop: -1\n\nReversing counter-clockwise along ring orbit...';
-  } else if (sel.indexOf('action=stats') !== -1) {
+    const match = visibleNodes.find(n => n.url === location) || visibleNodes[0];
+    body = `Status: 302 Moved Temporarily\nLocation: ${location}\nX-Ring-Algorithm: PseudoRandom-Mersenne-1999\nX-Ring-Target: ${match.name} (${match.id})\nSet-Cookie: RING_VISITED=${match.id}; path=/\n\nRedirecting client to random consortium destination: ${match.name}...`;
+  } else if (act === 'next' || act === 'prev' || act === 'skip') {
+    let fromIdx = 0;
+    if (targetId) {
+      const foundIdx = resolveNodeMatch(targetId);
+      if (foundIdx !== -1) fromIdx = foundIdx;
+    }
+    const step = act === 'next' ? 1 : act === 'skip' ? 2 : -1;
+    const toIdx = (fromIdx + step + visibleNodes.length) % visibleNodes.length;
+    const fromNode = visibleNodes[fromIdx];
+    const toNode = visibleNodes[toIdx];
+    location = toNode.url;
+    body = `Status: 302 Moved Temporarily\nLocation: ${location}\nX-Ring-Source: ${fromNode.name} (${fromNode.id})\nX-Ring-Destination: ${toNode.name} (${toNode.id})\nX-Ring-Hop: ${step > 0 ? '+' + step : step}\nSet-Cookie: RING_PREV_NODE=${fromNode.id}; path=/\nSet-Cookie: RING_CURR_NODE=${toNode.id}; path=/\n\nAdvancing ${step > 0 ? 'clockwise' : 'counter-clockwise'} along ring orbit to ${toNode.name}...`;
+  } else if (act === 'stats') {
+    let node = visibleNodes[0];
+    if (targetId) {
+      const idx = resolveNodeMatch(targetId);
+      if (idx !== -1) node = visibleNodes[idx];
+    }
     status = 'HTTP/1.0 200 OK';
-    body = 'Content-Type: text/plain\n\n--- WEBRING NODE STATS REPORT ---\nTarget ID: cybercafe\nRank: #4 / 18\nTotal Referrals In: 18,402\nTotal Referrals Out: 22,910\nTraffic Ratio: 1 : 1.24 (PASS)\nStatus: CERTIFIED COMPLIANT';
+    body = `Content-Type: text/plain\n\n--- WEBRING NODE STATS REPORT ---\nTarget ID: ${node.id} (${node.name})\nCategory: ${node.category.toUpperCase()}\nLatency: ${node.latency} ms (56k V.90)\nRank: #${node.num} / ${visibleNodes.length}\nTotal Referrals In: 28,490\nTotal Referrals Out: 31,120\nTraffic Ratio: 1 : 1.09 (PASS)\nStatus: 1999 CHARTER CERTIFIED & COMPLIANT`;
   } else {
     status = 'HTTP/1.0 200 OK';
-    body = 'Content-Type: text/html\n\n--- KILONET DIRECTORY INDEX ---\nTotal Registered Nodes: 18\nConsortium State: HEALTHY\nRing Master: ringmaster@kilonet.org';
+    body = `Content-Type: text/html\n\n--- KILONET DIRECTORY INDEX ---\nTotal Registered Nodes: ${visibleNodes.length} Active (1 Dormant Subsurface)\nConsortium State: HEALTHY UNBROKEN LOOP\nRing Master: ringmaster@kilonet.org`;
   }
 
-  term.textContent = status + '\nServer: Apache/1.3.9 (Unix) mod_perl/1.21\nDate: ' + time + '\n' + body.replace(/\\n/g, '\n');
+  term.textContent = status + '\nServer: Apache/1.3.9 (Unix) mod_perl/1.21\nDate: ' + time + '\n' + body;
   showNoticeToast('Perl CGI response received!');
 }
 
