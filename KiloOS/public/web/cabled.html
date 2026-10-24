@@ -2347,6 +2347,10 @@ function updatePortfolioUI() {
 function drawPortfolioChart() {
   const cvs = document.getElementById('portfolioChart');
   if (!cvs) return;
+  if (cvs.clientWidth) {
+    cvs.width = cvs.clientWidth;
+    cvs.height = cvs.clientHeight || 120;
+  }
   const ctx = cvs.getContext('2d');
   const w = cvs.width;
   const h = cvs.height;
@@ -2630,6 +2634,10 @@ function renderHypeCards() {
 function drawHypeRadar() {
   const cvs = document.getElementById('hypeRadarChart');
   if (!cvs) return;
+  if (cvs.clientWidth) {
+    cvs.width = cvs.clientWidth;
+    cvs.height = cvs.clientHeight || 320;
+  }
   const ctx = cvs.getContext('2d');
   const w = cvs.width;
   const h = cvs.height;
@@ -2828,6 +2836,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
   setInterval(updateTickerClock, 1000);
   setInterval(tickMarketDay, 5000); // automatic background tick every 5s
+  window.addEventListener('resize', () => {
+    drawPortfolioChart();
+    drawHypeRadar();
+  });
 });
 </script>
 </body>
