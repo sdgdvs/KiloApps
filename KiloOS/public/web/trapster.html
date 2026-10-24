@@ -2847,6 +2847,12 @@ function openHelpModal() {
   document.getElementById('nfoContent').textContent = 
 `TRAPSTER v1.0b - P2P Chiptune & Tracker Swarm (RFC-1999)
 ======================================================================
+KEYBOARD SHORTCUTS:
+  [F1] or [H] : Help & Documentation modal
+  [Space]     : Toggle Play / Pause audio playback
+  [M]         : Mute / Unmute all sound channels
+  [Esc]       : Dismiss active modal window
+
 FEATURES:
 1. Search & Filter:
    - Search across 48k+ Amiga ProTracker (.MOD), FastTracker II (.XM),
@@ -2872,6 +2878,38 @@ FEATURES:
 function openOptionsModal() {
   showToast('Options: Port 6667 / 6699 (TCP), VFS Destination: /home/music/');
 }
+
+// Global Keyboard Shortcut Navigation
+window.addEventListener('keydown', (e) => {
+  const isInput = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT');
+  if (e.key === 'Escape') {
+    document.getElementById('nfoModal').style.display = 'none';
+    closeShareModal();
+    return;
+  }
+  if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && !isInput)) {
+    e.preventDefault();
+    openHelpModal();
+    return;
+  }
+  if (!isInput) {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      playerTogglePlay();
+    } else if (e.key === 'm' || e.key === 'M') {
+      e.preventDefault();
+      const allMuted = channelMutes.every(m => m);
+      if (allMuted) {
+        unmuteAllChannels();
+      } else {
+        for (let i = 0; i < 6; i++) {
+          if (!channelMutes[i]) toggleChannelMute(i);
+        }
+        showToast('All channels muted [M]');
+      }
+    }
+  }
+});
 
 // --- Initialization ---
 window.addEventListener('DOMContentLoaded', () => {

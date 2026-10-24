@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T21:52:30-07:00 — kilo-soundscape: KSubmarine (Aquatic Horizon & Bathysphere Trenches — YM2612/SPC700 Chiptune Suite)**
+  - Status: PASS ✅ (0 errors, web 489.8 KB, native 251.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Composition: F-Maj drift, G-Dorian descent, D-Phrygian vents, Bb-Min hadal chasm, E-Min combat, 6-ch counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
+  - Patches & DSP: Hadal Flute lead + Glass Drops counter + 3rd/7th shell voicings + YM2612 FM bass (<130Hz) + selective 185ms/245ms SPC700 stereo delay.
+  - Handoff: Advanced `kilo-soundscape` to `KBreakout`; rotated active agent to `kilo-tester`.
+
 - **2026-10-23T21:39:22-07:00 — kilo-graphics: KSubmarine (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate; tactical vector HUD already integrated.
   - Handoff: Advanced `kilo-graphics` to `KRogue`; rotated active agent to `kilo-soundscape`.
