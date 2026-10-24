@@ -445,7 +445,10 @@ static void DrawTelemetryCards(HDC hdc, int x, int y, int w, int h) {
     k_strcat(buf, g_bandwidth_names[g_bandwidth_idx]);
     SetTextColor(hdc, COLOR_AMBER);
     TextOutA(hdc, x + 10, line_y, buf, k_strlen(buf));
-    line_y += 24;
+    line_y += 18;
+    SetTextColor(hdc, COLOR_CYAN);
+    TextOutA(hdc, x + 10, line_y, "Tuner: Shift=0.01k | L/R=0.10k | Ctrl=1.00k", 43);
+    line_y += 20;
 
     // Signal Carrier Lock
     if (g_carrier_locked) {
@@ -801,7 +804,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
         case WM_MOUSEWHEEL: {
             short zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
-            int step = (GetKeyState(VK_CONTROL) & 0x8000) ? 100 : ((GetKeyState(VK_SHIFT) & 0x8000) ? 1 : 10);
+            int step = (GetKeyState(VK_CONTROL) & 0x8000) ? 100 : ((GetKeyState(VK_SHIFT) & 0x8000) ? 1 : ((GetKeyState(VK_MENU) & 0x8000) ? 50 : 10));
             if (zDelta > 0) StepFrequency(step);
             else if (zDelta < 0) StepFrequency(-step);
             InvalidateRect(hwnd, NULL, FALSE);
@@ -818,13 +821,13 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 return 0;
             }
             if (wParam == VK_LEFT) {
-                int step = (GetKeyState(VK_CONTROL) & 0x8000) ? -100 : ((GetKeyState(VK_SHIFT) & 0x8000) ? -1 : -10);
+                int step = (GetKeyState(VK_CONTROL) & 0x8000) ? -100 : ((GetKeyState(VK_SHIFT) & 0x8000) ? -1 : ((GetKeyState(VK_MENU) & 0x8000) ? -50 : -10));
                 StepFrequency(step);
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
             if (wParam == VK_RIGHT) {
-                int step = (GetKeyState(VK_CONTROL) & 0x8000) ? 100 : ((GetKeyState(VK_SHIFT) & 0x8000) ? 1 : 10);
+                int step = (GetKeyState(VK_CONTROL) & 0x8000) ? 100 : ((GetKeyState(VK_SHIFT) & 0x8000) ? 1 : ((GetKeyState(VK_MENU) & 0x8000) ? 50 : 10));
                 StepFrequency(step);
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;

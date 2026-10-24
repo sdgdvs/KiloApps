@@ -238,6 +238,74 @@
   button.kbtn:focus-visible,
   select.kselect:focus-visible,
   .tab-btn:focus-visible,
+  
+  .tuner-step-badge {
+    font-size: 10px;
+    font-weight: bold;
+    padding: 3px 6px;
+    color: var(--cyan);
+    border: 1px solid var(--cyan);
+    background: rgba(51, 204, 255, 0.08);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+  }
+  .tuner-step-badge:hover {
+    background: rgba(51, 204, 255, 0.2);
+    box-shadow: 0 0 8px rgba(51, 204, 255, 0.4);
+  }
+  .tuner-step-badge.active-fine {
+    color: #fff;
+    background: rgba(51, 204, 255, 0.4);
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(51, 204, 255, 0.8);
+  }
+  .tuner-step-badge.active-coarse {
+    color: #000;
+    background: var(--amber);
+    border-color: var(--amber);
+    box-shadow: 0 0 10px rgba(255, 170, 0, 0.8);
+  }
+  .tuner-step-badge.active-medium {
+    color: #000;
+    background: var(--phosphor);
+    border-color: var(--phosphor);
+    box-shadow: 0 0 10px var(--phosphor-glow);
+  }
+
+  .decoder-hero-banner {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    background: rgba(10, 24, 17, 0.95);
+    border: 1px solid var(--border-bright);
+    padding: 8px 12px;
+    box-shadow: inset 0 0 10px rgba(51, 255, 102, 0.1);
+  }
+  @media (max-width: 760px) {
+    .decoder-hero-banner {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .hero-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .hero-label {
+    font-size: 10px;
+    color: var(--phosphor-dim);
+    letter-spacing: 0.5px;
+  }
+  .hero-value {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--phosphor);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .freq-readout:focus-visible {
     outline: 2px solid var(--phosphor);
     outline-offset: 1px;
@@ -320,6 +388,11 @@
   .confidence-meter-fill.warn {
     background: var(--amber);
     box-shadow: 0 0 6px var(--amber);
+  }
+
+    @media (max-width: 860px) {
+    #tab-decoder { flex-direction: column !important; overflow-y: auto !important; }
+    #tab-triangulation { flex-direction: column !important; overflow-y: auto !important; }
   }
 
   @media (max-width: 820px) {
@@ -692,6 +765,7 @@
       <div class="freq-readout" id="freqDisplay" tabindex="0" role="slider" aria-label="Receiver Frequency Tuner" aria-valuemin="1.0" aria-valuemax="120.0" aria-valuenow="10.19" aria-valuetext="10.19 kHz" title="Tuner: [Left/Right] +/-0.1k | [Shift+Left/Right] +/-0.01k | [Ctrl+Left/Right] +/-1k | [Wheel] Precision Tune | Click/Drag Waterfall">10.19 kHz</div>
       <button class="kbtn" id="btnFreqUpS">+0.1k &gt;</button>
       <button class="kbtn" id="btnFreqUpL">+1k &gt;&gt;</button>
+      <button class="kbtn tuner-step-badge" id="btnTunerStep" title="Precision Vernier: Click to cycle step, or hold Shift (0.01k fine), Ctrl (1.00k coarse), Alt (0.50k)">STEP: ±0.10k</button>
       <button class="kbtn warn" id="btnSweepToggle">SWEEP [SPACE]</button>
     </div>
 
@@ -793,6 +867,36 @@
         </div>
       </div>
 
+            <div class="panel" style="flex: 1.1;">
+        <div class="panel-header" style="justify-content: space-between;">
+          <span>DECODER TELEMETRY MONITOR</span>
+          <button class="kbtn" id="btnJumpDecoderTab" style="padding: 1px 5px; font-size: 10px;" title="Jump to Full DSP Forensic Decoder Tab">DSP DECODER ➔</button>
+        </div>
+        <div class="telemetry-card">
+          <div class="telemetry-row">
+            <span class="telemetry-label">CARRIER STATE:</span>
+            <span class="telemetry-value" id="sideCarrierState" style="color: var(--phosphor-dim);">SEARCHING NOISE</span>
+          </div>
+          <div class="telemetry-row">
+            <span class="telemetry-label">SIGNAL-TO-NOISE:</span>
+            <span class="telemetry-value" id="sideSnrVal">-4 dB</span>
+          </div>
+          <div class="telemetry-row" style="flex-direction: column; gap: 3px; border-bottom: none; margin-top: 2px;">
+            <div class="confidence-meter-bg">
+              <div class="confidence-meter-fill" id="sideSnrBar" style="width: 5%;"></div>
+            </div>
+          </div>
+          <div class="telemetry-row">
+            <span class="telemetry-label">LOCKED TARGET:</span>
+            <span class="telemetry-value" id="sideTargetName" style="color: var(--amber);">NONE</span>
+          </div>
+          <div class="telemetry-row">
+            <span class="telemetry-label">DECODED FRAME:</span>
+            <span class="telemetry-value" id="sideDecodedFrame" style="font-family: monospace; font-size: 11px; color: var(--cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px;">--</span>
+          </div>
+        </div>
+      </div>
+
       <div class="panel" style="flex: 1.5;">
         <div class="panel-header">
           <span>FORENSIC TELEMETRY STREAM</span>
@@ -811,6 +915,26 @@
         <span id="decoderLockLabel" style="color: var(--alert); font-weight: bold;">CARRIER LOCKED</span>
       </div>
       <div style="padding: 10px; display: flex; flex-direction: column; gap: 10px;">
+        <!-- Decoder Hero Readout -->
+        <div class="decoder-hero-banner" id="decoderHeroBanner">
+          <div class="hero-metric">
+            <div class="hero-label">RECEIVER STATUS</div>
+            <div class="hero-value" id="heroLockStatus" style="color: var(--phosphor-dim);">NO CARRIER LOCK</div>
+          </div>
+          <div class="hero-metric">
+            <div class="hero-label">SIGNAL-TO-NOISE RATIO</div>
+            <div class="hero-value" id="heroSnrVal">-4 dB (FLOOR)</div>
+          </div>
+          <div class="hero-metric">
+            <div class="hero-label">DOPPLER FREQ OFFSET</div>
+            <div class="hero-value" id="heroDopplerVal">Δf 0.00 kHz</div>
+          </div>
+          <div class="hero-metric">
+            <div class="hero-label">DEMOD PROTOCOL</div>
+            <div class="hero-value" id="heroProtocolVal" style="color: var(--cyan);">BELL-202 SUBTERRANEAN</div>
+          </div>
+        </div>
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;" class="decoder-grid">
           <div class="telemetry-card" style="border: 1px solid var(--border);">
             <div class="telemetry-row"><span class="telemetry-label">CARRIER LOCK:</span><span class="telemetry-value" id="decMetricLock">98.4%</span></div>
@@ -953,7 +1077,7 @@
     </div>
     <div class="status-right">
       <span>ANOMALIES: <strong id="footCatalogCount" style="color: var(--cyan);">0 / 12</strong></span>
-      <span>HOTKEYS: [F1] Manual | [F5] Save | [F9] Load | [Space] Sweep</span>
+      <span>HOTKEYS: [F1] Help | [←/→] Tune | [Shift+←/→] Fine | [Ctrl+←/→] Coarse | [Space] Sweep</span>
     </div>
   </footer>
 </div>
@@ -1310,7 +1434,7 @@
     }
   };
 
-  // Resize handling with HiDPI support
+  // Resize handling with HiDPI support & dynamic spectrogram buffer
   function resizeCanvases() {
     var dpr = window.devicePixelRatio || 1;
     var canvases = [wfCanvas, scopeCanvas, fftCanvas, triCanvas];
@@ -1327,6 +1451,27 @@
         }
       }
     });
+
+    // Dynamically adjust offscreen waterfall columns to match display backing resolution
+    if (wfCanvas && wfCanvas.width > 0 && wfCanvas.height > 0) {
+      var targetCols = Math.min(1024, Math.max(420, Math.round(wfCanvas.width)));
+      var targetRows = Math.min(512, Math.max(240, Math.round(wfCanvas.height)));
+      if (offCanvas.width !== targetCols || offCanvas.height !== targetRows) {
+        var tmp = document.createElement("canvas");
+        tmp.width = offCanvas.width;
+        tmp.height = offCanvas.height;
+        var tctx = tmp.getContext("2d");
+        tctx.drawImage(offCanvas, 0, 0);
+
+        offCanvas.width = targetCols;
+        offCanvas.height = targetRows;
+        WF_COLS = targetCols;
+        WF_ROWS = targetRows;
+        offCtx.fillStyle = "#000";
+        offCtx.fillRect(0, 0, targetCols, targetRows);
+        offCtx.drawImage(tmp, 0, 0, tmp.width, tmp.height, 0, 0, targetCols, targetRows);
+      }
+    }
   }
   window.addEventListener("resize", resizeCanvases);
 
@@ -1424,6 +1569,19 @@
     var decConf = document.getElementById("decMetricConfidence");
     var decBar = document.getElementById("decMetricConfidenceBar");
 
+    // Update Tab 1 Sidebar Decoder Monitor
+    var sideState = document.getElementById("sideCarrierState");
+    var sideSnr = document.getElementById("sideSnrVal");
+    var sideBar = document.getElementById("sideSnrBar");
+    var sideTarget = document.getElementById("sideTargetName");
+    var sideFrame = document.getElementById("sideDecodedFrame");
+
+    // Update Tab 2 Hero Banner
+    var heroLock = document.getElementById("heroLockStatus");
+    var heroSnr = document.getElementById("heroSnrVal");
+    var heroDoppler = document.getElementById("heroDopplerVal");
+    var heroProto = document.getElementById("heroProtocolVal");
+
     if (state.carrierLocked && state.lockedAnomaly) {
       var anom = state.lockedAnomaly;
       lockBox.className = "lock-indicator locked";
@@ -1435,15 +1593,38 @@
       document.getElementById("decoderLockLabel").textContent = "CARRIER LOCKED: " + anom.id;
       document.getElementById("decoderLockLabel").style.color = "var(--alert)";
 
+      if (sideState) {
+        sideState.textContent = "SYNCHRONIZED";
+        sideState.style.color = "var(--alert)";
+      }
+      if (sideSnr) sideSnr.textContent = "+" + state.snrDb + " dB (HIGH-Q)";
+      if (sideBar) {
+        sideBar.style.width = Math.min(100, Math.max(10, state.snrDb * 3)) + "%";
+        sideBar.className = "confidence-meter-fill alert";
+      }
+      if (sideTarget) sideTarget.textContent = anom.id + " (" + anom.name + ")";
+      if (sideFrame) sideFrame.textContent = anom.sig;
+
+      if (heroLock) {
+        heroLock.textContent = "CARRIER SYNCHRONIZED: " + anom.id;
+        heroLock.style.color = "var(--alert)";
+      }
+      if (heroSnr) heroSnr.textContent = "+" + state.snrDb + " dB (SNR HIGH)";
+      if (heroProto) heroProto.textContent = anom.mode + " / " + state.demodMode + " (LOCKED)";
+
       var curStation = STATIONS[state.stationIdx];
       var diffKhz = +(state.freq - anom.freq).toFixed(2);
 
       if (decLock) decLock.textContent = "99.4% (CARRIER SYNCHRONIZED)";
       if (decSnr) decSnr.textContent = "+" + state.snrDb + " dB (HIGH CONFIDENCE)";
+      var sign = diffKhz < 0 ? "-" : "+";
+      var shiftType = diffKhz < 0 ? " [RED SHIFT]" : " [BLUE SHIFT]";
+      var dopplerFormatted = sign + (Math.abs(diffKhz) * 0.12).toFixed(3) + " Hz/s" + shiftType;
       if (decDoppler) {
-        var sign = diffKhz < 0 ? "-" : "+";
-        var shiftType = diffKhz < 0 ? " [RED SHIFT]" : " [BLUE SHIFT]";
-        decDoppler.textContent = sign + (Math.abs(diffKhz) * 0.12).toFixed(3) + " Hz/s" + shiftType;
+        decDoppler.textContent = dopplerFormatted;
+      }
+      if (heroDoppler) {
+        heroDoppler.textContent = "Δf " + (diffKhz >= 0 ? "+" : "") + diffKhz + "k (" + dopplerFormatted + ")";
       }
       if (decMod) decMod.textContent = anom.mode + " / " + state.demodMode;
       if (decFreq) decFreq.textContent = anom.freq.toFixed(2) + " kHz";
@@ -1469,6 +1650,26 @@
 
       document.getElementById("decoderLockLabel").textContent = "NO CARRIER";
       document.getElementById("decoderLockLabel").style.color = "var(--phosphor-dim)";
+
+      if (sideState) {
+        sideState.textContent = "SEARCHING NOISE FLOOR";
+        sideState.style.color = "var(--phosphor-dim)";
+      }
+      if (sideSnr) sideSnr.textContent = "-4 dB (NOISE)";
+      if (sideBar) {
+        sideBar.style.width = "4%";
+        sideBar.className = "confidence-meter-fill";
+      }
+      if (sideTarget) sideTarget.textContent = "NONE / AWAITING LOCK";
+      if (sideFrame) sideFrame.textContent = "--";
+
+      if (heroLock) {
+        heroLock.textContent = "PASSBAND SEARCHING";
+        heroLock.style.color = "var(--phosphor-dim)";
+      }
+      if (heroSnr) heroSnr.textContent = "-4 dB (NOISE FLOOR)";
+      if (heroDoppler) heroDoppler.textContent = "Δf 0.00 kHz (STATIC)";
+      if (heroProto) heroProto.textContent = state.demodMode + " (IDLE)";
 
       if (decLock) decLock.textContent = "0.0% (PASSBAND SEARCHING)";
       if (decSnr) decSnr.textContent = "-4 dB (NOISE FLOOR)";
@@ -1671,22 +1872,25 @@
     wfCtx.fillStyle = state.carrierLocked ? "#ff3344" : "#ffaa00";
     wfCtx.fillText("f0 " + state.freq.toFixed(2) + " kHz", cx, rulerH / 2);
 
-    // 5. Geological Depth / Time history ticks along right edge
+    // 5. Geological Depth / Time history ticks along right edge (HiDPI crisp scaling)
     var strataTicks = [
-      { frac: 0.25, label: "T-4s" },
-      { frac: 0.50, label: "T-8s" },
-      { frac: 0.75, label: "T-12s" }
+      { frac: 0.15, label: "T-2s // Upper Strata" },
+      { frac: 0.38, label: "T-6s // Permian Salt (3.4km)" },
+      { frac: 0.62, label: "T-10s // Basalt Fault (6.2km)" },
+      { frac: 0.85, label: "T-14s // Deep Mantle (8.0km)" }
     ];
     wfCtx.textAlign = "right";
-    wfCtx.fillStyle = "rgba(51, 204, 255, 0.5)";
+    wfCtx.font = Math.round(9 * dpr) + "px 'Consolas', 'Courier New', monospace";
     strataTicks.forEach(function(st) {
       var ty = Math.round(wfCanvas.height * st.frac);
-      wfCtx.strokeStyle = "rgba(51, 204, 255, 0.4)";
+      wfCtx.strokeStyle = "rgba(51, 204, 255, 0.45)";
+      wfCtx.lineWidth = Math.max(1, Math.round(dpr));
       wfCtx.beginPath();
-      wfCtx.moveTo(wfCanvas.width - (10 * dpr), ty);
+      wfCtx.moveTo(wfCanvas.width - (14 * dpr), ty);
       wfCtx.lineTo(wfCanvas.width, ty);
       wfCtx.stroke();
-      wfCtx.fillText(st.label, wfCanvas.width - (12 * dpr), ty);
+      wfCtx.fillStyle = "rgba(51, 204, 255, 0.75)";
+      wfCtx.fillText(st.label, wfCanvas.width - (16 * dpr), ty);
     });
   }
 
@@ -1695,18 +1899,19 @@
     scopeCtx.fillStyle = "#000";
     scopeCtx.fillRect(0, 0, scopeCanvas.width, scopeCanvas.height);
 
+    var dpr = window.devicePixelRatio || 1;
     // Oscilloscope grid
     scopeCtx.strokeStyle = "rgba(32, 96, 56, 0.4)";
-    scopeCtx.lineWidth = 1;
+    scopeCtx.lineWidth = Math.max(1, Math.round(dpr));
     var midY = scopeCanvas.height / 2;
     scopeCtx.beginPath();
     scopeCtx.moveTo(0, midY);
     scopeCtx.lineTo(scopeCanvas.width, midY);
     scopeCtx.stroke();
 
-    // Waveform trace
+    // Waveform trace (HiDPI stroke)
     scopeCtx.strokeStyle = state.carrierLocked ? "var(--phosphor)" : "var(--phosphor-dim)";
-    scopeCtx.lineWidth = 1.5;
+    scopeCtx.lineWidth = Math.max(1, Math.round(1.5 * dpr));
     scopeCtx.beginPath();
 
     for (var x = 0; x < scopeCanvas.width; x++) {
@@ -2358,14 +2563,14 @@
     }
     if (e.key === "ArrowLeft") {
       e.preventDefault();
-      var stepL = e.ctrlKey ? -1.0 : (e.shiftKey ? -0.01 : (e.altKey ? -0.50 : -0.10));
-      stepFrequency(stepL);
+      var stepValL = getActiveStep(e);
+      stepFrequency(-stepValL);
       return;
     }
     if (e.key === "ArrowRight") {
       e.preventDefault();
-      var stepR = e.ctrlKey ? 1.0 : (e.shiftKey ? 0.01 : (e.altKey ? 0.50 : 0.10));
-      stepFrequency(stepR);
+      var stepValR = getActiveStep(e);
+      stepFrequency(stepValR);
       return;
     }
     if (e.key === "ArrowUp") {
@@ -2479,13 +2684,100 @@
     });
   }
 
+
+  // --- Tuner Precision Stepping Logic & Keyboard Enhancements ---
+  var BASE_STEPS = [0.01, 0.05, 0.10, 0.50, 1.00];
+  var baseStepIdx = 2; // Default 0.10 kHz
+
+  function getActiveStep(e) {
+    if (e) {
+      if (e.shiftKey) return 0.01;
+      if (e.ctrlKey) return 1.00;
+      if (e.altKey) return 0.50;
+    }
+    return BASE_STEPS[baseStepIdx];
+  }
+
+  function updateStepPill(modifier) {
+    var pill = document.getElementById("btnTunerStep");
+    if (!pill) return;
+    pill.classList.remove("active-fine", "active-coarse", "active-medium");
+    if (modifier === "shift") {
+      pill.textContent = "FINE: ±0.01k";
+      pill.classList.add("active-fine");
+    } else if (modifier === "ctrl") {
+      pill.textContent = "COARSE: ±1.00k";
+      pill.classList.add("active-coarse");
+    } else if (modifier === "alt") {
+      pill.textContent = "MEDIUM: ±0.50k";
+      pill.classList.add("active-medium");
+    } else {
+      var s = BASE_STEPS[baseStepIdx];
+      pill.textContent = "STEP: ±" + s.toFixed(2) + "k";
+      if (s === 0.01) pill.classList.add("active-fine");
+      else if (s >= 1.0) pill.classList.add("active-coarse");
+    }
+  }
+
+  var btnStepEl = document.getElementById("btnTunerStep");
+  if (btnStepEl) {
+    btnStepEl.addEventListener("click", function() {
+      baseStepIdx = (baseStepIdx + 1) % BASE_STEPS.length;
+      updateStepPill();
+      playUiClick(600 + baseStepIdx * 50);
+      logTerminal("[TUNER STEP] Precision increment set to ±" + BASE_STEPS[baseStepIdx].toFixed(2) + " kHz", "cyan");
+    });
+  }
+
+  window.addEventListener("keydown", function(e) {
+    if (e.key === "Shift") updateStepPill("shift");
+    if (e.key === "Control") updateStepPill("ctrl");
+    if (e.key === "Alt") updateStepPill("alt");
+  });
+  window.addEventListener("keyup", function(e) {
+    if (e.key === "Shift" || e.key === "Control" || e.key === "Alt") {
+      updateStepPill();
+    }
+  });
+
+  // Jump from Sidebar to Decoder Tab
+  var btnJumpDec = document.getElementById("btnJumpDecoderTab");
+  if (btnJumpDec) {
+    btnJumpDec.addEventListener("click", function() {
+      var decTabBtn = document.querySelector('.tab-btn[data-tab="tab-decoder"]');
+      if (decTabBtn) decTabBtn.click();
+    });
+  }
+
+  // Focus trapping utility for modals
+  function trapFocusModal(modalEl) {
+    if (!modalEl) return;
+    var focusables = modalEl.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusables.length) {
+      focusables[0].focus();
+      modalEl.onkeydown = function(e) {
+        if (e.key === "Tab") {
+          var first = focusables[0];
+          var last = focusables[focusables.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      };
+    }
+  }
+
   // --- Frequency Tuner Mouse Wheel Precision & Waterfall Click-to-Tune ---
   function attachWheelTuner(el) {
     if (!el) return;
     el.addEventListener("wheel", function(e) {
       e.preventDefault();
       var delta = e.deltaY < 0 ? 1 : -1;
-      var step = e.shiftKey ? 0.01 : (e.ctrlKey ? 1.0 : (e.altKey ? 0.50 : 0.05));
+      var step = getActiveStep(e);
       stepFrequency(+(delta * step).toFixed(2));
     }, { passive: false });
   }

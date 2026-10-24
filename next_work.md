@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ current_targets:
   kilo_graphics: KVoid
   kilo_soundscape: KFarm
   kilo_tester: KJournal
-  kilo_usability: KAnomaly
+  kilo_usability: KJournal
   kilo_qa: KJournal
   kilo_expander: KSteno
 virtual_web_target: kweb://rfc-archive
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
-  app: KSteno
-  timestamp: '2026-10-24T09:41:50-07:00'
+  agent: kilo-usability
+  app: KAnomaly
+  timestamp: '2026-10-24T09:52:54-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -139,17 +139,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KAnomaly`
+- **Active Target**: `KJournal`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
 | `KJournal` | `KiloOS/public/apps/kjournal.html`, `KJournal/main.c` | Responsive split entry list and markdown editor, line-length readability clamp, and clear save indicator. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Responsive tabular ledger at <640px, accessible color-blind friendly category tags, and modal focus traps. |
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Large card flip touch/keyboard ergonomics (`Space` to flip, `1-4` for ratings), responsive progress bar, and deck picker drawer. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
+| `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KJournal`
@@ -240,6 +240,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T09:52:54-07:00 — kilo-usability: KAnomaly (Usability, HiDPI Waterfall & Decoder Telemetry Polish)**
+  - Status: PASS ✅ (0 errors, web 114.4 KB, native 20.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - HiDPI & Spectrogram: Dynamic offscreen waterfall buffer scaling to backing resolution with preserved scanline history, dpr graticules and strata ticks.
+  - Tuner & Telemetry: Precision step pill (0.01k-1.00k via Shift/Ctrl/Alt or click), responsive decoder layout at <860px, hero status banner, and Tab 1 live decoder monitor.
+  - Handoff: Advanced `kilo-usability` to `KJournal`; rotated active agent to `kilo-qa`.
+
 - **2026-10-24T09:41:50-07:00 — kilo-tester: KSteno (Interactive UI Audit & Inline Repairs)**
   - Status: PASS (0 errors, web 156.9 KB, native 10.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - UI & Hotkey Audit: Verified LSB image/audio steganography, bitplane visualizer, RC4 passkey encryption, and modal dismissals.
@@ -262,9 +268,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ANSI .NFO archive & studio with multiple phosphor themes, ASCII frame generator, KPad/KHex launching, and VFS export.
   - Compo voting board with point tallying, category filtering, simulated release downloads, and subterranean 1999Hz mesh beacon.
   - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-24T09:08:05-07:00 — kilo-expander: KScript (Phase VI VFS Scripting API & Win32 Dual Parity)**
-  - Status: PASS ✅ (0 errors, web 156.4 KB, native 26.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.99%, HEAD Δ 11.68%, 0 fail, 0 warn, 8.7s)).
-  - Integrated KiloOS VFS mesh APIs (vfs_read, vfs_write, vfs_append, vfs_exists, vfs_size, vfs_copy, vfs_delete, os_launch, os_notify), VFS Open Picker toolbar integration, and KPad/KHex cross-launch actions.
-  - Native Win32 C parity: expanded VFS table to 32 slots, implemented string literal parsing for VFS functions, added VFS [Alt+V] toolbar button and explorer modal dialog.
-  - Handoff: Advanced `kilo-expander` to `KSteno`; rotated active agent to `kilo-creator`.
