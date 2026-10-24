@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_creator: kweb://trapster
   kilo_graphics: KSanctuary
   kilo_soundscape: KStellar
-  kilo_tester: KMech
+  kilo_tester: KSys
   kilo_usability: KMech
   kilo_qa: KTodo
   kilo_expander: KMech
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KCyber
-  timestamp: '2026-10-24T15:05:40-07:00'
+  agent: kilo-tester
+  app: KMech
+  timestamp: '2026-10-24T15:24:30-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -130,14 +130,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KMech`
+- **Active Target**: `KSys`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Fix #garage-rank not updating in updateGarage() (call getPilotRank(playerLevel)); implement actual enemyStunned=true stun effect on Head/Cockpit hit (currentTargetLimb===0) so enemyTurn() skips attack and vents heat per Manual; auto-restore kmech_save on boot; and trigger enemy overheat burnout damage when EMP pushes enemy heat over maxHeat. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
+| `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Fix #garage-rank not updating in updateGarage() (call getPilotRank(playerLevel)); implement actual enemyStunned=true stun effect on Head/Cockpit hit (currentTargetLimb===0) so enemyTurn() skips attack and vents heat per Manual; auto-restore kmech_save on boot; and trigger enemy overheat burnout damage when EMP pushes enemy heat over maxHeat. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KMech`
@@ -276,6 +276,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T15:24:30-07:00 — kilo-tester: KMech (KMech UI & Combat Mechanics Overhaul)**
+  - PASS: Fixed #garage-rank sync via getPilotRank(playerLevel) in updateGarage()
+  - PASS: Implemented enemyStunned Cockpit strike stun effect skipping attack & venting heat
+  - PASS: Enabled EMP overload burnout damage when enemy heat exceeds maxHeat
+  - PASS: Added boot auto-restore of kmech_save with toast telemetry feedback
+  - Handoff: Advanced `kilo-tester` to `KSys`; rotated active agent to `kilo-usability`.
+
 - **2026-10-24T15:17:15-07:00 — kilo-adhoc: CI/CD & Firebase Hosting (Quota Self-Pruning, Node 22/24 & Submodule Fix)**
   - Diagnosed Firebase Hosting deploy failure (HTTP 429 RESOURCE_EXHAUSTED): 3,295 retained versions (~10.24 GB) exceeded the 10 GB Spark storage ceiling.
   - Added scripts/prune_firebase_versions.py and wired it into .github/workflows/deploy.yml (pruned >7.2 GB immediately, retaining live + 3 rollbacks), added paths: filtering, upgraded Node 20 -> 22 (FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true), and removed the orphaned TinyRetroPad 160000 gitlink (xit code 128).
@@ -295,9 +302,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-24T14:46:55-07:00 — kilo-adhoc: Orchestrator (Session File NTFS NUL-Byte Self-Healing & Atomic Writes)**
   - Diagnosed 3 orchestrator warnings (Expecting value: line 1 column 1 (char 0)): .agents/scheduler_session.json was zero-filled (486 NUL bytes) after an unclean shutdown during non-atomic write_text() at 2026-10-24T05:40:41Z.
   - Added tomic_write_json() (	mp + os.fsync + os.replace) and load_session_data() auto-healing in scripts/orchestrate.py, restored .agents/scheduler_session.json and .agents/fleet_nodes/node_c.json telemetry (351 turns), and exempted [ARGON REVIEW] specs from pre-flight skip lists.
-
-- **2026-10-24T14:40:16-07:00 — kilo-creator: kweb://slashnet (SlashNet 1999 Web Destination with Terminal Hotkeys & VFS)**
-  - Status: PASS ✅ (0 errors, web 87.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Added interactive keyboard hotkeys (J/K story jumping, S/B/L/P/V views, 0-5 quick threshold, ? help modal).
-  - Verified Karma moderation, Beowulf cluster workbench, Linux 2.2 compile sim, and KiloOS VFS integration.
-  - Handoff: Advanced `kilo-creator` to `kweb://trapster`; rotated active agent to `kilo-graphics`.

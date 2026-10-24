@@ -467,10 +467,15 @@ void QuickLoadNative() {
     }
 }
 
+void ApplyCooling(void);
+
 void EnemyTurn() {
     if (enemyStunned) {
         enemyStunned = false;
-        addLog("Enemy systems rebooting... Attack disrupted!");
+        enemyIsDefending = true;
+        addLog("Enemy cockpit stunned! Attack skipped while emergency cooling vents.");
+        AddShockwave(440.0f, 145.0f, 40.0f, RGB(255, 160, 0), 3.0f);
+        ApplyCooling();
         return;
     }
 
@@ -631,7 +636,12 @@ void ActionAttack() {
         // EMP Arc Disruptor extra enemy heat
         if (equipWpn == 4) {
             enemyStats.heat += 20;
-            if (enemyStats.heat > enemyStats.maxHeat) enemyStats.heat = enemyStats.maxHeat;
+            if (enemyStats.heat > enemyStats.maxHeat) {
+                int burnoutDmg = 15;
+                enemyStats.hp -= burnoutDmg;
+                addLog("CRITICAL ENEMY OVERHEAT! Burnout dealt 15 internal damage!");
+                AddShockwave(440.0f, 145.0f, 35.0f, RGB(255, 60, 20), 4.0f);
+            }
             addLog("EMP arc overloaded enemy capacitors (+20 heat)!");
         } else if (equipWpn == 5) {
             addLog("Particle lance pierced directly through armor plating!");
@@ -1889,6 +1899,8 @@ void MainEntry() {
     if (GetFileAttributesA("kmech_tutorial.dat") == INVALID_FILE_ATTRIBUTES &&
         GetFileAttributesA("kmech_save.dat") == INVALID_FILE_ATTRIBUTES) {
         gameState = STATE_HELP;
+    } else if (GetFileAttributesA("kmech_save.dat") != INVALID_FILE_ATTRIBUTES) {
+        QuickLoadNative();
     }
     
     HINSTANCE hInstance = GetModuleHandle(NULL);

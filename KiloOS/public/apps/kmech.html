@@ -1808,6 +1808,7 @@
         let enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3, maxHeat: 100, heat: 0 };
         let isDefending = false;
         let enemyIsDefending = false;
+        let enemyStunned = false;
         let isProcessingTurn = false;
         let playerLimbDamage = [0, 0, 0, 0, 0];
         let currentTargetLimb = 1;
@@ -1849,6 +1850,7 @@
                     heat: enemyStats.heat
                 } : null,
                 currentTargetLimb,
+                enemyStunned: !!enemyStunned,
                 playerLimbDamage: [...playerLimbDamage],
                 playerLegEvadeBoost,
                 isDefending,
@@ -1898,6 +1900,7 @@
                     heat: typeof d.enemyStats.heat === 'number' ? d.enemyStats.heat : 0
                 };
                 currentTargetLimb = (typeof d.currentTargetLimb === 'number') ? Math.abs(Math.floor(d.currentTargetLimb)) % limbs.length : 1;
+                enemyStunned = !!d.enemyStunned;
                 if (Array.isArray(d.playerLimbDamage) && d.playerLimbDamage.length === 5) {
                     playerLimbDamage = [...d.playerLimbDamage];
                 }
@@ -2583,6 +2586,8 @@
             document.getElementById('garage-credits').innerText = credits;
             document.getElementById('garage-salvage').innerText = salvage;
             document.getElementById('garage-level').innerText = playerLevel;
+            const rankEl = document.getElementById('garage-rank');
+            if (rankEl) rankEl.innerText = getPilotRank(playerLevel);
             document.getElementById('garage-xp').innerText = playerXp;
             document.getElementById('garage-next-xp').innerText = playerLevel * 100;
             document.getElementById('garage-hp').innerText = `${playerStats.hp}/${playerStats.maxHp}`;
@@ -2767,6 +2772,7 @@
             playerStats.heat = 0;
             isDefending = false;
             enemyIsDefending = false;
+            enemyStunned = false;
             isProcessingTurn = false;
             playerLegEvadeBoost = 0;
             playerLimbDamage = [0, 0, 0, 0, 0];
@@ -2802,6 +2808,7 @@
         function endBattle(victory) {
             isProcessingTurn = false;
             isDefending = false;
+            enemyStunned = false;
             playerLegEvadeBoost = 0;
             document.getElementById('battle-actions').style.display = 'none';
             document.getElementById('post-battle-actions').style.display = 'flex';
@@ -2921,7 +2928,8 @@
 
                     // Subsystem tactical effects
                     if (currentTargetLimb === 0) {
-                        logMsg("CRITICAL COCKPIT STRIKE! Enemy systems rattled!");
+                        enemyStunned = true;
+                        logMsg("CRITICAL COCKPIT STRIKE! Enemy systems rattled and stunned!");
                     } else if (currentTargetLimb === 2) {
                         enemyStats.def = Math.max(0, enemyStats.def - 2);
                         logMsg("Enemy defensive armor sheared (-2 DEF)!");
@@ -2934,8 +2942,17 @@
                     }
 
                     if (equipWpn === 4) {
-                        enemyStats.heat = Math.min(enemyStats.maxHeat, enemyStats.heat + 16);
+                        enemyStats.heat += 16;
                         logMsg("EMP wave destabilized enemy reactor (+16 heat)!");
+                        if (enemyStats.heat > enemyStats.maxHeat) {
+                            const burnoutDmg = 15;
+                            enemyStats.hp -= burnoutDmg;
+                            triggerAnim('enemy-mech-container', 'damaged', 450);
+                            playSound('alarm');
+                            spawnExplosion(478, 70, 15, false);
+                            logMsg(`CRITICAL ENEMY OVERHEAT! Reactor burnout dealt ${burnoutDmg} internal damage!`);
+                            showToast(`🔥 ENEMY REACTOR OVERHEAT! Dealt ${burnoutDmg} burnout damage!`, 2500, 'warning');
+                        }
                     } else if (equipWpn === 5) {
                         logMsg("Particle lance pierced directly through enemy armor plating!");
                     } else if (equipWpn === 6) {
@@ -2989,6 +3006,18 @@
             if (enemyStats.hp <= 0 || document.getElementById('battle-actions').style.display === 'none') {
                 isProcessingTurn = false;
                 isDefending = false;
+                return;
+            }
+
+            if (enemyStunned) {
+                enemyStunned = false;
+                enemyIsDefending = true;
+                logMsg("Enemy cockpit stunned! Action skipped while emergency cooling vents.");
+                addShockwave(478, 70, 50, '#ffaa00', 4);
+                applyCooling();
+                updateBattle();
+                isDefending = false;
+                isProcessingTurn = false;
                 return;
             }
 
@@ -3079,20 +3108,35 @@
             updateBattle();
         }
 
-        updateGarage();
         updateSoundButton();
         if (soundEnabled) {
             setBgmMode('hangar');
         }
 
-        // Welcome prompt on fresh startup only (Pass 5 tutorial integrity)
+        // Auto-restore kmech_save on boot if present
         const seenTutorial = safeGetStorage('kmech_tutorialSeen');
         const hasSavedGame = safeGetStorage('kmech_save');
-        if (!seenTutorial && !hasSavedGame) {
-            setTimeout(() => {
-                showToast("🤖 PILOT ONLINE: Systems nominal. Press [F1] for Pilot's Manual, [F2] Backup, [F5] Save, [D] to deploy.", 4500);
-                safeSetStorage('kmech_tutorialSeen', '1');
-            }, 300);
+        let restoredOnBoot = false;
+        if (hasSavedGame) {
+            try {
+                const parsed = JSON.parse(hasSavedGame);
+                if (restoreSavePayload(parsed)) {
+                    restoredOnBoot = true;
+                    showToast(`📂 Telemetry restored: ${getPilotRank(playerLevel)} (Battle #${battleCount})`, 3000, 'info');
+                }
+            } catch (e) {
+                // Ignore parse errors on boot
+            }
+        }
+
+        if (!restoredOnBoot) {
+            updateGarage();
+            if (!seenTutorial) {
+                setTimeout(() => {
+                    showToast("🤖 PILOT ONLINE: Systems nominal. Press [F1] for Pilot's Manual, [F2] Backup, [F5] Save, [D] to deploy.", 4500);
+                    safeSetStorage('kmech_tutorialSeen', '1');
+                }, 300);
+            }
         }
 
         // Comprehensive keyboard navigation
