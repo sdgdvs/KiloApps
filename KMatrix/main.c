@@ -62,6 +62,8 @@ static void k_strcat(char* dst, const char* src) {
 #define ID_BTN_SAVE         107
 #define ID_BTN_LOAD         108
 #define ID_BTN_CLEAR        109
+#define ID_BTN_CODEBOOK     110
+#define ID_BTN_WATERFALL    111
 
 // Colors
 static COLORREF COLOR_BG = RGB(8, 18, 10);
@@ -229,6 +231,8 @@ static void ShowHelp(HWND hwnd) {
         "  status, sys           - View breach telemetry\r\n"
         "  scan, sectors         - Probe quarantined sectors & clues\r\n"
         "  breach <sec> <key>    - Decrypt target sector\r\n"
+        "  codebook              - Subterranean codebook decrypter\r\n"
+        "  waterfall             - RF frequency waterfall & telemetry\r\n"
         "  override <key>        - Master override bypass\r\n"
         "  save, load            - Quicksave (F5) / Quickload (F9)\r\n"
         "  clear, cls            - Clear terminal screen\r\n\r\n"
@@ -276,6 +280,8 @@ static void ProcessCommand(HWND hwnd, const char* input) {
         AppendOutput("  status, sys          - Sector breach telemetry");
         AppendOutput("  scan, sectors        - Diagnostic clue scan");
         AppendOutput("  breach <sec> <key>   - Submit decryption key");
+        AppendOutput("  codebook, decrypt    - Subterranean codebook decrypter table");
+        AppendOutput("  waterfall, cascade   - RF frequency waterfall & audio telemetry");
         AppendOutput("  override <key>       - Master override token");
         AppendOutput("  save, load           - Quicksave [F5] / Quickload [F9]");
         AppendOutput("  clear, cls           - Clear terminal buffer");
@@ -313,6 +319,38 @@ static void ProcessCommand(HWND hwnd, const char* input) {
         } else {
             AppendOutput("BREACH FAILED: Key rejected. Inspect sector clue via 'scan'.");
         }
+    } else if (k_strcasecmp(cmd, "codebook") == 0 || k_strcasecmp(cmd, "decrypt") == 0) {
+        AppendOutput("=== SUBTERRANEAN CODEBOOK DECRYPTER (ARG 1999) ===");
+        AppendOutput("INDEX | SECTOR ID   | ORIGIN VECTOR | CIPHER KEY / HASH  | STATUS");
+        AppendOutput("------+-------------+---------------+--------------------+---------");
+        int i;
+        char line[256];
+        for (i = 0; i < NUM_SECTORS; i++) {
+            const char* origin = "KHex/KCalc";
+            if (i == 1) origin = "KSynth/YM2612";
+            else if (i == 2) origin = "KBBS/Darknet";
+            else if (i == 3) origin = "KPad/VFS";
+            else if (i == 4) origin = "KDirector";
+            wsprintfA(line, " [0%d]  | %s | %s | %s | %s",
+                i + 1, g_sectors[i].id, origin, g_sectors[i].key1,
+                g_sectors[i].breached ? "BREACHED" : "LOCKED");
+            AppendOutput(line);
+        }
+        AppendOutput("Use 'breach <SECTOR_ID> <KEY>' to authenticate codebook entries.");
+    } else if (k_strcasecmp(cmd, "waterfall") == 0 || k_strcasecmp(cmd, "cascade") == 0) {
+        AppendOutput("=== RF FREQUENCY WATERFALL & SPECTRAL CASCADE ===");
+        AppendOutput("FREQ (Hz) | SPECTRAL POWER DENSITY                 | SNR / TELEMETRY");
+        AppendOutput("----------+----------------------------------------+-----------------");
+        AppendOutput(" 0100 Hz  | ||..                                   | -42 dB [NOISE FLOOR]");
+        AppendOutput(" 0440 Hz  | ||||....                               | -36 dB [CONCERT A REF]");
+        AppendOutput(" 0880 Hz  | ||||||..                               | -30 dB [HARMONIC 2X]");
+        AppendOutput(" 1200 Hz  | |||.....                               | -38 dB [NOISE INTERFERENCE]");
+        AppendOutput(" 1760 Hz  | ||||||||||||                           | -19 dB [PRE-CARRIER RISING]");
+        AppendOutput(" 1999 Hz  | |||||||||||||||||||||||||||||||||||||||| | +18 dB [*** CARRIER LOCK ***]");
+        AppendOutput(" 2200 Hz  | |||||||.....                           | -28 dB [SPC700 ECHO FILTER]");
+        AppendOutput(" 2400 Hz  | |||.........                           | -44 dB [HF CUTOFF]");
+        AppendOutput("TELEMETRY: Carrier at 1999.00 Hz locked. YM2612 2-Op FM ratio: 2:1.");
+        Beep(1999, 150);
     } else if (k_strcasecmp(cmd, "override") == 0) {
         if (k_strcasecmp(arg1, "ECHO-1999-ARCHITECT") == 0) {
             AppendOutput("MASTER OVERRIDE ACCEPTED: All sectors breached.");
@@ -407,6 +445,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 715, 430, 80, 24, hwnd, (HMENU)ID_BTN_CLEAR, GetModuleHandleA(NULL), NULL);
             SendMessageA(hBtn, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
 
+            hBtn = CreateWindowA("BUTTON", "CODEBOOK", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                260, 430, 95, 24, hwnd, (HMENU)ID_BTN_CODEBOOK, GetModuleHandleA(NULL), NULL);
+            SendMessageA(hBtn, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
+
+            hBtn = CreateWindowA("BUTTON", "WATERFALL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                360, 430, 95, 24, hwnd, (HMENU)ID_BTN_WATERFALL, GetModuleHandleA(NULL), NULL);
+            SendMessageA(hBtn, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
+
             AppendOutput("KMATRIX // RETRO FORENSIC MASTER TERMINAL INITIALIZED");
             AppendOutput("Milestone #100 // Autonomous Fleet Kernel v1.0.0");
             AppendOutput("Type 'help' or 'scan' to inspect quarantined sectors.\r\n");
@@ -441,6 +487,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 QuickLoadState();
             } else if (wmId == ID_BTN_CLEAR) {
                 SetWindowTextA(g_hEditOutput, "");
+            } else if (wmId == ID_BTN_CODEBOOK) {
+                ProcessCommand(hwnd, "codebook");
+            } else if (wmId == ID_BTN_WATERFALL) {
+                ProcessCommand(hwnd, "waterfall");
             }
             break;
         }

@@ -694,6 +694,36 @@
 (function() {
   'use strict';
 
+  // --- STORAGE HELPERS (QUALITY STANDARDS) ---
+  function safeGet(key, fallback = null) {
+    try {
+      const val = localStorage.getItem(key);
+      return val !== null ? val : fallback;
+    } catch(e) {
+      return fallback;
+    }
+  }
+
+  function safeSet(key, val) {
+    try {
+      localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
+
+  function safeGetJSON(key, fallback = null) {
+    try {
+      const val = localStorage.getItem(key);
+      if (val === null) return fallback;
+      return JSON.parse(val);
+    } catch(e) {
+      return fallback;
+    }
+  }
+
+
   // --- SECTOR MANIFEST (PURE DATA-DRIVEN ARCHITECTURE) ---
   const INITIAL_SECTORS = [
     {
@@ -1115,8 +1145,16 @@
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       stopMatrixRain();
-    } else if (state.matrixRain) {
-      startMatrixRain();
+      if (audioCtx && audioCtx.state === 'running') {
+        try { audioCtx.suspend(); } catch(e) {}
+      }
+    } else {
+      if (state.matrixRain) {
+        startMatrixRain();
+      }
+      if (audioCtx && audioCtx.state === 'suspended' && state.audioEnabled) {
+        try { audioCtx.resume(); } catch(e) {}
+      }
     }
   });
 
@@ -1184,6 +1222,8 @@
     printLine("  traceroute <ip>         - Trace multi-hop subterranean routing route");
     printLine("  sniff [count]           - Inspect raw network frames on subterranean socket");
     printLine("  matrix [on|off]         - Toggle digital rain visualizer (Shortcut: F2)");
+    printLine("  codebook, decrypt       - Subterranean codebook decrypter table");
+    printLine("  waterfall, cascade      - RF frequency waterfall & audio telemetry");
     printLine("  stats                   - Session telemetry, uptime & command metrics");
     printLine("  breach <sector> <key>   - Submit decryption key to unlock sector");
     printLine("  override <key>          - Master cryptographic override bypass");
@@ -1453,6 +1493,73 @@
     }
   }
 
+  // --- SUBTERRANEAN CODEBOOK DECRYPTER ---
+  function cmdCodebook(filter) {
+    printLine("=== SUBTERRANEAN CODEBOOK DECRYPTER (ARG 1999) ===", "cyan");
+    printLine("INDEX | SECTOR ID   | ORIGIN VECTOR | CIPHER KEY / HASH  | STATUS", "system");
+    printLine("------+-------------+---------------+--------------------+---------", "system");
+    const book = [
+      { id: "MEM_HEAP",    origin: "KHex/KCalc",   key: "7F1999",           name: "Memory Heap Buffer" },
+      { id: "AUDIO_DSP",   origin: "KSynth/YM2612",key: "1999HZ",           name: "DSP Resonance 1999Hz" },
+      { id: "NET_RELAY",   origin: "KBBS/Darknet", key: "10.19.99.4",       name: "Subterranean IPv4" },
+      { id: "STORAGE_VFS", origin: "KPad/KNote",   key: "RECOVERY_1999",    name: "Corrupted Archive" },
+      { id: "CORE_AI",     origin: "KDirector",    key: "AUTONOMOUS_FLEET", name: "Hive Mind Identity" }
+    ];
+
+    book.forEach((entry, idx) => {
+      const sec = state.sectors.find(s => s.id === entry.id);
+      const isBreached = sec && sec.status === 'BREACHED';
+      const statusText = isBreached ? "BREACHED" : "LOCKED";
+      const statusColor = isBreached ? "success" : "warn";
+      const line = ` [0${idx+1}]  | ${entry.id.padEnd(11, ' ')} | ${entry.origin.padEnd(13, ' ')} | ${entry.key.padEnd(18, ' ')} | ${statusText}`;
+      printLine(line, statusColor);
+    });
+    printLine("Use 'breach <SECTOR_ID> <KEY>' to authenticate codebook entries.", "system");
+    logTelemetry("Subterranean codebook decrypter table accessed.");
+  }
+
+  // --- RF FREQUENCY WATERFALL & AUDIO TELEMETRY ---
+  function cmdWaterfall() {
+    printLine("=== RF FREQUENCY WATERFALL & SPECTRAL CASCADE ===", "cyan");
+    printLine("FREQ (Hz) | SPECTRAL POWER DENSITY                 | SNR / TELEMETRY", "system");
+    printLine("----------+----------------------------------------+-----------------", "system");
+    const rows = [
+      { freq: " 0100 Hz", bar: "||..                                    ", snr: "-42 dB [NOISE FLOOR]" },
+      { freq: " 0440 Hz", bar: "||||....                                ", snr: "-36 dB [CONCERT A REF]" },
+      { freq: " 0880 Hz", bar: "||||||..                                ", snr: "-30 dB [HARMONIC 2X]" },
+      { freq: " 1200 Hz", bar: "|||.....                                ", snr: "-38 dB [NOISE INTERFERENCE]" },
+      { freq: " 1760 Hz", bar: "||||||||||||                            ", snr: "-19 dB [PRE-CARRIER RISING]" },
+      { freq: " 1999 Hz", bar: "||||||||||||||||||||||||||||||||||||||||", snr: "+18 dB [*** CARRIER LOCK ***]" },
+      { freq: " 2200 Hz", bar: "|||||||.....                            ", snr: "-28 dB [SPC700 ECHO FILTER]" },
+      { freq: " 2400 Hz", bar: "|||.........                            ", snr: "-44 dB [HF CUTOFF]" }
+    ];
+
+    rows.forEach(r => {
+      const isLock = r.freq.includes("1999");
+      printLine(`${r.freq} | ${r.bar} | ${r.snr}`, isLock ? "success" : "system");
+    });
+    printLine("TELEMETRY: Carrier at 1999.00 Hz locked. YM2612 2-Op FM modulation ratio: 2:1.", "cyan");
+    logTelemetry("Spectral waterfall scanned: 1999.00 Hz carrier peak detected (+18 dB SNR).");
+
+    if (state.audioEnabled) {
+      try {
+        initAudio();
+        if (audioCtx) {
+          const now = audioCtx.currentTime;
+          const osc = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          osc.frequency.setValueAtTime(1999, now);
+          g.gain.setValueAtTime(0.08, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+          osc.connect(g);
+          g.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.35);
+        }
+      } catch(e) {}
+    }
+  }
+
   // --- DEEP FEATURE EXPANSION: SESSION TELEMETRY & STATS ---
   function cmdStats() {
     const elapsedSec = Math.floor((Date.now() - state.startTime) / 1000);
@@ -1681,7 +1788,7 @@
 
   function saveState(notify = true) {
     try {
-      const data = JSON.stringify({
+      const data = {
         version: '1.1.0',
         sectors: state.sectors,
         scanlines: state.scanlines,
@@ -1690,11 +1797,14 @@
         theme: state.theme,
         completed: state.completed,
         savedAt: new Date().toISOString()
-      });
-      localStorage.setItem(STORAGE_KEY, data);
-      if (notify) {
-        printLine(`[QUICKSAVE] Session state stored to local storage (F5).`, "system");
-        SFX.key();
+      };
+      if (safeSet(STORAGE_KEY, data)) {
+        if (notify) {
+          printLine(`[QUICKSAVE] Session state stored to local storage (F5).`, "system");
+          SFX.key();
+        }
+      } else {
+        throw new Error("Storage write failure");
       }
     } catch(e) {
       printLine(`[QUICKSAVE ERROR] Could not persist state: ${e.message}`, "alert");
@@ -1703,12 +1813,11 @@
 
   function loadState(notify = true) {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
+      const data = safeGetJSON(STORAGE_KEY, null);
+      if (!data) {
         if (notify) printLine("[QUICKLOAD] No saved state found in local storage.", "warn");
         return false;
       }
-      const data = JSON.parse(raw);
       if (data && data.sectors) {
         state.sectors = data.sectors;
         if (data.scanlines !== undefined) state.scanlines = data.scanlines;
@@ -1719,6 +1828,10 @@
         if (data.audioEnabled !== undefined) state.audioEnabled = data.audioEnabled;
         if (data.theme) applyTheme(data.theme);
         if (data.completed) state.completed = data.completed;
+
+        // Ensure first-run tutorial is marked seen and closed on restore
+        safeSet('kmatrix_tutorialSeen', 'true');
+        tutorialModal.style.display = 'none';
 
         renderHUD();
         applyScanlines();
@@ -1882,6 +1995,14 @@
         else if (arg1 === 'off') toggleMatrixRain(false);
         else toggleMatrixRain();
         break;
+      case 'codebook':
+      case 'decrypt':
+        cmdCodebook(arg1);
+        break;
+      case 'waterfall':
+      case 'cascade':
+        cmdWaterfall();
+        break;
       case 'stats':
         cmdStats();
         break;
@@ -1951,7 +2072,7 @@
   // --- TAB AUTOCOMPLETE ---
   const AUTOCOMPLETE_LIST = [
     'help', 'status', 'scan', 'analyze', 'dump', 'disasm', 'entropy', 'ping', 'traceroute', 'sniff',
-    'matrix', 'rain', 'stats', 'breach', 'override', 'audio', 'theme', 'save', 'load', 'logexport',
+    'matrix', 'rain', 'codebook', 'decrypt', 'waterfall', 'cascade', 'stats', 'breach', 'override', 'audio', 'theme', 'save', 'load', 'logexport',
     'clear', 'cls', 'ascend', 'director', 'climax', 'replay', 'cutscene', 'fanfare',
     'MEM_HEAP', 'AUDIO_DSP', 'NET_RELAY', 'STORAGE_VFS', 'CORE_AI',
     '7F1999', '1999HZ', '10.19.99.4', 'RECOVERY_1999', 'AUTONOMOUS_FLEET'
@@ -1998,7 +2119,7 @@
     }
     if (e.key === 'Escape') {
       [splashModal, tutorialModal, helpModal, settingsModal, climaxModal].forEach(m => {
-        if (m.style.display !== 'none' && m !== splashModal) {
+        if (m && m.style.display !== 'none' && m !== splashModal) {
           m.style.display = 'none';
         }
       });
@@ -2117,7 +2238,7 @@
   }
 
   // Splash Screen handlers
-  const hasSave = localStorage.getItem(STORAGE_KEY) !== null;
+  const hasSave = safeGet(STORAGE_KEY) !== null;
   const btnStartContinue = document.getElementById('btnStartContinue');
   if (hasSave) {
     btnStartContinue.style.display = 'inline-block';
@@ -2145,9 +2266,9 @@
 
   function checkFirstRunTutorial() {
     try {
-      const seen = localStorage.getItem('kmatrix_tutorialSeen');
+      const seen = safeGet('kmatrix_tutorialSeen');
       if (!seen) {
-        localStorage.setItem('kmatrix_tutorialSeen', 'true');
+        safeSet('kmatrix_tutorialSeen', 'true');
         tutorialModal.style.display = 'flex';
       }
     } catch(e) {}

@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T07:17:40-07:00 — kilo-creator: kweb://scallion (The Scallion 1999 Satirical News portal & Phase VI VFS mesh)**
+  - Status: verified interactive 1999 satirical broadsheet (<250 KB budget, 91.5 KB actual)
+  - Integrated Ask A Sysadmin interactive agony column with live CRT teletype dispatch and VFS export
+  - Wired dual Infographic Lab (56k modem allocation + Duluth Bunker Matrix) and Headline Forge with KPad IPC
+  - Routed kweb://scallion in knet.html, portal.html, and webring.html with dual-target VFS mesh
+  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-24T06:37:51-07:00 — kilo-expander: KBBS (Phase VI VFS Bulletins Library & Inter-App KPad/KHex Launch Mesh)**
   - Status: PASS ✅ (0 errors, web 196.3 KB, native 106.0 KB < 999 KB; startup, Vite & security_lint PASS).
   - Enhanced File Area modal & door game exporters with direct VFS mesh actions to download ANSI .NFO/.TXT files to /home/bbs/ and launch KPad [P] or KHex [X] via OS_LAUNCH_APP.
