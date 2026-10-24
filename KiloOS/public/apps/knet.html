@@ -712,10 +712,6 @@
         <!-- Hidden Admin Section (Requires KDirector Password) -->
         <div id="adminPanel" style="display:none; flex-wrap:wrap; gap:6px; align-items:center; margin-top:4px; padding:4px 8px; background:rgba(30, 41, 59, 0.7); border:1px dashed #f59e0b; border-radius:4px;">
           <span style="font-size:11px; color:#f59e0b; font-weight:700;">🔒 CLASSIFIED ADMIN:</span>
-          <button class="btn-chip" data-url="kweb://darknet" style="color:#34d399; border-color:rgba(52, 211, 153, 0.4);">👁️ Darknet</button>
-          <button class="btn-chip" data-url="kweb://10.19.99.4/classified" style="color:#f59e0b; border-color:rgba(245, 158, 11, 0.4);">🔒 10.19.99.4</button>
-          <button class="btn-chip" data-url="kweb://deep-core" style="color:#22ff66; border-color:rgba(34, 255, 102, 0.4);">⚡ Deep Core</button>
-          <button class="btn-chip" data-url="kweb://echo-subsystem.net" style="color:#a78bfa; border-color:rgba(167, 139, 250, 0.4);">🔬 Echo Subsystem</button>
           <button class="btn-chip" data-url="/apps/kdirector.html" style="color:#fbbf24; border-color:rgba(251, 191, 36, 0.4);">🏛️ KDirector</button>
           <button class="btn-chip" data-url="echoes" style="color:#c084fc; border-color:rgba(192, 132, 252, 0.4);">🌌 Echoes</button>
           <button class="btn-chip" id="btnAdminLock" style="color:#ef4444; margin-left:auto; font-size:11px;" title="Lock Admin Session">Lock [✕]</button>
@@ -1137,10 +1133,7 @@
           <tr><td><code>kweb://users/~neon_rider</code></td><td>Access ~neon_rider's Win32 ASM &amp; Demoscene Devlog</td></tr>
           <tr><td><code>kweb://asm-temple</code></td><td>Access x86 Assembly Programming Shrine &amp; Opcode Converter</td></tr>
           <tr><td><code>kweb://warez</code></td><td>Access Underground Demoscene, Cracktro &amp; Chiptune Vault, glFTPd FXP Courier Race Arena &amp; PE-Pack '99 Entropy Forensics Lab</td></tr>
-          <tr><td><code>kweb://darknet</code></td><td>Access Node 0x7F Encrypted Relay, Blue Box Trunk &amp; Cryptography Lab</td></tr>
-          <tr><td><code>kweb://echo-subsystem.net</code></td><td>Access Tier 3 Acoustic Research Journal, SIGINT Phased Beamformer, Lithospheric Strata TDR, Helmholtz Cavity Resonator &amp; 4-Track Analog Tape Deck</td></tr>
-          <tr><td><code>kweb://10.19.99.4/classified</code></td><td>Access Classified Corporate Intranet Leak &amp; Memory Dumps</td></tr>
-          <tr><td><code>kweb://deep-core</code></td><td>Access Tier 3 Ghost Node Terminal &amp; Cryptographic Passkey Analyzer</td></tr>
+          <tr><td><code>💾 Spool VFS [Alt+S]</code></td><td>Save &amp; spool active page / response body to KiloOS VFS (<code>/home/downloads/</code>)</td></tr>
           <tr><td><code>Click Sniffer Row</code></td><td>Open deep frame dissection drawer (Ethernet, IP, Hex)</td></tr>
           <tr><td><code>ping:&lt;host&gt;</code></td><td>URL prefix to run Ping test on target host</td></tr>
           <tr><td><code>scan:&lt;host&gt;</code></td><td>URL prefix to run Port Scan on target host</td></tr>
@@ -1620,7 +1613,6 @@
         grp.id = 'adminBookmarksGroup';
         grp.label = '🔒 Classified Admin Console';
         grp.innerHTML = `
-          <option value="kweb://darknet">👁️ Node 0x7F Darknet</option>
           <option value="/apps/kdirector.html">🏛️ Director Console</option>
           <option value="echoes">🌌 Echoes Archive</option>
         `;
@@ -2177,6 +2169,13 @@
 
     const vfsPath = '/home/downloads/' + baseName;
     let content = currentRawText;
+    if (!content || content.startsWith('Error fetching source:')) {
+      try {
+        if (httpWebFrame && httpWebFrame.contentDocument && httpWebFrame.contentDocument.documentElement) {
+          content = '<!DOCTYPE html>\n' + httpWebFrame.contentDocument.documentElement.outerHTML;
+        }
+      } catch (e) {}
+    }
     if (!content || content.startsWith('Error fetching source:')) {
       content = `<!DOCTYPE html>\n<!-- Saved from KNet Spooler: ${curUrl} at ${new Date().toISOString()} -->\n<html>\n<head>\n  <title>${document.title} - Spooled: ${curUrl}</title>\n  <style>body{font-family:monospace;background:#030712;color:#38bdf8;padding:24px;}</style>\n</head>\n<body>\n  <h2>KNet Spooled Snapshot</h2>\n  <p><strong>URL:</strong> ${curUrl}</p>\n  <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>\n  <hr/>\n  <div id="content">\n${content || '(Empty payload)'}\n  </div>\n</body>\n</html>`;
     }

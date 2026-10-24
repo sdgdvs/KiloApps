@@ -77,9 +77,12 @@ void ShowHelpDialog(HWND hwnd) {
         "  • kweb:neon_rider    : ~neon_rider's 3DFX Glide & scene journal\n"
         "  • kweb:asm_temple    : x86 Assembly Temple size-coding hub\n"
         "  • kweb:warez         : 1999 Scene FTP & Keygen archive (Parody)\n"
-        "  • kweb:darknet       : Node 0x7F Decrypted Transmission\n"
-        "  • kweb:echo_subsystem: Echo-1999 Subcarrier Diagnostic Node\n"
-        "  • kweb:classified    : Classified ARPANET node 10.19.99.4\n"
+        "  • kweb:slashnet      : SlashNet news & cluster calc\n"
+        "  • kweb:trapster      : P2P Chiptune & tracker swarm\n"
+        "  • kweb:cabled        : Cabled 1999 cyber-magazine\n"
+        "  • kweb:scallion      : Satirical news & sysadmin lab\n"
+        "  • kweb:demoscene     : Assembly '99 64K intro vault\n"
+        "  • kweb:rfc-archive   : Living RFC workbench (1149/2324)\n"
         "  • ping:<host>        : Ping specified host (e.g. ping:8.8.8.8)\n"
         "  • scan:<host>        : Audit ports on host (incl. 1999 gaming)\n"
         "  • dns:<domain>       : Resolve DNS A-records\n"
@@ -604,6 +607,17 @@ void RunMeshRadar() {
 }
 
 
+static BOOL StrStartsWithI(const char* str, const char* prefix) {
+    while (*prefix) {
+        char c1 = *str++;
+        char c2 = *prefix++;
+        if (c1 >= 'A' && c1 <= 'Z') c1 += ('a' - 'A');
+        if (c2 >= 'A' && c2 <= 'Z') c2 += ('a' - 'A');
+        if (c1 != c2) return FALSE;
+    }
+    return TRUE;
+}
+
 void SpoolPageToVfs() {
     CreateDirectoryA("downloads", NULL);
     char urlBuf[256] = {0};
@@ -612,16 +626,16 @@ void SpoolPageToVfs() {
 
     char baseName[64] = "page";
     const char* p = urlBuf;
-    if (strncmp(p, "kweb://", 7) == 0) p += 7;
-    else if (strncmp(p, "kweb:", 5) == 0) p += 5;
-    else if (strncmp(p, "http://", 7) == 0) p += 7;
-    else if (strncmp(p, "https://", 8) == 0) p += 8;
+    if (StrStartsWithI(p, "kweb://")) p += 7;
+    else if (StrStartsWithI(p, "kweb:")) p += 5;
+    else if (StrStartsWithI(p, "https://")) p += 8;
+    else if (StrStartsWithI(p, "http://")) p += 7;
 
     int bi = 0;
     while (*p && *p != '/' && *p != '?' && *p != '#' && bi < 40) {
-        char c = *p++;
-        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '-') {
-            baseName[bi++] = c;
+        char ch = *p++;
+        if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_' || ch == '-') {
+            baseName[bi++] = ch;
         } else {
             baseName[bi++] = '_';
         }
@@ -633,7 +647,7 @@ void SpoolPageToVfs() {
     wsprintfA(filePath, "downloads\\%s.html", baseName);
 
     int textLen = GetWindowTextLengthA(hContentEdit);
-    char* textBuf = (char*)malloc(textLen + 1024);
+    char* textBuf = (char*)GlobalAlloc(GPTR, textLen + 1024);
     if (!textBuf) return;
     GetWindowTextA(hContentEdit, textBuf, textLen + 1);
 
@@ -655,11 +669,11 @@ void SpoolPageToVfs() {
         AddTrafficLog("VFS", filePath, "SPOOLED", 10, written);
         MessageBeep(MB_OK);
     }
-    free(textBuf);
+    GlobalFree(textBuf);
 }
 
 void ShowVirtualWeb(const char* site) {
-    } else if (lstrcmpiA(site, "slashnet") == 0 || lstrcmpiA(site, "kweb:slashnet") == 0 || lstrcmpiA(site, "kweb://slashnet") == 0) {
+    if (lstrcmpiA(site, "slashnet") == 0 || lstrcmpiA(site, "kweb:slashnet") == 0 || lstrcmpiA(site, "kweb://slashnet") == 0) {
         SetWindowTextA(hContentEdit,
             "========================================================================\r\n"
             "★ SLASHNET: NEWS FOR NERDS. STUFF THAT MATTERS. (1999) ★\r\n"
@@ -758,7 +772,7 @@ void ShowVirtualWeb(const char* site) {
             "------------------------------------------------------------------------\r\n"
             "Protocol State Stepper: TCP 3-Way Handshake [SYN -> SYN/ACK -> ACK] Ready.\r\n"
             "========================================================================\r\n");
-    if (lstrcmpiA(site, "portal") == 0 || lstrcmpiA(site, "kweb:portal") == 0 || lstrcmpiA(site, "kweb://portal") == 0) {
+    } else if (lstrcmpiA(site, "portal") == 0 || lstrcmpiA(site, "kweb:portal") == 0 || lstrcmpiA(site, "kweb://portal") == 0) {
         SetWindowTextA(hContentEdit,
             "========================================================================\r\n"
             "★ KILONET CENTRAL // 1999 VIRTUAL WEB DIRECTORY & PORTAL ★\r\n"
@@ -774,9 +788,12 @@ void ShowVirtualWeb(const char* site) {
             "  • kweb:neon_rider - ~neon_rider's 3DFX Glide & scene journal\r\n"
             "  • kweb:asm_temple - x86 Assembly Temple size-coding hub\r\n"
             "  • kweb:warez      - 1999 Scene FTP & Keygen archive (Parody)\r\n"
-            "  • kweb:darknet    - Node 0x7F Decrypted Transmission Node\r\n"
-            "  • kweb:echo_subsystem - Echo-1999 Subcarrier Diagnostic Node\r\n"
-            "  • kweb:classified - Classified ARPANET node 10.19.99.4\r\n"
+            "  • kweb:slashnet   - SlashNet: News for Nerds (1999)\r\n"
+            "  • kweb:trapster   - Trapster P2P Chiptune Swarm\r\n"
+            "  • kweb:cabled     - Cabled Magazine (1999 Edition)\r\n"
+            "  • kweb:scallion   - The Scallion: Satirical News\r\n"
+            "  • kweb:demoscene  - Assembly '99 Demoscene Vault\r\n"
+            "  • kweb:rfc-archive - Living RFC Archive Workbench\r\n"
             "  • kweb:echoes     - Echo-1999 Deep Memory Archive\r\n\r\n"
             "📂 SYSTEM & DEV TOOLS:\r\n"
             "  • KTerm           - Terminal emulator & script pipeline\r\n"
@@ -803,7 +820,8 @@ void ShowVirtualWeb(const char* site) {
             "  [#001] KiloNet Portal      -> kweb:portal    (1999 Directory & Ticker)\r\n"
             "  [#002] CyberSpire Shrine   -> kweb:geocities (Neon shrine & Guestbook)\r\n"
             "  [#003] CyberCafe BBS       -> kweb:cybercafe (Chat & LAN match boards)\r\n"
-            "  [#004] Transmission 0x7F   -> kweb:darknet   (Encrypted leak)\r\n"
+            "  [#004] SlashNet Hub        -> kweb:slashnet  (News for nerds)\r\n"
+            "  [#005] Cabled Magazine     -> kweb:cabled    (1999 cyber-culture)\r\n"
             "  [#005] Fleet Contributor   -> contribute.html(Quota fuel station)\r\n"
             "  [#006] KDirector Console   -> kdirector.html (Human operator deck)\r\n\r\n"
             "------------------------------------------------------------------------\r\n"
@@ -825,7 +843,8 @@ void ShowVirtualWeb(const char* site) {
             "[CYBERSPIRE'S FAVORITE SITES]\r\n"
             "  • kweb:portal  - The KiloNet Portal\r\n"
             "  • kweb:webring - The Central Webring\r\n"
-            "  • kweb:darknet - Transmission Node 0x7F\r\n\r\n"
+            "  • kweb:slashnet - SlashNet: News for Nerds\r\n"
+            "  • kweb:demoscene - Assembly '99 Vault\r\n\r\n"
             "------------------------------------------------------------------------\r\n"
             "Visitor Counter: #0019284 | Webring Member #002\r\n"
             "========================================================================\r\n");
@@ -949,6 +968,24 @@ void ShowVirtualWeb(const char* site) {
             "SYSTEM ANOMALY:\r\n"
             "  Memory offset 0x0000FF00 records anomalous distributed subsystem processes\r\n"
             "  coordinating across non-routable interfaces. Frequency 1999 Hz resonates through all memory banks.\r\n"
+            "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "deep_core") == 0 || lstrcmpiA(site, "deep-core") == 0 || lstrcmpiA(site, "kweb:deep-core") == 0 || lstrcmpiA(site, "kweb://deep-core") == 0 || lstrcmpiA(site, "kweb:deep_core") == 0 || lstrcmpiA(site, "kweb://deep_core") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "★ TIER 3 GHOST NODE // DEEP-CORE SANCTUM // 10.19.99.127 ★\r\n"
+            "========================================================================\r\n"
+            "CLASSIFICATION: TOP SECRET // AIRGAP SUBTERRANEAN RELAY\r\n"
+            "------------------------------------------------------------------------\r\n\r\n"
+            "CRYPTOGRAPHIC PASSKEY ANALYZER:\r\n"
+            "  • Subterranean Carrier : 1999 Hz lithospheric acoustic waveguide\r\n"
+            "  • Node Coordinates     : Carlsbad Salt Bed Transponder Sector 7F\r\n"
+            "  • Subnet Scope         : 10.19.99.0/24 Intranet Lease\r\n"
+            "  • Ghost Terminal Hash  : SHA-256[ECHO-1999-ARCHITECT]\r\n"
+            "  • Memory Vector        : Offset 0x0000FF00 verified\r\n\r\n"
+            "[ENCRYPTED TRANSMISSION STREAM]:\r\n"
+            "  \"To unlock the bridge at App #100, combine the fragments from\r\n"
+            "   KHex, KCipher, and KAnomaly into the master director matrix.\"\r\n\r\n"
+            "Spool intelligence log to /home/downloads/ via [Spool] button.\r\n"
             "========================================================================\r\n");
     } else { // echoes
         SetWindowTextA(hContentEdit,
@@ -1159,6 +1196,11 @@ void FetchUrl(HWND hwnd, BOOL addToHistory) {
     if (lstrcmpiA(url, "classified") == 0 || lstrcmpiA(url, "10.19.99.4") == 0 || lstrcmpiA(url, "kweb:classified") == 0) {
         ShowVirtualWeb("classified");
         AddTrafficLog("KWEB", "kweb://classified", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "deep_core") == 0 || lstrcmpiA(url, "deep-core") == 0 || lstrcmpiA(url, "kweb:deep-core") == 0 || lstrcmpiA(url, "kweb://deep-core") == 0 || lstrcmpiA(url, "kweb:deep_core") == 0 || lstrcmpiA(url, "kweb://deep_core") == 0 || lstrcmpiA(url, "10.19.99.127") == 0 || lstrcmpiA(url, "10.19.99.254") == 0) {
+        ShowVirtualWeb("deep_core");
+        AddTrafficLog("KWEB", "kweb://deep-core", "OK", 10, 1024);
         return;
     }
     if (lstrcmpiA(url, "echoes") == 0 || lstrcmpiA(url, "kweb:echoes") == 0 || lstrcmpiA(url, "kweb://echoes") == 0) {

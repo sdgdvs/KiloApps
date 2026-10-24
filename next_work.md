@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_tester: KSys
   kilo_usability: KSys
   kilo_qa: KVault
-  kilo_expander: KNet
+  kilo_expander: KBBS
 virtual_web_target: kweb://cabled
 virtual_web_rotation:
 - kweb://slashnet
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KHash
-  timestamp: '2026-10-24T01:31:34-07:00'
+  agent: kilo-expander
+  app: KNet
+  timestamp: '2026-10-24T02:38:07-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -171,11 +171,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KClock` | `KiloOS/public/apps/kclock.html`, `KClock/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, world time offsets, alarm trigger verification, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KNet`
+- **Active Target**: `KBBS`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
@@ -185,6 +184,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KVault` | `KiloOS/public/apps/kvault.html`, `KVault/main.c` | Phase VI VFS Integration: Allow saving/loading encrypted vault containers (`.kvlt`) directly to/from KiloOS VFS (`/home/crypto/`) and inter-op with KCipher. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | Phase VI Subterranean Bridge: Ingest decoded signal frames from KAnomaly (`/sys/anomaly_capture.sig`) via VFS and export decrypted intelligence logs. |
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
+| `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 
 ---
 
@@ -246,6 +246,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T02:38:07-07:00 — kilo-expander: KNet (KNet Phase VI VFS Spooling & TINAG Secrecy Hardening)**
+  - Status: PASS ✅ (0 errors, web 193.4 KB, native 56.0 KB < 999 KB; startup, Vite & security PASS).
+  - Purged Tier 3 darknet nodes (darknet, deep-core, 10.19.99.4/classified, echo-subsystem) from surface chips, bookmarks & help modals while retaining address-bar routing per arg_plan.md §6.
+  - Added Save Page/Spool to KiloOS VFS (/home/downloads/) across web and native Win32 C client with non-CRT memory allocation.
+  - Routed new canonical kweb:// parodies (slashnet, trapster, cabled, scallion, demoscene, rfc-archive, deep-core) across web & Win32 C.
+  - Handoff: Advanced `kilo-expander` to `KBBS`; rotated active agent to `kilo-creator`.
+
 - **2026-10-24T01:31:34-07:00 — kilo-qa: KHash (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 160.6 KB, native 17.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.31%, 0 fail, 0 warn, 4.6s)).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, khash_tutorialSeen flag, and Escape modal dismissals.
@@ -269,7 +276,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Composition: D Mixolydian arcade synthwave, 6-channel counterpoint, pure 3rd/7th shell voicings, 5:3 swing groove (~144 BPM).
   - Patches & DSP: YM2612 Brass Lead + flute counterpoint with 190/240ms SPC700 delay, slap bass, D Mixolydian combo pitch escalator, and skill/forge earcons.
   - Handoff: Advanced `kilo-soundscape` to `KQuest`; rotated active agent to `kilo-tester`.
-
-- **2026-10-23T23:13:11-07:00 — kilo-graphics: KRogue (Skip — Asset Suitability)**
-  - ⏭️ Skip — Imagen 3 assets already integrated for KRogue.
-  - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-soundscape`.
