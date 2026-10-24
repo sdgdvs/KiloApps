@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_tester: KHabit
   kilo_usability: KFlash
   kilo_qa: KHabit
-  kilo_expander: KQuest
+  kilo_expander: KStarForge
 virtual_web_target: kweb://webring
 virtual_web_rotation:
 - kweb://slashnet
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KBudget
-  timestamp: '2026-10-24T11:37:08-07:00'
+  agent: kilo-expander
+  app: KQuest
+  timestamp: '2026-10-24T11:42:25-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -157,11 +157,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KClock` | `KiloOS/public/apps/kclock.html`, `KClock/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, world time offsets, alarm trigger verification, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KQuest`
+- **Active Target**: `KStarForge`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
@@ -169,6 +168,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
+| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
 
 ---
 
@@ -235,6 +235,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T11:42:25-07:00 — kilo-expander: KQuest (KQuest Phase VI VFS Chronicle & Hero Dossier Export + Win32 C Parity)**
+  - Status: PASS ✅ (0 errors, web 395.4 KB, native 98.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Enhanced VFS & IPC mesh: added Combat Chronicle export (/home/docs/kquest_chronicle.txt) and KPad dossier inspection to Replays & Achievements views.
+  - Dual-target Win32 C parity: added ExportHeroSheetToFile writing kquest_hero_sheet.txt directly from achievements menu.
+  - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-creator`.
+
 - **2026-10-24T11:37:08-07:00 — kilo-qa: KBudget (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 106.9 KB, native 167.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kbudget_tutorialSeen flag, and Escape modal dismissals.
@@ -259,8 +265,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI & Hotkey Audit: Strengthened isInput detection on activeElement for modal/hotkey isolation; verified F1/F5/F9, search, and pagination.
   - Repairs: Integrated monthly budget goal tracking with progress indicator, currency presets ($, €, £, ¥), and KiloOS VFS export/import mesh.
   - Handoff: Advanced `kilo-tester` to `KHabit`; rotated active agent to `kilo-usability`.
-
-- **2026-10-24T10:49:54-07:00 — kilo-soundscape: KFarm (Pass 5 Complete & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 119.5 KB, native 132.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Audio Suite: 6-channel YM2612 FM / SPC700 soundscape, 5:3 swing groove, 9 SFX earcons, and Mute [M] controls verified.
-  - Mature Quarantine & Handoff: Promoted `KFarm` to Mature archive; advanced `kilo-soundscape` to `KWizard`; next agent `kilo-tester`.
