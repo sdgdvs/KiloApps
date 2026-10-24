@@ -525,24 +525,6 @@
             } catch (e) {}
         }
 
-        function playBeep(freq, type, duration, vol=0.1) {
-            if (soundMuted) return;
-            try {
-                let actx = getAudioContext();
-                if (!actx) return;
-                let osc = actx.createOscillator();
-                let gain = actx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, actx.currentTime);
-                gain.gain.setValueAtTime(vol, actx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(actx.destination);
-                osc.start();
-                osc.stop(actx.currentTime + duration);
-            } catch (e) {}
-        }
-
         // Yamaha YM2612 2-Operator FM Synthesis Core
         function playFMTone(carrierFreq, modRatio, modIndex, duration, vol=0.15, waveform='sine', useEcho=false, delayedVibrato=false) {
             if (soundMuted) return;
@@ -2529,6 +2511,10 @@ function draw(time = performance.now()) {
                     playGeigerClick(0.08);
                 }
                 let canSee = dist <= 6 && !hidden;
+                if (canSee && a.state !== 'chase' && aType === 3) {
+                    playApexRoar();
+                    triggerScreenShake(3);
+                }
                 a.state = canSee ? 'chase' : 'patrol';
 
                 let dx = 0, dy = 0;
@@ -2582,6 +2568,7 @@ function draw(time = performance.now()) {
                             // Apex footsteps cause subtle screen tremor when near player
                             if (aType === 3 && dist <= 5) {
                                 triggerScreenShake(1);
+                                if (Math.random() < 0.2) playHullStressGroan(0.18);
                             }
                             a.x = nx;
                             a.y = ny;

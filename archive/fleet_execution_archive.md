@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T12:41:08-07:00 — kilo-qa: KHabit (Pass 5 QA, Dual Parity & Mature Graduation)**
+  - Status: PASS ✅ (0 errors, web 98.8 KB, native 170.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.2%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.8s)).
+  - Streak & Edge Cases: Fixed DST/future date ISO edge case, preserved streak history on check toggle/undo in C and JS.
+  - State & Tutorial: Restored clean F5/F9 state snapshots, fixed misplaced settings event bindings, and validated tutorial/dismissal integrity.
+  - Dual Parity: Verified full Web HTML and Win32 C native build parity with local time calendar calculations.
+  - Mature Quarantine & Handoff: Promoted `KHabit` to Mature archive; advanced `kilo-qa` to `KFlash`; next agent `kilo-expander`.
+
 - **2026-10-24T12:37:29-07:00 — kilo-usability: KFlash (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 110.5 KB, native 141.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Ergonomics & Ratings: 1-4 rating system (Again, Hard, Good, Easy) with keyboard/touch shortcuts [1-4, G/R] and active card tap feedback.
