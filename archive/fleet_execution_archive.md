@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T22:19:13-07:00 — kilo-usability: KAnomaly (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 99.4 KB, native 20.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Waterfall & HiDPI: Subterranean spectrogram HiDPI frequency graticule, active passband highlight, time/depth markers, and click/drag interactive tuning.
+  - Tuner & Keyboard Ergonomics: Multi-tier precision ArrowLeft/Right (Ctrl 1.0k / Alt 0.5k / Normal 0.1k / Shift 0.01k), Up/Down, PageUp/Down, Home/End, wheel scaling, and ARIA slider focus.
+  - Decoder Telemetry: Formatted diagnostic telemetry report copy, dynamic carrier confidence progress bar, Doppler drift direction vectors, and responsive grid wrapping.
+  - Handoff: Advanced `kilo-usability` to `KCipher`; rotated active agent to `kilo-qa`.
+
 - **2026-10-23T22:04:53-07:00 — kilo-tester: KScript (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 146.4 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.27%, HEAD Δ 0.0%, 0 fail, 0 warn, 9.0s)).
   - UI & Hotkey Audit: Verified script IDE, AST/console runner, sample presets, breakpoint stepper, modal focus traps, Escape dismissal, and F5/F9 state persistence.

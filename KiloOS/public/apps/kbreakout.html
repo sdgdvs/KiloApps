@@ -400,8 +400,9 @@ initKBreakoutAssets();
 
 // ============================================================================
 // SEGA GENESIS YM2612 2-OP FM SYNTHESIZER & SNES SPC700 STEREO SOUNDSCAPE
-// Track: "Neon Deflector: Superluminal Orbit" (Arcade Cyber-Breakout Suite)
-// 6 Channels: Lead, Counter, Shell Voicings, Slap Bass, Kick/Snare, Inharmonic Hats
+// Track: "Neon Deflector: Overdrive Matrix" (Arcade Cyber-Breakout Suite)
+// 6 Channels: Brass Lead, Counter Flute, Shell Arp, Slap Bass, Kick/Snare, Hats
+// Mode: D Mixolydian / D Ionian (5:3 Swing-Tick Groove ~144 BPM)
 // ============================================================================
 
 let audioCtx = null;
@@ -411,6 +412,7 @@ let soundEnabled = safeGetStorage('kbreakout_sound') !== '0';
 let bgmEnabled = safeGetStorage('kbreakout_bgm') !== '0';
 let bgmTimer = null;
 let bgmStep = 0;
+let spComboCount = 0;
 
 function initAudio() {
     if (!audioCtx) {
@@ -528,7 +530,7 @@ function playFM(cType, mType, cFreq, mRatio, modIndex, duration, envDecay, gainA
     } catch(e) {}
 }
 
-// Authentic Genesis FM Drum generator (kick, snare, inharmonic hats)
+// Authentic Genesis FM Drum generator (kick, snare, inharmonic hats, crash)
 function playFMDrum(drum) {
     if (!soundEnabled) return;
     try {
@@ -537,13 +539,13 @@ function playFMDrum(drum) {
         const now = ctx.currentTime;
 
         if (drum === 'kick') {
-            // YM2612 punchy kick: pitch sweep 160 -> 38 Hz with heavy carrier impact
+            // YM2612 punchy kick: pitch sweep 165 -> 38 Hz with heavy carrier impact
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.setValueAtTime(165, now);
             osc.frequency.exponentialRampToValueAtTime(38, now + 0.09);
-            gain.gain.setValueAtTime(0.38, now);
+            gain.gain.setValueAtTime(0.40, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
             osc.connect(gain);
             gain.connect(masterLimiter || ctx.destination);
@@ -582,10 +584,10 @@ function playFMDrum(drum) {
             noise.start(now);
         } else if (drum === 'hat') {
             // Closed metallic FM hi-hat (inharmonic ratio 13.5)
-            playFM('square', 'sawtooth', 4200, 1.53, 12.0, 0.045, 0.035, 0.08, false);
+            playFM('square', 'sawtooth', 4200, 1.53, 13.5, 0.045, 0.035, 0.08, false);
         } else if (drum === 'openhat') {
-            // Sizzling open hi-hat
-            playFM('square', 'sawtooth', 3800, 1.48, 14.0, 0.19, 0.15, 0.10, false);
+            // Sizzling open hi-hat (inharmonic ratio 11.0)
+            playFM('square', 'sawtooth', 3800, 1.48, 11.0, 0.19, 0.15, 0.10, false);
         }
     } catch(e) {}
 }
@@ -610,19 +612,82 @@ function playTone(freq, type = 'sine', duration = 0.1, vol = 0.1) {
     } catch(e) {}
 }
 
-// Specialized High-Impact Earcons & Action Stingers
+// ============================================================================
+// SPECIALIZED HIGH-IMPACT FM EARCONS & ACTION STINGERS
+// ============================================================================
+
+// Harmonic brick-hit combo pitch escalator along D Mixolydian scale
+const COMBO_SCALE = [
+    587.33,  // D5
+    659.25,  // E5
+    739.99,  // F#5
+    783.99,  // G5
+    880.00,  // A5
+    987.77,  // B5
+    1046.50, // C6 (Mixolydian b7)
+    1174.66  // D6
+];
+
+function playBrickHit(tier = 1, combo = 1) {
+    if (!soundEnabled) return;
+    const safeCombo = Math.max(1, combo);
+    const idx = (safeCombo - 1) % COMBO_SCALE.length;
+    const octaveMult = Math.pow(2, Math.floor((safeCombo - 1) / COMBO_SCALE.length));
+    const baseFreq = COMBO_SCALE[idx] * octaveMult;
+    const modRatio = 3.5; // Crystalline FM bell overtone
+    const modIndex = 2.0 + Math.min(tier, 5) * 0.7;
+    playFM('sine', 'sine', baseFreq, modRatio, modIndex, 0.12, 0.08, 0.18, true);
+}
+
 function playPaddleHit() {
-    playFM('sine', 'sawtooth', 520, 2.0, 3.2, 0.08, 0.05, 0.18, true, { target: 680, time: 0.04 });
+    // Punchy FM deflection ping with upward pitch glide
+    playFM('sine', 'sawtooth', 520, 2.0, 3.5, 0.09, 0.05, 0.20, true, { target: 740, time: 0.04 });
 }
 
 function playWallBounce() {
-    playFM('triangle', 'square', 440, 1.5, 2.1, 0.05, 0.03, 0.10, false);
+    // Crisp rim blip
+    playFM('triangle', 'sine', 480, 1.5, 2.0, 0.045, 0.03, 0.10, false);
 }
 
-function playBrickHit(tier = 1) {
-    const baseFreqs = [440, 554.37, 659.25, 880, 1108.7];
-    const f = baseFreqs[Math.min(tier, baseFreqs.length - 1)] || 554.37;
-    playFM('sine', 'sine', f, 3.0, 4.5, 0.14, 0.09, 0.16, true);
+function playBossHit() {
+    // Deep metallic FM impact with downward pitch drop
+    playFM('sawtooth', 'square', 140, 2.7, 5.0, 0.22, 0.14, 0.24, true, { target: 45, time: 0.18 });
+}
+
+function playLaserShot() {
+    // Fast snappy pulse
+    playFM('square', 'sawtooth', 840, 1.0, 2.5, 0.05, 0.03, 0.10, false, { target: 360, time: 0.04 });
+}
+
+function playSkillSFX(skill) {
+    if (!soundEnabled) return;
+    if (skill === 'laser') {
+        playFM('sawtooth', 'square', 780, 1.5, 4.0, 0.18, 0.12, 0.22, true, { target: 260, time: 0.14 });
+    } else if (skill === 'multi') {
+        [587.33, 739.99, 880.0, 1174.66].forEach((f, i) => {
+            setTimeout(() => playFM('sine', 'sine', f, 3.0, 3.0, 0.12, 0.08, 0.15, true), i * 45);
+        });
+    } else if (skill === 'fire') {
+        playFM('sawtooth', 'triangle', 260, 0.5, 5.5, 0.32, 0.20, 0.24, true, { target: 90, time: 0.28 });
+    } else if (skill === 'barrier') {
+        playFM('sine', 'sine', 1046.5, 2.0, 4.0, 0.28, 0.20, 0.18, true, { target: 1318.5, time: 0.16 });
+    } else if (skill === 'grav') {
+        playFM('triangle', 'sine', 110, 3.0, 6.0, 0.35, 0.25, 0.24, true, { target: 55, time: 0.30 });
+    } else if (skill === 'sat') {
+        [659.25, 880.0, 1318.5].forEach((f, i) => {
+            setTimeout(() => playFM('sine', 'triangle', f, 2.5, 2.5, 0.15, 0.10, 0.14, true), i * 50);
+        });
+    }
+}
+
+function playCraftSuccess() {
+    [440, 554.37, 659.25, 880].forEach((f, i) => {
+        setTimeout(() => playFM('sine', 'sawtooth', f, 2.0, 2.0, 0.18, 0.12, 0.16, true), i * 65);
+    });
+}
+
+function playCraftFail() {
+    playFM('sawtooth', 'square', 160, 1.414, 4.5, 0.25, 0.18, 0.18, false, { target: 90, time: 0.20 });
 }
 
 function playLifeLost() {
@@ -630,73 +695,73 @@ function playLifeLost() {
 }
 
 function playStageClear() {
-    const notes = [293.66, 349.23, 440.00, 587.33];
+    const notes = [293.66, 369.99, 440.00, 587.33, 739.99, 880.00];
     notes.forEach((freq, idx) => {
         setTimeout(() => {
-            playFM('sine', 'sawtooth', freq, 2.0, 2.5, 0.35, 0.25, 0.18, true);
-        }, idx * 90);
+            playFM('sawtooth', 'sine', freq, 1.0, 3.0, 0.35, 0.25, 0.18, true);
+        }, idx * 80);
     });
 }
 
 // ----------------------------------------------------------------------------
 // 64-STEP YM2612 / SPC700 CHIPTUNE TRACKER
-// Track: "Neon Deflector: Superluminal Orbit"
+// Track: "Neon Deflector: Overdrive Matrix" (D Mixolydian Arcade Synthwave)
 // ----------------------------------------------------------------------------
-const C2 = 65.41, D2 = 73.42, E2 = 82.41, F2 = 87.31, G2 = 98.00, A2 = 110.00, Bb2 = 116.54, C3 = 130.81;
-const D3 = 146.83, E3 = 164.81, F3 = 174.61, G3 = 196.00, A3 = 220.00, Bb3 = 233.08, C4 = 261.63, Csharp4 = 277.18;
-const D4 = 293.66, E4 = 329.63, F4 = 349.23, G4 = 392.00, A4 = 440.00, Bb4 = 466.16, C5 = 523.25, Csharp5 = 554.37;
-const D5 = 587.33, E5 = 659.25, F5 = 698.46, G5 = 783.99, A5 = 880.00, Bb5 = 932.33, C6 = 1046.50;
+const C2 = 65.41, D2 = 73.42, E2 = 82.41, F2 = 87.31, Fsharp2 = 92.50, G2 = 98.00, A2 = 110.00, Bb2 = 116.54, B2 = 123.47, C3 = 130.81;
+const Csharp3 = 138.59, D3 = 146.83, E3 = 164.81, Fsharp3 = 185.00, G3 = 196.00, A3 = 220.00, B3 = 246.94, C4 = 261.63, Csharp4 = 277.18;
+const D4 = 293.66, E4 = 329.63, Fsharp4 = 369.99, G4 = 392.00, A4 = 440.00, Bb4 = 466.16, B4 = 493.88, C5 = 523.25, Csharp5 = 554.37;
+const D5 = 587.33, E5 = 659.25, Fsharp5 = 739.99, G5 = 783.99, A5 = 880.00, Bb5 = 932.33, B5 = 987.77, C6 = 1046.50, Csharp6 = 1108.73, D6 = 1174.66;
 
-// Ch 1: Lead Melody (expressive vocal phrasing, breathing rests, delayed vibrato)
+// Ch 1: Lead Melody (Heroic YM2612 FM brass lead, expressive phrasing, breathing rests, delayed vibrato)
 const TRACKER_LEAD = [
-    // Pattern 0: Orbital Insertion (Dm9 hook)
-    D4, 0, F4, 0, A4, 0, C5, 0, D5, 0, A4, 0, F4, G4, A4, 0,
-    // Pattern 1: Nebula Drift (Bbmaj7#11 apex -> breathing rest)
-    Bb4, 0, D5, 0, E5, 0, D5, 0, C5, 0, A4, 0, 0, 0, 0, 0,
-    // Pattern 2: Deep Void Gravitational Sling (Gm9)
-    G4, 0, Bb4, 0, D5, 0, F5, 0, E5, 0, D5, 0, C5, 0, Bb4, 0,
-    // Pattern 3: Quantum Resolution (A7b9 turnaround)
-    A4, 0, Csharp5, 0, E5, 0, G5, 0, F5, E5, D5, Csharp5, D5, 0, 0, 0
+    // Pattern 0: D Mixolydian Anthem Hook
+    D5, 0, D5, 0, Fsharp5, 0, A5, 0, G5, Fsharp5, E5, 0, D5, 0, E5, 0,
+    // Pattern 1: C Soaring Modal Apex -> Breathing rest
+    C5, 0, E5, 0, G5, 0, B5, 0, A5, 0, G5, 0, 0, 0, 0, 0,
+    // Pattern 2: G Drive Weave
+    B4, 0, D5, 0, G5, 0, A5, 0, B5, 0, A5, G5, Fsharp5, 0, G5, 0,
+    // Pattern 3: A7 Turnaround Climax
+    A4, 0, Csharp5, 0, E5, 0, G5, 0, Fsharp5, E5, D5, Csharp5, D5, 0, 0, 0
 ];
 
-// Ch 2: Counter-Melody (contrary motion to Lead + solo flourish on steps 28-31)
+// Ch 2: Counter-Melody (Contrary motion to Lead, steps forward during Lead's rest)
 const TRACKER_COUNTER = [
-    // Pattern 0: Contrary descending counterpoint
-    A4, 0, G4, 0, F4, 0, E4, 0, F4, 0, D4, 0, C4, 0, D4, 0,
-    // Pattern 1: Contrary harmony -> Solo fill during Lead rest
-    F4, 0, E4, 0, D4, 0, F4, 0, E4, 0, D4, 0, E4, G4, A4, Csharp5,
-    // Pattern 2: Contrary ascending weave beneath Lead descent
-    D4, 0, C4, 0, Bb3, 0, A3, 0, Bb3, 0, C4, 0, D4, 0, E4, 0,
-    // Pattern 3: Harmonic suspension descent resolving into Dm
-    E4, 0, G4, 0, A4, 0, Bb4, 0, A4, 0, G4, 0, F4, 0, E4, 0
+    // Pattern 0: Contrary descending counterpoint against Lead ascent
+    A4, 0, Fsharp4, 0, D4, 0, E4, 0, D4, 0, C4, 0, B3, 0, A3, 0,
+    // Pattern 1: Contrary movement -> Solo flourish on steps 28-31 during Lead breathing rest
+    G4, 0, Fsharp4, 0, E4, 0, D4, 0, E4, G4, B4, D5, E5, G5, Fsharp5, E5,
+    // Pattern 2: Ascending counter-line beneath Lead descent
+    D4, 0, E4, 0, Fsharp4, 0, G4, 0, Fsharp4, 0, E4, 0, D4, 0, B3, 0,
+    // Pattern 3: Harmonic suspension descent resolving into D
+    Csharp4, 0, E4, 0, G4, 0, A4, 0, G4, 0, Fsharp4, 0, E4, 0, D4, 0
 ];
 
-// Ch 3: Harmony / Arpeggio (strict shell voicings: 3rd + 7th / 9th / #11, omit 5ths)
+// Ch 3: Harmony / Arpeggio (Pure shell voicings: 3rd + 7th / 9th, omit 5th for clarity)
 const TRACKER_ARP = [
-    // Pattern 0 (Dm9 shell: F4 [b3], C5 [b7], E5 [9])
-    F4, 0, C5, 0, E5, 0, C5, 0, F4, 0, C5, 0, E5, 0, C5, 0,
-    // Pattern 1 (Bbmaj7#11 shell: D4 [3], A4 [7], E5 [#11])
-    D4, 0, A4, 0, E5, 0, A4, 0, D4, 0, A4, 0, E5, 0, A4, 0,
-    // Pattern 2 (Gm9 shell: Bb4 [b3], F5 [b7], A4 [9])
-    Bb4, 0, F5, 0, A4, 0, F5, 0, Bb4, 0, F5, 0, A4, 0, F5, 0,
-    // Pattern 3 (A7b9 shell: G4 [b7], C#5 [3], Bb4 [b9])
-    G4, 0, Csharp5, 0, Bb4, 0, Csharp5, 0, G4, 0, Csharp5, 0, Bb4, 0, G4, 0
+    // Pattern 0 (D: F#4 [3rd], C5 [b7], E5 [9th], C5 [b7])
+    Fsharp4, 0, C5, 0, E5, 0, C5, 0, Fsharp4, 0, C5, 0, E5, 0, C5, 0,
+    // Pattern 1 (C: E4 [3rd], B4 [7th], D5 [9th], B4 [7th])
+    E4, 0, B4, 0, D5, 0, B4, 0, E4, 0, B4, 0, D5, 0, B4, 0,
+    // Pattern 2 (G: B4 [3rd], F#5 [7th], A4 [9th], F#5 [7th])
+    B4, 0, Fsharp5, 0, A4, 0, Fsharp5, 0, B4, 0, Fsharp5, 0, A4, 0, Fsharp5, 0,
+    // Pattern 3 (A: G4 [b7], C#5 [3rd], E5 [5th], C#5 [3rd])
+    G4, 0, Csharp5, 0, E5, 0, Csharp5, 0, G4, 0, Csharp5, 0, Bb4, 0, Csharp5, 0
 ];
 
-// Ch 4: Slap/Sub Bass (driving 16th-note syncopation strictly below C3)
+// Ch 4: Slap/Sub Bass (Driving 16th syncopation strictly below C3 = 130.81 Hz)
 const TRACKER_BASS = [
-    // Pattern 0: Dm9 drive
-    D2, 0, D3, D2, 0, D3, D2, 0, C3, 0, C3, C2, Bb2, 0, C3, 0,
-    // Pattern 1: Bbmaj7 -> C pump
-    Bb2, 0, Bb2, Bb2, 0, Bb2, C3, 0, D3, 0, D2, D3, F2, 0, G2, A2,
-    // Pattern 2: Gm9 suspense
-    G2, 0, G3, G2, 0, G3, G2, 0, Bb2, 0, A2, 0, G2, 0, F2, E2,
-    // Pattern 3: A7 build
-    A2, 0, A3, A2, 0, A3, A2, 0, Bb2, 0, A2, 0, G2, 0, F2, E2
+    // Pattern 0: D Slap groove
+    D2, 0, D2, D2, 0, D2, Fsharp2, 0, G2, 0, A2, 0, C3, 0, A2, 0,
+    // Pattern 1: C Modal pump
+    C2, 0, C2, C2, 0, C2, E2, 0, G2, 0, B2, 0, C3, 0, B2, 0,
+    // Pattern 2: G Driving bass
+    G2, 0, G2, G2, 0, G2, B2, 0, D2, 0, B2, 0, A2, 0, G2, 0,
+    // Pattern 3: A Turnaround build
+    A2, 0, A2, A2, 0, A2, Csharp3, 0, E2, 0, G2, 0, A2, G2, Fsharp2, E2
 ];
 
-// Ch 1 Voice: Expressive Crystalline FM Lead with delayed vibrato (after 180ms)
-function playLeadTone(freq, dur = 0.22, vol = 0.15) {
+// Ch 1 Voice: Expressive YM2612 FM Brass Lead with delayed vibrato (after 180ms)
+function playLeadTone(freq, dur = 0.22, vol = 0.16) {
     if (!soundEnabled || !bgmEnabled) return;
     try {
         const ctx = getAudioContext();
@@ -709,22 +774,24 @@ function playLeadTone(freq, dur = 0.22, vol = 0.15) {
         const lfo = ctx.createOscillator();
         const lfoGain = ctx.createGain();
 
+        // 2-Op FM Brass Lead: Sawtooth carrier with Sine modulator, modRatio: 1.0 (warm brass harmonic bite)
         carrier.type = 'sawtooth';
         modulator.type = 'sine';
         carrier.frequency.setValueAtTime(freq, now);
-        modulator.frequency.setValueAtTime(freq * 2.003, now);
+        modulator.frequency.setValueAtTime(freq * 1.0, now);
 
-        // Delayed vibrato LFO (5.2Hz, ramping up after 180ms)
+        // Delayed vibrato LFO (5.4Hz, ramping up after 180ms)
         lfo.type = 'sine';
-        lfo.frequency.setValueAtTime(5.2, now);
+        lfo.frequency.setValueAtTime(5.4, now);
         lfoGain.gain.setValueAtTime(0, now);
         lfoGain.gain.setValueAtTime(0, now + 0.18);
-        lfoGain.gain.linearRampToValueAtTime(5.5, now + 0.32);
+        lfoGain.gain.linearRampToValueAtTime(6.0, now + 0.32);
         lfo.connect(lfoGain);
         lfoGain.connect(carrier.frequency);
 
-        modGain.gain.setValueAtTime(freq * 2.4, now);
-        modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.35), now + dur * 0.85);
+        // Modulator envelope: sharp initial brass swell decaying to sustain
+        modGain.gain.setValueAtTime(freq * 3.6, now);
+        modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.4), now + dur * 0.8);
 
         ampEnv.gain.setValueAtTime(vol, now);
         ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
@@ -746,14 +813,14 @@ function playLeadTone(freq, dur = 0.22, vol = 0.15) {
         lfo.start(now);
         modulator.start(now);
         carrier.start(now);
-        lfo.stop(now + dur + 0.02);
-        modulator.stop(now + dur + 0.02);
-        carrier.stop(now + dur + 0.02);
+        lfo.stop(now + dur + 0.03);
+        modulator.stop(now + dur + 0.03);
+        carrier.stop(now + dur + 0.03);
     } catch(e) {}
 }
 
 // Ch 2 Voice: Hollow FM Flute / Counterpoint
-function playCounterTone(freq, dur = 0.20, vol = 0.11) {
+function playCounterTone(freq, dur = 0.20, vol = 0.12) {
     if (!soundEnabled || !bgmEnabled) return;
     try {
         const ctx = getAudioContext();
@@ -764,13 +831,14 @@ function playCounterTone(freq, dur = 0.20, vol = 0.11) {
         const modGain = ctx.createGain();
         const ampEnv = ctx.createGain();
 
+        // Hollow FM Flute / Counter: Triangle carrier with Sine modulator at ratio 1.5
         carrier.type = 'triangle';
         modulator.type = 'sine';
         carrier.frequency.setValueAtTime(freq, now);
         modulator.frequency.setValueAtTime(freq * 1.5, now);
 
         modGain.gain.setValueAtTime(freq * 1.8, now);
-        modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.2), now + dur);
+        modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.15), now + dur);
 
         ampEnv.gain.setValueAtTime(vol, now);
         ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
@@ -791,13 +859,13 @@ function playCounterTone(freq, dur = 0.20, vol = 0.11) {
 
         modulator.start(now);
         carrier.start(now);
-        modulator.stop(now + dur + 0.02);
-        carrier.stop(now + dur + 0.02);
+        modulator.stop(now + dur + 0.03);
+        carrier.stop(now + dur + 0.03);
     } catch(e) {}
 }
 
-// Ch 3 Voice: Crystal Shell Arpeggio
-function playArpChime(freq, dur = 0.10, vol = 0.075) {
+// Ch 3 Voice: Crystal Shell Arpeggio (Pure 3rd/7th/9th shell chime)
+function playArpChime(freq, dur = 0.10, vol = 0.08) {
     if (!soundEnabled || !bgmEnabled) return;
     try {
         const ctx = getAudioContext();
@@ -808,12 +876,13 @@ function playArpChime(freq, dur = 0.10, vol = 0.075) {
         const modGain = ctx.createGain();
         const ampEnv = ctx.createGain();
 
+        // Crystalline bell: Sine with Sine modulator at ratio 3.5
         carrier.type = 'sine';
         modulator.type = 'sine';
         carrier.frequency.setValueAtTime(freq, now);
-        modulator.frequency.setValueAtTime(freq * 3.0, now);
+        modulator.frequency.setValueAtTime(freq * 3.5, now);
 
-        modGain.gain.setValueAtTime(freq * 3.5, now);
+        modGain.gain.setValueAtTime(freq * 3.2, now);
         modGain.gain.exponentialRampToValueAtTime(1.0, now + dur);
 
         ampEnv.gain.setValueAtTime(vol, now);
@@ -835,13 +904,13 @@ function playArpChime(freq, dur = 0.10, vol = 0.075) {
 
         modulator.start(now);
         carrier.start(now);
-        modulator.stop(now + dur + 0.02);
-        carrier.stop(now + dur + 0.02);
+        modulator.stop(now + dur + 0.03);
+        carrier.stop(now + dur + 0.03);
     } catch(e) {}
 }
 
 // Ch 4 Voice: Genesis Slap Bass (Strictly dry for crisp transient impact)
-function playSlapBass(freq, dur = 0.095, vol = 0.16) {
+function playSlapBass(freq, dur = 0.095, vol = 0.18) {
     if (!soundEnabled || !bgmEnabled) return;
     try {
         const ctx = getAudioContext();
@@ -852,13 +921,14 @@ function playSlapBass(freq, dur = 0.095, vol = 0.16) {
         const modGain = ctx.createGain();
         const ampEnv = ctx.createGain();
 
+        // Genesis 2-Op FM slap bass: Sawtooth carrier + Sine mod at ratio 2.0 strictly dry
         carrier.type = 'sawtooth';
         modulator.type = 'sine';
         carrier.frequency.setValueAtTime(freq, now);
         modulator.frequency.setValueAtTime(freq * 2.0, now);
 
-        modGain.gain.setValueAtTime(freq * 5.5, now);
-        modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.4), now + 0.05);
+        modGain.gain.setValueAtTime(freq * 6.0, now);
+        modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.3), now + 0.045);
 
         ampEnv.gain.setValueAtTime(vol, now);
         ampEnv.gain.exponentialRampToValueAtTime(0.0001, now + dur);
@@ -867,12 +937,13 @@ function playSlapBass(freq, dur = 0.095, vol = 0.16) {
         modGain.connect(carrier.frequency);
         carrier.connect(ampEnv);
 
+        // Bass is strictly dry through masterLimiter
         ampEnv.connect(masterLimiter || ctx.destination);
 
         modulator.start(now);
         carrier.start(now);
-        modulator.stop(now + dur + 0.02);
-        carrier.stop(now + dur + 0.02);
+        modulator.stop(now + dur + 0.03);
+        carrier.stop(now + dur + 0.03);
     } catch(e) {}
 }
 
@@ -882,19 +953,19 @@ function playTrackerStep(step) {
 
     // Ch 4: Bass
     const bFreq = TRACKER_BASS[step];
-    if (bFreq > 0) playSlapBass(bFreq, 0.095, 0.16);
+    if (bFreq > 0) playSlapBass(bFreq, 0.095, 0.18);
 
     // Ch 1: Lead Melody
     const lFreq = TRACKER_LEAD[step];
-    if (lFreq > 0) playLeadTone(lFreq, 0.22, 0.15);
+    if (lFreq > 0) playLeadTone(lFreq, 0.22, 0.16);
 
     // Ch 2: Counter Melody
     const cFreq = TRACKER_COUNTER[step];
-    if (cFreq > 0) playCounterTone(cFreq, 0.20, 0.11);
+    if (cFreq > 0) playCounterTone(cFreq, 0.20, 0.12);
 
     // Ch 3: Arp Shells
     const aFreq = TRACKER_ARP[step];
-    if (aFreq > 0) playArpChime(aFreq, 0.10, 0.075);
+    if (aFreq > 0) playArpChime(aFreq, 0.10, 0.08);
 
     // Ch 5 & 6: Drums
     if (subStep === 0 || subStep === 6 || subStep === 8 || subStep === 10) {
@@ -910,15 +981,16 @@ function playTrackerStep(step) {
         playFMDrum('openhat');
     }
     if (subStep === 0) {
+        // Crash cymbal impact on pattern start
         playFM('sawtooth', 'square', 3200, 2.14, 4.5, 0.40, 0.25, 0.09, true);
     }
 }
 
-// Swing-Tick Groove engine (5:3 shuffle swing ~142 BPM)
+// Swing-Tick Groove engine (5:3 shuffle swing ~144 BPM)
 function scheduleBgmStep() {
     if (!bgmTimer) return;
     const isEven = (bgmStep % 2 === 0);
-    const stepDelay = isEven ? 122 : 88;
+    const stepDelay = isEven ? 122 : 86;
 
     if (bgmEnabled && soundEnabled && state === 1 && !is_paused) {
         try {
@@ -1582,45 +1654,45 @@ function craftForge(recipe) {
         if (plasma_shards >= 15 && nano_alloys >= 10) {
             plasma_shards -= 15; nano_alloys -= 10;
             active_supernova = 1; dur_fire = 600;
-            playTone(600, 'triangle', 0.2);
-        } else { playTone(150, 'sawtooth', 0.15); }
+            playCraftSuccess();
+        } else { playCraftFail(); }
     } else if (recipe === 2) {
         if (plasma_shards >= 12 && quantum_cores >= 8) {
             plasma_shards -= 12; quantum_cores -= 8;
             active_chronos = 1;
             pad_w += 15;
-            playTone(700, 'sine', 0.25);
-        } else { playTone(150, 'sawtooth', 0.15); }
+            playCraftSuccess();
+        } else { playCraftFail(); }
     } else if (recipe === 3) {
         if (quantum_cores >= 10 && nano_alloys >= 15) {
             quantum_cores -= 10; nano_alloys -= 15;
             active_valkyrie = 1; dur_laser = 600;
-            playTone(800, 'square', 0.2);
-        } else { playTone(150, 'sawtooth', 0.15); }
+            playCraftSuccess();
+        } else { playCraftFail(); }
     } else if (recipe === 4) {
         if (plasma_shards >= 10 && quantum_cores >= 10 && nano_alloys >= 10) {
             plasma_shards -= 10; quantum_cores -= 10; nano_alloys -= 10;
             aegis_layers += 3; dur_barrier = 800;
-            playTone(900, 'sine', 0.3);
-        } else { playTone(150, 'sawtooth', 0.15); }
+            playCraftSuccess();
+        } else { playCraftFail(); }
     } else if (recipe === 5) {
         if (plasma_shards >= 20 && quantum_cores >= 15 && nano_alloys >= 15) {
             plasma_shards -= 20; quantum_cores -= 15; nano_alloys -= 15;
             spawnGravityWell(w / 2, 140, 45, 0);
-            playTone(400, 'sawtooth', 0.4);
-        } else { playTone(150, 'sawtooth', 0.15); }
+            playCraftSuccess();
+        } else { playCraftFail(); }
     } else if (recipe === 6) {
         if (plasma_shards >= 12 && quantum_cores >= 12 && nano_alloys >= 12) {
             plasma_shards -= 12; quantum_cores -= 12; nano_alloys -= 12;
             active_satellite_boost = 1; dur_satellite = 700;
-            playTone(750, 'sine', 0.3);
-        } else { playTone(150, 'sawtooth', 0.15); }
+            playCraftSuccess();
+        } else { playCraftFail(); }
     } else if (recipe === 7) {
         if (quantum_cores >= 15 && nano_alloys >= 10) {
             quantum_cores -= 15; nano_alloys -= 10;
             active_resonance_catalyst = 1;
-            playTone(850, 'triangle', 0.3);
-        } else { playTone(150, 'sawtooth', 0.15); }
+            playCraftSuccess();
+        } else { playCraftFail(); }
     }
     saveGameData();
     updateForgeMatDisplay();
@@ -2079,7 +2151,7 @@ function launchDuelAttack(fromSlot, subtype = 'disruption') {
         color: isP1 ? '#00ffff' : '#ff00c8'
     });
     triggerScreenShake(4.0, 0.03);
-    playTone(isP1 ? 850 : 420, 'sawtooth', 0.2);
+    playFM('sawtooth', 'square', isP1 ? 850 : 420, 1.5, 4.0, 0.22, 0.15, 0.2, true, { target: isP1 ? 1200 : 220, time: 0.15 });
     showToast(isP1 ? "⚡ Plasma Surge Attack Sent to Opponent!" : "⚠️ Incoming Opponent Surge Attack!", 'info', 2000);
 
     if (gameMode === MODE_DUEL_ONLINE && rMultiplayer && fromSlot === myPlayerSlot) {
@@ -2096,7 +2168,7 @@ function applyDuelAttack(targetSlot, subtype) {
         // Disruption to P1
         triggerScreenShake(7.0, 0.05);
         spawnShockwave(pad_x + pad_w / 2, DUEL_H - 40, '#ff00c8');
-        playTone(200, 'square', 0.35);
+        playFM('square', 'sawtooth', 200, 2.5, 5.0, 0.35, 0.22, 0.25, true, { target: 70, time: 0.3 });
         // Add 2 glitched disruption bricks to P1
         for (let i = 0; i < 2; i++) {
             let rc = Math.floor(Math.random() * DUEL_COLS);
@@ -2106,7 +2178,7 @@ function applyDuelAttack(targetSlot, subtype) {
     } else {
         // Disruption to P2
         spawnShockwave(p2PadX + p2PadW / 2, DUEL_H - 40, '#00ffff');
-        playTone(200, 'square', 0.35);
+        playFM('square', 'sawtooth', 200, 2.5, 5.0, 0.35, 0.22, 0.25, true, { target: 70, time: 0.3 });
         for (let i = 0; i < 2; i++) {
             let rc = Math.floor(Math.random() * DUEL_COLS);
             p2Bricks[0][rc] = 8;
@@ -2296,9 +2368,9 @@ function updateDuel() {
         b.y += b.dy;
 
         // Arena Boundaries
-        if (b.x - 4 < ARENA_P1_X) { b.x = ARENA_P1_X + 4; b.dx = Math.abs(b.dx); playTone(500, 'sine', 0.02, 0.03); }
-        if (b.x + 4 > ARENA_P1_X + ARENA_P1_W) { b.x = ARENA_P1_X + ARENA_P1_W - 4; b.dx = -Math.abs(b.dx); playTone(500, 'sine', 0.02, 0.03); }
-        if (b.y - 4 < 32) { b.y = 36; b.dy = Math.abs(b.dy); playTone(550, 'sine', 0.02, 0.03); }
+        if (b.x - 4 < ARENA_P1_X) { b.x = ARENA_P1_X + 4; b.dx = Math.abs(b.dx); playWallBounce(); }
+        if (b.x + 4 > ARENA_P1_X + ARENA_P1_W) { b.x = ARENA_P1_X + ARENA_P1_W - 4; b.dx = -Math.abs(b.dx); playWallBounce(); }
+        if (b.y - 4 < 32) { b.y = 36; b.dy = Math.abs(b.dy); playWallBounce(); }
 
         // P1 Paddle Collision
         if (b.y + 4 >= DUEL_H - 40 && b.y - 4 <= DUEL_H - 30 && b.x >= pad_x && b.x <= pad_x + pad_w) {
@@ -2307,7 +2379,7 @@ function updateDuel() {
             b.dx = hitRel * 4.5;
             b.dy = -Math.max(3.0, 5.0 - Math.abs(hitRel));
             p1ComboCount = 0;
-            playTone(600, 'square', 0.05, 0.08);
+            playPaddleHit();
             spawnShockwave(b.x, b.y, '#00ffff');
         }
 
@@ -2323,7 +2395,7 @@ function updateDuel() {
                 score += 50;
                 p1ComboCount++;
                 spawnParticles(b.x, b.y, getBrickColor(type, r, c), 6);
-                playTone(650 + p1ComboCount * 40, 'triangle', 0.08);
+                playBrickHit(type, p1ComboCount);
 
                 duelSurgeP1 = Math.min(100, duelSurgeP1 + 8 + (p1ComboCount > 1 ? 8 : 0));
                 if (duelSurgeP1 >= 100) {
@@ -2340,7 +2412,7 @@ function updateDuel() {
         // P1 KO!
         p2KOs++;
         triggerScreenShake(7.0, 0.05);
-        playTone(220, 'sawtooth', 0.35);
+        playLifeLost();
         showToast("⚠️ Round KO! Point awarded to Opponent!", 'warning', 2500);
         if (p2KOs >= targetKOs) {
             duelMatchOver = true;
@@ -2966,25 +3038,25 @@ function useSkill(skill) {
     initAudio();
     if (skill === 'laser' && cd_laser <= 0) {
         dur_laser = 360; cd_laser = 720;
-        playTone(550, 'square', 0.15);
+        playSkillSFX('laser');
     } else if (skill === 'multi' && cd_multi <= 0) {
         cd_multi = 900;
         if (balls.length > 0) splitBall(0);
-        playTone(440, 'triangle', 0.2);
+        playSkillSFX('multi');
     } else if (skill === 'fire' && cd_fire <= 0) {
         dur_fire = 480; cd_fire = 900;
-        playTone(300, 'sawtooth', 0.25);
+        playSkillSFX('fire');
     } else if (skill === 'barrier' && cd_barrier <= 0) {
         dur_barrier = 600; cd_barrier = 1080;
-        playTone(800, 'sine', 0.2);
+        playSkillSFX('barrier');
     } else if (skill === 'grav' && cd_gravity <= 0) {
         dur_gravity = 400; cd_gravity = 800;
         spawnGravityWell(w / 2, 160, 35, 0);
-        playTone(400, 'sine', 0.3);
+        playSkillSFX('grav');
     } else if (skill === 'sat' && cd_satellite <= 0) {
         dur_satellite = 480; cd_satellite = 840;
         spawnShockwave(pad_x + pad_w / 2, h - 40, '#00ffcc');
-        playTone(650, 'sine', 0.25);
+        playSkillSFX('sat');
     }
 }
 
@@ -3475,14 +3547,14 @@ function update() {
             for (let s of satellites) {
                 spawnLaser(s.x, s.y, 0, -8, 1);
             }
-            playTone(700, 'square', 0.04);
+            playLaserShot();
         }
 
         let laserRate = active_valkyrie ? 8 : 15;
         if (dur_laser > 0 && dur_laser % laserRate === 0) {
             spawnLaser(pad_x + 5, h - 40, 0, active_valkyrie ? -9 : -7, active_valkyrie ? 1 : 0);
             spawnLaser(pad_x + pad_w - 5, h - 40, 0, active_valkyrie ? -9 : -7, active_valkyrie ? 1 : 0);
-            playTone(600, 'square', 0.05);
+            playLaserShot();
         }
 
         for (let l of lasers) {
@@ -3565,7 +3637,7 @@ function update() {
                     spawnParticles(s.x, s.y, '#00ffcc', 8);
                     spawnShockwave(s.x, s.y, '#00ffcc');
                     score += 10;
-                    playTone(600, 'sine', 0.1);
+                    playWallBounce();
                 }
             }
 
@@ -3579,9 +3651,9 @@ function update() {
             b.trail.push({ x: b.x, y: b.y });
             if (b.trail.length > 8) b.trail.shift();
 
-            if (b.x < 0) { b.x = 0; b.dx = -b.dx; }
-            if (b.x > w - 8) { b.x = w - 8; b.dx = -b.dx; }
-            if (b.y < 0) { b.y = 0; b.dy = -b.dy; }
+            if (b.x < 0) { b.x = 0; b.dx = -b.dx; playWallBounce(); }
+            if (b.x > w - 8) { b.x = w - 8; b.dx = -b.dx; playWallBounce(); }
+            if (b.y < 0) { b.y = 0; b.dy = -b.dy; playWallBounce(); }
 
             if ((dur_barrier > 0 || aegis_layers > 0) && b.y >= h - 20) {
                 b.y = h - 20; b.dy = -Math.abs(b.dy);
@@ -3598,7 +3670,8 @@ function update() {
                 spawnParticles(b.x + 4, h - 40, '#00ffff', 8);
                 spawnShockwave(b.x + 4, h - 40, '#00ffff');
                 triggerScreenShake(4.0, 0.025);
-                playTone(400, 'sine', 0.1);
+                spComboCount = 0;
+                playPaddleHit();
             }
 
             if (boss_active && b.x + 8 > boss_x && b.x < boss_x + boss_w && b.y + 8 > boss_y && b.y < boss_y + boss_h) {
@@ -3607,7 +3680,7 @@ function update() {
                 spawnParticles(b.x, b.y, '#ff0055', 8);
                 spawnShockwave(b.x, b.y, '#ff0055');
                 triggerScreenShake(6.0, 0.03);
-                playTone(250, 'square', 0.1);
+                playBossHit();
                 if (boss_hp <= 0) {
                     score += 500;
                     nano_alloys += 5; quantum_cores += 3;
@@ -3663,7 +3736,9 @@ function update() {
                             if (bricks[r][c] === 0) { bricks_left--; score += 10 * chaosMult; lifetime_bricks++; }
                             b.dy = -b.dy;
                         }
-                        playTone(500, 'triangle', 0.08);
+                        spComboCount++;
+                        if (spComboCount > (telemetry.maxCombo || 0)) telemetry.maxCombo = spComboCount;
+                        playBrickHit(type, spComboCount);
 
                         if (chaos_mode && Math.random() < 0.25 && balls.length < 30) {
                             splitBall(balls.indexOf(b));
@@ -4512,6 +4587,13 @@ window.addEventListener('keydown', e => {
         return;
     }
 
+    // Audio / Mute toggle [M / Shift+M / U]
+    if (e.code === 'KeyU' || (e.code === 'KeyM' && (e.shiftKey || state !== 1)) || (isKeyAction(e.code, 'mute') && !e.repeat)) {
+        e.preventDefault();
+        toggleAudio();
+        return;
+    }
+
     // Escape handling hierarchy
     if (e.code === 'Escape' || isKeyAction(e.code, 'pause') && e.code === 'Escape') {
         if (keybind_open) { closeKeybindModal(); return; }
@@ -4627,13 +4709,13 @@ window.addEventListener('keydown', e => {
     if (state === 0 || state === 2 || state === 3) {
         if (e.code === 'Enter') {
             setCanvasMode(false);
-            diff = 0; speed = 3.5; score = 0; lives = 3; level = 1; chaos_mode = 0; initLevel(); state = 1;
+            diff = 0; speed = 3.5; score = 0; lives = 3; level = 1; chaos_mode = 0; initLevel(); state = 1; startBgm();
         } else if (e.code === 'Space') {
             setCanvasMode(false);
-            diff = 1; speed = 5.0; score = 0; lives = 3; level = 1; chaos_mode = 0; initLevel(); state = 1;
+            diff = 1; speed = 5.0; score = 0; lives = 3; level = 1; chaos_mode = 0; initLevel(); state = 1; startBgm();
         } else if (e.code === 'KeyC') {
             setCanvasMode(false);
-            diff = 1; speed = 4.5; score = 0; lives = 5; level = 1; chaos_mode = 1; initLevel(); state = 1;
+            diff = 1; speed = 4.5; score = 0; lives = 5; level = 1; chaos_mode = 1; initLevel(); state = 1; startBgm();
         } else if (isKeyAction(e.code, 'duel') || e.code === 'KeyD') {
             e.preventDefault();
             openDuelModal();
@@ -4684,7 +4766,7 @@ cvs.addEventListener('pointerdown', e => {
     dismissToast();
     if (state === 0 || state === 2 || state === 3) {
         setCanvasMode(false);
-        diff = 0; speed = 3.5; score = 0; lives = 3; level = 1; chaos_mode = 0; initLevel(); state = 1;
+        diff = 0; speed = 3.5; score = 0; lives = 3; level = 1; chaos_mode = 0; initLevel(); state = 1; startBgm();
     } else if (state === 1 && !forge_open && !is_paused && !tutorial_open && !duel_open && !replay_open && !keybind_open) {
         for (let b of balls) {
             if (b.stuck) {
