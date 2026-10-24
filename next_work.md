@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,9 +28,9 @@ current_targets:
   kilo_creator: kweb://rfc-archive
   kilo_graphics: KVoid
   kilo_soundscape: KFarm
-  kilo_tester: KJournal
-  kilo_usability: KJournal
-  kilo_qa: KJournal
+  kilo_tester: KBudget
+  kilo_usability: KBudget
+  kilo_qa: KBudget
   kilo_expander: KSteno
 virtual_web_target: kweb://rfc-archive
 virtual_web_rotation:
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KAnomaly
-  timestamp: '2026-10-24T09:52:54-07:00'
+  agent: kilo-qa
+  app: KJournal
+  timestamp: '2026-10-24T10:03:16-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -126,11 +126,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Compose mystical alchemical workshop 6-channel suite (Dorian/Lydian celesta bells, warm glass pad, bubbling FM cauldron transients, transmutation fanfare stingers). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KJournal`
+- **Active Target**: `KBudget`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KJournal` | `KiloOS/public/apps/kjournal.html`, `KJournal/main.c` | Audit daily entry editor, mood tags, markdown rendering, password lock, and calendar navigation. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Audit expense ledger, category charts, currency toggles, budget goals, and VFS export. |
 | `KHabit` | `KiloOS/public/apps/khabit.html`, `KHabit/main.c` | Audit habit tracker streaks, completion heatmaps, daily reminder alerts, and keyboard shortcuts. |
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Audit flashcard deck manager, spaced repetition algorithm, flip animations, and deck import/export. |
@@ -139,11 +138,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KJournal`
+- **Active Target**: `KBudget`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KJournal` | `KiloOS/public/apps/kjournal.html`, `KJournal/main.c` | Responsive split entry list and markdown editor, line-length readability clamp, and clear save indicator. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Responsive tabular ledger at <640px, accessible color-blind friendly category tags, and modal focus traps. |
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Large card flip touch/keyboard ergonomics (`Space` to flip, `1-4` for ratings), responsive progress bar, and deck picker drawer. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
@@ -152,11 +150,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KJournal`
+- **Active Target**: `KBudget`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KJournal` | `KiloOS/public/apps/kjournal.html`, `KJournal/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, encryption key safety, first-run tutorial tips, dual Win32 C parity, and promote to Mature table. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, currency calculation accuracy, export verification, dual Win32 C parity, and promote to Mature table. |
 | `KHabit` | `KiloOS/public/apps/khabit.html`, `KHabit/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, streak calculation edge-cases, first-run tutorial tips, dual Win32 C parity, and promote to Mature table. |
 | `KFlash` | `KiloOS/public/apps/kflash.html`, `KFlash/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Leitner box scheduling math, deck import integrity, dual Win32 C parity, and promote to Mature table. |
@@ -188,6 +185,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KJournal** | `KiloOS/public/apps/kjournal.html` | Pass 5+ (2026-10-24) | Productivity / Writing & Journal | Complete encrypted retro journal workstation with rich markdown preview, mood tags, PIN lock, calendar navigator, F5/F9 persistence, and dual Win32 C parity. |
 | **KMatrix** | `KiloOS/public/apps/kmatrix.html` | Pass 5+ (2026-10-24) | System / Security | Master forensic terminal & ARG climax with matrix digital rain visualizer, subterranean codebook decrypter, RF frequency waterfall, YM2612/SPC700 telemetry, F5/F9 state persistence, and dual Win32 C parity. |
 | **KVault** | `KiloOS/public/apps/kvault.html` | Pass 5+ (2026-10-24) | System / Security | Comprehensive client-side encrypted password & secret manager with AES-GCM/PBKDF2/WebCrypto, tree navigator, KeePass/CSV/ASCII export/import, F5/F9 state snapshots, and Win32 C parity. |
 | **KHash** | `KiloOS/public/apps/khash.html` | Pass 5+ (2026-10-24) | Security / Cryptography | Complete multi-algorithm checksum workstation (MD5, SHA1, SHA256, CRC32, Adler32, FNV-1a, Murmur3, CRC16), HMAC key generation, byte forensics/entropy, F5/F9 persistence, and dual Win32 C parity. |
@@ -240,6 +238,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T10:03:16-07:00 — kilo-qa: KJournal (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 193.1 KB, native 196.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload snapshots, kjournal_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer/autosave cleanup.
+  - Mature Quarantine & Handoff: Promoted `KJournal` to Mature archive; advanced `kilo-qa` to `KBudget`; next agent `kilo-expander`.
+
 - **2026-10-24T09:52:54-07:00 — kilo-usability: KAnomaly (Usability, HiDPI Waterfall & Decoder Telemetry Polish)**
   - Status: PASS ✅ (0 errors, web 114.4 KB, native 20.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - HiDPI & Spectrogram: Dynamic offscreen waterfall buffer scaling to backing resolution with preserved scanline history, dpr graticules and strata ticks.
@@ -261,10 +265,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-24T09:21:47-07:00 — kilo-graphics: KAlchemy (Skip — Asset Suitability)**
   - ⏭️ Skip — Vector/SVG UI crafting game; zero glints; full production visuals.
   - Handoff: Advanced `kilo-graphics` to `KVoid`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-24T09:17:30-07:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Party Vault Interactive Canvas & VFS Integration)**
-  - Status: PASS ✅ (0 errors, web 87.4 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Interactive 64K intro Canvas switcher with 5 real-time effects: plasma, rotozoom, 3D starfield, copper bars, metaballs.
-  - ANSI .NFO archive & studio with multiple phosphor themes, ASCII frame generator, KPad/KHex launching, and VFS export.
-  - Compo voting board with point tallying, category filtering, simulated release downloads, and subterranean 1999Hz mesh beacon.
-  - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.
