@@ -736,7 +736,7 @@
       status: "LOCKED",
       description: "Precursor recovery log recorded in storage subsystem.",
       clue: "System recovery log name preserved in KNote/KPad: RECOVERY_1999.",
-      keys: ["RECOVERY_1999", "SYSTEM_RECOVERY_1999.LOG", "PRECURSOR_RELIC", "VFS_ARCHIVE"],
+      keys: ["RECOVERY_1999", "SYSTEM_RECOVERY_1999.LOG", "PRECURSOR_RELIC", "VFS_ARCHIVE", "1999-ARCH", "VFS", "ALPHA.SYS"],
       telemetry: "VFS_PATH: /system/recovery/1999.log | INODE: #01999 | CRC32: 0x999F7F",
       log: "Archival record unsealed: 'The autonomous fleet awakens on scheduled ticks.'"
     },
@@ -1864,6 +1864,18 @@
       case 'pcap':
         cmdSniff(arg1);
         break;
+      case 'vfs':
+      case 'verify':
+        printLine("--- KILOOS VFS SECTOR VERIFICATION ---", "cyan");
+        printLine("Querying /sys/alpha.sys for subterranean passkey fragments...", "system");
+        try {
+          window.parent.postMessage({ type: 'VFS_READ', path: '/sys/alpha.sys', requestId: 'kmatrix_poll_' + Date.now() }, '*');
+          printLine("Dispatched VFS_READ request to KiloOS desktop bridge.", "system");
+        } catch(e) {
+          printLine("Unable to contact KiloOS desktop bridge (standalone window mode).", "alert");
+        }
+        break;
+
       case 'matrix':
       case 'rain':
         if (arg1 === 'on') toggleMatrixRain(true);
@@ -2170,6 +2182,35 @@
   };
 
   // --- INITIALIZATION ---
+  // --- KILOOS VFS INGRESS & LIVE KERNEL VERIFICATION ---
+  let vfsVerifiedSectors = {};
+  window.addEventListener('message', (e) => {
+    if (!e.data) return;
+    if (e.data.type === 'VFS_READ_DONE') {
+      const dataStr = String(e.data.data || '');
+      if (dataStr.includes('RECOVERY_1999') || dataStr.includes('1999-ARCH')) {
+        vfsVerifiedSectors['STORAGE_VFS'] = true;
+        const sec = state.sectors.find(s => s.id === 'STORAGE_VFS');
+        if (sec && sec.status !== 'BREACHED') {
+          sec.status = 'BREACHED';
+          renderHUD();
+          printLine('[VFS KERNEL AUTHENTICATED] Sector 04 (STORAGE_VFS) verified from /sys/alpha.sys!', 'success');
+          logTelemetry('Sector STORAGE_VFS auto-breached via KiloOS VFS kernel fragment verification.');
+          saveState(false);
+          checkClimax();
+        }
+      }
+    } else if (e.data.type === 'VFS_CHANGED') {
+      if (e.data.path === '/sys/alpha.sys' || (typeof e.data.path === 'string' && e.data.path.startsWith('/home/crypto/'))) {
+        window.parent.postMessage({ type: 'VFS_READ', path: '/sys/alpha.sys', requestId: 'kmatrix_check_' + Date.now() }, '*');
+      }
+    }
+  });
+
+  try {
+    window.parent.postMessage({ type: 'VFS_READ', path: '/sys/alpha.sys', requestId: 'kmatrix_init_' + Date.now() }, '*');
+  } catch(e) {}
+
   renderHUD();
   initMatrixRain();
   printLine("KMATRIX // RETRO FORENSIC MASTER TERMINAL INITIALIZED", "cyan");

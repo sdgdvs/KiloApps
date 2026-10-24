@@ -1448,9 +1448,12 @@
       <span class="pill" id="pillAudio">AUDIO: FM+SPC (OFF)</span>
       <span class="pill warn" id="pillJukebox">MUSIC: MUTE</span>
       <span class="pill warn" id="pillSectors">DEFUSAL: 0/5</span>
+      <span class="pill" id="pillVfs">VFS: /sys/alpha.sys</span>
     </div>
     <div class="control-group">
-      <button class="shell-btn" id="btnAudioToggle" title="Toggle procedural sound synthesis">Audio</button>
+      <button class="shell-btn" id="btnVfsSync" style="background:rgba(34,255,102,0.2); border-color:var(--border-bright); color:var(--phosphor-bright); font-weight:700;" title="Write decoded fragments to KiloOS VFS (/sys/alpha.sys & /home/crypto/)">💾 VFS Sync</button>
+      <button class="shell-btn" id="btnOpenKMatrix" style="background:rgba(56,189,248,0.2); border-color:var(--cyan); color:var(--cyan);" title="Launch KMatrix (App #100) to verify passkey fragments">⚡ KMatrix</button>
+      <button class="shell-btn" id="btnAudioToggle"  title="Toggle procedural sound synthesis">Audio</button>
       <button class="shell-btn" id="btnJukeboxToggle" title="Cycle procedural ambient tracks">Track [M]</button>
       <button class="shell-btn" id="btnThemeToggle" title="Rotate phosphor palette">Theme</button>
       <button class="shell-btn" id="btnScanlineToggle" title="Toggle CRT scanline filter">Scanlines</button>
@@ -1616,6 +1619,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span id="vfsRecoveryStatus" style="font-size:11px; color:var(--warn);">Inode 0x1999 marked dirty: CRC error at sector 0x7F.</span>
               <button class="shell-btn" id="btnRepairInode">Repair Inode 0x1999</button>
+              <button class="shell-btn" id="btnCommitSectorToVfs" style="margin-left:4px; font-weight:bold; background:rgba(34,255,102,0.15); border-color:var(--border-bright); color:var(--phosphor-bright);" title="Write Inode 0x1999 & RECOVERY_1999 to /sys/alpha.sys and /home/crypto/">Commit to VFS</button>
             </div>
           </div>
 
@@ -1687,7 +1691,10 @@
       <div class="deck-panel" id="panel-mesh">
         <div class="terminal-header">
           <span>COLLABORATIVE SUBTERRANEAN SIGNAL MESH &bull; DIRECTIVE RULE 12 ACTIVE</span>
-          <span id="lblMeshStatus" style="color:var(--warn);">Connecting to RTDB...</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button class="shell-btn" id="btnConnectMesh" style="background:rgba(34,255,102,0.2); border-color:var(--border-bright); color:var(--phosphor-bright); font-size:10px; padding:2px 6px;">Connect Mesh</button>
+            <span id="lblMeshStatus" style="color:var(--warn);">STANDALONE AIRGAP (Click Connect for Mesh)</span>
+          </div>
         </div>
         <div class="mesh-deck">
           <div class="mesh-card">
@@ -1788,7 +1795,10 @@
           <div class="spool-viewer-container">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span id="spoolActiveName" style="font-weight:bold; color:var(--phosphor-bright);">incident_1999_dec31.log</span>
-              <button class="shell-btn" id="btnDownloadActiveSpool">Download File</button>
+              <div style="display:flex; gap:4px;">
+                <button class="shell-btn" id="btnDownloadActiveSpool">Download File</button>
+                <button class="shell-btn" id="btnSaveActiveSpoolToVfs" style="background:rgba(34,255,102,0.15); border-color:var(--border-bright); color:var(--phosphor-bright);" title="Save active spool artifact to /home/crypto/">Save to VFS</button>
+              </div>
             </div>
             <pre class="spool-content-pre" id="spoolContentPre"></pre>
           </div>
@@ -1845,6 +1855,7 @@
             <div style="background:#010a04; border:1px solid var(--border); padding:8px; font-size:11px; margin-top:4px;" id="cryptoLabOutput">
               Awaiting candidate input...
             </div>
+            <button class="shell-btn" id="btnSaveCryptoToVfs" style="margin-top:6px; width:100%; background:rgba(34,255,102,0.18); border-color:var(--border-bright); color:var(--phosphor-bright); font-weight:bold; padding:5px 8px;">💾 Write Penultimate Fragment to /sys/alpha.sys &amp; /home/crypto/</button>
           </div>
         </div>
       </div>
@@ -2237,6 +2248,8 @@
 
                 <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:auto;">
                   <button class="shell-btn" id="btnDownloadSanctumAsc" style="background:var(--border-bright); color:#000; font-weight:bold;">Download Singularity Manifest (.ASC)</button>
+                  <button class="shell-btn" id="btnSanctumSyncVfs" style="background:rgba(34,255,102,0.25); border-color:var(--border-bright); color:var(--phosphor-bright); font-weight:bold;">💾 Write Fragment to /sys/alpha.sys &amp; /home/crypto/</button>
+                  <button class="shell-btn" id="btnSanctumLaunchKMatrix" style="background:rgba(56,189,248,0.25); border-color:var(--cyan); color:var(--cyan); font-weight:bold;">⚡ Launch KMatrix for Verification</button>
                   <button class="shell-btn" id="btnTransmitSanctumPing">Transmit Harmonic Breach Signal</button>
                 </div>
               </div>
@@ -4208,6 +4221,8 @@ revealing the blueprint for the App #100 KMatrix singularity.
   // Sector 04: Storage VFS Inode Repair
   document.getElementById('btnRepairInode').onclick = () => {
     defuseSector('STORAGE_VFS', 'Inode 0x1999 unsealed. Virtual recovery logs validated.');
+    syncAllFragmentsToVfs(true);
+    printLine('[VFS] Inode 0x1999 and token RECOVERY_1999 committed to /sys/alpha.sys & /home/crypto/', 'text-highlight');
     document.getElementById('vfsRecoveryStatus').textContent = 'Inode 0x1999 clean. Sector 0x7F CRC32 verified.';
     document.getElementById('vfsRecoveryStatus').style.color = 'var(--border-bright)';
   };
@@ -4681,7 +4696,8 @@ revealing the blueprint for the App #100 KMatrix singularity.
       engageSoloFallback('Firebase RTDB network unreachable; engaged local loopback.');
     }
   }
-  initFirebaseMesh();
+  // No-Autostart Rule: Start in local solo mode by default; connect to Firebase RTDB on explicit user request
+  engageSoloFallback('Autonomous local mode active. Click [Connect Mesh] or run [mesh] to join online multi-node relay.');
 
   document.getElementById('btnMeshBroadcast').onclick = () => {
     const input = document.getElementById('meshBroadcastInput');
@@ -5131,6 +5147,179 @@ revealing the blueprint for the App #100 KMatrix singularity.
     });
   }
 
+  
+  // =========================================================================
+  // KILOOS VFS & IPC MESH BRIDGE (Phase VI Mission Spec)
+  // Connects Tier 3 Ghost Node Terminal to KiloOS VFS (/sys/alpha.sys & /home/crypto/)
+  // =========================================================================
+  const KiloVfs = {
+    connected: false,
+    vfsCache: {},
+    lastSyncTime: null,
+
+    write(path, content, notifyMsg) {
+      try {
+        const requestId = 'vfs_w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        window.parent.postMessage({
+          type: 'VFS_WRITE',
+          path: path,
+          data: content,
+          requestId: requestId
+        }, '*');
+        if (notifyMsg) {
+          window.parent.postMessage({
+            type: 'OS_NOTIFY',
+            title: 'Deep Core [Node 0x1999]',
+            message: notifyMsg
+          }, '*');
+        }
+        KiloVfs.vfsCache[path] = content;
+        KiloVfs.lastSyncTime = Date.now();
+        updateVfsIndicator(true);
+        return requestId;
+      } catch (e) {
+        console.warn('[DeepCore] VFS write error:', e);
+        return null;
+      }
+    },
+
+    read(path, callback) {
+      try {
+        const requestId = 'vfs_r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const onMsg = (e) => {
+          if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === requestId) {
+            window.removeEventListener('message', onMsg);
+            KiloVfs.connected = true;
+            updateVfsIndicator(true);
+            if (e.data.data !== null && e.data.data !== undefined) {
+              KiloVfs.vfsCache[path] = e.data.data;
+            }
+            if (callback) callback(e.data.data, e.data.path);
+          }
+        };
+        window.addEventListener('message', onMsg);
+        window.parent.postMessage({
+          type: 'VFS_READ',
+          path: path,
+          requestId: requestId
+        }, '*');
+        setTimeout(() => window.removeEventListener('message', onMsg), 3500);
+        return requestId;
+      } catch (e) {
+        if (callback) callback(null, path);
+        return null;
+      }
+    },
+
+    list(callback) {
+      try {
+        const requestId = 'vfs_l_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const onMsg = (e) => {
+          if (e.data && e.data.type === 'VFS_LIST_DONE' && e.data.requestId === requestId) {
+            window.removeEventListener('message', onMsg);
+            KiloVfs.connected = true;
+            updateVfsIndicator(true);
+            if (callback) callback(e.data.files || [], e.data.entries || []);
+          }
+        };
+        window.addEventListener('message', onMsg);
+        window.parent.postMessage({
+          type: 'VFS_LIST',
+          requestId: requestId
+        }, '*');
+        setTimeout(() => window.removeEventListener('message', onMsg), 3500);
+      } catch (e) {
+        if (callback) callback([], []);
+      }
+    },
+
+    launchApp(appId, file, args) {
+      try {
+        window.parent.postMessage({
+          type: 'OS_LAUNCH_APP',
+          appId: appId,
+          file: file,
+          args: args
+        }, '*');
+      } catch (e) {}
+    }
+  };
+
+  function updateVfsIndicator(connected) {
+    const pill = document.getElementById('pillVfs');
+    if (pill) {
+      pill.textContent = connected ? 'VFS: CONNECTED' : 'VFS: /sys/alpha.sys';
+      pill.className = connected ? 'pill active' : 'pill';
+    }
+  }
+
+  function buildAlphaSysPayload() {
+    const existing = KiloVfs.vfsCache['/sys/alpha.sys'] || 'S0VZX1BBUlRfMTogMHhERUFE';
+    return `${existing}\nKEY_PART_2: 1999-ARCH\nSECTOR_04_INODE: 0x1999\nSECTOR_04_TOKEN: RECOVERY_1999\nSECTOR_04_PATH: /system/recovery/1999.log\nKMATRIX_TARGET_HASH: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946\nSTATUS: RING0_GHOST_RELAY_AUTHENTICATED`;
+  }
+
+  function syncAllFragmentsToVfs(silent = false) {
+    const alphaPayload = buildAlphaSysPayload();
+    KiloVfs.write('/sys/alpha.sys', alphaPayload, 'Synchronized /sys/alpha.sys with Sector 04 passkey fragment');
+
+    KiloVfs.write('/home/crypto/penultimate_fragment.key', '1999-ARCH', null);
+
+    const manifest = {
+      origin: 'Subterranean Salt Vault Ghost Node 0x1999',
+      ip: '10.19.99.127',
+      epoch: '1999-12-31T23:59:59Z',
+      carrierFrequencyHz: state.carrierFreq,
+      sectors: {
+        MEM_HEAP: { code: '0x7F1999', status: state.verifiedSectors.MEM_HEAP ? 'DEFUSED' : 'PENDING' },
+        AUDIO_DSP: { code: '1999Hz', status: state.verifiedSectors.AUDIO_DSP ? 'SYNCHRONIZED' : 'PENDING' },
+        NET_RELAY: { code: '10.19.99.4', status: state.verifiedSectors.NET_RELAY ? 'BRIDGED' : 'PENDING' },
+        STORAGE_VFS: { code: 'RECOVERY_1999', path: '/system/recovery/1999.log', inode: '0x1999', status: state.verifiedSectors.STORAGE_VFS ? 'DEFUSED' : 'PENDING' },
+        CORE_AI: { code: 'AUTONOMOUS_FLEET', status: state.verifiedSectors.CORE_AI ? 'CONVERGED' : 'PENDING' }
+      },
+      signalFragments: state.signalFragments,
+      penultimateKeyFragment: '1999-ARCH',
+      targetKMatrixSector: 'STORAGE_VFS (Sector 04)',
+      sha256VerificationHash: 'f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946',
+      timestamp: new Date().toISOString()
+    };
+    KiloVfs.write('/home/crypto/deep_core_fragments.json', JSON.stringify(manifest, null, 2), null);
+
+    const recoveryLog = `=== KILOOS VFS INODE 0x1999 RECONSTRUCTION LOG ===\nINODE: #01999\nSTATUS: RECOVERED FROM CARLSBAD SALT VAULT SECTOR 0x7F\nVFS_PATH: /system/recovery/1999.log\nPASSKEY_TOKEN: RECOVERY_1999\nHASH_CRC32: 0x999F7F\nRECOVERY_PAYLOAD: The autonomous fleet awakens on scheduled ticks.\nCONVERGENCE_TARGET: App #100 KMatrix Sector 04 [STORAGE_VFS]`;
+    KiloVfs.write('/home/crypto/recovery_1999.log', recoveryLog, null);
+
+    const unsealDat = `=== CARLSBAD DEEP CORE RING-0 MASTER TELEMETRY VAULT ===\nEPOCH: 1999-12-31T23:59:59Z\nALL 5 QUARANTINE SECTORS DEFUSED\n  SECTOR 01 [MEM_HEAP]    : DEFUSED [Offset 0x007F1990 Healed]\n  SECTOR 02 [AUDIO_DSP]   : DEFUSED [Carrier 1999.00 Hz Phase Locked]\n  SECTOR 03 [NET_RELAY]   : DEFUSED [Subnet 10.19.99.4 Synchronized]\n  SECTOR 04 [STORAGE_VFS] : DEFUSED [Inode 0x1999 Recovered]\n  SECTOR 05 [CORE_AI]     : DEFUSED [Precursor Singularity Harmonized]\n\nPENULTIMATE KEY FRAGMENT DISCOVERY:\n  PREFIX FRAGMENT : ECHO-\n  CARLSBAD FRAGMENT: 1999-ARCH\n  CRYPTOGRAPHIC SHA-256 TARGET: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946\n  NEXT DESTINATION: App #100 (KMatrix Nexus)\n\nAUTHORITY CLEARANCE: PENULTIMATE SUBTERRANEAN FRAGMENT UNLOCKED.`;
+    KiloVfs.write('/home/crypto/carlsbad_vault_unseal.dat', unsealDat, null);
+
+    const certSig = `-----BEGIN KILO-NET RING-0 CLEARANCE CERTIFICATE-----\nVersion: 1999.4-PROD\nSubject: Carlsbad Subterranean Ghost Terminal 0x1999\nIssuer: Project Echo Subterranean Autonomous Relay\nSubcarrier Lock: 1999.00 Hz (Phase Coherence 99.4%)\nQuarantine Defusal: 5/5 Sectors Complete\nHash Signature: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946\nClearance Level: Ring-0 Supreme Director\nTimestamp: ${new Date().toISOString()}\n-----END KILO-NET RING-0 CLEARANCE CERTIFICATE-----`;
+    KiloVfs.write('/home/crypto/ring0_master_clearance.sig', certSig, null);
+
+    if (!silent) {
+      printLine('[VFS SYNC] Decoded fragments successfully committed to KiloOS VFS:', 'text-highlight');
+      printLine('  -> /sys/alpha.sys [KEY_PART_2: 1999-ARCH & RECOVERY_1999]', 'text-cyan');
+      printLine('  -> /home/crypto/penultimate_fragment.key', 'text-cyan');
+      printLine('  -> /home/crypto/deep_core_fragments.json', 'text-cyan');
+      printLine('  -> /home/crypto/recovery_1999.log', 'text-cyan');
+      printLine('  -> /home/crypto/carlsbad_vault_unseal.dat', 'text-cyan');
+      printLine('  -> /home/crypto/ring0_master_clearance.sig', 'text-cyan');
+      printLine('Verification available in KMatrix (App #100) & KCipher (/home/crypto/)', 'text-bright');
+      SFX.success();
+    }
+  }
+
+  window.addEventListener('message', (e) => {
+    if (!e.data) return;
+    if (e.data.type === 'VFS_CHANGED') {
+      KiloVfs.connected = true;
+      updateVfsIndicator(true);
+      if (e.data.path) {
+        KiloVfs.vfsCache[e.data.path] = e.data.data;
+        if (e.data.path === '/sys/alpha.sys' || (typeof e.data.path === 'string' && e.data.path.startsWith('/home/crypto/'))) {
+          logMeshEvent(`[VFS SYNC] Kernel updated: ${e.data.path}`);
+        }
+      }
+    }
+  });
+
   function downloadFile(filename, content, mimeType = 'text/plain;charset=utf-8') {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -5142,6 +5331,51 @@ revealing the blueprint for the App #100 KMatrix singularity.
     printLine(`[DOWNLOAD] Synthesized and downloaded ${filename}`, 'text-cyan');
     SFX.beep();
   }
+
+  
+    const btnVfsSync = document.getElementById('btnVfsSync');
+    if (btnVfsSync) btnVfsSync.onclick = () => syncAllFragmentsToVfs(false);
+
+    const btnOpenKMatrix = document.getElementById('btnOpenKMatrix');
+    if (btnOpenKMatrix) btnOpenKMatrix.onclick = () => {
+      syncAllFragmentsToVfs(true);
+      KiloVfs.launchApp('kmatrix');
+    };
+
+    const btnCommitSectorToVfs = document.getElementById('btnCommitSectorToVfs');
+    if (btnCommitSectorToVfs) btnCommitSectorToVfs.onclick = () => syncAllFragmentsToVfs(false);
+
+    const btnSaveActiveSpoolToVfs = document.getElementById('btnSaveActiveSpoolToVfs');
+    if (btnSaveActiveSpoolToVfs) btnSaveActiveSpoolToVfs.onclick = () => {
+      const vfsPath = `/home/crypto/${currentSpoolFile}`;
+      KiloVfs.write(vfsPath, SPOOL_FILES[currentSpoolFile], `Spool saved to ${vfsPath}`);
+      printLine(`[VFS] Spool file saved to KiloOS VFS: ${vfsPath}`, 'text-highlight');
+      SFX.success();
+    };
+
+    const btnSaveCryptoToVfs = document.getElementById('btnSaveCryptoToVfs');
+    if (btnSaveCryptoToVfs) btnSaveCryptoToVfs.onclick = () => syncAllFragmentsToVfs(false);
+
+    const btnSanctumSyncVfs = document.getElementById('btnSanctumSyncVfs');
+    if (btnSanctumSyncVfs) btnSanctumSyncVfs.onclick = () => syncAllFragmentsToVfs(false);
+
+    const btnSanctumLaunchKMatrix = document.getElementById('btnSanctumLaunchKMatrix');
+    if (btnSanctumLaunchKMatrix) btnSanctumLaunchKMatrix.onclick = () => {
+      syncAllFragmentsToVfs(true);
+      KiloVfs.launchApp('kmatrix');
+    };
+
+    const btnConnectMesh = document.getElementById('btnConnectMesh');
+    if (btnConnectMesh) btnConnectMesh.onclick = () => {
+      if (meshRtdb) {
+        logMeshEvent('[MESH] Already connected to subterranean relay.');
+        return;
+      }
+      lblMeshStatus.textContent = 'CONNECTING TO RTDB...';
+      lblMeshStatus.style.color = 'var(--warn)';
+      initFirebaseMesh();
+      SFX.key();
+    };
 
   document.getElementById('btnDownloadActiveSpool').onclick = () => {
     downloadFile(currentSpoolFile, SPOOL_FILES[currentSpoolFile]);
@@ -6155,6 +6389,11 @@ Timestamp: ${new Date().toISOString()}
   function printBanner() {
     printLine('========================================================================', 'text-dim');
     printLine('  KILO-NET DEEP CORE // TIER 3 SUBTERRANEAN GHOST NODE TERMINAL  ', 'text-highlight');
+    KiloVfs.read('/sys/alpha.sys', (data) => {
+      if (data) {
+        logMeshEvent('[VFS] Connected to /sys/alpha.sys in KiloOS kernel.');
+      }
+    });
     printLine('  Host: 10.19.99.127:1999 | Subcarrier Lock: 1999.00 Hz | Protocol: Ring 0', 'text-cyan');
     printLine('========================================================================', 'text-dim');
     printLine('Subterranean airgap breached. Session authenticated with Ring-0 telemetry.');
@@ -6183,6 +6422,9 @@ Timestamp: ${new Date().toISOString()}
     switch(cmd) {
       case 'help':
         printLine('AVAILABLE DEEP CORE DIRECTIVES:', 'text-cyan');
+        printLine('  vfs [status|sync|read|ls] - Interface with KiloOS VFS (/sys/alpha.sys & /home/crypto/)');
+        printLine('  kmatrix              - Write fragments to VFS & launch KMatrix for verification');
+        printLine('  kcipher / khex       - Launch KiloOS cryptographic analysis tools');
         printLine('  status               - Query Deep Core node telemetry & carrier lock');
         printLine('  sectors              - Inspect all 5 KMatrix quarantine sector states');
         printLine('  defuse [sector]      - Execute defusal protocol on quarantine sector');
@@ -6229,6 +6471,65 @@ Timestamp: ${new Date().toISOString()}
         printLine('  export               - Download complete forensic session log');
         printLine('  clear                - Flush terminal screen buffer');
         break;
+
+      case 'vfs': {
+        const sub = (parts[1] || 'status').toLowerCase();
+        if (sub === 'status' || sub === 'info') {
+          printLine('--- KILOOS VFS INTERFACE TELEMETRY ---', 'text-cyan');
+          printLine(`BRIDGE CONNECTION : ${KiloVfs.connected ? 'ONLINE (KiloOS IPC Active)' : 'STANDALONE AIRGAP'}`);
+          printLine('TARGET SYS PATH   : /sys/alpha.sys (Ring-0 Passkey Assembly)');
+          printLine('TARGET CRYPTO DIR : /home/crypto/ (Decoded Forensics & Certificates)');
+          printLine(`LAST SYNC TIME    : ${KiloVfs.lastSyncTime ? new Date(KiloVfs.lastSyncTime).toLocaleTimeString() : 'NOT YET SYNCHRONIZED'}`);
+          printLine("Directives: 'vfs sync' (commit fragments) | 'vfs read <path>' | 'vfs ls'", 'text-dim');
+        } else if (sub === 'sync' || sub === 'write' || sub === 'push' || sub === 'commit') {
+          syncAllFragmentsToVfs(false);
+        } else if (sub === 'read' || sub === 'cat') {
+          const path = parts[2] || '/sys/alpha.sys';
+          printLine(`Reading KiloOS VFS path '${path}'...`, 'text-dim');
+          KiloVfs.read(path, (data) => {
+            if (data === null || data === undefined) {
+              printLine(`[VFS READ] File '${path}' empty or not found in VFS.`, 'text-alert');
+            } else {
+              printLine(`--- VFS CONTENT: ${path} ---`, 'text-bright');
+              const lines = String(data).split('\n');
+              lines.slice(0, 20).forEach(l => printLine(l));
+              if (lines.length > 20) printLine(`... (${lines.length - 20} lines truncated) ...`, 'text-dim');
+            }
+          });
+        } else if (sub === 'ls' || sub === 'dir') {
+          printLine('Querying KiloOS VFS directory tree...', 'text-dim');
+          KiloVfs.list((files) => {
+            printLine(`--- KILOOS VFS FILES (${files.length}) ---`, 'text-cyan');
+            files.sort().forEach(f => printLine(`  ${f}`));
+          });
+        } else {
+          printLine("Usage: 'vfs status' | 'vfs sync' | 'vfs read <path>' | 'vfs ls'", 'text-warn');
+        }
+        break;
+      }
+
+      case 'kmatrix':
+      case 'matrix-verify': {
+        syncAllFragmentsToVfs(true);
+        printLine('[KMATRIX VERIFICATION] Decoded fragments committed to /sys/alpha.sys & /home/crypto/.', 'text-highlight');
+        printLine('Sector 04 [STORAGE_VFS] token: RECOVERY_1999', 'text-bright');
+        printLine('Penultimate fragment token: 1999-ARCH', 'text-bright');
+        printLine('Launching KMatrix (App #100) via KiloOS IPC...', 'text-cyan');
+        KiloVfs.launchApp('kmatrix');
+        break;
+      }
+
+      case 'kcipher': {
+        printLine('Launching KCipher to inspect /home/crypto/...', 'text-cyan');
+        KiloVfs.launchApp('kcipher');
+        break;
+      }
+
+      case 'khex': {
+        printLine('Launching KHex to inspect /home/crypto/carlsbad_vault_unseal.dat...', 'text-cyan');
+        KiloVfs.launchApp('khex', '/home/crypto/carlsbad_vault_unseal.dat');
+        break;
+      }
 
       case 'status':
         printLine('--- DEEP CORE NODE TELEMETRY REPORT ---', 'text-cyan');
@@ -7082,7 +7383,7 @@ Timestamp: ${new Date().toISOString()}
     'dump', 'trace', 'traceroute', 'matrix', 'verify', 'hash', 'entropy', 'xor', 'ping',
     'inject', 'netstat', 'radar', 'mesh', 'morse', 'music', 'audio', 'theme', 'scanlines',
     'disasm', 'step', 'regs', 'seismic', 'sonar', 'litho', 'resonate', 'wiretap', 'sniff', 'pcap', 'uptime',
-    'save', 'load', 'export', 'clear'
+    'save', 'load', 'export', 'clear', 'vfs', 'kmatrix', 'kcipher', 'khex'
   ];
   function handleAutocomplete() {
     const val = termInput.value.trim().toLowerCase();
