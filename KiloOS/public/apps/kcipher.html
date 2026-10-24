@@ -1012,6 +1012,7 @@
             <span>OUTPUT / CIPHERTEXT</span>
             <div style="display: flex; gap: 4px;">
               <button class="btn btn-sm" id="btnInspectKHex" title="Inspect Ciphertext in KHex Hex Editor">🔍 Inspect in KHex</button>
+              <button class="btn btn-sm" id="btnSendToKSteno" title="Send Ciphertext to KSteno Steganography">🕵️ To KSteno</button>
               <button class="btn btn-sm" id="btnSendToFreq">📊 Analyze</button>
               <button class="btn btn-sm" id="btnSendToStego">🖼️ To Stego</button>
               <button class="btn btn-sm" id="btnClearOutput">Clear</button>
@@ -1071,6 +1072,7 @@
               <span id="pipelineStats" style="font-size: 11px; color: var(--text-muted); align-self: center; margin-right: 8px;">Chars: 0 | Entropy: 0.00</span>
               <button class="btn btn-sm" id="btnCopyPipelineOutput">📋 Copy</button>
               <button class="btn btn-sm" id="btnInspectPipelineKHex">🔍 Inspect in KHex</button>
+              <button class="btn btn-sm" id="btnSendPipelineKSteno" title="Send Pipeline Output to KSteno">🕵️ To KSteno</button>
             </div>
           </div>
           <div class="panel-body">
@@ -3515,6 +3517,20 @@
         audio.playSave();
       });
 
+      document.getElementById('btnSendToKSteno')?.addEventListener('click', () => {
+        const text = elements.outputText.value || elements.inputText.value;
+        if (!text) {
+          showToast('No ciphertext to send! Encrypt a message first.');
+          audio.playError();
+          return;
+        }
+        const stenoPath = '/home/crypto/kcipher_payload.txt';
+        KiloVFS.write(stenoPath, text);
+        KiloVFS.launchApp('ksteno', stenoPath);
+        showToast('Ciphertext dispatched to KSteno');
+        audio.playSave();
+      });
+
       // Pipeline Toolbar Handlers
       document.getElementById('btnPipelineEncrypt')?.addEventListener('click', () => executePipeline(false));
       document.getElementById('btnPipelineDecrypt')?.addEventListener('click', () => executePipeline(true));
@@ -3564,6 +3580,20 @@
         KiloVFS.write(inspectPath, text);
         KiloVFS.launchApp('khex', inspectPath);
         showToast('Pipeline output sent to KHex');
+        audio.playSave();
+      });
+
+      document.getElementById('btnSendPipelineKSteno')?.addEventListener('click', () => {
+        const text = document.getElementById('pipelineFinalOutput')?.value;
+        if (!text) {
+          showToast('No pipeline output to send!');
+          audio.playError();
+          return;
+        }
+        const stenoPath = '/home/crypto/kcipher_pipeline_payload.txt';
+        KiloVFS.write(stenoPath, text);
+        KiloVFS.launchApp('ksteno', stenoPath);
+        showToast('Pipeline output sent to KSteno');
         audio.playSave();
       });
       document.getElementById('btnSavePipelineVFS')?.addEventListener('click', () => {
@@ -4185,6 +4215,24 @@
       updateKeyGuards();
       updateStats();
       updateStegoCapacity();
+
+      function checkIncomingVFSLaunch() {
+        const rawHash = window.location.hash.replace(/^#/, '');
+        if (!rawHash) return;
+        const path = decodeURIComponent(rawHash);
+        if (path.startsWith('/')) {
+          KiloVFS.read(path, (data) => {
+            if (data && typeof data === 'string') {
+              elements.inputText.value = data;
+              runEncrypt();
+              showToast(`Loaded payload from VFS: ${path}`);
+              audio.playDecrypt();
+            }
+          });
+        }
+      }
+      window.addEventListener('hashchange', checkIncomingVFSLaunch);
+      checkIncomingVFSLaunch();
     });
   </script>
 </body>

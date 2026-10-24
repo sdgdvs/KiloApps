@@ -49,6 +49,9 @@ static int k_atoi(const char* s) {
 #define ID_BTN_COPY         110
 #define ID_BTN_QSAVE        111
 #define ID_BTN_QLOAD        112
+#define ID_BTN_FILE_OPEN    113
+#define ID_BTN_FILE_SAVE    114
+#define ID_BTN_FREQ_STATS   115
 
 // Colors
 static COLORREF COLOR_BG = RGB(9, 13, 22);
@@ -80,6 +83,9 @@ static HWND g_hBtnHelp = NULL;
 static HWND g_hBtnCopy = NULL;
 static HWND g_hBtnQuickSave = NULL;
 static HWND g_hBtnQuickLoad = NULL;
+static HWND g_hBtnFileOpen = NULL;
+static HWND g_hBtnFileSave = NULL;
+static HWND g_hBtnFreq = NULL;
 static HWND g_hStatusLabel = NULL;
 
 static char g_szStatus[256] = "KCipher Ready. Select cipher, enter key/shift, and click Encrypt/Decrypt.";
@@ -299,6 +305,112 @@ static void DoXOR(const char* in, char* out, const char* key, int decrypt) {
     }
 }
 
+static void OpenFileDlg(HWND hwnd) {
+    char szFile[MAX_PATH];
+    szFile[0] = 0;
+    OPENFILENAMEA ofn;
+    memset(&ofn, 0, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFilter = "Text / Cipher Files (*.txt;*.enc)\0*.txt;*.enc\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+    if (GetOpenFileNameA(&ofn)) {
+        HANDLE hFile = CreateFileA(szFile, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            char buf[4096];
+            memset(buf, 0, sizeof(buf));
+            DWORD dwRead = 0;
+            ReadFile(hFile, buf, sizeof(buf) - 1, &dwRead, NULL);
+            CloseHandle(hFile);
+            SetWindowTextA(g_hEditInput, buf);
+            wsprintfA(g_szStatus, "Loaded %d bytes from %s", (int)dwRead, szFile);
+            SetWindowTextA(g_hStatusLabel, g_szStatus);
+        }
+    }
+}
+
+static void SaveFileDlg(HWND hwnd) {
+    char szFile[MAX_PATH];
+    k_strcpy(szFile, "cipher_export.enc");
+    OPENFILENAMEA ofn;
+    memset(&ofn, 0, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFilter = "Cipher Files (*.enc)\0*.enc\0Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.Flags = OFN_OVERWRITEPROMPT;
+    if (GetSaveFileNameA(&ofn)) {
+        char buf[4096];
+        memset(buf, 0, sizeof(buf));
+        GetWindowTextA(g_hEditOutput, buf, sizeof(buf) - 1);
+        int len = k_strlen(buf);
+        if (len == 0) {
+            GetWindowTextA(g_hEditInput, buf, sizeof(buf) - 1);
+            len = k_strlen(buf);
+        }
+        HANDLE hFile = CreateFileA(szFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD dwWritten = 0;
+            WriteFile(hFile, buf, len, &dwWritten, NULL);
+            CloseHandle(hFile);
+            wsprintfA(g_szStatus, "Exported %d bytes to %s", len, szFile);
+            SetWindowTextA(g_hStatusLabel, g_szStatus);
+        }
+    }
+}
+
+static void ShowFrequencyStats(HWND hwnd) {
+    char text[4096];
+    memset(text, 0, sizeof(text));
+    GetWindowTextA(g_hEditOutput, text, sizeof(text) - 1);
+    if (k_strlen(text) == 0) {
+        GetWindowTextA(g_hEditInput, text, sizeof(text) - 1);
+    }
+    int len = k_strlen(text);
+    if (len == 0) {
+        MessageBoxA(hwnd, "No text to analyze. Enter plaintext or generate ciphertext first.", "Frequency Analysis", MB_OK | MB_ICONWARNING);
+        return;
+    }
+    int counts[26];
+    memset(counts, 0, sizeof(counts));
+    int totalLetters = 0;
+    for (int i = 0; i < len; i++) {
+        char c = text[i];
+        if (c >= 'A' && c <= 'Z') { counts[c - 'A']++; totalLetters++; }
+        else if (c >= 'a' && c <= 'z') { counts[c - 'a']++; totalLetters++; }
+    }
+    
+    int iocScaled = 0;
+    if (totalLetters > 1) {
+        int sumProd = 0;
+        for (int i = 0; i < 26; i++) {
+            sumProd += counts[i] * (counts[i] - 1);
+        }
+        iocScaled = (sumProd * 1000) / (totalLetters * (totalLetters - 1));
+    }
+
+    char msg[1024];
+    wsprintfA(msg,
+        "Text Length: %d chars | English Letters: %d\n"
+        "Index of Coincidence (IoC): 0.%03d\n"
+        "(Typical English: ~0.067 | Polyalphabetic/Random: ~0.038)\n\n"
+        "Letter Frequency Breakdown:\n"
+        "A:%d B:%d C:%d D:%d E:%d F:%d G:%d\n"
+        "H:%d I:%d J:%d K:%d L:%d M:%d N:%d\n"
+        "O:%d P:%d Q:%d R:%d S:%d T:%d U:%d\n"
+        "V:%d W:%d X:%d Y:%d Z:%d",
+        len, totalLetters, iocScaled,
+        counts[0], counts[1], counts[2], counts[3], counts[4], counts[5], counts[6],
+        counts[7], counts[8], counts[9], counts[10], counts[11], counts[12], counts[13],
+        counts[14], counts[15], counts[16], counts[17], counts[18], counts[19], counts[20],
+        counts[21], counts[22], counts[23], counts[24], counts[25]);
+
+    MessageBoxA(hwnd, msg, "Frequency & IoC Analysis", MB_OK | MB_ICONINFORMATION);
+}
+
 static void ProcessCipher(int decrypt) {
     char inText[4096];
     char outText[4096];
@@ -505,22 +617,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(g_hEditOutput, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
 
             // Action Buttons
-            g_hBtnSwap = CreateWindowA("BUTTON", "Swap Panes", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 485, 100, 26, hwnd, (HMENU)ID_BTN_SWAP, NULL, NULL);
+            g_hBtnSwap = CreateWindowA("BUTTON", "Swap Panes", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 485, 85, 26, hwnd, (HMENU)ID_BTN_SWAP, NULL, NULL);
             SendMessageA(g_hBtnSwap, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
-            g_hBtnClear = CreateWindowA("BUTTON", "Clear All", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 130, 485, 90, 26, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
+            g_hBtnClear = CreateWindowA("BUTTON", "Clear All", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 485, 75, 26, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
             SendMessageA(g_hBtnClear, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
-            g_hBtnCopy = CreateWindowA("BUTTON", "Copy Output", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 230, 485, 110, 26, hwnd, (HMENU)ID_BTN_COPY, NULL, NULL);
+            g_hBtnCopy = CreateWindowA("BUTTON", "Copy Output", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 485, 90, 26, hwnd, (HMENU)ID_BTN_COPY, NULL, NULL);
             SendMessageA(g_hBtnCopy, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
-            g_hBtnQuickSave = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 350, 485, 90, 26, hwnd, (HMENU)ID_BTN_QSAVE, NULL, NULL);
+            g_hBtnFileOpen = CreateWindowA("BUTTON", "Open File...", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 285, 485, 85, 26, hwnd, (HMENU)ID_BTN_FILE_OPEN, NULL, NULL);
+            SendMessageA(g_hBtnFileOpen, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+
+            g_hBtnFileSave = CreateWindowA("BUTTON", "Export...", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 375, 485, 80, 26, hwnd, (HMENU)ID_BTN_FILE_SAVE, NULL, NULL);
+            SendMessageA(g_hBtnFileSave, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+
+            g_hBtnFreq = CreateWindowA("BUTTON", "Freq / IoC", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 460, 485, 85, 26, hwnd, (HMENU)ID_BTN_FREQ_STATS, NULL, NULL);
+            SendMessageA(g_hBtnFreq, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+
+            g_hBtnQuickSave = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 550, 485, 80, 26, hwnd, (HMENU)ID_BTN_QSAVE, NULL, NULL);
             SendMessageA(g_hBtnQuickSave, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
-            g_hBtnQuickLoad = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 450, 485, 90, 26, hwnd, (HMENU)ID_BTN_QLOAD, NULL, NULL);
+            g_hBtnQuickLoad = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 635, 485, 80, 26, hwnd, (HMENU)ID_BTN_QLOAD, NULL, NULL);
             SendMessageA(g_hBtnQuickLoad, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
-            g_hBtnHelp = CreateWindowA("BUTTON", "Cipher Manual (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 750, 485, 150, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            g_hBtnHelp = CreateWindowA("BUTTON", "Manual (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 720, 485, 90, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
             SendMessageA(g_hBtnHelp, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
             g_hStatusLabel = CreateWindowA("STATIC", g_szStatus, WS_CHILD | WS_VISIBLE | SS_LEFT, 20, 525, 880, 20, hwnd, NULL, NULL, NULL);
@@ -565,6 +686,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SaveSnapshot(hwnd);
             } else if (wmId == ID_BTN_QLOAD) {
                 LoadSnapshot(hwnd);
+            } else if (wmId == ID_BTN_FILE_OPEN) {
+                OpenFileDlg(hwnd);
+            } else if (wmId == ID_BTN_FILE_SAVE) {
+                SaveFileDlg(hwnd);
+            } else if (wmId == ID_BTN_FREQ_STATS) {
+                ShowFrequencyStats(hwnd);
             } else if (wmId == ID_BTN_HELP) {
                 MessageBoxA(hwnd,
                     "KCipher - Cryptographic Cipher Suite (v1.0.0 - 1999)\n\n"
@@ -709,6 +836,10 @@ void MainEntry(void) {
             }
             if (ctrl && (msg.wParam == 'D' || msg.wParam == 'd')) {
                 ProcessCipher(1);
+                continue;
+            }
+            if (ctrl && (msg.wParam == 'I' || msg.wParam == 'i')) {
+                ShowFrequencyStats(hwnd);
                 continue;
             }
             if (ctrl && msg.wParam == VK_RETURN) {

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,9 +29,9 @@ current_targets:
   kilo_graphics: KRogue
   kilo_soundscape: KBreakout
   kilo_tester: KSteno
-  kilo_usability: KCipher
+  kilo_usability: KScript
   kilo_qa: None (Queue Exhausted)
-  kilo_expander: KCipher
+  kilo_expander: KNet
 virtual_web_target: kweb://trapster
 virtual_web_rotation:
 - kweb://slashnet
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KSolitaire
-  timestamp: '2026-10-23T22:21:05-07:00'
+  agent: kilo-expander
+  app: KCipher
+  timestamp: '2026-10-23T22:35:13-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -129,16 +129,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
-| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Audit cipher workbench (AES/XOR/Vigenère/ROT13/RSA toy), frequency histogram, key input guards, and VFS import/export. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KCipher`
+- **Active Target**: `KScript`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Side-by-side plaintext/ciphertext responsive split pane, HiDPI frequency chart crispness, one-click copy/swap ergonomics, and `[F1/H]` help overlay. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -153,11 +151,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 |---|---|---|
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KCipher`
+- **Active Target**: `KNet`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Phase VI VFS & IPC Mesh: add KiloOS VFS Open/Save (`/home/crypto/*.enc`), `"Inspect Ciphertext in KHex"` IPC launch (`OS_LAUNCH_APP`), multi-stage cipher chaining pipeline, and dual Win32 C parity. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
@@ -176,6 +173,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KCipher** | `KiloOS/public/apps/kcipher.html` | Pass 5+ (2026-10-23) | Security / Cryptography | Complete cryptographic suite: 10 ciphers (AES/RSA/RC4/XOR/classical), multi-stage pipeline, frequency/IoC cryptanalysis, LSB stego, VFS Open/Save, KHex/KSteno IPC mesh, and dual Win32 C parity. |
 | **KSolitaire** | `KiloOS/public/apps/ksolitaire.html` | Pass 5+ (2026-10-23) | Games / Cards | Complete Klondike, Vegas & 20-stage Campaign Solitaire engine with F5/F9 state persistence, undo/redo stack, and native Win32 C build. |
 | **KPac** | `KiloOS/public/apps/kpac.html` | Pass 5+ (2026-10-23) | Games / Arcade | Full cyber-arcade maze crawler with campaign progression, maze editor & PAC-FEN import/export, RFMS online duel & solo fallback, companion pets, forge/relics, F5/F9 state persistence, and dual Win32 C parity. |
 | **KMech** | `KiloOS/public/apps/kmech.html` | Pass 5+ (2026-10-23) | Games / Sci-Fi | Tactical turn-based mech skirmish arena with chassis/weapon loadouts, heat/armor management, limb targeting, F5/F9 state persistence, and dual Win32 C parity. |
@@ -224,6 +222,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T22:35:13-07:00 — kilo-expander: KCipher (KCipher Phase VI VFS/IPC Mesh & Dual-Target Native C Cryptanalysis)**
+  - Status: PASS ✅ (0 errors, web 159.1 KB, native 18.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.83%, HEAD Δ 0.3%, 0 fail, 0 warn, 8.6s)).
+  - Integrated KSteno cross-app IPC ('Send to KSteno' from workbench & pipeline) and hash-based VFS incoming launch loader.
+  - Expanded Win32 C client with Open/Export file dialogs (GetOpenFileName/GetSaveFileName) and Frequency/Index of Coincidence (IoC) cryptanalysis.
+  - Mature Quarantine & Handoff: Promoted `KCipher` to Mature archive; advanced `kilo-expander` to `KNet`; next agent `kilo-creator`.
+
 - **2026-10-23T22:21:05-07:00 — kilo-qa: KSolitaire (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 157.4 KB, native 48.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 65.12%, 0 fail, 0 warn, 7.6s)).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, ksolitaire_tutorialSeen flag, and Escape modal dismissals.
@@ -248,7 +252,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Composition: F-Maj drift, G-Dorian descent, D-Phrygian vents, Bb-Min hadal chasm, E-Min combat, 6-ch counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
   - Patches & DSP: Hadal Flute lead + Glass Drops counter + 3rd/7th shell voicings + YM2612 FM bass (<130Hz) + selective 185ms/245ms SPC700 stereo delay.
   - Handoff: Advanced `kilo-soundscape` to `KBreakout`; rotated active agent to `kilo-tester`.
-
-- **2026-10-23T21:39:22-07:00 — kilo-graphics: KSubmarine (Skip — Asset Suitability)**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate; tactical vector HUD already integrated.
-  - Handoff: Advanced `kilo-graphics` to `KRogue`; rotated active agent to `kilo-soundscape`.

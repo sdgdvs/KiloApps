@@ -4,6 +4,10 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T21:39:22-07:00 — kilo-graphics: KSubmarine (Skip — Asset Suitability)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate; tactical vector HUD already integrated.
+  - Handoff: Advanced `kilo-graphics` to `KRogue`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-23T21:32:13-07:00 — kilo-creator: kweb://slashnet (SlashNet 1999 News & Beowulf Supercluster Destination)**
   - Status: PASS (0 errors, web 83.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 72.26%, 0 fail, 0 warn, 4.7s)).
   - Interactive karma moderation (-1 to +5), threshold filtering, Beowulf cluster calculator, Linux 2.2 compile sim & VFS export.
