@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-23T19:49:13-07:00 — kilo-qa: KSolitaire (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 157.1 KB, native 48.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 65.12%, 0 fail, 0 warn, 7.4s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, ksolitaire_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KSolitaire` to Mature archive; advanced `kilo-qa` to `KSolitaire`; next agent `kilo-expander`.
+
 - **2026-10-23T19:43:34-07:00 — kilo-usability: KHash (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 160.6 KB, native 17.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.2%, HEAD Δ 9.52%, 0 fail, 0 warn, 8.8s)).
   - Live Multi-Digest Comparison Table: Added real-time responsive matrix cross-referencing expected hashes across all 13 algorithms with 1-click select and copy.

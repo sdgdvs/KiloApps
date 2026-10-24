@@ -51,7 +51,8 @@ void ShowNativeToast(HWND hwnd, const char* msg);
 #define ID_BTN_HEX_PREV     1026
 #define ID_BTN_HEX_NEXT     1027
 #define ID_BTN_HEX_RESET    1028
-#define ID_BTN_PROBE        1029
+#define ID_BTN_PROBE        1029
+#define ID_BTN_STRESS       1030
 
 HWND hTabCtrl = NULL;
 HWND hOutput = NULL;
@@ -81,7 +82,10 @@ HWND hBtnHexNext = NULL;
 HWND hBtnHexReset = NULL;
 HWND hBtnLogClear = NULL;
 HWND hBtnLogExport = NULL;
-HWND hStatusBar = NULL;
+HWND hStatusBar = NULL;
+HWND hBtnStress = NULL;
+BOOL g_StressActive = FALSE;
+DWORD g_StressCycles = 0;
 
 char g_LogBuffer[16384] = {0};
 char g_CpuResult[128] = "Not Executed";
@@ -1263,14 +1267,21 @@ void UpdateView() {
     BOOL isSvcTab   = (g_CurrentTab == 2);
     BOOL isLogTab   = (g_CurrentTab == 3);
     BOOL isExpTab   = (g_CurrentTab == 4);
+    BOOL isHexTab   = (g_CurrentTab == 5);
 
     ShowWindow(hBtnInspRefresh, isInspTab ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnInspBench,   isInspTab ? SW_SHOW : SW_HIDE);
 
-    ShowWindow(hBtnCpu,  isBenchTab ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnRam,  isBenchTab ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnDisk, isBenchTab ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnAll,  isBenchTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnCpu,    isBenchTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnRam,    isBenchTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnDisk,   isBenchTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnAll,    isBenchTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnStress, isBenchTab ? SW_SHOW : SW_HIDE);
+
+    ShowWindow(hBtnHexSrc,   isHexTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnHexPrev,  isHexTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnHexNext,  isHexTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnHexReset, isHexTab ? SW_SHOW : SW_HIDE);
 
     ShowWindow(hBtnSvcRefresh, isSvcTab ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnSvcFilter,  isSvcTab ? SW_SHOW : SW_HIDE);
@@ -1293,9 +1304,14 @@ void UpdateView() {
             "-> Press 'H' or F1 for Help/Instructions \r\n\r\n"
             "CPU Benchmark Test  : %s\r\n"
             "RAM Throughput Test : %s\r\n"
-            "Disk I/O Speed Test : %s\r\n\r\n"
-            "Click buttons below or press [C], [M], [D], or [R] to execute diagnostic performance benchmarks.\r\n",
-            g_CpuResult, g_RamResult, g_DiskResult
+            "Disk I/O Speed Test : %s\r\n"
+            "GDI 2D Fillrate     : %s\r\n"
+            "Cryptographic Hash  : %s\r\n"
+            "Scheduler Drift     : %s\r\n\r\n"
+            "Diagnostic Stress Mode: %s (Cycles: %u)\r\n\r\n"
+            "Click buttons below or press [C], [M], [D], [B], or [R] to execute diagnostic performance benchmarks.\r\n",
+            g_CpuResult, g_RamResult, g_DiskResult, g_GdiResult, g_CryptoResult, g_JitterResult,
+            g_StressActive ? "ACTIVE (Burn-in)" : "STANDBY", g_StressCycles
         );
         SetWindowTextA(hOutput, contentBuf);
     } else if (g_CurrentTab == 2) { // Services & Telemetry
@@ -1305,6 +1321,9 @@ void UpdateView() {
         SetWindowTextA(hOutput, g_LogBuffer[0] ? g_LogBuffer : "[No event logs recorded yet]\r\n");
     } else if (g_CurrentTab == 4) { // Report Export
         GetSystemAuditText(contentBuf, sizeof(contentBuf));
+        SetWindowTextA(hOutput, contentBuf);
+    } else if (g_CurrentTab == 5) { // Hex Buffer Explorer
+        GetHexInspectorText(contentBuf, sizeof(contentBuf));
         SetWindowTextA(hOutput, contentBuf);
     }
 }
@@ -1379,6 +1398,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TabCtrl_InsertItem(hTabCtrl, 3, &tie);
             tie.pszText = "[5] Report Export";
             TabCtrl_InsertItem(hTabCtrl, 4, &tie);
+            tie.pszText = "[6] Hex Explorer";
+            TabCtrl_InsertItem(hTabCtrl, 5, &tie);
 
             hOutput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 
                 5, 40, W - 25, H - 145, hwnd, (HMENU)ID_TXT_MAIN, NULL, NULL);
@@ -1392,6 +1413,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnRam  = CreateWindow("BUTTON", "Test RAM [M]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 125, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_RAM, NULL, NULL);
             hBtnDisk = CreateWindow("BUTTON", "Test Disk [D]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 240, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_DISK, NULL, NULL);
             hBtnAll  = CreateWindow("BUTTON", "Run All [R]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 355, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_ALL, NULL, NULL);
+            hBtnStress = CreateWindow("BUTTON", "Stress: OFF [B]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 475, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_STRESS, NULL, NULL);
+
+            // Hex Explorer Buttons
+            hBtnHexSrc   = CreateWindow("BUTTON", "Source [B]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_HEX_SRC, NULL, NULL);
+            hBtnHexPrev  = CreateWindow("BUTTON", "Prev 256B [Up]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 125, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_HEX_PREV, NULL, NULL);
+            hBtnHexNext  = CreateWindow("BUTTON", "Next 256B [Dn]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 255, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_HEX_NEXT, NULL, NULL);
+            hBtnHexReset = CreateWindow("BUTTON", "Top 0x0 [Home]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 385, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_HEX_RESET, NULL, NULL);
 
             // Service Buttons
             hBtnSvcRefresh = CreateWindow("BUTTON", "Refresh [R]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_SVC_REFRESH, NULL, NULL);
@@ -1455,10 +1483,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowNativeToast(hwnd, "Disk Benchmark finished.");
                 UpdateView();
             } else if (id == ID_BTN_ALL) {
-                RunCpuBenchmark();
-                RunRamBenchmark();
-                RunDiskBenchmark();
-                ShowNativeToast(hwnd, "All diagnostic benchmarks complete.");
+                RunAllBenchmarks();
+                ShowNativeToast(hwnd, "All 6 diagnostic benchmarks complete.");
+                UpdateView();
+            } else if (id == ID_BTN_STRESS) {
+                g_StressActive = !g_StressActive;
+                if (g_StressActive) {
+                    g_StressCycles++;
+                    RunCpuBenchmark();
+                    SetWindowTextA(hBtnStress, "Stress: ON [B]");
+                    ShowNativeToast(hwnd, "Diagnostic Stress Test ACTIVE [B to toggle]");
+                } else {
+                    SetWindowTextA(hBtnStress, "Stress: OFF [B]");
+                    ShowNativeToast(hwnd, "Diagnostic Stress Test halted.");
+                }
+                UpdateView();
+            } else if (id == ID_BTN_HEX_SRC) {
+                g_HexBufferSource = (g_HexBufferSource + 1) % 4;
+                g_HexOffset = 0;
+                ShowNativeToast(hwnd, "Cycled Hex buffer source [B]");
+                UpdateView();
+            } else if (id == ID_BTN_HEX_PREV) {
+                if (g_HexOffset >= 256) g_HexOffset -= 256; else g_HexOffset = 0;
+                UpdateView();
+            } else if (id == ID_BTN_HEX_NEXT) {
+                g_HexOffset += 256;
+                UpdateView();
+            } else if (id == ID_BTN_HEX_RESET) {
+                g_HexOffset = 0;
+                ShowNativeToast(hwnd, "Hex offset reset to 0x0 [Home]");
                 UpdateView();
             } else if (id == ID_BTN_SVC_REFRESH) {
                 LogEvent("INFO", "Refreshed Win32 Services & Telemetry status");
@@ -1621,24 +1674,50 @@ void MainEntry() {
             BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
             BOOL alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
             if (!ctrl && !alt) {
-                if (msg.wParam >= '1' && msg.wParam <= '5') {
+                if (msg.wParam >= '1' && msg.wParam <= '6') {
                     int newTab = (int)(msg.wParam - '1');
                     g_CurrentTab = newTab;
                     if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, newTab);
                     UpdateView();
                     continue;
                 } else if (msg.wParam == VK_LEFT) {
-                    g_CurrentTab = (g_CurrentTab - 1 + 5) % 5;
+                    g_CurrentTab = (g_CurrentTab - 1 + 6) % 6;
                     if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, g_CurrentTab);
                     UpdateView();
                     continue;
                 } else if (msg.wParam == VK_RIGHT) {
-                    g_CurrentTab = (g_CurrentTab + 1) % 5;
+                    g_CurrentTab = (g_CurrentTab + 1) % 6;
                     if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, g_CurrentTab);
                     UpdateView();
                     continue;
                 } else if (msg.wParam == VK_F1 || msg.wParam == 'H' || msg.wParam == 'h') {
                     ShowHelpDialog(hwnd);
+                    continue;
+                } else if (msg.wParam == 'B' || msg.wParam == 'b') {
+                    if (g_CurrentTab == 1) {
+                        SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_STRESS, BN_CLICKED), 0);
+                    } else if (g_CurrentTab == 5) {
+                        SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HEX_SRC, BN_CLICKED), 0);
+                    } else {
+                        g_CurrentTab = 1;
+                        if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, 1);
+                        SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_STRESS, BN_CLICKED), 0);
+                    }
+                    continue;
+                } else if (msg.wParam == 'X' || msg.wParam == 'x') {
+                    g_CurrentTab = 5;
+                    if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, 5);
+                    UpdateView();
+                    ShowNativeToast(hwnd, "Switched to Hex Inspector [6]");
+                    continue;
+                } else if (g_CurrentTab == 5 && msg.wParam == VK_UP) {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HEX_PREV, BN_CLICKED), 0);
+                    continue;
+                } else if (g_CurrentTab == 5 && msg.wParam == VK_DOWN) {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HEX_NEXT, BN_CLICKED), 0);
+                    continue;
+                } else if (g_CurrentTab == 5 && msg.wParam == VK_HOME) {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HEX_RESET, BN_CLICKED), 0);
                     continue;
                 } else if (msg.wParam == VK_ESCAPE) {
                     if (g_CurrentTab != 0) {

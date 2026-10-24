@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 317,
+  "turns_executed": 318,
   "last_turn_timestamp": "2026-10-06T16:51:00-07:00",
-  "last_heartbeat": "2026-10-24T03:28:31.984486+00:00",
-  "current_target": "kweb://deep-core",
+  "last_heartbeat": "2026-10-24T03:42:00.990413+00:00",
+  "current_target": "KStellar",
   "remote_command": "none"
 }

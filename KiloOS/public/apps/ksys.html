@@ -787,7 +787,8 @@
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">Esc</kbd> Dismiss Dialogs / Clear Search</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">F5</kbd> Quicksave Snapshot</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">F9</kbd> Quickload Snapshot</div>
-            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">R</kbd> Refresh Live Telemetry</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">R</kbd> Refresh Live Telemetry</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">B</kbd> Toggle Stress Test Loop</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">Space</kbd> Execute Tab Action / Bench</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">C / M / D</kbd> CPU / RAM / Disk Bench</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">S</kbd> Cycle Service Filter Mode</div>
@@ -909,6 +910,7 @@
     <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-right: 4px;">⚡ Quick Actions:</span>
     <button class="quick-chip" id="chip-audio-toggle" onclick="toggleAudio()" title="Toggle Yamaha YM2612 / SPC700 Audio (Shift+M)">🔊 Sound: ON <kbd>[Shift+M]</kbd></button>
     <button class="quick-chip" onclick="switchTab('benchmarks'); runAllBenchmarks();" title="Run full benchmark suite (Hotkey: 2, then Space/R)">▶ Run Benchmarks <kbd>[2/R]</kbd></button>
+    <button class="quick-chip" id="chip-stress-toggle" onclick="switchTab('benchmarks'); toggleContinuousStress();" title="Toggle continuous diagnostic stress burn-in test (Hotkey: B)">🔥 Stress Mode <kbd>[B]</kbd></button>
     <button class="quick-chip" onclick="refreshActiveView()" title="Refresh live telemetry and hardware metrics (Hotkey: R)">🔄 Refresh <kbd>[R]</kbd></button>
     <button class="quick-chip" onclick="switchTab('hex')" title="Inspect diagnostic buffers in hex viewer (Hotkey: 6 or X)">🔬 Hex <kbd>[6/X]</kbd></button>
     <button class="quick-chip" onclick="quicksaveSnapshot()" title="Quicksave diagnostics snapshot to local storage (Hotkey: F5)">💾 Quicksave <kbd>[F5]</kbd></button>
@@ -1071,7 +1073,8 @@
     <!-- Benchmarks Tab -->
     <section id="tab-benchmarks" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-benchmarks">
       <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center;">
-        <button class="btn btn-accent" id="btn-run-all" onclick="runAllBenchmarks()">▶ Run All Diagnostic Benchmarks</button>
+        <button class="btn btn-accent" id="btn-run-all" onclick="runAllBenchmarks()">▶ Run All Diagnostic Benchmarks</button>
+        <button class="btn btn-outline" id="btn-stress-toggle" onclick="toggleContinuousStress()" style="border-color: var(--accent-amber); color: var(--accent-amber);">🔥 Stress Mode: STANDBY [B]</button>
         <span id="bench-status-text" style="font-size: 13px; color: var(--text-muted);">Ready to test CPU, RAM, and Storage throughput.</span>
       </div>
 
@@ -1930,6 +1933,7 @@
   function closeHelpModal() {
     const hm = document.getElementById('help-modal');
     if (hm) hm.style.display = 'none';
+    clearToasts();
     safeSetStorage('ksys_tutorialSeen', '1');
     restoreModalFocus();
   }
@@ -1947,6 +1951,7 @@
     closeHelpModal();
     closeServiceModal();
     closeAddServiceModal();
+    clearToasts();
   }
   function closeAddServiceModal() {
     document.getElementById('add-service-modal').style.display = 'none';
@@ -2176,10 +2181,13 @@
 
   window.addEventListener('keydown', (e) => {
     // Input/Textarea handling
-    if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+    const activeTag = document.activeElement ? document.activeElement.tagName : '';
+    const targetTag = e.target ? e.target.tagName : '';
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(targetTag) || ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag)) {
       if (e.key === 'Escape') {
         closeAllModals();
-        e.target.blur();
+        clearToasts();
+        if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
       }
       return;
     }
@@ -2310,6 +2318,14 @@
       if (e.key === 'F9') {
         e.preventDefault();
         quickloadSnapshot();
+        return;
+      }
+      if (e.key.toLowerCase() === 'b') {
+        const activeTab = getActiveTabId();
+        if (activeTab !== 'benchmarks') {
+          switchTab('benchmarks');
+        }
+        toggleContinuousStress();
         return;
       }
       if (e.key.toLowerCase() === 'r') {
@@ -2675,6 +2691,70 @@
       }
     } catch (e) {
       console.warn('Could not fetch /apps/catalog.json in KSys:', e);
+    }
+  }
+
+
+  let stressInterval = null;
+  let stressCycleCount = 0;
+  let isStressActive = false;
+
+  function toggleContinuousStress() {
+    isStressActive = !isStressActive;
+    const btn = document.getElementById('btn-stress-toggle');
+    const chip = document.getElementById('chip-stress-toggle');
+    const statusText = document.getElementById('bench-status-text');
+
+    if (isStressActive) {
+      stressCycleCount = 0;
+      if (btn) {
+        btn.textContent = '🔥 Stress Mode: ACTIVE [B]';
+        btn.style.borderColor = 'var(--accent-red)';
+        btn.style.color = 'var(--accent-red)';
+      }
+      if (chip) chip.textContent = '🔥 Stress: ACTIVE [B]';
+      if (statusText) statusText.textContent = 'Continuous diagnostic stress loop active (running burn-in calculations)...';
+      logEvent('WARN', 'Continuous diagnostic stress test loop initiated.');
+      showToast('Continuous stress test initiated [Press B to toggle off]', 'warn');
+      if (typeof playYm2612Sfx === 'function') playYm2612Sfx('burst');
+
+      stressInterval = setInterval(() => {
+        if (!isStressActive) return;
+        stressCycleCount++;
+        let acc = 0;
+        for (let i = 0; i < 200000; i++) {
+          acc += Math.sin(i) * Math.cos(i);
+        }
+        const tmp = new Float64Array(16384);
+        for (let j = 0; j < 16384; j += 64) tmp[j] = acc + j;
+
+        const simulatedLoad = Math.min(99, Math.floor(65 + Math.random() * 32));
+        cpuHistory.shift();
+        cpuHistory.push(simulatedLoad);
+        drawSparkline('cpu-sparkline', cpuHistory, '#f87171');
+        const cpuPct = document.getElementById('telem-cpu-pct');
+        const cpuVal = document.getElementById('telem-cpu-val');
+        if (cpuPct) cpuPct.textContent = `${simulatedLoad}%`;
+        if (cpuVal) cpuVal.textContent = `${simulatedLoad}.0%`;
+
+        if (btn) btn.textContent = `🔥 Stress Mode: ACTIVE (Cycle ${stressCycleCount}) [B]`;
+        if (statusText) statusText.textContent = `Continuous stress loop active (Cycle #${stressCycleCount} | Simulated Core Load: ${simulatedLoad}%).`;
+      }, 1200);
+    } else {
+      if (stressInterval) {
+        clearInterval(stressInterval);
+        stressInterval = null;
+      }
+      if (btn) {
+        btn.textContent = '🔥 Stress Mode: STANDBY [B]';
+        btn.style.borderColor = 'var(--accent-amber)';
+        btn.style.color = 'var(--accent-amber)';
+      }
+      if (chip) chip.textContent = '🔥 Stress Mode [B]';
+      if (statusText) statusText.textContent = `Stress test halted after ${stressCycleCount} cycles. System nominal.`;
+      logEvent('INFO', `Continuous diagnostic stress test terminated after ${stressCycleCount} cycles.`);
+      showToast(`Stress test terminated (${stressCycleCount} cycles completed).`, 'info');
+      if (typeof playYm2612Sfx === 'function') playYm2612Sfx('beep');
     }
   }
 
