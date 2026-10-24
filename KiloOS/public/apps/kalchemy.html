@@ -2829,7 +2829,7 @@
       if (!ex || ex.status !== 0) return;
       if (!discoveredIds.has(ex.req1) || !discoveredIds.has(ex.req2)) {
         addLog(`⚠️ Discover required catalyst elements first!`, false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
       ex.status = 1;
@@ -2943,12 +2943,12 @@
       if (!pl || pl.isForged) return;
       if (!discoveredIds.has(pl.req1) || !discoveredIds.has(pl.req2) || !discoveredIds.has(pl.req3)) {
         addLog("⚠️ Discover all 3 catalyst elements to forge this Planetary Core!", false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
       if (gold < 100) {
         addLog("⚠️ Need 100 Gold to forge Planetary Core!", false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
       gold -= 100;
@@ -2970,7 +2970,7 @@
       const cost = pl.level * 150;
       if (gold < cost) {
         addLog(`⚠️ Need ${cost} Gold to upgrade Planetary Core!`, false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
       gold -= cost;
@@ -2989,7 +2989,7 @@
     function overchargePlanets() {
       if (essence < 50) {
         addLog("⚠️ Need at least 50 Essence to overcharge Planetary Matrix!", false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
       initPlanets();
@@ -3107,7 +3107,7 @@
       const goldCost = Math.floor(feedCost / 2);
       if (essence < feedCost || gold < goldCost) {
         addLog("⚠️ Need more Essence and Gold to feed familiar!", false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
       essence -= feedCost;
@@ -3336,7 +3336,7 @@
       const COST = 25;
       if (gold < COST) {
         addLog(`⚠️ <strong>Not enough Gold!</strong> Need ${COST} Gold to reroll daily trials.`, false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
       gold -= COST;
@@ -3346,7 +3346,7 @@
       updateStats();
       renderDailyTrials();
       addLog(`🔄 Refreshed Daily Alchemical Trials (-${COST} Gold).`, false, false, false);
-      playChime(500, 'sine', 0.15);
+      playFmUpgradeChime();
     }
 
     // Magnum Opus Rebirth & Astral Perks
@@ -3416,7 +3416,7 @@
 
       if (astralShards < cost) {
         addLog(`⚠️ <strong>Not enough Astral Shards!</strong> Need ${cost} Astral Shards.`, false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
 
@@ -3434,7 +3434,7 @@
     function performMagnumOpusRebirth() {
       if (discoveredIds.size < 35) {
         addLog("⚠️ Magnum Opus requires at least 35 discovered elements!", false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
 
@@ -3527,7 +3527,7 @@
       const btn = document.getElementById('btn-blitz-start');
       if (btn) btn.innerText = "🔄 Restart Blitz";
       addLog("⚡ <strong>BLITZ STARTED!</strong> Discover and craft compounds before the 60s timer expires!", true, false, false);
-      playChime(880, 'sine', 0.2);
+      playFmAutoFillStinger();
 
       blitzTimerId = setInterval(() => {
         if (!blitzActive) return;
@@ -3555,7 +3555,7 @@
           } else {
             triggerToast("⏰ Blitz Time's Up!", `Final Score: ${blitzScore} Pts (Record: ${blitzHighScore})`, '⏰');
             addLog(`⏰ <strong>BLITZ FINISHED!</strong> Final Score: ${blitzScore} Pts (High Score: ${blitzHighScore} Pts)`, false, false, false);
-            playChime(350, 'square', 0.4);
+            playFmErrorFizzle();
           }
         }
       }, 1000);
@@ -3585,7 +3585,7 @@
         const targetEl = ALL_ELEMENTS.find(e => e.id === puzzleTargetId);
         if (logChange && targetEl) {
           addLog(`🧩 <strong>NEW PUZZLE TARGET:</strong> Synthesize <strong>${targetEl.name}</strong> ${targetEl.icon} (Tier ${targetEl.tier})!`, false, false, false, 'oracle');
-          playChime(554, 'sine', 0.15);
+          playFmTabClick();
         }
       }
     }
@@ -3941,7 +3941,7 @@
           else orb.innerText = '🔮';
         }
       }
-      playChime(450, 'sine', 0.1);
+      playFmApparatusSwitch();
     }
 
     function renderQuestBoard() {
@@ -3990,7 +3990,7 @@
       const q = quests[slotIdx];
       if (!discoveredIds.has(q.targetId)) {
         addLog(`⚠️ You have not discovered <strong>${q.targetName}</strong> yet!`, false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
 
@@ -4019,7 +4019,7 @@
       const COST = 15;
       if (gold < COST) {
         addLog(`⚠️ <strong>Not enough Gold!</strong> Need ${COST} Gold to reroll quest board.`, false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
       gold -= COST;
@@ -4028,7 +4028,7 @@
       updateStats();
       renderQuestBoard();
       addLog(`🔄 Rerolled Master Alchemist Guild Quest Board (-${COST} Gold).`, false, false, false);
-      playChime(500, 'sine', 0.15);
+      playFmUpgradeChime();
     }
 
     function handleMainAction() {
@@ -4042,7 +4042,7 @@
     function brewPotion() {
       if (!selectedSlots[0] || !selectedSlots[1]) {
         addLog("Place an herb/ingredient and essence into the Cauldron slots before brewing.", false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
       const id1 = selectedSlots[0].id;
@@ -4083,7 +4083,7 @@
         triggerToast("🧪 Minor Tonic Brewed", "Brewed Minor Tonic (+15 Essence, +15 Dust)", '🧪');
         addLog(`🧪 <strong>POTION BREWING:</strong> Brewed a <strong>Minor Tonic</strong> from ${selectedSlots[0].name} + ${selectedSlots[1].name}! (+15 Essence, +15 Dust)`, false, false, false);
         triggerTransmuteFX('#3498db');
-        playChime(350, 'triangle', 0.25);
+        playBubbleSimmer();
       }
 
       saveState();
@@ -4094,7 +4094,7 @@
     function drinkPotion(type) {
       if (!potions[type] || potions[type] <= 0) {
         addLog("⚠️ You do not have any of this potion brewed in your inventory!", false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
 
@@ -4399,7 +4399,7 @@
     function clearCrucible() {
       selectedSlots = [null, null];
       updateSlotsUI();
-      playChime(300, 'sine', 0.1);
+      playGlassClinker(0.7);
     }
 
     const UPGRADE_DEFS = [
@@ -4484,7 +4484,7 @@
 
       if (gold < cost) {
         addLog(`⚠️ <strong>Not enough Gold!</strong> Need ${cost} Gold to purchase ${upg.name}.`, false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
 
@@ -4502,7 +4502,7 @@
     function autoFillCrucible() {
       if ((upgrades.autoSorter || 0) <= 0) {
         addLog("⚠️ Unlock Auto-Sorter in the Enchanter Workshop first!", false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
 
@@ -4527,7 +4527,7 @@
 
       if (!targetRecipe) {
         addLog("⚡ Auto-Sorter: No valid ingredient combinations found in Grimoire!", false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
 
@@ -4538,7 +4538,7 @@
       selectedSlots[1] = ing2;
       updateSlotsUI();
       addLog(`⚡ <strong>AUTO-SORTER:</strong> Placed <strong>${ing1.name}</strong> ${ing1.icon} and <strong>${ing2.name}</strong> ${ing2.icon} into Crucible!`, false, false, false);
-      playChime(600, 'sine', 0.15);
+      playFmSlotSwap();
     }
 
     function resetProgress() {
@@ -4751,13 +4751,13 @@
       checkDailyProgress(2, 1);
       if (!selectedSlots[0]) {
         addLog("Place a complex element into Slot 1 to distill in the Retort.", false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
       const el = selectedSlots[0];
       if (el.basic || el.tier === 1) {
         addLog(`⚠️ Primordial base element <strong>${el.name}</strong> cannot be distilled!`, false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
       const recipe = RECIPES.find(r => r.result === el.id);
@@ -4804,13 +4804,13 @@
       checkDailyProgress(2, 1);
       if (!selectedSlots[0]) {
         addLog("Place a complex element into Slot 1 to extract in the Alembic.", false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
       const el = selectedSlots[0];
       if (el.basic || el.tier === 1) {
         addLog(`⚠️ Primordial base element <strong>${el.name}</strong> cannot be extracted!`, false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
       const recipe = RECIPES.find(r => r.result === el.id);
@@ -4857,13 +4857,13 @@
       checkDailyProgress(2, 1);
       if (!selectedSlots[0]) {
         addLog("Place a complex element into Slot 1 to crush on the Anvil.", false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
       const el = selectedSlots[0];
       if (el.basic || el.tier === 1) {
         addLog(`⚠️ Primordial base element <strong>${el.name}</strong> cannot be crushed!`, false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
 
@@ -4903,14 +4903,14 @@
       else if (activeBuffs.mana > 0) COST = 10;
       if (dust < COST) {
         addLog(`⚠️ <strong>Not enough Alchemical Dust!</strong> Need ${COST} Dust (You have ${dust}). Craft new elements to earn Dust!`, false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
 
       const undiscoveredRecipes = RECIPES.filter(r => !discoveredIds.has(r.result));
       if (undiscoveredRecipes.length === 0) {
         addLog("🔮 <strong>The Oracle Whispers:</strong> All elements in the cosmos have already been discovered!", false, false, false, 'oracle');
-        playChime(880, 'sine', 0.3);
+        playFmOracleVision();
         return;
       }
 
@@ -4938,14 +4938,14 @@
       else if (activeBuffs.mana > 0) COST = 25;
       if (dust < COST) {
         addLog(`⚠️ <strong>Not enough Alchemical Dust!</strong> Need ${COST} Dust (You have ${dust}). Craft new elements to earn Dust!`, false, true, false);
-        playChime(220, 'sawtooth', 0.2);
+        playFmErrorFizzle();
         return;
       }
 
       const undiscoveredRecipes = RECIPES.filter(r => !discoveredIds.has(r.result));
       if (undiscoveredRecipes.length === 0) {
         addLog("🔮 <strong>The Oracle Whispers:</strong> All elements in the cosmos have already been discovered!", false, false, false, 'oracle');
-        playChime(880, 'sine', 0.3);
+        playFmOracleVision();
         return;
       }
 
@@ -5176,10 +5176,10 @@
         // Expressive delayed vibrato: ramp LFO after 180ms
         const lfo = audioCtx.createOscillator();
         const lfoGain = audioCtx.createGain();
-        lfo.frequency.setValueAtTime(5.5, now);
+        lfo.frequency.setValueAtTime(5.8, now);
         lfoGain.gain.setValueAtTime(0, now);
-        lfoGain.gain.setValueAtTime(0, now + 0.18);
-        lfoGain.gain.linearRampToValueAtTime(freq * 0.022, now + 0.32);
+        lfoGain.gain.setValueAtTime(0, now + 0.15);
+        lfoGain.gain.linearRampToValueAtTime(freq * 0.024, now + 0.26);
         lfo.connect(lfoGain);
         lfoGain.connect(carrier.frequency);
 
@@ -5577,20 +5577,20 @@
 
       // Channel 4: Bass (Strictly dry, <= C3)
       const b = bgmBass[step];
-      if (b) playFmBass(b, 0.12, 0.22);
+      if (b) playFmBass(b, 0.18, 0.24);
 
       // Channel 1: Lead Melody (With delayed vibrato & delay echo)
       const l = bgmLead[step];
-      if (l) playFmLead(l, 0.26, 0.18, true);
+      if (l) playFmLead(l, 0.34, 0.19, true);
 
       // Channel 2: Counter-Melody (Glass bells & delay echo)
       const c = bgmCounter[step];
-      if (c) playFmCounter(c, 0.20, 0.15, true);
+      if (c) playFmCounter(c, 0.22, 0.15, true);
 
       // Channel 3: Shell Harmony (3rd + 7th pad with delay echo)
       const h = bgmHarmony[step];
       if (h && Array.isArray(h)) {
-        h.forEach(freq => playFmHarmony(freq, 0.22, 0.09, true));
+        h.forEach(freq => playFmHarmony(freq, 0.26, 0.10, true));
       }
 
       // Channel 5: Percussion (FM Pitch-Drop Kick & High-MUL Noise Snare)
@@ -5618,7 +5618,7 @@
     function playChime(freq, type = 'sine', duration = 0.2) {
       if (!soundEnabled || !freq) return;
       if (type === 'sawtooth') {
-        playFmTone(freq, 1.0, 3.2, duration, 0.14, false);
+        playFmFizzle();
       } else if (type === 'triangle') {
         playFmTone(freq, 1.0, 1.2, duration, 0.12, true);
       } else if (type === 'square') {
@@ -5631,6 +5631,51 @@
     // =========================================================================
     // Action Stingers & Apparatus Earcons
     // =========================================================================
+
+    function playFmErrorFizzle() {
+      playFmFizzle();
+    }
+
+    function playFmApparatusSwitch() {
+      if (!soundEnabled) return;
+      playFmTone(520, 1.5, 2.4, 0.12, 0.12, true);
+      setTimeout(() => playFmTone(780, 2.0, 1.8, 0.16, 0.10, true), 40);
+    }
+
+    function playFmUpgradeChime() {
+      if (!soundEnabled) return;
+      const notes = [NOTE.F4, NOTE.A4, NOTE.C5, NOTE.E5];
+      notes.forEach((f, idx) => {
+        setTimeout(() => playFmCounter(f, 0.25, 0.16, true), idx * 60);
+      });
+    }
+
+    function playFmOracleVision() {
+      if (!soundEnabled) return;
+      const visionNotes = [NOTE.D5, NOTE.Fsh5, NOTE.A5, NOTE.D6];
+      visionNotes.forEach((f, idx) => {
+        setTimeout(() => playFmCounter(f, 0.38, 0.16, true), idx * 60);
+      });
+    }
+
+    function playFmSlotSwap() {
+      if (!soundEnabled) return;
+      playGlassClinker(0.85);
+      setTimeout(() => playGlassClinker(1.2), 65);
+    }
+
+    function playFmAutoFillStinger() {
+      if (!soundEnabled) return;
+      const loadNotes = [NOTE.A4, NOTE.C5, NOTE.E5];
+      loadNotes.forEach((f, idx) => {
+        setTimeout(() => playGlassClinker(f / 880), idx * 45);
+      });
+    }
+
+    function playFmTabClick() {
+      if (!soundEnabled) return;
+      playFmTone(440, 3.0, 1.2, 0.04, 0.08, false);
+    }
 
     function playBubbleSimmer() {
       if (!soundEnabled) return;
@@ -5902,7 +5947,7 @@
 
       modal.style.display = 'flex';
       modal.classList.add('show');
-      playChime(600, 'sine', 0.15);
+      playFmSlotSwap();
     }
 
     function closeCodexModal(evt) {
@@ -5928,7 +5973,7 @@
         }
         switchHelpTab(tab);
         updateManualBadge();
-        playChime(550, 'sine', 0.15);
+        playFmTabClick();
       }
     }
 
@@ -5956,7 +6001,7 @@
           minBtn.title = 'Restore Manual (M)';
         }
         updateManualBadge();
-        if (!silent) playChime(420, 'triangle', 0.1);
+        if (!silent) playGlassClinker(1.15);
       }
     }
 

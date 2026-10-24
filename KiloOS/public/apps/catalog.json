@@ -123,9 +123,9 @@
     "id": "kchatserver",
     "title": "KChat Server",
     "folder": "Network",
-    "webBytes": 24901,
+    "webBytes": 24241,
     "exeBytes": 13824,
-    "budgetPercent": 2.5
+    "budgetPercent": 2.4
   },
   {
     "id": "kchess",
@@ -187,9 +187,9 @@
     "id": "kcolosseum",
     "title": "KColosseum",
     "folder": "Games",
-    "webBytes": 284183,
+    "webBytes": 277303,
     "exeBytes": 39424,
-    "budgetPercent": 28.4
+    "budgetPercent": 27.8
   },
   {
     "id": "kconnect4",
@@ -419,9 +419,9 @@
     "id": "kmatrix",
     "title": "KMatrix",
     "folder": "System",
-    "webBytes": 84487,
-    "exeBytes": 15360,
-    "budgetPercent": 8.5
+    "webBytes": 89786,
+    "exeBytes": 17920,
+    "budgetPercent": 9.0
   },
   {
     "id": "kmaze",
@@ -467,9 +467,9 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 202687,
+    "webBytes": 198053,
     "exeBytes": 57344,
-    "budgetPercent": 20.3
+    "budgetPercent": 19.8
   },
   {
     "id": "knetmap",
@@ -523,9 +523,9 @@
     "id": "kping",
     "title": "KPing",
     "folder": "System",
-    "webBytes": 179903,
+    "webBytes": 175838,
     "exeBytes": 47616,
-    "budgetPercent": 18.0
+    "budgetPercent": 17.6
   },
   {
     "id": "kpomodoro",
@@ -563,9 +563,9 @@
     "id": "kradio",
     "title": "KRadio",
     "folder": "Media",
-    "webBytes": 108315,
+    "webBytes": 111203,
     "exeBytes": 8704,
-    "budgetPercent": 10.8
+    "budgetPercent": 11.1
   },
   {
     "id": "kread",
@@ -603,17 +603,17 @@
     "id": "ksanctuary",
     "title": "KSanctuary",
     "folder": "Games",
-    "webBytes": 460761,
+    "webBytes": 451809,
     "exeBytes": 264192,
-    "budgetPercent": 46.1
+    "budgetPercent": 45.2
   },
   {
     "id": "kscript",
     "title": "KScript",
     "folder": "Dev",
-    "webBytes": 155820,
-    "exeBytes": 25600,
-    "budgetPercent": 15.6
+    "webBytes": 160194,
+    "exeBytes": 27136,
+    "budgetPercent": 16.0
   },
   {
     "id": "ksettings",
@@ -651,9 +651,9 @@
     "id": "kspace",
     "title": "KSpace",
     "folder": "Games",
-    "webBytes": 207269,
+    "webBytes": 202033,
     "exeBytes": 92160,
-    "budgetPercent": 20.7
+    "budgetPercent": 20.2
   },
   {
     "id": "kstardredge",
@@ -675,9 +675,9 @@
     "id": "kstarship",
     "title": "KStarship",
     "folder": "Games",
-    "webBytes": 196982,
+    "webBytes": 197544,
     "exeBytes": 146944,
-    "budgetPercent": 19.7
+    "budgetPercent": 19.8
   },
   {
     "id": "kstellar",
@@ -691,9 +691,9 @@
     "id": "ksteno",
     "title": "KSteno",
     "folder": "System",
-    "webBytes": 154236,
-    "exeBytes": 10240,
-    "budgetPercent": 15.4
+    "webBytes": 156573,
+    "exeBytes": 10752,
+    "budgetPercent": 15.7
   },
   {
     "id": "ksubmarine",
@@ -787,7 +787,7 @@
     "id": "ktrader",
     "title": "KTrader",
     "folder": "Games",
-    "webBytes": 184293,
+    "webBytes": 184289,
     "exeBytes": 26624,
     "budgetPercent": 18.4
   },

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T08:41:48-07:00 — kilo-usability: KSteno (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 152.9 KB, native 10.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Layout & HiDPI: Preserved crisp pixelated carrier backing, HiDPI audio/chi-square canvas scaling on resize.
+  - Keyboard & Ergonomics: Added Ctrl+S quicksave, Ctrl+O quickload, Ctrl+Enter payload injection, status pill trigger, and native Win32 F1/Esc/Ctrl shortcuts.
+  - Handoff: Advanced `kilo-usability` to `KAnomaly`; rotated active agent to `kilo-qa`.
+
 - **2026-10-24T08:35:39-07:00 — kilo-tester: KScript (Interactive UI Audit & Inline Repairs)**
   - Status: PASS (0 errors, web 152.5 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.27%, HEAD Delta 0.01%, 0 fail, 0 warn, 9.3s)).
   - UI & Hotkey Audit: Verified script IDE controls, AST/linter modal, breakpoint stepper, telemetry sparkline, and F5/F9 state persistence.
