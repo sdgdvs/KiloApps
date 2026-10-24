@@ -505,18 +505,18 @@
             return audioCtx;
         }
 
-        // SNES SPC700 Warm Stereo Slapback Delay DSP line (185ms, 2.2kHz LP filter, 0.30 feedback)
+        // SNES SPC700 Cavernous Space Feedback Delay DSP line (260ms, 2.2kHz LP filter, 0.34 feedback)
         function setupSnesDelay(actx) {
             try {
                 snesDelayNode = actx.createDelay();
-                snesDelayNode.delayTime.setValueAtTime(0.185, actx.currentTime);
+                snesDelayNode.delayTime.setValueAtTime(0.260, actx.currentTime);
 
                 snesFilterNode = actx.createBiquadFilter();
                 snesFilterNode.type = 'lowpass';
                 snesFilterNode.frequency.setValueAtTime(2200, actx.currentTime);
 
                 snesFeedbackNode = actx.createGain();
-                snesFeedbackNode.gain.setValueAtTime(0.30, actx.currentTime);
+                snesFeedbackNode.gain.setValueAtTime(0.34, actx.currentTime);
 
                 snesDelayNode.connect(snesFilterNode);
                 snesFilterNode.connect(snesFeedbackNode);
@@ -597,10 +597,10 @@
             } catch (e) {}
         }
 
-        // --- Hardware Chiptune FM Instrument Patches ---
+        // --- Hardware Chiptune FM Instrument Patches (YM2612 2-Op Core) ---
         function playVoidPad(freq, dur, vol=0.08) {
             if (soundMuted) return;
-            playFMTone(freq, 0.5, 1.2, dur, vol, 'sine', true, false);
+            playFMTone(freq, 0.5, 1.6, dur, vol, 'sine', true, false);
         }
 
         function playCosmicBell(freq, dur, vol=0.12) {
@@ -608,14 +608,19 @@
             playFMTone(freq, 3.5, 4.5, dur, vol, 'sine', true, false);
         }
 
-        function playHollowLead(freq, dur, vol=0.12, vibrato=true) {
+        function playHollowLead(freq, dur, vol=0.13, vibrato=true) {
             if (soundMuted) return;
-            playFMTone(freq, 1.0, 0.9, dur, vol, 'sine', true, vibrato);
+            playFMTone(freq, 1.0, 1.4, dur, vol, 'sine', true, vibrato);
         }
 
         function playSlapBass(freq, dur, vol=0.16) {
             if (soundMuted) return;
-            playFMTone(freq, 2.0, 3.2, dur, vol, 'sine', false, false);
+            playFMTone(freq, 2.0, 3.4, dur, vol, 'triangle', false, false);
+        }
+
+        function playSubBassDrone(freq, dur, vol=0.18) {
+            if (soundMuted) return;
+            playFMTone(freq, 1.0, 2.0, dur, vol, 'sine', false, false);
         }
 
         function playFmKick(vol=0.22) {
@@ -626,14 +631,14 @@
                 let now = actx.currentTime;
                 let osc = actx.createOscillator();
                 let gain = actx.createGain();
-                osc.frequency.setValueAtTime(125, now);
-                osc.frequency.exponentialRampToValueAtTime(38, now + 0.04);
+                osc.frequency.setValueAtTime(130, now);
+                osc.frequency.exponentialRampToValueAtTime(36, now + 0.05);
                 gain.gain.setValueAtTime(vol, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
                 osc.connect(gain);
                 gain.connect(actx.destination);
                 osc.start(now);
-                osc.stop(now + 0.14);
+                osc.stop(now + 0.15);
             } catch (e) {}
         }
 
@@ -670,6 +675,87 @@
             if (soundMuted) return;
             let dur = open ? 0.16 : 0.045;
             playFMTone(480, 11.0, 5.5, dur, vol, 'sine', false, false);
+        }
+
+        function playGeigerClick(vol=0.08) {
+            if (soundMuted) return;
+            try {
+                let actx = getAudioContext();
+                if (!actx) return;
+                let now = actx.currentTime;
+                let osc = actx.createOscillator();
+                let gain = actx.createGain();
+                let freq = 1800 + Math.random() * 2600;
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now);
+                osc.frequency.exponentialRampToValueAtTime(120, now + 0.008);
+                gain.gain.setValueAtTime(vol, now);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.008);
+                osc.connect(gain);
+                gain.connect(actx.destination);
+                osc.start(now);
+                osc.stop(now + 0.009);
+            } catch (e) {}
+        }
+
+        function playHullStressGroan(vol=0.20) {
+            if (soundMuted) return;
+            try {
+                let actx = getAudioContext();
+                if (!actx) return;
+                let now = actx.currentTime;
+                let carrier = actx.createOscillator();
+                let modulator = actx.createOscillator();
+                let modGain = actx.createGain();
+                let masterGain = actx.createGain();
+                let filter = actx.createBiquadFilter();
+
+                carrier.type = 'sawtooth';
+                modulator.type = 'sine';
+
+                carrier.frequency.setValueAtTime(74, now);
+                carrier.frequency.exponentialRampToValueAtTime(42, now + 0.72);
+
+                modulator.frequency.setValueAtTime(37, now);
+                modulator.frequency.linearRampToValueAtTime(18, now + 0.72);
+
+                modGain.gain.setValueAtTime(220, now);
+                modGain.gain.exponentialRampToValueAtTime(15, now + 0.65);
+
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(650, now);
+                filter.frequency.exponentialRampToValueAtTime(180, now + 0.72);
+
+                masterGain.gain.setValueAtTime(vol, now);
+                masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.75);
+
+                carrier.connect(filter);
+                filter.connect(masterGain);
+                masterGain.connect(actx.destination);
+                if (snesDelayNode) masterGain.connect(snesDelayNode);
+
+                carrier.start(now);
+                modulator.start(now);
+                carrier.stop(now + 0.75);
+                modulator.stop(now + 0.75);
+            } catch (e) {}
+        }
+
+        function playEMPStinger() {
+            if (soundMuted) return;
+            try {
+                let actx = getAudioContext();
+                if (!actx) return;
+                playFMTone(420, 2.5, 3.8, 0.45, 0.28, 'sawtooth', true);
+                playFmKick(0.35);
+                setTimeout(() => {
+                    playCosmicBell(1320, 0.35, 0.16);
+                    playCosmicBell(880, 0.45, 0.14);
+                }, 80);
+            } catch (e) {}
         }
 
         // --- Action Stingers & UI Earcons ---
@@ -866,15 +952,15 @@
             } catch (e) {}
         }
 
-        // --- 64-Step Procedural Chiptune BGM Engine: "Derelict Bulkhead Protocol" ---
-        // Mode: D Minor / D Phrygian with Lydian Horizon modal shift
+        // --- 64-Step Procedural Chiptune BGM Engine: "Event Horizon Protocol" ---
+        // Mode: D Minor / D Phrygian with Whole-Tone clusters & Lydian Horizon modal shifts
         let bgmStep = 0;
         let bgmTimer = null;
 
-        const B_D2 = 73.42, B_F2 = 87.31, B_G2 = 98.00, B_A2 = 110.00, B_BB1 = 58.27, B_BB2 = 116.54;
-        const B_C3 = 130.81, B_CS3 = 138.59, B_D3 = 146.83, B_EB2 = 77.78, B_G1 = 49.00;
-        const P_F4 = 349.23, P_C5 = 523.25, P_D4 = 293.66, P_A4 = 440.00, P_BB4 = 466.16, P_F5 = 698.46;
-        const P_G4 = 392.00, P_CS5 = 554.37, P_E5 = 659.26, P_EB5 = 622.25, P_D5 = 587.33, P_G5 = 783.99, P_A5 = 880.00, P_BB5 = 932.33;
+        const B_D1 = 36.71, B_EB1 = 38.89, B_G1 = 49.00, B_A1 = 55.00, B_BB1 = 58.27, B_C2 = 65.41;
+        const B_CS2 = 69.30, B_D2 = 73.42, B_EB2 = 77.78, B_F2 = 87.31, B_G2 = 98.00, B_A2 = 110.00, B_BB2 = 116.54, B_C3 = 130.81, B_CS3 = 138.59, B_D3 = 146.83;
+        const P_D4 = 293.66, P_EB4 = 311.13, P_F4 = 349.23, P_G4 = 392.00, P_AB4 = 415.30, P_A4 = 440.00, P_BB4 = 466.16, P_C5 = 523.25;
+        const P_CS5 = 554.37, P_D5 = 587.33, P_EB5 = 622.25, P_E5 = 659.26, P_F5 = 698.46, P_FS5 = 739.99, P_G5 = 783.99, P_AB5 = 830.61, P_A5 = 880.00, P_BB5 = 932.33, P_C6 = 1046.50, P_D6 = 1174.66;
 
         function playBgmStep(step) {
             if (soundMuted || isDead || wonGame) return;
@@ -882,76 +968,86 @@
             let s = step % 64;
             let urgent = selfDestructActive || oxygen <= 20 || battery <= 20;
 
-            // Channel 4: Melodic Counterpoint Bass (YM2612 Slap Bass - Dry, Punchy)
-            if (s === 0 || s === 4 || s === 8 || s === 12) playSlapBass(B_D2, 0.22, 0.16);
-            else if (s === 6) playSlapBass(B_D3, 0.16, 0.14);
-            else if (s === 14) playSlapBass(B_C3, 0.18, 0.15);
-            else if (s === 16 || s === 20 || s === 24 || s === 28) playSlapBass(B_BB1, 0.24, 0.17);
+            // Channel 4: FM Sub-Bass & Slap Bass (Strictly below C3 / 130.81Hz - Punchy & Dry)
+            if (s === 0) playSlapBass(B_D2, 0.24, 0.18);
+            else if (s === 4) playSubBassDrone(B_D1, 0.32, 0.17);
+            else if (s === 6) playSlapBass(B_D2, 0.16, 0.14);
+            else if (s === 8) playSlapBass(B_D2, 0.22, 0.16);
+            else if (s === 12) playSlapBass(B_EB2, 0.20, 0.16); // Phrygian b2 flare
+            else if (s === 14) playSlapBass(B_C2, 0.18, 0.15);
+            else if (s === 16 || s === 20) playSlapBass(B_BB1, 0.26, 0.18);
             else if (s === 22) playSlapBass(B_F2, 0.16, 0.14);
-            else if (s === 30) playSlapBass(B_A2, 0.18, 0.15);
-            else if (s === 32 || s === 36 || s === 40 || s === 44) playSlapBass(B_G1, 0.24, 0.17);
+            else if (s === 24) playSlapBass(B_BB1, 0.24, 0.17);
+            else if (s === 28) playSlapBass(B_A1, 0.20, 0.16);
+            else if (s === 30) playSlapBass(B_BB2, 0.16, 0.14);
+            else if (s === 32 || s === 36) playSlapBass(B_G1, 0.26, 0.18);
             else if (s === 38) playSlapBass(B_D2, 0.16, 0.14);
-            else if (s === 46) playSlapBass(B_F2, 0.18, 0.15);
-            else if (s === 48 || s === 52) playSlapBass(B_EB2, 0.22, 0.17);
-            else if (s === 54) playSlapBass(B_BB2, 0.16, 0.14);
-            else if (s === 56 || s === 60) playSlapBass(B_A2, 0.22, 0.16);
-            else if (s === 62) playSlapBass(B_CS3, 0.18, 0.15);
+            else if (s === 40) playSubBassDrone(B_G1, 0.32, 0.17);
+            else if (s === 44) playSlapBass(B_F2, 0.18, 0.15);
+            else if (s === 46) playSlapBass(B_CS2, 0.20, 0.16); // Tritone leap
+            else if (s === 48 || s === 52) playSlapBass(B_EB2, 0.24, 0.17);
+            else if (s === 54) playSlapBass(B_BB1, 0.16, 0.14);
+            else if (s === 56 || s === 60) playSlapBass(B_A1, 0.24, 0.17);
+            else if (s === 62) playSlapBass(B_CS2, 0.20, 0.16);
 
-            // Channel 3: Harmonic Shell Voicing / Void Pad (3rd + 7th, no doubled 5th)
+            // Channel 3: Harmonic Shell Voicings & Whole-Tone / Phrygian Clusters (3rd + 7th, no doubled 5th)
             if (s === 0 || s === 8) {
                 playVoidPad(P_F4, 1.4, 0.08); // Minor 3rd
                 playVoidPad(P_C5, 1.4, 0.07); // Minor 7th
             } else if (s === 16 || s === 24) {
                 playVoidPad(P_D4, 1.4, 0.08); // Major 3rd
                 playVoidPad(P_A4, 1.4, 0.07); // Major 7th
+                playVoidPad(P_E5, 1.4, 0.06); // #11 Lydian Horizon
             } else if (s === 32 || s === 40) {
                 playVoidPad(P_BB4, 1.4, 0.08); // Minor 3rd
                 playVoidPad(P_F5, 1.4, 0.07); // Minor 7th
+                playVoidPad(P_AB4, 1.4, 0.06); // Whole-Tone tension cluster
             } else if (s === 48 || s === 56) {
-                playVoidPad(P_G4, 1.4, 0.08); // 7th
+                playVoidPad(P_G4, 1.4, 0.08); // 3rd leading tone
                 playVoidPad(P_CS5, 1.4, 0.07); // Tritone leading tone
+                playVoidPad(P_EB5, 1.4, 0.06); // Phrygian b2 singularity pull
             }
 
-            // Channel 1: Lead Melody (Hollow Flute / Ghost Lead - Vocal Phrasing & Vibrato)
+            // Channel 1: Lead Melody (Vocal Phrasing, Rests, Delayed Vibrato, Whole-Tone / Phrygian Theme)
             if (s === 0) playHollowLead(P_D5, 0.45, 0.13, false);
-            else if (s === 3) playHollowLead(P_F5, 0.40, 0.13, false);
-            else if (s === 6) playHollowLead(P_E5, 0.35, 0.12, false);
-            else if (s === 8) playHollowLead(P_D5, 0.70, 0.14, true);
-            else if (s === 12) playHollowLead(P_C5, 0.30, 0.12, false);
+            else if (s === 3) playHollowLead(P_F5, 0.38, 0.13, false);
+            else if (s === 6) playHollowLead(P_AB5, 0.38, 0.13, false); // Whole-Tone tritone dissonance
+            else if (s === 8) playHollowLead(P_D5, 0.68, 0.14, true);  // Vibrato ramp after 180ms
+            else if (s === 12) playHollowLead(P_C5, 0.32, 0.12, false);
             else if (s === 14) playHollowLead(P_D5, 0.45, 0.13, false);
-            // Steps 16-24: Lead RESTS (Call & Response silence for counter-melody)
+            // Steps 16-24: Lead RESTS (Call & Response silence - spotlight opens for Channel 2 Counter-Melody!)
             else if (s === 26) playHollowLead(P_F5, 0.35, 0.13, false);
             else if (s === 28) playHollowLead(P_E5, 0.35, 0.12, false);
             else if (s === 30) playHollowLead(P_C5, 0.40, 0.12, false);
             else if (s === 32) playHollowLead(P_D5, 0.50, 0.13, false);
             else if (s === 35) playHollowLead(P_BB4, 0.40, 0.12, false);
-            else if (s === 38) playHollowLead(P_C5, 0.35, 0.12, false);
+            else if (s === 38) playHollowLead(P_CS5, 0.38, 0.12, false);
             else if (s === 40) playHollowLead(P_D5, 0.65, 0.14, true);
-            else if (s === 44) playHollowLead(P_G5, 0.60, 0.15, true);
+            else if (s === 44) playHollowLead(P_AB5, 0.60, 0.15, true); // Event horizon cry!
             else if (s === 48) playHollowLead(P_EB5, 0.45, 0.14, false); // Phrygian b2 tension
             else if (s === 51) playHollowLead(P_D5, 0.40, 0.13, false);
             else if (s === 54) playHollowLead(P_CS5, 0.45, 0.13, true);
             else if (s === 58) playHollowLead(P_E5, 0.40, 0.13, false);
-            else if (s === 62) playHollowLead(P_D5, 0.50, 0.14, false);
+            else if (s === 62) playHollowLead(P_D5, 0.55, 0.14, false);
 
-            // Channel 2: Counter-Melody / Bell (Cosmic DX7 Chime - Contrary Motion & Solos)
-            if (s === 4) playCosmicBell(P_A5, 0.28, 0.11);
-            else if (s === 10) playCosmicBell(P_F5, 0.28, 0.11);
+            // Channel 2: Counter-Melody / Crystalline Chimes (Contrary Motion & Solo Spotlight)
+            if (s === 4) playCosmicBell(P_A5, 0.28, 0.12);
+            else if (s === 10) playCosmicBell(P_F5, 0.28, 0.12);
             // Solo Spotlight when Lead rests (Steps 16-24)
             else if (s === 16) playCosmicBell(P_BB4, 0.32, 0.14);
             else if (s === 18) playCosmicBell(P_D5, 0.32, 0.14);
-            else if (s === 20) playCosmicBell(P_F5, 0.32, 0.15);
-            else if (s === 22) playCosmicBell(P_E5, 0.40, 0.16); // #11 Lydian wonder!
-            else if (s === 24) playCosmicBell(P_A5, 0.45, 0.16); // Maj7 crystal
+            else if (s === 20) playCosmicBell(P_FS5, 0.34, 0.15); // #11 Lydian ray
+            else if (s === 22) playCosmicBell(P_AB5, 0.38, 0.15); // Whole-tone expansion
+            else if (s === 24) playCosmicBell(P_A5, 0.45, 0.16); // Crystal resolve
             else if (s === 36) playCosmicBell(P_D5, 0.30, 0.12);
             else if (s === 42) playCosmicBell(P_F5, 0.32, 0.13);
             else if (s === 46) playCosmicBell(P_BB5, 0.42, 0.15);
             else if (s === 50) playCosmicBell(P_G5, 0.28, 0.12);
-            else if (s === 53) playCosmicBell(P_E5, 0.28, 0.12);
+            else if (s === 53) playCosmicBell(P_EB5, 0.28, 0.12);
             else if (s === 56) playCosmicBell(P_CS5, 0.32, 0.13);
-            else if (s === 60) playCosmicBell(P_A5, 0.35, 0.14);
+            else if (s === 60) playCosmicBell(P_D6, 0.40, 0.15); // Crystalline peak
 
-            // Channel 5: Percussion (Kick & Snare)
+            // Channel 5: Percussion (FM Pitch-Drop Kick + Snappy Bandpass Noise Snare)
             if (s === 0 || s === 8 || s === 16 || s === 24 || s === 32 || s === 40 || s === 48 || s === 56) {
                 playFmKick(urgent ? 0.26 : 0.22);
             }
@@ -965,10 +1061,18 @@
                 playFmSnare(0.12 + (s - 60) * 0.03);
             }
 
-            // Channel 6: Hi-Hat with 5:3 Swing Feel
+            // Channel 6: Inharmonic Metallic Hi-Hat & Earcons (5:3 Swing Feel + Geiger & Hull Stress)
             if (s % 2 === 0) {
                 let isOpen = (s === 14 || s === 30 || s === 46 || s === 62);
                 playFmHiHat(0.06, isOpen);
+            }
+            // Ambient Geiger micro-ticks on syncopated off-beats
+            if (s === 7 || s === 23 || s === 39 || s === 55) {
+                playGeigerClick(0.04);
+            }
+            // Singularity hull stress groans at key measure transitions
+            if (s === 32 && (urgent || deck >= 2)) {
+                playHullStressGroan(0.16);
             }
         }
 
@@ -1006,7 +1110,7 @@
             }
             emps--;
             showMessage("EMP DEPLOYED. ALIENS STUNNED.", "#0ff");
-            playFMTone(320, 2.5, 3.5, 0.45, 0.28, 'sawtooth', true);
+            playEMPStinger();
             let pCentX = player.x * TILE_SIZE + TILE_SIZE / 2;
             let pCentY = player.y * TILE_SIZE + TILE_SIZE / 2;
             spawnParticles(pCentX, pCentY, '#0ff', 40);
@@ -1383,11 +1487,14 @@
                 selfDestructTimer--;
                 showMessage(`SELF DESTRUCT IN ${selfDestructTimer}s`, "#f00");
                 playAlarm();
+                if (Math.random() < 0.3) playHullStressGroan(0.24);
                 if (selfDestructTimer <= 0) {
                     die("STATION DESTROYED. YOU WERE INCINERATED.");
                 }
             } else if (oxygen <= 20 || battery <= 20 || chasing) {
                 playHeartbeat();
+            } else if (Math.random() < 0.08 && deck >= 2) {
+                playHullStressGroan(0.16);
             }
             
             updateStatsDisplay();
@@ -2418,6 +2525,9 @@ function draw(time = performance.now()) {
                 }
 
                 let dist = Math.abs(a.x - player.x) + Math.abs(a.y - player.y);
+                if (dist <= 5 && Math.random() < 0.35) {
+                    playGeigerClick(0.08);
+                }
                 let canSee = dist <= 6 && !hidden;
                 a.state = canSee ? 'chase' : 'patrol';
 
@@ -2629,6 +2739,7 @@ function draw(time = performance.now()) {
                         oxygen = Math.max(0.0, oxygen - 5.0);
                         map[newY][newX] = 0;
                         playAcidSizzle();
+                        playGeigerClick(0.18);
                         triggerScreenShake(3);
                         let pCentX = newX * TILE_SIZE + TILE_SIZE / 2;
                         let pCentY = newY * TILE_SIZE + TILE_SIZE / 2;

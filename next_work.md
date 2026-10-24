@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -27,7 +27,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://webring
   kilo_graphics: KStellar
-  kilo_soundscape: KVoid
+  kilo_soundscape: KCyber
   kilo_tester: KSteno
   kilo_usability: KSteno
   kilo_qa: KPac
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KCyber
-  timestamp: '2026-10-23T17:51:08-07:00'
+  agent: kilo-soundscape
+  app: KVoid
+  timestamp: '2026-10-23T18:05:24-07:00'
 last_planner_run: '2026-10-23T07:15:00Z'
 ---
 
@@ -108,11 +108,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Active Target**: `KVoid`
+- **Active Target**: `KCyber`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Compose abyssal sonar & trench descent 6-channel suite (Suspended `sus2/Maj7` cascade, muffled low-pass SPC700 echo, warm sine sub-bass, hydrophone ping earcons). |
@@ -122,6 +121,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Compose mystical alchemical workshop 6-channel suite (Dorian/Lydian celesta bells, warm glass pad, bubbling FM cauldron transients, transmutation fanfare stingers). |
 | `KFarm` | `KiloOS/public/apps/kfarm.html` | Compose pastoral 16-bit harvest & seasonal town 6-channel suite (Major pentatonic / Mixolydian acoustic FM guitar, warm marimba counter-melody, brushed snare groove, harvest earcons). |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
+| `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Active Target**: `KSteno`
@@ -224,6 +224,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-23T18:05:24-07:00 — kilo-soundscape: KVoid (Event Horizon Protocol — YM2612/SPC700 Chiptune Suite)**
+  - Status: PASS ✅ (0 errors, web 137.4 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Composition: D Phrygian / Whole-tone with Lydian Horizon shift, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
+  - Patches & DSP: 2-Op FM hollow lead w/ 180ms delayed vibrato, glass chime solo, sub-bass drone, cavernous 260ms SPC700 delay, Geiger & hull-stress earcons.
+  - Handoff: Advanced `kilo-soundscape` to `KCyber`; rotated active agent to `kilo-tester`.
+
 - **2026-10-23T17:51:08-07:00 — kilo-graphics: KCyber (Netrunner Icebreaker Deck Visual Polish)**
   - Status: PASS ✅ (0 errors, web 104.0 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Implemented 3D isometric node towers, enhanced matrix perspective grid with quadratic rungs and node glimmers.
@@ -250,10 +256,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kmech_tutorialSeen flag, audio persistence, and Escape modal dismissals.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, battle state scaling/clamping recovery, and visibilitychange timer cleanup.
   - Mature Quarantine & Handoff: Promoted `KMech` to Mature archive; advanced `kilo-qa` to `KPac`; next agent `kilo-expander`.
-
-- **2026-10-23T17:05:52-07:00 — kilo-usability: KSys (Usability, Responsive Layout & Ergonomics Polish)**
-  - Status: PASS ✅ (0 errors, web 187.6 KB, native 31.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Ergonomics: Added persistent footer statusbar with live telemetry/toast updates and discoverable shortcut pills [F1/H, F5/F9, Shift+M, 1-6, Esc].
-  - HiDPI & Canvas: Debounced resize observer with requestAnimationFrame and integer DPR canvas backing for telemetry sparklines.
-  - Accessibility: Full modal Tab focus trapping with focus restoration on dialog dismiss, plus high-contrast :focus-visible outlines.
-  - Handoff: Advanced `kilo-usability` to `KSteno`; rotated active agent to `kilo-qa`.
