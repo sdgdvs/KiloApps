@@ -46,6 +46,8 @@ static void k_strcat(char* dst, const char* src) {
 #define ID_BTN_HELP         110
 #define ID_BTN_COPY         111
 #define ID_STATUS_LABEL     112
+#define ID_BTN_SAVE_FILE    113
+#define ID_BTN_LOAD_FILE    114
 
 // Cyber Theme Colors
 static COLORREF COLOR_BG = RGB(8, 13, 26);
@@ -78,6 +80,8 @@ static HWND g_hBtnClear = NULL;
 static HWND g_hBtnHelp = NULL;
 static HWND g_hBtnCopy = NULL;
 static HWND g_hStatusLabel = NULL;
+static HWND g_hBtnSaveFile = NULL;
+static HWND g_hBtnLoadFile = NULL;
 
 static char g_szStatus[512] = "KSteno Ready. Select carrier mode, enter secret message, and click Inject or Extract.";
 
@@ -314,6 +318,49 @@ static void DoChiSquareScan(void) {
 }
 
 // Main Window Procedure
+static void DoExportPayload(void) {
+    char buf[8192];
+    buf[0] = 0;
+    GetWindowTextA(g_hEditOutput, buf, sizeof(buf));
+    if (!buf[0]) {
+        GetWindowTextA(g_hEditSecret, buf, sizeof(buf));
+    }
+    if (!buf[0]) {
+        SetWindowTextA(g_hStatusLabel, "Notice: No payload in output or secret buffer to export.");
+        return;
+    }
+    HANDLE hFile = CreateFileA("steno_extracted.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, buf, k_strlen(buf), &written, NULL);
+        CloseHandle(hFile);
+        SetWindowTextA(g_hStatusLabel, "Exported payload to steno_extracted.txt successfully.");
+    } else {
+        SetWindowTextA(g_hStatusLabel, "Error: Could not open steno_extracted.txt for writing.");
+    }
+}
+
+static void DoLoadCover(void) {
+    HANDLE hFile = CreateFileA("carrier_cover.txt", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char buf[8192];
+        DWORD read = 0;
+        if (ReadFile(hFile, buf, sizeof(buf) - 1, &read, NULL)) {
+            buf[read] = 0;
+            SetWindowTextA(g_hEditCover, buf);
+            SetWindowTextA(g_hStatusLabel, "Loaded carrier cover from carrier_cover.txt.");
+        }
+        CloseHandle(hFile);
+    } else {
+        SetWindowTextA(g_hEditCover,
+            "COVERT TRANSMISSION // NODE 0x7F ARCHIVE\r\n"
+            "Subject: Autonomous Fleet Manifest 1999\r\n"
+            "Carrier: Whitespace SNOW Modulated Channel\r\n"
+            "Notice: All operative nodes are synchronized.");
+        SetWindowTextA(g_hStatusLabel, "Created default carrier text (carrier_cover.txt not found).");
+    }
+}
+
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -356,8 +403,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             g_hBtnInject = CreateWindowA("BUTTON", "Inject Secret", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 20, 305, 130, 30, hwnd, (HMENU)ID_BTN_INJECT, NULL, NULL);
             g_hBtnExtract = CreateWindowA("BUTTON", "Extract Secret", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 160, 305, 130, 30, hwnd, (HMENU)ID_BTN_EXTRACT, NULL, NULL);
             g_hBtnChisq = CreateWindowA("BUTTON", "Chi-Square Scan", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 300, 305, 140, 30, hwnd, (HMENU)ID_BTN_CHISQ, NULL, NULL);
-            g_hBtnClear = CreateWindowA("BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 700, 305, 90, 30, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
-            g_hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 800, 305, 100, 30, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            g_hBtnSaveFile = CreateWindowA("BUTTON", "Export File", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 450, 305, 110, 30, hwnd, (HMENU)ID_BTN_SAVE_FILE, NULL, NULL);
+            g_hBtnLoadFile = CreateWindowA("BUTTON", "Load Cover", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 570, 305, 110, 30, hwnd, (HMENU)ID_BTN_LOAD_FILE, NULL, NULL);
+            g_hBtnClear = CreateWindowA("BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 690, 305, 90, 30, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
+            g_hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 790, 305, 110, 30, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             // Output Console Box
             g_hEditOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
@@ -383,6 +432,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 case ID_BTN_INJECT:  DoInject(); break;
                 case ID_BTN_EXTRACT: DoExtract(); break;
                 case ID_BTN_CHISQ:   DoChiSquareScan(); break;
+                case ID_BTN_SAVE_FILE: DoExportPayload(); break;
+                case ID_BTN_LOAD_FILE: DoLoadCover(); break;
                 case ID_BTN_CLEAR:
                     SetWindowTextA(g_hEditSecret, "");
                     SetWindowTextA(g_hEditOutput, "");

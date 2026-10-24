@@ -739,7 +739,8 @@
             <button class="btn btn-sm" id="btn-preset-fractal">Mandelbrot</button>
             <button class="btn btn-sm" id="btn-preset-nebula">Deep Space</button>
             <button class="btn btn-sm" id="btn-preset-crt">CRT Noise</button>
-            <button class="btn btn-sm" id="btn-preset-dither">Sunset Dither</button>
+            <button class="btn btn-sm" id="btn-preset-dither">Sunset Dither</button>
+            <button class="btn btn-sm" id="btn-img-vfs-open" title="Open carrier image from KiloOS VFS (/home/media/)">📂 Open VFS</button>
             <label class="btn btn-sm" style="margin-left:auto; cursor:pointer;">
               📁 Upload Image <input type="file" id="image-file-input" accept="image/*" style="display:none;">
             </label>
@@ -814,13 +815,21 @@
           </div>
 
           <div style="display:flex; gap:6px;">
-            <button class="btn btn-sm" id="btn-img-download" style="flex:1;">💾 Save Stego PNG</button>
+            <button class="btn btn-sm" id="btn-img-download" style="flex:1;">💾 Save PNG</button>
+            <button class="btn btn-sm" id="btn-img-vfs-save" style="flex:1;">💾 Save to VFS</button>
+            <button class="btn btn-sm" id="btn-img-inspect-hex" style="flex:1;">🔍 Open in KHex</button>
             <button class="btn btn-sm" id="btn-img-revert" style="flex:1;">🔄 Clean Carrier</button>
           </div>
 
           <!-- Extraction Output -->
-          <div>
-            <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Extracted Message:</label>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+              <label style="font-size:11px; font-weight:600; color:var(--text-muted);">Extracted Message:</label>
+              <div style="display:flex; gap:4px;">
+                <button class="btn btn-sm" id="btn-img-save-payload-vfs" title="Save extracted secret to VFS (/home/work/steno_extracted.txt)">💾 Save to VFS</button>
+                <button class="btn btn-sm btn-accent" id="btn-img-send-kcipher" title="Send secret payload to KCipher for cryptanalysis">🔐 Send to KCipher</button>
+              </div>
+            </div>
             <div id="img-extract-output" class="text-preview-box" style="height:90px;" placeholder="Extracted text will appear here..."></div>
           </div>
         </div>
@@ -860,7 +869,8 @@
             <button class="btn btn-sm" id="btn-synth-modem">1999 Modem Handshake</button>
             <button class="btn btn-sm" id="btn-synth-fm">Genesis FM Drone</button>
             <button class="btn btn-sm" id="btn-synth-cassette">Cassette Hiss</button>
-            <button class="btn btn-sm" id="btn-synth-pulsar">SPC700 Pulsar</button>
+            <button class="btn btn-sm" id="btn-synth-pulsar">SPC700 Pulsar</button>
+            <button class="btn btn-sm" id="btn-audio-vfs-open" title="Open audio WAV carrier from KiloOS VFS">📂 Open VFS WAV</button>
             <label class="btn btn-sm" style="margin-left:auto; cursor:pointer;">
               📁 Upload WAV <input type="file" id="audio-file-input" accept=".wav,audio/wav" style="display:none;">
             </label>
@@ -897,12 +907,19 @@
           </div>
 
           <div style="display:flex; gap:6px;">
-            <button class="btn btn-sm" id="btn-audio-download" style="flex:1;">💾 Download Stego WAV</button>
+            <button class="btn btn-sm" id="btn-audio-download" style="flex:1;">💾 Download WAV</button>
+            <button class="btn btn-sm" id="btn-audio-vfs-save" style="flex:1;">💾 Save to VFS</button>
             <button class="btn btn-sm" id="btn-audio-revert" style="flex:1;">🔄 Clean Audio</button>
           </div>
 
-          <div>
-            <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Extracted Audio Payload:</label>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+              <label style="font-size:11px; font-weight:600; color:var(--text-muted);">Extracted Audio Payload:</label>
+              <div style="display:flex; gap:4px;">
+                <button class="btn btn-sm" id="btn-audio-save-payload-vfs" title="Save extracted audio payload to VFS">💾 Save to VFS</button>
+                <button class="btn btn-sm btn-accent" id="btn-audio-send-kcipher" title="Send extracted audio payload to KCipher">🔐 Send to KCipher</button>
+              </div>
+            </div>
             <div id="audio-extract-output" class="text-preview-box" style="height:90px;" placeholder="Decoded audio secret will appear here..."></div>
           </div>
         </div>
@@ -926,7 +943,8 @@
             <button class="btn btn-sm" id="btn-text-preset-isp">1999 ISP Statement</button>
             <button class="btn btn-sm" id="btn-text-preset-nfo">FLARELIGHT NFO</button>
             <button class="btn btn-sm" id="btn-text-preset-y2k">Y2K Directive</button>
-            <button class="btn btn-sm" id="btn-text-preset-tournament">Surreal Tournament</button>
+            <button class="btn btn-sm" id="btn-text-preset-tournament">Surreal Tournament</button>
+            <button class="btn btn-sm" id="btn-text-vfs-open" title="Load cover text from KiloOS VFS (/home/docs/)">📂 Load from VFS</button>
           </div>
 
           <textarea id="cover-text-input" style="height:220px;" placeholder="Innocent cover text appears here..."></textarea>
@@ -966,12 +984,19 @@
           </div>
 
           <div style="display:flex; gap:6px;">
-            <button class="btn btn-sm" id="btn-text-copy" style="flex:1;">📋 Copy Stego Text</button>
-            <button class="btn btn-sm" id="btn-text-download" style="flex:1;">💾 Save Stego Text</button>
+            <button class="btn btn-sm" id="btn-text-copy" style="flex:1;">📋 Copy Stego Text</button>
+            <button class="btn btn-sm" id="btn-text-download" style="flex:1;">💾 Save Stego Text</button>
+            <button class="btn btn-sm" id="btn-text-vfs-save" style="flex:1;">💾 Save to VFS</button>
           </div>
 
-          <div>
-            <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Extracted Secret Message:</label>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+              <label style="font-size:11px; font-weight:600; color:var(--text-muted);">Extracted Secret Message:</label>
+              <div style="display:flex; gap:4px;">
+                <button class="btn btn-sm" id="btn-text-save-payload-vfs" title="Save extracted secret to VFS">💾 Save to VFS</button>
+                <button class="btn btn-sm btn-accent" id="btn-text-send-kcipher" title="Send secret payload to KCipher">🔐 Send to KCipher</button>
+              </div>
+            </div>
             <div id="text-extract-output" class="text-preview-box" style="height:90px;" placeholder="Decoded message will appear here..."></div>
           </div>
         </div>
@@ -1046,7 +1071,10 @@
           </div>
 
           <div style="font-size:11px; color:var(--text-muted); line-height:1.4; border-top:1px solid var(--border); padding-top:6px;">
-            <strong>Theory:</strong> Westfeld-Pfitzmann Pairs of Values (PoVs) test evaluates equalization between 2k and 2k+1 pixel values. Natural images show asymmetry; LSB injection forces asymptotic symmetry.
+            <div style="display:flex; gap:6px; margin-bottom:8px;">
+            <button class="btn btn-sm btn-primary" id="btn-steg-vfs-report" style="flex:1;">📊 Export χ² Report to VFS (/home/work/)</button>
+          </div>
+          <strong>Theory:</strong> Westfeld-Pfitzmann Pairs of Values (PoVs) test evaluates equalization between 2k and 2k+1 pixel values. Natural images show asymmetry; LSB injection forces asymptotic symmetry.
           </div>
         </div>
       </div>
@@ -1066,6 +1094,7 @@
                 <option value="subrosa">#sub-rosa-99</option>
                 <option value="cypher">#cypher-cadre</option>
               </select>
+              <button class="btn btn-sm btn-primary" id="btn-connect-relay" title="Connect to Live Firebase Dead-Drop Relay">⚡ Connect to Live Relay</button>
               <button class="btn btn-sm" id="btn-refresh-feed">🔄 Refresh</button>
             </div>
           </div>
@@ -1136,8 +1165,8 @@
   <footer>
     <div class="status-left">
       <span style="display:flex; align-items:center; gap:6px;">
-        <span class="status-indicator" id="net-indicator"></span>
-        <span id="net-status-text">Network: Connecting to RTDB...</span>
+        <span class="status-indicator offline" id="net-indicator"></span>
+        <span id="net-status-text">Network: Offline Simulation Mode</span>
       </span>
       <span>|</span>
       <span id="status-carrier-info">Carrier: 512x384 PNG (Clean)</span>
@@ -1282,7 +1311,7 @@
   <!-- SAFE NON-OCCLUDING TOAST CONTAINER -->
   <div id="toast-container" role="status" aria-live="polite"></div>
 
-  <!-- FIREBASE RTDB MODULE INITIALIZATION -->
+  <!-- FIREBASE RTDB MODULE INITIALIZATION (ON-DEMAND GATE) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
     import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
@@ -1297,31 +1326,37 @@
       appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
     };
 
-    try {
-      const app = initializeApp(firebaseConfig);
-      const db = getDatabase(app);
-      window.fb = {
-        app,
-        db,
-        ref,
-        set,
-        get,
-        push,
-        onValue,
-        onChildAdded,
-        off,
-        serverTimestamp,
-        onDisconnect
-      };
-      if (window.onFirebaseLoaded) {
-        window.onFirebaseLoaded();
+    window.connectFirebaseRTDB = function() {
+      try {
+        if (!window.fb) {
+          const app = initializeApp(firebaseConfig);
+          const db = getDatabase(app);
+          window.fb = {
+            app,
+            db,
+            ref,
+            set,
+            get,
+            push,
+            onValue,
+            onChildAdded,
+            off,
+            serverTimestamp,
+            onDisconnect
+          };
+        }
+        if (window.onFirebaseLoaded) {
+          window.onFirebaseLoaded();
+        }
+        return true;
+      } catch (err) {
+        console.warn("Firebase RTDB init error:", err);
+        if (window.onFirebaseError) {
+          window.onFirebaseError(err);
+        }
+        return false;
       }
-    } catch (err) {
-      console.warn("Firebase RTDB init error:", err);
-      if (window.onFirebaseError) {
-        window.onFirebaseError(err);
-      }
-    }
+    };
   </script>
 
   <!-- MAIN KSTENO APPLICATION LOGIC -->
@@ -2636,22 +2671,94 @@
       }
     ];
 
-    function initFirebaseIntegration() {
+    function initFirebaseIntegration(autoConnect = false) {
+      if (autoConnect && typeof window.connectFirebaseRTDB === 'function') {
+        window.connectFirebaseRTDB();
+      }
       if (window.fb && window.fb.db) {
         isFirebaseOnline = true;
         document.getElementById('net-indicator').className = 'status-indicator';
         document.getElementById('net-status-text').textContent = "Network: Firebase RTDB Online";
+        const btnRelay = document.getElementById('btn-connect-relay');
+        if (btnRelay) {
+          btnRelay.textContent = "🟢 Live Relay Active";
+          btnRelay.disabled = true;
+        }
         subscribeToDeadDropChannel(currentDeadDropChannel);
         updatePresence();
+        showToast("Connected to Live Firebase Relay", "success");
       } else {
-        document.getElementById('net-indicator').className = 'status-indicator connecting';
-        document.getElementById('net-status-text').textContent = "Network: Operating in Offline Simulation Mode";
+        isFirebaseOnline = false;
+        document.getElementById('net-indicator').className = 'status-indicator offline';
+        document.getElementById('net-status-text').textContent = "Network: Offline Simulation Mode";
         renderDeadDropFeed(SIMULATED_DROPS);
       }
     }
 
     window.onFirebaseLoaded = () => {
-      initFirebaseIntegration();
+            // VFS & IPC Hooks
+      document.getElementById('btn-img-vfs-open')?.addEventListener('click', openImageCarrierFromVFS);
+      document.getElementById('btn-img-vfs-save')?.addEventListener('click', saveImageCarrierToVFS);
+      document.getElementById('btn-img-inspect-hex')?.addEventListener('click', inspectCarrierInKHex);
+      document.getElementById('btn-img-save-payload-vfs')?.addEventListener('click', () => {
+        savePayloadToVFS(document.getElementById('img-extract-output').textContent, 'steno_img_extracted.txt');
+      });
+      document.getElementById('btn-img-send-kcipher')?.addEventListener('click', () => {
+        sendPayloadToKCipher(document.getElementById('img-extract-output').textContent);
+      });
+
+      document.getElementById('btn-audio-vfs-open')?.addEventListener('click', () => {
+        KiloVFS.openPicker((data, path) => {
+          showToast(`Audio VFS carrier loaded: ${path || 'file'}`, 'info');
+        });
+      });
+      document.getElementById('btn-audio-vfs-save')?.addEventListener('click', () => {
+        const samples = stegoAudioSamples || audioSamples;
+        const blob = createWavBlob(samples, audioSampleRate);
+        const reader = new FileReader();
+        reader.onload = () => {
+          const vfsPath = `/home/media/ksteno_audio_${Date.now().toString().slice(-4)}.wav`;
+          KiloVFS.write(vfsPath, reader.result);
+          showToast(`Saved audio to VFS: ${vfsPath}`, 'success');
+        };
+        reader.readAsDataURL(blob);
+      });
+      document.getElementById('btn-audio-save-payload-vfs')?.addEventListener('click', () => {
+        savePayloadToVFS(document.getElementById('audio-extract-output').textContent, 'steno_audio_extracted.txt');
+      });
+      document.getElementById('btn-audio-send-kcipher')?.addEventListener('click', () => {
+        sendPayloadToKCipher(document.getElementById('audio-extract-output').textContent);
+      });
+
+      document.getElementById('btn-text-vfs-open')?.addEventListener('click', () => {
+        KiloVFS.openPicker((data, path) => {
+          if (data) {
+            document.getElementById('cover-text-input').value = data;
+            showToast(`Loaded cover text from VFS: ${path || 'file'}`, 'success');
+          }
+        });
+      });
+      document.getElementById('btn-text-vfs-save')?.addEventListener('click', () => {
+        const text = document.getElementById('cover-text-input').value;
+        const vfsPath = `/home/docs/ksteno_chaff_${Date.now().toString().slice(-4)}.txt`;
+        KiloVFS.write(vfsPath, text);
+        showToast(`Saved stego text to VFS: ${vfsPath}`, 'success');
+      });
+      document.getElementById('btn-text-save-payload-vfs')?.addEventListener('click', () => {
+        savePayloadToVFS(document.getElementById('text-extract-output').textContent, 'steno_text_extracted.txt');
+      });
+      document.getElementById('btn-text-send-kcipher')?.addEventListener('click', () => {
+        sendPayloadToKCipher(document.getElementById('text-extract-output').textContent);
+      });
+
+      document.getElementById('btn-steg-vfs-report')?.addEventListener('click', exportSteganalysisReportToVFS);
+
+      document.getElementById('btn-connect-relay')?.addEventListener('click', () => {
+        initFirebaseIntegration(true);
+      });
+
+      initFirebaseIntegration(false);
+      checkIncomingVFSLaunch();
     };
 
     window.onFirebaseError = () => {
@@ -2862,6 +2969,180 @@
       showToast("Operative briefing completed", "info");
     }
 
+        /* ==========================================================================
+       KILOOS VFS & CROSS-APP IPC BRIDGE
+       ========================================================================== */
+    const KiloVFS = {
+      write(path, data) {
+        try {
+          const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+          window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
+          window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: `Saved to VFS: ${path}` }, '*');
+        } catch (e) {}
+      },
+      read(path, cb) {
+        const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const handler = (e) => {
+          if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+            window.removeEventListener('message', handler);
+            cb(e.data.data, e.data.path);
+          }
+        };
+        window.addEventListener('message', handler);
+        try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+      },
+      openPicker(cb) {
+        const reqId = 'open_' + Date.now();
+        const handler = (e) => {
+          if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+            window.removeEventListener('message', handler);
+            if (e.data.path) KiloVFS.read(e.data.path, cb);
+          }
+        };
+        window.addEventListener('message', handler);
+        try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
+      },
+      launchApp(targetApp, path = '') {
+        try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+      }
+    };
+
+    function saveImageCarrierToVFS() {
+      const defaultPath = `/home/media/ksteno_carrier_${Date.now().toString().slice(-4)}.png`;
+      const path = prompt("Enter KiloOS VFS path to save stego carrier:", defaultPath) || defaultPath;
+      const dataUrl = imgCanvas.toDataURL('image/png');
+      KiloVFS.write(path, dataUrl);
+      showToast(`Saved carrier to VFS: ${path}`, "success");
+      sound.playExtractChime();
+    }
+
+    function openImageCarrierFromVFS() {
+      if (window.parent && window.parent !== window) {
+        KiloVFS.openPicker((data, path) => {
+          if (data) {
+            const img = new Image();
+            img.onload = () => {
+              setCanvasDimensions(img.width, img.height);
+              imgCtx.drawImage(img, 0, 0);
+              backupCleanCanvas();
+              showToast(`Loaded carrier from VFS: ${path || 'file'}`, "success");
+            };
+            img.src = data.startsWith('data:') ? data : 'data:image/png;base64,' + data;
+          }
+        });
+      } else {
+        const path = prompt("Enter KiloOS VFS image path (e.g. /home/media/carrier.png):", "/home/media/carrier.png");
+        if (path) {
+          KiloVFS.read(path, (data) => {
+            if (data) {
+              const img = new Image();
+              img.onload = () => {
+                setCanvasDimensions(img.width, img.height);
+                imgCtx.drawImage(img, 0, 0);
+                backupCleanCanvas();
+                showToast(`Loaded carrier from VFS: ${path}`, "success");
+              };
+              img.src = data.startsWith('data:') ? data : 'data:image/png;base64,' + data;
+            }
+          });
+        }
+      }
+    }
+
+    function inspectCarrierInKHex() {
+      const path = '/home/media/ksteno_inspect.png';
+      const dataUrl = imgCanvas.toDataURL('image/png');
+      KiloVFS.write(path, dataUrl);
+      KiloVFS.launchApp('khex', path);
+      showToast('Carrier dispatched to KHex for binary analysis', 'info');
+    }
+
+    function sendPayloadToKCipher(text) {
+      if (!text || text.trim().length === 0 || text.startsWith('[ERROR:')) {
+        showToast('No valid payload to decrypt! Extract secret first.', 'warning');
+        return;
+      }
+      const path = '/home/work/steno_extracted.txt';
+      KiloVFS.write(path, text);
+      KiloVFS.launchApp('kcipher', path);
+      showToast('Payload dispatched to KCipher workbench', 'success');
+      sound.playExtractChime();
+    }
+
+    function savePayloadToVFS(text, defaultFileName = 'steno_payload.txt') {
+      if (!text || text.trim().length === 0 || text.startsWith('[ERROR:')) {
+        showToast('No valid payload to save! Extract secret first.', 'warning');
+        return;
+      }
+      const defaultPath = `/home/work/${defaultFileName}`;
+      const path = prompt("Enter KiloOS VFS path to save payload:", defaultPath) || defaultPath;
+      KiloVFS.write(path, text);
+      showToast(`Payload saved to VFS: ${path}`, 'success');
+      sound.playExtractChime();
+    }
+
+    function exportSteganalysisReportToVFS() {
+      const entropy = document.getElementById('stat-entropy')?.textContent || 'N/A';
+      const chisq = document.getElementById('stat-chisq')?.textContent || 'N/A';
+      const prob = document.getElementById('stat-prob')?.textContent || 'N/A';
+      const est = document.getElementById('stat-est-cap')?.textContent || 'N/A';
+      const verdict = document.getElementById('stego-verdict-text')?.textContent || 'UNKNOWN';
+      const dim = `${imgCanvas.width}x${imgCanvas.height}`;
+
+      const report = `=====================================================\n` +
+`KSTENO STEGANALYSIS REPORT (WESTFELD-PFITZMANN χ² SCAN)\n` +
+`Generated: ${new Date().toISOString()}\n` +
+`Target Carrier: Bitmap Canvas (${dim})\n` +
+`=====================================================\n\n` +
+`1. EXECUTIVE VERDICT\n` +
+`-------------------\n` +
+`Status: ${verdict}\n` +
+`Estimated Injected Secret: ${est}\n\n` +
+`2. STATISTICAL METRICS\n` +
+`----------------------\n` +
+`- Shannon Entropy:       ${entropy}\n` +
+`- Chi-Square (χ²):        ${chisq}\n` +
+`- Stego Probability (P):  ${prob}\n` +
+`- Degrees of Freedom:    127 Pairs of Values (PoVs)\n\n` +
+`3. ANALYSIS METHODOLOGY\n` +
+`-----------------------\n` +
+`Evaluates equalization between even/odd value pairs (2k, 2k+1) across\n` +
+`active color planes. Clean photographic images exhibit natural asymmetry;\n` +
+`LSB modulation enforces asymptotic equalization, forcing χ² toward zero.\n\n` +
+`-- KSteno Stenographic Carrier Suite (KiloOS Phase VI) --\n`;
+
+      const path = `/home/work/steganalysis_report_${Date.now().toString().slice(-4)}.txt`;
+      KiloVFS.write(path, report);
+      showToast(`Steganalysis report saved to VFS: ${path}`, 'success');
+      sound.playExtractChime();
+    }
+
+    function checkIncomingVFSLaunch() {
+      try {
+        const hash = window.location.hash ? decodeURIComponent(window.location.hash.slice(1)) : '';
+        if (hash && hash.startsWith('/')) {
+          KiloVFS.read(hash, (content) => {
+            if (!content) return;
+            if (hash.endsWith('.png') || hash.endsWith('.jpg') || hash.endsWith('.bmp')) {
+              const img = new Image();
+              img.onload = () => {
+                setCanvasDimensions(img.width, img.height);
+                imgCtx.drawImage(img, 0, 0);
+                backupCleanCanvas();
+                showToast(`Loaded carrier from VFS: ${hash}`, "success");
+              };
+              img.src = content.startsWith('data:') ? content : 'data:image/png;base64,' + content;
+            } else {
+              document.getElementById('cover-text-input').value = content;
+              document.getElementById('img-payload-input').value = content;
+              updateCapacityUI();
+              showToast(`Loaded payload from VFS: ${hash}`, "success");
+            }
+          });
+        }
+      } catch (e) {}
+    }
+
     /* ==========================================================================
        10. STATE PERSISTENCE (Quicksave F5 & Quickload F9)
        ========================================================================== */
