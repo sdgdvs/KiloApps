@@ -235,9 +235,9 @@
     "id": "kcyber",
     "title": "KCyber",
     "folder": "Games",
-    "webBytes": 100948,
-    "exeBytes": 33792,
-    "budgetPercent": 10.1
+    "webBytes": 106472,
+    "exeBytes": 34304,
+    "budgetPercent": 10.7
   },
   {
     "id": "kdarts",
@@ -435,9 +435,9 @@
     "id": "kmech",
     "title": "KMech",
     "folder": "Games",
-    "webBytes": 162296,
-    "exeBytes": 33792,
-    "budgetPercent": 16.2
+    "webBytes": 163685,
+    "exeBytes": 34304,
+    "budgetPercent": 16.4
   },
   {
     "id": "kmedia",
@@ -467,7 +467,7 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 203476,
+    "webBytes": 203533,
     "exeBytes": 45056,
     "budgetPercent": 20.4
   },
@@ -491,7 +491,7 @@
     "id": "kpac",
     "title": "KPac",
     "folder": "Games",
-    "webBytes": 218028,
+    "webBytes": 218131,
     "exeBytes": 52224,
     "budgetPercent": 21.8
   },
@@ -611,7 +611,7 @@
     "id": "kscript",
     "title": "KScript",
     "folder": "Dev",
-    "webBytes": 153629,
+    "webBytes": 154266,
     "exeBytes": 25600,
     "budgetPercent": 15.4
   },
@@ -691,9 +691,9 @@
     "id": "ksteno",
     "title": "KSteno",
     "folder": "System",
-    "webBytes": 131973,
-    "exeBytes": 9728,
-    "budgetPercent": 13.2
+    "webBytes": 149723,
+    "exeBytes": 10240,
+    "budgetPercent": 15.0
   },
   {
     "id": "ksubmarine",
@@ -723,9 +723,9 @@
     "id": "ksys",
     "title": "KSys",
     "folder": "System",
-    "webBytes": 187492,
+    "webBytes": 192123,
     "exeBytes": 32256,
-    "budgetPercent": 18.8
+    "budgetPercent": 19.2
   },
   {
     "id": "ktask",
@@ -811,17 +811,17 @@
     "id": "kvoid",
     "title": "KVoid",
     "folder": "Games",
-    "webBytes": 135481,
+    "webBytes": 140708,
     "exeBytes": 31232,
-    "budgetPercent": 13.6
+    "budgetPercent": 14.1
   },
   {
     "id": "kwizard",
     "title": "KWizard",
     "folder": "Games",
-    "webBytes": 150953,
+    "webBytes": 153845,
     "exeBytes": 12974,
-    "budgetPercent": 15.1
+    "budgetPercent": 15.4
   },
   {
     "id": "kwords",

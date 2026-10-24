@@ -653,7 +653,7 @@
         <div class="screen-desc" id="location-desc">Welcome to Oakhaven. Create your hero or venture forth into the Obsidian Spire!</div>
         
         <!-- Graphical Viewport Canvas -->
-        <canvas id="kquest-gfx-canvas" width="680" height="220" style="width:680px; max-width:100%; height:220px; align-self:center; border-radius:8px; border:1px solid #313244; background:#0f0f17; display:block; margin-top:8px; box-shadow:0 4px 12px rgba(0,0,0,0.5);"></canvas>
+        <canvas id="kquest-gfx-canvas" width="680" height="220" style="width:100%; max-width:680px; aspect-ratio:680/220; height:auto; align-self:center; border-radius:8px; border:1px solid #313244; background:#0f0f17; display:block; margin-top:8px; box-shadow:0 4px 12px rgba(0,0,0,0.5);"></canvas>
         
         <!-- Dynamic Interactive Area -->
         <div id="dynamic-content"></div>
@@ -759,7 +759,42 @@
 
   </div>
 
+  <script src="../assets/js/retro_multiplayer.js"></script>
   <script>
+    // --- KILO-OS VFS & IPC MESH BRIDGE ---
+    const KiloVFS = {
+      write(path, data) {
+        try {
+          window.parent.postMessage({ type: 'VFS_WRITE', path, data: typeof data === 'string' ? data : JSON.stringify(data, null, 2), requestId: 'w_' + Date.now() }, '*');
+          window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: `Saved to VFS: ${path}` }, '*');
+        } catch (e) {}
+      },
+      read(path, cb) {
+        const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const handler = (e) => {
+          if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+            window.removeEventListener('message', handler);
+            cb(e.data.data, e.data.path);
+          }
+        };
+        window.addEventListener('message', handler);
+        try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+      },
+      openPicker(cb) {
+        const reqId = 'open_' + Date.now();
+        const handler = (e) => {
+          if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+            window.removeEventListener('message', handler);
+            if (e.data.path) KiloVFS.read(e.data.path, cb);
+          }
+        };
+        window.addEventListener('message', handler);
+        try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
+      },
+      launchApp(targetApp, path = '') {
+        try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+      }
+    };
     // --- GRAPHICS & ANIMATION ENGINE ---
     const GFX = {
       canvas: null,
@@ -3353,6 +3388,8 @@
     function sfxDeath() { AudioEngine.playPreset('death'); }
     function sfxVictory() { AudioEngine.playPreset('victory'); }
     function sfxFlee() { AudioEngine.playPreset('flee'); }
+    function sfxRaidStart() { AudioEngine.playPreset('raid'); }
+    function sfxArenaClash() { AudioEngine.playPreset('arena'); }
 
     // Resume WebAudio on user interaction per browser autoplay security policies
     window.addEventListener('click', () => AudioEngine.handleUserGesture(), { once: true });
@@ -4480,6 +4517,9 @@
         <div style="display:flex; gap:8px; margin-top:12px; justify-content:center; border-top:1px solid #313244; padding-top:10px; flex-wrap:wrap;">
           <button class="btn btn-primary" style="font-size:0.8rem;" onclick="exportScoreJSON()">📤 Export Save to JSON</button>
           <button class="btn btn-accent" style="font-size:0.8rem;" onclick="document.getElementById('json-import-file').click()">📥 Import Save from JSON</button>
+          <button class="btn" style="background:#a6e3a1; color:#11111b; font-size:0.8rem; font-weight:700;" onclick="exportHeroToVFS()">💾 Save Hero to VFS</button>
+          <button class="btn" style="background:#89b4fa; color:#11111b; font-size:0.8rem; font-weight:700;" onclick="importHeroFromVFS()">📂 Load Hero from VFS</button>
+          <button class="btn" style="background:#cba6f7; color:#11111b; font-size:0.8rem; font-weight:700;" onclick="inspectHeroInKPad()">📜 Inspect Sheet in KPad</button>
         </div>
       `;
       dyn.innerHTML = slotsHtml;
@@ -4556,6 +4596,7 @@
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
         <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+        <button class="btn" style="background:#f38ba8; color:#11111b; font-weight:700;" onclick="openMultiplayerModal()">⚔️ Co-Op Raid & Guild Arena</button>
       `;
     }
 
@@ -4737,6 +4778,7 @@
         <button class="btn" style="background:#cba6f7; color:#11111b;" onclick="setGameState(STATE.TRAINING_HALL)">🏋️ Training Hall (${player.skillPoints} SP)</button>
         <button class="btn" style="background:#89b4fa; color:#11111b;" onclick="setGameState(STATE.QUEST_BOARD)">📜 Bounty Board</button>
         <button class="btn" style="background:#fab387; color:#11111b;" onclick="setGameState(STATE.TAVERN)">🍻 Rusty Dragon Tavern</button>
+        <button class="btn" style="background:#f38ba8; color:#11111b; font-weight:700;" onclick="openMultiplayerModal()">⚔️ Guild Arena & Co-Op</button>
         <button class="btn" onclick="restAtInn()">🍺 Rest at Inn (10 Gold)</button>
         <button class="btn" onclick="setGameState(STATE.SHOP)">🛒 Visit Merchant</button>
         <button class="btn btn-craft" onclick="setGameState(STATE.CRAFTING)">⚒️ Alchemy & Forge</button>
@@ -4969,6 +5011,7 @@
             const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
         <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+        <button class="btn" style="background:#f38ba8; color:#11111b; font-weight:700;" onclick="openMultiplayerModal()">⚔️ Co-Op Raid & Guild Arena</button>
         <button class="btn btn-accent" onclick="setGameState(STATE.TAVERN)">🍻 Visit Tavern (NPC)</button>
       `;
     }
@@ -5163,6 +5206,7 @@
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
         <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+        <button class="btn" style="background:#f38ba8; color:#11111b; font-weight:700;" onclick="openMultiplayerModal()">⚔️ Co-Op Raid & Guild Arena</button>
         <button class="btn" onclick="rerollBounties()">🎲 Reroll Board (10 Gold)</button>
       `;
     }
@@ -5334,6 +5378,7 @@
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
         <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+        <button class="btn" style="background:#f38ba8; color:#11111b; font-weight:700;" onclick="openMultiplayerModal()">⚔️ Co-Op Raid & Guild Arena</button>
       `;
     }
 
@@ -5413,12 +5458,20 @@
             <span>📜 Side Quest: Deliver 3 Iron Scrap for 60 Gold</span>
             <button class="btn btn-accent" onclick="tavernAction('quest')">Complete</button>
           </div>
+          <div class="item-row" style="background:linear-gradient(135deg, rgba(203,166,247,0.15) 0%, rgba(137,180,250,0.15) 100%); border:1px solid #cba6f7;">
+            <div>
+              <strong style="color:#cba6f7;">🤝 Co-Op Tavern Raid & Guild Arena (RFMS Online)</strong>
+              <div style="font-size:0.75rem; color:#a6adc8;">Raid colossal World Bosses in co-op parties or duel in turn-based PvP! (25s Solo AI Fallback)</div>
+            </div>
+            <button class="btn btn-accent" onclick="openMultiplayerModal()" style="font-weight:700;">⚔️ Enter Arena Hub</button>
+          </div>
         </div>
       `;
 
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
         <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+        <button class="btn" style="background:#f38ba8; color:#11111b; font-weight:700;" onclick="openMultiplayerModal()">⚔️ Co-Op Raid & Guild Arena</button>
       `;
     }
 
@@ -5482,6 +5535,7 @@
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
         <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+        <button class="btn" style="background:#f38ba8; color:#11111b; font-weight:700;" onclick="openMultiplayerModal()">⚔️ Co-Op Raid & Guild Arena</button>
       `;
     }
 
@@ -5745,6 +5799,7 @@
         <button class="btn btn-danger" onclick="startArmyBattle()">⚔️ Launch War Campaign</button>
         <button class="btn" style="background:#fab387; color:#11111b; font-weight:700;" onclick="startCastleDefense()">🛡️ Defend Castle Gate (Wave ${k.defenseWave})</button>
         <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+        <button class="btn" style="background:#f38ba8; color:#11111b; font-weight:700;" onclick="openMultiplayerModal()">⚔️ Co-Op Raid & Guild Arena</button>
       `;
     }
 
@@ -6236,6 +6291,7 @@
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
         <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+        <button class="btn" style="background:#f38ba8; color:#11111b; font-weight:700;" onclick="openMultiplayerModal()">⚔️ Co-Op Raid & Guild Arena</button>
       `;
     }
 
@@ -7666,7 +7722,921 @@
         event.target.value = '';
     }
 
+    // =========================================================================
+    // PHASE VI: KILOOS VFS INTEGRATION & CHARACTER DOSSIER EXPORT
+    // =========================================================================
+    function exportHeroToVFS() {
+      if (!charCreated || currentState === STATE.CHAR_CREATE) {
+        showToast('⚠️ Create your hero before exporting!', 2500);
+        return;
+      }
+      if (currentState === STATE.GAME_OVER || player.hp <= 0) {
+        showToast('⚠️ Cannot export save while fallen in battle!', 2500);
+        return;
+      }
+      const b = BIOMES[player.biome] || BIOMES[0];
+      const achCount = (player.achievements || []).filter(a => a === 1).length;
+      const heroPayload = {
+        app: 'KQuest',
+        format: 'KQuest-HeroSheet-v1',
+        exportedAt: new Date().toISOString(),
+        player: { ...player },
+        currentLocation: `${b.name} (Floor ${player.floor})`,
+        ngLevel: player.ngLevel || 0,
+        achievementsUnlocked: achCount,
+        achievementsTotal: ACHIEVEMENTS_DEF.length
+      };
+
+      const sheetText = generateHeroSheetText();
+
+      // Write structured JSON character sheet
+      KiloVFS.write('/home/saves/kquest_hero.json', heroPayload);
+      // Write human-readable text dossier
+      KiloVFS.write('/home/saves/kquest_hero_sheet.txt', sheetText);
+
+      showToast('💾 Hero dossier saved to /home/saves/ in KiloOS VFS!', 3000);
+      logMsg('💾 Hero saved to /home/saves/kquest_hero.json & kquest_hero_sheet.txt', 'system');
+      if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('item');
+    }
+
+    function generateHeroSheetText() {
+      const b = BIOMES[player.biome] || BIOMES[0];
+      const achUnlocked = (player.achievements || []).filter(a => a === 1).length;
+      return `=======================================================
+               KQUEST HERO CHARACTER DOSSIER
+=======================================================
+Hero Name:      ${player.name}
+Class:          ${player.class} (Tier ${player.ngLevel ? 'NG+' + player.ngLevel : 'Standard'})
+Level:          ${player.level} | Experience: ${player.xp} / ${player.level * 100}
+Health Points:  ${player.hp} / ${player.maxHp} HP
+Mana Points:    ${player.mp} / ${player.maxMp} MP
+Gold Treasury:  ${player.gold} 🪙
+Current Biome:  ${b.name} (Floor ${player.floor})
+Companion:      ${player.companion ? player.companion.toUpperCase() : 'None'}
+
+--- ATTRIBUTES & COMBAT RATINGS ---
+Strength (STR): ${player.str}
+Defense (DEF):  ${player.def}
+Speed (SPD):    ${player.spd}
+Magic (MAG):    ${player.mag}
+Skill Points:   ${player.skillPoints}
+
+--- EQUIPMENT & INVENTORY ---
+Weapon:         ${player.weaponName || player.weapon?.name || 'Iron Sword'} (ATK: ${player.str})
+Armor:          ${player.armorName || player.armor?.name || 'Leather Vest'} (DEF: ${player.def})
+Iron Scrap:     ${player.materials?.iron || 0}
+Arcane Dust:    ${player.materials?.dust || 0}
+Elemental Core: ${player.materials?.core || 0}
+Potions:        Health (${player.potions?.health || 0}), Mana (${player.potions?.mana || 0}), Elixirs (${player.potions?.elixir || 0})
+
+--- MILESTONES & HONORS ---
+Completed Milestones: ${achUnlocked} / ${ACHIEVEMENTS_DEF.length}
+NG+ Difficulty Cycle: NG+ ${player.ngLevel || 0}
+
+Generated by KQuest on ${new Date().toLocaleString()}
+=======================================================`;
+    }
+
+    function inspectHeroInKPad() {
+      if (!charCreated || currentState === STATE.CHAR_CREATE) {
+        showToast('⚠️ Create your hero first!', 2500);
+        return;
+      }
+      exportHeroToVFS();
+      KiloVFS.launchApp('kpad', '/home/saves/kquest_hero_sheet.txt');
+      showToast('📜 Launching Character Dossier in KPad...', 2500);
+    }
+
+    function importHeroFromVFS() {
+      KiloVFS.read('/home/saves/kquest_hero.json', (data, path) => {
+        if (!data) {
+          showToast('⚠️ /home/saves/kquest_hero.json not found in VFS.', 3000);
+          return;
+        }
+        try {
+          const imported = typeof data === 'string' ? JSON.parse(data) : data;
+          if (imported && (imported.player || imported.name)) {
+            const p = imported.player || imported;
+            player = { ...player, ...p };
+            if (player.hp <= 0) player.hp = Math.max(1, Math.floor(player.maxHp * 0.5));
+            charCreated = true;
+            if (imported.ngLevel !== undefined) player.ngLevel = imported.ngLevel;
+            if (imported.achievements) player.achievements = imported.achievements;
+            updateUI();
+            showToast(`📂 Restored Hero ${player.name} (Lvl ${player.level}) from VFS!`, 3000);
+            logMsg(`📂 Loaded Hero ${player.name} from ${path || '/home/saves/kquest_hero.json'}.`, 'system');
+            if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('item');
+          }
+        } catch (e) {
+          showToast('❌ Failed to parse VFS save: ' + e.message, 3000);
+        }
+      });
+    }
+
+    // =========================================================================
+    // PHASE VI: RFMS ONLINE MULTIPLAYER (CO-OP TAVERN RAID & GUILD ARENA DUEL)
+    // =========================================================================
+    let rMultiplayer = null;
+    let mpRoom = null;
+    let mpMySlot = null;
+    let mpMode = 'coop'; // 'coop' or 'duel'
+    let mpSoloTimer = null;
+    let mpSoloSec = 25;
+    let mpInBattle = false;
+    let mpIsHost = false;
+
+    // Raid State
+    let mpRaidBoss = {
+      name: '🐲 Ignis the Obsidian World-Eater',
+      maxHp: 800,
+      hp: 800,
+      atk: 28,
+      desc: 'Colossal elder dragon slumbering beneath the Spire. Requires co-op party cooperation!'
+    };
+    let mpPeerHero = null;
+    let mpDuelChallenger = null;
+    let mpDuelTurn = 'p1';
+
+    function initRetroMultiplayer() {
+      if (typeof RetroMultiplayer === 'undefined') {
+        console.warn("[KQuest] RetroMultiplayer script unavailable.");
+        return;
+      }
+      if (rMultiplayer) {
+        if (player && player.name) rMultiplayer.playerName = player.name;
+        return;
+      }
+      try {
+        rMultiplayer = new RetroMultiplayer({
+          gameId: 'kquest',
+          prefix: 'KQ',
+          playerName: (player && player.name) ? player.name : 'Hero',
+          soloTimeoutMs: 25000,
+          onPlayerJoin: (playerData, slot) => {
+            logMpEvent(`Adventurer ${playerData.name} joined room (${slot})!`, '#a6e3a1');
+            stopMpSoloCountdown();
+            if (mpMode === 'coop') {
+              setupCoopRaid(playerData, slot);
+            } else {
+              setupArenaDuel(playerData, slot);
+            }
+          },
+          onPlayerLeave: (slot) => {
+            logMpEvent(`Player ${slot} retreated from the room.`, '#f38ba8');
+            if (mpInBattle) {
+              logMpEvent(`Partner retreated! AI Reinforcement took their position.`, '#fab387');
+              handleMpSoloFallback();
+            }
+          },
+          onMove: (moveData) => {
+            handleIncomingMpMove(moveData);
+          },
+          onSoloFallback: () => {
+            handleMpSoloFallback();
+          }
+        });
+      } catch (e) {
+        console.warn("[KQuest] RetroMultiplayer init error:", e);
+      }
+    }
+
+    function openMultiplayerModal() {
+      initRetroMultiplayer();
+      const modal = document.getElementById('mp-modal-overlay');
+      if (modal) {
+        modal.style.display = 'flex';
+        updateMpPlayerPill();
+        setMpTab(mpMode);
+        resetMpWaitingView();
+      }
+    }
+
+    function closeMultiplayerModal() {
+      const modal = document.getElementById('mp-modal-overlay');
+      if (modal) modal.style.display = 'none';
+      stopMpSoloCountdown();
+      if (rMultiplayer && mpRoom) {
+        try { rMultiplayer.leaveRoom(); } catch(e) {}
+        mpRoom = null;
+      }
+      mpInBattle = false;
+    }
+
+    function updateMpPlayerPill() {
+      const nameInput = document.getElementById('mp-hero-name-input');
+      if (nameInput && player.name) nameInput.value = player.name;
+      const statsPill = document.getElementById('mp-hero-stats-pill');
+      if (statsPill) {
+        statsPill.textContent = `Lvl ${player.level} ${player.class} | HP: ${player.hp}/${player.maxHp} | STR: ${player.str} | DEF: ${player.def}`;
+      }
+      const netStatus = document.getElementById('mp-network-status');
+      if (netStatus) {
+        const isOnline = rMultiplayer && rMultiplayer.isOnline && rMultiplayer.isOnline();
+        netStatus.innerHTML = isOnline 
+          ? `<span style="color:#a6e3a1;">● RFMS Cloud Subnet (Online)</span>` 
+          : `<span style="color:#fab387;">● P2P Local Mesh (BroadcastChannel)</span>`;
+      }
+    }
+
+    function saveMpHeroName() {
+      const nameInput = document.getElementById('mp-hero-name-input');
+      if (nameInput && nameInput.value.trim()) {
+        player.name = nameInput.value.trim();
+        if (rMultiplayer) rMultiplayer.playerName = player.name;
+        updateUI();
+        showToast(`Hero name updated: ${player.name}`, 2000);
+      }
+    }
+
+    function setMpTab(mode) {
+      mpMode = mode;
+      const tabCoop = document.getElementById('mp-tab-coop');
+      const tabDuel = document.getElementById('mp-tab-duel');
+      const coopPanel = document.getElementById('mp-panel-coop');
+      const duelPanel = document.getElementById('mp-panel-duel');
+
+      if (tabCoop && tabDuel) {
+        tabCoop.classList.toggle('active', mode === 'coop');
+        tabDuel.classList.toggle('active', mode === 'duel');
+      }
+      if (coopPanel && duelPanel) {
+        coopPanel.style.display = mode === 'coop' ? 'block' : 'none';
+        duelPanel.style.display = mode === 'duel' ? 'block' : 'none';
+      }
+      resetMpWaitingView();
+    }
+
+    function resetMpWaitingView() {
+      const waitBox = document.getElementById('mp-waiting-box');
+      const lobbyBox = document.getElementById('mp-lobby-controls');
+      const battleBox = document.getElementById('mp-battle-view');
+      if (waitBox) waitBox.style.display = 'none';
+      if (lobbyBox) lobbyBox.style.display = 'block';
+      if (battleBox) battleBox.style.display = 'none';
+      mpInBattle = false;
+    }
+
+    function startMpSoloCountdown(actionLabel) {
+      stopMpSoloCountdown();
+      mpSoloSec = 25;
+      const timerEl = document.getElementById('mp-countdown-display');
+      if (timerEl) {
+        timerEl.textContent = `⏱️ Matchmaking active: ${mpSoloSec}s remaining before solo AI companion engages...`;
+      }
+      mpSoloTimer = setInterval(() => {
+        mpSoloSec--;
+        if (timerEl) {
+          timerEl.textContent = `⏱️ Matchmaking active: ${mpSoloSec}s remaining before solo AI companion engages...`;
+        }
+        if (mpSoloSec <= 0) {
+          stopMpSoloCountdown();
+          handleMpSoloFallback();
+        }
+      }, 1000);
+    }
+
+    function stopMpSoloCountdown() {
+      if (mpSoloTimer) {
+        clearInterval(mpSoloTimer);
+        mpSoloTimer = null;
+      }
+      if (rMultiplayer) {
+        try { rMultiplayer.stopSoloFallbackTimer(); } catch(e) {}
+      }
+    }
+
+    async function startMpQuickMatch() {
+      initRetroMultiplayer();
+      saveMpHeroName();
+      showWaitingUI('Scanning Guild Lobbies for match...');
+      startMpSoloCountdown();
+
+      if (rMultiplayer) {
+        try {
+          const res = await rMultiplayer.quickMatch({
+            mode: mpMode,
+            heroClass: player.class,
+            heroLevel: player.level,
+            heroHp: player.hp,
+            heroMaxHp: player.maxHp,
+            heroStr: player.str,
+            heroDef: player.def
+          });
+          if (res && res.success) {
+            mpRoom = res.roomId;
+            mpMySlot = res.slot;
+            mpIsHost = (res.slot === 'p1');
+            document.getElementById('mp-room-code-tag').textContent = mpRoom;
+            logMpEvent(`Connected to Room [${mpRoom}] as ${mpMySlot.toUpperCase()}.`, '#89b4fa');
+            if (res.slot === 'p2' && res.room && res.room.p1) {
+              stopMpSoloCountdown();
+              if (mpMode === 'coop') setupCoopRaid(res.room.p1, 'p1');
+              else setupArenaDuel(res.room.p1, 'p1');
+            }
+          }
+        } catch (e) {
+          console.warn("[KQuest] quickMatch error:", e);
+        }
+      }
+    }
+
+    async function createMpCustomRoom() {
+      initRetroMultiplayer();
+      saveMpHeroName();
+      showWaitingUI('Hosting room in Guild Tavern...');
+      startMpSoloCountdown();
+
+      if (rMultiplayer) {
+        try {
+          const res = await rMultiplayer.createRoom({
+            mode: mpMode,
+            heroClass: player.class,
+            heroLevel: player.level,
+            heroHp: player.hp,
+            heroMaxHp: player.maxHp,
+            heroStr: player.str,
+            heroDef: player.def
+          }, true);
+          if (res && res.roomId) {
+            mpRoom = res.roomId;
+            mpMySlot = 'p1';
+            mpIsHost = true;
+            document.getElementById('mp-room-code-tag').textContent = mpRoom;
+            logMpEvent(`Created Room [${mpRoom}]. Awaiting challenger or companion...`, '#cba6f7');
+          }
+        } catch (e) {
+          console.warn("[KQuest] createRoom error:", e);
+        }
+      }
+    }
+
+    async function joinMpRoomByCode() {
+      initRetroMultiplayer();
+      saveMpHeroName();
+      const input = document.getElementById('mp-join-code-input');
+      const code = input ? input.value.trim().toUpperCase() : '';
+      if (!code) {
+        showToast('⚠️ Please enter a room code!', 2000);
+        return;
+      }
+      showWaitingUI(`Connecting to Room ${code}...`);
+      startMpSoloCountdown();
+
+      if (rMultiplayer) {
+        try {
+          const res = await rMultiplayer.joinRoom(code);
+          if (res && res.success) {
+            stopMpSoloCountdown();
+            mpRoom = code;
+            mpMySlot = 'p2';
+            mpIsHost = false;
+            document.getElementById('mp-room-code-tag').textContent = mpRoom;
+            logMpEvent(`Joined Room [${code}] as Challenger!`, '#a6e3a1');
+            const p1Data = (res.room && res.room.p1) ? res.room.p1 : { name: 'Host Adventurer', heroClass: 'Warrior', heroLevel: player.level };
+            if (mpMode === 'coop') setupCoopRaid(p1Data, 'p1');
+            else setupArenaDuel(p1Data, 'p1');
+          } else {
+            showToast('❌ Room not found or already full.', 3000);
+            resetMpWaitingView();
+          }
+        } catch (e) {
+          showToast('❌ Join failed: ' + e.message, 3000);
+          resetMpWaitingView();
+        }
+      }
+    }
+
+    function showWaitingUI(title) {
+      const waitBox = document.getElementById('mp-waiting-box');
+      const lobbyBox = document.getElementById('mp-lobby-controls');
+      const battleBox = document.getElementById('mp-battle-view');
+      if (waitBox) waitBox.style.display = 'block';
+      if (lobbyBox) lobbyBox.style.display = 'none';
+      if (battleBox) battleBox.style.display = 'none';
+      const statusTitle = document.getElementById('mp-waiting-title');
+      if (statusTitle) statusTitle.textContent = title;
+    }
+
+    function handleMpSoloFallback() {
+      stopMpSoloCountdown();
+      logMpEvent('⏱️ 25s Matchmaking timeout reached! Engaging AI Solo Companion...', '#fab387');
+      if (mpMode === 'coop') {
+        const aiPartners = [
+          { name: 'Sir Valerie the Ironclad', heroClass: 'Paladin', heroLevel: Math.max(player.level, 5), maxHp: 180, hp: 180, str: 32, isAi: true },
+          { name: 'Arch-Sorceress Lyra', heroClass: 'Mage', heroLevel: Math.max(player.level, 5), maxHp: 120, hp: 120, str: 42, isAi: true },
+          { name: 'Shadowblade Morvath', heroClass: 'Rogue', heroLevel: Math.max(player.level, 5), maxHp: 140, hp: 140, str: 36, isAi: true }
+        ];
+        const ai = aiPartners[Math.floor(Math.random() * aiPartners.length)];
+        setupCoopRaid(ai, 'p2');
+      } else {
+        const aiGladiators = [
+          { name: 'Gladiator Draven', heroClass: 'Warrior', heroLevel: player.level, maxHp: player.maxHp, hp: player.maxHp, str: player.str, isAi: true },
+          { name: 'Spell-Reaver Cindy', heroClass: 'Mage', heroLevel: player.level, maxHp: Math.floor(player.maxHp * 0.9), hp: Math.floor(player.maxHp * 0.9), str: Math.floor(player.str * 1.1), isAi: true }
+        ];
+        const ai = aiGladiators[Math.floor(Math.random() * aiGladiators.length)];
+        setupArenaDuel(ai, 'p2');
+      }
+    }
+
+    // --- CO-OP TAVERN RAID SETUP & BATTLE ---
+    function setupCoopRaid(peerData, slot) {
+      mpInBattle = true;
+      mpPeerHero = {
+        name: peerData.name || (peerData.isAi ? 'Sir Valerie' : 'Fellow Adventurer'),
+        class: peerData.heroClass || 'Warrior',
+        level: peerData.heroLevel || player.level,
+        hp: peerData.heroHp || 150,
+        maxHp: peerData.heroMaxHp || 150,
+        str: peerData.heroStr || 30,
+        isAi: !!peerData.isAi
+      };
+
+      mpRaidBoss.hp = mpRaidBoss.maxHp;
+      document.getElementById('mp-waiting-box').style.display = 'none';
+      document.getElementById('mp-lobby-controls').style.display = 'none';
+      document.getElementById('mp-battle-view').style.display = 'block';
+
+      if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('raid');
+      logMpEvent(`⚔️ RAID LAUNCHED: ${player.name} & ${mpPeerHero.name} vs ${mpRaidBoss.name}!`, '#cba6f7');
+      renderMpBattleUI();
+    }
+
+    function setupArenaDuel(peerData, slot) {
+      mpInBattle = true;
+      mpDuelChallenger = {
+        name: peerData.name || (peerData.isAi ? 'Gladiator Draven' : 'Arena Challenger'),
+        class: peerData.heroClass || 'Warrior',
+        level: peerData.heroLevel || player.level,
+        hp: peerData.heroHp || player.maxHp,
+        maxHp: peerData.heroMaxHp || player.maxHp,
+        str: peerData.heroStr || player.str,
+        def: peerData.heroDef || player.def,
+        isAi: !!peerData.isAi
+      };
+
+      mpDuelTurn = 'p1';
+      document.getElementById('mp-waiting-box').style.display = 'none';
+      document.getElementById('mp-lobby-controls').style.display = 'none';
+      document.getElementById('mp-battle-view').style.display = 'block';
+
+      if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('arena');
+      logMpEvent(`⚔️ ARENA DUEL: ${player.name} vs ${mpDuelChallenger.name}!`, '#f38ba8');
+      renderMpBattleUI();
+    }
+
+    function renderMpBattleUI() {
+      const container = document.getElementById('mp-battle-content');
+      if (!container) return;
+
+      if (mpMode === 'coop') {
+        const bossPct = Math.max(0, Math.min(100, Math.round((mpRaidBoss.hp / mpRaidBoss.maxHp) * 100)));
+        const p1Pct = Math.max(0, Math.min(100, Math.round((player.hp / player.maxHp) * 100)));
+        const p2Pct = Math.max(0, Math.min(100, Math.round((mpPeerHero.hp / mpPeerHero.maxHp) * 100)));
+
+        container.innerHTML = `
+          <!-- World Boss Health Bar -->
+          <div style="background:#181825; border:2px solid #f38ba8; border-radius:8px; padding:12px; margin-bottom:12px; text-align:center;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color:#f38ba8; font-size:1.05rem;">${mpRaidBoss.name}</strong>
+              <span style="font-size:0.85rem; color:#f9e2af; font-weight:700;">${mpRaidBoss.hp} / ${mpRaidBoss.maxHp} HP</span>
+            </div>
+            <div style="background:#313244; height:18px; border-radius:9px; overflow:hidden; border:1px solid #45475a;">
+              <div style="background:linear-gradient(90deg, #f38ba8 0%, #e64553 100%); width:${bossPct}%; height:100%; transition:width 0.3s ease;"></div>
+            </div>
+            <div style="font-size:0.75rem; color:#a6adc8; margin-top:6px;">${mpRaidBoss.desc}</div>
+          </div>
+
+          <!-- Co-Op Party Cards -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+            <div style="background:#1e1e2e; border:1px solid #a6e3a1; border-radius:8px; padding:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="color:#a6e3a1;">🛡️ ${player.name} (You)</strong>
+                <span class="codex-badge" style="background:#a6e3a1; color:#11111b; font-weight:700;">Lvl ${player.level} ${player.class}</span>
+              </div>
+              <div style="margin-top:6px; font-size:0.8rem; color:#cdd6f4;">HP: ${player.hp} / ${player.maxHp}</div>
+              <div style="background:#313244; height:10px; border-radius:5px; overflow:hidden; margin-top:4px;">
+                <div style="background:#a6e3a1; width:${p1Pct}%; height:100%;"></div>
+              </div>
+            </div>
+
+            <div style="background:#1e1e2e; border:1px solid #89b4fa; border-radius:8px; padding:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="color:#89b4fa;">🤝 ${mpPeerHero.name} ${mpPeerHero.isAi ? '(AI)' : ''}</strong>
+                <span class="codex-badge" style="background:#89b4fa; color:#11111b; font-weight:700;">Lvl ${mpPeerHero.level} ${mpPeerHero.class}</span>
+              </div>
+              <div style="margin-top:6px; font-size:0.8rem; color:#cdd6f4;">HP: ${mpPeerHero.hp} / ${mpPeerHero.maxHp}</div>
+              <div style="background:#313244; height:10px; border-radius:5px; overflow:hidden; margin-top:4px;">
+                <div style="background:#89b4fa; width:${p2Pct}%; height:100%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Raid Actions -->
+          <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:10px;">
+            <button class="btn btn-primary" onclick="sendMpAction('STRIKE')" ${player.hp <= 0 ? 'disabled' : ''}>⚔️ Heroic Strike</button>
+            <button class="btn btn-accent" onclick="sendMpAction('SPELL')" ${player.hp <= 0 || player.mp < 10 ? 'disabled' : ''}>✨ Arcane Barrage (10 MP)</button>
+            <button class="btn" style="background:#cba6f7; color:#11111b; font-weight:700;" onclick="sendMpAction('GUARD')" ${player.hp <= 0 ? 'disabled' : ''}>🛡️ Guard Party (50% Block)</button>
+            <button class="btn" style="background:#f9e2af; color:#11111b; font-weight:700;" onclick="sendMpAction('HEAL')" ${player.hp <= 0 ? 'disabled' : ''}>🧪 Rally Elixir (+40 HP)</button>
+          </div>
+        `;
+      } else {
+        // Duel Mode
+        const p1Pct = Math.max(0, Math.min(100, Math.round((player.hp / player.maxHp) * 100)));
+        const p2Pct = Math.max(0, Math.min(100, Math.round((mpDuelChallenger.hp / mpDuelChallenger.maxHp) * 100)));
+        const isMyTurn = (mpMySlot === 'p1' && mpDuelTurn === 'p1') || (mpMySlot === 'p2' && mpDuelTurn === 'p2') || mpDuelChallenger.isAi;
+
+        container.innerHTML = `
+          <!-- Duel Header Banner -->
+          <div style="text-align:center; margin-bottom:10px;">
+            <span style="font-weight:700; color:${isMyTurn ? '#a6e3a1' : '#f9e2af'}; font-size:1.05rem;">
+              ${isMyTurn ? '🟢 YOUR TURN TO STRIKE!' : '⏳ CHALLENGER IS WEIGHING THEIR MOVE...'}
+            </span>
+          </div>
+
+          <!-- Duel Combatants -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+            <div style="background:#1e1e2e; border:2px solid #a6e3a1; border-radius:8px; padding:12px; text-align:center;">
+              <strong style="color:#a6e3a1; font-size:1.05rem;">👑 ${player.name} (You)</strong>
+              <div style="font-size:0.8rem; color:#a6adc8; margin:4px 0;">${player.class} | STR: ${player.str} | DEF: ${player.def}</div>
+              <div style="font-size:0.85rem; font-weight:700; color:#f9e2af; margin-bottom:4px;">${player.hp} / ${player.maxHp} HP</div>
+              <div style="background:#313244; height:12px; border-radius:6px; overflow:hidden;">
+                <div style="background:#a6e3a1; width:${p1Pct}%; height:100%;"></div>
+              </div>
+            </div>
+
+            <div style="background:#1e1e2e; border:2px solid #f38ba8; border-radius:8px; padding:12px; text-align:center;">
+              <strong style="color:#f38ba8; font-size:1.05rem;">⚔️ ${mpDuelChallenger.name} ${mpDuelChallenger.isAi ? '(AI)' : ''}</strong>
+              <div style="font-size:0.8rem; color:#a6adc8; margin:4px 0;">${mpDuelChallenger.class} | STR: ${mpDuelChallenger.str} | DEF: ${mpDuelChallenger.def}</div>
+              <div style="font-size:0.85rem; font-weight:700; color:#f9e2af; margin-bottom:4px;">${mpDuelChallenger.hp} / ${mpDuelChallenger.maxHp} HP</div>
+              <div style="background:#313244; height:12px; border-radius:6px; overflow:hidden;">
+                <div style="background:#f38ba8; width:${p2Pct}%; height:100%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Duel Actions -->
+          <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:10px;">
+            <button class="btn btn-primary" onclick="sendDuelAction('SLASH')" ${!isMyTurn || player.hp <= 0 ? 'disabled' : ''}>⚔️ Melee Slash</button>
+            <button class="btn btn-accent" onclick="sendDuelAction('SKILL')" ${!isMyTurn || player.hp <= 0 || player.mp < 8 ? 'disabled' : ''}>⚡ Signature Skill (8 MP)</button>
+            <button class="btn" style="background:#cba6f7; color:#11111b; font-weight:700;" onclick="sendDuelAction('PARRY')" ${!isMyTurn || player.hp <= 0 ? 'disabled' : ''}>🛡️ Parry & Defend</button>
+            <button class="btn" style="background:#f9e2af; color:#11111b; font-weight:700;" onclick="sendDuelAction('POTION')" ${!isMyTurn || player.hp <= 0 ? 'disabled' : ''}>🧪 Combat Potion</button>
+          </div>
+        `;
+      }
+    }
+
+    function sendMpAction(type) {
+      if (!mpInBattle || mpRaidBoss.hp <= 0 || player.hp <= 0) return;
+
+      let dmg = 0;
+      let logText = '';
+      if (type === 'STRIKE') {
+        dmg = Math.floor(player.str * (1.2 + Math.random() * 0.5));
+        mpRaidBoss.hp = Math.max(0, mpRaidBoss.hp - dmg);
+        logText = `🗡️ ${player.name} struck ${mpRaidBoss.name} for ${dmg} physical damage!`;
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('hit');
+      } else if (type === 'SPELL') {
+        player.mp = Math.max(0, player.mp - 10);
+        dmg = Math.floor(player.mag * (1.8 + Math.random() * 0.6)) + 25;
+        mpRaidBoss.hp = Math.max(0, mpRaidBoss.hp - dmg);
+        logText = `✨ ${player.name} unleashed Arcane Barrage for ${dmg} elemental damage!`;
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('spell');
+      } else if (type === 'GUARD') {
+        logText = `🛡️ ${player.name} raised defensive ward for the party!`;
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('door');
+      } else if (type === 'HEAL') {
+        const healAmt = 40;
+        player.hp = Math.min(player.maxHp, player.hp + healAmt);
+        if (mpPeerHero) mpPeerHero.hp = Math.min(mpPeerHero.maxHp, mpPeerHero.hp + Math.floor(healAmt * 0.5));
+        logText = `🧪 ${player.name} used Rally Elixir: Restored +${healAmt} HP to self & +20 HP to partner!`;
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('heal');
+      }
+
+      logMpEvent(logText, '#a6e3a1');
+
+      if (rMultiplayer && mpRoom) {
+        try {
+          rMultiplayer.sendMove({
+            type: 'RAID_ACTION',
+            subType: type,
+            actor: player.name,
+            dmg: dmg,
+            logText: logText,
+            bossHp: mpRaidBoss.hp
+          });
+        } catch(e) {}
+      }
+
+      if (mpRaidBoss.hp <= 0) {
+        triggerRaidVictory();
+        return;
+      }
+
+      if (mpPeerHero && mpPeerHero.isAi) {
+        setTimeout(() => triggerAiRaidTurn(), 600);
+      } else {
+        setTimeout(() => triggerBossRetaliation(), 800);
+      }
+      renderMpBattleUI();
+    }
+
+    function triggerAiRaidTurn() {
+      if (!mpInBattle || mpRaidBoss.hp <= 0) return;
+      const aiDmg = Math.floor(mpPeerHero.str * (1.1 + Math.random() * 0.4));
+      mpRaidBoss.hp = Math.max(0, mpRaidBoss.hp - aiDmg);
+      logMpEvent(`⚔️ ${mpPeerHero.name} (AI) attacked for ${aiDmg} damage!`, '#89b4fa');
+      if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('hit');
+
+      if (mpRaidBoss.hp <= 0) {
+        triggerRaidVictory();
+      } else {
+        setTimeout(() => triggerBossRetaliation(), 700);
+      }
+      renderMpBattleUI();
+    }
+
+    function triggerBossRetaliation() {
+      if (!mpInBattle || mpRaidBoss.hp <= 0) return;
+      const bossDmg = Math.floor(mpRaidBoss.atk * (0.8 + Math.random() * 0.4));
+      const targetP1 = Math.random() > 0.4;
+      if (targetP1) {
+        player.hp = Math.max(0, player.hp - bossDmg);
+        logMpEvent(`🔥 ${mpRaidBoss.name} spewed molten flame on ${player.name} for ${bossDmg} damage!`, '#f38ba8');
+      } else if (mpPeerHero) {
+        mpPeerHero.hp = Math.max(0, mpPeerHero.hp - bossDmg);
+        logMpEvent(`🔥 ${mpRaidBoss.name} clawed ${mpPeerHero.name} for ${bossDmg} damage!`, '#f38ba8');
+      }
+      if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('hit');
+
+      if (player.hp <= 0 && (!mpPeerHero || mpPeerHero.hp <= 0)) {
+        logMpEvent(`💀 The Raid Party was vanquished by ${mpRaidBoss.name}!`, '#f38ba8');
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('death');
+      }
+      updateUI();
+      renderMpBattleUI();
+    }
+
+    function triggerRaidVictory() {
+      mpInBattle = false;
+      logMpEvent(`🎉 VICTORY! ${mpRaidBoss.name} has fallen!`, '#ffd700');
+      if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('victory');
+
+      const goldReward = 500;
+      const xpReward = 1500;
+      player.gold += goldReward;
+      player.xp += xpReward;
+      player.materials.dust = (player.materials.dust || 0) + 4;
+      player.materials.core = (player.materials.core || 0) + 2;
+      updateUI();
+      showToast(`🏆 Co-Op Raid Victory! +${goldReward} Gold, +${xpReward} XP, +4 Arcane Dust, +2 Elemental Cores!`, 5000);
+
+      const container = document.getElementById('mp-battle-content');
+      if (container) {
+        container.innerHTML = `
+          <div style="background:#181825; border:2px solid #ffd700; border-radius:8px; padding:20px; text-align:center;">
+            <h2 style="color:#ffd700; margin-bottom:8px;">🏆 RAID CONQUERED!</h2>
+            <p style="color:#cdd6f4; font-size:0.95rem; margin-bottom:12px;">You and ${mpPeerHero ? mpPeerHero.name : 'the party'} slayed ${mpRaidBoss.name}!</p>
+            <div style="font-size:0.85rem; color:#a6e3a1; margin-bottom:16px;">
+              Rewards Distributed: +${goldReward} Gold 🪙 | +${xpReward} XP ⚡ | +4 Arcane Dust ✨ | +2 Elemental Cores 🔥
+            </div>
+            <button class="btn btn-primary" onclick="resetMpWaitingView()">Return to Guild Hub</button>
+          </div>
+        `;
+      }
+    }
+
+    function sendDuelAction(type) {
+      if (!mpInBattle || !mpDuelChallenger) return;
+      let dmg = 0;
+      let logText = '';
+
+      if (type === 'SLASH') {
+        dmg = Math.max(5, Math.floor(player.str * (1.1 + Math.random() * 0.4) - (mpDuelChallenger.def * 0.4)));
+        mpDuelChallenger.hp = Math.max(0, mpDuelChallenger.hp - dmg);
+        logText = `⚔️ ${player.name} struck ${mpDuelChallenger.name} for ${dmg} damage!`;
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('hit');
+      } else if (type === 'SKILL') {
+        player.mp = Math.max(0, player.mp - 8);
+        dmg = Math.max(10, Math.floor(player.mag * (1.6 + Math.random() * 0.5)));
+        mpDuelChallenger.hp = Math.max(0, mpDuelChallenger.hp - dmg);
+        logText = `⚡ ${player.name} unleashed Signature Strike on ${mpDuelChallenger.name} for ${dmg} damage!`;
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('spell');
+      } else if (type === 'PARRY') {
+        logText = `🛡️ ${player.name} assumes defensive parry stance!`;
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('door');
+      } else if (type === 'POTION') {
+        const healAmt = 35;
+        player.hp = Math.min(player.maxHp, player.hp + healAmt);
+        logText = `🧪 ${player.name} quaffed an Arena Potion: Restored +${healAmt} HP!`;
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('heal');
+      }
+
+      logMpEvent(logText, '#a6e3a1');
+
+      if (rMultiplayer && mpRoom) {
+        try {
+          rMultiplayer.sendMove({
+            type: 'DUEL_ACTION',
+            subType: type,
+            actor: player.name,
+            dmg: dmg,
+            logText: logText,
+            challengerHp: mpDuelChallenger.hp
+          });
+        } catch(e) {}
+      }
+
+      if (mpDuelChallenger.hp <= 0) {
+        triggerDuelVictory();
+        return;
+      }
+
+      if (mpDuelChallenger.isAi) {
+        mpDuelTurn = 'p2';
+        renderMpBattleUI();
+        setTimeout(() => triggerAiDuelTurn(), 700);
+      } else {
+        mpDuelTurn = (mpMySlot === 'p1') ? 'p2' : 'p1';
+        renderMpBattleUI();
+      }
+    }
+
+    function triggerAiDuelTurn() {
+      if (!mpInBattle || !mpDuelChallenger || mpDuelChallenger.hp <= 0) return;
+      const aiDmg = Math.max(5, Math.floor(mpDuelChallenger.str * (1.0 + Math.random() * 0.4) - (player.def * 0.4)));
+      player.hp = Math.max(0, player.hp - aiDmg);
+      logMpEvent(`⚔️ ${mpDuelChallenger.name} (AI) counter-attacked for ${aiDmg} damage!`, '#f38ba8');
+      if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('hit');
+
+      if (player.hp <= 0) {
+        logMpEvent(`💀 Defeat! You were bested by ${mpDuelChallenger.name}.`, '#f38ba8');
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('death');
+      }
+      mpDuelTurn = 'p1';
+      updateUI();
+      renderMpBattleUI();
+    }
+
+    function triggerDuelVictory() {
+      mpInBattle = false;
+      logMpEvent(`🏆 ARENA CHAMPION! ${mpDuelChallenger.name} was defeated!`, '#ffd700');
+      if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('victory');
+
+      const goldReward = 300;
+      const xpReward = 800;
+      player.gold += goldReward;
+      player.xp += xpReward;
+      updateUI();
+      showToast(`🏆 Arena Victory! Earned +${goldReward} Gold & +${xpReward} XP!`, 4000);
+
+      const container = document.getElementById('mp-battle-content');
+      if (container) {
+        container.innerHTML = `
+          <div style="background:#181825; border:2px solid #ffd700; border-radius:8px; padding:20px; text-align:center;">
+            <h2 style="color:#ffd700; margin-bottom:8px;">🏆 ARENA CHAMPION!</h2>
+            <p style="color:#cdd6f4; font-size:0.95rem; margin-bottom:12px;">You conquered ${mpDuelChallenger.name} in fair gladiatorial combat!</p>
+            <div style="font-size:0.85rem; color:#a6e3a1; margin-bottom:16px;">
+              Bounty Claimed: +${goldReward} Gold 🪙 | +${xpReward} XP ⚡
+            </div>
+            <button class="btn btn-primary" onclick="resetMpWaitingView()">Return to Guild Hub</button>
+          </div>
+        `;
+      }
+    }
+
+    function handleIncomingMpMove(moveData) {
+      if (!moveData) return;
+      if (moveData.type === 'RAID_ACTION') {
+        if (moveData.bossHp !== undefined) mpRaidBoss.hp = moveData.bossHp;
+        if (moveData.logText) logMpEvent(`[Peer] ${moveData.logText}`, '#89b4fa');
+        renderMpBattleUI();
+      } else if (moveData.type === 'DUEL_ACTION') {
+        if (moveData.dmg) {
+          player.hp = Math.max(0, player.hp - moveData.dmg);
+          logMpEvent(`[Peer] ${moveData.logText}`, '#f38ba8');
+        }
+        mpDuelTurn = mpMySlot;
+        updateUI();
+        renderMpBattleUI();
+      }
+    }
+
+    function logMpEvent(text, color = '#cdd6f4') {
+      const box = document.getElementById('mp-event-log');
+      if (!box) return;
+      const row = document.createElement('div');
+      row.style.color = color;
+      row.style.marginBottom = '3px';
+      row.style.fontSize = '0.78rem';
+      row.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+      box.appendChild(row);
+      box.scrollTop = box.scrollHeight;
+    }
+
   </script>
+
+  <!-- Phase VI: RFMS Online Co-Op Tavern & Guild Arena Modal -->
+  <div id="mp-modal-overlay" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeMultiplayerModal();">
+    <div class="modal-card" style="max-width:720px; width:92%;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.4rem;">⚔️</span>
+          <div>
+            <h2 style="font-size:1.05rem; color:#f38ba8; margin:0;">Oakhaven Guild Arena & Co-Op Tavern</h2>
+            <div style="font-size:0.75rem; color:#a6adc8;">Real-Time Multiplayer (RFMS v2.0) with 25s Solo AI Fallback</div>
+          </div>
+        </div>
+        <button class="btn-close-modal" onclick="closeMultiplayerModal()" title="Close (Esc)">✖</button>
+      </div>
+
+      <!-- Hero Identity & Network Status Strip -->
+      <div style="background:#181825; padding:8px 16px; border-bottom:1px solid #313244; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:0.8rem; color:#fab387; font-weight:700;">Hero Call-Sign:</span>
+          <input type="text" id="mp-hero-name-input" maxlength="18" style="background:#11111b; color:#cdd6f4; border:1px solid #45475a; border-radius:4px; padding:3px 8px; font-size:0.8rem; width:130px;" onchange="saveMpHeroName()">
+          <button class="btn btn-accent" style="padding:2px 8px; font-size:0.75rem;" onclick="saveMpHeroName()">Save</button>
+        </div>
+        <div id="mp-network-status" style="font-size:0.75rem;"></div>
+        <div id="mp-hero-stats-pill" style="font-size:0.75rem; color:#a6e3a1; font-weight:600;"></div>
+      </div>
+
+      <!-- Mode Tabs -->
+      <div class="modal-tabs">
+        <button id="mp-tab-coop" class="modal-tab-btn active" onclick="setMpTab('coop')">🏰 Co-Op Tavern Raid (2-Player vs World Boss)</button>
+        <button id="mp-tab-duel" class="modal-tab-btn" onclick="setMpTab('duel')">⚔️ Guild Arena Duel (1v1 Turn-Based PvP)</button>
+      </div>
+
+      <div class="modal-body" style="padding:16px;">
+        <!-- Lobby Controls (When not in match) -->
+        <div id="mp-lobby-controls">
+          <div id="mp-panel-coop" style="margin-bottom:12px;">
+            <div class="help-card" style="background:#181825; border:1px solid #cba6f7; margin-bottom:12px;">
+              <h4 style="color:#cba6f7; margin:0 0 6px 0;">🐉 Tavern Co-Op Raid: Ignis the Obsidian World-Eater</h4>
+              <p style="font-size:0.8rem; color:#bac2de; margin:0;">
+                Team up with a fellow adventurer to defeat the 800 HP Elder Dragon! If no peer connects in 25 seconds, an elite AI Guild Mercenary steps in automatically. Both heroes earn 500 Gold, 1500 XP, Arcane Dust, and Elemental Cores on victory!
+              </p>
+            </div>
+          </div>
+
+          <div id="mp-panel-duel" style="display:none; margin-bottom:12px;">
+            <div class="help-card" style="background:#181825; border:1px solid #f38ba8; margin-bottom:12px;">
+              <h4 style="color:#f38ba8; margin:0 0 6px 0;">⚔️ Guild Arena Duel: Gladiatorial PvP Match</h4>
+              <p style="font-size:0.8rem; color:#bac2de; margin:0;">
+                Enter the Arena ring for 1v1 turn-based duels! Trade physical blows, spells, and strategic shields against another hero or the Arena AI Champion (25s fallback). Winner claims 300 Gold and the Champion title!
+              </p>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:14px;">
+            <button class="btn btn-primary" style="font-weight:700; padding:8px 16px;" onclick="startMpQuickMatch()">⚡ Quick Match (Join or Host)</button>
+            <button class="btn" style="background:#89b4fa; color:#11111b; font-weight:700; padding:8px 16px;" onclick="createMpCustomRoom()">➕ Create Custom Room</button>
+          </div>
+
+          <!-- Join by Code Input -->
+          <div style="background:#181825; border:1px solid #313244; border-radius:8px; padding:10px 14px; display:flex; align-items:center; justify-content:center; gap:8px; max-width:400px; margin:0 auto;">
+            <span style="font-size:0.8rem; color:#fab387; font-weight:600;">Join with Code:</span>
+            <input type="text" id="mp-join-code-input" placeholder="KQ-XXXX" maxlength="8" style="background:#11111b; color:#cdd6f4; border:1px solid #45475a; border-radius:4px; padding:4px 8px; font-size:0.85rem; width:100px; text-transform:uppercase;">
+            <button class="btn btn-accent" style="padding:4px 12px; font-size:0.8rem;" onclick="joinMpRoomByCode()">Join Room</button>
+          </div>
+        </div>
+
+        <!-- Waiting / Countdown Overlay -->
+        <div id="mp-waiting-box" style="display:none; background:#181825; border:2px solid #89b4fa; border-radius:8px; padding:18px; text-align:center; margin-bottom:12px;">
+          <h3 id="mp-waiting-title" style="color:#89b4fa; margin-bottom:8px;">Awaiting Challenger / Companion...</h3>
+          <div style="font-size:0.9rem; margin-bottom:8px;">
+            Room Code: <strong id="mp-room-code-tag" style="font-family:monospace; color:#ffd700; font-size:1.15rem; letter-spacing:1px;">...</strong>
+          </div>
+          <div id="mp-countdown-display" style="font-size:0.85rem; color:#fab387; font-weight:600; margin-bottom:12px;">
+            ⏱️ Matchmaking active: 25s remaining before solo AI companion engages...
+          </div>
+          <div style="display:flex; gap:8px; justify-content:center;">
+            <button class="btn btn-accent" onclick="handleMpSoloFallback()">Engage AI Partner Now</button>
+            <button class="btn btn-danger" onclick="resetMpWaitingView()">Cancel Matchmaking</button>
+          </div>
+        </div>
+
+        <!-- Active Battle View -->
+        <div id="mp-battle-view" style="display:none;">
+          <div id="mp-battle-content"></div>
+        </div>
+
+        <!-- Real-Time Event & Combat Log -->
+        <div style="margin-top:14px;">
+          <div style="font-size:0.8rem; font-weight:700; color:#89b4fa; margin-bottom:4px;">📜 Subnet Event Log:</div>
+          <div id="mp-event-log" style="background:#11111b; border:1px solid #313244; border-radius:6px; height:90px; overflow-y:auto; padding:8px; font-family:monospace;">
+            <div style="color:#6c7086; font-size:0.75rem;">Waiting for matchmaking or custom room command...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <span style="font-size:0.75rem; color:#a6adc8;">RFMS v2.0 Subnet Mesh • 25s Mandate 12 Solo AI Fallback Compliant</span>
+        <button class="btn btn-primary" onclick="closeMultiplayerModal()" style="font-size:0.8rem; padding:4px 14px;">Exit Hub</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Phase 14: Comprehensive Help & Codex Overlay -->
   <div id="help-modal-overlay" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeHelpModal();">
