@@ -421,8 +421,10 @@
         #blueprint-canvas {
             display: block;
             cursor: crosshair;
-            max-width: 100%;
+            max-width: calc(100vh - 170px);
             max-height: calc(100vh - 170px);
+            width: min(560px, calc(100vh - 170px));
+            height: min(560px, calc(100vh - 170px));
             aspect-ratio: 1 / 1;
             object-fit: contain;
         }

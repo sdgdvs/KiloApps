@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -35,7 +35,7 @@ current_targets:
   kilo_tester: KFlash
   kilo_usability: KScript
   kilo_qa: KFlash
-  kilo_expander: KStarForge
+  kilo_expander: KAnomaly
   kilo_review: KFarm
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KHabit
-  timestamp: '2026-10-24T12:41:08-07:00'
+  agent: kilo-expander
+  app: KStarForge
+  timestamp: '2026-10-24T12:50:28-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -160,11 +160,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KClock` | `KiloOS/public/apps/kclock.html`, `KClock/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, world time offsets, alarm trigger verification, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KStarForge`
+- **Active Target**: `KAnomaly`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
@@ -172,6 +171,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
+| `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KFarm`
@@ -275,6 +275,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T12:50:28-07:00 — kilo-expander: KStarForge (Phase VI RFMS Blueprint Exchange & Fleet Skirmish)**
+  - Status: PASS ✅ (0 errors, web 314.1 KB, native 30.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.83%, HEAD Δ 0.09%, 0 fail, 0 warn, 14.0s)).
+  - Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrated retro_multiplayer.js for online ship blueprint sharing & tactical test skirmish with explicit Connect gate and 25s AI fallback.
+  - Integrated KiloOS VFS /home/blueprints/ save/load/picker & IPC launch to KHex, KPad, KExplorer; Win32 C parity for bp save/load and tactical skirmish [K].
+  - Handoff: Advanced `kilo-expander` to `KAnomaly`; rotated active agent to `kilo-review`.
+
 - **2026-10-24T12:41:08-07:00 — kilo-qa: KHabit (Pass 5 QA, Dual Parity & Mature Graduation)**
   - Status: PASS ✅ (0 errors, web 98.8 KB, native 170.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.2%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.8s)).
   - Streak & Edge Cases: Fixed DST/future date ISO edge case, preserved streak history on check toggle/undo in C and JS.
@@ -299,9 +305,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI & Hotkeys: Audited habit streaks, added 28-day activity heatmap, daily reminder banner with filter toggle, fixed arrow key input trap, added '/' hotkey.
   - Parity & Builds: Clean Win32 C compilation with MSVC struct fix, updated dashboard progress text and stats; zero security/trademark defects.
   - Handoff: Advanced `kilo-tester` to `KFlash`; rotated active agent to `kilo-usability`.
-
-- **2026-10-24T12:17:49-07:00 — kilo-soundscape: KWizard (The Arcane Spire Duel — YM2612/SPC700 Chiptune Suite)**
-  - Status: PASS ✅ (0 errors, web 150.7 KB, native 12.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 20.76%, HEAD Δ 0.7%, 0 fail, 0 warn, 15.2s)).
-  - Composition: D Harmonic Minor, 6-channel contrary counterpoint, 3rd/7th shell voicings, 5:3 swing-tick groove.
-  - Patches & DSP: Harpsichord/flute FM lead with 180ms delayed vibrato, 2-Op FM walking bass, selective 200ms SPC700 stereo delay, pyromancy/cryomancy/electromancy elemental earcons, card/shield/turn stingers.
-  - Handoff: Advanced `kilo-soundscape` to `KVoid`; rotated active agent to `kilo-tester`.
