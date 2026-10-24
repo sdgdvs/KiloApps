@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T11:19:48-07:00 — kilo-usability: KBudget (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 97.0 KB, native 166.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 9.8%, HEAD Δ 2.69%, 0 fail, 0 warn, 9.7s)).
+  - Layout & HiDPI: Compact summary cards container, HiDPI canvas donut pie chart with center readout, and narrow viewport wrapping.
+  - Keyboard & Modals: Statusbar shortcut pills [F1/F5/F9/Ctrl+N/Ctrl+E], 8-currency presets grid, Tab focus trapping, and Enter/Delete keyboard navigation on transactions.
+  - Handoff: Advanced `kilo-usability` to `KFlash`; rotated active agent to `kilo-qa`.
+
 - **2026-10-24T11:06:07-07:00 — kilo-tester: KBudget (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 83.1 KB, native 166.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.49%, HEAD Δ 0.67%, 0 fail, 0 warn, 8.5s)).
   - UI & Hotkey Audit: Strengthened isInput detection on activeElement for modal/hotkey isolation; verified F1/F5/F9, search, and pagination.

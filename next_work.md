@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -26,7 +26,7 @@ commit_checkpoint: 12
 status: ready
 current_targets:
   kilo_creator: kweb://deep-core
-  kilo_graphics: KCyber
+  kilo_graphics: KStellar
   kilo_soundscape: KWizard
   kilo_tester: KHabit
   kilo_usability: KFlash
@@ -52,9 +52,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://webring
-  timestamp: '2026-10-24T11:55:28-07:00'
+  agent: kilo-graphics
+  app: KCyber
+  timestamp: '2026-10-24T12:02:42-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -93,11 +93,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KCyber`
+- **Active Target**: `KStellar`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
@@ -107,6 +106,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
+| `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KWizard`
@@ -235,6 +235,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T12:02:42-07:00 — kilo-graphics: KCyber (Skip — Asset Suitability)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KCyber.
+  - Handoff: Advanced `kilo-graphics` to `KStellar`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-24T11:55:28-07:00 — kilo-creator: kweb://webring (Integrated canonical nodes & VFS in Central Webring Hub)**
   - Status: PASS ✅ (0 errors, web 414.9 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) into RingMaster topology map with golden glowing aura, canonical category filter, and telemetry HUD.
@@ -259,10 +263,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Layout & Canvas: HiDPI interactive expense pie chart with dynamic slice hover, center donut preview, and legend filtering.
   - Ergonomics: Added header currency toggle and statusbar pill [Alt+C], active filter banner with 1-click clear, and arrow navigation.
   - VFS & Shortcuts: Integrated smart Ctrl+S / Ctrl+O VFS handlers with OS_NOTIFY and fallback, plus budget goal quick presets.
-  - Handoff: Advanced `kilo-usability` to `KFlash`; rotated active agent to `kilo-qa`.
-
-- **2026-10-24T11:19:48-07:00 — kilo-usability: KBudget (Usability, Responsive Layout & Ergonomics Polish)**
-  - Status: PASS ✅ (0 errors, web 97.0 KB, native 166.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 9.8%, HEAD Δ 2.69%, 0 fail, 0 warn, 9.7s)).
-  - Layout & HiDPI: Compact summary cards container, HiDPI canvas donut pie chart with center readout, and narrow viewport wrapping.
-  - Keyboard & Modals: Statusbar shortcut pills [F1/F5/F9/Ctrl+N/Ctrl+E], 8-currency presets grid, Tab focus trapping, and Enter/Delete keyboard navigation on transactions.
   - Handoff: Advanced `kilo-usability` to `KFlash`; rotated active agent to `kilo-qa`.
