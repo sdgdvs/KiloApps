@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-soundscape
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ tool_call_cap: 25
 commit_checkpoint: 12
 status: ready
 current_targets:
-  kilo_creator: kweb://slashnet
+  kilo_creator: kweb://trapster
   kilo_graphics: KMech
   kilo_soundscape: KCyber
   kilo_tester: KMech
@@ -37,7 +37,7 @@ current_targets:
   kilo_qa: KTodo
   kilo_expander: KMech
   kilo_review: KTrader
-virtual_web_target: kweb://slashnet
+virtual_web_target: kweb://trapster
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KMech
-  timestamp: '2026-10-24T14:34:02-07:00'
+  agent: kilo-creator
+  app: kweb://slashnet
+  timestamp: '2026-10-24T14:40:16-07:00'
 last_planner_run: '2026-10-24T07:31:25Z'
 ---
 
@@ -84,11 +84,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://slashnet`
+- **Active Target**: `kweb://trapster`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 | `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
 | `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
@@ -96,6 +95,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
+| `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KMech`
@@ -276,6 +276,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-24T14:40:16-07:00 — kilo-creator: kweb://slashnet (SlashNet 1999 Web Destination with Terminal Hotkeys & VFS)**
+  - Status: PASS ✅ (0 errors, web 87.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Added interactive keyboard hotkeys (J/K story jumping, S/B/L/P/V views, 0-5 quick threshold, ? help modal).
+  - Verified Karma moderation, Beowulf cluster workbench, Linux 2.2 compile sim, and KiloOS VFS integration.
+  - Handoff: Advanced `kilo-creator` to `kweb://trapster`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-24T14:34:02-07:00 — kilo-review: KMech (Argon Visual, Feature & Usability Review (Mature Audit))**
   - Status: AUDIT COMPLETE — un-quarantined KMech from Mature Applications and queued surgical fixes across kilo-usability, kilo-tester, kilo-graphics, and kilo-expander.
   - Visual & Layout Findings (640x503 sheet.png): 37px vertical overflow clips bottom action buttons ([S] Sell Salvage, [F1] Manual) and bottom HUD corners; .header-bar wraps title and [F1] Manual onto 2 rows; #toast-container (top:44px) overlaps wrapped header and .quick-hint; player/enemy mechs use forbidden SVG geometric primitives.
@@ -300,10 +306,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Layout: Eliminated 197px vertical overflow (reduced to x0/y0px at 640x743) by compacting container, margins, and grouping primary, shop, and utility button toolbars.
   - Toast & Input: Relocated #kfarmToast to top-right to prevent button occlusion; wired Arrow/WASD + Enter to navigate grid cursor and trigger tile actions in both web and Win32 C.
   - Mature Quarantine & Handoff: Promoted `KFarm` to Mature archive; advanced `kilo-usability` to `KScript`; next agent `kilo-qa`.
-
-- **2026-10-24T13:42:17-07:00 — kilo-tester: KFarm (Fix loadGame TypeError, 3x3 AoE seed planting & Mill [W] hotkey parity)**
-  - Fixed fatal TypeError in loadGame() by declaring chickensList/cowsList with let
-  - Enabled 3x3 AoE seed planting in both HTML and Win32 C when tools are upgraded
-  - Expanded Wheat to Winter (seasons [0,2,3]) for year-round viability
-  - Aligned Mill button label and hotkey to [W] across web and Win32 C
-  - Handoff: Advanced `kilo-tester` to `KFlash`; rotated active agent to `kilo-usability`.

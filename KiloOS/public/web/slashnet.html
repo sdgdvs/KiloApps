@@ -597,6 +597,7 @@
       <li><a href="#vfs" onclick="switchSection('vfs')">VFS Export Center</a></li>
     </ul>
     <div class="nav-tools">
+      <button class="btn-retro" onclick="toggleShortcutHelp()" title="Keyboard Shortcuts [?]">⌨️ Keys [?]</button>
       <button class="btn-retro btn-green" onclick="openStorySubmitModal()">+ Submit Story</button>
       <button class="btn-retro" onclick="resetModPoints()">🔄 Request Mod Points</button>
     </div>
@@ -1085,6 +1086,31 @@ Configure options selected above, then click 'make dep &amp;&amp; make bzImage'.
     <div style="display:flex; justify-content:flex-end; gap:8px;">
       <button class="btn-retro" onclick="closeStorySubmitModal()">Cancel</button>
       <button class="btn-retro btn-green" onclick="submitCustomStory()">Submit for Review</button>
+    </div>
+  </div>
+</div>
+
+<!-- Keyboard Shortcuts Modal -->
+<div id="shortcutHelpModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center;">
+  <div style="background:#ffffff; border:2px solid var(--slash-green); padding:16px; width:90%; max-width:440px; box-shadow:0 8px 24px rgba(0,0,0,0.4); font-family:var(--font-sans);">
+    <h3 style="font-family:var(--font-serif); color:var(--slash-green); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+      <span>SlashNet Terminal Hotkeys</span>
+      <button class="btn-retro" style="padding:2px 6px; font-size:10px;" onclick="toggleShortcutHelp()">✕</button>
+    </h3>
+    <p style="font-size:11px; color:var(--slash-text-muted); margin-bottom:12px;">Navigate SlashNet like a true 1999 Unix power user.</p>
+    <table style="width:100%; font-size:12px; border-collapse:collapse; margin-bottom:12px;">
+      <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">J</kbd> / <kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">K</kbd></td><td>Next / Previous Story</td></tr>
+      <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">S</kbd></td><td>Switch to Stories View</td></tr>
+      <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">B</kbd></td><td>Beowulf Cluster Workbench</td></tr>
+      <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">L</kbd></td><td>Linux 2.2 Kernel Compile Sim</td></tr>
+      <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">P</kbd></td><td>Daily Poll</td></tr>
+      <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">V</kbd></td><td>KiloOS VFS Hub</td></tr>
+      <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">0-5</kbd></td><td>Quick Threshold Filter for Active Story</td></tr>
+      <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">M</kbd></td><td>Toggle Audio SFX (Mute)</td></tr>
+      <tr><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">?</kbd> / <kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">H</kbd></td><td>Toggle Hotkey Reference</td></tr>
+    </table>
+    <div style="text-align:right;">
+      <button class="btn-retro btn-green" onclick="toggleShortcutHelp()">Close [Esc]</button>
     </div>
   </div>
 </div>
@@ -2160,6 +2186,84 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+// --- Keyboard Navigation & Hotkeys ---
+let currentStoryIndex = 0;
+const storyIds = ['story-1', 'story-2', 'story-3'];
+
+function selectStoryByIndex(idx) {
+  if (idx < 0) idx = 0;
+  if (idx >= storyIds.length) idx = storyIds.length - 1;
+  currentStoryIndex = idx;
+  switchSection('stories');
+  const targetEl = document.getElementById(storyIds[idx]);
+  if (targetEl) {
+    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    showToast(`Viewing story ${idx + 1} of ${storyIds.length}: ${storyIds[idx]}`);
+    playRetroSound(520, 0.04);
+  }
+}
+
+function toggleShortcutHelp() {
+  const m = document.getElementById('shortcutHelpModal');
+  if (!m) return;
+  const isHidden = (m.style.display === 'none' || !m.style.display);
+  m.style.display = isHidden ? 'flex' : 'none';
+  if (isHidden) playRetroSound(700, 0.05);
+}
+
+function setQuickThreshold(thresh) {
+  const storyId = storyIds[currentStoryIndex] || 'story-1';
+  const sel = document.getElementById('thresholdSelect-' + storyId);
+  if (sel) {
+    sel.value = thresh;
+    updateCommentThreshold(storyId);
+    showToast(`Threshold for ${storyId} set to +${thresh}`);
+    playRetroSound(620, 0.04);
+  }
+}
+
+window.addEventListener('keydown', (e) => {
+  const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+    if (e.key === 'Escape') {
+      closeStorySubmitModal();
+      const helpModal = document.getElementById('shortcutHelpModal');
+      if (helpModal) helpModal.style.display = 'none';
+    }
+    return;
+  }
+
+  const k = e.key.toLowerCase();
+  if (k === 'escape') {
+    closeStorySubmitModal();
+    const helpModal = document.getElementById('shortcutHelpModal');
+    if (helpModal) helpModal.style.display = 'none';
+  } else if (k === 'j') {
+    e.preventDefault();
+    selectStoryByIndex(currentStoryIndex + 1);
+  } else if (k === 'k') {
+    e.preventDefault();
+    selectStoryByIndex(currentStoryIndex - 1);
+  } else if (k === 's') {
+    switchSection('stories');
+  } else if (k === 'b') {
+    switchSection('beowulf');
+  } else if (k === 'l') {
+    switchSection('kernel');
+  } else if (k === 'p') {
+    switchSection('poll');
+  } else if (k === 'v') {
+    switchSection('vfs');
+  } else if (k === 'm') {
+    toggleAudio();
+  } else if (k === '?' || k === 'h') {
+    e.preventDefault();
+    toggleShortcutHelp();
+  } else if (e.key >= '0' && e.key <= '5') {
+    setQuickThreshold(parseInt(e.key, 10));
+  }
+});
 
 // --- Initialization ---
 window.addEventListener('DOMContentLoaded', () => {
