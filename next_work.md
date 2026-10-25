@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_soundscape: KSubmarine
   kilo_tester: KSys
   kilo_usability: KScript
-  kilo_qa: KTimer
+  kilo_qa: KClock
   kilo_expander: KTrader
   kilo_review: KPac
 virtual_web_target: kweb://cabled
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KTrader
-  timestamp: '2026-10-25T13:37:12-07:00'
+  agent: kilo-qa
+  app: KTimer
+  timestamp: '2026-10-25T14:34:21-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -164,11 +164,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KTimer`
+- **Active Target**: `KClock`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KTimer` | `KiloOS/public/apps/ktimer.html`, `KTimer/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, lap export verification, sound alert toggle, dual Win32 C parity, and promote to Mature table. |
 | `KClock` | `KiloOS/public/apps/kclock.html`, `KClock/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, world time offsets, alarm trigger verification, dual Win32 C parity, and promote to Mature table. |
 | `KPomodoro` | `KiloOS/public/apps/kpomodoro.html`, `KPomodoro/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, interval timer verification, notification chime, dual Win32 C parity, and promote to Mature table. |
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, bookmark export/import, search filtering, dual Win32 C parity, and promote to Mature table. |
@@ -241,6 +240,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KTimer** | `KiloOS/public/apps/ktimer.html` | Pass 5+ (2026-10-25) | Productivity | Complete timing suite with Stopwatch, Countdown, Multi-Timer, Pomodoro, and HIIT Interval timers, F5/F9 state persistence, sound alerts [M], CSV/TXT lap exports, and 100% Win32 C parity. |
 | **KTodo** | `KiloOS/public/apps/ktodo.html` | Pass 5+ (2026-10-24) | Office / Productivity | Complete productivity task manager with multi-tab boards, F5/F9 persistence, dynamic tag filtering, dual Win32 C parity, and real-time RTDB collab. |
 | **KFlash** | `KiloOS/public/apps/kflash.html` | Pass 5+ (2026-10-24) | Education / Spaced Repetition | Complete flashcard & Leitner spaced repetition study workstation with 5 boxes, 1-4 rating math, deck drawer, sample packs, JSON/CSV import/export, F5/F9 persistence, and dual Win32 C parity. |
 | **KFarm** | `KiloOS/public/apps/kfarm.html` | Pass 5+ (2026-10-24) | Simulation / Farming | Pastoral farming simulator; 4 crops, livestock, artisanal machines, YM2612 audio, 3x3 AoE tool, in-viewport compact layout, WASD/Arrow keyboard grid navigation, dual Win32 C parity, F5/F9 state. |
@@ -297,6 +297,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-25T14:34:21-07:00 — kilo-qa: KTimer (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 107.8 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.46%, HEAD Δ 0.0%, 0 fail, 0 warn, 9.3s)).
+  - State & Persistence: Verified F5/F9 workspace snapshot, ktimer_tutorialSeen flag, sound alert persistence, and modal dismissals.
+  - Dual Parity & Audio: Verified Web HTML + Win32 C parity for sound alert toggle [M], CSV/TXT lap exports, and visibilitychange lifecycle.
+  - Mature Quarantine & Handoff: Promoted `KTimer` to Mature archive; advanced `kilo-qa` to `KClock`; next agent `kilo-expander`.
+
 - **2026-10-25T13:37:12-07:00 — kilo-usability: KTrader (KTrader Usability, Flex Header & Responsive Compact Layout)**
   - Status: PASS ✅ (web 175.1 KB, native 26.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Flex Header & Toolbar: Converted absolute 12-button toolbar into responsive flex header eliminating H1 collision at 960x683.
@@ -322,9 +328,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Polished multi-layer atmospheric weather overlay: toxic rain splashes/ripples, undulating gamma aurora ribbons, blizzard snow gale drifts with rime frost needles, and drought thermal mirage shimmer.
   - Verified zero rotating specular glints or traveling perimeter border dots across web and native C targets.
   - Handoff: Advanced `kilo-graphics` to `KSubmarine`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-25T11:32:30-07:00 — kilo-creator: kweb://trapster (Trapster P2P Chiptune & Tracker Exchange v1.0b)**
-  - Status: PASS ✅ (0 errors, web 96.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Searchable 1999 P2P node directory with simulated 56k/T1 download queue and 6-channel YM2612/SPC700 chiptune previewer.
-  - KiloOS VFS /home/music/ .mod/.trk write and bidirectional OS_LAUNCH_APP IPC integration.
-  - Handoff: Advanced `kilo-creator` to `kweb://cabled`; rotated active agent to `kilo-graphics`.

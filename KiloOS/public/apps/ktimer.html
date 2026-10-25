@@ -1086,6 +1086,7 @@
             <tr><td><kbd>+</kbd> / <kbd>-</kbd></td><td>Quick adjust timer duration by ±1m (Timer mode)</td></tr>
             <tr><td><kbd>S</kbd></td><td>Skip Phase (Pomo / HIIT) | Start All (Multi-Timer)</td></tr>
             <tr><td><kbd>P</kbd></td><td>Pause All (Multi-Timer)</td></tr>
+            <tr><td><kbd>M</kbd></td><td>Toggle sound alert / Mute</td></tr>
             <tr><td><kbd>R</kbd></td><td>Reset current timer</td></tr>
             <tr><td><kbd>Enter</kbd></td><td>Start timer / Add multi-timer / Save preset</td></tr>
             <tr><td><kbd>F5</kbd></td><td>Quicksave complete timers & workspace snapshot</td></tr>
@@ -1147,6 +1148,7 @@
           <table class="shortcuts-table">
             <tr><td><kbd>Space</kbd></td><td>Start / Pause active timer</td></tr>
             <tr><td><kbd>1</kbd> - <kbd>5</kbd></td><td>Switch timer mode tabs</td></tr>
+            <tr><td><kbd>M</kbd></td><td>Toggle sound alert / Mute</td></tr>
             <tr><td><kbd>F5</kbd> / <kbd>F9</kbd></td><td>Quicksave / Quickload complete workspace snapshot</td></tr>
             <tr><td><kbd>F1</kbd> / <kbd>H</kbd></td><td>Open full keyboard shortcut guide</td></tr>
           </table>
@@ -2430,6 +2432,7 @@
         version: 1,
         timestamp: now,
         activeTab: activeTabName,
+        soundType: document.getElementById("soundTypeSelect") ? document.getElementById("soundTypeSelect").value : "beep",
         stopwatch: {
           running: !!swInterval,
           elapsed: currentSwElapsed,
@@ -2622,6 +2625,12 @@
         // 7. Restore Active Tab
         if (state.activeTab) {
           switchTab(state.activeTab);
+        }
+
+        // 8. Restore Sound Alert Selection
+        if (state.soundType && document.getElementById("soundTypeSelect")) {
+          document.getElementById("soundTypeSelect").value = state.soundType;
+          safeStorageSet("ktimer_sound_type", state.soundType);
         }
 
         return true;
@@ -2818,6 +2827,22 @@
           document.getElementById('intBtnSkip').click();
         } else if (activeTabObj && activeTabObj.name === 'multi') {
           document.getElementById('mtBtnStartAll').click();
+        }
+        return;
+      }
+
+      if (e.key.toLowerCase() === 'm') {
+        const soundSelect = document.getElementById('soundTypeSelect');
+        if (soundSelect) {
+          if (soundSelect.value === 'mute') {
+            soundSelect.value = soundSelect.getAttribute('data-prev-sound') || 'beep';
+            showToast('🔊 Sound alerts enabled (' + soundSelect.value + ')', 'info');
+          } else {
+            soundSelect.setAttribute('data-prev-sound', soundSelect.value);
+            soundSelect.value = 'mute';
+            showToast('🔇 Sound alerts muted', 'warning');
+          }
+          safeStorageSet('ktimer_sound_type', soundSelect.value);
         }
         return;
       }
@@ -3036,6 +3061,13 @@
     });
 
     // --- Startup Initialization, Session Recovery & Tutorial Onboarding ---
+    const soundSelectInit = document.getElementById('soundTypeSelect');
+    if (soundSelectInit) {
+      soundSelectInit.value = safeStorageGet('ktimer_sound_type', 'beep');
+      soundSelectInit.addEventListener('change', () => {
+        safeStorageSet('ktimer_sound_type', soundSelectInit.value);
+      });
+    }
     const savedSession = safeStorageGet('ktimer_session_state', null);
     const hasQuicksave = safeStorageGet('ktimer_quicksave', null);
     const hasSeenTutorial = safeStorageGet('ktimer_tutorialSeen', false);

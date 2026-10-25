@@ -65,6 +65,7 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 #define ID_STATIC_STATUS    1070
 #define ID_BTN_SAVE         1071
 #define ID_BTN_LOAD         1072
+#define ID_BTN_SOUND_TOGGLE 1073
 
 // App Modes
 typedef enum {
@@ -144,7 +145,8 @@ static int g_dpiScale = 100;
 #define S(x) ((x) * g_dpiScale / 100)
 
 HWND hMainWnd = NULL;
-HWND hTabSW, hTabTM, hTabMT, hTabPOMO, hTabINT, hBtnHelp, hBtnSave, hBtnLoad;
+HWND hTabSW, hTabTM, hTabMT, hTabPOMO, hTabINT, hBtnHelp, hBtnSave, hBtnLoad, hBtnSoundToggle;
+int g_soundEnabled = 1;
 HWND hDisplay, hTmInput, hStaticStats, hStaticIntStats, hStaticIntLabels;
 HWND hBtnStart, hBtnLap, hBtnReset, hBtnExportCsv, hBtnExportTxt, hBtnCopyLaps;
 HWND hListLaps;
@@ -261,6 +263,7 @@ static DWORD ParseTimerInput(const char* str) {
 }
 
 static void PlayAlarmSound() {
+    if (!g_soundEnabled) return;
     MessageBeep(MB_ICONASTERISK);
     Beep(800, 200);
     Beep(1000, 200);
@@ -268,6 +271,7 @@ static void PlayAlarmSound() {
 }
 
 static void PlayChimeSound() {
+    if (!g_soundEnabled) return;
     MessageBeep(MB_OK);
     Beep(523, 150);
     Beep(659, 150);
@@ -275,15 +279,25 @@ static void PlayChimeSound() {
 }
 
 static void PlayWorkStartSound() {
+    if (!g_soundEnabled) return;
     MessageBeep(MB_ICONASTERISK);
     Beep(880, 150);
     Beep(1174, 250);
 }
 
 static void PlayRestStartSound() {
+    if (!g_soundEnabled) return;
     MessageBeep(MB_OK);
     Beep(587, 180);
     Beep(440, 250);
+}
+
+static void ToggleSoundAlerts() {
+    g_soundEnabled = !g_soundEnabled;
+    if (hBtnSoundToggle) {
+        SetWindowTextA(hBtnSoundToggle, g_soundEnabled ? "Sound [M]" : "Mute [M]");
+    }
+    ShowNativeStatus(g_soundEnabled ? "🔊 Sound alerts: ENABLED [M]" : "🔇 Sound alerts: MUTED [M]");
 }
 
 static void UpdateStopwatchDisplay() {
@@ -746,13 +760,14 @@ static void SwitchMode(AppMode newMode) {
 // Pass 5 State Persistence Architecture
 // ==========================================
 #define KTIMER_SAVE_MAGIC 0x4B544D52 // "KTMR"
-#define KTIMER_SAVE_VERSION 1
+#define KTIMER_SAVE_VERSION 2
 
 #pragma pack(push, 1)
 typedef struct {
     DWORD magic;
     DWORD version;
     int mode;
+    int soundEnabled;
     // Stopwatch
     int swIsRunning;
     DWORD swElapsed;
@@ -793,6 +808,7 @@ static int SaveStateToFile(const char* filename) {
     data.magic = KTIMER_SAVE_MAGIC;
     data.version = KTIMER_SAVE_VERSION;
     data.mode = (int)g_mode;
+    data.soundEnabled = g_soundEnabled;
 
     // Stopwatch
     DWORD currentSwMs = g_swElapsed + (g_swIsRunning ? (GetTickCount() - g_swStartTime) : 0);
@@ -1079,9 +1095,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnPresetBoxing = CreateWindowA("BUTTON", "Boxing 3m/1mx3", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(290), S(250), S(140), S(28), hwnd, (HMENU)ID_PRESET_BOXING, NULL, NULL);
 
             hStatusLabel = CreateWindowExA(0, "STATIC", g_statusMsg, WS_CHILD | WS_VISIBLE | SS_CENTER, S(10), S(500), S(420), S(18), hwnd, (HMENU)ID_STATIC_STATUS, NULL, NULL);
-            hBtnSave = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(10), S(520), S(75), S(22), hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
-            hBtnLoad = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(88), S(520), S(75), S(22), hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
-            hHelpLabel = CreateWindowExA(0, "STATIC", "Press 'H' or F1 for Help | Space: Start/Pause", WS_CHILD | WS_VISIBLE | SS_CENTER, S(166), S(522), S(264), S(18), hwnd, NULL, NULL, NULL);
+            hBtnSave = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(10), S(520), S(66), S(22), hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+            hBtnLoad = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(80), S(520), S(66), S(22), hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
+            hBtnSoundToggle = CreateWindowA("BUTTON", "Sound [M]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(150), S(520), S(76), S(22), hwnd, (HMENU)ID_BTN_SOUND_TOGGLE, NULL, NULL);
+            hHelpLabel = CreateWindowExA(0, "STATIC", "F1: Help | 'M': Sound | Space: Run", WS_CHILD | WS_VISIBLE | SS_CENTER, S(230), S(522), S(200), S(18), hwnd, NULL, NULL, NULL);
 
             // Font Application
             SendMessageA(hTabSW, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
@@ -1092,6 +1109,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             SendMessageA(hBtnSave, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hBtnLoad, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hBtnSoundToggle, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFontDisplay, TRUE);
             SendMessageA(hTmInput, WM_SETFONT, (WPARAM)hFontDisplay, TRUE);
             SendMessageA(hBtnStart, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
@@ -1708,6 +1726,10 @@ void __stdcall MainEntry() {
                     }
                 }
 
+                if (msg.wParam == 'M' || msg.wParam == 'm') {
+                    ToggleSoundAlerts();
+                    continue;
+                }
                 if (msg.wParam == 'P' || msg.wParam == 'p') {
                     if (g_mode == MODE_MULTI) {
                         SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_MT_PAUSEALL, 0), (LPARAM)hBtnMtPauseAll);
