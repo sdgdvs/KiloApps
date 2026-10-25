@@ -60,7 +60,7 @@ last_run:
   agent: kilo-qa
   app: KTodo
   timestamp: '2026-10-24T16:33:52-07:00'
-last_planner_run: '2026-10-24T07:31:25Z'
+last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
 # KiloApps Master Fleet Work & Queue State (`Phase VI: System Convergence`)
@@ -138,6 +138,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Fix #garage-rank not updating in updateGarage() (call getPilotRank(playerLevel)); implement actual enemyStunned=true stun effect on Head/Cockpit hit (currentTargetLimb===0) so enemyTurn() skips attack and vents heat per Manual; auto-restore kmech_save on boot; and trigger enemy overheat burnout damage when EMP pushes enemy heat over maxHeat. |
+| `KCalendar` | `KiloOS/public/apps/kcalendar.html`, `KCalendar/main.c` | Audit monthly/weekly views, event creation modal, reminder triggers, keyboard navigation (`ArrowLeft/Right`), and VFS `.ics` export. |
+| `KContacts` | `KiloOS/public/apps/kcontacts.html`, `KContacts/main.c` | Audit address book entry creation, search/filter, vCard import/export, keyboard shortcuts, and VFS storage sync. |
+| `KPomodoro` | `KiloOS/public/apps/kpomodoro.html`, `KPomodoro/main.c` | Audit work/break interval timers, task checklist, tick audio alerts, F5/F9 state persistence, and keyboard controls. |
+| `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Audit feed reader parser, article list scrollback, OPML import/export, offline cache, and keyboard article cycling (`J/K`). |
+| `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Audit bookmark manager folder hierarchy, tagging, search filter, HTML/JSON export, and modal focus traps. |
+| `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Audit archive packer/unpacker UI, compression ratio telemetry, file list viewer, and drag-and-drop file ingestion. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KScript`
@@ -149,6 +155,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Eliminate 37px vertical overflow at 640x503 by removing min-height:520px on #game-container and tightening body/container padding so bottom action buttons and HUD corners fit in-viewport; keep .header-bar and .quick-hint single-line; reposition #toast-container so it never overlaps header/hints; add interactive limb-target selector pills with hit% and HiDPI scaling on #combat-fx-canvas. |
+| `KCalendar` | `KiloOS/public/apps/kcalendar.html`, `KCalendar/main.c` | Compact responsive grid layout at `<640px`, accessible modal focus traps for event dialog, and high-contrast date selection indicator. |
+| `KContacts` | `KiloOS/public/apps/kcontacts.html`, `KContacts/main.c` | Responsive split detail pane layout, keyboard navigation focus rings, and clear empty-state messaging. |
+| `KPomodoro` | `KiloOS/public/apps/kpomodoro.html`, `KPomodoro/main.c` | HiDPI circular timer canvas rendering, responsive button row, and high-contrast task checklist typography. |
+| `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Responsive dual-pane feed/reader layout, comfortable reading line-length (65-75ch), and clear unread badge contrast. |
+| `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Responsive folder tree sidebar, accessible tag chips, and keyboard shortcut cheat sheet dialog. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KTimer`
@@ -157,6 +168,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 |---|---|---|
 | `KTimer` | `KiloOS/public/apps/ktimer.html`, `KTimer/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, lap export verification, sound alert toggle, dual Win32 C parity, and promote to Mature table. |
 | `KClock` | `KiloOS/public/apps/kclock.html`, `KClock/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, world time offsets, alarm trigger verification, dual Win32 C parity, and promote to Mature table. |
+| `KPomodoro` | `KiloOS/public/apps/kpomodoro.html`, `KPomodoro/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, interval timer verification, notification chime, dual Win32 C parity, and promote to Mature table. |
+| `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, bookmark export/import, search filtering, dual Win32 C parity, and promote to Mature table. |
+| `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, feed parser resilience, OPML export, dual Win32 C parity, and promote to Mature table. |
+| `KCalendar` | `KiloOS/public/apps/kcalendar.html`, `KCalendar/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, event storage integrity, date navigation, dual Win32 C parity, and promote to Mature table. |
+| `KContacts` | `KiloOS/public/apps/kcontacts.html`, `KContacts/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, contact CRUD verification, vCard export, dual Win32 C parity, and promote to Mature table. |
+| `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, archive unpack/pack verification, byte limits, dual Win32 C parity, and promote to Mature table. |
+| `KType` | `KiloOS/public/apps/ktype.html`, `KType/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, typing speed WPM/accuracy benchmark, word drill banks, dual Win32 C parity, and promote to Mature table. |
+| `KColor` | `KiloOS/public/apps/kcolor.html`, `KColor/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, palette generator/harmony rules, HEX/RGB/HSL conversion, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KMech`

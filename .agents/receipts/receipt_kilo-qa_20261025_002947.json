@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-25T00:29:47.685664+00:00",
+  "agent": "kilo-qa",
+  "model": "gemini-3.8-flash-medium",
+  "target": "KTodo",
+  "duration_seconds": 1037.85,
+  "returncode": 1,
+  "success": false,
+  "provenance": null
+}
