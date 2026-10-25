@@ -1796,6 +1796,14 @@
 
       if (dock) dock.style.display = 'none';
 
+      const fut = document.getElementById('futures-modal');
+
+      const multi = document.getElementById('multiplayer-modal');
+
+      if (fut) fut.style.display = 'none';
+
+      if (multi) multi.style.display = 'none';
+
       untrapModal();
 
     }
@@ -3282,7 +3290,11 @@
 
           enemyMaxShields: state.enemyMaxShields,
 
-          bountyTarget: state.bountyTarget
+          bountyTarget: state.bountyTarget,
+
+          futuresContracts: state.futuresContracts || [],
+
+          futuresHistory: state.futuresHistory || []
 
         },
 
@@ -6412,6 +6424,8 @@
         state.repTraders += count;
 
         log(`Bought ${count} ${good} for ${totalCost} cr.`);
+        broadcastDuelState(`Bought ${count} ${good}`);
+        pushSyndicateTicker(`MARKET: ${myPlayerName} bought ${count} ${good} at ${state.location}`);
 
         playSound('chime');
 
@@ -6468,6 +6482,8 @@
         state.repTraders += count;
 
         log(`Sold all ${count} ${good} for ${price * count} cr.`);
+        broadcastDuelState(`Sold all ${count} ${good}`);
+        pushSyndicateTicker(`MARKET: ${myPlayerName} sold all ${count} ${good} at ${state.location}`);
 
         playSound('chime');
 
@@ -6654,6 +6670,10 @@
 
 
         generatePrices();
+
+        advanceFuturesOnJump();
+
+        updateDuelOnJump(target);
 
         generateMissions();
 
@@ -6963,7 +6983,7 @@
 
       if (e.ctrlKey || e.metaKey) return;
 
-      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) return;
 
       
 
@@ -6981,7 +7001,15 @@
 
 
 
+      const futOpen = document.getElementById('futures-modal') && document.getElementById('futures-modal').style.display === 'flex';
+
+      const multiOpen = document.getElementById('multiplayer-modal') && document.getElementById('multiplayer-modal').style.display === 'flex';
+
       const activeModal = dockOpen ? document.getElementById('docking-modal') :
+
+                          futOpen ? document.getElementById('futures-modal') :
+
+                          multiOpen ? document.getElementById('multiplayer-modal') :
 
                           helpOpen ? document.getElementById('help-modal') :
 
@@ -7034,6 +7062,10 @@
 
 
       if (e.key === 'Escape') {
+
+        if (futOpen) { hideFuturesModal(); return; }
+
+        if (multiOpen) { hideMultiplayerModal(); return; }
 
         if (dockOpen) { hideDocking(); return; }
 
@@ -7138,6 +7170,26 @@
           e.preventDefault();
 
           showDocking();
+
+          return;
+
+        }
+
+        if (e.key === 'u' || e.key === 'U') {
+
+          e.preventDefault();
+
+          showFuturesModal();
+
+          return;
+
+        }
+
+        if (e.key === 'g' || e.key === 'G') {
+
+          e.preventDefault();
+
+          showMultiplayerModal();
 
           return;
 

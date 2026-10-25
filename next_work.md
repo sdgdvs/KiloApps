@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_creator: kweb://cabled
   kilo_graphics: KSubmarine
   kilo_soundscape: KSubmarine
-  kilo_tester: KTrader
+  kilo_tester: KSys
   kilo_usability: KTrader
   kilo_qa: KTimer
   kilo_expander: KTrader
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KStellar
-  timestamp: '2026-10-25T12:36:45-07:00'
+  agent: kilo-tester
+  app: KTrader
+  timestamp: '2026-10-25T13:16:53-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -130,11 +130,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KTrader`
+- **Active Target**: `KSys`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -145,6 +144,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Audit feed reader parser, article list scrollback, OPML import/export, offline cache, and keyboard article cycling (`J/K`). |
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Audit bookmark manager folder hierarchy, tagging, search filter, HTML/JSON export, and modal focus traps. |
 | `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Audit archive packer/unpacker UI, compression ratio telemetry, file list viewer, and drag-and-drop file ingestion. |
+| `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KTrader`
@@ -297,6 +297,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-25T13:16:53-07:00 — kilo-tester: KTrader (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 174.4 KB, native 26.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - UI & Hotkeys: Wired [U] for futures modal and [G] for syndicate duel modal; added SELECT guard to keydown; added #futures-modal and #multiplayer-modal to closeAllModals(), Escape dismissal, and activeModal focus trap.
+  - Repairs: Connected advanceFuturesOnJump() and updateDuelOnJump(target) in travel(); serialized futures contracts/history in getSavePayload(); added broadcastDuelState() to buyMaxGood() and sellAllGood().
+  - Handoff: Advanced `kilo-tester` to `KSys`; rotated active agent to `kilo-usability`.
+
 - **2026-10-25T12:36:45-07:00 — kilo-soundscape: KStellar (Galactic Accord & Armada March — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 195.4 KB, native 157.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.76%, HEAD Δ 0.31%, 0 fail, 0 warn, 12.7s)).
   - Composition: 32-step C/F Lydian 4X grand diplomacy & fleet command suite, 6-channel contrary counterpoint, 3rd/7th shell voicings, 5:3 swing-tick groove.
@@ -321,9 +327,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Defects: Top 12-button absolute toolbar wraps over H1 title; 807px vertical overflow hides Shipyard/Missions/Log below 683px fold; market rows show misleading [1]-[5] jump numbers; #ui-shipyard lacks flex-wrap and stat previews; #gfx-canvas lacks HiDPI scaling.
   - Dead Features & Gameplay Flaws: advanceFuturesOnJump() and updateDuelOnJump() are dead code never called in travel(); getSavePayload() drops futuresContracts/futuresHistory; buyMaxGood/sellAllGood skip duel broadcasts; [U]/[G]/[Esc] modal hotkeys broken on Futures/Syndicate modals; 12-system star chart missing.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KTrader`, `kilo-tester`->`KTrader`, `kilo-expander`->`KTrader`] (un-quarantined `KTrader` from Mature); advanced `kilo-review` to `KPac`; next agent `kilo-creator`.
-
-- **2026-10-25T10:35:53-07:00 — kilo-expander: KMech (KMech Phase VI VFS Open/Save, KPad/KHex IPC & RFMS Arena Duel)**
-  - Status: PASS ✅ (0 errors, web 183.6 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - VFS Telemetry: Wired /home/saves/kmech_telemetry.json Open/Save & picker fallback into #modal-telemetry, plus live KPad and KHex IPC inspection buttons.
-  - RFMS Multiplayer: Gated online mech duels behind explicit Multiplayer Arena modal with 25s autonomous AI fallback, plus native C parity for F2/F3 telemetry JSON import/export.
-  - Handoff: Advanced `kilo-expander` to `KSynth`; rotated active agent to `kilo-review`.
