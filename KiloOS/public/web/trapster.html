@@ -1406,14 +1406,30 @@ function launchInExternalApp(appName) {
     showToast('Please select and preview a track first');
     return;
   }
+  const appIdMap = {
+    'KAudio': 'kaudio',
+    'KSynth': 'ksynth',
+    'KHex': 'khex',
+    'KPad': 'kpad'
+  };
   const appMap = {
     'KAudio': 'kaudio.html',
     'KSynth': 'ksynth.html',
     'KHex': 'khex.html',
     'KPad': 'kpad.html'
   };
+  const targetId = appIdMap[appName] || appName.toLowerCase();
   const targetHtml = appMap[appName] || 'kaudio.html';
   try {
+    // KiloOS Shell IPC standard
+    window.parent.postMessage({
+      type: 'OS_LAUNCH_APP',
+      appId: targetId,
+      targetApp: targetId,
+      file: '/home/music/' + currentTrack.filename,
+      title: currentTrack.title
+    }, '*');
+    // Fallback legacy launcher
     window.parent.postMessage({
       type: 'LAUNCH_APP',
       app: targetHtml,

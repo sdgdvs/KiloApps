@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T15:24:30-07:00 — kilo-tester: KMech (KMech UI & Combat Mechanics Overhaul)**
+  - PASS: Fixed #garage-rank sync via getPilotRank(playerLevel) in updateGarage()
+  - PASS: Implemented enemyStunned Cockpit strike stun effect skipping attack & venting heat
+  - PASS: Enabled EMP overload burnout damage when enemy heat exceeds maxHeat
+  - PASS: Added boot auto-restore of kmech_save with toast telemetry feedback
+  - Handoff: Advanced `kilo-tester` to `KSys`; rotated active agent to `kilo-usability`.
+
 - **2026-10-24T15:17:15-07:00 — kilo-adhoc: CI/CD & Firebase Hosting (Quota Self-Pruning, Node 22/24 & Submodule Fix)**
   - Diagnosed Firebase Hosting deploy failure (HTTP 429 RESOURCE_EXHAUSTED): 3,295 retained versions (~10.24 GB) exceeded the 10 GB Spark storage ceiling.
   - Added scripts/prune_firebase_versions.py and wired it into .github/workflows/deploy.yml (pruned >7.2 GB immediately, retaining live + 3 rollbacks), added paths: filtering, upgraded Node 20 -> 22 (FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true), and removed the orphaned TinyRetroPad 160000 gitlink (xit code 128).
