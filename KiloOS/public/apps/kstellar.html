@@ -343,20 +343,28 @@
         }
 
         // Yamaha YM2612 2-Operator FM Synthesizer Voice Generator with Instrument Patch Library
+        // 4X Galactic Diplomacy & Fleet Command Suite (Lydian Brass, Floating Maj9 Shells, Armada Bass)
         const FM_PATCHES = {
-            // Ch1: Expressive FM cosmic bell lead (Carrier : Modulator = 1:2.0, delayed vibrato)
-            cosmicLead: { modRatio: 2.0, modIndex: 2.6, decay: 0.70, modDecay: 0.55, attack: 0.006, carrierWave: 'sine', modWave: 'sine' },
-            bellLead:   { modRatio: 2.0, modIndex: 2.6, decay: 0.70, modDecay: 0.55, attack: 0.006, carrierWave: 'sine', modWave: 'sine' },
-            // Ch2: Soft flute-like contrary counter-melody (Carrier : Modulator = 1:1.0)
-            counterLead:{ modRatio: 1.0, modIndex: 1.8, decay: 0.60, modDecay: 0.45, attack: 0.012, carrierWave: 'sine', modWave: 'sine' },
-            // Ch3: SPC700 warm harmonic pad for 3rd/7th shells (Carrier : Modulator = 1:3.0)
-            shellPad:   { modRatio: 3.0, modIndex: 1.4, decay: 0.95, modDecay: 0.80, attack: 0.035, carrierWave: 'sine', modWave: 'sine' },
-            pad:        { modRatio: 3.0, modIndex: 1.4, decay: 0.95, modDecay: 0.80, attack: 0.035, carrierWave: 'sine', modWave: 'sine' },
-            // High shimmer cosmic arpeggio
-            cosmicArp:  { modRatio: 3.5, modIndex: 3.0, decay: 0.22, modDecay: 0.16, attack: 0.004, carrierWave: 'sine', modWave: 'sine' },
-            // Ch4: Punchy 2-Op FM slap/sub bass strictly below C3 (130.81Hz) (Carrier : Modulator = 1:2.0, snappy decay)
-            fmBass:     { modRatio: 2.0, modIndex: 3.8, decay: 0.24, modDecay: 0.12, attack: 0.003, carrierWave: 'sawtooth', modWave: 'sine' },
-            bass:       { modRatio: 2.0, modIndex: 3.8, decay: 0.24, modDecay: 0.12, attack: 0.003, carrierWave: 'sawtooth', modWave: 'sine' }
+            // Ch1: Lydian Brass Fanfare Lead (Noble FM horn/brass formant, carrier: sawtooth, mod: sine, delayed vibrato)
+            lydianBrass:    { modRatio: 1.0, modIndex: 2.8, decay: 0.72, modDecay: 0.55, attack: 0.022, carrierWave: 'sawtooth', modWave: 'sine' },
+            cosmicLead:     { modRatio: 1.0, modIndex: 2.8, decay: 0.72, modDecay: 0.55, attack: 0.022, carrierWave: 'sawtooth', modWave: 'sine' },
+            bellLead:       { modRatio: 2.0, modIndex: 2.4, decay: 0.68, modDecay: 0.50, attack: 0.008, carrierWave: 'sine', modWave: 'sine' },
+            // Ch2: Fleet Command Counter-Melody (French horn / woodwind in contrary motion)
+            commandCounter: { modRatio: 1.5, modIndex: 1.8, decay: 0.65, modDecay: 0.45, attack: 0.016, carrierWave: 'sine', modWave: 'triangle' },
+            counterLead:    { modRatio: 1.5, modIndex: 1.8, decay: 0.65, modDecay: 0.45, attack: 0.016, carrierWave: 'sine', modWave: 'triangle' },
+            // Ch3: Floating Maj9 Warm Harmonic Pad (3rd/7th shells only, SPC700 stereo delay warmth)
+            floatingMaj9Pad:{ modRatio: 2.002, modIndex: 1.25, decay: 1.05, modDecay: 0.90, attack: 0.045, carrierWave: 'sine', modWave: 'sine' },
+            shellPad:       { modRatio: 2.002, modIndex: 1.25, decay: 1.05, modDecay: 0.90, attack: 0.045, carrierWave: 'sine', modWave: 'sine' },
+            pad:            { modRatio: 2.002, modIndex: 1.25, decay: 1.05, modDecay: 0.90, attack: 0.045, carrierWave: 'sine', modWave: 'sine' },
+            // High shimmer navigation telemetry arpeggio
+            fleetArp:       { modRatio: 3.5, modIndex: 2.5, decay: 0.20, modDecay: 0.14, attack: 0.003, carrierWave: 'sine', modWave: 'sine' },
+            cosmicArp:      { modRatio: 3.5, modIndex: 2.5, decay: 0.20, modDecay: 0.14, attack: 0.003, carrierWave: 'sine', modWave: 'sine' },
+            // Ch4: Armada Punchy 2-Op FM Bass strictly below C3 (130.81Hz) (snappy mod decay)
+            armadaBass:     { modRatio: 2.0, modIndex: 3.6, decay: 0.26, modDecay: 0.11, attack: 0.003, carrierWave: 'sawtooth', modWave: 'sine' },
+            fmBass:         { modRatio: 2.0, modIndex: 3.6, decay: 0.26, modDecay: 0.11, attack: 0.003, carrierWave: 'sawtooth', modWave: 'sine' },
+            bass:           { modRatio: 2.0, modIndex: 3.6, decay: 0.26, modDecay: 0.11, attack: 0.003, carrierWave: 'sawtooth', modWave: 'sine' },
+            // Diplomatic Accord & Treaty Crystalline Chime
+            treatyBell:     { modRatio: 2.756, modIndex: 2.4, decay: 0.85, modDecay: 0.60, attack: 0.004, carrierWave: 'sine', modWave: 'sine' }
         };
 
         function playFMPatch(patchKey, freq, gainVal = 0.14, duration = null, sendDelay = false, hasVibrato = false) {
@@ -621,122 +629,122 @@
             }
         };
 
-        // 32-step Sci-Fi FM Track: "Voyage Across the Spiral Arm"
-        // 8-chord Dorian / Aeolian progression in 4-step harmonic blocks
-        // Strictly 3rd + 7th shell voicings on Ch3, punchy FM bass < 130.81Hz on Ch4
+        // 32-step Grand 4X Galactic Diplomacy & Fleet Command Suite: "Galactic Accord & Armada March"
+        // 8 harmonic blocks in C Lydian / F Lydian / G Command / Eb Accord
+        // Strictly 3rd + 7th shell voicings on Ch3, punchy FM bass strictly < 130.81Hz on Ch4
         const CHORD_SHELLS = [
-            // Chord 0 (Steps 0..3): Dm7 (Root D2 73.42, 3rd F3 174.61, 7th C4 261.63)
-            { root: 73.42, altRoot: 55.00, third: 174.61, seventh: 261.63 },
-            { root: 73.42, altRoot: 73.42, third: 174.61, seventh: 261.63 },
-            { root: 73.42, altRoot: 36.71, third: 174.61, seventh: 261.63 },
-            { root: 73.42, altRoot: 55.00, third: 174.61, seventh: 261.63 },
-            // Chord 1 (Steps 4..7): BbMaj7 (Root Bb1 58.27, 3rd D3 146.83, 7th A3 220.00)
+            // Chord 0 (Steps 0..3): C Maj9 (#11) [C Lydian Grand Fanfare]
+            { root: 65.41, altRoot: 48.99, third: 164.81, seventh: 246.94 },
+            { root: 65.41, altRoot: 65.41, third: 164.81, seventh: 246.94 },
+            { root: 65.41, altRoot: 48.99, third: 164.81, seventh: 246.94 },
+            { root: 65.41, altRoot: 97.99, third: 164.81, seventh: 246.94 },
+            // Chord 1 (Steps 4..7): D9 / C [Lydian II/I Cadence]
+            { root: 73.42, altRoot: 55.00, third: 185.00, seventh: 261.63 },
+            { root: 73.42, altRoot: 73.42, third: 185.00, seventh: 261.63 },
+            { root: 73.42, altRoot: 55.00, third: 185.00, seventh: 261.63 },
+            { root: 73.42, altRoot: 110.00, third: 185.00, seventh: 261.63 },
+            // Chord 2 (Steps 8..11): Ab Maj9 (#11) [Deep-Space Chromatic Mediant]
+            { root: 51.91, altRoot: 77.78, third: 130.81, seventh: 196.00 },
+            { root: 51.91, altRoot: 51.91, third: 130.81, seventh: 196.00 },
+            { root: 51.91, altRoot: 77.78, third: 130.81, seventh: 196.00 },
+            { root: 51.91, altRoot: 103.83, third: 130.81, seventh: 196.00 },
+            // Chord 3 (Steps 12..15): Bb Maj9 (#11) [Armada Flank Ascent]
             { root: 58.27, altRoot: 87.31, third: 146.83, seventh: 220.00 },
             { root: 58.27, altRoot: 58.27, third: 146.83, seventh: 220.00 },
-            { root: 58.27, altRoot: 43.65, third: 146.83, seventh: 220.00 },
             { root: 58.27, altRoot: 87.31, third: 146.83, seventh: 220.00 },
-            // Chord 2 (Steps 8..11): Gm7 (Root G1 48.99, 3rd Bb3 233.08, 7th F4 349.23)
-            { root: 48.99, altRoot: 73.42, third: 233.08, seventh: 349.23 },
-            { root: 48.99, altRoot: 48.99, third: 233.08, seventh: 349.23 },
-            { root: 48.99, altRoot: 97.99, third: 233.08, seventh: 349.23 },
-            { root: 48.99, altRoot: 73.42, third: 233.08, seventh: 349.23 },
-            // Chord 3 (Steps 12..15): C9 (Root C2 65.41, 3rd E3 164.81, 7th Bb3 233.08)
-            { root: 65.41, altRoot: 97.99, third: 164.81, seventh: 233.08 },
-            { root: 65.41, altRoot: 65.41, third: 164.81, seventh: 233.08 },
-            { root: 65.41, altRoot: 48.99, third: 164.81, seventh: 233.08 },
-            { root: 65.41, altRoot: 97.99, third: 164.81, seventh: 233.08 },
-            // Chord 4 (Steps 16..19): FMaj7 (Root F2 87.31, 3rd A3 220.00, 7th E4 329.63)
+            { root: 58.27, altRoot: 116.54, third: 146.83, seventh: 220.00 },
+            // Chord 4 (Steps 16..19): F Maj9 (#11) [F Lydian Diplomatic Conclave]
             { root: 87.31, altRoot: 65.41, third: 220.00, seventh: 329.63 },
             { root: 87.31, altRoot: 87.31, third: 220.00, seventh: 329.63 },
             { root: 87.31, altRoot: 43.65, third: 220.00, seventh: 329.63 },
             { root: 87.31, altRoot: 65.41, third: 220.00, seventh: 329.63 },
-            // Chord 5 (Steps 20..23): Em7b5 (Root E2 82.41, 3rd G3 196.00, 7th D4 293.66)
-            { root: 82.41, altRoot: 61.74, third: 196.00, seventh: 293.66 },
-            { root: 82.41, altRoot: 82.41, third: 196.00, seventh: 293.66 },
-            { root: 82.41, altRoot: 41.20, third: 196.00, seventh: 293.66 },
-            { root: 82.41, altRoot: 61.74, third: 196.00, seventh: 293.66 },
-            // Chord 6 (Steps 24..27): A7alt (Root A1 55.00, 3rd C#4 277.18, 7th G3 196.00)
-            { root: 55.00, altRoot: 82.41, third: 277.18, seventh: 196.00 },
-            { root: 55.00, altRoot: 55.00, third: 277.18, seventh: 196.00 },
-            { root: 55.00, altRoot: 110.00, third: 277.18, seventh: 196.00 },
-            { root: 55.00, altRoot: 82.41, third: 277.18, seventh: 196.00 },
-            // Chord 7 (Steps 28..31): Dm9 (Root D2 73.42, 3rd F3 174.61, 7th C4 261.63)
-            { root: 73.42, altRoot: 55.00, third: 174.61, seventh: 261.63 },
-            { root: 73.42, altRoot: 73.42, third: 174.61, seventh: 261.63 },
-            { root: 73.42, altRoot: 36.71, third: 174.61, seventh: 261.63 },
-            { root: 73.42, altRoot: 55.00, third: 174.61, seventh: 261.63 }
+            // Chord 5 (Steps 20..23): G7sus4 -> G9 [Fleet Marshal Command]
+            { root: 48.99, altRoot: 73.42, third: 246.94, seventh: 174.61 },
+            { root: 48.99, altRoot: 48.99, third: 246.94, seventh: 174.61 },
+            { root: 48.99, altRoot: 97.99, third: 246.94, seventh: 174.61 },
+            { root: 48.99, altRoot: 73.42, third: 246.94, seventh: 174.61 },
+            // Chord 6 (Steps 24..27): Eb Maj9 (#11) [Galactic Federation Accord]
+            { root: 77.78, altRoot: 58.27, third: 196.00, seventh: 293.66 },
+            { root: 77.78, altRoot: 77.78, third: 196.00, seventh: 293.66 },
+            { root: 77.78, altRoot: 58.27, third: 196.00, seventh: 293.66 },
+            { root: 77.78, altRoot: 116.54, third: 196.00, seventh: 293.66 },
+            // Chord 7 (Steps 28..31): C Maj9 [Grand Sovereign Resolution]
+            { root: 65.41, altRoot: 48.99, third: 164.81, seventh: 246.94 },
+            { root: 65.41, altRoot: 65.41, third: 164.81, seventh: 246.94 },
+            { root: 65.41, altRoot: 48.99, third: 164.81, seventh: 246.94 },
+            { root: 65.41, altRoot: 97.99, third: 164.81, seventh: 246.94 }
         ];
 
-        // Ch1: Expressive Lead voice with rests and delayed vibrato
+        // Ch1: Lydian Brass Fanfare Lead with expressive phrasing and delayed vibrato
         const CH1_LEAD = [
-            { freq: 293.66, dur: 0.32, vel: 0.14 }, // Step 0: D4
-            { freq: 349.23, dur: 0.22, vel: 0.13 }, // Step 1: F4
-            { freq: 440.00, dur: 0.38, vel: 0.15 }, // Step 2: A4
-            { freq: 523.25, dur: 0.42, vel: 0.16 }, // Step 3: C5
-            { freq: 587.33, dur: 0.50, vel: 0.16 }, // Step 4: D5
-            { freq: 523.25, dur: 0.28, vel: 0.13 }, // Step 5: C5
+            { freq: 392.00, dur: 0.32, vel: 0.15 }, // Step 0: G4 (Fanfare open)
+            { freq: 493.88, dur: 0.22, vel: 0.14 }, // Step 1: B4
+            { freq: 587.33, dur: 0.36, vel: 0.16 }, // Step 2: D5
+            { freq: 739.99, dur: 0.46, vel: 0.17 }, // Step 3: F#5 (Lydian #11 apex!)
+            { freq: 659.25, dur: 0.45, vel: 0.16 }, // Step 4: E5
+            { freq: 587.33, dur: 0.26, vel: 0.13 }, // Step 5: D5
             null,                                   // Step 6: REST (Ch2 spotlight!)
             null,                                   // Step 7: REST (Ch2 spotlight!)
-            { freq: 466.16, dur: 0.35, vel: 0.14 }, // Step 8: Bb4
-            { freq: 440.00, dur: 0.25, vel: 0.13 }, // Step 9: A4
-            { freq: 392.00, dur: 0.32, vel: 0.14 }, // Step 10: G4
-            { freq: 349.23, dur: 0.35, vel: 0.14 }, // Step 11: F4
-            { freq: 392.00, dur: 0.45, vel: 0.15 }, // Step 12: G4
-            { freq: 329.63, dur: 0.35, vel: 0.13 }, // Step 13: E4
+            { freq: 622.25, dur: 0.35, vel: 0.15 }, // Step 8: Eb5 (Chromatic mediant shift)
+            { freq: 783.99, dur: 0.28, vel: 0.15 }, // Step 9: G5
+            { freq: 698.46, dur: 0.32, vel: 0.14 }, // Step 10: F5
+            { freq: 587.33, dur: 0.36, vel: 0.14 }, // Step 11: D5
+            { freq: 698.46, dur: 0.42, vel: 0.15 }, // Step 12: F5
+            { freq: 523.25, dur: 0.32, vel: 0.13 }, // Step 13: C5
             null,                                   // Step 14: REST (Ch2 spotlight!)
             null,                                   // Step 15: REST (Ch2 spotlight!)
-            { freq: 349.23, dur: 0.32, vel: 0.14 }, // Step 16: F4
-            { freq: 440.00, dur: 0.26, vel: 0.13 }, // Step 17: A4
-            { freq: 523.25, dur: 0.38, vel: 0.15 }, // Step 18: C5
-            { freq: 659.25, dur: 0.45, vel: 0.16 }, // Step 19: E5
-            { freq: 587.33, dur: 0.40, vel: 0.15 }, // Step 20: D5
-            { freq: 493.88, dur: 0.35, vel: 0.14 }, // Step 21: B4
+            { freq: 440.00, dur: 0.32, vel: 0.14 }, // Step 16: A4 (F Lydian theme)
+            { freq: 523.25, dur: 0.26, vel: 0.13 }, // Step 17: C5
+            { freq: 659.25, dur: 0.38, vel: 0.15 }, // Step 18: E5
+            { freq: 987.77, dur: 0.46, vel: 0.17 }, // Step 19: B5 (F Lydian #11 apex!)
+            { freq: 880.00, dur: 0.42, vel: 0.16 }, // Step 20: A5
+            { freq: 783.99, dur: 0.34, vel: 0.14 }, // Step 21: G5
             null,                                   // Step 22: REST (Ch2 spotlight!)
             null,                                   // Step 23: REST (Ch2 spotlight!)
-            { freq: 392.00, dur: 0.35, vel: 0.14 }, // Step 24: G4
-            { freq: 440.00, dur: 0.30, vel: 0.13 }, // Step 25: A4
-            { freq: 466.16, dur: 0.35, vel: 0.14 }, // Step 26: Bb4
-            { freq: 554.37, dur: 0.42, vel: 0.15 }, // Step 27: C#5
-            { freq: 587.33, dur: 0.55, vel: 0.16 }, // Step 28: D5
-            { freq: 440.00, dur: 0.35, vel: 0.13 }, // Step 29: A4
+            { freq: 466.16, dur: 0.35, vel: 0.14 }, // Step 24: Bb4
+            { freq: 587.33, dur: 0.30, vel: 0.14 }, // Step 25: D5
+            { freq: 698.46, dur: 0.36, vel: 0.15 }, // Step 26: F5
+            { freq: 880.00, dur: 0.42, vel: 0.16 }, // Step 27: A5
+            { freq: 783.99, dur: 0.55, vel: 0.17 }, // Step 28: G5 (Imperial resolution)
+            { freq: 659.25, dur: 0.35, vel: 0.14 }, // Step 29: E5
             null,                                   // Step 30: REST (Ch2 spotlight!)
             null                                    // Step 31: REST (Ch2 spotlight!)
         ];
 
-        // Ch2: Counter-melody in contrary motion; takes spotlight during Ch1 rests
+        // Ch2: Fleet Command Counter-Melody in contrary motion; takes spotlight during Ch1 rests
         const CH2_COUNTER = [
             null,                                   // Step 0: Rest while Ch1 starts
             null,                                   // Step 1
-            { freq: 146.83, dur: 0.26, vel: 0.10 }, // Step 2: D3 (contrary motion downward)
+            { freq: 130.81, dur: 0.26, vel: 0.11 }, // Step 2: C3 (contrary motion downward)
             null,                                   // Step 3
-            { freq: 220.00, dur: 0.28, vel: 0.11 }, // Step 4: A3
-            { freq: 174.61, dur: 0.22, vel: 0.10 }, // Step 5: F3
-            { freq: 233.08, dur: 0.30, vel: 0.13 }, // Step 6: Bb3 (SPOTLIGHT)
-            { freq: 261.63, dur: 0.36, vel: 0.14 }, // Step 7: C4 (SPOTLIGHT)
+            { freq: 196.00, dur: 0.28, vel: 0.11 }, // Step 4: G3
+            { freq: 185.00, dur: 0.22, vel: 0.10 }, // Step 5: F#3
+            { freq: 220.00, dur: 0.32, vel: 0.13 }, // Step 6: A3 (SPOTLIGHT)
+            { freq: 261.63, dur: 0.38, vel: 0.14 }, // Step 7: C4 (SPOTLIGHT)
             null,                                   // Step 8
             null,                                   // Step 9
             { freq: 233.08, dur: 0.25, vel: 0.10 }, // Step 10: Bb3
-            { freq: 261.63, dur: 0.25, vel: 0.11 }, // Step 11: C4
+            { freq: 261.63, dur: 0.26, vel: 0.11 }, // Step 11: C4
             null,                                   // Step 12
             null,                                   // Step 13
             { freq: 293.66, dur: 0.32, vel: 0.13 }, // Step 14: D4 (SPOTLIGHT)
-            { freq: 329.63, dur: 0.36, vel: 0.14 }, // Step 15: E4 (SPOTLIGHT)
+            { freq: 311.13, dur: 0.38, vel: 0.14 }, // Step 15: Eb4 (SPOTLIGHT)
             null,                                   // Step 16
             null,                                   // Step 17
-            { freq: 220.00, dur: 0.26, vel: 0.10 }, // Step 18: A3
-            { freq: 196.00, dur: 0.28, vel: 0.11 }, // Step 19: G3
+            { freq: 174.61, dur: 0.26, vel: 0.10 }, // Step 18: F3
+            { freq: 164.81, dur: 0.28, vel: 0.11 }, // Step 19: E3
             null,                                   // Step 20
             null,                                   // Step 21
-            { freq: 392.00, dur: 0.32, vel: 0.13 }, // Step 22: G4 (SPOTLIGHT)
-            { freq: 369.99, dur: 0.36, vel: 0.14 }, // Step 23: F#4 (SPOTLIGHT)
+            { freq: 293.66, dur: 0.32, vel: 0.13 }, // Step 22: D4 (SPOTLIGHT)
+            { freq: 277.18, dur: 0.38, vel: 0.14 }, // Step 23: C#4 (SPOTLIGHT)
             null,                                   // Step 24
             null,                                   // Step 25
-            { freq: 329.63, dur: 0.26, vel: 0.11 }, // Step 26: E4
-            { freq: 293.66, dur: 0.28, vel: 0.12 }, // Step 27: D4
+            { freq: 196.00, dur: 0.26, vel: 0.11 }, // Step 26: G3
+            { freq: 174.61, dur: 0.28, vel: 0.12 }, // Step 27: F3
             null,                                   // Step 28
             null,                                   // Step 29
-            { freq: 349.23, dur: 0.35, vel: 0.13 }, // Step 30: F4 (SPOTLIGHT)
-            { freq: 293.66, dur: 0.45, vel: 0.14 }  // Step 31: D4 (SPOTLIGHT resolution)
+            { freq: 246.94, dur: 0.35, vel: 0.13 }, // Step 30: B3 (SPOTLIGHT)
+            { freq: 261.63, dur: 0.45, vel: 0.15 }  // Step 31: C4 (SPOTLIGHT resolution to tonic!)
         ];
 
         function stepFmMusic() {
@@ -746,40 +754,40 @@
             const lead = CH1_LEAD[stepIdx];
             const counter = CH2_COUNTER[stepIdx];
 
-            // 1. Ch1: Lead Melody with delayed vibrato (stereo delay enabled)
+            // 1. Ch1: Lydian Brass Fanfare Lead with delayed vibrato (stereo delay enabled)
             if (lead) {
-                playFMPatch('cosmicLead', lead.freq, lead.vel, lead.dur, true, true);
+                playFMPatch('lydianBrass', lead.freq, lead.vel, lead.dur, true, true);
             }
 
-            // 2. Ch2: Contrary Counter-Melody (stereo delay enabled)
+            // 2. Ch2: Fleet Command Counter-Melody in contrary motion (stereo delay enabled)
             if (counter) {
-                playFMPatch('counterLead', counter.freq, counter.vel, counter.dur, true, false);
+                playFMPatch('commandCounter', counter.freq, counter.vel, counter.dur, true, false);
             }
 
-            // 3. Ch3: Shell Voicings (3rd + 7th only, never 5th) / Cosmic Arp
+            // 3. Ch3: Floating Maj9 Shell Voicings (3rd + 7th only, never 5th) + Telemetry Arp
             if (stepIdx % 2 === 0) {
                 // Shell 3rd on even step
-                playFMPatch('shellPad', chord.third, 0.055, 0.85, true, false);
+                playFMPatch('floatingMaj9Pad', chord.third, 0.055, 0.90, true, false);
             } else {
                 // Shell 7th on odd step
-                playFMPatch('shellPad', chord.seventh, 0.050, 0.70, true, false);
-                // Subtle syncopated arp sparkle
+                playFMPatch('floatingMaj9Pad', chord.seventh, 0.050, 0.75, true, false);
+                // Subtle syncopated telemetry navigation sparkle
                 const arpFreq = (stepIdx % 4 === 1 ? chord.third : chord.seventh) * 2.0;
                 setTimeout(() => {
-                    playFMPatch('cosmicArp', arpFreq, 0.06, 0.18, true, false);
+                    playFMPatch('fleetArp', arpFreq, 0.055, 0.18, true, false);
                 }, 50);
             }
 
-            // 4. Ch4: FM Bass (strictly below C3 130.81Hz, dry)
+            // 4. Ch4: Armada Punchy 2-Op FM Bass (strictly below C3 130.81Hz, strictly dry)
             if (stepIdx % 4 === 0) {
-                playFMPatch('fmBass', chord.root, 0.18, 0.22, false, false);
+                playFMPatch('armadaBass', chord.root, 0.18, 0.22, false, false);
             } else if (stepIdx % 4 === 2) {
-                playFMPatch('fmBass', chord.altRoot, 0.14, 0.19, false, false);
+                playFMPatch('armadaBass', chord.altRoot, 0.14, 0.19, false, false);
             } else if (stepIdx % 8 === 7) {
-                playFMPatch('fmBass', chord.root, 0.12, 0.15, false, false);
+                playFMPatch('armadaBass', chord.root, 0.12, 0.15, false, false);
             }
 
-            // 5. Ch5: FM Drums (Kick + Snare, strictly dry)
+            // 5. Ch5: Stately Armada Military March FM Drums (Kick + Snare, strictly dry)
             if (stepIdx % 8 === 0 || stepIdx % 8 === 4) {
                 playFMKick(0.32);
             } else if (stepIdx % 8 === 2 || stepIdx % 8 === 6) {
@@ -790,7 +798,7 @@
                 playFMKick(0.18);
             }
 
-            // 6. Ch6: Metallic Inharmonic Hi-Hat (strictly dry)
+            // 6. Ch6: Metallic Inharmonic Hi-Hat & Telemetry Tick (strictly dry)
             const isOpenHat = (stepIdx % 4 === 2);
             playFMHiHat(isOpenHat, isOpenHat ? 0.09 : 0.055);
 
@@ -837,7 +845,7 @@
                     btn.style.color = "#00ffcc";
                     btn.style.borderColor = "#00ffcc";
                 }
-                showToast("🎵 Genesis YM2612 FM Music: ACTIVE");
+                showToast("🎵 Grand 4X Fleet FM Suite: ACTIVE");
             } else {
                 stopFmMusic();
                 if (btn) {
@@ -845,26 +853,60 @@
                     btn.style.color = "#ff00ff";
                     btn.style.borderColor = "#ff00ff";
                 }
-                showToast("🔇 Genesis YM2612 FM Music: OFF");
+                showToast("🔇 Grand 4X Fleet FM Suite: OFF");
             }
         };
 
         function playBlip() {
             // Tactile YM2612 UI earcon blip with micro FM carrier
-            playFM(1520, 1.414, 2.8, 0.05, 0.08, false);
+            playFM(1520, 1.414, 2.8, 0.04, 0.08, false);
         }
 
-        function playWarp() {
+        // Grand 4X Hyperdrive Jump Earcon (Multi-stage sub-bass spool -> coil lock -> nav flash -> hyperspace slipstream)
+        function playHyperdrive() {
             if (!soundEnabled) return;
             initAudio();
             if (!audioCtx) return;
             try {
-                // Hyperspace drive spool: sub-bass pulse + rising FM cascade with SPC delay
-                playFMPatch('fmBass', 73.42, 0.26, 0.8, false);
-                setTimeout(() => playFMPatch('cosmicLead', 220, 0.18, 0.5, true), 80);
-                setTimeout(() => playFMPatch('cosmicLead', 440, 0.20, 0.5, true), 190);
-                setTimeout(() => playFMPatch('cosmicArp', 880, 0.22, 0.6, true), 320);
-                setTimeout(() => playFMPatch('cosmicArp', 1760, 0.20, 0.7, true), 460);
+                playFMPatch('armadaBass', 48.99, 0.28, 0.90, false, false); // G1 sub-bass spool
+                setTimeout(() => playFMPatch('lydianBrass', 369.99, 0.16, 0.50, true, false), 90); // F#4 warp coil lock
+                setTimeout(() => playFMPatch('fleetArp', 739.99, 0.18, 0.40, true, false), 180);   // F#5 nav lock
+                setTimeout(() => playFMPatch('fleetArp', 1108.73, 0.20, 0.50, true, false), 290);  // C#6 harmonic jump
+                setTimeout(() => playFM(1480, 2.756, 3.8, 0.55, 0.22, true), 420);                 // Hyperspace fold burst
+            } catch(e) {}
+        }
+
+        function playWarp() {
+            playHyperdrive();
+        }
+
+        // Grand Galactic Diplomacy & Treaty Ratification Earcon (Lydian Maj9 chime with SPC700 stereo warmth)
+        function playTreaty() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                const treatyNotes = [
+                    { patch: 'lydianBrass', freq: 261.63, vel: 0.14, dur: 0.65, delay: 0 },   // C4 root
+                    { patch: 'lydianBrass', freq: 329.63, vel: 0.14, dur: 0.65, delay: 65 },  // E4 major 3rd
+                    { patch: 'treatyBell',  freq: 369.99, vel: 0.16, dur: 0.75, delay: 130 }, // F#4 (Lydian #11)
+                    { patch: 'treatyBell',  freq: 493.88, vel: 0.16, dur: 0.85, delay: 195 }, // B4 (Maj7)
+                    { patch: 'lydianBrass', freq: 587.33, vel: 0.18, dur: 1.00, delay: 280 }  // D5 (9th with delayed vibrato)
+                ];
+                treatyNotes.forEach(n => {
+                    setTimeout(() => playFMPatch(n.patch, n.freq, n.vel, n.dur, true, n.delay > 200), n.delay);
+                });
+            } catch(e) {}
+        }
+
+        // Tactical Armada Order / Fleet Command Dispatch Earcon (Stately 2-tone military chime)
+        function playFleetCommand() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                playFMPatch('commandCounter', 392.00, 0.14, 0.16, false, false);
+                setTimeout(() => playFMPatch('lydianBrass', 523.25, 0.16, 0.28, true, false), 70);
             } catch(e) {}
         }
 
@@ -938,25 +980,25 @@
         }
 
         function playUpgrade() {
-            // Ascending 4-chord YM2612 FM chime with SPC delay
-            const notes = [523.25, 659.25, 783.99, 1046.50];
+            // Ascending 5-tone Lydian fleet upgrade cascade with SPC700 stereo delay
+            const notes = [261.63, 329.63, 369.99, 440.00, 523.25];
             notes.forEach((freq, idx) => {
-                setTimeout(() => playFMPatch('cosmicLead', freq, 0.15, 0.35, true), idx * 75);
+                setTimeout(() => playFMPatch('lydianBrass', freq, 0.15, 0.38, true), idx * 70);
             });
         }
 
         function playVictory() {
-            // 4-chord YM2612 triumphant fanfare with SPC700 stereo warmth
+            // Grand 4-chord Lydian fleet victory fanfare with SPC700 stereo warmth
             const chords = [
-                [523.25, 659.25, 783.99],
-                [587.33, 739.99, 880.00],
-                [659.25, 830.61, 987.77],
-                [1046.50, 1318.51, 1567.98]
+                [261.63, 329.63, 392.00],             // C Major
+                [293.66, 369.99, 440.00],             // D Major (Lydian cadence)
+                [329.63, 392.00, 493.88],             // E minor
+                [523.25, 659.25, 739.99, 987.77]      // C Maj9 (#11) imperial resolution
             ];
             chords.forEach((chord, step) => {
                 setTimeout(() => {
-                    chord.forEach(freq => playFMPatch('cosmicLead', freq, 0.13, 0.55, true));
-                }, step * 135);
+                    chord.forEach(freq => playFMPatch('lydianBrass', freq, 0.13, 0.65, true, step === 3));
+                }, step * 140);
             });
         }
 
@@ -1713,6 +1755,7 @@
                 if (activeMission.type === 'delivery') {
                     credits += activeMission.reward;
                     adjustRep(2, 8, 0);
+                    playTreaty();
                     missionMsg = `\n\nMission Complete: Delivery made to ${activeMission.targetName}. Earned ₭${activeMission.reward}.\nReputation: +8 Traders Guild, +2 Federation.`;
                     activeMission = null;
                 } else if (activeMission.type === 'bounty') {
@@ -1732,6 +1775,7 @@
                 } else if (repPirates >= 15) {
                     credits += 150;
                     adjustRep(0, 0, 1);
+                    playTreaty();
                     msg += `\n\n[PIRATE SYNDICATE HAIL]\nA pirate corsair intercepts your course, but recognizes your friendly colors!\n"Greetings, corsair brother! The Syndicate honors our friends."\nThey grant safe passage and offer ₭150 in tribute!`;
                 } else {
                     alert(msg + "\n\nAlert: Hostile pirate vessel encountered!");
@@ -2030,7 +2074,7 @@
                 alert("You already have an active mission! Abandon it first to accept a new one.");
                 return;
             }
-            playBlip();
+            playFleetCommand();
             activeMission = currentStationMissions[idx];
             currentStationMissions.splice(idx, 1);
             updateDashboard();
@@ -2287,7 +2331,7 @@
 
         window.donateFed = function() {
             if (credits >= 350) {
-                playBlip();
+                playTreaty();
                 credits -= 350;
                 adjustRep(15, 0, -8);
                 updateDashboard();
@@ -2301,7 +2345,7 @@
 
         window.payGuildDues = function() {
             if (credits >= 300) {
-                playBlip();
+                playTreaty();
                 credits -= 300;
                 adjustRep(0, 15, 0);
                 updateDashboard();
@@ -2315,7 +2359,7 @@
 
         window.bribePirates = function() {
             if (credits >= 400) {
-                playBlip();
+                playTreaty();
                 credits -= 400;
                 adjustRep(-8, 0, 15);
                 updateDashboard();
@@ -2375,6 +2419,7 @@
                     cargoMsg = " Encrypted alien datacubes synthesized 1 ton of advanced Tech cargo!";
                 }
                 adjustRep(6, 4, 2);
+                playTreaty();
                 title = "ALIEN MONOLITH DECRYPTION";
                 details = `Sensors linked with the ancient obsidian obelisk.\nCryptographic pulses broadcasted interstellar starcharts into your memory core!\nScience institutions paid ₭${reward} for telemetry.${cargoMsg}\nDiplomatic standing improved with all civilized factions (+6 Fed, +4 Traders, +2 Pirates).`;
             } else if (sys.phenomenon === "Ion Storm") {

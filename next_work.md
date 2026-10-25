@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://cabled
   kilo_graphics: KSubmarine
-  kilo_soundscape: KStellar
+  kilo_soundscape: KSubmarine
   kilo_tester: KTrader
   kilo_usability: KTrader
   kilo_qa: KTimer
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KSanctuary
-  timestamp: '2026-10-25T12:16:50-07:00'
+  agent: kilo-soundscape
+  app: KStellar
+  timestamp: '2026-10-25T12:36:45-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -115,11 +115,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Active Target**: `KStellar`
+- **Active Target**: `KSubmarine`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Compose abyssal sonar & trench descent 6-channel suite (Suspended `sus2/Maj7` cascade, muffled low-pass SPC700 echo, warm sine sub-bass, hydrophone ping earcons). |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Compose high-energy 6-channel YM2612 FM arcade synthwave theme (Ionian/Mixolydian, 5:3 swing groove, slap bass, brass lead, selective SPC700 delay) + harmonic brick-hit combo pitch escalator and powerup earcons. |
 | `KQuest` | `KiloOS/public/apps/kquest.html` | Compose overworld & battle 6-channel JRPG chiptune suite (Royal Road `IV-V-iii-vi` town/overworld + Heroic `bVI-bVII-I` combat cadence, E-Piano & flute counterpoint, SPC700 echo) + spell/quest earcons. |
@@ -128,6 +127,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
+| `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Active Target**: `KTrader`
@@ -297,6 +297,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-25T12:36:45-07:00 — kilo-soundscape: KStellar (Galactic Accord & Armada March — YM2612/SPC700 Chiptune Suite)**
+  - Status: PASS ✅ (0 errors, web 195.4 KB, native 157.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.76%, HEAD Δ 0.31%, 0 fail, 0 warn, 12.7s)).
+  - Composition: 32-step C/F Lydian 4X grand diplomacy & fleet command suite, 6-channel contrary counterpoint, 3rd/7th shell voicings, 5:3 swing-tick groove.
+  - Patches & DSP: Custom YM2612 2-Op lydianBrass (delayed vibrato), commandCounter, floatingMaj9Pad, armadaBass (<130.81Hz), fleetArp, treatyBell, 180/240ms SPC700 stereo delay line, and hyperdrive/treaty earcons.
+  - Handoff: Advanced `kilo-soundscape` to `KSubmarine`; rotated active agent to `kilo-tester`.
+
 - **2026-10-25T12:16:50-07:00 — kilo-graphics: KSanctuary (Xenobiology Terrarium & Atmospheric Weather Graphics Overhaul)**
   - Status: PASS ✅ (0 errors, web 456.7 KB, native 258.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.32%, HEAD Δ 0.4%, 0 fail, 0 warn, 10.5s)).
   - Integrated xenobiology terrarium habitat visuals in hydroponics: swaying mutated alien flora, bioluminescent spores, mist droplets, and specimen containment dome with animated alien bio-critter & aeration bubbles.
@@ -321,9 +327,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - VFS Telemetry: Wired /home/saves/kmech_telemetry.json Open/Save & picker fallback into #modal-telemetry, plus live KPad and KHex IPC inspection buttons.
   - RFMS Multiplayer: Gated online mech duels behind explicit Multiplayer Arena modal with 25s autonomous AI fallback, plus native C parity for F2/F3 telemetry JSON import/export.
   - Handoff: Advanced `kilo-expander` to `KSynth`; rotated active agent to `kilo-review`.
-
-- **2026-10-24T16:33:52-07:00 — kilo-qa: KTodo (Pass 5 QA, Dual Parity & Mature Graduation)**
-  - Status: PASS (0 errors, web 127.5 KB, native 23.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, ktodo_tutorialSeen flag, and Escape modal dismissals.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, tag preservation in markdown import, and visibilitychange autoSaveSession.
-  - Mature Quarantine & Handoff: Promoted `KTodo` to Mature archive; advanced `kilo-qa` to `KTimer`; next agent `kilo-expander`.
