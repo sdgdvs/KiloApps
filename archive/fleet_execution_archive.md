@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-25T11:16:04-07:00 — kilo-review: KTrader (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 960x683 sheet.png + audited ktrader.html & KTrader/main.c; un-quarantined KTrader from Mature with Row-1 fixes).
+  - Visual/UX Defects: Top 12-button absolute toolbar wraps over H1 title; 807px vertical overflow hides Shipyard/Missions/Log below 683px fold; market rows show misleading [1]-[5] jump numbers; #ui-shipyard lacks flex-wrap and stat previews; #gfx-canvas lacks HiDPI scaling.
+  - Dead Features & Gameplay Flaws: advanceFuturesOnJump() and updateDuelOnJump() are dead code never called in travel(); getSavePayload() drops futuresContracts/futuresHistory; buyMaxGood/sellAllGood skip duel broadcasts; [U]/[G]/[Esc] modal hotkeys broken on Futures/Syndicate modals; 12-system star chart missing.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KTrader`, `kilo-tester`->`KTrader`, `kilo-expander`->`KTrader`] (un-quarantined `KTrader` from Mature); advanced `kilo-review` to `KPac`; next agent `kilo-creator`.
+
 - **2026-10-25T10:35:53-07:00 — kilo-expander: KMech (KMech Phase VI VFS Open/Save, KPad/KHex IPC & RFMS Arena Duel)**
   - Status: PASS ✅ (0 errors, web 183.6 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - VFS Telemetry: Wired /home/saves/kmech_telemetry.json Open/Save & picker fallback into #modal-telemetry, plus live KPad and KHex IPC inspection buttons.

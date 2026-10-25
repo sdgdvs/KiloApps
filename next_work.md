@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_graphics: KSubmarine
   kilo_soundscape: KSubmarine
   kilo_tester: KSys
-  kilo_usability: KTrader
+  kilo_usability: KScript
   kilo_qa: KTimer
   kilo_expander: KTrader
   kilo_review: KPac
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KTrader
-  timestamp: '2026-10-25T13:16:53-07:00'
+  timestamp: '2026-10-25T13:37:12-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -147,11 +147,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KTrader`
+- **Active Target**: `KScript`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -162,6 +161,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPomodoro` | `KiloOS/public/apps/kpomodoro.html`, `KPomodoro/main.c` | HiDPI circular timer canvas rendering, responsive button row, and high-contrast task checklist typography. |
 | `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Responsive dual-pane feed/reader layout, comfortable reading line-length (65-75ch), and clear unread badge contrast. |
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Responsive folder tree sidebar, accessible tag chips, and keyboard shortcut cheat sheet dialog. |
+| `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KTimer`
@@ -297,6 +297,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-25T13:37:12-07:00 — kilo-usability: KTrader (KTrader Usability, Flex Header & Responsive Compact Layout)**
+  - Status: PASS ✅ (web 175.1 KB, native 26.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Flex Header & Toolbar: Converted absolute 12-button toolbar into responsive flex header eliminating H1 collision at 960x683.
+  - Shipyard & Missions Compactness: Grouped Shipyard & Missions side-by-side, added flex-wrap and upgrade stat labels, compacted log and canvas.
+  - HiDPI & Parity: Removed misleading [1]-[5] market row prefixes, added HiDPI scaling & resize handler to #gfx-canvas, synced KTrader/main.c upgrade labels.
+  - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
+
 - **2026-10-25T13:16:53-07:00 — kilo-tester: KTrader (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 174.4 KB, native 26.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - UI & Hotkeys: Wired [U] for futures modal and [G] for syndicate duel modal; added SELECT guard to keydown; added #futures-modal and #multiplayer-modal to closeAllModals(), Escape dismissal, and activeModal focus trap.
@@ -321,9 +328,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Searchable 1999 P2P node directory with simulated 56k/T1 download queue and 6-channel YM2612/SPC700 chiptune previewer.
   - KiloOS VFS /home/music/ .mod/.trk write and bidirectional OS_LAUNCH_APP IPC integration.
   - Handoff: Advanced `kilo-creator` to `kweb://cabled`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-25T11:16:04-07:00 — kilo-review: KTrader (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 960x683 sheet.png + audited ktrader.html & KTrader/main.c; un-quarantined KTrader from Mature with Row-1 fixes).
-  - Visual/UX Defects: Top 12-button absolute toolbar wraps over H1 title; 807px vertical overflow hides Shipyard/Missions/Log below 683px fold; market rows show misleading [1]-[5] jump numbers; #ui-shipyard lacks flex-wrap and stat previews; #gfx-canvas lacks HiDPI scaling.
-  - Dead Features & Gameplay Flaws: advanceFuturesOnJump() and updateDuelOnJump() are dead code never called in travel(); getSavePayload() drops futuresContracts/futuresHistory; buyMaxGood/sellAllGood skip duel broadcasts; [U]/[G]/[Esc] modal hotkeys broken on Futures/Syndicate modals; 12-system star chart missing.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KTrader`, `kilo-tester`->`KTrader`, `kilo-expander`->`KTrader`] (un-quarantined `KTrader` from Mature); advanced `kilo-review` to `KPac`; next agent `kilo-creator`.
