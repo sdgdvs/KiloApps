@@ -31,6 +31,7 @@ void* memcpy(void* dest, const void* src, size_t count) {
 #define ID_BTN_NEW 601
 #define ID_BTN_QUICKSAVE 602
 #define ID_BTN_QUICKLOAD 603
+#define ID_BTN_CHART 604
 
 typedef struct {
     int credits;
@@ -399,6 +400,7 @@ HWND hStatActiveMission;
 HWND hBtnAbandonMission;
 HWND hBtnMission[3];
 HWND hBtnHelp;
+HWND hBtnChart;
 HWND hBtnNew;
 HWND hBtnQuickSave;
 HWND hBtnQuickLoad;
@@ -471,7 +473,8 @@ void UpdateUI(HWND hwnd) {
         ShowWindow(hBtnBribe, SW_SHOW);
         EnableWindow(hBtnBribe, state.credits >= 100);
         
-        wsprintf(buf, "Shields: %d", state.playerShields);
+        int maxPShields = (state.hasDreadnought ? 250 : 50) + state.cargoLevel * 10;
+        wsprintf(buf, "Shields: %d / %d", state.playerShields, maxPShields);
         SetWindowText(hStatCombatPlayer, buf);
         wsprintf(buf, "Enemy: %d / %d", state.enemyShields, state.enemyMaxShields);
         SetWindowText(hStatCombatEnemy, buf);
@@ -628,8 +631,12 @@ void Travel(int btnIdx, HWND hwnd) {
         int navyIntercept = 0;
         int forcedPirate = 0;
 
-        if (state.activeMissionType == 3) {
-            if ((SimpleRand() % 100) < 25) navyIntercept = 1;
+        int hasContraband = (state.inventory[6] > 0);
+        int isSmuggling = (state.activeMissionType == 3);
+
+        if (hasContraband || isSmuggling) {
+            int interceptChance = 35 + (state.repNavy < 0 ? 15 : 0) - (state.repNavy > 50 ? 15 : 0);
+            if ((SimpleRand() % 100) < interceptChance) navyIntercept = 1;
         }
         if (state.activeMissionType == 2 && target == state.activeMissionTarget) {
             forcedPirate = 1;
@@ -637,14 +644,27 @@ void Travel(int btnIdx, HWND hwnd) {
 
         if (navyIntercept) {
             PlaySoundEffect(4); // alert
-            LogMessage("> 🚨 INTERCEPTED BY GALACTIC NAVY! Contraband found! 🚨");
-            int fine = (int)(state.credits * 0.3) + 200;
+            LogMessage("> 🚨 INTERCEPTED BY GALACTIC NAVY! Navy patrol scan! 🚨");
+            int seized = state.inventory[6];
+            if (seized > 0) {
+                state.inventory[6] = 0;
+                state.cargo -= seized;
+                if (state.cargo < 0) state.cargo = 0;
+            }
+            int fine = (int)(state.credits * 0.25) + 150 + seized * 80;
             state.credits -= fine;
             if (state.credits < 0) state.credits = 0;
             state.repNavy -= 10;
-            wsprintf(buf, "> Navy fined you %d cr and confiscated the goods. Mission Failed!", fine);
+            if (seized > 0) {
+                wsprintf(buf, "> Navy confiscated %d units of Contraband and fined you %d cr! Navy Rep -10.", seized, fine);
+            } else {
+                wsprintf(buf, "> Navy fined you %d cr for contraband smuggling! Navy Rep -10.", fine);
+            }
             LogMessage(buf);
-            state.activeMissionType = 0;
+            if (isSmuggling) {
+                LogMessage("> Smuggling contract terminated! Mission Failed!");
+                state.activeMissionType = 0;
+            }
         } else if (forcedPirate) {
             PlaySoundEffect(4); // alert
             state.inCombat = 1;
@@ -811,10 +831,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBtnQuickSave = CreateWindow("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 310, 12, 80, 25, hwnd, (HMENU)ID_BTN_QUICKSAVE, NULL, NULL);
             hBtnQuickLoad = CreateWindow("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 395, 12, 80, 25, hwnd, (HMENU)ID_BTN_QUICKLOAD, NULL, NULL);
             hBtnHelp = CreateWindow("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 480, 12, 80, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            hBtnChart = CreateWindow("BUTTON", "Chart [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 565, 12, 80, 25, hwnd, (HMENU)ID_BTN_CHART, NULL, NULL);
             SendMessage(hBtnNew, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnQuickSave, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnQuickLoad, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnChart, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hStatCredits = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 10, 210, 140, 20, hwnd, NULL, NULL, NULL);
             hStatFuel = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 160, 210, 140, 20, hwnd, NULL, NULL, NULL);
@@ -978,12 +1000,37 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     "- Dreadnought: Ultimate 100,000 cr flagship goal!\n\n"
                     "Flight Controls & Hotkeys:\n"
                     "- [1, 2, 3] Jump to connected destinations\n"
+                    "- [C] Open Galactic Star Chart [12 Systems]\n"
                     "- [R] Refuel ship at dock\n"
                     "- [F5] Quicksave voyage state\n"
                     "- [F9] Quickload saved voyage\n"
                     "- [F1] Help Guide\n"
                     "- Combat: [F / Space] Fire | [E] Flee | [B] Bribe", 
                     "Help", MB_OK | MB_ICONINFORMATION);
+            } else if (LOWORD(wParam) == ID_BTN_CHART) {
+                char chartBuf[2048];
+                int pos = wsprintf(chartBuf, "GALACTIC STAR CHART - 12 PLANETARY SYSTEMS\n===========================================\n");
+                const char* ecoNames[] = {"Agri", "Mining", "Tech", "Industrial", "Balanced"};
+                for (int i = 0; i < NUM_PLANETS; i++) {
+                    char flags[48] = "";
+                    if (i == state.location) {
+                        lstrcat(flags, " [YOU ARE HERE]");
+                    }
+                    if (state.activeMissionType != 0 && i == state.activeMissionTarget) {
+                        lstrcat(flags, " [MISSION TARGET]");
+                    }
+                    int d0 = planetDistances[i][0] - state.engineLevel * 2; if (d0 < 1) d0 = 1;
+                    int d1 = planetDistances[i][1] - state.engineLevel * 2; if (d1 < 1) d1 = 1;
+                    int d2 = planetDistances[i][2] - state.engineLevel * 2; if (d2 < 1) d2 = 1;
+
+                    pos += wsprintf(chartBuf + pos, "%-10s (X:%2d, Y:%2d) [%s TL%d]%s\n  Jump Gates: %s(%dF), %s(%dF), %s(%dF)\n",
+                        planets[i].name, planets[i].x, planets[i].y,
+                        ecoNames[planets[i].ecoType], planets[i].techLevel, flags,
+                        planets[planetLinks[i][0]].name, d0,
+                        planets[planetLinks[i][1]].name, d1,
+                        planets[planetLinks[i][2]].name, d2);
+                }
+                MessageBoxA(hwnd, chartBuf, "Galactic Star Chart (NAVCOM 1999)", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_BTN_QUICKSAVE) {
                 SaveQuickSave();
                 LogMessage("> Quicksave created in ktrader_quicksave.dat! [F5]");
@@ -1667,6 +1714,8 @@ void __stdcall MainEntry() {
                             SendMessage(hwnd, WM_COMMAND, ID_BTN_DEST3, 0);
                         } else if (msg.wParam == 'R') {
                             SendMessage(hwnd, WM_COMMAND, ID_BTN_REFUEL, 0);
+                        } else if (msg.wParam == 'C' || msg.wParam == 'c') {
+                            SendMessage(hwnd, WM_COMMAND, ID_BTN_CHART, 0);
                         } else if (msg.wParam == 'B') {
                             for (int i = 0; i < 8; i++) {
                                 if (state.credits >= currentPrices[i] && state.cargo < state.maxCargo) {

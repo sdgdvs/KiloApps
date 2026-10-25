@@ -545,6 +545,47 @@
     </div>
   </div>
 
+  <!-- 12-System Galactic Sector Star Chart Modal -->
+  <div id="chart-modal" onclick="if(event.target===this)hideChartModal();" role="dialog" aria-modal="true" aria-label="12-System Galactic Sector Star Chart" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,8,16,0.92); z-index:156; align-items:center; justify-content:center; padding:12px; box-sizing:border-box;">
+    <div style="max-width:880px; width:100%; max-height:92vh; overflow-y:auto; background:rgba(2,12,22,0.98); border:2px solid #0ff; box-shadow:0 0 30px rgba(0,255,255,0.45); border-radius:6px; padding:16px; color:#d0f4ff; box-sizing:border-box; position:relative; font-family:'Courier New', monospace;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #005577; padding-bottom:8px; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:1.3em;">🌌</span>
+          <h2 style="margin:0; font-size:1.15em; color:#0ff; text-shadow:0 0 8px #0ff;">GALACTIC STAR CHART — 12-SYSTEM JUMP TOPOLOGY</h2>
+        </div>
+        <button onclick="hideChartModal()" style="font-size:0.9em; padding:3px 10px; border-color:#0ff; color:#0ff; cursor:pointer;" title="Close Star Chart [Esc / C]">Close [Esc / C]</button>
+      </div>
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:320px; position:relative;">
+          <canvas id="star-chart-canvas" width="560" height="380" style="display:block; width:100%; background:#02060d; border:1px solid #0088aa; border-radius:4px; box-shadow:inset 0 0 25px rgba(0,80,120,0.3); cursor:crosshair;"></canvas>
+          <div style="font-size:0.75em; color:#78aab8; margin-top:4px; display:flex; justify-content:space-between;">
+            <span>Click any planetary system to inspect &amp; plot course</span>
+            <span>Cyan: Direct Gate | Dim: Sector Network</span>
+          </div>
+        </div>
+        <div id="chart-system-details" style="width:280px; background:rgba(0,25,38,0.7); border:1px solid #007799; border-radius:4px; padding:12px; font-size:0.85em; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+          <!-- Dynamically populated in renderStarChartDetails() -->
+        </div>
+      </div>
+
+      <div style="margin-top:10px; padding:6px 10px; background:rgba(0,18,28,0.85); border:1px solid #004455; border-radius:4px; display:flex; flex-wrap:wrap; gap:12px; font-size:0.78em; align-items:center; justify-content:space-between;">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <span style="color:#888;">Eco Types:</span>
+          <span style="color:#00ff88; font-weight:bold;">● Agri</span>
+          <span style="color:#ffaa33; font-weight:bold;">● Mining</span>
+          <span style="color:#00ddff; font-weight:bold;">● Tech</span>
+          <span style="color:#ff6644; font-weight:bold;">● Industrial</span>
+          <span style="color:#ffee55; font-weight:bold;">● Balanced</span>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+          <span style="color:#0ff;">🚀 Current Location</span>
+          <span style="color:#ff4444;">🎯 Mission Target</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Planetary Orbital Spaceport Docking Modal -->
 
   <div id="docking-modal" onclick="if(event.target===this)hideDocking();" role="dialog" aria-modal="true" aria-label="Orbital Starport Docking Berth" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,10,15,0.88); z-index:155; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
@@ -632,6 +673,7 @@
     <button onclick="exportToVFS()" title="Export voyage & cargo ledger to KiloOS VFS (/home/saves/ktrader_ledger.json)" style="font-size: 0.82em; padding: 3px 6px; margin: 1px; border-color: #0fa; color: #0fa;">VFS Save</button>
     <button onclick="importFromVFS()" title="Import voyage & ledger from KiloOS VFS" style="font-size: 0.82em; padding: 3px 6px; margin: 1px; border-color: #0fa; color: #0fa;">VFS Load</button>
     <button onclick="openLedgerInKPad()" title="Open Cargo Ledger in KPad editor" style="font-size: 0.82em; padding: 3px 6px; margin: 1px; border-color: #ff0; color: #ff0;">KPad</button>
+    <button onclick="showChartModal()" title="12-System Galactic Sector Star Chart [C]" style="font-size: 0.82em; padding: 3px 6px; margin: 1px; border-color: #0ff; color: #0ff;">Chart [C]</button>
     <button onclick="showFuturesModal()" title="Commodity Futures & Derivative Ledger [U]" style="font-size: 0.82em; padding: 3px 6px; margin: 1px; border-color: #f0f; color: #f0f;">Futures [U]</button>
     <button onclick="showMultiplayerModal()" title="Galactic Syndicate RFMS Trade Duel & Ticker [G]" style="font-size: 0.82em; padding: 3px 6px; margin: 1px; border-color: #f80; color: #f80;">Syndicate [G]</button>
     <button onclick="exportSaveFile()" title="Export voyage JSON file" style="font-size: 0.82em; padding: 3px 6px; margin: 1px;">Export</button>
@@ -705,6 +747,10 @@
       <ul>
 
         <li><strong>[1-9]:</strong> Jump to connected planetary destination routes</li>
+
+        <li><strong>[C]:</strong> Open 12-System Galactic Star Chart &amp; Jump-Gate Topology</li>
+
+        <li><strong>[U] / [G]:</strong> Open Commodity Futures Ledger / Syndicate Multiplayer Duel</li>
 
         <li><strong>[R]:</strong> Quick refuel ship at starport / emergency solar recharge</li>
 
@@ -838,17 +884,29 @@
 
       <div style="flex: 1;">
 
-        <h3>Your Ship</h3>
+        <h3 style="margin-bottom: 4px;">Your Ship</h3>
 
-        <p id="ui-combat-pshields">Shields: 50</p>
+        <div style="display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 2px;">
+          <span>Shields:</span>
+          <span id="ui-combat-pshields">50 / 50</span>
+        </div>
+        <div style="background: #111; border: 1px solid #00aa55; height: 14px; width: 100%; border-radius: 2px; overflow: hidden; box-shadow: inset 0 0 6px #003311;">
+          <div id="ui-combat-pshields-bar" style="background: linear-gradient(90deg, #00bb55, #00ff88); height: 100%; width: 100%; transition: width 0.25s ease-out; box-shadow: 0 0 8px #00ff88;"></div>
+        </div>
 
       </div>
 
       <div style="flex: 1;">
 
-        <h3>Pirate Ship</h3>
+        <h3 style="margin-bottom: 4px;">Pirate Ship</h3>
 
-        <p id="ui-combat-eshields">Shields: 30</p>
+        <div style="display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 2px;">
+          <span>Shields:</span>
+          <span id="ui-combat-eshields">30 / 30</span>
+        </div>
+        <div style="background: #111; border: 1px solid #aa2200; height: 14px; width: 100%; border-radius: 2px; overflow: hidden; box-shadow: inset 0 0 6px #330500;">
+          <div id="ui-combat-eshields-bar" style="background: linear-gradient(90deg, #cc2200, #ff4444); height: 100%; width: 100%; transition: width 0.25s ease-out; box-shadow: 0 0 8px #ff4444;"></div>
+        </div>
 
       </div>
 
@@ -1789,9 +1847,13 @@
 
       const multi = document.getElementById('multiplayer-modal');
 
+      const chart = document.getElementById('chart-modal');
+
       if (fut) fut.style.display = 'none';
 
       if (multi) multi.style.display = 'none';
+
+      if (chart) chart.style.display = 'none';
 
       untrapModal();
 
@@ -1977,6 +2039,376 @@
 
       if (m) m.style.display = 'none';
 
+    }
+
+    // --- 12-SYSTEM GALACTIC SECTOR STAR CHART ---
+    let selectedChartPlanet = null;
+    let chartCanvasInitialized = false;
+
+    function showChartModal() {
+      closeAllModals();
+      const m = document.getElementById('chart-modal');
+      if (m) {
+        m.style.display = 'flex';
+        selectedChartPlanet = state.location;
+        initStarChartCanvas();
+        renderStarChart();
+        renderStarChartDetails(selectedChartPlanet);
+        trapModal(m);
+      }
+    }
+
+    function hideChartModal() {
+      const m = document.getElementById('chart-modal');
+      if (m) m.style.display = 'none';
+      untrapModal();
+    }
+
+    function toggleChartModal() {
+      const m = document.getElementById('chart-modal');
+      if (m && m.style.display === 'flex') {
+        hideChartModal();
+      } else {
+        showChartModal();
+      }
+    }
+
+    function initStarChartCanvas() {
+      if (chartCanvasInitialized) return;
+      const canvas = document.getElementById('star-chart-canvas');
+      if (!canvas) return;
+      chartCanvasInitialized = true;
+
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const clickX = (e.clientX - rect.left) * scaleX;
+        const clickY = (e.clientY - rect.top) * scaleY;
+
+        const padX = 50;
+        const padY = 40;
+        const cw = canvas.width;
+        const ch = canvas.height;
+
+        let closest = null;
+        let minDist = 26;
+
+        for (const [name, p] of Object.entries(planets)) {
+          const px = padX + (p.x / 100) * (cw - padX * 2);
+          const py = padY + (p.y / 100) * (ch - padY * 2);
+          const d = Math.hypot(clickX - px, clickY - py);
+          if (d < minDist) {
+            minDist = d;
+            closest = name;
+          }
+        }
+
+        if (closest) {
+          selectedChartPlanet = closest;
+          renderStarChart();
+          renderStarChartDetails(closest);
+          playSound('click');
+        }
+      });
+    }
+
+    function renderStarChart() {
+      const canvas = document.getElementById('star-chart-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const cw = canvas.width;
+      const ch = canvas.height;
+      const padX = 50;
+      const padY = 40;
+
+      const gx = (x) => padX + (x / 100) * (cw - padX * 2);
+      const gy = (y) => padY + (y / 100) * (ch - padY * 2);
+
+      const ecoColors = {
+        Agri: '#00ff88',
+        Mining: '#ffaa33',
+        Tech: '#00ddff',
+        Industrial: '#ff6644',
+        Balanced: '#ffee55'
+      };
+
+      ctx.fillStyle = '#02060d';
+      ctx.fillRect(0, 0, cw, ch);
+
+      // Sector Grid
+      ctx.strokeStyle = '#071824';
+      ctx.lineWidth = 1;
+      for (let x = 40; x < cw; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, ch);
+        ctx.stroke();
+      }
+      for (let y = 40; y < ch; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(cw, y);
+        ctx.stroke();
+      }
+
+      // Background stars
+      ctx.fillStyle = '#3a6688';
+      for (let i = 0; i < 45; i++) {
+        const sx = ((i * 137.5) % (cw - 20)) + 10;
+        const sy = ((i * 223.7) % (ch - 20)) + 10;
+        const sr = (i % 3 === 0) ? 1.5 : 1;
+        ctx.beginPath();
+        ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Jump-gate Topology
+      const drawnLinks = new Set();
+      for (const [p1, data1] of Object.entries(planets)) {
+        if (!data1.distance) continue;
+        for (const [p2, dist] of Object.entries(data1.distance)) {
+          const linkKey = p1 < p2 ? `${p1}-${p2}` : `${p2}-${p1}`;
+          if (drawnLinks.has(linkKey)) continue;
+          drawnLinks.add(linkKey);
+
+          const data2 = planets[p2];
+          if (!data2) continue;
+
+          const x1 = gx(data1.x), y1 = gy(data1.y);
+          const x2 = gx(data2.x), y2 = gy(data2.y);
+
+          const isCurrentRoute = (p1 === state.location || p2 === state.location);
+          const isMissionRoute = state.activeMission && (p1 === state.activeMission.target || p2 === state.activeMission.target);
+
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+
+          if (isCurrentRoute) {
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 2.2;
+            ctx.setLineDash([]);
+            ctx.shadowColor = '#00ffff';
+            ctx.shadowBlur = 6;
+          } else if (isMissionRoute) {
+            ctx.strokeStyle = '#ff9900';
+            ctx.lineWidth = 1.6;
+            ctx.setLineDash([4, 3]);
+            ctx.shadowColor = '#ff9900';
+            ctx.shadowBlur = 4;
+          } else {
+            ctx.strokeStyle = '#0f384a';
+            ctx.lineWidth = 1.2;
+            ctx.setLineDash([]);
+            ctx.shadowBlur = 0;
+          }
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.setLineDash([]);
+
+          if (isCurrentRoute) {
+            const actualCost = Math.max(1, dist - (state.engineLevel || 0) * 2);
+            const mx = (x1 + x2) / 2;
+            const my = (y1 + y2) / 2;
+            ctx.fillStyle = 'rgba(0, 20, 30, 0.85)';
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 1;
+            ctx.fillRect(mx - 14, my - 7, 28, 14);
+            ctx.strokeRect(mx - 14, my - 7, 28, 14);
+            ctx.fillStyle = '#00ffff';
+            ctx.font = 'bold 9px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${actualCost}F`, mx, my);
+          }
+        }
+      }
+
+      // Render 12 Planet Nodes
+      for (const [name, p] of Object.entries(planets)) {
+        const px = gx(p.x);
+        const py = gy(p.y);
+        const isCurrent = (name === state.location);
+        const isMission = (state.activeMission && state.activeMission.target === name);
+        const isSelected = (name === selectedChartPlanet);
+        const pColor = ecoColors[p.ecoType] || '#ffffff';
+
+        // Halo
+        ctx.beginPath();
+        ctx.arc(px, py, 14, 0, Math.PI * 2);
+        ctx.fillStyle = isCurrent ? 'rgba(0,255,255,0.2)' : (isMission ? 'rgba(255,68,68,0.2)' : 'rgba(0,60,90,0.15)');
+        ctx.fill();
+
+        // Planet body
+        ctx.beginPath();
+        ctx.arc(px, py, 8, 0, Math.PI * 2);
+        ctx.fillStyle = pColor;
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Current location beacon
+        if (isCurrent) {
+          ctx.beginPath();
+          ctx.arc(px, py, 17, 0, Math.PI * 2);
+          ctx.strokeStyle = '#00ffff';
+          ctx.lineWidth = 2;
+          ctx.shadowColor = '#00ffff';
+          ctx.shadowBlur = 8;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          ctx.fillStyle = '#00ffff';
+          ctx.font = 'bold 10px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('🚀 YOU', px, py - 23);
+        }
+
+        // Active mission target marker
+        if (isMission) {
+          ctx.beginPath();
+          ctx.arc(px, py, 15, 0, Math.PI * 2);
+          ctx.strokeStyle = '#ff3333';
+          ctx.lineWidth = 2;
+          ctx.shadowColor = '#ff3333';
+          ctx.shadowBlur = 8;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          ctx.strokeStyle = '#ff3333';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(px - 18, py); ctx.lineTo(px - 10, py);
+          ctx.moveTo(px + 10, py); ctx.lineTo(px + 18, py);
+          ctx.moveTo(px, py - 18); ctx.lineTo(px, py - 10);
+          ctx.moveTo(px, py + 10); ctx.lineTo(px, py + 18);
+          ctx.stroke();
+
+          ctx.fillStyle = '#ff4444';
+          ctx.font = 'bold 9px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('🎯 TARGET', px, py + 26);
+        }
+
+        // Selected planet targeting box
+        if (isSelected) {
+          ctx.strokeStyle = '#ffea00';
+          ctx.lineWidth = 1.8;
+          ctx.strokeRect(px - 14, py - 14, 28, 28);
+        }
+
+        // Planet label
+        ctx.fillStyle = isCurrent ? '#00ffff' : (isSelected ? '#ffea00' : '#ffffff');
+        ctx.font = 'bold 11px Courier New, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(name, px, py - 12);
+
+        // Eco & Tech badge
+        ctx.fillStyle = pColor;
+        ctx.font = '9px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`[${p.ecoType.slice(0, 3)}·TL${p.techLevel}]`, px, py + 18);
+      }
+    }
+
+    function renderStarChartDetails(pName) {
+      const detailsEl = document.getElementById('chart-system-details');
+      if (!detailsEl) return;
+      const p = planets[pName];
+      if (!p) {
+        detailsEl.innerHTML = '<div style="color:#888;">Select a system to inspect telemetry.</div>';
+        return;
+      }
+
+      const isCurrent = (pName === state.location);
+      const isDirect = !isCurrent && planets[state.location] && planets[state.location].distance && (pName in planets[state.location].distance);
+      const dist = isDirect ? planets[state.location].distance[pName] : (isCurrent ? 0 : null);
+      const cost = isDirect ? Math.max(1, dist - (state.engineLevel || 0) * 2) : 0;
+      const canJump = isDirect && (state.fuel >= cost) && !travelInProgress && !state.inCombat;
+      const isMissionTarget = (state.activeMission && state.activeMission.target === pName);
+
+      const ecoDescMap = {
+        Agri: 'Abundant Food & Water; high demand for Tech & Meds.',
+        Mining: 'Rich Raw Ores; seeks Industrial tools & Food.',
+        Tech: 'Advanced Tech & Meds manufacturing; needs Ore.',
+        Industrial: 'Heavy manufacturing; high demand for Ore & Fuel.',
+        Balanced: 'Diversified trade hub; stable commodity pricing.'
+      };
+
+      const ecoColors = {
+        Agri: '#00ff88',
+        Mining: '#ffaa33',
+        Tech: '#00ddff',
+        Industrial: '#ff6644',
+        Balanced: '#ffee55'
+      };
+
+      let routeHtml = '';
+      if (isCurrent) {
+        routeHtml = '<div style="padding:6px; background:rgba(0,50,40,0.5); border:1px solid #00ff88; color:#00ff88; border-radius:3px; margin:8px 0; text-align:center; font-weight:bold;">🚀 CURRENT DOCKED SYSTEM</div>';
+      } else if (isDirect) {
+        routeHtml = `
+          <div style="padding:6px; background:rgba(0,40,60,0.6); border:1px solid #00ffff; border-radius:3px; margin:8px 0;">
+            <div style="color:#00ffff; font-weight:bold;">⚡ DIRECT JUMP GATE OPEN</div>
+            <div>Distance: <strong>${dist} LY</strong> | Fuel Cost: <strong style="color:${state.fuel >= cost ? '#00ff88' : '#ff4444'};">${cost} fuel</strong> (Available: ${state.fuel})</div>
+            <button onclick="jumpFromChart('${pName}', ${cost})" ${canJump ? '' : 'disabled'} style="margin-top:8px; width:100%; padding:6px; font-weight:bold; font-size:0.95em; border-color:${canJump ? '#00ffff' : '#555'}; color:${canJump ? '#000' : '#888'}; background:${canJump ? '#00ffff' : '#222'}; cursor:${canJump ? 'pointer' : 'not-allowed'};">
+              Engage Jump Gate [${cost} Fuel]
+            </button>
+          </div>`;
+      } else {
+        routeHtml = `
+          <div style="padding:6px; background:rgba(40,20,10,0.5); border:1px solid #aa6600; color:#ffaa44; border-radius:3px; margin:8px 0; font-size:0.9em;">
+            ⚠️ <strong>Indirect Sector:</strong> No direct jump-gate connection from ${state.location}. Route hyperspace jump through intermediate systems.
+          </div>`;
+      }
+
+      let missionHtml = '';
+      if (isMissionTarget) {
+        missionHtml = `
+          <div style="padding:6px; background:rgba(60,10,10,0.7); border:1px solid #ff4444; border-radius:3px; margin:6px 0; color:#ffaaaa;">
+            <strong style="color:#ff4444;">🎯 ACTIVE MISSION DESTINATION</strong><br>
+            Type: <strong>${state.activeMission.type.toUpperCase()}</strong> | Bounty/Reward: <strong>${state.activeMission.reward} cr</strong>
+          </div>`;
+      }
+
+      const connections = Object.entries(p.distance || {}).map(([dest, d]) => {
+        return `<span style="display:inline-block; margin:2px 4px 2px 0; padding:1px 5px; background:rgba(0,30,50,0.8); border:1px solid #006688; border-radius:2px; font-size:0.85em;">${dest} (${d} LY)</span>`;
+      }).join('');
+
+      detailsEl.innerHTML = `
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #005577; padding-bottom:4px; margin-bottom:8px;">
+            <h3 style="margin:0; color:#0ff; font-size:1.15em;">${pName}</h3>
+            <span style="color:#8ab; font-size:0.85em;">[X:${p.x}, Y:${p.y}]</span>
+          </div>
+
+          <div style="margin-bottom:6px;">
+            Economy: <strong style="color:${ecoColors[p.ecoType] || '#fff'};">${p.ecoType}</strong>
+            <span style="margin-left:8px; padding:1px 5px; background:#002233; border:1px solid #0088aa; border-radius:2px; font-size:0.85em;">Tech Lv ${p.techLevel}</span>
+          </div>
+          <div style="font-size:0.82em; color:#a0c8d8; line-height:1.4; margin-bottom:8px;">
+            ${ecoDescMap[p.ecoType] || ''}
+          </div>
+
+          ${missionHtml}
+          ${routeHtml}
+
+          <div style="margin-top:8px;">
+            <div style="color:#78aab8; font-size:0.8em; margin-bottom:3px; text-transform:uppercase;">Sector Jump Gates:</div>
+            <div style="display:flex; flex-wrap:wrap;">${connections || 'None'}</div>
+          </div>
+        </div>
+        <div style="text-align:right; font-size:0.75em; color:#567; margin-top:8px;">
+          Galactic Sector Registry · 1999 NAVCOM
+        </div>
+      `;
+    }
+
+    function jumpFromChart(target, cost) {
+      hideChartModal();
+      travel(target, cost);
     }
 
 
@@ -5713,9 +6145,17 @@
 
         document.getElementById('ui-combat-panel').style.display = 'block';
 
-        document.getElementById('ui-combat-pshields').textContent = `Shields: ${Math.max(0, state.playerShields)}`;
+        const maxPShields = (state.hasDreadnought ? 250 : 50) + (state.cargoLevel || 0) * 10;
+        const curPShields = Math.max(0, state.playerShields);
+        document.getElementById('ui-combat-pshields').textContent = `${curPShields} / ${maxPShields}`;
+        const pBar = document.getElementById('ui-combat-pshields-bar');
+        if (pBar) pBar.style.width = `${Math.min(100, Math.max(0, (curPShields / maxPShields) * 100))}%`;
 
-        document.getElementById('ui-combat-eshields').textContent = `Shields: ${Math.max(0, state.enemyShields)} / ${state.enemyMaxShields}`;
+        const maxEShields = state.enemyMaxShields || 30;
+        const curEShields = Math.max(0, state.enemyShields);
+        document.getElementById('ui-combat-eshields').textContent = `${curEShields} / ${maxEShields}`;
+        const eBar = document.getElementById('ui-combat-eshields-bar');
+        if (eBar) eBar.style.width = `${Math.min(100, Math.max(0, (curEShields / maxEShields) * 100))}%`;
 
         
 
@@ -6578,12 +7018,14 @@
 
         let forcedPirate = false;
 
+        const hasContraband = (state.inventory && (state.inventory['Contraband'] || 0) > 0);
+        const isSmuggling = (state.activeMission && state.activeMission.type === 'smuggling');
 
-
-        if (state.activeMission && state.activeMission.type === 'smuggling') {
-
-            if (Math.random() < 0.25) navyIntercept = true;
-
+        if (hasContraband || isSmuggling) {
+            let interceptChance = 0.35;
+            if (state.repNavy < 0) interceptChance += 0.15;
+            if (state.repNavy > 50) interceptChance -= 0.15;
+            if (Math.random() < interceptChance) navyIntercept = true;
         }
 
         if (state.activeMission && state.activeMission.type === 'bounty' && target === state.activeMission.target) {
@@ -6592,23 +7034,34 @@
 
         }
 
-
-
         if (navyIntercept) {
 
             setTimeout(() => playSound('alert'), 500);
 
-            log(`🚨 INTERCEPTED BY GALACTIC NAVY! Contraband found! 🚨`, true);
+            log(`🚨 INTERCEPTED BY GALACTIC NAVY! Navy patrol scanned your cargo hold! 🚨`, true);
 
-            const fine = Math.floor(state.credits * 0.3) + 200;
+            const seized = state.inventory['Contraband'] || 0;
+            if (seized > 0) {
+                state.inventory['Contraband'] = 0;
+                state.cargo = Math.max(0, state.cargo - seized);
+            }
+
+            const fine = Math.floor(state.credits * 0.25) + 150 + seized * 80;
 
             state.credits = Math.max(0, state.credits - fine);
 
             state.repNavy -= 10;
 
-            log(`Navy fined you ${fine} cr and confiscated the goods. Mission Failed!`, true);
+            if (seized > 0) {
+                log(`Navy confiscated ${seized} units of Contraband cargo and fined you ${fine} cr. Navy Rep -10.`, true);
+            } else {
+                log(`Navy fined you ${fine} cr for illegal smuggling operations. Navy Rep -10.`, true);
+            }
 
-            state.activeMission = null;
+            if (isSmuggling) {
+                log(`Smuggling mission contract terminated! Mission Failed!`, true);
+                state.activeMission = null;
+            }
 
         } else if (forcedPirate) {
 
@@ -6996,16 +7449,14 @@
 
       const multiOpen = document.getElementById('multiplayer-modal') && document.getElementById('multiplayer-modal').style.display === 'flex';
 
+      const chartOpen = document.getElementById('chart-modal') && document.getElementById('chart-modal').style.display === 'flex';
+
       const activeModal = dockOpen ? document.getElementById('docking-modal') :
-
+                          chartOpen ? document.getElementById('chart-modal') :
                           futOpen ? document.getElementById('futures-modal') :
-
                           multiOpen ? document.getElementById('multiplayer-modal') :
-
                           helpOpen ? document.getElementById('help-modal') :
-
                           tutOpen ? document.getElementById('tutorial-modal') :
-
                           vicOpen ? document.getElementById('victory-modal') : null;
 
 
@@ -7054,6 +7505,8 @@
 
       if (e.key === 'Escape') {
 
+        if (chartOpen) { hideChartModal(); return; }
+
         if (futOpen) { hideFuturesModal(); return; }
 
         if (multiOpen) { hideMultiplayerModal(); return; }
@@ -7073,6 +7526,8 @@
 
 
       if (e.key === 'Enter' || e.key === ' ') {
+
+        if (chartOpen) { e.preventDefault(); hideChartModal(); return; }
 
         if (dockOpen) { e.preventDefault(); hideDocking(); return; }
 
@@ -7181,6 +7636,16 @@
           e.preventDefault();
 
           showMultiplayerModal();
+
+          return;
+
+        }
+
+        if (e.key === 'c' || e.key === 'C') {
+
+          e.preventDefault();
+
+          toggleChartModal();
 
           return;
 

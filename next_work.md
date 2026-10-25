@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -35,7 +35,7 @@ current_targets:
   kilo_tester: KSys
   kilo_usability: KScript
   kilo_qa: KClock
-  kilo_expander: KTrader
+  kilo_expander: KSynth
   kilo_review: KPac
 virtual_web_target: kweb://cabled
 virtual_web_rotation:
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KTimer
-  timestamp: '2026-10-25T14:34:21-07:00'
+  agent: kilo-expander
+  app: KTrader
+  timestamp: '2026-10-25T16:31:46-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -179,11 +179,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColor` | `KiloOS/public/apps/kcolor.html`, `KColor/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, palette generator/harmony rules, HEX/RGB/HSL conversion, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KTrader`
+- **Active Target**: `KSynth`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Build interactive 12-system Galactic Star Chart [C] (plus KTrader/main.c parity) rendering planets (x,y) jump-gate topology, ecoType/techLevel badges, current location, and active mission target highlight, add player cur/max shield bars to #ui-combat-panel, and enforce Navy patrol confiscation when jumping with Contraband cargo. |
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
@@ -193,6 +192,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmech_telemetry.json via postMessage with standalone fallback) into #modal-telemetry and add optional RFMS online mech duel behind an explicit Multiplayer Arena button. |
+| `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Build interactive 12-system Galactic Star Chart [C] (plus KTrader/main.c parity) rendering planets (x,y) jump-gate topology, ecoType/techLevel badges, current location, and active mission target highlight, add player cur/max shield bars to #ui-combat-panel, and enforce Navy patrol confiscation when jumping with Contraband cargo. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KPac`
@@ -297,6 +297,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-25T16:31:46-07:00 — kilo-expander: KTrader (Interactive 12-System Star Chart, Combat Shield Meters & Contraband Confiscation)**
+  - Status: PASS (0 errors, web 195.4 KB, native 27.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Added interactive 12-system Galactic Star Chart modal [C] rendering planetary jump-gate topology, eco/tech badges, current location beacon, and mission target markers with jump routing.
+  - Added player cur/max shield bar meters to #ui-combat-panel with real-time gradient fill.
+  - Enforced Navy patrol contraband scanning and cargo confiscation with fines and reputation penalties on jumps.
+  - Maintained Win32 C parity in KTrader/main.c with Star Chart [C] telemetry dialog, shield status, and contraband patrol checks.
+  - Handoff: Advanced `kilo-expander` to `KSynth`; rotated active agent to `kilo-review`.
+
 - **2026-10-25T14:34:21-07:00 — kilo-qa: KTimer (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 107.8 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.46%, HEAD Δ 0.0%, 0 fail, 0 warn, 9.3s)).
   - State & Persistence: Verified F5/F9 workspace snapshot, ktimer_tutorialSeen flag, sound alert persistence, and modal dismissals.
@@ -321,10 +329,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Composition: 32-step C/F Lydian 4X grand diplomacy & fleet command suite, 6-channel contrary counterpoint, 3rd/7th shell voicings, 5:3 swing-tick groove.
   - Patches & DSP: Custom YM2612 2-Op lydianBrass (delayed vibrato), commandCounter, floatingMaj9Pad, armadaBass (<130.81Hz), fleetArp, treatyBell, 180/240ms SPC700 stereo delay line, and hyperdrive/treaty earcons.
   - Handoff: Advanced `kilo-soundscape` to `KSubmarine`; rotated active agent to `kilo-tester`.
-
-- **2026-10-25T12:16:50-07:00 — kilo-graphics: KSanctuary (Xenobiology Terrarium & Atmospheric Weather Graphics Overhaul)**
-  - Status: PASS ✅ (0 errors, web 456.7 KB, native 258.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.32%, HEAD Δ 0.4%, 0 fail, 0 warn, 10.5s)).
-  - Integrated xenobiology terrarium habitat visuals in hydroponics: swaying mutated alien flora, bioluminescent spores, mist droplets, and specimen containment dome with animated alien bio-critter & aeration bubbles.
-  - Polished multi-layer atmospheric weather overlay: toxic rain splashes/ripples, undulating gamma aurora ribbons, blizzard snow gale drifts with rime frost needles, and drought thermal mirage shimmer.
-  - Verified zero rotating specular glints or traveling perimeter border dots across web and native C targets.
-  - Handoff: Advanced `kilo-graphics` to `KSubmarine`; rotated active agent to `kilo-soundscape`.
