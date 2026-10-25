@@ -399,6 +399,120 @@ void QuickSaveNative() {
     }
 }
 
+void QuickLoadNative();
+
+void ExportTelemetryJSON() {
+    HANDLE hFile = CreateFileA("kmech_telemetry.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char buf[512];
+        int len = wsprintfA(buf,
+            "{\r\n"
+            "  \"version\": 1,\r\n"
+            "  \"credits\": %d,\r\n"
+            "  \"salvage\": %d,\r\n"
+            "  \"battleCount\": %d,\r\n"
+            "  \"playerLevel\": %d,\r\n"
+            "  \"playerXp\": %d,\r\n"
+            "  \"equipWpn\": %d,\r\n"
+            "  \"equipArm\": %d,\r\n"
+            "  \"equipSink\": %d,\r\n"
+            "  \"equipSpec\": %d,\r\n"
+            "  \"playerHp\": %d,\r\n"
+            "  \"playerHeat\": %d\r\n"
+            "}\r\n",
+            credits, salvage, battleCount, playerLevel, playerXp,
+            equipWpn, equipArm, equipSink, equipSpec,
+            playerStats.hp, playerStats.heat);
+        DWORD written = 0;
+        WriteFile(hFile, buf, len, &written, NULL);
+        CloseHandle(hFile);
+        lstrcpyA(garageInfo, "Exported telemetry to kmech_telemetry.json (F2, F3 to import).");
+        addLog("Exported telemetry to kmech_telemetry.json (F2, F3 to import).");
+    } else {
+        lstrcpyA(garageInfo, "Failed to write telemetry JSON.");
+    }
+}
+
+static const char* MyStrStr(const char* haystack, const char* needle) {
+    if (!haystack || !needle || !*needle) return NULL;
+    for (; *haystack; haystack++) {
+        const char* h = haystack;
+        const char* n = needle;
+        while (*h && *n && (*h == *n)) {
+            h++;
+            n++;
+        }
+        if (!*n) return haystack;
+    }
+    return NULL;
+}
+
+static int ParseJsonInt(const char* buf, const char* key, int defaultVal) {
+    const char* p = MyStrStr(buf, key);
+    if (!p) return defaultVal;
+    p += lstrlenA(key);
+    while (*p == ' ' || *p == '\t' || *p == ':' || *p == '\"') p++;
+    int sign = 1;
+    if (*p == '-') { sign = -1; p++; }
+    if (*p < '0' || *p > '9') return defaultVal;
+    int val = 0;
+    while (*p >= '0' && *p <= '9') {
+        val = val * 10 + (*p - '0');
+        p++;
+    }
+    return val * sign;
+}
+
+void ImportTelemetryJSON() {
+    HANDLE hFile = CreateFileA("kmech_telemetry.json", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char buf[2048];
+        DWORD bytesRead = 0;
+        if (ReadFile(hFile, buf, sizeof(buf) - 1, &bytesRead, NULL) && bytesRead > 0) {
+            buf[bytesRead] = '\0';
+            credits = ParseJsonInt(buf, "\"credits\"", credits);
+            salvage = ParseJsonInt(buf, "\"salvage\"", salvage);
+            battleCount = ParseJsonInt(buf, "\"battleCount\"", battleCount);
+            if (battleCount < 1) battleCount = 1;
+            playerLevel = ParseJsonInt(buf, "\"playerLevel\"", playerLevel);
+            if (playerLevel < 1) playerLevel = 1;
+            if (playerLevel > 20) playerLevel = 20;
+            playerXp = ParseJsonInt(buf, "\"playerXp\"", playerXp);
+            if (playerXp < 0) playerXp = 0;
+
+            equipWpn = ParseJsonInt(buf, "\"equipWpn\"", equipWpn) % NUM_WEAPONS;
+            if (equipWpn < 0) equipWpn = 0;
+            equipArm = ParseJsonInt(buf, "\"equipArm\"", equipArm) % NUM_ARMORS;
+            if (equipArm < 0) equipArm = 0;
+            equipSink = ParseJsonInt(buf, "\"equipSink\"", equipSink) % NUM_SINKS;
+            if (equipSink < 0) equipSink = 0;
+            equipSpec = ParseJsonInt(buf, "\"equipSpec\"", equipSpec) % NUM_SPECIALS;
+            if (equipSpec < 0) equipSpec = 0;
+
+            playerStats.def = armors[equipArm].def;
+            playerStats.maxHp = armors[equipArm].maxHp;
+            int loadedHp = ParseJsonInt(buf, "\"playerHp\"", playerStats.maxHp);
+            playerStats.hp = (loadedHp > playerStats.maxHp) ? playerStats.maxHp : (loadedHp < 1 ? 1 : loadedHp);
+            playerStats.maxHeat = sinks[equipSink].maxHeat;
+            playerCooling = sinks[equipSink].cooling;
+            playerHeatGen = weapons[equipWpn].heatGen;
+            playerStats.atk = weapons[equipWpn].atk;
+            playerStats.heat = ParseJsonInt(buf, "\"playerHeat\"", 0);
+            if (playerStats.heat < 0) playerStats.heat = 0;
+            if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
+
+            MarkTutorialSeen();
+            lstrcpyA(garageInfo, "Imported telemetry from kmech_telemetry.json (F3/Shift+F2).");
+            addLog("Imported telemetry from kmech_telemetry.json (F3/Shift+F2).");
+        } else {
+            lstrcpyA(garageInfo, "Empty or invalid kmech_telemetry.json.");
+        }
+        CloseHandle(hFile);
+    } else {
+        lstrcpyA(garageInfo, "No kmech_telemetry.json file found to import.");
+    }
+}
+
 void QuickLoadNative() {
     HANDLE hFile = CreateFileA("kmech_save.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -467,8 +581,10 @@ void QuickLoadNative() {
     }
 }
 
-void ApplyCooling(void);
-
+void ApplyCooling(void);
+
+
+
 void EnemyTurn() {
     if (enemyStunned) {
         enemyStunned = false;
@@ -1519,7 +1635,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 RECT instRect = {20, 105, 340, 125};
                 SetTextColor(memDC, RGB(140, 255, 170));
-                DrawTextA(memDC, "[D] Deploy | [R] Repair | [U/S] Salvage", -1, &instRect, DT_LEFT | DT_SINGLELINE);
+                DrawTextA(memDC, "[D] Deploy | [P] Arena | [R] Repair | [F2] VFS | [U/S] Salvage", -1, &instRect, DT_LEFT | DT_SINGLELINE);
                 SetTextColor(memDC, RGB(0, 255, 120));
 
                 RECT msgRect = {20, 130, 340, 165};
@@ -1747,7 +1863,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 const char* helpText = 
                     "CONTROLS & SHORTCUTS:\n"
-                    "- Garage: [D/Enter] Deploy | [R] Repair | [U/S] Salvage | [F5] Save | [F9] Load\n"
+                    "- Garage: [D/Enter] Deploy | [P] Arena | [R] Repair | [U/S] Salvage | [F2/F3] Telemetry | [F5] Save | [F9] Load\n"
                     "- Equipment: [1] Weapon | [2] Armor | [3] Heat Sink | [4] Special\n"
                     "- Combat: [A/Space/1] Attack | [D/2] Defend | [T] Cycle Target Limb\n"
                     "- Post-Battle: [R/Space/Enter/Esc] Return to Garage (Autosaves)\n"
@@ -1777,6 +1893,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN: {
+            if (wParam == VK_F2) {
+                if (GetKeyState(VK_SHIFT) & 0x8000) {
+                    ImportTelemetryJSON();
+                } else {
+                    ExportTelemetryJSON();
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
+            if (wParam == VK_F3) {
+                ImportTelemetryJSON();
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
             if (wParam == VK_F5) {
                 QuickSaveNative();
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -1806,6 +1936,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (gameState == STATE_GARAGE) {
                 if (wParam == 'D' || wParam == VK_RETURN) {
                     StartBattle();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (wParam == 'P') {
+                    StartBattle();
+                    lstrcpyA(garageInfo, "ARENA ENGAGED: Neural Combat Simulator vs Synthetic Rival!");
+                    addLog("ARENA ENGAGED: Neural Combat Simulator vs Synthetic Rival!");
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (wParam == 'R') {
                     int missingHp = playerStats.maxHp - playerStats.hp;

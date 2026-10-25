@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -35,7 +35,7 @@ current_targets:
   kilo_tester: KSys
   kilo_usability: KScript
   kilo_qa: KTimer
-  kilo_expander: KMech
+  kilo_expander: KSynth
   kilo_review: KTrader
 virtual_web_target: kweb://trapster
 virtual_web_rotation:
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KTodo
-  timestamp: '2026-10-24T16:33:52-07:00'
+  agent: kilo-expander
+  app: KMech
+  timestamp: '2026-10-25T10:35:53-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -178,11 +178,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColor` | `KiloOS/public/apps/kcolor.html`, `KColor/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, palette generator/harmony rules, HEX/RGB/HSL conversion, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KMech`
+- **Active Target**: `KSynth`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmech_telemetry.json via postMessage with standalone fallback) into #modal-telemetry and add optional RFMS online mech duel behind an explicit Multiplayer Arena button. |
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
@@ -191,6 +190,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
+| `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmech_telemetry.json via postMessage with standalone fallback) into #modal-telemetry and add optional RFMS online mech duel behind an explicit Multiplayer Arena button. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KTrader`
@@ -295,6 +295,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-25T10:35:53-07:00 — kilo-expander: KMech (KMech Phase VI VFS Open/Save, KPad/KHex IPC & RFMS Arena Duel)**
+  - Status: PASS ✅ (0 errors, web 183.6 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - VFS Telemetry: Wired /home/saves/kmech_telemetry.json Open/Save & picker fallback into #modal-telemetry, plus live KPad and KHex IPC inspection buttons.
+  - RFMS Multiplayer: Gated online mech duels behind explicit Multiplayer Arena modal with 25s autonomous AI fallback, plus native C parity for F2/F3 telemetry JSON import/export.
+  - Handoff: Advanced `kilo-expander` to `KSynth`; rotated active agent to `kilo-review`.
+
 - **2026-10-24T16:33:52-07:00 — kilo-qa: KTodo (Pass 5 QA, Dual Parity & Mature Graduation)**
   - Status: PASS (0 errors, web 127.5 KB, native 23.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, ktodo_tutorialSeen flag, and Escape modal dismissals.
@@ -317,9 +323,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-24T15:17:15-07:00 — kilo-adhoc: CI/CD & Firebase Hosting (Quota Self-Pruning, Node 22/24 & Submodule Fix)**
   - Diagnosed Firebase Hosting deploy failure (HTTP 429 RESOURCE_EXHAUSTED): 3,295 retained versions (~10.24 GB) exceeded the 10 GB Spark storage ceiling.
   - Added scripts/prune_firebase_versions.py and wired it into .github/workflows/deploy.yml (pruned >7.2 GB immediately, retaining live + 3 rollbacks), added paths: filtering, upgraded Node 20 -> 22 (FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true), and removed the orphaned TinyRetroPad 160000 gitlink (xit code 128).
-
-- **2026-10-24T15:05:40-07:00 — kilo-soundscape: KCyber (Neon Grid Infiltration — YM2612/SPC700 Chiptune Suite)**
-  - Status: PASS ✅ (0 errors, web 116.0 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.86%, HEAD Δ 0.91%, 0 fail, 0 warn, 12.0s)).
-  - Composition: D-Dorian breakbeat, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
-  - Patches & DSP: 303 acid FM bass (<C3), digital bells, shell pad, Amen breakbeat, 210ms SPC700 stereo delay, crystalline credit siphon & cyber earcons.
-  - Handoff: Advanced `kilo-soundscape` to `KStellar`; rotated active agent to `kilo-tester`.
