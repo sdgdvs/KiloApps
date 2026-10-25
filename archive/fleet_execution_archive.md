@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-24T16:19:24-07:00 — kilo-usability: KMech (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 150.2 KB, native 33.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.1%, input 13.9%, HEAD Δ 20.67%, 0 fail, 0 warn, 9.1s)).
+  - Layout & HiDPI: Zero 37px vertical overflow at 640x503, single-line header/hints, toast repositioned to bottom safe zone, devicePixelRatio scaling on #combat-fx-canvas.
+  - Interactive Targeting: Subsystem limb-target selector pills with dynamic hit% (Head/Torso/L.Arm/R.Arm/Legs), keyboard 1-5 & T cycling, and native C hit% parity.
+  - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
+
 - **2026-10-24T15:24:30-07:00 — kilo-tester: KMech (KMech UI & Combat Mechanics Overhaul)**
   - PASS: Fixed #garage-rank sync via getPilotRank(playerLevel) in updateGarage()
   - PASS: Implemented enemyStunned Cockpit strike stun effect skipping attack & venting heat
