@@ -11,7 +11,7 @@ description: >-
 Replaces programmer art with Imagen 3 generated assets and eliminates perimeter glints on **exactly ONE game per turn**.
 
 ## ⚡ Flash Execution & Tool-Budget Protocol (CRITICAL)
-- **Tool Call Budget (<= 25 tool calls)** & **Commit Checkpoint (~12 tool calls)**.
+- **Tool Call Budget (<= 32 tool calls)** & **Commit Checkpoint (~16 tool calls)**.
 - **Fast Skip Path (<= 3 tool calls total!)**:
   - If the target game is pure vector/wireframe, abstract board/text, or **already has production sprites integrated**, **DO NOT compile C binaries, DO NOT run Vite builds, and DO NOT run startup tests!**
   - Immediately run `python scripts/advance_turn.py --agent kilo-graphics --app <TargetGame> --title "Skip — Asset Suitability" --bullet "⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for <TargetGame>."`, commit `next_work.md`, push, and **STOP immediately**!

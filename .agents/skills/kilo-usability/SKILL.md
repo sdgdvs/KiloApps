@@ -10,7 +10,7 @@ description: >-
 Executes UX, responsive layout, accessibility, and input ergonomics enhancements on **exactly ONE application per turn**.
 
 ## ⚡ Flash Execution & Tool-Budget Protocol (CRITICAL)
-- **Tool Call Budget (<= 25 tool calls)** & **Commit Checkpoint (~12 tool calls)**:
+- **Tool Call Budget (<= 32 tool calls)** & **Commit Checkpoint (~16 tool calls)**:
   - Inspect `KiloOS/public/apps/k<name>.html` (and `<AppName>/main.c` if native C exists), apply high-craft responsive layout, HiDPI canvas, focus trap, and keyboard/VFS UX improvements, then verify and hand off!
 - **1-Command Verification & Visual Sheet Review**:
   ```powershell

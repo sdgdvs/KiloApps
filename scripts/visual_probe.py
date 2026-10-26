@@ -731,21 +731,24 @@ async def probe_app(cdp: CDP, html: Path, viewports: dict, compare_head: bool, s
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
 
-    r = await run_probe(cdp, html, vp, http_port)
     head = None
     head_delta = None
-    if compare_head:
-        hp = git_head_copy(html)
-        if hp:
+    hp = git_head_copy(html) if compare_head else None
+    if hp:
+        try:
+            r, head = await asyncio.gather(
+                run_probe(cdp, html, vp, http_port),
+                run_probe(cdp, hp, vp, http_port),
+            )
+        finally:
             try:
-                head = await run_probe(cdp, hp, vp, http_port)
-            finally:
-                try:
-                    hp.unlink()
-                except OSError:
-                    pass
-            head_delta, hmask = diff_stats(head["frames"]["ready"], r["frames"]["ready"])
-            head["frames"]["delta_heat"] = heatmap(r["frames"]["ready"], hmask, head_delta["bbox"])
+                hp.unlink()
+            except OSError:
+                pass
+        head_delta, hmask = diff_stats(head["frames"]["ready"], r["frames"]["ready"])
+        head["frames"]["delta_heat"] = heatmap(r["frames"]["ready"], hmask, head_delta["bbox"])
+    else:
+        r = await run_probe(cdp, html, vp, http_port)
 
     fails, warns = assess(r)
     if strict:

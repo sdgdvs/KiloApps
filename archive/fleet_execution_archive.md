@@ -4,6 +4,18 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T05:21:02-07:00 — kilo-soundscape: KSubmarine (Abyssal Sonar & Trench Descent — YM2612/SPC700 Chiptune Suite)**
+  - Status: PASS ✅ (0 errors, web 507.0 KB, native 251.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.33%, HEAD Δ 0.13%, 0 fail, 0 warn, 13.6s)).
+  - Composition: Abyssal sonar & trench descent 5-track suite, 6-channel counterpoint, sus2/Maj7 shell voicings, 5:3 swing-tick groove.
+  - Patches & DSP: 2-Op FM warm sine sub-bass (<130.81Hz), vocal flute lead with delayed vibrato, muffled 1800Hz SPC700 stereo delay, and crystal hydrophone ping earcons.
+  - Handoff: Advanced `kilo-soundscape` to `KBreakout`; rotated active agent to `kilo-tester`.
+
+- **2026-10-26T03:32:14-07:00 — kilo-graphics: KStarDredge (Skip — Asset Suitability & Vector Authenticity)**
+  - ⏭️ Skip — KStarDredge is an authentic CRT vector-scan salvager; bitmap sprites not appropriate.
+  - Glint sweep verified: zero specular glints or traveling perimeter border dots in HTML and C.
+  - Status: PASS ✅ (web 520.4 KB, native 286.0 KB, startup & security PASS).
+  - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-26T03:14:42-07:00 — kilo-creator: kweb://scallion (The Scallion: 1999 Satirical News (kweb://scallion))**
   - Status: PASS ✅ (0 errors, web 91.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.22%, input 42.61%, HEAD Δ 0.34%, 0 fail, 0 warn, 8.2s)).
   - Satire Portal & Columns: Full broadsheet with Lead Story, Sub-Articles, Y2K Doom Clock, Interactive Gallup Poll, Tech Horoscopes, and [1-6]/[M]/[S]/[P]/[Esc] keyboard navigation.

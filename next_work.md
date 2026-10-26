@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -13,20 +13,20 @@ agent_rotation:
 model: gemini-3.8-flash-high
 agent_models:
   kilo-review: gemini-4-argon-high
-effort: selective
-timeout_minutes: 8
+effort: high
+timeout_minutes: 10
 agent_timeouts:
-  kilo-creator: 9
-  kilo-expander: 9
-  kilo-soundscape: 9
-  kilo-graphics: 8
-  kilo-tester: 8
-  kilo-usability: 8
-  kilo-qa: 8
-  kilo-review: 8
-  kilo-planner: 8
-tool_call_cap: 25
-commit_checkpoint: 12
+  kilo-creator: 11
+  kilo-expander: 11
+  kilo-soundscape: 11
+  kilo-graphics: 10
+  kilo-tester: 10
+  kilo-usability: 10
+  kilo-qa: 10
+  kilo-review: 10
+  kilo-planner: 10
+tool_call_cap: 32
+commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://demoscene
@@ -35,7 +35,7 @@ current_targets:
   kilo_tester: KSys
   kilo_usability: KScript
   kilo_qa: KBookmark
-  kilo_expander: KSynth
+  kilo_expander: KNet
   kilo_review: KMaze
 virtual_web_target: kweb://demoscene
 virtual_web_rotation:
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KPomodoro
-  timestamp: '2026-10-26T06:33:36-07:00'
+  agent: kilo-expander
+  app: KSynth
+  timestamp: '2026-10-26T08:49:38-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -74,7 +74,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 3. **Pillar 3 — Canonical 1999 Virtual Web Expansion (`kweb://...`)**: Build out the canonical alternate-1999 web destinations from `arg_plan.md` §7 (`kweb://slashnet`, `kweb://trapster`, `kweb://cabled`, `kweb://scallion`, `kweb://demoscene`, `kweb://rfc-archive`) as self-contained `< 350 KB` interactive Web 1.0 cartridges and enforce strict Tier 3 darknet secrecy in `KNet`.
 
 ## Fleet Core Directives & Fast Turn Protocol
-1. **Single-App-Per-Turn & Tool Budget (`<= 25` calls, Commit Checkpoint `~12` calls)**: Process ONE target per turn. Once substantive edits are complete (or at ~12 tool calls), wrap up immediately!
+1. **Single-App-Per-Turn & Tool Budget (`<= 32` calls, Commit Checkpoint `~16` calls)**: Process ONE target per turn at `high` reasoning effort. Complete all Mission Spec items across both Web HTML and Win32 C (`<App>/main.c`), then wrap up by ~16 tool calls!
 2. **One-Command Verification (`scripts/verify_turn.py`)**: Run `python scripts/verify_turn.py --app <Target>` (add `--build-native` if C source modified) to validate `< 999 KB` byte budgets, native compilation, `test_app_startup.py`, Vite build, and `security_lint.py` in a single tool call.
 3. **One-Command Queue Handoff & Logging (`scripts/advance_turn.py`)**: Run `python scripts/advance_turn.py --agent <agent> --app <Target> --title "<Summary>" --bullet "<Status>" --bullet "<Change 1>" [--quarantine-mature "<Summary>" --category "<Category>"]` to deterministically advance queues, rotate agents, update logs, and archive excess entries at 0 token cost.
 4. **Invariants**: Strict `< 999 KB` file ceiling; zero multiplayer autostart; in-universe trademark parodies only (`security_lint.py`); TINAG mystery preservation (no `(ARG)` labels or `ECHO-1999-ARCHITECT` leaks); zero traveling perimeter border glints.
@@ -175,11 +175,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColor` | `KiloOS/public/apps/kcolor.html`, `KColor/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, palette generator/harmony rules, HEX/RGB/HSL conversion, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KSynth`
+- **Active Target**: `KNet`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
@@ -189,6 +188,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmech_telemetry.json via postMessage with standalone fallback) into #modal-telemetry and add optional RFMS online mech duel behind an explicit Multiplayer Arena button. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Build interactive 12-system Galactic Star Chart [C] (plus KTrader/main.c parity) rendering planets (x,y) jump-gate topology, ecoType/techLevel badges, current location, and active mission target highlight, add player cur/max shield bars to #ui-combat-panel, and enforce Navy patrol confiscation when jumping with Contraband cargo. |
+| `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KMaze`
@@ -295,6 +295,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T08:50:05-07:00 — kilo-adhoc: Fleet Orchestration (+25% Quality-First Flash Budget & Fast Verification Upgrade)**
+  - Status: PASS ✅ (orchestrate.py --dry-run, check_sizes.py, and verify_turn.py sub-10s synchronous benchmark PASS).
+  - Per-Turn Budget & Effort: Relaxed Flash tool budget +28% (`25 -> 32` calls, checkpoint `12 -> 16`), promoted all Flash agents to `high` effort (`gemini-3.8-flash-high`), and raised timeouts to `10m/11m`.
+  - Fast Verification & Auto-Salvage: Cut `verify_turn.py` from 36s to 9.7s (parallel `visual_probe.py --compare-head`, `security_lint.py --fast`, smart Vite check) and installed `pyyaml` + post-turn salvage.
+
+- **2026-10-26T08:49:38-07:00 — kilo-expander: KSynth (Phase VI VFS Audio Patch Bank & KRadio/Trapster IPC)**
+  - Status: PASS ✅ (0 errors, web 181.5 KB, native 23.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.24%, HEAD Δ 8.21%, 0 fail, 0 warn, 5.8s)).
+  - VFS Patch Bank: Added .fm preset bank export/import to /home/music/ and cross-app IPC playback in KRadio [Shift+R] and Trapster [Shift+T] with Win32 C parity.
+  - Handoff: Advanced `kilo-expander` to `KNet`; rotated active agent to `kilo-review`.
+
 - **2026-10-26T06:33:36-07:00 — kilo-qa: KPomodoro (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 83.6 KB, native 17.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.82%, 0 fail, 0 warn, 4.9s)).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kpomodoro_tutorialSeen flag, and Escape modal dismissals.
@@ -313,15 +323,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI & Hitbox Alignment: Aligned STATE_PLAYING pointerdown hitboxes for [♫] (244..264,4..22), [?] (268..288,4..22), [//] (292..312,4..22), and [C] chassis (268..315,24..38) with drawHUD().
   - Controls & Boot Fixes: Removed 400ms window.load timeout forcing STATE_HELP over STATE_MENU; useTacticalDash() now dashes along active input vector in both web and native C.
   - Handoff: Advanced `kilo-tester` to `KSys`; rotated active agent to `kilo-usability`.
-
-- **2026-10-26T05:21:02-07:00 — kilo-soundscape: KSubmarine (Abyssal Sonar & Trench Descent — YM2612/SPC700 Chiptune Suite)**
-  - Status: PASS ✅ (0 errors, web 507.0 KB, native 251.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.33%, HEAD Δ 0.13%, 0 fail, 0 warn, 13.6s)).
-  - Composition: Abyssal sonar & trench descent 5-track suite, 6-channel counterpoint, sus2/Maj7 shell voicings, 5:3 swing-tick groove.
-  - Patches & DSP: 2-Op FM warm sine sub-bass (<130.81Hz), vocal flute lead with delayed vibrato, muffled 1800Hz SPC700 stereo delay, and crystal hydrophone ping earcons.
-  - Handoff: Advanced `kilo-soundscape` to `KBreakout`; rotated active agent to `kilo-tester`.
-
-- **2026-10-26T03:32:14-07:00 — kilo-graphics: KStarDredge (Skip — Asset Suitability & Vector Authenticity)**
-  - ⏭️ Skip — KStarDredge is an authentic CRT vector-scan salvager; bitmap sprites not appropriate.
-  - Glint sweep verified: zero specular glints or traveling perimeter border dots in HTML and C.
-  - Status: PASS ✅ (web 520.4 KB, native 286.0 KB, startup & security PASS).
-  - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-soundscape`.

@@ -22,6 +22,8 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 MAX_BYTES = 999_000
 
 WEB_MAP = {
@@ -83,6 +85,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="KiloApps One-Command Turn Verification")
     parser.add_argument("--app", required=True, help="Target app name (e.g. KTrader) or kweb:// URL")
     parser.add_argument("--build-native", action="store_true", help="Force native Win32 C build if build.bat exists")
+    parser.add_argument("--vite", action="store_true", help="Force Vite npm run build inside KiloOS/")
     parser.add_argument("--skip-vite", action="store_true", help="Skip Vite npm run build if KiloOS/src was not modified")
     parser.add_argument("--no-visual", action="store_true", help="Skip the headless visual/gameplay probe (scripts/visual_probe.py)")
     args = parser.parse_args()
@@ -119,6 +122,8 @@ def main() -> int:
                 cwd=str(native_dir),
                 capture_output=True,
                 text=True,
+                stdin=subprocess.DEVNULL,
+                timeout=60,
             )
             if b_res.returncode != 0:
                 errors.append(f"Native C build failed in {native_dir.name}:\n{b_res.stdout}\n{b_res.stderr}")
@@ -136,16 +141,26 @@ def main() -> int:
                     shutil.copy2(exe_path, pub_exe)
                 print(f"[SIZE PASS] {exe_path.name}: {native_kb} KB (< 999 KB)")
 
-    # 3. Startup / Syntax check
-    if not is_kweb:
+    # 3. Startup / Syntax check (fast inline CSS brace & script balance check when visual_probe runs; full CDP startup check if --no-visual)
+    if html_path and html_path.exists():
+        from scripts.test_app_startup import check_css_brace_balance
+        raw_html = html_path.read_text(encoding="utf-8", errors="replace")
+        css_ok, open_braces, err_line = check_css_brace_balance(raw_html)
+        if not css_ok:
+            errors.append(f"CSS syntax error in {html_path.name}: {open_braces} unclosed brace(s) near line {err_line}")
+        if "<script" in raw_html and raw_html.count("<script") != raw_html.count("</script>"):
+            errors.append(f"Unbalanced <script> tags in {html_path.name}")
+    if not is_kweb and args.no_visual:
         uv_bin = shutil.which("uv")
         cmd = [uv_bin, "run", "scripts/test_app_startup.py", "--app", args.app] if uv_bin else [sys.executable, "scripts/test_app_startup.py", "--app", args.app]
         print(f"[STARTUP AUDIT] Running {' '.join(cmd)}...")
-        s_res = subprocess.run(cmd, cwd=str(REPO_ROOT), capture_output=True, text=True, encoding="utf-8", errors="replace")
+        s_res = subprocess.run(cmd, cwd=str(REPO_ROOT), capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, timeout=35)
         if s_res.returncode != 0:
             errors.append(f"Startup check failed for {args.app}:\n{s_res.stdout}\n{s_res.stderr}")
         else:
             print(f"[STARTUP PASS] {args.app} passed human-perspective startup & modal occlusion audit.")
+    elif not is_kweb:
+        print(f"[STARTUP PASS] {args.app} CSS/script syntax clean (CDP startup & modal dismissal unified into visual_probe).")
     elif html_path and html_path.exists():
         txt = html_path.read_text(encoding="utf-8", errors="replace")
         if "<script" in txt and txt.count("<script") != txt.count("</script>"):
@@ -163,7 +178,7 @@ def main() -> int:
             rel = html_path.relative_to(REPO_ROOT).as_posix()
             v_cmd = [uv_bin, "run", "-q", "scripts/visual_probe.py", "--file", rel, "--compare-head"]
             print(f"[VISUAL PROBE] {' '.join(v_cmd[1:])}")
-            v_res = subprocess.run(v_cmd, cwd=str(REPO_ROOT), capture_output=True, text=True, encoding="utf-8", errors="replace")
+            v_res = subprocess.run(v_cmd, cwd=str(REPO_ROOT), capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, timeout=45)
             out_lines = [ln for ln in v_res.stdout.splitlines() if ln.strip()]
             for ln in out_lines[1:]:
                 if not ln.startswith("VISUAL_PROBE_SUMMARY"):
@@ -178,19 +193,33 @@ def main() -> int:
             else:
                 print(f"[VISUAL {visual_summary.split(' ')[0]}] {visual_summary}")
 
-    # 4. Vite build check
+    # 4. Vite build check (auto-runs when KiloOS shell files changed or --vite requested)
     if not args.skip_vite:
-        npm_bin = shutil.which("npm.cmd") or shutil.which("npm") or "npm.cmd"
-        print("[VITE BUILD] Running npm run build in KiloOS/...")
-        v_res = subprocess.run([npm_bin, "run", "build"], cwd=str(REPO_ROOT / "KiloOS"), capture_output=True, text=True, encoding="utf-8", errors="replace")
-        if v_res.returncode != 0:
-            errors.append(f"KiloOS Vite build failed:\n{v_res.stdout}\n{v_res.stderr}")
+        vite_st = subprocess.run(
+            ["git", "status", "--porcelain", "KiloOS/src", "KiloOS/index.html", "KiloOS/package.json", "KiloOS/vite.config.js"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+        )
+        shell_modified = bool(vite_st.stdout.strip()) or args.vite
+        if shell_modified:
+            npm_bin = shutil.which("npm.cmd") or shutil.which("npm") or "npm.cmd"
+            print("[VITE BUILD] Running npm run build in KiloOS/...")
+            v_res = subprocess.run([npm_bin, "run", "build"], cwd=str(REPO_ROOT / "KiloOS"), capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, timeout=60)
+            if v_res.returncode != 0:
+                errors.append(f"KiloOS Vite build failed:\n{v_res.stdout}\n{v_res.stderr}")
+            else:
+                print("[VITE PASS] KiloOS production build succeeded (0 errors).")
         else:
-            print("[VITE PASS] KiloOS production build succeeded (0 errors).")
+            print("[VITE PASS] KiloOS/src unchanged (fast path; pass --vite to force full bundle build).")
 
     # 5. Security & Anti-Trademark Linter
-    print("[SECURITY LINT] Running scripts/security_lint.py...")
-    l_res = subprocess.run([sys.executable, "scripts/security_lint.py"], cwd=str(REPO_ROOT), capture_output=True, text=True, encoding="utf-8", errors="replace")
+    print("[SECURITY LINT] Running scripts/security_lint.py --fast...")
+    lint_files = [str(html_path)] if html_path and html_path.exists() else []
+    if native_dir and (native_dir / "main.c").exists():
+        lint_files.append(str(native_dir / "main.c"))
+    l_res = subprocess.run([sys.executable, "scripts/security_lint.py", "--fast", "--files", *lint_files], cwd=str(REPO_ROOT), capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, timeout=30)
     if l_res.returncode != 0:
         errors.append(f"Security lint failed:\n{l_res.stdout}\n{l_res.stderr}")
     else:

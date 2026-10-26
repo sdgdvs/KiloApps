@@ -11,7 +11,7 @@ description: >-
 Executes Pass 5 QA, state persistence verification, and dual Win32 C build parity on **exactly ONE application per turn**.
 
 ## ⚡ Flash Execution & Tool-Budget Protocol (CRITICAL)
-- **Tool Call Budget (<= 25 tool calls)** & **Commit Checkpoint (~12 tool calls)**:
+- **Tool Call Budget (<= 32 tool calls)** & **Commit Checkpoint (~16 tool calls)**:
   - Inspect `KiloOS/public/apps/k<name>.html` and `<AppName>/main.c` (if present), fix any state persistence (`F5`/`F9`), tutorial flag, lifecycle leak, or Win32 C parity gaps, then run 1-command verification!
 - **1-Command Verification (with Native C Build & Headless Visual/Gameplay Probe)**:
   ```powershell

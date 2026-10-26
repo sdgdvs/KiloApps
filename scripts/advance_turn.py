@@ -401,7 +401,12 @@ def main() -> int:
     # Update YAML frontmatter
     parts = content.split("---", 2)
     if len(parts) >= 3:
-        import yaml
+        try:
+            import yaml
+        except ImportError:
+            import subprocess
+            subprocess.run([sys.executable, "-m", "pip", "install", "-q", "pyyaml"], check=False)
+            import yaml
         fm = yaml.safe_load(parts[1]) or {}
         rotation = fm.get("agent_rotation") or [
             "kilo-creator", "kilo-graphics", "kilo-soundscape",

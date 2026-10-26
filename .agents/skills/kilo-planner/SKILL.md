@@ -10,7 +10,7 @@ description: >-
 Invoked automatically every 24 hours by `scripts/orchestrate.py` to replenish the multi-turn **Mission Pipeline Tables** in `next_work.md`, enforce Mature Application Quarantine, audit icon uniqueness, and compact logs.
 
 ## ⚡ Flash Execution & Tool-Budget Protocol (CRITICAL)
-- **Tool Call Budget (<= 20 tool calls)**:
+- **Tool Call Budget (<= 25 tool calls)**:
   1. `git pull --rebase --autostash`
   2. Read `next_work.md` and run `python scripts/check_icons.py` + `python scripts/rotate_logs.py`.
   3. Replenish any queue table in `next_work.md` that has fewer than 6 upcoming targets using non-mature apps from `KiloOS/src/App.jsx`.

@@ -622,6 +622,10 @@
             <li><b>[C]</b> : Clear active 16-step sequencer</li>
             <li><b>[R]</b> : Randomize sequencer pattern notes</li>
             <li><b>[F5] / [F9]</b> : Quicksave / Quickload entire synth workstation state</li>
+            <li><b>[Shift+S]</b> : Export 2-Op FM patch preset (.fm) to /home/music/ (VFS)</li>
+            <li><b>[Shift+O]</b> : Import 2-Op FM patch preset (.fm) from /home/music/ (VFS)</li>
+            <li><b>[Shift+R]</b> : Render audio and play live in KRadio workstation</li>
+            <li><b>[Shift+T]</b> : Broadcast 2-Op FM patch to Trapster P2P swarm catalog</li>
             <li><b>[Ctrl+S]</b> : Export synth patch preset as JSON</li>
             <li><b>[Ctrl+O]</b> : Import synth patch preset JSON</li>
             <li><b>[Ctrl+E]</b> : Export 16-bit 44.1 kHz WAV audio preview</li>
@@ -636,6 +640,7 @@
             <li>&bull; <b>LFO Modulation Matrix:</b> Sine, Triangle, Saw, Square, and Sample & Hold with Free Hz or Tempo Sync.</li>
             <li>&bull; <b>Drive, Bitcrush & Chorus:</b> Vintage analog saturation, tone filter, 4-16 bit DAC crunch, and Roland Juno stereo ensemble.</li>
             <li>&bull; <b>Standardized RFMS Multiplayer:</b> Real-time jam rooms via Firebase RTDB, room link sharing (#room=CODE), and 25-second Subnet Ghost Jammer fallback.</li>
+            <li>&bull; <b>Phase VI VFS Patch Bank:</b> Export/import 2-Op FM presets (.fm) to /home/music/ & cross-launch playback in KRadio/Trapster.</li>
             <li>&bull; <b>Standard MIDI Export:</b> Type 0 SMF .mid generator for direct DAW interoperability.</li>
             <li>&bull; <b>SPC700 Delay Echo:</b> Stereo ping-pong delay unit with warm Gaussian feedback loop damping.</li>
             <li>&bull; <b>ADSR Envelope:</b> Real-time visual curve canvas with millisecond precision.</li>
@@ -680,7 +685,7 @@
 
       <button id="btnSavePreset" class="btn" title="Export Synth Preset as JSON [Ctrl+S]">💾 Patch [^S]</button>
       <button id="btnLoadPreset" class="btn" title="Import Synth Preset JSON [Ctrl+O]">📂 Patch [^O]</button>
-      <input type="file" id="presetFileInput" accept=".json" style="display:none;">
+      <input type="file" id="presetFileInput" accept=".json,.fm" style="display:none;">
 
       <button id="btnExportWav" class="btn" title="Export Synth Audio Preview to WAV [Ctrl+E]">🔊 WAV [^E]</button>
       <button id="btnExportMidi" class="btn" title="Export 16-Step Pattern as Standard MIDI File (.mid) [Shift+M]">🎹 MIDI</button>
@@ -717,6 +722,32 @@
     <button class="btn quick-chip" onclick="selectPresetByIndex(11)" title="Preset 12: Vapor Keys">12: Vapor</button>
     <button class="btn quick-chip" onclick="selectPresetByIndex(12)" title="Preset 13: 1999 Drone">13: Drone</button>
     <button class="btn quick-chip" onclick="selectPresetByIndex(13)" title="Preset 14: FM E-Piano">14: FM Keys</button>
+  </div>
+
+  <!-- Phase VI VFS Audio Patch Bank & Cross-App Bridge -->
+  <div class="patch-bank-bar" id="vfsPatchBankBar" style="background:#131722; border-bottom:1px solid var(--panel-border); padding:5px 12px; display:flex; align-items:center; gap:8px; font-size:11px; flex-wrap:wrap;">
+    <span style="color:var(--accent-cyan); font-weight:700; letter-spacing:0.8px; display:flex; align-items:center; gap:4px;">
+      🎛️ VFS Patch Bank:
+    </span>
+    <span style="color:var(--text-muted); font-size:10px;">/home/music/</span>
+    <select id="vfsPatchSelect" style="background:#1c202b; color:var(--accent-cyan); border:1px solid var(--panel-border); border-radius:3px; padding:2px 6px; font-size:11px;" title="Select 2-Op FM Patch Preset from /home/music/">
+      <option value="">-- Load FM Bank Preset --</option>
+      <option value="genesis_slap_bass.fm">genesis_slap_bass.fm (YM2612 Slap Bass)</option>
+      <option value="crystal_fm_bell.fm">crystal_fm_bell.fm (DX7 / 2-Op Chime)</option>
+      <option value="cyber_acid_lead.fm">cyber_acid_lead.fm (303 FM Bite)</option>
+      <option value="spc700_echo_pad.fm">spc700_echo_pad.fm (SNES Echo Pad)</option>
+      <option value="vapor_epiano.fm">vapor_epiano.fm (Vaporwave FM Keys)</option>
+      <option value="sub_punch_fm.fm">sub_punch_fm.fm (Sub Punch FM Bass)</option>
+      <option value="ghost_beacon_1999.fm">ghost_beacon_1999.fm (Ghost Beacon Demod)</option>
+      <option value="metallic_fm_perch.fm">metallic_fm_perch.fm (Metallic Percussion)</option>
+    </select>
+    <button id="btnVfsExportFm" class="btn quick-chip" style="color:var(--accent-cyan);" title="Export 2-Op FM patch preset (.fm) to /home/music/ in KiloOS VFS [Shift+S]">💾 Export .FM [Shift+S]</button>
+    <button id="btnVfsImportFm" class="btn quick-chip" title="Import 2-Op FM patch preset (.fm) from KiloOS VFS (/home/music/) [Shift+O]">📂 Open .FM [Shift+O]</button>
+    <input type="file" id="fmFileInput" accept=".fm,.json" style="display:none;">
+    <span style="color:var(--panel-border); margin:0 2px;">|</span>
+    <span style="color:var(--text-muted); font-size:10px; font-weight:600;">CROSS-APP:</span>
+    <button id="btnPlayInKRadio" class="btn quick-chip" style="color:var(--accent-yellow);" title="Export audio to /home/music/ksynth_track.wav and tune live in KRadio [Shift+R]">📻 Play in KRadio [Shift+R]</button>
+    <button id="btnShareTrapster" class="btn quick-chip" style="color:#00ff66;" title="Export .FM patch to /home/music/ and share to Trapster P2P Swarm [Shift+T]">🐱 Share in Trapster [Shift+T]</button>
   </div>
 
   <!-- Collaborative Jam Session Bar (Firebase RTDB + RFMS Standard) -->
@@ -3123,6 +3154,26 @@
       selectPresetByIndex(9);
       return;
     }
+    if (e.shiftKey && key === 's') {
+      e.preventDefault();
+      exportFmPresetToVfs();
+      return;
+    }
+    if (e.shiftKey && key === 'o') {
+      e.preventDefault();
+      importFmPresetFromVfs();
+      return;
+    }
+    if (e.shiftKey && key === 'r') {
+      e.preventDefault();
+      playTrackInKRadio();
+      return;
+    }
+    if (e.shiftKey && key === 't') {
+      e.preventDefault();
+      shareTrackInTrapster();
+      return;
+    }
     if (e.shiftKey && key === 'm') {
       e.preventDefault();
       exportMidiSequence();
@@ -3702,6 +3753,413 @@
     e.target.value = '';
   });
 
+  // ----------------------------------------------------
+  // Phase VI KiloOS VFS & Inter-App IPC Bridge
+  // ----------------------------------------------------
+  const KiloVFS = {
+    write(path, data) {
+      try {
+        const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
+        window.parent.postMessage({ type: 'OS_NOTIFY', title: 'KSynth Workstation', message: `Saved to VFS: ${path}` }, '*');
+      } catch (e) {}
+      try {
+        localStorage.setItem('kilo_vfs_' + path, typeof data === 'string' ? data : JSON.stringify(data, null, 2));
+      } catch (e) {}
+    },
+    read(path, cb) {
+      const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      const handler = (e) => {
+        if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+          window.removeEventListener('message', handler);
+          cb(e.data.data, e.data.path);
+        }
+      };
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
+      } catch (e) {}
+      setTimeout(() => {
+        const local = localStorage.getItem('kilo_vfs_' + path);
+        if (local) cb(local, path);
+      }, 350);
+    },
+    openPicker(cb) {
+      const reqId = 'open_' + Date.now();
+      const handler = (e) => {
+        if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+          window.removeEventListener('message', handler);
+          if (e.data.path) KiloVFS.read(e.data.path, cb);
+        }
+      };
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
+      } catch (e) {}
+    },
+    launchApp(targetApp, path = '') {
+      try {
+        window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, appId: targetApp, path }, '*');
+        window.parent.postMessage({ type: 'LAUNCH_APP', app: targetApp + '.html', args: { file: path, path } }, '*');
+      } catch (e) {}
+    }
+  };
+
+  const FM_VFS_BANK = {
+    'genesis_slap_bass.fm': {
+      format: "KILO_2OP_FM", name: "YM2612 Slap Bass",
+      engineMode: "fm", fmRatio: 2.0, fmModDepth: 0.72, fmFeedback: 0.35,
+      osc1Wave: "sine", osc1Oct: -1, osc1Detune: 0, osc1Vol: 0.9,
+      osc2Wave: "sine", osc2Oct: 0, osc2Detune: 2, osc2Vol: 0.7,
+      filterType: "lowpass", filterCutoff: 3800, filterRes: 2.5, masterVol: 0.85,
+      delayTime: 0.25, delayFdbk: 0.3, delayMix: 0.2, delayEchoMode: "mono",
+      attack: 0.005, decay: 0.28, sustain: 0.35, release: 0.15
+    },
+    'crystal_fm_bell.fm': {
+      format: "KILO_2OP_FM", name: "Crystal FM Bell",
+      engineMode: "fm", fmRatio: 3.5, fmModDepth: 0.60, fmFeedback: 0.15,
+      osc1Wave: "sine", osc1Oct: 1, osc1Detune: 0, osc1Vol: 0.9,
+      osc2Wave: "sine", osc2Oct: 2, osc2Detune: 10, osc2Vol: 0.6,
+      filterType: "lowpass", filterCutoff: 5200, filterRes: 2.0, masterVol: 0.80,
+      delayTime: 0.35, delayFdbk: 0.45, delayMix: 0.40, delayEchoMode: "spc700",
+      attack: 0.005, decay: 0.65, sustain: 0.10, release: 0.85
+    },
+    'cyber_acid_lead.fm': {
+      format: "KILO_2OP_FM", name: "Cyber Acid FM",
+      engineMode: "fm", fmRatio: 1.0, fmModDepth: 0.85, fmFeedback: 0.60,
+      osc1Wave: "sawtooth", osc1Oct: 0, osc1Detune: 0, osc1Vol: 0.95,
+      osc2Wave: "square", osc2Oct: 0, osc2Detune: 4, osc2Vol: 0.75,
+      filterType: "lowpass", filterCutoff: 2100, filterRes: 8.5, masterVol: 0.85,
+      delayTime: 0.25, delayFdbk: 0.35, delayMix: 0.25, delayEchoMode: "mono",
+      attack: 0.005, decay: 0.25, sustain: 0.20, release: 0.18
+    },
+    'spc700_echo_pad.fm': {
+      format: "KILO_2OP_FM", name: "SPC700 SNES Pad",
+      engineMode: "fm", fmRatio: 0.5, fmModDepth: 0.30, fmFeedback: 0.20,
+      osc1Wave: "triangle", osc1Oct: 0, osc1Detune: -4, osc1Vol: 0.75,
+      osc2Wave: "sine", osc2Oct: 1, osc2Detune: 4, osc2Vol: 0.65,
+      filterType: "lowpass", filterCutoff: 3200, filterRes: 1.8, masterVol: 0.75,
+      delayTime: 0.38, delayFdbk: 0.55, delayMix: 0.55, delayEchoMode: "spc700",
+      attack: 0.40, decay: 0.80, sustain: 0.85, release: 1.40
+    },
+    'vapor_epiano.fm': {
+      format: "KILO_2OP_FM", name: "Vaporwave FM E-Piano",
+      engineMode: "fm", fmRatio: 3.5, fmModDepth: 0.65, fmFeedback: 0.28,
+      osc1Wave: "sine", osc1Oct: 0, osc1Detune: 0, osc1Vol: 0.90,
+      osc2Wave: "sine", osc2Oct: 1, osc2Detune: 5, osc2Vol: 0.60,
+      filterType: "lowpass", filterCutoff: 4800, filterRes: 2.2, masterVol: 0.80,
+      delayTime: 0.20, delayFdbk: 0.25, delayMix: 0.20, delayEchoMode: "mono",
+      attack: 0.005, decay: 0.50, sustain: 0.25, release: 0.60
+    },
+    'sub_punch_fm.fm': {
+      format: "KILO_2OP_FM", name: "Sub Punch FM Bass",
+      engineMode: "fm", fmRatio: 1.0, fmModDepth: 0.45, fmFeedback: 0.10,
+      osc1Wave: "sine", osc1Oct: -2, osc1Detune: 0, osc1Vol: 0.95,
+      osc2Wave: "sine", osc2Oct: -1, osc2Detune: 0, osc2Vol: 0.55,
+      filterType: "lowpass", filterCutoff: 1800, filterRes: 1.5, masterVol: 0.85,
+      delayTime: 0.15, delayFdbk: 0.10, delayMix: 0.10, delayEchoMode: "mono",
+      attack: 0.010, decay: 0.22, sustain: 0.50, release: 0.12
+    },
+    'ghost_beacon_1999.fm': {
+      format: "KILO_2OP_FM", name: "1999 Ghost Demodulator",
+      engineMode: "fm", fmRatio: 4.0, fmModDepth: 0.75, fmFeedback: 0.40,
+      osc1Wave: "sine", osc1Oct: 0, osc1Detune: 0, osc1Vol: 0.80,
+      osc2Wave: "triangle", osc2Oct: 1, osc2Detune: 0, osc2Vol: 0.50,
+      filterType: "bandpass", filterCutoff: 1999, filterRes: 7.5, masterVol: 0.80,
+      delayTime: 0.40, delayFdbk: 0.50, delayMix: 0.45, delayEchoMode: "spc700",
+      attack: 0.080, decay: 0.45, sustain: 0.70, release: 0.80
+    },
+    'metallic_fm_perch.fm': {
+      format: "KILO_2OP_FM", name: "Metallic FM Percussion",
+      engineMode: "fm", fmRatio: 5.5, fmModDepth: 0.90, fmFeedback: 0.50,
+      osc1Wave: "square", osc1Oct: 1, osc1Detune: 0, osc1Vol: 0.85,
+      osc2Wave: "sine", osc2Oct: 2, osc2Detune: 12, osc2Vol: 0.80,
+      filterType: "highpass", filterCutoff: 2500, filterRes: 4.0, masterVol: 0.75,
+      delayTime: 0.18, delayFdbk: 0.20, delayMix: 0.15, delayEchoMode: "mono",
+      attack: 0.002, decay: 0.12, sustain: 0.02, release: 0.08
+    }
+  };
+
+  function getFmPatchData(name) {
+    return {
+      format: "KILO_2OP_FM",
+      version: "1.0",
+      name: name || document.getElementById('presetSelect').options[document.getElementById('presetSelect').selectedIndex]?.text || "2-Op FM Patch",
+      engineMode: "fm",
+      fmRatio: parseFloat(document.getElementById('fmRatio').value),
+      fmModDepth: parseFloat(document.getElementById('fmModDepth').value),
+      fmFeedback: parseFloat(document.getElementById('fmFeedback').value),
+      osc1Wave: document.getElementById('osc1Wave').value,
+      osc1Oct: parseInt(document.getElementById('osc1Oct').value),
+      osc1Detune: parseInt(document.getElementById('osc1Detune').value),
+      osc1Vol: parseFloat(document.getElementById('osc1Vol').value),
+      osc2Wave: document.getElementById('osc2Wave').value,
+      osc2Oct: parseInt(document.getElementById('osc2Oct').value),
+      osc2Detune: parseInt(document.getElementById('osc2Detune').value),
+      osc2Vol: parseFloat(document.getElementById('osc2Vol').value),
+      filterType: document.getElementById('filterType').value,
+      filterCutoff: parseFloat(document.getElementById('filterCutoff').value),
+      filterRes: parseFloat(document.getElementById('filterRes').value),
+      masterVol: parseFloat(document.getElementById('masterVol').value),
+      delayTime: parseFloat(document.getElementById('delayTime').value),
+      delayFdbk: parseFloat(document.getElementById('delayFdbk').value),
+      delayMix: parseFloat(document.getElementById('delayMix').value),
+      delayEchoMode: document.getElementById('delayEchoMode').value,
+      attack: parseFloat(document.getElementById('attack').value),
+      decay: parseFloat(document.getElementById('decay').value),
+      sustain: parseFloat(document.getElementById('sustain').value),
+      release: parseFloat(document.getElementById('release').value),
+      lfoWave: document.getElementById('lfoWave').value,
+      lfoRate: parseFloat(document.getElementById('lfoRate').value),
+      lfoSync: document.getElementById('lfoSync').value,
+      lfoTarget: document.getElementById('lfoTarget').value,
+      lfoDepth: parseFloat(document.getElementById('lfoDepth').value),
+      lfoEnabled: lfoEnabled,
+      driveEnabled: driveEnabled,
+      driveAmt: parseFloat(document.getElementById('driveAmt').value),
+      driveTone: parseFloat(document.getElementById('driveTone').value),
+      bitDepth: parseInt(document.getElementById('bitDepth').value),
+      chorusEnabled: chorusEnabled,
+      chorusMix: parseFloat(document.getElementById('chorusMix').value),
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  function applyFmPatch(p, patchName) {
+    if (!p || typeof p !== 'object') return;
+    if (!p.engineMode) p.engineMode = 'fm';
+    applyPreset(p);
+    document.getElementById('presetSelect').value = 'custom';
+    saveCurrentPatch();
+    showToast(`Loaded 2-Op FM patch: ${p.name || patchName || 'Custom'}`, 'success', 2200);
+  }
+
+  function exportFmPresetToVfs(customPath) {
+    const patch = getFmPatchData();
+    const cleanName = (patch.name || 'patch').toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const vfsPath = customPath || `/home/music/${cleanName}.fm`;
+    KiloVFS.write(vfsPath, patch);
+
+    // Also download as local .fm file
+    const blob = new Blob([JSON.stringify(patch, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${cleanName}.fm`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 500);
+
+    // Register into VFS Patch dropdown if not present
+    const sel = document.getElementById('vfsPatchSelect');
+    const optVal = `${cleanName}.fm`;
+    if (sel && !sel.querySelector(`option[value="${optVal}"]`)) {
+      const opt = document.createElement('option');
+      opt.value = optVal;
+      opt.textContent = `${cleanName}.fm (${patch.name || '2-Op FM'})`;
+      sel.appendChild(opt);
+      sel.value = optVal;
+    }
+
+    showToast(`2-Op FM patch exported: ${vfsPath}`, 'success', 2500);
+  }
+
+  function importFmPresetFromVfs() {
+    if (window.parent && window.parent !== window) {
+      KiloVFS.openPicker((data, path) => {
+        if (data) {
+          try {
+            const p = typeof data === 'string' ? JSON.parse(data) : data;
+            applyFmPatch(p, path);
+          } catch (err) {
+            showToast('Failed to parse .FM patch from VFS', 'error');
+          }
+        }
+      });
+    } else {
+      const fmInput = document.getElementById('fmFileInput');
+      if (fmInput) fmInput.click();
+    }
+  }
+
+  // Render quick WAV buffer from active patch settings
+  async function renderTrackWavDataUrl() {
+    const sampleRate = 44100;
+    const duration = 3.0;
+    const OfflineContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!OfflineContext) return null;
+    const offlineCtx = new OfflineContext(1, Math.floor(sampleRate * duration), sampleRate);
+
+    const osc1Type = document.getElementById('osc1Wave').value;
+    const osc1Oct = parseInt(document.getElementById('osc1Oct').value);
+    const osc1Vol = parseFloat(document.getElementById('osc1Vol').value);
+    const osc2Type = document.getElementById('osc2Wave').value;
+    const osc2Oct = parseInt(document.getElementById('osc2Oct').value);
+    const osc2Vol = parseFloat(document.getElementById('osc2Vol').value);
+    const filterCutoff = parseFloat(document.getElementById('filterCutoff').value);
+    const filterRes = parseFloat(document.getElementById('filterRes').value);
+    const masterVol = parseFloat(document.getElementById('masterVol').value);
+    const attack = parseFloat(document.getElementById('attack').value);
+    const decay = parseFloat(document.getElementById('decay').value);
+    const sustain = parseFloat(document.getElementById('sustain').value);
+    const release = parseFloat(document.getElementById('release').value);
+    const engineMode = document.getElementById('synthEngineMode').value;
+    const fmRatio = parseFloat(document.getElementById('fmRatio').value);
+    const fmModDepth = parseFloat(document.getElementById('fmModDepth').value);
+
+    const filter = offlineCtx.createBiquadFilter();
+    filter.type = document.getElementById('filterType').value;
+    filter.frequency.value = filterCutoff;
+    filter.Q.value = filterRes;
+
+    const master = offlineCtx.createGain();
+    master.gain.value = masterVol;
+    filter.connect(master);
+    master.connect(offlineCtx.destination);
+
+    // Sequence chord progression: C4, E4, G4, C5
+    const baseFreq = 261.63;
+    const chordNotes = [baseFreq, baseFreq * 1.25, baseFreq * 1.5, baseFreq * 2.0];
+    chordNotes.forEach((freq, idx) => {
+      const st = idx * 0.35;
+      const vGain = offlineCtx.createGain();
+      vGain.gain.setValueAtTime(0.0001, st);
+      vGain.gain.linearRampToValueAtTime(0.28, st + Math.max(0.002, attack));
+      vGain.gain.linearRampToValueAtTime(Math.max(0.0001, 0.28 * sustain), st + attack + decay);
+      vGain.gain.setValueAtTime(Math.max(0.0001, 0.28 * sustain), st + 0.85);
+      vGain.gain.exponentialRampToValueAtTime(0.0001, st + 0.85 + Math.max(0.02, release));
+
+      if (engineMode === 'fm') {
+        const cFreq = freq * Math.pow(2, osc1Oct);
+        const carrier = offlineCtx.createOscillator();
+        carrier.type = (osc1Type === 'noise') ? 'sine' : osc1Type;
+        carrier.frequency.value = cFreq;
+
+        const mFreq = cFreq * fmRatio * Math.pow(2, osc2Oct);
+        const modulator = offlineCtx.createOscillator();
+        modulator.type = (osc2Type === 'noise') ? 'sine' : osc2Type;
+        modulator.frequency.value = mFreq;
+
+        const mGain = offlineCtx.createGain();
+        mGain.gain.value = cFreq * fmRatio * (fmModDepth * 4.5);
+        modulator.connect(mGain);
+        mGain.connect(carrier.frequency);
+
+        const cVol = offlineCtx.createGain();
+        cVol.gain.value = osc1Vol;
+        carrier.connect(cVol);
+        cVol.connect(vGain);
+
+        modulator.start(st);
+        modulator.stop(st + 1.2);
+        carrier.start(st);
+        carrier.stop(st + 1.2);
+      } else {
+        const osc = offlineCtx.createOscillator();
+        osc.type = (osc1Type === 'noise') ? 'sine' : osc1Type;
+        osc.frequency.value = freq * Math.pow(2, osc1Oct);
+        const oscVol = offlineCtx.createGain();
+        oscVol.gain.value = osc1Vol;
+        osc.connect(oscVol);
+        oscVol.connect(vGain);
+        osc.start(st);
+        osc.stop(st + 1.2);
+      }
+      vGain.connect(filter);
+    });
+
+    const rendered = await offlineCtx.startRendering();
+    const wavBlob = audioBufferToWavBlob(rendered);
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(wavBlob);
+    });
+  }
+
+  async function playTrackInKRadio() {
+    showToast('Rendering track for KRadio workstation...', 'info', 1800);
+    try {
+      const dataUrl = await renderTrackWavDataUrl();
+      if (dataUrl) {
+        try { localStorage.setItem('ksynth_vfs_track', dataUrl); } catch (e) {}
+        KiloVFS.write('/home/music/ksynth_track.wav', dataUrl);
+      }
+      KiloVFS.launchApp('kradio', '/home/music/ksynth_track.wav');
+      showToast('📻 Exported track to /home/music/ksynth_track.wav & tuned KRadio!', 'success', 2800);
+    } catch (err) {
+      console.error(err);
+      KiloVFS.launchApp('kradio', '/home/music/ksynth_track.wav');
+      showToast('Tuned KRadio to /home/music/ksynth_track.wav', 'info', 2200);
+    }
+  }
+
+  function shareTrackInTrapster() {
+    const patch = getFmPatchData();
+    KiloVFS.write('/home/music/ksynth_patch.fm', patch);
+
+    try {
+      const raw = localStorage.getItem('trapster_library');
+      const lib = raw ? JSON.parse(raw) : [];
+      const title = 'KSynth - ' + (patch.name || '2-Op FM Session');
+      if (!lib.some(item => item.title === title)) {
+        lib.unshift({
+          id: 'fm-' + Date.now(),
+          title: title,
+          artist: 'KSynth Pilot',
+          format: 'FM',
+          sizeStr: '2.4 KB',
+          channels: 2,
+          shared: true,
+          uploads: 14,
+          hash: 'FM-' + Math.random().toString(36).substring(2, 8).toUpperCase()
+        });
+        localStorage.setItem('trapster_library', JSON.stringify(lib));
+      }
+    } catch (e) {}
+
+    KiloVFS.launchApp('knet', 'kweb://trapster');
+    showToast('🐱 Published 2-Op FM patch to Trapster P2P Swarm catalog (/home/music/)!', 'success', 3000);
+  }
+
+  // Wire VFS Patch Bank UI Elements
+  document.getElementById('btnVfsExportFm').addEventListener('click', () => exportFmPresetToVfs());
+  document.getElementById('btnVfsImportFm').addEventListener('click', importFmPresetFromVfs);
+  const fmFileInput = document.getElementById('fmFileInput');
+  if (fmFileInput) {
+    fmFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const p = JSON.parse(event.target.result);
+          applyFmPatch(p, file.name);
+          KiloVFS.write('/home/music/' + file.name, p);
+        } catch (err) {
+          showToast('Failed to parse .FM patch file', 'error');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+  }
+
+  document.getElementById('vfsPatchSelect').addEventListener('change', (e) => {
+    const key = e.target.value;
+    if (!key) return;
+    if (FM_VFS_BANK[key]) {
+      applyFmPatch(FM_VFS_BANK[key], key);
+      KiloVFS.write('/home/music/' + key, FM_VFS_BANK[key]);
+    }
+  });
+
+  document.getElementById('btnPlayInKRadio').addEventListener('click', playTrackInKRadio);
+  document.getElementById('btnShareTrapster').addEventListener('click', shareTrackInTrapster);
+
   // Export Sequence JSON
   document.getElementById('btnExportSeq').addEventListener('click', () => {
     const seqData = {
@@ -4264,8 +4722,39 @@
     }
   }, { passive: true });
 
-  // Load saved patch on initial start
-  loadSavedPatch();
+  // Phase VI VFS Patch / Hash Initialization
+  function checkVfsInitialPatch() {
+    const hash = window.location.hash || '';
+    if (hash.includes('.fm') || hash.includes('/home/music/')) {
+      const cleanPath = hash.replace(/^#/, '');
+      const bankKey = cleanPath.split('/').pop();
+      if (FM_VFS_BANK[bankKey]) {
+        applyFmPatch(FM_VFS_BANK[bankKey], bankKey);
+      } else {
+        KiloVFS.read(cleanPath, (data) => {
+          if (data) {
+            try {
+              const p = typeof data === 'string' ? JSON.parse(data) : data;
+              applyFmPatch(p, cleanPath);
+            } catch (err) {}
+          }
+        });
+      }
+    }
+  }
+  window.addEventListener('hashchange', checkVfsInitialPatch);
+  window.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'VFS_LOAD_PATCH' && e.data.patch) {
+      applyFmPatch(e.data.patch, e.data.path || 'vfs_patch.fm');
+    }
+  });
+  const initHash = window.location.hash || '';
+  if (initHash.includes('.fm') || initHash.includes('/home/music/')) {
+    checkVfsInitialPatch();
+  } else {
+    // Load saved patch on initial start
+    loadSavedPatch();
+  }
 
   // Initialize standardized Retro Multiplayer (Rule 12 RFMS)
   initRetroMultiplayer();

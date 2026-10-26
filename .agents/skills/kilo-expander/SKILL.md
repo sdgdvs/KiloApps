@@ -11,9 +11,9 @@ description: >-
 Deepens functional utility, cross-app OS integration, and multiplayer capabilities on **exactly ONE application per turn**.
 
 ## ⚡ Flash Execution & Tool-Budget Protocol (CRITICAL)
-- **Tool Call Budget (<= 25 tool calls)** & **Commit Checkpoint (~12 tool calls)**:
+- **Tool Call Budget (<= 32 tool calls)** & **Commit Checkpoint (~16 tool calls)**:
   - Inspect the target file (`KiloOS/public/apps/k<name>.html` and `<AppName>/main.c` if present) and plan a high-craft expansion.
-  - Once substantive edits are complete (or at ~12 tool calls), wrap up immediately!
+  - Once substantive edits are complete (or at ~16 tool calls), wrap up immediately!
 - **1-Command Verification (Saves 4+ tool calls)**:
   ```powershell
   python scripts/verify_turn.py --app <TargetApp>

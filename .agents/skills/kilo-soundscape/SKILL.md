@@ -11,7 +11,7 @@ description: >-
 Executes one procedural chiptune audio overhaul per turn modelled on 16-bit hardware composers (Yuzo Koshiro, Koji Kondo, Tim Follin, Nobuo Uematsu). Zero external audio files — 100% Web Audio API.
 
 ## ⚡ Flash Execution & Tool-Budget Protocol (CRITICAL)
-- **Tool Call Budget (<= 25 tool calls)** & **Commit Checkpoint (~12 tool calls)**:
+- **Tool Call Budget (<= 32 tool calls)** & **Commit Checkpoint (~16 tool calls)**:
   - Read the audio section of the target file (`KiloOS/public/apps/k<name>.html` or `KiloOS/public/web/<name>.html`), design the 6-channel FM tracker & SFX earcons, apply the edit cleanly, and verify!
 - **Fast Skip Path (<= 3 tool calls)**:
   - If the target is a pure text/system utility or already has a complete 6-channel YM2612/SPC700 tracker suite, run `python scripts/advance_turn.py --agent kilo-soundscape --app <Target> --title "Skip — Audio Complete/Inappropriate" --bullet "⏭️ Skip — Procedural soundscape already complete or not appropriate for <Target>."`, commit, push, and STOP immediately!

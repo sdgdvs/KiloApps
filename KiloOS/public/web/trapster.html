@@ -425,6 +425,7 @@
   .fmt-s3m { background: #f3e8ff; color: #9333ea; }
   .fmt-it  { background: #dcfce7; color: #16a34a; }
   .fmt-trk { background: #fee2e2; color: #dc2626; }
+  .fmt-fm  { background: #e0e7ff; color: #4338ca; }
 
   .action-bar {
     margin-top: 6px;
@@ -1427,6 +1428,7 @@ function launchInExternalApp(appName) {
       appId: targetId,
       targetApp: targetId,
       file: '/home/music/' + currentTrack.filename,
+      path: '/home/music/' + currentTrack.filename,
       title: currentTrack.title
     }, '*');
     // Fallback legacy launcher

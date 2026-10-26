@@ -4,9 +4,9 @@
 #include <stdlib.h>
 
 #define W 660
-#define H 460
+#define H 495
 
-HWND hComboPreset, hComboWave, hBtnPlay, hBtnSeq, hBtnExportWav, hBtnHelp, hBtnSave, hBtnLoad, hFreq, hAttack, hDecay, hSustain, hRelease;
+HWND hComboPreset, hComboWave, hBtnPlay, hBtnSeq, hBtnExportWav, hBtnHelp, hBtnSave, hBtnLoad, hBtnExportFm, hBtnImportFm, hFreq, hAttack, hDecay, hSustain, hRelease;
 HWND hDelayTime, hDelayFdbk, hDelayMix;
 HWND hComboArp, hArpBpm, hArpOct;
 HWND hScopeWnd, hPianoWnd, hStatusText;
@@ -643,6 +643,157 @@ void ExportWav(HWND hwnd) {
 }
 
 void UpdateWindowTitle(HWND hwnd);
+
+static const char* my_strstr(const char* haystack, const char* needle) {
+    if (!haystack || !needle || !*needle) return haystack;
+    for (; *haystack; haystack++) {
+        const char* h = haystack;
+        const char* n = needle;
+        while (*h && *n && *h == *n) { h++; n++; }
+        if (!*n) return haystack;
+    }
+    return NULL;
+}
+
+static void extract_json_str(const char* json, const char* key, char* out, int maxLen) {
+    out[0] = '\0';
+    char search[64];
+    wsprintfA(search, "\"%s\":", key);
+    const char* p = my_strstr(json, search);
+    if (!p) return;
+    p += lstrlenA(search);
+    while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') p++;
+    if (*p == '\"') {
+        p++;
+        int i = 0;
+        while (*p && *p != '\"' && i < maxLen - 1) {
+            out[i++] = *p++;
+        }
+        out[i] = '\0';
+    } else {
+        int i = 0;
+        while (*p && *p != ',' && *p != '}' && *p != '\r' && *p != '\n' && *p != ' ' && i < maxLen - 1) {
+            out[i++] = *p++;
+        }
+        out[i] = '\0';
+    }
+}
+
+void ExportFmPreset(HWND hwnd, const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "Could not open file for writing FM preset.", "Export Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    int wave = (int)SendMessage(hComboWave, CB_GETCURSEL, 0, 0);
+    if (wave == CB_ERR) wave = 0;
+
+    char fBuf[32], att[32], dec[32], sus[32], rel[32], dTime[32], dFdbk[32], dMix[32];
+    GetWindowTextA(hFreq, fBuf, sizeof(fBuf));
+    GetWindowTextA(hAttack, att, sizeof(att));
+    GetWindowTextA(hDecay, dec, sizeof(dec));
+    GetWindowTextA(hSustain, sus, sizeof(sus));
+    GetWindowTextA(hRelease, rel, sizeof(rel));
+    GetWindowTextA(hDelayTime, dTime, sizeof(dTime));
+    GetWindowTextA(hDelayFdbk, dFdbk, sizeof(dFdbk));
+    GetWindowTextA(hDelayMix, dMix, sizeof(dMix));
+
+    static const char* waveNames[] = { "sine", "square", "sawtooth", "triangle", "noise" };
+    const char* waveStr = (wave >= 0 && wave < 5) ? waveNames[wave] : "sine";
+
+    char json[1024];
+    wsprintfA(json,
+        "{\r\n"
+        "  \"format\": \"KILO_2OP_FM\",\r\n"
+        "  \"version\": \"1.0\",\r\n"
+        "  \"name\": \"Win32 FM Preset\",\r\n"
+        "  \"engineMode\": \"fm\",\r\n"
+        "  \"osc1Wave\": \"%s\",\r\n"
+        "  \"freq\": %s,\r\n"
+        "  \"attack\": %s,\r\n"
+        "  \"decay\": %s,\r\n"
+        "  \"sustain\": %s,\r\n"
+        "  \"release\": %s,\r\n"
+        "  \"delayTime\": %s,\r\n"
+        "  \"delayFdbk\": %s,\r\n"
+        "  \"delayMix\": %s\r\n"
+        "}\r\n",
+        waveStr, fBuf, att, dec, sus, rel, dTime, dFdbk, dMix
+    );
+
+    DWORD len = (DWORD)lstrlenA(json);
+    DWORD written = 0;
+    WriteFile(hFile, json, len, &written, NULL);
+    CloseHandle(hFile);
+
+    char msg[128];
+    wsprintfA(msg, "Exported 2-Op FM patch preset to %s!", filename);
+    UpdateStatusText(msg);
+    MessageBoxA(hwnd, msg, "KSynth FM Patch Export", MB_OK | MB_ICONINFORMATION);
+}
+
+BOOL ImportFmPreset(HWND hwnd, const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        UpdateStatusText("⚠ Could not open FM patch file (ksynth_patch.fm)");
+        return FALSE;
+    }
+
+    char json[2048];
+    DWORD readBytes = 0;
+    BOOL ok = ReadFile(hFile, json, sizeof(json) - 1, &readBytes, NULL);
+    CloseHandle(hFile);
+    if (!ok || readBytes == 0) return FALSE;
+    json[readBytes] = '\0';
+
+    if (!my_strstr(json, "KILO_2OP_FM") && !my_strstr(json, "\"format\"")) {
+        UpdateStatusText("⚠ Invalid .FM patch format");
+        return FALSE;
+    }
+
+    char val[64];
+    extract_json_str(json, "freq", val, sizeof(val));
+    if (val[0]) SetWindowTextA(hFreq, val);
+
+    extract_json_str(json, "attack", val, sizeof(val));
+    if (val[0]) SetWindowTextA(hAttack, val);
+
+    extract_json_str(json, "decay", val, sizeof(val));
+    if (val[0]) SetWindowTextA(hDecay, val);
+
+    extract_json_str(json, "sustain", val, sizeof(val));
+    if (val[0]) SetWindowTextA(hSustain, val);
+
+    extract_json_str(json, "release", val, sizeof(val));
+    if (val[0]) SetWindowTextA(hRelease, val);
+
+    extract_json_str(json, "delayTime", val, sizeof(val));
+    if (val[0]) SetWindowTextA(hDelayTime, val);
+
+    extract_json_str(json, "delayFdbk", val, sizeof(val));
+    if (val[0]) SetWindowTextA(hDelayFdbk, val);
+
+    extract_json_str(json, "delayMix", val, sizeof(val));
+    if (val[0]) SetWindowTextA(hDelayMix, val);
+
+    extract_json_str(json, "osc1Wave", val, sizeof(val));
+    if (val[0]) {
+        if (my_strstr(val, "square")) SendMessage(hComboWave, CB_SETCURSEL, 1, 0);
+        else if (my_strstr(val, "saw")) SendMessage(hComboWave, CB_SETCURSEL, 2, 0);
+        else if (my_strstr(val, "tri")) SendMessage(hComboWave, CB_SETCURSEL, 3, 0);
+        else if (my_strstr(val, "noise")) SendMessage(hComboWave, CB_SETCURSEL, 4, 0);
+        else SendMessage(hComboWave, CB_SETCURSEL, 0, 0);
+    }
+
+    SendMessage(hComboPreset, CB_SETCURSEL, -1, 0);
+
+    char msg[128];
+    wsprintfA(msg, "★ Loaded FM patch preset from %s", filename);
+    UpdateStatusText(msg);
+    PlayTone();
+    return TRUE;
+}
 
 #define KSYNTH_SAVE_MAGIC 0x4B53594E // "KSYN"
 #define KSYNTH_SAVE_VER 1

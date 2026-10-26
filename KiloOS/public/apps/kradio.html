@@ -2881,6 +2881,43 @@
                 showToast('📻 Ready to stream! Press [Space] to play or [F1] for help.', 'info', 3000);
             }
 
+            // Phase VI VFS Track Integration (KSynth Audio & /home/music/)
+            function checkVfsAudioTrack() {
+                const hash = window.location.hash || '';
+                if (hash.includes('ksynth') || hash.includes('/home/music/')) {
+                    const vfsData = safeGetStorage('ksynth_vfs_track');
+                    if (vfsData) {
+                        try {
+                            activePresetIndex = -1;
+                            stationUrl.value = '/home/music/ksynth_track.wav';
+                            displayStation.textContent = 'KSynth Studio Output';
+                            stationTag.textContent = 'VFS AUDIO';
+                            displayBitrate.textContent = '44.1 kHz 16-bit WAV';
+                            audio.src = vfsData;
+                            playStream();
+                            showToast('📻 Playing KSynth Studio track from /home/music/!', 'success', 3000);
+                        } catch (e) {
+                            console.warn('VFS track playback err:', e);
+                        }
+                    } else {
+                        displayStation.textContent = 'KSynth Track (VFS)';
+                        stationTag.textContent = 'VFS';
+                        displayBitrate.textContent = '44.1 kHz';
+                        showToast('📻 Loaded track reference: /home/music/ksynth_track.wav', 'info', 2500);
+                    }
+                }
+            }
+            window.addEventListener('hashchange', checkVfsAudioTrack);
+            window.addEventListener('message', (e) => {
+                if (e.data && (e.data.type === 'LOAD_AUDIO_TRACK' || e.data.type === 'VFS_LOAD_TRACK')) {
+                    if (e.data.dataUrl) {
+                        safeSetStorage('ksynth_vfs_track', e.data.dataUrl);
+                        checkVfsAudioTrack();
+                    }
+                }
+            });
+            checkVfsAudioTrack();
+
             setStatus('Ready', 'ready');
         });
     </script>

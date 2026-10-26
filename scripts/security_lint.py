@@ -165,10 +165,10 @@ def strip_c_syntax(content: str) -> str:
     clean = re.sub(r"/\*.*?\*/", "", content, flags=re.DOTALL)
     # Strip line comments
     clean = re.sub(r"//.*", "", clean)
-    # Strip string literals ("...")
-    clean = re.sub(r'"(?:\\.|[^"\\])*"', '""', clean)
+    # Strip string literals ("...") using unrolled loop to avoid backtracking
+    clean = re.sub(r'"[^"\\]*(?:\\.[^"\\]*)*"', '""', clean)
     # Strip character literals ('x', '\n', '\x41', etc.)
-    clean = re.sub(r"'(?:\\.|[^'\\])'", "' '", clean)
+    clean = re.sub(r"'[^'\\]*(?:\\.[^'\\]*)*'", "' '", clean)
     return clean
 
 
@@ -367,9 +367,11 @@ def run_security_scan(pr_mode: bool = False, base_ref: str = "origin/main") -> i
 
     else:
         log("Running in FULL mode: scanning entire repository...")
-        for c_file in REPO_ROOT.glob("K*/**/*.c"):
-            if "node_modules" not in c_file.parts:
-                violations.extend(check_c_file(c_file))
+        for k_dir in REPO_ROOT.glob("K*"):
+            if k_dir.is_dir() and k_dir.name not in ("KiloOS", "KiloOS_Server"):
+                for c_file in k_dir.rglob("*.c"):
+                    if "node_modules" not in c_file.parts:
+                        violations.extend(check_c_file(c_file))
 
         for web_file in (REPO_ROOT / "KiloOS" / "public" / "apps").glob("*.html"):
             violations.extend(check_web_file(web_file))
@@ -392,12 +394,46 @@ def run_security_scan(pr_mode: bool = False, base_ref: str = "origin/main") -> i
         return 0
 
 
+def run_fast_turn_scan(extra_files: list[str] = None) -> int:
+    log("=" * 60)
+    log("Starting KiloApps Fast Turn Security & Anti-Trademark Linter...")
+    res = subprocess.run(["git", "status", "--porcelain"], cwd=str(REPO_ROOT), text=True, capture_output=True, stdin=subprocess.DEVNULL)
+    target_files = set(extra_files or [])
+    for line in res.stdout.splitlines():
+        parts = line.strip().split(maxsplit=1)
+        if len(parts) == 2:
+            target_files.add(parts[1].strip('"'))
+    violations = []
+    for f_str in sorted(target_files):
+        f_path = REPO_ROOT / f_str if not Path(f_str).is_absolute() else Path(f_str)
+        if not f_path.exists() or not f_path.is_file():
+            continue
+        if f_path.suffix.lower() in [".c", ".h"]:
+            violations.extend(check_c_file(f_path))
+        elif f_path.suffix.lower() in [".html", ".js", ".jsx"]:
+            violations.extend(check_web_file(f_path))
+        elif f_path.suffix.lower() in [".md", ".txt", ".json"]:
+            violations.extend(check_text_file(f_path))
+    log("=" * 60)
+    if violations:
+        log(f"❌ SECURITY SCAN FAILED! {len(violations)} violation(s) detected:")
+        for v in violations:
+            print(f"  - {v}")
+        return 1
+    log(f"✅ ALL SECURITY GATES PASSED! ({len(target_files)} modified/target file(s) verified in fast mode).")
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description="KiloApps Autonomous Security Linter")
     parser.add_argument("--pr", action="store_true", help="Scan only files modified in current branch relative to base")
+    parser.add_argument("--fast", action="store_true", help="Scan working-tree modified files + explicit --files")
+    parser.add_argument("--files", nargs="*", default=[], help="Explicit files to scan in --fast mode")
     parser.add_argument("--base", type=str, default="origin/main", help="Base git ref for PR diff comparisons")
     args = parser.parse_args()
 
+    if args.fast:
+        sys.exit(run_fast_turn_scan(args.files))
     sys.exit(run_security_scan(pr_mode=args.pr, base_ref=args.base))
 
 

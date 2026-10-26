@@ -746,10 +746,10 @@ def validate_next_work_file(path: Path) -> tuple[bool, str]:
 
 
 TOKEN_EFFICIENCY_SUFFIX = (
-    " TOKEN EFFICIENCY & FAST VERIFICATION DIRECTIVE: "
-    "Complete this turn in <= 25 tool calls. "
-    "COMMIT CHECKPOINT: Once you have substantive edits or reach ~12 tool calls, wrap up immediately: "
-    "1) Run ONE-COMMAND verification: `python scripts/verify_turn.py --app <target>` (validates size <999KB, native C build if modified, startup check, Vite build, and security lint in 1 call). "
+    " QUALITY & FAST VERIFICATION DIRECTIVE: "
+    "Complete this turn in <= 32 tool calls. "
+    "COMMIT CHECKPOINT: Complete all Mission Spec items across both Web HTML and Win32 C (<App>/main.c if present), then wrap up by ~16 tool calls: "
+    "1) Run ONE-COMMAND post-edit verification ONCE (do NOT run verify_turn.py before editing): `python scripts/verify_turn.py --app <target> --build-native` (validates size <999KB, native C build, startup check, visual probe sheet.png, Vite build if shell changed, and security lint in 1 call), and inspect `docs/gallery/review/<target>/sheet.png` via `view_file` to confirm zero layout clipping. "
     "2) Run ONE-COMMAND queue handoff & logging: `python scripts/advance_turn.py --agent <agent> --app <target> --title \"<Summary>\" --bullet \"<Status>\" --bullet \"<Key change>\"` (or pass `--quarantine-mature \"<Summary>\" --category \"<Category>\"` if promoting to Mature). "
     "3) Commit (`git add -A && git commit -m ... && git push origin main`) and STOP immediately. "
     "Do NOT read historical archive files (archive/) or receipts."
@@ -1160,10 +1160,12 @@ def main():
             else:
                 model = frontmatter.get("model", "gemini-3.8-flash-high")
 
-            # Selective effort: creative/deep generative/critic agents run high effort;
-            # structured audit/verification/testing agents run medium effort to prevent runaway reasoning loops.
-            CREATIVE_AGENTS = {"kilo-creator", "kilo-expander", "kilo-soundscape", "kilo-planner", "kilo-review"}
-            fm_effort = frontmatter.get("effort", "selective")
+            # High effort across all active Flash & Argon agents to maximize code/UX/fix quality
+            HIGH_EFFORT_AGENTS = {
+                "kilo-creator", "kilo-expander", "kilo-soundscape", "kilo-tester",
+                "kilo-usability", "kilo-qa", "kilo-graphics", "kilo-planner", "kilo-review"
+            }
+            fm_effort = frontmatter.get("effort", "high")
             if os.environ.get("AGY_EFFORT"):
                 effort = os.environ.get("AGY_EFFORT")
             elif isinstance(frontmatter.get("agent_efforts"), dict) and agent in frontmatter["agent_efforts"]:
@@ -1171,7 +1173,7 @@ def main():
             elif fm_effort in ("high", "medium", "low"):
                 effort = fm_effort
             else:
-                effort = "high" if agent in CREATIVE_AGENTS else "medium"
+                effort = "high" if agent in HIGH_EFFORT_AGENTS else "medium"
 
             # Align model identifier with effort for Gemini 3.8 Flash & Gemini 4 Argon to prevent CLI conflict
             if model.startswith("gemini-3.8-flash") and effort in ("high", "medium", "low"):
@@ -1182,7 +1184,7 @@ def main():
             timeout_min = int(
                 os.environ.get("AGY_TIMEOUT")
                 or (frontmatter.get("agent_timeouts", {}).get(agent) if isinstance(frontmatter.get("agent_timeouts"), dict) else None)
-                or frontmatter.get("timeout_minutes", 8)
+                or frontmatter.get("timeout_minutes", 10)
             )
             targets = frontmatter.get("current_targets", {})
             if isinstance(targets, str):
@@ -1286,7 +1288,7 @@ def main():
         # Post-agent Git check: ensure unpushed commits and node state are synchronized to remote
         if process.returncode == 0 and not args.dry_run:
             try:
-                # Post-turn Uncommitted Work Salvage: if agent finished next_work.md right as --print-timeout fired
+                # Post-turn Uncommitted Work Salvage: if agent finished edits right as --print-timeout fired
                 nw_status = subprocess.run(
                     ["git", "status", "--porcelain", "next_work.md"],
                     cwd=str(REPO_ROOT),
@@ -1300,6 +1302,42 @@ def main():
                         subprocess.run(["git", "add", "-u"], cwd=str(REPO_ROOT), capture_output=True)
                         subprocess.run(["git", "commit", "-m", f"feat({agent}): auto-salvage completed turn for {target_app}"], cwd=str(REPO_ROOT), capture_output=True)
                         log(f"[POST-TURN SALVAGE] Committed completed turn for {agent} ({target_app}).")
+                elif target_app:
+                    app_status = subprocess.run(
+                        ["git", "status", "--porcelain", "KiloOS/public"],
+                        cwd=str(REPO_ROOT),
+                        capture_output=True,
+                        text=True,
+                    )
+                    if app_status.returncode == 0 and app_status.stdout.strip():
+                        log(f"[POST-TURN SALVAGE] Detected uncommitted app edits for {agent} ({target_app}) before handoff. Running verify_turn.py...")
+                        v_res = subprocess.run(
+                            [sys.executable, "scripts/verify_turn.py", "--app", target_app, "--build-native"],
+                            cwd=str(REPO_ROOT),
+                            capture_output=True,
+                            text=True,
+                            stdin=subprocess.DEVNULL,
+                            timeout=90,
+                        )
+                        if v_res.returncode == 0:
+                            adv_res = subprocess.run(
+                                [
+                                    sys.executable, "scripts/advance_turn.py",
+                                    "--agent", agent,
+                                    "--app", target_app,
+                                    "--title", "Verified Turn (Auto-Salvaged at Timeout)",
+                                    "--bullet", "Status: PASS ✅ (verified by orchestrator post-turn salvage).",
+                                    "--bullet", f"Completed {agent} updates for {target_app} across web and native targets.",
+                                ],
+                                cwd=str(REPO_ROOT),
+                                capture_output=True,
+                                text=True,
+                                stdin=subprocess.DEVNULL,
+                            )
+                            if adv_res.returncode == 0:
+                                subprocess.run(["git", "add", "-u"], cwd=str(REPO_ROOT), capture_output=True)
+                                subprocess.run(["git", "commit", "-m", f"feat({agent}): auto-salvage verified turn for {target_app}"], cwd=str(REPO_ROOT), capture_output=True)
+                                log(f"[POST-TURN SALVAGE] Verified, advanced queue, and committed turn for {agent} ({target_app})!")
 
                 # Post-turn 0-token rotation: ensure new logs written by agent don't exceed cap
                 rot_res = rotate_next_work_logs(next_work_path=NEXT_WORK_FILE)
