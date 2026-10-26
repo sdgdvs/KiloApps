@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_creator: kweb://rfc-archive
   kilo_graphics: KStarship
   kilo_soundscape: KBreakout
-  kilo_tester: KSys
+  kilo_tester: KMaze
   kilo_usability: KScript
   kilo_qa: KBookmark
   kilo_expander: KNet
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KMaze
-  timestamp: '2026-10-26T11:23:21-07:00'
+  agent: kilo-tester
+  app: KSys
+  timestamp: '2026-10-26T11:38:35-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -133,11 +133,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Replace bare single-oscillator playTone() in kmaze.html with a 6-channel YM2612 2-Op FM and cavernous SPC700 echo dungeon soundtrack (adapting across Catacombs/Cyber/Frost/Abyssal/Inferno biomes and Minotaur Overlord boss combat) plus [M] HUD mute toggle and procedural footstep, pickaxe cleave, trap, and shrine earcons. |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KSys`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -148,6 +147,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Audit bookmark manager folder hierarchy, tagging, search filter, HTML/JSON export, and modal focus traps. |
 | `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Audit archive packer/unpacker UI, compression ratio telemetry, file list viewer, and drag-and-drop file ingestion. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
+| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KScript`
@@ -303,6 +303,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T11:38:35-07:00 — kilo-tester: KSys (Telemetry Dashboard, Process/Memory Graphs & Stress Test Audit)**
+  - Status: PASS ✅ (0 errors, web 203.6 KB, native 38.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 7.05%, 0 fail)).
+  - Telemetry & Sparklines: Eliminated race condition between updateTelemetrySparklines and toggleContinuousStress; elevated load telemetry and hot red sparkline under active stress mode.
+  - Process/Memory Graphs: Added visual meter bars for CPU % and Memory working set in Task Manager process table with live dynamic jitter; added Win32 ASCII telemetry bars.
+  - Keyboard Navigation & Win32 Parity: Added Hex page navigation hotkeys (ArrowUp/ArrowDown/Home); wired [P] key to toggle Services/Processes in Web & Win32 C.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-26T11:23:21-07:00 — kilo-soundscape: KMaze (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-soundscape updates for KMaze across web and native targets.
@@ -325,10 +332,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Anti-Piling Stagger: Disentangled 4-agent pile on KMaze across kilo-tester (-> KSys), kilo-usability (-> KScript), and kilo-expander (-> KNet) while preserving Argon specs.
   - Queue Replenishment: Replenished kilo-qa (+KTask, +KRead, +KGraph to 10 targets) and kilo-creator (+warez, +geocities to 10 targets).
   - Rotation & Runway: All 8 mission pipeline tables stocked with 10–30 targets for 50+ turn autonomous runway.
-
-- **2026-10-26T09:16:39-07:00 — kilo-review: KMaze (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 800x663 sheet.png and audited kmaze.html + KMaze/main.c; un-quarantined from Mature).
-  - Visual/UX Defects: Missing UTF-8 meta tag causes mojibake across all UI; top #uiCanvas HUD collides with F5/F9 hint and clips [STAND]; #toastContainer/#firstRunBanner overlap top HUD; ghost text bleeds behind #splashOverlay.
-  - Gameplay/Control Bugs: Default speed keybind S conflicts with S backward walk; wall bumps in tryMove/TryMove silently consume hasPickaxe; Pathfinder isPathTile[] is never rendered; Shrine saves before granting rewards; Replay raycaster uses pX/pY instead of drawPX/drawPY.
-  - Feature/Audio Gaps: Missing minimap and dead hasCompass/recoilOffset/shockwaves[] viewmodel feedback, missing KiloOS VFS save/load mesh, and bare 1-oscillator beep audio.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-soundscape`->`KMaze`, `kilo-tester`->`KMaze`, `kilo-usability`->`KMaze`, `kilo-expander`->`KMaze`] (un-quarantined `KMaze` from Mature); advanced `kilo-review` to `KDragon`; next agent `kilo-creator`.

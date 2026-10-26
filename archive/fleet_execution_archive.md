@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T09:16:39-07:00 — kilo-review: KMaze (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 800x663 sheet.png and audited kmaze.html + KMaze/main.c; un-quarantined from Mature).
+  - Visual/UX Defects: Missing UTF-8 meta tag causes mojibake across all UI; top #uiCanvas HUD collides with F5/F9 hint and clips [STAND]; #toastContainer/#firstRunBanner overlap top HUD; ghost text bleeds behind #splashOverlay.
+  - Gameplay/Control Bugs: Default speed keybind S conflicts with S backward walk; wall bumps in tryMove/TryMove silently consume hasPickaxe; Pathfinder isPathTile[] is never rendered; Shrine saves before granting rewards; Replay raycaster uses pX/pY instead of drawPX/drawPY.
+  - Feature/Audio Gaps: Missing minimap and dead hasCompass/recoilOffset/shockwaves[] viewmodel feedback, missing KiloOS VFS save/load mesh, and bare 1-oscillator beep audio.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-soundscape`->`KMaze`, `kilo-tester`->`KMaze`, `kilo-usability`->`KMaze`, `kilo-expander`->`KMaze`] (un-quarantined `KMaze` from Mature); advanced `kilo-review` to `KDragon`; next agent `kilo-creator`.
+
 - **2026-10-26T08:50:05-07:00 — kilo-adhoc: Fleet Orchestration (+25% Quality-First Flash Budget & Fast Verification Upgrade)**
   - Status: PASS ✅ (orchestrate.py --dry-run, check_sizes.py, and verify_turn.py sub-10s synchronous benchmark PASS).
   - Per-Turn Budget & Effort: Relaxed Flash tool budget +28% (`25 -> 32` calls, checkpoint `12 -> 16`), promoted all Flash agents to `high` effort (`gemini-3.8-flash-high`), and raised timeouts to `10m/11m`.

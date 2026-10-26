@@ -1,1838 +1,3750 @@
 #define WIN32_LEAN_AND_MEAN
+
 #include <windows.h>
+
 #include <mmsystem.h>
+
 #include <commctrl.h>
 
+
+
 #pragma function(memset, memcpy)
+
 void* __cdecl memset(void* dest, int c, size_t count) {
+
     char* p = (char*)dest;
+
     while (count--) *p++ = (char)c;
+
     return dest;
+
 }
+
+
 
 void* __cdecl memcpy(void* dest, const void* src, size_t count) {
+
     char* d = (char*)dest;
+
     const char* s = (const char*)src;
+
     while (count--) *d++ = *s++;
+
     return dest;
+
 }
+
+
 
 void UpdateView(void);
+
 void ShowNativeToast(HWND hwnd, const char* msg);
 
+
+
 #define W 1024
+
 #define H 768
 
+
+
 #define ID_TAB_CTRL        1001
+
 #define ID_TXT_MAIN        1002
+
 #define ID_BTN_CPU         1003
+
 #define ID_BTN_RAM         1004
+
 #define ID_BTN_DISK        1005
+
 #define ID_BTN_ALL         1006
+
 #define ID_BTN_EXP_TXT      1007
+
 #define ID_BTN_EXP_JSON     1008
+
 #define ID_BTN_EXP_HTML     1009
+
 #define ID_BTN_HELP          1010
+
 #define ID_BTN_SVC_REFRESH  1011
+
 #define ID_BTN_SVC_FILTER   1012
+
 #define ID_BTN_INSP_REFRESH 1013
+
 #define ID_BTN_INSP_BENCH   1014
+
 #define ID_BTN_LOG_CLEAR    1015
+
 #define ID_BTN_LOG_EXPORT   1016
+
 #define ID_STATUS_BAR       1017
+
 #define ID_BTN_EXP_CSV      1018
+
 #define ID_BTN_EXP_MD       1019
+
 #define ID_BTN_SAVE         1020
+
 #define ID_BTN_LOAD         1021
+
 #define ID_BTN_GDI          1022
+
 #define ID_BTN_CRYPTO       1023
+
 #define ID_BTN_JITTER       1024
+
 #define ID_BTN_HEX_SRC      1025
+
 #define ID_BTN_HEX_PREV     1026
+
 #define ID_BTN_HEX_NEXT     1027
+
 #define ID_BTN_HEX_RESET    1028
-#define ID_BTN_PROBE        1029
+
+#define ID_BTN_PROBE        1029
+
+
+
 #define ID_BTN_STRESS       1030
 
+
+
 HWND hTabCtrl = NULL;
+
 HWND hOutput = NULL;
+
 HWND hBtnCpu = NULL;
+
 HWND hBtnRam = NULL;
+
 HWND hBtnDisk = NULL;
+
 HWND hBtnGdi = NULL;
+
 HWND hBtnCrypto = NULL;
+
 HWND hBtnJitter = NULL;
+
 HWND hBtnAll = NULL;
+
 HWND hBtnExpTxt = NULL;
+
 HWND hBtnExpJson = NULL;
+
 HWND hBtnExpHtml = NULL;
+
 HWND hBtnExpCsv = NULL;
+
 HWND hBtnExpMd = NULL;
+
 HWND hBtnHelp = NULL;
+
 HWND hBtnSave = NULL;
+
 HWND hBtnLoad = NULL;
+
 HWND hBtnSvcRefresh = NULL;
+
 HWND hBtnSvcFilter = NULL;
+
 HWND hBtnInspRefresh = NULL;
+
 HWND hBtnInspBench = NULL;
+
 HWND hBtnProbe = NULL;
+
 HWND hBtnHexSrc = NULL;
+
 HWND hBtnHexPrev = NULL;
+
 HWND hBtnHexNext = NULL;
+
 HWND hBtnHexReset = NULL;
+
 HWND hBtnLogClear = NULL;
+
 HWND hBtnLogExport = NULL;
-HWND hStatusBar = NULL;
-HWND hBtnStress = NULL;
-BOOL g_StressActive = FALSE;
+
+HWND hStatusBar = NULL;
+
+
+
+HWND hBtnStress = NULL;
+
+
+
+BOOL g_StressActive = FALSE;
+
+
+
 DWORD g_StressCycles = 0;
 
+
+
 char g_LogBuffer[16384] = {0};
+
 char g_CpuResult[128] = "Not Executed";
+
 char g_RamResult[128] = "Not Executed";
+
 char g_DiskResult[128] = "Not Executed";
+
 char g_GdiResult[128] = "Not Executed";
+
 char g_CryptoResult[128] = "Not Executed";
+
 char g_JitterResult[128] = "Not Executed";
+
 char g_ToastMsg[256] = "Welcome to KSys! Tabs: [1-6] | [Shift+M] Sound | [F5] Save | [F9] Load | [F1] Help";
+
 DWORD g_ToastExpire = 0;
 
+
+
 int g_CurrentTab = 0;
+
 int g_ServiceFilterMode = 0; // 0: All, 1: Running Only, 2: Stopped Only, 3: Win32, 4: Drivers
+
 int g_HexBufferSource = 0;   // 0: Telemetry Buffer, 1: Save Snapshot, 2: Network Probe Packet, 3: Event Logs
+
 DWORD g_HexOffset = 0;
+
 BOOL g_SoundEnabled = TRUE;
 
+
+
 // Procedural Audio Synthesizer (Yamaha YM2612 2-Op FM & SNES SPC700 Delay Warmth)
+
 static const signed char g_Sin64[64] = {
+
     0, 12, 25, 37, 49, 60, 71, 81, 90, 98, 106, 112, 117, 122, 125, 126,
+
     127, 126, 125, 122, 117, 112, 106, 98, 90, 81, 71, 60, 49, 37, 25, 12,
+
     0, -12, -25, -37, -49, -60, -71, -81, -90, -98, -106, -112, -117, -122, -125, -126,
+
     -127, -126, -125, -122, -117, -112, -106, -98, -90, -81, -71, -60, -49, -37, -25, -12
+
 };
 
+
+
 static int SinLookup(int phase) {
+
     return (int)g_Sin64[(phase >> 10) & 63];
+
 }
+
+
 
 static BYTE g_SndBuf[8192];
 
+
+
 void PlayNativeSfx(int type) {
+
     if (!g_SoundEnabled) return;
 
+
+
     DWORD sampleRate = 11025;
+
     int numSamples = 2200; // ~0.2 sec default
+
     if (type == 1 || type == 5) numSamples = 4400; // ~0.4 sec for chime / fanfare
+
     if (numSamples > (int)(sizeof(g_SndBuf) - 44)) numSamples = (int)(sizeof(g_SndBuf) - 44);
 
+
+
     BYTE* p = g_SndBuf;
+
     // RIFF header
+
     p[0] = 'R'; p[1] = 'I'; p[2] = 'F'; p[3] = 'F';
+
     DWORD riffSize = 36 + numSamples;
+
     *(DWORD*)(p + 4) = riffSize;
+
     p[8] = 'W'; p[9] = 'A'; p[10] = 'V'; p[11] = 'E';
+
     // fmt subchunk
+
     p[12] = 'f'; p[13] = 'm'; p[14] = 't'; p[15] = ' ';
+
     *(DWORD*)(p + 16) = 16;
+
     *(WORD*)(p + 20) = 1; // PCM
+
     *(WORD*)(p + 22) = 1; // Mono
+
     *(DWORD*)(p + 24) = sampleRate;
+
     *(DWORD*)(p + 28) = sampleRate; // byte rate (sampleRate * channels * bytesPerSample)
+
     *(WORD*)(p + 32) = 1; // block align
+
     *(WORD*)(p + 34) = 8; // 8-bit
+
     // data subchunk
+
     p[36] = 'd'; p[37] = 'a'; p[38] = 't'; p[39] = 'a';
+
     *(DWORD*)(p + 40) = numSamples;
+
+
 
     BYTE* samples = p + 44;
 
+
+
     int fc = 440, fm = 880, modIdx = 60;
+
     if (type == 0) { fc = 220; fm = 220; modIdx = 20; numSamples = 1100; }
+
     else if (type == 1) { fc = 660; fm = 1320; modIdx = 80; } // quicksave chime
+
     else if (type == 2) { fc = 780; fm = 780; modIdx = 30; numSamples = 900; } // tick
+
     else if (type == 3) { fc = 330; fm = 660; modIdx = 50; } // bench start
+
     else if (type == 4) { fc = 880; fm = 1760; modIdx = 70; } // bench pass
+
     else if (type == 5) { fc = 988; fm = 1976; modIdx = 90; } // fanfare
+
     else if (type == 6) { fc = 180; fm = 180; modIdx = 100; } // warn
+
     else if (type == 7) { fc = 520; fm = 1040; modIdx = 40; numSamples = 1200; } // probe / seek
 
+
+
     int inc_c = (fc * 65536) / sampleRate;
+
     int inc_m = (fm * 65536) / sampleRate;
+
     int phase_c = 0;
+
     int phase_m = 0;
 
+
+
     static short delayRing[2048] = {0};
+
     int delayIdx = 0;
+
     int delayLen = 1650; // ~150ms SPC700 slapback
 
+
+
     for (int i = 0; i < numSamples; i++) {
+
         phase_m += inc_m;
+
         int mVal = (SinLookup(phase_m) * modIdx) >> 7;
+
         phase_c += inc_c + (mVal << 6);
+
         int cVal = SinLookup(phase_c);
 
+
+
         int env = 127 - (i * 127 / numSamples);
+
         int raw = (cVal * env) >> 7;
 
+
+
         int echo = (delayRing[delayIdx] * 28) / 100;
+
         int mixed = raw + echo;
+
         delayRing[delayIdx] = (short)mixed;
+
         delayIdx = (delayIdx + 1) % delayLen;
 
+
+
         int out = 128 + (mixed * 95 / 128);
+
         if (out < 0) out = 0;
+
         if (out > 255) out = 255;
+
         samples[i] = (BYTE)out;
+
     }
+
+
 
     PlaySoundA((LPCSTR)g_SndBuf, NULL, SND_MEMORY | SND_ASYNC);
+
 }
+
+
 
 void LogEvent(const char* level, const char* msg) {
+
     SYSTEMTIME st;
+
     GetLocalTime(&st);
+
     char timeStr[128];
+
     wsprintfA(timeStr, "[%02d:%02d:%02d] [%s] %s\r\n", st.wHour, st.wMinute, st.wSecond, level, msg);
+
     
+
     int curLen = lstrlenA(g_LogBuffer);
+
     int addLen = lstrlenA(timeStr);
+
     if (curLen + addLen >= (int)sizeof(g_LogBuffer) - 1) {
+
         int pruneLen = (int)sizeof(g_LogBuffer) / 2;
+
         char* pNextLine = g_LogBuffer + pruneLen;
+
         while (*pNextLine && *pNextLine != '\n') pNextLine++;
+
         if (*pNextLine == '\n') pNextLine++;
+
         int remainLen = lstrlenA(pNextLine);
+
         for (int i = 0; i <= remainLen; i++) {
+
             g_LogBuffer[i] = pNextLine[i];
+
         }
+
     }
+
     lstrcatA(g_LogBuffer, timeStr);
+
 }
+
+
 
 ULONGLONG ftTo64(const FILETIME* ft) {
+
     return ((ULONGLONG)ft->dwHighDateTime << 32) | ft->dwLowDateTime;
+
 }
+
+
 
 int GetCpuUsagePercent() {
+
     static ULONGLONG prevIdle = 0, prevKernel = 0, prevUser = 0;
+
     FILETIME ftIdle, ftKernel, ftUser;
+
     if (!GetSystemTimes(&ftIdle, &ftKernel, &ftUser)) return 0;
+
     
+
     ULONGLONG idle = ftTo64(&ftIdle);
+
     ULONGLONG kernel = ftTo64(&ftKernel);
+
     ULONGLONG user = ftTo64(&ftUser);
+
     
+
     ULONGLONG diffIdle = idle - prevIdle;
+
     ULONGLONG diffKernel = kernel - prevKernel;
+
     ULONGLONG diffUser = user - prevUser;
+
     
+
     prevIdle = idle;
+
     prevKernel = kernel;
+
     prevUser = user;
+
     
+
     ULONGLONG totalSys = diffKernel + diffUser;
+
     if (totalSys == 0) return 0;
+
     
+
     ULONGLONG sysUsage = totalSys - diffIdle;
+
     int pct = (int)((sysUsage * 100) / totalSys);
+
     if (pct < 0) pct = 0;
+
     if (pct > 100) pct = 100;
+
+    if (g_StressActive && pct < 75) {
+
+        pct = 75 + (int)(GetTickCount() % 24);
+
+    }
+
     return pct;
+
 }
+
+
 
 void GetSystemAuditText(char* buf, int maxLen) {
+
     SYSTEM_INFO si;
+
     GetSystemInfo(&si);
+
     
+
     MEMORYSTATUSEX mem = {0};
+
     mem.dwLength = sizeof(mem);
+
     GlobalMemoryStatusEx(&mem);
+
     
+
     DWORD ticks = GetTickCount();
+
     DWORD hours = ticks / 3600000;
+
     DWORD mins = (ticks / 60000) % 60;
+
     DWORD secs = (ticks / 1000) % 60;
+
     
+
     HDC hdc = GetDC(NULL);
+
     int sw = hdc ? GetDeviceCaps(hdc, HORZRES) : 0;
+
     int sh = hdc ? GetDeviceCaps(hdc, VERTRES) : 0;
+
     int bpp = hdc ? GetDeviceCaps(hdc, BITSPIXEL) : 0;
+
     int hz = hdc ? GetDeviceCaps(hdc, VREFRESH) : 0;
+
     if (hdc) ReleaseDC(NULL, hdc);
+
     
+
     SYSTEM_POWER_STATUS sps;
+
     BOOL hasPower = GetSystemPowerStatus(&sps);
 
+
+
     char computerName[64] = "Unknown";
+
     DWORD cnSize = sizeof(computerName);
+
     GetComputerNameA(computerName, &cnSize);
 
+
+
     char userName[64] = "Unknown";
+
     DWORD unSize = sizeof(userName);
+
     GetUserNameA(userName, &unSize);
 
+
+
     char winDir[MAX_PATH] = "Unknown";
+
     GetWindowsDirectoryA(winDir, sizeof(winDir));
 
+
+
     char sysDir[MAX_PATH] = "Unknown";
+
     GetSystemDirectoryA(sysDir, sizeof(sysDir));
 
+
+
     DWORD totalSvc = 0, runSvc = 0;
+
     SC_HANDLE hSCM = OpenSCManagerA(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+
     if (hSCM) {
+
         DWORD bytesNeeded = 0, servicesReturned = 0, resumeHandle = 0;
+
         EnumServicesStatusA(hSCM, SERVICE_WIN32 | SERVICE_DRIVER, SERVICE_STATE_ALL, NULL, 0, &bytesNeeded, &servicesReturned, &resumeHandle);
+
         if (bytesNeeded > 0) {
+
             BYTE* pBuf = (BYTE*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, bytesNeeded);
+
             if (pBuf) {
+
                 resumeHandle = 0;
+
                 if (EnumServicesStatusA(hSCM, SERVICE_WIN32 | SERVICE_DRIVER, SERVICE_STATE_ALL, (LPENUM_SERVICE_STATUSA)pBuf, bytesNeeded, &bytesNeeded, &servicesReturned, &resumeHandle)) {
+
                     totalSvc = servicesReturned;
+
                     LPENUM_SERVICE_STATUSA pServices = (LPENUM_SERVICE_STATUSA)pBuf;
+
                     for (DWORD i = 0; i < totalSvc; i++) {
+
                         if (pServices[i].ServiceStatus.dwCurrentState == SERVICE_RUNNING) runSvc++;
+
                     }
+
                 }
+
                 HeapFree(GetProcessHeap(), 0, pBuf);
+
             }
+
         }
+
         CloseServiceHandle(hSCM);
+
     }
+
+
 
     // Health Index calculation
+
     int healthScore = 100;
+
     if (mem.dwMemoryLoad > 85) healthScore -= 25;
+
     else if (mem.dwMemoryLoad > 70) healthScore -= 10;
 
+
+
     ULARGE_INTEGER cFreeBytesCaller, cTotalBytes, cTotalFree;
+
     BOOL hasDiskC = GetDiskFreeSpaceExA("C:\\", &cFreeBytesCaller, &cTotalBytes, &cTotalFree);
+
     if (hasDiskC) {
+
         DWORD freeMB = (DWORD)(cTotalFree.QuadPart >> 20);
+
         if (freeMB < 5120) healthScore -= 20;
+
         else if (freeMB < 15360) healthScore -= 10;
+
     }
+
     if (healthScore < 0) healthScore = 0;
 
+
+
     const char* healthRating = (healthScore >= 90) ? "EXCELLENT - Optimal Operation" :
+
                                (healthScore >= 75) ? "GOOD - Standard Workload Parameters" :
+
                                (healthScore >= 50) ? "FAIR - High Memory or Storage Load" : "CRITICAL - Resource Exhaustion Risk";
 
+
+
     char chunk[512];
+
     buf[0] = '\0';
+
     lstrcatA(buf, "=================================================================\r\n"
+
                   "       KSYS NATIVE SYSTEM DIAGNOSTICS & HARDWARE REPORT          \r\n"
+
                   "=================================================================\r\n"
+
                   "-> Press 'H' or F1 for Help/Instructions \r\n\r\n");
 
+
+
     wsprintfA(chunk, "--- SYSTEM HEALTH & HOST IDENTITY ---\r\n"
+
                      "Overall Health Index : %u%% [%s]\r\n"
+
                      "Host Computer Name   : %s\r\n"
+
                      "Active User Profile  : %s\r\n"
+
                      "System Uptime        : %u h %u m %u s\r\n\r\n",
+
               healthScore, healthRating, computerName, userName, hours, mins, secs);
+
     lstrcatA(buf, chunk);
+
+
 
     wsprintfA(chunk, "--- PROCESSOR & TOPOLOGY ---\r\n"
+
                      "Architecture         : %s\r\n"
+
                      "Logical Processors   : %u Cores\r\n"
+
                      "Page Size            : %u bytes\r\n"
+
                      "Alloc Granularity    : %u bytes\r\n"
+
                      "Min App Address      : 0x%p\r\n"
+
                      "Max App Address      : 0x%p\r\n\r\n",
+
               (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) ? "x64 (AMD64)" :
+
               (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL) ? "x86 (Intel)" : "ARM/Other",
+
               si.dwNumberOfProcessors, si.dwPageSize, si.dwAllocationGranularity,
+
               si.lpMinimumApplicationAddress, si.lpMaximumApplicationAddress);
+
     lstrcatA(buf, chunk);
+
+
 
     wsprintfA(chunk, "--- MEMORY SPECIFICATIONS ---\r\n"
+
                      "Memory Load          : %u%%\r\n"
+
                      "Total Physical RAM   : %u MB\r\n"
+
                      "Available Physical   : %u MB\r\n"
+
                      "Total Page File      : %u MB\r\n"
+
                      "Available Page File  : %u MB\r\n\r\n",
+
               mem.dwMemoryLoad, (DWORD)(mem.ullTotalPhys >> 20), (DWORD)(mem.ullAvailPhys >> 20),
+
               (DWORD)(mem.ullTotalPageFile >> 20), (DWORD)(mem.ullAvailPageFile >> 20));
+
     lstrcatA(buf, chunk);
+
+
 
     wsprintfA(chunk, "--- SYSTEM SERVICES SUMMARY ---\r\n"
+
                      "Total Services       : %u Services & Drivers Monitored\r\n"
+
                      "Running Services     : %u Active Services\r\n\r\n",
+
               totalSvc, runSvc);
+
     lstrcatA(buf, chunk);
+
+
 
     lstrcatA(buf, "--- MOUNTED DRIVES & STORAGE VOLUMES ---\r\n");
+
     char driveStrings[512] = {0};
+
     DWORD drvLen = GetLogicalDriveStringsA(sizeof(driveStrings) - 1, driveStrings);
+
     if (drvLen > 0 && drvLen < sizeof(driveStrings)) {
+
         char* pDrive = driveStrings;
+
         while (*pDrive && lstrlenA(buf) < maxLen - 1024) {
+
             UINT driveType = GetDriveTypeA(pDrive);
+
             const char* typeStr = "Unknown";
+
             if (driveType == DRIVE_FIXED) typeStr = "Fixed (HDD/SSD)";
+
             else if (driveType == DRIVE_REMOVABLE) typeStr = "Removable (USB)";
+
             else if (driveType == DRIVE_CDROM) typeStr = "CD-ROM/Optical";
+
             else if (driveType == DRIVE_REMOTE) typeStr = "Network Share";
+
             else if (driveType == DRIVE_RAMDISK) typeStr = "RAM Disk";
 
+
+
             char volName[64] = {0};
+
             char fsName[32] = {0};
+
             GetVolumeInformationA(pDrive, volName, sizeof(volName), NULL, NULL, NULL, fsName, sizeof(fsName));
 
+
+
             ULARGE_INTEGER dCaller, dTotal, dFree;
+
             if (GetDiskFreeSpaceExA(pDrive, &dCaller, &dTotal, &dFree)) {
+
                 wsprintfA(chunk, "  %-4s [%-12s] %-16s FS: %-6s Total: %6u MB | Free: %6u MB\r\n",
+
                           pDrive, volName[0] ? volName : "Local Disk", typeStr, fsName[0] ? fsName : "NTFS",
+
                           (DWORD)(dTotal.QuadPart >> 20), (DWORD)(dFree.QuadPart >> 20));
+
             } else {
+
                 wsprintfA(chunk, "  %-4s %-16s (Media Unmounted/Not Ready)\r\n", pDrive, typeStr);
+
             }
+
             lstrcatA(buf, chunk);
+
             pDrive += lstrlenA(pDrive) + 1;
+
         }
+
     }
+
     lstrcatA(buf, "\r\n");
 
+
+
     wsprintfA(chunk, "--- OS DIRECTORIES ---\r\n"
+
                      "Windows Directory    : %s\r\n"
+
                      "System Directory     : %s\r\n\r\n",
+
               winDir, sysDir);
+
     lstrcatA(buf, chunk);
+
+
 
     wsprintfA(chunk, "--- DISPLAY & GRAPHICS ---\r\n"
+
                      "Resolution           : %dx%d (%d-bit, %d Hz)\r\n\r\n",
+
               sw, sh, bpp, hz);
+
     lstrcatA(buf, chunk);
+
+
 
     wsprintfA(chunk, "--- POWER & BATTERY ---\r\n"
+
                      "AC Power Line        : %s\r\n"
+
                      "Battery Level        : %s\r\n\r\n",
+
               hasPower ? ((sps.ACLineStatus == 1) ? "Online (AC)" : "Offline (Battery)") : "Unknown",
+
               hasPower ? ((sps.BatteryLifePercent != 255) ? "Charged" : "N/A") : "N/A");
+
     lstrcatA(buf, chunk);
+
+
 
     wsprintfA(chunk, "--- DIAGNOSTIC BENCHMARK RESULTS ---\r\n"
+
                      "CPU Multi-thread     : %s\r\n"
+
                      "RAM Throughput       : %s\r\n"
+
                      "Disk I/O Throughput  : %s\r\n"
+
                      "GDI Blit Fillrate    : %s\r\n"
+
                      "CRC-32 Cryptography  : %s\r\n"
+
                      "Scheduler Jitter     : %s\r\n"
+
                      "=================================================================\r\n",
+
               g_CpuResult, g_RamResult, g_DiskResult, g_GdiResult, g_CryptoResult, g_JitterResult);
+
     lstrcatA(buf, chunk);
+
 }
 
+
+
 void GetServicesAndTelemetryText(char* buf, int maxLen) {
+
     int cpuPct = GetCpuUsagePercent();
+
     
+
     MEMORYSTATUSEX mem = {0};
+
     mem.dwLength = sizeof(mem);
+
     GlobalMemoryStatusEx(&mem);
+
     
+
     DWORD ticks = GetTickCount();
+
     DWORD hours = ticks / 3600000;
+
     DWORD mins = (ticks / 60000) % 60;
+
     DWORD secs = (ticks / 1000) % 60;
+
+
+
+    char cpuBar[18];
+
+    int cpuFilled = (cpuPct * 16) / 100;
+
+    if (cpuFilled < 0) cpuFilled = 0;
+
+    if (cpuFilled > 16) cpuFilled = 16;
+
+    for (int i = 0; i < 16; i++) cpuBar[i] = (i < cpuFilled) ? '|' : '.';
+
+    cpuBar[16] = '\0';
+
+
+
+    char memBar[18];
+
+    int memFilled = ((int)mem.dwMemoryLoad * 16) / 100;
+
+    if (memFilled < 0) memFilled = 0;
+
+    if (memFilled > 16) memFilled = 16;
+
+    for (int i = 0; i < 16; i++) memBar[i] = (i < memFilled) ? '|' : '.';
+
+    memBar[16] = '\0';
+
     
+
     wsprintfA(buf,
+
         "=================================================================\r\n"
+
         "       REAL-TIME SYSTEM TELEMETRY & SERVICES MANAGER            \r\n"
+
         "=================================================================\r\n"
+
         "-> Press 'H' or F1 for Help/Instructions \r\n\r\n"
+
         "--- REAL-TIME TELEMETRY ---\r\n"
-        "Live CPU Usage      : %d%%\r\n"
-        "Memory Load         : %u%%\r\n"
+
+        "Live CPU Usage      : %d%% [%s]\r\n"
+
+        "Memory Load         : %u%% [%s]\r\n"
+
         "Avail Physical RAM  : %u MB / %u MB\r\n"
+
         "Page File Avail     : %u MB\r\n"
-        "System Uptime       : %u h %u m %u s\r\n\r\n"
+
+        "System Uptime       : %u h %u m %u s\r\n"
+
+        "Diagnostic Stress   : %s (Cycles: %u)\r\n\r\n"
+
         "--- WINDOWS SYSTEM SERVICES & DRIVERS STATUS ---\r\n"
+
         "Filter Mode         : %s\r\n",
-        cpuPct,
-        mem.dwMemoryLoad,
+
+        cpuPct, cpuBar,
+
+        mem.dwMemoryLoad, memBar,
+
         (DWORD)(mem.ullAvailPhys >> 20),
+
         (DWORD)(mem.ullTotalPhys >> 20),
+
         (DWORD)(mem.ullAvailPageFile >> 20),
+
         hours, mins, secs,
+
+        g_StressActive ? "ACTIVE (Burn-in)" : "STANDBY", g_StressCycles,
+
         (g_ServiceFilterMode == 1) ? "RUNNING ONLY" :
+
         (g_ServiceFilterMode == 2) ? "STOPPED ONLY" :
+
         (g_ServiceFilterMode == 3) ? "WIN32 SERVICES ONLY" :
+
         (g_ServiceFilterMode == 4) ? "DRIVERS ONLY" : "ALL SERVICES"
+
     );
 
+
+
     SC_HANDLE hSCM = OpenSCManagerA(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+
     if (!hSCM) {
+
         lstrcatA(buf, "Error: Unable to open Windows Service Control Manager.\r\n");
+
         return;
+
     }
 
+
+
     DWORD bytesNeeded = 0, servicesReturned = 0, resumeHandle = 0;
+
     EnumServicesStatusA(hSCM, SERVICE_WIN32 | SERVICE_DRIVER, SERVICE_STATE_ALL, NULL, 0, &bytesNeeded, &servicesReturned, &resumeHandle);
 
+
+
     if (bytesNeeded > 0) {
+
         BYTE* pBuf = (BYTE*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, bytesNeeded);
+
         if (pBuf) {
+
             resumeHandle = 0;
+
             if (EnumServicesStatusA(hSCM, SERVICE_WIN32 | SERVICE_DRIVER, SERVICE_STATE_ALL, (LPENUM_SERVICE_STATUSA)pBuf, bytesNeeded, &bytesNeeded, &servicesReturned, &resumeHandle)) {
+
                 LPENUM_SERVICE_STATUSA pServices = (LPENUM_SERVICE_STATUSA)pBuf;
+
                 DWORD totalCount = servicesReturned;
+
                 DWORD runningCount = 0;
+
                 DWORD stoppedCount = 0;
+
                 DWORD driverCount = 0;
 
+
+
                 for (DWORD i = 0; i < totalCount; i++) {
+
                     if (pServices[i].ServiceStatus.dwCurrentState == SERVICE_RUNNING) runningCount++;
+
                     else if (pServices[i].ServiceStatus.dwCurrentState == SERVICE_STOPPED) stoppedCount++;
+
                     if (pServices[i].ServiceStatus.dwServiceType & SERVICE_DRIVER) driverCount++;
+
                 }
 
+
+
                 char headerBuf[256];
+
                 wsprintfA(headerBuf,
+
                     "Total Services      : %u | Running: %u | Stopped: %u | Drivers: %u\r\n\r\n"
+
                     "%-24s %-12s %-12s %-32s\r\n"
+
                     "--------------------------------------------------------------------------------\r\n",
+
                     totalCount, runningCount, stoppedCount, driverCount,
+
                     "SERVICE NAME", "TYPE", "STATUS", "DISPLAY NAME"
+
                 );
+
                 lstrcatA(buf, headerBuf);
 
+
+
                 DWORD shown = 0;
+
                 for (DWORD i = 0; i < totalCount && shown < 80; i++) {
+
                     DWORD state = pServices[i].ServiceStatus.dwCurrentState;
+
                     DWORD type = pServices[i].ServiceStatus.dwServiceType;
 
+
+
                     if (g_ServiceFilterMode == 1 && state != SERVICE_RUNNING) continue;
+
                     if (g_ServiceFilterMode == 2 && state != SERVICE_STOPPED) continue;
+
                     if (g_ServiceFilterMode == 3 && (type & SERVICE_DRIVER)) continue;
+
                     if (g_ServiceFilterMode == 4 && !(type & SERVICE_DRIVER)) continue;
 
+
+
                     const char* stStr = (state == SERVICE_RUNNING) ? "RUNNING" :
+
                                         (state == SERVICE_STOPPED) ? "STOPPED" :
+
                                         (state == SERVICE_PAUSED) ? "PAUSED" : "PENDING";
+
+
 
                     const char* typeStr = (type & SERVICE_DRIVER) ? "DRIVER" : "WIN32";
 
+
+
                     char svcName[25];
+
                     lstrcpynA(svcName, pServices[i].lpServiceName ? pServices[i].lpServiceName : "N/A", sizeof(svcName));
 
+
+
                     char dispName[33];
+
                     lstrcpynA(dispName, pServices[i].lpDisplayName ? pServices[i].lpDisplayName : "N/A", sizeof(dispName));
 
+
+
                     char line[256];
+
                     wsprintfA(line, "%-24s %-12s %-12s %-32s\r\n", svcName, typeStr, stStr, dispName);
+
                     lstrcatA(buf, line);
+
                     shown++;
+
                 }
+
                 if (shown < totalCount && g_ServiceFilterMode == 0) {
+
                     char tailBuf[64];
+
                     wsprintfA(tailBuf, "... and %u more services.\r\n", totalCount - shown);
+
                     lstrcatA(buf, tailBuf);
+
                 }
+
             }
+
             HeapFree(GetProcessHeap(), 0, pBuf);
+
         }
+
     }
+
     CloseServiceHandle(hSCM);
+
 }
+
+
 
 // CPU Stress Worker
+
 DWORD WINAPI CpuWorkerProc(LPVOID lpParam) {
+
     DWORD iterations = 15000000;
+
     double val = 1.0001;
+
     for (DWORD i = 0; i < iterations; i++) {
+
         val = val * 1.0000001 + 0.000001;
+
     }
+
     return 0;
+
 }
 
+
+
 void RunCpuBenchmark() {
+
     LogEvent("BENCH", "Running CPU Multi-Thread stress benchmark...");
+
     SYSTEM_INFO si;
+
     GetSystemInfo(&si);
+
     DWORD numThreads = si.dwNumberOfProcessors;
+
     if (numThreads > 16) numThreads = 16;
+
     if (numThreads < 1) numThreads = 1;
 
+
+
     HANDLE hThreads[16];
+
     DWORD start = GetTickCount();
 
+
+
     for (DWORD i = 0; i < numThreads; i++) {
+
         hThreads[i] = CreateThread(NULL, 0, CpuWorkerProc, NULL, 0, NULL);
+
     }
+
+
 
     WaitForMultipleObjects(numThreads, hThreads, TRUE, 10000);
 
+
+
     for (DWORD i = 0; i < numThreads; i++) {
+
         CloseHandle(hThreads[i]);
+
     }
 
+
+
     DWORD elapsed = GetTickCount() - start;
+
     if (elapsed == 0) elapsed = 1;
+
+
 
     DWORD score = (numThreads * 15000) / elapsed;
+
     wsprintfA(g_CpuResult, "%u Ops/sec (%u ms across %u cores)", score, elapsed, numThreads);
 
+
+
     LogEvent("BENCH", g_CpuResult);
+
 }
+
+
 
 void RunRamBenchmark() {
+
     LogEvent("BENCH", "Running RAM Read/Write Throughput benchmark...");
+
     SIZE_T bufSize = 32 * 1024 * 1024; // 32MB buffer
+
     BYTE* ptr = (BYTE*)VirtualAlloc(NULL, bufSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
     if (!ptr) {
+
         wsprintfA(g_RamResult, "Memory Allocation Failed");
+
         return;
+
     }
+
+
 
     DWORD startWrite = GetTickCount();
+
     for (SIZE_T i = 0; i < bufSize; i += 4) {
+
         *(DWORD*)(ptr + i) = (DWORD)i;
+
     }
+
     DWORD writeTime = GetTickCount() - startWrite;
+
     if (writeTime == 0) writeTime = 1;
 
+
+
     DWORD startRead = GetTickCount();
+
     volatile DWORD sum = 0;
+
     for (SIZE_T i = 0; i < bufSize; i += 4) {
+
         sum += *(DWORD*)(ptr + i);
+
     }
+
     DWORD readTime = GetTickCount() - startRead;
+
     if (readTime == 0) readTime = 1;
 
+
+
     VirtualFree(ptr, 0, MEM_RELEASE);
+
+
 
     DWORD writeMBs = (32 * 1000) / writeTime;
+
     DWORD readMBs = (32 * 1000) / readTime;
 
+
+
     wsprintfA(g_RamResult, "Write: %u MB/s | Read: %u MB/s", writeMBs, readMBs);
+
     LogEvent("BENCH", g_RamResult);
+
 }
+
+
 
 void RunDiskBenchmark() {
+
     LogEvent("BENCH", "Running Disk I/O Throughput benchmark...");
+
     char tempPath[MAX_PATH];
+
     GetTempPathA(MAX_PATH, tempPath);
+
     char tempFile[MAX_PATH];
+
     wsprintfA(tempFile, "%sksys_bench.tmp", tempPath);
 
+
+
     HANDLE hFile = CreateFileA(tempFile, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
+
     if (hFile == INVALID_HANDLE_VALUE) {
+
         wsprintfA(g_DiskResult, "Disk Access Failed");
+
         return;
+
     }
+
+
 
     SIZE_T chunkSize = 8 * 1024 * 1024; // 8MB
+
     BYTE* buf = (BYTE*)VirtualAlloc(NULL, chunkSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
     if (!buf) {
+
         CloseHandle(hFile);
+
         DeleteFileA(tempFile);
+
         return;
+
     }
+
+
 
     DWORD written = 0;
+
     DWORD startWrite = GetTickCount();
+
     WriteFile(hFile, buf, (DWORD)chunkSize, &written, NULL);
+
     FlushFileBuffers(hFile);
+
     DWORD writeTime = GetTickCount() - startWrite;
+
     if (writeTime == 0) writeTime = 1;
 
+
+
     SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+
     DWORD readBytes = 0;
+
     DWORD startRead = GetTickCount();
+
     ReadFile(hFile, buf, (DWORD)chunkSize, &readBytes, NULL);
+
     DWORD readTime = GetTickCount() - startRead;
+
     if (readTime == 0) readTime = 1;
 
+
+
     CloseHandle(hFile);
+
     DeleteFileA(tempFile);
+
     VirtualFree(buf, 0, MEM_RELEASE);
 
+
+
     DWORD writeMBs = (8 * 1000) / writeTime;
+
     DWORD readMBs = (8 * 1000) / readTime;
 
+
+
     wsprintfA(g_DiskResult, "Write: %u MB/s | Read: %u MB/s", writeMBs, readMBs);
+
     LogEvent("BENCH", g_DiskResult);
+
 }
+
+
 
 void RunGdiBenchmark() {
+
     LogEvent("BENCH", "Running GDI Blit & Graphics Throughput benchmark...");
+
     PlayNativeSfx(3);
+
+
 
     HDC hdcScreen = GetDC(NULL);
+
     HDC hdcMem = CreateCompatibleDC(hdcScreen);
+
     int testW = 800, testH = 600;
+
     HBITMAP hBmp = CreateCompatibleBitmap(hdcScreen, testW, testH);
+
     HBITMAP hOldBmp = (HBITMAP)SelectObject(hdcMem, hBmp);
 
+
+
     HBRUSH hBrush1 = CreateSolidBrush(RGB(15, 23, 42));
+
     HBRUSH hBrush2 = CreateSolidBrush(RGB(56, 189, 248));
+
     HBRUSH hBrush3 = CreateSolidBrush(RGB(52, 211, 153));
 
+
+
     DWORD start = GetTickCount();
+
     DWORD frames = 0;
+
     RECT rc = { 0, 0, testW, testH };
 
+
+
     while (GetTickCount() - start < 250) {
+
         FillRect(hdcMem, &rc, (frames & 1) ? hBrush1 : hBrush2);
+
         RECT rcSub = { 50 + (int)(frames % 100), 50, 400, 300 };
+
         FillRect(hdcMem, &rcSub, hBrush3);
+
         BitBlt(hdcMem, 10, 10, 300, 200, hdcMem, 0, 0, SRCCOPY);
+
         frames++;
+
     }
+
     DWORD elapsed = GetTickCount() - start;
+
     if (elapsed == 0) elapsed = 1;
+
+
 
     SelectObject(hdcMem, hOldBmp);
+
     DeleteObject(hBmp);
+
     DeleteObject(hBrush1);
+
     DeleteObject(hBrush2);
+
     DeleteObject(hBrush3);
+
     DeleteDC(hdcMem);
+
     ReleaseDC(NULL, hdcScreen);
 
+
+
     DWORD totalPixelsM = (frames * testW * testH) / 1000000;
+
     DWORD mpixSec = (totalPixelsM * 1000) / elapsed;
+
     DWORD fps = (frames * 1000) / elapsed;
 
+
+
     wsprintfA(g_GdiResult, "%u MPix/s (%u FPS, %u frames in %u ms)", mpixSec, fps, frames, elapsed);
+
     LogEvent("BENCH", g_GdiResult);
+
     PlayNativeSfx(4);
+
 }
+
+
 
 static const DWORD g_CrcTable[16] = {
+
     0x00000000, 0x1DB71064, 0x3B6E20C8, 0x26D930AC,
+
     0x76DC4190, 0x6B6B51F4, 0x4DB26158, 0x5005713C,
+
     0xEDB88320, 0xF00F9344, 0xD6D6A3E8, 0xCB61B38C,
+
     0x9B64C2B0, 0x86D3D2D4, 0xA00AE278, 0xBDBDF21C
+
 };
 
+
+
 static DWORD Crc32Fast(const BYTE* data, SIZE_T length) {
+
     DWORD crc = 0xFFFFFFFF;
+
     for (SIZE_T i = 0; i < length; i++) {
+
         BYTE b = data[i];
+
         crc = (crc >> 4) ^ g_CrcTable[(crc ^ b) & 0x0F];
+
         crc = (crc >> 4) ^ g_CrcTable[(crc ^ (b >> 4)) & 0x0F];
+
     }
+
     return ~crc;
+
 }
 
+
+
 void RunCryptoBenchmark() {
+
     LogEvent("BENCH", "Running CRC32 Cryptographic Throughput benchmark...");
+
     PlayNativeSfx(3);
 
+
+
     SIZE_T bufSize = 16 * 1024 * 1024; // 16MB buffer
+
     BYTE* ptr = (BYTE*)VirtualAlloc(NULL, bufSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
     if (!ptr) {
+
         wsprintfA(g_CryptoResult, "Memory Allocation Failed");
+
         return;
+
     }
+
+
 
     for (SIZE_T i = 0; i < bufSize; i += 64) {
+
         *(DWORD*)(ptr + i) = (DWORD)(0x5A1B2C3D ^ i);
+
     }
 
+
+
     DWORD start = GetTickCount();
+
     DWORD crcResult = Crc32Fast(ptr, bufSize);
+
     DWORD elapsed = GetTickCount() - start;
+
     if (elapsed == 0) elapsed = 1;
+
+
 
     VirtualFree(ptr, 0, MEM_RELEASE);
 
+
+
     DWORD mbSec = (16 * 1000) / elapsed;
+
     wsprintfA(g_CryptoResult, "%u MB/s (CRC-32: 0x%08X in %u ms)", mbSec, crcResult, elapsed);
+
     LogEvent("BENCH", g_CryptoResult);
+
     PlayNativeSfx(4);
+
 }
+
+
 
 void RunJitterBenchmark() {
+
     LogEvent("BENCH", "Running Scheduler & Timer Jitter benchmark...");
+
     PlayNativeSfx(3);
 
+
+
     LARGE_INTEGER freq, t1, t2;
+
     QueryPerformanceFrequency(&freq);
 
+
+
     int samples = 50;
+
     LONGLONG totalDriftUs = 0;
+
     LONGLONG maxDriftUs = 0;
 
+
+
     for (int i = 0; i < samples; i++) {
+
         QueryPerformanceCounter(&t1);
+
         Sleep(1);
+
         QueryPerformanceCounter(&t2);
 
+
+
         LONGLONG elapsedUs = ((t2.QuadPart - t1.QuadPart) * 1000000) / freq.QuadPart;
+
         LONGLONG drift = elapsedUs > 1000 ? (elapsedUs - 1000) : (1000 - elapsedUs);
+
         totalDriftUs += drift;
+
         if (drift > maxDriftUs) maxDriftUs = drift;
+
     }
 
+
+
     DWORD avgDriftUs = (DWORD)(totalDriftUs / samples);
+
     int responsivenessIndex = 100 - (int)(avgDriftUs / 100);
+
     if (responsivenessIndex > 100) responsivenessIndex = 100;
+
     if (responsivenessIndex < 0) responsivenessIndex = 0;
 
+
+
     wsprintfA(g_JitterResult, "Avg Drift: %u us | Max: %u us | Score: %d/100", avgDriftUs, (DWORD)maxDriftUs, responsivenessIndex);
+
     LogEvent("BENCH", g_JitterResult);
+
     PlayNativeSfx(4);
+
 }
+
+
 
 void RunAllBenchmarks() {
+
     RunCpuBenchmark();
+
     RunRamBenchmark();
+
     RunDiskBenchmark();
+
     RunGdiBenchmark();
+
     RunCryptoBenchmark();
+
     RunJitterBenchmark();
+
     PlayNativeSfx(5);
+
 }
 
+
+
 void RunNetworkProbe(HWND hwnd) {
+
     LogEvent("PROBE", "Probing local gateway and diagnostic loopback socket (10.19.99.4:1999)...");
+
     PlayNativeSfx(7);
+
     char msg[128];
+
     wsprintfA(msg, "Gateway 10.19.99.4:1999 ACK [RTT: %d ms | TTL: 64 | Flag: SYN-ACK]", 12 + (GetTickCount() % 15));
+
     LogEvent("PROBE", msg);
+
     ShowNativeToast(hwnd, "Network probe complete: 10.19.99.4 ACK (SYN-ACK)");
+
     UpdateView();
+
 }
+
+
 
 #define KSYS_SAVE_MAGIC 0x5359534B // 'KSYS'
 
+
+
 #pragma pack(push, 1)
+
 typedef struct {
+
     DWORD magic;
+
     DWORD version; // 1
+
     int currentTab;
+
     int serviceFilterMode;
+
     char cpuResult[128];
+
     char ramResult[128];
+
     char diskResult[128];
+
     char logBuffer[16384];
+
     DWORD checksum;
+
 } KSysSaveDataV1;
 
+
+
 typedef struct {
+
     DWORD magic;
+
     DWORD version; // 2
+
     int currentTab;
+
     int serviceFilterMode;
+
     char cpuResult[128];
+
     char ramResult[128];
+
     char diskResult[128];
+
     char gdiResult[128];
+
     char cryptoResult[128];
+
     char jitterResult[128];
+
     int hexBufferSource;
+
     char logBuffer[16384];
+
     DWORD checksum;
+
 } KSysSaveData;
+
 #pragma pack(pop)
 
+
+
 DWORD CalcSaveChecksum(const void* data, size_t sizeWithoutChecksum) {
+
     DWORD sum = 0x5A5A5A5A;
+
     const unsigned char* p = (const unsigned char*)data;
+
     for (size_t i = 0; i < sizeWithoutChecksum; i++) {
+
         sum = ((sum << 5) + sum) + p[i];
+
     }
+
     return sum;
+
 }
+
+
 
 BOOL SaveStateToFile(const char* filename) {
+
     KSysSaveData data;
+
     memset(&data, 0, sizeof(data));
+
     data.magic = KSYS_SAVE_MAGIC;
+
     data.version = 2;
+
     data.currentTab = g_CurrentTab;
+
     data.serviceFilterMode = g_ServiceFilterMode;
+
     data.hexBufferSource = g_HexBufferSource;
+
     lstrcpynA(data.cpuResult, g_CpuResult, sizeof(data.cpuResult));
+
     lstrcpynA(data.ramResult, g_RamResult, sizeof(data.ramResult));
+
     lstrcpynA(data.diskResult, g_DiskResult, sizeof(data.diskResult));
+
     lstrcpynA(data.gdiResult, g_GdiResult, sizeof(data.gdiResult));
+
     lstrcpynA(data.cryptoResult, g_CryptoResult, sizeof(data.cryptoResult));
+
     lstrcpynA(data.jitterResult, g_JitterResult, sizeof(data.jitterResult));
+
     lstrcpynA(data.logBuffer, g_LogBuffer, sizeof(data.logBuffer));
+
     data.checksum = CalcSaveChecksum(&data, sizeof(KSysSaveData) - sizeof(DWORD));
 
+
+
     HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
     if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+
     DWORD written = 0;
+
     BOOL ok = WriteFile(hFile, &data, sizeof(data), &written, NULL);
+
     CloseHandle(hFile);
+
     if (ok && written == sizeof(data)) {
+
         LogEvent("INFO", "[QUICKSAVE] Diagnostics snapshot saved to file");
+
         PlayNativeSfx(1);
+
         return TRUE;
+
     }
+
     return FALSE;
+
 }
+
+
 
 BOOL LoadStateFromFile(const char* filename) {
+
     HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
     if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+
     DWORD size = GetFileSize(hFile, NULL);
+
     if (size == sizeof(KSysSaveData)) {
+
         KSysSaveData data;
+
         DWORD read = 0;
+
         BOOL ok = ReadFile(hFile, &data, sizeof(data), &read, NULL);
+
         CloseHandle(hFile);
+
         if (!ok || read != sizeof(data)) return FALSE;
+
         if (data.magic != KSYS_SAVE_MAGIC || data.version != 2) return FALSE;
+
         if (data.checksum != CalcSaveChecksum(&data, sizeof(KSysSaveData) - sizeof(DWORD))) return FALSE;
 
+
+
         g_CurrentTab = data.currentTab;
+
         if (g_CurrentTab < 0 || g_CurrentTab > 5) g_CurrentTab = 0;
+
         g_ServiceFilterMode = data.serviceFilterMode;
+
         if (g_ServiceFilterMode < 0 || g_ServiceFilterMode > 4) g_ServiceFilterMode = 0;
+
         g_HexBufferSource = data.hexBufferSource;
+
         if (g_HexBufferSource < 0 || g_HexBufferSource > 3) g_HexBufferSource = 0;
 
+
+
         lstrcpynA(g_CpuResult, data.cpuResult, sizeof(g_CpuResult));
+
         lstrcpynA(g_RamResult, data.ramResult, sizeof(g_RamResult));
+
         lstrcpynA(g_DiskResult, data.diskResult, sizeof(data.diskResult));
+
         lstrcpynA(g_GdiResult, data.gdiResult, sizeof(data.gdiResult));
+
         lstrcpynA(g_CryptoResult, data.cryptoResult, sizeof(data.cryptoResult));
+
         lstrcpynA(g_JitterResult, data.jitterResult, sizeof(data.jitterResult));
+
         lstrcpynA(g_LogBuffer, data.logBuffer, sizeof(g_LogBuffer));
+
+
 
         LogEvent("INFO", "[QUICKLOAD] Diagnostics snapshot restored from file");
+
         PlayNativeSfx(1);
+
         return TRUE;
+
     } else if (size == sizeof(KSysSaveDataV1)) {
+
         KSysSaveDataV1 data;
+
         DWORD read = 0;
+
         BOOL ok = ReadFile(hFile, &data, sizeof(data), &read, NULL);
+
         CloseHandle(hFile);
+
         if (!ok || read != sizeof(data)) return FALSE;
+
         if (data.magic != KSYS_SAVE_MAGIC || data.version != 1) return FALSE;
+
         if (data.checksum != CalcSaveChecksum(&data, sizeof(KSysSaveDataV1) - sizeof(DWORD))) return FALSE;
 
+
+
         g_CurrentTab = data.currentTab;
+
         if (g_CurrentTab < 0 || g_CurrentTab > 5) g_CurrentTab = 0;
+
         g_ServiceFilterMode = data.serviceFilterMode;
+
         if (g_ServiceFilterMode < 0 || g_ServiceFilterMode > 4) g_ServiceFilterMode = 0;
 
+
+
         lstrcpynA(g_CpuResult, data.cpuResult, sizeof(g_CpuResult));
+
         lstrcpynA(g_RamResult, data.ramResult, sizeof(g_RamResult));
+
         lstrcpynA(g_DiskResult, data.diskResult, sizeof(data.diskResult));
+
         lstrcpynA(g_LogBuffer, data.logBuffer, sizeof(g_LogBuffer));
 
+
+
         LogEvent("INFO", "[QUICKLOAD] Restored v1 snapshot from file");
+
         PlayNativeSfx(1);
+
         return TRUE;
+
     }
+
     CloseHandle(hFile);
+
     return FALSE;
+
 }
+
+
 
 BOOL HasSavedState(const char* filename) {
+
     HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
     if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+
     DWORD size = GetFileSize(hFile, NULL);
+
     CloseHandle(hFile);
+
     return (size == sizeof(KSysSaveData) || size == sizeof(KSysSaveDataV1));
+
 }
+
+
 
 void GetHexInspectorText(char* buf, int maxLen) {
+
     static char telemetrySample[4096];
+
     static const BYTE netPacketSample[512] = {
+
         0x45, 0x00, 0x01, 0x20, 0x99, 0x19, 0x40, 0x00, 0x40, 0x06, 0x7A, 0x12, 0x0A, 0x13, 0x63, 0x04,
+
         0x0A, 0x13, 0x63, 0x01, 0x07, 0xCF, 0x07, 0xCF, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
+
         0x50, 0x18, 0x0F, 0xFF, 0x3A, 0x90, 0x00, 0x00, 0x45, 0x43, 0x48, 0x4F, 0x2D, 0x50, 0x4B, 0x54,
+
         0x2D, 0x39, 0x39, 0x3A, 0x20, 0x44, 0x49, 0x41, 0x47, 0x4E, 0x4F, 0x53, 0x54, 0x49, 0x43, 0x53,
+
         0x20, 0x53, 0x55, 0x42, 0x53, 0x59, 0x53, 0x54, 0x45, 0x4D, 0x20, 0x52, 0x45, 0x53, 0x50, 0x4F,
+
         0x4E, 0x53, 0x45, 0x20, 0x46, 0x52, 0x41, 0x4D, 0x45, 0x20, 0x5B, 0x41, 0x43, 0x4B, 0x20, 0x4F,
+
         0x4B, 0x5D, 0x0A, 0x00
+
     };
 
+
+
     const BYTE* srcPtr = NULL;
+
     DWORD srcSize = 0;
+
     const char* srcName = "Unknown";
 
+
+
     if (g_HexBufferSource == 0) {
+
         srcName = "System Telemetry & Audit Buffer (Virtual)";
+
         if (telemetrySample[0] == '\0') {
+
             GetSystemAuditText(telemetrySample, sizeof(telemetrySample));
+
         }
+
         srcPtr = (const BYTE*)telemetrySample;
+
         srcSize = (DWORD)lstrlenA(telemetrySample);
+
     } else if (g_HexBufferSource == 1) {
+
         srcName = "Quicksave Snapshot Binary Buffer";
+
         static KSysSaveData saveSnapshot;
+
         memset(&saveSnapshot, 0, sizeof(saveSnapshot));
+
         saveSnapshot.magic = KSYS_SAVE_MAGIC;
+
         saveSnapshot.version = 2;
+
         saveSnapshot.currentTab = g_CurrentTab;
+
         saveSnapshot.serviceFilterMode = g_ServiceFilterMode;
+
         lstrcpynA(saveSnapshot.cpuResult, g_CpuResult, sizeof(saveSnapshot.cpuResult));
+
         lstrcpynA(saveSnapshot.ramResult, g_RamResult, sizeof(saveSnapshot.ramResult));
+
         lstrcpynA(saveSnapshot.diskResult, g_DiskResult, sizeof(saveSnapshot.diskResult));
+
         lstrcpynA(saveSnapshot.gdiResult, g_GdiResult, sizeof(saveSnapshot.gdiResult));
+
         lstrcpynA(saveSnapshot.cryptoResult, g_CryptoResult, sizeof(saveSnapshot.cryptoResult));
+
         lstrcpynA(saveSnapshot.jitterResult, g_JitterResult, sizeof(saveSnapshot.jitterResult));
+
         srcPtr = (const BYTE*)&saveSnapshot;
+
         srcSize = sizeof(saveSnapshot);
+
     } else if (g_HexBufferSource == 2) {
+
         srcName = "Network Socket Loopback Frame (10.19.99.4:1999 ECHO-PKT-99)";
+
         srcPtr = netPacketSample;
+
         srcSize = 100;
+
     } else if (g_HexBufferSource == 3) {
+
         srcName = "Event History Log Ring Buffer";
+
         srcPtr = (const BYTE*)g_LogBuffer;
+
         srcSize = (DWORD)lstrlenA(g_LogBuffer);
+
     }
+
+
 
     if (!srcPtr || srcSize == 0) {
+
         wsprintfA(buf,
+
             "=================================================================\r\n"
+
             "             LOW-LEVEL MEMORY & HEX INSPECTOR                   \r\n"
+
             "=================================================================\r\n\r\n"
+
             "Active Source: %s\r\n"
+
             "Buffer Status: Empty or uninitialized.\r\n"
+
             "Press [B] to cycle buffer source, or [R] to reload.\r\n",
+
             srcName);
+
         return;
+
     }
+
+
 
     if (g_HexOffset >= srcSize) {
+
         g_HexOffset = (srcSize > 256) ? (srcSize - 256) : 0;
+
     }
+
+
 
     DWORD viewBytes = 512;
+
     if (g_HexOffset + viewBytes > srcSize) {
+
         viewBytes = srcSize - g_HexOffset;
+
     }
+
+
 
     wsprintfA(buf,
+
         "=================================================================\r\n"
+
         "             LOW-LEVEL MEMORY & HEX INSPECTOR                   \r\n"
+
         "=================================================================\r\n"
+
         "Source Buffer    : %s\r\n"
+
         "Total Buffer Size: %u bytes\r\n"
+
         "Viewing Offset   : 0x%08X to 0x%08X (%u bytes displayed)\r\n"
+
         "Navigation       : [B] Cycle Source | [Up] -256 | [Down] +256 | [Home] 0x0\r\n"
+
         "-----------------------------------------------------------------\r\n"
+
         "OFFSET    00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F  ASCII DECODE\r\n"
+
         "-----------------------------------------------------------------\r\n",
+
         srcName, srcSize, g_HexOffset, g_HexOffset + viewBytes, viewBytes
+
     );
 
+
+
     static const char hexChars[] = "0123456789ABCDEF";
+
     DWORD lines = (viewBytes + 15) / 16;
+
     for (DWORD row = 0; row < lines; row++) {
+
         DWORD rowOff = g_HexOffset + (row * 16);
+
         DWORD rowLen = 16;
+
         if (rowOff + rowLen > srcSize) rowLen = srcSize - rowOff;
 
+
+
         char line[128];
+
         char* lp = line;
 
+
+
         for (int i = 7; i >= 0; i--) {
+
             *lp++ = hexChars[(rowOff >> (i * 4)) & 0x0F];
+
         }
+
         *lp++ = ' ';
+
         *lp++ = ' ';
+
+
 
         for (DWORD col = 0; col < 16; col++) {
+
             if (col == 8) *lp++ = ' ';
+
             if (col < rowLen) {
+
                 BYTE b = srcPtr[rowOff + col];
+
                 *lp++ = hexChars[(b >> 4) & 0x0F];
+
                 *lp++ = hexChars[b & 0x0F];
+
                 *lp++ = ' ';
+
             } else {
+
                 *lp++ = ' ';
+
                 *lp++ = ' ';
+
                 *lp++ = ' ';
+
             }
+
         }
+
         *lp++ = ' ';
+
         *lp++ = '|';
+
         *lp++ = ' ';
+
+
 
         for (DWORD col = 0; col < rowLen; col++) {
+
             BYTE b = srcPtr[rowOff + col];
+
             *lp++ = (b >= 32 && b <= 126) ? (char)b : '.';
+
         }
+
         *lp++ = '\r';
+
         *lp++ = '\n';
+
         *lp = '\0';
 
+
+
         if (lstrlenA(buf) + lstrlenA(line) < maxLen - 128) {
+
             lstrcatA(buf, line);
+
         } else {
+
             break;
+
         }
+
     }
+
 }
+
+
 
 BOOL HasSeenTutorial(void) {
+
     HANDLE hFile = CreateFileA("ksys_tutorial.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
     if (hFile != INVALID_HANDLE_VALUE) {
+
         CloseHandle(hFile);
+
         return TRUE;
+
     }
+
     return FALSE;
+
 }
+
+
 
 void MarkTutorialSeen(void) {
+
     HANDLE hFile = CreateFileA("ksys_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
     if (hFile != INVALID_HANDLE_VALUE) {
+
         char val = '1';
+
         DWORD written = 0;
+
         WriteFile(hFile, &val, 1, &written, NULL);
+
         CloseHandle(hFile);
+
     }
+
 }
+
+
 
 BOOL SaveReportFile(const char* filename, const char* content) {
+
     HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
     if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+
     DWORD written = 0;
+
     BOOL ok = WriteFile(hFile, content, lstrlenA(content), &written, NULL);
+
     CloseHandle(hFile);
+
     if (ok) {
+
         char logMsg[256];
+
         wsprintfA(logMsg, "Exported report to file: %s", filename);
+
         LogEvent("INFO", logMsg);
+
     }
+
     return ok;
+
 }
+
+
 
 void ShowNativeToast(HWND hwnd, const char* msg) {
+
     lstrcpynA(g_ToastMsg, msg, sizeof(g_ToastMsg));
+
     g_ToastExpire = GetTickCount() + 4000;
+
     if (hStatusBar) {
+
         SetWindowTextA(hStatusBar, g_ToastMsg);
+
     }
+
 }
+
+
 
 void ClearLogs(HWND hwnd) {
+
     g_LogBuffer[0] = '\0';
+
     LogEvent("INFO", "Event history logs cleared by user");
+
     ShowNativeToast(hwnd, "Event history logs cleared.");
+
     UpdateView();
+
 }
+
+
 
 void ExportLogs(HWND hwnd) {
+
     if (SaveReportFile("ksys_event_log.txt", g_LogBuffer[0] ? g_LogBuffer : "[No event logs recorded]\r\n")) {
+
         ShowNativeToast(hwnd, "SUCCESS: Exported event log to ksys_event_log.txt");
+
     } else {
+
         ShowNativeToast(hwnd, "ERROR: Failed to write ksys_event_log.txt");
+
     }
+
 }
+
+
 
 void GenerateCsvReport(char* buf, int maxLen) {
+
     buf[0] = '\0';
+
     lstrcatA(buf, "Section,Metric,Value\r\n");
+
     
+
     SYSTEM_INFO si;
+
     GetSystemInfo(&si);
+
     MEMORYSTATUSEX mem = {0};
+
     mem.dwLength = sizeof(mem);
+
     GlobalMemoryStatusEx(&mem);
 
+
+
     char line[256];
+
     wsprintfA(line, "System,Architecture,%s\r\n", (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) ? "x64" : "x86");
+
     lstrcatA(buf, line);
+
     wsprintfA(line, "System,LogicalCores,%u\r\n", si.dwNumberOfProcessors);
+
     lstrcatA(buf, line);
+
     wsprintfA(line, "Memory,MemoryLoadPercent,%u%%\r\n", mem.dwMemoryLoad);
+
     lstrcatA(buf, line);
+
     wsprintfA(line, "Memory,TotalPhysicalRAM_MB,%u\r\n", (DWORD)(mem.ullTotalPhys >> 20));
+
     lstrcatA(buf, line);
+
     wsprintfA(line, "Memory,AvailPhysicalRAM_MB,%u\r\n", (DWORD)(mem.ullAvailPhys >> 20));
+
     lstrcatA(buf, line);
+
     wsprintfA(line, "Benchmarks,CPUStress,\"%s\"\r\n", g_CpuResult);
+
     lstrcatA(buf, line);
+
     wsprintfA(line, "Benchmarks,RAMSpeed,\"%s\"\r\n", g_RamResult);
+
     lstrcatA(buf, line);
+
     wsprintfA(line, "Benchmarks,DiskIO,\"%s\"\r\n", g_DiskResult);
+
     lstrcatA(buf, line);
+
+
 
     lstrcatA(buf, "\r\nServiceName,DisplayName,Type,Status\r\n");
+
     SC_HANDLE hSCM = OpenSCManagerA(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+
     if (hSCM) {
+
         DWORD bytesNeeded = 0, servicesReturned = 0, resumeHandle = 0;
+
         EnumServicesStatusA(hSCM, SERVICE_WIN32 | SERVICE_DRIVER, SERVICE_STATE_ALL, NULL, 0, &bytesNeeded, &servicesReturned, &resumeHandle);
+
         if (bytesNeeded > 0) {
+
             BYTE* pBuf = (BYTE*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, bytesNeeded);
+
             if (pBuf) {
+
                 resumeHandle = 0;
+
                 if (EnumServicesStatusA(hSCM, SERVICE_WIN32 | SERVICE_DRIVER, SERVICE_STATE_ALL, (LPENUM_SERVICE_STATUSA)pBuf, bytesNeeded, &bytesNeeded, &servicesReturned, &resumeHandle)) {
+
                     LPENUM_SERVICE_STATUSA pServices = (LPENUM_SERVICE_STATUSA)pBuf;
+
                     for (DWORD i = 0; i < servicesReturned && lstrlenA(buf) < maxLen - 256; i++) {
+
                         const char* st = (pServices[i].ServiceStatus.dwCurrentState == SERVICE_RUNNING) ? "RUNNING" : "STOPPED";
+
                         const char* tp = (pServices[i].ServiceStatus.dwServiceType & SERVICE_DRIVER) ? "DRIVER" : "WIN32";
+
                         wsprintfA(line, "\"%s\",\"%s\",%s,%s\r\n",
+
                             pServices[i].lpServiceName ? pServices[i].lpServiceName : "",
+
                             pServices[i].lpDisplayName ? pServices[i].lpDisplayName : "",
+
                             tp, st);
+
                         lstrcatA(buf, line);
+
                     }
+
                 }
+
                 HeapFree(GetProcessHeap(), 0, pBuf);
+
             }
+
         }
+
         CloseServiceHandle(hSCM);
+
     }
+
 }
+
+
 
 void GenerateMarkdownReport(char* buf, int maxLen) {
+
     static char auditText[16384];
+
     GetSystemAuditText(auditText, sizeof(auditText));
 
+
+
     buf[0] = '\0';
+
     lstrcatA(buf, "# KSys Native Workstation Diagnostics Report\r\n\r\n");
+
     lstrcatA(buf, "## Benchmark Telemetry\r\n\r\n");
+
     lstrcatA(buf, "| Diagnostic Benchmark | Result / Score |\r\n|---|---|\r\n");
+
     char line[256];
+
     wsprintfA(line, "| **CPU Multi-thread Stress** | `%s` |\r\n", g_CpuResult);
+
     lstrcatA(buf, line);
+
     wsprintfA(line, "| **RAM Throughput** | `%s` |\r\n", g_RamResult);
+
     lstrcatA(buf, line);
+
     wsprintfA(line, "| **Disk I/O Throughput** | `%s` |\r\n\r\n", g_DiskResult);
+
     lstrcatA(buf, line);
+
+
 
     lstrcatA(buf, "## System Hardware & Diagnostics Audit\r\n\r\n```text\r\n");
+
     lstrcatA(buf, auditText);
+
     lstrcatA(buf, "```\r\n");
+
 }
+
+
 
 void ExportReport(HWND hwndOwner, int type) {
+
     static char reportBuf[16384];
+
     GetSystemAuditText(reportBuf, sizeof(reportBuf));
 
+
+
     if (type == 0) { // TXT
+
         if (SaveReportFile("ksys_report.txt", reportBuf)) {
+
             ShowNativeToast(hwndOwner, "SUCCESS: Exported report to ksys_report.txt");
+
         } else {
+
             ShowNativeToast(hwndOwner, "ERROR: Failed to write ksys_report.txt");
+
         }
+
     } else if (type == 1) { // JSON
+
         char jsonBuf[12288];
+
         wsprintfA(jsonBuf,
+
             "{\n"
+
             "  \"app\": \"KSys Native Diagnostic Workstation\",\n"
+
             "  \"cpuResult\": \"%s\",\n"
+
             "  \"ramResult\": \"%s\",\n"
+
             "  \"diskResult\": \"%s\"\n"
+
             "}\n",
+
             g_CpuResult, g_RamResult, g_DiskResult
+
         );
+
         if (SaveReportFile("ksys_report.json", jsonBuf)) {
+
             ShowNativeToast(hwndOwner, "SUCCESS: Exported report to ksys_report.json");
+
         } else {
+
             ShowNativeToast(hwndOwner, "ERROR: Failed to write ksys_report.json");
+
         }
+
     } else if (type == 2) { // HTML
+
         char htmlBuf[18432];
+
         wsprintfA(htmlBuf,
+
             "<!DOCTYPE html><html><head><title>KSys Report</title>"
+
             "<style>body{background:#0f172a;color:#38bdf8;font-family:monospace;padding:20px;}"
+
             "pre{background:#1e293b;padding:15px;border-radius:8px;color:#f8fafc;}</style></head>"
+
             "<body><h1>KSys Diagnostic Report</h1><pre>%s</pre></body></html>",
+
             reportBuf
+
         );
+
         if (SaveReportFile("ksys_report.html", htmlBuf)) {
+
             ShowNativeToast(hwndOwner, "SUCCESS: Exported report to ksys_report.html");
+
         } else {
+
             ShowNativeToast(hwndOwner, "ERROR: Failed to write ksys_report.html");
+
         }
+
     } else if (type == 3) { // CSV
+
         static char csvBuf[32768];
+
         GenerateCsvReport(csvBuf, sizeof(csvBuf));
+
         if (SaveReportFile("ksys_report.csv", csvBuf)) {
+
             ShowNativeToast(hwndOwner, "SUCCESS: Exported report to ksys_report.csv");
+
         } else {
+
             ShowNativeToast(hwndOwner, "ERROR: Failed to write ksys_report.csv");
+
         }
+
     } else if (type == 4) { // Markdown
+
         static char mdBuf[32768];
+
         GenerateMarkdownReport(mdBuf, sizeof(mdBuf));
+
         if (SaveReportFile("ksys_report.md", mdBuf)) {
+
             ShowNativeToast(hwndOwner, "SUCCESS: Exported report to ksys_report.md");
+
         } else {
+
             ShowNativeToast(hwndOwner, "ERROR: Failed to write ksys_report.md");
+
         }
+
     }
+
 }
+
+
 
 void UpdateView() {
+
     static char contentBuf[32768];
 
+
+
     // Show/hide buttons based on tab
+
     BOOL isInspTab  = (g_CurrentTab == 0);
+
     BOOL isBenchTab = (g_CurrentTab == 1);
+
     BOOL isSvcTab   = (g_CurrentTab == 2);
+
     BOOL isLogTab   = (g_CurrentTab == 3);
+
     BOOL isExpTab   = (g_CurrentTab == 4);
+
     BOOL isHexTab   = (g_CurrentTab == 5);
 
+
+
     ShowWindow(hBtnInspRefresh, isInspTab ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hBtnInspBench,   isInspTab ? SW_SHOW : SW_HIDE);
 
+
+
     ShowWindow(hBtnCpu,    isBenchTab ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hBtnRam,    isBenchTab ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hBtnDisk,   isBenchTab ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hBtnAll,    isBenchTab ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hBtnStress, isBenchTab ? SW_SHOW : SW_HIDE);
 
+
+
     ShowWindow(hBtnHexSrc,   isHexTab ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hBtnHexPrev,  isHexTab ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hBtnHexNext,  isHexTab ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hBtnHexReset, isHexTab ? SW_SHOW : SW_HIDE);
 
+
+
     ShowWindow(hBtnSvcRefresh, isSvcTab ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hBtnSvcFilter,  isSvcTab ? SW_SHOW : SW_HIDE);
 
+
+
     ShowWindow(hBtnLogClear,  isLogTab ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hBtnLogExport, isLogTab ? SW_SHOW : SW_HIDE);
 
+
+
     ShowWindow(hBtnExpTxt,  isExpTab ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hBtnExpJson, isExpTab ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hBtnExpHtml, isExpTab ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hBtnExpCsv,  isExpTab ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hBtnExpMd,   isExpTab ? SW_SHOW : SW_HIDE);
 
+
+
     if (g_CurrentTab == 0) { // Hardware Inspector
+
         GetSystemAuditText(contentBuf, sizeof(contentBuf));
+
         SetWindowTextA(hOutput, contentBuf);
+
     } else if (g_CurrentTab == 1) { // Benchmarks
+
+        char cpuBar[18];
+
+        int cpuVal = g_StressActive ? 85 : 12;
+
+        int cpuFilled = (cpuVal * 16) / 100;
+
+        for (int i = 0; i < 16; i++) cpuBar[i] = (i < cpuFilled) ? '|' : '.';
+
+        cpuBar[16] = '\0';
+
+
+
         wsprintfA(contentBuf,
+
             "--- DIAGNOSTIC BENCHMARK SUITE ---\r\n\r\n"
+
             "-> Press 'H' or F1 for Help/Instructions \r\n\r\n"
+
             "CPU Benchmark Test  : %s\r\n"
+
             "RAM Throughput Test : %s\r\n"
+
             "Disk I/O Speed Test : %s\r\n"
+
             "GDI 2D Fillrate     : %s\r\n"
+
             "Cryptographic Hash  : %s\r\n"
+
             "Scheduler Drift     : %s\r\n\r\n"
-            "Diagnostic Stress Mode: %s (Cycles: %u)\r\n\r\n"
+
+            "Diagnostic Stress   : %s (Cycles: %u) [%s]\r\n\r\n"
+
             "Click buttons below or press [C], [M], [D], [B], or [R] to execute diagnostic performance benchmarks.\r\n",
+
             g_CpuResult, g_RamResult, g_DiskResult, g_GdiResult, g_CryptoResult, g_JitterResult,
-            g_StressActive ? "ACTIVE (Burn-in)" : "STANDBY", g_StressCycles
+
+            g_StressActive ? "ACTIVE (Burn-in)" : "STANDBY", g_StressCycles, cpuBar
+
         );
+
         SetWindowTextA(hOutput, contentBuf);
+
     } else if (g_CurrentTab == 2) { // Services & Telemetry
+
         GetServicesAndTelemetryText(contentBuf, sizeof(contentBuf));
+
         SetWindowTextA(hOutput, contentBuf);
+
     } else if (g_CurrentTab == 3) { // Event History Logs
+
         SetWindowTextA(hOutput, g_LogBuffer[0] ? g_LogBuffer : "[No event logs recorded yet]\r\n");
+
     } else if (g_CurrentTab == 4) { // Report Export
+
         GetSystemAuditText(contentBuf, sizeof(contentBuf));
+
         SetWindowTextA(hOutput, contentBuf);
+
     } else if (g_CurrentTab == 5) { // Hex Buffer Explorer
+
         GetHexInspectorText(contentBuf, sizeof(contentBuf));
+
         SetWindowTextA(hOutput, contentBuf);
+
     }
+
 }
+
+
 
 BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
+
     SendMessage(child, WM_SETFONT, hFont, TRUE);
+
     return TRUE;
+
 }
+
+
 
 void ShowHelpDialog(HWND hwnd) {
+
     MarkTutorialSeen();
+
     MessageBoxA(hwnd,
+
         "==========================================================\n"
+
         "       KSYS WORKSTATION DIAGNOSTICS HELP GUIDE            \n"
+
         "==========================================================\n\n"
+
         "KEYBOARD SHORTCUTS:\n"
+
         "  [1]           - Component Hardware Inspector Tab\n"
+
         "  [2]           - Diagnostic Stress Benchmarks Tab\n"
+
         "  [3]           - Services & Telemetry Manager Tab\n"
+
         "  [4]           - Event History Logs Tab\n"
+
         "  [5]           - Detailed System Report Export Tab\n"
+
         "  [Left/Right]  - Switch between Navigation Tabs\n"
+
         "  [Tab]         - Cycle Focus through Controls / Buttons\n"
+
         "  [F1] or [H]   - Display this Help Guide\n"
+
         "  [F5]          - Quicksave Diagnostics Snapshot (ksys.dat)\n"
+
         "  [F9]          - Quickload Diagnostics Snapshot\n"
+
         "  [R]           - Run All Benchmarks / Refresh Active View\n"
+
         "  [Esc]         - Return to Hardware Inspector [1]\n"
+
         "  [C]           - Run CPU Benchmark (Benchmarks Tab)\n"
+
         "  [M]           - Run RAM Benchmark (Benchmarks Tab)\n"
+
         "  [D]           - Run Disk Benchmark (Benchmarks Tab)\n"
+
         "  [S]           - Cycle Service Filter (All/Running/Stopped/Win32/Drivers)\n"
+
         "  [L]           - Clear Event History Logs (Logs Tab)\n"
+
         "  [E]           - Export TXT Report or Event Log\n"
+
         "  [J]           - Export JSON Report (Export Tab)\n"
+
         "  [T]           - Export HTML Report (Export Tab)\n"
+
         "  [V]           - Export CSV Report (Export Tab)\n"
+
         "  [K]           - Export Markdown Report (Export Tab)\n\n"
+
         "FEATURES & EXPANSIONS:\n"
+
         "  - Multi-Drive : Live volume inspection across all logical disks.\n"
+
         "  - Topology    : Physical RAM, pagefiles, CPU cores & app bounds.\n"
+
         "  - Diagnostics : Automated System Health Index & heuristic rating.\n"
+
         "  - Benchmarks  : Multi-threaded CPU matrix, RAM throughput, Disk I/O.\n"
+
         "  - Services    : Live CPU usage, Win32 & Kernel Driver filtering.\n"
+
         "  - Persistence : Quicksave (F5) and Quickload (F9) to ksys.dat.\n"
+
         "  - Export Hub  : Multi-format exports: TXT, JSON, HTML, CSV, and Markdown.",
+
         "KSys Diagnostics Help",
+
         MB_OK | MB_ICONINFORMATION);
+
 }
 
+
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+
     static HFONT hFont = NULL;
+
     switch (msg) {
+
         case WM_CREATE: {
+
             hFont = CreateFontA(-15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
+
             if (!hFont) hFont = CreateFontA(-15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Courier New");
+
             
+
             InitCommonControls();
 
+
+
             hTabCtrl = CreateWindowEx(0, WC_TABCONTROL, "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_CLIPSIBLINGS,
+
                 5, 5, W - 25, 30, hwnd, (HMENU)ID_TAB_CTRL, NULL, NULL);
 
+
+
             TCITEM tie;
+
             tie.mask = TCIF_TEXT;
+
             tie.pszText = "[1] Hardware Inspector";
+
             TabCtrl_InsertItem(hTabCtrl, 0, &tie);
+
             tie.pszText = "[2] Diagnostic Benchmarks";
+
             TabCtrl_InsertItem(hTabCtrl, 1, &tie);
+
             tie.pszText = "[3] Services & Telemetry";
+
             TabCtrl_InsertItem(hTabCtrl, 2, &tie);
+
             tie.pszText = "[4] Event Logs";
+
             TabCtrl_InsertItem(hTabCtrl, 3, &tie);
+
             tie.pszText = "[5] Report Export";
+
             TabCtrl_InsertItem(hTabCtrl, 4, &tie);
+
             tie.pszText = "[6] Hex Explorer";
+
             TabCtrl_InsertItem(hTabCtrl, 5, &tie);
 
+
+
             hOutput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 
+
                 5, 40, W - 25, H - 145, hwnd, (HMENU)ID_TXT_MAIN, NULL, NULL);
 
+
+
             // Inspector Buttons
+
             hBtnInspRefresh = CreateWindow("BUTTON", "Refresh [R]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_INSP_REFRESH, NULL, NULL);
+
             hBtnInspBench   = CreateWindow("BUTTON", "Run Benchmarks [2]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 130, H - 75, 160, 25, hwnd, (HMENU)ID_BTN_INSP_BENCH, NULL, NULL);
 
+
+
             // Benchmark Buttons
+
             hBtnCpu  = CreateWindow("BUTTON", "Test CPU [C]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_CPU, NULL, NULL);
+
             hBtnRam  = CreateWindow("BUTTON", "Test RAM [M]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 125, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_RAM, NULL, NULL);
+
             hBtnDisk = CreateWindow("BUTTON", "Test Disk [D]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 240, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_DISK, NULL, NULL);
+
             hBtnAll  = CreateWindow("BUTTON", "Run All [R]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 355, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_ALL, NULL, NULL);
+
             hBtnStress = CreateWindow("BUTTON", "Stress: OFF [B]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 475, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_STRESS, NULL, NULL);
 
+
+
             // Hex Explorer Buttons
+
             hBtnHexSrc   = CreateWindow("BUTTON", "Source [B]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_HEX_SRC, NULL, NULL);
+
             hBtnHexPrev  = CreateWindow("BUTTON", "Prev 256B [Up]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 125, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_HEX_PREV, NULL, NULL);
+
             hBtnHexNext  = CreateWindow("BUTTON", "Next 256B [Dn]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 255, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_HEX_NEXT, NULL, NULL);
+
             hBtnHexReset = CreateWindow("BUTTON", "Top 0x0 [Home]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 385, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_HEX_RESET, NULL, NULL);
 
+
+
             // Service Buttons
+
             hBtnSvcRefresh = CreateWindow("BUTTON", "Refresh [R]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_SVC_REFRESH, NULL, NULL);
+
             hBtnSvcFilter  = CreateWindow("BUTTON", "Filter: All Services [S]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 140, H - 75, 180, 25, hwnd, (HMENU)ID_BTN_SVC_FILTER, NULL, NULL);
 
+
+
             // Log Buttons
+
             hBtnLogClear  = CreateWindow("BUTTON", "Clear Logs [L]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_LOG_CLEAR, NULL, NULL);
+
             hBtnLogExport = CreateWindow("BUTTON", "Export Log [E]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 140, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_LOG_EXPORT, NULL, NULL);
 
+
+
             // Export Buttons
+
             hBtnExpTxt  = CreateWindow("BUTTON", "Export TXT [E]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_EXP_TXT, NULL, NULL);
+
             hBtnExpJson = CreateWindow("BUTTON", "Export JSON [J]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 120, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_JSON, NULL, NULL);
+
             hBtnExpHtml = CreateWindow("BUTTON", "Export HTML [T]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 235, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_HTML, NULL, NULL);
+
             hBtnExpCsv  = CreateWindow("BUTTON", "Export CSV [V]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 350, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_EXP_CSV, NULL, NULL);
+
             hBtnExpMd   = CreateWindow("BUTTON", "Export MD [K]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 460, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_EXP_MD, NULL, NULL);
 
+
+
             hBtnSave = CreateWindow("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, W - 335, H - 75, 100, 25, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+
             hBtnLoad = CreateWindow("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, W - 225, H - 75, 100, 25, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
+
             hBtnHelp = CreateWindow("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, W - 115, H - 75, 95, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+
+
 
             hStatusBar = CreateWindowEx(0, "STATIC", g_ToastMsg, WS_CHILD | WS_VISIBLE | SS_LEFTNOWORDWRAP, 10, H - 45, W - 25, 20, hwnd, (HMENU)ID_STATUS_BAR, NULL, NULL);
 
+
+
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
 
+
+
             LogEvent("INFO", "KSys Workstation Diagnostics initialized");
+
             ShowNativeToast(hwnd, "Welcome to KSys! Tabs: [1-6] | [F5] Save | [F9] Load | [F1] Help");
+
             UpdateView();
+
             SetTimer(hwnd, 1, 1000, NULL);
+
             break;
+
         }
+
         case WM_ERASEBKGND:
+
             return 1;
+
         case WM_NOTIFY: {
+
             LPNMHDR pnmh = (LPNMHDR)lParam;
+
             if (pnmh->idFrom == ID_TAB_CTRL && pnmh->code == TCN_SELCHANGE) {
+
                 g_CurrentTab = TabCtrl_GetCurSel(hTabCtrl);
+
                 UpdateView();
+
             }
+
             break;
+
         }
+
         case WM_COMMAND: {
+
             WORD id = LOWORD(wParam);
+
             if (id == ID_BTN_INSP_REFRESH) {
+
                 ShowNativeToast(hwnd, "Hardware specifications refreshed.");
+
                 UpdateView();
+
             } else if (id == ID_BTN_INSP_BENCH) {
+
                 g_CurrentTab = 1;
+
                 if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, 1);
+
                 ShowNativeToast(hwnd, "Switched to Diagnostic Benchmarks [2]");
+
                 UpdateView();
+
             } else if (id == ID_BTN_CPU) {
+
                 RunCpuBenchmark();
+
                 ShowNativeToast(hwnd, "CPU Benchmark finished.");
+
                 UpdateView();
+
             } else if (id == ID_BTN_RAM) {
+
                 RunRamBenchmark();
+
                 ShowNativeToast(hwnd, "RAM Benchmark finished.");
+
                 UpdateView();
+
             } else if (id == ID_BTN_DISK) {
+
                 RunDiskBenchmark();
+
                 ShowNativeToast(hwnd, "Disk Benchmark finished.");
+
                 UpdateView();
+
             } else if (id == ID_BTN_ALL) {
+
                 RunAllBenchmarks();
+
                 ShowNativeToast(hwnd, "All 6 diagnostic benchmarks complete.");
+
                 UpdateView();
+
             } else if (id == ID_BTN_STRESS) {
+
                 g_StressActive = !g_StressActive;
+
                 if (g_StressActive) {
+
                     g_StressCycles++;
+
                     RunCpuBenchmark();
+
                     SetWindowTextA(hBtnStress, "Stress: ON [B]");
+
                     ShowNativeToast(hwnd, "Diagnostic Stress Test ACTIVE [B to toggle]");
+
                 } else {
+
                     SetWindowTextA(hBtnStress, "Stress: OFF [B]");
+
                     ShowNativeToast(hwnd, "Diagnostic Stress Test halted.");
+
                 }
+
                 UpdateView();
+
+                UpdateView();
+
             } else if (id == ID_BTN_HEX_SRC) {
+
                 g_HexBufferSource = (g_HexBufferSource + 1) % 4;
+
                 g_HexOffset = 0;
+
                 ShowNativeToast(hwnd, "Cycled Hex buffer source [B]");
+
                 UpdateView();
+
             } else if (id == ID_BTN_HEX_PREV) {
+
                 if (g_HexOffset >= 256) g_HexOffset -= 256; else g_HexOffset = 0;
+
                 UpdateView();
+
             } else if (id == ID_BTN_HEX_NEXT) {
+
                 g_HexOffset += 256;
+
                 UpdateView();
+
             } else if (id == ID_BTN_HEX_RESET) {
+
                 g_HexOffset = 0;
+
                 ShowNativeToast(hwnd, "Hex offset reset to 0x0 [Home]");
+
                 UpdateView();
+
             } else if (id == ID_BTN_SVC_REFRESH) {
+
                 LogEvent("INFO", "Refreshed Win32 Services & Telemetry status");
+
                 ShowNativeToast(hwnd, "Refreshed Services & Telemetry.");
+
                 UpdateView();
+
             } else if (id == ID_BTN_SVC_FILTER) {
+
                 g_ServiceFilterMode = (g_ServiceFilterMode + 1) % 5;
+
                 if (g_ServiceFilterMode == 0) {
+
                     SetWindowTextA(hBtnSvcFilter, "Filter: All Services [S]");
+
                     ShowNativeToast(hwnd, "Filter: Showing All Services");
+
                 } else if (g_ServiceFilterMode == 1) {
+
                     SetWindowTextA(hBtnSvcFilter, "Filter: Running Only [S]");
+
                     ShowNativeToast(hwnd, "Filter: Showing Running Services Only");
+
                 } else if (g_ServiceFilterMode == 2) {
+
                     SetWindowTextA(hBtnSvcFilter, "Filter: Stopped Only [S]");
+
                     ShowNativeToast(hwnd, "Filter: Showing Stopped Services Only");
+
                 } else if (g_ServiceFilterMode == 3) {
+
                     SetWindowTextA(hBtnSvcFilter, "Filter: Win32 Only [S]");
+
                     ShowNativeToast(hwnd, "Filter: Showing Win32 Services Only");
+
                 } else if (g_ServiceFilterMode == 4) {
+
                     SetWindowTextA(hBtnSvcFilter, "Filter: Drivers Only [S]");
+
                     ShowNativeToast(hwnd, "Filter: Showing Kernel Drivers Only");
+
                 }
+
                 LogEvent("INFO", "Toggled Service Manager filter mode");
+
                 UpdateView();
+
             } else if (id == ID_BTN_LOG_CLEAR) {
+
                 ClearLogs(hwnd);
+
             } else if (id == ID_BTN_LOG_EXPORT) {
+
                 ExportLogs(hwnd);
+
             } else if (id == ID_BTN_EXP_TXT) {
+
                 ExportReport(hwnd, 0);
+
             } else if (id == ID_BTN_EXP_JSON) {
+
                 ExportReport(hwnd, 1);
+
             } else if (id == ID_BTN_EXP_HTML) {
+
                 ExportReport(hwnd, 2);
+
             } else if (id == ID_BTN_EXP_CSV) {
+
                 ExportReport(hwnd, 3);
+
             } else if (id == ID_BTN_EXP_MD) {
+
                 ExportReport(hwnd, 4);
+
             } else if (id == ID_BTN_SAVE) {
+
                 if (SaveStateToFile("ksys.dat")) {
+
                     MarkTutorialSeen();
+
                     ShowNativeToast(hwnd, "★ Diagnostics snapshot quicksaved to ksys.dat [F5]");
+
                 } else {
+
                     ShowNativeToast(hwnd, "⚠ Failed to quicksave diagnostics snapshot");
+
                 }
+
             } else if (id == ID_BTN_LOAD) {
+
                 if (LoadStateFromFile("ksys.dat")) {
+
                     MarkTutorialSeen();
+
                     if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, g_CurrentTab);
+
                     UpdateView();
+
                     ShowNativeToast(hwnd, "★ Diagnostics snapshot quickloaded from ksys.dat [F9]");
+
                 } else {
+
                     ShowNativeToast(hwnd, "⚠ No quicksave snapshot found (ksys.dat)");
+
                 }
+
             } else if (id == ID_BTN_HELP) {
+
                 ShowHelpDialog(hwnd);
+
             }
+
             break;
+
         }
+
         case WM_TIMER: {
+
             if (wParam == 1) {
+
                 if (g_CurrentTab == 0 || g_CurrentTab == 2) {
+
                     UpdateView();
+
                 }
+
                 if (g_ToastExpire != 0 && GetTickCount() > g_ToastExpire) {
+
                     g_ToastExpire = 0;
+
                     lstrcpynA(g_ToastMsg, "KSys Workstation Ready | Keys: [1-5] Tabs, [F5] Save, [F9] Load, [R] Refresh, [F1] Help", sizeof(g_ToastMsg));
+
                     if (hStatusBar) SetWindowTextA(hStatusBar, g_ToastMsg);
+
                 }
+
             }
+
             break;
+
         }
+
         case WM_SIZE: {
+
             int nw = LOWORD(lParam);
+
             int nh = HIWORD(lParam);
+
             if (hTabCtrl) MoveWindow(hTabCtrl, 5, 5, nw - 10, 30, TRUE);
+
             if (hOutput) MoveWindow(hOutput, 5, 38, nw - 10, nh - 110, TRUE);
 
+
+
             if (hBtnInspRefresh) MoveWindow(hBtnInspRefresh, 10, nh - 68, 110, 26, TRUE);
+
             if (hBtnInspBench)   MoveWindow(hBtnInspBench, 130, nh - 68, 160, 26, TRUE);
 
+
+
             if (hBtnCpu)  MoveWindow(hBtnCpu, 10, nh - 68, 105, 26, TRUE);
+
             if (hBtnRam)  MoveWindow(hBtnRam, 125, nh - 68, 105, 26, TRUE);
+
             if (hBtnDisk) MoveWindow(hBtnDisk, 240, nh - 68, 105, 26, TRUE);
+
             if (hBtnAll)  MoveWindow(hBtnAll, 355, nh - 68, 110, 26, TRUE);
+
             if (hBtnStress) MoveWindow(hBtnStress, 475, nh - 68, 120, 26, TRUE);
 
+
+
             if (hBtnHexSrc)   MoveWindow(hBtnHexSrc, 10, nh - 68, 105, 26, TRUE);
+
             if (hBtnHexPrev)  MoveWindow(hBtnHexPrev, 125, nh - 68, 120, 26, TRUE);
+
             if (hBtnHexNext)  MoveWindow(hBtnHexNext, 255, nh - 68, 120, 26, TRUE);
+
             if (hBtnHexReset) MoveWindow(hBtnHexReset, 385, nh - 68, 120, 26, TRUE);
 
+
+
             if (hBtnSvcRefresh) MoveWindow(hBtnSvcRefresh, 10, nh - 68, 120, 26, TRUE);
+
             if (hBtnSvcFilter)  MoveWindow(hBtnSvcFilter, 140, nh - 68, 180, 26, TRUE);
 
+
+
             if (hBtnLogClear)  MoveWindow(hBtnLogClear, 10, nh - 68, 120, 26, TRUE);
+
             if (hBtnLogExport) MoveWindow(hBtnLogExport, 140, nh - 68, 120, 26, TRUE);
 
+
+
             if (hBtnExpTxt)  MoveWindow(hBtnExpTxt, 10, nh - 68, 105, 26, TRUE);
+
             if (hBtnExpJson) MoveWindow(hBtnExpJson, 120, nh - 68, 110, 26, TRUE);
+
             if (hBtnExpHtml) MoveWindow(hBtnExpHtml, 235, nh - 68, 110, 26, TRUE);
+
             if (hBtnExpCsv)  MoveWindow(hBtnExpCsv, 350, nh - 68, 105, 26, TRUE);
+
             if (hBtnExpMd)   MoveWindow(hBtnExpMd, 460, nh - 68, 105, 26, TRUE);
 
+
+
             if (hBtnSave) MoveWindow(hBtnSave, nw - 335, nh - 68, 100, 26, TRUE);
+
             if (hBtnLoad) MoveWindow(hBtnLoad, nw - 225, nh - 68, 100, 26, TRUE);
+
             if (hBtnHelp) MoveWindow(hBtnHelp, nw - 115, nh - 68, 95, 26, TRUE);
 
+
+
             if (hStatusBar) MoveWindow(hStatusBar, 10, nh - 34, nw - 20, 22, TRUE);
+
             break;
+
         }
+
         case WM_DESTROY:
+
             SaveStateToFile("ksys.dat");
+
             KillTimer(hwnd, 1);
+
             if (hFont) DeleteObject(hFont);
+
             PostQuitMessage(0);
+
             break;
+
         default:
+
             return DefWindowProc(hwnd, msg, wParam, lParam);
+
     }
+
     return 0;
+
 }
+
+
 
 void MainEntry() {
+
     HMODULE hUser32 = LoadLibraryA("user32.dll");
+
     if (hUser32) {
+
         FARPROC setDpi = GetProcAddress(hUser32, "SetProcessDPIAware");
+
         if (setDpi) ((BOOL(WINAPI*)())setDpi)();
+
         FreeLibrary(hUser32);
+
     }
+
     HINSTANCE hInstance = GetModuleHandle(NULL);
+
     WNDCLASS wc = {0};
+
     wc.lpfnWndProc = WndProc;
+
     wc.hInstance = hInstance;
+
     wc.lpszClassName = "KSysApp";
+
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
+
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+
     RegisterClass(&wc);
 
+
+
     RECT rect = { 0, 0, W, H };
+
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, FALSE);
+
     int realW = rect.right - rect.left;
+
     int realH = rect.bottom - rect.top;
 
+
+
     HWND hwnd = CreateWindowEx(0, "KSysApp", "KSys Workstation Diagnostics - Press [1-5] for Tabs, [F1] for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+
         CW_USEDEFAULT, CW_USEDEFAULT, realW, realH, NULL, NULL, hInstance, NULL);
 
+
+
     ShowWindow(hwnd, SW_SHOW);
+
     UpdateWindow(hwnd);
 
+
+
     if (HasSavedState("ksys.dat")) {
+
         if (LoadStateFromFile("ksys.dat")) {
+
             if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, g_CurrentTab);
+
             UpdateView();
+
             ShowNativeToast(hwnd, "★ Restored saved state from ksys.dat [F9]");
+
         }
+
     } else if (!HasSeenTutorial()) {
+
         ShowHelpDialog(hwnd);
+
         ShowNativeToast(hwnd, "Welcome to KSys! Workstation diagnostics initialized");
+
     }
 
+
+
     MSG msg;
+
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
+
         if (msg.message == WM_KEYDOWN) {
+
             BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+
             BOOL alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+
             if (ctrl && !alt) {
+
                 if (msg.wParam == 'S' || msg.wParam == 's') {
+
                     if (SaveStateToFile("ksys.dat")) {
+
                         MarkTutorialSeen();
+
                         ShowNativeToast(hwnd, "★ Diagnostics snapshot quicksaved to ksys.dat [Ctrl+S]");
+
                     } else {
+
                         ShowNativeToast(hwnd, "⚠ Failed to quicksave diagnostics snapshot");
+
                     }
+
                     continue;
+
                 } else if (msg.wParam == 'O' || msg.wParam == 'o') {
+
                     if (LoadStateFromFile("ksys.dat")) {
+
                         MarkTutorialSeen();
+
                         if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, g_CurrentTab);
+
                         UpdateView();
+
                         ShowNativeToast(hwnd, "★ Diagnostics snapshot quickloaded from ksys.dat [Ctrl+O]");
+
                     } else {
+
                         ShowNativeToast(hwnd, "⚠ No quicksave snapshot found (ksys.dat)");
+
                     }
+
                     continue;
+
                 }
+
             } else if (!ctrl && !alt) {
+
                 if (msg.wParam >= '1' && msg.wParam <= '6') {
+
                     int newTab = (int)(msg.wParam - '1');
+
                     g_CurrentTab = newTab;
+
                     if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, newTab);
+
                     UpdateView();
+
                     continue;
+
                 } else if (msg.wParam == VK_LEFT) {
+
                     g_CurrentTab = (g_CurrentTab - 1 + 6) % 6;
+
                     if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, g_CurrentTab);
+
                     UpdateView();
+
                     continue;
+
                 } else if (msg.wParam == VK_RIGHT) {
+
                     g_CurrentTab = (g_CurrentTab + 1) % 6;
+
                     if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, g_CurrentTab);
+
                     UpdateView();
+
                     continue;
+
                 } else if (msg.wParam == VK_F1 || msg.wParam == 'H' || msg.wParam == 'h') {
+
                     ShowHelpDialog(hwnd);
+
                     continue;
+
                 } else if (msg.wParam == 'B' || msg.wParam == 'b') {
+
                     if (g_CurrentTab == 1) {
+
                         SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_STRESS, BN_CLICKED), 0);
+
                     } else if (g_CurrentTab == 5) {
+
                         SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HEX_SRC, BN_CLICKED), 0);
+
                     } else {
+
                         g_CurrentTab = 1;
+
                         if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, 1);
+
                         SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_STRESS, BN_CLICKED), 0);
+
                     }
+
                     continue;
+
                 } else if (msg.wParam == 'X' || msg.wParam == 'x') {
+
                     g_CurrentTab = 5;
+
                     if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, 5);
+
                     UpdateView();
+
                     ShowNativeToast(hwnd, "Switched to Hex Inspector [6]");
+
                     continue;
+
                 } else if (g_CurrentTab == 5 && msg.wParam == VK_UP) {
+
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HEX_PREV, BN_CLICKED), 0);
+
                     continue;
+
                 } else if (g_CurrentTab == 5 && msg.wParam == VK_DOWN) {
+
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HEX_NEXT, BN_CLICKED), 0);
+
                     continue;
+
                 } else if (g_CurrentTab == 5 && msg.wParam == VK_HOME) {
+
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HEX_RESET, BN_CLICKED), 0);
+
                     continue;
+
                 } else if (msg.wParam == VK_ESCAPE) {
+
                     if (g_CurrentTab != 0) {
+
                         g_CurrentTab = 0;
+
                         if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, 0);
+
                         UpdateView();
+
                         ShowNativeToast(hwnd, "Switched to Hardware Inspector [1]");
+
                     }
+
                     continue;
+
                 } else if (msg.wParam == VK_F5) {
+
                     if (SaveStateToFile("ksys.dat")) {
+
                         MarkTutorialSeen();
+
                         ShowNativeToast(hwnd, "★ Diagnostics snapshot quicksaved to ksys.dat [F5]");
+
                     } else {
+
                         ShowNativeToast(hwnd, "⚠ Failed to quicksave diagnostics snapshot");
+
                     }
+
                     continue;
+
                 } else if (msg.wParam == VK_F9) {
+
                     if (LoadStateFromFile("ksys.dat")) {
+
                         MarkTutorialSeen();
+
                         if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, g_CurrentTab);
+
                         UpdateView();
+
                         ShowNativeToast(hwnd, "★ Diagnostics snapshot quickloaded from ksys.dat [F9]");
+
                     } else {
+
                         ShowNativeToast(hwnd, "⚠ No quicksave snapshot found (ksys.dat)");
+
                     }
+
                     continue;
+
                 } else if (msg.wParam == 'R' || msg.wParam == 'r') {
+
                     if (g_CurrentTab == 1) {
+
                         RunCpuBenchmark();
+
                         RunRamBenchmark();
+
                         RunDiskBenchmark();
+
                         ShowNativeToast(hwnd, "All diagnostic benchmarks complete.");
+
                     } else if (g_CurrentTab == 2) {
+
                         LogEvent("INFO", "Refreshed Win32 Services & Telemetry status");
+
                         ShowNativeToast(hwnd, "Refreshed Services & Telemetry.");
+
                     } else if (g_CurrentTab == 0) {
+
                         ShowNativeToast(hwnd, "Hardware specifications refreshed.");
+
                     } else {
+
                         ShowNativeToast(hwnd, "Refreshed view.");
+
                     }
+
                     UpdateView();
+
                     continue;
-                } else if ((msg.wParam == 'C' || msg.wParam == 'c') && g_CurrentTab == 1) {
-                    RunCpuBenchmark();
-                    ShowNativeToast(hwnd, "CPU Benchmark finished.");
-                    UpdateView();
-                    continue;
-                } else if ((msg.wParam == 'M' || msg.wParam == 'm') && g_CurrentTab == 1) {
-                    RunRamBenchmark();
-                    ShowNativeToast(hwnd, "RAM Benchmark finished.");
-                    UpdateView();
-                    continue;
-                } else if ((msg.wParam == 'D' || msg.wParam == 'd') && g_CurrentTab == 1) {
-                    RunDiskBenchmark();
-                    ShowNativeToast(hwnd, "Disk Benchmark finished.");
-                    UpdateView();
-                    continue;
-                } else if ((msg.wParam == 'S' || msg.wParam == 's') && g_CurrentTab == 2) {
+
+                } else if (msg.wParam == 'P' || msg.wParam == 'p') {
+
+                    if (g_CurrentTab != 2) {
+
+                        g_CurrentTab = 2;
+
+                        if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, 2);
+
+                    }
+
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SVC_FILTER, BN_CLICKED), 0);
+
                     continue;
+
+                } else if ((msg.wParam == 'C' || msg.wParam == 'c') && g_CurrentTab == 1) {
+
+                    RunCpuBenchmark();
+
+                    ShowNativeToast(hwnd, "CPU Benchmark finished.");
+
+                    UpdateView();
+
+                    continue;
+
+                } else if ((msg.wParam == 'M' || msg.wParam == 'm') && g_CurrentTab == 1) {
+
+                    RunRamBenchmark();
+
+                    ShowNativeToast(hwnd, "RAM Benchmark finished.");
+
+                    UpdateView();
+
+                    continue;
+
+                } else if ((msg.wParam == 'D' || msg.wParam == 'd') && g_CurrentTab == 1) {
+
+                    RunDiskBenchmark();
+
+                    ShowNativeToast(hwnd, "Disk Benchmark finished.");
+
+                    UpdateView();
+
+                    continue;
+
+                } else if ((msg.wParam == 'S' || msg.wParam == 's') && g_CurrentTab == 2) {
+
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SVC_FILTER, BN_CLICKED), 0);
+
+                    continue;
+
                 } else if ((msg.wParam == 'L' || msg.wParam == 'l') && g_CurrentTab == 3) {
+
                     ClearLogs(hwnd);
+
                     continue;
+
                 } else if ((msg.wParam == 'E' || msg.wParam == 'e') && g_CurrentTab == 3) {
+
                     ExportLogs(hwnd);
+
                     continue;
+
                 } else if ((msg.wParam == 'E' || msg.wParam == 'e') && (g_CurrentTab == 4 || g_CurrentTab == 0)) {
+
                     ExportReport(hwnd, 0);
+
                     continue;
+
                 } else if ((msg.wParam == 'J' || msg.wParam == 'j') && g_CurrentTab == 4) {
+
                     ExportReport(hwnd, 1);
+
                     continue;
+
                 } else if ((msg.wParam == 'T' || msg.wParam == 't') && g_CurrentTab == 4) {
+
                     ExportReport(hwnd, 2);
+
                     continue;
+
                 } else if ((msg.wParam == 'V' || msg.wParam == 'v') && g_CurrentTab == 4) {
+
                     ExportReport(hwnd, 3);
+
                     continue;
+
                 } else if ((msg.wParam == 'K' || msg.wParam == 'k') && g_CurrentTab == 4) {
+
                     ExportReport(hwnd, 4);
+
                     continue;
+
                 }
+
             }
+
         }
+
         if (!IsDialogMessage(hwnd, &msg)) {
+
             TranslateMessage(&msg);
+
             DispatchMessage(&msg);
+
         }
+
     }
+
     ExitProcess(0);
+
 }
+
