@@ -635,6 +635,9 @@
         <option value="https://lite.cnn.com">CNN Lite</option>
         <option value="http://example.com">Example.com</option>
       </optgroup>
+      <optgroup label="📂 KiloOS VFS Storage">
+        <option value="vfs:/home/downloads/">📂 Open from VFS (/home/downloads/)</option>
+      </optgroup>
       <optgroup label="🛠️ Network Diagnostics">
         <option value="hex:http://example.com">🔢 Hex Inspect Example.com</option>
         <option value="ping:8.8.8.8">📡 Ping 8.8.8.8</option>
@@ -679,6 +682,8 @@
           <button class="btn-chip" id="btnViewSource">📄 Raw Source</button>
           <button class="btn-chip" id="btnViewHex">🔢 Hex View</button>
           <button class="btn-chip" id="btnInspectorSpoolVfs" title="Save Page/Spool to KiloOS VFS (/home/downloads/)" style="color:#34d399; border-color:rgba(52, 211, 153, 0.4); font-weight:700;">💾 Spool to VFS</button>
+          <button class="btn-chip" id="btnOpenInKHex" title="Spool &amp; Inspect buffer in KHex [IPC]" style="color:#a78bfa; border-color:rgba(167, 139, 250, 0.4); font-weight:700;">🔢 KHex</button>
+          <button class="btn-chip" id="btnOpenInKPad" title="Spool &amp; Edit page in KPad [IPC]" style="color:#38bdf8; border-color:rgba(56, 189, 248, 0.4); font-weight:700;">📝 KPad</button>
           <span id="httpStatusBadge" class="badge badge-success">HTTP 200 OK</span>
         </div>
       </div>
@@ -1555,6 +1560,28 @@
   if (btnSpoolVfs) btnSpoolVfs.onclick = spoolCurrentPageToVfs;
   const btnInspectorSpoolVfs = document.getElementById('btnInspectorSpoolVfs');
   if (btnInspectorSpoolVfs) btnInspectorSpoolVfs.onclick = spoolCurrentPageToVfs;
+const btnOpenInKHex = document.getElementById('btnOpenInKHex');
+  if (btnOpenInKHex) {
+    btnOpenInKHex.onclick = () => {
+      spoolCurrentPageToVfs();
+      const curUrl = urlInput.value.trim() || '/web/portal.html';
+      const baseName = getSpoolBaseName(curUrl);
+      const vfsPath = '/home/downloads/' + baseName;
+      KiloVFS.launchApp('khex', vfsPath);
+      showToast(`Launched KHex for: ${vfsPath}`, 'info');
+    };
+  }
+  const btnOpenInKPad = document.getElementById('btnOpenInKPad');
+  if (btnOpenInKPad) {
+    btnOpenInKPad.onclick = () => {
+      spoolCurrentPageToVfs();
+      const curUrl = urlInput.value.trim() || '/web/portal.html';
+      const baseName = getSpoolBaseName(curUrl);
+      const vfsPath = '/home/downloads/' + baseName;
+      KiloVFS.launchApp('kpad', vfsPath);
+      showToast(`Launched KPad for: ${vfsPath}`, 'info');
+    };
+  }
   const btnQuickLoad = document.getElementById('btnQuickLoad');
   if (btnQuickLoad) btnQuickLoad.onclick = quickLoad;
 
@@ -2137,6 +2164,45 @@
     }
   };
 
+  function getSpoolBaseName(curUrl) {
+    let baseName = 'page';
+    try {
+      if (curUrl.startsWith('kweb://')) {
+        baseName = curUrl.replace('kweb://', '').split(/[/?#]/)[0] || 'kweb_page';
+      } else if (curUrl.startsWith('/web/') || curUrl.startsWith('/apps/')) {
+        const parts = curUrl.split('/');
+        baseName = parts[parts.length - 1].split(/[?#]/)[0] || 'local_page';
+      } else if (curUrl.includes('://')) {
+        const parsed = new URL(curUrl);
+        const lastPart = parsed.pathname.split('/').filter(Boolean).pop();
+        baseName = lastPart ? lastPart.split(/[?#]/)[0] : parsed.hostname;
+      } else {
+        baseName = curUrl.replace(/[^a-zA-Z0-9_-]/g, '_');
+      }
+    } catch (e) {
+      baseName = 'page';
+    }
+    if (!baseName || baseName === '/' || baseName === '.') baseName = 'page';
+    baseName = baseName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    if (!baseName.endsWith('.html') && !baseName.endsWith('.txt') && !baseName.endsWith('.json')) {
+      baseName += '.html';
+    }
+    return baseName;
+  }
+
+  function displayLoadedVfsContent(path, text) {
+    currentRawText = text;
+    httpWebFrame.removeAttribute('src');
+    httpWebFrame.srcdoc = text;
+    httpContentArea.textContent = text;
+    httpHexArea.textContent = generateHexDump(text);
+    httpStatusBadge.className = "badge badge-success";
+    httpStatusBadge.textContent = "VFS 200 OK";
+    footerStatus.textContent = "Loaded from KiloOS VFS: " + path;
+    updateMetrics(1, 1, 2, text.length, 5, 'VFS/LOCAL');
+    addTrafficLog('VFS', path, 'LOADED', 200, 5, text.length, text);
+  }
+
   function spoolCurrentPageToVfs() {
     initAudio();
     playNavChime();
@@ -2196,6 +2262,33 @@
     if (!url) return;
     initAudio();
     playNavChime();
+
+    // Normalize single-colon kweb: into standard kweb://
+    if (url.toLowerCase().startsWith('kweb:') && !url.toLowerCase().startsWith('kweb://')) {
+      url = 'kweb://' + url.slice(5);
+    }
+
+    // Support loading files directly from KiloOS VFS (/home/downloads/...)
+    if (url.startsWith('vfs:') || url.startsWith('/home/')) {
+      const vfsPath = url.startsWith('vfs:') ? url.slice(4) : url;
+      if (!vfsPath || vfsPath === '/home/downloads' || vfsPath === '/home/downloads/') {
+        KiloVFS.openPicker((data, p) => {
+          if (p && data !== undefined) {
+            urlInput.value = 'vfs:' + p;
+            displayLoadedVfsContent(p, data);
+          }
+        });
+        return;
+      }
+      KiloVFS.read(vfsPath, (data, p) => {
+        if (data !== undefined && data !== null) {
+          displayLoadedVfsContent(p || vfsPath, data);
+        } else {
+          showToast(`File not found in KiloOS VFS: ${vfsPath}`, 'error');
+        }
+      });
+      return;
+    }
 
     if (addToHistory && !url.startsWith('hex:') && url.toLowerCase() !== 'admin') {
       navHistory = navHistory.slice(0, navIdx + 1);

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -35,7 +35,7 @@ current_targets:
   kilo_tester: KMaze
   kilo_usability: KMaze
   kilo_qa: KRss
-  kilo_expander: KNet
+  kilo_expander: KMaze
   kilo_review: KDragon
 virtual_web_target: kweb://rfc-archive
 virtual_web_rotation:
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KBookmark
-  timestamp: '2026-10-26T12:35:12-07:00'
+  agent: kilo-expander
+  app: KNet
+  timestamp: '2026-10-26T13:20:00-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -180,11 +180,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KNet`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Add toggleable [Tab] explored-fog Minimap and top-center Cardinal/Objective Compass (wiring dead hasCompass on Lore Tablets/Shrines to point toward Key/Exit) plus right-hand Pickaxe swing viewmodel using recoilOffset, 2D concentric hit shockwaves, and #gameCanvas left-click attack in both kmaze.html and KMaze/main.c; and wire Phase VI KiloOS VFS Open/Save (/home/saves/kmaze_descent.json via postMessage with standalone fallback) into checkpoint/stats export and import. |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
@@ -195,6 +194,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmech_telemetry.json via postMessage with standalone fallback) into #modal-telemetry and add optional RFMS online mech duel behind an explicit Multiplayer Arena button. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Build interactive 12-system Galactic Star Chart [C] (plus KTrader/main.c parity) rendering planets (x,y) jump-gate topology, ecoType/techLevel badges, current location, and active mission target highlight, add player cur/max shield bars to #ui-combat-panel, and enforce Navy patrol confiscation when jumping with Contraband cargo. |
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
+| `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KDragon`
@@ -301,6 +301,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T13:20:00-07:00 — kilo-expander: KNet (KNet: Phase VI VFS Spooling & TINAG Darknet Hardening)**
+  - Status: PASS (0 errors, web 201.9 KB, native 56.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - Enforced TINAG secrecy: removed Tier 3 darknet nodes from surface bookmark chips while preserving address-bar routing across HTML and Win32 C.
+  - Integrated Phase VI VFS mesh: added 'Save Page/Spool to KiloOS VFS' (/home/downloads/) with Alt+S shortcuts, vfs: URI loading, and IPC handoff to KHex/KPad.
+  - Routed all 6 canonical 1999 virtual web parody destinations (slashnet, trapster, cabled, demoscene, scallion, rfc-archive) with dual-target parity.
+  - Handoff: Advanced `kilo-expander` to `KMaze`; rotated active agent to `kilo-review`.
+
 - **2026-10-26T12:35:12-07:00 — kilo-qa: KBookmark (Pass 5 QA, Dual Parity & Mature Graduation)**
   - Status: PASS ✅ (0 errors, web 160.2 KB, native 23.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kbookmark_tutorialSeen flag, and Escape modal dismissal.
@@ -323,9 +330,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-soundscape updates for KMaze across web and native targets.
   - Handoff: Advanced `kilo-soundscape` to `KBreakout`; rotated active agent to `kilo-tester`.
-
-- **2026-10-26T10:33:05-07:00 — kilo-graphics: KBreakout (Arcade Visuals & Glint Sweep)**
-  - Status: PASS ✅ (0 errors, web 186.2 KB, native 54.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 17.23%, HEAD Δ 0.01%, 0 fail, 0 warn, 6.9s)).
-  - Textured metallic/crystalline bricks, plasma paddle induction & ball trails, boss hazard visuals verified.
-  - Glint sweep verified: zero specular glints or traveling perimeter border dots in Web and C.
-  - Handoff: Advanced `kilo-graphics` to `KStarship`; rotated active agent to `kilo-soundscape`.

@@ -56,6 +56,7 @@ void ShowHelpDialog(HWND hwnd) {
         "  • F1 or H            : Show this Help & Shortcut guide\n"
         "  • F5                 : Quick Save complete session snapshot\n"
         "  • F9                 : Quick Load session snapshot\n"
+        "  • Alt + S            : Save Page / Spool active buffer to KiloOS VFS (/home/downloads/)\n"
         "  • Enter (in URL)     : Execute HTTP Fetch or command\n"
         "  • Enter (in Filter)  : Refresh Traffic Log filter\n"
         "  • P                  : Start Ping & Latency test\n"
@@ -1183,22 +1184,30 @@ void FetchUrl(HWND hwnd, BOOL addToHistory) {
         AddTrafficLog("KWEB", "kweb://warez", "OK", 10, 1024);
         return;
     }
-    if (lstrcmpiA(url, "darknet") == 0 || lstrcmpiA(url, "kweb:darknet") == 0 || lstrcmpiA(url, "kweb://darknet") == 0) {
+    if (lstrcmpiA(url, "darknet") == 0 || lstrcmpiA(url, "kweb:darknet") == 0 || lstrcmpiA(url, "kweb://darknet") == 0 ||
+        lstrcmpiA(url, "node0x7f") == 0 || lstrcmpiA(url, "kweb:node0x7f") == 0 || lstrcmpiA(url, "kweb://node0x7f") == 0 ||
+        lstrcmpiA(url, "10.19.99.12") == 0 || lstrcmpiA(url, "10.19.99.7f") == 0) {
         ShowVirtualWeb("darknet");
         AddTrafficLog("KWEB", "kweb://darknet", "OK", 10, 1024);
         return;
     }
-    if (lstrcmpiA(url, "echo_subsystem") == 0 || lstrcmpiA(url, "kweb:echo_subsystem") == 0 || lstrcmpiA(url, "echo-subsystem.net") == 0 || lstrcmpiA(url, "kweb://echo-subsystem.net") == 0) {
+    if (lstrcmpiA(url, "echo_subsystem") == 0 || lstrcmpiA(url, "kweb:echo_subsystem") == 0 || lstrcmpiA(url, "echo-subsystem.net") == 0 || lstrcmpiA(url, "kweb://echo-subsystem.net") == 0 ||
+        lstrcmpiA(url, "echo-subsystem") == 0 || lstrcmpiA(url, "kweb:echo-subsystem") == 0 || lstrcmpiA(url, "kweb://echo-subsystem") == 0 ||
+        lstrcmpiA(url, "10.19.99.1") == 0 || lstrcmpiA(url, "echo-gw") == 0) {
         ShowVirtualWeb("echo_subsystem");
-        AddTrafficLog("KWEB", "kweb://echo_subsystem", "OK", 10, 1024);
+        AddTrafficLog("KWEB", "kweb://echo-subsystem.net", "OK", 10, 1024);
         return;
     }
-    if (lstrcmpiA(url, "classified") == 0 || lstrcmpiA(url, "10.19.99.4") == 0 || lstrcmpiA(url, "kweb:classified") == 0) {
+    if (lstrcmpiA(url, "classified") == 0 || lstrcmpiA(url, "10.19.99.4") == 0 || lstrcmpiA(url, "kweb:classified") == 0 || lstrcmpiA(url, "kweb://classified") == 0 ||
+        lstrcmpiA(url, "10.19.99.4/classified") == 0 || lstrcmpiA(url, "kweb:10.19.99.4/classified") == 0 || lstrcmpiA(url, "kweb://10.19.99.4/classified") == 0 ||
+        lstrcmpiA(url, "kweb:10.19.99.4") == 0 || lstrcmpiA(url, "kweb://10.19.99.4") == 0 || lstrcmpiA(url, "carlsbad") == 0) {
         ShowVirtualWeb("classified");
-        AddTrafficLog("KWEB", "kweb://classified", "OK", 10, 1024);
+        AddTrafficLog("KWEB", "kweb://10.19.99.4/classified", "OK", 10, 1024);
         return;
     }
-    if (lstrcmpiA(url, "deep_core") == 0 || lstrcmpiA(url, "deep-core") == 0 || lstrcmpiA(url, "kweb:deep-core") == 0 || lstrcmpiA(url, "kweb://deep-core") == 0 || lstrcmpiA(url, "kweb:deep_core") == 0 || lstrcmpiA(url, "kweb://deep_core") == 0 || lstrcmpiA(url, "10.19.99.127") == 0 || lstrcmpiA(url, "10.19.99.254") == 0) {
+    if (lstrcmpiA(url, "deep_core") == 0 || lstrcmpiA(url, "deep-core") == 0 || lstrcmpiA(url, "kweb:deep-core") == 0 || lstrcmpiA(url, "kweb://deep-core") == 0 ||
+        lstrcmpiA(url, "kweb:deep_core") == 0 || lstrcmpiA(url, "kweb://deep_core") == 0 || lstrcmpiA(url, "10.19.99.127") == 0 || lstrcmpiA(url, "10.19.99.254") == 0 ||
+        lstrcmpiA(url, "ghost-node") == 0 || lstrcmpiA(url, "kweb:ghost-node") == 0 || lstrcmpiA(url, "kweb://ghost-node") == 0) {
         ShowVirtualWeb("deep_core");
         AddTrafficLog("KWEB", "kweb://deep-core", "OK", 10, 1024);
         return;
@@ -1796,6 +1805,10 @@ void MainEntry() {
             }
             if (altDown && msg.wParam == VK_RIGHT) {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(3, BN_CLICKED), (LPARAM)hBtnForward);
+                continue;
+            }
+            if (altDown && (msg.wParam == 'S' || msg.wParam == 's')) {
+                SpoolPageToVfs();
                 continue;
             }
 
