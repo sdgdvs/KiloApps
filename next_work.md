@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_graphics: KWizard
   kilo_soundscape: KSubmarine
   kilo_tester: KSys
-  kilo_usability: KPac
+  kilo_usability: KScript
   kilo_qa: KClock
   kilo_expander: KPac
   kilo_review: KSpace
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KPac
-  timestamp: '2026-10-25T20:37:03-07:00'
+  timestamp: '2026-10-25T22:19:30-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -149,11 +149,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | **[ARGON REVIEW]:** Add ctx.moveTo(x+2,y) before each status-diode ctx.arc() in draw() to eliminate the flashing hourglass corridor polygon; replace undeclared ghostModeTimer/diffLevel/freezeTimer in showTelemetry, exportPACFEN(), importPACFEN(), and exportCSV() with frightTimer/diffMode/freezeSkillTimer; recalculate dotCount in importPACFEN(); add eaten-ghost pen return in Campaign/Endless update(), let ghosts exit pen door (r===6,c===7) in Endless mazes, block closed tile-10 phase gates, and add click-to-rebind key capture on #kb_p1Up..#kb_p2Right. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KPac`
+- **Active Target**: `KScript`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | **[ARGON REVIEW]:** Widen #game-container to fit the KiloOS window with zero vertical overflow, separate .app-title + badges above a compact 2-row toolbar (removing duplicate Forge/Mode buttons from .skills-bar), anchor .toast-container below the full header with max 2 non-occluding toasts, and restore pre-modal pause state on modal close. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -165,6 +164,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Responsive dual-pane feed/reader layout, comfortable reading line-length (65-75ch), and clear unread badge contrast. |
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Responsive folder tree sidebar, accessible tag chips, and keyboard shortcut cheat sheet dialog. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
+| `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | **[ARGON REVIEW]:** Widen #game-container to fit the KiloOS window with zero vertical overflow, separate .app-title + badges above a compact 2-row toolbar (removing duplicate Forge/Mode buttons from .skills-bar), anchor .toast-container below the full header with max 2 non-occluding toasts, and restore pre-modal pause state on modal close. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KClock`
@@ -300,6 +300,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-25T22:19:30-07:00 — kilo-usability: KPac (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 244.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.17%, input 3.74%, HEAD Δ 30.27%, 0 fail, 0 warn, 11.3s)).
+  - Layout & Responsive: Widened #game-container to 394px for KiloOS frame with zero vertical overflow, separated .app-title-bar above compact 2-row toolbar, removed duplicate Forge/Camp buttons from skills bar.
+  - Ergonomics & Toasts: Anchored .toast-container at top 68px below full header with max 2 non-occluding toasts, added focus-visible outlines, touch-action controls, and restored pre-modal pause state on modal close.
+  - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
+
 - **2026-10-25T20:37:03-07:00 — kilo-tester: KPac (Interactive UI Audit & Inline Repairs)**
   - Status: PASS (0 errors, web 242.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.14%, input 3.12%, HEAD delta 6.56%)).
   - UI & Hotkeys: Added ctx.moveTo before diode arcs eliminating corridor polygon; added click-to-rebind key capture on #kb_p1Up..#kb_p2Right.
@@ -324,10 +330,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive Y2K Readiness Audit, Dot-Com IPO Simulator, Jargon Watch generator & Hype-vs-Reality matrix.
   - Integrated KiloOS VFS exports, retro audio synth, hotkey navigation, and knet.html/portal/webring routing.
   - Handoff: Advanced `kilo-creator` to `kweb://scallion`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-25T17:16:38-07:00 — kilo-review: KPac (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE - un-quarantined KPac from Mature and queued 4 surgical Flash fixes after inspecting 480x593 sheet.png and kpac.html/main.c.
-  - Visual & UX Defects: Unseparated ctx.arc() corner diodes fill a flashing cyan/yellow/pink hourglass polygon across maze corridors; 15-button 5-row header overflows viewport (+6px) and is occluded by top-42px .toast-container.
-  - Crash & Gameplay Defects: Undeclared ghostModeTimer/diffLevel/freezeTimer crash HUD [T], break FEN [N] export, and fail CSV [Y]; eaten ghosts freeze forever in Campaign/Endless; Endless ghost house walls trap all ghosts; tile-10 gates lack collision; Keys [K] badges cannot rebind.
-  - Feature & Audio Gaps: Mature spec claims a maze editor and OS integration, but #fenModal only accepts raw text strings with zero VFS hooks and audio is a 15-line single-oscillator beep stub.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KPac`, `kilo-usability`->`KPac`, `kilo-expander`->`KPac`, `kilo-soundscape`->`KPac`] (un-quarantined `KPac` from Mature); advanced `kilo-review` to `KSpace`; next agent `kilo-creator`.

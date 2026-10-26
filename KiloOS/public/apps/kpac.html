@@ -8,7 +8,7 @@
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    padding: 6px;
+    padding: 4px;
     background-color: #030611;
     color: #fff;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -16,35 +16,49 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    overflow-x: hidden;
+    height: 100vh;
+    overflow: hidden;
     text-rendering: optimizeLegibility;
+    user-select: none;
+  }
+  button:focus-visible {
+    outline: 2px solid #00e5ff;
+    outline-offset: 1px;
+  }
+  button {
+    touch-action: manipulation;
   }
   #game-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     background: #080d1a;
-    padding: 8px 10px;
-    border-radius: 12px;
+    padding: 5px 6px;
+    border-radius: 8px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 15px rgba(30, 136, 229, 0.3);
     border: 1px solid #1e88e5;
     position: relative;
-    max-width: 340px;
+    max-width: 394px;
     width: 100%;
   }
   .app-header {
     display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 5px;
+    gap: 3px;
+  }
+  .app-title-bar {
+    display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    margin-bottom: 6px;
-    gap: 4px;
+    padding: 0 2px;
   }
   .app-title {
     font-size: 13px;
     font-weight: 800;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     background: linear-gradient(90deg, #00e5ff, #ffd700);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -52,20 +66,40 @@
     align-items: center;
     gap: 4px;
   }
-  .header-actions {
+  .app-badges {
     display: flex;
-    gap: 3px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+  }
+  .header-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+  }
+  .toolbar-row {
+    display: flex;
+    gap: 2px;
+    width: 100%;
+  }
+  .toolbar-row .hdr-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    padding: 2px 1px;
+    font-size: 9px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .hdr-btn {
     background: #0d1b2a;
     border: 1px solid #1e88e5;
     color: #90caf9;
-    border-radius: 4px;
+    border-radius: 3px;
     font-size: 9px;
     font-weight: bold;
-    padding: 3px 5px;
+    padding: 2px 2px;
     cursor: pointer;
     transition: all 0.15s ease;
     user-select: none;
@@ -95,6 +129,7 @@
     border-radius: 6px;
     background-color: #030611;
     border: 1px solid rgba(30, 136, 229, 0.3);
+    touch-action: none;
   }
   .skills-bar {
     display: flex;
@@ -170,29 +205,29 @@
     color: #030611;
   }
 
-  /* Toast notification system - Positioned safely below header toolbar to prevent button occlusion */
+  /* Toast notification system - Anchored safely below full 2-row header toolbar */
   .toast-container {
     position: absolute;
-    top: 42px;
+    top: 68px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    width: 88%;
-    max-width: 290px;
+    gap: 4px;
+    width: 86%;
+    max-width: 280px;
     pointer-events: none;
   }
   .toast-card {
-    background: rgba(10, 20, 40, 0.95);
+    background: rgba(10, 20, 40, 0.90);
     border: 1px solid #00e5ff;
-    border-radius: 8px;
-    padding: 7px 10px;
+    border-radius: 5px;
+    padding: 3px 6px;
     color: #fff;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 229, 255, 0.4);
-    font-size: 10px;
-    line-height: 1.3;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 229, 255, 0.35);
+    font-size: 9px;
+    line-height: 1.2;
     pointer-events: auto;
     cursor: pointer;
     animation: toastSlide 0.25s ease-out;
@@ -404,28 +439,36 @@
 
   <!-- App Header Toolbar -->
   <div class="app-header">
-    <div class="app-title">
-      <span>🟡 KPac</span>
-      <span id="hdrModeBadge" class="hdr-badge">CAMP</span>
-      <span id="hdrDiffBadge" class="hdr-badge" style="color: #ffd700; background: rgba(255, 215, 0, 0.15);">NORM</span>
+    <div class="app-title-bar">
+      <div class="app-title">
+        <span>🟡 KPac Cyber Edition</span>
+      </div>
+      <div class="app-badges">
+        <span id="hdrModeBadge" class="hdr-badge">CAMP</span>
+        <span id="hdrDiffBadge" class="hdr-badge" style="color: #ffd700; background: rgba(255, 215, 0, 0.15);">NORM</span>
+      </div>
     </div>
-    <div class="header-actions">
-      <button class="hdr-btn" onclick="toggleHelpModal(true)" title="Help & Shortcuts [F1/H]">Help [F1]</button>
-      <button id="btnMute" class="hdr-btn" onclick="toggleMute()" title="Toggle Procedural Audio & FM Synth [M]">Snd [M]</button>
-      <button id="btnPause" class="hdr-btn" onclick="togglePause()" title="Pause / Resume Game [Space]">Pause [Space]</button>
-      <button class="hdr-btn" onclick="toggleCraftModal(true)" title="Cyber-Forge Menu [C]">Forge [C]</button>
-      <button class="hdr-btn" onclick="toggleGameMode()" title="Toggle Campaign / Arcade Endless [O]">Mode [O]</button>
-      <button class="hdr-btn" onclick="cycleDifficulty()" title="Cycle Difficulty [1-3]">Diff [1-3]</button>
-      <button id="btnDuel" class="hdr-btn" onclick="openDuelModal()" title="Cyber Duel Arena & Multiplayer [X]" style="color: #00e5ff; border-color: #00e5ff;">Duel [X]</button>
-      <button id="btnReplay" class="hdr-btn" onclick="openReplayModal()" title="Match Replay Viewer & Records [R]">Replay [R]</button>
-      <button id="btnKeybinds" class="hdr-btn" onclick="openKeybindsModal()" title="Custom Controls & Keys [K]">Keys [K]</button>
-      <button id="btnFen" class="hdr-btn" onclick="openFenModal()" title="PAC-FEN Board State & Custom Mazes [N]">FEN [N]</button>
-      <button id="btnTelemetry" class="hdr-btn" onclick="toggleTelemetry()" title="Engine Diagnostics Telemetry [T]">HUD [T]</button>
-      <button class="hdr-btn" onclick="saveGame()" title="Quick Save [F5/V]">Save [F5]</button>
-      <button class="hdr-btn" onclick="loadGame()" title="Quick Load [F9/L]">Load [F9]</button>
-      <button class="hdr-btn" onclick="exportJSON()" title="Export JSON Data [E]">Exp [E]</button>
-      <button class="hdr-btn" onclick="exportCSV()" title="Export Match CSV Telemetry [Y]">CSV [Y]</button>
-      <button class="hdr-btn" onclick="triggerImport()" title="Import JSON Data [I]">Imp [I]</button>
+    <div class="header-toolbar">
+      <div class="toolbar-row">
+        <button class="hdr-btn" onclick="toggleHelpModal(true)" title="Help & Shortcuts [F1/H]">Help [F1]</button>
+        <button id="btnMute" class="hdr-btn" onclick="toggleMute()" title="Toggle Procedural Audio & FM Synth [M]">Snd [M]</button>
+        <button id="btnPause" class="hdr-btn" onclick="togglePause()" title="Pause / Resume Game [Space]">Pause [Space]</button>
+        <button id="btnMode" class="hdr-btn mode-btn" onclick="toggleGameMode()" title="Toggle Campaign / Arcade Endless [O]">Mode [O]</button>
+        <button class="hdr-btn" onclick="cycleDifficulty()" title="Cycle Difficulty [1-3]">Diff [1-3]</button>
+        <button id="btnCraft" class="hdr-btn craft-btn" onclick="toggleCraftModal(true)" title="Cyber-Forge Menu [C]">Forge [C]</button>
+        <button id="btnDuel" class="hdr-btn" onclick="openDuelModal()" title="Cyber Duel Arena & Multiplayer [X]" style="color: #00e5ff; border-color: #00e5ff;">Duel [X]</button>
+        <button id="btnKeybinds" class="hdr-btn" onclick="openKeybindsModal()" title="Custom Controls & Keys [K]">Keys [K]</button>
+      </div>
+      <div class="toolbar-row">
+        <button id="btnReplay" class="hdr-btn" onclick="openReplayModal()" title="Match Replay Viewer & Records [R]">Replay [R]</button>
+        <button id="btnFen" class="hdr-btn" onclick="openFenModal()" title="PAC-FEN Board State & Custom Mazes [N]">FEN [N]</button>
+        <button id="btnTelemetry" class="hdr-btn" onclick="toggleTelemetry()" title="Engine Diagnostics Telemetry [T]">HUD [T]</button>
+        <button class="hdr-btn" onclick="saveGame()" title="Quick Save [F5/V]">Save [F5]</button>
+        <button class="hdr-btn" onclick="loadGame()" title="Quick Load [F9/L]">Load [F9]</button>
+        <button class="hdr-btn" onclick="exportJSON()" title="Export JSON Data [E]">Exp [E]</button>
+        <button class="hdr-btn" onclick="exportCSV()" title="Export Match CSV Telemetry [Y]">CSV [Y]</button>
+        <button class="hdr-btn" onclick="triggerImport()" title="Import JSON Data [I]">Imp [I]</button>
+      </div>
     </div>
   </div>
 
@@ -441,11 +484,9 @@
     <button id="btnPetUlt" class="skill-btn pet-btn" onclick="triggerPetUltimate()" title="Pet Ultimate Skill [U]">Pet [U]</button>
   </div>
 
-  <!-- Skills Bar Row 2 (Quick Craft & Modes) -->
+  <!-- Skills Bar Row 2 (Quick Craft & Companion) -->
   <div class="skills-bar" style="margin-top: 4px;">
-    <button id="btnCraft" class="skill-btn craft-btn" onclick="toggleCraftModal(true)" title="Cyber-Forge [C]">Forge [C]</button>
-    <button id="btnPetType" class="skill-btn pet-btn" onclick="cyclePetCompanion()" title="Cycle Companion Pet [P]">Type [P]</button>
-    <button id="btnMode" class="skill-btn mode-btn" onclick="toggleGameMode()" title="Mode [O]">Mode [O]</button>
+    <button id="btnPetType" class="skill-btn pet-btn" onclick="cyclePetCompanion()" title="Cycle Companion Pet [P]">Pet [P]</button>
     <button class="skill-btn" onclick="craftItem(1)" title="Craft Super Pellet [7]">Pellet [7]</button>
     <button class="skill-btn" onclick="craftItem(2)" title="Craft Chrono Warp [8]">Warp [8]</button>
     <button class="skill-btn" onclick="craftItem(3)" title="Craft Aegis Shield [9]">Shield [9]</button>
@@ -1309,10 +1350,13 @@
   let statsGamesPlayed = 0, statsGhostsEaten = 0, statsMaxScore = 0, statsRelicsForged = 0;
   let shockwaves = [], particles = [], popups = [];
 
-  // Toast System
+  // Toast System - Max 2 non-occluding toasts
   function showToast(msg, type = 'info') {
       const container = document.getElementById('toastContainer');
       if (!container) return;
+      while (container.children.length >= 2) {
+          container.removeChild(container.firstChild);
+      }
       const toast = document.createElement('div');
       toast.className = `toast-card ${type}`;
       toast.innerHTML = `<span>${msg}</span><span style="font-size:9px;opacity:0.6;margin-left:6px;">✕</span>`;
@@ -1324,7 +1368,7 @@
               toast.style.transition = 'opacity 0.3s ease';
               setTimeout(() => toast.remove(), 300);
           }
-      }, 3500);
+      }, 3200);
   }
 
   function updateUIBadges() {
@@ -1391,15 +1435,51 @@
       else startBgm();
   }
 
+  let preModalPaused = null;
+
+  function capturePreModalPause() {
+      if (preModalPaused === null) {
+          preModalPaused = paused ? 1 : 0;
+      }
+      paused = 1;
+      const btn = document.getElementById('btnPause');
+      if (btn) btn.textContent = 'Resume [Space]';
+      stopBgm();
+  }
+
+  function restorePreModalPause() {
+      const helpOpen = document.getElementById('helpModal')?.style.display === 'flex';
+      const craftOpen = document.getElementById('craftModal')?.style.display === 'flex';
+      const duelOpen = document.getElementById('duelModal')?.style.display === 'flex';
+      const replayOpen = document.getElementById('replayModal')?.style.display === 'flex';
+      const keybindOpen = document.getElementById('keybindModal')?.style.display === 'flex';
+      const inviteOpen = document.getElementById('inviteModal')?.style.display === 'flex';
+      const fenOpen = document.getElementById('fenModal')?.style.display === 'flex';
+      const anyModalOpen = helpOpen || craftOpen || duelOpen || replayOpen || keybindOpen || inviteOpen || fenOpen;
+
+      if (!anyModalOpen && preModalPaused !== null) {
+          if (!gameOver) {
+              paused = preModalPaused;
+          } else {
+              paused = 1;
+          }
+          preModalPaused = null;
+          const btn = document.getElementById('btnPause');
+          if (btn) btn.textContent = paused ? 'Resume [Space]' : 'Pause [Space]';
+          if (paused || gameOver) stopBgm();
+          else startBgm();
+      }
+  }
+
   function toggleHelpModal(show) {
       const modal = document.getElementById('helpModal');
       if (!modal) return;
       if (show === undefined) show = modal.style.display !== 'flex';
       modal.style.display = show ? 'flex' : 'none';
       if (show) {
-          paused = 1;
-          const btn = document.getElementById('btnPause');
-          if (btn) btn.textContent = 'Resume [Space]';
+          capturePreModalPause();
+      } else {
+          restorePreModalPause();
       }
       setTutorialSeen();
   }
@@ -1411,18 +1491,16 @@
       modal.style.display = show ? 'flex' : 'none';
       if (show) {
           updateUIBadges();
-          paused = 1;
-          const btn = document.getElementById('btnPause');
-          if (btn) btn.textContent = 'Resume [Space]';
+          capturePreModalPause();
+      } else {
+          restorePreModalPause();
       }
   }
 
   function openDuelModal() {
       const modal = document.getElementById('duelModal');
       if (modal) modal.style.display = 'flex';
-      paused = 1;
-      const btn = document.getElementById('btnPause');
-      if (btn) btn.textContent = 'Resume [Space]';
+      capturePreModalPause();
       const nameInput = document.getElementById('mpPlayerName');
       if (nameInput) nameInput.value = myPlayerName;
   }
@@ -1431,14 +1509,13 @@
       const modal = document.getElementById('duelModal');
       if (modal) modal.style.display = 'none';
       stopSoloFallbackCountdown();
+      restorePreModalPause();
   }
 
   function openReplayModal() {
       const modal = document.getElementById('replayModal');
       if (modal) modal.style.display = 'flex';
-      paused = 1;
-      const btn = document.getElementById('btnPause');
-      if (btn) btn.textContent = 'Resume [Space]';
+      capturePreModalPause();
       const disp = document.getElementById('replayFrameCountDisp');
       if (disp) disp.textContent = replayFrames.length;
       updateReplayProgressUI();
@@ -1447,14 +1524,13 @@
   function closeReplayModal() {
       const modal = document.getElementById('replayModal');
       if (modal) modal.style.display = 'none';
+      restorePreModalPause();
   }
 
   function openFenModal() {
       const modal = document.getElementById('fenModal');
       if (modal) modal.style.display = 'flex';
-      paused = 1;
-      const btn = document.getElementById('btnPause');
-      if (btn) btn.textContent = 'Resume [Space]';
+      capturePreModalPause();
       const box = document.getElementById('fenExportBox');
       if (box) box.value = exportPACFEN();
   }
@@ -1462,6 +1538,7 @@
   function closeFenModal() {
       const modal = document.getElementById('fenModal');
       if (modal) modal.style.display = 'none';
+      restorePreModalPause();
   }
 
   function copyFenString() {
@@ -1576,9 +1653,7 @@
   function openKeybindsModal() {
       const modal = document.getElementById('keybindModal');
       if (modal) modal.style.display = 'flex';
-      paused = 1;
-      const btn = document.getElementById('btnPause');
-      if (btn) btn.textContent = 'Resume [Space]';
+      capturePreModalPause();
       updateKeybindDisplay();
   }
 
@@ -1587,11 +1662,13 @@
       updateKeybindDisplay();
       const modal = document.getElementById('keybindModal');
       if (modal) modal.style.display = 'none';
+      restorePreModalPause();
   }
 
   function closeInviteModal() {
       const modal = document.getElementById('inviteModal');
       if (modal) modal.style.display = 'none';
+      restorePreModalPause();
   }
 
   function closeAllModals() {
@@ -1602,6 +1679,7 @@
       closeKeybindModal();
       closeInviteModal();
       closeFenModal();
+      restorePreModalPause();
   }
 
   function savePlayerName(val) {
@@ -1801,6 +1879,7 @@
       const label = document.getElementById('inviteCodeLabel');
       if (label) label.textContent = code;
       if (modal) modal.style.display = 'flex';
+      capturePreModalPause();
   }
 
   function acceptInvite() {
