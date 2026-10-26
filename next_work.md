@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-soundscape
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ tool_call_cap: 25
 commit_checkpoint: 12
 status: ready
 current_targets:
-  kilo_creator: kweb://scallion
+  kilo_creator: kweb://demoscene
   kilo_graphics: KWizard
   kilo_soundscape: KSubmarine
   kilo_tester: KSpace
@@ -37,7 +37,7 @@ current_targets:
   kilo_qa: KPomodoro
   kilo_expander: KSynth
   kilo_review: KMaze
-virtual_web_target: kweb://scallion
+virtual_web_target: kweb://demoscene
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KSpace
-  timestamp: '2026-10-26T02:32:17-07:00'
+  agent: kilo-creator
+  app: kweb://scallion
+  timestamp: '2026-10-26T03:14:42-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -84,11 +84,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://scallion`
+- **Active Target**: `kweb://demoscene`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
@@ -96,6 +95,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 | `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
+| `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KWizard`
@@ -298,6 +298,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T03:14:42-07:00 — kilo-creator: kweb://scallion (The Scallion: 1999 Satirical News (kweb://scallion))**
+  - Status: PASS ✅ (0 errors, web 91.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.22%, input 42.61%, HEAD Δ 0.34%, 0 fail, 0 warn, 8.2s)).
+  - Satire Portal & Columns: Full broadsheet with Lead Story, Sub-Articles, Y2K Doom Clock, Interactive Gallup Poll, Tech Horoscopes, and [1-6]/[M]/[S]/[P]/[Esc] keyboard navigation.
+  - Sysadmin, Forge & VFS: Added interactive BOFH teletype terminal, 56k/Bunker canvas charts, headline forge generator, and full VFS/KPad export.
+  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-26T02:32:17-07:00 — kilo-review: KSpace (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 480x483 / 320x480 canvas and audited kspace.html + KSpace/main.c).
   - Visual/HUD Findings: Help screen 11px centered lines overflow 320px canvas on both sides; HUD W:1/20 [S1] overlaps top-right audio button; [C]ALPH clips right border; Sector 3 HEAT text collides with [W]/[C] at y=33; #btnTimeStop truncates to [T] TI...; ship clamping at H-20 overlaps #skillBar.
@@ -322,9 +328,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Layout & Responsive: Widened #game-container to 394px for KiloOS frame with zero vertical overflow, separated .app-title-bar above compact 2-row toolbar, removed duplicate Forge/Camp buttons from skills bar.
   - Ergonomics & Toasts: Anchored .toast-container at top 68px below full header with max 2 non-occluding toasts, added focus-visible outlines, touch-action controls, and restored pre-modal pause state on modal close.
   - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
-
-- **2026-10-25T20:37:03-07:00 — kilo-tester: KPac (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS (0 errors, web 242.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.14%, input 3.12%, HEAD delta 6.56%)).
-  - UI & Hotkeys: Added ctx.moveTo before diode arcs eliminating corridor polygon; added click-to-rebind key capture on #kb_p1Up..#kb_p2Right.
-  - Gameplay & FEN: Fixed undeclared vars in showTelemetry, exportPACFEN/CSV; recalculated dotCount on import; added eaten-ghost pen return, Endless door exit and closed tile-10 gate blocks.
-  - Handoff: Advanced `kilo-tester` to `KSys`; rotated active agent to `kilo-usability`.

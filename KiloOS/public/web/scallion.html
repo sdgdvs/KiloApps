@@ -729,9 +729,9 @@
     </div>
     <div class="telemetry-tools">
       <span class="badge-retro">KILONET VIRTUAL EDITION</span>
-      <button class="btn-telemetry" id="btnAudioToggle" onclick="toggleAudio()" title="Toggle Web Audio SFX">🔊 SFX [ON]</button>
-      <button class="btn-telemetry" onclick="exportFrontPageVfs()" title="Save current edition text to KiloOS VFS">💾 SAVE TO VFS</button>
-      <button class="btn-telemetry" onclick="printFrontPage()" title="Print broadsheet page">🖨️ PRINT</button>
+      <button class="btn-telemetry" id="btnAudioToggle" onclick="toggleAudio()" title="Toggle Web Audio SFX [M]">🔊 SFX [M]</button>
+      <button class="btn-telemetry" onclick="exportFrontPageVfs()" title="Save current edition text to KiloOS VFS [S]">💾 SAVE VFS [S]</button>
+      <button class="btn-telemetry" onclick="printFrontPage()" title="Print broadsheet page [P]">🖨️ PRINT [P]</button>
     </div>
   </div>
 
@@ -1404,7 +1404,7 @@ function initAudio() {
 function toggleAudio() {
   soundEnabled = !soundEnabled;
   const btn = document.getElementById('btnAudioToggle');
-  if (btn) btn.textContent = soundEnabled ? '🔊 SFX [ON]' : '🔇 SFX [OFF]';
+  if (btn) btn.textContent = soundEnabled ? '🔊 SFX [M]' : '🔇 SFX [M]';
   if (soundEnabled) playRetroSound(880, 0.06);
 }
 
@@ -2153,12 +2153,64 @@ function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// --- Initialization ---
+// --- Initialization & Keyboard Navigation ---
 window.addEventListener('DOMContentLoaded', () => {
   renderPoll();
   renderUserLetters();
   updatePanicDisplay();
   buildCustomHeadline();
+});
+
+window.addEventListener('keydown', (e) => {
+  const targetTag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
+  const isInput = targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT';
+
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('articleModal');
+    if (modal && modal.classList.contains('active')) {
+      closeArticleModalDirect();
+      e.preventDefault();
+      return;
+    }
+  }
+
+  if (isInput) return;
+
+  const keyLower = e.key.toLowerCase();
+  if (keyLower === 'm') {
+    toggleAudio();
+    e.preventDefault();
+  } else if (keyLower === '1') {
+    const btn = document.querySelector('.scallion-nav .nav-btn:nth-child(1)');
+    switchSection('frontpage', btn);
+    e.preventDefault();
+  } else if (keyLower === '2') {
+    const btn = document.querySelector('.scallion-nav .nav-btn:nth-child(2)');
+    switchSection('sysadmin', btn);
+    e.preventDefault();
+  } else if (keyLower === '3') {
+    const btn = document.querySelector('.scallion-nav .nav-btn:nth-child(3)');
+    switchSection('infographics', btn);
+    e.preventDefault();
+  } else if (keyLower === '4') {
+    const btn = document.querySelector('.scallion-nav .nav-btn:nth-child(4)');
+    switchSection('forge', btn);
+    e.preventDefault();
+  } else if (keyLower === '5') {
+    const btn = document.querySelector('.scallion-nav .nav-btn:nth-child(5)');
+    switchSection('opinion', btn);
+    e.preventDefault();
+  } else if (keyLower === '6') {
+    const btn = document.querySelector('.scallion-nav .nav-btn:nth-child(6)');
+    switchSection('classifieds', btn);
+    e.preventDefault();
+  } else if (keyLower === 's' && !e.ctrlKey && !e.metaKey) {
+    exportFrontPageVfs();
+    e.preventDefault();
+  } else if (keyLower === 'p' && !e.ctrlKey && !e.metaKey) {
+    printFrontPage();
+    e.preventDefault();
+  }
 });
 </script>
 </body>

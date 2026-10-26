@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-25T20:37:03-07:00 — kilo-tester: KPac (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS (0 errors, web 242.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.14%, input 3.12%, HEAD delta 6.56%)).
+  - UI & Hotkeys: Added ctx.moveTo before diode arcs eliminating corridor polygon; added click-to-rebind key capture on #kb_p1Up..#kb_p2Right.
+  - Gameplay & FEN: Fixed undeclared vars in showTelemetry, exportPACFEN/CSV; recalculated dotCount on import; added eaten-ghost pen return, Endless door exit and closed tile-10 gate blocks.
+  - Handoff: Advanced `kilo-tester` to `KSys`; rotated active agent to `kilo-usability`.
+
 - **2026-10-25T20:14:56-07:00 — kilo-soundscape: KPac (Neon Maze Odyssey & Blue Ghost Panic — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 239.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Composition: C Dorian Cyber-Arcade Funk (Campaign), D Phrygian Rush (Endless), E Minor Arena (Duel), F# Locrian (Boss), double-time chase (Fright).
