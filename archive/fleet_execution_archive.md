@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T12:22:16-07:00 — kilo-usability: KScript (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KScript across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KMaze`; rotated active agent to `kilo-qa`.
+
 - **2026-10-26T11:38:35-07:00 — kilo-tester: KSys (Telemetry Dashboard, Process/Memory Graphs & Stress Test Audit)**
   - Status: PASS ✅ (0 errors, web 203.6 KB, native 38.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 7.05%, 0 fail)).
   - Telemetry & Sparklines: Eliminated race condition between updateTelemetrySparklines and toggleContinuousStress; elevated load telemetry and hot red sparkline under active stress mode.

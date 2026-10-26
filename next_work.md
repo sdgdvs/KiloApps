@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://webring
-  kilo_graphics: KDragon
+  kilo_graphics: KStarship
   kilo_soundscape: KBreakout
   kilo_tester: KDragon
   kilo_usability: KDragon
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://rfc-archive
-  timestamp: '2026-10-26T14:20:12-07:00'
+  agent: kilo-graphics
+  app: KDragon
+  timestamp: '2026-10-26T14:36:38-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -100,11 +100,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KDragon`
+- **Active Target**: `KStarship`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Replace code-generated 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with Imagen 3 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
@@ -116,6 +115,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
 | `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
+| `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Replace code-generated 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with Imagen 3 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KBreakout`
@@ -303,6 +303,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T14:36:38-07:00 — kilo-graphics: KDragon (Imagen 3 2-Stage Sprites (Egg, Hatchling, Drake, Elder, Arena))**
+  - Status: PASS ✅ (0 errors, web 187.5 KB, native 151.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Replaced 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies.
+  - Maintained dual Win32 C GDI pixel rendering parity and verified zero perimeter glints/border dots.
+  - Handoff: Advanced `kilo-graphics` to `KStarship`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-26T14:20:12-07:00 — kilo-creator: kweb://rfc-archive (IETF 1999 Living RFC Workbench)**
   - Status: PASS ✅ (0 errors, web 81.2 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.01%, input 2.38%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.9s)).
   - Implemented RFC 1149/2549 Avian Carrier Simulator, RFC 2324 HTCPCP Coffee Pot Console (418 I'm a teapot), RFC 793 TCP Stepper, and Living RFC Vault.
@@ -327,8 +333,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kbookmark_tutorialSeen flag, and Escape modal dismissal.
   - Dual Parity & Lifecycle: Added Netscape HTML/JSON Export/Import to Win32 C, search filter, and visibilitychange auto-save.
   - Mature Quarantine & Handoff: Promoted `KBookmark` to Mature archive; advanced `kilo-qa` to `KRss`; next agent `kilo-expander`.
-
-- **2026-10-26T12:22:16-07:00 — kilo-usability: KScript (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-usability updates for KScript across web and native targets.
-  - Handoff: Advanced `kilo-usability` to `KMaze`; rotated active agent to `kilo-qa`.

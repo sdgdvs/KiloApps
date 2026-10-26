@@ -329,6 +329,15 @@
         .shaking { animation: shake 0.25s 2; }
         .attacking { animation: attack-move 0.3s ease-in-out; }
         .attacking-enemy { animation: attack-move-enemy 0.3s ease-in-out; }
+        .dragon-sprite {
+            display: inline-block;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            vertical-align: middle;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
     </style>
 </head>
 <body>
@@ -357,35 +366,9 @@
                 <span style="font-weight: bold; font-family: 'Cinzel', serif;">👑 Hoard Relics:</span>
                 <span id="relics-list" style="color: #f7e0b5; font-size: 11px; font-family: monospace;">(None discovered yet)</span>
             </div>
-            <div class="entity-display" id="entity-art"><svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <rect x="6" y="3" width="4" height="1" fill="rgb(180,150,100)" />
-  <rect x="5" y="4" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="6" y="4" width="4" height="1" fill="rgb(230,210,180)" />
-  <rect x="10" y="4" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="5" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="5" y="5" width="5" height="1" fill="rgb(230,210,180)" />
-  <rect x="10" y="5" width="1" height="1" fill="rgb(255,255,255)" />
-  <rect x="11" y="5" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="6" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="6" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="6" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="7" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="7" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="7" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="8" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="8" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="8" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="9" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="9" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="9" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="10" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="10" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="10" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="11" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="5" y="11" width="6" height="1" fill="rgb(230,210,180)" />
-  <rect x="11" y="11" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="5" y="12" width="6" height="1" fill="rgb(180,150,100)" />
-</svg></div>
+            <div class="entity-display" id="entity-art">
+                <img id="player-svg" class="bobbing dragon-sprite" src="../assets/sprites/kdragon/kdragon_egg.png" onerror="if(this.src.indexOf('/assets/')!==-1){this.src='assets/sprites/kdragon/kdragon_egg.png';}" width="128" height="128" alt="Dragon Egg">
+            </div>
             <div class="controls" id="controls">
                 <button id="btn-feed"><span class="btn-badge">1</span> Feed (🍎)</button>
                 <button id="btn-play"><span class="btn-badge">2</span> Play (🎾)</button>
@@ -675,35 +658,9 @@
         </div>
         
         <div id="start-screen">
-            <div class="entity-display"><svg id="start-egg-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <rect x="6" y="3" width="4" height="1" fill="rgb(180,150,100)" />
-  <rect x="5" y="4" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="6" y="4" width="4" height="1" fill="rgb(230,210,180)" />
-  <rect x="10" y="4" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="5" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="5" y="5" width="5" height="1" fill="rgb(230,210,180)" />
-  <rect x="10" y="5" width="1" height="1" fill="rgb(255,255,255)" />
-  <rect x="11" y="5" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="6" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="6" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="6" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="7" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="7" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="7" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="8" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="8" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="8" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="9" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="9" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="9" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="10" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="10" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="10" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="11" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="5" y="11" width="6" height="1" fill="rgb(230,210,180)" />
-  <rect x="11" y="11" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="5" y="12" width="6" height="1" fill="rgb(180,150,100)" />
-</svg></div>
+            <div class="entity-display">
+                <img id="start-egg-svg" class="bobbing dragon-sprite" src="../assets/sprites/kdragon/kdragon_egg.png" onerror="if(this.src.indexOf('/assets/')!==-1){this.src='assets/sprites/kdragon/kdragon_egg.png';}" width="128" height="128" alt="Dragon Egg">
+            </div>
             <p>A mysterious egg awaits...</p>
             <p style="font-size: 14px; font-style: italic;">Press H or F1 for Help | F5/F9 to Save/Load | U for Sound</p>
             <button id="btn-hatch"><span class="btn-badge">Space</span> Incubate Egg</button>
@@ -2564,246 +2521,23 @@
                 
                 let playerSvg = '';
                 if (this.state === 'egg') {
-                    playerSvg = `<svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <rect x="6" y="3" width="4" height="1" fill="rgb(180,150,100)" />
-  <rect x="5" y="4" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="6" y="4" width="4" height="1" fill="rgb(230,210,180)" />
-  <rect x="10" y="4" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="5" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="5" y="5" width="5" height="1" fill="rgb(230,210,180)" />
-  <rect x="10" y="5" width="1" height="1" fill="rgb(255,255,255)" />
-  <rect x="11" y="5" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="6" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="6" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="6" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="7" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="7" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="7" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="8" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="8" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="8" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="9" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="9" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="9" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="3" y="10" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="10" width="8" height="1" fill="rgb(230,210,180)" />
-  <rect x="12" y="10" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="4" y="11" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="5" y="11" width="6" height="1" fill="rgb(230,210,180)" />
-  <rect x="11" y="11" width="1" height="1" fill="rgb(180,150,100)" />
-  <rect x="5" y="12" width="6" height="1" fill="rgb(180,150,100)" />
-</svg>`;
+                    playerSvg = `<img id="player-svg" class="bobbing dragon-sprite" src="../assets/sprites/kdragon/kdragon_egg.png" onerror="if(this.src.indexOf('/assets/')!==-1){this.src='assets/sprites/kdragon/kdragon_egg.png';}" width="128" height="128" alt="Dragon Egg">`;
                 } else if (this.state === 'dragon') {
-                    playerSvg = `<svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <rect x="8" y="1" width="2" height="1" fill="rgb(30,100,30)" />
-  <rect x="7" y="2" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="8" y="2" width="2" height="1" fill="rgb(60,180,60)" />
-  <rect x="10" y="2" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="7" y="3" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="8" y="3" width="2" height="1" fill="rgb(60,180,60)" />
-  <rect x="10" y="3" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="12" y="3" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="6" y="4" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="7" y="4" width="4" height="1" fill="rgb(60,180,60)" />
-  <rect x="11" y="4" width="3" height="1" fill="rgb(30,100,30)" />
-  <rect x="1" y="5" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="4" y="5" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="5" y="5" width="9" height="1" fill="rgb(60,180,60)" />
-  <rect x="14" y="5" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="1" y="6" width="2" height="1" fill="rgb(30,100,30)" />
-  <rect x="4" y="6" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="5" y="6" width="6" height="1" fill="rgb(60,180,60)" />
-  <rect x="11" y="6" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="12" y="6" width="1" height="1" fill="rgb(60,180,60)" />
-  <rect x="13" y="6" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="1" y="7" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="2" y="7" width="1" height="1" fill="rgb(60,180,60)" />
-  <rect x="3" y="7" width="2" height="1" fill="rgb(30,100,30)" />
-  <rect x="5" y="7" width="6" height="1" fill="rgb(60,180,60)" />
-  <rect x="11" y="7" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="12" y="7" width="1" height="1" fill="rgb(60,180,60)" />
-  <rect x="13" y="7" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="1" y="8" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="2" y="8" width="2" height="1" fill="rgb(60,180,60)" />
-  <rect x="4" y="8" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="5" y="8" width="6" height="1" fill="rgb(60,180,60)" />
-  <rect x="11" y="8" width="3" height="1" fill="rgb(30,100,30)" />
-  <rect x="2" y="9" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="3" y="9" width="8" height="1" fill="rgb(60,180,60)" />
-  <rect x="11" y="9" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="3" y="10" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="4" y="10" width="6" height="1" fill="rgb(60,180,60)" />
-  <rect x="10" y="10" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="3" y="11" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="4" y="11" width="1" height="1" fill="rgb(60,180,60)" />
-  <rect x="5" y="11" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="8" y="11" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="9" y="11" width="1" height="1" fill="rgb(60,180,60)" />
-  <rect x="10" y="11" width="1" height="1" fill="rgb(30,100,30)" />
-  <rect x="3" y="12" width="2" height="1" fill="rgb(30,100,30)" />
-  <rect x="9" y="12" width="2" height="1" fill="rgb(30,100,30)" />
-</svg>`;
+                    playerSvg = `<img id="player-svg" class="bobbing dragon-sprite" src="../assets/sprites/kdragon/kdragon_hatchling.png" onerror="if(this.src.indexOf('/assets/')!==-1){this.src='assets/sprites/kdragon/kdragon_hatchling.png';}" width="128" height="128" alt="Dragon Hatchling">`;
                 } else if (this.state === 'adult') {
-                    let adultBaseSvg = `<svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <rect x="5" y="1" width="2" height="1" fill="rgb(180,30,30)" />
-  <rect x="4" y="2" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="5" y="2" width="2" height="1" fill="rgb(220,60,60)" />
-  <rect x="7" y="2" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="3" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="4" y="3" width="3" height="1" fill="rgb(220,60,60)" />
-  <rect x="7" y="3" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="12" y="3" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="4" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="4" y="4" width="1" height="1" fill="rgb(220,60,60)" />
-  <rect x="5" y="4" width="1" height="1" fill="rgb(255,255,255)" />
-  <rect x="6" y="4" width="2" height="1" fill="rgb(220,60,60)" />
-  <rect x="8" y="4" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="11" y="4" width="2" height="1" fill="rgb(180,30,30)" />
-  <rect x="2" y="5" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="5" width="6" height="1" fill="rgb(220,60,60)" />
-  <rect x="9" y="5" width="3" height="1" fill="rgb(180,30,30)" />
-  <rect x="2" y="6" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="6" width="6" height="1" fill="rgb(220,60,60)" />
-  <rect x="9" y="6" width="2" height="1" fill="rgb(180,30,30)" />
-  <rect x="1" y="7" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="2" y="7" width="7" height="1" fill="rgb(220,60,60)" />
-  <rect x="9" y="7" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="1" y="8" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="2" y="8" width="7" height="1" fill="rgb(220,60,60)" />
-  <rect x="9" y="8" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="1" y="9" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="2" y="9" width="2" height="1" fill="rgb(220,60,60)" />
-  <rect x="4" y="9" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="5" y="9" width="4" height="1" fill="rgb(220,60,60)" />
-  <rect x="9" y="9" width="3" height="1" fill="rgb(180,30,30)" />
-  <rect x="2" y="10" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="10" width="9" height="1" fill="rgb(220,60,60)" />
-  <rect x="12" y="10" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="11" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="4" y="11" width="8" height="1" fill="rgb(220,60,60)" />
-  <rect x="12" y="11" width="2" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="12" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="4" y="12" width="3" height="1" fill="rgb(220,60,60)" />
-  <rect x="7" y="12" width="2" height="1" fill="rgb(180,30,30)" />
-  <rect x="9" y="12" width="4" height="1" fill="rgb(220,60,60)" />
-  <rect x="13" y="12" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="13" width="4" height="1" fill="rgb(180,30,30)" />
-  <rect x="9" y="13" width="4" height="1" fill="rgb(180,30,30)" />
-</svg>`;
-                    if (this.element === 'Water') {
-                        playerSvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(30,60,180)").replace(/rgb\(220,60,60\)/g, "rgb(60,120,220)");
-                    } else if (this.element === 'Earth') {
-                        playerSvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(100,60,30)").replace(/rgb\(220,60,60\)/g, "rgb(150,100,60)");
-                    } else if (this.element === 'Astral') {
-                        playerSvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(180,130,20)").replace(/rgb\(220,60,60\)/g, "rgb(255,215,60)");
-                    } else {
-                        playerSvg = adultBaseSvg;
-                    }
+                    let spriteFile = 'kdragon_adult_fire.png';
+                    if (this.element === 'Water') spriteFile = 'kdragon_adult_water.png';
+                    else if (this.element === 'Earth') spriteFile = 'kdragon_adult_earth.png';
+                    else if (this.element === 'Astral') spriteFile = 'kdragon_adult_astral.png';
+                    playerSvg = `<img id="player-svg" class="bobbing dragon-sprite" src="../assets/sprites/kdragon/${spriteFile}" onerror="if(this.src.indexOf('/assets/')!==-1){this.src='assets/sprites/kdragon/${spriteFile}';}" width="128" height="128" alt="Adult ${this.element} Drake">`;
                 } else if (this.state === 'elder') {
-                    let elderBaseSvg = `<svg id="player-svg" class="bobbing" width="136" height="136" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2" y="0" width="1" height="2" fill="rgb(255,215,60)" />
-  <rect x="13" y="0" width="1" height="2" fill="rgb(255,215,60)" />
-  <rect x="3" y="1" width="1" height="2" fill="rgb(180,30,30)" />
-  <rect x="12" y="1" width="1" height="2" fill="rgb(180,30,30)" />
-  <rect x="4" y="2" width="2" height="1" fill="rgb(220,60,60)" />
-  <rect x="7" y="1" width="2" height="1" fill="rgb(255,215,60)" />
-  <rect x="10" y="2" width="2" height="1" fill="rgb(220,60,60)" />
-  <rect x="4" y="3" width="8" height="2" fill="rgb(220,60,60)" />
-  <rect x="3" y="3" width="1" height="3" fill="rgb(180,30,30)" />
-  <rect x="12" y="3" width="1" height="3" fill="rgb(180,30,30)" />
-  <rect x="5" y="4" width="1" height="1" fill="rgb(255,255,255)" />
-  <rect x="6" y="4" width="1" height="1" fill="rgb(255,230,80)" />
-  <rect x="9" y="4" width="1" height="1" fill="rgb(255,230,80)" />
-  <rect x="10" y="4" width="1" height="1" fill="rgb(255,255,255)" />
-  <rect x="6" y="5" width="4" height="1" fill="rgb(180,30,30)" />
-  <rect x="7" y="5" width="2" height="1" fill="rgb(255,255,230)" />
-  <rect x="0" y="4" width="2" height="1" fill="rgb(180,30,30)" />
-  <rect x="14" y="4" width="2" height="1" fill="rgb(180,30,30)" />
-  <rect x="0" y="5" width="3" height="1" fill="rgb(220,60,60)" />
-  <rect x="13" y="5" width="3" height="1" fill="rgb(220,60,60)" />
-  <rect x="1" y="6" width="3" height="2" fill="rgb(220,60,60)" />
-  <rect x="12" y="6" width="3" height="2" fill="rgb(220,60,60)" />
-  <rect x="0" y="6" width="1" height="2" fill="rgb(180,30,30)" />
-  <rect x="15" y="6" width="1" height="2" fill="rgb(180,30,30)" />
-  <rect x="4" y="6" width="8" height="5" fill="rgb(220,60,60)" />
-  <rect x="5" y="6" width="6" height="1" fill="rgb(255,100,80)" />
-  <rect x="7" y="7" width="2" height="2" fill="rgb(255,230,80)" />
-  <rect x="7" y="8" width="2" height="1" fill="rgb(255,255,255)" />
-  <rect x="5" y="9" width="6" height="1" fill="rgb(180,30,30)" />
-  <rect x="6" y="10" width="4" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="10" width="3" height="2" fill="rgb(180,30,30)" />
-  <rect x="10" y="10" width="3" height="2" fill="rgb(180,30,30)" />
-  <rect x="4" y="11" width="8" height="2" fill="rgb(220,60,60)" />
-  <rect x="2" y="13" width="3" height="2" fill="rgb(180,30,30)" />
-  <rect x="11" y="13" width="3" height="2" fill="rgb(180,30,30)" />
-  <rect x="2" y="15" width="1" height="1" fill="rgb(255,215,60)" />
-  <rect x="4" y="15" width="1" height="1" fill="rgb(255,215,60)" />
-  <rect x="11" y="15" width="1" height="1" fill="rgb(255,215,60)" />
-  <rect x="13" y="15" width="1" height="1" fill="rgb(255,215,60)" />
-  <rect x="7" y="13" width="2" height="2" fill="rgb(180,30,30)" />
-  <rect x="7" y="15" width="2" height="1" fill="rgb(255,100,80)" />
-</svg>`;
-                    if (this.element === 'Water') {
-                        playerSvg = elderBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(20,60,160)").replace(/rgb\(220,60,60\)/g, "rgb(50,130,230)").replace(/rgb\(255,100,80\)/g, "rgb(100,200,255)").replace(/rgb\(255,215,60\)/g, "rgb(120,230,255)");
-                    } else if (this.element === 'Earth') {
-                        playerSvg = elderBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(90,50,20)").replace(/rgb\(220,60,60\)/g, "rgb(150,90,40)").replace(/rgb\(255,100,80\)/g, "rgb(200,140,80)").replace(/rgb\(255,215,60\)/g, "rgb(212,175,55)");
-                    } else if (this.element === 'Astral') {
-                        playerSvg = elderBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(140,40,180)").replace(/rgb\(220,60,60\)/g, "rgb(200,90,240)").replace(/rgb\(255,100,80\)/g, "rgb(255,215,80)").replace(/rgb\(255,215,60\)/g, "rgb(255,255,180)");
-                    } else {
-                        playerSvg = elderBaseSvg;
-                    }
+                    playerSvg = `<img id="player-svg" class="bobbing dragon-sprite" src="../assets/sprites/kdragon/kdragon_elder.png" onerror="if(this.src.indexOf('/assets/')!==-1){this.src='assets/sprites/kdragon/kdragon_elder.png';}" width="136" height="136" alt="Elder Sovereign Dragon" style="filter:drop-shadow(0 0 12px rgba(255,215,0,0.7));">`;
                 }
                 
                 if (this.battleState) {
-                    let adultBaseSvg = `<svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <rect x="5" y="1" width="2" height="1" fill="rgb(180,30,30)" />
-  <rect x="4" y="2" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="5" y="2" width="2" height="1" fill="rgb(220,60,60)" />
-  <rect x="7" y="2" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="3" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="4" y="3" width="3" height="1" fill="rgb(220,60,60)" />
-  <rect x="7" y="3" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="12" y="3" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="4" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="4" y="4" width="1" height="1" fill="rgb(220,60,60)" />
-  <rect x="5" y="4" width="1" height="1" fill="rgb(255,255,255)" />
-  <rect x="6" y="4" width="2" height="1" fill="rgb(220,60,60)" />
-  <rect x="8" y="4" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="11" y="4" width="2" height="1" fill="rgb(180,30,30)" />
-  <rect x="2" y="5" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="5" width="6" height="1" fill="rgb(220,60,60)" />
-  <rect x="9" y="5" width="3" height="1" fill="rgb(180,30,30)" />
-  <rect x="2" y="6" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="6" width="6" height="1" fill="rgb(220,60,60)" />
-  <rect x="9" y="6" width="2" height="1" fill="rgb(180,30,30)" />
-  <rect x="1" y="7" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="2" y="7" width="7" height="1" fill="rgb(220,60,60)" />
-  <rect x="9" y="7" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="1" y="8" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="2" y="8" width="7" height="1" fill="rgb(220,60,60)" />
-  <rect x="9" y="8" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="1" y="9" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="2" y="9" width="2" height="1" fill="rgb(220,60,60)" />
-  <rect x="4" y="9" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="5" y="9" width="4" height="1" fill="rgb(220,60,60)" />
-  <rect x="9" y="9" width="3" height="1" fill="rgb(180,30,30)" />
-  <rect x="2" y="10" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="10" width="9" height="1" fill="rgb(220,60,60)" />
-  <rect x="12" y="10" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="11" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="4" y="11" width="8" height="1" fill="rgb(220,60,60)" />
-  <rect x="12" y="11" width="2" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="12" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="4" y="12" width="3" height="1" fill="rgb(220,60,60)" />
-  <rect x="7" y="12" width="2" height="1" fill="rgb(180,30,30)" />
-  <rect x="9" y="12" width="4" height="1" fill="rgb(220,60,60)" />
-  <rect x="13" y="12" width="1" height="1" fill="rgb(180,30,30)" />
-  <rect x="3" y="13" width="4" height="1" fill="rgb(180,30,30)" />
-  <rect x="9" y="13" width="4" height="1" fill="rgb(180,30,30)" />
-</svg>`;
-                    const p1 = this.battleState.enemy?.palette1 || "rgb(128,0,128)";
-                    const p2 = this.battleState.enemy?.palette2 || "rgb(180,50,180)";
-                    let enemySvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, p1).replace(/rgb\(220,60,60\)/g, p2).replace('id="player-svg"', 'id="enemy-svg"');
+                    const enemyId = this.battleState.enemy?.id || 'magma';
+                    const enemyFile = `enemy_${enemyId}.png`;
+                    let enemySvg = `<img id="enemy-svg" class="bobbing dragon-sprite" src="../assets/sprites/kdragon/${enemyFile}" onerror="if(this.src.indexOf('/assets/')!==-1){this.src='assets/sprites/kdragon/${enemyFile}';}" width="128" height="128" alt="${this.battleState.enemy.name}">`;
 
                     const playerPct = Math.max(0, Math.min(100, Math.round((this.battleState.playerHp / this.battleState.playerMaxHp) * 100)));
                     const enemyPct = Math.max(0, Math.min(100, Math.round((this.battleState.enemyHp / this.battleState.enemyMaxHp) * 100)));
