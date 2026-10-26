@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_soundscape: KBreakout
   kilo_tester: KMaze
   kilo_usability: KMaze
-  kilo_qa: KBookmark
+  kilo_qa: KRss
   kilo_expander: KNet
   kilo_review: KDragon
 virtual_web_target: kweb://rfc-archive
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KScript
-  timestamp: '2026-10-26T12:22:16-07:00'
+  agent: kilo-qa
+  app: KBookmark
+  timestamp: '2026-10-26T12:35:12-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -144,7 +144,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCalendar` | `KiloOS/public/apps/kcalendar.html`, `KCalendar/main.c` | Audit monthly/weekly views, event creation modal, reminder triggers, keyboard navigation (`ArrowLeft/Right`), and VFS `.ics` export. |
 | `KContacts` | `KiloOS/public/apps/kcontacts.html`, `KContacts/main.c` | Audit address book entry creation, search/filter, vCard import/export, keyboard shortcuts, and VFS storage sync. |
 | `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Audit feed reader parser, article list scrollback, OPML import/export, offline cache, and keyboard article cycling (`J/K`). |
-| `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Audit bookmark manager folder hierarchy, tagging, search filter, HTML/JSON export, and modal focus traps. |
 | `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Audit archive packer/unpacker UI, compression ratio telemetry, file list viewer, and drag-and-drop file ingestion. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
@@ -162,16 +161,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCalendar` | `KiloOS/public/apps/kcalendar.html`, `KCalendar/main.c` | Compact responsive grid layout at `<640px`, accessible modal focus traps for event dialog, and high-contrast date selection indicator. |
 | `KContacts` | `KiloOS/public/apps/kcontacts.html`, `KContacts/main.c` | Responsive split detail pane layout, keyboard navigation focus rings, and clear empty-state messaging. |
 | `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Responsive dual-pane feed/reader layout, comfortable reading line-length (65-75ch), and clear unread badge contrast. |
-| `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Responsive folder tree sidebar, accessible tag chips, and keyboard shortcut cheat sheet dialog. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KBookmark`
+- **Active Target**: `KRss`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, bookmark export/import, search filtering, dual Win32 C parity, and promote to Mature table. |
 | `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, feed parser resilience, OPML export, dual Win32 C parity, and promote to Mature table. |
 | `KCalendar` | `KiloOS/public/apps/kcalendar.html`, `KCalendar/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, event storage integrity, date navigation, dual Win32 C parity, and promote to Mature table. |
 | `KContacts` | `KiloOS/public/apps/kcontacts.html`, `KContacts/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, contact CRUD verification, vCard export, dual Win32 C parity, and promote to Mature table. |
@@ -245,6 +242,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KBookmark** | `KiloOS/public/apps/kbookmark.html` | Pass 5+ (2026-10-26) | Workstation / Organization | Complete retro Web 1.0 link vault with folder hierarchy, Netscape HTML/JSON export/import, search filter, F5/F9 state persistence, and dual Win32 C parity. |
 | **KPomodoro** | `KiloOS/public/apps/kpomodoro.html` | Pass 5+ (2026-10-26) | Office / Productivity | Feature-complete cognitive cadence & Pomodoro workstation; customizable intervals, mechanical/zen chimes, task estimates, daily telemetry, F5/F9 persistence, dual Win32 C parity. |
 | **KSpace** | `KiloOS/public/apps/kspace.html` | Pass 5+ (2026-10-26) | Games / Space Shooter | Deep space shooter with 6 campaign sectors, multi-chassis fighters, custom keybinds, GDI native parity, and Argon visual polish |
 | **KPac** | `KiloOS/public/apps/kpac.html` | Pass 5+ (2026-10-26) | Games / Arcade | Complete arcade cyber-maze workstation with 20 stages, endless wave generator, 1v1 online duel mode, match replay viewer (.kpdr), 15x15 interactive PAC-FEN maze editor, KiloOS VFS mesh integration, 6-channel YM2612 audio suite, and dual Win32 C parity. |
@@ -303,6 +301,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T12:35:12-07:00 — kilo-qa: KBookmark (Pass 5 QA, Dual Parity & Mature Graduation)**
+  - Status: PASS ✅ (0 errors, web 160.2 KB, native 23.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kbookmark_tutorialSeen flag, and Escape modal dismissal.
+  - Dual Parity & Lifecycle: Added Netscape HTML/JSON Export/Import to Win32 C, search filter, and visibilitychange auto-save.
+  - Mature Quarantine & Handoff: Promoted `KBookmark` to Mature archive; advanced `kilo-qa` to `KRss`; next agent `kilo-expander`.
+
 - **2026-10-26T12:22:16-07:00 — kilo-usability: KScript (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KScript across web and native targets.
@@ -325,9 +329,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Textured metallic/crystalline bricks, plasma paddle induction & ball trails, boss hazard visuals verified.
   - Glint sweep verified: zero specular glints or traveling perimeter border dots in Web and C.
   - Handoff: Advanced `kilo-graphics` to `KStarship`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-26T10:19:13-07:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Vault Mode 13h & VFS Polish)**
-  - Status: PASS ✅ (0 errors, web 86.2 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Optimized 64K intro switcher with pre-allocated buffers and synchronous Mode 13h metaball blitter.
-  - Enhanced VFS save bridges, phosphor ANSI NFO studio, and subterranean 1999Hz audio resonance.
-  - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.

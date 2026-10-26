@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <commctrl.h>
+#include <commdlg.h>
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -50,6 +51,31 @@ int str_cmp_nocase(const char* s1, const char* s2) {
         s2++;
     }
     return (unsigned char)*s1 - (unsigned char)*s2;
+}
+
+
+char* str_chr(const char* s, char c) {
+    if (!s) return NULL;
+    while (*s) {
+        if (*s == c) return (char*)s;
+        s++;
+    }
+    return (c == '\0') ? (char*)s : NULL;
+}
+
+char* str_str(const char* haystack, const char* needle) {
+    if (!haystack || !needle) return NULL;
+    if (!*needle) return (char*)haystack;
+    int hlen = str_len(haystack);
+    int nlen = str_len(needle);
+    for (int i = 0; i <= hlen - nlen; i++) {
+        int match = 1;
+        for (int j = 0; j < nlen; j++) {
+            if (haystack[i + j] != needle[j]) { match = 0; break; }
+        }
+        if (match) return (char*)(haystack + i);
+    }
+    return NULL;
 }
 
 int str_find_nocase(const char* haystack, const char* needle) {
@@ -113,6 +139,8 @@ static char g_statusMessage[256] = "KBookmark Ready. Press H or F1 for Help, Ent
 #define ID_BTN_SAVE     206
 #define ID_BTN_LOAD     207
 #define ID_BTN_HELP     208
+#define ID_BTN_EXPORT   213
+#define ID_BTN_IMPORT   214
 #define ID_EDIT_SEARCH  209
 #define ID_LIST_CATS    210
 #define ID_LIST_VIEW    211
@@ -137,6 +165,8 @@ static HWND g_hBtnOpen = NULL;
 static HWND g_hBtnSave = NULL;
 static HWND g_hBtnLoad = NULL;
 static HWND g_hBtnHelp = NULL;
+static HWND g_hBtnExport = NULL;
+static HWND g_hBtnImport = NULL;
 static HWND g_hEditSearch = NULL;
 static HWND g_hListCats = NULL;
 static HWND g_hListView = NULL;
@@ -157,6 +187,8 @@ static void ToggleStarSelected(void);
 static void DeleteSelected(void);
 static void QuickSave(void);
 static void QuickLoad(void);
+static void ExportBookmarks(HWND hwnd);
+static void ImportBookmarks(HWND hwnd);
 static void ShowHelpDialog(HWND parent);
 static void ShowAddEditDialog(HWND parent, int editIdx);
 
@@ -729,6 +761,8 @@ static LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
         SendMessageA(g_hBtnOpen, WM_SETFONT, (WPARAM)g_hFontUi, TRUE);
         SendMessageA(g_hBtnSave, WM_SETFONT, (WPARAM)g_hFontUi, TRUE);
         SendMessageA(g_hBtnLoad, WM_SETFONT, (WPARAM)g_hFontUi, TRUE);
+        SendMessageA(g_hBtnExport, WM_SETFONT, (WPARAM)g_hFontUi, TRUE);
+        SendMessageA(g_hBtnImport, WM_SETFONT, (WPARAM)g_hFontUi, TRUE);
         SendMessageA(g_hBtnHelp, WM_SETFONT, (WPARAM)g_hFontUi, TRUE);
         SendMessageA(g_hEditSearch, WM_SETFONT, (WPARAM)g_hFontUi, TRUE);
         SendMessageA(g_hListCats, WM_SETFONT, (WPARAM)g_hFontUi, TRUE);

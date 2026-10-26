@@ -3968,6 +3968,11 @@
           }
           const activeModals = document.querySelectorAll('.modal-overlay.active');
           if (activeModals.length > 0) {
+            if (modalSplash && modalSplash.classList.contains('active')) {
+              try { localStorage.setItem('kbookmark_tutorialSeen', '1'); } catch(e){}
+              if (checkTutorialSeen) checkTutorialSeen.checked = true;
+              if (splashTutorialCheck) splashTutorialCheck.checked = true;
+            }
             activeModals.forEach(m => m.classList.remove('active'));
             return;
           }
