@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T03:14:42-07:00 — kilo-creator: kweb://scallion (The Scallion: 1999 Satirical News (kweb://scallion))**
+  - Status: PASS ✅ (0 errors, web 91.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.22%, input 42.61%, HEAD Δ 0.34%, 0 fail, 0 warn, 8.2s)).
+  - Satire Portal & Columns: Full broadsheet with Lead Story, Sub-Articles, Y2K Doom Clock, Interactive Gallup Poll, Tech Horoscopes, and [1-6]/[M]/[S]/[P]/[Esc] keyboard navigation.
+  - Sysadmin, Forge & VFS: Added interactive BOFH teletype terminal, 56k/Bunker canvas charts, headline forge generator, and full VFS/KPad export.
+  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-26T02:32:17-07:00 — kilo-review: KSpace (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 480x483 / 320x480 canvas and audited kspace.html + KSpace/main.c).
   - Visual/HUD Findings: Help screen 11px centered lines overflow 320px canvas on both sides; HUD W:1/20 [S1] overlaps top-right audio button; [C]ALPH clips right border; Sector 3 HEAT text collides with [W]/[C] at y=33; #btnTimeStop truncates to [T] TI...; ship clamping at H-20 overlaps #skillBar.

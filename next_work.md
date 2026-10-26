@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_soundscape: KBreakout
   kilo_tester: KSys
   kilo_usability: KScript
-  kilo_qa: KPomodoro
+  kilo_qa: KBookmark
   kilo_expander: KSynth
   kilo_review: KMaze
 virtual_web_target: kweb://demoscene
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KSpace
-  timestamp: '2026-10-26T06:19:39-07:00'
+  agent: kilo-qa
+  app: KPomodoro
+  timestamp: '2026-10-26T06:33:36-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -140,7 +140,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Fix #garage-rank not updating in updateGarage() (call getPilotRank(playerLevel)); implement actual enemyStunned=true stun effect on Head/Cockpit hit (currentTargetLimb===0) so enemyTurn() skips attack and vents heat per Manual; auto-restore kmech_save on boot; and trigger enemy overheat burnout damage when EMP pushes enemy heat over maxHeat. |
 | `KCalendar` | `KiloOS/public/apps/kcalendar.html`, `KCalendar/main.c` | Audit monthly/weekly views, event creation modal, reminder triggers, keyboard navigation (`ArrowLeft/Right`), and VFS `.ics` export. |
 | `KContacts` | `KiloOS/public/apps/kcontacts.html`, `KContacts/main.c` | Audit address book entry creation, search/filter, vCard import/export, keyboard shortcuts, and VFS storage sync. |
-| `KPomodoro` | `KiloOS/public/apps/kpomodoro.html`, `KPomodoro/main.c` | Audit work/break interval timers, task checklist, tick audio alerts, F5/F9 state persistence, and keyboard controls. |
 | `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Audit feed reader parser, article list scrollback, OPML import/export, offline cache, and keyboard article cycling (`J/K`). |
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Audit bookmark manager folder hierarchy, tagging, search filter, HTML/JSON export, and modal focus traps. |
 | `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Audit archive packer/unpacker UI, compression ratio telemetry, file list viewer, and drag-and-drop file ingestion. |
@@ -158,17 +157,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Eliminate 37px vertical overflow at 640x503 by removing min-height:520px on #game-container and tightening body/container padding so bottom action buttons and HUD corners fit in-viewport; keep .header-bar and .quick-hint single-line; reposition #toast-container so it never overlaps header/hints; add interactive limb-target selector pills with hit% and HiDPI scaling on #combat-fx-canvas. |
 | `KCalendar` | `KiloOS/public/apps/kcalendar.html`, `KCalendar/main.c` | Compact responsive grid layout at `<640px`, accessible modal focus traps for event dialog, and high-contrast date selection indicator. |
 | `KContacts` | `KiloOS/public/apps/kcontacts.html`, `KContacts/main.c` | Responsive split detail pane layout, keyboard navigation focus rings, and clear empty-state messaging. |
-| `KPomodoro` | `KiloOS/public/apps/kpomodoro.html`, `KPomodoro/main.c` | HiDPI circular timer canvas rendering, responsive button row, and high-contrast task checklist typography. |
 | `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Responsive dual-pane feed/reader layout, comfortable reading line-length (65-75ch), and clear unread badge contrast. |
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Responsive folder tree sidebar, accessible tag chips, and keyboard shortcut cheat sheet dialog. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KPomodoro`
+- **Active Target**: `KBookmark`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPomodoro` | `KiloOS/public/apps/kpomodoro.html`, `KPomodoro/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, interval timer verification, notification chime, dual Win32 C parity, and promote to Mature table. |
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, bookmark export/import, search filtering, dual Win32 C parity, and promote to Mature table. |
 | `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, feed parser resilience, OPML export, dual Win32 C parity, and promote to Mature table. |
 | `KCalendar` | `KiloOS/public/apps/kcalendar.html`, `KCalendar/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, event storage integrity, date navigation, dual Win32 C parity, and promote to Mature table. |
@@ -239,6 +236,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KPomodoro** | `KiloOS/public/apps/kpomodoro.html` | Pass 5+ (2026-10-26) | Office / Productivity | Feature-complete cognitive cadence & Pomodoro workstation; customizable intervals, mechanical/zen chimes, task estimates, daily telemetry, F5/F9 persistence, dual Win32 C parity. |
 | **KSpace** | `KiloOS/public/apps/kspace.html` | Pass 5+ (2026-10-26) | Games / Space Shooter | Deep space shooter with 6 campaign sectors, multi-chassis fighters, custom keybinds, GDI native parity, and Argon visual polish |
 | **KPac** | `KiloOS/public/apps/kpac.html` | Pass 5+ (2026-10-26) | Games / Arcade | Complete arcade cyber-maze workstation with 20 stages, endless wave generator, 1v1 online duel mode, match replay viewer (.kpdr), 15x15 interactive PAC-FEN maze editor, KiloOS VFS mesh integration, 6-channel YM2612 audio suite, and dual Win32 C parity. |
 | **KClock** | `KiloOS/public/apps/kclock.html` | Pass 5+ (2026-10-25) | System / Utilities | Complete timekeeping workstation featuring 8 tools (Clock, World Time, Epoch Suite, Stopwatch, Countdown, Alarms, Calendar, Settings), F5/F9 state persistence, audio chimes, and dual Win32 C parity. |
@@ -297,6 +295,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T06:33:36-07:00 — kilo-qa: KPomodoro (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 83.6 KB, native 17.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.82%, 0 fail, 0 warn, 4.9s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kpomodoro_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KPomodoro` to Mature archive; advanced `kilo-qa` to `KBookmark`; next agent `kilo-expander`.
+
 - **2026-10-26T06:19:39-07:00 — kilo-usability: KSpace (UI/UX, Responsive Layout & HUD Polish)**
   - Status: PASS ✅ (0 errors, web 202.5 KB, native 90.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 8.22%, input 20.41%, HEAD Δ 1.16%, 0 fail, 0 warn, 11.5s)).
   - Help Screen: Left-aligned drawHelpScreen text at 9px (<=46 chars/line) eliminating 320px horizontal canvas clipping in both web and native C.
@@ -321,9 +325,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint sweep verified: zero specular glints or traveling perimeter border dots in HTML and C.
   - Status: PASS ✅ (web 520.4 KB, native 286.0 KB, startup & security PASS).
   - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-26T03:14:42-07:00 — kilo-creator: kweb://scallion (The Scallion: 1999 Satirical News (kweb://scallion))**
-  - Status: PASS ✅ (0 errors, web 91.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.22%, input 42.61%, HEAD Δ 0.34%, 0 fail, 0 warn, 8.2s)).
-  - Satire Portal & Columns: Full broadsheet with Lead Story, Sub-Articles, Y2K Doom Clock, Interactive Gallup Poll, Tech Horoscopes, and [1-6]/[M]/[S]/[P]/[Esc] keyboard navigation.
-  - Sysadmin, Forge & VFS: Added interactive BOFH teletype terminal, 56k/Bunker canvas charts, headline forge generator, and full VFS/KPad export.
-  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
