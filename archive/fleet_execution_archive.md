@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-25T12:36:45-07:00 — kilo-soundscape: KStellar (Galactic Accord & Armada March — YM2612/SPC700 Chiptune Suite)**
+  - Status: PASS ✅ (0 errors, web 195.4 KB, native 157.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.76%, HEAD Δ 0.31%, 0 fail, 0 warn, 12.7s)).
+  - Composition: 32-step C/F Lydian 4X grand diplomacy & fleet command suite, 6-channel contrary counterpoint, 3rd/7th shell voicings, 5:3 swing-tick groove.
+  - Patches & DSP: Custom YM2612 2-Op lydianBrass (delayed vibrato), commandCounter, floatingMaj9Pad, armadaBass (<130.81Hz), fleetArp, treatyBell, 180/240ms SPC700 stereo delay line, and hyperdrive/treaty earcons.
+  - Handoff: Advanced `kilo-soundscape` to `KSubmarine`; rotated active agent to `kilo-tester`.
+
 - **2026-10-25T12:16:50-07:00 — kilo-graphics: KSanctuary (Xenobiology Terrarium & Atmospheric Weather Graphics Overhaul)**
   - Status: PASS ✅ (0 errors, web 456.7 KB, native 258.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.32%, HEAD Δ 0.4%, 0 fail, 0 warn, 10.5s)).
   - Integrated xenobiology terrarium habitat visuals in hydroponics: swaying mutated alien flora, bioluminescent spores, mist droplets, and specimen containment dome with animated alien bio-critter & aeration bubbles.
