@@ -1958,7 +1958,11 @@
       try {
         const val = localStorage.getItem(key);
         if (val === null) return fallback;
-        return JSON.parse(val) ?? fallback;
+        try {
+          return JSON.parse(val) ?? fallback;
+        } catch {
+          return val ?? fallback;
+        }
       } catch {
         return fallback;
       }
@@ -1969,6 +1973,14 @@
         localStorage.setItem(key, JSON.stringify(value));
       } catch (e) {
         console.warn('[KRSS] Storage write failed:', e.message);
+      }
+    }
+
+    function safeRemove(key) {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        console.warn('[KRSS] Storage remove failed:', e.message);
       }
     }
 
@@ -2272,9 +2284,9 @@
     // --- State Initialization & Persistence ---
     function loadWorkstationState() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = safeGet(STORAGE_KEY, null);
         if (raw) {
-          const parsed = JSON.parse(raw);
+          const parsed = (typeof raw === 'string') ? JSON.parse(raw) : raw;
           if (Array.isArray(parsed.feeds) && parsed.feeds.length > 0) {
             feeds = parsed.feeds;
           } else {
@@ -2582,7 +2594,7 @@
     function purgeOfflineCache() {
       if (confirm("Purge local offline news cache spool?")) {
         offlineCache = null;
-        try { localStorage.removeItem(OFFLINE_CACHE_KEY); } catch (e) {}
+        safeRemove(OFFLINE_CACHE_KEY);
         updateOfflineStatsUI();
         playSoundEffect('click');
         showToast("Offline news cache spool purged.");
@@ -2725,8 +2737,9 @@
 
     // --- XML / RSS / Atom Deterministic Parser ---
     function parseFeedXml(xmlString, sourceUrl = "") {
+      const cleanXml = (xmlString || "").replace(/^\uFEFF/, "").trim();
       const parser = new DOMParser();
-      const doc = parser.parseFromString(xmlString, "text/xml");
+      const doc = parser.parseFromString(cleanXml, "text/xml");
       const parseError = doc.querySelector("parsererror");
       if (parseError) {
         throw new Error("XML Parsing Failed: " + parseError.textContent.slice(0, 100));
@@ -2739,23 +2752,34 @@
       };
       let items = [];
 
-      // Check for RSS 2.0 or 0.91
+      // Check for RSS 2.0 / 0.91 / 0.92 / 1.0 (RDF)
       const channel = doc.querySelector("channel");
-      if (channel) {
-        const chTitle = channel.querySelector("title");
-        if (chTitle) feedMeta.title = chTitle.textContent.trim();
-        const chDesc = channel.querySelector("description");
-        if (chDesc) feedMeta.description = chDesc.textContent.trim();
-        const chLink = channel.querySelector("link");
-        if (chLink) feedMeta.link = chLink.textContent.trim();
+      let itemNodes = channel ? channel.querySelectorAll("item") : [];
+      if (itemNodes.length === 0) {
+        itemNodes = doc.querySelectorAll("item");
+      }
+      if (channel || itemNodes.length > 0) {
+        if (channel) {
+          const chTitle = channel.querySelector("title");
+          if (chTitle) feedMeta.title = chTitle.textContent.trim();
+          const chDesc = channel.querySelector("description");
+          if (chDesc) feedMeta.description = chDesc.textContent.trim();
+          const chLink = channel.querySelector("link");
+          if (chLink) feedMeta.link = chLink.textContent.trim();
+        }
 
-        const itemNodes = channel.querySelectorAll("item");
         itemNodes.forEach((node, idx) => {
           const tNode = node.querySelector("title");
           const lNode = node.querySelector("link");
-          const dNode = node.querySelector("description") || node.querySelector("encoded");
-          const pNode = node.querySelector("pubDate") || node.querySelector("date");
-          const aNode = node.querySelector("author") || node.querySelector("creator");
+          const dNode = node.getElementsByTagNameNS("*", "encoded")[0] ||
+                        node.querySelector("description") ||
+                        node.querySelector("encoded");
+          const pNode = node.querySelector("pubDate") ||
+                        node.getElementsByTagNameNS("*", "date")[0] ||
+                        node.querySelector("date");
+          const aNode = node.querySelector("author") ||
+                        node.getElementsByTagNameNS("*", "creator")[0] ||
+                        node.querySelector("creator");
 
           const title = tNode ? tNode.textContent.trim() : "Untitled Post";
           const link = lNode ? lNode.textContent.trim() : sourceUrl;
@@ -2793,7 +2817,7 @@
         entryNodes.forEach((node, idx) => {
           const tNode = node.querySelector("title");
           const lNode = node.querySelector("link[href]") || node.querySelector("link");
-          const sNode = node.querySelector("summary") || node.querySelector("content");
+          const sNode = node.querySelector("content") || node.querySelector("summary");
           const uNode = node.querySelector("updated") || node.querySelector("published");
           const aNode = node.querySelector("author > name") || node.querySelector("author");
 
@@ -2830,8 +2854,9 @@
 
     // --- OPML Import / Export Engine ---
     function parseOpmlXml(opmlString) {
+      const cleanOpml = (opmlString || "").replace(/^\uFEFF/, "").trim();
       const parser = new DOMParser();
-      const doc = parser.parseFromString(opmlString, "text/xml");
+      const doc = parser.parseFromString(cleanOpml, "text/xml");
       const outlines = doc.querySelectorAll("outline");
       let imported = 0;
 
@@ -2839,7 +2864,15 @@
         const xmlUrl = outline.getAttribute("xmlUrl") || outline.getAttribute("url");
         if (xmlUrl) {
           const title = outline.getAttribute("title") || outline.getAttribute("text") || "Imported Channel";
-          const category = outline.getAttribute("category") || "Imported Subscriptions";
+          let category = outline.getAttribute("category") || "";
+          if (!category) {
+            const parent = outline.parentElement;
+            if (parent && parent.tagName.toLowerCase() === 'outline') {
+              category = parent.getAttribute('title') || parent.getAttribute('text') || "Imported Subscriptions";
+            } else {
+              category = "Imported Subscriptions";
+            }
+          }
 
           // Avoid duplicate feed URLs
           const exists = feeds.find(f => f.url.toLowerCase() === xmlUrl.toLowerCase());
@@ -3065,18 +3098,11 @@
 
     // --- Research Scrapbook & Notebook Engine ---
     function loadScrapbook() {
-      try {
-        const raw = localStorage.getItem(SCRAPBOOK_KEY);
-        return raw ? JSON.parse(raw) : [];
-      } catch (e) {
-        return [];
-      }
+      return safeGet(SCRAPBOOK_KEY, []);
     }
 
     function saveScrapbook(clips) {
-      try {
-        localStorage.setItem(SCRAPBOOK_KEY, JSON.stringify(clips));
-      } catch (e) {}
+      safeSet(SCRAPBOOK_KEY, clips);
     }
 
     function clipCurrentArticle() {
@@ -3551,12 +3577,10 @@
         container.appendChild(li);
       });
 
-      // Collapsed categories state from localStorage
+      // Collapsed categories state from storage
       let collapsedCats = new Set();
-      try {
-        const stored = JSON.parse(localStorage.getItem('krss_collapsed_categories') || '[]');
-        if (Array.isArray(stored)) collapsedCats = new Set(stored);
-      } catch (e) {}
+      const stored = safeGet('krss_collapsed_categories', []);
+      if (Array.isArray(stored)) collapsedCats = new Set(stored);
 
       // Render grouped feeds by category
       const categories = [...new Set(feeds.map(f => f.category))];
@@ -3581,9 +3605,7 @@
           } else {
             collapsedCats.add(cat);
           }
-          try {
-            localStorage.setItem('krss_collapsed_categories', JSON.stringify([...collapsedCats]));
-          } catch (e) {}
+          safeSet('krss_collapsed_categories', [...collapsedCats]);
           playSoundEffect('click');
           renderFeedsList();
         };
@@ -4166,7 +4188,7 @@
       const splashCb = document.getElementById('checkSplashTutorialSeen');
       const shouldRemember = splashCb ? splashCb.checked : true;
       if (shouldRemember) {
-        localStorage.setItem(TUTORIAL_KEY, 'true');
+        safeSet(TUTORIAL_KEY, true);
         const helpCb = document.getElementById('checkTutorialSeen');
         if (helpCb) helpCb.checked = true;
       }
@@ -4187,25 +4209,21 @@
       const SPLITTER_STORAGE_KEY = 'krss_pane_widths';
 
       // Restore saved widths
-      try {
-        const saved = JSON.parse(localStorage.getItem(SPLITTER_STORAGE_KEY));
-        if (saved) {
-          if (saved.feeds && saved.feeds >= 160 && saved.feeds <= 450 && paneFeeds) {
-            paneFeeds.style.width = saved.feeds + 'px';
-          }
-          if (saved.articles && saved.articles >= 200 && saved.articles <= 550 && paneArticles) {
-            paneArticles.style.width = saved.articles + 'px';
-          }
+      const saved = safeGet(SPLITTER_STORAGE_KEY, null);
+      if (saved) {
+        if (saved.feeds && saved.feeds >= 160 && saved.feeds <= 450 && paneFeeds) {
+          paneFeeds.style.width = saved.feeds + 'px';
         }
-      } catch (e) {}
+        if (saved.articles && saved.articles >= 200 && saved.articles <= 550 && paneArticles) {
+          paneArticles.style.width = saved.articles + 'px';
+        }
+      }
 
       function saveWidths() {
-        try {
-          localStorage.setItem(SPLITTER_STORAGE_KEY, JSON.stringify({
-            feeds: paneFeeds ? paneFeeds.offsetWidth : 230,
-            articles: paneArticles ? paneArticles.offsetWidth : 320
-          }));
-        } catch (e) {}
+        safeSet(SPLITTER_STORAGE_KEY, {
+          feeds: paneFeeds ? paneFeeds.offsetWidth : 230,
+          articles: paneArticles ? paneArticles.offsetWidth : 320
+        });
       }
 
       function setupResizer(resizer, targetPane, minW, maxW, isFeeds) {
@@ -4808,14 +4826,14 @@
       document.getElementById('btnCloseHelp').onclick = () => closeModal('modalHelp');
       document.getElementById('btnHelpClose').onclick = () => closeModal('modalHelp');
       document.getElementById('checkTutorialSeen').onchange = (e) => {
-        localStorage.setItem(TUTORIAL_KEY, e.target.checked ? 'true' : 'false');
+        safeSet(TUTORIAL_KEY, e.target.checked);
         const splashCb = document.getElementById('checkSplashTutorialSeen');
         if (splashCb) splashCb.checked = e.target.checked;
       };
       const splashCb = document.getElementById('checkSplashTutorialSeen');
       if (splashCb) {
         splashCb.onchange = (e) => {
-          localStorage.setItem(TUTORIAL_KEY, e.target.checked ? 'true' : 'false');
+          safeSet(TUTORIAL_KEY, e.target.checked);
           const helpCb = document.getElementById('checkTutorialSeen');
           if (helpCb) helpCb.checked = e.target.checked;
         };
@@ -5006,8 +5024,9 @@
 
     // --- Onboarding & Splash Logic ---
     function checkFirstRunSplash() {
-      const seen = localStorage.getItem(TUTORIAL_KEY) === 'true';
-      const hasSavedState = !!localStorage.getItem(STORAGE_KEY);
+      const seenVal = safeGet(TUTORIAL_KEY, false);
+      const seen = seenVal === true || seenVal === 'true';
+      const hasSavedState = !!safeGet(STORAGE_KEY, null);
       const checkbox = document.getElementById('checkTutorialSeen');
       const splashCheckbox = document.getElementById('checkSplashTutorialSeen');
       if (checkbox) checkbox.checked = seen;
@@ -5027,6 +5046,24 @@
       populateTagFilterOptions();
       checkFirstRunSplash();
       window.addEventListener('beforeunload', () => saveWorkstationState(true));
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          if (window.speechSynthesis && window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+            const ttsBtn = document.getElementById('btnTtsRead');
+            if (ttsBtn) ttsBtn.textContent = '🗣️ Read';
+          }
+          if (audioCtx && audioCtx.state === 'running') {
+            try { audioCtx.suspend(); } catch (e) {}
+          }
+          saveWorkstationState(true);
+        } else {
+          if (audioCtx && audioCtx.state === 'suspended') {
+            try { audioCtx.resume(); } catch (e) {}
+          }
+        }
+      });
       if (window.fb) {
         window.initCommunityWire();
       }

@@ -420,6 +420,8 @@ static void ExportOPML(void) {
             k_strcat(entry, g_feeds[i].title);
             k_strcat(entry, "\" title=\"");
             k_strcat(entry, g_feeds[i].title);
+            k_strcat(entry, "\" category=\"");
+            k_strcat(entry, g_feeds[i].category);
             k_strcat(entry, "\" type=\"rss\" xmlUrl=\"");
             k_strcat(entry, g_feeds[i].url);
             k_strcat(entry, "\"/>\r\n");
