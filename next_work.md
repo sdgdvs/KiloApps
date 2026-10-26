@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-review
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,11 +32,11 @@ current_targets:
   kilo_creator: kweb://scallion
   kilo_graphics: KWizard
   kilo_soundscape: KSubmarine
-  kilo_tester: KSys
-  kilo_usability: KScript
+  kilo_tester: KSpace
+  kilo_usability: KSpace
   kilo_qa: KPomodoro
   kilo_expander: KSynth
-  kilo_review: KSpace
+  kilo_review: KMaze
 virtual_web_target: kweb://scallion
 virtual_web_rotation:
 - kweb://slashnet
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KPac
-  timestamp: '2026-10-26T02:20:36-07:00'
+  agent: kilo-review
+  app: KSpace
+  timestamp: '2026-10-26T02:32:17-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -130,10 +130,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KSys`
+- **Active Target**: `KSpace`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KSpace` | `KiloOS/public/apps/kspace.html`, `KSpace/main.c` | **[ARGON REVIEW]:** In kspace.html, align STATE_PLAYING pointerdown hitboxes for [♫] (244..264,4..22), [?] (268..288,4..22), [//] (292..312,4..22), and [C] chassis (268..315,24..38) with drawHUD(), remove the 400ms window.load timeout that forces STATE_HELP over STATE_MENU on first boot, and make useTacticalDash() dash along current input vector instead of resetting p.x/p.y to spawn. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -147,10 +148,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KScript`
+- **Active Target**: `KSpace`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KSpace` | In kspace.html and KSpace/main.c, left-align drawHelpScreen text at 9px (<=46 chars/line) to stop 320px horizontal clipping, shift HUD W | **[ARGON REVIEW]:** wave/20 [Sx] left to x=132 clear of top-right [♫][?][//] buttons, move Sector 3 HEAT indicator off y=33 so it never overlaps [W]/[C], shift [C]ALPH to W-48, use compact #skillBar labels ([T] TIM, [S] SHL), and clamp player p.y to H-52 above #skillBar. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -194,11 +196,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Build interactive 12-system Galactic Star Chart [C] (plus KTrader/main.c parity) rendering planets (x,y) jump-gate topology, ecoType/techLevel badges, current location, and active mission target highlight, add player cur/max shield bars to #ui-combat-panel, and enforce Navy patrol confiscation when jumping with Contraband cargo. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
-- **Active Target**: `KSpace`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSpace` | `KiloOS/public/apps/kspace.html`, `KSpace/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + shooter HUD, chassis/boss rendering, and keyboard/mouse flight ergonomics; inject fixes via `--inject-fix`. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + 3D raycaster viewport, minimap/compass readability, and combat controls; inject fixes via `--inject-fix`. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + dragon habitat & arena combat controls, care timers, and layout clipping; inject fixes via `--inject-fix`. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + planetary colony grid, tech tree/expedition drawers, and resource ticker legibility; inject fixes via `--inject-fix`. |
@@ -228,6 +229,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | [Argon Audited 2026-10-24: Fixes queued -> kilo-expander, kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | [Argon Audited 2026-10-25: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | [Argon Audited 2026-10-25: Fixes queued -> kilo-expander, kilo-soundscape, kilo-tester, kilo-usability] Visual, feature & usability review. |
+| `KSpace` | `KiloOS/public/apps/kspace.html`, `KSpace/main.c` | [Argon Audited 2026-10-26: Fixes queued -> kilo-tester, kilo-usability] Visual, feature & usability review. |
 
 ---
 
@@ -259,7 +261,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KFont** | `KiloOS/public/apps/kfont.html` | Pass 5+ (2026-10-23) | Media / Typography | Complete typography workstation: 11 tabs, custom bitmap glyph editor & font bank, OTF axes, WCAG contrast matrix, C LOGFONT/JSON exports, F5/F9 persistence, dual Win32 C parity. |
 | **KHex** | `KiloOS/public/apps/khex.html` | Pass 5+ (2026-10-23) | System / Analysis | Complete binary byte workstation featuring 9 analysis/edit tabs, multi-arch disassembler (x86/6502/Z80), VFS Open/Save integration, F5/F9 persistence, and dual Win32 C parity. |
 | **KPass** | `KiloOS/public/apps/kpass.html` | Pass 5+ (2026-10-23) | Security / Vault | Feature-complete retro password manager & vault; 4 generator modes, entropy visualizer, AES-GCM 256 encrypted vault, security audit scanner, export suite, F5/F9 persistence, dual Win32 C parity. |
-| **KSpace** | `KiloOS/public/apps/kspace.html` | Pass 5 (2026-10-23) | Action / Deep Space Shooter | 6-chassis space shooter, 12 enemy archetypes, 3 boss flagships, F5/F9 state persistence, first-run tutorial integrity, replay telemetry, dual Win32 native client parity. |
 | **KBase** | `KiloOS/public/apps/kbase.html` | Pass 5+ (2026-10-23) | Dev / Radix Converter | Full multi-base studio (radix 2-36, BCD, Gray, Base32/58/64, ULEB/SLEB128, IEEE-754, bitboard matrix), F5/F9 state, export suite (CSV/MD/JSON), dual Win32 C parity. |
 | **KTowers** | `KiloOS/public/apps/ktowers.html` | Pass 6+ (2026-10-08) | Puzzle / Strategy | Feature-complete Tower of Hanoi variant; full state persistence, responsive controls, zero glints. |
 | **KDarts** | `KiloOS/public/apps/kdarts.html` | Pass 6+ (2026-10-08) | Sports / Arcade | Complete physics simulation, scoring engine, audio effects, and UI persistence. |
@@ -297,6 +298,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T02:32:17-07:00 — kilo-review: KSpace (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 480x483 / 320x480 canvas and audited kspace.html + KSpace/main.c).
+  - Visual/HUD Findings: Help screen 11px centered lines overflow 320px canvas on both sides; HUD W:1/20 [S1] overlaps top-right audio button; [C]ALPH clips right border; Sector 3 HEAT text collides with [W]/[C] at y=33; #btnTimeStop truncates to [T] TI...; ship clamping at H-20 overlaps #skillBar.
+  - Feature/UX Findings: 400ms boot timeout hijacks menu into STATE_HELP; HUD top-right button and [C] chassis pointerdown hitboxes mismatch drawn boxes; [D] Dash teleports player back to spawn instead of dashing.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KSpace`, `kilo-tester`->`KSpace`] (un-quarantined `KSpace` from Mature); advanced `kilo-review` to `KMaze`; next agent `kilo-creator`.
+
 - **2026-10-26T02:20:36-07:00 — kilo-expander: KPac (KPac (Phase VI Maze Editor, VFS & Win32 C Parity))**
   - Status: PASS ✅ (0 errors, web 274.7 KB, native 52.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Maze Editor & Live FEN: Added 15x15 tile-palette editor in #fenModal with two-way live sync for PAC-FEN.
@@ -321,9 +328,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI & Hotkeys: Added ctx.moveTo before diode arcs eliminating corridor polygon; added click-to-rebind key capture on #kb_p1Up..#kb_p2Right.
   - Gameplay & FEN: Fixed undeclared vars in showTelemetry, exportPACFEN/CSV; recalculated dotCount on import; added eaten-ghost pen return, Endless door exit and closed tile-10 gate blocks.
   - Handoff: Advanced `kilo-tester` to `KSys`; rotated active agent to `kilo-usability`.
-
-- **2026-10-25T20:14:56-07:00 — kilo-soundscape: KPac (Neon Maze Odyssey & Blue Ghost Panic — YM2612/SPC700 Chiptune Suite)**
-  - Status: PASS ✅ (0 errors, web 239.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Composition: C Dorian Cyber-Arcade Funk (Campaign), D Phrygian Rush (Endless), E Minor Arena (Duel), F# Locrian (Boss), double-time chase (Fright).
-  - Patches & DSP: 6-channel YM2612 2-Op FM counterpoint, 3rd/7th shell voicings, 5:3 shuffle swing, 200ms SPC700 stereo delay bus, and Mute [M] toggle.
-  - Handoff: Advanced `kilo-soundscape` to `KSubmarine`; rotated active agent to `kilo-tester`.

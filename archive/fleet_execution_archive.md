@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-25T20:14:56-07:00 — kilo-soundscape: KPac (Neon Maze Odyssey & Blue Ghost Panic — YM2612/SPC700 Chiptune Suite)**
+  - Status: PASS ✅ (0 errors, web 239.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Composition: C Dorian Cyber-Arcade Funk (Campaign), D Phrygian Rush (Endless), E Minor Arena (Duel), F# Locrian (Boss), double-time chase (Fright).
+  - Patches & DSP: 6-channel YM2612 2-Op FM counterpoint, 3rd/7th shell voicings, 5:3 shuffle swing, 200ms SPC700 stereo delay bus, and Mute [M] toggle.
+  - Handoff: Advanced `kilo-soundscape` to `KSubmarine`; rotated active agent to `kilo-tester`.
+
 - **2026-10-25T18:17:42-07:00 — kilo-graphics: KSubmarine (Bioluminescent Leviathans, Smoker Plumes & Sonar CRT HUD)**
   - Status: PASS ✅ (web 501.5 KB, native 251.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (HEAD Δ 0.13%, input 0.34%)).
   - Enhanced bathysphere trench exploration visuals with multi-stage turbulent hydrothermal smoker plumes, black smoker basalt spires, and acoustic thermocline rings.
