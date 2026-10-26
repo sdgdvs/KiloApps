@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_graphics: KBreakout
   kilo_soundscape: KBreakout
   kilo_tester: KSys
-  kilo_usability: KSpace
+  kilo_usability: KScript
   kilo_qa: KPomodoro
   kilo_expander: KSynth
   kilo_review: KMaze
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KSpace
-  timestamp: '2026-10-26T05:34:45-07:00'
+  timestamp: '2026-10-26T06:19:39-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -145,14 +145,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Audit bookmark manager folder hierarchy, tagging, search filter, HTML/JSON export, and modal focus traps. |
 | `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Audit archive packer/unpacker UI, compression ratio telemetry, file list viewer, and drag-and-drop file ingestion. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
-| `KSpace` | `KiloOS/public/apps/kspace.html`, `KSpace/main.c` | **[ARGON REVIEW]:** In kspace.html, align STATE_PLAYING pointerdown hitboxes for [♫] (244..264,4..22), [?] (268..288,4..22), [//] (292..312,4..22), and [C] chassis (268..315,24..38) with drawHUD(), remove the 400ms window.load timeout that forces STATE_HELP over STATE_MENU on first boot, and make useTacticalDash() dash along current input vector instead of resetting p.x/p.y to spawn. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KSpace`
+- **Active Target**: `KScript`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSpace` | In kspace.html and KSpace/main.c, left-align drawHelpScreen text at 9px (<=46 chars/line) to stop 320px horizontal clipping, shift HUD W | **[ARGON REVIEW]:** wave/20 [Sx] left to x=132 clear of top-right [♫][?][//] buttons, move Sector 3 HEAT indicator off y=33 so it never overlaps [W]/[C], shift [C]ALPH to W-48, use compact #skillBar labels ([T] TIM, [S] SHL), and clamp player p.y to H-52 above #skillBar. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -241,6 +239,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KSpace** | `KiloOS/public/apps/kspace.html` | Pass 5+ (2026-10-26) | Games / Space Shooter | Deep space shooter with 6 campaign sectors, multi-chassis fighters, custom keybinds, GDI native parity, and Argon visual polish |
 | **KPac** | `KiloOS/public/apps/kpac.html` | Pass 5+ (2026-10-26) | Games / Arcade | Complete arcade cyber-maze workstation with 20 stages, endless wave generator, 1v1 online duel mode, match replay viewer (.kpdr), 15x15 interactive PAC-FEN maze editor, KiloOS VFS mesh integration, 6-channel YM2612 audio suite, and dual Win32 C parity. |
 | **KClock** | `KiloOS/public/apps/kclock.html` | Pass 5+ (2026-10-25) | System / Utilities | Complete timekeeping workstation featuring 8 tools (Clock, World Time, Epoch Suite, Stopwatch, Countdown, Alarms, Calendar, Settings), F5/F9 state persistence, audio chimes, and dual Win32 C parity. |
 | **KTimer** | `KiloOS/public/apps/ktimer.html` | Pass 5+ (2026-10-25) | Productivity | Complete timing suite with Stopwatch, Countdown, Multi-Timer, Pomodoro, and HIIT Interval timers, F5/F9 state persistence, sound alerts [M], CSV/TXT lap exports, and 100% Win32 C parity. |
@@ -298,6 +297,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T06:19:39-07:00 — kilo-usability: KSpace (UI/UX, Responsive Layout & HUD Polish)**
+  - Status: PASS ✅ (0 errors, web 202.5 KB, native 90.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 8.22%, input 20.41%, HEAD Δ 1.16%, 0 fail, 0 warn, 11.5s)).
+  - Help Screen: Left-aligned drawHelpScreen text at 9px (<=46 chars/line) eliminating 320px horizontal canvas clipping in both web and native C.
+  - HUD Layout: Shifted wave/20 [Sx] to x=132 clear of top-right buttons; shifted [C] chassis indicator to W-48; moved Sector 3 HEAT to y=44 (y=36 in C) preventing HUD overlap.
+  - Ergonomics & Controls: Clamped player ship p.y to H-52 keeping craft above #skillBar; updated #skillBar labels to compact [T] TIM and [S] SHL.
+  - Mature Quarantine & Handoff: Promoted `KSpace` to Mature archive; advanced `kilo-usability` to `KScript`; next agent `kilo-qa`.
+
 - **2026-10-26T05:34:45-07:00 — kilo-tester: KSpace (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 197.5 KB, native 90.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 8.03%, input 20.41%, HEAD Δ 23.43%, 0 fail, 0 warn, 11.2s)).
   - UI & Hitbox Alignment: Aligned STATE_PLAYING pointerdown hitboxes for [♫] (244..264,4..22), [?] (268..288,4..22), [//] (292..312,4..22), and [C] chassis (268..315,24..38) with drawHUD().
@@ -321,9 +327,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Satire Portal & Columns: Full broadsheet with Lead Story, Sub-Articles, Y2K Doom Clock, Interactive Gallup Poll, Tech Horoscopes, and [1-6]/[M]/[S]/[P]/[Esc] keyboard navigation.
   - Sysadmin, Forge & VFS: Added interactive BOFH teletype terminal, 56k/Bunker canvas charts, headline forge generator, and full VFS/KPad export.
   - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-26T02:32:17-07:00 — kilo-review: KSpace (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 480x483 / 320x480 canvas and audited kspace.html + KSpace/main.c).
-  - Visual/HUD Findings: Help screen 11px centered lines overflow 320px canvas on both sides; HUD W:1/20 [S1] overlaps top-right audio button; [C]ALPH clips right border; Sector 3 HEAT text collides with [W]/[C] at y=33; #btnTimeStop truncates to [T] TI...; ship clamping at H-20 overlaps #skillBar.
-  - Feature/UX Findings: 400ms boot timeout hijacks menu into STATE_HELP; HUD top-right button and [C] chassis pointerdown hitboxes mismatch drawn boxes; [D] Dash teleports player back to spawn instead of dashing.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KSpace`, `kilo-tester`->`KSpace`] (un-quarantined `KSpace` from Mature); advanced `kilo-review` to `KMaze`; next agent `kilo-creator`.

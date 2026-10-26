@@ -175,6 +175,7 @@ int modeIndex = MODE_CLASSIC;
 static HFONT hFontTitle = NULL;
 static HFONT hFontMenu = NULL;
 static HFONT hFontHUD = NULL;
+static HFONT hFontHelp = NULL;
 
 Ent p = { W/2.0f - 10.0f, H - 60.0f, 1.0f, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0.0f, 0 };
 int shieldActive = 3;
@@ -1213,7 +1214,7 @@ void UseTacticalDash() {
         if (p.x < 0.0f) p.x = 0.0f;
         if (p.x > W - 20.0f) p.x = W - 20.0f;
         if (p.y < 0.0f) p.y = 0.0f;
-        if (p.y > H - 20.0f) p.y = H - 20.0f;
+        if (p.y > H - 52.0f) p.y = H - 52.0f;
         invincibleTimer = 125; // 2 seconds
         dashCooldown = (playerChassis == 2) ? 210 : 300; // Void Phantom: faster cooldown
         PlaySnd(2);
@@ -2178,7 +2179,7 @@ void Update() {
     if (p.x < 0) p.x = 0;
     if (p.x > W - 20) p.x = W - 20;
     if (p.y < 0) p.y = 0;
-    if (p.y > H - 20) p.y = H - 20;
+    if (p.y > H - 52) p.y = H - 52;
 
     // Firing
     if ((GetAsyncKeyState(kbFire) & 0x8001) || (GetAsyncKeyState(VK_RETURN) & 0x8001) || mouseFiring) {
@@ -3846,6 +3847,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFontTitle = CreateFontA(-18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             hFontMenu = CreateFontA(-13, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             hFontHUD = CreateFontA(-11, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+            hFontHelp = CreateFontA(-9, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             for (int i = 0; i < MAX_STARS; i++) {
                 stars[i].x = (float)(rnd() % W);
                 stars[i].y = (float)(rnd() % H);
@@ -4032,7 +4034,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (p.x < 0) p.x = 0;
                     if (p.x > W - 20) p.x = W - 20;
                     if (p.y < 0) p.y = 0;
-                    if (p.y > H - 20) p.y = H - 20;
+                    if (p.y > H - 52) p.y = H - 52;
                 }
             } else if (gameState == STATE_HELP) {
                 gameState = (previousState == STATE_PLAYING || previousState == STATE_PAUSED) ? STATE_PAUSED : STATE_MENU;
@@ -4056,7 +4058,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (p.x < 0) p.x = 0;
                     if (p.x > W - 20) p.x = W - 20;
                     if (p.y < 0) p.y = 0;
-                    if (p.y > H - 20) p.y = H - 20;
+                    if (p.y > H - 52) p.y = H - 52;
                 }
             }
             break;
@@ -4349,7 +4351,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(memDC, hFontTitle);
                     SetTextColor(memDC, RGB(0, 229, 255));
                     TextOutA(memDC, W/2 - 50, 16, "HOW TO PLAY", 11);
-                    SelectObject(memDC, hFontHUD);
+                    SelectObject(memDC, hFontHelp ? hFontHelp : hFontHUD);
                     SetTextColor(memDC, RGB(255, 255, 255));
                     char* lines[] = {
                         "ARROWS / DRAG : Move Ship",
@@ -4537,19 +4539,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(memDC, RGB(255, 255, 255));
                     int sec = GetSector(wave);
                     char hudStr[64];
-                    wsprintfA(hudStr, "SC:%d HI:%d W:%d/20 S%d", score, highScore, wave, sec);
+                    wsprintfA(hudStr, "SC:%d HI:%d", score, highScore);
                     TextOutA(memDC, 10, 6, hudStr, lstrlenA(hudStr));
+                    char wStr[32];
+                    wsprintfA(wStr, "W:%d/20 [S%d]", wave, sec);
+                    TextOutA(memDC, 132, 6, wStr, lstrlenA(wStr));
 
                     if (sec == 3 || heatGauge > 0) {
                         char hStr[48];
                         wsprintfA(hStr, "HEAT:%d%% %s", (int)heatGauge, heatGauge >= 100.0f ? "[JAM! D:VENT]" : (heatGauge > 70.0f ? "[WARN]" : ""));
                         SetTextColor(memDC, heatGauge >= 100.0f ? RGB(255, 23, 68) : (heatGauge > 70.0f ? RGB(255, 145, 0) : RGB(255, 234, 0)));
-                        TextOutA(memDC, 172, 6, hStr, lstrlenA(hStr));
+                        TextOutA(memDC, 10, 36, hStr, lstrlenA(hStr));
                     } else if (sec == 4) {
                         char pStr[48];
                         wsprintfA(pStr, "PHASE:%s", spectralPhaseTimer > 0 ? "SYNC 2X" : "DESYNC");
                         SetTextColor(memDC, spectralPhaseTimer > 0 ? RGB(0, 230, 118) : RGB(179, 136, 255));
-                        TextOutA(memDC, 172, 6, pStr, lstrlenA(pStr));
+                        TextOutA(memDC, 10, 36, pStr, lstrlenA(pStr));
                     }
 
                     char statStr[96];
@@ -4745,6 +4750,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hFontTitle) DeleteObject(hFontTitle);
             if (hFontMenu) DeleteObject(hFontMenu);
             if (hFontHUD) DeleteObject(hFontHUD);
+            if (hFontHelp) DeleteObject(hFontHelp);
             KillTimer(hwnd, 1);
             PostQuitMessage(0);
             break;

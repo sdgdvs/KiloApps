@@ -146,10 +146,10 @@ window.addEventListener('beforeunload', () => {
     <button class="skill-btn" id="btnHyperJump" type="button" aria-label="Hyper-Jump Warp Drive" title="Hyper-Jump Warp Drive [J]" onclick="useHyperJump(); this.blur();" onpointerdown="event.stopPropagation();">[J] WARP</button>
     <button class="skill-btn" id="btnDrone" type="button" aria-label="Deploy Support Drone Wing" title="Deploy Support Drone Wing [W]" onclick="deployDroneWing(); this.blur();" onpointerdown="event.stopPropagation();">[W] DRONE</button>
     <button class="skill-btn" id="btnOvercharge" type="button" aria-label="Overcharge Hyper-Mode" title="Overcharge Hyper-Mode [O]" onclick="useOvercharge(); this.blur();" onpointerdown="event.stopPropagation();">[O] OVER</button>
-    <button class="skill-btn" id="btnTimeStop" type="button" aria-label="Chrono-Shift Time Stop" title="Chrono-Shift Time Stop [T]" onclick="useTimeStop(); this.blur();" onpointerdown="event.stopPropagation();">[T] TIME</button>
+    <button class="skill-btn" id="btnTimeStop" type="button" aria-label="Chrono-Shift Time Stop" title="Chrono-Shift Time Stop [T]" onclick="useTimeStop(); this.blur();" onpointerdown="event.stopPropagation();">[T] TIM</button>
     <button class="skill-btn" id="btnDash" type="button" aria-label="Tactical Dash Burst" title="Tactical Dash Burst [D]" onclick="useTacticalDash(); this.blur();" onpointerdown="event.stopPropagation();">[D] DASH</button>
     <button class="skill-btn" id="btnBomb" type="button" aria-label="Detonate Smart Bomb" title="Detonate Smart Bomb [B]" onclick="useSmartBomb(); this.blur();" onpointerdown="event.stopPropagation();">[B] BOMB</button>
-    <button class="skill-btn" id="btnShield" type="button" aria-label="Deploy Hyper-Shield" title="Deploy Hyper-Shield [S]" onclick="useHyperShield(); this.blur();" onpointerdown="event.stopPropagation();">[S] SHIELD</button>
+    <button class="skill-btn" id="btnShield" type="button" aria-label="Deploy Hyper-Shield" title="Deploy Hyper-Shield [S]" onclick="useHyperShield(); this.blur();" onpointerdown="event.stopPropagation();">[S] SHL</button>
   </div>
 </div>
 
@@ -1711,7 +1711,7 @@ window.addEventListener('beforeunload', () => {
       const len = Math.hypot(dx, dy) || 1;
       const dashDist = 75;
       p.x = Math.max(0, Math.min(W - 20, p.x + (dx / len) * dashDist));
-      p.y = Math.max(0, Math.min(H - 20, p.y + (dy / len) * dashDist));
+      p.y = Math.max(0, Math.min(H - 52, p.y + (dy / len) * dashDist));
       invincibleTimer = 125; // 2 seconds invincibility
       dashCooldown = playerChassis === 2 ? 210 : 300; // Void Phantom: 30% faster cooldown
       playSound(2);
@@ -2124,7 +2124,7 @@ window.addEventListener('beforeunload', () => {
       }
       isPointerDown = true;
       p.x = Math.max(0, Math.min(W - 20, mx - 10));
-      p.y = Math.max(0, Math.min(H - 20, my - 10));
+      p.y = Math.max(0, Math.min(H - 52, my - 10));
     }
   });
 
@@ -2134,7 +2134,7 @@ window.addEventListener('beforeunload', () => {
       const mx = (e.clientX - rect.left) * (W / rect.width);
       const my = (e.clientY - rect.top) * (H / rect.height);
       p.x = Math.max(0, Math.min(W - 20, mx - 10));
-      p.y = Math.max(0, Math.min(H - 20, my - 10));
+      p.y = Math.max(0, Math.min(H - 52, my - 10));
     }
   });
 
@@ -2639,7 +2639,7 @@ window.addEventListener('beforeunload', () => {
       if (keys[keybinds.up] || keys['arrowup']) p.y -= speed;
       if (keys[keybinds.down] || keys['arrowdown']) p.y += speed;
       p.x = Math.max(0, Math.min(W - 20, p.x));
-      p.y = Math.max(0, Math.min(H - 20, p.y));
+      p.y = Math.max(0, Math.min(H - 52, p.y));
 
       currentReplay.frames.push({ x: parseFloat(p.x.toFixed(1)), y: parseFloat(p.y.toFixed(1)), f: willFire ? 1 : 0 });
 
@@ -3363,7 +3363,7 @@ window.addEventListener('beforeunload', () => {
     if (bStop) {
       if (timeStopTimer > 0) { bStop.className = 'skill-btn'; bStop.innerText = '[T] ACT'; }
       else if (timeStopCooldown > 0) { bStop.className = 'skill-btn cooldown'; bStop.innerText = `[T] ${Math.ceil(timeStopCooldown/60)}s`; }
-      else { bStop.className = 'skill-btn'; bStop.innerText = '[T] TIME'; }
+      else { bStop.className = 'skill-btn'; bStop.innerText = '[T] TIM'; }
     }
 
     if (bDash) {
@@ -3381,7 +3381,7 @@ window.addEventListener('beforeunload', () => {
     if (bShield) {
       if (hyperShieldTimer > 0) { bShield.className = 'skill-btn'; bShield.innerText = '[S] ACT'; }
       else if (hyperShieldCooldown > 0) { bShield.className = 'skill-btn cooldown'; bShield.innerText = `[S] ${Math.ceil(hyperShieldCooldown/60)}s`; }
-      else { bShield.className = 'skill-btn'; bShield.innerText = '[S] SHLD'; }
+      else { bShield.className = 'skill-btn'; bShield.innerText = '[S] SHL'; }
     }
   }
 
@@ -4760,7 +4760,7 @@ window.addEventListener('beforeunload', () => {
     ctx.textAlign = 'left';
     ctx.fillText(isReplaying ? `REP: ${score}` : `SCORE: ${score}`, 10, 18);
     let sec = getSector(wave);
-    ctx.fillText(`W:${wave}/20 [S${sec}]`, 175, 18);
+    ctx.fillText(`W:${wave}/20 [S${sec}]`, 132, 18);
 
     // Visible Pause [||], Help [?] and Sound [♫/✕] buttons in HUD
     ctx.fillStyle = 'rgba(10, 25, 50, 0.85)';
@@ -4830,10 +4830,10 @@ window.addEventListener('beforeunload', () => {
       ctx.fillStyle = (overheatTimer > 0 && frameCount % 6 < 3) ? '#ff1744' : '#ff9100';
       ctx.font = 'bold 9px monospace';
       ctx.textAlign = 'left';
-      ctx.fillText(`HEAT:${Math.floor(heatGauge)}%`, bombX + 22 + p.bombs * 10 + 8, 33);
+      ctx.fillText(`HEAT:${Math.floor(heatGauge)}%`, 10, 44);
       if (overheatTimer > 0) {
         ctx.fillStyle = (frameCount % 4 < 2) ? '#ffea00' : '#ff1744';
-        ctx.fillText('[D]VENT', bombX + 22 + p.bombs * 10 + 64, 33);
+        ctx.fillText('[D]VENT', 70, 44);
       }
     }
 
@@ -4843,7 +4843,7 @@ window.addEventListener('beforeunload', () => {
     ctx.fillText(`[W]${droneCount}/2`, W - 92, 33);
     const cTag = playerChassis === 1 ? 'CRIM' : (playerChassis === 2 ? 'VOID' : 'ALPH');
     ctx.fillStyle = playerChassis === 1 ? '#ff5252' : (playerChassis === 2 ? '#b388ff' : '#00e5ff');
-    ctx.fillText(`[C]${cTag}`, W - 42, 33);
+    ctx.fillText(`[C]${cTag}`, W - 48, 33);
 
     // Overcharge & Hyper-Jump status
     if (hyperJumpTimer > 0) {
@@ -4937,40 +4937,42 @@ window.addEventListener('beforeunload', () => {
     ctx.fillStyle = 'rgba(5, 5, 18, 0.96)';
     ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = '#00e5ff';
-    ctx.font = 'bold 22px monospace';
+    ctx.font = 'bold 20px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('MISSION CONTROLS', W / 2, 40);
+    ctx.fillText('MISSION CONTROLS', W / 2, 36);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '11px monospace';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'left';
     let instructions = [
       "ARROWS / DRAG : Move Ship",
       "SPACE / CLICK : Fire Weapon",
       "[C] / [F4]    : Cycle Fighter Chassis",
       "[P] / [||]    : Pause Game",
       "[F5] / [F9]   : Quicksave / Quickload",
-      "[M] : Mute All Audio       [N] : Toggle Chiptune BGM",
+      "[M] : Mute Audio        [N] : Toggle BGM",
       "",
       "--- 6 CAMPAIGN SECTORS ---",
-      "S1: Kuiper Debris - Asteroid Kinetic Shards & Slingshots",
-      "S2: Ionized Nebula - Damped Laser, Chain Arcs, EMP Storm",
-      "S3: Magma Foundry - Heat Gauge, [D] Heat Vent, Solar Flares",
-      "S4: Phased Graveyard - Phased Hosts, Spectral Sync [T]/Q-Pod",
-      "S5: Citadel Approach - Laser Barrier Gates, Shield Pylons",
-      "S6: Dreadnought Siege - Dual Gens, Lances, Core Meltdown",
+      "S1: Kuiper Debris - Asteroid Kinetic Shards",
+      "S2: Ionized Nebula - Damped Laser & EMP",
+      "S3: Magma Foundry - Heat Vent & Flares",
+      "S4: Phased Graveyard - Spectral Sync",
+      "S5: Citadel Approach - Shield Barrier Gates",
+      "S6: Dreadnought Siege - Core Meltdown",
       "",
       "--- COMBAT SUBSYSTEMS ---",
-      "[J] : Hyper-Jump Warp Drive   [D] : Dash / Vent Heat",
-      "[W] : Deploy Companion Drone  [T] : Time / Phase Sync",
-      "[O] : Overcharge Hyper-Mode   [B] : Smart Bomb Screen Wipe",
-      "[S] : Hyper Shield Barrier    Q   : Quantum Phase Pod"
+      "[J] : Hyper-Jump Warp   [D] : Dash / Heat Vent",
+      "[W] : Support Drones    [T] : Chrono Time Sync",
+      "[O] : Overcharge Boost  [B] : Smart Bomb Wipe",
+      "[S] : Hyper-Shield Bar  [Q] : Quantum Phase Pod"
     ];
     for (let i = 0; i < instructions.length; i++) {
-      ctx.fillText(instructions[i], W / 2, 65 + i * 15);
+      ctx.fillText(instructions[i], 12, 58 + i * 14);
     }
 
     ctx.fillStyle = '#ffea00';
-    ctx.font = 'bold 12px monospace';
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'center';
     ctx.fillText('Press [H], [ESC], [ENTER] or Click to return', W / 2, H - 22);
     ctx.textAlign = 'left';
   }
