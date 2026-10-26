@@ -1482,7 +1482,7 @@
           if (!map || map.length === 0) return "";
           let gridStr = map.map(row => row.join("")).join("/");
           let ghostStr = (ghosts || []).map(g => `${Math.round(g.x)},${Math.round(g.y)}`).join(";");
-          let fen = `PACFEN/1.0|GRID:${gridStr}|P:${Math.round(px)},${Math.round(py)}|G:${ghostStr}|S:${score}|L:${lives}|LV:${level}|D:${diffLevel}|M:${gameMode}`;
+          let fen = `PACFEN/1.0|GRID:${gridStr}|P:${Math.round(px)},${Math.round(py)}|G:${ghostStr}|S:${score}|L:${lives}|LV:${level}|D:${diffMode}|M:${gameMode}`;
           return fen;
       } catch(e) {
           return "";
@@ -1506,10 +1506,14 @@
           if (data.GRID) {
               const rows = data.GRID.split("/");
               if (rows.length === ROWS) {
+                  dotCount = 0;
                   for (let r = 0; r < ROWS; r++) {
                       for (let c = 0; c < COLS; c++) {
                           const val = parseInt(rows[r][c]);
-                          if (!isNaN(val)) map[r][c] = val;
+                          if (!isNaN(val)) {
+                              map[r][c] = val;
+                              if (val >= 2 && val <= 5) dotCount++;
+                          }
                       }
                   }
               }
@@ -1530,7 +1534,7 @@
           if (data.S !== undefined) score = parseInt(data.S) || score;
           if (data.L !== undefined) lives = parseInt(data.L) || lives;
           if (data.LV !== undefined) level = parseInt(data.LV) || level;
-          if (data.D !== undefined) diffLevel = parseInt(data.D) || diffLevel;
+          if (data.D !== undefined) diffMode = parseInt(data.D) || diffMode;
           if (data.M !== undefined) gameMode = parseInt(data.M) || gameMode;
 
           closeFenModal();
@@ -1579,6 +1583,8 @@
   }
 
   function closeKeybindModal() {
+      activeRebindAction = null;
+      updateKeybindDisplay();
       const modal = document.getElementById('keybindModal');
       if (modal) modal.style.display = 'none';
   }
@@ -2118,11 +2124,57 @@
       showToast("Exited Replay. Returned to Campaign.", "info");
   }
 
+  let activeRebindAction = null;
   function updateKeybindDisplay() {
       const ids = ['p1Up', 'p1Down', 'p1Left', 'p1Right', 'p2Up', 'p2Down', 'p2Left', 'p2Right'];
       ids.forEach(id => {
           const el = document.getElementById(`kb_${id}`);
-          if (el) el.textContent = (keyBindings[id] || '').replace('Key', '').replace('Arrow', '');
+          if (el) {
+              el.style.cursor = 'pointer';
+              el.title = 'Click to rebind this key';
+              if (activeRebindAction === id) {
+                  el.textContent = 'Press Key...';
+                  el.style.borderColor = '#ffd700';
+                  el.style.color = '#ffd700';
+              } else {
+                  el.style.borderColor = '';
+                  el.style.color = '';
+                  el.textContent = (keyBindings[id] || '').replace('Key', '').replace('Arrow', '');
+              }
+          }
+      });
+  }
+
+  function startRebindKey(action) {
+      activeRebindAction = action;
+      updateKeybindDisplay();
+      const onKeyDownCapture = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.removeEventListener('keydown', onKeyDownCapture, true);
+          if (activeRebindAction === action) {
+              if (e.key !== 'Escape') {
+                  keyBindings[action] = e.code || e.key;
+                  saveKeybinds();
+                  showToast(`Bound ${action} to ${keyBindings[action]}`, 'success');
+              }
+              activeRebindAction = null;
+              updateKeybindDisplay();
+          }
+      };
+      window.addEventListener('keydown', onKeyDownCapture, true);
+  }
+
+  function initKeybindRebindUI() {
+      const ids = ['p1Up', 'p1Down', 'p1Left', 'p1Right', 'p2Up', 'p2Down', 'p2Left', 'p2Right'];
+      ids.forEach(id => {
+          const el = document.getElementById(`kb_${id}`);
+          if (el) {
+              el.addEventListener('click', (ev) => {
+                  ev.stopPropagation();
+                  startRebindKey(id);
+              });
+          }
       });
   }
 
@@ -2361,7 +2413,7 @@
               ['Lives', lives],
               ['Level', level],
               ['Game Mode', gameMode === 0 ? 'Campaign' : 'Endless'],
-              ['Difficulty', diffLevel === 1 ? 'Easy' : (diffLevel === 2 ? 'Normal' : 'Hard')],
+              ['Difficulty', diffMode === 0 ? 'Easy' : (diffMode === 2 ? 'Hard' : 'Normal')],
               ['Endless High Wave', endlessHighWave],
               ['Craft Ectoplasm', craftEctoplasm],
               ['Craft Fruit Essence', craftFruitEssence],
@@ -4398,12 +4450,22 @@
       ghostSpeed = Math.max(1, ghostSpeed);
       if (frightTimer > 0) ghostSpeed *= 2;
 
-      // Ghost movement
+      // Ghost movement & Eaten Pen Return
       if (freezeSkillTimer === 0 && frameCount % ghostSpeed === 0) {
           let dirs = [[1,0], [-1,0], [0,1], [0,-1]];
           for (let i = 0; i < numGhosts; i++) {
               let g = ghosts[i];
-              if (g.isDead || g.stunTimer > 0) continue;
+              if (g.isDead) {
+                  // Return to pen nest (7, 6)
+                  if (g.x === 7 && g.y === 6) {
+                      g.isDead = 0;
+                  } else {
+                      g.x += (7 > g.x) ? 1 : ((7 < g.x) ? -1 : 0);
+                      g.y += (6 > g.y) ? 1 : ((6 < g.y) ? -1 : 0);
+                  }
+                  continue;
+              }
+              if (g.stunTimer > 0) continue;
               if (g.isPhantom && g.phantomTimer <= 0) continue;
 
               let oldX = g.x, oldY = g.y;
@@ -4425,7 +4487,8 @@
                       let nx = g.x + dirs[d][0], ny = g.y + dirs[d][1];
                       if (nx < 0) nx = COLS - 1;
                       if (nx >= COLS) nx = 0;
-                      if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+                      let isPassable = (map[ny][nx] !== 1 || (ny === 6 && nx === 7)) && !(map[ny][nx] === 10 && (frameCount % 40 >= 20));
+                      if (ny >= 0 && ny < ROWS && isPassable) {
                           let dist = Math.abs(nx - tx) + Math.abs(ny - ty);
                           if (dist < minDist) { minDist = dist; bestD = d; }
                       }
@@ -4434,14 +4497,16 @@
                       let nx = g.x + dirs[bestD][0], ny = g.y + dirs[bestD][1];
                       if (nx < 0) nx = COLS - 1;
                       if (nx >= COLS) nx = 0;
-                      if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) { g.x = nx; g.y = ny; }
+                      let isPassable = (map[ny][nx] !== 1 || (ny === 6 && nx === 7)) && !(map[ny][nx] === 10 && (frameCount % 40 >= 20));
+                      if (ny >= 0 && ny < ROWS && isPassable) { g.x = nx; g.y = ny; }
                   }
               } else {
                   let d = Math.floor(Math.random() * 4);
                   let nx = g.x + dirs[d][0], ny = g.y + dirs[d][1];
                   if (nx < 0) nx = COLS - 1;
                   if (nx >= COLS) nx = 0;
-                  if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) { g.x = nx; g.y = ny; }
+                  let isPassable = (map[ny][nx] !== 1 || (ny === 6 && nx === 7)) && !(map[ny][nx] === 10 && (frameCount % 40 >= 20));
+                  if (ny >= 0 && ny < ROWS && isPassable) { g.x = nx; g.y = ny; }
               }
               g.dirX = g.x - oldX; g.dirY = g.y - oldY;
           }
@@ -4449,7 +4514,8 @@
 
       if (ndx !== 0 || ndy !== 0) {
           let nx = px + ndx, ny = py + ndy;
-          if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+          let isBlocked = (map[ny] && (map[ny][nx] === 1 || (map[ny][nx] === 10 && (frameCount % 40 >= 20))));
+          if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && !isBlocked) {
               pdx = ndx; pdy = ndy; ndx = 0; ndy = 0;
           }
       }
@@ -4462,7 +4528,8 @@
           if (nx < 0) nx = COLS - 1;
           if (nx >= COLS) nx = 0;
 
-          if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+          let isBlocked = (map[ny] && (map[ny][nx] === 1 || (map[ny][nx] === 10 && (frameCount % 40 >= 20))));
+          if (ny >= 0 && ny < ROWS && !isBlocked) {
               px = nx; py = ny;
 
               if (!relicAegis) {
@@ -4930,10 +4997,10 @@
       let dCol = diodeCols[Math.floor(frameCount / 10) % 4];
       ctx.fillStyle = dCol;
       ctx.beginPath();
-      ctx.arc(5, 5, 2, 0, Math.PI * 2);
-      ctx.arc(295, 5, 2, 0, Math.PI * 2);
-      ctx.arc(5, 295, 2, 0, Math.PI * 2);
-      ctx.arc(295, 295, 2, 0, Math.PI * 2);
+      ctx.moveTo(5 + 2, 5); ctx.arc(5, 5, 2, 0, Math.PI * 2);
+      ctx.moveTo(295 + 2, 5); ctx.arc(295, 5, 2, 0, Math.PI * 2);
+      ctx.moveTo(5 + 2, 295); ctx.arc(5, 295, 2, 0, Math.PI * 2);
+      ctx.moveTo(295 + 2, 295); ctx.arc(295, 295, 2, 0, Math.PI * 2);
       ctx.fill();
 
       // Maze Render
@@ -5524,9 +5591,9 @@
           ctx.font = '7.5px monospace';
           ctx.fillText(`FPS: 60 | Tick: ${frameCount || 0}`, 12, 29);
           ctx.fillText(`Pac Pos: (${Math.round(px)}, ${Math.round(py)}) Dir:(${pdx},${pdy})`, 12, 40);
-          ctx.fillText(`Ghosts: ${ghosts.length} | Scat/Chase: ${ghostModeTimer || 0}`, 12, 51);
-          ctx.fillText(`Mode: ${gameMode===0?'CAMP':(gameMode===1?'ENDL':'DUEL')} | Diff: ${diffLevel}`, 12, 62);
-          ctx.fillText(`Buffs: S:${p1SuperTimer>0?'Y':'N'} Sh:${shieldActive?'Y':'N'} Frz:${freezeTimer>0?'Y':'N'}`, 12, 73);
+          ctx.fillText(`Ghosts: ${ghosts.length} | Fright: ${frightTimer || 0}`, 12, 51);
+          ctx.fillText(`Mode: ${gameMode===0?'CAMP':(gameMode===1?'ENDL':'DUEL')} | Diff: ${diffMode===0?'EASY':(diffMode===2?'HARD':'NORM')}`, 12, 62);
+          ctx.fillText(`Buffs: S:${p1SuperTimer>0?'Y':'N'} Sh:${shieldActive?'Y':'N'} Frz:${freezeSkillTimer>0?'Y':'N'}`, 12, 73);
           ctx.restore();
       }
   }
@@ -5539,6 +5606,7 @@
 
   loadHighScore();
   loadKeybinds();
+  initKeybindRebindUI();
   initRetroMultiplayer();
   checkUrlInvite();
   init(false);

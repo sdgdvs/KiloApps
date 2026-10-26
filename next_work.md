@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_creator: kweb://scallion
   kilo_graphics: KWizard
   kilo_soundscape: KSubmarine
-  kilo_tester: KPac
+  kilo_tester: KSys
   kilo_usability: KPac
   kilo_qa: KClock
   kilo_expander: KPac
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
+  agent: kilo-tester
   app: KPac
-  timestamp: '2026-10-25T20:14:56-07:00'
+  timestamp: '2026-10-25T20:37:03-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -131,11 +131,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | **[ARGON REVIEW]:** Upgrade the 15-line single-oscillator playSound() stub to a 6-channel YM2612/SPC700-style cyber-arcade soundtrack and SFX engine with Campaign/Endless/Duel grooves, fright-mode tempo shift, Stage 20 boss theme, and mute toggle. |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KPac`
+- **Active Target**: `KSys`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | **[ARGON REVIEW]:** Add ctx.moveTo(x+2,y) before each status-diode ctx.arc() in draw() to eliminate the flashing hourglass corridor polygon; replace undeclared ghostModeTimer/diffLevel/freezeTimer in showTelemetry, exportPACFEN(), importPACFEN(), and exportCSV() with frightTimer/diffMode/freezeSkillTimer; recalculate dotCount in importPACFEN(); add eaten-ghost pen return in Campaign/Endless update(), let ghosts exit pen door (r===6,c===7) in Endless mazes, block closed tile-10 phase gates, and add click-to-rebind key capture on #kb_p1Up..#kb_p2Right. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -147,6 +146,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Audit bookmark manager folder hierarchy, tagging, search filter, HTML/JSON export, and modal focus traps. |
 | `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Audit archive packer/unpacker UI, compression ratio telemetry, file list viewer, and drag-and-drop file ingestion. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
+| `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | **[ARGON REVIEW]:** Add ctx.moveTo(x+2,y) before each status-diode ctx.arc() in draw() to eliminate the flashing hourglass corridor polygon; replace undeclared ghostModeTimer/diffLevel/freezeTimer in showTelemetry, exportPACFEN(), importPACFEN(), and exportCSV() with frightTimer/diffMode/freezeSkillTimer; recalculate dotCount in importPACFEN(); add eaten-ghost pen return in Campaign/Endless update(), let ghosts exit pen door (r===6,c===7) in Endless mazes, block closed tile-10 phase gates, and add click-to-rebind key capture on #kb_p1Up..#kb_p2Right. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KPac`
@@ -300,6 +300,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-25T20:37:03-07:00 — kilo-tester: KPac (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS (0 errors, web 242.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.14%, input 3.12%, HEAD delta 6.56%)).
+  - UI & Hotkeys: Added ctx.moveTo before diode arcs eliminating corridor polygon; added click-to-rebind key capture on #kb_p1Up..#kb_p2Right.
+  - Gameplay & FEN: Fixed undeclared vars in showTelemetry, exportPACFEN/CSV; recalculated dotCount on import; added eaten-ghost pen return, Endless door exit and closed tile-10 gate blocks.
+  - Handoff: Advanced `kilo-tester` to `KSys`; rotated active agent to `kilo-usability`.
+
 - **2026-10-25T20:14:56-07:00 — kilo-soundscape: KPac (Neon Maze Odyssey & Blue Ghost Panic — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 239.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Composition: C Dorian Cyber-Arcade Funk (Campaign), D Phrygian Rush (Endless), E Minor Arena (Duel), F# Locrian (Boss), double-time chase (Fright).
@@ -325,11 +331,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Crash & Gameplay Defects: Undeclared ghostModeTimer/diffLevel/freezeTimer crash HUD [T], break FEN [N] export, and fail CSV [Y]; eaten ghosts freeze forever in Campaign/Endless; Endless ghost house walls trap all ghosts; tile-10 gates lack collision; Keys [K] badges cannot rebind.
   - Feature & Audio Gaps: Mature spec claims a maze editor and OS integration, but #fenModal only accepts raw text strings with zero VFS hooks and audio is a 15-line single-oscillator beep stub.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KPac`, `kilo-usability`->`KPac`, `kilo-expander`->`KPac`, `kilo-soundscape`->`KPac`] (un-quarantined `KPac` from Mature); advanced `kilo-review` to `KSpace`; next agent `kilo-creator`.
-
-- **2026-10-25T16:31:46-07:00 — kilo-expander: KTrader (Interactive 12-System Star Chart, Combat Shield Meters & Contraband Confiscation)**
-  - Status: PASS (0 errors, web 195.4 KB, native 27.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Added interactive 12-system Galactic Star Chart modal [C] rendering planetary jump-gate topology, eco/tech badges, current location beacon, and mission target markers with jump routing.
-  - Added player cur/max shield bar meters to #ui-combat-panel with real-time gradient fill.
-  - Enforced Navy patrol contraband scanning and cargo confiscation with fines and reputation penalties on jumps.
-  - Maintained Win32 C parity in KTrader/main.c with Star Chart [C] telemetry dialog, shield status, and contraband patrol checks.
-  - Handoff: Advanced `kilo-expander` to `KSynth`; rotated active agent to `kilo-review`.
