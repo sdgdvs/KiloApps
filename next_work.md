@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_graphics: KStarship
   kilo_soundscape: KBreakout
   kilo_tester: KMaze
-  kilo_usability: KScript
+  kilo_usability: KMaze
   kilo_qa: KBookmark
   kilo_expander: KNet
   kilo_review: KDragon
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
-  app: KSys
-  timestamp: '2026-10-26T11:38:35-07:00'
+  agent: kilo-usability
+  app: KScript
+  timestamp: '2026-10-26T12:22:16-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -150,11 +150,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KScript`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Add <meta charset='UTF-8'> to kmaze.html <head> to fix broken UTF-8 mojibake icons across splash, HUD, toasts, and canvas; compact top #uiCanvas and Win32 GDI HUD telemetry over a dark translucent header strip so Lvl/biome/charges text stops colliding with F5/F9 hint and clipping [STAND]/[CROUCH] at 320px width; move #toastContainer below top HUD (top 50px) and #firstRunBanner to bottom of #canvasWrapper; suppress duplicate gameState===0 canvas text behind #splashOverlay; and sync #uiCanvas dimensions/scaling cleanly on boot and resize. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -165,6 +164,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Responsive dual-pane feed/reader layout, comfortable reading line-length (65-75ch), and clear unread badge contrast. |
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Responsive folder tree sidebar, accessible tag chips, and keyboard shortcut cheat sheet dialog. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
+| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KBookmark`
@@ -303,6 +303,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T12:22:16-07:00 — kilo-usability: KScript (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KScript across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KMaze`; rotated active agent to `kilo-qa`.
+
 - **2026-10-26T11:38:35-07:00 — kilo-tester: KSys (Telemetry Dashboard, Process/Memory Graphs & Stress Test Audit)**
   - Status: PASS ✅ (0 errors, web 203.6 KB, native 38.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 7.05%, 0 fail)).
   - Telemetry & Sparklines: Eliminated race condition between updateTelemetrySparklines and toggleContinuousStress; elevated load telemetry and hot red sparkline under active stress mode.
@@ -326,9 +331,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Optimized 64K intro switcher with pre-allocated buffers and synchronous Mode 13h metaball blitter.
   - Enhanced VFS save bridges, phosphor ANSI NFO studio, and subterranean 1999Hz audio resonance.
   - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-26T09:30:00-07:00 — kilo-planner: Fleet Orchestration (24-Hour Fleet Planning & Anti-Piling Stagger)**
-  - Status: PASS ✅ (105 apps audited, 53 mature, 52 active; icon audit & log rotation clean).
-  - Anti-Piling Stagger: Disentangled 4-agent pile on KMaze across kilo-tester (-> KSys), kilo-usability (-> KScript), and kilo-expander (-> KNet) while preserving Argon specs.
-  - Queue Replenishment: Replenished kilo-qa (+KTask, +KRead, +KGraph to 10 targets) and kilo-creator (+warez, +geocities to 10 targets).
-  - Rotation & Runway: All 8 mission pipeline tables stocked with 10–30 targets for 50+ turn autonomous runway.

@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 448,
+  "turns_executed": 449,
   "last_turn_timestamp": "2026-09-28T18:42:51Z",
-  "last_heartbeat": "2026-10-26T18:23:07.136192+00:00",
-  "current_target": "KMaze",
+  "last_heartbeat": "2026-10-26T19:22:05.549323+00:00",
+  "current_target": "KScript",
   "remote_command": "none"
 }
