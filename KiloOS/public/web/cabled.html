@@ -2242,7 +2242,8 @@ function buyStock(ticker, amount) {
 
   const cost = stk.price * amount;
   if (userCash < cost) {
-    alert("Insufficient seed venture capital!");
+    showToast("⚠️ Insufficient seed venture capital!");
+    playRetroSound('alarm');
     return;
   }
 
@@ -2428,7 +2429,7 @@ function stageIPOEvent() {
   safeSet('cabled_sim_cash', userCash);
   updatePortfolioUI();
 
-  alert(`🚨 NASDAQ BELL RINGS! First-day IPO popped +${pop}%!\nVenture underwriters distributed $${bonus.toLocaleString()} cash distribution to your fund!`);
+  showToast(`🚨 NASDAQ BELL RINGS! +${pop}% IPO pop! Distributed $${bonus.toLocaleString()}!`);
   tickMarketDay();
 }
 
@@ -2836,6 +2837,33 @@ window.addEventListener('DOMContentLoaded', () => {
 
   setInterval(updateTickerClock, 1000);
   setInterval(tickMarketDay, 5000); // automatic background tick every 5s
+
+  // Retro Navigation Hotkeys
+  window.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+    const k = e.key.toLowerCase();
+    if (k === 'm') {
+      toggleAudio();
+    } else if (k === '1') {
+      scrollToSection('sec-cover');
+    } else if (k === '2') {
+      scrollToSection('sec-y2k');
+    } else if (k === '3') {
+      scrollToSection('sec-ipo');
+    } else if (k === '4') {
+      scrollToSection('sec-jargon');
+    } else if (k === '5') {
+      scrollToSection('sec-hype');
+    } else if (k === '6') {
+      scrollToSection('sec-fetish');
+    } else if (k === 'h' || k === '?') {
+      showToast('⌨️ Hotkeys: [M] Audio Synth | [1-6] Jump Sections | [F5] Y2K Export');
+    } else if (e.key === 'F5') {
+      e.preventDefault();
+      exportY2kCertificateVFS();
+    }
+  });
+
   window.addEventListener('resize', () => {
     drawPortfolioChart();
     drawHypeRadar();
