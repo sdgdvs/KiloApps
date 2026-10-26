@@ -1189,6 +1189,17 @@ let lastFpsCheck = performance.now();
 let speedFactor = 0.045;
 let activePalette = 'cyber';
 
+// Pre-allocated Canvas Buffers & ImageData (Zero GC churn)
+const plasmaImgData = ctx.createImageData(W, H);
+const rotoImgData = ctx.createImageData(W, H);
+
+// Offscreen buffer for 2D fluid metaballs (synchronous Mode 13h blitter)
+const offCanvas = document.createElement('canvas');
+offCanvas.width = 200;
+offCanvas.height = 125;
+const offCtx = offCanvas.getContext('2d');
+const metaballImgData = offCtx ? offCtx.createImageData(200, 125) : null;
+
 // Precalculated Sin Table for Mode 13h speed
 const SIN_TABLE = new Float32Array(512);
 for (let i = 0; i < 512; i++) {
@@ -1326,9 +1337,12 @@ function getPaletteColor(val, pal) {
 }
 
 // Effect 1: Sine Plasma
+/**
+ * Renders multi-frequency trigonometric interference plasma onto cached buffer.
+ * @param {number} t - Time progression scalar.
+ */
 function renderPlasma(t) {
-  const imgData = ctx.createImageData(W, H);
-  const data = imgData.data;
+  const data = plasmaImgData.data;
   let idx = 0;
   const t1 = t * 1.2;
   const t2 = t * 0.9;
@@ -1353,10 +1367,14 @@ function renderPlasma(t) {
       data[idx++] = 255;
     }
   }
-  ctx.putImageData(imgData, 0, 0);
+  ctx.putImageData(plasmaImgData, 0, 0);
 }
 
 // Effect 2: Affine Rotozoom
+/**
+ * Renders affine matrix texture rotozoom sampling dynamic XOR fractal.
+ * @param {number} t - Time progression scalar.
+ */
 function renderRotozoom(t) {
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, W, H);
@@ -1366,8 +1384,7 @@ function renderRotozoom(t) {
   const cosA = Math.cos(angle) * zoom;
   const sinA = Math.sin(angle) * zoom;
 
-  const imgData = ctx.createImageData(W, H);
-  const data = imgData.data;
+  const data = rotoImgData.data;
   let idx = 0;
 
   for (let y = 0; y < H; y++) {
@@ -1387,7 +1404,7 @@ function renderRotozoom(t) {
       data[idx++] = 255;
     }
   }
-  ctx.putImageData(imgData, 0, 0);
+  ctx.putImageData(rotoImgData, 0, 0);
 }
 
 // Effect 3: 3D Starfield & Warp Tunnel
@@ -1485,6 +1502,10 @@ function renderCopperBars(t) {
 }
 
 // Effect 5: Metaballs
+/**
+ * Renders 2D organic fluid iso-surface metaballs into offscreen buffer and upscales synchronously.
+ * @param {number} t - Time progression scalar.
+ */
 function renderMetaballs(t) {
   // Update ball positions
   for (let b of metaballs) {
@@ -1497,12 +1518,13 @@ function renderMetaballs(t) {
     }
   }
 
+  if (!offCtx || !metaballImgData) return;
+
   // Draw 2D potential field on downscaled grid for 60 FPS speed, then scale up
   const step = 2;
   const gw = Math.floor(W / step);
   const gh = Math.floor(H / step);
-  const imgData = ctx.createImageData(gw, gh);
-  const data = imgData.data;
+  const data = metaballImgData.data;
   let idx = 0;
 
   for (let y = 0; y < gh; y++) {
@@ -1514,8 +1536,7 @@ function renderMetaballs(t) {
       for (let b of metaballs) {
         const dx = px - b.x;
         const dy = py - b.y;
-        const d2 = dx * dx + dy * dy + 1;
-        sum += (b.r * b.r * 18) / d2;
+        sum += (b.r * b.r * 18) / (dx * dx + dy * dy + 1);
       }
 
       if (sum > 55) {
@@ -1534,14 +1555,20 @@ function renderMetaballs(t) {
     }
   }
 
-  // Put to offscreen and upscale smoothly
-  createImageBitmap(imgData).then(bmp => {
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(bmp, 0, 0, W, H);
-  });
+  // Blit offscreen buffer synchronously to avoid Promise overhead
+  offCtx.putImageData(metaballImgData, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(offCanvas, 0, 0, W, H);
 }
 
+// Scroller animation tracking
+let scrollerPos = 0;
+
 // Main Raster Loop
+/**
+ * Core 60 Hz vertical sync animation loop.
+ * @param {DOMHighResTimeStamp} now - Timestamp from requestAnimationFrame.
+ */
 function rasterLoop(now) {
   animFrameId = requestAnimationFrame(rasterLoop);
 
@@ -1565,21 +1592,18 @@ function rasterLoop(now) {
     else if (currentEffect === 'starfield') renderStarfield(effectTime);
     else if (currentEffect === 'copper') renderCopperBars(effectTime);
     else if (currentEffect === 'metaballs') renderMetaballs(effectTime);
+
+    // Synchronized smooth banner scroller advance
+    const el = document.getElementById('scrollerText');
+    if (el) {
+      scrollerPos += 1.5 * (speedFactor / 0.045);
+      if (scrollerPos > el.scrollWidth - el.clientWidth) {
+        scrollerPos = 0;
+      }
+      el.scrollLeft = Math.floor(scrollerPos);
+    }
   }
 }
-
-// Scroller animation
-let scrollerPos = 0;
-setInterval(() => {
-  const el = document.getElementById('scrollerText');
-  if (el) {
-    scrollerPos += 2;
-    if (scrollerPos > el.scrollWidth - el.clientWidth) {
-      scrollerPos = 0;
-    }
-    el.scrollLeft = scrollerPos;
-  }
-}, 30);
 
 function saveActiveIntroVFS() {
   const txt = `========================================================================
@@ -2329,8 +2353,8 @@ function selectTrack(idx) {
 
   if (idx === 3) {
     try {
-      const raw = localStorage.getItem('knet_subterranean_signals');
-      const sigs = raw ? JSON.parse(raw) : {};
+      // ARG: intentional
+      const sigs = safeGet('knet_subterranean_signals', {});
       sigs['subterranean_demoscene'] = {
         source: 'assembly99_vault',
         label: "Assembly '99 Demoscene #021",
@@ -2339,7 +2363,7 @@ function selectTrack(idx) {
         timestamp: Date.now(),
         status: 'LOCKED'
       };
-      localStorage.setItem('knet_subterranean_signals', JSON.stringify(sigs));
+      safeSet('knet_subterranean_signals', sigs);
       showToast('1999Hz Subcarrier Resonance synchronized with Subterranean Mesh!');
     } catch (e) {}
   }
@@ -2472,6 +2496,15 @@ window.addEventListener('DOMContentLoaded', () => {
   if (scopeCtx) {
     scopeCtx.fillStyle = '#000';
     scopeCtx.fillRect(0, 0, scopeCanvas.width, scopeCanvas.height);
+  }
+});
+
+// Lifecycle cleanup (Quality Standards)
+window.addEventListener('beforeunload', () => {
+  if (animFrameId) cancelAnimationFrame(animFrameId);
+  if (bgmTimer) clearInterval(bgmTimer);
+  if (audioCtx && audioCtx.state !== 'closed') {
+    try { audioCtx.close(); } catch (e) {}
   }
 });
 </script>
