@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T08:50:05-07:00 — kilo-adhoc: Fleet Orchestration (+25% Quality-First Flash Budget & Fast Verification Upgrade)**
+  - Status: PASS ✅ (orchestrate.py --dry-run, check_sizes.py, and verify_turn.py sub-10s synchronous benchmark PASS).
+  - Per-Turn Budget & Effort: Relaxed Flash tool budget +28% (`25 -> 32` calls, checkpoint `12 -> 16`), promoted all Flash agents to `high` effort (`gemini-3.8-flash-high`), and raised timeouts to `10m/11m`.
+  - Fast Verification & Auto-Salvage: Cut `verify_turn.py` from 36s to 9.7s (parallel `visual_probe.py --compare-head`, `security_lint.py --fast`, smart Vite check) and installed `pyyaml` + post-turn salvage.
+
 - **2026-10-26T08:49:38-07:00 — kilo-expander: KSynth (Phase VI VFS Audio Patch Bank & KRadio/Trapster IPC)**
   - Status: PASS ✅ (0 errors, web 181.5 KB, native 23.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.24%, HEAD Δ 8.21%, 0 fail, 0 warn, 5.8s)).
   - VFS Patch Bank: Added .fm preset bank export/import to /home/music/ and cross-app IPC playback in KRadio [Shift+R] and Trapster [Shift+T] with Win32 C parity.

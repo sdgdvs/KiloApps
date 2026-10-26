@@ -525,6 +525,7 @@
         <button id="btnSplashTutorial" class="splashBtn" onclick="openTutorialOverlay()"><span class="badge">F1 / 🎓</span> 🔰 Tutorial</button>
         <button id="btnSplashHelp" class="splashBtn" onclick="toggleHelpModal(true)"><span class="badge">H</span> 📖 Codex</button>
         <button id="btnSplashKeys" class="splashBtn" onclick="toggleKeybinds()"><span class="badge">K</span> ⌨️ Keybinds</button>
+        <button id="btnSplashAudio" class="splashBtn" onclick="toggleAudioMute()"><span class="badge">M</span> <span id="splashAudioLabel">🔊 Audio</span></button>
       </div>
       <div id="splashSaveStatus" style="font-size: 13px; color: #38bdf8; margin-bottom: 8px;"></div>
       <div id="splashStats" class="splashStats"></div>
@@ -545,6 +546,7 @@
     <button id="btnKeys" class="hudBtn" onclick="toggleKeybinds()" title="Rebind control keys"><span class="badge">K</span> Keybinds</button>
     <button id="btnExport" class="hudBtn" onclick="exportStats()" title="Export best times and statistics to JSON"><span class="badge">E</span> Export</button>
     <button id="btnImport" class="hudBtn" onclick="document.getElementById('importFile').click()" title="Import saved statistics JSON"><span class="badge">I</span> Import</button>
+    <button id="btnAudio" class="hudBtn" onclick="toggleAudioMute()" title="Toggle YM2612 FM / SPC700 Audio [M]"><span class="badge">M</span> <span id="hudAudioLabel">🔊 Audio</span></button>
   </div>
 
   <!-- Help & Codex Modal -->
@@ -575,6 +577,7 @@
             <div><span class="kbd">T</span> : <b>Time Freeze</b> (Halts dungeon entities, 10s)</div>
             <div><span class="kbd">F5 / V</span> : Quicksave Checkpoint</div>
             <div><span class="kbd">F9 / L</span> : Quickload Checkpoint</div>
+            <div><span class="kbd">M</span> : <b>Mute Audio</b> (YM2612 FM & SPC700)</div>
           </div>
         </div>
 

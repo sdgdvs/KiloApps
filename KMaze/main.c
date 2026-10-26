@@ -302,6 +302,13 @@ int score = 0;
 char msgText[128] = "";
 int msgTimer = 0;
 int isCrouching = 0;
+static BOOL g_bMuted = FALSE;
+
+void PlayGameSound(UINT uType) {
+    if (!g_bMuted) {
+        PlayGameSound(uType);
+    }
+}
 
 int muzzleFlashTimer = 0;
 int recoilOffset = 0;
@@ -954,7 +961,7 @@ int TryMove(int x, int y) {
         if (keysHeld > 0) {
             keysHeld--;
             SetMapValue(x, y, 0);
-            MessageBeep(MB_ICONEXCLAMATION);
+            PlayGameSound(MB_ICONEXCLAMATION);
             AddParticles(160.0f, 120.0f, RGB(0, 150, 255), 20);
             return 1;
         }
@@ -968,7 +975,7 @@ int TryMove(int x, int y) {
             if (x < mapW - 1 && y < mapH - 1) {
                 hasPickaxe--;
                 SetMapValue(x, y, 0);
-                MessageBeep(MB_ICONEXCLAMATION);
+                PlayGameSound(MB_ICONEXCLAMATION);
                 AddParticles(160.0f, 120.0f, RGB(180, 100, 50), 25);
                 return 1;
             }
@@ -1426,11 +1433,11 @@ void LoadCheckpoint() {
         if (gameState == 0 || gameState == 2) gameState = 1;
         strcpy(msgText, "Checkpoint / Save Loaded!");
         msgTimer = 60;
-        MessageBeep(MB_OK);
+        PlayGameSound(MB_OK);
     } else {
         strcpy(msgText, "No saved checkpoint found!");
         msgTimer = 60;
-        MessageBeep(MB_ICONWARNING);
+        PlayGameSound(MB_ICONWARNING);
     }
 }
 
@@ -1709,7 +1716,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                             
                             if (mx == (int)pX && my == (int)pY) {
-                                MessageBeep(MB_ICONHAND);
+                                PlayGameSound(MB_ICONHAND);
                                 damageFlinchTimer = 20;
                                 AddScreenShake(30, 0.5f);
                                 AddShockwave(pX, pY);
@@ -1749,7 +1756,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (isCrouching) {
                         strcpy(msgText, "Stealth Crouch Active (Sneaking / Silenced)!");
                         msgTimer = 60;
-                        MessageBeep(MB_OK);
+                        PlayGameSound(MB_OK);
                         AddParticles(160.0f, 120.0f, RGB(0, 255, 150), 20);
                     } else {
                         strcpy(msgText, "Standing Stance.");
@@ -1771,12 +1778,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 strcpy(msgText, "Perimeter Bedrock is unbreakable!");
                                 msgTimer = 40;
                                 activeKeyCooldown = 250;
-                                MessageBeep(MB_ICONHAND);
+                                PlayGameSound(MB_ICONHAND);
                                 break;
                             }
                             hasPickaxe--;
                             SetMapValue(tx, ty, 0);
-                            MessageBeep(MB_OK);
+                            PlayGameSound(MB_OK);
                             if (tVal == 39) {
                                 score += 150;
                                 AddParticles(160.0f, 120.0f, RGB(180, 50, 255), 45);
@@ -1795,7 +1802,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             hasPickaxe--;
                             SetMapValue(tx, ty, 0);
                             score += 200;
-                            MessageBeep(MB_OK);
+                            PlayGameSound(MB_OK);
                             AddParticles(160.0f, 120.0f, RGB(255, 0, 0), 40);
                             strcpy(msgText, "Minotaur Slain!");
                             msgTimer = 60;
@@ -1829,7 +1836,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         pathfinderCharges--;
                         pathfinderTimer = 10000;
                         ComputePathfinderPath();
-                        MessageBeep(MB_ICONASTERISK);
+                        PlayGameSound(MB_ICONASTERISK);
                         AddParticles(160.0f, 120.0f, RGB(0, 255, 255), 25);
                         strcpy(msgText, "Pathfinder Active (10s)!");
                         msgTimer = 60;
@@ -1840,7 +1847,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (speedShoesCharges > 0 || speedBoost) {
                         if (speedShoesCharges > 0) speedShoesCharges--;
                         speedShoesTimer = 8000;
-                        MessageBeep(MB_ICONASTERISK);
+                        PlayGameSound(MB_ICONASTERISK);
                         AddParticles(160.0f, 120.0f, RGB(255, 255, 0), 25);
                         strcpy(msgText, "Speed Shoes Active (8s)!");
                         msgTimer = 60;
@@ -1851,7 +1858,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (stunSprayCharges > 0) {
                         stunSprayCharges--;
                         stunSprayTimer = 10000;
-                        MessageBeep(MB_ICONASTERISK);
+                        PlayGameSound(MB_ICONASTERISK);
                         AddParticles(160.0f, 120.0f, RGB(100, 200, 255), 30);
                         strcpy(msgText, "Minotaur Stun Spray Active (10s)!");
                         msgTimer = 60;
@@ -1864,7 +1871,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (timeFreezeCharges > 0) {
                         timeFreezeCharges--;
                         timeFreezeTimer = 10000;
-                        MessageBeep(MB_ICONASTERISK);
+                        PlayGameSound(MB_ICONASTERISK);
                         AddParticles(160.0f, 120.0f, RGB(0, 100, 255), 30);
                         strcpy(msgText, "Time Freeze Active (10s)!");
                         msgTimer = 60;
@@ -1876,7 +1883,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     strcpy(msgText, "Game Saved to Checkpoint!");
                     msgTimer = 60;
                     activeKeyCooldown = 1000;
-                    MessageBeep(MB_OK);
+                    PlayGameSound(MB_OK);
                 }
                 if ((GetAsyncKeyState('L') & 0x8000) || (GetAsyncKeyState(VK_F9) & 0x8000)) {
                     LoadCheckpoint();
@@ -1922,20 +1929,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (curVal == 3) {
                 keysHeld++;
                 SetMapValue((int)pX, (int)pY, 0);
-                MessageBeep(MB_OK);
+                PlayGameSound(MB_OK);
                 AddParticles(160.0f, 120.0f, RGB(255, 255, 0), 15);
             } else if (curVal == 2) {
-                MessageBeep(MB_ICONASTERISK);
+                PlayGameSound(MB_ICONASTERISK);
                 AddParticles(160.0f, 120.0f, RGB(0, 255, 0), 30);
                 NextLevel();
             } else if (curVal == 5) {
                 score += 100;
                 SetMapValue((int)pX, (int)pY, 0);
-                MessageBeep(MB_OK);
+                PlayGameSound(MB_OK);
                 AddParticles(160.0f, 120.0f, RGB(255, 200, 0), 15);
             } else if (curVal == 6) {
                 int trapDmg = isCrouching ? 25 : 50;
-                MessageBeep(MB_ICONHAND);
+                PlayGameSound(MB_ICONHAND);
                 damageFlinchTimer = 20;
                 AddScreenShake(20, 0.3f);
                 AddShockwave(pX, pY);
@@ -1950,12 +1957,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 msgTimer = 60;
             } else if (curVal == 7) {
                 SetMapValue((int)pX, (int)pY, 0);
-                MessageBeep(MB_OK);
+                PlayGameSound(MB_OK);
                 AddParticles(160.0f, 120.0f, RGB(150, 150, 150), 10);
             } else if (curVal == 8) {
                 pathfinderCharges++;
                 SetMapValue((int)pX, (int)pY, 0);
-                MessageBeep(MB_ICONASTERISK);
+                PlayGameSound(MB_ICONASTERISK);
                 AddParticles(160.0f, 120.0f, RGB(0, 255, 255), 15);
                 strcpy(msgText, "+1 Pathfinder!"); msgTimer = 60;
             } else if (curVal == 9) {
@@ -1963,7 +1970,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 speedBoost = 1;
                 score += 50;
                 SetMapValue((int)pX, (int)pY, 0);
-                MessageBeep(MB_ICONASTERISK);
+                PlayGameSound(MB_ICONASTERISK);
                 AddParticles(160.0f, 120.0f, RGB(255, 255, 0), 15);
                 strcpy(msgText, "+1 Speed Shoes!"); msgTimer = 60;
             } else if (curVal == 10) {
@@ -1971,7 +1978,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     for(int j=0; j<45; j++) {
                         if (GetMapValue(i, j) == 11) {
                             pX = i + 0.5f; pY = j + 0.5f;
-                            MessageBeep(MB_ICONHAND);
+                            PlayGameSound(MB_ICONHAND);
                             AddParticles(160.0f, 120.0f, RGB(255, 0, 255), 25);
                             i=45; break;
                         }
@@ -1982,14 +1989,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     for(int j=0; j<45; j++) {
                         if (GetMapValue(i, j) == 10) {
                             pX = i + 0.5f; pY = j + 0.5f;
-                            MessageBeep(MB_ICONHAND);
+                            PlayGameSound(MB_ICONHAND);
                             AddParticles(160.0f, 120.0f, RGB(255, 0, 255), 25);
                             i=45; break;
                         }
                     }
                 }
             } else if (curVal == 12) {
-                MessageBeep(MB_ICONHAND);
+                PlayGameSound(MB_ICONHAND);
                 damageFlinchTimer = 20;
                 AddScreenShake(30, 0.5f);
                 AddShockwave(pX, pY);
@@ -1999,17 +2006,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (curVal == 13) {
                 hasPickaxe++;
                 SetMapValue((int)pX, (int)pY, 0);
-                MessageBeep(MB_ICONASTERISK);
+                PlayGameSound(MB_ICONASTERISK);
                 AddParticles(160.0f, 120.0f, RGB(180, 100, 50), 15);
                 strcpy(msgText, "+1 Pickaxe!"); msgTimer = 60;
             } else if (curVal == 14) {
                 stunSprayCharges++;
                 SetMapValue((int)pX, (int)pY, 0);
-                MessageBeep(MB_ICONASTERISK);
+                PlayGameSound(MB_ICONASTERISK);
                 AddParticles(160.0f, 120.0f, RGB(100, 200, 255), 15);
                 strcpy(msgText, "+1 Stun Spray!"); msgTimer = 60;
             } else if (curVal == 15) {
-                MessageBeep(MB_ICONHAND);
+                PlayGameSound(MB_ICONHAND);
                 damageFlinchTimer = 20;
                 AddScreenShake(35, 0.6f);
                 AddShockwave(pX, pY);
@@ -2019,20 +2026,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (curVal == 16) {
                 if (score >= 200) {
                     score -= 200; hasPickaxe++; timeFreezeCharges++;
-                    SetMapValue((int)pX, (int)pY, 0); MessageBeep(MB_ICONASTERISK); AddParticles(160.0f, 120.0f, RGB(0, 255, 100), 25);
+                    SetMapValue((int)pX, (int)pY, 0); PlayGameSound(MB_ICONASTERISK); AddParticles(160.0f, 120.0f, RGB(0, 255, 100), 25);
                     strcpy(msgText, "-200 Score: Trade for Pickaxe + Freeze!"); msgTimer = 60;
                 } else { strcpy(msgText, "Need 200 Score for Merchant!"); msgTimer = 10; }
             } else if (curVal == 17) {
                 for (int i=0; i<45; i++) for(int j=0; j<45; j++) { if (GetMapValue(i, j) == 18) SetMapValue(i, j, 0); }
-                SetMapValue((int)pX, (int)pY, 0); MessageBeep(MB_ICONASTERISK); AddParticles(160.0f, 120.0f, RGB(255, 0, 0), 25);
+                SetMapValue((int)pX, (int)pY, 0); PlayGameSound(MB_ICONASTERISK); AddParticles(160.0f, 120.0f, RGB(255, 0, 0), 25);
                 strcpy(msgText, "Puzzle Switch Pressed! Doors Open!"); msgTimer = 60;
             } else if (curVal == 19) {
-                timeFreezeCharges++; SetMapValue((int)pX, (int)pY, 0); MessageBeep(MB_ICONASTERISK); AddParticles(160.0f, 120.0f, RGB(0, 100, 255), 15);
+                timeFreezeCharges++; SetMapValue((int)pX, (int)pY, 0); PlayGameSound(MB_ICONASTERISK); AddParticles(160.0f, 120.0f, RGB(0, 100, 255), 15);
                 strcpy(msgText, "+1 Time Freeze!"); msgTimer = 60;
             } else if (curVal == 25) {
                 if ((animFrameCount / 10) % 2 == 0) {
                     int trapDmg = isCrouching ? 35 : 75;
-                    MessageBeep(MB_ICONHAND);
+                    PlayGameSound(MB_ICONHAND);
                     damageFlinchTimer = 20;
                     AddScreenShake(20, 0.4f);
                     AddShockwave(pX, pY);
@@ -2052,7 +2059,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 speedBoost = 0;
                 speedShoesCharges = 0;
                 SetMapValue((int)pX, (int)pY, 0);
-                MessageBeep(MB_ICONHAND);
+                PlayGameSound(MB_ICONHAND);
                 AddParticles(160.0f, 120.0f, RGB(128, 0, 128), 30);
                 strcpy(msgText, "Cursed Relic: +500 Score, Lost Speed/Nav!"); msgTimer = 60;
             } else if (curVal == 28) { // Save Shrine Checkpoint
@@ -2079,7 +2086,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 timeFreezeCharges = checkpointFreeze;
                 SaveCheckpoint();
                 
-                MessageBeep(MB_ICONASTERISK);
+                PlayGameSound(MB_ICONASTERISK);
                 AddParticles(160.0f, 120.0f, RGB(255, 215, 0), 35);
                 strcpy(msgText, "Ancient Save Shrine Activated! Checkpoint Saved!");
                 msgTimer = 90;
@@ -2087,7 +2094,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetMapValue((int)pX, (int)pY, 0);
                 torchTimer = 15000;
                 score += 50;
-                MessageBeep(MB_ICONASTERISK);
+                PlayGameSound(MB_ICONASTERISK);
                 AddParticles(160.0f, 120.0f, RGB(255, 180, 50), 20);
                 strcpy(msgText, "Ignited Wall Torch! Radiant Glow (+15s)!");
                 msgTimer = 60;
@@ -2098,7 +2105,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 speedShoesCharges++;
                 stunSprayCharges++;
                 timeFreezeCharges++;
-                MessageBeep(MB_ICONASTERISK);
+                PlayGameSound(MB_ICONASTERISK);
                 AddParticles(160.0f, 120.0f, RGB(0, 255, 200), 40);
                 strcpy(msgText, "Descended into Dungeon Depths! (+250 Score)");
                 msgTimer = 90;
@@ -2106,7 +2113,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (curVal == 39) { // Secret Illusionary Fake Wall
                 SetMapValue((int)pX, (int)pY, 0);
                 score += 150;
-                MessageBeep(MB_ICONASTERISK);
+                PlayGameSound(MB_ICONASTERISK);
                 AddParticles(160.0f, 120.0f, RGB(180, 50, 255), 45);
                 AddShockwave(pX, pY);
                 AddScreenShake(10, 0.15f);
@@ -2139,7 +2146,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int qIdx = rand() % 12;
                 strcpy(msgText, loreQuotes[qIdx]);
                 msgTimer = 120;
-                MessageBeep(MB_ICONASTERISK);
+                PlayGameSound(MB_ICONASTERISK);
                 AddParticles(160.0f, 120.0f, RGB(0, 255, 220), 40);
                 AddShockwave(pX, pY);
             }
@@ -2569,7 +2576,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 char t1[128]; wsprintfA(t1, "Lvl:%d/45 [%s] K:%d P:%d C:%d S:%d F:%d T:%d [%s]", currentLevel + 1, biome, keysHeld, hasPickaxe, pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges, isCrouching ? "CROUCH" : "STAND");
                 char t2[128]; wsprintfA(t2, "Score:%d Time:%ds Torch:%ds", score, elapsedSec, torchTimer/1000);
-                const char* t3 = "V:Save L:Load F1/H:Help";
+                char t3[64]; wsprintfA(t3, "V:Save L:Load M:%s", g_bMuted ? "Unmute" : "Mute");
                 
                 SetTextColor(hdc, RGB(0, 0, 0));
                 TextOutA(hdc, 22, 22, t1, lstrlenA(t1)); TextOutA(hdc, 22, 52, t2, lstrlenA(t2));
@@ -2670,6 +2677,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == 'I') ImportStats();
                 if (wParam == 'L') LoadCheckpoint();
                 if (wParam == 'K') { prevState = gameState; gameState = 4; }
+                if (wParam == 'M' || wParam == 'm') {
+                    g_bMuted = !g_bMuted;
+                    lstrcpyA(msgText, g_bMuted ? "Audio Muted [M]" : "Audio Enabled [M]");
+                    msgTimer = 45;
+                }
             }
             if (gameState == 4) {
                 if (wParam == VK_ESCAPE) { waitingForKey = 0; gameState = prevState; }

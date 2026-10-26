@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://rfc-archive
   kilo_graphics: KStarship
-  kilo_soundscape: KMaze
+  kilo_soundscape: KBreakout
   kilo_tester: KSys
   kilo_usability: KScript
   kilo_qa: KBookmark
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KBreakout
-  timestamp: '2026-10-26T10:33:05-07:00'
+  agent: kilo-soundscape
+  app: KMaze
+  timestamp: '2026-10-26T11:23:21-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -117,11 +117,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Active Target**: `KMaze`
+- **Active Target**: `KBreakout`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Replace bare single-oscillator playTone() in kmaze.html with a 6-channel YM2612 2-Op FM and cavernous SPC700 echo dungeon soundtrack (adapting across Catacombs/Cyber/Frost/Abyssal/Inferno biomes and Minotaur Overlord boss combat) plus [M] HUD mute toggle and procedural footstep, pickaxe cleave, trap, and shrine earcons. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Compose high-energy 6-channel YM2612 FM arcade synthwave theme (Ionian/Mixolydian, 5:3 swing groove, slap bass, brass lead, selective SPC700 delay) + harmonic brick-hit combo pitch escalator and powerup earcons. |
 | `KQuest` | `KiloOS/public/apps/kquest.html` | Compose overworld & battle 6-channel JRPG chiptune suite (Royal Road `IV-V-iii-vi` town/overworld + Heroic `bVI-bVII-I` combat cadence, E-Piano & flute counterpoint, SPC700 echo) + spell/quest earcons. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Compose bridge alert & deep-space exploration 6-channel FM suite (Lydian `#4` pad + tactical Phrygian Dominant combat march, sonar/shield/warp earcons). |
@@ -131,6 +130,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Compose abyssal sonar & trench descent 6-channel suite (Suspended `sus2/Maj7` cascade, muffled low-pass SPC700 echo, warm sine sub-bass, hydrophone ping earcons). |
+| `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Replace bare single-oscillator playTone() in kmaze.html with a 6-channel YM2612 2-Op FM and cavernous SPC700 echo dungeon soundtrack (adapting across Catacombs/Cyber/Frost/Abyssal/Inferno biomes and Minotaur Overlord boss combat) plus [M] HUD mute toggle and procedural footstep, pickaxe cleave, trap, and shrine earcons. |
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Active Target**: `KSys`
@@ -303,6 +303,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T11:23:21-07:00 — kilo-soundscape: KMaze (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-soundscape updates for KMaze across web and native targets.
+  - Handoff: Advanced `kilo-soundscape` to `KBreakout`; rotated active agent to `kilo-tester`.
+
 - **2026-10-26T10:33:05-07:00 — kilo-graphics: KBreakout (Arcade Visuals & Glint Sweep)**
   - Status: PASS ✅ (0 errors, web 186.2 KB, native 54.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 17.23%, HEAD Δ 0.01%, 0 fail, 0 warn, 6.9s)).
   - Textured metallic/crystalline bricks, plasma paddle induction & ball trails, boss hazard visuals verified.
@@ -327,8 +332,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Gameplay/Control Bugs: Default speed keybind S conflicts with S backward walk; wall bumps in tryMove/TryMove silently consume hasPickaxe; Pathfinder isPathTile[] is never rendered; Shrine saves before granting rewards; Replay raycaster uses pX/pY instead of drawPX/drawPY.
   - Feature/Audio Gaps: Missing minimap and dead hasCompass/recoilOffset/shockwaves[] viewmodel feedback, missing KiloOS VFS save/load mesh, and bare 1-oscillator beep audio.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-soundscape`->`KMaze`, `kilo-tester`->`KMaze`, `kilo-usability`->`KMaze`, `kilo-expander`->`KMaze`] (un-quarantined `KMaze` from Mature); advanced `kilo-review` to `KDragon`; next agent `kilo-creator`.
-
-- **2026-10-26T08:50:05-07:00 — kilo-adhoc: Fleet Orchestration (+25% Quality-First Flash Budget & Fast Verification Upgrade)**
-  - Status: PASS ✅ (orchestrate.py --dry-run, check_sizes.py, and verify_turn.py sub-10s synchronous benchmark PASS).
-  - Per-Turn Budget & Effort: Relaxed Flash tool budget +28% (`25 -> 32` calls, checkpoint `12 -> 16`), promoted all Flash agents to `high` effort (`gemini-3.8-flash-high`), and raised timeouts to `10m/11m`.
-  - Fast Verification & Auto-Salvage: Cut `verify_turn.py` from 36s to 9.7s (parallel `visual_probe.py --compare-head`, `security_lint.py --fast`, smart Vite check) and installed `pyyaml` + post-turn salvage.
