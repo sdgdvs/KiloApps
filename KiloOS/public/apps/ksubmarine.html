@@ -2479,7 +2479,7 @@
                 initMusicSystem() {
                     if (!this.ctx || this.musicInitialized) return;
                     try {
-                        // SNES SPC700 Selective Stereo Delay Line (185ms / 245ms with 2.2kHz warm lowpass filter)
+                        // SNES SPC700 Muffled Low-Pass Selective Stereo Delay Line (185ms / 245ms with 1.8kHz warm filter)
                         this.delayL = this.ctx.createDelay();
                         this.delayL.delayTime.value = 0.185;
                         this.delayR = this.ctx.createDelay();
@@ -2487,11 +2487,11 @@
 
                         this.delayFilter = this.ctx.createBiquadFilter();
                         this.delayFilter.type = 'lowpass';
-                        this.delayFilter.frequency.value = 2200;
-                        this.delayFilter.Q.value = 0.7;
+                        this.delayFilter.frequency.value = 1800; // Muffled low-pass SPC700 echo
+                        this.delayFilter.Q.value = 0.8;
 
                         this.delayFeedback = this.ctx.createGain();
-                        this.delayFeedback.gain.value = 0.28;
+                        this.delayFeedback.gain.value = 0.30;
 
                         const merger = this.ctx.createChannelMerger(2);
                         this.delayL.connect(merger, 0, 0);
@@ -2515,7 +2515,7 @@
                         this.musicDryGain.gain.value = 1.0;
                         this.musicDryGain.connect(this.musicGain);
 
-                        // Wet bus for lead, counter, harmony arpeggios
+                        // Wet bus for lead, counter, harmony arpeggios (SPC700 stereo delay send)
                         this.musicWetGain = this.ctx.createGain();
                         this.musicWetGain.gain.value = 0.65;
                         this.musicWetGain.connect(this.musicGain);
@@ -2532,7 +2532,7 @@
                 },
 
                 // Ch1 Lead Melody: Expressive vocal phrasing with rests and delayed vibrato (ramp LFO after 180ms)
-                playFmLead(freq, dur = 0.40, vel = 0.55, modMul = 1.0, modIdx = 2.4) {
+                playFmLead(freq, dur = 0.44, vel = 0.55, modMul = 1.0, modIdx = 2.2) {
                     if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicWetGain) return;
                     try {
                         const now = this.ctx.currentTime;
@@ -2544,28 +2544,28 @@
                         mod.type = 'sine';
                         mod.frequency.setValueAtTime(freq * modMul, now);
                         modGain.gain.setValueAtTime(freq * modIdx * vel, now);
-                        modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.15), now + 0.08);
+                        modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.15), now + 0.10);
                         modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
 
                         mod.connect(modGain);
                         modGain.connect(car.frequency);
 
-                        // Delayed vibrato (after 180ms) - vocal/flute expression
+                        // Delayed vibrato (after 180ms) - expressive bathyal flute / vocal expression
                         const vib = this.ctx.createOscillator();
                         const vibGain = this.ctx.createGain();
-                        vib.frequency.setValueAtTime(5.4, now);
+                        vib.frequency.setValueAtTime(5.2, now);
                         vibGain.gain.setValueAtTime(0.0001, now);
                         vibGain.gain.setValueAtTime(0.0001, now + 0.18);
-                        vibGain.gain.linearRampToValueAtTime(freq * 0.025, now + 0.34);
+                        vibGain.gain.linearRampToValueAtTime(freq * 0.028, now + 0.36);
                         vib.connect(vibGain);
                         vibGain.connect(car.frequency);
 
                         car.type = 'sine';
                         car.frequency.setValueAtTime(freq, now);
 
-                        const peakGain = Math.max(0.0001, vel * 0.22);
+                        const peakGain = Math.max(0.0001, vel * 0.24);
                         carGain.gain.setValueAtTime(0.0001, now);
-                        carGain.gain.linearRampToValueAtTime(peakGain, now + 0.018);
+                        carGain.gain.linearRampToValueAtTime(peakGain, now + 0.02);
                         carGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
 
                         car.connect(carGain);
@@ -2583,7 +2583,7 @@
                 },
 
                 // Ch2 Counter-Melody: Contrary motion to Lead; takes spotlight when Lead rests (Glass Chime / Bell)
-                playFmCounter(freq, dur = 0.36, vel = 0.45) {
+                playFmCounter(freq, dur = 0.38, vel = 0.46) {
                     if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicWetGain) return;
                     try {
                         const now = this.ctx.currentTime;
@@ -2593,9 +2593,9 @@
                         const carGain = this.ctx.createGain();
 
                         mod.type = 'sine';
-                        mod.frequency.setValueAtTime(freq * 1.0, now);
-                        modGain.gain.setValueAtTime(freq * 0.9 * vel, now);
-                        modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.1), now + dur * 0.5);
+                        mod.frequency.setValueAtTime(freq * 2.0, now);
+                        modGain.gain.setValueAtTime(freq * 1.5 * vel, now);
+                        modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.08), now + dur * 0.45);
 
                         mod.connect(modGain);
                         modGain.connect(car.frequency);
@@ -2603,9 +2603,9 @@
                         car.type = 'sine';
                         car.frequency.setValueAtTime(freq, now);
 
-                        const peakGain = Math.max(0.0001, vel * 0.18);
+                        const peakGain = Math.max(0.0001, vel * 0.19);
                         carGain.gain.setValueAtTime(0.0001, now);
-                        carGain.gain.linearRampToValueAtTime(peakGain, now + 0.02);
+                        carGain.gain.linearRampToValueAtTime(peakGain, now + 0.015);
                         carGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
 
                         car.connect(carGain);
@@ -2620,8 +2620,8 @@
                     } catch(e) {}
                 },
 
-                // Ch3 Harmony: Shell voicings (3rd + 7th only — never double the 5th)
-                playFmHarmony(notes, dur = 0.52, vel = 0.38) {
+                // Ch3 Harmony: Shell voicings (3rd + 7th only or 2nd + 7th for sus2/Maj7 cascade — never double the 5th)
+                playFmHarmony(notes, dur = 0.55, vel = 0.38) {
                     if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicWetGain) return;
                     const arr = Array.isArray(notes) ? notes : [notes];
                     arr.forEach((freq, idx) => {
@@ -2634,9 +2634,9 @@
                             const carGain = this.ctx.createGain();
 
                             mod.type = 'sine';
-                            mod.frequency.setValueAtTime(freq * 2.0, now);
-                            modGain.gain.setValueAtTime(freq * 1.4 * vel, now);
-                            modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.12), now + 0.1);
+                            mod.frequency.setValueAtTime(freq * 1.5, now);
+                            modGain.gain.setValueAtTime(freq * 0.9 * vel, now);
+                            modGain.gain.exponentialRampToValueAtTime(Math.max(1, freq * 0.1), now + 0.12);
                             modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
 
                             mod.connect(modGain);
@@ -2662,8 +2662,8 @@
                     });
                 },
 
-                // Ch4 FM Bass: Punchy 2-Op FM slap/sub bass strictly below C3 (130.81Hz)
-                playFmBass(freq, dur = 0.36, vel = 0.68) {
+                // Ch4 FM Bass: Warm sine sub-bass strictly below C3 (130.81Hz)
+                playFmBass(freq, dur = 0.38, vel = 0.72) {
                     if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicDryGain) return;
                     try {
                         const safeFreq = Math.min(130.81, freq);
@@ -2673,11 +2673,12 @@
                         const modGain = this.ctx.createGain();
                         const carGain = this.ctx.createGain();
 
+                        // 2-Op FM warm sine sub-bass (1:1 harmonic ratio with soft warmth decay)
                         mod.type = 'sine';
-                        mod.frequency.setValueAtTime(safeFreq * 2.0, now);
-                        modGain.gain.setValueAtTime(safeFreq * 3.2 * vel, now);
-                        modGain.gain.exponentialRampToValueAtTime(Math.max(1, safeFreq * 0.15), now + 0.06);
-                        modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+                        mod.frequency.setValueAtTime(safeFreq * 1.0, now);
+                        modGain.gain.setValueAtTime(safeFreq * 1.2 * vel, now);
+                        modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, safeFreq * 0.05), now + 0.08);
+                        modGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
 
                         mod.connect(modGain);
                         modGain.connect(car.frequency);
@@ -2685,9 +2686,9 @@
                         car.type = 'sine';
                         car.frequency.setValueAtTime(safeFreq, now);
 
-                        const peakGain = Math.max(0.0001, vel * 0.28);
+                        const peakGain = Math.max(0.0001, vel * 0.32);
                         carGain.gain.setValueAtTime(0.0001, now);
-                        carGain.gain.linearRampToValueAtTime(peakGain, now + 0.008);
+                        carGain.gain.linearRampToValueAtTime(peakGain, now + 0.012);
                         carGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
 
                         car.connect(carGain);
@@ -2702,32 +2703,37 @@
                     } catch(e) {}
                 },
 
-                // Ch5 Kick: FM pitch-drop kick
+                // Ch5 Kick: Muffled low-pass SPC700 underwater pitch-drop kick
                 playFmKick(vel = 0.75) {
                     if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicDryGain) return;
                     try {
                         const now = this.ctx.currentTime;
                         const osc = this.ctx.createOscillator();
+                        const lpf = this.ctx.createBiquadFilter();
                         const gain = this.ctx.createGain();
 
                         osc.type = 'sine';
-                        osc.frequency.setValueAtTime(125, now);
-                        osc.frequency.exponentialRampToValueAtTime(36, now + 0.038);
+                        osc.frequency.setValueAtTime(110, now);
+                        osc.frequency.exponentialRampToValueAtTime(32, now + 0.045);
+
+                        lpf.type = 'lowpass';
+                        lpf.frequency.setValueAtTime(320, now);
 
                         gain.gain.setValueAtTime(0.0001, now);
-                        gain.gain.linearRampToValueAtTime(vel * 0.32, now + 0.004);
-                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+                        gain.gain.linearRampToValueAtTime(vel * 0.35, now + 0.004);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
 
-                        osc.connect(gain);
+                        osc.connect(lpf);
+                        lpf.connect(gain);
                         gain.connect(this.musicDryGain);
 
                         osc.start(now);
-                        osc.stop(now + 0.14);
-                        scopePulseIntensity = Math.min(1.0, scopePulseIntensity + 0.2);
+                        osc.stop(now + 0.16);
+                        scopePulseIntensity = Math.min(1.0, scopePulseIntensity + 0.25);
                     } catch(e) {}
                 },
 
-                // Ch5 Snare: high-MUL noise snare
+                // Ch5 Snare: High-MUL noise snare with underwater cavitation body
                 playFmSnare(vel = 0.55) {
                     if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicDryGain) return;
                     try {
@@ -2736,29 +2742,35 @@
                         const mod = this.ctx.createOscillator();
                         const modGain = this.ctx.createGain();
                         const carGain = this.ctx.createGain();
+                        const bpf = this.ctx.createBiquadFilter();
 
                         mod.type = 'sine';
-                        mod.frequency.setValueAtTime(180 * 10.0, now);
-                        modGain.gain.setValueAtTime(180 * 8.0 * vel, now);
-                        modGain.gain.exponentialRampToValueAtTime(1.0, now + 0.11);
+                        mod.frequency.setValueAtTime(160 * 10.5, now);
+                        modGain.gain.setValueAtTime(160 * 8.5 * vel, now);
+                        modGain.gain.exponentialRampToValueAtTime(1.0, now + 0.12);
 
                         mod.connect(modGain);
                         modGain.connect(car.frequency);
 
                         car.type = 'sine';
-                        car.frequency.setValueAtTime(180, now);
-                        car.frequency.exponentialRampToValueAtTime(80, now + 0.11);
+                        car.frequency.setValueAtTime(160, now);
+                        car.frequency.exponentialRampToValueAtTime(70, now + 0.12);
+
+                        bpf.type = 'bandpass';
+                        bpf.frequency.setValueAtTime(1200, now);
+                        bpf.Q.value = 1.2;
 
                         carGain.gain.setValueAtTime(0.0001, now);
-                        carGain.gain.linearRampToValueAtTime(vel * 0.22, now + 0.003);
-                        carGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
+                        carGain.gain.linearRampToValueAtTime(vel * 0.24, now + 0.003);
+                        carGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
 
-                        car.connect(carGain);
+                        car.connect(bpf);
+                        bpf.connect(carGain);
                         carGain.connect(this.musicDryGain);
 
                         mod.start(now);
                         car.start(now);
-                        const stopTime = now + 0.11;
+                        const stopTime = now + 0.12;
                         mod.stop(stopTime);
                         car.stop(stopTime);
                     } catch(e) {}
@@ -2775,23 +2787,23 @@
                         const carGain = this.ctx.createGain();
                         const hpf = this.ctx.createBiquadFilter();
 
-                        const dur = isOpen ? 0.18 : 0.045;
+                        const dur = isOpen ? 0.19 : 0.045;
                         mod.type = 'sine';
-                        mod.frequency.setValueAtTime(800 * 11.0, now);
-                        modGain.gain.setValueAtTime(800 * 6.0, now);
+                        mod.frequency.setValueAtTime(750 * 11.0, now);
+                        modGain.gain.setValueAtTime(750 * 6.5, now);
                         modGain.gain.exponentialRampToValueAtTime(10.0, now + dur);
 
                         mod.connect(modGain);
                         modGain.connect(car.frequency);
 
                         car.type = 'sine';
-                        car.frequency.setValueAtTime(800, now);
+                        car.frequency.setValueAtTime(750, now);
 
                         hpf.type = 'highpass';
-                        hpf.frequency.setValueAtTime(6500, now);
+                        hpf.frequency.setValueAtTime(6200, now);
 
                         carGain.gain.setValueAtTime(0.0001, now);
-                        carGain.gain.linearRampToValueAtTime(vel * 0.14, now + 0.002);
+                        carGain.gain.linearRampToValueAtTime(vel * 0.15, now + 0.002);
                         carGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
 
                         car.connect(hpf);
@@ -2806,14 +2818,43 @@
                     } catch(e) {}
                 },
 
-                // Context-Specific Earcons & Action Stingers
+                // Context-Specific Hydrophone Ping Earcons & Action Stingers
                 playFmEarcon(type = 'click') {
                     if (!this.soundEnabled) return;
                     try {
                         this.init();
                         if (!this.ctx) return;
                         const now = this.ctx.currentTime;
-                        if (type === 'click') {
+                        if (type === 'hydrophone_ping') {
+                            // Pure crystal hydrophone ping with SPC700 stereo delay tail
+                            const car = this.ctx.createOscillator();
+                            const mod = this.ctx.createOscillator();
+                            const modG = this.ctx.createGain();
+                            const carG = this.ctx.createGain();
+                            const freq = 1920;
+
+                            mod.type = 'sine';
+                            mod.frequency.setValueAtTime(freq * 2.0, now);
+                            modG.gain.setValueAtTime(freq * 1.2, now);
+                            modG.gain.exponentialRampToValueAtTime(0.1, now + 0.4);
+                            mod.connect(modG);
+                            modG.connect(car.frequency);
+
+                            car.type = 'sine';
+                            car.frequency.setValueAtTime(freq, now);
+                            car.frequency.exponentialRampToValueAtTime(1240, now + 1.2);
+
+                            carG.gain.setValueAtTime(0.24 * masterVolume, now);
+                            carG.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
+
+                            car.connect(carG);
+                            carG.connect(this.masterGain || this.ctx.destination);
+                            if (this.musicWetGain) carG.connect(this.musicWetGain);
+
+                            mod.start(now); car.start(now);
+                            mod.stop(now + 1.6); car.stop(now + 1.6);
+                            scopePulseIntensity = 1.0;
+                        } else if (type === 'click') {
                             const car = this.ctx.createOscillator();
                             const mod = this.ctx.createOscillator();
                             const modG = this.ctx.createGain();
@@ -2832,42 +2873,75 @@
                             mod.stop(now + 0.04); car.stop(now + 0.04);
                         } else if (type === 'lock') {
                             [880, 1320].forEach((freq, idx) => {
-                                const osc = this.ctx.createOscillator();
-                                const g = this.ctx.createGain();
-                                osc.type = 'triangle';
-                                osc.frequency.setValueAtTime(freq, now + idx * 0.05);
-                                g.gain.setValueAtTime(0.16 * masterVolume, now + idx * 0.05);
-                                g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.12);
-                                osc.connect(g);
-                                g.connect(this.masterGain || this.ctx.destination);
-                                osc.start(now + idx * 0.05);
-                                osc.stop(now + idx * 0.05 + 0.12);
+                                const car = this.ctx.createOscillator();
+                                const mod = this.ctx.createOscillator();
+                                const modG = this.ctx.createGain();
+                                const carG = this.ctx.createGain();
+                                mod.frequency.setValueAtTime(freq * 1.5, now + idx * 0.06);
+                                modG.gain.setValueAtTime(freq * 0.8, now + idx * 0.06);
+                                modG.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.06 + 0.14);
+                                mod.connect(modG);
+                                modG.connect(car.frequency);
+                                car.frequency.setValueAtTime(freq, now + idx * 0.06);
+                                carG.gain.setValueAtTime(0.16 * masterVolume, now + idx * 0.06);
+                                carG.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.14);
+                                car.connect(carG);
+                                carG.connect(this.masterGain || this.ctx.destination);
+                                if (this.musicWetGain) carG.connect(this.musicWetGain);
+                                mod.start(now + idx * 0.06); car.start(now + idx * 0.06);
+                                mod.stop(now + idx * 0.06 + 0.14); car.stop(now + idx * 0.06 + 0.14);
                             });
-                        } else if (type === 'alert') {
-                            [440, 622].forEach(freq => {
+                        } else if (type === 'alert' || type === 'depth_alert') {
+                            [140, 185].forEach((freq, idx) => {
                                 const osc = this.ctx.createOscillator();
                                 const g = this.ctx.createGain();
                                 osc.type = 'sawtooth';
-                                osc.frequency.setValueAtTime(freq, now);
-                                g.gain.setValueAtTime(0.18 * masterVolume, now);
-                                g.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+                                osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+                                g.gain.setValueAtTime(0.20 * masterVolume, now + idx * 0.09);
+                                g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.22);
                                 osc.connect(g);
                                 g.connect(this.masterGain || this.ctx.destination);
-                                osc.start(now);
-                                osc.stop(now + 0.22);
+                                osc.start(now + idx * 0.09);
+                                osc.stop(now + idx * 0.09 + 0.22);
                             });
-                        } else if (type === 'victory') {
+                        } else if (type === 'sonar_chirp') {
+                            const osc = this.ctx.createOscillator();
+                            const g = this.ctx.createGain();
+                            osc.type = 'sine';
+                            osc.frequency.setValueAtTime(980, now);
+                            osc.frequency.exponentialRampToValueAtTime(2400, now + 0.18);
+                            g.gain.setValueAtTime(0.18 * masterVolume, now);
+                            g.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                            osc.connect(g);
+                            g.connect(this.masterGain || this.ctx.destination);
+                            if (this.musicWetGain) g.connect(this.musicWetGain);
+                            osc.start(now); osc.stop(now + 0.25);
+                        } else if (type === 'salvage') {
                             [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
                                 const osc = this.ctx.createOscillator();
                                 const g = this.ctx.createGain();
                                 osc.type = 'triangle';
-                                osc.frequency.setValueAtTime(freq, now + idx * 0.07);
-                                g.gain.setValueAtTime(0.15 * masterVolume, now + idx * 0.07);
-                                g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.28);
+                                osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+                                g.gain.setValueAtTime(0.14 * masterVolume, now + idx * 0.05);
+                                g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.22);
                                 osc.connect(g);
                                 g.connect(this.masterGain || this.ctx.destination);
+                                if (this.musicWetGain) g.connect(this.musicWetGain);
+                                osc.start(now + idx * 0.05); osc.stop(now + idx * 0.05 + 0.22);
+                            });
+                        } else if (type === 'victory') {
+                            [392.00, 523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                                const osc = this.ctx.createOscillator();
+                                const g = this.ctx.createGain();
+                                osc.type = 'triangle';
+                                osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+                                g.gain.setValueAtTime(0.16 * masterVolume, now + idx * 0.07);
+                                g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.35);
+                                osc.connect(g);
+                                g.connect(this.masterGain || this.ctx.destination);
+                                if (this.musicWetGain) g.connect(this.musicWetGain);
                                 osc.start(now + idx * 0.07);
-                                osc.stop(now + idx * 0.07 + 0.28);
+                                osc.stop(now + idx * 0.07 + 0.35);
                             });
                         }
                     } catch(e) {}
@@ -2876,11 +2950,11 @@
                 getTrackTitle(idx = null) {
                     const t = (idx !== null) ? idx : this.currentTrackIdx;
                     switch (t) {
-                        case 0: return 'AQUATIC HORIZON (F-MAJ OCEANIC DRIFT)';
-                        case 1: return 'TWILIGHT BATHYSPHERE (G-DORIAN DESCENT)';
-                        case 2: return 'HYDROTHERMAL PLUMES (D-PHRYGIAN SMOKERS)';
-                        case 3: return 'HADAL VOID SERPENT (BB-MIN VOID REQUIEM)';
-                        case 4: return 'SUPERCAVITATION HUNT (E-MIN COMBAT)';
+                        case 0: return 'ABYSSAL HORIZON (F-MAJ7 / C-SUS2 OCEANIC DRIFT)';
+                        case 1: return 'TRENCH DESCENT (G-MIN9 / EB-MAJ7 MESOPELAGIC CASCADE)';
+                        case 2: return 'HYDROTHERMAL CHASM (D-PHRYGIAN SUS2 SMOKER FUMAROLE)';
+                        case 3: return 'HADAL VOID REQUIEM (BB-MIN9 / GB-MAJ7 DEEP TRENCH DESCENT)';
+                        case 4: return 'SUPERCAVITATION HUNT (E-MIN9 / C-MAJ7 FAST SONAR COMBAT)';
                         default: return 'BATHYSCAPHE FM SOUNDSCAPE';
                     }
                 },
@@ -2937,9 +3011,9 @@
                     if (!this.soundEnabled || !this.musicEnabled || !this.ctx) return;
                     this.tickSequencerStep();
                     // 5:3 subtle swing-tick groove:
-                    // Even step: 175ms, Odd step: 115ms (avg ~145ms per step, ~103 BPM 16th groove)
+                    // Even step: 170ms, Odd step: 110ms (avg 140ms per step, ~107 BPM 16th groove)
                     const isEven = (this.seqStep % 2 === 0);
-                    const nextDelay = isEven ? 175 : 115;
+                    const nextDelay = isEven ? 170 : 110;
                     this.seqTimer = setTimeout(() => {
                         this.scheduleNextStep();
                     }, nextDelay);
@@ -2962,48 +3036,48 @@
                     }
 
                     const PATTERNS = {
-                        // Sector 0: Continental Shelf (F-Major / D-Dorian Oceanic Drift)
+                        // Sector 0: Continental Shelf (F-Maj7 / C-sus2 Oceanic Drift)
                         0: {
-                            lead:    [349.23, 0, 440.00, 0, 523.25, 0, 587.33, 0, 523.25, 0, 440.00, 0, 392.00, 0, 349.23, 0],
-                            counter: [0, 698.46, 0, 659.25, 0, 587.33, 0, 440.00, 0, 392.00, 0, 349.23, 0, 523.25, 0, 440.00],
-                            harmony: [[440.00, 659.25], 0, 0, 0, [349.23, 523.25], 0, 0, 0, [349.23, 440.00], 0, 0, 0, [329.63, 466.16], 0, 0, 0],
-                            bass:    [87.31, 0, 87.31, 0, 73.42, 0, 73.42, 0, 58.27, 0, 58.27, 0, 65.41, 0, 65.41, 0],
+                            lead:    [523.25, 0, 659.25, 0, 783.99, 0, 698.46, 0, 587.33, 0, 0, 0, 440.00, 0, 523.25, 0],
+                            counter: [0, 880.00, 0, 0, 0, 0, 659.25, 0, 0, 698.46, 783.99, 880.00, 0, 698.46, 0, 659.25],
+                            harmony: [[440.00, 659.25], 0, 0, 0, [293.66, 466.16], 0, 0, 0, [349.23, 523.25], 0, 0, 0, [261.63, 440.00], 0, 0, 0],
+                            bass:    [43.65, 0, 87.31, 0, 65.41, 0, 130.81, 0, 73.42, 0, 73.42, 0, 58.27, 0, 116.54, 0],
                             perc:    [1, 0, 0, 0, 2, 0, 0, 0, 1, 0, 1, 0, 2, 0, 0, 0],
-                            hat:     [0, 1, 1, 1, 0, 1, 1, 2, 0, 1, 1, 1, 0, 1, 1, 2]
+                            hat:     [0, 1, 0, 1, 0, 1, 1, 2, 0, 1, 0, 1, 0, 1, 1, 2]
                         },
-                        // Sector 1: Twilight Drop-Off (G-Dorian Mesopelagic Descent)
+                        // Sector 1: Twilight Drop-Off (G-Min9 / Eb-Maj7 Mesopelagic Cascade)
                         1: {
-                            lead:    [392.00, 0, 0, 466.16, 0, 587.33, 0, 0, 659.25, 0, 587.33, 0, 466.16, 0, 392.00, 0],
-                            counter: [0, 587.33, 0, 0, 466.16, 0, 392.00, 0, 0, 349.23, 0, 293.66, 0, 392.00, 0, 466.16],
-                            harmony: [[466.16, 698.46], 0, 0, 0, [329.63, 466.16], 0, 0, 0, [392.00, 587.33], 0, 0, 0, [349.23, 523.25], 0, 0, 0],
-                            bass:    [98.00, 0, 49.00, 0, 65.41, 0, 130.81, 0, 77.78, 0, 38.89, 0, 73.42, 0, 110.00, 0],
+                            lead:    [587.33, 0, 466.16, 0, 392.00, 0, 0, 0, 349.23, 0, 311.13, 0, 293.66, 0, 349.23, 0],
+                            counter: [0, 392.00, 0, 466.16, 0, 587.33, 698.46, 783.99, 0, 0, 587.33, 0, 0, 523.25, 0, 466.16],
+                            harmony: [[233.08, 349.23], 0, 0, 0, [174.61, 293.66], 0, 0, 0, [155.56, 233.08], 0, 0, 0, [164.81, 261.63], 0, 0, 0],
+                            bass:    [49.00, 0, 98.00, 0, 38.89, 0, 77.78, 0, 65.41, 0, 65.41, 0, 73.42, 0, 36.71, 0],
                             perc:    [1, 0, 0, 0, 2, 0, 0, 1, 0, 0, 1, 0, 2, 0, 0, 0],
                             hat:     [0, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 2]
                         },
-                        // Sector 2: Hydrothermal Vents (D-Phrygian Geothermal Smoker Tension)
+                        // Sector 2: Hydrothermal Vent Fields (D-Phrygian sus2 Smoker Fumarole)
                         2: {
-                            lead:    [293.66, 0, 311.13, 0, 349.23, 0, 311.13, 0, 293.66, 0, 261.63, 0, 233.08, 0, 220.00, 0],
-                            counter: [0, 440.00, 0, 392.00, 0, 349.23, 0, 311.13, 0, 293.66, 0, 246.94, 0, 261.63, 0, 293.66],
-                            harmony: [[349.23, 523.25], 0, 0, 0, [392.00, 587.33], 0, 0, 0, [293.66, 415.30], 0, 0, 0, [277.18, 392.00], 0, 0, 0],
-                            bass:    [73.42, 0, 73.42, 0, 77.78, 0, 38.89, 0, 58.27, 0, 116.54, 0, 55.00, 0, 110.00, 0],
+                            lead:    [293.66, 0, 311.13, 0, 349.23, 0, 311.13, 0, 293.66, 0, 0, 0, 277.18, 0, 233.08, 0],
+                            counter: [0, 440.00, 0, 392.00, 0, 466.16, 0, 0, 0, 349.23, 392.00, 440.00, 0, 554.37, 0, 440.00],
+                            harmony: [[174.61, 277.18], 0, 0, 0, [146.83, 220.00], 0, 0, 0, [196.00, 246.94], 0, 0, 0, [174.61, 293.66], 0, 0, 0],
+                            bass:    [36.71, 0, 73.42, 0, 58.27, 0, 116.54, 0, 55.00, 0, 110.00, 0, 38.89, 0, 77.78, 0],
                             perc:    [1, 0, 0, 0, 2, 0, 1, 0, 1, 0, 0, 0, 2, 0, 1, 0],
                             hat:     [1, 1, 0, 1, 1, 1, 0, 2, 1, 1, 0, 1, 1, 1, 0, 2]
                         },
-                        // Sector 3: Mariana Hadal Chasm (Bb-Minor / Hadal Abyss Void Requiem)
+                        // Sector 3: Mariana Hadal Chasm (Bb-Min9 / Gb-Maj7 Deep Trench Descent)
                         3: {
-                            lead:    [466.16, 0, 0, 554.37, 0, 0, 698.46, 0, 622.25, 0, 0, 554.37, 0, 466.16, 0, 415.30],
-                            counter: [0, 311.13, 0, 0, 349.23, 0, 415.30, 0, 0, 466.16, 0, 0, 554.37, 0, 622.25, 0],
-                            harmony: [[311.13, 415.30], 0, 0, 0, [349.23, 440.00], 0, 0, 0, [293.66, 392.00], 0, 0, 0, [277.18, 392.00], 0, 0, 0],
-                            bass:    [58.27, 0, 0, 0, 46.25, 0, 0, 0, 38.89, 0, 0, 0, 43.65, 0, 0, 0],
+                            lead:    [349.23, 0, 0, 466.16, 0, 0, 554.37, 0, 523.25, 0, 0, 415.30, 0, 349.23, 0, 0],
+                            counter: [0, 277.18, 0, 0, 349.23, 0, 0, 0, 0, 311.13, 0, 0, 369.99, 0, 0, 0],
+                            harmony: [[138.59, 207.65], 0, 0, 0, [207.65, 349.23], 0, 0, 0, [185.00, 277.18], 0, 0, 0, [196.00, 311.13], 0, 0, 0],
+                            bass:    [29.14, 0, 0, 0, 46.25, 0, 0, 0, 38.89, 0, 0, 0, 43.65, 0, 0, 0],
                             perc:    [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0],
                             hat:     [0, 1, 0, 0, 0, 1, 0, 2, 0, 1, 0, 0, 0, 1, 0, 2]
                         },
-                        // Combat Engagement (E-Minor Supercavitation Hunt)
+                        // Sector 4: Combat Engagement (E-Min9 / C-Maj7 Fast Sonar Combat)
                         4: {
                             lead:    [659.25, 0, 587.33, 0, 659.25, 0, 783.99, 0, 739.99, 0, 659.25, 0, 587.33, 0, 493.88, 0],
                             counter: [0, 329.63, 0, 369.99, 0, 392.00, 0, 440.00, 0, 493.88, 0, 587.33, 0, 659.25, 0, 587.33],
-                            harmony: [[392.00, 587.33], 0, 0, 0, [329.63, 493.88], 0, 0, 0, [261.63, 392.00], 0, 0, 0, [311.13, 440.00], 0, 0, 0],
-                            bass:    [82.41, 0, 82.41, 82.41, 65.41, 0, 65.41, 0, 55.00, 0, 55.00, 55.00, 61.74, 0, 123.47, 0],
+                            harmony: [[196.00, 293.66], 0, 0, 0, [146.83, 246.94], 0, 0, 0, [130.81, 196.00], 0, 0, 0, [138.59, 220.00], 0, 0, 0],
+                            bass:    [41.20, 82.41, 41.20, 82.41, 65.41, 0, 65.41, 0, 55.00, 110.00, 55.00, 110.00, 61.74, 0, 123.47, 0],
                             perc:    [1, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 2, 0, 1, 2],
                             hat:     [1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2]
                         }
@@ -3012,16 +3086,16 @@
                     const pat = PATTERNS[this.currentTrackIdx] || PATTERNS[0];
 
                     if (pat.bass && pat.bass[step]) {
-                        this.playFmBass(pat.bass[step], 0.36, 0.68);
+                        this.playFmBass(pat.bass[step], 0.38, 0.72);
                     }
                     if (pat.lead && pat.lead[step]) {
-                        this.playFmLead(pat.lead[step], 0.40, 0.55);
+                        this.playFmLead(pat.lead[step], 0.44, 0.55);
                     }
                     if (pat.counter && pat.counter[step]) {
-                        this.playFmCounter(pat.counter[step], 0.36, 0.45);
+                        this.playFmCounter(pat.counter[step], 0.38, 0.46);
                     }
                     if (pat.harmony && pat.harmony[step]) {
-                        this.playFmHarmony(pat.harmony[step], 0.52, 0.38);
+                        this.playFmHarmony(pat.harmony[step], 0.55, 0.38);
                     }
                     if (pat.perc && pat.perc[step]) {
                         if (pat.perc[step] === 1) this.playFmKick(0.75);
@@ -3037,21 +3111,44 @@
                 SubAudio.init();
             }
 
+            // 2-Op FM acoustic tone generator for UI and telemetry with SPC700 stereo delay send
             function playBeep(freq = 440, type = 'sine', duration = 0.15, gainVal = 0.1) {
                 if (!soundEnabled) return;
                 try {
                     initAudio();
                     if (audioCtx.state === 'suspended') audioCtx.resume();
-                    const osc = audioCtx.createOscillator();
+                    const now = audioCtx.currentTime;
+                    const car = audioCtx.createOscillator();
+                    const mod = audioCtx.createOscillator();
+                    const modGain = audioCtx.createGain();
                     const gain = audioCtx.createGain();
-                    osc.type = type;
-                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(gainVal * masterVolume, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-                    osc.connect(gain);
+
+                    // 2-Op FM acoustic tone with fast decaying modulator
+                    mod.type = 'sine';
+                    const isHarsh = (type === 'square' || type === 'sawtooth');
+                    mod.frequency.setValueAtTime(freq * (isHarsh ? 3.0 : 1.5), now);
+                    modGain.gain.setValueAtTime(freq * (isHarsh ? 1.5 : 0.8), now);
+                    modGain.gain.exponentialRampToValueAtTime(0.01, now + Math.min(0.06, duration * 0.5));
+                    mod.connect(modGain);
+                    modGain.connect(car.frequency);
+
+                    car.type = isHarsh ? 'triangle' : 'sine';
+                    car.frequency.setValueAtTime(freq, now);
+
+                    gain.gain.setValueAtTime(gainVal * masterVolume, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+                    car.connect(gain);
                     gain.connect(SubAudio.masterGain || audioCtx.destination);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + duration);
+                    if (SubAudio.musicWetGain && duration > 0.12) {
+                        gain.connect(SubAudio.musicWetGain);
+                    }
+
+                    mod.start(now);
+                    car.start(now);
+                    const stopTime = now + duration;
+                    mod.stop(stopTime);
+                    car.stop(stopTime);
                     scopePulseIntensity = Math.min(1.0, scopePulseIntensity + 0.15);
                 } catch(e) {}
             }

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-25T22:31:36-07:00 — kilo-qa: KClock (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 113.1 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Persistence: Verified F5/F9 quicksave/quickload, kclock_tutorialSeen flag, world time offsets, alarms, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer hygiene.
+  - Mature Quarantine & Handoff: Promoted `KClock` to Mature archive; advanced `kilo-qa` to `KPomodoro`; next agent `kilo-expander`.
+
 - **2026-10-25T22:19:30-07:00 — kilo-usability: KPac (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 244.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.17%, input 3.74%, HEAD Δ 30.27%, 0 fail, 0 warn, 11.3s)).
   - Layout & Responsive: Widened #game-container to 394px for KiloOS frame with zero vertical overflow, separated .app-title-bar above compact 2-row toolbar, removed duplicate Forge/Camp buttons from skills bar.

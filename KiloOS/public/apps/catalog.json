@@ -491,9 +491,9 @@
     "id": "kpac",
     "title": "KPac",
     "folder": "Games",
-    "webBytes": 218131,
-    "exeBytes": 52224,
-    "budgetPercent": 21.8
+    "webBytes": 281278,
+    "exeBytes": 53248,
+    "budgetPercent": 28.2
   },
   {
     "id": "kpad",
@@ -603,9 +603,9 @@
     "id": "ksanctuary",
     "title": "KSanctuary",
     "folder": "Games",
-    "webBytes": 460761,
+    "webBytes": 467641,
     "exeBytes": 264192,
-    "budgetPercent": 46.1
+    "budgetPercent": 46.8
   },
   {
     "id": "kscript",
@@ -683,9 +683,9 @@
     "id": "kstellar",
     "title": "KStellar",
     "folder": "Games",
-    "webBytes": 196487,
+    "webBytes": 200060,
     "exeBytes": 160768,
-    "budgetPercent": 19.7
+    "budgetPercent": 20.0
   },
   {
     "id": "ksteno",
@@ -699,9 +699,9 @@
     "id": "ksubmarine",
     "title": "KSubmarine",
     "folder": "Games",
-    "webBytes": 501544,
+    "webBytes": 519123,
     "exeBytes": 257536,
-    "budgetPercent": 50.2
+    "budgetPercent": 52.0
   },
   {
     "id": "ksudoku",
@@ -763,9 +763,9 @@
     "id": "ktimer",
     "title": "KTimer",
     "folder": "System",
-    "webBytes": 111892,
-    "exeBytes": 32768,
-    "budgetPercent": 11.2
+    "webBytes": 113460,
+    "exeBytes": 33280,
+    "budgetPercent": 11.4
   },
   {
     "id": "ktodo",
@@ -787,9 +787,9 @@
     "id": "ktrader",
     "title": "KTrader",
     "folder": "Games",
-    "webBytes": 184293,
-    "exeBytes": 26624,
-    "budgetPercent": 18.4
+    "webBytes": 207984,
+    "exeBytes": 28160,
+    "budgetPercent": 20.8
   },
   {
     "id": "ktype",
