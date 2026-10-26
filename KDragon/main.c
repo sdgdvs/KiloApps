@@ -87,6 +87,7 @@ HBRUSH bgBrush;
 int current_event_id = 0;
 int relics_mask = 0;
 int elder_ascension_done = 0;
+int sovereign_aura_applied = 0;
 const char* relic_names[6] = { "Shiny Scale", "Gemstone", "Old Bone", "Mystery Eggshell", "Dragon Fang", "Star Fragment" };
 int count_relics(void) {
     int c = 0;
@@ -94,6 +95,16 @@ int count_relics(void) {
         if (relics_mask & (1 << i)) c++;
     }
     return c;
+}
+
+void check_relics_sovereign_bonus(void) {
+    if (count_relics() >= 6 && !sovereign_aura_applied) {
+        sovereign_aura_applied = 1;
+        strength += 10;
+        speed += 10;
+        loyalty += 10;
+        add_log("SOVEREIGN AURA ACTIVATED: +10 Strength, Speed, Loyalty!");
+    }
 }
 
 int is_elder(void) {
@@ -594,6 +605,7 @@ void QuickLoadNative(HWND hwnd) {
                 loyalty = data.loyalty;
                 gold = data.gold;
                 relics_mask = data.relics_mask;
+                sovereign_aura_applied = (count_relics() >= 6);
 
                 // Hide all submenus / minigames / events
                 ShowWindow(btn_incubate, SW_HIDE);
@@ -1137,7 +1149,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (relics_mask & (1 << 4)) dmg += 4; // Dragon Fang perk
                             if (is_elder()) dmg += 3; // Elder power
                             int is_crit = 0;
-                            if ((relics_mask & (1 << 0)) && (rand() % 100 < 20)) { // Shiny Scale perk
+                            int crit_chance = 0;
+                            if (relics_mask & (1 << 0)) crit_chance += 20; // Shiny Scale perk
+                            if (strcmp(get_mood_str(), "Ecstatic") == 0) crit_chance += 15; // Ecstatic mood +15% crit
+                            if (crit_chance > 0 && (rand() % 100 < crit_chance)) {
                                 dmg = dmg * 8 / 5;
                                 is_crit = 1;
                             }
@@ -1474,6 +1489,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if ((rand() % 100 < 35) && !(relics_mask & (1 << 5))) {
                             relics_mask |= (1 << 5);
                             add_log("NEW RELIC: Star Fragment recovered!");
+                            check_relics_sovereign_bonus();
                         }
                         spawn_particles_ext(300, 150, RGB(255,215,60), 25, 3);
                     } else {
@@ -1687,6 +1703,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     relics_mask |= (1 << rIdx);
                     sprintf(logMsg, "Dragon also found a rare relic: %s!", relic_names[rIdx]);
                     add_log(logMsg);
+                    check_relics_sovereign_bonus();
                     if (count_relics() == 6 && state == 2) {
                         add_log("All 6 relics assembled! Dragon ascended to an ELDER SOVEREIGN WYRM!");
                         trigger_screen_shake(12.0f);

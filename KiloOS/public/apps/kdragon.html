@@ -1907,7 +1907,7 @@
             playCount: 0,
             sleepCount: 0,
             isBusy: false,
-            stats: { hunger: 50, happiness: 50, energy: 100, age: 0, strength: 0, speed: 0, loyalty: 0, gold: 0, relics: [] },
+            stats: { hunger: 50, happiness: 50, energy: 100, age: 0, strength: 0, speed: 0, loyalty: 0, gold: 0, relics: [], sovereignAura: false },
             tickInterval: null,
             minigameState: null,
             minigameInterval: null,
@@ -1916,6 +1916,21 @@
             battleState: null,
             hasRelic(name) {
                 return !!(this.stats.relics && this.stats.relics.includes(name));
+            },
+
+            applySovereignAura() {
+                if (this.stats.sovereignAura) return;
+                this.stats.sovereignAura = true;
+                this.stats.strength += 10;
+                this.stats.speed += 10;
+                this.stats.loyalty += 10;
+                this.log("👑 HOARD COMPLETE! Sovereign Aura unlocked: +10 to all stats (Strength, Speed, Loyalty)!");
+                this.showToast("👑 <b>SOVEREIGN AURA!</b> All 6 sacred relics assembled! (+10 All Stats)", "gold", 8000);
+                AudioEngine.playPreset('victory');
+                VFX.addShockwave(width / 2, height / 2, '#ffd700', 140);
+                VFX.addFloatingText(width / 2, height / 2 - 60, "SOVEREIGN AURA +10 ALL STATS", "#ffd700", 22);
+                this.spawnParticles('#ffd700', 40);
+                this.updateUI();
             },
 
             getItemPrice(type) {
@@ -1928,19 +1943,23 @@
                     crown: 60,
                     polish: 75
                 };
-                const base = basePrices[type] || 50;
+                const base = typeof type === 'number' ? type : (basePrices[type] || 50);
                 return this.hasRelic("Mystery Eggshell") ? Math.round(base * 0.8) : base;
             },
 
             getMood() {
-                if (this.state === 'egg') return { label: 'Dormant', icon: '🥚', color: '#ffd700' };
-                if (this.stats.hunger < 20) return { label: 'Ravenous', icon: '🍖', color: '#ff6b6b' };
-                if (this.stats.energy < 20) return { label: 'Exhausted', icon: '🥱', color: '#ffa94d' };
-                if (this.stats.happiness < 20) return { label: 'Melancholy', icon: '😢', color: '#74c0fc' };
-                if (this.stats.happiness >= 80 && this.stats.hunger >= 60 && this.stats.energy >= 50) {
-                    return { label: 'Ecstatic', icon: '✨', color: '#ffd700' };
+                let m;
+                if (this.state === 'egg') m = { label: 'Dormant', icon: '🥚', color: '#ffd700' };
+                else if (this.stats.hunger < 20) m = { label: 'Ravenous', icon: '🍖', color: '#ff6b6b' };
+                else if (this.stats.energy < 20) m = { label: 'Exhausted', icon: '🥱', color: '#ffa94d' };
+                else if (this.stats.happiness < 20) m = { label: 'Melancholy', icon: '😢', color: '#74c0fc' };
+                else if (this.stats.happiness >= 80 && this.stats.hunger >= 60 && this.stats.energy >= 50) {
+                    m = { label: 'Ecstatic', icon: '✨', color: '#ffd700' };
+                } else {
+                    m = { label: 'Content', icon: '🙂', color: '#69db7c' };
                 }
-                return { label: 'Content', icon: '🙂', color: '#69db7c' };
+                m.toString = () => m.label;
+                return m;
             },
 
             getStageTitle() {
@@ -2024,7 +2043,8 @@
                         speed: this.stats.speed,
                         loyalty: this.stats.loyalty,
                         gold: this.stats.gold,
-                        relics: [...(this.stats.relics || [])]
+                        relics: [...(this.stats.relics || [])],
+                        sovereignAura: !!this.stats.sovereignAura
                     },
                     battleState: this.battleState ? {
                         playerHp: this.battleState.playerHp,
@@ -2129,8 +2149,12 @@
                         speed: typeof data.stats.speed === 'number' ? data.stats.speed : 0,
                         loyalty: typeof data.stats.loyalty === 'number' ? data.stats.loyalty : 0,
                         gold: typeof data.stats.gold === 'number' ? data.stats.gold : 0,
-                        relics: Array.isArray(data.stats.relics) ? [...data.stats.relics] : []
+                        relics: Array.isArray(data.stats.relics) ? [...data.stats.relics] : [],
+                        sovereignAura: !!data.stats.sovereignAura
                     };
+                    if (this.stats.relics && this.stats.relics.length >= 6 && !this.stats.sovereignAura) {
+                        this.applySovereignAura();
+                    }
                     
                     // Reset overlay containers
                     document.getElementById('start-screen').style.display = 'none';
@@ -2277,7 +2301,9 @@
                 
                 // Comprehensive global keyboard navigation
                 window.addEventListener('keydown', (e) => {
+                    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
                     if (e.ctrlKey || e.altKey || e.metaKey) return;
+                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', ' '].includes(e.key)) e.preventDefault();
 
                     if (e.key === 'F5') {
                         e.preventDefault();
@@ -2662,9 +2688,7 @@
                                 this.showToast(`💎 <b>NEW RELIC DISCOVERED:</b> ${item}! (${this.stats.relics.length}/6)`, "gold", 5000);
                                 AudioEngine.playPreset('gold');
                                 if (this.stats.relics.length === 6) {
-                                    this.log("👑 HOARD COMPLETE! You have assembled all 6 sacred dragon relics!");
-                                    this.showToast("👑 <b>TREASURE SOVEREIGN!</b> All 6 sacred relics assembled!", "gold", 8000);
-                                    AudioEngine.playPreset('victory');
+                                    this.applySovereignAura();
                                 }
                             } else {
                                 this.log(`Dragon brought back another ${item}!`);
@@ -2709,7 +2733,7 @@
                         document.getElementById('btn-str-hit').onclick = null;
                         let gain = Math.floor(this.minigameValue / 20);
                         if (this.hasRelic("Old Bone")) gain += 1;
-                        if (this.getMood() === 'Ecstatic') gain += 1;
+                        if (this.getMood().label === 'Ecstatic') gain += 1;
                         this.stats.strength += gain;
                         this.log(`You hit with power ${this.minigameValue}! Strength +${gain}`);
                         this.showToast(`⚔️ Power Strike: ${this.minigameValue}! Strength +${gain}`, "gold");
@@ -2755,7 +2779,7 @@
                             let time = Date.now() - this.minigameValue;
                             let gain = time < 300 ? 5 : (time < 500 ? 3 : 1);
                             if (this.hasRelic("Old Bone")) gain += 1;
-                            if (this.getMood() === 'Ecstatic') gain += 1;
+                            if (this.getMood().label === 'Ecstatic') gain += 1;
                             this.stats.speed += gain;
                             this.log(`Reaction time: ${time}ms! Speed +${gain}`);
                             this.showToast(`⚡ Reaction: ${time}ms! Speed +${gain}`, "gold");
@@ -2775,7 +2799,7 @@
                             pickedDone = true;
                             let picked = parseInt(btn.getAttribute('data-box'));
                             if (picked === correctBox) {
-                                let gain = 5 + (this.hasRelic("Old Bone") ? 1 : 0) + (this.getMood() === 'Ecstatic' ? 1 : 0);
+                                let gain = 5 + (this.hasRelic("Old Bone") ? 1 : 0) + (this.getMood().label === 'Ecstatic' ? 1 : 0);
                                 this.stats.loyalty += gain;
                                 this.log(`You found the treat! Loyalty +${gain}`);
                                 this.showToast(`🎉 You found the treat! Loyalty +${gain}`, "gold");
@@ -2797,7 +2821,7 @@
             
             buyItem(type) {
                 if (type === 'food') {
-                    const price = this.getItemPrice(20);
+                    const price = this.getItemPrice('food');
                     if (this.stats.gold >= price) {
                         this.stats.gold -= price;
                         this.stats.hunger = Math.min(100, this.stats.hunger + 50);
@@ -2812,7 +2836,7 @@
                         AudioEngine.playPreset('click');
                     }
                 } else if (type === 'toy') {
-                    const price = this.getItemPrice(30);
+                    const price = this.getItemPrice('toy');
                     if (this.stats.gold >= price) {
                         this.stats.gold -= price;
                         this.stats.happiness = Math.min(100, this.stats.happiness + 50);
@@ -2827,7 +2851,7 @@
                         AudioEngine.playPreset('click');
                     }
                 } else if (type === 'str') {
-                    const price = this.getItemPrice(50);
+                    const price = this.getItemPrice('str');
                     if (this.stats.gold >= price) {
                         this.stats.gold -= price;
                         this.stats.strength += 5;
@@ -2841,7 +2865,7 @@
                         AudioEngine.playPreset('click');
                     }
                 } else if (type === 'spd') {
-                    const price = this.getItemPrice(50);
+                    const price = this.getItemPrice('spd');
                     if (this.stats.gold >= price) {
                         this.stats.gold -= price;
                         this.stats.speed += 5;
@@ -2855,7 +2879,7 @@
                         AudioEngine.playPreset('click');
                     }
                 } else if (type === 'nectar') {
-                    const price = this.getItemPrice(40);
+                    const price = this.getItemPrice('nectar');
                     if (this.stats.gold >= price) {
                         this.stats.gold -= price;
                         this.stats.energy = 100;
@@ -2872,7 +2896,7 @@
                         AudioEngine.playPreset('click');
                     }
                 } else if (type === 'crown') {
-                    const price = this.getItemPrice(60);
+                    const price = this.getItemPrice('crown');
                     if (this.stats.gold >= price) {
                         this.stats.gold -= price;
                         this.stats.loyalty += 8;
@@ -2888,7 +2912,7 @@
                         AudioEngine.playPreset('click');
                     }
                 } else if (type === 'polish') {
-                    const price = this.getItemPrice(75);
+                    const price = this.getItemPrice('polish');
                     if (this.stats.gold >= price) {
                         this.stats.gold -= price;
                         this.stats.strength += 4;
@@ -2985,7 +3009,10 @@
                         if (this.hasRelic("Dragon Fang")) dmg += 4;
                         if (this.state === 'elder') dmg += 3;
                         let isCrit = false;
-                        if (this.hasRelic("Shiny Scale") && Math.random() < 0.20) {
+                        let critChance = 0;
+                        if (this.hasRelic("Shiny Scale")) critChance += 0.20;
+                        if (this.getMood().label === 'Ecstatic') critChance += 0.15;
+                        if (critChance > 0 && Math.random() < critChance) {
                             dmg = Math.floor(dmg * 1.6);
                             isCrit = true;
                         }
@@ -3273,6 +3300,9 @@
                                 if (!this.stats.relics) this.stats.relics = [];
                                 this.stats.relics.push("Star Fragment");
                                 this.showToast("💎 <b>STAR FRAGMENT DISCOVERED!</b>", "gold", 5000);
+                                if (this.stats.relics.length === 6) {
+                                    this.applySovereignAura();
+                                }
                             }
                         },
                         act2: () => {

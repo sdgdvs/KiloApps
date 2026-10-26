@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_creator: kweb://webring
   kilo_graphics: KStarship
   kilo_soundscape: KQuest
-  kilo_tester: KDragon
+  kilo_tester: KMaze
   kilo_usability: KDragon
   kilo_qa: KRss
   kilo_expander: KMaze
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KBreakout
-  timestamp: '2026-10-26T15:19:30-07:00'
+  agent: kilo-tester
+  app: KDragon
+  timestamp: '2026-10-26T15:37:32-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -134,11 +134,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Compose high-energy 6-channel YM2612 FM arcade synthwave theme (Ionian/Mixolydian, 5:3 swing groove, slap bass, brass lead, selective SPC700 delay) + harmonic brick-hit combo pitch escalator and powerup earcons. |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KDragon`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Fix buyItem() calling getItemPrice(number) instead of string keys ('food','toy','nectar','crown','polish') which charges 50g for all items; fix getMood().label === 'Ecstatic' in startMinigame() and battleTurn() (+15% crit); and apply the +10 Sovereign Aura stat bonus upon collecting all 6 relics. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -149,6 +148,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Audit archive packer/unpacker UI, compression ratio telemetry, file list viewer, and drag-and-drop file ingestion. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
+| `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Fix buyItem() calling getItemPrice(number) instead of string keys ('food','toy','nectar','crown','polish') which charges 50g for all items; fix getMood().label === 'Ecstatic' in startMinigame() and battleTurn() (+15% crit); and apply the +10 Sovereign Aura stat bonus upon collecting all 6 relics. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KDragon`
@@ -303,6 +303,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T15:37:32-07:00 — kilo-tester: KDragon (Fix Shop Pricing, Ecstatic Mood & Sovereign Aura Parity)**
+  - Status: PASS ✅ (0 errors, web 189.2 KB, native 151.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.29%, input 40.24%, HEAD Δ 0.02%, 0 fail, 0 warn, 7.3s)).
+  - Fixed buyItem() string key prices, getMood().label === 'Ecstatic' in training minigames and battle (+15% crit), and +10 Sovereign Aura stat bonus across Web HTML and Win32 C.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-26T15:19:30-07:00 — kilo-soundscape: KBreakout (Neon Deflector: Overdrive Matrix — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS (0 errors, web 190.8 KB, native 54.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Composition: D Mixolydian/Ionian mode, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove (~144 BPM).
@@ -326,10 +331,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: #game-screen overflows 660x623 viewport by 297px causing Space/Arrow keys to scroll the header/stats off-screen; #toast-container stacks 3 toasts over #btn-help and #message-log; dragon entities use forbidden 16x16 SVG rect programmer art.
   - Feature/Gameplay Findings: buyItem() passes numbers (20, 30, 40, 60, 75) to getItemPrice(type) which expects string keys ('food', 'toy', etc.), charging 50g for every shop item; startMinigame() compares object getMood() === 'Ecstatic' (always false); Ecstatic +15% battle crit and 6/6 Relic +10 Sovereign Aura stat bonus are missing.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KDragon`, `kilo-tester`->`KDragon`, `kilo-graphics`->`KDragon`] (un-quarantined `KDragon` from Mature); advanced `kilo-review` to `KColony`; next agent `kilo-creator`.
-
-- **2026-10-26T13:20:00-07:00 — kilo-expander: KNet (KNet: Phase VI VFS Spooling & TINAG Darknet Hardening)**
-  - Status: PASS (0 errors, web 201.9 KB, native 56.5 KB < 999 KB; startup, Vite & security_lint PASS).
-  - Enforced TINAG secrecy: removed Tier 3 darknet nodes from surface bookmark chips while preserving address-bar routing across HTML and Win32 C.
-  - Integrated Phase VI VFS mesh: added 'Save Page/Spool to KiloOS VFS' (/home/downloads/) with Alt+S shortcuts, vfs: URI loading, and IPC handoff to KHex/KPad.
-  - Routed all 6 canonical 1999 virtual web parody destinations (slashnet, trapster, cabled, demoscene, scallion, rfc-archive) with dual-target parity.
-  - Handoff: Advanced `kilo-expander` to `KMaze`; rotated active agent to `kilo-review`.
