@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T13:31:55-07:00 — kilo-review: KDragon (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 660x623 and audited kdragon.html + KDragon/main.c).
+  - Visual/UX Findings: #game-screen overflows 660x623 viewport by 297px causing Space/Arrow keys to scroll the header/stats off-screen; #toast-container stacks 3 toasts over #btn-help and #message-log; dragon entities use forbidden 16x16 SVG rect programmer art.
+  - Feature/Gameplay Findings: buyItem() passes numbers (20, 30, 40, 60, 75) to getItemPrice(type) which expects string keys ('food', 'toy', etc.), charging 50g for every shop item; startMinigame() compares object getMood() === 'Ecstatic' (always false); Ecstatic +15% battle crit and 6/6 Relic +10 Sovereign Aura stat bonus are missing.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KDragon`, `kilo-tester`->`KDragon`, `kilo-graphics`->`KDragon`] (un-quarantined `KDragon` from Mature); advanced `kilo-review` to `KColony`; next agent `kilo-creator`.
+
 - **2026-10-26T13:20:00-07:00 — kilo-expander: KNet (KNet: Phase VI VFS Spooling & TINAG Darknet Hardening)**
   - Status: PASS (0 errors, web 201.9 KB, native 56.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - Enforced TINAG secrecy: removed Tier 3 darknet nodes from surface bookmark chips while preserving address-bar routing across HTML and Win32 C.

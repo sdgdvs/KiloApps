@@ -6,7 +6,24 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Cinzel:wght@600;900&display=swap');
         * { box-sizing: border-box; }
-        body { margin: 0; padding: 20px; font-family: 'Uncial Antiqua', serif; background-color: #241408; color: #3b240b; user-select: none; text-rendering: optimizeLegibility; overflow-x: hidden; position: relative; min-height: 100vh; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        body {
+            padding: 4px 8px;
+            font-family: 'Uncial Antiqua', serif;
+            background-color: #241408;
+            color: #3b240b;
+            user-select: none;
+            text-rendering: optimizeLegibility;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
         
         #vfx-canvas {
             position: fixed;
@@ -23,21 +40,24 @@
             text-align: center;
             font-family: 'Cinzel', serif;
             font-weight: 900;
-            letter-spacing: 3px;
-            text-shadow: 0 0 10px rgba(255, 170, 0, 0.6), 2px 2px 4px #000;
-            margin-top: 5px;
-            margin-bottom: 15px;
+            font-size: 18px;
+            line-height: 1.1;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(255, 170, 0, 0.6), 2px 2px 4px #000;
+            margin-top: 1px;
+            margin-bottom: 3px;
         }
 
         .container {
-            max-width: 620px;
+            width: 100%;
+            max-width: 636px;
             margin: 0 auto;
             text-align: center;
             background: linear-gradient(135deg, #e8cc9e 0%, #d8b880 50%, #c9a66b 100%);
-            padding: 24px;
-            border: 4px solid #5a3814;
-            border-radius: 8px;
-            box-shadow: inset 0 0 30px rgba(70,35,10,0.35), 0 10px 30px rgba(0,0,0,0.7), 0 0 15px rgba(212,175,55,0.3);
+            padding: 6px 10px;
+            border: 3px solid #5a3814;
+            border-radius: 7px;
+            box-shadow: inset 0 0 24px rgba(70,35,10,0.35), 0 6px 20px rgba(0,0,0,0.7), 0 0 10px rgba(212,175,55,0.3);
             position: relative;
             z-index: 5;
             transition: transform 0.05s ease-out;
@@ -68,24 +88,26 @@
 
         .stats {
             display: flex;
-            justify-content: space-around;
-            margin-top: 15px;
-            padding: 12px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2px;
+            padding: 2px 5px;
             background: rgba(60, 35, 12, 0.25);
-            border: 2px solid #5a3814;
-            border-radius: 6px;
+            border: 1px solid #5a3814;
+            border-radius: 5px;
             flex-wrap: wrap;
-            gap: 8px;
-            box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
+            gap: 3px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
         }
         .stat {
-            font-size: 16px;
+            font-size: 11px;
+            line-height: 1.2;
             font-weight: bold;
             color: #2a1404;
             text-shadow: 0 1px 0 rgba(255,255,255,0.4);
-            padding: 2px 6px;
+            padding: 1px 5px;
             background: rgba(255,255,255,0.2);
-            border-radius: 4px;
+            border-radius: 3px;
             border: 1px solid rgba(90,56,20,0.2);
         }
         .stat span {
@@ -94,34 +116,36 @@
         }
 
         .controls {
-            margin-top: 20px;
+            margin-top: 4px;
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 4px;
             flex-wrap: wrap;
         }
 
         button {
-            padding: 10px 18px;
-            font-size: 16px;
+            padding: 3px 7px;
+            font-size: 11px;
+            line-height: 1.2;
             cursor: pointer;
             background: linear-gradient(180deg, #9e6932 0%, #75441b 100%);
             color: #fdf1d6;
             border: 2px solid #3b240b;
-            border-radius: 5px;
+            border-radius: 4px;
             font-family: 'Uncial Antiqua', serif;
             text-shadow: 1px 1px 2px #000;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.3);
             transition: all 0.15s ease;
+            touch-action: manipulation;
         }
         button:hover {
             background: linear-gradient(180deg, #b87c3e 0%, #8c5222 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.4);
         }
         button:active {
             transform: translateY(1px);
-            box-shadow: 0 2px 3px rgba(0,0,0,0.4);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.4);
         }
         button:disabled {
             background: #5a4b3c;
@@ -130,39 +154,57 @@
             transform: none;
             box-shadow: none;
         }
+        button:focus-visible, .shop-card:focus-visible, .close-btn:focus-visible {
+            outline: 2px solid #ffd700;
+            outline-offset: 1px;
+        }
 
         .entity-display {
-            margin: 25px 0;
-            min-height: 140px;
+            margin: 3px auto;
+            min-height: 94px;
+            max-height: 100px;
             display: flex;
             justify-content: center;
             align-items: center;
             background: radial-gradient(circle, rgba(255,248,220,0.6) 0%, rgba(210,180,140,0.2) 60%, transparent 85%);
             border-radius: 50%;
-            padding: 10px;
+            padding: 3px;
         }
 
         .shop-card {
             background: rgba(90, 56, 20, 0.15);
-            border: 2px solid #5a3814;
-            border-radius: 8px;
-            padding: 10px;
+            border: 1px solid #5a3814;
+            border-radius: 5px;
+            padding: 2px 5px;
             text-align: center;
             transition: transform 0.2s, background 0.2s;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .shop-card svg {
+            width: 26px;
+            height: 26px;
+        }
+        .shop-card button {
+            padding: 2px 5px;
+            font-size: 10px;
+            margin-top: 2px;
         }
         .shop-card:hover {
             background: rgba(90, 56, 20, 0.25);
-            transform: translateY(-3px);
+            transform: translateY(-1px);
             border-color: #d4af37;
         }
 
         .message-log {
-            margin-top: 20px;
-            height: 110px;
+            margin-top: 4px;
+            height: 66px;
             overflow-y: auto;
             background: rgba(255, 250, 240, 0.6);
-            padding: 10px 14px;
+            padding: 3px 6px;
             text-align: left;
             font-family: 'Courier New', monospace;
             border: 2px inset #5a3814;
@@ -171,7 +213,7 @@
             font-weight: bold;
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
         }
-        .message { margin: 4px 0; font-size: 14px; }
+        .message { margin: 2px 0; font-size: 11px; line-height: 1.25; }
 
         .modal {
             display: none;
@@ -217,25 +259,25 @@
 
         #toast-container {
             position: fixed;
-            bottom: 16px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 8px;
+            right: 12px;
             z-index: 9999;
             display: flex;
-            flex-direction: column-reverse;
-            align-items: center;
-            gap: 8px;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
             pointer-events: none;
-            max-width: 440px;
-            width: 90%;
+            max-width: 280px;
+            width: auto;
         }
         .toast {
             background: linear-gradient(135deg, rgba(42, 23, 4, 0.95), rgba(74, 40, 10, 0.95));
             border: 2px solid #d4af37;
-            border-radius: 6px;
+            border-radius: 5px;
             color: #f7e0b5;
-            padding: 10px 14px;
-            font-size: 13px;
+            padding: 5px 9px;
+            font-size: 11px;
+            line-height: 1.3;
             font-family: 'Cinzel', serif;
             box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 8px rgba(212,175,55,0.3);
             pointer-events: auto;
@@ -245,14 +287,14 @@
         }
         .toast.hide {
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(-8px);
         }
         .toast-gold { border-color: #ffd700; color: #fff8db; }
         .toast-info { border-color: #74c0fc; color: #e7f5ff; }
         .toast-success { border-color: #69db7c; color: #ebfbee; }
         .toast-warn { border-color: #ffa94d; color: #fff4e6; }
         @keyframes toastIn {
-            from { opacity: 0; transform: translateY(15px); }
+            from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -330,6 +372,11 @@
         .attacking { animation: attack-move 0.3s ease-in-out; }
         .attacking-enemy { animation: attack-move-enemy 0.3s ease-in-out; }
         .dragon-sprite {
+            max-width: 86px;
+            max-height: 86px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
             display: inline-block;
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
@@ -362,9 +409,9 @@
                 <div class="stat">Loy: <span id="stat-loyalty">0</span></div>
                 <div class="stat">Gold: <span id="stat-gold">0</span></div>
             </div>
-            <div id="relics-tray" style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; padding: 5px 10px; background: rgba(42, 23, 4, 0.4); border: 1px solid rgba(212, 175, 55, 0.45); border-radius: 4px; font-size: 12px; color: #ffd700;">
+            <div id="relics-tray" style="display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 2px; padding: 2px 6px; background: rgba(42, 23, 4, 0.4); border: 1px solid rgba(212, 175, 55, 0.45); border-radius: 4px; font-size: 11px; color: #ffd700;">
                 <span style="font-weight: bold; font-family: 'Cinzel', serif;">👑 Hoard Relics:</span>
-                <span id="relics-list" style="color: #f7e0b5; font-size: 11px; font-family: monospace;">(None discovered yet)</span>
+                <span id="relics-list" style="color: #f7e0b5; font-size: 10px; font-family: monospace;">(None discovered yet)</span>
             </div>
             <div class="entity-display" id="entity-art">
                 <img id="player-svg" class="bobbing dragon-sprite" src="../assets/sprites/kdragon/kdragon_egg.png" onerror="if(this.src.indexOf('/assets/')!==-1){this.src='assets/sprites/kdragon/kdragon_egg.png';}" width="128" height="128" alt="Dragon Egg">
@@ -384,7 +431,7 @@
                 <button id="btn-audio" title="Toggle Sound [M/U]"><span class="btn-badge">M</span> 🔊 Audio</button>
                 <button id="btn-help" title="Dragon Master's Guide [F1/H]"><span class="btn-badge">F1</span> Help (❓)</button>
             </div>
-            <div class="controls" id="shop-controls" style="display: none; flex-wrap: wrap; justify-content: center; gap: 14px;">
+            <div class="controls" id="shop-controls" style="display: none; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: 3px;">
                 <div class="shop-card">
                     <svg width="48" height="48" viewBox="0 0 48 48">
                         <defs>
@@ -530,7 +577,7 @@
                     <button id="btn-shop-polish"><span class="btn-badge">7</span> Polish (75g)</button>
                 </div>
                 <div class="shop-card" style="display:flex; align-items:center; justify-content:center;">
-                    <button id="btn-shop-back" style="margin-top: 15px;"><span class="btn-badge">Esc</span> Back</button>
+                    <button id="btn-shop-back" style="margin-top: 0;"><span class="btn-badge">Esc</span> Back</button>
                 </div>
             </div>
             <div class="controls" id="train-controls" style="display: none;">
@@ -661,12 +708,14 @@
             <div class="entity-display">
                 <img id="start-egg-svg" class="bobbing dragon-sprite" src="../assets/sprites/kdragon/kdragon_egg.png" onerror="if(this.src.indexOf('/assets/')!==-1){this.src='assets/sprites/kdragon/kdragon_egg.png';}" width="128" height="128" alt="Dragon Egg">
             </div>
-            <p>A mysterious egg awaits...</p>
-            <p style="font-size: 14px; font-style: italic;">Press H or F1 for Help | F5/F9 to Save/Load | U for Sound</p>
-            <button id="btn-hatch"><span class="btn-badge">Space</span> Incubate Egg</button>
-            <button id="btn-start-load"><span class="btn-badge">F9</span> Load Saved Dragon</button>
-            <button id="btn-start-import"><span class="btn-badge">Imp</span> Import Save</button>
-            <button id="btn-start-help"><span class="btn-badge">F1</span> Help (❓)</button>
+            <p style="margin: 3px 0 1px 0; font-weight: bold; font-size: 13px;">A mysterious egg awaits...</p>
+            <p style="font-size: 11px; font-style: italic; margin: 1px 0 6px 0; color: #5a3814;">Press H or F1 for Help | F5/F9 to Save/Load | M for Sound</p>
+            <div class="controls" style="margin-top: 3px; gap: 4px;">
+                <button id="btn-hatch"><span class="btn-badge">Space</span> Incubate Egg</button>
+                <button id="btn-start-load"><span class="btn-badge">F9</span> Load Saved Dragon</button>
+                <button id="btn-start-import"><span class="btn-badge">Imp</span> Import Save</button>
+                <button id="btn-start-help"><span class="btn-badge">F1</span> Help (❓)</button>
+            </div>
             <input type="file" id="import-save-file" accept=".json" style="display: none;">
         </div>
     </div>
@@ -675,12 +724,30 @@
         // === 60 FPS PARTICLES, SHOCKWAVES & ATMOSPHERIC EFFECTS ===
         const canvas = document.getElementById('vfx-canvas');
         const ctx = canvas.getContext('2d');
-        let width = canvas.width = window.innerWidth;
-        let height = canvas.height = window.innerHeight;
+        let dpr = window.devicePixelRatio || 1;
+        let width = window.innerWidth;
+        let height = window.innerHeight;
 
+        function resizeCanvas() {
+            dpr = window.devicePixelRatio || 1;
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = Math.round(width * dpr);
+            canvas.height = Math.round(height * dpr);
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        resizeCanvas();
+
+        let resizeTimer = null;
         window.addEventListener('resize', () => {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
+            if (!resizeTimer) {
+                resizeTimer = requestAnimationFrame(() => {
+                    resizeCanvas();
+                    resizeTimer = null;
+                });
+            }
         });
 
         const VFX = {
@@ -2300,10 +2367,18 @@
                 });
                 
                 // Comprehensive global keyboard navigation
+                let lastActiveElement = null;
                 window.addEventListener('keydown', (e) => {
+                    // Prevent page scrolling on Arrow, Space, and Page navigation keys during gameplay
+                    const isNavKey = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Up', 'Down', 'Left', 'Right', 'Space', ' ', 'Spacebar', 'PageUp', 'PageDown'].includes(e.key) ||
+                                     e.code === 'Space' || (typeof e.code === 'string' && e.code.startsWith('Arrow'));
+                    if (isNavKey) {
+                        if (!['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+                            e.preventDefault();
+                        }
+                    }
                     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
                     if (e.ctrlKey || e.altKey || e.metaKey) return;
-                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', ' '].includes(e.key)) e.preventDefault();
 
                     if (e.key === 'F5') {
                         e.preventDefault();
@@ -2320,8 +2395,15 @@
                         e.preventDefault();
                         const hm = document.getElementById('help-modal');
                         const isClosing = hm.style.display === 'block';
-                        hm.style.display = isClosing ? 'none' : 'block';
-                        if (!isClosing) safeSetStorage(TUTORIAL_KEY, '1');
+                        if (isClosing) {
+                            hm.style.display = 'none';
+                            lastActiveElement?.focus?.();
+                        } else {
+                            lastActiveElement = document.activeElement;
+                            hm.style.display = 'block';
+                            document.getElementById('btn-close-help-bottom')?.focus();
+                            safeSetStorage(TUTORIAL_KEY, '1');
+                        }
                         return;
                     }
                     if (e.key.toLowerCase() === 'm' || e.key.toLowerCase() === 'u') {
@@ -2334,6 +2416,7 @@
                         const hm = document.getElementById('help-modal');
                         if (hm.style.display === 'block') {
                             hm.style.display = 'none';
+                            lastActiveElement?.focus?.();
                             return;
                         }
                         if (this.isBusy) {

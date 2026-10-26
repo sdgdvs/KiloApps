@@ -41,6 +41,7 @@ DWORD minigame_start_time = 0;
 #define MAX_LOG_LINES 4
 char log_messages[MAX_LOG_LINES][128] = {0};
 int log_count = 0;
+void add_log(const char* msg);
 
 #define BTN_TRAIN     5
 #define BTN_TR_STR    6

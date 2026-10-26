@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_graphics: KStarship
   kilo_soundscape: KQuest
   kilo_tester: KMaze
-  kilo_usability: KDragon
+  kilo_usability: KMaze
   kilo_qa: KRss
   kilo_expander: KMaze
   kilo_review: KColony
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KDragon
-  timestamp: '2026-10-26T15:37:32-07:00'
+  timestamp: '2026-10-26T16:21:22-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -151,11 +151,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Fix buyItem() calling getItemPrice(number) instead of string keys ('food','toy','nectar','crown','polish') which charges 50g for all items; fix getMood().label === 'Ecstatic' in startMinigame() and battleTurn() (+15% crit); and apply the +10 Sovereign Aura stat bonus upon collecting all 6 relics. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KDragon`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Compact #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 without vertical scroll, add preventDefault() for Arrow/Space keys so gameplay never scrolls the page, and prevent #toast-container from covering #controls and #message-log. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Add <meta charset='UTF-8'> to kmaze.html <head> to fix broken UTF-8 mojibake icons across splash, HUD, toasts, and canvas; compact top #uiCanvas and Win32 GDI HUD telemetry over a dark translucent header strip so Lvl/biome/charges text stops colliding with F5/F9 hint and clipping [STAND]/[CROUCH] at 320px width; move #toastContainer below top HUD (top 50px) and #firstRunBanner to bottom of #canvasWrapper; suppress duplicate gameState===0 canvas text behind #splashOverlay; and sync #uiCanvas dimensions/scaling cleanly on boot and resize. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -166,6 +165,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Responsive dual-pane feed/reader layout, comfortable reading line-length (65-75ch), and clear unread badge contrast. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
+| `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Compact #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 without vertical scroll, add preventDefault() for Arrow/Space keys so gameplay never scrolls the page, and prevent #toast-container from covering #controls and #message-log. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KRss`
@@ -303,6 +303,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T16:21:22-07:00 — kilo-usability: KDragon (KDragon Usability, Compact Viewport & Toast Repositioning Polish)**
+  - Status: PASS ✅ (0 errors, web 188.7 KB, native 151.0 KB < 999 KB; 0 overflow, 0 cut-off controls; visual PASS).
+  - Layout & Viewport: Compacted #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 with 0px overflow.
+  - Ergonomics & HiDPI: Repositioned #toast-container to top-right, added preventDefault() for Arrow/Space keys, and enabled devicePixelRatio canvas scaling.
+  - Handoff: Advanced `kilo-usability` to `KMaze`; rotated active agent to `kilo-qa`.
+
 - **2026-10-26T15:37:32-07:00 — kilo-tester: KDragon (Fix Shop Pricing, Ecstatic Mood & Sovereign Aura Parity)**
   - Status: PASS ✅ (0 errors, web 189.2 KB, native 151.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.29%, input 40.24%, HEAD Δ 0.02%, 0 fail, 0 warn, 7.3s)).
   - Fixed buyItem() string key prices, getMood().label === 'Ecstatic' in training minigames and battle (+15% crit), and +10 Sovereign Aura stat bonus across Web HTML and Win32 C.
@@ -325,9 +331,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented RFC 1149/2549 Avian Carrier Simulator, RFC 2324 HTCPCP Coffee Pot Console (418 I'm a teapot), RFC 793 TCP Stepper, and Living RFC Vault.
   - Added YM2612 2-Op FM synthesis + SPC700 stereo delay, safeGet/safeSet localStorage persistence, and KiloOS VFS export (/home/downloads/).
   - Handoff: Advanced `kilo-creator` to `kweb://webring`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-26T13:31:55-07:00 — kilo-review: KDragon (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 660x623 and audited kdragon.html + KDragon/main.c).
-  - Visual/UX Findings: #game-screen overflows 660x623 viewport by 297px causing Space/Arrow keys to scroll the header/stats off-screen; #toast-container stacks 3 toasts over #btn-help and #message-log; dragon entities use forbidden 16x16 SVG rect programmer art.
-  - Feature/Gameplay Findings: buyItem() passes numbers (20, 30, 40, 60, 75) to getItemPrice(type) which expects string keys ('food', 'toy', etc.), charging 50g for every shop item; startMinigame() compares object getMood() === 'Ecstatic' (always false); Ecstatic +15% battle crit and 6/6 Relic +10 Sovereign Aura stat bonus are missing.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KDragon`, `kilo-tester`->`KDragon`, `kilo-graphics`->`KDragon`] (un-quarantined `KDragon` from Mature); advanced `kilo-review` to `KColony`; next agent `kilo-creator`.

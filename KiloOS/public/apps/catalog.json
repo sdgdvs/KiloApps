@@ -75,9 +75,9 @@
     "id": "kbreakout",
     "title": "KBreakout",
     "folder": "Games",
-    "webBytes": 190696,
+    "webBytes": 195334,
     "exeBytes": 55808,
-    "budgetPercent": 19.1
+    "budgetPercent": 19.6
   },
   {
     "id": "kbudget",
@@ -267,9 +267,9 @@
     "id": "kdragon",
     "title": "KDragon",
     "folder": "Games",
-    "webBytes": 191987,
+    "webBytes": 193274,
     "exeBytes": 154624,
-    "budgetPercent": 19.2
+    "budgetPercent": 19.3
   },
   {
     "id": "kexplorer",
