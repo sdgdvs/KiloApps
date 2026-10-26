@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-25T14:34:21-07:00 — kilo-qa: KTimer (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 107.8 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.46%, HEAD Δ 0.0%, 0 fail, 0 warn, 9.3s)).
+  - State & Persistence: Verified F5/F9 workspace snapshot, ktimer_tutorialSeen flag, sound alert persistence, and modal dismissals.
+  - Dual Parity & Audio: Verified Web HTML + Win32 C parity for sound alert toggle [M], CSV/TXT lap exports, and visibilitychange lifecycle.
+  - Mature Quarantine & Handoff: Promoted `KTimer` to Mature archive; advanced `kilo-qa` to `KClock`; next agent `kilo-expander`.
+
 - **2026-10-25T13:37:12-07:00 — kilo-usability: KTrader (KTrader Usability, Flex Header & Responsive Compact Layout)**
   - Status: PASS ✅ (web 175.1 KB, native 26.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Flex Header & Toolbar: Converted absolute 12-button toolbar into responsive flex header eliminating H1 collision at 960x683.

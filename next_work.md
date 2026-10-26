@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://scallion
   kilo_graphics: KWizard
-  kilo_soundscape: KPac
+  kilo_soundscape: KSubmarine
   kilo_tester: KPac
   kilo_usability: KPac
   kilo_qa: KClock
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KSubmarine
-  timestamp: '2026-10-25T18:17:42-07:00'
+  agent: kilo-soundscape
+  app: KPac
+  timestamp: '2026-10-25T20:14:56-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -115,11 +115,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Active Target**: `KPac`
+- **Active Target**: `KSubmarine`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | **[ARGON REVIEW]:** Upgrade the 15-line single-oscillator playSound() stub to a 6-channel YM2612/SPC700-style cyber-arcade soundtrack and SFX engine with Campaign/Endless/Duel grooves, fright-mode tempo shift, Stage 20 boss theme, and mute toggle. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Compose abyssal sonar & trench descent 6-channel suite (Suspended `sus2/Maj7` cascade, muffled low-pass SPC700 echo, warm sine sub-bass, hydrophone ping earcons). |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Compose high-energy 6-channel YM2612 FM arcade synthwave theme (Ionian/Mixolydian, 5:3 swing groove, slap bass, brass lead, selective SPC700 delay) + harmonic brick-hit combo pitch escalator and powerup earcons. |
 | `KQuest` | `KiloOS/public/apps/kquest.html` | Compose overworld & battle 6-channel JRPG chiptune suite (Royal Road `IV-V-iii-vi` town/overworld + Heroic `bVI-bVII-I` combat cadence, E-Piano & flute counterpoint, SPC700 echo) + spell/quest earcons. |
@@ -129,6 +128,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
+| `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | **[ARGON REVIEW]:** Upgrade the 15-line single-oscillator playSound() stub to a 6-channel YM2612/SPC700-style cyber-arcade soundtrack and SFX engine with Campaign/Endless/Duel grooves, fright-mode tempo shift, Stage 20 boss theme, and mute toggle. |
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Active Target**: `KPac`
@@ -300,6 +300,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-25T20:14:56-07:00 — kilo-soundscape: KPac (Neon Maze Odyssey & Blue Ghost Panic — YM2612/SPC700 Chiptune Suite)**
+  - Status: PASS ✅ (0 errors, web 239.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Composition: C Dorian Cyber-Arcade Funk (Campaign), D Phrygian Rush (Endless), E Minor Arena (Duel), F# Locrian (Boss), double-time chase (Fright).
+  - Patches & DSP: 6-channel YM2612 2-Op FM counterpoint, 3rd/7th shell voicings, 5:3 shuffle swing, 200ms SPC700 stereo delay bus, and Mute [M] toggle.
+  - Handoff: Advanced `kilo-soundscape` to `KSubmarine`; rotated active agent to `kilo-tester`.
+
 - **2026-10-25T18:17:42-07:00 — kilo-graphics: KSubmarine (Bioluminescent Leviathans, Smoker Plumes & Sonar CRT HUD)**
   - Status: PASS ✅ (web 501.5 KB, native 251.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (HEAD Δ 0.13%, input 0.34%)).
   - Enhanced bathysphere trench exploration visuals with multi-stage turbulent hydrothermal smoker plumes, black smoker basalt spires, and acoustic thermocline rings.
@@ -327,9 +333,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Enforced Navy patrol contraband scanning and cargo confiscation with fines and reputation penalties on jumps.
   - Maintained Win32 C parity in KTrader/main.c with Star Chart [C] telemetry dialog, shield status, and contraband patrol checks.
   - Handoff: Advanced `kilo-expander` to `KSynth`; rotated active agent to `kilo-review`.
-
-- **2026-10-25T14:34:21-07:00 — kilo-qa: KTimer (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 107.8 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.46%, HEAD Δ 0.0%, 0 fail, 0 warn, 9.3s)).
-  - State & Persistence: Verified F5/F9 workspace snapshot, ktimer_tutorialSeen flag, sound alert persistence, and modal dismissals.
-  - Dual Parity & Audio: Verified Web HTML + Win32 C parity for sound alert toggle [M], CSV/TXT lap exports, and visibilitychange lifecycle.
-  - Mature Quarantine & Handoff: Promoted `KTimer` to Mature archive; advanced `kilo-qa` to `KClock`; next agent `kilo-expander`.
