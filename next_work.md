@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -35,7 +35,7 @@ current_targets:
   kilo_tester: KSys
   kilo_usability: KScript
   kilo_qa: KPomodoro
-  kilo_expander: KPac
+  kilo_expander: KSynth
   kilo_review: KSpace
 virtual_web_target: kweb://scallion
 virtual_web_rotation:
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KClock
-  timestamp: '2026-10-25T22:31:36-07:00'
+  agent: kilo-expander
+  app: KPac
+  timestamp: '2026-10-26T02:20:36-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -128,7 +128,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
-| `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | **[ARGON REVIEW]:** Upgrade the 15-line single-oscillator playSound() stub to a 6-channel YM2612/SPC700-style cyber-arcade soundtrack and SFX engine with Campaign/Endless/Duel grooves, fright-mode tempo shift, Stage 20 boss theme, and mute toggle. |
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Active Target**: `KSys`
@@ -146,7 +145,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Audit bookmark manager folder hierarchy, tagging, search filter, HTML/JSON export, and modal focus traps. |
 | `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Audit archive packer/unpacker UI, compression ratio telemetry, file list viewer, and drag-and-drop file ingestion. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
-| `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | **[ARGON REVIEW]:** Add ctx.moveTo(x+2,y) before each status-diode ctx.arc() in draw() to eliminate the flashing hourglass corridor polygon; replace undeclared ghostModeTimer/diffLevel/freezeTimer in showTelemetry, exportPACFEN(), importPACFEN(), and exportCSV() with frightTimer/diffMode/freezeSkillTimer; recalculate dotCount in importPACFEN(); add eaten-ghost pen return in Campaign/Endless update(), let ghosts exit pen door (r===6,c===7) in Endless mazes, block closed tile-10 phase gates, and add click-to-rebind key capture on #kb_p1Up..#kb_p2Right. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KScript`
@@ -164,7 +162,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Responsive dual-pane feed/reader layout, comfortable reading line-length (65-75ch), and clear unread badge contrast. |
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Responsive folder tree sidebar, accessible tag chips, and keyboard shortcut cheat sheet dialog. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
-| `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | **[ARGON REVIEW]:** Widen #game-container to fit the KiloOS window with zero vertical overflow, separate .app-title + badges above a compact 2-row toolbar (removing duplicate Forge/Mode buttons from .skills-bar), anchor .toast-container below the full header with max 2 non-occluding toasts, and restore pre-modal pause state on modal close. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KPomodoro`
@@ -181,11 +178,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColor` | `KiloOS/public/apps/kcolor.html`, `KColor/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, palette generator/harmony rules, HEX/RGB/HSL conversion, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KPac`
+- **Active Target**: `KSynth`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | **[ARGON REVIEW]:** Add an interactive 15x15 clickable tile-palette Maze Editor tab inside #fenModal live-synced with PAC-FEN, wire KiloOS VFS_SHOW_SAVE and VFS_SHOW_OPEN (/home/games/kpac/) for .pacfen mazes and .kpdr replays with standalone fallback, and sync eaten-ghost pen return + tile-10 phase-gate collision in KPac/main.c. |
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
@@ -243,6 +239,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KPac** | `KiloOS/public/apps/kpac.html` | Pass 5+ (2026-10-26) | Games / Arcade | Complete arcade cyber-maze workstation with 20 stages, endless wave generator, 1v1 online duel mode, match replay viewer (.kpdr), 15x15 interactive PAC-FEN maze editor, KiloOS VFS mesh integration, 6-channel YM2612 audio suite, and dual Win32 C parity. |
 | **KClock** | `KiloOS/public/apps/kclock.html` | Pass 5+ (2026-10-25) | System / Utilities | Complete timekeeping workstation featuring 8 tools (Clock, World Time, Epoch Suite, Stopwatch, Countdown, Alarms, Calendar, Settings), F5/F9 state persistence, audio chimes, and dual Win32 C parity. |
 | **KTimer** | `KiloOS/public/apps/ktimer.html` | Pass 5+ (2026-10-25) | Productivity | Complete timing suite with Stopwatch, Countdown, Multi-Timer, Pomodoro, and HIIT Interval timers, F5/F9 state persistence, sound alerts [M], CSV/TXT lap exports, and 100% Win32 C parity. |
 | **KTodo** | `KiloOS/public/apps/ktodo.html` | Pass 5+ (2026-10-24) | Office / Productivity | Complete productivity task manager with multi-tab boards, F5/F9 persistence, dynamic tag filtering, dual Win32 C parity, and real-time RTDB collab. |
@@ -300,6 +297,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T02:20:36-07:00 — kilo-expander: KPac (KPac (Phase VI Maze Editor, VFS & Win32 C Parity))**
+  - Status: PASS ✅ (0 errors, web 274.7 KB, native 52.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Maze Editor & Live FEN: Added 15x15 tile-palette editor in #fenModal with two-way live sync for PAC-FEN.
+  - VFS Integration: Wired VFS_SHOW_SAVE and VFS_SHOW_OPEN (/home/games/kpac/) for .pacfen and .kpdr replays with standalone fallback.
+  - Dual Parity: Synced eaten-ghost pen return and tile-10 phase-gate collision in KPac/main.c.
+  - Mature Quarantine & Handoff: Promoted `KPac` to Mature archive; advanced `kilo-expander` to `KSynth`; next agent `kilo-review`.
+
 - **2026-10-25T22:31:36-07:00 — kilo-qa: KClock (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 113.1 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Persistence: Verified F5/F9 quicksave/quickload, kclock_tutorialSeen flag, world time offsets, alarms, and Escape modal dismissals.
@@ -323,10 +327,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Composition: C Dorian Cyber-Arcade Funk (Campaign), D Phrygian Rush (Endless), E Minor Arena (Duel), F# Locrian (Boss), double-time chase (Fright).
   - Patches & DSP: 6-channel YM2612 2-Op FM counterpoint, 3rd/7th shell voicings, 5:3 shuffle swing, 200ms SPC700 stereo delay bus, and Mute [M] toggle.
   - Handoff: Advanced `kilo-soundscape` to `KSubmarine`; rotated active agent to `kilo-tester`.
-
-- **2026-10-25T18:17:42-07:00 — kilo-graphics: KSubmarine (Bioluminescent Leviathans, Smoker Plumes & Sonar CRT HUD)**
-  - Status: PASS ✅ (web 501.5 KB, native 251.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (HEAD Δ 0.13%, input 0.34%)).
-  - Enhanced bathysphere trench exploration visuals with multi-stage turbulent hydrothermal smoker plumes, black smoker basalt spires, and acoustic thermocline rings.
-  - Polished sonar HUD with 12-sector CRT phosphor sweep persistence decay fan, 30° azimuth compass graticules, cardinal marks, and fine distance graticule notches.
-  - Integrated colossal bioluminescent trench leviathan silhouettes with glowing photophore lateral lines, translucent skeletal ribs, and luminous caudal fin rays.
-  - Handoff: Advanced `kilo-graphics` to `KWizard`; rotated active agent to `kilo-soundscape`.

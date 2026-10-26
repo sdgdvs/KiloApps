@@ -1373,11 +1373,14 @@ void Update() {
     for (int i = 0; i < numGhosts; i++) {
         if (ghosts[i].isDead) {
             if (frameCount % 2 == 0) {
+                int oldGx = ghosts[i].x, oldGy = ghosts[i].y;
                 if (ghosts[i].x < 7) ghosts[i].x++;
                 else if (ghosts[i].x > 7) ghosts[i].x--;
                 if (ghosts[i].y < 6) ghosts[i].y++;
                 else if (ghosts[i].y > 6) ghosts[i].y--;
-                if (ghosts[i].x == 7 && ghosts[i].y == 6) ghosts[i].isDead = 0;
+                ghosts[i].dirX = ghosts[i].x - oldGx;
+                ghosts[i].dirY = ghosts[i].y - oldGy;
+                if (ghosts[i].x == 7 && ghosts[i].y == 6) { ghosts[i].isDead = 0; ghosts[i].stunTimer = 0; }
             }
         }
     }
@@ -1398,7 +1401,8 @@ void Update() {
             int d = MyRand() % 4;
             int nx = vipX + dirs[d][0];
             int ny = vipY + dirs[d][1];
-            if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && map[ny][nx] != 1) {
+            int isBlk = (map[ny][nx] == 1 || (map[ny][nx] == 10 && (frameCount % 40 >= 20)));
+            if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && !isBlk) {
                 vipX = nx; vipY = ny;
             }
         }
@@ -1431,8 +1435,10 @@ void Update() {
             if (ghosts[i].trait == 1 && (frameCount % 10 == 0)) {
                 int distToP = Abs(ghosts[i].x - px) + Abs(ghosts[i].y - py);
                 if (distToP <= 3 && distToP > 1) {
-                    if (px < ghosts[i].x && map[py][px+1] != 1) px++;
-                    else if (px > ghosts[i].x && map[py][px-1] != 1) px--;
+                    int isBlkR = (px + 1 >= COLS) || (map[py][px+1] == 1 || (map[py][px+1] == 10 && (frameCount % 40 >= 20)));
+                    int isBlkL = (px - 1 < 0) || (map[py][px-1] == 1 || (map[py][px-1] == 10 && (frameCount % 40 >= 20)));
+                    if (px < ghosts[i].x && !isBlkR) px++;
+                    else if (px > ghosts[i].x && !isBlkL) px--;
                 }
             }
 
@@ -1440,10 +1446,13 @@ void Update() {
             if (ghosts[i].trait == 2 && (MyRand() % 100 < 4)) {
                 int rx = px + (MyRand() % 5 - 2);
                 int ry = py + (MyRand() % 5 - 2);
-                if (rx >= 0 && rx < COLS && ry >= 0 && ry < ROWS && map[ry][rx] != 1) {
-                    ghosts[i].x = rx;
-                    ghosts[i].y = ry;
-                    AddSparks(rx * TS + TS/2, ry * TS + TS/2, RGB(255, 0, 255), 6);
+                if (rx >= 0 && rx < COLS && ry >= 0 && ry < ROWS) {
+                    int isClosed10 = (map[ry][rx] == 10 && (frameCount % 40 >= 20));
+                    if (map[ry][rx] != 1 && !isClosed10) {
+                        ghosts[i].x = rx;
+                        ghosts[i].y = ry;
+                        AddSparks(rx * TS + TS/2, ry * TS + TS/2, RGB(255, 0, 255), 6);
+                    }
                 }
             }
 
@@ -1492,7 +1501,9 @@ void Update() {
                         int ny = ghosts[i].y + dirs[d][1];
                         if (nx < 0) nx = COLS - 1;
                         if (nx >= COLS) nx = 0;
-                        if (ny >= 0 && ny < ROWS && map[ny][nx] != 1) {
+                        int isClosed10 = (map[ny][nx] == 10 && (frameCount % 40 >= 20));
+                        int isPassable = (map[ny][nx] != 1 || (ny == 6 && nx == 7)) && !isClosed10;
+                        if (ny >= 0 && ny < ROWS && isPassable) {
                             int dist = Abs(nx - tx) + Abs(ny - ty);
                             if (dist < min_dist) { min_dist = dist; best_d = d; }
                         }
@@ -1503,7 +1514,9 @@ void Update() {
                     int ny = ghosts[i].y + dirs[best_d][1];
                     if (nx < 0) nx = COLS - 1;
                     if (nx >= COLS) nx = 0;
-                    if (ny >= 0 && ny < ROWS && map[ny][nx] != 1) {
+                    int isClosed10 = (map[ny][nx] == 10 && (frameCount % 40 >= 20));
+                    int isPassable = (map[ny][nx] != 1 || (ny == 6 && nx == 7)) && !isClosed10;
+                    if (ny >= 0 && ny < ROWS && isPassable) {
                         ghosts[i].x = nx;
                         ghosts[i].y = ny;
                     }
@@ -1514,7 +1527,9 @@ void Update() {
                 int ny = ghosts[i].y + dirs[d][1];
                 if (nx < 0) nx = COLS - 1;
                 if (nx >= COLS) nx = 0;
-                if (ny >= 0 && ny < ROWS && map[ny][nx] != 1) {
+                int isClosed10 = (map[ny][nx] == 10 && (frameCount % 40 >= 20));
+                int isPassable = (map[ny][nx] != 1 || (ny == 6 && nx == 7)) && !isClosed10;
+                if (ny >= 0 && ny < ROWS && isPassable) {
                     ghosts[i].x = nx;
                     ghosts[i].y = ny;
                 }
@@ -1528,7 +1543,8 @@ void Update() {
     if (ndx != 0 || ndy != 0) {
         int nx = px + ndx;
         int ny = py + ndy;
-        if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && map[ny][nx] != 1) {
+        int isBlk = (map[ny][nx] == 1 || (map[ny][nx] == 10 && (frameCount % 40 >= 20)));
+        if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && !isBlk) {
             pdx = ndx; pdy = ndy;
             ndx = 0; ndy = 0;
         }
@@ -1548,7 +1564,8 @@ void Update() {
         if (nx < 0) nx = COLS - 1;
         if (nx >= COLS) nx = 0;
 
-        if (ny >= 0 && ny < ROWS && map[ny][nx] != 1) {
+        int isBlk = (map[ny][nx] == 1 || (map[ny][nx] == 10 && (frameCount % 40 >= 20)));
+        if (ny >= 0 && ny < ROWS && !isBlk) {
             px = nx;
             py = ny;
 
@@ -1569,9 +1586,12 @@ void Update() {
                 // Find matching/mirror portal or opposite quadrant
                 int targetX = COLS - 1 - px;
                 int targetY = ROWS - 1 - py;
-                if (targetX >= 0 && targetX < COLS && targetY >= 0 && targetY < ROWS && map[targetY][targetX] != 1) {
-                    px = targetX;
-                    py = targetY;
+                if (targetX >= 0 && targetX < COLS && targetY >= 0 && targetY < ROWS) {
+                    int isClosed10 = (map[targetY][targetX] == 10 && (frameCount % 40 >= 20));
+                    if (map[targetY][targetX] != 1 && !isClosed10) {
+                        px = targetX;
+                        py = targetY;
+                    }
                 }
                 AddExplosion(px * TS + TS/2, py * TS + TS/2, RGB(186, 104, 200));
                 if (shieldActive || frightTimer > 0) {
