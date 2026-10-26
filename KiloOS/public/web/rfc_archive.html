@@ -598,7 +598,7 @@ Ready for dispatch. Click "Dispatch Avian Carrier Ping Flock" to transmit datagr
       <div class="htcpcp-grid">
         <!-- Pot Visual & Gauges -->
         <div class="pot-visual-card">
-          <canvas id="potCanvas"></canvas>
+          <canvas id="potCanvas" width="300" height="260"></canvas>
           <div class="pot-gauges">
             <div class="gauge-box">
               <div style="color:var(--text-muted); font-size:10px;">POT STATUS</div>
@@ -787,7 +787,7 @@ Click "Next Step" or "Auto-Run Scenario" to advance TCP state transitions.</div>
           <option value="rfc791">RFC 791: Internet Protocol (DARPA Internet Program)</option>
           <option value="rfc768">RFC 768: User Datagram Protocol (UDP)</option>
           <option value="rfc2616">RFC 2616: Hypertext Transfer Protocol -- HTTP/1.1</option>
-          <option value="rfc1999">RFC 1999: Millennium ARPANET IMP #04 Telemetry (TINAG Lore)</option>
+          <option value="rfc1999">RFC 1999: Millennium ARPANET IMP #04 Telemetry (Classified Protocol Telemetry)</option>
         </select>
 
         <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-left:12px;">FILTER / SEARCH:</span>
@@ -844,15 +844,50 @@ Click "Next Step" or "Auto-Run Scenario" to advance TCP state transitions.</div>
  * Anti-Potemkin compliant with zero external dependencies and KiloOS VFS integration.
  */
 
-// --- Audio Synthesizer (Web Audio API) ---
+// --- Storage Safety (KiloApps Standard) ---
+function safeGet(key, fallback) {
+  try {
+    const val = localStorage.getItem(key);
+    return val !== null ? JSON.parse(val) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function safeSet(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.warn('[RFC Archive] Storage write failed:', e ? e.message : e);
+  }
+}
+
+// --- Audio Synthesizer (YM2612 2-Op FM + SPC700 Delay Standard) ---
 let audioCtx = null;
-let audioMuted = false;
+let audioMuted = safeGet('kweb_rfc_muted', false);
+let spcDelayNode = null;
 
 function initAudio() {
   if (audioCtx) return audioCtx;
   try {
     const AudioClass = window.AudioContext || window.webkitAudioContext;
-    if (AudioClass) audioCtx = new AudioClass();
+    if (AudioClass) {
+      audioCtx = new AudioClass();
+      // SPC700 stereo delay line: 180ms delay, 2200Hz LP filter, 0.28 feedback
+      const delay = audioCtx.createDelay(1.0);
+      delay.delayTime.setValueAtTime(0.18, audioCtx.currentTime);
+      const feedback = audioCtx.createGain();
+      feedback.gain.setValueAtTime(0.28, audioCtx.currentTime);
+      const lpFilter = audioCtx.createBiquadFilter();
+      lpFilter.type = 'lowpass';
+      lpFilter.frequency.setValueAtTime(2200, audioCtx.currentTime);
+
+      delay.connect(lpFilter);
+      lpFilter.connect(feedback);
+      feedback.connect(delay);
+      lpFilter.connect(audioCtx.destination);
+      spcDelayNode = delay;
+    }
   } catch (e) {}
   return audioCtx;
 }
@@ -862,16 +897,59 @@ function playTone(freq, dur = 0.1, type = 'sine', vol = 0.15) {
   const ctx = initAudio();
   if (!ctx) return;
   try {
+    const t = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = type;
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    gain.gain.setValueAtTime(vol, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     osc.connect(gain);
     gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + dur);
+    if (spcDelayNode && vol > 0.08) {
+      gain.connect(spcDelayNode);
+    }
+    osc.start(t);
+    osc.stop(t + dur);
+  } catch (e) {}
+}
+
+function playFmNote(carrierFreq, dur = 0.18, modRatio = 2.0, modIndex = 2.5, vol = 0.15) {
+  if (audioMuted) return;
+  const ctx = initAudio();
+  if (!ctx) return;
+  try {
+    const t = ctx.currentTime;
+    const carrier = ctx.createOscillator();
+    const modulator = ctx.createOscillator();
+    const modGain = ctx.createGain();
+    const masterGain = ctx.createGain();
+
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(carrierFreq, t);
+
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(carrierFreq * modRatio, t);
+
+    const dev = carrierFreq * modRatio * modIndex;
+    modGain.gain.setValueAtTime(dev, t);
+    modGain.gain.exponentialRampToValueAtTime(0.01, t + dur);
+
+    masterGain.gain.setValueAtTime(vol, t);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+    carrier.connect(masterGain);
+    masterGain.connect(ctx.destination);
+    if (spcDelayNode) {
+      masterGain.connect(spcDelayNode);
+    }
+
+    modulator.start(t);
+    carrier.start(t);
+    modulator.stop(t + dur);
+    carrier.stop(t + dur);
   } catch (e) {}
 }
 
@@ -891,6 +969,7 @@ function playPigeonCoo() {
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.36);
     osc.connect(gain);
     gain.connect(ctx.destination);
+    if (spcDelayNode) gain.connect(spcDelayNode);
     osc.start(t);
     osc.stop(t + 0.36);
   } catch (e) {}
@@ -902,7 +981,6 @@ function playCoffeePercolator() {
   if (!ctx) return;
   try {
     const t = ctx.currentTime;
-    // Bubble chirp
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';
@@ -932,16 +1010,16 @@ function playTeapotWhistle() {
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
     osc.connect(gain);
     gain.connect(ctx.destination);
+    if (spcDelayNode) gain.connect(spcDelayNode);
     osc.start(t);
     osc.stop(t + 0.5);
   } catch (e) {}
 }
 
 function playTcpChime() {
-  // Major triad handshake chime
-  playTone(523.25, 0.15, 'sine', 0.1);
-  setTimeout(() => playTone(659.25, 0.15, 'sine', 0.1), 100);
-  setTimeout(() => playTone(783.99, 0.25, 'sine', 0.12), 200);
+  playFmNote(523.25, 0.22, 1.0, 1.8, 0.12);
+  setTimeout(() => playFmNote(659.25, 0.22, 1.0, 1.8, 0.12), 110);
+  setTimeout(() => playFmNote(783.99, 0.35, 2.0, 2.2, 0.14), 220);
 }
 
 // --- Toast & KiloOS VFS IPC ---
@@ -979,13 +1057,18 @@ function launchKiloApp(appFile, args) {
       app: appFile,
       args: args || {}
     }, '*');
+    window.parent.postMessage({
+      type: 'OS_LAUNCH_APP',
+      app: appFile,
+      args: args || {}
+    }, '*');
     showToast('Launching ' + appFile + '...');
   } catch (e) {
     showToast('Launch failed: ' + (e.message || e));
   }
 }
 
-// --- Navigation Tab Switching ---
+// --- Navigation Tab Switching & Persistence ---
 const tabBtns = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
@@ -996,14 +1079,22 @@ tabBtns.forEach(btn => {
     btn.classList.add('active');
     const target = document.getElementById(btn.dataset.tab);
     if (target) target.classList.add('active');
+    safeSet('kweb_rfc_active_tab', btn.dataset.tab);
+    if (btn.dataset.tab === 'tab-avian') {
+      resizeAvianCanvas();
+    }
     playTone(600, 0.05);
   });
 });
 
 // Audio mute button
 const btnAudioMute = document.getElementById('btnAudioMute');
+if (audioMuted) {
+  btnAudioMute.textContent = '🔇 Audio OFF';
+}
 btnAudioMute.addEventListener('click', () => {
   audioMuted = !audioMuted;
+  safeSet('kweb_rfc_muted', audioMuted);
   btnAudioMute.textContent = audioMuted ? '🔇 Audio OFF' : '🔊 Audio ON';
   showToast(audioMuted ? 'Audio synthesizer muted' : 'Audio synthesizer enabled');
 });
@@ -1011,9 +1102,15 @@ btnAudioMute.addEventListener('click', () => {
 // CRT toggle
 const btnToggleCrt = document.getElementById('btnToggleCrt');
 const crtOverlay = document.getElementById('crtOverlay');
+const savedCrtDisabled = safeGet('kweb_rfc_crt_disabled', false);
+if (savedCrtDisabled) {
+  crtOverlay.classList.add('disabled');
+}
 btnToggleCrt.addEventListener('click', () => {
   crtOverlay.classList.toggle('disabled');
-  showToast(crtOverlay.classList.contains('disabled') ? 'CRT filter disabled' : 'CRT scanlines enabled');
+  const dis = crtOverlay.classList.contains('disabled');
+  safeSet('kweb_rfc_crt_disabled', dis);
+  showToast(dis ? 'CRT filter disabled' : 'CRT scanlines enabled');
 });
 
 // Spool All Manifest to VFS
@@ -1048,17 +1145,21 @@ const avianCtx = avianCanvas.getContext('2d');
 const avianTerminal = document.getElementById('avianTerminal');
 const avianStatsDisp = document.getElementById('avianStats');
 
-let avianTx = 0;
-let avianRx = 0;
+const savedAvianStats = safeGet('kweb_rfc_avian_stats', { tx: 0, rx: 0 });
+let avianTx = savedAvianStats.tx || 0;
+let avianRx = savedAvianStats.rx || 0;
 let avianPigeons = [];
 let falconEncounter = false;
 let avianAnimFrame = null;
 
 function resizeAvianCanvas() {
   const rect = avianCanvas.getBoundingClientRect();
-  avianCanvas.width = rect.width * (window.devicePixelRatio || 1);
-  avianCanvas.height = 320 * (window.devicePixelRatio || 1);
-  avianCtx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(320, Math.floor(rect.width || 800));
+  avianCanvas.width = w * dpr;
+  avianCanvas.height = 320 * dpr;
+  avianCtx.setTransform(1, 0, 0, 1, 0, 0);
+  avianCtx.scale(dpr, dpr);
 }
 window.addEventListener('resize', resizeAvianCanvas);
 resizeAvianCanvas();
@@ -1072,7 +1173,8 @@ class PigeonPacket {
     this.mtu = mtu;
     this.x = 40;
     this.y = 200 + (Math.random() * 40 - 20);
-    this.targetX = avianCanvas.getBoundingClientRect().width - 50;
+    const canvasW = avianCanvas.getBoundingClientRect().width || (avianCanvas.width / (window.devicePixelRatio || 1)) || 800;
+    this.targetX = Math.max(260, canvasW - 50);
     this.targetY = 160 + (Math.random() * 40 - 20);
     this.progress = 0;
     this.wingAngle = 0;
@@ -1194,7 +1296,8 @@ class PigeonPacket {
 }
 
 function renderAvianScene() {
-  const w = avianCanvas.getBoundingClientRect().width;
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(320, avianCanvas.getBoundingClientRect().width || (avianCanvas.width / dpr) || 800);
   const h = 320;
   avianCtx.clearRect(0, 0, w, h);
 
@@ -1299,6 +1402,7 @@ function logAvian(msg) {
 function updateAvianStats() {
   const lossRate = avianTx > 0 ? (((avianTx - avianRx) / avianTx) * 100).toFixed(1) : '0.0';
   avianStatsDisp.textContent = `Tx: ${avianTx} | Rx: ${avianRx} | Loss: ${lossRate}%`;
+  safeSet('kweb_rfc_avian_stats', { tx: avianTx, rx: avianRx });
 }
 
 document.getElementById('btnDispatchFlock').addEventListener('click', () => {
@@ -1345,6 +1449,11 @@ ${avianTerminal.textContent}`;
    ===================================================================== */
 const potCanvas = document.getElementById('potCanvas');
 const potCtx = potCanvas.getContext('2d');
+const potDpr = window.devicePixelRatio || 1;
+potCanvas.width = 300 * potDpr;
+potCanvas.height = 260 * potDpr;
+potCtx.setTransform(1, 0, 0, 1, 0, 0);
+potCtx.scale(potDpr, potDpr);
 const coffeeTerminal = document.getElementById('coffeeTerminal');
 const potStatusDisp = document.getElementById('potStatusDisp');
 const tempDisp = document.getElementById('tempDisp');
@@ -1740,6 +1849,8 @@ function stepTcp() {
     if (tcpAutoTimer) {
       clearInterval(tcpAutoTimer);
       tcpAutoTimer = null;
+      const btn = document.getElementById('btnAutoPlayTcp');
+      if (btn) btn.textContent = '▶️ Auto Step';
     }
   }
 }
@@ -1747,11 +1858,14 @@ function stepTcp() {
 document.getElementById('btnStepTcp').addEventListener('click', stepTcp);
 
 document.getElementById('btnAutoPlayTcp').addEventListener('click', () => {
+  const btn = document.getElementById('btnAutoPlayTcp');
   if (tcpAutoTimer) {
     clearInterval(tcpAutoTimer);
     tcpAutoTimer = null;
+    if (btn) btn.textContent = '▶️ Auto Step';
     return;
   }
+  if (btn) btn.textContent = '⏸️ Pause';
   tcpAutoTimer = setInterval(stepTcp, 1200);
 });
 
@@ -1764,6 +1878,8 @@ function resetTcp() {
   if (tcpAutoTimer) {
     clearInterval(tcpAutoTimer);
     tcpAutoTimer = null;
+    const btn = document.getElementById('btnAutoPlayTcp');
+    if (btn) btn.textContent = '▶️ Auto Step';
   }
   tcpStep = 0;
   badgeClientState.textContent = 'CLOSED';
@@ -2067,9 +2183,25 @@ function loadRfcDoc() {
   }
 }
 
-selRfcDoc.addEventListener('change', loadRfcDoc);
+selRfcDoc.addEventListener('change', () => {
+  safeSet('kweb_rfc_doc_key', selRfcDoc.value);
+  loadRfcDoc();
+});
 inpFilterRfc.addEventListener('input', loadRfcDoc);
+
+// Restore saved document selection & active tab
+const savedDoc = safeGet('kweb_rfc_doc_key', 'rfc1149');
+if (RFC_DOCS[savedDoc]) {
+  selRfcDoc.value = savedDoc;
+}
 loadRfcDoc();
+
+const savedActiveTab = safeGet('kweb_rfc_active_tab', 'tab-avian');
+const initTabBtn = document.querySelector(`.tab-btn[data-tab="${savedActiveTab}"]`);
+if (initTabBtn && savedActiveTab !== 'tab-avian') {
+  initTabBtn.click();
+}
+updateAvianStats();
 
 document.getElementById('btnSaveActiveRfcToVfs').addEventListener('click', () => {
   const docKey = selRfcDoc.value;
