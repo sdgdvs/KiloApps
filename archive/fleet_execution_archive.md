@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T12:35:12-07:00 — kilo-qa: KBookmark (Pass 5 QA, Dual Parity & Mature Graduation)**
+  - Status: PASS ✅ (0 errors, web 160.2 KB, native 23.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kbookmark_tutorialSeen flag, and Escape modal dismissal.
+  - Dual Parity & Lifecycle: Added Netscape HTML/JSON Export/Import to Win32 C, search filter, and visibilitychange auto-save.
+  - Mature Quarantine & Handoff: Promoted `KBookmark` to Mature archive; advanced `kilo-qa` to `KRss`; next agent `kilo-expander`.
+
 - **2026-10-26T12:22:16-07:00 — kilo-usability: KScript (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KScript across web and native targets.

@@ -690,6 +690,63 @@ function playCraftFail() {
     playFM('sawtooth', 'square', 160, 1.414, 4.5, 0.25, 0.18, 0.18, false, { target: 90, time: 0.20 });
 }
 
+function playPowerupEarcon(type = 1) {
+    if (!soundEnabled) return;
+    const baseFreqs = [587.33, 659.25, 739.99, 880.00, 1046.50, 1174.66];
+    const root = baseFreqs[(type - 1) % baseFreqs.length] || 587.33;
+    [root, root * 1.25, root * 1.5].forEach((freq, idx) => {
+        setTimeout(() => {
+            playFM('sine', 'sine', freq, 3.5, 3.5, 0.14, 0.08, 0.16, true);
+        }, idx * 42);
+    });
+}
+
+function playPauseSFX(paused) {
+    if (!soundEnabled) return;
+    if (paused) {
+        playFM('square', 'sine', 370, 1.0, 1.8, 0.09, 0.05, 0.14, false, { target: 220, time: 0.07 });
+    } else {
+        playFM('square', 'sine', 293.66, 1.0, 1.8, 0.09, 0.05, 0.14, false, { target: 440, time: 0.07 });
+    }
+}
+
+function playSaveSFX() {
+    if (!soundEnabled) return;
+    [739.99, 880.00, 1174.66].forEach((f, i) => {
+        setTimeout(() => playFM('sine', 'sine', f, 2.0, 2.2, 0.14, 0.08, 0.14, true), i * 50);
+    });
+}
+
+function playLoadSFX() {
+    if (!soundEnabled) return;
+    [587.33, 739.99, 880.00].forEach((f, i) => {
+        setTimeout(() => playFM('triangle', 'sine', f, 1.5, 2.5, 0.16, 0.10, 0.14, true), i * 45);
+    });
+}
+
+function playDuelStartSFX() {
+    if (!soundEnabled) return;
+    [440, 554.37, 659.25, 880].forEach((f, i) => {
+        setTimeout(() => playFM('sawtooth', 'square', f, 1.5, 3.0, 0.18, 0.11, 0.15, true), i * 55);
+    });
+}
+
+function playKOSFX() {
+    if (!soundEnabled) return;
+    playFM('sawtooth', 'square', 330, 0.5, 4.5, 0.32, 0.20, 0.22, true, { target: 110, time: 0.25 });
+}
+
+function playExplosionSFX() {
+    if (!soundEnabled) return;
+    playFM('sawtooth', 'triangle', 140, 2.8, 6.0, 0.34, 0.22, 0.24, true, { target: 38, time: 0.26 });
+}
+
+function playResonanceSFX(chain = 1) {
+    if (!soundEnabled) return;
+    const freq = Math.min(1400, 587.33 + chain * 73.4);
+    playFM('sine', 'sine', freq, 3.5, 3.2 + Math.min(3, chain * 0.4), 0.20, 0.12, 0.18, true);
+}
+
 function playLifeLost() {
     playFM('sawtooth', 'triangle', 180, 0.5, 6.0, 0.45, 0.35, 0.26, true, { target: 45, time: 0.40 });
 }
@@ -1124,10 +1181,10 @@ function togglePause() {
     if (ov) ov.style.display = is_paused ? 'block' : 'none';
     if (is_paused) {
         stopBgm();
-        playTone(350, 'square', 0.1);
+        playPauseSFX(true);
     } else {
         if (state === 1) startBgm();
-        playTone(500, 'square', 0.1);
+        playPauseSFX(false);
     }
 }
 
@@ -1198,7 +1255,7 @@ function quicksaveGame(silent = false) {
         safeSetStorage('kbreakout_tutorialSeen', '1');
         if (!silent) {
             showToast('Tactical Quicksave Stored! [F5]', 'success');
-            playTone(700, 'sine', 0.15);
+            playSaveSFX();
         }
     } else {
         if (!silent) showToast('Failed to save (storage quota error)', 'error');
@@ -1296,7 +1353,7 @@ function quickloadGame() {
         document.getElementById('boss-bar-container').style.display = 'none';
     }
     showToast('Tactical State Restored! [F9]', 'success');
-    playTone(850, 'triangle', 0.2);
+    playLoadSFX();
     return true;
 }
 
@@ -1654,44 +1711,44 @@ function craftForge(recipe) {
         if (plasma_shards >= 15 && nano_alloys >= 10) {
             plasma_shards -= 15; nano_alloys -= 10;
             active_supernova = 1; dur_fire = 600;
-            playCraftSuccess();
+            playCraftSuccess(); playPowerupEarcon(recipe);
         } else { playCraftFail(); }
     } else if (recipe === 2) {
         if (plasma_shards >= 12 && quantum_cores >= 8) {
             plasma_shards -= 12; quantum_cores -= 8;
             active_chronos = 1;
             pad_w += 15;
-            playCraftSuccess();
+            playCraftSuccess(); playPowerupEarcon(recipe);
         } else { playCraftFail(); }
     } else if (recipe === 3) {
         if (quantum_cores >= 10 && nano_alloys >= 15) {
             quantum_cores -= 10; nano_alloys -= 15;
             active_valkyrie = 1; dur_laser = 600;
-            playCraftSuccess();
+            playCraftSuccess(); playPowerupEarcon(recipe);
         } else { playCraftFail(); }
     } else if (recipe === 4) {
         if (plasma_shards >= 10 && quantum_cores >= 10 && nano_alloys >= 10) {
             plasma_shards -= 10; quantum_cores -= 10; nano_alloys -= 10;
             aegis_layers += 3; dur_barrier = 800;
-            playCraftSuccess();
+            playCraftSuccess(); playPowerupEarcon(recipe);
         } else { playCraftFail(); }
     } else if (recipe === 5) {
         if (plasma_shards >= 20 && quantum_cores >= 15 && nano_alloys >= 15) {
             plasma_shards -= 20; quantum_cores -= 15; nano_alloys -= 15;
             spawnGravityWell(w / 2, 140, 45, 0);
-            playCraftSuccess();
+            playCraftSuccess(); playPowerupEarcon(recipe);
         } else { playCraftFail(); }
     } else if (recipe === 6) {
         if (plasma_shards >= 12 && quantum_cores >= 12 && nano_alloys >= 12) {
             plasma_shards -= 12; quantum_cores -= 12; nano_alloys -= 12;
             active_satellite_boost = 1; dur_satellite = 700;
-            playCraftSuccess();
+            playCraftSuccess(); playPowerupEarcon(recipe);
         } else { playCraftFail(); }
     } else if (recipe === 7) {
         if (quantum_cores >= 15 && nano_alloys >= 10) {
             quantum_cores -= 15; nano_alloys -= 10;
             active_resonance_catalyst = 1;
-            playCraftSuccess();
+            playCraftSuccess(); playPowerupEarcon(recipe);
         } else { playCraftFail(); }
     }
     saveGameData();
@@ -2037,7 +2094,7 @@ function startDuelAI(diff) {
     state = 1;
     initDuelRound();
     showToast(`⚔️ Arcade Duel vs ${oppPlayerName} Engaged! [BO3]`, 'success', 3500);
-    playTone(650, 'triangle', 0.25);
+    playDuelStartSFX();
 }
 
 function startDuelOnline(code, slot, customData) {
@@ -2057,7 +2114,7 @@ function startDuelOnline(code, slot, customData) {
     state = 1;
     initDuelRound();
     showToast(`🌐 Connected to Duel Room ${code}! First to ${targetKOs} KOs!`, 'success', 4000);
-    playTone(800, 'sine', 0.3);
+    playDuelStartSFX();
 }
 
 function initDuelRound() {
@@ -2294,7 +2351,7 @@ function updateDuelAI() {
             b.dx = hitRel * 4.5;
             b.dy = -Math.max(3.0, 5.0 - Math.abs(hitRel));
             p2ComboCount = 0;
-            playTone(480, 'square', 0.05, 0.05);
+            playPaddleHit();
         }
 
         // P2 Bricks Collision
@@ -2321,7 +2378,7 @@ function updateDuelAI() {
         // P2 Lost round!
         p1KOs++;
         triggerScreenShake(7.0, 0.05);
-        playTone(300, 'sawtooth', 0.3);
+        playKOSFX();
         showToast("⚡ KO SCORED! Point awarded to Player 1!", 'success', 2500);
         if (p1KOs >= targetKOs) {
             duelMatchOver = true;
@@ -3081,7 +3138,7 @@ function triggerQuantumResonance(orig_r, orig_c) {
     }
     if (chain > 0) {
         triggerScreenShake(12.0, 0.04);
-        playTone(520 + chain * 60, 'sine', 0.3);
+        playResonanceSFX(chain);
     }
 }
 
@@ -3347,7 +3404,7 @@ function drawBrick(r, c, type, bx, by, hp) {
 }
 
 function triggerExplosion(r, c) {
-    playTone(180, 'sawtooth', 0.3);
+    playExplosionSFX();
     for (let nr = r - 1; nr <= r + 1; nr++) {
         for (let nc = c - 1; nc <= c + 1; nc++) {
             if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
@@ -3740,6 +3797,13 @@ function update() {
                         if (spComboCount > (telemetry.maxCombo || 0)) telemetry.maxCombo = spComboCount;
                         playBrickHit(type, spComboCount);
 
+                        if (!power_active && Math.random() < 0.20) {
+                            power_active = 1;
+                            power_type = Math.floor(Math.random() * 9) + 1;
+                            power_x = bx;
+                            power_y = by;
+                        }
+
                         if (chaos_mode && Math.random() < 0.25 && balls.length < 30) {
                             splitBall(balls.indexOf(b));
                         }
@@ -3755,6 +3819,30 @@ function update() {
             }
         }
 
+        if (power_active) {
+            power_y += 2.5;
+            if (active_chronos) {
+                let dx = (pad_x + pad_w / 2) - power_x;
+                power_x += dx * 0.05;
+            }
+            if (power_y + 10 > h - 40 && power_y < h - 40 + pad_h && power_x + 10 > pad_x && power_x < pad_x + pad_w) {
+                power_active = 0;
+                pad_squash_timer = 15;
+                playPowerupEarcon(power_type);
+                spawnParticles(power_x, power_y, '#ffffff', 10);
+                if (power_type === 1) { paddle_timer = 350; pad_w = (diff === 1) ? 75 : 95; }
+                else if (power_type === 2) { lives++; }
+                else if (power_type === 3) { dur_fire = 480; }
+                else if (power_type === 4) { sticky_timer = 300; }
+                else if (power_type === 5) { dur_laser = 360; }
+                else if (power_type === 6) { dur_barrier = 600; }
+                else if (power_type === 7) { useSkill('multi'); }
+                else if (power_type === 8) { useSkill('grav'); }
+                else if (power_type === 9) { useSkill('sat'); }
+            }
+            if (power_y > h) power_active = 0;
+        }
+
         balls = balls.filter(b => b.y <= h || dur_barrier > 0 || aegis_layers > 0);
         if (balls.length === 0) {
             lives--;
@@ -3762,7 +3850,6 @@ function update() {
             if (lives <= 0) {
                 state = 2; stopBgm(); playLifeLost(); saveGameData();
                 triggerScreenShake(16.0, 0.05);
-                playTone(120, 'sawtooth', 0.5);
             } else {
                 initLevel();
             }
@@ -4471,6 +4558,31 @@ function render() {
 
         // Sculpted paddle with thrusters and metallic chassis
         drawSculptedPaddle(ctx, pad_x, h - 40, pad_w, pad_h);
+
+        // Falling Cyber-Powerup Capsule
+        if (power_active) {
+            const pColors = { 1: '#ffc800', 2: '#32dc32', 3: '#ff3232', 4: '#3264ff', 5: '#00ffff', 6: '#00ffc8', 7: '#ff00ff', 8: '#a020f0', 9: '#00ffdc' };
+            const pBadges = { 1: 'E', 2: '+', 3: 'P', 4: 'S', 5: 'L', 6: 'B', 7: 'M', 8: 'G', 9: 'D' };
+            const clr = pColors[power_type] || '#ffffff';
+            const badge = pBadges[power_type] || '?';
+            ctx.save();
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = clr;
+            ctx.fillStyle = clr;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(power_x - 10, power_y - 6, 20, 12, 6);
+            else ctx.rect(power_x - 10, power_y - 6, 20, 12);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#0a0a14';
+            ctx.font = 'bold 9px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(badge, power_x, power_y);
+            ctx.restore();
+        }
 
         // Enhanced Lasers with plasma envelope and incandescent core
         for (let l of lasers) {
