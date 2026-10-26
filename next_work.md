@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_creator: kweb://demoscene
   kilo_graphics: KBreakout
   kilo_soundscape: KBreakout
-  kilo_tester: KSpace
+  kilo_tester: KSys
   kilo_usability: KSpace
   kilo_qa: KPomodoro
   kilo_expander: KSynth
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KSubmarine
-  timestamp: '2026-10-26T05:21:02-07:00'
+  agent: kilo-tester
+  app: KSpace
+  timestamp: '2026-10-26T05:34:45-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -130,11 +130,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Compose abyssal sonar & trench descent 6-channel suite (Suspended `sus2/Maj7` cascade, muffled low-pass SPC700 echo, warm sine sub-bass, hydrophone ping earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KSpace`
+- **Active Target**: `KSys`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSpace` | `KiloOS/public/apps/kspace.html`, `KSpace/main.c` | **[ARGON REVIEW]:** In kspace.html, align STATE_PLAYING pointerdown hitboxes for [♫] (244..264,4..22), [?] (268..288,4..22), [//] (292..312,4..22), and [C] chassis (268..315,24..38) with drawHUD(), remove the 400ms window.load timeout that forces STATE_HELP over STATE_MENU on first boot, and make useTacticalDash() dash along current input vector instead of resetting p.x/p.y to spawn. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -146,6 +145,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Audit bookmark manager folder hierarchy, tagging, search filter, HTML/JSON export, and modal focus traps. |
 | `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Audit archive packer/unpacker UI, compression ratio telemetry, file list viewer, and drag-and-drop file ingestion. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
+| `KSpace` | `KiloOS/public/apps/kspace.html`, `KSpace/main.c` | **[ARGON REVIEW]:** In kspace.html, align STATE_PLAYING pointerdown hitboxes for [♫] (244..264,4..22), [?] (268..288,4..22), [//] (292..312,4..22), and [C] chassis (268..315,24..38) with drawHUD(), remove the 400ms window.load timeout that forces STATE_HELP over STATE_MENU on first boot, and make useTacticalDash() dash along current input vector instead of resetting p.x/p.y to spawn. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KSpace`
@@ -298,6 +298,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T05:34:45-07:00 — kilo-tester: KSpace (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 197.5 KB, native 90.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 8.03%, input 20.41%, HEAD Δ 23.43%, 0 fail, 0 warn, 11.2s)).
+  - UI & Hitbox Alignment: Aligned STATE_PLAYING pointerdown hitboxes for [♫] (244..264,4..22), [?] (268..288,4..22), [//] (292..312,4..22), and [C] chassis (268..315,24..38) with drawHUD().
+  - Controls & Boot Fixes: Removed 400ms window.load timeout forcing STATE_HELP over STATE_MENU; useTacticalDash() now dashes along active input vector in both web and native C.
+  - Handoff: Advanced `kilo-tester` to `KSys`; rotated active agent to `kilo-usability`.
+
 - **2026-10-26T05:21:02-07:00 — kilo-soundscape: KSubmarine (Abyssal Sonar & Trench Descent — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 507.0 KB, native 251.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.33%, HEAD Δ 0.13%, 0 fail, 0 warn, 13.6s)).
   - Composition: Abyssal sonar & trench descent 5-track suite, 6-channel counterpoint, sus2/Maj7 shell voicings, 5:3 swing-tick groove.
@@ -321,10 +327,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/HUD Findings: Help screen 11px centered lines overflow 320px canvas on both sides; HUD W:1/20 [S1] overlaps top-right audio button; [C]ALPH clips right border; Sector 3 HEAT text collides with [W]/[C] at y=33; #btnTimeStop truncates to [T] TI...; ship clamping at H-20 overlaps #skillBar.
   - Feature/UX Findings: 400ms boot timeout hijacks menu into STATE_HELP; HUD top-right button and [C] chassis pointerdown hitboxes mismatch drawn boxes; [D] Dash teleports player back to spawn instead of dashing.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KSpace`, `kilo-tester`->`KSpace`] (un-quarantined `KSpace` from Mature); advanced `kilo-review` to `KMaze`; next agent `kilo-creator`.
-
-- **2026-10-26T02:20:36-07:00 — kilo-expander: KPac (KPac (Phase VI Maze Editor, VFS & Win32 C Parity))**
-  - Status: PASS ✅ (0 errors, web 274.7 KB, native 52.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Maze Editor & Live FEN: Added 15x15 tile-palette editor in #fenModal with two-way live sync for PAC-FEN.
-  - VFS Integration: Wired VFS_SHOW_SAVE and VFS_SHOW_OPEN (/home/games/kpac/) for .pacfen and .kpdr replays with standalone fallback.
-  - Dual Parity: Synced eaten-ghost pen return and tile-10 phase-gate collision in KPac/main.c.
-  - Mature Quarantine & Handoff: Promoted `KPac` to Mature archive; advanced `kilo-expander` to `KSynth`; next agent `kilo-review`.

@@ -9,20 +9,12 @@ window.addEventListener('load', () => {
     if (window.parent) window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 340, height: 520 }, '*');
     const c = document.getElementById('gameCanvas');
     if (c) c.focus();
-    setTimeout(() => {
-      let tutorialSeen = safeGetStorage('kspace_tutorialSeen') === '1';
-      let hasSaved = typeof hasSavedGame === 'function' ? hasSavedGame() : false;
-      if (!tutorialSeen && !hasSaved) {
-        safeSetStorage('kspace_tutorialSeen', '1');
-        previousState = STATE_MENU;
-        gameState = STATE_HELP;
-        if (typeof showToast === 'function') {
-          showToast('🚀 Welcome Commander! Review mission controls [F1/Esc/Enter].', 'info', 4500);
-        }
-      } else if (typeof showToast === 'function') {
-        showToast('🚀 KSPACE: [F1] Controls | [F5] Quicksave | [F9] Quickload', 'info', 4000);
-      }
-    }, 400);
+    try {
+      safeSetStorage('kspace_tutorialSeen', '1');
+    } catch(e) {}
+    if (typeof showToast === 'function') {
+      showToast('🚀 KSPACE: [F1] Controls | [F5] Quicksave | [F9] Quickload', 'info', 4000);
+    }
 });
 window.addEventListener('beforeunload', () => {
   if (typeof gameState !== 'undefined' && (gameState === STATE_PLAYING || gameState === STATE_PAUSED)) {
@@ -1710,8 +1702,16 @@ window.addEventListener('beforeunload', () => {
     recordSkillInReplay('d');
     if (dashCooldown <= 0) {
       addExplosion(p.x + 10, p.y + 10, 25, '#00b0ff');
-      p.x = W / 2 - 10;
-      p.y = H - 60;
+      let dx = 0, dy = 0;
+      if (keys[keybinds.left] || keys['arrowleft'] || (keybinds.left !== 'a' && keys['a'])) dx -= 1;
+      if (keys[keybinds.right] || keys['arrowright']) dx += 1;
+      if (keys[keybinds.up] || keys['arrowup']) dy -= 1;
+      if (keys[keybinds.down] || keys['arrowdown']) dy += 1;
+      if (dx === 0 && dy === 0) dy = -1; // Default dash upwards if neutral
+      const len = Math.hypot(dx, dy) || 1;
+      const dashDist = 75;
+      p.x = Math.max(0, Math.min(W - 20, p.x + (dx / len) * dashDist));
+      p.y = Math.max(0, Math.min(H - 20, p.y + (dy / len) * dashDist));
       invincibleTimer = 125; // 2 seconds invincibility
       dashCooldown = playerChassis === 2 ? 210 : 300; // Void Phantom: 30% faster cooldown
       playSound(2);
@@ -2100,20 +2100,26 @@ window.addEventListener('beforeunload', () => {
       gameState = STATE_MENU;
       return;
     } else if (gameState === STATE_PLAYING) {
-      if (mx >= 190 && mx <= 280 && my >= 20 && my <= 44) {
-        cyclePlayerChassis();
+      // Sound toggle [♫]
+      if (mx >= 244 && mx <= 264 && my >= 4 && my <= 22) {
+        toggleSound();
         return;
       }
-      if (mx >= W - 32 && mx <= W && my >= 0 && my <= 32) {
-        gameState = STATE_PAUSED;
-        menuIndex = 0;
-        return;
-      } else if (mx >= W - 60 && mx < W - 32 && my >= 0 && my <= 32) {
+      // Help screen [?]
+      if (mx >= 268 && mx <= 288 && my >= 4 && my <= 22) {
         previousState = STATE_PLAYING;
         gameState = STATE_HELP;
         return;
-      } else if (mx >= W - 88 && mx < W - 60 && my >= 0 && my <= 32) {
-        toggleSound();
+      }
+      // Pause game [//] / [||]
+      if (mx >= 292 && mx <= 312 && my >= 4 && my <= 22) {
+        gameState = STATE_PAUSED;
+        menuIndex = 0;
+        return;
+      }
+      // Chassis selector [C]
+      if (mx >= 268 && mx <= 315 && my >= 24 && my <= 38) {
+        cyclePlayerChassis();
         return;
       }
       isPointerDown = true;

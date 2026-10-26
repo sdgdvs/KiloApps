@@ -1201,8 +1201,19 @@ void UseTacticalDash() {
     if (gameState != STATE_PLAYING) return;
     if (dashCooldown <= 0) {
         AddExplosion(p.x + 10.0f, p.y + 10.0f, 25, RGB(0, 176, 255));
-        p.x = W / 2.0f - 10.0f;
-        p.y = H - 60.0f;
+        float ddirX = 0.0f, ddirY = 0.0f;
+        if (GetAsyncKeyState(kbLeft) & 0x8000) ddirX -= 1.0f;
+        if (GetAsyncKeyState(kbRight) & 0x8000) ddirX += 1.0f;
+        if (GetAsyncKeyState(kbUp) & 0x8000) ddirY -= 1.0f;
+        if (GetAsyncKeyState(kbDown) & 0x8000) ddirY += 1.0f;
+        if (ddirX == 0.0f && ddirY == 0.0f) ddirY = -1.0f;
+        float dlen = (ddirX != 0.0f && ddirY != 0.0f) ? 1.41421356f : 1.0f;
+        p.x += (ddirX / dlen) * 75.0f;
+        p.y += (ddirY / dlen) * 75.0f;
+        if (p.x < 0.0f) p.x = 0.0f;
+        if (p.x > W - 20.0f) p.x = W - 20.0f;
+        if (p.y < 0.0f) p.y = 0.0f;
+        if (p.y > H - 20.0f) p.y = H - 20.0f;
         invincibleTimer = 125; // 2 seconds
         dashCooldown = (playerChassis == 2) ? 210 : 300; // Void Phantom: faster cooldown
         PlaySnd(2);
