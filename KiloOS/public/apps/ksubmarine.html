@@ -8399,76 +8399,178 @@
                 ctx.restore();
             }
 
-            // 2. Colossal Abyssal Leviathan Serpent Sprite
+            // 2. Colossal Bioluminescent Trench Leviathan Silhouette
             function drawLeviathanCreature(ctx, cX, cY, dpr, isSwept, isSelected, time) {
                 ctx.save();
                 ctx.translate(cX, cY);
 
-                const baseColor = isSwept || isSelected ? '#f43f5e' : 'rgba(244, 63, 94, 0.35)';
+                const baseColor = isSwept || isSelected ? '#f43f5e' : 'rgba(244, 63, 94, 0.45)';
                 const glowColor = '#ff2e5b';
-                const numSegments = 6;
-                const segSpacing = 3.4 * dpr;
-                const waveFreq = 3.6;
-                const waveAmp = 2.8 * dpr;
+                const bioCyan = '#00f0ff';
+                const bioViolet = '#c084fc';
+                const numSegments = 9;
+                const segSpacing = 3.8 * dpr;
+                const waveFreq = 3.2;
+                const waveAmp = 3.2 * dpr;
 
+                // Ambient Bioluminescent Radial Aura Haze
                 if (isSwept || isSelected) {
-                    ctx.shadowColor = glowColor;
-                    ctx.shadowBlur = 10 * dpr;
-                }
-                ctx.fillStyle = baseColor;
+                    const auraRad = (24 + Math.sin(time * 3) * 3) * dpr;
+                    const auraGrad = ctx.createRadialGradient(0, 0, 2 * dpr, 0, 0, auraRad);
+                    auraGrad.addColorStop(0, 'rgba(244, 63, 94, 0.32)');
+                    auraGrad.addColorStop(0.5, 'rgba(168, 85, 247, 0.15)');
+                    auraGrad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+                    ctx.fillStyle = auraGrad;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, auraRad, 0, Math.PI * 2);
+                    ctx.fill();
 
-                // Menacing Serpent Head
-                const headAngle = Math.sin(time * waveFreq) * 0.25;
+                    ctx.shadowColor = glowColor;
+                    ctx.shadowBlur = 12 * dpr;
+                }
+
+                // Menacing Serpent Head & Jaws
+                const headAngle = Math.sin(time * waveFreq) * 0.22;
                 ctx.save();
                 ctx.rotate(headAngle);
+
+                // Bioluminescent chin barbel with glowing lure bulb
+                ctx.strokeStyle = bioCyan;
+                ctx.lineWidth = 1 * dpr;
                 ctx.beginPath();
-                ctx.moveTo(8 * dpr, 0);
-                ctx.lineTo(3 * dpr, -4.5 * dpr);
-                ctx.lineTo(-2 * dpr, -3.5 * dpr);
-                ctx.lineTo(-2 * dpr, 3.5 * dpr);
-                ctx.lineTo(3 * dpr, 4.5 * dpr);
+                ctx.moveTo(3 * dpr, 4 * dpr);
+                const barbWave = Math.sin(time * 5) * 2 * dpr;
+                ctx.quadraticCurveTo(6 * dpr, 8 * dpr, 8 * dpr + barbWave, 11 * dpr);
+                ctx.stroke();
+                // Barbel bioluminescent bulb
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath();
+                ctx.arc(8 * dpr + barbWave, 11 * dpr, 1.6 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Armored Cranium Silhouette
+                ctx.fillStyle = baseColor;
+                ctx.beginPath();
+                ctx.moveTo(11 * dpr, 0); // Spined snout tip
+                ctx.lineTo(6 * dpr, -5.5 * dpr); // Upper cranial crest
+                ctx.lineTo(0, -6 * dpr); // Rear horn ridge
+                ctx.lineTo(-2 * dpr, -4 * dpr); // Neck transition
+                ctx.lineTo(-3 * dpr, 3.5 * dpr); // Lower jaw hinge
+                ctx.lineTo(4 * dpr, 5 * dpr); // Lower mandible
+                ctx.lineTo(8 * dpr, 2.5 * dpr); // Underbite cusp
                 ctx.closePath();
                 ctx.fill();
 
-                // Luminous Abyssal Eye
+                // Gaping mouth cavity & luminescent needle teeth
+                ctx.fillStyle = '#050510';
+                ctx.beginPath();
+                ctx.moveTo(10 * dpr, 0);
+                ctx.lineTo(2 * dpr, 1 * dpr);
+                ctx.lineTo(7 * dpr, 3.2 * dpr);
+                ctx.closePath();
+                ctx.fill();
+
+                // Translucent fangs
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 0.8 * dpr;
+                ctx.beginPath();
+                ctx.moveTo(8 * dpr, 0.2 * dpr); ctx.lineTo(7 * dpr, 1.8 * dpr);
+                ctx.moveTo(5 * dpr, 0.4 * dpr); ctx.lineTo(4.5 * dpr, 1.6 * dpr);
+                ctx.stroke();
+
+                // Abyssal Predatory Multi-Eyes (Tri-Spectral Ocelli)
                 ctx.fillStyle = '#fef08a';
                 ctx.beginPath();
-                ctx.arc(4 * dpr, -1.8 * dpr, 1.3 * dpr, 0, Math.PI * 2);
+                ctx.arc(4.5 * dpr, -2.2 * dpr, 1.5 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+                // Secondary sensory eye
+                ctx.fillStyle = bioCyan;
+                ctx.beginPath();
+                ctx.arc(1.8 * dpr, -3.2 * dpr, 1 * dpr, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.restore();
 
-                // Undulating Sinusoidal Body Segments
-                ctx.fillStyle = baseColor;
+                // Undulating Sinusoidal Body Segments with Skeletal Ribs & Dorsal Crest
                 for (let i = 1; i <= numSegments; i++) {
+                    const segPhase = time * waveFreq - i * 0.55;
                     const segX = -i * segSpacing;
-                    const segY = Math.sin(time * waveFreq - i * 0.7) * waveAmp;
-                    const segRad = Math.max(1.6 * dpr, (numSegments - i * 0.6) * 0.9 * dpr);
+                    const segY = Math.sin(segPhase) * waveAmp;
+                    const segRad = Math.max(1.8 * dpr, (numSegments - i * 0.45) * 1.05 * dpr);
 
+                    // Segment silhouette body
+                    ctx.fillStyle = baseColor;
                     ctx.beginPath();
                     ctx.arc(segX, segY, segRad, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Photophore Bioluminescent Nodes along Dorsal Ridge
-                    if (i % 2 === 1 && (isSwept || isSelected)) {
-                        ctx.fillStyle = '#38bdf8';
+                    // Branching Dorsal Spines & Radiant Filament Tips
+                    const spineHeight = (segRad + (5 - Math.abs(i - 4) * 0.8) * dpr);
+                    const spineAngle = Math.cos(segPhase) * 0.35;
+                    ctx.strokeStyle = baseColor;
+                    ctx.lineWidth = 1 * dpr;
+                    ctx.beginPath();
+                    ctx.moveTo(segX, segY - segRad * 0.6);
+                    ctx.lineTo(segX - 1.5 * dpr + Math.sin(spineAngle) * 3 * dpr, segY - spineHeight);
+                    ctx.stroke();
+
+                    // Spine tip photophore
+                    if (isSwept || isSelected) {
+                        ctx.fillStyle = (i % 2 === 0) ? bioCyan : bioViolet;
                         ctx.beginPath();
-                        ctx.arc(segX, segY - segRad - 1.2 * dpr, 1 * dpr, 0, Math.PI * 2);
+                        ctx.arc(segX - 1.5 * dpr + Math.sin(spineAngle) * 3 * dpr, segY - spineHeight, 1.1 * dpr, 0, Math.PI * 2);
                         ctx.fill();
-                        ctx.fillStyle = baseColor;
+                    }
+
+                    // Translucent Luminescent Rib Arches
+                    ctx.strokeStyle = isSwept || isSelected ? 'rgba(56, 189, 248, 0.5)' : 'rgba(244, 63, 94, 0.3)';
+                    ctx.lineWidth = 0.8 * dpr;
+                    ctx.beginPath();
+                    ctx.arc(segX, segY, segRad * 0.75, Math.PI * 0.2, Math.PI * 0.8);
+                    ctx.stroke();
+
+                    // Lateral Line Photophore Nodes (Bioluminescent Pearls)
+                    if (isSwept || isSelected) {
+                        ctx.fillStyle = (i % 2 === 1) ? bioCyan : '#38bdf8';
+                        ctx.beginPath();
+                        ctx.arc(segX, segY, 1.1 * dpr, 0, Math.PI * 2);
+                        ctx.fill();
                     }
                 }
 
-                // Bifurcated Tail Fluke
-                const tailX = -(numSegments + 1) * segSpacing;
-                const tailY = Math.sin(time * waveFreq - (numSegments + 1) * 0.7) * waveAmp;
+                // Caudal Fin: Wide Bifurcated Luminous Caudal Fluke with Radiant Fin Rays
+                const tailIdx = numSegments + 1;
+                const tailX = -tailIdx * segSpacing;
+                const tailY = Math.sin(time * waveFreq - tailIdx * 0.55) * waveAmp;
+                const tailAngle = Math.cos(time * waveFreq - tailIdx * 0.55) * 0.3;
+
+                ctx.save();
+                ctx.translate(tailX, tailY);
+                ctx.rotate(tailAngle);
+
+                // Caudal fin webbing
+                ctx.fillStyle = isSwept || isSelected ? 'rgba(244, 63, 94, 0.65)' : 'rgba(244, 63, 94, 0.25)';
                 ctx.beginPath();
-                ctx.moveTo(tailX, tailY);
-                ctx.lineTo(tailX - 6.5 * dpr, tailY - 5.5 * dpr);
-                ctx.lineTo(tailX - 3.2 * dpr, tailY);
-                ctx.lineTo(tailX - 6.5 * dpr, tailY + 5.5 * dpr);
+                ctx.moveTo(0, 0);
+                ctx.quadraticCurveTo(-4 * dpr, -5 * dpr, -9 * dpr, -8 * dpr);
+                ctx.lineTo(-6 * dpr, -2 * dpr);
+                ctx.lineTo(-4 * dpr, 0);
+                ctx.lineTo(-6 * dpr, 2 * dpr);
+                ctx.lineTo(-9 * dpr, 8 * dpr);
+                ctx.quadraticCurveTo(-4 * dpr, 5 * dpr, 0, 0);
                 ctx.closePath();
                 ctx.fill();
 
+                // Luminous Caudal Fin Rays
+                ctx.strokeStyle = bioCyan;
+                ctx.lineWidth = 0.9 * dpr;
+                ctx.beginPath();
+                ctx.moveTo(0, 0); ctx.lineTo(-8.5 * dpr, -7.5 * dpr);
+                ctx.moveTo(0, 0); ctx.lineTo(-5.5 * dpr, -2 * dpr);
+                ctx.moveTo(0, 0); ctx.lineTo(-5.5 * dpr, 2 * dpr);
+                ctx.moveTo(0, 0); ctx.lineTo(-8.5 * dpr, 7.5 * dpr);
+                ctx.stroke();
+
+                ctx.restore();
                 ctx.restore();
             }
 
@@ -8856,22 +8958,75 @@
                     ctx.fillText(`${r * 500}m`, cx + (maxR / 4) * r - (18 * dpr), cy - 4 * dpr);
                 }
 
-                // Crosshairs & Bearings
+                // Crosshairs & Bearings with fine graticule notches
+                ctx.strokeStyle = palette.ring;
+                ctx.lineWidth = 0.9 * dpr;
                 ctx.beginPath();
-                ctx.moveTo(cx - maxR, cy);
-                ctx.lineTo(cx + maxR, cy);
-                ctx.moveTo(cx, cy - maxR);
-                ctx.lineTo(cx, cy + maxR);
+                ctx.moveTo(cx - maxR, cy); ctx.lineTo(cx + maxR, cy);
+                ctx.moveTo(cx, cy - maxR); ctx.lineTo(cx, cy + maxR);
                 ctx.stroke();
 
-                // Sonar sweep beam
+                for (let step = 1; step <= 8; step++) {
+                    const dStep = (maxR / 8) * step;
+                    ctx.beginPath();
+                    ctx.moveTo(cx + dStep, cy - 2.5 * dpr); ctx.lineTo(cx + dStep, cy + 2.5 * dpr);
+                    ctx.moveTo(cx - dStep, cy - 2.5 * dpr); ctx.lineTo(cx - dStep, cy + 2.5 * dpr);
+                    ctx.moveTo(cx - 2.5 * dpr, cy + dStep); ctx.lineTo(cx + 2.5 * dpr, cy + dStep);
+                    ctx.moveTo(cx - 2.5 * dpr, cy - dStep); ctx.lineTo(cx + 2.5 * dpr, cy - dStep);
+                    ctx.stroke();
+                }
+
+                // Outer Compass Azimuth Graticule & Cardinal Marks
+                for (let deg = 0; deg < 360; deg += 30) {
+                    const rad = deg * (Math.PI / 180);
+                    const isCardinal = (deg % 90 === 0);
+                    const tickLen = (isCardinal ? 6 : 3.5) * dpr;
+                    const cosA = Math.cos(rad);
+                    const sinA = Math.sin(rad);
+
+                    ctx.strokeStyle = isCardinal ? (palette.accent || palette.textBright) : palette.ring;
+                    ctx.lineWidth = (isCardinal ? 1.5 : 0.8) * dpr;
+                    ctx.beginPath();
+                    ctx.moveTo(cx + cosA * (maxR - tickLen), cy + sinA * (maxR - tickLen));
+                    ctx.lineTo(cx + cosA * maxR, cy + sinA * maxR);
+                    ctx.stroke();
+
+                    if (isCardinal) {
+                        ctx.fillStyle = palette.ringText;
+                        ctx.font = `bold ${7.5 * dpr}px monospace`;
+                        const cardText = deg === 0 ? '090°' : (deg === 90 ? '180°' : (deg === 180 ? '270°' : '000°'));
+                        const lblR = maxR - 13 * dpr;
+                        ctx.fillText(cardText, cx + cosA * lblR - 10 * dpr, cy + sinA * lblR + 3 * dpr);
+                    }
+                }
+
+                // Sonar sweep beam & CRT Phosphor Decay Sector Trail
                 sweepAngle += 0.03;
                 if (sweepAngle >= Math.PI * 2) sweepAngle = 0;
 
+                // Authentic phosphor decay fan trail (12 fading angular sectors trailing the beam)
+                const trailSectors = 12;
+                const trailSpan = 0.55; // ~31 degrees
+                const sectorStep = trailSpan / trailSectors;
+                for (let s = trailSectors; s >= 1; s--) {
+                    const aStart = sweepAngle - s * sectorStep;
+                    const aEnd = sweepAngle - (s - 1) * sectorStep;
+                    const decayRatio = 1.0 - (s / trailSectors);
+                    const trailAlpha = decayRatio * decayRatio * 0.22;
+
+                    ctx.fillStyle = palette.sweep;
+                    ctx.globalAlpha = trailAlpha;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.arc(cx, cy, maxR, aStart, aEnd);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1.0;
+
+                // Leading acoustic sweep beam line
                 const sweepX = cx + Math.cos(sweepAngle) * maxR;
                 const sweepY = cy + Math.sin(sweepAngle) * maxR;
-
-                // Gradient fan sweep
                 ctx.strokeStyle = palette.sweep;
                 ctx.lineWidth = 2 * dpr;
                 ctx.beginPath();
@@ -8906,27 +9061,83 @@
                     const vx = cx + vRelX * maxR;
                     const vy = cy + vRelY * maxR;
                     ctx.save();
-                    ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
-                    ctx.beginPath();
-                    ctx.arc(vx, vy, 14 * dpr, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.strokeStyle = 'rgba(245, 158, 11, 0.6)';
+
+                    // Thermal Anomaly Acoustic Thermocline Ring
+                    const thermoclinePuff = ((globalAnimTime * 0.8) % 1.0);
+                    const thermRad = (18 + thermoclinePuff * 26) * dpr;
+                    ctx.strokeStyle = `rgba(239, 68, 68, ${(1.0 - thermoclinePuff) * 0.45})`;
+                    ctx.setLineDash([3 * dpr, 4 * dpr]);
                     ctx.lineWidth = 1.2 * dpr;
+                    ctx.beginPath();
+                    ctx.arc(vx, vy, thermRad, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // Basalt Chimney Spire Silhouette (Seabed Black Smoker Tower)
+                    ctx.fillStyle = '#0f172a';
+                    ctx.strokeStyle = '#334155';
+                    ctx.lineWidth = 1 * dpr;
+                    ctx.beginPath();
+                    ctx.moveTo(vx - 7 * dpr, vy + 14 * dpr);
+                    ctx.lineTo(vx - 4 * dpr, vy + 4 * dpr);
+                    ctx.lineTo(vx - 2 * dpr, vy - 2 * dpr);
+                    ctx.lineTo(vx + 2 * dpr, vy - 2 * dpr);
+                    ctx.lineTo(vx + 4 * dpr, vy + 5 * dpr);
+                    ctx.lineTo(vx + 8 * dpr, vy + 14 * dpr);
+                    ctx.closePath();
+                    ctx.fill();
                     ctx.stroke();
 
-                    // Rising thermal smoker motes
-                    for (let p = 0; p < 4; p++) {
-                        const pPhase = ((globalAnimTime * 1.6 + p * 0.25) % 1.0);
-                        const pR = (3 + pPhase * 10) * dpr;
-                        const pAlpha = 1.0 - pPhase;
-                        ctx.strokeStyle = (p % 2 === 0) ? `rgba(239, 68, 68, ${pAlpha * 0.7})` : `rgba(245, 158, 11, ${pAlpha * 0.7})`;
+                    // Incandescent Geothermal Vent Mouth Core Glow
+                    const ventCoreGrad = ctx.createRadialGradient(vx, vy - 2 * dpr, 1 * dpr, vx, vy - 2 * dpr, 6 * dpr);
+                    ventCoreGrad.addColorStop(0, '#fef08a');
+                    ventCoreGrad.addColorStop(0.4, '#f59e0b');
+                    ventCoreGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+                    ctx.fillStyle = ventCoreGrad;
+                    ctx.beginPath();
+                    ctx.arc(vx, vy - 2 * dpr, 6 * dpr, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Multi-Stage Turbulent Convective Billowing Mineral Plume
+                    const numPuffs = 9;
+                    for (let p = 0; p < numPuffs; p++) {
+                        const pPhase = ((globalAnimTime * 0.9 + p * (1.0 / numPuffs)) % 1.0);
+                        const riseDist = pPhase * 32 * dpr;
+                        const driftX = Math.sin(globalAnimTime * 2.5 + p * 1.3) * (5 + pPhase * 8) * dpr + (pPhase * 6 * dpr);
+                        const puffY = vy - 3 * dpr - riseDist;
+                        const puffX = vx + driftX;
+                        const puffRadius = (3.5 + pPhase * 12) * dpr;
+                        const puffAlpha = (1.0 - pPhase) * 0.75;
+
+                        // Hot sulfur core puff to dense black smoker mineral cloud
+                        const puffGrad = ctx.createRadialGradient(puffX, puffY, puffRadius * 0.15, puffX, puffY, puffRadius);
+                        if (pPhase < 0.25) {
+                            puffGrad.addColorStop(0, `rgba(254, 240, 138, ${puffAlpha})`);
+                            puffGrad.addColorStop(0.6, `rgba(245, 158, 11, ${puffAlpha * 0.8})`);
+                            puffGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+                        } else if (pPhase < 0.6) {
+                            puffGrad.addColorStop(0, `rgba(239, 68, 68, ${puffAlpha * 0.85})`);
+                            puffGrad.addColorStop(0.65, `rgba(185, 28, 28, ${puffAlpha * 0.5})`);
+                            puffGrad.addColorStop(1, 'rgba(30, 41, 59, 0)');
+                        } else {
+                            puffGrad.addColorStop(0, `rgba(71, 85, 105, ${puffAlpha * 0.6})`);
+                            puffGrad.addColorStop(0.7, `rgba(30, 41, 59, ${puffAlpha * 0.35})`);
+                            puffGrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+                        }
+
+                        ctx.fillStyle = puffGrad;
                         ctx.beginPath();
-                        ctx.arc(vx + Math.sin(globalAnimTime * 4 + p) * 3 * dpr, vy - pPhase * 16 * dpr, pR, 0, Math.PI * 2);
-                        ctx.stroke();
+                        ctx.arc(puffX, puffY, puffRadius, 0, Math.PI * 2);
+                        ctx.fill();
                     }
+
+                    // Temperature readout & telemetry label
                     ctx.fillStyle = '#f87171';
                     ctx.font = `bold ${8 * dpr}px monospace`;
-                    ctx.fillText('♨ HYDROTHERMAL VENT', vx + 10 * dpr, vy - 4 * dpr);
+                    ctx.fillText('♨ HYDROTHERMAL VENT [382°C]', vx + 12 * dpr, vy - 6 * dpr);
+                    ctx.font = `${7 * dpr}px monospace`;
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fillText('SUPERHEATED MINERAL SPOUT', vx + 12 * dpr, vy + 4 * dpr);
                     ctx.restore();
                 }
 
@@ -9202,16 +9413,28 @@
                     ctx.fillText(`SECTOR: ${sec.name}`, secCenterX - 45 * dpr, secCenterY - 3.8 * scale);
                 });
 
-                // Thermal Smokers Anomaly Ring
+                // Thermal Smokers Anomaly Ring & Plume Marker
                 const ventX = cx + (-5.5 - state.posX) * scale;
                 const ventY = cy + (-6.0 - state.posY) * scale;
-                ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+                ctx.setLineDash([3 * dpr, 3 * dpr]);
                 ctx.beginPath();
                 ctx.arc(ventX, ventY, 1.2 * scale, 0, Math.PI * 2);
                 ctx.stroke();
-                ctx.fillStyle = 'rgba(239, 68, 68, 0.7)';
-                ctx.font = `${8 * dpr}px monospace`;
-                ctx.fillText('♨ HYDROTHERMAL THERMAL SPOUT', ventX - 50 * dpr, ventY + 18 * dpr);
+                ctx.setLineDash([]);
+
+                // Vent Crag Chimney Marker
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.moveTo(ventX - 5 * dpr, ventY + 6 * dpr);
+                ctx.lineTo(ventX, ventY - 5 * dpr);
+                ctx.lineTo(ventX + 5 * dpr, ventY + 6 * dpr);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#f87171';
+                ctx.font = `bold ${8 * dpr}px monospace`;
+                ctx.fillText('♨ HYDROTHERMAL THERMAL SPOUT [382°C]', ventX - 50 * dpr, ventY + 18 * dpr);
 
                 // Breadcrumb trail
                 if (state.breadcrumbs.length > 1) {

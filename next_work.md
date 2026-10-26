@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ commit_checkpoint: 12
 status: ready
 current_targets:
   kilo_creator: kweb://scallion
-  kilo_graphics: KSubmarine
+  kilo_graphics: KWizard
   kilo_soundscape: KPac
   kilo_tester: KPac
   kilo_usability: KPac
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://cabled
-  timestamp: '2026-10-25T17:34:05-07:00'
+  agent: kilo-graphics
+  app: KSubmarine
+  timestamp: '2026-10-25T18:17:42-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -98,11 +98,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KSubmarine`
+- **Active Target**: `KWizard`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
 | `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
@@ -113,6 +112,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Replace forbidden code-generated SVG mech primitives (getPlayerMechSVG and getEnemyMechSVG) with Imagen 3 2-stage chroma-keyed sprites for player chassis and enemy mech tiers. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
+| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KPac`
@@ -300,6 +300,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-25T18:17:42-07:00 — kilo-graphics: KSubmarine (Bioluminescent Leviathans, Smoker Plumes & Sonar CRT HUD)**
+  - Status: PASS ✅ (web 501.5 KB, native 251.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (HEAD Δ 0.13%, input 0.34%)).
+  - Enhanced bathysphere trench exploration visuals with multi-stage turbulent hydrothermal smoker plumes, black smoker basalt spires, and acoustic thermocline rings.
+  - Polished sonar HUD with 12-sector CRT phosphor sweep persistence decay fan, 30° azimuth compass graticules, cardinal marks, and fine distance graticule notches.
+  - Integrated colossal bioluminescent trench leviathan silhouettes with glowing photophore lateral lines, translucent skeletal ribs, and luminous caudal fin rays.
+  - Handoff: Advanced `kilo-graphics` to `KWizard`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-25T17:34:05-07:00 — kilo-creator: kweb://cabled (Cabled Magazine 1999 Neon Edition & Cyberculture Hub)**
   - Status: PASS ✅ (0 errors, web 99.6 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Interactive Y2K Readiness Audit, Dot-Com IPO Simulator, Jargon Watch generator & Hype-vs-Reality matrix.
@@ -326,10 +333,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Persistence: Verified F5/F9 workspace snapshot, ktimer_tutorialSeen flag, sound alert persistence, and modal dismissals.
   - Dual Parity & Audio: Verified Web HTML + Win32 C parity for sound alert toggle [M], CSV/TXT lap exports, and visibilitychange lifecycle.
   - Mature Quarantine & Handoff: Promoted `KTimer` to Mature archive; advanced `kilo-qa` to `KClock`; next agent `kilo-expander`.
-
-- **2026-10-25T13:37:12-07:00 — kilo-usability: KTrader (KTrader Usability, Flex Header & Responsive Compact Layout)**
-  - Status: PASS ✅ (web 175.1 KB, native 26.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Flex Header & Toolbar: Converted absolute 12-button toolbar into responsive flex header eliminating H1 collision at 960x683.
-  - Shipyard & Missions Compactness: Grouped Shipyard & Missions side-by-side, added flex-wrap and upgrade stat labels, compacted log and canvas.
-  - HiDPI & Parity: Removed misleading [1]-[5] market row prefixes, added HiDPI scaling & resize handler to #gfx-canvas, synced KTrader/main.c upgrade labels.
-  - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
