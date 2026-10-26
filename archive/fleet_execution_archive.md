@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T06:19:39-07:00 — kilo-usability: KSpace (UI/UX, Responsive Layout & HUD Polish)**
+  - Status: PASS ✅ (0 errors, web 202.5 KB, native 90.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 8.22%, input 20.41%, HEAD Δ 1.16%, 0 fail, 0 warn, 11.5s)).
+  - Help Screen: Left-aligned drawHelpScreen text at 9px (<=46 chars/line) eliminating 320px horizontal canvas clipping in both web and native C.
+  - HUD Layout: Shifted wave/20 [Sx] to x=132 clear of top-right buttons; shifted [C] chassis indicator to W-48; moved Sector 3 HEAT to y=44 (y=36 in C) preventing HUD overlap.
+  - Ergonomics & Controls: Clamped player ship p.y to H-52 keeping craft above #skillBar; updated #skillBar labels to compact [T] TIM and [S] SHL.
+  - Mature Quarantine & Handoff: Promoted `KSpace` to Mature archive; advanced `kilo-usability` to `KScript`; next agent `kilo-qa`.
+
 - **2026-10-26T05:34:45-07:00 — kilo-tester: KSpace (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 197.5 KB, native 90.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 8.03%, input 20.41%, HEAD Δ 23.43%, 0 fail, 0 warn, 11.2s)).
   - UI & Hitbox Alignment: Aligned STATE_PLAYING pointerdown hitboxes for [♫] (244..264,4..22), [?] (268..288,4..22), [//] (292..312,4..22), and [C] chassis (268..315,24..38) with drawHUD().
