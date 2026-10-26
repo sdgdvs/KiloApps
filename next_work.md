@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_soundscape: KSubmarine
   kilo_tester: KSys
   kilo_usability: KScript
-  kilo_qa: KClock
+  kilo_qa: KPomodoro
   kilo_expander: KPac
   kilo_review: KSpace
 virtual_web_target: kweb://scallion
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KPac
-  timestamp: '2026-10-25T22:19:30-07:00'
+  agent: kilo-qa
+  app: KClock
+  timestamp: '2026-10-25T22:31:36-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -167,11 +167,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPac` | `KiloOS/public/apps/kpac.html`, `KPac/main.c` | **[ARGON REVIEW]:** Widen #game-container to fit the KiloOS window with zero vertical overflow, separate .app-title + badges above a compact 2-row toolbar (removing duplicate Forge/Mode buttons from .skills-bar), anchor .toast-container below the full header with max 2 non-occluding toasts, and restore pre-modal pause state on modal close. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KClock`
+- **Active Target**: `KPomodoro`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KClock` | `KiloOS/public/apps/kclock.html`, `KClock/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, world time offsets, alarm trigger verification, dual Win32 C parity, and promote to Mature table. |
 | `KPomodoro` | `KiloOS/public/apps/kpomodoro.html`, `KPomodoro/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, interval timer verification, notification chime, dual Win32 C parity, and promote to Mature table. |
 | `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, bookmark export/import, search filtering, dual Win32 C parity, and promote to Mature table. |
 | `KRss` | `KiloOS/public/apps/krss.html`, `KRSS/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, feed parser resilience, OPML export, dual Win32 C parity, and promote to Mature table. |
@@ -244,6 +243,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KClock** | `KiloOS/public/apps/kclock.html` | Pass 5+ (2026-10-25) | System / Utilities | Complete timekeeping workstation featuring 8 tools (Clock, World Time, Epoch Suite, Stopwatch, Countdown, Alarms, Calendar, Settings), F5/F9 state persistence, audio chimes, and dual Win32 C parity. |
 | **KTimer** | `KiloOS/public/apps/ktimer.html` | Pass 5+ (2026-10-25) | Productivity | Complete timing suite with Stopwatch, Countdown, Multi-Timer, Pomodoro, and HIIT Interval timers, F5/F9 state persistence, sound alerts [M], CSV/TXT lap exports, and 100% Win32 C parity. |
 | **KTodo** | `KiloOS/public/apps/ktodo.html` | Pass 5+ (2026-10-24) | Office / Productivity | Complete productivity task manager with multi-tab boards, F5/F9 persistence, dynamic tag filtering, dual Win32 C parity, and real-time RTDB collab. |
 | **KFlash** | `KiloOS/public/apps/kflash.html` | Pass 5+ (2026-10-24) | Education / Spaced Repetition | Complete flashcard & Leitner spaced repetition study workstation with 5 boxes, 1-4 rating math, deck drawer, sample packs, JSON/CSV import/export, F5/F9 persistence, and dual Win32 C parity. |
@@ -300,6 +300,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-25T22:31:36-07:00 — kilo-qa: KClock (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 113.1 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Persistence: Verified F5/F9 quicksave/quickload, kclock_tutorialSeen flag, world time offsets, alarms, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer hygiene.
+  - Mature Quarantine & Handoff: Promoted `KClock` to Mature archive; advanced `kilo-qa` to `KPomodoro`; next agent `kilo-expander`.
+
 - **2026-10-25T22:19:30-07:00 — kilo-usability: KPac (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 244.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.17%, input 3.74%, HEAD Δ 30.27%, 0 fail, 0 warn, 11.3s)).
   - Layout & Responsive: Widened #game-container to 394px for KiloOS frame with zero vertical overflow, separated .app-title-bar above compact 2-row toolbar, removed duplicate Forge/Camp buttons from skills bar.
@@ -324,9 +330,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Polished sonar HUD with 12-sector CRT phosphor sweep persistence decay fan, 30° azimuth compass graticules, cardinal marks, and fine distance graticule notches.
   - Integrated colossal bioluminescent trench leviathan silhouettes with glowing photophore lateral lines, translucent skeletal ribs, and luminous caudal fin rays.
   - Handoff: Advanced `kilo-graphics` to `KWizard`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-25T17:34:05-07:00 — kilo-creator: kweb://cabled (Cabled Magazine 1999 Neon Edition & Cyberculture Hub)**
-  - Status: PASS ✅ (0 errors, web 99.6 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Interactive Y2K Readiness Audit, Dot-Com IPO Simulator, Jargon Watch generator & Hype-vs-Reality matrix.
-  - Integrated KiloOS VFS exports, retro audio synth, hotkey navigation, and knet.html/portal/webring routing.
-  - Handoff: Advanced `kilo-creator` to `kweb://scallion`; rotated active agent to `kilo-graphics`.
