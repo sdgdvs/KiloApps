@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-25T22:19:30-07:00 — kilo-usability: KPac (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 244.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.17%, input 3.74%, HEAD Δ 30.27%, 0 fail, 0 warn, 11.3s)).
+  - Layout & Responsive: Widened #game-container to 394px for KiloOS frame with zero vertical overflow, separated .app-title-bar above compact 2-row toolbar, removed duplicate Forge/Camp buttons from skills bar.
+  - Ergonomics & Toasts: Anchored .toast-container at top 68px below full header with max 2 non-occluding toasts, added focus-visible outlines, touch-action controls, and restored pre-modal pause state on modal close.
+  - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
+
 - **2026-10-25T20:37:03-07:00 — kilo-tester: KPac (Interactive UI Audit & Inline Repairs)**
   - Status: PASS (0 errors, web 242.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.14%, input 3.12%, HEAD delta 6.56%)).
   - UI & Hotkeys: Added ctx.moveTo before diode arcs eliminating corridor polygon; added click-to-rebind key capture on #kb_p1Up..#kb_p2Right.

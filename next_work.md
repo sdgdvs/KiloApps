@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ commit_checkpoint: 12
 status: ready
 current_targets:
   kilo_creator: kweb://demoscene
-  kilo_graphics: KWizard
+  kilo_graphics: KBreakout
   kilo_soundscape: KSubmarine
   kilo_tester: KSpace
   kilo_usability: KSpace
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://scallion
-  timestamp: '2026-10-26T03:14:42-07:00'
+  agent: kilo-graphics
+  app: KStarDredge
+  timestamp: '2026-10-26T03:32:14-07:00'
 last_planner_run: '2026-10-25T16:15:00Z'
 ---
 
@@ -98,12 +98,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KWizard`
+- **Active Target**: `KBreakout`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
-| `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
@@ -113,6 +111,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Replace forbidden code-generated SVG mech primitives (getPlayerMechSVG and getEnemyMechSVG) with Imagen 3 2-stage chroma-keyed sprites for player chassis and enemy mech tiers. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
+| `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
+| `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KSubmarine`
@@ -298,6 +298,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T03:32:14-07:00 — kilo-graphics: KStarDredge (Skip — Asset Suitability & Vector Authenticity)**
+  - ⏭️ Skip — KStarDredge is an authentic CRT vector-scan salvager; bitmap sprites not appropriate.
+  - Glint sweep verified: zero specular glints or traveling perimeter border dots in HTML and C.
+  - Status: PASS ✅ (web 520.4 KB, native 286.0 KB, startup & security PASS).
+  - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-26T03:14:42-07:00 — kilo-creator: kweb://scallion (The Scallion: 1999 Satirical News (kweb://scallion))**
   - Status: PASS ✅ (0 errors, web 91.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.22%, input 42.61%, HEAD Δ 0.34%, 0 fail, 0 warn, 8.2s)).
   - Satire Portal & Columns: Full broadsheet with Lead Story, Sub-Articles, Y2K Doom Clock, Interactive Gallup Poll, Tech Horoscopes, and [1-6]/[M]/[S]/[P]/[Esc] keyboard navigation.
@@ -322,9 +328,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Persistence: Verified F5/F9 quicksave/quickload, kclock_tutorialSeen flag, world time offsets, alarms, and Escape modal dismissals.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer hygiene.
   - Mature Quarantine & Handoff: Promoted `KClock` to Mature archive; advanced `kilo-qa` to `KPomodoro`; next agent `kilo-expander`.
-
-- **2026-10-25T22:19:30-07:00 — kilo-usability: KPac (Usability, Responsive Layout & Ergonomics Polish)**
-  - Status: PASS ✅ (0 errors, web 244.3 KB, native 51.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.17%, input 3.74%, HEAD Δ 30.27%, 0 fail, 0 warn, 11.3s)).
-  - Layout & Responsive: Widened #game-container to 394px for KiloOS frame with zero vertical overflow, separated .app-title-bar above compact 2-row toolbar, removed duplicate Forge/Camp buttons from skills bar.
-  - Ergonomics & Toasts: Anchored .toast-container at top 68px below full header with max 2 non-occluding toasts, added focus-visible outlines, touch-action controls, and restored pre-modal pause state on modal close.
-  - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
