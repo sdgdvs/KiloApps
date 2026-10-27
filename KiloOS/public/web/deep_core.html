@@ -4302,9 +4302,16 @@ revealing the blueprint for the App #100 KMatrix singularity.
     updateSectorsUI();
     updateWorkbenchUI();
 
+    // Auto-commit decoded fragment to KiloOS VFS if Sector 04 or all 5 defused
+    if (sectorId === 'STORAGE_VFS') {
+      syncAllFragmentsToVfs(true);
+      printLine('[VFS COMMITTED] Sector 04 fragment written to /sys/alpha.sys and /home/crypto/ for KMatrix verification.', 'text-highlight');
+    }
+
     // Check if all 5 are defused
     const numDefused = Object.values(state.verifiedSectors).filter(Boolean).length;
     if (numDefused === 5) {
+      syncAllFragmentsToVfs(true);
       setTimeout(() => {
         SFX.unsealFanfare();
         printLine('========================================================================', 'text-highlight');
@@ -5160,21 +5167,37 @@ revealing the blueprint for the App #100 KMatrix singularity.
     write(path, content, notifyMsg) {
       try {
         const requestId = 'vfs_w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-        window.parent.postMessage({
+        const writeMsg = {
           type: 'VFS_WRITE',
           path: path,
           data: content,
           requestId: requestId
-        }, '*');
+        };
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(writeMsg, '*');
+        }
+        if (window.top && window.top !== window && window.top !== window.parent) {
+          try { window.top.postMessage(writeMsg, '*'); } catch (e) {}
+        }
         if (notifyMsg) {
-          window.parent.postMessage({
+          const notify = {
             type: 'OS_NOTIFY',
             title: 'Deep Core [Node 0x1999]',
             message: notifyMsg
-          }, '*');
+          };
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage(notify, '*');
+          }
+          if (window.top && window.top !== window && window.top !== window.parent) {
+            try { window.top.postMessage(notify, '*'); } catch (e) {}
+          }
         }
         KiloVfs.vfsCache[path] = content;
+        try {
+          localStorage.setItem('kilo_vfs_' + path, typeof content === 'string' ? content : JSON.stringify(content));
+        } catch (e) {}
         KiloVfs.lastSyncTime = Date.now();
+        KiloVfs.connected = true;
         updateVfsIndicator(true);
         return requestId;
       } catch (e) {
@@ -5184,26 +5207,48 @@ revealing the blueprint for the App #100 KMatrix singularity.
     },
 
     read(path, callback) {
+      if (KiloVfs.vfsCache[path] !== undefined) {
+        if (callback) callback(KiloVfs.vfsCache[path], path);
+        return 'cached';
+      }
+      try {
+        const local = localStorage.getItem('kilo_vfs_' + path);
+        if (local !== null) {
+          KiloVfs.vfsCache[path] = local;
+          if (callback) callback(local, path);
+          return 'local';
+        }
+      } catch (e) {}
+
       try {
         const requestId = 'vfs_r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        let handled = false;
         const onMsg = (e) => {
           if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === requestId) {
+            handled = true;
             window.removeEventListener('message', onMsg);
             KiloVfs.connected = true;
             updateVfsIndicator(true);
             if (e.data.data !== null && e.data.data !== undefined) {
               KiloVfs.vfsCache[path] = e.data.data;
+              try { localStorage.setItem('kilo_vfs_' + path, e.data.data); } catch (err) {}
             }
             if (callback) callback(e.data.data, e.data.path);
           }
         };
         window.addEventListener('message', onMsg);
-        window.parent.postMessage({
-          type: 'VFS_READ',
-          path: path,
-          requestId: requestId
-        }, '*');
-        setTimeout(() => window.removeEventListener('message', onMsg), 3500);
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'VFS_READ', path, requestId }, '*');
+        }
+        if (window.top && window.top !== window && window.top !== window.parent) {
+          try { window.top.postMessage({ type: 'VFS_READ', path, requestId }, '*'); } catch (e) {}
+        }
+        setTimeout(() => {
+          window.removeEventListener('message', onMsg);
+          if (!handled && callback && KiloVfs.vfsCache[path] === undefined) {
+            callback(null, path);
+          }
+        }, 1500);
         return requestId;
       } catch (e) {
         if (callback) callback(null, path);
@@ -5214,8 +5259,10 @@ revealing the blueprint for the App #100 KMatrix singularity.
     list(callback) {
       try {
         const requestId = 'vfs_l_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        let handled = false;
         const onMsg = (e) => {
           if (e.data && e.data.type === 'VFS_LIST_DONE' && e.data.requestId === requestId) {
+            handled = true;
             window.removeEventListener('message', onMsg);
             KiloVfs.connected = true;
             updateVfsIndicator(true);
@@ -5223,11 +5270,21 @@ revealing the blueprint for the App #100 KMatrix singularity.
           }
         };
         window.addEventListener('message', onMsg);
-        window.parent.postMessage({
-          type: 'VFS_LIST',
-          requestId: requestId
-        }, '*');
-        setTimeout(() => window.removeEventListener('message', onMsg), 3500);
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'VFS_LIST', requestId }, '*');
+        }
+        if (window.top && window.top !== window && window.top !== window.parent) {
+          try { window.top.postMessage({ type: 'VFS_LIST', requestId }, '*'); } catch (e) {}
+        }
+        setTimeout(() => {
+          window.removeEventListener('message', onMsg);
+          if (!handled && callback) {
+            const cachedKeys = Object.keys(KiloVfs.vfsCache);
+            const defaultKeys = ['/sys/alpha.sys', '/home/crypto/penultimate_fragment.key', '/home/crypto/deep_core_fragments.json', '/home/crypto/recovery_1999.log'];
+            const all = Array.from(new Set([...cachedKeys, ...defaultKeys]));
+            callback(all, all.map(f => ({ name: f, isDirectory: false })));
+          }
+        }, 1500);
       } catch (e) {
         if (callback) callback([], []);
       }
@@ -5235,12 +5292,16 @@ revealing the blueprint for the App #100 KMatrix singularity.
 
     launchApp(appId, file, args) {
       try {
-        window.parent.postMessage({
+        const msg = {
           type: 'OS_LAUNCH_APP',
           appId: appId,
           file: file,
           args: args
-        }, '*');
+        };
+        if (window.parent && window.parent !== window) window.parent.postMessage(msg, '*');
+        if (window.top && window.top !== window && window.top !== window.parent) {
+          try { window.top.postMessage(msg, '*'); } catch (e) {}
+        }
       } catch (e) {}
     }
   };
@@ -5254,8 +5315,26 @@ revealing the blueprint for the App #100 KMatrix singularity.
   }
 
   function buildAlphaSysPayload() {
-    const existing = KiloVfs.vfsCache['/sys/alpha.sys'] || 'S0VZX1BBUlRfMTogMHhERUFE';
-    return `${existing}\nKEY_PART_2: 1999-ARCH\nSECTOR_04_INODE: 0x1999\nSECTOR_04_TOKEN: RECOVERY_1999\nSECTOR_04_PATH: /system/recovery/1999.log\nKMATRIX_TARGET_HASH: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946\nSTATUS: RING0_GHOST_RELAY_AUTHENTICATED`;
+    let existing = KiloVfs.vfsCache['/sys/alpha.sys'] || 'S0VZX1BBUlRfMTogMHhERUFE';
+    if (!existing.includes('1999-ARCH')) {
+      existing += '\nKEY_PART_2: 1999-ARCH';
+    }
+    if (!existing.includes('SECTOR_04_INODE')) {
+      existing += '\nSECTOR_04_INODE: 0x1999';
+    }
+    if (!existing.includes('RECOVERY_1999')) {
+      existing += '\nSECTOR_04_TOKEN: RECOVERY_1999';
+    }
+    if (!existing.includes('/system/recovery/1999.log')) {
+      existing += '\nSECTOR_04_PATH: /system/recovery/1999.log';
+    }
+    if (!existing.includes('KMATRIX_TARGET_HASH')) {
+      existing += '\nKMATRIX_TARGET_HASH: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946';
+    }
+    if (!existing.includes('RING0_GHOST_RELAY_AUTHENTICATED')) {
+      existing += '\nSTATUS: RING0_GHOST_RELAY_AUTHENTICATED';
+    }
+    return existing;
   }
 
   function syncAllFragmentsToVfs(silent = false) {
@@ -6480,9 +6559,18 @@ Timestamp: ${new Date().toISOString()}
           printLine('TARGET SYS PATH   : /sys/alpha.sys (Ring-0 Passkey Assembly)');
           printLine('TARGET CRYPTO DIR : /home/crypto/ (Decoded Forensics & Certificates)');
           printLine(`LAST SYNC TIME    : ${KiloVfs.lastSyncTime ? new Date(KiloVfs.lastSyncTime).toLocaleTimeString() : 'NOT YET SYNCHRONIZED'}`);
-          printLine("Directives: 'vfs sync' (commit fragments) | 'vfs read <path>' | 'vfs ls'", 'text-dim');
-        } else if (sub === 'sync' || sub === 'write' || sub === 'push' || sub === 'commit') {
+          printLine("Directives: 'vfs sync' (commit fragments) | 'vfs read <path>' | 'vfs write <path> <data>' | 'vfs ls'", 'text-dim');
+        } else if (sub === 'sync' || sub === 'commit' || sub === 'push') {
           syncAllFragmentsToVfs(false);
+        } else if (sub === 'write') {
+          if (parts.length > 2) {
+            const p = parts[2];
+            const c = parts.slice(3).join(' ') || '1999-ARCH';
+            KiloVfs.write(p, c, `Saved ${p} to VFS`);
+            printLine(`[VFS WRITE] Wrote ${c.length} bytes to ${p}`, 'text-highlight');
+          } else {
+            syncAllFragmentsToVfs(false);
+          }
         } else if (sub === 'read' || sub === 'cat') {
           const path = parts[2] || '/sys/alpha.sys';
           printLine(`Reading KiloOS VFS path '${path}'...`, 'text-dim');
@@ -6503,7 +6591,33 @@ Timestamp: ${new Date().toISOString()}
             files.sort().forEach(f => printLine(`  ${f}`));
           });
         } else {
-          printLine("Usage: 'vfs status' | 'vfs sync' | 'vfs read <path>' | 'vfs ls'", 'text-warn');
+          printLine("Usage: 'vfs status' | 'vfs sync' | 'vfs read <path>' | 'vfs write <path> <data>' | 'vfs ls'", 'text-warn');
+        }
+        break;
+      }
+
+      case 'sync':
+      case 'commit':
+      case 'vfs-commit': {
+        syncAllFragmentsToVfs(false);
+        break;
+      }
+
+      case 'decode': {
+        const tgt = (arg || 'all').toLowerCase();
+        if (tgt.includes('4') || tgt.includes('storage') || tgt.includes('vfs') || tgt === 'fragment' || tgt === 'all') {
+          defuseSector('STORAGE_VFS', 'Decoded Inode 0x1999 from Ghost Node terminal.');
+          syncAllFragmentsToVfs(false);
+          printLine('[DECODE & VFS COMMIT] Fragment [1999-ARCH & RECOVERY_1999] written to /sys/alpha.sys & /home/crypto/', 'text-highlight');
+          printLine('Verification available in KMatrix (App #100). Type "kmatrix" to verify.', 'text-cyan');
+        } else if (tgt.includes('1') || tgt.includes('mem')) {
+          defuseSector('MEM_HEAP', 'Decoded 0x7F1999 memory offset.');
+        } else if (tgt.includes('2') || tgt.includes('audio')) {
+          defuseSector('AUDIO_DSP', 'Decoded 1999Hz subcarrier lock.');
+        } else if (tgt.includes('3') || tgt.includes('net')) {
+          defuseSector('NET_RELAY', 'Decoded 10.19.99.4 subnet relay.');
+        } else if (tgt.includes('5') || tgt.includes('core')) {
+          defuseSector('CORE_AI', 'Decoded Precursor Singularity lattice.');
         }
         break;
       }
@@ -7076,6 +7190,9 @@ Timestamp: ${new Date().toISOString()}
       SFX.beep();
     } else if (clean.includes('ARCH') || clean.includes('1999-ARCH')) {
       printLine(`[RESIDUE MATCH] Fragment '${clean}' matches residual memory string from Sector 0x1999.`, 'text-cyan');
+      defuseSector('STORAGE_VFS', 'Fragment residue verified.');
+      syncAllFragmentsToVfs(false);
+      printLine('[VFS COMMITTED] Synchronized /sys/alpha.sys & /home/crypto/ for KMatrix verification.', 'text-highlight');
       SFX.beep();
     } else {
       printLine('[REJECTED] Candidate checksum does not match any recognized Ring-0 sector key.', 'text-alert');
@@ -7383,7 +7500,7 @@ Timestamp: ${new Date().toISOString()}
     'dump', 'trace', 'traceroute', 'matrix', 'verify', 'hash', 'entropy', 'xor', 'ping',
     'inject', 'netstat', 'radar', 'mesh', 'morse', 'music', 'audio', 'theme', 'scanlines',
     'disasm', 'step', 'regs', 'seismic', 'sonar', 'litho', 'resonate', 'wiretap', 'sniff', 'pcap', 'uptime',
-    'save', 'load', 'export', 'clear', 'vfs', 'kmatrix', 'kcipher', 'khex'
+    'save', 'load', 'export', 'clear', 'vfs', 'kmatrix', 'kcipher', 'khex', 'decode', 'sync', 'commit'
   ];
   function handleAutocomplete() {
     const val = termInput.value.trim().toLowerCase();

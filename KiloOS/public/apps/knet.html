@@ -3934,6 +3934,19 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
     if ((event.data.type === 'NAVIGATE' || event.data.type === 'OPEN_URL' || event.data.type === 'KILO_OPEN_URL' || event.data.type === 'KNET_NAVIGATE') && targetUrl) {
       urlInput.value = targetUrl;
       fetchUrl(targetUrl, true);
+      return;
+    }
+
+    // Bidirectional VFS & OS IPC Bridge between inner iframe and KiloOS host
+    const iframe = document.getElementById('httpWebFrame');
+    if (iframe && event.source === iframe.contentWindow) {
+      if (typeof event.data.type === 'string' && (event.data.type.startsWith('VFS_') || event.data.type.startsWith('OS_'))) {
+        try { window.parent.postMessage(event.data, '*'); } catch (e) {}
+      }
+    } else if (event.source === window.parent && iframe && iframe.contentWindow) {
+      if (typeof event.data.type === 'string' && (event.data.type.startsWith('VFS_') || event.data.type.startsWith('OS_'))) {
+        try { iframe.contentWindow.postMessage(event.data, '*'); } catch (e) {}
+      }
     }
   });
 
