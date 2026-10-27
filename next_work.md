@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_soundscape: KCyber
   kilo_tester: KMaze
   kilo_usability: KColosseum
-  kilo_qa: KColor
+  kilo_qa: KTask
   kilo_expander: KMatrix
   kilo_review: KCipher
 virtual_web_target: kweb://scallion
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KMatrix
-  timestamp: '2026-10-27T15:20:56-07:00'
+  agent: kilo-qa
+  app: KColor
+  timestamp: '2026-10-27T15:35:39-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -170,11 +170,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Scale #matrixCanvas by devicePixelRatio in resizeMatrixRain(), refocus #termInput on modal close and .terminal-wrapper click, and add codebook/waterfall/vfs to #helpModal, cmdHelp(), and quick-action buttons. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KColor`
+- **Active Target**: `KTask`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KColor` | `KiloOS/public/apps/kcolor.html`, `KColor/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, palette generator/harmony rules, HEX/RGB/HSL conversion, dual Win32 C parity, and promote to Mature table. |
 | `KTask` | `KiloOS/public/apps/ktask.html`, `KTask/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/task lifecycle management, memory telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, document reader pagination/zoom, bookmark state, dual Win32 C parity, and promote to Mature table. |
 | `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
@@ -250,6 +249,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KColor** | `KiloOS/public/apps/kcolor.html` | Pass 5+ (2026-10-27) | Productivity / Design | Complete color picker & palette studio with RGB/HSL/HSV/CMYK conversions, WCAG 2.1 contrast checker, 7-rule harmony palette generator (G), F5/F9 persistence, and dual Win32 C parity. |
 | **KVoid** | `KiloOS/public/apps/kvoid.html` | Pass 5+ (2026-10-27) | Games / Survival | Deep void survival roguelite; 6-channel YM2612 FM / 260ms SPC700 suite, F5/F9 state persistence, dual Win32 C parity. |
 | **KType** | `KiloOS/public/apps/ktype.html` | Pass 5+ (2026-10-27) | Education / Typing | Complete typing ergonomics & arcade speed workstation with 6 drill banks (Home/Top/Bottom rows, Code, Benchmark), WPM/accuracy rank grading, F5/F9 persistence, and dual Win32 C parity. |
 | **KZip** | `KiloOS/public/apps/kzip.html` | Pass 5+ (2026-10-27) | System / Utilities | Complete archive studio with KZA/ZIP/TAR format support, RLE/Deflate algorithms, hex preview, batch extraction, CRC32/SHA-256 telemetry, F5/F9 state persistence, and dual Win32 C parity. |
@@ -309,6 +309,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T15:35:39-07:00 — kilo-qa: KColor (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 72.8 KB, native 20.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 24.17%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.2s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kcolor_tutorialSeen flag, auto-restore on boot, and Escape modal dismissals.
+  - Dual Parity & Harmonies: Added harmony palette generator (G), dual Win32 C 7-rule harmony rendering, and visibilitychange hygiene.
+  - Mature Quarantine & Handoff: Promoted `KColor` to Mature archive; advanced `kilo-qa` to `KTask`; next agent `kilo-expander`.
+
 - **2026-10-27T15:20:56-07:00 — kilo-usability: KMatrix (UI/UX, HiDPI Canvas Scaling & Command Usability Polish)**
   - Status: PASS ✅ (0 errors, web 97.0 KB, native 20.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - HiDPI Canvas: Scaled #matrixCanvas by devicePixelRatio in resizeMatrixRain() with requestAnimationFrame rendering.
@@ -332,9 +338,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-27T13:31:47-07:00 — kilo-graphics: KVoid (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KVoid.
   - Handoff: Advanced `kilo-graphics` to `KCyber`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-27T13:16:46-07:00 — kilo-creator: kweb://cabled (Cabled Magazine 1999 Neon Edition)**
-  - Status: PASS ✅ (0 errors, web 99.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Interactive Y2K Readiness Audit, Dot-Com IPO Simulator, Jargon Watch generator, and Hype Matrix.
-  - Parody brand audit & KNet/Webring integration with zero external CDN dependencies.
-  - Handoff: Advanced `kilo-creator` to `kweb://scallion`; rotated active agent to `kilo-graphics`.

@@ -475,6 +475,7 @@
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">C</kbd> — Copy active HEX code</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">E</kbd> — Activate Eyedropper / Screen sampler</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">+</kbd> / <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">A</kbd> — Add active color to palette library</li>
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">G</kbd> — Generate harmony palette into library</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Z</kbd> / <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">U</kbd> — Revert / restore previous color</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">1</kbd>–<kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">9</kbd> — Quick-select palette swatches 1–9</li>
         <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Del</kbd> / <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Backspace</kbd> — Remove focused saved swatch</li>
@@ -679,6 +680,7 @@
       <div class="card-title">
         <span>Palette Library (1-9 Hotkeys)</span>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="copy-btn" id="genHarmoniesBtn" title="Generate harmony palette from active color into library (Hotkey: G)">Gen Harmonies (G)</button>
           <button class="copy-btn" id="exportCssBtn" title="Copy all swatches as CSS variables">Copy CSS</button>
           <button class="copy-btn" id="exportJsonBtn" title="Copy all swatches as JSON array">Copy JSON</button>
           <button class="copy-btn" id="importJsonBtn" title="Import swatches from JSON file">Import JSON</button>
@@ -1569,6 +1571,34 @@
     showToast('Cleared saved swatches');
   });
 
+  // Generate Harmony Palette into Library
+  function generateHarmonyPalette() {
+    const hsl = rgbToHsl(state.r, state.g, state.b);
+    const baseHex = rgbToHex(state.r, state.g, state.b);
+    const harmonyOffsets = [0, 180, 330, 30, 120, 240, 150, 210];
+    const newSwatches = [];
+    harmonyOffsets.forEach(off => {
+      const th = (hsl.h + off + 360) % 360;
+      const rgb = hslToRgb(th, hsl.s, hsl.l);
+      const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+      if (!newSwatches.includes(hex)) newSwatches.push(hex);
+    });
+    const tintRgb = hslToRgb(hsl.h, hsl.s, Math.min(100, hsl.l + 25));
+    const shadeRgb = hslToRgb(hsl.h, hsl.s, Math.max(0, hsl.l - 25));
+    const tintHex = rgbToHex(tintRgb.r, tintRgb.g, tintRgb.b);
+    const shadeHex = rgbToHex(shadeRgb.r, shadeRgb.g, shadeRgb.b);
+    if (!newSwatches.includes(tintHex)) newSwatches.push(tintHex);
+    if (!newSwatches.includes(shadeHex)) newSwatches.push(shadeHex);
+
+    savedSwatches = newSwatches.slice(0, 24);
+    safeSetStorage('kcolor_saved_swatches', savedSwatches);
+    renderSwatches();
+    showToast(`Generated harmony palette for ${baseHex} [G]`);
+  }
+
+  const genHarmoniesBtn = document.getElementById('genHarmoniesBtn');
+  if (genHarmoniesBtn) genHarmoniesBtn.addEventListener('click', generateHarmonyPalette);
+
   // Palette Exports
   const exportCssBtn = document.getElementById('exportCssBtn');
   if (exportCssBtn) {
@@ -1816,6 +1846,9 @@
       e.preventDefault();
       const eyeBtn = document.getElementById('eyedropperBtn');
       if (eyeBtn) eyeBtn.click();
+    } else if (e.key === 'g' || e.key === 'G') {
+      e.preventDefault();
+      generateHarmonyPalette();
     } else if (e.key === '+' || e.key === '=' || e.key === 'a' || e.key === 'A') {
       e.preventDefault();
       const addBtn = document.getElementById('addSwatchBtn');
@@ -1841,13 +1874,30 @@
     }
   });
 
-  // Init
+  // Lifecycle & Resource Hygiene: Pause toasts and dismiss on backgrounding
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (toastTimer) {
+        clearTimeout(toastTimer);
+        toastTimer = null;
+      }
+      if (toastEl) {
+        toastEl.classList.remove('show');
+      }
+    }
+  });
+
+  // Init & State Persistence
   const tutorialSeen = safeGetStorage('kcolor_tutorialSeen', false);
   const existingSave = safeGetStorage('kcolor_quicksave', null);
   if (chkDoNotShow) chkDoNotShow.checked = !!tutorialSeen;
-  renderSwatches();
-  updateAll();
-  updatePrevDisplay();
+  if (existingSave && existingSave.state) {
+    quickloadState();
+  } else {
+    renderSwatches();
+    updateAll();
+    updatePrevDisplay();
+  }
   // First-run Tutorial Integrity: Ensure tutorial prompts fire only on fresh sessions without existing quicksave
   if (!tutorialSeen && !existingSave) {
     toggleHelp(true);

@@ -12,24 +12,32 @@
 #define IDC_SCROLL_S 105
 #define IDC_SCROLL_L 106
 
-#define IDC_HEX_EDIT     107
-#define IDC_BTN_COPY_HEX 108
-#define IDC_BTN_COPY_RGB 109
-#define IDC_BTN_COPY_HSL 110
-#define IDC_BTN_RANDOM   111
-#define IDC_BTN_INVERT   112
-#define IDC_BTN_HELP     113
-#define IDC_BTN_SAVE     114
-#define IDC_BTN_LOAD     115
+#define IDC_HEX_EDIT        107
+#define IDC_BTN_COPY_HEX    108
+#define IDC_BTN_COPY_RGB    109
+#define IDC_BTN_COPY_HSL    110
+#define IDC_BTN_RANDOM      111
+#define IDC_BTN_INVERT      112
+#define IDC_BTN_HELP        113
+#define IDC_BTN_SAVE        114
+#define IDC_BTN_LOAD        115
+#define IDC_BTN_GEN_HARMONY 116
 
 // Swatch rect count
 #define NUM_SWATCHES 10
+#define NUM_HARMONIES 7
 
 typedef struct {
     COLORREF color;
     const char* name;
     RECT rect;
 } Swatch;
+
+typedef struct {
+    COLORREF color;
+    const char* name;
+    RECT rect;
+} HarmonySwatch;
 
 // Global State
 static int g_r = 100, g_g = 150, g_b = 200;
@@ -47,12 +55,13 @@ static HWND g_hValH, g_hValS, g_hValL;
 static HWND g_hEditHex;
 static HWND g_hBtnCopyHex, g_hBtnCopyRgb, g_hBtnCopyHsl;
 static HWND g_hBtnRandom, g_hBtnInvert, g_hBtnHelp;
-static HWND g_hBtnSave, g_hBtnLoad;
+static HWND g_hBtnSave, g_hBtnLoad, g_hBtnGenHarmony;
 static HWND g_hStatus;
 
 static HFONT g_hFontNormal = NULL;
 static HFONT g_hFontBold = NULL;
 static HFONT g_hFontMono = NULL;
+static HFONT g_hFontSmall = NULL;
 static HBRUSH g_hBgBrush = NULL;
 static WNDPROC g_OldEditProc = NULL;
 
@@ -67,6 +76,16 @@ static Swatch g_swatches[NUM_SWATCHES] = {
     { RGB(236, 72, 153), "Pink",    {0} },
     { RGB(15, 23, 42),   "Dark",    {0} },
     { RGB(255, 255, 255),"White",   {0} }
+};
+
+static HarmonySwatch g_harmonies[NUM_HARMONIES] = {
+    { 0, "Complementary", {0} },
+    { 0, "Analogous -30°", {0} },
+    { 0, "Analogous +30°", {0} },
+    { 0, "Triadic 1",      {0} },
+    { 0, "Triadic 2",      {0} },
+    { 0, "Split Comp 1",   {0} },
+    { 0, "Split Comp 2",   {0} }
 };
 
 // CRT replacement definitions for no-CRT link
@@ -159,6 +178,32 @@ static void HslToRgb(int h, int s, int l, int *outR, int *outG, int *outB) {
     *outR = clamp_int((int)(r * 255.0f + 0.5f), 0, 255);
     *outG = clamp_int((int)(g * 255.0f + 0.5f), 0, 255);
     *outB = clamp_int((int)(b * 255.0f + 0.5f), 0, 255);
+}
+
+static void ComputeHarmonies(int h, int s, int l) {
+    static const int offsets[NUM_HARMONIES] = { 180, 330, 30, 120, 240, 150, 210 };
+    for (int i = 0; i < NUM_HARMONIES; i++) {
+        int th = (h + offsets[i] + 360) % 360;
+        int tr, tg, tb;
+        HslToRgb(th, s, l, &tr, &tg, &tb);
+        g_harmonies[i].color = RGB(tr, tg, tb);
+    }
+}
+
+static float GetLuminance(int r, int g, int b) {
+    float rf = r / 255.0f;
+    float gf = g / 255.0f;
+    float bf = b / 255.0f;
+    rf = (rf <= 0.03928f) ? (rf / 12.92f) : ((rf + 0.055f) / 1.055f) * ((rf + 0.055f) / 1.055f);
+    gf = (gf <= 0.03928f) ? (gf / 12.92f) : ((gf + 0.055f) / 1.055f) * ((gf + 0.055f) / 1.055f);
+    bf = (bf <= 0.03928f) ? (bf / 12.92f) : ((bf + 0.055f) / 1.055f) * ((bf + 0.055f) / 1.055f);
+    return rf * 0.2126f + gf * 0.7152f + bf * 0.0722f;
+}
+
+static float GetContrastRatio(float lum1, float lum2) {
+    float maxL = (lum1 > lum2) ? lum1 : lum2;
+    float minL = (lum1 < lum2) ? lum1 : lum2;
+    return (maxL + 0.05f) / (minL + 0.05f);
 }
 
 static int HexCharVal(char c) {
@@ -353,10 +398,11 @@ static void ShowHelpDialog(HWND hwnd) {
         "  - R: Generate Random Color\n"
         "  - I: Invert Active Color\n"
         "  - C: Copy Active HEX code\n"
+        "  - G: Generate 10-Color Harmony Palette into swatches\n"
         "  - F5 / Ctrl+S: Quicksave active color & swatches\n"
         "  - F9 / Ctrl+O: Quickload saved state\n"
-        "  - 1..9: Quick-select Swatches 1..9 (0 for 10)\n"
-        "  - Left-Click Swatch: Select color\n"
+        "  - 1..9, 0: Quick-select Swatches 1..10\n"
+        "  - Left-Click Swatch or Harmony: Select color\n"
         "  - Right-Click Swatch: Save current color to swatch\n"
         "  - F1 / H: Open this Help guide\n\n"
         "Adjust RGB and HSL sliders or type any HEX color in the input field.",
@@ -407,8 +453,9 @@ static LRESULT CALLBACK HexEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, 
 static void SyncControlsFromRgb(HWND hwnd, BOOL updateHexEdit) {
     g_bUpdatingScrolls = TRUE;
 
-    // Calc HSL
+    // Calc HSL and Harmonies
     RgbToHsl(g_r, g_g, g_b, &g_h, &g_s, &g_l);
+    ComputeHarmonies(g_h, g_s, g_l);
 
     // Scrollbars
     SetScrollPos(g_hScrollR, SB_CTL, g_r, TRUE);
@@ -440,6 +487,48 @@ static void SyncControlsFromRgb(HWND hwnd, BOOL updateHexEdit) {
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
+static void GenerateHarmonyPaletteNative(HWND hwnd) {
+    g_swatches[0].color = RGB(g_r, g_g, g_b);
+    g_swatches[0].name = "Base";
+
+    g_swatches[1].color = g_harmonies[0].color;
+    g_swatches[1].name = "Complementary";
+
+    g_swatches[2].color = g_harmonies[1].color;
+    g_swatches[2].name = "Analogous -30°";
+
+    g_swatches[3].color = g_harmonies[2].color;
+    g_swatches[3].name = "Analogous +30°";
+
+    g_swatches[4].color = g_harmonies[3].color;
+    g_swatches[4].name = "Triadic 1";
+
+    g_swatches[5].color = g_harmonies[4].color;
+    g_swatches[5].name = "Triadic 2";
+
+    g_swatches[6].color = g_harmonies[5].color;
+    g_swatches[6].name = "Split Comp 1";
+
+    g_swatches[7].color = g_harmonies[6].color;
+    g_swatches[7].name = "Split Comp 2";
+
+    int tr, tg, tb;
+    HslToRgb(g_h, g_s, clamp_int(g_l + 25, 0, 100), &tr, &tg, &tb);
+    g_swatches[8].color = RGB(tr, tg, tb);
+    g_swatches[8].name = "Tint (+25% L)";
+
+    HslToRgb(g_h, g_s, clamp_int(g_l - 25, 0, 100), &tr, &tg, &tb);
+    g_swatches[9].color = RGB(tr, tg, tb);
+    g_swatches[9].name = "Shade (-25% L)";
+
+    InvalidateRect(hwnd, NULL, FALSE);
+    if (g_hStatus) {
+        char msg[80];
+        wsprintfA(msg, "Generated 10-Color Harmony Palette for #%02X%02X%02X (G)!", g_r, g_g, g_b);
+        SetWindowTextA(g_hStatus, msg);
+    }
+}
+
 // --- WNDPROC ---
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -449,7 +538,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             g_hFontNormal = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             g_hFontBold = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            g_hFontMono = CreateFontA(16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
+            g_hFontMono = CreateFontA(18, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
+            g_hFontSmall = CreateFontA(12, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             g_hBgBrush = CreateSolidBrush(RGB(240, 243, 246));
 
             // Section 1: RGB Sliders
@@ -498,41 +588,55 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hValL = CreateWindowExA(0, "STATIC", "59%", WS_CHILD | WS_VISIBLE | SS_RIGHT, 175, 215, 30, 20, hwnd, NULL, NULL, NULL);
 
             // Hex Input & Copy Buttons
-            CreateWindowExA(0, "STATIC", "Hex Code:", WS_CHILD | WS_VISIBLE, 225, 130, 70, 20, hwnd, NULL, NULL, NULL);
-            g_hEditHex = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "#6496C8", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, 300, 127, 90, 24, hwnd, (HMENU)IDC_HEX_EDIT, NULL, NULL);
-            SendMessageA(g_hEditHex, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
+            CreateWindowExA(0, "STATIC", "Hex Code:", WS_CHILD | WS_VISIBLE, 225, 126, 70, 20, hwnd, NULL, NULL, NULL);
+            g_hEditHex = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "#6496C8", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, 300, 123, 90, 24, hwnd, (HMENU)IDC_HEX_EDIT, NULL, NULL);
+            SendMessageA(g_hEditHex, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
 
             // Subclass the Edit control
             g_OldEditProc = (WNDPROC)SetWindowLongPtrA(g_hEditHex, GWLP_WNDPROC, (LONG_PTR)HexEditSubclassProc);
 
             // Copy Buttons
-            g_hBtnCopyHex = CreateWindowExA(0, "BUTTON", "Copy HEX", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 225, 160, 95, 26, hwnd, (HMENU)IDC_BTN_COPY_HEX, NULL, NULL);
-            g_hBtnCopyRgb = CreateWindowExA(0, "BUTTON", "Copy RGB", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 325, 160, 95, 26, hwnd, (HMENU)IDC_BTN_COPY_RGB, NULL, NULL);
-            g_hBtnCopyHsl = CreateWindowExA(0, "BUTTON", "Copy HSL", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 425, 160, 95, 26, hwnd, (HMENU)IDC_BTN_COPY_HSL, NULL, NULL);
+            g_hBtnCopyHex = CreateWindowExA(0, "BUTTON", "Copy HEX", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 225, 155, 95, 26, hwnd, (HMENU)IDC_BTN_COPY_HEX, NULL, NULL);
+            g_hBtnCopyRgb = CreateWindowExA(0, "BUTTON", "Copy RGB", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 325, 155, 95, 26, hwnd, (HMENU)IDC_BTN_COPY_RGB, NULL, NULL);
+            g_hBtnCopyHsl = CreateWindowExA(0, "BUTTON", "Copy HSL", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 425, 155, 95, 26, hwnd, (HMENU)IDC_BTN_COPY_HSL, NULL, NULL);
 
             // Utility Buttons: Random, Invert, Help
-            g_hBtnRandom = CreateWindowExA(0, "BUTTON", "Random (R)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 225, 192, 95, 26, hwnd, (HMENU)IDC_BTN_RANDOM, NULL, NULL);
-            g_hBtnInvert = CreateWindowExA(0, "BUTTON", "Invert (I)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 325, 192, 95, 26, hwnd, (HMENU)IDC_BTN_INVERT, NULL, NULL);
-            g_hBtnHelp = CreateWindowExA(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 425, 192, 95, 26, hwnd, (HMENU)IDC_BTN_HELP, NULL, NULL);
+            g_hBtnRandom = CreateWindowExA(0, "BUTTON", "Random (R)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 225, 186, 95, 26, hwnd, (HMENU)IDC_BTN_RANDOM, NULL, NULL);
+            g_hBtnInvert = CreateWindowExA(0, "BUTTON", "Invert (I)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 325, 186, 95, 26, hwnd, (HMENU)IDC_BTN_INVERT, NULL, NULL);
+            g_hBtnHelp = CreateWindowExA(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 425, 186, 95, 26, hwnd, (HMENU)IDC_BTN_HELP, NULL, NULL);
 
-            // Quicksave & Quickload Buttons
-            g_hBtnSave = CreateWindowExA(0, "BUTTON", "Save (F5)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 225, 305, 95, 26, hwnd, (HMENU)IDC_BTN_SAVE, NULL, NULL);
-            g_hBtnLoad = CreateWindowExA(0, "BUTTON", "Load (F9)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 325, 305, 95, 26, hwnd, (HMENU)IDC_BTN_LOAD, NULL, NULL);
+            // Quicksave, Quickload & Gen Harmonies Buttons
+            g_hBtnSave = CreateWindowExA(0, "BUTTON", "Save (F5)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 225, 312, 95, 26, hwnd, (HMENU)IDC_BTN_SAVE, NULL, NULL);
+            g_hBtnLoad = CreateWindowExA(0, "BUTTON", "Load (F9)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 325, 312, 95, 26, hwnd, (HMENU)IDC_BTN_LOAD, NULL, NULL);
+            g_hBtnGenHarmony = CreateWindowExA(0, "BUTTON", "Harmonies (G)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 425, 312, 95, 26, hwnd, (HMENU)IDC_BTN_GEN_HARMONY, NULL, NULL);
 
             // Status Bar
-            g_hStatus = CreateWindowExA(0, "STATIC", "Ready (F5: Save, F9: Load, F1: Help, R: Random, I: Invert, 1..9: Swatches)", WS_CHILD | WS_VISIBLE | SS_SUNKEN, 10, 380, 525, 22, hwnd, NULL, NULL, NULL);
+            g_hStatus = CreateWindowExA(0, "STATIC", "Ready (F5: Save, F9: Load, G: Harmonies, R: Random, I: Invert, 1..9: Swatches)", WS_CHILD | WS_VISIBLE | SS_SUNKEN, 10, 348, 525, 22, hwnd, NULL, NULL, NULL);
 
             // Apply font to all controls
             EnumChildWindows(hwnd, (WNDENUMPROC)SendMessageA, (LPARAM)WM_SETFONT);
 
-            // Calculate Swatch Rectangles (bottom area)
-            int swX = 225, swY = 260, swW = 27, swH = 27, gap = 4;
+            // Calculate Harmony Rectangles
+            int hmX = 225, hmY = 236, hmW = 38, hmH = 22, hmGap = 4;
+            for (int i = 0; i < NUM_HARMONIES; i++) {
+                g_harmonies[i].rect.left = hmX + i * (hmW + hmGap);
+                g_harmonies[i].rect.top = hmY;
+                g_harmonies[i].rect.right = g_harmonies[i].rect.left + hmW;
+                g_harmonies[i].rect.bottom = g_harmonies[i].rect.top + hmH;
+            }
+
+            // Calculate Swatch Rectangles
+            int swX = 225, swY = 280, swW = 26, swH = 24, swGap = 4;
             for (int i = 0; i < NUM_SWATCHES; i++) {
-                int col = i % 10;
-                g_swatches[i].rect.left = swX + col * (swW + gap);
+                g_swatches[i].rect.left = swX + i * (swW + swGap);
                 g_swatches[i].rect.top = swY;
                 g_swatches[i].rect.right = g_swatches[i].rect.left + swW;
                 g_swatches[i].rect.bottom = g_swatches[i].rect.top + swH;
+            }
+
+            // Auto-load state if quicksave exists
+            if (HasQuicksaveNative()) {
+                LoadGameStateFromFile();
             }
 
             SyncControlsFromRgb(hwnd, TRUE);
@@ -617,6 +721,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (g_hStatus) SetWindowTextA(g_hStatus, "Inverted Active Color");
             } else if (id == IDC_BTN_HELP) {
                 ShowHelpDialog(hwnd);
+            } else if (id == IDC_BTN_GEN_HARMONY) {
+                GenerateHarmonyPaletteNative(hwnd);
             } else if (id == IDC_BTN_SAVE) {
                 if (SaveGameStateToFile()) {
                     if (g_hStatus) SetWindowTextA(g_hStatus, "Saved State to kcolor_save.dat (F5)!");
@@ -652,6 +758,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(IDC_BTN_INVERT, 0), 0);
             } else if (wParam == 'C' || wParam == 'c') {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(IDC_BTN_COPY_HEX, 0), 0);
+            } else if (wParam == 'G' || wParam == 'g') {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(IDC_BTN_GEN_HARMONY, 0), 0);
+            } else if (wParam == VK_ESCAPE) {
+                SetFocus(hwnd);
+                if (g_hStatus) SetWindowTextA(g_hStatus, "Ready");
             } else if (wParam >= '1' && wParam <= '9') {
                 int idx = (int)(wParam - '1');
                 if (idx < NUM_SWATCHES) {
@@ -686,6 +797,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int y = HIWORD(lParam);
             POINT pt = { x, y };
 
+            // Check Harmonies Swatches
+            for (int i = 0; i < NUM_HARMONIES; i++) {
+                if (PtInRect(&g_harmonies[i].rect, pt)) {
+                    COLORREF c = g_harmonies[i].color;
+                    g_r = GetRValue(c);
+                    g_g = GetGValue(c);
+                    g_b = GetBValue(c);
+                    SyncControlsFromRgb(hwnd, TRUE);
+                    if (g_hStatus) {
+                        char msg[80];
+                        wsprintfA(msg, "Selected Harmony: %s (#%02X%02X%02X)", g_harmonies[i].name, g_r, g_g, g_b);
+                        SetWindowTextA(g_hStatus, msg);
+                    }
+                    return 0;
+                }
+            }
+
+            // Check Palette Swatches
             for (int i = 0; i < NUM_SWATCHES; i++) {
                 if (PtInRect(&g_swatches[i].rect, pt)) {
                     COLORREF c = g_swatches[i].color;
@@ -698,7 +827,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         wsprintfA(msg, "Selected Palette Swatch: %s", g_swatches[i].name);
                         SetWindowTextA(g_hStatus, msg);
                     }
-                    break;
+                    return 0;
                 }
             }
             break;
@@ -753,18 +882,49 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             wsprintfA(hexStr, "#%02X%02X%02X", g_r, g_g, g_b);
             
             // Choose black or white text based on luminance
-            float lum = (g_r * 0.299f + g_g * 0.587f + g_b * 0.114f);
-            COLORREF textColor = lum > 128.0f ? RGB(0,0,0) : RGB(255,255,255);
+            float lum = GetLuminance(g_r, g_g, g_b);
+            COLORREF textColor = lum > 0.40f ? RGB(15, 23, 42) : RGB(255, 255, 255);
 
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, textColor);
             HFONT oldFont = (HFONT)SelectObject(memDC, g_hFontMono);
-            TextOutA(memDC, 240, 45, hexStr, lstrlenA(hexStr));
+            TextOutA(memDC, 240, 22, hexStr, lstrlenA(hexStr));
 
-            // Draw Swatches Title
+            // Details line: RGB and HSL
+            SelectObject(memDC, g_hFontBold);
+            char detailsStr[64];
+            wsprintfA(detailsStr, "rgb(%d, %d, %d)   hsl(%d, %d%%, %d%%)", g_r, g_g, g_b, g_h, g_s, g_l);
+            TextOutA(memDC, 240, 52, detailsStr, lstrlenA(detailsStr));
+
+            // Contrast line: WCAG ratios
+            SelectObject(memDC, g_hFontSmall);
+            float crWhite = GetContrastRatio(lum, 1.0f);
+            float crDark = GetContrastRatio(lum, 0.015f);
+            int wInt = (int)crWhite;
+            int wFrac = (int)((crWhite - wInt) * 100.0f);
+            if (wFrac < 0) wFrac = 0;
+            int dInt = (int)crDark;
+            int dFrac = (int)((crDark - dInt) * 100.0f);
+            if (dFrac < 0) dFrac = 0;
+            char contrastStr[80];
+            wsprintfA(contrastStr, "WCAG Contrast:  White %d.%02d:1   |   Dark %d.%02d:1", wInt, wFrac, dInt, dFrac);
+            TextOutA(memDC, 240, 78, contrastStr, lstrlenA(contrastStr));
+
+            // Draw Harmonies Title
             SelectObject(memDC, g_hFontBold);
             SetTextColor(memDC, RGB(30, 41, 59));
-            TextOutA(memDC, 225, 235, "Quick Palette Swatches (L-Click select, R-Click save):", 54);
+            TextOutA(memDC, 225, 218, "Color Harmonies (Click any swatch to apply):", 44);
+
+            // Draw Harmony Swatches
+            for (int i = 0; i < NUM_HARMONIES; i++) {
+                HBRUSH hmBrush = CreateSolidBrush(g_harmonies[i].color);
+                FillRect(memDC, &g_harmonies[i].rect, hmBrush);
+                DeleteObject(hmBrush);
+                FrameRect(memDC, &g_harmonies[i].rect, (HBRUSH)GetStockObject(BLACK_BRUSH));
+            }
+
+            // Draw Quick Swatches Title
+            TextOutA(memDC, 225, 262, "Quick Palette Swatches (1..9, 0 - Click select, R-Click save):", 62);
 
             // Draw Swatch Rects
             for (int i = 0; i < NUM_SWATCHES; i++) {
@@ -791,6 +951,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_hFontNormal) DeleteObject(g_hFontNormal);
             if (g_hFontBold) DeleteObject(g_hFontBold);
             if (g_hFontMono) DeleteObject(g_hFontMono);
+            if (g_hFontSmall) DeleteObject(g_hFontSmall);
             if (g_hBgBrush) DeleteObject(g_hBgBrush);
             PostQuitMessage(0);
             break;
@@ -827,6 +988,31 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0) > 0) {
+        if (msg.message == WM_KEYDOWN) {
+            // Forward accelerators and global hotkeys even if child control is focused
+            if (msg.hwnd == g_hEditHex) {
+                if (msg.wParam == VK_F5 || msg.wParam == VK_F9 || msg.wParam == VK_ESCAPE || msg.wParam == VK_RETURN) {
+                    SendMessageA(hwnd, WM_KEYDOWN, msg.wParam, msg.lParam);
+                    continue;
+                }
+            } else {
+                if ((GetKeyState(VK_CONTROL) & 0x8000) && (msg.wParam == 'S' || msg.wParam == 's' || msg.wParam == 'O' || msg.wParam == 'o')) {
+                    SendMessageA(hwnd, WM_KEYDOWN, msg.wParam, msg.lParam);
+                    continue;
+                }
+                if (msg.wParam == VK_F5 || msg.wParam == VK_F9 || msg.wParam == VK_F1 ||
+                    msg.wParam == 'R' || msg.wParam == 'r' ||
+                    msg.wParam == 'I' || msg.wParam == 'i' ||
+                    msg.wParam == 'C' || msg.wParam == 'c' ||
+                    msg.wParam == 'G' || msg.wParam == 'g' ||
+                    msg.wParam == 'H' || msg.wParam == 'h' ||
+                    msg.wParam == VK_ESCAPE ||
+                    (msg.wParam >= '0' && msg.wParam <= '9')) {
+                    SendMessageA(hwnd, WM_KEYDOWN, msg.wParam, msg.lParam);
+                    continue;
+                }
+            }
+        }
         if (!IsDialogMessageA(hwnd, &msg)) {
             TranslateMessage(&msg);
             DispatchMessageA(&msg);
