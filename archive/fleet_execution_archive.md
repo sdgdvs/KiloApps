@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T17:31:56-07:00 — kilo-review: KColony (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 870x623 and audited kcolony.html; dispatched 2 surgical fix specs to Flash queues).
+  - Visual/UX Findings: #start-screen clips bottom manual button at 623px height; .panel-col overflows vertically by 401px causing Arrow/Space keys to scroll #topbar off-screen; 20x20 #grid cells (419x419px with 1px gap) overflow 400x400 #grid border and canvases by 19px; 38 button <small> labels use 8px font.
+  - Gameplay/Feature Findings: Sandbox mode (gameMode === 4) sets power/maxPower to 9999 on start but gameTick() immediately clamps maxPower back to 50 + batCount*50; pressing Space on #start-screen at tick === 0 is a no-op.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KColony`, `kilo-tester`->`KColony`] (un-quarantined `KColony` from Mature); advanced `kilo-review` to `KFortress`; next agent `kilo-creator`.
+
 - **2026-10-26T17:23:22-07:00 — kilo-expander: KMaze (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KMaze across web and native targets.

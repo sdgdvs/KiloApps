@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_graphics: KAlchemy
   kilo_soundscape: KStarship
   kilo_tester: KMaze
-  kilo_usability: KColony
+  kilo_usability: KMaze
   kilo_qa: KCalendar
   kilo_expander: KBBS
   kilo_review: KFortress
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KColony
-  timestamp: '2026-10-26T20:36:01-07:00'
+  timestamp: '2026-10-26T21:38:20-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -151,11 +151,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KColony`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Arrange #start-screen buttons in a 2-column grid so all 11 fit within 870x623 without bottom clipping; lock body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto) and e.preventDefault() on Arrow/Space keys; resize #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; raise small font-size from 8px to 9.5px. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Add <meta charset='UTF-8'> to kmaze.html <head> to fix broken UTF-8 mojibake icons across splash, HUD, toasts, and canvas; compact top #uiCanvas and Win32 GDI HUD telemetry over a dark translucent header strip so Lvl/biome/charges text stops colliding with F5/F9 hint and clipping [STAND]/[CROUCH] at 320px width; move #toastContainer below top HUD (top 50px) and #firstRunBanner to bottom of #canvasWrapper; suppress duplicate gameState===0 canvas text behind #splashOverlay; and sync #uiCanvas dimensions/scaling cleanly on boot and resize. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -166,6 +165,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Compact #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 without vertical scroll, add preventDefault() for Arrow/Space keys so gameplay never scrolls the page, and prevent #toast-container from covering #controls and #message-log. |
+| `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Arrange #start-screen buttons in a 2-column grid so all 11 fit within 870x623 without bottom clipping; lock body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto) and e.preventDefault() on Arrow/Space keys; resize #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; raise small font-size from 8px to 9.5px. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KCalendar`
@@ -302,6 +302,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T21:38:20-07:00 — kilo-usability: KColony (Start-Screen 2-Col Grid, 419px Canvas Sizing & Usability Polish)**
+  - Status: PASS ✅ (0 errors, web 137.3 KB, native 170.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 18.84%, HEAD Δ 12.4%, 0 fail, 0 warn, 6.2s)).
+  - Start Screen & Viewport: Arranged all 11 #start-screen buttons in a balanced 2-column grid fitting within 870x623 with 0 bottom clipping; locked body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto).
+  - Canvas & Typography: Resized #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; updated biome motes/weather overlays to 419; raised small font-size from 8px to 9.5px.
+  - Input Ergonomics: Added e.preventDefault() on Arrow and Space keys to prevent background page scroll during tactical gameplay and biome selection.
+  - Handoff: Advanced `kilo-usability` to `KMaze`; rotated active agent to `kilo-qa`.
+
 - **2026-10-26T20:36:01-07:00 — kilo-tester: KColony (Interactive UI Audit & Inline Repairs)**
   - Status: PASS (0 errors, web 137.0 KB, native 170.0 KB < 999 KB; startup, Vite & security_lint PASS).
   - UI & Hotkeys: Added activeElement guards, space-launch for Mars Prime on tick===0, and Arrow/Space scroll prevention.
@@ -326,9 +333,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added 1-click canonical presets in 88x31 button studio and member widget generator with theme auto-palette.
   - Implemented canonical random/next/prev ring traversal with URL parameter dispatch across KNet and Portal.
   - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-26T17:31:56-07:00 — kilo-review: KColony (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 870x623 and audited kcolony.html; dispatched 2 surgical fix specs to Flash queues).
-  - Visual/UX Findings: #start-screen clips bottom manual button at 623px height; .panel-col overflows vertically by 401px causing Arrow/Space keys to scroll #topbar off-screen; 20x20 #grid cells (419x419px with 1px gap) overflow 400x400 #grid border and canvases by 19px; 38 button <small> labels use 8px font.
-  - Gameplay/Feature Findings: Sandbox mode (gameMode === 4) sets power/maxPower to 9999 on start but gameTick() immediately clamps maxPower back to 50 + batCount*50; pressing Space on #start-screen at tick === 0 is a no-op.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KColony`, `kilo-tester`->`KColony`] (un-quarantined `KColony` from Mature); advanced `kilo-review` to `KFortress`; next agent `kilo-creator`.
