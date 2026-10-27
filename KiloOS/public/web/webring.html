@@ -1641,6 +1641,9 @@
       <button class="btn-teleport alt" onclick="triggerRingTourNext()">
         <span>⏩</span> Next Ring Node »
       </button>
+      <button class="btn-teleport alt" onclick="triggerCanonicalRandomWarp()" style="color:var(--amber-bright); border-color:rgba(251,191,36,0.6);" title="Random warp between the 6 canonical 1999 web destinations">
+        <span>★</span> Canonical Warp
+      </button>
     </div>
   </div>
 
@@ -1842,6 +1845,18 @@
       <div class="badge-studio-grid">
         <!-- Controls Column -->
         <div>
+          <!-- Canonical Quick Chips for 88x31 -->
+          <div style="margin-bottom:8px;">
+            <div style="font-family:var(--font-mono); font-size:10px; color:var(--amber-bright); margin-bottom:4px; font-weight:bold;">★ 1-CLICK CANONICAL PRESETS:</div>
+            <div style="display:flex; gap:4px; flex-wrap:wrap;">
+              <button type="button" class="pill-btn" onclick="applyBadgePreset('slashnet')" style="color:#34d399; font-size:10px;">📰 SlashNet</button>
+              <button type="button" class="pill-btn" onclick="applyBadgePreset('trapster')" style="color:#38bdf8; font-size:10px;">💿 Trapster</button>
+              <button type="button" class="pill-btn" onclick="applyBadgePreset('cabled')" style="color:#fbbf24; font-size:10px;">⚡ Cabled</button>
+              <button type="button" class="pill-btn" onclick="applyBadgePreset('scallion')" style="color:#4ade80; font-size:10px;">🧅 Scallion</button>
+              <button type="button" class="pill-btn" onclick="applyBadgePreset('demoscene')" style="color:#f472b6; font-size:10px;">💾 Demoscene</button>
+              <button type="button" class="pill-btn" onclick="applyBadgePreset('rfc')" style="color:#a78bfa; font-size:10px;">📜 Living RFC</button>
+            </div>
+          </div>
           <div class="form-group">
             <label class="form-label" for="badgePresetSelect">PRESET BUTTON ARCHETYPE</label>
             <select class="form-control" id="badgePresetSelect" onchange="applyBadgePreset(this.value)">
@@ -1991,6 +2006,18 @@
       <div class="badge-studio-grid">
         <!-- Controls Column -->
         <div>
+          <!-- Canonical Quick Chips for Widget -->
+          <div style="margin-bottom:8px;">
+            <div style="font-family:var(--font-mono); font-size:10px; color:var(--amber-bright); margin-bottom:4px; font-weight:bold;">★ 1-CLICK CANONICAL SITE PRESET:</div>
+            <div style="display:flex; gap:4px; flex-wrap:wrap;">
+              <button type="button" class="pill-btn" onclick="applyMemberNodePreset('#023')" style="color:#34d399; font-size:10px;">📰 SlashNet (#023)</button>
+              <button type="button" class="pill-btn" onclick="applyMemberNodePreset('#024')" style="color:#38bdf8; font-size:10px;">💿 Trapster (#024)</button>
+              <button type="button" class="pill-btn" onclick="applyMemberNodePreset('#025')" style="color:#fbbf24; font-size:10px;">⚡ Cabled (#025)</button>
+              <button type="button" class="pill-btn" onclick="applyMemberNodePreset('#026')" style="color:#4ade80; font-size:10px;">🧅 Scallion (#026)</button>
+              <button type="button" class="pill-btn" onclick="applyMemberNodePreset('#021')" style="color:#f472b6; font-size:10px;">💾 Demoscene (#021)</button>
+              <button type="button" class="pill-btn" onclick="applyMemberNodePreset('#022')" style="color:#a78bfa; font-size:10px;">📜 RFC Bench (#022)</button>
+            </div>
+          </div>
           <div class="form-group">
             <label class="form-label" for="badgeNodeSelect">LOAD MEMBER SITE PRESET</label>
             <select class="form-control" id="badgeNodeSelect" onchange="applyMemberNodePreset(this.value)">
@@ -2653,6 +2680,24 @@ Tune dial to match lithospheric harmonic frequency to isolate transit frames.
         </div>
       </div>
 
+      <!-- Canonical Nodes Fast-Hop Tracer Deck -->
+      <div style="margin-bottom:10px; background:#070b16; border:1px solid var(--border-med); border-radius:3px; padding:8px 12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--amber-bright);">★ CANONICAL TRACER:</span>
+          <button type="button" class="pill-btn" onclick="focusTopologyNode('#023')" style="color:#34d399; border-color:rgba(52,211,153,0.5);" title="Inspect SlashNet: News for Nerds">📰 SlashNet (#023)</button>
+          <button type="button" class="pill-btn" onclick="focusTopologyNode('#024')" style="color:#38bdf8; border-color:rgba(56,189,248,0.5);" title="Inspect Trapster P2P Chiptune Swarm">💿 Trapster (#024)</button>
+          <button type="button" class="pill-btn" onclick="focusTopologyNode('#025')" style="color:#fbbf24; border-color:rgba(251,191,36,0.5);" title="Inspect Cabled Magazine 1999 Edition">⚡ Cabled (#025)</button>
+          <button type="button" class="pill-btn" onclick="focusTopologyNode('#026')" style="color:#4ade80; border-color:rgba(74,222,128,0.5);" title="Inspect The Scallion Satirical News">🧅 Scallion (#026)</button>
+          <button type="button" class="pill-btn" onclick="focusTopologyNode('#021')" style="color:#f472b6; border-color:rgba(244,114,182,0.5);" title="Inspect Assembly '99 Demoscene Vault">💾 Demoscene (#021)</button>
+          <button type="button" class="pill-btn" onclick="focusTopologyNode('#022')" style="color:#a78bfa; border-color:rgba(167,139,250,0.5);" title="Inspect IETF Living RFC Workbench">📜 RFC Archive (#022)</button>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="btn-action" onclick="traceCanonicalOrbitSequence()" style="font-size:11px; color:var(--amber-bright); border-color:var(--amber);">
+            <span>✨</span> Trace Canonical Constellation
+          </button>
+        </div>
+      </div>
+
       <!-- Canvas Wrap -->
       <div class="topology-canvas-wrap">
         <canvas id="topologyCanvas" width="880" height="420"></canvas>
@@ -2698,6 +2743,13 @@ Tune dial to match lithospheric harmonic frequency to isolate transit frames.
           <button class="btn-teleport alt" onclick="surfJumpRandom()" title="Random Jump">
             <span>🔀</span> Random
           </button>
+          <div style="display:flex; align-items:center; gap:4px; margin-left:6px;">
+            <label style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--amber-bright);">SCOPE:</label>
+            <select class="form-control" id="surfScopeSelect" onchange="setSurfScope(this.value)" style="padding:3px 6px; font-size:11px; width:170px; background:#0c1322; color:var(--amber-bright); border-color:var(--amber);">
+              <option value="all">All Consortium Nodes (24)</option>
+              <option value="canonical" selected>★ Canonical 1999 Fleet (6 Sites)</option>
+            </select>
+          </div>
         </div>
 
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
@@ -5357,17 +5409,45 @@ const BADGE_PRESETS = {
     palette: "netscape",
     bevel: "raised",
     pattern: "solid"
+  },
+  'rfc-archive': {
+    top: "IETF RFC 1149",
+    bottom: "AVIAN CARRIER",
+    glyph: "globe",
+    palette: "netscape",
+    bevel: "raised",
+    pattern: "solid"
+  },
+  'rfc_archive': {
+    top: "IETF RFC 1149",
+    bottom: "AVIAN CARRIER",
+    glyph: "globe",
+    palette: "netscape",
+    bevel: "raised",
+    pattern: "solid"
   }
 };
 
 function applyMemberNodePreset(nodeId) {
   if (!nodeId) return;
-  const node = ringNodes.find(n => n.id === nodeId);
+  const matchIdx = resolveNodeMatch(nodeId);
+  const node = matchIdx !== -1 ? ringNodes[matchIdx] : ringNodes.find(n => n.id === nodeId);
   if (!node) return;
   const titleEl = document.getElementById('badgeSiteTitle');
   const idEl = document.getElementById('badgeRingId');
   if (titleEl) titleEl.value = node.name;
   if (idEl) idEl.value = node.id;
+
+  const themeEl = document.getElementById('badgeThemeSelect');
+  if (themeEl) {
+    if (node.id === '#023') themeEl.value = 'matrix';
+    else if (node.id === '#024') themeEl.value = 'cyan';
+    else if (node.id === '#025') themeEl.value = 'gold';
+    else if (node.id === '#026') themeEl.value = 'win95';
+    else if (node.id === '#021') themeEl.value = 'neon';
+    else if (node.id === '#022') themeEl.value = 'terminal';
+  }
+
   if (typeof updateBadgePreview === 'function') updateBadgePreview();
   if (typeof showNoticeToast === 'function') showNoticeToast(`Loaded node preset: ${node.name} (${node.id})`);
 }
@@ -6285,6 +6365,69 @@ function toggleTopologyDirection() {
   }
 }
 
+function focusTopologyNode(nodeId) {
+  const idx = resolveNodeMatch(nodeId);
+  if (idx === -1) return;
+  const node = ringNodes[idx];
+  switchTab('tab-topology');
+  topoHoverNode = { node: node, index: idx };
+  const hudEl = document.getElementById('topoSellabel');
+  if (hudEl) {
+    hudEl.innerHTML = `<span style="color:var(--amber-bright); font-weight:bold;">★ ${node.name} (${node.id})</span> <span style="color:var(--green-bright); font-size:10px;">[CANONICAL 1999 DESTINATION]</span> • Latency: ${node.latency}ms • Cat: ${node.category.toUpperCase()}`;
+  }
+  const freq = 520 + (idx % 6) * 110;
+  playFmTone(freq, 1.2, 0.4, 0.08, 0.08, false);
+  openNodeModal(node.id);
+  showNoticeToast(`Focused Canonical Node: ${node.name} (${node.id})`);
+}
+
+let canonicalTraceTimer = null;
+function traceCanonicalOrbitSequence() {
+  if (canonicalTraceTimer) {
+    clearInterval(canonicalTraceTimer);
+    canonicalTraceTimer = null;
+    showNoticeToast("Canonical trace paused.");
+    return;
+  }
+  setTopologyFilter('canonical');
+  const canonicalList = ringNodes.filter(n => CANONICAL_IDS.has(n.id));
+  let step = 0;
+  playSfx('pulse');
+  showNoticeToast("✨ Tracing Canonical 1999 Constellation orbit...");
+
+  canonicalTraceTimer = setInterval(() => {
+    if (step >= canonicalList.length) {
+      clearInterval(canonicalTraceTimer);
+      canonicalTraceTimer = null;
+      showNoticeToast("★ Canonical Constellation trace complete!");
+      return;
+    }
+    const cNode = canonicalList[step];
+    const fullIdx = ringNodes.findIndex(n => n.id === cNode.id);
+    topoHoverNode = { node: cNode, index: fullIdx };
+    const hudEl = document.getElementById('topoSellabel');
+    if (hudEl) {
+      hudEl.innerHTML = `<span style="color:var(--amber-bright); font-weight:bold;">★ Canonical Hop [${step + 1}/${canonicalList.length}]: ${cNode.name} (${cNode.id})</span> • Latency: ${cNode.latency}ms • <a href="${cNode.url}" style="color:var(--cyan); text-decoration:underline;">Visit Site »</a>`;
+    }
+    const freq = 440 + step * 88;
+    playFmTone(freq, 1.5, 0.8, 0.06, 0.07, false);
+    step++;
+  }, 450);
+}
+
+function triggerCanonicalRandomWarp() {
+  const canonNodes = ringNodes.filter(n => CANONICAL_IDS.has(n.id));
+  if (canonNodes.length === 0) return;
+  const pick = canonNodes[Math.floor(Math.random() * canonNodes.length)];
+  switchTab('tab-teleport');
+  warpTarget = pick;
+  const nameEl = document.getElementById('warpDestName');
+  const urlEl = document.getElementById('warpDestUrl');
+  if (nameEl) nameEl.innerHTML = `<span style="color:var(--amber-bright);">★ ${pick.name}</span> (${pick.id})`;
+  if (urlEl) urlEl.textContent = pick.url.startsWith('/') ? `kweb://${pick.url.replace('/web/', '').replace('.html', '')}` : pick.url;
+  triggerStagedWarp();
+}
+
 function transmitTopologyPing() {
   if (isTopoPingActive) return;
   isTopoPingActive = true;
@@ -6454,6 +6597,37 @@ function drawTopologyMap(canvas, ctx) {
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
       ctx.stroke();
     });
+  }
+
+  // Golden Constellation Lines when in Canonical Filter Mode
+  if (topoFilter === 'canonical') {
+    const canonNodes = [];
+    for (let i = 0; i < n; i++) {
+      if (CANONICAL_IDS.has(ringNodes[i].id)) {
+        const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+        canonNodes.push({
+          x: cx + radius * Math.cos(a),
+          y: cy + radius * Math.sin(a),
+          node: ringNodes[i]
+        });
+      }
+    }
+    if (canonNodes.length > 1) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(251, 191, 36, 0.75)";
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      for (let ci = 0; ci < canonNodes.length; ci++) {
+        const p1 = canonNodes[ci];
+        const p2 = canonNodes[(ci + 1) % canonNodes.length];
+        if (ci === 0) ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   // Draw Interconnecting Ring Lines
@@ -8621,12 +8795,30 @@ function saveSurfBookmarks() {
   } catch (e) {}
 }
 
-function renderSurfViewport() {
+let surfScope = 'canonical';
+
+function setSurfScope(scope) {
+  surfScope = scope;
+  if (typeof playSfx === 'function') playSfx('click');
+  currentSurfIndex = 0;
+  renderSurfViewport();
+  showNoticeToast(`Ring Surfer Scope: ${scope === 'canonical' ? '★ Canonical Fleet (6 Sites)' : 'All Consortium Nodes'}`);
+}
+
+function getSurfEligibleNodes() {
   const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
-  if (currentSurfIndex < 0 || currentSurfIndex >= visibleNodes.length) {
+  if (surfScope === 'canonical') {
+    return visibleNodes.filter(n => CANONICAL_IDS.has(n.id));
+  }
+  return visibleNodes;
+}
+
+function renderSurfViewport() {
+  const eligibleNodes = getSurfEligibleNodes();
+  if (currentSurfIndex < 0 || currentSurfIndex >= eligibleNodes.length) {
     currentSurfIndex = 0;
   }
-  const node = visibleNodes[currentSurfIndex];
+  const node = eligibleNodes[currentSurfIndex];
   if (!node) return;
 
   // Titlebar & Location
@@ -8688,11 +8880,11 @@ function renderSurfViewport() {
 }
 
 function surfStep(dir) {
-  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
-  currentSurfIndex = (currentSurfIndex + dir + visibleNodes.length) % visibleNodes.length;
+  const eligibleNodes = getSurfEligibleNodes();
+  currentSurfIndex = (currentSurfIndex + dir + eligibleNodes.length) % eligibleNodes.length;
 
   surfTourHistoryHops++;
-  const activeNode = visibleNodes[currentSurfIndex];
+  const activeNode = eligibleNodes[currentSurfIndex];
   const simulatedBytes = Math.round(25000 + (activeNode.num * 8500) % 95000);
   surfTotalBytesStreamed += simulatedBytes;
 
@@ -8722,8 +8914,8 @@ function surfStep(dir) {
 }
 
 function surfJumpRandom() {
-  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
-  const nextIdx = Math.floor(Math.random() * visibleNodes.length);
+  const eligibleNodes = getSurfEligibleNodes();
+  const nextIdx = Math.floor(Math.random() * eligibleNodes.length);
   currentSurfIndex = nextIdx;
   surfStep(0);
 }
@@ -9219,13 +9411,24 @@ function resolveNodeMatch(query) {
   if (!query) return -1;
   const q = String(query).toLowerCase().trim();
   const cleanQ = q.replace(/^(kweb:\/\/|\/web\/)/, '').replace(/\.html$/, '').replace(/^#/, '');
+  const normQ = cleanQ.replace(/[-_]/g, '');
   const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
   return visibleNodes.findIndex(n => {
     const nid = n.id.toLowerCase().replace('#', '');
     const nnum = String(n.num);
     const nurl = n.url.toLowerCase().replace(/^(kweb:\/\/|\/web\/)/, '').replace(/\.html$/, '');
+    const normUrl = nurl.replace(/[-_]/g, '');
     const nname = n.name.toLowerCase();
-    return nid === cleanQ || nnum === cleanQ || nurl === cleanQ || nurl.includes(cleanQ) || cleanQ.includes(nurl) || nname.includes(cleanQ);
+    const ntags = (n.tags || '').toLowerCase();
+    return nid === cleanQ ||
+      nnum === cleanQ ||
+      nurl === cleanQ ||
+      normUrl === normQ ||
+      normUrl.includes(normQ) ||
+      normQ.includes(normUrl) ||
+      nname.includes(cleanQ) ||
+      ntags.includes(cleanQ) ||
+      ntags.includes(normQ);
   });
 }
 
@@ -9262,9 +9465,26 @@ window.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const ringAction = urlParams.get('action');
   const targetId = urlParams.get('id') || urlParams.get('node') || urlParams.get('from') || urlParams.get('site');
+  const scopeParam = urlParams.get('scope');
 
-  if (urlParams.get('warp') === 'random' || ringAction === 'random') {
+  if (urlParams.get('warp') === 'random' || ringAction === 'random' || ringAction === 'warp') {
+    const candidates = (scopeParam === 'canonical' || targetId === 'canonical')
+      ? ringNodes.filter(n => CANONICAL_IDS.has(n.id))
+      : ringNodes.filter(n => !n.hiddenFromDirectory);
+    const dest = candidates[Math.floor(Math.random() * candidates.length)] || ringNodes[0];
+
+    if (urlParams.get('direct') === '1' || urlParams.get('warp') === '1') {
+      logNodeVisit(dest.id);
+      window.location.href = dest.url;
+      return;
+    }
+
     switchTab('tab-teleport');
+    warpTarget = dest;
+    const nameEl = document.getElementById('warpDestName');
+    const urlEl = document.getElementById('warpDestUrl');
+    if (nameEl) nameEl.innerHTML = `${CANONICAL_IDS.has(dest.id) ? '★ ' : ''}${dest.name} (${dest.id})`;
+    if (urlEl) urlEl.textContent = dest.url.startsWith('/') ? `kweb://${dest.url.replace('/web/', '').replace('.html', '')}` : dest.url;
     triggerStagedWarp();
   } else if (ringAction === 'next' || ringAction === 'prev' || ringAction === 'skip') {
     const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
@@ -9288,6 +9508,13 @@ window.addEventListener('DOMContentLoaded', () => {
     if (typeof showNoticeToast === 'function') {
       showNoticeToast(`Ring Traversal [${ringAction.toUpperCase()}]: Hop to ${dest.name} (${dest.id})`);
     }
+  } else if (ringAction === 'canonical' || ringAction === 'constellation') {
+    switchTab('tab-topology');
+    setTopologyFilter('canonical');
+    traceCanonicalOrbitSequence();
+  } else if (ringAction === 'badge' || ringAction === 'widget') {
+    switchTab('tab-badge');
+    if (targetId) applyMemberNodePreset(targetId);
   } else if (ringAction === 'list' || ringAction === 'directory') {
     switchTab('tab-directory');
   } else if (ringAction === 'stats') {

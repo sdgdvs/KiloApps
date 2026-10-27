@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T15:37:32-07:00 — kilo-tester: KDragon (Fix Shop Pricing, Ecstatic Mood & Sovereign Aura Parity)**
+  - Status: PASS ✅ (0 errors, web 189.2 KB, native 151.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.29%, input 40.24%, HEAD Δ 0.02%, 0 fail, 0 warn, 7.3s)).
+  - Fixed buyItem() string key prices, getMood().label === 'Ecstatic' in training minigames and battle (+15% crit), and +10 Sovereign Aura stat bonus across Web HTML and Win32 C.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-26T15:19:30-07:00 — kilo-soundscape: KBreakout (Neon Deflector: Overdrive Matrix — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS (0 errors, web 190.8 KB, native 54.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Composition: D Mixolydian/Ionian mode, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove (~144 BPM).

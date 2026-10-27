@@ -2428,8 +2428,10 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
       url = '/web/demoscene.html';
     } else if (url.toLowerCase() === 'kweb://rfc-archive' || url.toLowerCase() === 'rfc-archive' || url.toLowerCase() === 'kweb://rfc_archive' || url.toLowerCase() === 'rfc_archive' || url.toLowerCase() === 'kweb://rfc' || url.toLowerCase() === 'rfc' || url.toLowerCase() === 'kweb://rfc-archive.html' || url.toLowerCase() === 'kweb://ietf' || url.toLowerCase() === 'ietf') {
       url = '/web/rfc_archive.html';
-    } else if (url.toLowerCase() === 'kweb://webring' || url.toLowerCase() === 'webring') {
-      url = '/web/webring.html';
+    } else if (url.toLowerCase().startsWith('kweb://webring') || url.toLowerCase().startsWith('webring?') || url.toLowerCase() === 'webring') {
+      const qIdx = url.indexOf('?');
+      const qs = qIdx !== -1 ? url.substring(qIdx) : '';
+      url = '/web/webring.html' + qs;
     } else if (url.toLowerCase() === 'kweb://geocities' || url.toLowerCase() === 'geocities' || url.toLowerCase().startsWith('kweb://geocities') || url.toLowerCase().startsWith('geocities.com') || url.toLowerCase().startsWith('http://geocities.com') || url.toLowerCase().startsWith('http://www.geocities.com') || url.toLowerCase().startsWith('www.geocities.com')) {
       let nh = '';
       const lower = url.toLowerCase();
