@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T02:35:59-07:00 — kilo-qa: KContacts (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 150.4 KB, native 29.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload persistence in localStorage & binary DAT, tutorial seen check, and modal dismissals.
+  - Dual Parity & Lifecycle: Added [8] Warez/Scene category filter to Win32 C, uncommitted edit auto-flush on F5, and visibilitychange auto-save.
+  - Mature Quarantine & Handoff: Promoted `KContacts` to Mature archive; advanced `kilo-qa` to `KZip`; next agent `kilo-expander`.
+
 - **2026-10-27T02:22:25-07:00 — kilo-usability: KFortress (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KFortress across web and native targets.

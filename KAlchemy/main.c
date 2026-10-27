@@ -640,6 +640,13 @@ static int StrContainsIgnoreCase(const char* haystack, const char* needle) {
     return 0;
 }
 
+static void PlayErrorFizzle() {
+    if (!g_State.soundEnabled) return;
+    Beep(360, 40);
+    Beep(240, 50);
+    Beep(140, 70);
+}
+
 static void PlayGlassClink() {
     if (!g_State.soundEnabled) return;
     Beep(1800, 30);
@@ -1661,6 +1668,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 UpdateEquipmentUI(hwnd);
                 PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (key == 'M' || key == 'm') {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1300, 0), 0);
             } else if (!g_State.showHelpModal) {
                 if (key == 'C' || key == 'c') {
                     g_State.slot1 = -1;
@@ -1817,7 +1826,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             char logMsg[256];
                             wsprintfA(logMsg, "⏰ BLITZ TIME'S UP! Final Score: %d Pts (High Score: %d Pts)", g_State.blitzScore, g_State.blitzHighScore);
                             AddJournalLog(logMsg);
-                            Beep(350, 150);
+                            PlayErrorFizzle();
                         }
                     }
                 }
@@ -3797,6 +3806,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             } else if (hFocus != g_hSearchEdit) {
                 if (vk == 'H' || vk == 'h') {
                     SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1400, 0), 0);
+                    continue;
+                } else if (vk == 'M' || vk == 'm') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1300, 0), 0);
                     continue;
                 } else if (vk == 'C' || vk == 'c') {
                     SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(202, 0), 0);
