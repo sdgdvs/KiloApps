@@ -13,10 +13,15 @@ HWND hBtnQS, hBtnQL;
 
 #define MAX_VARS 256
 #define MAX_VAR_NAME 32
+#define MAX_VFS_FILES 32
+#define MAX_VFS_PATH 64
+#define MAX_VFS_DATA 2048
 
 typedef struct {
     char name[MAX_VAR_NAME];
     int val;
+    char strVal[MAX_VFS_DATA];
+    int isStr;
     int assigned;
 } VarEntry;
 
@@ -63,6 +68,24 @@ int StrEqualCase(const char* a, const char* b) {
         a++; b++;
     }
     return (*a == '\0' && *b == '\0');
+}
+
+int StrStartsWith(const char* str, const char* prefix) {
+    while (*prefix) {
+        if (*str != *prefix) return 0;
+        str++; prefix++;
+    }
+    return 1;
+}
+
+int StrStartsWithCase(const char* str, const char* prefix) {
+    while (*prefix) {
+        char ca = (*str >= 'A' && *str <= 'Z') ? *str + 32 : *str;
+        char cb = (*prefix >= 'A' && *prefix <= 'Z') ? *prefix + 32 : *prefix;
+        if (ca != cb) return 0;
+        str++; prefix++;
+    }
+    return 1;
 }
 
 void IntToStr(int val, char* buf) {
@@ -155,6 +178,26 @@ int VfsWrite(const char* path, const char* data) {
     }
     g_vfsFiles[idx].data[dLen] = '\0';
     g_vfsFiles[idx].size = dLen;
+
+    // Synchronize to disk under home/scripts/ if path is in scripts directory
+    if (StrStartsWith(path, "/home/scripts/") || StrStartsWith(path, "home/scripts/")) {
+        CreateDirectoryA("home", NULL);
+        CreateDirectoryA("home\\scripts", NULL);
+        const char* diskRel = (path[0] == '/') ? path + 1 : path;
+        char diskPath[MAX_PATH];
+        int dIdx = 0;
+        while (diskRel[dIdx] && dIdx < MAX_PATH - 1) {
+            diskPath[dIdx] = (diskRel[dIdx] == '/') ? '\\' : diskRel[dIdx];
+            dIdx++;
+        }
+        diskPath[dIdx] = '\0';
+        HANDLE hFile = CreateFileA(diskPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD dwWritten = 0;
+            WriteFile(hFile, data, dLen, &dwWritten, NULL);
+            CloseHandle(hFile);
+        }
+    }
     return dLen;
 }
 
@@ -191,6 +234,34 @@ int VfsCopy(const char* src, const char* dst) {
 const char* VfsRead(const char* path) {
     int idx = VfsFind(path);
     if (idx != -1) return g_vfsFiles[idx].data;
+
+    // Check disk fallback for home/scripts/
+    if (StrStartsWith(path, "/home/scripts/") || StrStartsWith(path, "home/scripts/")) {
+        const char* diskRel = (path[0] == '/') ? path + 1 : path;
+        char diskPath[MAX_PATH];
+        int dIdx = 0;
+        while (diskRel[dIdx] && dIdx < MAX_PATH - 1) {
+            diskPath[dIdx] = (diskRel[dIdx] == '/') ? '\\' : diskRel[dIdx];
+            dIdx++;
+        }
+        diskPath[dIdx] = '\0';
+        HANDLE hFile = CreateFileA(diskPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD dwSize = GetFileSize(hFile, NULL);
+            if (dwSize > 0 && dwSize < MAX_VFS_DATA) {
+                char diskBuf[MAX_VFS_DATA];
+                DWORD dwRead = 0;
+                if (ReadFile(hFile, diskBuf, dwSize, &dwRead, NULL)) {
+                    diskBuf[dwRead] = '\0';
+                    CloseHandle(hFile);
+                    VfsWrite(path, diskBuf);
+                    idx = VfsFind(path);
+                    if (idx != -1) return g_vfsFiles[idx].data;
+                }
+            }
+            CloseHandle(hFile);
+        }
+    }
     return "";
 }
 
@@ -208,6 +279,13 @@ void VfsInitDefaults(void) {
     if (g_vfsCount == 0) {
         VfsWrite("/home/scripts/welcome.ks", "// KScript Virtual Filesystem\r\nval = 42\r\nprint \"VFS active:\", val\r\n");
         VfsWrite("/home/scripts/calc_log.txt", "KScript Execution Session Initialized\r\n");
+        VfsWrite("/home/scripts/vfs_demo.ks",
+            "// KScript VFS Scripting Demo\r\n"
+            "vfs.write(\"/home/scripts/output.log\", \"VFS Ready\")\r\n"
+            "content = vfs.read(\"/home/scripts/output.log\")\r\n"
+            "files = vfs.list(\"/home/scripts/\")\r\n"
+            "print \"Read back:\", content\r\n"
+            "print \"Files found:\", files\r\n");
     }
 }
 
@@ -232,6 +310,8 @@ int GetOrCreateVariable(const char* name) {
         }
         g_vars[idx].name[i] = '\0';
         g_vars[idx].val = 0;
+        g_vars[idx].strVal[0] = '\0';
+        g_vars[idx].isStr = 0;
         g_vars[idx].assigned = 0;
         return idx;
     }
@@ -243,6 +323,8 @@ void ClearVariables() {
     for (int i = 0; i < MAX_VARS; i++) {
         g_vars[i].name[0] = '\0';
         g_vars[i].val = 0;
+        g_vars[i].strVal[0] = '\0';
+        g_vars[i].isStr = 0;
         g_vars[i].assigned = 0;
     }
 }
@@ -363,7 +445,7 @@ int ParsePrimary(const char** p) {
     if (IsAlpha(**p)) {
         char ident[MAX_VAR_NAME];
         int len = 0;
-        while (IsAlnum(**p) && len < MAX_VAR_NAME - 1) {
+        while ((IsAlnum(**p) || **p == '.') && len < MAX_VAR_NAME - 1) {
             ident[len++] = **p;
             (*p)++;
         }
@@ -424,6 +506,15 @@ int ParsePrimary(const char** p) {
             if (StrEqualCase(ident, "vfs_read") || StrEqualCase(ident, "vfs.read")) {
                 const char* data = VfsRead(sArg1);
                 return StrLen(data);
+            }
+            if (StrEqualCase(ident, "vfs_list") || StrEqualCase(ident, "vfs.list")) {
+                int matchCount = 0;
+                for (int i = 0; i < g_vfsCount; i++) {
+                    if (!sArg1[0] || StrStartsWith(g_vfsFiles[i].path, sArg1)) {
+                        matchCount++;
+                    }
+                }
+                return matchCount;
             }
             if (StrEqualCase(ident, "vfs_delete") || StrEqualCase(ident, "vfs.delete")) {
                 return VfsDelete(sArg1);
@@ -696,10 +787,21 @@ void UpdateMemoryUI() {
     int active = 0;
     for (int i = 0; i < g_varCount; i++) {
         if (g_vars[i].assigned) {
-            char binBuf[24];
-            FormatBin16((unsigned int)g_vars[i].val, binBuf);
             char line[128];
-            wsprintfA(line, "%-14s  %-9d  0x%04X    %s\r\n", g_vars[i].name, g_vars[i].val, (unsigned int)(g_vars[i].val & 0xFFFF), binBuf);
+            if (g_vars[i].isStr) {
+                char truncStr[24];
+                int sl = 0;
+                while (g_vars[i].strVal[sl] && sl < 16) {
+                    truncStr[sl] = g_vars[i].strVal[sl];
+                    sl++;
+                }
+                truncStr[sl] = '\0';
+                wsprintfA(line, "%-14s  \"%s\" (len=%d)\r\n", g_vars[i].name, truncStr, StrLen(g_vars[i].strVal));
+            } else {
+                char binBuf[24];
+                FormatBin16((unsigned int)g_vars[i].val, binBuf);
+                wsprintfA(line, "%-14s  %-9d  0x%04X    %s\r\n", g_vars[i].name, g_vars[i].val, (unsigned int)(g_vars[i].val & 0xFFFF), binBuf);
+            }
             if (StrLen(memStr) + StrLen(line) < sizeof(memStr) - 100) {
                 lstrcatA(memStr, line);
             }
@@ -772,6 +874,77 @@ int StepScript(int* lastVal) {
                         lstrcatA(outStr, strPart);
                     }
                     first = 0;
+                } else if (StrStartsWithCase(debugPtr, "vfs.read(") || StrStartsWithCase(debugPtr, "vfs_read(")) {
+                    while (*debugPtr && *debugPtr != '(') debugPtr++;
+                    if (*debugPtr == '(') debugPtr++;
+                    char sPath[MAX_VFS_PATH] = {0};
+                    int dummy = 0;
+                    ParseStringOrExpr(&debugPtr, sPath, sizeof(sPath), &dummy);
+                    SkipWhitespace(&debugPtr);
+                    if (*debugPtr == ')') debugPtr++;
+                    const char* vdata = VfsRead(sPath);
+                    outL = StrLen(outStr);
+                    if (outL + StrLen(vdata) + 2 < sizeof(outStr)) {
+                        if (!first) lstrcatA(outStr, " ");
+                        lstrcatA(outStr, vdata);
+                    }
+                    first = 0;
+                } else if (StrStartsWithCase(debugPtr, "vfs.list(") || StrStartsWithCase(debugPtr, "vfs_list(")) {
+                    while (*debugPtr && *debugPtr != '(') debugPtr++;
+                    if (*debugPtr == '(') debugPtr++;
+                    char sPrefix[MAX_VFS_PATH] = {0};
+                    int dummy = 0;
+                    SkipWhitespace(&debugPtr);
+                    if (*debugPtr != ')') {
+                        ParseStringOrExpr(&debugPtr, sPrefix, sizeof(sPrefix), &dummy);
+                    }
+                    SkipWhitespace(&debugPtr);
+                    if (*debugPtr == ')') debugPtr++;
+                    char listJson[MAX_VFS_DATA] = "[";
+                    int matchCount = 0;
+                    for (int i = 0; i < g_vfsCount; i++) {
+                        if (!sPrefix[0] || StrStartsWith(g_vfsFiles[i].path, sPrefix)) {
+                            if (matchCount > 0) lstrcatA(listJson, ", ");
+                            lstrcatA(listJson, "\"");
+                            lstrcatA(listJson, g_vfsFiles[i].path);
+                            lstrcatA(listJson, "\"");
+                            matchCount++;
+                        }
+                    }
+                    lstrcatA(listJson, "]");
+                    outL = StrLen(outStr);
+                    if (outL + StrLen(listJson) + 2 < sizeof(outStr)) {
+                        if (!first) lstrcatA(outStr, " ");
+                        lstrcatA(outStr, listJson);
+                    }
+                    first = 0;
+                } else if (IsAlpha(*debugPtr)) {
+                    char vName[MAX_VAR_NAME];
+                    int vLen = 0;
+                    const char* vScan = debugPtr;
+                    while (IsAlnum(*vScan) && vLen < MAX_VAR_NAME - 1) vName[vLen++] = *vScan++;
+                    vName[vLen] = '\0';
+                    int varIdx = FindVariable(vName);
+                    if (varIdx != -1 && g_vars[varIdx].isStr && (*vScan == ',' || *vScan == ' ' || *vScan == '\t' || *vScan == '\0' || *vScan == '\r' || *vScan == '\n' || *vScan == ';')) {
+                        debugPtr = vScan;
+                        outL = StrLen(outStr);
+                        if (outL + StrLen(g_vars[varIdx].strVal) + 2 < sizeof(outStr)) {
+                            if (!first) lstrcatA(outStr, " ");
+                            lstrcatA(outStr, g_vars[varIdx].strVal);
+                        }
+                        first = 0;
+                        continue;
+                    }
+                    int val = ParseExpr(&debugPtr);
+                    *lastVal = val;
+                    char vstr[32];
+                    IntToStr(val, vstr);
+                    outL = StrLen(outStr);
+                    if (outL + 36 < sizeof(outStr)) {
+                        if (!first) lstrcatA(outStr, " ");
+                        lstrcatA(outStr, vstr);
+                    }
+                    first = 0;
                 } else if (*debugPtr != '\0' && *debugPtr != '\r' && *debugPtr != '\n' && *debugPtr != ';') {
                     int val = ParseExpr(&debugPtr);
                     *lastVal = val;
@@ -810,11 +983,111 @@ int StepScript(int* lastVal) {
         }
     }
 
+    if (isAssign) {
+        SkipWhitespace(&debugPtr);
+        int idx = GetOrCreateVariable(varName);
+        if (*debugPtr == '\"') {
+            char sVal[MAX_VFS_DATA];
+            int sValInt = 0;
+            ParseStringOrExpr(&debugPtr, sVal, sizeof(sVal), &sValInt);
+            if (idx != -1) {
+                int sl = 0;
+                while (sVal[sl] && sl < MAX_VFS_DATA - 1) {
+                    g_vars[idx].strVal[sl] = sVal[sl];
+                    sl++;
+                }
+                g_vars[idx].strVal[sl] = '\0';
+                g_vars[idx].val = sl;
+                g_vars[idx].isStr = 1;
+                g_vars[idx].assigned = 1;
+            }
+            int l = StrLen(outStr);
+            if (l + StrLen(varName) + StrLen(sVal) + 40 < sizeof(outStr)) {
+                wsprintfA(outStr + l, "%s = \"%s\"\r\n", varName, sVal);
+            }
+            *lastVal = sValInt;
+            UpdateMemoryUI();
+            return 1;
+        }
+        else if (StrStartsWithCase(debugPtr, "vfs.read(") || StrStartsWithCase(debugPtr, "vfs_read(")) {
+            while (*debugPtr && *debugPtr != '(') debugPtr++;
+            if (*debugPtr == '(') debugPtr++;
+            char sPath[MAX_VFS_PATH] = {0};
+            int dummy = 0;
+            ParseStringOrExpr(&debugPtr, sPath, sizeof(sPath), &dummy);
+            SkipWhitespace(&debugPtr);
+            if (*debugPtr == ')') debugPtr++;
+            const char* vdata = VfsRead(sPath);
+            if (idx != -1) {
+                int sl = 0;
+                while (vdata[sl] && sl < MAX_VFS_DATA - 1) {
+                    g_vars[idx].strVal[sl] = vdata[sl];
+                    sl++;
+                }
+                g_vars[idx].strVal[sl] = '\0';
+                g_vars[idx].val = sl;
+                g_vars[idx].isStr = 1;
+                g_vars[idx].assigned = 1;
+            }
+            int l = StrLen(outStr);
+            if (l + StrLen(varName) + StrLen(vdata) + 40 < sizeof(outStr)) {
+                wsprintfA(outStr + l, "%s = %s\r\n", varName, vdata);
+            }
+            *lastVal = StrLen(vdata);
+            UpdateMemoryUI();
+            return 1;
+        }
+        else if (StrStartsWithCase(debugPtr, "vfs.list(") || StrStartsWithCase(debugPtr, "vfs_list(")) {
+            while (*debugPtr && *debugPtr != '(') debugPtr++;
+            if (*debugPtr == '(') debugPtr++;
+            char sPrefix[MAX_VFS_PATH] = {0};
+            int dummy = 0;
+            SkipWhitespace(&debugPtr);
+            if (*debugPtr != ')') {
+                ParseStringOrExpr(&debugPtr, sPrefix, sizeof(sPrefix), &dummy);
+            }
+            SkipWhitespace(&debugPtr);
+            if (*debugPtr == ')') debugPtr++;
+            char listJson[MAX_VFS_DATA] = "[";
+            int matchCount = 0;
+            for (int i = 0; i < g_vfsCount; i++) {
+                if (!sPrefix[0] || StrStartsWith(g_vfsFiles[i].path, sPrefix)) {
+                    if (matchCount > 0) lstrcatA(listJson, ", ");
+                    lstrcatA(listJson, "\"");
+                    lstrcatA(listJson, g_vfsFiles[i].path);
+                    lstrcatA(listJson, "\"");
+                    matchCount++;
+                }
+            }
+            lstrcatA(listJson, "]");
+            if (idx != -1) {
+                int sl = 0;
+                while (listJson[sl] && sl < MAX_VFS_DATA - 1) {
+                    g_vars[idx].strVal[sl] = listJson[sl];
+                    sl++;
+                }
+                g_vars[idx].strVal[sl] = '\0';
+                g_vars[idx].val = matchCount;
+                g_vars[idx].isStr = 1;
+                g_vars[idx].assigned = 1;
+            }
+            int l = StrLen(outStr);
+            if (l + StrLen(varName) + StrLen(listJson) + 40 < sizeof(outStr)) {
+                wsprintfA(outStr + l, "%s = %s\r\n", varName, listJson);
+            }
+            *lastVal = matchCount;
+            UpdateMemoryUI();
+            return 1;
+        }
+    }
+
     int val = ParseExpr(&debugPtr);
     if (isAssign) {
         int idx = GetOrCreateVariable(varName);
         if (idx != -1) {
             g_vars[idx].val = val;
+            g_vars[idx].strVal[0] = '\0';
+            g_vars[idx].isStr = 0;
             g_vars[idx].assigned = 1;
         }
         char vstr[32];
@@ -1217,19 +1490,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int fontHeight = -MulDiv(11, dpi, 72);
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
 
-            // Toolbar Buttons
-            hBtnRec   = CreateWindowEx(0, "BUTTON", "Rec", WS_CHILD | WS_VISIBLE, S(6), S(8), S(52), S(26), hwnd, (HMENU)4, NULL, NULL);
-            hBtnPlay  = CreateWindowEx(0, "BUTTON", "Play", WS_CHILD | WS_VISIBLE, S(62), S(8), S(52), S(26), hwnd, (HMENU)5, NULL, NULL);
-            hBtnStep  = CreateWindowEx(0, "BUTTON", "Step [F10]", WS_CHILD | WS_VISIBLE, S(118), S(8), S(78), S(26), hwnd, (HMENU)6, NULL, NULL);
-            hBtnRun   = CreateWindowEx(0, "BUTTON", "Run [^Ent]", WS_CHILD | WS_VISIBLE, S(200), S(8), S(84), S(26), hwnd, (HMENU)1, NULL, NULL);
-            hBtnQS    = CreateWindowEx(0, "BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE, S(288), S(8), S(72), S(26), hwnd, (HMENU)11, NULL, NULL);
-            hBtnQL    = CreateWindowEx(0, "BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE, S(364), S(8), S(72), S(26), hwnd, (HMENU)12, NULL, NULL);
-            hBtnBench = CreateWindowEx(0, "BUTTON", "Bench [F6]", WS_CHILD | WS_VISIBLE, S(440), S(8), S(76), S(26), hwnd, (HMENU)10, NULL, NULL);
-            hBtnLoad  = CreateWindowEx(0, "BUTTON", "Imp [^O]", WS_CHILD | WS_VISIBLE, S(480), S(8), S(60), S(26), hwnd, (HMENU)2, NULL, NULL);
-            hBtnSave  = CreateWindowEx(0, "BUTTON", "Exp [^S]", WS_CHILD | WS_VISIBLE, S(542), S(8), S(60), S(26), hwnd, (HMENU)3, NULL, NULL);
-            hBtnVfs   = CreateWindowEx(0, "BUTTON", "VFS [Alt+V]", WS_CHILD | WS_VISIBLE, S(604), S(8), S(78), S(26), hwnd, (HMENU)13, NULL, NULL);
-            hBtnClear = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE, S(684), S(8), S(48), S(26), hwnd, (HMENU)9, NULL, NULL);
-            hBtnHelp  = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, S(734), S(8), S(60), S(26), hwnd, (HMENU)8, NULL, NULL);
+            // Toolbar Buttons (S-scaled, non-overlapping)
+            hBtnRec   = CreateWindowEx(0, "BUTTON", "Rec", WS_CHILD | WS_VISIBLE, S(6), S(8), S(46), S(26), hwnd, (HMENU)4, NULL, NULL);
+            hBtnPlay  = CreateWindowEx(0, "BUTTON", "Play", WS_CHILD | WS_VISIBLE, S(56), S(8), S(46), S(26), hwnd, (HMENU)5, NULL, NULL);
+            hBtnStep  = CreateWindowEx(0, "BUTTON", "Step [F10]", WS_CHILD | WS_VISIBLE, S(106), S(8), S(72), S(26), hwnd, (HMENU)6, NULL, NULL);
+            hBtnRun   = CreateWindowEx(0, "BUTTON", "Run [^Ent]", WS_CHILD | WS_VISIBLE, S(182), S(8), S(78), S(26), hwnd, (HMENU)1, NULL, NULL);
+            hBtnQS    = CreateWindowEx(0, "BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE, S(264), S(8), S(66), S(26), hwnd, (HMENU)11, NULL, NULL);
+            hBtnQL    = CreateWindowEx(0, "BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE, S(334), S(8), S(66), S(26), hwnd, (HMENU)12, NULL, NULL);
+            hBtnBench = CreateWindowEx(0, "BUTTON", "Bench [F6]", WS_CHILD | WS_VISIBLE, S(404), S(8), S(70), S(26), hwnd, (HMENU)10, NULL, NULL);
+            hBtnLoad  = CreateWindowEx(0, "BUTTON", "Imp [^O]", WS_CHILD | WS_VISIBLE, S(478), S(8), S(58), S(26), hwnd, (HMENU)2, NULL, NULL);
+            hBtnSave  = CreateWindowEx(0, "BUTTON", "Exp [^S]", WS_CHILD | WS_VISIBLE, S(540), S(8), S(58), S(26), hwnd, (HMENU)3, NULL, NULL);
+            hBtnVfs   = CreateWindowEx(0, "BUTTON", "VFS [Alt+V]", WS_CHILD | WS_VISIBLE, S(602), S(8), S(76), S(26), hwnd, (HMENU)13, NULL, NULL);
+            hBtnClear = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE, S(682), S(8), S(46), S(26), hwnd, (HMENU)9, NULL, NULL);
+            hBtnHelp  = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, S(732), S(8), S(58), S(26), hwnd, (HMENU)8, NULL, NULL);
 
             hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(796), S(9), S(56), S(24), hwnd, NULL, NULL, NULL);
             hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(856), S(9), S(56), S(24), hwnd, NULL, NULL, NULL);
@@ -1432,14 +1705,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             else if (wmId == 13) {
-                char vfsInfo[1024];
-                wsprintfA(vfsInfo, "KScript Virtual Filesystem (VFS)\r\nTotal Virtual Files: %d\r\n\r\n", g_vfsCount);
+                char vfsInfo[2048];
+                wsprintfA(vfsInfo, "KScript Virtual Filesystem (VFS) Explorer\r\nTotal Virtual Files in Mesh: %d\r\n\r\n", g_vfsCount);
                 for (int i = 0; i < g_vfsCount; i++) {
-                    char entry[128];
+                    char entry[160];
                     wsprintfA(entry, "%d) %s (%d B)\r\n", i + 1, g_vfsFiles[i].path, g_vfsFiles[i].size);
                     lstrcatA(vfsInfo, entry);
                 }
-                lstrcatA(vfsInfo, "\r\nUse vfs_count(), vfs_size(i), or vfs_exists(i) in scripts.");
+                lstrcatA(vfsInfo, "\r\nPhase VI VFS Scripting APIs:\r\n"
+                                  " - vfs.read(path) / vfs_read(path)\r\n"
+                                  " - vfs.write(path, data) / vfs_write(path, data)\r\n"
+                                  " - vfs.list(prefix) / vfs_list(prefix)\r\n"
+                                  " - vfs.exists(path), vfs.size(path), vfs.delete(path)\r\n"
+                                  "Scripts saved to /home/scripts/ sync with Win32 interpreter.");
                 MessageBoxA(hwnd, vfsInfo, "KScript VFS Explorer [Alt+V]", MB_OK | MB_ICONINFORMATION);
             }
             break;
