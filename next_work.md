@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-review
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,11 +32,11 @@ current_targets:
   kilo_creator: kweb://deep-core
   kilo_graphics: KAlchemy
   kilo_soundscape: KStarship
-  kilo_tester: KMaze
-  kilo_usability: KMaze
+  kilo_tester: KFortress
+  kilo_usability: KFortress
   kilo_qa: KContacts
   kilo_expander: KScript
-  kilo_review: KFortress
+  kilo_review: KMystery
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
 - kweb://slashnet
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KBBS
-  timestamp: '2026-10-26T23:22:45-07:00'
+  agent: kilo-review
+  app: KFortress
+  timestamp: '2026-10-26T23:32:12-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -134,10 +134,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KQuest` | `KiloOS/public/apps/kquest.html` | Compose overworld & battle 6-channel JRPG chiptune suite (Royal Road `IV-V-iii-vi` town/overworld + Heroic `bVI-bVII-I` combat cadence, E-Piano & flute counterpoint, SPC700 echo) + spell/quest earcons. |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KMaze`
+- **Active Target**: `KFortress`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -150,10 +151,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KMaze`
+- **Active Target**: `KFortress`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Add <meta charset='UTF-8'> to kmaze.html <head> to fix broken UTF-8 mojibake icons across splash, HUD, toasts, and canvas; compact top #uiCanvas and Win32 GDI HUD telemetry over a dark translucent header strip so Lvl/biome/charges text stops colliding with F5/F9 hint and clipping [STAND]/[CROUCH] at 320px width; move #toastContainer below top HUD (top 50px) and #firstRunBanner to bottom of #canvasWrapper; suppress duplicate gameState===0 canvas text behind #splashOverlay; and sync #uiCanvas dimensions/scaling cleanly on boot and resize. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -196,11 +198,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
-- **Active Target**: `KFortress`
+- **Active Target**: `KMystery`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + tower defense pathing, wave controls, and sidebar ergonomics; inject fixes via `--inject-fix`. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + clue dossier viewer, forensic scanner, and interrogation dialog tree; inject fixes via `--inject-fix`. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + ludus management tabs, gladiator arena combat HUD, and button clipping; inject fixes via `--inject-fix`. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + forensic decrypter, RF waterfall, and VFS integration ergonomics; inject fixes via `--inject-fix`. |
@@ -230,6 +231,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | [Argon Audited 2026-10-26: Fixes queued -> kilo-expander, kilo-soundscape, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | [Argon Audited 2026-10-26: Fixes queued -> kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | [Argon Audited 2026-10-26: Fixes queued -> kilo-tester, kilo-usability] Visual, feature & usability review. |
+| `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | [Argon Audited 2026-10-26: Fixes queued -> kilo-tester, kilo-usability] Visual, feature & usability review. |
 
 ---
 
@@ -284,7 +286,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KSudoku** | `KiloOS/public/apps/ksudoku.html` | Pass 8+ (2026-10-18) | Puzzle / Logic | 30-stage campaign, RFMS online duel, logic explainer, replay scrubber, puzzle manager, full F5/F9 state persistence, dual Win32 native client parity. |
 | **KTetris** | `KiloOS/public/apps/ktetris.html` | Pass 10+ (2026-10-18) | Arcade / Classic | Full retro arcade physics, SRS rotation, hold piece, ghost piece, marathon/sprint/ultra modes, RFMS multiplayer, full F5/F9 state persistence, dual Win32 native client parity. |
 | **KFreecell** | `KiloOS/public/apps/kfreecell.html` | Pass 5 (2026-10-19) | Card / Solitaire | 4 game modes (incl. 20-stage campaign & time attack), 5 active skills, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity, zero glints. |
-| **KFortress** | `KiloOS/public/apps/kfortress.html` | Pass 6+ (2026-10-19) | Strategy / Tower Defense | Complete 12-map stronghold defense, Imagen 3 sprites & textured terrain, dual Win32 client parity, YM2612 2-Op FM / SPC700 2-movement soundscape, full F5/F9 state persistence. |
 | **KMystery** | `KiloOS/public/apps/kmystery.html` | Pass 6+ (2026-10-19) | Puzzle / Adventure | Detective noir murder mystery; interactive clue dossier sketch viewer, forensic lab scanner, suspect interrogation tree, YM2612 2-Op FM jazz, dual Win32 native client parity, full F5/F9 persistence. |
 | **KMatch3** | `KiloOS/public/apps/kmatch3.html` | Pass 5 (2026-10-19) | Puzzle / Match-3 | 20-stage campaign, Zen, Timed Rush & Duel Arena modes, Jewel King boss encounter, active skills, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity. |
 | **KChart** | `KiloOS/public/apps/kchart.html` | Pass 6+ (2026-10-20) | Office / Visualization | Feature-complete 1999 spreadsheet & business chart studio; 10 engines, regressions & OLS fit, YM2612 FM / SPC700 sonification, 7 export formats, dual Win32 C parity, full state persistence. |
@@ -299,6 +300,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-26T23:32:12-07:00 — kilo-review: KFortress (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1024x703 and audited kfortress.html + KFortress/main.c; injected 2 surgical fixes, un-quarantining KFortress to active Flash queues).
+  - Visual/UX Findings (kilo-usability): Single-column .tower-selection (11 cards) overflows the 635px .sidebar at 1024x703, pushing map switcher, #waveBtn (START WAVE), #academyBtn/#resetBtn, and HERO & SKILLS [1-5] completely off-screen below the scroll fold; occupied tower slots also lack a sell/demolish action.
+  - Gameplay/Feature Findings (kilo-tester): Tower targeting adds distance-to-tower (e.waypointIndex * 1000 + dist) instead of subtracting distance-to-next-waypoint, misfiring at trailing enemies; mutators.eclipse (+30% tower rate), mutators.phaseshift (+75% gold), and mutators.titan (2x bosses) are partially unimplemented; poison/trap/chain deaths bypass boss bounty/hsBoss accounting.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KFortress`, `kilo-tester`->`KFortress`] (un-quarantined `KFortress` from Mature); advanced `kilo-review` to `KMystery`; next agent `kilo-creator`.
 
 - **2026-10-26T23:22:45-07:00 — kilo-expander: KBBS (KBBS Phase VI VFS Mesh & Door Game Inter-App IPC)**
   - Status: PASS (0 errors, web 206.1 KB, native 108.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.15%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.8s)).
@@ -324,9 +331,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI & Hotkeys: Added activeElement guards, space-launch for Mars Prime on tick===0, and Arrow/Space scroll prevention.
   - Sandbox Resources: Preserved unlimited resources (power, maxPower, food, mat, advm, sci = 9999) in gameTick() across Web and C.
   - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
-
-- **2026-10-26T20:20:27-07:00 — kilo-soundscape: KQuest (Overture of Valor & Steel and Sorcery — YM2612/SPC700 Chiptune Suite)**
-  - Status: PASS ✅ (0 errors, web 395.4 KB, native 99.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.09%, input 16.05%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.4s)).
-  - Composition: Royal Road IV-V-iii-vi town/overworld + Heroic bVI-bVII-I combat cadence, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
-  - Patches & DSP: Lead Flute (180ms vibrato), Heroic Brass, E-Piano, FM Bass (<130.81Hz), 200ms SPC700 delay, and Win32 C parity for heal/quest/victory/flee/raid/arena earcons.
-  - Handoff: Advanced `kilo-soundscape` to `KStarship`; rotated active agent to `kilo-tester`.
