@@ -1489,6 +1489,7 @@
     ev.completed = !ev.completed;
     saveEvents();
     renderApp();
+    playRetroChime('check');
     showToast(ev.completed ? `Completed: "${ev.title}"` : `Marked pending: "${ev.title}"`, 'info', 2000);
   }
 
@@ -2466,6 +2467,71 @@
     safeSet('kcalendar_tutorial_seen', '1');
   }
 
+  // --- RETRO SOUND FX & REMINDER CHIMES ---
+  let audioCtx = null;
+  function playRetroChime(type) {
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      if (!audioCtx) audioCtx = new AudioContextClass();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'save') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.12);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.start(now);
+        osc.stop(now + 0.18);
+      } else if (type === 'load') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(659.25, now);
+        osc.frequency.exponentialRampToValueAtTime(523.25, now + 0.12);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.start(now);
+        osc.stop(now + 0.18);
+      } else if (type === 'reminder') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, now);
+        osc.frequency.setValueAtTime(880.00, now + 0.08);
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        osc.start(now);
+        osc.stop(now + 0.22);
+      } else if (type === 'check') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      }
+    } catch (_) {}
+  }
+
+  function checkDailyReminders(quiet) {
+    const todayStr = formatDateStr(new Date());
+    const todayEvents = events.filter(e => e.date === todayStr && !e.completed);
+    if (todayEvents.length > 0) {
+      const urgentCount = todayEvents.filter(e => e.priority === 'urgent' || e.priority === 'high').length;
+      const urgentBadge = urgentCount > 0 ? ` (${urgentCount} high/urgent!)` : '';
+      const msg = `📅 Today: ${todayEvents.length} pending event(s)${urgentBadge}`;
+      if (!quiet) {
+        showToast(msg, urgentCount > 0 ? 'warning' : 'info', 3500);
+        playRetroChime('reminder');
+      }
+    }
+  }
+
   // --- QUICKSAVE & QUICKLOAD ENGINE ---
   function quicksaveState() {
     try {
@@ -2487,6 +2553,7 @@
         safeSet('kcalendar_tutorial_seen', '1');
       } catch (_) {}
       showToast('Quicksave Snapshot Saved [F5] ✅', 'success', 2500);
+      playRetroChime('save');
     } catch (err) {
       showToast('Quicksave failed: ' + err.message, 'error');
     }
@@ -2540,6 +2607,7 @@
         saveEvents();
         renderApp();
         showToast('Quicksave Snapshot Restored [F9] ✅', 'success', 2500);
+        playRetroChime('load');
       } else {
         showToast('Corrupted quicksave data.', 'error');
       }
@@ -2795,16 +2863,34 @@
     return str.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
   }
 
+  function saveToVfs(fileName, content) {
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'VFS_WRITE',
+          path: '/user/' + fileName,
+          data: typeof content === 'string' ? content : JSON.stringify(content, null, 2),
+          requestId: 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)
+        }, '*');
+      }
+    } catch (_) {}
+  }
+
   function downloadFile(content, fileName, mimeType) {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    saveToVfs(fileName, content);
+    try {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.warn('[KCalendar] Client file download fallback:', e);
+    }
   }
 
   function handleImportFile(e) {
@@ -3019,6 +3105,7 @@
     selectedDate = new Date();
     renderApp();
     showToast('Navigated to Today', 'info', 2000);
+    checkDailyReminders(false);
   };
 
   function switchView(viewName) {
@@ -3298,6 +3385,7 @@
         selectedDate = new Date();
         renderApp();
         showToast('Navigated to Today', 'info', 2000);
+        checkDailyReminders(false);
       }
       else if (e.key === 's' || e.key === 'S') { openStatsModal(); }
       else if (e.key === 'h' || e.key === 'H') { openHelpModal(); }
@@ -3315,6 +3403,23 @@
   // Init
   loadEvents();
   renderApp();
+  setTimeout(() => checkDailyReminders(true), 600);
+
+  // VFS IPC Listener for bidirectional KiloOS coordination
+  window.addEventListener('message', (e) => {
+    if (!e.data) return;
+    if (e.data.type === 'VFS_LOAD_CALENDAR' && e.data.data) {
+      try {
+        const parsed = typeof e.data.data === 'string' ? JSON.parse(e.data.data) : e.data.data;
+        if (Array.isArray(parsed)) {
+          events = parsed;
+          saveEvents();
+          renderApp();
+          showToast(`Loaded ${events.length} event(s) from VFS`, 'success');
+        }
+      } catch (_) {}
+    }
+  });
 
   // First-run tutorial onboarding check: only on fresh sessions, never interrupting restored save states
   const hasSeenTutorial = String(safeGet('kcalendar_tutorialSeen', '0')) === '1' ||
@@ -3328,6 +3433,7 @@
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
       renderApp();
+      checkDailyReminders(true);
     }
   });
 </script>

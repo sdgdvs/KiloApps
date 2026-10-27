@@ -130,9 +130,39 @@ static int IsEventOnDate(const Event* e, int y, int m, int d) {
     return 0;
 }
 
+static void SaveEvents(void);
 static void LoadEvents() {
     HANDLE hFile = CreateFileA("kcal_events.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE) return;
+    if (hFile == INVALID_HANDLE_VALUE) {
+        // Seed initial sample events for dual parity with Web HTML
+        event_count = 0;
+        SYSTEMTIME today;
+        GetLocalTime(&today);
+
+        events[0].year = today.wYear; events[0].month = today.wMonth; events[0].day = today.wDay;
+        my_strcpy(events[0].category, "Work");
+        events[0].recurring = 0; events[0].priority = 2; events[0].completed = 1;
+        my_strcpy(events[0].text, "Project Kickoff");
+
+        events[1].year = today.wYear; events[1].month = today.wMonth; events[1].day = today.wDay;
+        my_strcpy(events[1].category, "Health");
+        events[1].recurring = 1; events[1].priority = 1; events[1].completed = 0;
+        my_strcpy(events[1].text, "Gym Workout");
+
+        events[2].year = today.wYear; events[2].month = today.wMonth; events[2].day = today.wDay;
+        my_strcpy(events[2].category, "Important");
+        events[2].recurring = 2; events[2].priority = 3; events[2].completed = 0;
+        my_strcpy(events[2].text, "Weekly Planning");
+
+        events[3].year = 1999; events[3].month = 12; events[3].day = 31;
+        my_strcpy(events[3].category, "Important");
+        events[3].recurring = 0; events[3].priority = 3; events[3].completed = 0;
+        my_strcpy(events[3].text, "Y2K Readiness Protocol");
+
+        event_count = 4;
+        SaveEvents();
+        return;
+    }
 
     DWORD fileSize = GetFileSize(hFile, NULL);
     if (fileSize == 0 || fileSize == INVALID_FILE_SIZE) {
@@ -235,6 +265,51 @@ static void SaveEvents() {
 }
 
 static void RefreshList(void);
+
+static int GetDaysInMonth(int y, int m) {
+    if (m == 4 || m == 6 || m == 9 || m == 11) return 30;
+    if (m == 2) {
+        int isLeap = (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0));
+        return isLeap ? 29 : 28;
+    }
+    return 31;
+}
+
+static void NavigateDateDays(int days) {
+    int y = selected_date.wYear;
+    int m = selected_date.wMonth;
+    int d = selected_date.wDay + days;
+    while (d < 1) {
+        m--;
+        if (m < 1) { m = 12; y--; }
+        d += GetDaysInMonth(y, m);
+    }
+    while (d > GetDaysInMonth(y, m)) {
+        d -= GetDaysInMonth(y, m);
+        m++;
+        if (m > 12) { m = 1; y++; }
+    }
+    selected_date.wYear = (WORD)y;
+    selected_date.wMonth = (WORD)m;
+    selected_date.wDay = (WORD)d;
+    selected_date.wDayOfWeek = (WORD)DayOfWeek(y, m, d);
+    if (hMonthCal) SendMessage(hMonthCal, MCM_SETCURSEL, 0, (LPARAM)&selected_date);
+    RefreshList();
+}
+
+static void NavigateDateMonths(int months) {
+    int m = selected_date.wMonth + months;
+    int y = selected_date.wYear;
+    while (m < 1) { m += 12; y--; }
+    while (m > 12) { m -= 12; y++; }
+    selected_date.wYear = (WORD)y;
+    selected_date.wMonth = (WORD)m;
+    int maxDays = GetDaysInMonth(y, m);
+    if (selected_date.wDay > maxDays) selected_date.wDay = (WORD)maxDays;
+    selected_date.wDayOfWeek = (WORD)DayOfWeek(selected_date.wYear, selected_date.wMonth, selected_date.wDay);
+    if (hMonthCal) SendMessage(hMonthCal, MCM_SETCURSEL, 0, (LPARAM)&selected_date);
+    RefreshList();
+}
 
 static void NativeQuickSave(HWND hwnd) {
     HANDLE hFile = CreateFileA("kcalendar_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -438,9 +513,11 @@ static void ShowHelpDialog(HWND hwnd) {
         "7. Analytics: Press [S] or click 'Analytics' to view a summary breakdown of your commitments.\r\n\r\n"
         "KEYBOARD SHORTCUTS:\r\n"
         "- [F1] or [H]: Open this Help Guide\r\n"
-        "- [F5]: Quicksave snapshot to kcalendar_quicksave.dat\r\n"
+        "- [F5] / [Ctrl+S]: Quicksave snapshot to kcalendar_quicksave.dat\r\n"
         "- [F9]: Quickload snapshot from kcalendar_quicksave.dat\r\n"
         "- [Space]: Toggle Completed status of selected event\r\n"
+        "- [Left] / [Right] or [[] / []]: Navigate date backwards / forwards\r\n"
+        "- [PgUp] / [PgDn]: Navigate month backwards / forwards\r\n"
         "- [T]: Jump to Today\r\n"
         "- [S]: Open Analytics & Statistics\r\n"
         "- [N]: Focus Add Event input box\r\n"
@@ -795,7 +872,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Visible help & hotkeys prompt in left column
             hStaticHelpPrompt = CreateWindowEx(0, "STATIC",
-                "Hotkeys:\n[F1] Help\n[F5] Save  |  [F9] Load\n[Space] Done  |  [T] Today\n[S] Stats  |  [N] New\n[/] Search  |  [Del] Del",
+                "Hotkeys:\n[F1] Help  |  [F5] Save  |  [F9] Load\n[Space] Done  |  [T] Today  |  [S] Stats\n[N] New  |  [/] Search  |  [Del] Del\n[<-/->] Day  |  [PgUp/Dn] Month",
                 WS_CHILD | WS_VISIBLE,
                 pad, btnY + btnH + SCALE(8), rc.right, SCALE(100),
                 hwnd, NULL, GetModuleHandle(NULL), NULL);
@@ -1037,7 +1114,7 @@ void MainEntry() {
     BOOL hasSavedState = (hSaveCheck != INVALID_HANDLE_VALUE);
     if (hSaveCheck != INVALID_HANDLE_VALUE) CloseHandle(hSaveCheck);
 
-    if (hTutCheck == INVALID_HANDLE_VALUE && !hasSavedState && event_count == 0) {
+    if (hTutCheck == INVALID_HANDLE_VALUE && !hasSavedState) {
         MessageBoxA(hwnd,
             "=== Welcome to KCalendar ===\r\n\r\n"
             "KCalendar is your high-efficiency retro date scheduler,\r\n"
@@ -1068,7 +1145,8 @@ void MainEntry() {
             char cls[32] = {0};
             GetClassNameA(msg.hwnd, cls, 32);
             BOOL inEdit = (lstrcmpiA(cls, "EDIT") == 0);
-            if (msg.wParam == VK_F5) {
+            BOOL isCtrl = ((GetKeyState(VK_CONTROL) & 0x8000) != 0);
+            if (msg.wParam == VK_F5 || (isCtrl && (msg.wParam == 'S' || msg.wParam == 's'))) {
                 NativeQuickSave(hwnd);
             } else if (msg.wParam == VK_F9) {
                 NativeQuickLoad(hwnd);
@@ -1084,6 +1162,14 @@ void MainEntry() {
                 SetFocus(hEditSearch);
             } else if (!inEdit && msg.wParam == VK_SPACE) {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_TOGGLE_DONE, BN_CLICKED), (LPARAM)hBtnToggleDone);
+            } else if (!inEdit && (msg.wParam == VK_LEFT || msg.wParam == 219)) {
+                NavigateDateDays(-1);
+            } else if (!inEdit && (msg.wParam == VK_RIGHT || msg.wParam == 221)) {
+                NavigateDateDays(1);
+            } else if (!inEdit && msg.wParam == VK_PRIOR) {
+                NavigateDateMonths(-1);
+            } else if (!inEdit && msg.wParam == VK_NEXT) {
+                NavigateDateMonths(1);
             }
         }
         if (!IsDialogMessage(hwnd, &msg)) {
