@@ -390,8 +390,8 @@
             <button id="music-toggle-btn" onclick="toggleMusic()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Toggle procedural 16-bit noir jazz audio">♫ Music: ON</button>
             <button onclick="quickSave()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Quicksave game state [F5]">Save [F5]</button>
             <button onclick="quickLoad()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Quickload game state [F9]">Load [F9]</button>
-            <button onclick="exportCase()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Export case file to JSON [Ctrl+S]">Export [.json]</button>
-            <button onclick="document.getElementById('case-import-input').click()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Import case file from JSON [Ctrl+O]">Import [.json]</button>
+            <button id="btn-vfs-save" onclick="vfsSaveCase()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Save Case to KiloOS VFS (/home/saves/kmystery_case.json) [Ctrl+S]">VFS Save [Ctrl+S]</button>
+            <button id="btn-vfs-open" onclick="vfsOpenCase()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Open Case from KiloOS VFS (/home/saves/kmystery_case.json) [Ctrl+O]">VFS Open [Ctrl+O]</button>
             <input type="file" id="case-import-input" accept=".json" style="display:none;" onchange="importCaseFile(event)">
             <button onclick="toggleHelp()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Detective manual and hotkeys [F1 / H]">Help [F1/H]</button>
         </div>
@@ -419,7 +419,7 @@
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:3px 10px; font-size:11px; background:rgba(0,0,0,0.5); padding:6px 10px; border-radius:3px; border:1px dashed #4a3e26;">
                     <div><b style="color:#d4af37;">[F1] / [H]</b>: Help / Manual</div>
                     <div><b style="color:#d4af37;">[F5] / [F9]</b>: Quicksave / Quickload</div>
-                    <div><b style="color:#d4af37;">[Ctrl+S] / [O]</b>: Export / Import Case</div>
+                    <div><b style="color:#d4af37;">[Ctrl+S] / [Ctrl+O]</b>: VFS Save / Open Case</div>
                     <div><b style="color:#d4af37;">[S]</b>: Search for Clues (2h)</div>
                     <div><b style="color:#d4af37;">[L]</b>: Forensic Lab (1h)</div>
                     <div><b style="color:#d4af37;">[I]</b>: Interrogate Suspect (1h)</div>
@@ -474,6 +474,7 @@
                 <div style="display:flex; gap:6px;">
                     <button id="btn-prev-dossier" onclick="prevDossier()" class="btn-gold" style="font-size:11px; padding:5px 12px;" title="Previous Clue [◀ / Left Arrow]">◀ Prev [←]</button>
                     <button id="btn-next-dossier" onclick="nextDossier()" class="btn-gold" style="font-size:11px; padding:5px 12px;" title="Next Clue [▶ / Right Arrow]">Next [→] ▶</button>
+                    <button id="btn-present-dossier" onclick="presentCurrentDossierClue()" class="btn-gold" style="font-size:11px; padding:5px 12px; font-weight:bold; color:#ffe890; border-color:#ffe890;" title="Present this clue to suspect [P]">Present Clue [P]</button>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
                     <span id="dossier-counter" style="font-size:11px; color:#9c9586;">Clue 1 of 1</span>
@@ -574,7 +575,10 @@
             <div id="game-over-area" class="hidden" style="text-align:center; padding:16px; background:rgba(18,18,24,0.9); border:1px solid #d4af37; border-radius:4px; margin-top:8px;">
                 <h3 id="game-over-title" style="color:#d4af37; font-size:16px; margin-top:0;">Case Concluded</h3>
                 <p id="game-over-msg" style="color:#dfd8c8; font-size:13px; line-height:1.5; margin:10px 0; white-space:pre-line;"></p>
-                <button onclick="returnToTitle()" class="btn-gold" style="font-size:14px; padding:8px 22px;">Start New Case</button>
+                <div style="margin-top:10px; display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
+                    <button onclick="returnToTitle()" class="btn-gold" style="font-size:14px; padding:8px 22px;">Start New Case</button>
+                    <button id="btn-export-dossier" onclick="exportDossierReport(true)" class="btn-gold hidden" style="font-size:14px; padding:8px 22px;" title="Export forensic dossier to /home/docs/kmystery_dossier.txt">📄 Export Forensic Dossier (/home/docs/kmystery_dossier.txt)</button>
+                </div>
             </div>
             
             <div id="travel-container">
@@ -1059,7 +1063,293 @@
         }
 
         // Quicksave / Quickload & JSON Case File Management
-        function quickSave() {
+                // ==========================================
+        // KiloOS Phase VI VFS & Inter-App IPC Bridge
+        // ==========================================
+        const KiloVFS = {
+            write(path, data) {
+                try {
+                    const content = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                    window.parent.postMessage({ type: 'VFS_WRITE', path, data: content, requestId: 'w_' + Date.now() }, '*');
+                    window.parent.postMessage({ type: 'OS_NOTIFY', title: 'KMystery', message: `Saved to VFS: ${path}` }, '*');
+                } catch (e) {}
+            },
+            read(path, cb) {
+                const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                const handler = (e) => {
+                    if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                        window.removeEventListener('message', handler);
+                        cb(e.data.data, e.data.path);
+                    }
+                };
+                window.addEventListener('message', handler);
+                try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+            },
+            savePicker(defaultPath, data, cb) {
+                if (window.parent === window) {
+                    if (cb) cb(null);
+                    return;
+                }
+                const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                const handler = (e) => {
+                    if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+                        window.removeEventListener('message', handler);
+                        if (e.data.path) {
+                            KiloVFS.write(e.data.path, data);
+                            if (cb) cb(e.data.path);
+                        }
+                    }
+                };
+                window.addEventListener('message', handler);
+                try {
+                    window.parent.postMessage({
+                        type: 'VFS_SHOW_SAVE',
+                        requestId: reqId,
+                        defaultPath: defaultPath,
+                        path: defaultPath
+                    }, '*');
+                } catch (e) {}
+            },
+            openPicker(cb) {
+                if (window.parent === window) {
+                    if (cb) cb(null, null);
+                    return;
+                }
+                const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                const handler = (e) => {
+                    if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                        window.removeEventListener('message', handler);
+                        if (e.data.path) {
+                            KiloVFS.read(e.data.path, cb);
+                        }
+                    }
+                };
+                window.addEventListener('message', handler);
+                try {
+                    window.parent.postMessage({
+                        type: 'VFS_SHOW_OPEN',
+                        requestId: reqId,
+                        defaultPath: '/home/saves/'
+                    }, '*');
+                } catch (e) {}
+            },
+            launchApp(targetApp, path = '') {
+                try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+            }
+        };
+
+        function getExportPayload() {
+            let exportData = null;
+            if (!document.getElementById('game-screen').classList.contains('hidden')) {
+                const gameOverArea = document.getElementById('game-over-area');
+                if (gameOverArea && !gameOverArea.classList.contains('hidden')) {
+                    showToast("⚠️ Cannot export concluded case. Start a new case.");
+                    return null;
+                }
+                const isAccusing = !document.getElementById('accusation-area').classList.contains('hidden');
+                state.inAccusation = isAccusing;
+                exportData = {
+                    app: 'KMystery',
+                    version: 1,
+                    timestamp: Date.now(),
+                    difficulty: document.getElementById('difficulty').value,
+                    state: JSON.parse(JSON.stringify(state)),
+                    analysisState: analysisState ? JSON.parse(JSON.stringify(analysisState)) : null
+                };
+            } else {
+                const raw = safeGetStorage('kmystery_quicksave');
+                if (raw) {
+                    try { exportData = JSON.parse(raw); } catch (e) {}
+                }
+                if (!exportData || !exportData.state) {
+                    showToast("ℹ️ Start an investigation or quicksave first to export.");
+                    return null;
+                }
+            }
+            return exportData;
+        }
+
+        function downloadJsonFile(jsonStr, fileName) {
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function vfsSaveCase() {
+            try {
+                const data = getExportPayload();
+                if (!data) return;
+                const jsonStr = JSON.stringify(data, null, 2);
+                const defaultPath = '/home/saves/kmystery_case.json';
+
+                if (window.parent !== window) {
+                    KiloVFS.savePicker(defaultPath, jsonStr, (savedPath) => {
+                        if (savedPath) {
+                            showToast(`💾 Case saved to VFS: ${savedPath}`);
+                            noirAudio.playTypewriter();
+                        }
+                    });
+                } else {
+                    const d = new Date();
+                    const stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+                    downloadJsonFile(jsonStr, `kmystery_case_${stamp}.json`);
+                    showToast("📁 Case file exported (standalone download)!");
+                    noirAudio.playTypewriter();
+                }
+            } catch (err) {
+                showToast("⚠️ Save failed: " + err.message);
+            }
+        }
+
+        function vfsOpenCase() {
+            if (window.parent !== window) {
+                KiloVFS.openPicker((data, path) => {
+                    if (data) {
+                        try {
+                            const parsed = JSON.parse(data);
+                            if (!parsed || !parsed.state || !parsed.state.solution || !parsed.state.locations) {
+                                showToast("⚠️ Invalid case file format in VFS.");
+                                return;
+                            }
+                            safeSetStorage('kmystery_quicksave', JSON.stringify(parsed));
+                            loadCaseData(parsed);
+                            showToast(`📂 Case loaded from VFS: ${path || 'case file'}`);
+                            noirAudio.playTypewriter();
+                            updateStatsUI();
+                        } catch (e) {
+                            showToast("⚠️ Failed to parse VFS case file: " + e.message);
+                        }
+                    } else if (path === undefined) {
+                        // Direct read fallback
+                        KiloVFS.read('/home/saves/kmystery_case.json', (defData, defPath) => {
+                            if (defData) {
+                                try {
+                                    const parsed = JSON.parse(defData);
+                                    safeSetStorage('kmystery_quicksave', JSON.stringify(parsed));
+                                    loadCaseData(parsed);
+                                    showToast("📂 Loaded /home/saves/kmystery_case.json");
+                                    noirAudio.playTypewriter();
+                                    updateStatsUI();
+                                } catch (e) {
+                                    showToast("⚠️ Corrupt /home/saves/kmystery_case.json");
+                                }
+                            } else {
+                                showToast("ℹ️ No case file selected or found in VFS.");
+                            }
+                        });
+                    }
+                });
+            } else {
+                const fileInput = document.getElementById('case-import-input');
+                if (fileInput) fileInput.click();
+            }
+        }
+
+        function generateForensicDossierText(suspect, motive, weapon, hoursTaken, penaltyFree) {
+            const divider = "================================================================================";
+            const dateStr = new Date().toLocaleString();
+            const caseId = "KM-1999-" + Math.floor(1000 + Math.random() * 9000);
+            
+            let text = `${divider}\n`;
+            text += `         KILO CITY POLICE DEPARTMENT - HOMICIDE SQUAD\n`;
+            text += `              OFFICIAL FORENSIC DOSSIER & CASE REPORT\n`;
+            text += `${divider}\n`;
+            text += `CASE FILE: ${caseId}                  DATE: ${dateStr}\n`;
+            text += `STATUS: CASE CLOSED / CONVICTION SECURED\n`;
+            text += `CHIEF INVESTIGATOR: DETECTIVE ON DUTY\n`;
+            text += `${divider}\n\n`;
+            text += `[INDICTMENT & VERDICT]\n`;
+            text += `• Indicted Perpetrator: ${suspect}\n`;
+            text += `• Murder Motive Established: ${motive}\n`;
+            text += `• Confirmed Murder Weapon: ${weapon}\n`;
+            text += `• Primary Crime Scene: ${state.locations && state.locations['The Manor'] ? 'The Manor (Study)' : 'Homicide Scene'}\n`;
+            text += `• Time Elapsed to Indictment: ${hoursTaken} hours (Initial Budget: ${state.initialTime}h)\n`;
+            text += `• Forensic Rating: ${penaltyFree ? '★ PERFECT FORENSIC INVESTIGATION ★ (0 lab errors, 0 suspect violations)' : 'STANDARD PROSECUTORIAL CONVICTION'}\n\n`;
+            text += `[FORENSIC EVIDENCE & CLUES RECOVERED]\n`;
+            if (state.foundClues && state.foundClues.length > 0) {
+                state.foundClues.forEach((c, idx) => {
+                    const parts = c.split('] ');
+                    const loc = parts.length > 1 ? parts[0].replace('[', '') : 'Crime Scene';
+                    const actualClue = parts.length > 1 ? parts[1] : c;
+                    const info = clueForensicData[actualClue];
+                    text += `  ${idx + 1}. [${loc}] ${actualClue}\n`;
+                    if (info) {
+                        text += `     - Specimen: ${info.name}\n`;
+                        text += `     - Ballistics/Lab: ${info.analysis}\n`;
+                        text += `     - Detective Deduction: ${info.deduction}\n`;
+                    }
+                });
+            } else {
+                text += `  (No physical evidence logged)\n`;
+            }
+            text += `\n[SUSPECT REGISTER & ALIBI AUDIT]\n`;
+            if (state.locations) {
+                Object.keys(state.locations).forEach(locName => {
+                    const s = state.locations[locName].suspect;
+                    if (s) {
+                        const alibi = state.discoveredAlibis && state.discoveredAlibis[s] ? state.discoveredAlibis[s] : (state.alibis ? state.alibis[s] : 'Refused statement');
+                        const status = s === suspect ? 'PERPETRATOR - CONFESSED UNDER INTERROGATION' : 'EXONERATED';
+                        text += `  • ${s} (Encountered at ${locName})\n`;
+                        text += `     Status: ${status}\n`;
+                        text += `     Alibi on Record: "${alibi}"\n`;
+                        text += `     Patience Remaining: ${state.patience && state.patience[s] !== undefined ? state.patience[s] : 0} pts\n`;
+                    }
+                });
+            }
+            text += `\n[FORENSIC LAB PERFORMANCE]\n`;
+            text += `• Failed Spectrometer Calibrations: ${state.failedCalibrations || 0}\n`;
+            text += `• Suspects Agitated to Rage: ${state.angrySuspects || 0}\n`;
+            text += `• Analyzed Clues: ${state.foundClues ? state.foundClues.length : 0}\n\n`;
+            text += `${divider}\n`;
+            text += `ARCHIVE LOCATION: /home/docs/kmystery_dossier.txt\n`;
+            text += `CONFIDENTIAL LAW ENFORCEMENT RECORD - NOT FOR PUBLIC DISCLOSURE\n`;
+            text += `${divider}\n`;
+            return text;
+        }
+
+        function exportDossierReport(userTriggered = false) {
+            try {
+                const hoursTaken = state.initialTime - state.timeLeft;
+                const penaltyFree = (state.failedCalibrations === 0 && state.angrySuspects === 0);
+                const report = generateForensicDossierText(state.solution.killer, state.solution.motive, state.solution.weapon, hoursTaken, penaltyFree);
+                const targetPath = '/home/docs/kmystery_dossier.txt';
+
+                if (window.parent !== window) {
+                    KiloVFS.write(targetPath, report);
+                    try {
+                        window.parent.postMessage({
+                            type: 'OS_NOTIFY',
+                            title: 'KMystery Case Solved',
+                            message: `Exported Forensic Dossier to ${targetPath}`
+                        }, '*');
+                    } catch (e) {}
+                    showToast(`📄 Dossier report archived to VFS: ${targetPath}`);
+                } else {
+                    if (userTriggered) {
+                        const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'kmystery_dossier.txt';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    }
+                    showToast("📄 Forensic Dossier Report generated!");
+                }
+            } catch (e) {
+                showToast("⚠️ Failed to export dossier report: " + e.message);
+            }
+        }
+
+function quickSave() {
             try {
                 if (document.getElementById('game-screen').classList.contains('hidden')) {
                     showToast("ℹ️ Start a case investigation first before saving.");
@@ -1169,54 +1459,7 @@
         }
 
         function exportCase() {
-            try {
-                let exportData = null;
-                if (!document.getElementById('game-screen').classList.contains('hidden')) {
-                    const gameOverArea = document.getElementById('game-over-area');
-                    if (gameOverArea && !gameOverArea.classList.contains('hidden')) {
-                        showToast("⚠️ Cannot export concluded case. Start a new case.");
-                        return;
-                    }
-                    const isAccusing = !document.getElementById('accusation-area').classList.contains('hidden');
-                    state.inAccusation = isAccusing;
-                    exportData = {
-                        app: 'KMystery',
-                        version: 1,
-                        timestamp: Date.now(),
-                        difficulty: document.getElementById('difficulty').value,
-                        state: JSON.parse(JSON.stringify(state)),
-                        analysisState: analysisState ? JSON.parse(JSON.stringify(analysisState)) : null
-                    };
-                } else {
-                    const raw = safeGetStorage('kmystery_quicksave');
-                    if (raw) {
-                        try {
-                            exportData = JSON.parse(raw);
-                        } catch (e) {}
-                    }
-                    if (!exportData || !exportData.state) {
-                        showToast("ℹ️ Start an investigation or quicksave first to export.");
-                        return;
-                    }
-                }
-
-                const jsonStr = JSON.stringify(exportData, null, 2);
-                const blob = new Blob([jsonStr], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                const d = new Date();
-                const stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
-                a.href = url;
-                a.download = `kmystery_case_${stamp}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-                showToast("📁 Case file exported successfully!");
-                noirAudio.playTypewriter();
-            } catch (err) {
-                showToast("⚠️ Export failed: " + err.message);
-            }
+            vfsSaveCase();
         }
 
         function importCaseFile(event) {
@@ -1891,7 +2134,51 @@
             if (prevBtn) prevBtn.disabled = (currentDossierIdx <= 0);
             if (nextBtn) nextBtn.disabled = (currentDossierIdx >= state.foundClues.length - 1);
 
+            const presentBtn = document.getElementById('btn-present-dossier');
+            if (presentBtn) {
+                const currLoc = state.locations ? state.locations[state.currentLocation] : null;
+                const suspect = state.currentInterrogation || (currLoc ? currLoc.suspect : null);
+                if (suspect) {
+                    presentBtn.textContent = `Present to ${suspect} [P]`;
+                    presentBtn.disabled = false;
+                    presentBtn.title = `Present this clue to ${suspect} [P]`;
+                } else {
+                    presentBtn.textContent = `Present Clue [P]`;
+                    presentBtn.disabled = true;
+                    presentBtn.title = `No suspect present at this location to interrogate`;
+                }
+            }
+
             drawDossierSketch(actualClue);
+        }
+
+        function presentCurrentDossierClue() {
+            if (!state.foundClues || state.foundClues.length === 0) return;
+            const clueIdx = currentDossierIdx;
+            const currLoc = state.locations ? state.locations[state.currentLocation] : null;
+            const suspect = state.currentInterrogation || (currLoc ? currLoc.suspect : null);
+
+            if (!suspect) {
+                showToast("ℹ️ No suspect present at this location to interrogate.");
+                return;
+            }
+
+            closeDossier();
+
+            if (!state.currentInterrogation) {
+                if (state.patience && state.patience[suspect] <= 0) {
+                    startInterrogation();
+                    return;
+                }
+                if (advanceTime(1)) return;
+                document.getElementById('action-area').classList.add('hidden');
+                document.getElementById('travel-container').classList.add('hidden');
+                state.currentInterrogation = suspect;
+                state.interrogationMood = 'normal';
+                state.inLab = false;
+            }
+
+            submitClue(clueIdx);
         }
 
         function inspectClue(idx) {
@@ -2221,8 +2508,9 @@
                 
                 let msg = `Case Closed, Detective! ${suspect} broke down and signed a full confession.\n\nMotive: ${motive}\nWeapon: ${weapon}\nTime Taken: ${hoursTaken}h\n`;
                 if (penaltyFree) msg += "★ PERFECT INVESTIGATION! ★ (No failed labs, no angered suspects)\n";
-                msg += "\nCongratulations - You cracked the case!";
-                showGameOver("Case Solved! ★", msg);
+                msg += "\nCongratulations - You cracked the case! Forensic Dossier generated.";
+                showGameOver("Case Solved! ★", msg, true);
+                exportDossierReport(false);
             } else {
                 noirAudio.playDefeatChord();
                 triggerScreenShake(25);
@@ -2230,7 +2518,7 @@
             }
         }
 
-        function showGameOver(title, msg) {
+        function showGameOver(title, msg, isSolved = false) {
             document.getElementById('accusation-area').classList.add('hidden');
             document.getElementById('action-area').classList.add('hidden');
             document.getElementById('travel-container').classList.add('hidden');
@@ -2240,10 +2528,20 @@
             const goArea = document.getElementById('game-over-area');
             document.getElementById('game-over-title').textContent = title;
             document.getElementById('game-over-msg').textContent = msg;
+            const btnDossier = document.getElementById('btn-export-dossier');
+            if (btnDossier) {
+                if (isSolved) {
+                    btnDossier.classList.remove('hidden');
+                } else {
+                    btnDossier.classList.add('hidden');
+                }
+            }
             goArea.classList.remove('hidden');
         }
 
         function returnToTitle() {
+            const btnDossier = document.getElementById('btn-export-dossier');
+            if (btnDossier) btnDossier.classList.add('hidden');
             document.getElementById('game-over-area').classList.add('hidden');
             document.getElementById('game-screen').classList.add('hidden');
             document.getElementById('start-screen').classList.remove('hidden');
@@ -2262,8 +2560,7 @@
             }
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
                 e.preventDefault();
-                const fileInput = document.getElementById('case-import-input');
-                if (fileInput) fileInput.click();
+                vfsOpenCase();
                 return;
             }
             if (e.key === 'F5') {
@@ -2300,14 +2597,19 @@
                 return;
             }
             if (dossierModal && !dossierModal.classList.contains('hidden')) {
-                if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'p') {
+                if (e.key === 'ArrowLeft' || e.key === '[') {
                     e.preventDefault();
                     prevDossier();
                     return;
                 }
-                if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'n') {
+                if (e.key === 'ArrowRight' || e.key === ']' || e.key.toLowerCase() === 'n') {
                     e.preventDefault();
                     nextDossier();
+                    return;
+                }
+                if (e.key.toLowerCase() === 'p') {
+                    e.preventDefault();
+                    presentCurrentDossierClue();
                     return;
                 }
                 if (e.key === 'Enter' || e.key === ' ') {
