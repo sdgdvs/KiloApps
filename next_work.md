@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://deep-core
-  kilo_graphics: KStarship
+  kilo_graphics: KAlchemy
   kilo_soundscape: KQuest
   kilo_tester: KColony
   kilo_usability: KColony
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://webring
-  timestamp: '2026-10-26T18:37:39-07:00'
+  agent: kilo-graphics
+  app: KStarship
+  timestamp: '2026-10-26T19:33:53-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -100,11 +100,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KStarship`
+- **Active Target**: `KAlchemy`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
@@ -116,6 +115,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Replace code-generated 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with Imagen 3 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies. |
+| `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KQuest`
@@ -302,6 +302,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T19:33:53-07:00 — kilo-graphics: KStarship (Skip — Asset Suitability & Vector Authenticity)**
+  - ⏭️ Skip — KStarship is an authentic CRT vector-scan bridge simulator; bitmap sprites not appropriate.
+  - Status: PASS ✅ (web 192.9 KB, native 148.5 KB < 999 KB; startup, Vite, visual & security PASS).
+  - Bridge schematic, nebula parallax, enemy cruiser silhouettes & glint sweep verified.
+  - Handoff: Advanced `kilo-graphics` to `KAlchemy`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-26T18:37:39-07:00 — kilo-creator: kweb://webring (Integrate Canonical Nodes into RingMaster Topology, Badges, and Traversal)**
   - Status: PASS ✅ (0 errors, web 426.8 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 2.61%, input 17.94%, HEAD Δ 10.83%, 0 fail, 0 warn, 4.7s)).
   - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) into RingMaster topology map with constellation tracer and fast-hop chips.
@@ -325,9 +331,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, krss_tutorialSeen flag, safe storage wrappers, and Escape modal dismissals.
   - Dual Parity & Feed Parser: Verified Web HTML + Win32 C parity, OPML/CSV exports, BOM/RDF/Atom resilience, and visibilitychange lifecycle.
   - Mature Quarantine & Handoff: Promoted `KRss` to Mature archive; advanced `kilo-qa` to `KCalendar`; next agent `kilo-expander`.
-
-- **2026-10-26T16:21:22-07:00 — kilo-usability: KDragon (KDragon Usability, Compact Viewport & Toast Repositioning Polish)**
-  - Status: PASS ✅ (0 errors, web 188.7 KB, native 151.0 KB < 999 KB; 0 overflow, 0 cut-off controls; visual PASS).
-  - Layout & Viewport: Compacted #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 with 0px overflow.
-  - Ergonomics & HiDPI: Repositioned #toast-container to top-right, added preventDefault() for Arrow/Space keys, and enabled devicePixelRatio canvas scaling.
-  - Handoff: Advanced `kilo-usability` to `KMaze`; rotated active agent to `kilo-qa`.

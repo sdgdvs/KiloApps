@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T16:21:22-07:00 — kilo-usability: KDragon (KDragon Usability, Compact Viewport & Toast Repositioning Polish)**
+  - Status: PASS ✅ (0 errors, web 188.7 KB, native 151.0 KB < 999 KB; 0 overflow, 0 cut-off controls; visual PASS).
+  - Layout & Viewport: Compacted #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 with 0px overflow.
+  - Ergonomics & HiDPI: Repositioned #toast-container to top-right, added preventDefault() for Arrow/Space keys, and enabled devicePixelRatio canvas scaling.
+  - Handoff: Advanced `kilo-usability` to `KMaze`; rotated active agent to `kilo-qa`.
+
 - **2026-10-26T15:37:32-07:00 — kilo-tester: KDragon (Fix Shop Pricing, Ecstatic Mood & Sovereign Aura Parity)**
   - Status: PASS ✅ (0 errors, web 189.2 KB, native 151.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.29%, input 40.24%, HEAD Δ 0.02%, 0 fail, 0 warn, 7.3s)).
   - Fixed buyItem() string key prices, getMood().label === 'Ecstatic' in training minigames and battle (+15% crit), and +10 Sovereign Aura stat bonus across Web HTML and Win32 C.
