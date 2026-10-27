@@ -2989,7 +2989,7 @@
           town: {
             tempo: 112,
             stepDur: (60 / 112) / 2, // 8th note steps
-            swing: 0.016, // Swing-tick groove
+            swing: 0.048, // Authentic 5:3 swing-tick groove
             steps: 32,
             // Ch1: Expressive Lead Flute
             lead: [
@@ -3036,14 +3036,14 @@
             kicks: [0, 8, 16, 24],
             snares: [4, 12, 20, 28],
             // Ch6: Swing-tick Hi-Hats
-            hats: [2, 6, 10, 14, 18, 22, 26, 30]
+            hats: [2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 22, 23, 26, 27, 30, 31]
           },
 
           // Track 2: "Steel & Sorcery" - Combat Suite (Heroic bVI-bVII-I Cadence in A Minor)
           battle: {
             tempo: 144,
             stepDur: (60 / 144) / 2,
-            swing: 0.010,
+            swing: 0.028,
             steps: 32,
             // Ch1: Heroic Brass Lead
             lead: [
@@ -3393,7 +3393,7 @@
       }
     };
 
-    let soundEnabled = !AudioEngine.muted;
+    let soundEnabled = !AudioEngine.muted; AudioEngine.syncMuteUI();
 
     function getAudioContext() {
       AudioEngine.init();

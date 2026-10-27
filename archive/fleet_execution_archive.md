@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T16:34:50-07:00 — kilo-qa: KRss (Pass 5 QA, Dual Parity & Mature Graduation)**
+  - Status: PASS (web 188.9 KB, native 21.5 KB < 999 KB; startup, Vite & security PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, krss_tutorialSeen flag, safe storage wrappers, and Escape modal dismissals.
+  - Dual Parity & Feed Parser: Verified Web HTML + Win32 C parity, OPML/CSV exports, BOM/RDF/Atom resilience, and visibilitychange lifecycle.
+  - Mature Quarantine & Handoff: Promoted `KRss` to Mature archive; advanced `kilo-qa` to `KCalendar`; next agent `kilo-expander`.
+
 - **2026-10-26T16:21:22-07:00 — kilo-usability: KDragon (KDragon Usability, Compact Viewport & Toast Repositioning Polish)**
   - Status: PASS ✅ (0 errors, web 188.7 KB, native 151.0 KB < 999 KB; 0 overflow, 0 cut-off controls; visual PASS).
   - Layout & Viewport: Compacted #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 with 0px overflow.

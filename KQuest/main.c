@@ -640,6 +640,55 @@ void SfxDeath() {
     Beep(100, 200);
 }
 
+void SfxMagicHeal() {
+    if (!g_SoundEnabled) return;
+    Beep(349, 60);
+    Beep(440, 60);
+    Beep(523, 70);
+    Beep(659, 120);
+}
+
+void SfxQuestComplete() {
+    if (!g_SoundEnabled) return;
+    Beep(349, 70);
+    Beep(440, 70);
+    Beep(523, 70);
+    Beep(659, 80);
+    Beep(784, 150);
+}
+
+void SfxVictory() {
+    if (!g_SoundEnabled) return;
+    Beep(294, 80);
+    Beep(349, 80);
+    Beep(392, 80);
+    Beep(440, 90);
+    Beep(587, 180);
+}
+
+void SfxFlee() {
+    if (!g_SoundEnabled) return;
+    Beep(440, 50);
+    Beep(392, 50);
+    Beep(349, 50);
+    Beep(294, 80);
+}
+
+void SfxRaidStart() {
+    if (!g_SoundEnabled) return;
+    Beep(294, 70);
+    Beep(440, 70);
+    Beep(587, 100);
+    Beep(740, 140);
+}
+
+void SfxArenaClash() {
+    if (!g_SoundEnabled) return;
+    Beep(880, 50);
+    Beep(440, 60);
+    Beep(220, 90);
+}
+
 void UnlockAchievement(int id) {
     if (id < 0 || id >= 10) return;
     if (!g_Achievements[id]) {
@@ -2145,7 +2194,7 @@ void StartCastleDefense(int waveIdx) {
     g_SiegeEnemyHp = s->hp;
     g_CastleBarrierTurns = 0;
     gameState = STATE_CASTLE_DEFENSE;
-    Beep(330, 100); Beep(440, 150);
+    SfxRaidStart();
     char msg[128];
     wsprintfA(msg, "🚨 SIEGE ALERT! Wave %d: %s attacking Castle Gates!", waveIdx + 1, s->name);
     LogMessage(msg);
@@ -2456,6 +2505,7 @@ void CombatVictory() {
     char msg[128];
     wsprintfA(msg, "🎉 VICTORY! Defeated %s! Gained +%d XP and +%d Gold!", currentEnemy.name, currentEnemy.xp, rewardGold);
     LogMessage(msg);
+    SfxVictory();
     AddGdiShockwave(380, 70, RGB(249, 226, 175), 90);
     TriggerGdiScreenShake(10);
     AddGdiParticles(380, 70, RGB(249, 226, 175), 35, 1);
@@ -2780,7 +2830,7 @@ void HandleButton1() {
             currentEnemy.xp = player.arenaWave * 450; currentEnemy.gold = player.arenaWave * 300;
         }
         gameState = STATE_COMBAT;
-        Beep(523, 120); Beep(659, 120);
+        SfxArenaClash();
         char wmsg[128];
         wsprintfA(wmsg, "🏟️ ARENA BOSS RUSH - WAVE %d! Challenging %s!", player.arenaWave, currentEnemy.name);
         LogMessage(wmsg);
@@ -3228,7 +3278,7 @@ void HandleButton2() {
             if (it->type == 0) {
                 if (ContainsSubstr(it->name, "Health")) {
                     player.hp = (player.hp + 35 > player.maxHp) ? player.maxHp : player.hp + 35;
-                    LogMessage("🧪 Drank Health Potion (+35 HP)!");
+                    LogMessage("🧪 Drank Health Potion (+35 HP)!"); SfxMagicHeal();
                 } else if (ContainsSubstr(it->name, "Mana")) {
                     player.mp = (player.mp + 25 > player.maxMp) ? player.maxMp : player.mp + 25;
                     LogMessage("🧪 Drank Mana Potion (+25 MP)!");
@@ -3618,7 +3668,7 @@ void HandleButton3() {
             player.hpPotions--;
             player.hp = (player.hp + 35 > player.maxHp) ? player.maxHp : player.hp + 35;
             SfxSpellCast();
-            LogMessage("🧪 Drank Health Potion (+35 HP)!");
+            LogMessage("🧪 Drank Health Potion (+35 HP)!"); SfxMagicHeal();
             UpdateUI();
             if (gameState == STATE_COMBAT) EnemyTurn();
         } else {
@@ -3682,7 +3732,7 @@ void HandleButton4() {
         if (player.ironScrap >= 3) {
             player.ironScrap -= 3;
             player.gold += 60;
-            LogMessage("🪙 Side Quest Complete! Traded 3 Scrap for 60 Gold.");
+            LogMessage("🪙 Side Quest Complete! Traded 3 Scrap for 60 Gold."); SfxQuestComplete();
             UpdateUI();
         } else {
             LogMessage("Side Quest: 'Bring 3 Iron Scrap, I'll pay 60 Gold.'");
@@ -3969,13 +4019,13 @@ void HandleButton5() {
         if (player.questMonstersKilled >= 5 && !player.questMonstersDone) {
             player.questMonstersDone = 1;
             player.gold += 50;
-            LogMessage("📜 Quest Completed: Clear Dungeon Chambers! +50 Gold!");
+            LogMessage("📜 Quest Completed: Clear Dungeon Chambers! +50 Gold!"); SfxQuestComplete();
             claimed++;
         }
         if (player.questBossKilled >= 1 && !player.questBossDone) {
             player.questBossDone = 1;
             player.gold += 150;
-            LogMessage("📜 Quest Completed: Slay Biome Boss! +150 Gold!");
+            LogMessage("📜 Quest Completed: Slay Biome Boss! +150 Gold!"); SfxQuestComplete();
             claimed++;
         }
         if (claimed == 0) {
@@ -4045,7 +4095,7 @@ void HandleButton5() {
         UpdateUI();
     } else if (gameState == STATE_COMBAT) {
         if ((xrand() % 100) < 60) {
-            LogMessage("🏃 Fled safely from combat!");
+            LogMessage("🏃 Fled safely from combat!"); SfxFlee();
             if (player.arenaActive) {
                 player.arenaActive = 0;
                 gameState = STATE_BOSS_RUSH;
