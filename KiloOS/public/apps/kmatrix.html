@@ -75,10 +75,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
     background: var(--term-bg);
     border: 1px solid var(--border);
     padding: 6px 12px;
     box-shadow: 0 0 10px var(--phosphor-glow);
+    gap: 8px;
   }
 
   .title-group {
@@ -98,8 +100,9 @@
 
   .header-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
+    flex-wrap: wrap;
   }
 
   button.term-btn {
@@ -267,6 +270,26 @@
   .line-success { color: var(--phosphor); text-shadow: 0 0 8px var(--phosphor-glow); }
   .line-cyan { color: var(--cyan); }
 
+  .quick-actions-bar {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px dashed var(--phosphor-dim);
+  }
+  .quick-label {
+    font-size: 10px;
+    color: var(--phosphor-dim);
+    font-weight: bold;
+    user-select: none;
+  }
+  .quick-btn {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
   .term-input-row {
     display: flex;
     align-items: center;
@@ -429,6 +452,9 @@
       <span>MASTER TERMINAL &amp; ARG CLIMAX [APP #100]</span>
     </div>
     <div class="header-actions">
+      <button class="term-btn quick-action-btn" id="btnCodebook" title="Subterranean Codebook [codebook]">Codebook</button>
+      <button class="term-btn quick-action-btn" id="btnWaterfall" title="RF Waterfall Spectrogram [waterfall]">Waterfall</button>
+      <button class="term-btn quick-action-btn" id="btnVfs" title="Verify KiloOS VFS Mesh [vfs]">VFS</button>
       <button class="term-btn" id="btnMatrixRain" title="Toggle Matrix Digital Rain [F2]">Rain [F2]</button>
       <button class="term-btn" id="btnQuicksave" title="Quicksave session state [F5]">Save [F5]</button>
       <button class="term-btn" id="btnQuickload" title="Quickload session state [F9]">Load [F9]</button>
@@ -479,6 +505,15 @@
     <div class="terminal-wrapper" style="position: relative; overflow: hidden;">
       <canvas id="matrixCanvas"></canvas>
       <div id="termOutput" style="position: relative; z-index: 1;"></div>
+      <div class="quick-actions-bar" style="position: relative; z-index: 1;">
+        <span class="quick-label">⚡ QUICK ACTIONS:</span>
+        <button class="term-btn quick-btn quick-action-btn" id="btnQuickScan" title="Scan Sectors">SCAN</button>
+        <button class="term-btn quick-btn quick-action-btn" id="btnQuickStatus" title="System Status">STATUS</button>
+        <button class="term-btn quick-btn quick-action-btn" id="btnQuickCodebook" title="Subterranean Codebook">CODEBOOK</button>
+        <button class="term-btn quick-btn quick-action-btn" id="btnQuickWaterfall" title="RF Waterfall Spectrogram">WATERFALL</button>
+        <button class="term-btn quick-btn quick-action-btn" id="btnQuickVfs" title="Verify KiloOS VFS Mesh">VFS</button>
+        <button class="term-btn quick-btn quick-action-btn" id="btnQuickHelp" title="Command Reference [F1]">HELP [F1]</button>
+      </div>
       <div class="term-input-row" style="position: relative; z-index: 1;">
         <span class="term-prompt">KMATRIX:\&gt;</span>
         <input type="text" id="termInput" autocomplete="off" spellcheck="false" autofocus>
@@ -572,6 +607,9 @@
           <tr><td style="padding: 4px;"><code>traceroute &lt;ip&gt;</code></td><td>Subterranean route hop traceroute diagnostic</td></tr>
           <tr><td style="padding: 4px;"><code>sniff [count]</code></td><td>Raw packet capture stream on subterranean socket</td></tr>
           <tr><td style="padding: 4px;"><code>matrix [on|off]</code></td><td>Toggle background digital rain screensaver (F2)</td></tr>
+          <tr><td style="padding: 4px;"><code>codebook [filter]</code></td><td>Subterranean codebook decrypter (optional filter)</td></tr>
+          <tr><td style="padding: 4px;"><code>waterfall, cascade</code></td><td>RF frequency waterfall &amp; audio telemetry</td></tr>
+          <tr><td style="padding: 4px;"><code>vfs, verify</code></td><td>Query KiloOS VFS kernel fragment verification</td></tr>
           <tr><td style="padding: 4px;"><code>stats</code></td><td>Session telemetry, uptime &amp; command metrics</td></tr>
           <tr><td style="padding: 4px;"><code>breach &lt;sec&gt; &lt;key&gt;</code></td><td>Submit decryption key to breach target sector</td></tr>
           <tr><td style="padding: 4px;"><code>override &lt;key&gt;</code></td><td>Attempt master cryptographic override</td></tr>
@@ -1074,9 +1112,12 @@
 
   function resizeMatrixRain() {
     if (!matrixCanvas || !rainCtx) return;
-    matrixCanvas.width = matrixCanvas.offsetWidth || 800;
-    matrixCanvas.height = matrixCanvas.offsetHeight || 600;
-    const columns = Math.floor(matrixCanvas.width / 14);
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = matrixCanvas.offsetWidth || 800;
+    const cssH = matrixCanvas.offsetHeight || 600;
+    matrixCanvas.width = Math.floor(cssW * dpr);
+    matrixCanvas.height = Math.floor(cssH * dpr);
+    const columns = Math.floor(cssW / 14);
     rainDrops = [];
     for (let i = 0; i < columns; i++) {
       rainDrops[i] = Math.floor(Math.random() * -50);
@@ -1085,11 +1126,15 @@
 
   function renderMatrixRainFrame() {
     if (!state.matrixRain || !rainCtx || !matrixCanvas) return;
-    const w = matrixCanvas.width;
-    const h = matrixCanvas.height;
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = matrixCanvas.offsetWidth || (matrixCanvas.width / dpr);
+    const cssH = matrixCanvas.offsetHeight || (matrixCanvas.height / dpr);
+
+    rainCtx.save();
+    rainCtx.scale(dpr, dpr);
 
     rainCtx.fillStyle = 'rgba(5, 11, 6, 0.08)';
-    rainCtx.fillRect(0, 0, w, h);
+    rainCtx.fillRect(0, 0, cssW, cssH);
 
     const themeColors = {
       green: { head: '#ffffff', tail: '#33ff66' },
@@ -1106,21 +1151,22 @@
       const x = i * fontSize;
       const y = rainDrops[i] * fontSize;
 
-      if (y > 0 && y < h) {
+      if (y > 0 && y < cssH) {
         rainCtx.fillStyle = pal.head;
         rainCtx.fillText(char, x, y);
       }
-      if (y - fontSize > 0 && y - fontSize < h) {
+      if (y - fontSize > 0 && y - fontSize < cssH) {
         rainCtx.fillStyle = pal.tail;
         rainCtx.fillText(char, x, y - fontSize);
       }
 
-      if (y > h && Math.random() > 0.975) {
+      if (y > cssH && Math.random() > 0.975) {
         rainDrops[i] = 0;
       } else {
         rainDrops[i]++;
       }
     }
+    rainCtx.restore();
   }
 
   function startMatrixRain() {
@@ -1225,6 +1271,7 @@
     printLine("  matrix [on|off]         - Toggle digital rain visualizer (Shortcut: F2)");
     printLine("  codebook [filter]       - Subterranean codebook decrypter (optional filter)");
     printLine("  waterfall, cascade      - RF frequency waterfall & audio telemetry");
+    printLine("  vfs, verify             - Query KiloOS VFS kernel fragment verification");
     printLine("  stats                   - Session telemetry, uptime & command metrics");
     printLine("  breach <sector> <key>   - Submit decryption key to unlock sector");
     printLine("  override <key>          - Master cryptographic override bypass");
@@ -2229,13 +2276,45 @@
     helpModal.style.display = 'flex';
   });
 
-  // Modal dismissals
-  document.getElementById('btnHelpClose').addEventListener('click', () => helpModal.style.display = 'none');
-  document.getElementById('btnHelpAcknowledge').addEventListener('click', () => helpModal.style.display = 'none');
-  document.getElementById('btnTutorialClose').addEventListener('click', () => tutorialModal.style.display = 'none');
-  document.getElementById('btnTutorialFinish').addEventListener('click', () => tutorialModal.style.display = 'none');
-  document.getElementById('btnSettingsClose').addEventListener('click', () => settingsModal.style.display = 'none');
-  document.getElementById('btnClimaxClose').addEventListener('click', () => climaxModal.style.display = 'none');
+  function refocusInput() {
+    if (termInput && !termInput.disabled) {
+      termInput.focus();
+    }
+  }
+
+  // Refocus input on terminal wrapper click
+  const terminalWrapper = document.querySelector('.terminal-wrapper');
+  if (terminalWrapper) {
+    terminalWrapper.addEventListener('click', (e) => {
+      const sel = window.getSelection();
+      if (sel && sel.toString().length > 0) return;
+      if (e.target && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT')) return;
+      refocusInput();
+    });
+  }
+
+  // Overlay backdrop click dismissals with refocus
+  document.querySelectorAll('.overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.style.display = 'none';
+        if (overlay === splashModal) {
+          initAudio();
+          initMatrixRain();
+          checkFirstRunTutorial();
+        }
+        refocusInput();
+      }
+    });
+  });
+
+  // Modal dismissals with termInput refocus
+  document.getElementById('btnHelpClose').addEventListener('click', () => { helpModal.style.display = 'none'; refocusInput(); });
+  document.getElementById('btnHelpAcknowledge').addEventListener('click', () => { helpModal.style.display = 'none'; refocusInput(); });
+  document.getElementById('btnTutorialClose').addEventListener('click', () => { tutorialModal.style.display = 'none'; refocusInput(); });
+  document.getElementById('btnTutorialFinish').addEventListener('click', () => { tutorialModal.style.display = 'none'; refocusInput(); });
+  document.getElementById('btnSettingsClose').addEventListener('click', () => { settingsModal.style.display = 'none'; refocusInput(); });
+  document.getElementById('btnClimaxClose').addEventListener('click', () => { climaxModal.style.display = 'none'; refocusInput(); });
 
   document.getElementById('btnThemeGreen').addEventListener('click', () => applyTheme('green'));
   document.getElementById('btnThemeAmber').addEventListener('click', () => applyTheme('amber'));
@@ -2250,10 +2329,31 @@
     settingsModal.style.display = 'none';
     saveState(false);
     printLine("[SETTINGS] Preferences saved.", "system");
+    refocusInput();
   });
 
   const btnDismiss = document.getElementById('btnClimaxDismiss');
-  if (btnDismiss) btnDismiss.addEventListener('click', () => climaxModal.style.display = 'none');
+  if (btnDismiss) btnDismiss.addEventListener('click', () => { climaxModal.style.display = 'none'; refocusInput(); });
+
+  // Quick Action button bindings
+  const bindQuickAction = (id, cmd) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('click', () => {
+        dispatchCommand(cmd);
+        refocusInput();
+      });
+    }
+  };
+  bindQuickAction('btnCodebook', 'codebook');
+  bindQuickAction('btnWaterfall', 'waterfall');
+  bindQuickAction('btnVfs', 'vfs');
+  bindQuickAction('btnQuickScan', 'scan');
+  bindQuickAction('btnQuickStatus', 'status');
+  bindQuickAction('btnQuickCodebook', 'codebook');
+  bindQuickAction('btnQuickWaterfall', 'waterfall');
+  bindQuickAction('btnQuickVfs', 'vfs');
+  bindQuickAction('btnQuickHelp', 'help');
 
   const btnCopy = document.getElementById('btnCopyPasskey');
   if (btnCopy) {
@@ -2300,6 +2400,7 @@
     initMatrixRain();
     SFX.enter();
     checkFirstRunTutorial();
+    refocusInput();
   });
 
   btnStartContinue.addEventListener('click', () => {
@@ -2308,6 +2409,7 @@
     initMatrixRain();
     loadState(true);
     SFX.enter();
+    refocusInput();
   });
 
   document.getElementById('btnSplashHelp').addEventListener('click', () => {

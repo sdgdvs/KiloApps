@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T12:31:27-07:00 — kilo-review: KMatrix (Argon Visual, Feature & Usability Review (Mature Audit))**
+  - Status: AUDIT COMPLETE — reviewed 4-panel sheet.png (1080x683) and audited KiloOS/public/apps/kmatrix.html + KMatrix/main.c.
+  - Visual/UX Findings: #matrixCanvas lacks devicePixelRatio HiDPI scaling; closing tutorial/help/settings modals or clicking .terminal-wrapper fails to refocus #termInput; #helpModal omits codebook, waterfall, and vfs commands.
+  - Feature/VFS Findings: cmdDump() renders identical hex bytes across all 5 sectors; cmdCodebook(filter) ignores its filter param and main.c codebook columns are unpadded; vfs command omits /sys/anomaly_capture.sig polling, lacks missing-file feedback, and never writes breach artifacts via VFS_WRITE.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KMatrix`, `kilo-tester`->`KMatrix`, `kilo-expander`->`KMatrix`] (un-quarantined `KMatrix` from Mature); advanced `kilo-review` to `KCipher`; next agent `kilo-creator`.
+
 - **2026-10-27T12:21:44-07:00 — kilo-expander: KSteno (Phase VI VFS Carrier Pipeline & Send to KCipher IPC)**
   - Status: PASS ✅ (0 errors, web 167.1 KB, native 18.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.17%, HEAD Δ 0.0%, 0 fail, 0 warn, 10.8s)).
   - Wired unconditional VFS & IPC event hooks on DOMContentLoaded and hashchange, connecting /home/media/ carrier open/save, /home/work/ payload export, and 'Send Payload to KCipher' cross-app launch across image, audio, text, and steganalysis lab.

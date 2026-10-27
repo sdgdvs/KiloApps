@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_graphics: KCyber
   kilo_soundscape: KCyber
   kilo_tester: KMaze
-  kilo_usability: KMatrix
+  kilo_usability: KColosseum
   kilo_qa: KColor
   kilo_expander: KMatrix
   kilo_review: KCipher
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KMatrix
-  timestamp: '2026-10-27T14:39:00-07:00'
+  timestamp: '2026-10-27T15:20:56-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -151,11 +151,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Give each sector distinct hex/ASCII bytes in cmdDump(), wire filter arg in cmdCodebook(filter), add .line-dim CSS rule for VFS_READ_DONE, and pad codebook table columns in KMatrix/main.c. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KMatrix`
+- **Active Target**: `KColosseum`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Scale #matrixCanvas by devicePixelRatio in resizeMatrixRain(), refocus #termInput on modal close and .terminal-wrapper click, and add codebook/waterfall/vfs to #helpModal, cmdHelp(), and quick-action buttons. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Scope global li card styling to #marketList > li and #ownedList > li so #tutorialModal ol li stops stretching and clipping #btnTutorialEnter; lock body to 100vh flex column at 800x563 by merging .top-nav, h1, and .funds into a compact header, removing the duplicate Empire Duel Arena banner, making #marketList and #ownedList independently scrollable with Sort by Prowess/HP buttons (sortGladiators), and compacting #arenaPanel (#arenaCanvas 185px, #combatLog 72px) for 0px overflow; add devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas, guard SELECT in keydown, and replace prompt() in importGladiatorDossier() with an in-DOM modal. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -168,6 +167,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Add <meta charset='UTF-8'> to kmaze.html <head> to fix broken UTF-8 mojibake icons across splash, HUD, toasts, and canvas; compact top #uiCanvas and Win32 GDI HUD telemetry over a dark translucent header strip so Lvl/biome/charges text stops colliding with F5/F9 hint and clipping [STAND]/[CROUCH] at 320px width; move #toastContainer below top HUD (top 50px) and #firstRunBanner to bottom of #canvasWrapper; suppress duplicate gameState===0 canvas text behind #splashOverlay; and sync #uiCanvas dimensions/scaling cleanly on boot and resize. |
+| `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Scale #matrixCanvas by devicePixelRatio in resizeMatrixRain(), refocus #termInput on modal close and .terminal-wrapper click, and add codebook/waterfall/vfs to #helpModal, cmdHelp(), and quick-action buttons. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KColor`
@@ -309,6 +309,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T15:20:56-07:00 — kilo-usability: KMatrix (UI/UX, HiDPI Canvas Scaling & Command Usability Polish)**
+  - Status: PASS ✅ (0 errors, web 97.0 KB, native 20.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - HiDPI Canvas: Scaled #matrixCanvas by devicePixelRatio in resizeMatrixRain() with requestAnimationFrame rendering.
+  - Focus & Ergonomics: Refocused #termInput on modal close/dismissal and .terminal-wrapper click.
+  - Command Discovery: Added codebook, waterfall, and vfs to #helpModal, cmdHelp(), and quick-action buttons across web & Win32 C.
+  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
+
 - **2026-10-27T14:39:00-07:00 — kilo-tester: KMatrix (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 92.6 KB, native 19.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.51%, HEAD Δ 0.59%, 0 fail, 0 warn, 7.8s)).
   - Dump & Codebook: Distinct sector hex/ASCII dumps in cmdDump() & main.c, wired filter arg in cmdCodebook(filter).
@@ -331,9 +338,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive Y2K Readiness Audit, Dot-Com IPO Simulator, Jargon Watch generator, and Hype Matrix.
   - Parody brand audit & KNet/Webring integration with zero external CDN dependencies.
   - Handoff: Advanced `kilo-creator` to `kweb://scallion`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-27T12:31:27-07:00 — kilo-review: KMatrix (Argon Visual, Feature & Usability Review (Mature Audit))**
-  - Status: AUDIT COMPLETE — reviewed 4-panel sheet.png (1080x683) and audited KiloOS/public/apps/kmatrix.html + KMatrix/main.c.
-  - Visual/UX Findings: #matrixCanvas lacks devicePixelRatio HiDPI scaling; closing tutorial/help/settings modals or clicking .terminal-wrapper fails to refocus #termInput; #helpModal omits codebook, waterfall, and vfs commands.
-  - Feature/VFS Findings: cmdDump() renders identical hex bytes across all 5 sectors; cmdCodebook(filter) ignores its filter param and main.c codebook columns are unpadded; vfs command omits /sys/anomaly_capture.sig polling, lacks missing-file feedback, and never writes breach artifacts via VFS_WRITE.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KMatrix`, `kilo-tester`->`KMatrix`, `kilo-expander`->`KMatrix`] (un-quarantined `KMatrix` from Mature); advanced `kilo-review` to `KCipher`; next agent `kilo-creator`.

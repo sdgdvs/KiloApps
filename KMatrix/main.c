@@ -84,6 +84,7 @@ static const char* k_strcasestr(const char* haystack, const char* needle) {
 #define ID_BTN_CLEAR        109
 #define ID_BTN_CODEBOOK     110
 #define ID_BTN_WATERFALL    111
+#define ID_BTN_VFS          112
 
 // Colors
 static COLORREF COLOR_BG = RGB(8, 18, 10);
@@ -254,6 +255,7 @@ static void ShowHelp(HWND hwnd) {
         "  codebook [filter]     - Subterranean codebook decrypter\r\n"
         "  dump <sec>            - Forensic hex dump of sector\r\n"
         "  waterfall             - RF frequency waterfall & telemetry\r\n"
+        "  vfs                   - Inspect KiloOS VFS kernel integration\r\n"
         "  override <key>        - Master override bypass\r\n"
         "  save, load            - Quicksave (F5) / Quickload (F9)\r\n"
         "  clear, cls            - Clear terminal screen\r\n\r\n"
@@ -304,6 +306,7 @@ static void ProcessCommand(HWND hwnd, const char* input) {
         AppendOutput("  codebook [filter]    - Subterranean codebook decrypter table");
         AppendOutput("  dump <sec>           - Forensic hexadecimal memory dump");
         AppendOutput("  waterfall, cascade   - RF frequency waterfall & audio telemetry");
+        AppendOutput("  vfs                  - Query KiloOS VFS kernel fragment verification");
         AppendOutput("  override <key>       - Master override token");
         AppendOutput("  save, load           - Quicksave [F5] / Quickload [F9]");
         AppendOutput("  clear, cls           - Clear terminal buffer");
@@ -488,6 +491,10 @@ static void ProcessCommand(HWND hwnd, const char* input) {
         } else {
             AppendOutput("ACCESS DENIED: Invalid master override token.");
         }
+    } else if (k_strcasecmp(cmd, "vfs") == 0 || k_strcasecmp(cmd, "verify") == 0) {
+        AppendOutput("--- KILOOS VFS SECTOR VERIFICATION ---");
+        AppendOutput("Querying /sys/alpha.sys in Win32 standalone mode...");
+        AppendOutput("[VFS VERIFIED] Sector 04 (STORAGE_VFS) kernel interface ready.");
     } else if (k_strcasecmp(cmd, "save") == 0) {
         QuickSaveState();
     } else if (k_strcasecmp(cmd, "load") == 0) {
@@ -573,6 +580,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 715, 430, 80, 24, hwnd, (HMENU)ID_BTN_CLEAR, GetModuleHandleA(NULL), NULL);
             SendMessageA(hBtn, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
 
+            hBtn = CreateWindowA("BUTTON", "VFS", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                170, 430, 80, 24, hwnd, (HMENU)ID_BTN_VFS, GetModuleHandleA(NULL), NULL);
+            SendMessageA(hBtn, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
+
             hBtn = CreateWindowA("BUTTON", "CODEBOOK", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 260, 430, 95, 24, hwnd, (HMENU)ID_BTN_CODEBOOK, GetModuleHandleA(NULL), NULL);
             SendMessageA(hBtn, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
@@ -605,20 +616,31 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 SetFocus(g_hEditInput);
             } else if (wmId == ID_BTN_SCAN) {
                 ShowScan();
+                SetFocus(g_hEditInput);
             } else if (wmId == ID_BTN_STATUS) {
                 ShowStatus();
+                SetFocus(g_hEditInput);
             } else if (wmId == ID_BTN_HELP) {
                 ShowHelp(hwnd);
+                SetFocus(g_hEditInput);
             } else if (wmId == ID_BTN_SAVE) {
                 QuickSaveState();
+                SetFocus(g_hEditInput);
             } else if (wmId == ID_BTN_LOAD) {
                 QuickLoadState();
+                SetFocus(g_hEditInput);
             } else if (wmId == ID_BTN_CLEAR) {
                 SetWindowTextA(g_hEditOutput, "");
+                SetFocus(g_hEditInput);
+            } else if (wmId == ID_BTN_VFS) {
+                ProcessCommand(hwnd, "vfs");
+                SetFocus(g_hEditInput);
             } else if (wmId == ID_BTN_CODEBOOK) {
                 ProcessCommand(hwnd, "codebook");
+                SetFocus(g_hEditInput);
             } else if (wmId == ID_BTN_WATERFALL) {
                 ProcessCommand(hwnd, "waterfall");
+                SetFocus(g_hEditInput);
             }
             break;
         }
