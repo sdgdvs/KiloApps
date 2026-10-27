@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_creator: kweb://scallion
   kilo_graphics: KCyber
   kilo_soundscape: KCyber
-  kilo_tester: KMatrix
+  kilo_tester: KMaze
   kilo_usability: KMatrix
   kilo_qa: KColor
   kilo_expander: KMatrix
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KVoid
-  timestamp: '2026-10-27T14:18:24-07:00'
+  agent: kilo-tester
+  app: KMatrix
+  timestamp: '2026-10-27T14:39:00-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -133,11 +133,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KMatrix`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Give each sector distinct hex/ASCII bytes in cmdDump(), wire filter arg in cmdCodebook(filter), add .line-dim CSS rule for VFS_READ_DONE, and pad codebook table columns in KMatrix/main.c. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -149,6 +148,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Wire all 4 dead Potemkin ludusFacilities perks in combatAction(), enterArena(), enterOnlineDuel(), and startSoloFallbackDuel() (armory +8/+16/+25% weapon dmg, banquet +10/+20/+30% starting crowdFavor, scriptorium +8/+16/+24% crit rate, shrine 12/24/36% fatal-blow survival at 1 HP in checkPlayerDeath()); call recordReplayRound() on every solo combat action, pass damageDealt to recordBattleStats(), and record/save flee outcomes; enable [W] hotkey for solo warcry with once-per-bout playerRallied guard, persist g.stance in getSavePayload(), reset ludusFacilities and currentArenaWager in resetLudus(), apply infirmary discount in updateUI()/healGladiator(), trigger immediate victory on fatal Shield Bash counter in kcolosseum.html and KColosseum/main.c, and route WM_KEYDOWN (including [T] Stats) in KColosseum/main.c GetMessageA loop. |
+| `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Give each sector distinct hex/ASCII bytes in cmdDump(), wire filter arg in cmdCodebook(filter), add .line-dim CSS rule for VFS_READ_DONE, and pad codebook table columns in KMatrix/main.c. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KMatrix`
@@ -309,6 +309,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T14:39:00-07:00 — kilo-tester: KMatrix (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 92.6 KB, native 19.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.51%, HEAD Δ 0.59%, 0 fail, 0 warn, 7.8s)).
+  - Dump & Codebook: Distinct sector hex/ASCII dumps in cmdDump() & main.c, wired filter arg in cmdCodebook(filter).
+  - Styling & Parity: Added .line-dim CSS for VFS_READ_DONE, padded codebook table columns in KMatrix/main.c.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-27T14:18:24-07:00 — kilo-soundscape: KVoid (Event Horizon Protocol — YM2612/SPC700 Chiptune Suite & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 140.0 KB, native 11.2 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Composition: D Minor/Phrygian whole-tone clusters, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
@@ -331,9 +337,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: #matrixCanvas lacks devicePixelRatio HiDPI scaling; closing tutorial/help/settings modals or clicking .terminal-wrapper fails to refocus #termInput; #helpModal omits codebook, waterfall, and vfs commands.
   - Feature/VFS Findings: cmdDump() renders identical hex bytes across all 5 sectors; cmdCodebook(filter) ignores its filter param and main.c codebook columns are unpadded; vfs command omits /sys/anomaly_capture.sig polling, lacks missing-file feedback, and never writes breach artifacts via VFS_WRITE.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KMatrix`, `kilo-tester`->`KMatrix`, `kilo-expander`->`KMatrix`] (un-quarantined `KMatrix` from Mature); advanced `kilo-review` to `KCipher`; next agent `kilo-creator`.
-
-- **2026-10-27T12:21:44-07:00 — kilo-expander: KSteno (Phase VI VFS Carrier Pipeline & Send to KCipher IPC)**
-  - Status: PASS ✅ (0 errors, web 167.1 KB, native 18.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.17%, HEAD Δ 0.0%, 0 fail, 0 warn, 10.8s)).
-  - Wired unconditional VFS & IPC event hooks on DOMContentLoaded and hashchange, connecting /home/media/ carrier open/save, /home/work/ payload export, and 'Send Payload to KCipher' cross-app launch across image, audio, text, and steganalysis lab.
-  - Extended Win32 C parity in KSteno/main.c with 'Send to KCipher' (ID_BTN_SEND_KCIPHER / Ctrl+K), dual-format handshake export, and Westfeld-Pfitzmann Chi-Square steganalysis for 24-bit BMP and 16-bit PCM WAV carriers.
-  - Handoff: Advanced `kilo-expander` to `KColosseum`; rotated active agent to `kilo-review`.

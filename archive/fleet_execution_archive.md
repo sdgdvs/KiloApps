@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T12:21:44-07:00 — kilo-expander: KSteno (Phase VI VFS Carrier Pipeline & Send to KCipher IPC)**
+  - Status: PASS ✅ (0 errors, web 167.1 KB, native 18.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.17%, HEAD Δ 0.0%, 0 fail, 0 warn, 10.8s)).
+  - Wired unconditional VFS & IPC event hooks on DOMContentLoaded and hashchange, connecting /home/media/ carrier open/save, /home/work/ payload export, and 'Send Payload to KCipher' cross-app launch across image, audio, text, and steganalysis lab.
+  - Extended Win32 C parity in KSteno/main.c with 'Send to KCipher' (ID_BTN_SEND_KCIPHER / Ctrl+K), dual-format handshake export, and Westfeld-Pfitzmann Chi-Square steganalysis for 24-bit BMP and 16-bit PCM WAV carriers.
+  - Handoff: Advanced `kilo-expander` to `KColosseum`; rotated active agent to `kilo-review`.
+
 - **2026-10-27T11:39:11-07:00 — kilo-qa: KType (Pass 5 QA, Dual Parity & Mature Graduation)**
   - Status: PASS (0 errors, web 139.4 KB, native 26.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload across localStorage and ktype.dat, ktype_tutorialSeen flag, and Escape modal dismissals.

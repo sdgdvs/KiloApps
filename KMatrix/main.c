@@ -52,6 +52,26 @@ static void k_strcat(char* dst, const char* src) {
     *dst = '\0';
 }
 
+static const char* k_strcasestr(const char* haystack, const char* needle) {
+    if (!needle || !*needle) return haystack;
+    if (!haystack) return NULL;
+    int nlen = k_strlen(needle);
+    int hlen = k_strlen(haystack);
+    if (nlen > hlen) return NULL;
+    int i, j;
+    for (i = 0; i <= hlen - nlen; i++) {
+        int match = 1;
+        for (j = 0; j < nlen; j++) {
+            if (k_toupper(haystack[i + j]) != k_toupper(needle[j])) {
+                match = 0;
+                break;
+            }
+        }
+        if (match) return haystack + i;
+    }
+    return NULL;
+}
+
 // Control IDs
 #define ID_EDIT_OUTPUT      101
 #define ID_EDIT_INPUT       102
@@ -231,7 +251,8 @@ static void ShowHelp(HWND hwnd) {
         "  status, sys           - View breach telemetry\r\n"
         "  scan, sectors         - Probe quarantined sectors & clues\r\n"
         "  breach <sec> <key>    - Decrypt target sector\r\n"
-        "  codebook              - Subterranean codebook decrypter\r\n"
+        "  codebook [filter]     - Subterranean codebook decrypter\r\n"
+        "  dump <sec>            - Forensic hex dump of sector\r\n"
         "  waterfall             - RF frequency waterfall & telemetry\r\n"
         "  override <key>        - Master override bypass\r\n"
         "  save, load            - Quicksave (F5) / Quickload (F9)\r\n"
@@ -280,7 +301,8 @@ static void ProcessCommand(HWND hwnd, const char* input) {
         AppendOutput("  status, sys          - Sector breach telemetry");
         AppendOutput("  scan, sectors        - Diagnostic clue scan");
         AppendOutput("  breach <sec> <key>   - Submit decryption key");
-        AppendOutput("  codebook, decrypt    - Subterranean codebook decrypter table");
+        AppendOutput("  codebook [filter]    - Subterranean codebook decrypter table");
+        AppendOutput("  dump <sec>           - Forensic hexadecimal memory dump");
         AppendOutput("  waterfall, cascade   - RF frequency waterfall & audio telemetry");
         AppendOutput("  override <key>       - Master override token");
         AppendOutput("  save, load           - Quicksave [F5] / Quickload [F9]");
@@ -319,22 +341,128 @@ static void ProcessCommand(HWND hwnd, const char* input) {
         } else {
             AppendOutput("BREACH FAILED: Key rejected. Inspect sector clue via 'scan'.");
         }
+    } else if (k_strcasecmp(cmd, "dump") == 0) {
+        if (!arg1[0]) {
+            AppendOutput("USAGE: dump <sector_id> (e.g. dump MEM_HEAP)");
+            return;
+        }
+        int found = -1;
+        int i;
+        for (i = 0; i < NUM_SECTORS; i++) {
+            if (k_strcasecmp(g_sectors[i].id, arg1) == 0) {
+                found = i;
+                break;
+            }
+        }
+        if (found < 0) {
+            AppendOutput("ERROR: Unknown sector ID. Type 'scan' for valid IDs.");
+            return;
+        }
+        const char* secId = g_sectors[found].id;
+        unsigned long baseOff = 0x007F1999;
+        if (found == 1) baseOff = 0x00199928;
+        else if (found == 2) baseOff = 0x0A136304;
+        else if (found == 3) baseOff = 0x00001999;
+        else if (found == 4) baseOff = 0x00EC1099;
+
+        char hdr[128];
+        wsprintfA(hdr, "=== HEX MEMORY DUMP: %s [OFFSET: 0x%08X] ===", secId, baseOff);
+        AppendOutput(hdr);
+        AppendOutput("  Offset    00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F  ASCII Preview");
+        AppendOutput("  -------------------------------------------------------------------------");
+
+        static const unsigned char dumps[5][4][16] = {
+            { // MEM_HEAP
+                {0x45,0x43,0x48,0x4F,0x5F,0x42,0x55,0x46,0x46,0x45,0x52,0x5F,0x37,0x46,0x31,0x39},
+                {0x39,0x39,0x00,0x7F,0x90,0x90,0xB8,0x99,0x19,0x7F,0x00,0xCD,0x21,0x89,0xC3,0x31},
+                {0xC0,0x4D,0x45,0x4D,0x5F,0x48,0x45,0x41,0x50,0x5F,0x53,0x45,0x47,0x4D,0x45,0x4E},
+                {0x54,0x5F,0x4F,0x4B,0x00,0x00,0xDE,0xAD,0xBE,0xEF,0x7F,0x19,0x99,0x00,0xFF,0xFF}
+            },
+            { // AUDIO_DSP
+                {0x59,0x4D,0x32,0x36,0x31,0x32,0x5F,0x46,0x4D,0x5F,0x31,0x39,0x39,0x39,0x48,0x5A},
+                {0x28,0x02,0x01,0x4F,0x50,0x31,0x5F,0x4D,0x55,0x4C,0x54,0x30,0x32,0x54,0x4C,0x20},
+                {0x53,0x50,0x43,0x37,0x30,0x30,0x5F,0x44,0x53,0x50,0x5F,0x45,0x43,0x48,0x4F,0x00},
+                {0x2E,0x2D,0x2E,0x2D,0x2E,0x20,0x2E,0x2E,0x2E,0x2E,0x20,0x2D,0x2D,0x2D,0x00,0x7F}
+            },
+            { // NET_RELAY
+                {0x0A,0x13,0x63,0x04,0x07,0xCF,0x54,0x43,0x50,0x5F,0x53,0x59,0x4E,0x5F,0x41,0x43},
+                {0x4B,0x5F,0x52,0x45,0x4C,0x41,0x59,0x00,0x31,0x30,0x2E,0x31,0x39,0x2E,0x39,0x39},
+                {0x2E,0x34,0x3A,0x31,0x39,0x39,0x39,0x00,0x44,0x41,0x52,0x4B,0x4E,0x45,0x54,0x5F},
+                {0x50,0x41,0x43,0x4B,0x45,0x54,0x5F,0x52,0x4F,0x55,0x54,0x45,0x5F,0x4F,0x4B,0x00}
+            },
+            { // STORAGE_VFS
+                {0x2F,0x73,0x79,0x73,0x74,0x65,0x6D,0x2F,0x72,0x65,0x63,0x6F,0x76,0x65,0x72,0x79},
+                {0x2F,0x31,0x39,0x39,0x39,0x2E,0x6C,0x6F,0x67,0x00,0x49,0x4E,0x4F,0x44,0x45,0x5F},
+                {0x30,0x31,0x39,0x39,0x39,0x00,0x43,0x52,0x43,0x33,0x32,0x5F,0x39,0x39,0x39,0x46},
+                {0x37,0x46,0x00,0x52,0x45,0x43,0x4F,0x56,0x45,0x52,0x5F,0x31,0x39,0x39,0x39}
+            },
+            { // CORE_AI
+                {0x41,0x55,0x54,0x4F,0x4E,0x4F,0x4D,0x4F,0x55,0x53,0x5F,0x46,0x4C,0x45,0x45,0x54},
+                {0x00,0x48,0x49,0x56,0x45,0x5F,0x4D,0x49,0x4E,0x44,0x5F,0x4E,0x45,0x58,0x55,0x53},
+                {0x00,0x41,0x47,0x45,0x4E,0x54,0x53,0x5F,0x43,0x59,0x43,0x4C,0x49,0x43,0x5F,0x56},
+                {0x49,0x00,0x44,0x49,0x52,0x45,0x43,0x54,0x4F,0x52,0x5F,0x53,0x59,0x4E,0x43,0x00}
+            }
+        };
+
+        int r, b;
+        char rowBuf[128];
+        for (r = 0; r < 4; r++) {
+            char hex1[32];
+            char hex2[32];
+            char asc[20];
+            hex1[0] = hex2[0] = asc[0] = '\0';
+            for (b = 0; b < 8; b++) {
+                char h[4];
+                unsigned char byteVal = dumps[found][r][b];
+                wsprintfA(h, "%02X ", byteVal);
+                k_strcat(hex1, h);
+                asc[b] = (byteVal >= 32 && byteVal <= 126) ? (char)byteVal : '.';
+            }
+            if (hex1[k_strlen(hex1) - 1] == ' ') hex1[k_strlen(hex1) - 1] = '\0';
+
+            for (b = 8; b < 16; b++) {
+                char h[4];
+                unsigned char byteVal = dumps[found][r][b];
+                wsprintfA(h, "%02X ", byteVal);
+                k_strcat(hex2, h);
+                asc[b] = (byteVal >= 32 && byteVal <= 126) ? (char)byteVal : '.';
+            }
+            if (hex2[k_strlen(hex2) - 1] == ' ') hex2[k_strlen(hex2) - 1] = '\0';
+            asc[16] = '\0';
+
+            wsprintfA(rowBuf, "  %08X  %-23s  %-23s  |%s|", baseOff + r * 16, hex1, hex2, asc);
+            AppendOutput(rowBuf);
+        }
+        AppendOutput("  -------------------------------------------------------------------------");
     } else if (k_strcasecmp(cmd, "codebook") == 0 || k_strcasecmp(cmd, "decrypt") == 0) {
-        AppendOutput("=== SUBTERRANEAN CODEBOOK DECRYPTER (ARG 1999) ===");
+        AppendOutput("=== SUBTERRANEAN CODEBOOK DECRYPTER (SUB-NET 1999) ===");
         AppendOutput("INDEX | SECTOR ID   | ORIGIN VECTOR | CIPHER KEY / HASH  | STATUS");
         AppendOutput("------+-------------+---------------+--------------------+---------");
         int i;
         char line[256];
+        int count = 0;
         for (i = 0; i < NUM_SECTORS; i++) {
             const char* origin = "KHex/KCalc";
             if (i == 1) origin = "KSynth/YM2612";
             else if (i == 2) origin = "KBBS/Darknet";
             else if (i == 3) origin = "KPad/VFS";
             else if (i == 4) origin = "KDirector";
-            wsprintfA(line, " [0%d]  | %s | %s | %s | %s",
-                i + 1, g_sectors[i].id, origin, g_sectors[i].key1,
-                g_sectors[i].breached ? "BREACHED" : "LOCKED");
+            const char* status = g_sectors[i].breached ? "BREACHED" : "LOCKED";
+            if (arg1[0]) {
+                if (!k_strcasestr(g_sectors[i].id, arg1) &&
+                    !k_strcasestr(origin, arg1) &&
+                    !k_strcasestr(g_sectors[i].key1, arg1) &&
+                    !k_strcasestr(status, arg1)) {
+                    continue;
+                }
+            }
+            count++;
+            wsprintfA(line, " [0%d]  | %-11s | %-13s | %-18s | %s",
+                i + 1, g_sectors[i].id, origin, g_sectors[i].key1, status);
             AppendOutput(line);
+        }
+        if (arg1[0] && count == 0) {
+            AppendOutput("No codebook entries matching filter.");
         }
         AppendOutput("Use 'breach <SECTOR_ID> <KEY>' to authenticate codebook entries.");
     } else if (k_strcasecmp(cmd, "waterfall") == 0 || k_strcasecmp(cmd, "cascade") == 0) {
