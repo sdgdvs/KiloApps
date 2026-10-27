@@ -58,6 +58,7 @@ float my_cos(float x) {
 #define ID_BTN_SCAN_11 1015
 #define ID_BTN_SCAN_7 1016
 #define ID_BTN_SCAN_M3 1017
+#define ID_BTN_SCAN_RESET 1033
 #define ID_LIST_UNANALYZED 1018
 
 #define ID_BTN_ACCUSE 1019
@@ -82,12 +83,12 @@ HWND hStartPanel, hBtnStart, hBtnStartMed, hBtnStartHard, hStartDesc, hStatsDesc
 HWND hBtnHelp, hHelpTitle, hHelpDesc, hBtnCloseHelp, hBtnSave, hBtnLoad;
 HWND hBtnInterrogate, hIntDesc, hBtnAskAlibi, hBtnPresentClue, hBtnEndInt;
 HWND hBtnLab, hLabTitle, hBtnAnalyze, hBtnLeaveLab;
-HWND hScanDesc, hBtnScan11, hBtnScan7, hBtnScanM3;
+HWND hScanDesc, hBtnScan11, hBtnScan7, hBtnScanM3, hBtnScanReset;
 HWND hBtnAccuse, hAccuseTitle, hAccuseDesc, hBtnSubmitAccuse, hBtnCancelAccuse, hCmbSuspect, hCmbMotive, hCmbWeapon;
 HWND hTimeLeft;
 HFONT hFont, hFontBold, hFontTitle;
 
-int timeLeft = 12;
+int timeLeft = 18;
 int activeItems = 3;
 int currentState = 0; // 0 = start, 1 = playing, 2 = interrogate, 3 = lab, 4 = scan, 5 = accuse, 6 = help
 int prevState = 0;
@@ -171,7 +172,7 @@ char* weaponClues[] = {
 int statsCasesSolved = 0;
 int statsFastestSolve = 999;
 int statsPerfectSolves = 0;
-int initialTime = 0;
+int initialTime = 18;
 int failedCalibrations = 0;
 int angrySuspects = 0;
 
@@ -433,6 +434,7 @@ void UpdateUI() {
         ShowWindow(hBtnScan11, SW_HIDE);
         ShowWindow(hBtnScan7, SW_HIDE);
         ShowWindow(hBtnScanM3, SW_HIDE);
+        ShowWindow(hBtnScanReset, SW_HIDE);
         
         ShowWindow(hBtnAccuse, SW_HIDE);
         ShowWindow(hAccuseTitle, SW_HIDE);
@@ -503,6 +505,7 @@ void UpdateUI() {
         ShowWindow(hBtnScan11, SW_HIDE);
         ShowWindow(hBtnScan7, SW_HIDE);
         ShowWindow(hBtnScanM3, SW_HIDE);
+        ShowWindow(hBtnScanReset, SW_HIDE);
 
         ShowWindow(hBtnAccuse, SW_SHOW);
         ShowWindow(hAccuseTitle, SW_HIDE);
@@ -576,6 +579,7 @@ void UpdateUI() {
         ShowWindow(hBtnScan11, SW_HIDE);
         ShowWindow(hBtnScan7, SW_HIDE);
         ShowWindow(hBtnScanM3, SW_HIDE);
+        ShowWindow(hBtnScanReset, SW_HIDE);
     } else if (currentState == 4) {
         ShowWindow(hSceneWnd, SW_SHOW);
         ShowWindow(hBtnSearch, SW_HIDE);
@@ -601,6 +605,7 @@ void UpdateUI() {
         ShowWindow(hBtnScan11, SW_SHOW);
         ShowWindow(hBtnScan7, SW_SHOW);
         ShowWindow(hBtnScanM3, SW_SHOW);
+        ShowWindow(hBtnScanReset, SW_SHOW);
         
         char scanBuf[256];
         wsprintfA(scanBuf, "Calibrate Spectral Scanner to match frequency:\nTarget: %d Hz | Tuned: %d Hz | Stability Moves: %d", scanTarget, scanCurrent, scanMoves);
@@ -630,6 +635,7 @@ void UpdateUI() {
         ShowWindow(hBtnScan11, SW_HIDE);
         ShowWindow(hBtnScan7, SW_HIDE);
         ShowWindow(hBtnScanM3, SW_HIDE);
+        ShowWindow(hBtnScanReset, SW_HIDE);
         
         ShowWindow(hAccuseTitle, SW_SHOW);
         ShowWindow(hAccuseDesc, SW_SHOW);
@@ -680,6 +686,7 @@ void UpdateUI() {
         ShowWindow(hBtnScan11, SW_HIDE);
         ShowWindow(hBtnScan7, SW_HIDE);
         ShowWindow(hBtnScanM3, SW_HIDE);
+        ShowWindow(hBtnScanReset, SW_HIDE);
         ShowWindow(hBtnAccuse, SW_HIDE);
         ShowWindow(hAccuseTitle, SW_HIDE);
         ShowWindow(hAccuseDesc, SW_HIDE);
@@ -893,20 +900,19 @@ void StartGame(int items, int time) {
 }
 
 int AdvanceTime(HWND hwnd, int hours) {
-    timeLeft -= hours;
-    if (timeLeft < 0) timeLeft = 0;
-    
-    char timeBuf[64];
-    wsprintfA(timeBuf, "Time Left: %dh", timeLeft);
-    SetWindowTextA(hTimeLeft, timeBuf);
-    
-    if (timeLeft <= 0) {
+    if (hours > timeLeft) {
         PlayDramaticChord();
         MessageBoxA(hwnd, "Time's up! The killer has escaped into the night. GAME OVER. (Restart to play again)", "Game Over", MB_OK | MB_ICONERROR);
         currentState = 0;
         UpdateUI();
         return 1;
     }
+    timeLeft -= hours;
+    if (timeLeft < 0) timeLeft = 0;
+    
+    char timeBuf[64];
+    wsprintfA(timeBuf, "Time Left: %dh", timeLeft);
+    SetWindowTextA(hTimeLeft, timeBuf);
     return 0;
 }
 
@@ -1541,9 +1547,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Start Screen
             hStartPanel = CreateWindowA("STATIC", "", WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             hStartDesc = CreateWindowA("STATIC", "Homicide Investigation: A murder occurred at the Manor.", WS_CHILD | WS_VISIBLE | SS_CENTER, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
-            hBtnStart = CreateWindowA("BUTTON", "Start Easy (3 Suspects)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START, NULL, NULL);
-            hBtnStartMed = CreateWindowA("BUTTON", "Start Medium (4 Suspects)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START_MED, NULL, NULL);
-            hBtnStartHard = CreateWindowA("BUTTON", "Start Hard (5 Suspects)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START_HARD, NULL, NULL);
+            hBtnStart = CreateWindowA("BUTTON", "Start Easy (3 Suspects, 18h)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START, NULL, NULL);
+            hBtnStartMed = CreateWindowA("BUTTON", "Start Medium (4 Suspects, 20h)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START_MED, NULL, NULL);
+            hBtnStartHard = CreateWindowA("BUTTON", "Start Hard (5 Suspects, 22h)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START_HARD, NULL, NULL);
             hStatsDesc = CreateWindowA("STATIC", "", WS_CHILD | WS_VISIBLE | SS_CENTER, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             SendMessageA(hStatsDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
             LoadStats();
@@ -1571,6 +1577,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnScan11 = CreateWindowA("BUTTON", "+11", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_11, NULL, NULL);
             hBtnScan7 = CreateWindowA("BUTTON", "+7", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_7, NULL, NULL);
             hBtnScanM3 = CreateWindowA("BUTTON", "-3", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_M3, NULL, NULL);
+            hBtnScanReset = CreateWindowA("BUTTON", "Reset [R]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_RESET, NULL, NULL);
 
             hBtnAccuse = CreateWindowA("BUTTON", "Accuse Someone", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_ACCUSE, NULL, NULL);
             hAccuseTitle = CreateWindowA("STATIC", "Grand Jury Indictment", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
@@ -1629,6 +1636,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnScan11, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hBtnScan7, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hBtnScanM3, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hBtnScanReset, WM_SETFONT, (WPARAM)hFontBold, TRUE);
 
             SendMessageA(hBtnAccuse, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hAccuseTitle, WM_SETFONT, (WPARAM)hFontTitle, TRUE);
@@ -1762,9 +1770,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MoveWindow(hBtnLeaveLab, pad, travelY + 65, 140, 28, TRUE);
                 
                 MoveWindow(hScanDesc, pad, travelY, leftW - pad, 45, TRUE);
-                MoveWindow(hBtnScan11, pad, travelY + 50, 70, 28, TRUE);
-                MoveWindow(hBtnScan7, pad + 76, travelY + 50, 70, 28, TRUE);
-                MoveWindow(hBtnScanM3, pad + 152, travelY + 50, 70, 28, TRUE);
+                MoveWindow(hBtnScan11, pad, travelY + 50, 65, 28, TRUE);
+                MoveWindow(hBtnScan7, pad + 70, travelY + 50, 65, 28, TRUE);
+                MoveWindow(hBtnScanM3, pad + 140, travelY + 50, 65, 28, TRUE);
+                MoveWindow(hBtnScanReset, pad + 210, travelY + 50, 80, 28, TRUE);
 
                 MoveWindow(hAccuseTitle, pad, travelY, leftW - pad, 25, TRUE);
                 MoveWindow(hAccuseDesc, pad, travelY + 25, leftW - pad, 25, TRUE);
@@ -1805,13 +1814,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (code == 0) PlayTypewriter();
 
             if (id == ID_BTN_START) {
-                StartGame(3, 16);
+                StartGame(3, 18);
                 RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
             } else if (id == ID_BTN_START_MED) {
-                StartGame(4, 14);
+                StartGame(4, 20);
                 RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
             } else if (id == ID_BTN_START_HARD) {
-                StartGame(5, 12);
+                StartGame(5, 22);
                 RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
             } else if (id == ID_BTN_SEARCH) {
                 SearchLocation(hwnd);
@@ -1977,6 +1986,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (id == ID_BTN_SCAN_11) scanCurrent += 11;
                 else if (id == ID_BTN_SCAN_7) scanCurrent += 7;
                 else if (id == ID_BTN_SCAN_M3) scanCurrent -= 3;
+                if (scanCurrent < 0) scanCurrent = 0;
                 
                 scanMoves--;
                 TriggerShake(3.0f);
@@ -2012,6 +2022,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     wsprintfA(scanBuf, "Calibrate Spectral Scanner to match frequency:\nTarget: %d Hz | Tuned: %d Hz | Stability Moves: %d", scanTarget, scanCurrent, scanMoves);
                     SetWindowTextA(hScanDesc, scanBuf);
                 }
+            } else if (id == ID_BTN_SCAN_RESET) {
+                scanCurrent = 0;
+                scanMoves = 12;
+                TriggerShake(4.0f);
+                PlayDramaticChord();
+                char scanBuf[256];
+                wsprintfA(scanBuf, "Calibrate Spectral Scanner to match frequency:\nTarget: %d Hz | Tuned: %d Hz | Stability Moves: %d", scanTarget, scanCurrent, scanMoves);
+                SetWindowTextA(hScanDesc, scanBuf);
             } else if (id == ID_BTN_ACCUSE) {
                 currentState = 5;
                 UpdateUI();
@@ -2168,6 +2186,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (wParam == '3') {
                     SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SCAN_M3, 0), 0);
                     return 0;
+                } else if (wParam == 'R' || wParam == 'r' || wParam == '4') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SCAN_RESET, 0), 0);
+                    return 0;
                 }
             } else if (currentState == 5) {
                 if (wParam == VK_RETURN) {
@@ -2256,6 +2277,9 @@ void __stdcall MainEntry() {
         ShowWindow(hMainWnd, SW_SHOWDEFAULT);
         MSG msg;
         while (GetMessageA(&msg, NULL, 0, 0)) {
+            if (msg.message == WM_KEYDOWN && msg.hwnd != hMainWnd) {
+                SendMessageA(hMainWnd, WM_KEYDOWN, msg.wParam, msg.lParam);
+            }
             TranslateMessage(&msg);
             DispatchMessageA(&msg);
         }

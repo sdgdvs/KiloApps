@@ -479,9 +479,9 @@
             <div style="margin: 18px 0;">
                 <label for="difficulty" style="color: #d4af37; margin-right: 8px;">Case Difficulty:</label>
                 <select id="difficulty" style="background:#18181c; color:#dfd8c8; border:1px solid #5a4828; padding:6px 10px; font-family:inherit; border-radius:3px;">
-                    <option value="Easy">Easy (3 suspects, 16h)</option>
-                    <option value="Medium">Medium (4 suspects, 14h)</option>
-                    <option value="Hard">Hard (5 suspects, 12h)</option>
+                    <option value="Easy">Easy (3 suspects, 18h)</option>
+                    <option value="Medium">Medium (4 suspects, 20h)</option>
+                    <option value="Hard">Hard (5 suspects, 22h)</option>
                 </select>
             </div>
             <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
@@ -532,7 +532,7 @@
                     <div class="scanner-hud">
                         <span>TARGET FREQ: <b id="scanner-target">73</b> Hz</span>
                         <span>TUNED: <b id="scanner-current">0</b> Hz</span>
-                        <span>STABILITY: <b id="scanner-moves">10</b></span>
+                        <span>STABILITY: <b id="scanner-moves">12</b></span>
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <button onclick="adjScanner(11)" style="flex:1;" title="Shift frequency +11 kHz [1]">+11 kHz [1]</button>
@@ -819,10 +819,14 @@
 
             toggleMusic() {
                 this.musicEnabled = !this.musicEnabled;
-                if (!this.musicEnabled && this.musicGain) {
-                    this.musicGain.gain.setValueAtTime(0, this.ctx.currentTime);
-                } else if (this.musicEnabled && this.musicGain) {
-                    this.musicGain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                if (!this.musicEnabled) {
+                    if (this.musicGain) this.musicGain.gain.setValueAtTime(0, this.ctx.currentTime);
+                    if (this.rainGain) this.rainGain.gain.setValueAtTime(0, this.ctx.currentTime);
+                    if (this.sfxGain) this.sfxGain.gain.setValueAtTime(0, this.ctx.currentTime);
+                } else {
+                    if (this.musicGain) this.musicGain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                    if (this.rainGain) this.rainGain.gain.setValueAtTime(0.035, this.ctx.currentTime);
+                    if (this.sfxGain) this.sfxGain.gain.setValueAtTime(0.6, this.ctx.currentTime);
                 }
                 return this.musicEnabled;
             }
@@ -1236,7 +1240,7 @@
 
         const state = {
             currentLocation: 'Office',
-            timeLeft: 12,
+            timeLeft: 18,
             locations: {},
             suspects: [],
             foundClues: [],
@@ -1245,7 +1249,7 @@
             solution: {},
             alibis: {},
             patience: {},
-            initialTime: 12,
+            initialTime: 18,
             failedCalibrations: 0,
             angrySuspects: 0,
             currentInterrogation: null,
@@ -1288,9 +1292,9 @@
         function generateMystery() {
             const diff = document.getElementById('difficulty').value;
             let numItems = 3;
-            let time = 16;
-            if (diff === 'Medium') { numItems = 4; time = 14; }
-            else if (diff === 'Hard') { numItems = 5; time = 12; }
+            let time = 18;
+            if (diff === 'Medium') { numItems = 4; time = 20; }
+            else if (diff === 'Hard') { numItems = 5; time = 22; }
             
             state.suspects = allSuspects.slice(0, numItems);
             state.locations = {};
@@ -1425,15 +1429,15 @@
         }
 
         function advanceTime(hours) {
-            state.timeLeft -= hours;
-            if (state.timeLeft < 0) state.timeLeft = 0;
-            document.getElementById('time-left').textContent = state.timeLeft;
-            if (state.timeLeft <= 0) {
+            if (hours > state.timeLeft) {
                 triggerScreenShake(20);
                 noirAudio.playDramaticChord();
                 showGameOver("Time Expired", "Time's up! The killer has slipped into the shadows and escaped.\nThe trail has gone cold. (Case Failed)");
                 return true;
             }
+            state.timeLeft -= hours;
+            if (state.timeLeft < 0) state.timeLeft = 0;
+            document.getElementById('time-left').textContent = state.timeLeft;
             return false;
         }
 
@@ -1448,6 +1452,7 @@
                     noirAudio.playDramaticChord();
                     triggerLightning();
                     spawnParticleBurst(canvas.width/2, canvas.height/2, 35, '#d4af37');
+                    spawnShockwave(canvas.width/2, canvas.height/2, '#d4af37');
                     showToast("🔎 You recovered physical evidence!\nTake it to the Evidence Lab to analyze.");
                 } else {
                     showToast("You searched thoroughly, but found nothing useful here.");
@@ -1580,6 +1585,7 @@
                 state.interrogationMood = 'caught';
                 triggerScreenShake(18);
                 spawnParticleBurst(canvas.width / 2, canvas.height / 2, 45, '#ff3333');
+                spawnShockwave(canvas.width / 2, canvas.height / 2, '#ff3333');
                 if (suspect === 'Mr. Black') {
                     response = '"Where did you unearth that?! My attorney will have your badge for this unlawful search! ...I lost that cufflink, it proves nothing!" (Caught in a lie!)';
                 } else if (suspect === 'Miss Scarlet') {
@@ -1721,6 +1727,7 @@
         function adjScanner(val) {
             if (!analysisState) return;
             analysisState.current += val;
+            if (analysisState.current < 0) analysisState.current = 0;
             analysisState.moves--;
             triggerScreenShake(3);
             noirAudio.playCalibrationTone(analysisState.current, analysisState.target);
@@ -1736,6 +1743,7 @@
                 noirAudio.playClueReveal();
                 triggerLightning();
                 spawnParticleBurst(canvas.width / 2, canvas.height / 2, 45, '#44ff44');
+                spawnShockwave(canvas.width / 2, canvas.height / 2, '#44ff44');
                 showToast(`🔬 Spectral Analysis Complete!\nRevealed: ${item.realClue}`);
                 updateNotebook();
                 renderLabList();
@@ -1751,22 +1759,11 @@
 
         function resetScannerFreq() {
             if (!analysisState) return;
-            if (analysisState.current === 0) {
-                showToast("ℹ️ Frequency is already calibrated at 0 Hz.");
-                return;
-            }
             analysisState.current = 0;
-            analysisState.moves--;
+            analysisState.moves = 12;
             triggerScreenShake(4);
             noirAudio.playCalibrationTone(0, analysisState.target);
-            if (analysisState.moves <= 0) {
-                triggerScreenShake(8);
-                showToast("⚠️ Calibration failed: Sensor overloaded. Try again.");
-                state.failedCalibrations++;
-                renderLabList();
-            } else {
-                updateScannerUI();
-            }
+            updateScannerUI();
         }
 
         function closeLab() {
@@ -2176,6 +2173,7 @@
                 noirAudio.playSuccessChord();
                 triggerLightning();
                 spawnParticleBurst(canvas.width / 2, canvas.height / 2, 100, '#d4af37');
+                spawnShockwave(canvas.width / 2, canvas.height / 2, '#d4af37');
                 
                 let msg = `Case Closed, Detective! ${suspect} broke down and signed a full confession.\n\nMotive: ${motive}\nWeapon: ${weapon}\nTime Taken: ${hoursTaken}h\n`;
                 if (penaltyFree) msg += "★ PERFECT INVESTIGATION! ★ (No failed labs, no angered suspects)\n";

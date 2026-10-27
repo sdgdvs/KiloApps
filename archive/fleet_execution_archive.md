@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T03:41:12-07:00 — kilo-expander: KScript (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KScript across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KSteno`; rotated active agent to `kilo-review`.
+
 - **2026-10-27T02:35:59-07:00 — kilo-qa: KContacts (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 150.4 KB, native 29.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload persistence in localStorage & binary DAT, tutorial seen check, and modal dismissals.

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_creator: kweb://trapster
   kilo_graphics: KVoid
   kilo_soundscape: KWizard
-  kilo_tester: KMystery
+  kilo_tester: KMaze
   kilo_usability: KMystery
   kilo_qa: KZip
   kilo_expander: KMystery
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KAlchemy
-  timestamp: '2026-10-27T05:34:45-07:00'
+  agent: kilo-tester
+  app: KMystery
+  timestamp: '2026-10-27T06:20:31-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -135,11 +135,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Compose mystical alchemical workshop 6-channel suite (Dorian/Lydian celesta bells, warm glass pad, bubbling FM cauldron transients, transmutation fanfare stingers). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KMystery`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -150,6 +149,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Fix buyItem() calling getItemPrice(number) instead of string keys ('food','toy','nectar','crown','polish') which charges 50g for all items; fix getMood().label === 'Ecstatic' in startMinigame() and battleTurn() (+15% crit); and apply the +10 Sovereign Aura stat bonus upon collecting all 6 relics. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
+| `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KMystery`
@@ -302,6 +302,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T06:20:31-07:00 — kilo-tester: KMystery (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 156.8 KB, native 39.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.29%, HEAD Δ 0.28%, 0 fail, 0 warn, 7.9s)).
+  - Rebalanced hour budgets to Easy 18h / Medium 20h / Hard 22h and fixed advanceTime/AdvanceTime to finish action and permit Accuse [A] at 0h.
+  - Fixed resetScannerFreq to restore moves=12 and clamped current >= 0; added Reset [R] to KMystery/main.c.
+  - Wired dead spawnShockwave to clue/scanner/lie/win events, muted rain/sfx in toggleMusic, and routed WM_KEYDOWN in Win32 message loop.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-27T05:34:45-07:00 — kilo-soundscape: KAlchemy (The Hermetic Transmutation — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 271.3 KB, native 69.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.52%, 0 fail, 0 warn, 7.5s)).
   - Composition: D Dorian / F Lydian modal progression, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
@@ -324,8 +331,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual & UX Findings: #help-modal clips Interrogation Tips mid-line at 960x673; updateLocation() strips [S]/[I] hotkeys and omits hour costs; scanner buttons mix kHz vs Hz; suspect alibis/reactions vanish from notebook; all portraits/scenes/sketches are primitive geometric programmer art.
   - Gameplay, Audio & Mesh Findings: Medium (14h) and Hard (12h) budgets plus advanceTime(0) instant-fail make 4-5 location cases unsolvable; resetScannerFreq() decrements moves-- instead of restoring 12; spawnShockwave() is dead; toggleMusic() leaves white-noise rain/SFX playing; Win32 child focus breaks hotkeys and lacks Reset/Dossier/VFS.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-graphics`->`KMystery`, `kilo-tester`->`KMystery`, `kilo-usability`->`KMystery`, `kilo-expander`->`KMystery`] (un-quarantined `KMystery` from Mature); advanced `kilo-review` to `KColosseum`; next agent `kilo-creator`.
-
-- **2026-10-27T03:41:12-07:00 — kilo-expander: KScript (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KScript across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KSteno`; rotated active agent to `kilo-review`.
