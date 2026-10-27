@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T22:38:18-07:00 — kilo-qa: KCalendar (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 123.7 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kcalendar_tutorialSeen flag, Escape modal dismissals, and retro chime audio.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, reminder engine, VFS export mesh, and visibilitychange cleanup.
+  - Mature Quarantine & Handoff: Promoted `KCalendar` to Mature archive; advanced `kilo-qa` to `KContacts`; next agent `kilo-expander`.
+
 - **2026-10-26T21:38:20-07:00 — kilo-usability: KColony (Start-Screen 2-Col Grid, 419px Canvas Sizing & Usability Polish)**
   - Status: PASS ✅ (0 errors, web 137.3 KB, native 170.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 18.84%, HEAD Δ 12.4%, 0 fail, 0 warn, 6.2s)).
   - Start Screen & Viewport: Arranged all 11 #start-screen buttons in a balanced 2-column grid fitting within 870x623 with 0 bottom clipping; locked body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto).

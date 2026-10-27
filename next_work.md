@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://slashnet
   kilo_graphics: KVoid
-  kilo_soundscape: KStarship
+  kilo_soundscape: KAlchemy
   kilo_tester: KFortress
   kilo_usability: KFortress
   kilo_qa: KContacts
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KAlchemy
-  timestamp: '2026-10-27T00:40:23-07:00'
+  agent: kilo-soundscape
+  app: KStarship
+  timestamp: '2026-10-27T01:22:41-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -118,11 +118,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Active Target**: `KStarship`
+- **Active Target**: `KAlchemy`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStarship` | `KiloOS/public/apps/kstarship.html` | Compose bridge alert & deep-space exploration 6-channel FM suite (Lydian `#4` pad + tactical Phrygian Dominant combat march, sonar/shield/warp earcons). |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Compose mystical alchemical workshop 6-channel suite (Dorian/Lydian celesta bells, warm glass pad, bubbling FM cauldron transients, transmutation fanfare stingers). |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
@@ -132,6 +131,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Replace bare single-oscillator playTone() in kmaze.html with a 6-channel YM2612 2-Op FM and cavernous SPC700 echo dungeon soundtrack (adapting across Catacombs/Cyber/Frost/Abyssal/Inferno biomes and Minotaur Overlord boss combat) plus [M] HUD mute toggle and procedural footstep, pickaxe cleave, trap, and shrine earcons. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Compose high-energy 6-channel YM2612 FM arcade synthwave theme (Ionian/Mixolydian, 5:3 swing groove, slap bass, brass lead, selective SPC700 delay) + harmonic brick-hit combo pitch escalator and powerup earcons. |
 | `KQuest` | `KiloOS/public/apps/kquest.html` | Compose overworld & battle 6-channel JRPG chiptune suite (Royal Road `IV-V-iii-vi` town/overworld + Heroic `bVI-bVII-I` combat cadence, E-Piano & flute counterpoint, SPC700 echo) + spell/quest earcons. |
+| `KStarship` | `KiloOS/public/apps/kstarship.html` | Compose bridge alert & deep-space exploration 6-channel FM suite (Lydian `#4` pad + tactical Phrygian Dominant combat march, sonar/shield/warp earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Active Target**: `KFortress`
@@ -301,6 +301,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T01:22:41-07:00 — kilo-soundscape: KStarship (Sector Vanguard & Red Alert — YM2612/SPC700 Chiptune Suite)**
+  - Status: PASS ✅ (0 errors, web 209.0 KB, native 148.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.01%, input 38.65%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.4s)).
+  - Composition: D Lydian (#4 G#) deep space expanse & D Phrygian Dominant tactical combat march, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
+  - Patches & DSP: 2-Op FM slap bass (<C3 dry), dual-layer noise snare, inharmonic metallic hats (11.0/13.5), selective 180ms/240ms SPC700 stereo delay, and sonar/shield/warp/alert earcons.
+  - Handoff: Advanced `kilo-soundscape` to `KAlchemy`; rotated active agent to `kilo-tester`.
+
 - **2026-10-27T00:40:23-07:00 — kilo-graphics: KAlchemy (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-graphics updates for KAlchemy across web and native targets.
@@ -323,9 +329,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Wired KiloOS VFS (/home/bbs/) download & OS_LAUNCH_APP bridge to open ANSI bulletins and door game logs directly in KPad and KHex.
   - Dual-target Win32 C parity in KBBS/main.c with LaunchViewer fallback resolving ..\KPad and ..\KHex.
   - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-review`.
-
-- **2026-10-26T22:38:18-07:00 — kilo-qa: KCalendar (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 123.7 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, kcalendar_tutorialSeen flag, Escape modal dismissals, and retro chime audio.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, reminder engine, VFS export mesh, and visibilitychange cleanup.
-  - Mature Quarantine & Handoff: Promoted `KCalendar` to Mature archive; advanced `kilo-qa` to `KContacts`; next agent `kilo-expander`.

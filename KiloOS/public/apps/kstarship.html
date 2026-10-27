@@ -511,44 +511,111 @@
       } catch (e) {}
     }
 
+    // High-resolution procedural noise generator for snappy 16-bit snares & textured FX
+    let noiseBuffer = null;
+    function getNoiseBuffer() {
+      if (!audioCtx) return null;
+      if (!noiseBuffer) {
+        const bufferSize = Math.floor(audioCtx.sampleRate * 0.5);
+        noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+      }
+      return noiseBuffer;
+    }
+
+    function playNoiseBurst(dur = 0.12, filterFreq = 1600, vol = 0.16, useDelay = false) {
+      if (soundMuted || !audioCtx) return;
+      try {
+        const now = audioCtx.currentTime;
+        const buf = getNoiseBuffer();
+        if (!buf) return;
+        const src = audioCtx.createBufferSource();
+        src.buffer = buf;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(filterFreq, now);
+        filter.Q.setValueAtTime(1.8, now);
+
+        const env = audioCtx.createGain();
+        env.gain.setValueAtTime(vol, now);
+        env.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+        src.connect(filter);
+        filter.connect(env);
+
+        if (useDelay && spcBus) {
+          env.connect(spcBus.dryGain);
+          env.connect(spcBus.delayL);
+          env.connect(spcBus.delayR);
+        } else if (masterLimiter) {
+          env.connect(masterLimiter);
+        } else {
+          env.connect(audioCtx.destination);
+        }
+
+        src.start(now);
+        src.stop(now + dur + 0.02);
+      } catch (e) {}
+    }
+
     // Genre-appropriate FM Sound Effects, UI Earcons & Action Stingers
     function playLaser() {
-      playFM('sawtooth', 'sine', 820, 2.5, 4.2, 0.20, 0.14, 0.30, false, { target: 220, time: 0.18 });
+      playFM('sawtooth', 'sine', 940, 2.5, 4.8, 0.18, 0.12, 0.30, false, { target: 190, time: 0.16 });
     }
     function playSuperweapon() {
-      playFM('triangle', 'sawtooth', 140, 0.5, 8.5, 0.70, 0.55, 0.48, true, { target: 28, time: 0.65 });
+      playFM('triangle', 'sawtooth', 120, 0.5, 9.5, 0.75, 0.58, 0.50, true, { target: 24, time: 0.70 });
+      playNoiseBurst(0.65, 800, 0.22, true);
     }
     function playShieldBoost() {
-      playFM('sine', 'sine', 392, 1.5, 3.4, 0.38, 0.28, 0.25, true);
-      setTimeout(() => playFM('sine', 'sine', 493.88, 1.5, 3.4, 0.38, 0.28, 0.25, true), 70);
-      setTimeout(() => playFM('sine', 'sine', 587.33, 1.5, 3.4, 0.45, 0.35, 0.25, true), 140);
+      // Crystalline arpeggiated deflector recharge in D
+      const notes = [293.66, 369.99, 440.00, 587.33];
+      notes.forEach((f, i) => {
+        setTimeout(() => playFM('sine', 'sine', f, 2.0, 3.6, 0.42, 0.28, 0.22, true), i * 65);
+      });
     }
     function playShieldDeflect() {
-      playFM('sine', 'triangle', 980, 2.0, 3.8, 0.16, 0.10, 0.25, true, { target: 680, time: 0.14 });
+      // Metallic deflector ricochet chirp
+      playFM('sine', 'triangle', 1150, 2.7, 5.0, 0.14, 0.08, 0.28, true, { target: 550, time: 0.12 });
+      playNoiseBurst(0.08, 3800, 0.12, false);
     }
     function playAlarm() {
-      playFM('square', 'sawtooth', 880, 1.25, 2.2, 0.14, 0.10, 0.22, false);
-      setTimeout(() => playFM('square', 'sawtooth', 660, 1.25, 2.2, 0.16, 0.11, 0.22, false), 110);
+      // Tactical Bridge Red Alert: Dual-pulse dissonant tritone klaxon (880Hz / 622Hz)
+      playFM('square', 'sawtooth', 880, 1.414, 2.8, 0.13, 0.09, 0.24, false);
+      setTimeout(() => playFM('square', 'sawtooth', 622.25, 1.414, 2.8, 0.15, 0.10, 0.24, false), 90);
+      setTimeout(() => playFM('square', 'sawtooth', 880, 1.414, 2.8, 0.13, 0.09, 0.24, false), 220);
+      setTimeout(() => playFM('square', 'sawtooth', 622.25, 1.414, 2.8, 0.15, 0.10, 0.24, false), 310);
     }
     function playBeacon() {
-      playFM('sine', 'sine', 920, 2.0, 2.2, 0.48, 0.40, 0.24, true);
+      // Deep-space emergency transponder: Dual harmonic pure tones (960Hz & 1440Hz)
+      playFM('sine', 'sine', 960, 1.5, 2.0, 0.55, 0.45, 0.22, true);
+      setTimeout(() => playFM('sine', 'sine', 1440, 1.5, 1.8, 0.50, 0.40, 0.18, true), 80);
     }
     function playChime() {
-      playFM('sine', 'sine', 523.25, 1.5, 2.2, 0.18, 0.14, 0.22, true);
-      setTimeout(() => playFM('sine', 'sine', 659.25, 1.5, 2.2, 0.22, 0.16, 0.24, true), 60);
-      setTimeout(() => playFM('sine', 'sine', 783.99, 1.5, 2.4, 0.32, 0.24, 0.26, true), 120);
+      // Crystalline console acknowledgement: Ascending triad (D5 -> F#5 -> A5)
+      playFM('sine', 'sine', 587.33, 1.5, 2.2, 0.18, 0.14, 0.20, true);
+      setTimeout(() => playFM('sine', 'sine', 739.99, 1.5, 2.2, 0.22, 0.16, 0.22, true), 55);
+      setTimeout(() => playFM('sine', 'sine', 880.00, 1.5, 2.4, 0.32, 0.24, 0.24, true), 110);
     }
     function playWarpPing() {
-      playFM('sawtooth', 'triangle', 160, 3.0, 5.5, 0.50, 0.40, 0.30, true, { target: 1850, time: 0.46 });
+      // Sub-space warp drive initiation: Rising Doppler sweep from 110Hz to 2100Hz
+      playFM('sawtooth', 'triangle', 110, 3.0, 6.0, 0.52, 0.42, 0.32, true, { target: 2100, time: 0.48 });
+      setTimeout(() => playFM('sine', 'sine', 1760, 2.0, 1.5, 0.35, 0.25, 0.18, true), 260);
     }
     function playSonarPing() {
-      playFM('sine', 'sine', 1280, 1.33, 1.8, 0.38, 0.26, 0.22, true, { target: 640, time: 0.32 });
+      // Sensor sweep / deep-space sonar ping: Dual-carrier ping at 1320Hz / 660Hz with stereo echo
+      playFM('sine', 'sine', 1320, 1.33, 2.2, 0.45, 0.32, 0.24, true, { target: 660, time: 0.36 });
+      setTimeout(() => playFM('sine', 'sine', 660, 1.0, 1.2, 0.35, 0.25, 0.14, true), 160);
     }
     function playVictoryFanfare() {
       if (soundMuted || !audioCtx) return;
-      const notes = [440, 554.37, 659.25, 880];
+      // Starfleet heroic fanfare in D Lydian
+      const notes = [293.66, 369.99, 440.00, 415.30, 440.00, 587.33];
+      const delays = [0, 90, 180, 270, 360, 470];
       notes.forEach((f, i) => {
-        setTimeout(() => playFM('triangle', 'sine', f, 1.5, 2.2, 0.42, 0.30, 0.25, true), i * 95);
+        setTimeout(() => playFM('triangle', 'sine', f, 1.5, 2.2, i === 5 ? 0.65 : 0.32, 0.24, 0.26, true), delays[i]);
       });
     }
 
@@ -838,7 +905,7 @@
       } catch (e) {}
     }
 
-    // Ch5 & Ch6: Genesis FM Drums (kick, snare, metallic inharmonic hats)
+    // Ch5 & Ch6: Genesis FM Drums (kick, dual-layer noise snare, metallic inharmonic hats)
     function playFMDrum(drum) {
       if (soundMuted || !audioCtx) return;
       try {
@@ -848,7 +915,7 @@
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(155, now);
+          osc.frequency.setValueAtTime(165, now);
           osc.frequency.exponentialRampToValueAtTime(36, now + 0.09);
           gain.gain.setValueAtTime(0.32, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
@@ -857,14 +924,15 @@
           osc.start(now);
           osc.stop(now + 0.13);
         } else if (drum === 'snare') {
-          // Strictly dry FM snare: pitch-drop body + high-MUL noise burst
-          playFM('square', 'sawtooth', 190, 4.33, 6.2, 0.12, 0.065, 0.18, false, { target: 65, time: 0.06 });
+          // Dual-layer 16-bit snare: pitch-drop body + snappy bandpass noise burst
+          playFM('square', 'sawtooth', 190, 4.33, 5.5, 0.11, 0.06, 0.18, false, { target: 60, time: 0.05 });
+          playNoiseBurst(0.12, 1500, 0.18, false);
         } else if (drum === 'hat') {
           // Strictly dry metallic inharmonic FM closed hi-hat (YM2612 ratio 11.0)
-          playFM('square', 'sawtooth', 360, 11.0, 7.8, 0.038, 0.022, 0.10, false);
+          playFM('square', 'sawtooth', 380, 11.0, 7.5, 0.038, 0.022, 0.10, false);
         } else if (drum === 'openhat') {
           // Strictly dry metallic inharmonic FM open hi-hat (YM2612 ratio 13.5)
-          playFM('sawtooth', 'square', 340, 13.5, 8.5, 0.18, 0.10, 0.11, false);
+          playFM('sawtooth', 'square', 360, 13.5, 8.5, 0.18, 0.10, 0.12, false);
         }
       } catch (e) {}
     }
@@ -983,6 +1051,15 @@
     let bgmStep = 0;
     let bgmTimer = null;
 
+    function getSustainSteps(table, idx) {
+      let count = 1;
+      while ((idx + count) < 64 && table[idx + count] === 0) {
+        count++;
+        if (count >= 4) break;
+      }
+      return count;
+    }
+
     function playTrackerStep(step) {
       const combat = isCombatActive();
       const pat = Math.floor(step / 16);
@@ -998,13 +1075,21 @@
       const bFreq = bassTable[step];
       if (bFreq > 0) playSlapBass(bFreq, combat ? 0.08 : 0.095, combat ? 0.18 : 0.16);
 
-      // Ch 1: Lead Melody (crystalline hero voice with delayed vibrato)
+      // Ch 1: Lead Melody (crystalline hero voice with delayed vibrato blooming after 180ms)
       const lFreq = leadTable[step];
-      if (lFreq > 0) playLeadTone(lFreq, combat ? 0.18 : 0.22, combat ? 0.17 : 0.15);
+      if (lFreq > 0) {
+        const sCount = getSustainSteps(leadTable, step);
+        const lDur = combat ? (sCount > 1 ? 0.32 : 0.18) : (sCount > 1 ? 0.42 : 0.22);
+        playLeadTone(lFreq, lDur, combat ? 0.17 : 0.15);
+      }
 
       // Ch 2: Counter-Melody (contrary motion & solo fills)
       const cFreq = counterTable[step];
-      if (cFreq > 0) playCounterTone(cFreq, combat ? 0.16 : 0.20, combat ? 0.13 : 0.11);
+      if (cFreq > 0) {
+        const cCount = getSustainSteps(counterTable, step);
+        const cDur = combat ? (cCount > 1 ? 0.28 : 0.16) : (cCount > 1 ? 0.36 : 0.20);
+        playCounterTone(cFreq, cDur, combat ? 0.13 : 0.11);
+      }
 
       // Ch 3: Arpeggio Glitter (shell voicing cascades)
       const aFreq = arpTable[step];
@@ -1014,7 +1099,7 @@
       if (subStep === 0) {
         const chord = padTable[pat];
         if (chord) {
-          chord.forEach(f => playAmbientPad(f, combat ? 1.7 : 2.2, combat ? 0.04 : 0.035));
+          chord.forEach(f => playAmbientPad(f, combat ? 1.8 : 2.4, combat ? 0.04 : 0.035));
         }
       }
 
@@ -1049,7 +1134,7 @@
       }
     }
 
-    // 5:3 Swing-tick groove engine (~124 BPM explore, ~140 BPM combat)
+    // 5:3 Swing-tick groove engine (~107 BPM explore, ~139 BPM combat)
     function scheduleBgmStep() {
       if (soundMuted) {
         bgmTimer = null;
@@ -1057,7 +1142,8 @@
       }
       const combat = isCombatActive();
       const isEven = (bgmStep % 2 === 0);
-      const stepDelay = combat ? (isEven ? 112 : 76) : (isEven ? 132 : 88);
+      // 5:3 swing ratio (175ms even / 105ms odd for explore, 135ms even / 81ms odd for combat march)
+      const stepDelay = combat ? (isEven ? 135 : 81) : (isEven ? 175 : 105);
 
       try {
         playTrackerStep(bgmStep);
