@@ -723,6 +723,16 @@
                 <option value="5">5: Pure Signal (+5)</option>
               </select>
 
+              <span class="threshold-pills" style="margin-left:4px;">
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-1', -1)" title="Show all (-1)">-1</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-1', 0)" title="Score >= 0">0</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-1', 1)" title="Score >= 1">1</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-1', 2)" title="Score >= 2">2</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-1', 3)" title="Score >= 3">3</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-1', 4)" title="Score >= 4">4</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-1', 5)" title="Score >= 5">5</button>
+              </span>
+
               <strong style="margin-left:8px;">View:</strong>
               <select id="viewModeSelect-story-1" onchange="renderComments('story-1')">
                 <option value="nested">Nested</option>
@@ -758,7 +768,7 @@
       <!-- Story 2: Beowulf Cluster in Carlsbad -->
       <article class="story-card" id="story-2">
         <div class="story-header">
-          <h2 class="story-title"><a href="#story-1" onclick="toggleStoryComments('story-2')">Beowulf Cluster of 64 Celeron 300As Outperforms Cray Supercomputer</a></h2>
+          <h2 class="story-title"><a href="#story-2" onclick="toggleStoryComments('story-2')">Beowulf Cluster of 64 Celeron 300As Outperforms Cray Supercomputer</a></h2>
           <span class="story-topic-badge">Hardware</span>
         </div>
         <div class="story-meta">
@@ -771,7 +781,7 @@
         </div>
         <div class="story-footer">
           <div>
-            💬 <a href="#story-1" onclick="toggleStoryComments('story-2')"><strong id="commentCount-story-2">5 Comments</strong></a>
+            💬 <a href="#story-2" onclick="toggleStoryComments('story-2')"><strong id="commentCount-story-2">5 Comments</strong></a>
             &bull; <span style="color:#059669; font-weight:bold;">Score Threshold: Active</span>
           </div>
           <div class="story-actions">
@@ -794,6 +804,17 @@
                 <option value="4">4: Funny (+4)</option>
                 <option value="5">5: Pure Signal (+5)</option>
               </select>
+
+              <span class="threshold-pills" style="margin-left:4px;">
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-2', -1)" title="Show all (-1)">-1</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-2', 0)" title="Score >= 0">0</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-2', 1)" title="Score >= 1">1</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-2', 2)" title="Score >= 2">2</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-2', 3)" title="Score >= 3">3</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-2', 4)" title="Score >= 4">4</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-2', 5)" title="Score >= 5">5</button>
+              </span>
+
               <strong style="margin-left:8px;">View:</strong>
               <select id="viewModeSelect-story-2" onchange="renderComments('story-2')">
                 <option value="nested">Nested</option>
@@ -823,12 +844,12 @@
       <!-- Story 3: 3D Graphics Glide & Mesa -->
       <article class="story-card" id="story-3">
         <div class="story-header">
-          <h2 class="story-title"><a href="#story-1" onclick="toggleStoryComments('story-3')">Glide3 and Mesa 3.1 Unleash 3dfx Voodoo3 on XFree86</a></h2>
+          <h2 class="story-title"><a href="#story-3" onclick="toggleStoryComments('story-3')">Glide3 and Mesa 3.1 Unleash 3dfx Voodoo3 on XFree86</a></h2>
           <span class="story-topic-badge">Gaming</span>
         </div>
         <div class="story-meta">
           <div>Posted by <strong>Brian 'Zous' Shaler</strong> on Wed Oct 20 1999 @ 11:20AM</div>
-          <div>From the <em>sixty-frames-per-second-in-quake</em> dept.</div>
+          <div>From the <em>sixty-frames-per-second-in-tremor</em> dept.</div>
         </div>
         <div class="story-body">
           <p>Gaming on Linux has made a titanic leap forward this week. The Open Source 3dfx Device Driver team, along with Brian Paul's Mesa 3.1 project, have rolled out rock-solid <strong>Glide3x drivers</strong> for 3dfx Voodoo2 and Voodoo3 accelerators under XFree86 3.3.5.</p>
@@ -836,7 +857,8 @@
         </div>
         <div class="story-footer">
           <div>
-            💬 <a href="#story-1" onclick="toggleStoryComments('story-3')"><strong id="commentCount-story-3">4 Comments</strong></a>
+            💬 <a href="#story-3" onclick="toggleStoryComments('story-3')"><strong id="commentCount-story-3">4 Comments</strong></a>
+            &bull; <span style="color:#059669; font-weight:bold;">Score Threshold: Active</span>
           </div>
           <div class="story-actions">
             <button class="btn-retro btn-green" onclick="exportStoryVFS('story-3')">💾 Save to VFS</button>
@@ -856,6 +878,22 @@
                 <option value="3">3: Interesting (+3)</option>
                 <option value="4">4: Funny (+4)</option>
                 <option value="5">5: Pure Signal (+5)</option>
+              </select>
+
+              <span class="threshold-pills" style="margin-left:4px;">
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-3', -1)" title="Show all (-1)">-1</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-3', 0)" title="Score >= 0">0</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-3', 1)" title="Score >= 1">1</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-3', 2)" title="Score >= 2">2</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-3', 3)" title="Score >= 3">3</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-3', 4)" title="Score >= 4">4</button>
+                <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('story-3', 5)" title="Score >= 5">5</button>
+              </span>
+
+              <strong style="margin-left:8px;">View:</strong>
+              <select id="viewModeSelect-story-3" onchange="renderComments('story-3')">
+                <option value="nested">Nested</option>
+                <option value="flat">Flat</option>
               </select>
             </div>
             <div id="filterSummary-story-3" style="font-size:11px; color:var(--slash-text-muted);">
@@ -881,9 +919,16 @@
     <!-- SECTION: BEOWULF CLUSTER CALCULATOR -->
     <div id="sectionBeowulf" style="display:none;" class="tool-panel">
       <h2 class="tool-title">⚡ Interactive Beowulf Cluster Engineering Workbench</h2>
-      <p style="font-size:12px; margin-bottom:12px;">
+      <p style="font-size:12px; margin-bottom:8px;">
         <em>"Imagine a Beowulf cluster of these!"</em> Configure node counts, microarchitecture, network interconnects, and benchmark theoretical vs sustained LINPACK throughput for custom 1999 computing clusters.
       </p>
+      <div style="background:#f1f5f9; border:1px solid #cbd5e1; padding:6px 10px; margin-bottom:10px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+        <span style="font-size:11px; font-weight:bold; color:var(--slash-green-dark);">Cluster Presets:</span>
+        <button type="button" class="btn-retro" onclick="applyBeowulfPreset(16, 'celeron300a', '128', 'fast_eth')">Stone Soupercomputer (16x Celeron 300A)</button>
+        <button type="button" class="btn-retro" onclick="applyBeowulfPreset(64, 'piii600', '256', 'gbe')">Carlsbad Subterranean (64x P-III 600)</button>
+        <button type="button" class="btn-retro" onclick="applyBeowulfPreset(140, 'alpha667', '512', 'myrinet')">Avalon Super-Rig (140x Alpha 21264)</button>
+        <button type="button" class="btn-retro" onclick="applyBeowulfPreset(8, 'athlon650', '128', 'fast_eth')">Budget University Lab (8x Athlon K7)</button>
+      </div>
 
       <div class="calc-grid">
         <div class="calc-field">
@@ -981,7 +1026,16 @@
 
       <!-- Menuconfig checklist -->
       <div style="background:#f1f5f9; border:1px solid #cbd5e1; padding:10px; margin-bottom:10px;">
-        <strong style="font-size:12px; display:block; margin-bottom:6px; color:#0f172a;">Kernel Feature Selection (make menuconfig):</strong>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+          <strong style="font-size:12px; color:#0f172a;">Kernel Feature Selection (make menuconfig):</strong>
+          <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+            <span style="font-size:10px; font-weight:bold; color:#475569;">Profiles:</span>
+            <button type="button" class="btn-retro" style="font-size:10px; padding:1px 5px;" onclick="applyKernelProfile('workstation')">Workstation (3dfx+SB16)</button>
+            <button type="button" class="btn-retro" style="font-size:10px; padding:1px 5px;" onclick="applyKernelProfile('beowulf')">Beowulf Compute Node</button>
+            <button type="button" class="btn-retro" style="font-size:10px; padding:1px 5px;" onclick="applyKernelProfile('server')">Gateway &amp; Firewall</button>
+            <button type="button" class="btn-retro" style="font-size:10px; padding:1px 5px;" onclick="applyKernelProfile('minimal')">Rescue Floppy</button>
+          </div>
+        </div>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:6px; font-size:11px;">
           <label><input type="checkbox" id="cfg_smp" checked> Symmetric multi-processing (SMP)</label>
           <label><input type="checkbox" id="cfg_firewall" checked> IP: firewalling &amp; ipchains</label>
@@ -1199,10 +1253,20 @@ function playFanfareSound() {
 let userKarma = safeGet('slashnet_user_karma', 42);
 let userModPoints = safeGet('slashnet_mod_points', 5);
 
+function getKarmaLabel(k) {
+  if (k >= 120) return `God-like (${k})`;
+  if (k >= 80) return `Excellent (${k})`;
+  if (k >= 50) return `Good (${k})`;
+  if (k >= 30) return `Positive (${k})`;
+  if (k >= 10) return `Neutral (${k})`;
+  if (k >= 0) return `Bad (${k})`;
+  return `Terrible (${k})`;
+}
+
 function updateUserInfoBar() {
   const karmaEl = document.getElementById('userKarmaDisplay');
   const modEl = document.getElementById('userModPointsDisplay');
-  if (karmaEl) karmaEl.textContent = 'Good (' + userKarma + ')';
+  if (karmaEl) karmaEl.textContent = getKarmaLabel(userKarma);
   if (modEl) modEl.textContent = String(userModPoints);
 }
 
@@ -1401,7 +1465,7 @@ const INITIAL_COMMENTS = {
   'story-3': [
     {
       id: 'c3-1',
-      author: 'Quake_Lord',
+      author: 'Tremor_Master',
       subject: 'Tremor III Arena running flawlessly',
       time: '1999-10-20 12:00',
       score: 4,
@@ -1480,17 +1544,33 @@ function getScoreClass(score) {
   return '';
 }
 
+let revealedComments = new Set();
+
+function revealSingleComment(commentId, storyId) {
+  revealedComments.add(commentId);
+  renderComments(storyId);
+  playRetroSound(700, 0.05);
+  showToast("Hidden comment revealed in-line.");
+}
+
+function hideSingleComment(commentId, storyId) {
+  revealedComments.delete(commentId);
+  renderComments(storyId);
+  playRetroSound(500, 0.04);
+}
+
 function renderCommentNode(c, depth, threshold, storyId, viewMode) {
-  const isHidden = c.score < threshold;
+  const isHidden = (c.score < threshold) && !revealedComments.has(c.id);
+  const isRevealedOverride = (c.score < threshold) && revealedComments.has(c.id);
   const scoreClass = getScoreClass(c.score);
   const nestClass = viewMode === 'flat' ? '' : (depth > 0 ? ' nested-' + Math.min(depth, 3) : '');
 
   if (isHidden) {
     let html = `
-      <div class="comment-item ${nestClass} hidden-by-threshold" onclick="revealSingleComment('${c.id}', '${storyId}')">
+      <div class="comment-item ${nestClass} hidden-by-threshold" onclick="revealSingleComment('${c.id}', '${storyId}')" style="cursor:pointer;" title="Click to reveal hidden comment">
         [-] <strong>${escapeHtml(c.subject)}</strong> by ${escapeHtml(c.author)}
         (Score: <span class="${scoreClass}">${c.score}</span>, ${escapeHtml(c.tag || 'Normal')})
-        <span style="font-style:italic; font-size:10px;">[Click to read hidden comment]</span>
+        <span style="font-style:italic; font-size:10px; color:var(--slash-green); margin-left:6px;">[Click to read hidden comment]</span>
       </div>
     `;
     if (viewMode !== 'flat' && c.children && c.children.length) {
@@ -1501,6 +1581,10 @@ function renderCommentNode(c, depth, threshold, storyId, viewMode) {
     return html;
   }
 
+  let overrideBadge = isRevealedOverride
+    ? `<span style="color:#cc3300; font-size:10px; font-weight:bold; margin-left:6px;">[Threshold Override &bull; <a onclick="hideSingleComment('${c.id}', '${storyId}')" style="color:#cc3300; text-decoration:underline; cursor:pointer;">Hide</a>]</span>`
+    : '';
+
   let html = `
     <div class="comment-item ${nestClass}" id="node-${c.id}">
       <div class="comment-header">
@@ -1508,6 +1592,7 @@ function renderCommentNode(c, depth, threshold, storyId, viewMode) {
           <span class="comment-subject">${escapeHtml(c.subject)}</span>
           &bull; by <span class="comment-author">${escapeHtml(c.author)}</span>
           on ${escapeHtml(c.time)}
+          ${overrideBadge}
         </div>
         <div>
           Score: <span class="comment-score ${scoreClass}">${c.score > 0 ? '+' : ''}${c.score}</span>
@@ -1520,16 +1605,29 @@ function renderCommentNode(c, depth, threshold, storyId, viewMode) {
       <div class="comment-mod-bar">
         <span>Moderate:</span>
         <select id="modReason-${c.id}" style="font-size:10px; padding:1px;">
-          <option value="+1|Insightful">+1 Insightful</option>
-          <option value="+1|Informative">+1 Informative</option>
-          <option value="+1|Interesting">+1 Interesting</option>
-          <option value="+1|Funny">+1 Funny</option>
-          <option value="-1|Troll">-1 Troll</option>
-          <option value="-1|Flamebait">-1 Flamebait</option>
-          <option value="-1|Offtopic">-1 Offtopic</option>
-          <option value="-1|Redundant">-1 Redundant</option>
+          <optgroup label="Relative Karma Moderation">
+            <option value="+1|Insightful">+1 Insightful</option>
+            <option value="+1|Informative">+1 Informative</option>
+            <option value="+1|Interesting">+1 Interesting</option>
+            <option value="+1|Funny">+1 Funny</option>
+            <option value="-1|Troll">-1 Troll</option>
+            <option value="-1|Flamebait">-1 Flamebait</option>
+            <option value="-1|Offtopic">-1 Offtopic</option>
+            <option value="-1|Redundant">-1 Redundant</option>
+          </optgroup>
+          <optgroup label="Set Rating Directly (-1 to +5)">
+            <option value="set:5|Insightful">Score +5: Insightful (Pure Signal)</option>
+            <option value="set:4|Informative">Score +4: Informative</option>
+            <option value="set:3|Interesting">Score +3: Interesting</option>
+            <option value="set:2|Normal">Score +2: Notable</option>
+            <option value="set:1|Insightful">Score +1: Insightful</option>
+            <option value="set:0|Normal">Score 0: Neutral</option>
+            <option value="set:-1|Troll">Score -1: Troll</option>
+          </optgroup>
         </select>
-        <button class="btn-retro" style="font-size:10px; padding:1px 5px;" onclick="moderateComment('${storyId}', '${c.id}')">Apply</button>
+        <button type="button" class="btn-retro" style="font-size:10px; padding:1px 5px;" onclick="moderateComment('${storyId}', '${c.id}')">Apply</button>
+        <button type="button" class="btn-retro btn-green" style="font-size:10px; padding:1px 5px; margin-left:4px;" onclick="quickModComment('${storyId}', '${c.id}', 1, 'Insightful')" title="Quick +1 Insightful">+1</button>
+        <button type="button" class="btn-retro" style="font-size:10px; padding:1px 5px; margin-left:2px; color:#dc2626;" onclick="quickModComment('${storyId}', '${c.id}', -1, 'Troll')" title="Quick -1 Troll">-1</button>
       </div>
     </div>
   `;
@@ -1593,6 +1691,15 @@ function renderComments(storyId) {
   }
 }
 
+function setStoryThreshold(storyId, thresh) {
+  const sel = document.getElementById('thresholdSelect-' + storyId);
+  if (sel) sel.value = thresh;
+  storyThresholds[storyId] = thresh;
+  renderComments(storyId);
+  playRetroSound(550, 0.04);
+  showToast(`Threshold for ${storyId} set to ${thresh >= 0 ? '+' + thresh : thresh}`);
+}
+
 function updateCommentThreshold(storyId) {
   const sel = document.getElementById('thresholdSelect-' + storyId);
   if (sel) {
@@ -1602,35 +1709,11 @@ function updateCommentThreshold(storyId) {
   }
 }
 
-function revealSingleComment(commentId, storyId) {
-  playRetroSound(700, 0.05);
-  // Find node and temporarily display it
-  function findNode(arr) {
-    for (let c of arr) {
-      if (c.id === commentId) return c;
-      if (c.children) {
-        const found = findNode(c.children);
-        if (found) return found;
-      }
-    }
-    return null;
-  }
-  const node = findNode(commentsState[storyId] || []);
-  if (!node) return;
-  alert(`[Hidden Comment: Score ${node.score}, ${node.tag}]\nAuthor: ${node.author}\nSubject: ${node.subject}\n\n${node.body}`);
-}
-
-function moderateComment(storyId, commentId) {
+function quickModComment(storyId, commentId, delta, tagStr) {
   if (userModPoints <= 0) {
-    alert("You have 0 moderation points remaining! Click 'Request Mod Points' in the top bar to replenish.");
+    showToast("You have 0 moderation points remaining! Replenish in the top bar.");
     return;
   }
-
-  const reasonEl = document.getElementById('modReason-' + commentId);
-  if (!reasonEl) return;
-  const [deltaStr, tagStr] = reasonEl.value.split('|');
-  const delta = parseInt(deltaStr, 10);
-
   function applyMod(arr) {
     for (let c of arr) {
       if (c.id === commentId) {
@@ -1642,15 +1725,71 @@ function moderateComment(storyId, commentId) {
     }
     return false;
   }
-
   if (applyMod(commentsState[storyId])) {
     userModPoints--;
+    userKarma += 1;
     safeSet('slashnet_mod_points', userModPoints);
+    safeSet('slashnet_user_karma', userKarma);
     safeSet('slashnet_comments_v1', commentsState);
     updateUserInfoBar();
     renderComments(storyId);
-    showToast(`Moderated comment as ${delta > 0 ? '+' + delta : delta} ${tagStr}.`);
+    showToast(`Quick moderated comment: ${delta > 0 ? '+' + delta : delta} ${tagStr}. (+1 Karma)`);
     playRetroSound(delta > 0 ? 800 : 350, 0.08);
+  }
+}
+
+function moderateComment(storyId, commentId) {
+  if (userModPoints <= 0) {
+    showToast("You have 0 moderation points remaining! Replenish in the top bar.");
+    return;
+  }
+
+  const reasonEl = document.getElementById('modReason-' + commentId);
+  if (!reasonEl) return;
+  const rawVal = reasonEl.value;
+  let delta = 0;
+  let tagStr = 'Normal';
+  let isAbsolute = false;
+  let targetScore = 0;
+
+  if (rawVal.startsWith('set:')) {
+    const parts = rawVal.substring(4).split('|');
+    targetScore = parseInt(parts[0], 10);
+    tagStr = parts[1] || 'Insightful';
+    isAbsolute = true;
+  } else {
+    const [deltaStr, tag] = rawVal.split('|');
+    delta = parseInt(deltaStr, 10);
+    tagStr = tag || 'Normal';
+  }
+
+  function applyMod(arr) {
+    for (let c of arr) {
+      if (c.id === commentId) {
+        if (isAbsolute) {
+          c.score = Math.max(-1, Math.min(5, targetScore));
+        } else {
+          c.score = Math.max(-1, Math.min(5, c.score + delta));
+        }
+        c.tag = tagStr;
+        return true;
+      }
+      if (c.children && applyMod(c.children)) return true;
+    }
+    return false;
+  }
+
+  if (applyMod(commentsState[storyId])) {
+    userModPoints--;
+    userKarma += 1;
+    safeSet('slashnet_mod_points', userModPoints);
+    safeSet('slashnet_user_karma', userKarma);
+    safeSet('slashnet_comments_v1', commentsState);
+    updateUserInfoBar();
+    renderComments(storyId);
+    const modDesc = isAbsolute ? `Score set to ${targetScore} (${tagStr})` : `${delta > 0 ? '+' + delta : delta} ${tagStr}`;
+    showToast(`Moderated comment as ${modDesc}. (+1 Karma)`);
+    playRetroSound(delta > 0 || (isAbsolute && targetScore > 0) ? 800 : 350, 0.08);
   }
 }
 
@@ -1664,7 +1803,7 @@ function postNewComment(storyId) {
   const body = bodyInput ? bodyInput.value.trim() : '';
 
   if (!subject || !body) {
-    alert("Please enter both a Subject and Comment body.");
+    showToast("Please enter both a Subject and Comment body.");
     return;
   }
 
@@ -1688,9 +1827,13 @@ function postNewComment(storyId) {
   if (subjectInput) subjectInput.value = '';
   if (bodyInput) bodyInput.value = '';
 
+  userKarma += 2;
+  safeSet('slashnet_user_karma', userKarma);
+  updateUserInfoBar();
+
   updateStoryCommentCounts();
   renderComments(storyId);
-  showToast("Your comment has been posted to SlashNet!");
+  showToast("Your comment has been posted to SlashNet! (+2 Karma)");
   playRetroSound(620, 0.08);
 }
 
@@ -1869,14 +2012,52 @@ function runBeowulfBenchmark() {
   }, 450);
 }
 
-function loadSpecIntoBeowulf(nodes, cpuType) {
+function applyBeowulfPreset(nodes, cpu, ram, net) {
   switchSection('beowulf');
   const nodeInput = document.getElementById('clusterNodeCount');
   const cpuSelect = document.getElementById('clusterCpuSelect');
+  const ramSelect = document.getElementById('clusterRamSelect');
+  const netSelect = document.getElementById('clusterNetSelect');
   if (nodeInput) nodeInput.value = nodes;
-  if (cpuSelect) cpuSelect.value = cpuType;
+  if (cpuSelect) cpuSelect.value = cpu;
+  if (ramSelect) ramSelect.value = ram;
+  if (netSelect) netSelect.value = net;
   calculateClusterMetrics();
-  showToast(`Loaded ${nodes}-Node ${cpuType} spec into Cluster Workbench.`);
+  showToast(`Loaded ${nodes}-Node ${cpu} spec into Cluster Workbench.`);
+  playRetroSound(650, 0.05);
+}
+
+function loadSpecIntoBeowulf(nodes, cpuType) {
+  applyBeowulfPreset(nodes, cpuType, '128', 'fast_eth');
+}
+
+function applyKernelProfile(prof) {
+  const setChk = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = val;
+  };
+  if (prof === 'workstation') {
+    setChk('cfg_smp', true); setChk('cfg_firewall', false); setChk('cfg_masq', false);
+    setChk('cfg_sb16', true); setChk('cfg_vortex', true); setChk('cfg_rtc', true);
+    setChk('cfg_ext2', true); setChk('cfg_fb', true); setChk('cfg_usb', false); setChk('cfg_glide', true);
+    showToast('Loaded Workstation profile (Glide 3D + SB16 Sound enabled).');
+  } else if (prof === 'beowulf') {
+    setChk('cfg_smp', true); setChk('cfg_firewall', false); setChk('cfg_masq', false);
+    setChk('cfg_sb16', false); setChk('cfg_vortex', true); setChk('cfg_rtc', true);
+    setChk('cfg_ext2', true); setChk('cfg_fb', false); setChk('cfg_usb', false); setChk('cfg_glide', false);
+    showToast('Loaded Beowulf Cluster Node profile (Optimized for MPI throughput).');
+  } else if (prof === 'server') {
+    setChk('cfg_smp', true); setChk('cfg_firewall', true); setChk('cfg_masq', true);
+    setChk('cfg_sb16', false); setChk('cfg_vortex', true); setChk('cfg_rtc', true);
+    setChk('cfg_ext2', true); setChk('cfg_fb', false); setChk('cfg_usb', false); setChk('cfg_glide', false);
+    showToast('Loaded Internet Gateway profile (ipchains & NAT masq enabled).');
+  } else if (prof === 'minimal') {
+    setChk('cfg_smp', false); setChk('cfg_firewall', false); setChk('cfg_masq', false);
+    setChk('cfg_sb16', false); setChk('cfg_vortex', true); setChk('cfg_rtc', true);
+    setChk('cfg_ext2', true); setChk('cfg_fb', false); setChk('cfg_usb', false); setChk('cfg_glide', false);
+    showToast('Loaded Minimal Floppy profile (<600KB uncompressed footprint).');
+  }
+  playRetroSound(580, 0.04);
 }
 
 // --- Linux 2.2 Kernel Compile Mini-Sim ---
@@ -1897,16 +2078,31 @@ function startKernelCompilation() {
   term.textContent = `make[1]: Entering directory '/usr/src/linux-2.2.14'\n`;
   playRetroSound(400, 0.05);
 
+  const smp = document.getElementById('cfg_smp') ? document.getElementById('cfg_smp').checked : true;
+  const firewall = document.getElementById('cfg_firewall') ? document.getElementById('cfg_firewall').checked : true;
+  const masq = document.getElementById('cfg_masq') ? document.getElementById('cfg_masq').checked : true;
+  const sb16 = document.getElementById('cfg_sb16') ? document.getElementById('cfg_sb16').checked : true;
+  const vortex = document.getElementById('cfg_vortex') ? document.getElementById('cfg_vortex').checked : true;
+  const fb = document.getElementById('cfg_fb') ? document.getElementById('cfg_fb').checked : true;
+  const usb = document.getElementById('cfg_usb') && document.getElementById('cfg_usb').checked;
+  const glide = document.getElementById('cfg_glide') && document.getElementById('cfg_glide').checked;
+
   const compileLines = [
     `gcc -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer -pipe -fno-strength-reduce -m486 -malign-loops=2 -c init/main.c`,
     `gcc -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer -c init/version.c`,
     `gcc -D__KERNEL__ -I/usr/src/linux/include -c arch/i386/kernel/entry.S`,
-    `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c arch/i386/kernel/setup.c`,
-    `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c arch/i386/kernel/smp.c (SMP APIC irq routing enabled)`,
-    `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c drivers/block/ll_rw_blk.c`,
-    `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c drivers/net/3c59x.c (3Com Vortex driver)`,
-    `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c drivers/sound/sb_card.c (Sound Blaster 16/AWE64)`,
-    `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c net/ipv4/ipchains_core.c (Firewall packet filter)`,
+    `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c arch/i386/kernel/setup.c`
+  ];
+  if (smp) compileLines.push(`gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c arch/i386/kernel/smp.c (SMP APIC irq routing enabled)`);
+  compileLines.push(`gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c drivers/block/ll_rw_blk.c`);
+  if (vortex) compileLines.push(`gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c drivers/net/3c59x.c (3Com Vortex driver)`);
+  if (sb16) compileLines.push(`gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c drivers/sound/sb_card.c (Sound Blaster 16/AWE64)`);
+  if (firewall) compileLines.push(`gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c net/ipv4/ipchains_core.c (Firewall packet filter)`);
+  if (masq) compileLines.push(`gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c net/ipv4/ip_masq.c (NAT masquerade module)`);
+  if (fb) compileLines.push(`gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c drivers/video/vesafb.c (VESA 800x600 framebuffer)`);
+  if (glide) compileLines.push(`gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c drivers/char/glide_voodoo.c (Direct 3dfx hardware access)`);
+  if (usb) compileLines.push(`gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c drivers/usb/usb-ohci.c (Experimental USB host)`);
+  compileLines.push(
     `gcc -D__KERNEL__ -I/usr/src/linux/include -O2 -c fs/ext2/super.c fs/ext2/inode.c`,
     `ld -m elf_i386 -T arch/i386/vmlinux.lds -e stext arch/i386/kernel/head.o init/main.o -o vmlinux`,
     `nm vmlinux | grep -v '\\(compiled\\)\\|\\(\\.o$$\\)' | sort > System.map`,
@@ -1916,9 +2112,9 @@ function startKernelCompilation() {
     `Root device is (3, 1)`,
     `Boot sector 512 bytes.`,
     `Setup is 4820 bytes.`,
-    `System is 648 kB.`,
-    `Kernel: arch/i386/boot/bzImage is ready #1 SMP Sat Oct 23 11:42:00 EST 1999`
-  ];
+    `System is ${620 + (sb16 ? 28 : 0) + (firewall ? 18 : 0) + (glide ? 24 : 0)} kB.`,
+    `Kernel: arch/i386/boot/bzImage is ready #1 ${smp ? 'SMP ' : ''}Sat Oct 23 11:42:00 EST 1999`
+  );
 
   let lineIdx = 0;
   const timer = setInterval(() => {
@@ -1935,9 +2131,9 @@ function startKernelCompilation() {
       if (bootBtn) bootBtn.disabled = false;
       if (prog) prog.textContent = 'Build Complete! vmlinuz ready.';
       playFanfareSound();
-      showToast('Kernel compiled: arch/i386/boot/bzImage (648 KB)');
+      showToast('Kernel compiled: arch/i386/boot/bzImage (' + (620 + (sb16 ? 28 : 0) + (firewall ? 18 : 0)) + ' KB)');
     }
-  }, 220);
+  }, 160);
 }
 
 function testBootKernel() {
@@ -1947,25 +2143,51 @@ function testBootKernel() {
   term.textContent = `LILO boot: linux\nLoading linux...................\n`;
   playRetroSound(600, 0.08);
 
+  const smp = document.getElementById('cfg_smp') ? document.getElementById('cfg_smp').checked : true;
+  const firewall = document.getElementById('cfg_firewall') ? document.getElementById('cfg_firewall').checked : true;
+  const sb16 = document.getElementById('cfg_sb16') ? document.getElementById('cfg_sb16').checked : true;
+  const vortex = document.getElementById('cfg_vortex') ? document.getElementById('cfg_vortex').checked : true;
+  const rtc = document.getElementById('cfg_rtc') ? document.getElementById('cfg_rtc').checked : true;
+  const fb = document.getElementById('cfg_fb') ? document.getElementById('cfg_fb').checked : true;
+  const glide = document.getElementById('cfg_glide') && document.getElementById('cfg_glide').checked;
+  const usb = document.getElementById('cfg_usb') && document.getElementById('cfg_usb').checked;
+
   const bootLines = [
-    `Linux version 2.2.14-kilo (root@slashnet) (gcc version egcs-2.91.66) #1 SMP Sat Oct 23 11:42:00 EST 1999`,
+    `Linux version 2.2.14-kilo (root@slashnet) (gcc version egcs-2.91.66) #1 ${smp ? 'SMP ' : ''}Sat Oct 23 11:42:00 EST 1999`,
     `Detected 451.082 MHz processor.`,
-    `Console: colour VGA+ 80x25`,
+    `Console: ${fb ? 'VESA VGA+ 800x600 16bpp' : 'colour VGA+ 80x25'}`,
     `Calibrating delay loop.. 901.12 BogoMIPS`,
     `Memory: 127244k/131072k available (1024k kernel code, 412k reserved, 2392k data, 64k init)`,
-    `POSIX conformance testing by UNIFIX`,
-    `SMP: Total of 2 processors activated (1802.24 BogoMIPS).`,
-    `PCI: Probing PCI hardware`,
-    `3c59x: Donald Becker's 3c59x/3c905 vortex server driver 0.99H`,
-    `eth0: 3Com 3c905B Cyclone 100baseTx at 0xd800, 00:60:08:42:19:99, IRQ 11`,
-    `Soundblaster audio driver Copyright (C) by Hannu Savolainen 1993-1998`,
-    `sb: Creative SB AWE64 PnP detected at 0x220 irq 5 dma 1,5`,
-    `Real Time Clock Driver v1.09 (Y2K Compliance Tested: 2000-01-01 verified)`,
+    `POSIX conformance testing by UNIFIX`
+  ];
+  if (smp) bootLines.push(`SMP: Total of 2 processors activated (1802.24 BogoMIPS).`);
+  bootLines.push(`PCI: Probing PCI hardware`);
+  if (vortex) {
+    bootLines.push(`3c59x: Donald Becker's 3c59x/3c905 vortex server driver 0.99H`);
+    bootLines.push(`eth0: 3Com 3c905B Cyclone 100baseTx at 0xd800, 00:60:08:42:19:99, IRQ 11`);
+  }
+  if (sb16) {
+    bootLines.push(`Soundblaster audio driver Copyright (C) by Hannu Savolainen 1993-1998`);
+    bootLines.push(`sb: Creative SB AWE64 PnP detected at 0x220 irq 5 dma 1,5`);
+  }
+  if (glide) {
+    bootLines.push(`glide: 3dfx Interactive Voodoo3 accelerator attached (16MB SGRAM, IO 0xec00)`);
+  }
+  if (firewall) {
+    bootLines.push(`IP packet filtering: ipchains v1.3.9 initialized, transparent proxy enabled`);
+  }
+  if (usb) {
+    bootLines.push(`usb.c: USB OHCI host controller driver initialized`);
+  }
+  if (rtc) {
+    bootLines.push(`Real Time Clock Driver v1.09 (Y2K Compliance Tested: 2000-01-01 verified)`);
+  }
+  bootLines.push(
     `VFS: Mounted root (ext2 filesystem) readonly.`,
     `INIT: version 2.76 booting`,
     `SlashNet Linux 2.2.14-kilo (tty1)`,
     `slashnet login: _`
-  ];
+  );
 
   let i = 0;
   const interval = setInterval(() => {
@@ -1979,7 +2201,7 @@ function testBootKernel() {
       playFanfareSound();
       showToast('Kernel boot sequence finished successfully!');
     }
-  }, 160);
+  }, 140);
 }
 
 // --- Daily Poll Implementation ---
@@ -2050,7 +2272,7 @@ function renderPolls() {
 function submitMainPollVote() {
   const sel = document.querySelector('input[name="mainPollOpt"]:checked');
   if (!sel) {
-    alert("Please select an option before voting.");
+    showToast("Please select an option before voting.");
     return;
   }
   const idx = parseInt(sel.value, 10);
@@ -2167,13 +2389,110 @@ function submitCustomStory() {
   const body = document.getElementById('modalStoryBody').value.trim();
 
   if (!title || !body) {
-    alert("Please provide both a Title and Story description.");
+    showToast("Please provide both a Title and Story description.");
     return;
   }
 
-  alert("Thank you for submitting to SlashNet! Your story has been dispatched to the editorial queue.");
+  const customId = 'story-custom-' + Date.now();
+  storyIds.unshift(customId);
+  commentsState[customId] = [
+    {
+      id: 'c_' + customId + '_1',
+      author: 'CmdrTaco',
+      subject: 'Story accepted for publication',
+      time: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      score: 3,
+      tag: 'Informative',
+      body: 'Great submission! Promoted from the editorial queue.',
+      children: []
+    }
+  ];
+  safeSet('slashnet_comments_v1', commentsState);
+  storyThresholds[customId] = 1;
+
+  const container = document.getElementById('sectionStories');
+  if (container) {
+    const art = document.createElement('article');
+    art.className = 'story-card';
+    art.id = customId;
+    art.innerHTML = `
+      <div class="story-header">
+        <h2 class="story-title"><a href="#${customId}" onclick="toggleStoryComments('${customId}')">${escapeHtml(title)}</a></h2>
+        <span class="story-topic-badge">${escapeHtml(topic)}</span>
+      </div>
+      <div class="story-meta">
+        <div>Posted by <strong>Anonymous Reader</strong> on just now</div>
+        <div>From the <em>breaking-news</em> dept.</div>
+      </div>
+      <div class="story-body">
+        <p>${escapeHtml(body)}</p>
+      </div>
+      <div class="story-footer">
+        <div>
+          💬 <a href="#${customId}" onclick="toggleStoryComments('${customId}')"><strong id="commentCount-${customId}">1 Comment</strong></a>
+          &bull; <span style="color:#059669; font-weight:bold;">Score Threshold: Active</span>
+        </div>
+        <div class="story-actions">
+          <button type="button" class="btn-retro btn-green" onclick="exportStoryVFS('${customId}')">💾 Save to VFS</button>
+          <button type="button" class="btn-retro" onclick="openStoryInKPad('${customId}')">📝 Open in KPad</button>
+        </div>
+      </div>
+      <div class="comments-container" id="comments-${customId}" style="display:none;">
+        <div class="filter-bar">
+          <div class="filter-controls">
+            <strong>Threshold:</strong>
+            <select id="thresholdSelect-${customId}" onchange="updateCommentThreshold('${customId}')">
+              <option value="-1">-1: Everything</option>
+              <option value="0">0: Normal</option>
+              <option value="1" selected>1: Insightful (+1)</option>
+              <option value="2">2: Informative (+2)</option>
+              <option value="3">3: Interesting (+3)</option>
+              <option value="4">4: Funny (+4)</option>
+              <option value="5">5: Pure Signal (+5)</option>
+            </select>
+            <span class="threshold-pills" style="margin-left:4px;">
+              <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('${customId}', -1)">-1</button>
+              <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('${customId}', 0)">0</button>
+              <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('${customId}', 1)">1</button>
+              <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('${customId}', 2)">2</button>
+              <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('${customId}', 3)">3</button>
+              <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('${customId}', 4)">4</button>
+              <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px;" onclick="setStoryThreshold('${customId}', 5)">5</button>
+            </span>
+            <strong style="margin-left:8px;">View:</strong>
+            <select id="viewModeSelect-${customId}" onchange="renderComments('${customId}')">
+              <option value="nested">Nested</option>
+              <option value="flat">Flat</option>
+            </select>
+          </div>
+          <div id="filterSummary-${customId}" style="font-size:11px; color:var(--slash-text-muted);">Showing comments</div>
+        </div>
+        <div class="comments-list" id="commentList-${customId}"></div>
+        <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:10px; margin-top:12px;">
+          <strong style="font-size:12px; display:block; margin-bottom:6px;">Post a Response:</strong>
+          <div style="display:grid; grid-template-columns: 140px 1fr; gap:6px; margin-bottom:6px;">
+            <input type="text" id="newCommentAuthor-${customId}" placeholder="Handle" value="Anonymous Coward" style="font-size:11px; padding:3px;" />
+            <input type="text" id="newCommentSubject-${customId}" placeholder="Subject" style="font-size:11px; padding:3px;" />
+          </div>
+          <textarea id="newCommentBody-${customId}" rows="3" placeholder="Comment..." style="width:100%; font-family:var(--font-mono); font-size:11px; padding:4px; margin-bottom:6px;"></textarea>
+          <div style="display:flex; justify-content:flex-end;">
+            <button type="button" class="btn-retro btn-green" onclick="postNewComment('${customId}')">Submit Comment</button>
+          </div>
+        </div>
+      </div>
+    `;
+    container.insertBefore(art, container.firstChild);
+    renderComments(customId);
+  }
+
+  userKarma += 5;
+  safeSet('slashnet_user_karma', userKarma);
+  updateUserInfoBar();
+  showToast("Story approved & published to front page! (+5 Karma)");
   closeStorySubmitModal();
-  playRetroSound(800, 0.08);
+  document.getElementById('modalStoryTitle').value = '';
+  document.getElementById('modalStoryBody').value = '';
+  playFanfareSound();
 }
 
 // Helper HTML sanitizer
