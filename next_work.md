@@ -33,9 +33,9 @@ current_targets:
   kilo_graphics: KVoid
   kilo_soundscape: KWizard
   kilo_tester: KColosseum
-  kilo_usability: KColosseum
+  kilo_usability: KMaze
   kilo_qa: KType
-  kilo_expander: KColosseum
+  kilo_expander: KSteno
   kilo_review: KMatrix
 virtual_web_target: kweb://cabled
 virtual_web_rotation:
@@ -60,7 +60,7 @@ last_run:
   agent: kilo-graphics
   app: KColosseum
   timestamp: '2026-10-27T09:22:17-07:00'
-last_planner_run: '2026-10-26T16:30:00Z'
+last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
 # KiloApps Master Fleet Work & Queue State (`Phase VI: System Convergence`)
@@ -117,7 +117,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
-| `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art shapes in drawMiniPortrait(), drawGladiatorVisual(), drawLionVisual(), drawChariotVisual(), drawBehemothVisual(), drawPraetorianVisual(), drawDimachaerusVisual(), and drawArenaEnvironment() with Imagen 3 2-stage chroma-keyed gladiator/boss sprites and Flavian amphitheatre arena backdrop (<999 KB, keeping procedural fallback while loading and zero perimeter border glints). |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KWizard`
@@ -153,12 +152,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KColosseum`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Scope global li card styling to #marketList > li and #ownedList > li so #tutorialModal ol li stops stretching and clipping #btnTutorialEnter; lock body to 100vh flex column at 800x563 by merging .top-nav, h1, and .funds into a compact header, removing the duplicate Empire Duel Arena banner, making #marketList and #ownedList independently scrollable with Sort by Prowess/HP buttons (sortGladiators), and compacting #arenaPanel (#arenaCanvas 185px, #combatLog 72px) for 0px overflow; add devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas, guard SELECT in keydown, and replace prompt() in importGladiatorDossier() with an in-DOM modal. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Add <meta charset='UTF-8'> to kmaze.html <head> to fix broken UTF-8 mojibake icons across splash, HUD, toasts, and canvas; compact top #uiCanvas and Win32 GDI HUD telemetry over a dark translucent header strip so Lvl/biome/charges text stops colliding with F5/F9 hint and clipping [STAND]/[CROUCH] at 320px width; move #toastContainer below top HUD (top 50px) and #firstRunBanner to bottom of #canvasWrapper; suppress duplicate gameState===0 canvas text behind #splashOverlay; and sync #uiCanvas dimensions/scaling cleanly on boot and resize. |
+| `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Scope global li card styling to #marketList > li and #ownedList > li so #tutorialModal ol li stops stretching and clipping #btnTutorialEnter; lock body to 100vh flex column at 800x563 by merging .top-nav, h1, and .funds into a compact header, removing the duplicate Empire Duel Arena banner, making #marketList and #ownedList independently scrollable with Sort by Prowess/HP buttons (sortGladiators), and compacting #arenaPanel (#arenaCanvas 185px, #combatLog 72px) for 0px overflow; add devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas, guard SELECT in keydown, and replace prompt() in importGladiatorDossier() with an in-DOM modal. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
@@ -180,14 +179,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTask` | `KiloOS/public/apps/ktask.html`, `KTask/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/task lifecycle management, memory telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, document reader pagination/zoom, bookmark state, dual Win32 C parity, and promote to Mature table. |
 | `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
+| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
+| `KMandel` | `KiloOS/public/apps/kmandel.html`, `KMandel/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, fractal rendering zoom/pan coordinates, palette cycles, dual Win32 C parity, and promote to Mature table. |
+| `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, waveform audio editor, spectrum visualizer, filter pipeline, dual Win32 C parity, and promote to Mature table. |
+| `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, bitmap manipulation filters, canvas scaling, dual Win32 C parity, and promote to Mature table. |
+| `KSettings` | `KiloOS/public/apps/ksettings.html`, `KSettings/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, OS theme/sound preferences, display modes, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KColosseum`
+- **Active Target**: `KSteno`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kcolosseum_ludus.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback) in #exportModal plus VFS export of Battle Chronicles and orphaned exportGladiatorCertificate() dossiers to /home/docs/ via VFS_WRITE and OS_NOTIFY; render the orphaned Arena Wager bar (#btnWager0, #btnWager25, #btnWager50, #btnWager100, #wagerOddsDisplay calling setArenaWager()) and settle payouts/forfeits on solo match completion, add Certificate button on owned gladiator cards, and add Ludus Facilities [U] and Arena Wager parity to KColosseum/main.c. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
+| `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kcolosseum_ludus.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback) in #exportModal plus VFS export of Battle Chronicles and orphaned exportGladiatorCertificate() dossiers to /home/docs/ via VFS_WRITE and OS_NOTIFY; render the orphaned Arena Wager bar (#btnWager0, #btnWager25, #btnWager50, #btnWager100, #wagerOddsDisplay calling setArenaWager()) and settle payouts/forfeits on solo match completion, add Certificate button on owned gladiator cards, and add Ludus Facilities [U] and Arena Wager parity to KColosseum/main.c. |
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
