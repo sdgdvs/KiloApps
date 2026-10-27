@@ -2180,6 +2180,38 @@ static const BBS_BULLETIN gBulletins[] = {
         "INTERCEPT LOG: Scheduled ZMH poll detected unlisted handshake from 10.19.99.4.\r\n"
         "HEX-SIGNATURE: 0x4B 0x49 0x4C 0x4F 0x2D 0x4D 0x45 0x53 0x48 0x2D 0x39 0x39\r\n"
         "Inspect in KHex to examine raw binary byte streams and cryptographic salts.\r\n"
+    },
+    {
+        "DOORWAY.TXT",
+        "Doorway Mode & BBS Dropfile Standard",
+        "================================================================================\r\n"
+        "DOORWAY PROTOCOL SPECIFICATION & BBS DROPFILE STANDARD v4.0\r\n"
+        "Author: SysOp Merlin [1:100/42.0] | Standard: GAP DOOR.SYS, CHAIN.TXT & VFS\r\n"
+        "================================================================================\r\n"
+        "1. Dropfile Generation: BBS writes DOOR.SYS / CHAIN.TXT in node spool directory.\r\n"
+        "2. VFS Mesh Integration: Player saves and flight logs sync to bbs/ folder.\r\n"
+        "3. CP437 Passthrough: 8-bit transparent binary ANSI stream directly to terminal.\r\n"
+    },
+    {
+        "DEFCON99.TXT",
+        "DEFCON VII Phreaking & Telecom Dispatch",
+        "================================================================================\r\n"
+        "DEFCON VII SPECIAL DISPATCH: 1999 TELECOMM & PHREAKING COMPENDIUM\r\n"
+        "Group: ACiD Telecomm / Phreak Underground | BBS: Acid Underground (1:249/106.1)\r\n"
+        "================================================================================\r\n"
+        "1. Frequencies: 2600 Hz SF trunk line disconnect | 1700+2200 Hz Red Box coin tone\r\n"
+        "2. Carrier Network: SS7 common-channel migration from in-band crossbar switches.\r\n"
+        "3. Archive Directive: Sync traces to /home/bbs/ and inspect binary dumps in KHex.\r\n"
+    },
+    {
+        "SYSOP.NFO",
+        "KiloBBS Node 1 SysOp Specs & VFS Mesh",
+        "================================================================================\r\n"
+        "KILOBBS STATION NODE 1 - SYSOP TECHNICAL SPECIFICATION & VFS MESH\r\n"
+        "Release: Version 2.50 (Phase VI Convergence) | SysOp: Merlin <merlin@kilobbs.org>\r\n"
+        "================================================================================\r\n"
+        "1. VFS Mesh Architecture: Spool at bbs/ with direct KPad / KHex inspect actions.\r\n"
+        "2. Convergence: Telnet, CP437 ANSI.SYS, ZMODEM-8K, and full dual Win32/Web parity.\r\n"
     }
 };
 #define NUM_BULLETINS (sizeof(gBulletins) / sizeof(gBulletins[0]))
@@ -2208,6 +2240,17 @@ static void SaveBulletinToFile(int idx) {
 
 static void LaunchViewer(HWND hwnd, const char* appExe, const char* fallbackExe, const char* filePath) {
     HINSTANCE hInst = ShellExecuteA(hwnd, "open", appExe, filePath, NULL, SW_SHOWNORMAL);
+    if ((INT_PTR)hInst <= 32) {
+        char relPath[MAX_PATH];
+        if (lstrcmpA(appExe, "KPad.exe") == 0) {
+            wsprintfA(relPath, "..\\KPad\\KPad.exe");
+        } else if (lstrcmpA(appExe, "KHex.exe") == 0) {
+            wsprintfA(relPath, "..\\KHex\\KHex.exe");
+        } else {
+            wsprintfA(relPath, "..\\%s", appExe);
+        }
+        hInst = ShellExecuteA(hwnd, "open", relPath, filePath, NULL, SW_SHOWNORMAL);
+    }
     if ((INT_PTR)hInst <= 32 && fallbackExe) {
         ShellExecuteA(hwnd, "open", fallbackExe, filePath, NULL, SW_SHOWNORMAL);
     }

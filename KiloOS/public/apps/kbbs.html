@@ -685,6 +685,7 @@ SEND:"secret\r"'></textarea>
                 const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
                 window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
                 window.parent.postMessage({ type: 'OS_NOTIFY', title: 'KBBS File Terminal', message: `Saved to VFS: ${path}` }, '*');
+                try { localStorage.setItem('vfs:' + path, payload); } catch (e) {}
             } catch (e) {}
         },
         read(path, cb) {
@@ -697,6 +698,12 @@ SEND:"secret\r"'></textarea>
             };
             window.addEventListener('message', handler);
             try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+            if (window.parent === window) {
+                try {
+                    const fallback = localStorage.getItem('vfs:' + path);
+                    if (fallback !== null) setTimeout(() => cb(fallback, path), 10);
+                } catch (e) {}
+            }
         },
         openPicker(cb) {
             const reqId = 'open_' + Date.now();
@@ -710,7 +717,13 @@ SEND:"secret\r"'></textarea>
             try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
         },
         launchApp(targetApp, path = '') {
-            try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, appId: targetApp, path }, '*');
+                } else {
+                    window.open(`${targetApp}.html#${path}`, '_blank');
+                }
+            } catch (e) {}
         }
     };
     function escapeHTML(str) {
@@ -3209,12 +3222,149 @@ Inspect this NFO in KHex to examine binary raw payload and cryptographic salts.
 Authorized SysOps: Archive to KiloOS VFS path /home/bbs/CLASSIF.NFO immediately.
 \x1B[1;31m--------------------------------------------------------------------------------\x1B[0m`
         }
+        ,
+        {
+            name: "DOORWAY.TXT",
+            title: "Doorway Mode & BBS Dropfile Standard (DOOR.SYS / CHAIN.TXT)",
+            size: 1540,
+            date: "1999-09-02",
+            uploader: "SysOp Merlin [1:100/42.0]",
+            category: "doors",
+            desc: "Technical specification for BBS dropfiles, serial baud rate passing, and KiloOS VFS inter-process door pipes.",
+            content: `\x1B[1;36m════════════════════════════════════════════════════════════════════════════════\x1B[0m
+\x1B[1;33m       DOORWAY PROTOCOL SPECIFICATION & BBS DROPFILE STANDARD v4.0             \x1B[0m
+\x1B[1;36m════════════════════════════════════════════════════════════════════════════════\x1B[0m
+Author   : SysOp Merlin <merlin@kilobbs.org>
+Node     : KiloBBS Station Hub (1:100/42.0)
+Standard : GAP DOOR.SYS, CHAIN.TXT & KiloOS VFS IPC
+
+1. DROPFILE GENERATION:
+   When an online door game (LORD, TradeWars 2015) is spawned,
+   the BBS writes a standardized dropfile in the node spool directory (/home/bbs/):
+   - Line 1 : Comm Port ("COM1:" or "SOCKET")
+   - Line 2 : DTE Baud Rate (33600 / 57600 bps)
+   - Line 3 : Parity & Word Length (8,N,1)
+   - Line 4 : Node Number (Node 1)
+   - Line 5 : User Alias (e.g. "DragonSlayer")
+   - Line 6 : Security Level (Level 50 SysOp / Level 10 User)
+
+2. KILOOS VFS MESH INTEGRATION:
+   Dropfile manifests and character state sync directly to /home/bbs/:
+   - /home/bbs/lord_player.txt : Active L.O.R.D. warrior statistics
+   - /home/bbs/tw_manifest.txt : TradeWars starship hold manifests
+   Inspect in KPad [P] for text editing or KHex [X] for byte telemetry.
+
+3. CP437 RAW PASSTHROUGH:
+   Door games operate in 8-bit binary transparent mode. All ANSI escape codes
+   (ESC[...m) pass unbuffered directly to the caller terminal.`
+        },
+        {
+            name: "DEFCON99.TXT",
+            title: "DEFCON VII Phreaking & Telecom Underground Dispatch",
+            size: 1680,
+            date: "1999-07-15",
+            uploader: "The Prophet [Acid Underground 106.1]",
+            category: "demoscene",
+            desc: "Underground telecom report on ESS switching, blue/red boxing frequencies, and acoustic 2600 Hz trunk signaling.",
+            content: `\x1B[1;35m════════════════════════════════════════════════════════════════════════════════\x1B[0m
+\x1B[1;31m     DEFCON VII SPECIAL DISPATCH: 1999 TELECOMM & PHREAKING COMPENDIUM          \x1B[0m
+\x1B[1;35m════════════════════════════════════════════════════════════════════════════════\x1B[0m
+Group: ACiD Telecomm / Phreak Underground
+BBS  : Acid Underground (1:249/106.1)
+
+[SIGNALING FREQUENCIES]
+  - 2600 Hz : Single Frequency (SF) trunk line seizure disconnect
+  - 1700 Hz + 2200 Hz : Red Box coin drop acoustic tone pairs (5c/10c/25c pulses)
+  - 700 Hz + 900 Hz   : Blue Box MF KP (Key Pulse) start tone
+  - 1100 Hz + 1700 Hz : Blue Box ST (Start) finish tone
+
+[CARRIER NETWORK TRANSITION]
+  As telcos transition from analog crossbar 5XB switches to digital 5ESS,
+  in-band multi-frequency signaling is being migrated to Common Channel
+  Interoffice Signaling (SS7 / CCS7). Packet-switched telecommunications
+  and virtual web nodes route encrypted terminal sessions over TCP.
+
+[ARCHIVE DIRECTIVE]
+  Archive this bulletin to KiloOS VFS (/home/bbs/DEFCON99.TXT). Use KHex to
+  verify raw hexadecimal byte dumps of trunk capture traces.`
+        },
+        {
+            name: "SYSOP.NFO",
+            title: "KiloBBS Station Node 1 Configuration & VFS Mesh Architecture",
+            size: 1920,
+            date: "1999-10-23",
+            uploader: "SysOp Merlin [1:100/42.0]",
+            category: "system",
+            desc: "SysOp architecture reference: FidoNet Echomail tosser schedules, VFS spool directories, and dual Win32/Web parity.",
+            content: `\x1B[1;32m════════════════════════════════════════════════════════════════════════════════\x1B[0m
+\x1B[1;33m       KILOBBS STATION NODE 1 - SYSOP TECHNICAL SPECIFICATION & VFS MESH         \x1B[0m
+\x1B[1;32m════════════════════════════════════════════════════════════════════════════════\x1B[0m
+Release : Version 2.50 (Phase VI Convergence Edition)
+SysOp   : Merlin <merlin@kilobbs.org>
+Node    : 1:100/42.0 @ FidoNet Zone 1
+Hardware: Dual Pentium III 500 MHz, USRobotics Courier V.Everything 56K
+
+1. VFS INTER-APP MESH ARCHITECTURE:
+   The BBS subsystem provides two-way integration with KiloOS:
+   - Spool Path : /home/bbs/
+   - Actions    :
+     * [V] Download bulletin directly to KiloOS VFS
+     * [P] Open bulletin in KPad text workstation
+     * [X] Inspect bulletin in KHex binary hexadecimal editor
+     * [T] Stream bulletin directly to CP437 terminal rasterizer
+     * [Sync All] Batch synchronize entire bulletin library
+
+2. PROTOCOL CONVERGENCE:
+   - Telnet & Raw TCP WebSocket bridge
+   - ANSI.SYS 80x25 with extended CP437 graphical rendering
+   - ZMODEM 8K streaming with 32-bit CRC crash recovery
+   - XMODEM-CRC 128-byte checksummed blocks
+   - Dual-Target Parity: 100% matched functionality in Win32 C native KBBS.exe`
+        }
     ];
 
     let selectedBulletinIndex = 0;
     let currentFileCategory = 'all';
 
+    function syncDynamicBulletins() {
+        if (typeof lordPlayer !== 'undefined' && lordPlayer && lordPlayer.name) {
+            const lordReport = `============================================================\nLEGEND OF THE RED DRAGON (L.O.R.D.) - ACTIVE CHARACTER RECORD\nBBS Node: KiloBBS Station Hub (1:100/42.0)\nTimestamp: 1999-10-23\n============================================================\nWarrior Name : ${lordPlayer.name}\nCombat Level : ${lordPlayer.level}\nHit Points   : ${lordPlayer.hp} / ${lordPlayer.maxHp}\nGold on Hand : ${lordPlayer.gold}\nBank Deposit : ${lordPlayer.bank}\nForest Fights: ${lordPlayer.fights}\nWeapon       : ${lordPlayer.weapon}\nArmor        : ${lordPlayer.armor}\n------------------------------------------------------------\nBattle History:\n${(lordLogHistory || []).join('\n')}\n============================================================`;
+            const entry = {
+                name: "LORD_SAV.TXT",
+                title: `L.O.R.D. Character Record: ${lordPlayer.name} (Lvl ${lordPlayer.level})`,
+                size: lordReport.length,
+                date: "1999-10-23",
+                uploader: `${lordPlayer.name} [Warrior Guild]`,
+                category: "doors",
+                desc: "Live exported warrior save record and combat logs from active L.O.R.D. session. Synchronizes to /home/bbs/.",
+                content: lordReport
+            };
+            const idx = bbsBulletins.findIndex(b => b.name === 'LORD_SAV.TXT');
+            if (idx >= 0) bbsBulletins[idx] = entry;
+            else bbsBulletins.push(entry);
+        }
+
+        if (typeof twPlayer !== 'undefined' && twPlayer) {
+            const twReport = `============================================================\nTRADEWARS 2015 - ACTIVE STARSHIP FLIGHT LOG & MANIFEST\nBBS Node: Starport Exchange (2:201/33.0)\nTimestamp: 1999-10-23\n============================================================\nShip Commander : SectorTrader\nCurrent Sector : Sector ${twPlayer.sector} (Sol Route)\nCredits        : $${twPlayer.credits}\nCargo Holds    : ${twPlayer.holds} units\nCargo Breakdown:\n  - Fuel Ore   : ${twPlayer.ore} units\n  - Organics   : ${twPlayer.organics} units\n  - Equipment  : ${twPlayer.equipment} units\nShield Integrity: ${twPlayer.shields}%\n------------------------------------------------------------\nNavigation Log:\n${(twLogHistory || []).join('\n')}\n============================================================`;
+            const entry = {
+                name: "TW_LOG.TXT",
+                title: `TradeWars 2015 Manifest: Sector ${twPlayer.sector} ($${twPlayer.credits})`,
+                size: twReport.length,
+                date: "1999-10-23",
+                uploader: "SectorTrader [Starport 2:201/33.0]",
+                category: "doors",
+                desc: "Real-time starship cargo manifest, warp logs, and commodity balances. Synchronizes to /home/bbs/.",
+                content: twReport
+            };
+            const idx = bbsBulletins.findIndex(b => b.name === 'TW_LOG.TXT');
+            if (idx >= 0) bbsBulletins[idx] = entry;
+            else bbsBulletins.push(entry);
+        }
+    }
+
     function showFileArea() {
+        syncDynamicBulletins();
+
         closeAllModalsExcept('fileAreaModal');
         dismissAllToasts();
         document.getElementById('fileAreaModal').style.display = 'flex';
@@ -3345,6 +3495,7 @@ Authorized SysOps: Archive to KiloOS VFS path /home/bbs/CLASSIF.NFO immediately.
     }
 
     function exportAllBulletinsToVFS() {
+        syncDynamicBulletins();
         bbsBulletins.forEach(b => {
             KiloVFS.write(`/home/bbs/${b.name}`, b.content);
         });
