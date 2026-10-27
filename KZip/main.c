@@ -604,6 +604,13 @@ BOOL QuickSaveState(HWND hwnd) {
     }
 
     CloseHandle(hFile);
+    HANDLE hNewFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hNewFlag != INVALID_HANDLE_VALUE) {
+        BYTE b = 1;
+        DWORD w = 0;
+        WriteFile(hNewFlag, &b, 1, &w, NULL);
+        CloseHandle(hNewFlag);
+    }
     char msg[128];
     wsprintfA(msg, "Archive state quicksaved (%d files) to kzip.dat [F5]", numFiles);
     SetWindowTextA(hStatus, msg);
@@ -684,6 +691,13 @@ BOOL QuickLoadState(HWND hwnd) {
     }
 
     CloseHandle(hFile);
+    HANDLE hNewFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hNewFlag != INVALID_HANDLE_VALUE) {
+        BYTE b = 1;
+        DWORD w = 0;
+        WriteFile(hNewFlag, &b, 1, &w, NULL);
+        CloseHandle(hNewFlag);
+    }
     RefreshList();
     char msg[128];
     wsprintfA(msg, "Quicksave restored (%d files) from kzip.dat [F9]", numFiles);
@@ -1338,9 +1352,15 @@ void MainEntry() {
                         continue;
                     }
                 }
+                else if (msg.wParam == VK_ESCAPE) {
+                    SetWindowTextA(hEditSearch, "");
+                    RefreshList();
+                    SetFocus(hListBox);
+                    continue;
+                }
             } else {
                 if (msg.wParam == VK_ESCAPE) {
-                    if (hFocus == hEditSearch) {
+                if (hFocus == hEditSearch) {
                         SetWindowTextA(hEditSearch, "");
                         RefreshList();
                         SetFocus(hListBox);

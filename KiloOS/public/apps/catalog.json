@@ -20,7 +20,7 @@
     "title": "KAlchemy",
     "folder": "Games",
     "webBytes": 277777,
-    "exeBytes": 70656,
+    "exeBytes": 71168,
     "budgetPercent": 27.8
   },
   {
@@ -459,9 +459,9 @@
     "id": "kmystery",
     "title": "KMystery",
     "folder": "Games",
-    "webBytes": 160262,
-    "exeBytes": 40448,
-    "budgetPercent": 16.0
+    "webBytes": 168222,
+    "exeBytes": 40960,
+    "budgetPercent": 16.8
   },
   {
     "id": "knet",

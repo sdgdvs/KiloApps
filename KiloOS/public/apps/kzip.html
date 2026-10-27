@@ -1177,7 +1177,18 @@
   const btnHelpApp = document.getElementById('btnHelpApp');
   const btnHeaderHelp = document.getElementById('btnHeaderHelp');
 
-  const allModals = [verifyModal, previewModal, editorModal, analysisModal, renameModal, newFileModal, commentModal, manifestModal, helpModal];
+  const grepModal = document.getElementById('grepModal');
+  const benchmarkModal = document.getElementById('benchmarkModal');
+  const splitterModal = document.getElementById('splitterModal');
+  const dedupModal = document.getElementById('dedupModal');
+  const transcodeModal = document.getElementById('transcodeModal');
+
+  const allModals = [
+    verifyModal, previewModal, editorModal, analysisModal,
+    renameModal, newFileModal, commentModal, manifestModal,
+    grepModal, benchmarkModal, splitterModal, dedupModal,
+    transcodeModal, helpModal
+  ];
 
   // Clear toasts immediately when modals open to prevent control occlusion
   function clearToasts() {
@@ -2239,7 +2250,7 @@ Refer to acoustic diagnostics at echo-subsystem.net.
       name: sanitizeFilename(f.name),
       size: f.uncompSize,
       crc32: f.crc32,
-      data: uint8ToBase64(f.uncompressedBytes)
+      data: uint8ToBase64(f.rawBytes)
     }));
     const jsonStr = JSON.stringify({ comment: comment || '', files: archivePayload });
     return `<!DOCTYPE html>
@@ -2272,7 +2283,7 @@ Refer to acoustic diagnostics at echo-subsystem.net.
     <button id="btnExtractAll">⚡ Extract All Files</button>
   </div>
 </div>
-<script>
+${'<' + 'script>'}
   const payload = ${jsonStr};
   const cBox = document.getElementById('commentBox');
   if (payload.comment) { cBox.innerText = payload.comment; cBox.style.display = 'block'; }
@@ -3216,6 +3227,7 @@ Refer to acoustic diagnostics at echo-subsystem.net.
       };
       const jsonStr = JSON.stringify(payload);
       const ok = safeSetStorage('kzip_quicksave', jsonStr);
+      safeSetStorage('kzip_tutorialSeen', '1');
       if (!ok) {
         showToast("Quicksave failed: storage quota exceeded.", true);
         return;
@@ -3307,6 +3319,7 @@ Refer to acoustic diagnostics at echo-subsystem.net.
       if (e.key === 'Escape') {
         e.preventDefault();
         activeModal.classList.remove('active');
+        if (activeModal === helpModal) safeSetStorage('kzip_tutorialSeen', '1');
       } else if (e.key === 'Enter' && !inInput) {
         e.preventDefault();
         activeModal.classList.remove('active');
@@ -3476,7 +3489,6 @@ Refer to acoustic diagnostics at echo-subsystem.net.
 
   // Grep in Archive Files Wireup
   const btnGrep = document.getElementById('btnGrep');
-  const grepModal = document.getElementById('grepModal');
   const btnCloseGrep = document.getElementById('btnCloseGrep');
   const btnOkGrep = document.getElementById('btnOkGrep');
   const btnRunGrep = document.getElementById('btnRunGrep');
@@ -3521,7 +3533,7 @@ Refer to acoustic diagnostics at echo-subsystem.net.
       files.forEach(f => {
         let text = '';
         try {
-          text = decoder.decode(f.uncompressedBytes);
+          text = decoder.decode(f.rawBytes);
         } catch (_) { return; }
         // Skip non-printable or huge binary blobs
         if (/[\x00-\x08\x0E-\x1F]/.test(text.slice(0, 500))) return;
@@ -3563,7 +3575,6 @@ Refer to acoustic diagnostics at echo-subsystem.net.
 
   // 1. Benchmark Lab
   const btnBenchmark = document.getElementById('btnBenchmark');
-  const benchmarkModal = document.getElementById('benchmarkModal');
   const btnCloseBenchmark = document.getElementById('btnCloseBenchmark');
   const btnOkBenchmark = document.getElementById('btnOkBenchmark');
   const btnRunBenchmarkAction = document.getElementById('btnRunBenchmarkAction');
@@ -3587,7 +3598,7 @@ Refer to acoustic diagnostics at echo-subsystem.net.
     await new Promise(r => setTimeout(r, 40));
 
     let totalOriginalBytes = 0;
-    files.forEach(f => totalOriginalBytes += f.uncompressedBytes.length);
+    files.forEach(f => totalOriginalBytes += (f.rawBytes ? f.rawBytes.length : f.uncompSize || 0));
 
     // Test Store
     const t0Store = performance.now();
@@ -3598,7 +3609,7 @@ Refer to acoustic diagnostics at echo-subsystem.net.
     const t0Rle = performance.now();
     let rleTotal = 0;
     files.forEach(f => {
-      const c = compressRLE(f.uncompressedBytes);
+      const c = compressRLE(f.rawBytes);
       rleTotal += c.length;
     });
     const durRle = Math.max(0.01, performance.now() - t0Rle);
@@ -3609,7 +3620,7 @@ Refer to acoustic diagnostics at echo-subsystem.net.
     try {
       if (typeof pako !== 'undefined') {
         files.forEach(f => {
-          const d = pako.deflateRaw(f.uncompressedBytes);
+          const d = pako.deflateRaw(f.rawBytes);
           deflateTotal += d.length;
         });
       } else {
@@ -3665,7 +3676,6 @@ Refer to acoustic diagnostics at echo-subsystem.net.
 
   // 2. Multi-Volume Splitter & Combiner
   const btnSplitter = document.getElementById('btnSplitter');
-  const splitterModal = document.getElementById('splitterModal');
   const btnCloseSplitter = document.getElementById('btnCloseSplitter');
   const btnOkSplitter = document.getElementById('btnOkSplitter');
   const splitPresetSelect = document.getElementById('splitPresetSelect');
@@ -3711,7 +3721,7 @@ Refer to acoustic diagnostics at echo-subsystem.net.
   function updateSplitPreview() {
     if (!splitEstPreview) return;
     let approxSize = 0;
-    files.forEach(f => approxSize += (f.compressedBytes ? f.compressedBytes.length : f.uncompressedBytes.length));
+    files.forEach(f => approxSize += (f.packedBytes ? f.packedBytes.length : (f.rawBytes ? f.rawBytes.length : f.uncompSize || 0)));
     approxSize += 512; // header overhead
     const chunkBytes = getChunkSizeBytes();
     const vols = Math.max(1, Math.ceil(approxSize / chunkBytes));
@@ -3792,7 +3802,6 @@ Refer to acoustic diagnostics at echo-subsystem.net.
 
   // 3. Deduplication & SHA-256 Hash Audit
   const btnDedup = document.getElementById('btnDedup');
-  const dedupModal = document.getElementById('dedupModal');
   const btnCloseDedup = document.getElementById('btnCloseDedup');
   const btnOkDedup = document.getElementById('btnOkDedup');
   const dedupReportBody = document.getElementById('dedupReportBody');
@@ -3840,7 +3849,7 @@ Refer to acoustic diagnostics at echo-subsystem.net.
 
     for (let i = 0; i < files.length; i++) {
       const f = files[i];
-      const sha = await sha256Hex(f.uncompressedBytes);
+      const sha = await sha256Hex(f.rawBytes);
       f._sha256 = sha;
       if (!hashMap.has(sha)) {
         hashMap.set(sha, []);
@@ -3923,7 +3932,6 @@ Refer to acoustic diagnostics at echo-subsystem.net.
 
   // 4. Batch Format Transcoder
   const btnTranscode = document.getElementById('btnTranscode');
-  const transcodeModal = document.getElementById('transcodeModal');
   const btnCloseTranscode = document.getElementById('btnCloseTranscode');
   const btnCancelTranscode = document.getElementById('btnCancelTranscode');
   const btnExecuteTranscode = document.getElementById('btnExecuteTranscode');
@@ -3951,6 +3959,16 @@ Refer to acoustic diagnostics at echo-subsystem.net.
       btnPack.click();
     };
   }
+
+  // Lifecycle & Resource Hygiene: pause toast timers on document hidden
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (toastTimer) {
+        clearTimeout(toastTimer);
+        toastTimer = null;
+      }
+    }
+  });
 </script>
 </body>
 </html>

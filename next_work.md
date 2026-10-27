@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_soundscape: KWizard
   kilo_tester: KMaze
   kilo_usability: KMaze
-  kilo_qa: KZip
+  kilo_qa: KType
   kilo_expander: KMystery
   kilo_review: KColosseum
 virtual_web_target: kweb://trapster
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KMystery
-  timestamp: '2026-10-27T06:40:16-07:00'
+  agent: kilo-qa
+  app: KZip
+  timestamp: '2026-10-27T07:21:38-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -143,7 +143,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Fix #garage-rank not updating in updateGarage() (call getPilotRank(playerLevel)); implement actual enemyStunned=true stun effect on Head/Cockpit hit (currentTargetLimb===0) so enemyTurn() skips attack and vents heat per Manual; auto-restore kmech_save on boot; and trigger enemy overheat burnout damage when EMP pushes enemy heat over maxHeat. |
-| `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Audit archive packer/unpacker UI, compression ratio telemetry, file list viewer, and drag-and-drop file ingestion. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Fix buyItem() calling getItemPrice(number) instead of string keys ('food','toy','nectar','crown','polish') which charges 50g for all items; fix getMood().label === 'Ecstatic' in startMinigame() and battleTurn() (+15% crit); and apply the +10 Sovereign Aura stat bonus upon collecting all 6 relics. |
@@ -169,11 +168,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KZip`
+- **Active Target**: `KType`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, archive unpack/pack verification, byte limits, dual Win32 C parity, and promote to Mature table. |
 | `KType` | `KiloOS/public/apps/ktype.html`, `KType/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, typing speed WPM/accuracy benchmark, word drill banks, dual Win32 C parity, and promote to Mature table. |
 | `KColor` | `KiloOS/public/apps/kcolor.html`, `KColor/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, palette generator/harmony rules, HEX/RGB/HSL conversion, dual Win32 C parity, and promote to Mature table. |
 | `KTask` | `KiloOS/public/apps/ktask.html`, `KTask/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/task lifecycle management, memory telemetry, dual Win32 C parity, and promote to Mature table. |
@@ -244,6 +242,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KZip** | `KiloOS/public/apps/kzip.html` | Pass 5+ (2026-10-27) | System / Utilities | Complete archive studio with KZA/ZIP/TAR format support, RLE/Deflate algorithms, hex preview, batch extraction, CRC32/SHA-256 telemetry, F5/F9 state persistence, and dual Win32 C parity. |
 | **KContacts** | `KiloOS/public/apps/kcontacts.html` | Pass 5+ (2026-10-27) | Office / Productivity | Complete contact manager & address book with vCard 3.0/CSV/JSON/LDIF export/import, duplicate merging, 8-category filter, F5/F9 state persistence, and dual Win32 C parity. |
 | **KCalendar** | `KiloOS/public/apps/kcalendar.html` | Pass 5+ (2026-10-26) | Office / Productivity | Complete retro schedule/event workstation with Month/Week/Day/Agenda views, reminder alerts, VFS export mesh, retro chime audio, F5/F9 persistence, and dual Win32 C native build parity. |
 | **KRss** | `KiloOS/public/apps/krss.html` | Pass 5+ (2026-10-26) | Internet / Syndication | Complete Sovereign Web 1.0 RSS/Atom/JSON Feed syndication terminal with OPML/CSV round-trip, research scrapbook, speech synthesis, F5/F9 state persistence, and dual Win32 C binary parity. |
@@ -302,6 +301,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T07:21:38-07:00 — kilo-qa: KZip (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 153.9 KB, native 25.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kzip_tutorialSeen flag, and Escape modal dismissals across all 14 modals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, visibilitychange timer cleanup, and fixed byte property bindings.
+  - Mature Quarantine & Handoff: Promoted `KZip` to Mature archive; advanced `kilo-qa` to `KType`; next agent `kilo-expander`.
+
 - **2026-10-27T06:40:16-07:00 — kilo-usability: KMystery (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KMystery across web and native targets.
@@ -324,9 +329,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-graphics updates for KMystery across web and native targets.
   - Handoff: Advanced `kilo-graphics` to `KVoid`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-27T04:39:11-07:00 — kilo-creator: kweb://slashnet (SlashNet: News for Nerds (1999) Web Destination)**
-  - Status: PASS ✅ (0 errors, web 110.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 73.02%, HEAD Δ 23.6%, 0 fail, 0 warn, 4.8s)).
-  - Karma Moderation: Implemented full relative and absolute moderation (-1 Troll to +5 Insightful), quick vote buttons (+1 / -1), dynamic user karma ranks, and non-blocking in-line comment reveals.
-  - Beowulf & Kernel Rig: Added 4 classic cluster presets, dynamic kernel configuration compilation and LILO boot sequences, VFS article export, and verified routing in knet and portal.
-  - Handoff: Advanced `kilo-creator` to `kweb://trapster`; rotated active agent to `kilo-graphics`.
