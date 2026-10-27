@@ -373,6 +373,26 @@ void GenerateMystery() {
     suspectMood = 0;
 }
 
+void UpdateSuspectList() {
+    SendMessageA(hListSuspects, LB_RESETCONTENT, 0, 0);
+    for (int i = 0; i < activeItems; i++) {
+        char itemBuf[128];
+        int pat = suspectPatience[i];
+        if (pat > 3) pat = 3;
+        if (pat < 0) pat = 0;
+        int isPresent = (locations[currentLocation].suspectIdx == i);
+        char c1 = (pat >= 1) ? '*' : '.';
+        char c2 = (pat >= 2) ? '*' : '.';
+        char c3 = (pat >= 3) ? '*' : '.';
+        if (isPresent) {
+            wsprintfA(itemBuf, "%s [PRESENT] [%c%c%c]", suspects[i], c1, c2, c3);
+        } else {
+            wsprintfA(itemBuf, "%s [%c%c%c]", suspects[i], c1, c2, c3);
+        }
+        SendMessageA(hListSuspects, LB_ADDSTRING, 0, (LPARAM)itemBuf);
+    }
+}
+
 void UpdateUI() {
     if (currentState == 0) {
         ShowWindow(hStartPanel, SW_SHOW);
@@ -526,12 +546,13 @@ void UpdateUI() {
             SetWindowTextA(hBtnSearch, "Already searched");
         } else {
             EnableWindow(hBtnSearch, TRUE);
-            SetWindowTextA(hBtnSearch, "Search for Clues");
+            SetWindowTextA(hBtnSearch, "Search Clues [S] (2h)");
         }
         
         char intBuf[64];
-        wsprintfA(intBuf, "Interrogate %s", suspects[locations[currentLocation].suspectIdx]);
+        wsprintfA(intBuf, "Interrogate %s [I] (1h)", suspects[locations[currentLocation].suspectIdx]);
         SetWindowTextA(hBtnInterrogate, intBuf);
+        UpdateSuspectList();
         
         EnableWindow(hBtnTravelOffice, currentLocation != 0);
         EnableWindow(hBtnTravelManor, currentLocation != 1);
@@ -833,12 +854,9 @@ void QuickLoadGame(HWND hwnd) {
         SetWindowTextA(hScanDesc, scanBuf);
     }
 
-    SendMessageA(hListSuspects, LB_RESETCONTENT, 0, 0);
     SendMessageA(hListClues, LB_RESETCONTENT, 0, 0);
     SendMessageA(hListUnanalyzed, LB_RESETCONTENT, 0, 0);
-    for (int i = 0; i < activeItems; i++) {
-        SendMessageA(hListSuspects, LB_ADDSTRING, 0, (LPARAM)suspects[i]);
-    }
+    UpdateSuspectList();
     SendMessageA(hCmbSuspect, CB_RESETCONTENT, 0, 0);
     for (int i = 0; i < activeItems; i++) {
         SendMessageA(hCmbSuspect, CB_ADDSTRING, 0, (LPARAM)suspects[i]);
@@ -884,12 +902,9 @@ void StartGame(int items, int time) {
     SetWindowTextA(hTimeLeft, timeBuf);
     numUnanalyzed = 0;
     currentLocation = 0;
-    SendMessageA(hListSuspects, LB_RESETCONTENT, 0, 0);
     SendMessageA(hListClues, LB_RESETCONTENT, 0, 0);
     SendMessageA(hListUnanalyzed, LB_RESETCONTENT, 0, 0);
-    for (int i = 0; i < activeItems; i++) {
-        SendMessageA(hListSuspects, LB_ADDSTRING, 0, (LPARAM)suspects[i]);
-    }
+    UpdateSuspectList();
     SendMessageA(hCmbSuspect, CB_RESETCONTENT, 0, 0);
     for (int i = 0; i < activeItems; i++) {
         SendMessageA(hCmbSuspect, CB_ADDSTRING, 0, (LPARAM)suspects[i]);
@@ -1461,9 +1476,9 @@ LRESULT CALLBACK SceneWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 DrawEvidenceLabGDI(memDC, w, h);
             } else {
                 DrawLocationSceneGDI(memDC, currentLocation, w, h);
-                if (currentState == 2) {
+                if (currentState == 2 || (currentState == 1 && locations[currentLocation].suspectIdx >= 0)) {
                     int sIdx = locations[currentLocation].suspectIdx;
-                    DrawSuspectPortraitGDI(memDC, sIdx, suspectMood, w - 120, 15, 105, 140);
+                    DrawSuspectPortraitGDI(memDC, sIdx, currentState == 2 ? suspectMood : 0, w - 120, 15, 105, 140);
                 }
             }
 
@@ -1517,6 +1532,53 @@ LRESULT CALLBACK SceneWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return 0;
         }
 
+        case WM_LBUTTONDOWN: {
+            int clickX = LOWORD(lParam);
+            int clickY = HIWORD(lParam);
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+            int w = rc.right - rc.left;
+            
+            if (currentState == 1) {
+                int sIdx = locations[currentLocation].suspectIdx;
+                if (sIdx >= 0 && clickX >= w - 130) {
+                    SendMessageA(hMainWnd, WM_COMMAND, MAKEWPARAM(ID_BTN_INTERROGATE, 0), 0);
+                    return 0;
+                }
+                if (!locations[currentLocation].searched) {
+                    SendMessageA(hMainWnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SEARCH, 0), 0);
+                    return 0;
+                } else if (numUnanalyzed > 0) {
+                    SendMessageA(hMainWnd, WM_COMMAND, MAKEWPARAM(ID_BTN_LAB, 0), 0);
+                    return 0;
+                }
+            } else if (currentState == 2) {
+                int sIdx = locations[currentLocation].suspectIdx;
+                if (sIdx >= 0 && clickX >= w - 130) {
+                    SendMessageA(hMainWnd, WM_COMMAND, MAKEWPARAM(ID_BTN_ASK_ALIBI, 0), 0);
+                    return 0;
+                }
+            }
+            break;
+        }
+
+        case WM_SETCURSOR: {
+            if (currentState == 1) {
+                POINT pt;
+                GetCursorPos(&pt);
+                ScreenToClient(hwnd, &pt);
+                RECT rc;
+                GetClientRect(hwnd, &rc);
+                int w = rc.right - rc.left;
+                int sIdx = locations[currentLocation].suspectIdx;
+                if ((sIdx >= 0 && pt.x >= w - 130) || !locations[currentLocation].searched || numUnanalyzed > 0) {
+                    SetCursor(LoadCursorA(NULL, (LPCSTR)IDC_HAND));
+                    return TRUE;
+                }
+            }
+            break;
+        }
+
         case WM_ERASEBKGND:
             return 1;
     }
@@ -1562,21 +1624,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnSearch = CreateWindowA("BUTTON", "Search for Clues", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SEARCH, NULL, NULL);
             hBtnInterrogate = CreateWindowA("BUTTON", "Interrogate", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_INTERROGATE, NULL, NULL);
             
-            hBtnTravelOffice = CreateWindowA("BUTTON", "Travel: Office", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_OFFICE, NULL, NULL);
-            hBtnTravelManor = CreateWindowA("BUTTON", "Travel: The Manor", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_MANOR, NULL, NULL);
-            hBtnTravelDocks = CreateWindowA("BUTTON", "Travel: The Docks", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_DOCKS, NULL, NULL);
-            hBtnTravelCasino = CreateWindowA("BUTTON", "Travel: The Casino", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_CASINO, NULL, NULL);
-            hBtnTravelStation = CreateWindowA("BUTTON", "Travel: Station", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_STATION, NULL, NULL);
+            hBtnTravelOffice = CreateWindowA("BUTTON", "[1] Office (1h)", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_OFFICE, NULL, NULL);
+            hBtnTravelManor = CreateWindowA("BUTTON", "[2] Manor (1h)", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_MANOR, NULL, NULL);
+            hBtnTravelDocks = CreateWindowA("BUTTON", "[3] Docks (1h)", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_DOCKS, NULL, NULL);
+            hBtnTravelCasino = CreateWindowA("BUTTON", "[4] Casino (1h)", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_CASINO, NULL, NULL);
+            hBtnTravelStation = CreateWindowA("BUTTON", "[5] Station (1h)", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRAVEL_STATION, NULL, NULL);
             
-            hBtnLab = CreateWindowA("BUTTON", "Evidence Lab", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_LAB, NULL, NULL);
+            hBtnLab = CreateWindowA("BUTTON", "Evidence Lab [L] (1h)", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_LAB, NULL, NULL);
             hLabTitle = CreateWindowA("STATIC", "Forensic Lab", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
-            hBtnAnalyze = CreateWindowA("BUTTON", "Analyze Selected Object", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_ANALYZE, NULL, NULL);
-            hBtnLeaveLab = CreateWindowA("BUTTON", "Leave Lab", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_LEAVE_LAB, NULL, NULL);
+            hBtnAnalyze = CreateWindowA("BUTTON", "Analyze Selected Object (1h)", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_ANALYZE, NULL, NULL);
+            hBtnLeaveLab = CreateWindowA("BUTTON", "Leave Lab [Esc]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_LEAVE_LAB, NULL, NULL);
             
             hScanDesc = CreateWindowA("STATIC", "", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
-            hBtnScan11 = CreateWindowA("BUTTON", "+11", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_11, NULL, NULL);
-            hBtnScan7 = CreateWindowA("BUTTON", "+7", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_7, NULL, NULL);
-            hBtnScanM3 = CreateWindowA("BUTTON", "-3", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_M3, NULL, NULL);
+            hBtnScan11 = CreateWindowA("BUTTON", "+11 Hz [1]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_11, NULL, NULL);
+            hBtnScan7 = CreateWindowA("BUTTON", "+7 Hz [2]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_7, NULL, NULL);
+            hBtnScanM3 = CreateWindowA("BUTTON", "-3 Hz [3]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_M3, NULL, NULL);
             hBtnScanReset = CreateWindowA("BUTTON", "Reset [R]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN_RESET, NULL, NULL);
 
             hBtnAccuse = CreateWindowA("BUTTON", "Accuse Someone", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_ACCUSE, NULL, NULL);
@@ -1950,6 +2012,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         
                         if (intimidated) {
                             suspectPatience[sIdx]--;
+                            UpdateSuspectList();
                             if (suspectPatience[sIdx] <= 0) {
                                 suspectMood = 2;
                                 my_strcpy(response, "\"That's it! You're just guessing. I want my lawyer!\" (They refuse to talk anymore)");

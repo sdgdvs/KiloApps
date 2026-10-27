@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T04:17:05-07:00 — kilo-review: KMystery (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 960x673 4-panel sheet.png, kmystery.html, and KMystery/main.c; un-quarantined from Mature).
+  - Visual & UX Findings: #help-modal clips Interrogation Tips mid-line at 960x673; updateLocation() strips [S]/[I] hotkeys and omits hour costs; scanner buttons mix kHz vs Hz; suspect alibis/reactions vanish from notebook; all portraits/scenes/sketches are primitive geometric programmer art.
+  - Gameplay, Audio & Mesh Findings: Medium (14h) and Hard (12h) budgets plus advanceTime(0) instant-fail make 4-5 location cases unsolvable; resetScannerFreq() decrements moves-- instead of restoring 12; spawnShockwave() is dead; toggleMusic() leaves white-noise rain/SFX playing; Win32 child focus breaks hotkeys and lacks Reset/Dossier/VFS.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-graphics`->`KMystery`, `kilo-tester`->`KMystery`, `kilo-usability`->`KMystery`, `kilo-expander`->`KMystery`] (un-quarantined `KMystery` from Mature); advanced `kilo-review` to `KColosseum`; next agent `kilo-creator`.
+
 - **2026-10-27T03:41:12-07:00 — kilo-expander: KScript (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KScript across web and native targets.
