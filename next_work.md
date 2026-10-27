@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_soundscape: KAlchemy
   kilo_tester: KMaze
   kilo_usability: KMaze
-  kilo_qa: KContacts
+  kilo_qa: KZip
   kilo_expander: KScript
   kilo_review: KMystery
 virtual_web_target: kweb://slashnet
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KFortress
-  timestamp: '2026-10-27T02:22:25-07:00'
+  agent: kilo-qa
+  app: KContacts
+  timestamp: '2026-10-27T02:35:59-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -142,7 +142,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Fix #garage-rank not updating in updateGarage() (call getPilotRank(playerLevel)); implement actual enemyStunned=true stun effect on Head/Cockpit hit (currentTargetLimb===0) so enemyTurn() skips attack and vents heat per Manual; auto-restore kmech_save on boot; and trigger enemy overheat burnout damage when EMP pushes enemy heat over maxHeat. |
-| `KContacts` | `KiloOS/public/apps/kcontacts.html`, `KContacts/main.c` | Audit address book entry creation, search/filter, vCard import/export, keyboard shortcuts, and VFS storage sync. |
 | `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Audit archive packer/unpacker UI, compression ratio telemetry, file list viewer, and drag-and-drop file ingestion. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
@@ -160,7 +159,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Eliminate 37px vertical overflow at 640x503 by removing min-height:520px on #game-container and tightening body/container padding so bottom action buttons and HUD corners fit in-viewport; keep .header-bar and .quick-hint single-line; reposition #toast-container so it never overlaps header/hints; add interactive limb-target selector pills with hit% and HiDPI scaling on #combat-fx-canvas. |
-| `KContacts` | `KiloOS/public/apps/kcontacts.html`, `KContacts/main.c` | Responsive split detail pane layout, keyboard navigation focus rings, and clear empty-state messaging. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Compact #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 without vertical scroll, add preventDefault() for Arrow/Space keys so gameplay never scrolls the page, and prevent #toast-container from covering #controls and #message-log. |
@@ -168,11 +166,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KContacts`
+- **Active Target**: `KZip`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KContacts` | `KiloOS/public/apps/kcontacts.html`, `KContacts/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, contact CRUD verification, vCard export, dual Win32 C parity, and promote to Mature table. |
 | `KZip` | `KiloOS/public/apps/kzip.html`, `KZip/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, archive unpack/pack verification, byte limits, dual Win32 C parity, and promote to Mature table. |
 | `KType` | `KiloOS/public/apps/ktype.html`, `KType/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, typing speed WPM/accuracy benchmark, word drill banks, dual Win32 C parity, and promote to Mature table. |
 | `KColor` | `KiloOS/public/apps/kcolor.html`, `KColor/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, palette generator/harmony rules, HEX/RGB/HSL conversion, dual Win32 C parity, and promote to Mature table. |
@@ -243,6 +240,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KContacts** | `KiloOS/public/apps/kcontacts.html` | Pass 5+ (2026-10-27) | Office / Productivity | Complete contact manager & address book with vCard 3.0/CSV/JSON/LDIF export/import, duplicate merging, 8-category filter, F5/F9 state persistence, and dual Win32 C parity. |
 | **KCalendar** | `KiloOS/public/apps/kcalendar.html` | Pass 5+ (2026-10-26) | Office / Productivity | Complete retro schedule/event workstation with Month/Week/Day/Agenda views, reminder alerts, VFS export mesh, retro chime audio, F5/F9 persistence, and dual Win32 C native build parity. |
 | **KRss** | `KiloOS/public/apps/krss.html` | Pass 5+ (2026-10-26) | Internet / Syndication | Complete Sovereign Web 1.0 RSS/Atom/JSON Feed syndication terminal with OPML/CSV round-trip, research scrapbook, speech synthesis, F5/F9 state persistence, and dual Win32 C binary parity. |
 | **KBookmark** | `KiloOS/public/apps/kbookmark.html` | Pass 5+ (2026-10-26) | Workstation / Organization | Complete retro Web 1.0 link vault with folder hierarchy, Netscape HTML/JSON export/import, search filter, F5/F9 state persistence, and dual Win32 C parity. |
@@ -301,6 +299,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T02:35:59-07:00 — kilo-qa: KContacts (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 150.4 KB, native 29.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload persistence in localStorage & binary DAT, tutorial seen check, and modal dismissals.
+  - Dual Parity & Lifecycle: Added [8] Warez/Scene category filter to Win32 C, uncommitted edit auto-flush on F5, and visibilitychange auto-save.
+  - Mature Quarantine & Handoff: Promoted `KContacts` to Mature archive; advanced `kilo-qa` to `KZip`; next agent `kilo-expander`.
+
 - **2026-10-27T02:22:25-07:00 — kilo-usability: KFortress (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KFortress across web and native targets.
@@ -321,9 +325,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-graphics updates for KAlchemy across web and native targets.
   - Handoff: Advanced `kilo-graphics` to `KVoid`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-27T00:21:48-07:00 — kilo-creator: kweb://deep-core (Tier 3 Ghost Node VFS & KMatrix Passkey Integration)**
-  - Status: PASS ✅ (0 errors, web 304.4 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.9%, HEAD Δ 0.21%, 0 fail, 0 warn, 5.7s)).
-  - Connected Ghost Node terminal directives ('vfs', 'decode', 'sync') directly to KiloOS VFS (/sys/alpha.sys & /home/crypto/) with automated Inode 0x1999 defusal commits.
-  - Added bidirectional VFS & OS IPC message bridge in KNet to forward VFS events between nested iframes and host for seamless KMatrix passkey verification.
-  - Handoff: Advanced `kilo-creator` to `kweb://slashnet`; rotated active agent to `kilo-graphics`.

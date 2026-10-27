@@ -203,6 +203,10 @@ void RefreshList() {
             cat_match = (my_stricmp(contacts[i].category, "Friends") == 0);
         } else if (cat_idx == 6) {
             cat_match = (my_stricmp(contacts[i].category, "Other") == 0 || contacts[i].category[0] == 0);
+        } else if (cat_idx == 7) {
+            cat_match = (my_stricmp(contacts[i].category, "Warez/Scene") == 0 || 
+                         my_stricmp(contacts[i].category, "Warez") == 0 || 
+                         my_stricmp(contacts[i].category, "Scene") == 0);
         }
 
         if (search_match && cat_match) {
@@ -316,7 +320,7 @@ void NativeQuickLoad(HWND hwnd) {
                 ReadFile(hFile, contacts, sizeof(Contact) * contact_count, &read, NULL);
 
                 SetWindowTextA(hSearch, search_buf);
-                if (cat_idx >= 0 && cat_idx <= 6) {
+                if (cat_idx >= 0 && cat_idx <= 7) {
                     SendMessageA(hComboCat, CB_SETCURSEL, cat_idx, 0);
                 } else {
                     SendMessageA(hComboCat, CB_SETCURSEL, 0, 0);
@@ -851,7 +855,7 @@ void ShowHelpDialog(HWND hwnd) {
         "  [Ctrl+C] or [C]   - Copy selected contact details to clipboard\n"
         "  [Alt+C]           - Call contact phone\n"
         "  [Alt+M]           - Email contact\n"
-        "  [1] - [7]         - Quick category filter (1=All, 2=Favs, 3=Work, 4=Personal, 5=Family, 6=Friends, 7=Other)\n"
+        "  [1] - [8]         - Quick category filter (1=All, 2=Favs, 3=Work, 4=Personal, 5=Family, 6=Friends, 7=Other, 8=Warez)\n"
         "  [Ctrl+D]          - Restore 5 standard sample contacts\n"
         "  [Esc]             - Clear search query and reset filter\n"
         "  [Delete]          - Delete currently selected contact\n"
@@ -892,6 +896,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"[5] Family");
             SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"[6] Friends");
             SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"[7] Other");
+            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"[8] Warez/Scene");
             SendMessageA(hComboCat, CB_SETCURSEL, 0, 0);
 
             // ListBox
@@ -1215,7 +1220,7 @@ void __stdcall MainEntry() {
                 SendMessageA(hwnd, WM_COMMAND, 1014, 0);
                 continue;
             }
-            if (!isEdit && msg.wParam >= '1' && msg.wParam <= '7') {
+            if (!isEdit && msg.wParam >= '1' && msg.wParam <= '8') {
                 int catIndex = msg.wParam - '1';
                 SendMessageA(hComboCat, CB_SETCURSEL, catIndex, 0);
                 RefreshList();

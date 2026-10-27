@@ -1318,7 +1318,7 @@
         <li><kbd>F5</kbd> : Quicksave snapshot to localStorage</li>
         <li><kbd>F9</kbd> : Quickload snapshot from localStorage</li>
         <li><kbd>Esc</kbd> : Close modals, unfocus inputs, or clear search</li>
-        <li><kbd>1</kbd> - <kbd>7</kbd> : Quick switch categories (1=All, 2=Favs, 3=Work, 4=Personal, etc.)</li>
+        <li><kbd>1</kbd> - <kbd>8</kbd> : Quick switch categories (1=All, 2=Favs, 3=Work, 4=Personal, etc.)</li>
         <li><kbd>Ctrl+S</kbd> or <kbd>Enter</kbd> : Save contact details</li>
         <li><kbd>N</kbd> or <kbd>Ctrl+N</kbd> : Create new contact draft</li>
         <li><kbd>C</kbd> : Quick copy contact info to clipboard</li>
@@ -3969,6 +3969,18 @@
       }
     });
 
+    // Lifecycle & Resource Hygiene (Pass 5 QA): auto-save dirty contact edits on hidden/unload
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && selectedId && isDirty) {
+        saveCurrentContact();
+      }
+    });
+    window.addEventListener('pagehide', () => {
+      if (selectedId && isDirty) {
+        saveCurrentContact();
+      }
+    });
+
     // Initialization
     if (window.resizeTo) window.resizeTo(920, 680);
     seedData();
@@ -3980,14 +3992,14 @@
     const chkStartup = document.getElementById('chkShowHelpOnStartup');
     const hideStartupHelp = localStorage.getItem('kcontacts_hideHelpStartup') === '1';
     const tutorialSeen = localStorage.getItem('kcontacts_tutorialSeen') === '1';
-    const hasSavedData = localStorage.getItem('kcontacts_quicksave') !== null;
+    const hasSavedData = localStorage.getItem('kcontacts_quicksave') !== null || localStorage.getItem('kcontacts_data_v3') !== null;
     if (chkStartup) {
       chkStartup.checked = !hideStartupHelp;
     }
     if (!tutorialSeen && !hideStartupHelp && !hasSavedData) {
       openHelp();
     } else {
-      setTimeout(() => showToast("📇 Welcome to KContacts! Press F1 for Help, [F5] Quicksave, [N] Add, or [1-7] Filter."), 300);
+      setTimeout(() => showToast("📇 Welcome to KContacts! Press F1 for Help, [F5] Quicksave, [N] Add, or [1-8] Filter."), 300);
     }
   </script>
 
