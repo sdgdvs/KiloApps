@@ -50,6 +50,38 @@ DWORD WINAPI SoundThread(LPVOID lpParam) {
     } else if (type == 7) { // Acid Sizzle
         Beep(220, 40);
         Beep(160, 40);
+    } else if (type == 8) { // EMP Blast
+        Beep(420, 90);
+        Beep(1320, 70);
+        Beep(880, 110);
+    } else if (type == 9) { // Keycard Pickup
+        Beep(440, 50);
+        Beep(587, 50);
+        Beep(740, 50);
+        Beep(880, 100);
+    } else if (type == 10) { // Terminal Hack Chirp
+        Beep(1999, 40);
+        Beep(1175, 100);
+    } else if (type == 11) { // Geiger Hull Stress / Hazard
+        Beep(1800, 15);
+        Beep(120, 50);
+    } else if (type == 12) { // Victory Fanfare
+        Beep(466, 90);
+        Beep(523, 90);
+        Beep(587, 220);
+        Beep(880, 300);
+    } else if (type == 13) { // Game Over Descent
+        Beep(147, 180);
+        Beep(156, 220);
+        Beep(73, 350);
+    } else if (type == 14) { // Quicksave Earcon
+        Beep(587, 50);
+        Beep(880, 50);
+        Beep(1175, 100);
+    } else if (type == 15) { // Quickload Earcon
+        Beep(1175, 50);
+        Beep(880, 50);
+        Beep(698, 100);
     }
     return 0;
 }
@@ -586,6 +618,7 @@ void SaveGameState(void) {
         DWORD written = 0;
         WriteFile(hFile, s, sizeof(KVoidSaveState), &written, NULL);
         CloseHandle(hFile);
+        PlaySoundEffect(14);
         lstrcpy(sysMsg, "STATE QUICKSAVED (F5)");
     } else {
         lstrcpy(sysMsg, "SAVE FAILED (FILE ERROR)");
@@ -614,6 +647,7 @@ int LoadGameState(void) {
         return 0;
     }
 
+    PlaySoundEffect(15);
     playerX = s->playerX;
     playerY = s->playerY;
     playerDir = s->playerDir;
@@ -1710,6 +1744,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 case VK_SPACE:
                     if (emps > 0) {
                         emps--;
+                        PlaySoundEffect(8);
                         lstrcpy(sysMsg, "EMP DEPLOYED. ALIENS STUNNED.");
                         msgTimer = 60;
                         float epx = playerX * TILE_SIZE + TILE_SIZE / 2.0f;
@@ -1766,6 +1801,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     int l_idx = rand() % 8;
                     int unlockColor = 3 + (rand() % 3);
                     const char* colorName = (unlockColor == 3) ? "RED" : (unlockColor == 4) ? "GREEN" : "BLUE";
+                    PlaySoundEffect(10);
                     wsprintf(sysMsg, "%s %s DOORS OPENED.", lores[l_idx], colorName);
                     
                     for (int y = 1; y < ROWS - 1; y++) {
@@ -1788,11 +1824,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (flares < 3) flares++;
                     flareCount = 0;
                     GenerateMap();
+                    PlaySoundEffect(10);
                     wsprintf(sysMsg, "ELEVATOR TO DECK %d. STATS & FLARES RESTORED.", deck);
                     msgTimer = 60;
                     InvalidateRect(hwnd, NULL, FALSE);
                 } else if (target == 14) {
                     wonGame = 1;
+                    PlaySoundEffect(12);
                     if (selfDestructActive) {
                         if (totalTime < 300) {
                             lstrcpy(winEnding, "S-RANK: STATION DESTROYED, SPEEDRUN ESCAPE!");
@@ -1819,6 +1857,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 } else if (target == 0 || (target >= 6 && target <= 8) || target == 11 || target == 12 || (target >= 16 && target <= 18)) {
                     if (target >= 6 && target <= 8) {
+                        PlaySoundEffect(9);
                         if (target == 6) { hasRedKey = 1; lstrcpy(sysMsg, "PICKED UP RED KEYCARD."); }
                         if (target == 7) { hasGreenKey = 1; lstrcpy(sysMsg, "PICKED UP GREEN KEYCARD."); }
                         if (target == 8) { hasBlueKey = 1; lstrcpy(sysMsg, "PICKED UP BLUE KEYCARD."); }

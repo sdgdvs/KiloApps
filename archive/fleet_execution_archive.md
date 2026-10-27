@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T11:39:11-07:00 — kilo-qa: KType (Pass 5 QA, Dual Parity & Mature Graduation)**
+  - Status: PASS (0 errors, web 139.4 KB, native 26.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload across localStorage and ktype.dat, ktype_tutorialSeen flag, and Escape modal dismissals.
+  - Drills & Benchmarks: Added Home Row, Top Row, Bottom Row drills, speed benchmark corpus, and official typing rank tiers.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, visibilitychange timer pause, and clean native build.
+  - Mature Quarantine & Handoff: Promoted `KType` to Mature archive; advanced `kilo-qa` to `KColor`; next agent `kilo-expander`.
+
 - **2026-10-27T11:22:20-07:00 — kilo-usability: KMaze (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KMaze across web and native targets.

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://scallion
   kilo_graphics: KCyber
-  kilo_soundscape: KVoid
+  kilo_soundscape: KCyber
   kilo_tester: KMatrix
   kilo_usability: KMatrix
   kilo_qa: KColor
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
+  agent: kilo-soundscape
   app: KVoid
-  timestamp: '2026-10-27T13:31:47-07:00'
+  timestamp: '2026-10-27T14:18:24-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -116,14 +116,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
-| `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Active Target**: `KVoid`
+- **Active Target**: `KCyber`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Compose abyssal sonar & trench descent 6-channel suite (Suspended `sus2/Maj7` cascade, muffled low-pass SPC700 echo, warm sine sub-bass, hydrophone ping earcons). |
@@ -252,6 +250,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KVoid** | `KiloOS/public/apps/kvoid.html` | Pass 5+ (2026-10-27) | Games / Survival | Deep void survival roguelite; 6-channel YM2612 FM / 260ms SPC700 suite, F5/F9 state persistence, dual Win32 C parity. |
 | **KType** | `KiloOS/public/apps/ktype.html` | Pass 5+ (2026-10-27) | Education / Typing | Complete typing ergonomics & arcade speed workstation with 6 drill banks (Home/Top/Bottom rows, Code, Benchmark), WPM/accuracy rank grading, F5/F9 persistence, and dual Win32 C parity. |
 | **KZip** | `KiloOS/public/apps/kzip.html` | Pass 5+ (2026-10-27) | System / Utilities | Complete archive studio with KZA/ZIP/TAR format support, RLE/Deflate algorithms, hex preview, batch extraction, CRC32/SHA-256 telemetry, F5/F9 state persistence, and dual Win32 C parity. |
 | **KContacts** | `KiloOS/public/apps/kcontacts.html` | Pass 5+ (2026-10-27) | Office / Productivity | Complete contact manager & address book with vCard 3.0/CSV/JSON/LDIF export/import, duplicate merging, 8-category filter, F5/F9 state persistence, and dual Win32 C parity. |
@@ -310,6 +309,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T14:18:24-07:00 — kilo-soundscape: KVoid (Event Horizon Protocol — YM2612/SPC700 Chiptune Suite & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 140.0 KB, native 11.2 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Composition: D Minor/Phrygian whole-tone clusters, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
+  - Patches & DSP: 2-Op FM slap/sub-bass drone, crystalline bells, 260ms cavernous SPC700 stereo delay, Geiger/hull-stress earcons.
+  - Dual Parity: Win32 C audio earcons & F5/F9 state persistence verified (KVoid.exe 11.2 KB).
+  - Mature Quarantine & Handoff: Promoted `KVoid` to Mature archive; advanced `kilo-soundscape` to `KCyber`; next agent `kilo-tester`.
+
 - **2026-10-27T13:31:47-07:00 — kilo-graphics: KVoid (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KVoid.
   - Handoff: Advanced `kilo-graphics` to `KCyber`; rotated active agent to `kilo-soundscape`.
@@ -331,10 +337,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Wired unconditional VFS & IPC event hooks on DOMContentLoaded and hashchange, connecting /home/media/ carrier open/save, /home/work/ payload export, and 'Send Payload to KCipher' cross-app launch across image, audio, text, and steganalysis lab.
   - Extended Win32 C parity in KSteno/main.c with 'Send to KCipher' (ID_BTN_SEND_KCIPHER / Ctrl+K), dual-format handshake export, and Westfeld-Pfitzmann Chi-Square steganalysis for 24-bit BMP and 16-bit PCM WAV carriers.
   - Handoff: Advanced `kilo-expander` to `KColosseum`; rotated active agent to `kilo-review`.
-
-- **2026-10-27T11:39:11-07:00 — kilo-qa: KType (Pass 5 QA, Dual Parity & Mature Graduation)**
-  - Status: PASS (0 errors, web 139.4 KB, native 26.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload across localStorage and ktype.dat, ktype_tutorialSeen flag, and Escape modal dismissals.
-  - Drills & Benchmarks: Added Home Row, Top Row, Bottom Row drills, speed benchmark corpus, and official typing rank tiers.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, visibilitychange timer pause, and clean native build.
-  - Mature Quarantine & Handoff: Promoted `KType` to Mature archive; advanced `kilo-qa` to `KColor`; next agent `kilo-expander`.
