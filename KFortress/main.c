@@ -3092,7 +3092,8 @@ void Render(HDC hdc, HWND hwnd) {
         SetTextColor(memDC, TEXT_WHITE);
         TextOutA(memDC, hX + 20, cy, "- [Space]: Start Wave | [Esc]: Close Modals | [F1] / [H]: Field Guide | [R]: Reset Battle", 88); cy += 16;
         TextOutA(memDC, hX + 20, cy, "- [F5]: Quicksave State | [F9]: Quickload State | [1-4]: Hero Skills", 68); cy += 16;
-        TextOutA(memDC, hX + 20, cy, "- [5]: Siege Trebuchet | [F]: Firestorm | [B]: Blizzard | [A]: Academy | [M]: Mutators", 86); cy += 25;
+        TextOutA(memDC, hX + 20, cy, "- [5]: Siege Trebuchet | [F]: Firestorm | [B]: Blizzard | [A]: Academy | [M]: Mutators", 86); cy += 16;
+        TextOutA(memDC, hX + 20, cy, "- [Right-Click / Del]: Demolish Tower (70% Gold Refund)", 55); cy += 25;
         
         DrawRoundedRect(memDC, hX + 260, hY + hH - 45, hX + 420, hY + hH - 15, RGB(16, 185, 129), BORDER_COLOR, 6);
         SetTextColor(memDC, RGB(0,0,0));
@@ -3103,6 +3104,47 @@ void Render(HDC hdc, HWND hwnd) {
     SelectObject(memDC, oldBitmap);
     DeleteObject(memBitmap);
     DeleteDC(memDC);
+}
+
+static BOOL DemolishTower(int slotIdx) {
+    if (slotIdx < 0 || slotIdx >= g_slotCount) return FALSE;
+    if (!g_slots[slotIdx].occupied) return FALSE;
+
+    int baseCost = 50;
+    if (g_slots[slotIdx].towerType == TOWER_MAGE) baseCost = 100;
+    else if (g_slots[slotIdx].towerType == TOWER_CANNON) baseCost = 150;
+    else if (g_slots[slotIdx].towerType == TOWER_FROST) baseCost = 120;
+    else if (g_slots[slotIdx].towerType == TOWER_TESLA) baseCost = 180;
+    else if (g_slots[slotIdx].towerType == TOWER_BALLISTA) baseCost = 160;
+    else if (g_slots[slotIdx].towerType == TOWER_POISON) baseCost = 140;
+    else if (g_slots[slotIdx].towerType == TOWER_INFERNO) baseCost = 150;
+    else if (g_slots[slotIdx].towerType == TOWER_SUPERCONDUCTOR) baseCost = 180;
+    else if (g_slots[slotIdx].towerType == TOWER_VENOMSPITE) baseCost = 160;
+    else if (g_slots[slotIdx].towerType == TOWER_SOLAR_BEAM) baseCost = 50;
+
+    int totalCost = baseCost;
+    if (g_slots[slotIdx].level >= 2) totalCost += (int)(baseCost * 1.5f);
+    if (g_slots[slotIdx].level >= 3) totalCost += (int)(baseCost * 3.0f);
+    if (g_slots[slotIdx].level >= 4) totalCost += 220;
+
+    int refund = (int)(totalCost * 0.70f);
+    g_gold += refund;
+
+    char buf[48];
+    wsprintfA(buf, "+%dg REFUND", refund);
+    AddFloatingText((float)g_slots[slotIdx].x, (float)(g_slots[slotIdx].y - 20), buf, RGB(16, 185, 129));
+    SpawnParticleBurst((float)g_slots[slotIdx].x, (float)g_slots[slotIdx].y, RGB(241, 245, 249), 16);
+    Beep(450, 40); Beep(350, 60);
+
+    g_slots[slotIdx].occupied = FALSE;
+    g_slots[slotIdx].towerType = 0;
+    g_slots[slotIdx].level = 1;
+    g_slots[slotIdx].cooldown = 0;
+    g_slots[slotIdx].attackAnim = 0;
+    g_slots[slotIdx].beamTargetId = -1;
+    if (g_selectedSlot == slotIdx) g_selectedSlot = -1;
+
+    return TRUE;
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -3118,6 +3160,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         break;
 
     case WM_KEYDOWN: {
+        if (wParam == VK_DELETE || wParam == VK_BACK) {
+            if (!g_gameOver && g_selectedSlot >= 0 && g_selectedSlot < g_slotCount) {
+                if (DemolishTower(g_selectedSlot)) {
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+            }
+        }
         if (wParam == VK_ESCAPE) {
             if (g_showHelp || g_showMutators || g_showAcademy) {
                 g_showHelp = FALSE;
@@ -3310,6 +3360,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             Beep(600, 60); Beep(900, 80);
         } else if (wParam == '5') {
             TriggerTrebuchetStrike(g_hero.targetX, g_hero.targetY);
+        }
+        break;
+    }
+
+    case WM_RBUTTONDOWN: {
+        int x = LOWORD(lParam);
+        int y = HIWORD(lParam);
+        if (!g_gameOver && !g_showHelp && !g_showAcademy && !g_showMutators) {
+            for (int i = 0; i < g_slotCount; i++) {
+                int dx = x - g_slots[i].x;
+                int dy = y - g_slots[i].y;
+                if (dx * dx + dy * dy <= 24 * 24) {
+                    if (DemolishTower(i)) {
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                }
+            }
         }
         break;
     }

@@ -46,12 +46,13 @@
     header {
       background-color: var(--card-bg);
       border-bottom: 1px solid var(--border-color);
-      padding: 8px 18px;
+      padding: 5px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 4px 14px rgba(0,0,0,0.4);
       z-index: 10;
+      flex-shrink: 0;
     }
 
     .title-group {
@@ -101,16 +102,18 @@
     .main-container {
       flex: 1;
       display: flex;
-      padding: 10px;
-      gap: 10px;
-      height: calc(100vh - 54px);
+      padding: 6px 8px;
+      gap: 8px;
+      height: calc(100vh - 46px);
+      min-height: 0;
+      overflow: hidden;
     }
 
     .battlefield-card {
       flex: 1;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
-      border-radius: 10px;
+      border-radius: 8px;
       position: relative;
       overflow: hidden;
       display: flex;
@@ -126,44 +129,47 @@
     }
 
     .sidebar {
-      width: 275px;
+      width: 290px;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 10px;
+      border-radius: 8px;
+      padding: 6px 8px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.3);
       overflow-y: auto;
+      flex-shrink: 0;
     }
 
     .sidebar h2 {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 800;
       color: var(--gold-color);
       border-bottom: 1px solid var(--border-color);
-      padding-bottom: 3px;
-      letter-spacing: 1px;
+      padding-bottom: 2px;
+      margin-top: 1px;
+      letter-spacing: 0.8px;
       text-transform: uppercase;
     }
 
     .tower-selection {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 4px;
     }
 
     .tower-card {
       background: rgba(0,0,0,0.25);
       border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 4px 6px;
+      border-radius: 5px;
+      padding: 3px 5px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       cursor: pointer;
       transition: all 0.15s ease;
+      min-width: 0;
     }
 
     .tower-card:hover {
@@ -173,50 +179,61 @@
 
     .tower-card.selected {
       border-color: var(--gold-color);
-      background: rgba(255, 215, 0, 0.1);
-      box-shadow: 0 0 8px var(--gold-glow);
+      background: rgba(255, 215, 0, 0.12);
+      box-shadow: 0 0 6px var(--gold-glow);
     }
 
     .tower-icon {
-      width: 26px;
-      height: 26px;
-      border-radius: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 3px;
       background: #475569;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 14px;
+      font-size: 12px;
       border: 1px solid rgba(255,255,255,0.2);
+      flex-shrink: 0;
     }
 
     .tower-info {
       flex: 1;
+      min-width: 0;
+      overflow: hidden;
     }
 
     .tower-name {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       color: var(--text-white);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.1;
     }
 
     .tower-cost {
-      font-size: 10px;
-      font-weight: 700;
+      font-size: 9px;
+      font-weight: 600;
       color: var(--gold-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.1;
     }
 
     .btn {
       background: var(--card-hover);
       color: var(--text-white);
       border: 1px solid var(--border-color);
-      padding: 6px;
-      border-radius: 6px;
+      padding: 5px;
+      border-radius: 5px;
       font-weight: 700;
-      font-size: 11px;
+      font-size: 10px;
       cursor: pointer;
       transition: all 0.15s ease;
       text-align: center;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
     }
 
     .btn:hover {
@@ -375,6 +392,7 @@
         <div><b style="color:var(--gold-color);">[F5]</b> Quicksave Battle State</div>
         <div><b style="color:var(--gold-color);">[F9]</b> Quickload Battle State</div>
         <div><b style="color:var(--gold-color);">[H] / [F1]</b> Toggle Field Guide</div>
+        <div><b style="color:var(--gold-color);">[R-Click / Del]</b> Demolish Tower (70% Refund)</div>
         <div><b style="color:var(--gold-color);">[Esc]</b> Close Open Dialogs</div>
       </div>
       
@@ -426,50 +444,50 @@
         <div class="tower-card selected" data-type="Archer" id="archerTowerCard">
           <div class="tower-icon">🏹</div>
           <div class="tower-info">
-            <div class="tower-name">Archer Tower</div>
-            <div class="tower-cost">50g | Dmg: 12 | Rng: 130</div>
+            <div class="tower-name">Archer</div>
+            <div class="tower-cost">50g | 12 Dmg</div>
           </div>
         </div>
         <div class="tower-card" data-type="Mage" id="mageTowerCard">
           <div class="tower-icon">🔮</div>
           <div class="tower-info">
-            <div class="tower-name">Mage Tower</div>
-            <div class="tower-cost">100g | Dmg: 15 (AoE) | Rng: 110</div>
+            <div class="tower-name">Mage</div>
+            <div class="tower-cost">100g | 15 AoE</div>
           </div>
         </div>
         <div class="tower-card" data-type="Cannon" id="cannonTowerCard">
           <div class="tower-icon">💣</div>
           <div class="tower-info">
-            <div class="tower-name">Cannon Tower</div>
-            <div class="tower-cost">150g | Dmg: 40 | Rng: 150</div>
+            <div class="tower-name">Cannon</div>
+            <div class="tower-cost">150g | 40 Dmg</div>
           </div>
         </div>
         <div class="tower-card" data-type="Frost" id="frostTowerCard">
           <div class="tower-icon">❄️</div>
           <div class="tower-info">
-            <div class="tower-name">Frost Tower</div>
-            <div class="tower-cost">120g | Slow 60% Aura | Rng: 100</div>
+            <div class="tower-name">Frost</div>
+            <div class="tower-cost">120g | Slow 60%</div>
           </div>
         </div>
         <div class="tower-card" data-type="Tesla" id="teslaTowerCard">
           <div class="tower-icon">⚡</div>
           <div class="tower-info">
-            <div class="tower-name">Tesla Tower</div>
-            <div class="tower-cost">180g | Dmg: 28 (Chain x3) | Rng: 135</div>
+            <div class="tower-name">Tesla</div>
+            <div class="tower-cost">180g | Chain x3</div>
           </div>
         </div>
         <div class="tower-card" data-type="Ballista" id="ballistaTowerCard">
           <div class="tower-icon">🎯</div>
           <div class="tower-info">
-            <div class="tower-name">Siege Ballista</div>
-            <div class="tower-cost">160g | Dmg: 75 + CRIT | Rng: 190</div>
+            <div class="tower-name">Ballista</div>
+            <div class="tower-cost">160g | 75 Crit</div>
           </div>
         </div>
         <div class="tower-card" data-type="Poison" id="poisonTowerCard">
           <div class="tower-icon">🧪</div>
           <div class="tower-info">
-            <div class="tower-name">Alchemist Poison</div>
-            <div class="tower-cost">140g | Dmg: 12 + DoT | Rng: 120</div>
+            <div class="tower-name">Poison</div>
+            <div class="tower-cost">140g | 12 + DoT</div>
           </div>
         </div>
       </div>
@@ -480,69 +498,71 @@
           <div class="tower-icon">🪤</div>
           <div class="tower-info">
             <div class="tower-name">Spike Pit</div>
-            <div class="tower-cost">30g | Dmg: 50 (3 charges)</div>
+            <div class="tower-cost">30g | 3 hits</div>
           </div>
         </div>
         <div class="tower-card" data-type="Oil" id="oilCard">
           <div class="tower-icon">🛢️</div>
           <div class="tower-info">
             <div class="tower-name">Oil Slick</div>
-            <div class="tower-cost">40g | Slow 70% puddle</div>
+            <div class="tower-cost">40g | Slow 70%</div>
           </div>
         </div>
         <div class="tower-card" data-type="Barricade" id="barricadeCard">
           <div class="tower-icon">🚧</div>
           <div class="tower-info">
             <div class="tower-name">Barricade</div>
-            <div class="tower-cost">50g | 200 HP Wall</div>
+            <div class="tower-cost">50g | 200 HP</div>
           </div>
         </div>
         <div class="tower-card" data-type="Dynamite" id="dynamiteCard">
           <div class="tower-icon">🧨</div>
           <div class="tower-info">
-            <div class="tower-name">Dynamite Mine</div>
-            <div class="tower-cost">60g | 140 AoE Blast</div>
+            <div class="tower-name">Dynamite</div>
+            <div class="tower-cost">60g | 140 AoE</div>
           </div>
         </div>
-        <div style="display:flex; gap:4px; margin-top:2px;">
-          <button class="btn" id="btnTrebuchet" style="flex:1; padding:5px 2px; font-size:9px; background:#d97706; color:#fff; border-color:#b45309;" title="Hotkey: 5">Siege [5]</button>
-          <button class="btn" id="btnFirestorm" style="flex:1; padding:5px 2px; font-size:9px; background:#dc2626; color:#fff; border-color:#b91c1c;" title="Hotkey: F">Fire [F] (100g)</button>
-          <button class="btn" id="btnBlizzard" style="flex:1; padding:5px 2px; font-size:9px; background:#0284c7; color:#fff; border-color:#0369a1;" title="Hotkey: B">Bliz [B] (80g)</button>
-        </div>
+      </div>
+      <div style="display:flex; gap:3px; margin-top:1px;">
+        <button class="btn" id="btnTrebuchet" style="flex:1; padding:3px 2px; font-size:9px; background:#d97706; color:#fff; border-color:#b45309;" title="Hotkey: 5">Siege [5]</button>
+        <button class="btn" id="btnFirestorm" style="flex:1; padding:3px 2px; font-size:9px; background:#dc2626; color:#fff; border-color:#b91c1c;" title="Hotkey: F">Fire [F] (100g)</button>
+        <button class="btn" id="btnBlizzard" style="flex:1; padding:3px 2px; font-size:9px; background:#0284c7; color:#fff; border-color:#0369a1;" title="Hotkey: B">Bliz [B] (80g)</button>
       </div>
 
       <h2>MODES & MUTATORS</h2>
       <div style="display:flex; gap:3px;">
-        <button class="btn" id="modeCampaignBtn" style="flex:1; padding:4px; font-size:10px; background:var(--gold-color); color:#000;">Camp</button>
-        <button class="btn" id="modeEndlessBtn" style="flex:1; padding:4px; font-size:10px;">Endl</button>
-        <button class="btn" id="modeBossBtn" style="flex:1; padding:4px; font-size:10px;">Boss</button>
-        <button class="btn" id="btnMutatorsModal" style="flex:1; padding:4px; font-size:10px; background:var(--purple-color); color:#fff; border-color:#9333ea;" title="Hotkey: M">Muts [M]</button>
+        <button class="btn" id="modeCampaignBtn" style="flex:1; padding:3px 2px; font-size:10px; background:var(--gold-color); color:#000;">Camp</button>
+        <button class="btn" id="modeEndlessBtn" style="flex:1; padding:3px 2px; font-size:10px;">Endl</button>
+        <button class="btn" id="modeBossBtn" style="flex:1; padding:3px 2px; font-size:10px;">Boss</button>
+        <button class="btn" id="btnMutatorsModal" style="flex:1; padding:3px 2px; font-size:10px; background:var(--purple-color); color:#fff; border-color:#9333ea;" title="Hotkey: M">Muts [M]</button>
       </div>
-      <div style="font-size:10px; color:var(--text-muted); text-align:center;">
+      <div style="font-size:10px; color:var(--text-muted); text-align:center; line-height:1.2;">
         Best Endl: <span id="hsEndless" style="color:var(--gold-color)">0</span> | Boss: <span id="hsBoss" style="color:var(--gold-color)">0</span>
       </div>
 
-      <div style="display:flex; gap:4px;">
-        <button class="btn" id="prevMapBtn" style="flex:1; padding:4px; font-size:11px;">◀</button>
-        <div id="mapNameDisplay" style="flex:3; text-align:center; font-size:11px; font-weight:bold; color:var(--gold-color); line-height:24px; background:rgba(0,0,0,0.3); border-radius:4px; border:1px solid var(--border-color);">Forest Outpost</div>
-        <button class="btn" id="nextMapBtn" style="flex:1; padding:4px; font-size:11px;">▶</button>
+      <div style="display:flex; gap:3px;">
+        <button class="btn" id="prevMapBtn" style="flex:1; padding:3px; font-size:11px;">◀</button>
+        <div id="mapNameDisplay" style="flex:3; text-align:center; font-size:11px; font-weight:bold; color:var(--gold-color); line-height:22px; background:rgba(0,0,0,0.3); border-radius:4px; border:1px solid var(--border-color);">Forest Outpost</div>
+        <button class="btn" id="nextMapBtn" style="flex:1; padding:3px; font-size:11px;">▶</button>
       </div>
 
-      <button class="btn btn-primary" id="waveBtn">START WAVE 1 [Space]</button>
-      <div style="display:flex; gap:4px;">
-        <button class="btn" id="academyBtn" style="flex:1; background:#4f46e5; border-color:#4338ca; color:#fff; font-size:11px;" title="Hotkey: A">ACADEMY [A]</button>
-        <button class="btn btn-danger" id="resetBtn" style="flex:1; font-size:11px;" title="Hotkey: R">RESET [R]</button>
+      <button class="btn btn-primary" id="waveBtn" style="padding:5px; font-size:11px;">START WAVE 1 [Space]</button>
+      <div style="display:flex; gap:3px;">
+        <button class="btn" id="academyBtn" style="flex:1; padding:4px 2px; background:#4f46e5; border-color:#4338ca; color:#fff; font-size:11px;" title="Hotkey: A">ACADEMY [A]</button>
+        <button class="btn btn-danger" id="resetBtn" style="flex:1; padding:4px 2px; font-size:11px;" title="Hotkey: R">RESET [R]</button>
       </div>
 
       <h2>HERO & SKILLS [1-5]</h2>
-      <div style="font-size:11px; font-weight:bold; color:var(--text-white);">
-        HP: <span id="heroHpVal" style="color:var(--green-color);">100/100</span> | <span id="heroStatusVal">Ready</span>
+      <div style="font-size:10px; font-weight:bold; color:var(--text-white); display:flex; justify-content:space-between; align-items:center;">
+        <span>HP: <span id="heroHpVal" style="color:var(--green-color);">100/100</span></span>
+        <span id="heroStatusVal">Ready</span>
+        <span style="font-size:9px; color:var(--gold-color); font-weight:normal;">[R-Click/Del] Demolish (70%)</span>
       </div>
       <div style="display:flex; gap:3px;">
-        <button class="btn" id="btnHeal" style="flex:1; padding:5px 2px; font-size:9px; background:#fbbf24; color:#000; border-color:#d97706;" title="Hotkey: 1">Heal [1]</button>
-        <button class="btn" id="btnShield" style="flex:1; padding:5px 2px; font-size:9px; background:#3b82f6; color:#fff; border-color:#2563eb;" title="Hotkey: 2">Shld [2]</button>
-        <button class="btn" id="btnMeteor" style="flex:1; padding:5px 2px; font-size:9px; background:#ef4444; color:#fff; border-color:#dc2626;" title="Hotkey: 3">Mtr [3]</button>
-        <button class="btn" id="btnReinforce" style="flex:1; padding:5px 2px; font-size:9px; background:#10b981; color:#000; border-color:#059669;" title="Hotkey: 4">Milt [4]</button>
+        <button class="btn" id="btnHeal" style="flex:1; padding:4px 2px; font-size:9px; background:#fbbf24; color:#000; border-color:#d97706;" title="Hotkey: 1">Heal [1]</button>
+        <button class="btn" id="btnShield" style="flex:1; padding:4px 2px; font-size:9px; background:#3b82f6; color:#fff; border-color:#2563eb;" title="Hotkey: 2">Shld [2]</button>
+        <button class="btn" id="btnMeteor" style="flex:1; padding:4px 2px; font-size:9px; background:#ef4444; color:#fff; border-color:#dc2626;" title="Hotkey: 3">Mtr [3]</button>
+        <button class="btn" id="btnReinforce" style="flex:1; padding:4px 2px; font-size:9px; background:#10b981; color:#000; border-color:#059669;" title="Hotkey: 4">Milt [4]</button>
       </div>
     </div>
   </div>
@@ -2451,6 +2471,23 @@
 
       if (anyModalOpen) return;
 
+      // Delete or Backspace to demolish selected or hovered tower (70% refund)
+      if (e.key === 'Delete' || e.key === 'Del' || e.key === 'Backspace') {
+        if (!gameOver && !anyModalOpen) {
+          if (selectedSlotIndex !== -1 && slots[selectedSlotIndex] && slots[selectedSlotIndex].occupied) {
+            e.preventDefault();
+            demolishTower(selectedSlotIndex);
+            updateHUD();
+            return;
+          } else if (hoverSlotIndex !== -1 && slots[hoverSlotIndex] && slots[hoverSlotIndex].occupied) {
+            e.preventDefault();
+            demolishTower(hoverSlotIndex);
+            updateHUD();
+            return;
+          }
+        }
+      }
+
       // Reset hotkey [R] when wave is not in progress
       if (e.key.toLowerCase() === 'r' && !waveInProgress) {
         document.getElementById('resetBtn').click();
@@ -2510,6 +2547,49 @@
       return slots.map(s => ({ ...s, sx: s.x * scaleX, sy: s.y * scaleY }));
     }
 
+    function getTowerTotalCost(t) {
+      if (t.investedGold && t.investedGold > 0) return t.investedGold;
+      const def = towerDefs[t.baseType || t.type] || towerDefs['Archer'] || { cost: 50 };
+      let cost = def.cost || 50;
+      if (t.level >= 2) cost += Math.floor(cost * 1.5);
+      if (t.level >= 3) cost += Math.floor(cost * 3.0);
+      if (t.level >= 4) cost += 220;
+      return cost;
+    }
+
+    function demolishTower(slotIndex) {
+      if (slotIndex < 0 || slotIndex >= slots.length) return false;
+      const rawSlot = slots[slotIndex];
+      if (!rawSlot || !rawSlot.occupied || !rawSlot.tower) return false;
+      const t = rawSlot.tower;
+      const totalCost = getTowerTotalCost(t);
+      const refund = Math.floor(totalCost * 0.70);
+      gold += refund;
+      const scaledSlots = getScaledSlots();
+      const slotPos = scaledSlots[slotIndex] || { sx: rawSlot.x, sy: rawSlot.y };
+      spawnFloatingText(slotPos.sx, slotPos.sy - 20, `+${refund}g REFUND (70%)`, '#10b981');
+      showToast("Tower Demolished", `Demolished ${t.type} tower for 70% refund (+${refund}g).`, "warning", 2500);
+      playSfx('build');
+      for (let i = 0; i < 14; i++) {
+        particles.push({
+          x: slotPos.sx,
+          y: slotPos.sy,
+          vx: (Math.random() - 0.5) * 6,
+          vy: (Math.random() - 0.5) * 6,
+          life: 25,
+          maxLife: 25,
+          color: '#e2e8f0',
+          radius: 3
+        });
+      }
+      rawSlot.occupied = false;
+      rawSlot.tower = null;
+      if (selectedSlotIndex === slotIndex) selectedSlotIndex = -1;
+      return true;
+    }
+
+    let hoverSlotIndex = -1;
+
     canvas.addEventListener('click', (e) => {
       if (gameOver) {
         document.getElementById('resetBtn').click();
@@ -2543,6 +2623,8 @@
               const dmgMod = 1 + (techTowerDmg * 0.1);
               targetSlot.tower = {
                 type: selectedTowerType,
+                baseType: selectedTowerType,
+                investedGold: def.cost,
                 level: 1,
                 range: def.range,
                 damage: Math.floor(def.damage * dmgMod),
@@ -2561,10 +2643,11 @@
           } else {
             const t = targetSlot.tower;
             if (t.level < 3) {
-              const def = towerDefs[t.type];
+              const def = towerDefs[t.baseType || t.type] || towerDefs['Archer'];
               const upCost = Math.floor(def.cost * (t.level * 1.5));
               if (gold >= upCost) {
                 gold -= upCost;
+                t.investedGold = (t.investedGold || def.cost) + upCost;
                 t.level++;
                 t.damage = Math.floor(t.damage * 1.4);
                 t.range = Math.floor(t.range * 1.15);
@@ -2581,6 +2664,8 @@
               const fusCost = 220;
               if (gold >= fusCost) {
                 gold -= fusCost;
+                const def = towerDefs[t.baseType || t.type] || towerDefs['Archer'];
+                t.investedGold = (t.investedGold || (def.cost * 3)) + fusCost;
                 t.level = 4;
                 const fusBonus = 1 + (techFusion * 0.25);
                 if (t.type === 'Mage' || t.type === 'Cannon') {
@@ -2653,6 +2738,40 @@
       }
 
       updateHUD();
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const scaledSlots = getScaledSlots();
+      hoverSlotIndex = -1;
+      for (let i = 0; i < scaledSlots.length; i++) {
+        const s = scaledSlots[i];
+        if (Math.hypot(mx - s.sx, my - s.sy) <= 24) {
+          hoverSlotIndex = i;
+          break;
+        }
+      }
+    });
+
+    canvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      if (gameOver) return;
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+      const scaledSlots = getScaledSlots();
+      for (let i = 0; i < scaledSlots.length; i++) {
+        const slot = scaledSlots[i];
+        if (Math.hypot(clickX - slot.sx, clickY - slot.sy) <= 24) {
+          if (slots[i] && slots[i].occupied) {
+            demolishTower(i);
+            updateHUD();
+          }
+          return;
+        }
+      }
     });
     
     document.getElementById('btnFirestorm').addEventListener('click', () => {
@@ -5306,6 +5425,27 @@
           ctx.fillStyle = (rawSlot.tower.level === 4) ? '#fef08a' : '#fbbf24';
           ctx.font = '800 9px Segoe UI';
           ctx.fillText(rawSlot.tower.level === 4 ? 'FUS' : ('L' + rawSlot.tower.level), slot.sx + 12, slot.sy + 13);
+
+          // Demolish / refund usability hint on select or hover
+          if (selectedSlotIndex === index || hoverSlotIndex === index) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 1;
+            if (ctx.roundRect) {
+              ctx.beginPath();
+              ctx.roundRect(slot.sx - 35, slot.sy - 32, 70, 13, 3);
+              ctx.fill(); ctx.stroke();
+            } else {
+              ctx.fillRect(slot.sx - 35, slot.sy - 32, 70, 13);
+              ctx.strokeRect(slot.sx - 35, slot.sy - 32, 70, 13);
+            }
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = '700 8px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText('R-CLICK: SELL 70%', slot.sx, slot.sy - 22);
+            ctx.restore();
+          }
         } else {
           ctx.fillStyle = '#94a3b8'; ctx.font = '700 14px Segoe UI'; ctx.textAlign = 'center';
           ctx.fillText('+', slot.sx, slot.sy + 5);

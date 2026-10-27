@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T23:32:12-07:00 — kilo-review: KFortress (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1024x703 and audited kfortress.html + KFortress/main.c; injected 2 surgical fixes, un-quarantining KFortress to active Flash queues).
+  - Visual/UX Findings (kilo-usability): Single-column .tower-selection (11 cards) overflows the 635px .sidebar at 1024x703, pushing map switcher, #waveBtn (START WAVE), #academyBtn/#resetBtn, and HERO & SKILLS [1-5] completely off-screen below the scroll fold; occupied tower slots also lack a sell/demolish action.
+  - Gameplay/Feature Findings (kilo-tester): Tower targeting adds distance-to-tower (e.waypointIndex * 1000 + dist) instead of subtracting distance-to-next-waypoint, misfiring at trailing enemies; mutators.eclipse (+30% tower rate), mutators.phaseshift (+75% gold), and mutators.titan (2x bosses) are partially unimplemented; poison/trap/chain deaths bypass boss bounty/hsBoss accounting.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KFortress`, `kilo-tester`->`KFortress`] (un-quarantined `KFortress` from Mature); advanced `kilo-review` to `KMystery`; next agent `kilo-creator`.
+
 - **2026-10-26T23:22:45-07:00 — kilo-expander: KBBS (KBBS Phase VI VFS Mesh & Door Game Inter-App IPC)**
   - Status: PASS (0 errors, web 206.1 KB, native 108.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.15%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.8s)).
   - Wired KiloOS VFS (/home/bbs/) download & OS_LAUNCH_APP bridge to open ANSI bulletins and door game logs directly in KPad and KHex.
