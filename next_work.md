@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-review
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,11 +32,11 @@ current_targets:
   kilo_creator: kweb://cabled
   kilo_graphics: KVoid
   kilo_soundscape: KVoid
-  kilo_tester: KMaze
-  kilo_usability: KColosseum
+  kilo_tester: KMatrix
+  kilo_usability: KMatrix
   kilo_qa: KColor
-  kilo_expander: KColosseum
-  kilo_review: KMatrix
+  kilo_expander: KMatrix
+  kilo_review: KCipher
 virtual_web_target: kweb://cabled
 virtual_web_rotation:
 - kweb://slashnet
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KSteno
-  timestamp: '2026-10-27T12:21:44-07:00'
+  agent: kilo-review
+  app: KMatrix
+  timestamp: '2026-10-27T12:31:27-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -135,10 +135,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KMaze`
+- **Active Target**: `KMatrix`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Give each sector distinct hex/ASCII bytes in cmdDump(), wire filter arg in cmdCodebook(filter), add .line-dim CSS rule for VFS_READ_DONE, and pad codebook table columns in KMatrix/main.c. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -152,10 +153,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Wire all 4 dead Potemkin ludusFacilities perks in combatAction(), enterArena(), enterOnlineDuel(), and startSoloFallbackDuel() (armory +8/+16/+25% weapon dmg, banquet +10/+20/+30% starting crowdFavor, scriptorium +8/+16/+24% crit rate, shrine 12/24/36% fatal-blow survival at 1 HP in checkPlayerDeath()); call recordReplayRound() on every solo combat action, pass damageDealt to recordBattleStats(), and record/save flee outcomes; enable [W] hotkey for solo warcry with once-per-bout playerRallied guard, persist g.stance in getSavePayload(), reset ludusFacilities and currentArenaWager in resetLudus(), apply infirmary discount in updateUI()/healGladiator(), trigger immediate victory on fatal Shield Bash counter in kcolosseum.html and KColosseum/main.c, and route WM_KEYDOWN (including [T] Stats) in KColosseum/main.c GetMessageA loop. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KColosseum`
+- **Active Target**: `KMatrix`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Scale #matrixCanvas by devicePixelRatio in resizeMatrixRain(), refocus #termInput on modal close and .terminal-wrapper click, and add codebook/waterfall/vfs to #helpModal, cmdHelp(), and quick-action buttons. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Scope global li card styling to #marketList > li and #ownedList > li so #tutorialModal ol li stops stretching and clipping #btnTutorialEnter; lock body to 100vh flex column at 800x563 by merging .top-nav, h1, and .funds into a compact header, removing the duplicate Empire Duel Arena banner, making #marketList and #ownedList independently scrollable with Sort by Prowess/HP buttons (sortGladiators), and compacting #arenaPanel (#arenaCanvas 185px, #combatLog 72px) for 0px overflow; add devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas, guard SELECT in keydown, and replace prompt() in importGladiatorDossier() with an in-DOM modal. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -185,10 +187,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSettings` | `KiloOS/public/apps/ksettings.html`, `KSettings/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, OS theme/sound preferences, display modes, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KColosseum`
+- **Active Target**: `KMatrix`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kcolosseum_ludus.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback) in #exportModal plus VFS export of Battle Chronicles and orphaned exportGladiatorCertificate() dossiers to /home/docs/ via VFS_WRITE and OS_NOTIFY; render the orphaned Arena Wager bar (#btnWager0, #btnWager25, #btnWager50, #btnWager100, #wagerOddsDisplay calling setArenaWager()) and settle payouts/forfeits on solo match completion, add Certificate button on owned gladiator cards, and add Ludus Facilities [U] and Arena Wager parity to KColosseum/main.c. |
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
@@ -204,11 +207,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
-- **Active Target**: `KMatrix`
+- **Active Target**: `KCipher`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + forensic decrypter, RF waterfall, and VFS integration ergonomics; inject fixes via `--inject-fix`. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + multi-cipher pipeline, IoC analyzer, and VFS/IPC ergonomics; inject fixes via `--inject-fix`. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + SQL studio, ER diagram canvas, and query result table scrolling; inject fixes via `--inject-fix`. |
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + digital art canvas, layer/sprite reel drawers, and tool palette layout; inject fixes via `--inject-fix`. |
@@ -238,6 +240,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | [Argon Audited 2026-10-26: Fixes queued -> kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | [Argon Audited 2026-10-27: Fixes queued -> kilo-expander, kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | [Argon Audited 2026-10-27: Fixes queued -> kilo-expander, kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
+| `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | [Argon Audited 2026-10-27: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 
 ---
 
@@ -266,7 +269,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KHabit** | `KiloOS/public/apps/khabit.html` | Pass 5+ (2026-10-24) | Office / Productivity | Feature-complete sovereign habit tracker with streak calculations, 28-day completion heatmap, daily reminder banner, YM2612 FM audio, F5/F9 state persistence, and dual Win32 C parity. |
 | **KBudget** | `KiloOS/public/apps/kbudget.html` | Pass 5+ (2026-10-24) | Office / Productivity | Comprehensive retro budget ledger with category allocation pie charts, multi-currency switching, monthly goals, CSV/JSON VFS integration, F5/F9 snapshot persistence, and dual Win32 C parity. |
 | **KJournal** | `KiloOS/public/apps/kjournal.html` | Pass 5+ (2026-10-24) | Productivity / Writing & Journal | Complete encrypted retro journal workstation with rich markdown preview, mood tags, PIN lock, calendar navigator, F5/F9 persistence, and dual Win32 C parity. |
-| **KMatrix** | `KiloOS/public/apps/kmatrix.html` | Pass 5+ (2026-10-24) | System / Security | Master forensic terminal & ARG climax with matrix digital rain visualizer, subterranean codebook decrypter, RF frequency waterfall, YM2612/SPC700 telemetry, F5/F9 state persistence, and dual Win32 C parity. |
 | **KVault** | `KiloOS/public/apps/kvault.html` | Pass 5+ (2026-10-24) | System / Security | Comprehensive client-side encrypted password & secret manager with AES-GCM/PBKDF2/WebCrypto, tree navigator, KeePass/CSV/ASCII export/import, F5/F9 state snapshots, and Win32 C parity. |
 | **KHash** | `KiloOS/public/apps/khash.html` | Pass 5+ (2026-10-24) | Security / Cryptography | Complete multi-algorithm checksum workstation (MD5, SHA1, SHA256, CRC32, Adler32, FNV-1a, Murmur3, CRC16), HMAC key generation, byte forensics/entropy, F5/F9 persistence, and dual Win32 C parity. |
 | **KCipher** | `KiloOS/public/apps/kcipher.html` | Pass 5+ (2026-10-23) | Security / Cryptography | Complete cryptographic suite: 10 ciphers (AES/RSA/RC4/XOR/classical), multi-stage pipeline, frequency/IoC cryptanalysis, LSB stego, VFS Open/Save, KHex/KSteno IPC mesh, and dual Win32 C parity. |
@@ -308,6 +310,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T12:31:27-07:00 — kilo-review: KMatrix (Argon Visual, Feature & Usability Review (Mature Audit))**
+  - Status: AUDIT COMPLETE — reviewed 4-panel sheet.png (1080x683) and audited KiloOS/public/apps/kmatrix.html + KMatrix/main.c.
+  - Visual/UX Findings: #matrixCanvas lacks devicePixelRatio HiDPI scaling; closing tutorial/help/settings modals or clicking .terminal-wrapper fails to refocus #termInput; #helpModal omits codebook, waterfall, and vfs commands.
+  - Feature/VFS Findings: cmdDump() renders identical hex bytes across all 5 sectors; cmdCodebook(filter) ignores its filter param and main.c codebook columns are unpadded; vfs command omits /sys/anomaly_capture.sig polling, lacks missing-file feedback, and never writes breach artifacts via VFS_WRITE.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KMatrix`, `kilo-tester`->`KMatrix`, `kilo-expander`->`KMatrix`] (un-quarantined `KMatrix` from Mature); advanced `kilo-review` to `KCipher`; next agent `kilo-creator`.
+
 - **2026-10-27T12:21:44-07:00 — kilo-expander: KSteno (Phase VI VFS Carrier Pipeline & Send to KCipher IPC)**
   - Status: PASS ✅ (0 errors, web 167.1 KB, native 18.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.17%, HEAD Δ 0.0%, 0 fail, 0 warn, 10.8s)).
   - Wired unconditional VFS & IPC event hooks on DOMContentLoaded and hashchange, connecting /home/media/ carrier open/save, /home/work/ payload export, and 'Send Payload to KCipher' cross-app launch across image, audio, text, and steganalysis lab.
@@ -330,9 +338,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KColosseum across web and native targets.
   - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
-
-- **2026-10-27T10:20:57-07:00 — kilo-soundscape: KWizard (The Arcane Spire Duel — YM2612/SPC700 Chiptune Suite)**
-  - Status: PASS ✅ (0 errors, web 151.6 KB, native 12.8 KB < 999 KB; visual PASS).
-  - Composition: D Harmonic Minor, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
-  - Patches & DSP: Harpsichord/flute lead with delayed vibrato, walking FM bass, elemental spell earcons, Win32 parity.
-  - Handoff: Advanced `kilo-soundscape` to `KVoid`; rotated active agent to `kilo-tester`.
