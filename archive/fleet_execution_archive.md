@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T23:22:45-07:00 — kilo-expander: KBBS (KBBS Phase VI VFS Mesh & Door Game Inter-App IPC)**
+  - Status: PASS (0 errors, web 206.1 KB, native 108.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.15%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.8s)).
+  - Wired KiloOS VFS (/home/bbs/) download & OS_LAUNCH_APP bridge to open ANSI bulletins and door game logs directly in KPad and KHex.
+  - Dual-target Win32 C parity in KBBS/main.c with LaunchViewer fallback resolving ..\KPad and ..\KHex.
+  - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-review`.
+
 - **2026-10-26T22:38:18-07:00 — kilo-qa: KCalendar (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 123.7 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kcalendar_tutorialSeen flag, Escape modal dismissals, and retro chime audio.

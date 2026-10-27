@@ -2691,7 +2691,7 @@
       
       if (gameMode === 'BossBlitz') {
         SPAWN_INTERVAL = 35;
-        const total = wave * 2;
+        const total = wave * 2 * (mutators.titan ? 2 : 1);
         for (let i = 0; i < total; i++) {
           spawnQueue.push((i % 3 === 0) ? 'Ogre' : ((i % 3 === 1) ? 'Wyvern' : 'Golem'));
         }
@@ -2699,9 +2699,19 @@
         SPAWN_INTERVAL = 60;
         const total = 6 + wave * 3;
         for (let i = 0; i < total; i++) {
-          if (wave % 5 === 0 && i === 0) spawnQueue.push((wave % 10 === 0) ? 'Golem' : 'Ogre');
-          else if (wave >= 6 && i === 1 && wave % 3 === 0) spawnQueue.push('Wyvern');
-          else if (wave >= 8 && i === 2 && wave % 4 === 0) spawnQueue.push('Golem');
+          if (wave % 5 === 0 && i === 0) {
+            const b = (wave % 10 === 0) ? 'Golem' : 'Ogre';
+            spawnQueue.push(b);
+            if (mutators.titan) spawnQueue.push(b);
+          }
+          else if (wave >= 6 && i === 1 && wave % 3 === 0) {
+            spawnQueue.push('Wyvern');
+            if (mutators.titan) spawnQueue.push('Wyvern');
+          }
+          else if (wave >= 8 && i === 2 && wave % 4 === 0) {
+            spawnQueue.push('Golem');
+            if (mutators.titan) spawnQueue.push('Golem');
+          }
           else {
             let rnd = Math.random();
             if (wave >= 5 && rnd < 0.15) spawnQueue.push('Necromancer');
@@ -2921,6 +2931,30 @@
           rotSpd: 0.15,
           growth: -0.05
         });
+      }
+    }
+
+    function handleEnemyDeath(e, index) {
+      const isBoss = (e.type === 'Ogre' || e.type === 'Wyvern' || e.type === 'Golem');
+      let reward = isBoss ? 100 : 15;
+      if (isBoss) {
+        bossesKilled++;
+        if (bossesKilled > hsBoss) {
+          hsBoss = bossesKilled;
+          safeSet('kf_hsBoss', hsBoss);
+          const hsBossEl = document.getElementById('hsBoss');
+          if (hsBossEl) hsBossEl.textContent = hsBoss;
+        }
+        spawnExplosion(e.x, e.y, "#fbbf24", 1.8);
+      } else {
+        spawnParticleEffect(e.x, e.y, e.color);
+      }
+      if (mutators.bloodlust) reward = Math.floor(reward * 1.5);
+      if (mutators.phaseshift) reward = Math.floor(reward * 1.75);
+      gold += reward;
+      spawnFloatingText(e.x, e.y - 15, "+" + reward + "g", "#ffd700");
+      if (index !== undefined) {
+        enemies.splice(index, 1);
       }
     }
 
@@ -3180,8 +3214,7 @@
           }
           e.poisonTicks--;
           if (e.hp <= 0) {
-            enemies.splice(i, 1);
-            gold += (mutators.bloodlust ? 25 : 15);
+            handleEnemyDeath(e, i);
             continue;
           }
         }
@@ -3254,6 +3287,11 @@
                  break;
               }
            }
+        }
+        
+        if (e.hp <= 0) {
+          handleEnemyDeath(e, i);
+          continue;
         }
         
         if (trapBlocked) continue;
@@ -3333,12 +3371,14 @@
           tower.cooldown--;
         } else {
           let target = null;
-          let maxDistProgress = -1;
+          let maxDistProgress = -Infinity;
 
           enemies.forEach(e => {
             const dist = Math.hypot(e.x - slot.sx, e.y - slot.sy);
             if (dist <= tower.range) {
-              const progress = e.waypointIndex * 1000 + dist;
+              const nextWP = (e.type === 'Gargoyle' || e.type === 'Wyvern') ? waypoints[waypoints.length - 1] : waypoints[e.waypointIndex + 1];
+              const distToNextWaypoint = nextWP ? Math.hypot(nextWP.x - e.x, nextWP.y - e.y) : 0;
+              const progress = e.waypointIndex * 10000 - distToNextWaypoint;
               if (progress > maxDistProgress) {
                 maxDistProgress = progress;
                 target = e;
@@ -3347,7 +3387,7 @@
           });
 
           if (target) {
-            tower.cooldown = tower.maxCooldown;
+            tower.cooldown = mutators.eclipse ? Math.max(1, Math.round(tower.maxCooldown / 1.3)) : tower.maxCooldown;
             tower.animTimer = 5;
 
             // Solar Beam Fusion
@@ -3516,21 +3556,7 @@
       // Clean up dead enemies
       for (let j = enemies.length - 1; j >= 0; j--) {
         if (enemies[j].hp <= 0) {
-          let isBoss = (enemies[j].type === 'Ogre' || enemies[j].type === 'Wyvern' || enemies[j].type === 'Golem');
-          let reward = isBoss ? 100 : 15;
-          if (enemies[j].type === 'Ogre' || enemies[j].type === 'Wyvern' || enemies[j].type === 'Golem') {
-            if (gameMode === 'BossBlitz') {
-               bossesKilled++;
-               if (bossesKilled > hsBoss) { hsBoss = bossesKilled; safeSet('kf_hsBoss', hsBoss); }
-            }
-            spawnExplosion(enemies[j].x, enemies[j].y, "#fbbf24", 1.8);
-          } else {
-            spawnParticleEffect(enemies[j].x, enemies[j].y, enemies[j].color);
-          }
-          if (mutators.bloodlust) reward = Math.floor(reward * 1.5);
-          gold += reward;
-          spawnFloatingText(enemies[j].x, enemies[j].y - 15, "+" + reward + "g", "#ffd700");
-          enemies.splice(j, 1);
+          handleEnemyDeath(enemies[j], j);
         }
       }
 

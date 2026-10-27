@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_creator: kweb://slashnet
   kilo_graphics: KVoid
   kilo_soundscape: KAlchemy
-  kilo_tester: KFortress
+  kilo_tester: KMaze
   kilo_usability: KFortress
   kilo_qa: KContacts
   kilo_expander: KScript
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KStarship
-  timestamp: '2026-10-27T01:22:41-07:00'
+  agent: kilo-tester
+  app: KFortress
+  timestamp: '2026-10-27T01:40:17-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -134,11 +134,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Compose bridge alert & deep-space exploration 6-channel FM suite (Lydian `#4` pad + tactical Phrygian Dominant combat march, sonar/shield/warp earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KFortress`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -149,6 +148,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Fix buyItem() calling getItemPrice(number) instead of string keys ('food','toy','nectar','crown','polish') which charges 50g for all items; fix getMood().label === 'Ecstatic' in startMinigame() and battleTurn() (+15% crit); and apply the +10 Sovereign Aura stat bonus upon collecting all 6 relics. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
+| `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KFortress`
@@ -301,6 +301,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T01:40:17-07:00 — kilo-tester: KFortress (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-tester updates for KFortress across web and native targets.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-27T01:22:41-07:00 — kilo-soundscape: KStarship (Sector Vanguard & Red Alert — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 209.0 KB, native 148.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.01%, input 38.65%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.4s)).
   - Composition: D Lydian (#4 G#) deep space expanse & D Phrygian Dominant tactical combat march, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
@@ -323,9 +328,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings (kilo-usability): Single-column .tower-selection (11 cards) overflows the 635px .sidebar at 1024x703, pushing map switcher, #waveBtn (START WAVE), #academyBtn/#resetBtn, and HERO & SKILLS [1-5] completely off-screen below the scroll fold; occupied tower slots also lack a sell/demolish action.
   - Gameplay/Feature Findings (kilo-tester): Tower targeting adds distance-to-tower (e.waypointIndex * 1000 + dist) instead of subtracting distance-to-next-waypoint, misfiring at trailing enemies; mutators.eclipse (+30% tower rate), mutators.phaseshift (+75% gold), and mutators.titan (2x bosses) are partially unimplemented; poison/trap/chain deaths bypass boss bounty/hsBoss accounting.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KFortress`, `kilo-tester`->`KFortress`] (un-quarantined `KFortress` from Mature); advanced `kilo-review` to `KMystery`; next agent `kilo-creator`.
-
-- **2026-10-26T23:22:45-07:00 — kilo-expander: KBBS (KBBS Phase VI VFS Mesh & Door Game Inter-App IPC)**
-  - Status: PASS (0 errors, web 206.1 KB, native 108.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.15%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.8s)).
-  - Wired KiloOS VFS (/home/bbs/) download & OS_LAUNCH_APP bridge to open ANSI bulletins and door game logs directly in KPad and KHex.
-  - Dual-target Win32 C parity in KBBS/main.c with LaunchViewer fallback resolving ..\KPad and ..\KHex.
-  - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-review`.
