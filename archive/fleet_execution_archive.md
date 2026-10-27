@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T08:16:17-07:00 — kilo-review: KColosseum (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 800x563 sheet.png and audited kcolosseum.html + KColosseum/main.c; un-quarantined from Mature with surgical fixes queued).
+  - Visual/UX Findings: Global li CSS breaks #tutorialModal ol layout and clips #btnTutorialEnter; 320px vertical overflow hides all gladiator cards below fold at 800x563; 100% geometric canvas programmer art; missing HiDPI scaling.
+  - Feature/Gameplay Findings: 4 of 6 ludusFacilities (armory, banquet, shrine, scriptorium) are dead Potemkin stubs; solo combat never calls recordReplayRound() or tracks damageDealt; stance omitted from save payload; orphaned wager/sort/certificate helpers and Win32 focus hotkey loss.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KColosseum`, `kilo-tester`->`KColosseum`, `kilo-graphics`->`KColosseum`, `kilo-expander`->`KColosseum`] (un-quarantined `KColosseum` from Mature); advanced `kilo-review` to `KMatrix`; next agent `kilo-creator`.
+
 - **2026-10-27T07:41:15-07:00 — kilo-expander: KMystery (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KMystery across web and native targets.

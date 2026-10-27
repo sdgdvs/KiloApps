@@ -2507,6 +2507,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(ringP);
             }
 
+            if (pBits && (gameState == 1 || gameState == 3)) {
+                for (int y = 0; y < 27; y++) {
+                    DWORD* row = (DWORD*)pBits + y * W;
+                    for (int x = 0; x < W; x++) {
+                        DWORD c = row[x];
+                        DWORD r = ((c >> 16) & 0xFF) / 4 + 2;
+                        DWORD g = ((c >> 8) & 0xFF) / 4 + 3;
+                        DWORD b = (c & 0xFF) / 4 + 6;
+                        if (y == 26) { r = 0; g = 180; b = 220; }
+                        row[x] = (r << 16) | (g << 8) | b;
+                    }
+                }
+            }
+
             RECT clientRect;
             GetClientRect(hwnd, &clientRect);
             StretchBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, hdcMem, 0, 0, W, H, SRCCOPY);
@@ -2560,8 +2574,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(hdc, clientRect.right/2 - 90, clientRect.bottom/2 + 50, t4, lstrlenA(t4));
             } else if (gameState == 3) {
                 char uiText[128]; wsprintfA(uiText, "REPLAY Lvl %d - Frame %d/%d (A/D: scrub, ESC: exit)", replayLevel+1, replayCurFrame, replayFrameCount);
-                SetTextColor(hdc, RGB(0, 0, 0)); TextOutA(hdc, 22, 22, uiText, lstrlenA(uiText));
-                SetTextColor(hdc, RGB(255, 255, 255)); TextOutA(hdc, 20, 20, uiText, lstrlenA(uiText));
+                SetTextColor(hdc, RGB(0, 0, 0)); TextOutA(hdc, 22, 16, uiText, lstrlenA(uiText));
+                SetTextColor(hdc, RGB(0, 240, 255)); TextOutA(hdc, 20, 14, uiText, lstrlenA(uiText));
             } else if (gameState == 4) {
                 const char* uiText = "KEYBINDS - Click below to bind, ESC to close";
                 SetTextColor(hdc, RGB(0, 0, 0)); TextOutA(hdc, 22, 22, uiText, lstrlenA(uiText));
@@ -2574,18 +2588,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (currentLevel >= 20) biome = "Frost Caverns";
                 else if (currentLevel >= 10) biome = "Cyber Labyrinth";
 
-                char t1[128]; wsprintfA(t1, "Lvl:%d/45 [%s] K:%d P:%d C:%d S:%d F:%d T:%d [%s]", currentLevel + 1, biome, keysHeld, hasPickaxe, pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges, isCrouching ? "CROUCH" : "STAND");
-                char t2[128]; wsprintfA(t2, "Score:%d Time:%ds Torch:%ds", score, elapsedSec, torchTimer/1000);
-                char t3[64]; wsprintfA(t3, "V:Save L:Load M:%s", g_bMuted ? "Unmute" : "Mute");
-                
+                char tLvl[64]; wsprintfA(tLvl, "Lvl:%d/45 [%s]", currentLevel + 1, biome);
+                char tSave[64]; wsprintfA(tSave, clientRect.right < 420 ? "F5/F9" : "F5/V:Save F9/L:Load");
+                char tCharges[128]; wsprintfA(tCharges, "K:%d P:%d C:%d S:%d F:%d T:%d [%s]", keysHeld, hasPickaxe, pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges, isCrouching ? "CROUCH" : "STAND");
+                char tStats[64]; wsprintfA(tStats, clientRect.right < 420 ? "Sc:%d T:%ds" : "Score:%d Time:%ds Torch:%ds M:%s", score, elapsedSec, torchTimer/1000, g_bMuted ? "Unmute" : "Mute");
+
+                int rightSaveOffset = clientRect.right < 420 ? 80 : 190;
+                int rightStatsOffset = clientRect.right < 420 ? 110 : 270;
+
+                // Drop shadows
                 SetTextColor(hdc, RGB(0, 0, 0));
-                TextOutA(hdc, 22, 22, t1, lstrlenA(t1)); TextOutA(hdc, 22, 52, t2, lstrlenA(t2));
-                TextOutA(hdc, clientRect.right - 248, 22, t3, lstrlenA(t3));
-                
+                TextOutA(hdc, 22, 16, tLvl, lstrlenA(tLvl));
+                TextOutA(hdc, clientRect.right - rightSaveOffset + 2, 16, tSave, lstrlenA(tSave));
+                TextOutA(hdc, 22, 38, tCharges, lstrlenA(tCharges));
+                TextOutA(hdc, clientRect.right - rightStatsOffset + 2, 38, tStats, lstrlenA(tStats));
+
+                // Foreground
+                SetTextColor(hdc, RGB(0, 240, 255));
+                TextOutA(hdc, 20, 14, tLvl, lstrlenA(tLvl));
+                SetTextColor(hdc, RGB(200, 220, 240));
+                TextOutA(hdc, clientRect.right - rightSaveOffset, 14, tSave, lstrlenA(tSave));
+
                 SetTextColor(hdc, isCrouching ? RGB(0, 255, 180) : RGB(255, 255, 255));
-                TextOutA(hdc, 20, 20, t1, lstrlenA(t1)); TextOutA(hdc, 20, 50, t2, lstrlenA(t2));
-                SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, clientRect.right - 250, 20, t3, lstrlenA(t3));
+                TextOutA(hdc, 20, 36, tCharges, lstrlenA(tCharges));
+                SetTextColor(hdc, RGB(180, 200, 220));
+                TextOutA(hdc, clientRect.right - rightStatsOffset, 36, tStats, lstrlenA(tStats));
             }
             
             if (gameState == 4) {

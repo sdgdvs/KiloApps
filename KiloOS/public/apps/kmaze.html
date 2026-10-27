@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <title>KMaze</title>
 <style>
   * { box-sizing: border-box; }
@@ -112,7 +113,7 @@
   /* Toast Notification Container */
   #toastContainer {
     position: absolute;
-    top: 14px;
+    top: 50px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;
@@ -373,7 +374,7 @@
   /* In-game first-run onboarding banner */
   #firstRunBanner {
     position: absolute;
-    top: 10px;
+    bottom: 12px;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(13, 21, 37, 0.94);
@@ -530,6 +531,11 @@
       <div id="splashSaveStatus" style="font-size: 13px; color: #38bdf8; margin-bottom: 8px;"></div>
       <div id="splashStats" class="splashStats"></div>
     </div>
+    <!-- In-game First Run HUD Guidance Strip -->
+    <div id="firstRunBanner">
+      <span>🛡️ <b>Tactical Briefing:</b> WASD Move • <span class="kbd">X</span> Sneak • <span class="kbd">P</span> Pickaxe • <span class="kbd">F5</span> Quicksave <button class="hudBtn" style="padding:1px 6px; font-size:11px; margin-left:6px;" onclick="openTutorialOverlay()">🎓 Briefing</button></span>
+      <button class="modalCloseBtn" style="padding: 1px 6px; font-size: 11px;" onclick="dismissFirstRunBanner()">✕</button>
+    </div>
   </div>
   <div id="hudControls">
     <button id="btnNew" class="hudBtn" onclick="startNewGame()" title="Start a fresh dungeon descent"><span class="badge">N</span> New Game</button>
@@ -638,11 +644,7 @@
     </div>
   </div>
 
-  <!-- In-game First Run HUD Guidance Strip -->
-  <div id="firstRunBanner">
-    <span>🛡️ <b>Tactical Briefing:</b> WASD Move • <span class="kbd">X</span> Sneak • <span class="kbd">P</span> Pickaxe • <span class="kbd">F5</span> Quicksave <button class="hudBtn" style="padding:1px 6px; font-size:11px; margin-left:6px;" onclick="openTutorialOverlay()">🎓 Briefing</button></span>
-    <button class="modalCloseBtn" style="padding: 1px 6px; font-size: 11px;" onclick="dismissFirstRunBanner()">✕</button>
-  </div>
+
 </div>
 <input type="file" id="importFile" style="display:none" onchange="importStats(event)">
 <script>
@@ -686,13 +688,23 @@
   const ctx = canvas.getContext('2d');
   const uiCanvas = document.getElementById('uiCanvas');
   const uiCtx = uiCanvas.getContext('2d');
-  
-  const dpr = window.devicePixelRatio || 1;
-  uiCanvas.width = 800 * dpr;
-  uiCanvas.height = 600 * dpr;
-  uiCtx.scale(dpr, dpr);
-  
+  const canvasWrapper = document.getElementById('canvasWrapper');
+
   const W = 320, H = 240;
+
+  function syncUiCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = (canvasWrapper && canvasWrapper.clientWidth) || uiCanvas.clientWidth || 800;
+    const h = (canvasWrapper && canvasWrapper.clientHeight) || uiCanvas.clientHeight || 600;
+    const targetW = Math.max(320, Math.round(w * dpr));
+    const targetH = Math.max(240, Math.round(h * dpr));
+    if (uiCanvas.width !== targetW || uiCanvas.height !== targetH) {
+      uiCanvas.width = targetW;
+      uiCanvas.height = targetH;
+    }
+  }
+  syncUiCanvas();
+  requestAnimationFrame(syncUiCanvas);
   const maps = [
     [
       [1,1,1,1,1,1,1,1,1,1],
@@ -3650,7 +3662,7 @@
       let mW = map.length, mH = map[0].length;
       let boxSize = 64;
       let boxX = W - boxSize - 8;
-      let boxY = 24;
+      let boxY = 28;
 
       uiCtx.save();
       uiCtx.fillStyle = 'rgba(10, 15, 25, 0.85)';
@@ -3732,9 +3744,13 @@
       uiCtx.restore();
   }
       // 3. Draw Ambient Motes & 2D Concentric Shockwaves
+      syncUiCanvas();
+      uiCtx.setTransform(1, 0, 0, 1, 0, 0);
       uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
       uiCtx.save();
-      uiCtx.scale(2.5, 2.5);
+      const sx = uiCanvas.width / W;
+      const sy = uiCanvas.height / H;
+      uiCtx.setTransform(sx, 0, 0, sy, 0, 0);
 
       uiCtx.globalCompositeOperation = 'source-over';
       
@@ -3819,31 +3835,39 @@
       drawMinimap();
       
       // 5. Draw UI
-      uiCtx.fillStyle = 'white';
-      uiCtx.font = '12px monospace';
+      uiCtx.font = '10px monospace';
       if (gameState === 0) {
-          uiCtx.fillText("KMAZE - DUNGEON DESCENT", W/2 - 75, H/2 - 20);
-          uiCtx.fillText("Press ENTER to start", W/2 - 70, H/2 + 10);
-          uiCtx.fillText("Press F1 or H for Help | L to Load Checkpoint", W/2 - 145, H/2 + 25);
-          uiCtx.fillText(`Games: ${totalGames} Escapes: ${totalEscapes} Best: ${bestTime < 9999 ? bestTime.toFixed(1) + 's' : '--'}`, W/2 - 110, H/2 + 40);
+          // Suppress duplicate gameState===0 canvas text behind #splashOverlay
       } else if (gameState === 2) {
           let elapsed = (endTime - startTime) / 1000;
+          uiCtx.fillStyle = 'white';
+          uiCtx.font = '12px monospace';
           uiCtx.fillText("You Escaped 45 Stages!", W/2 - 70, H/2 - 20);
           uiCtx.fillText("Final Score: " + score + " Time: " + elapsed.toFixed(1) + "s", W/2 - 95, H/2);
           uiCtx.fillText("Best: " + bestTime.toFixed(1) + "s", W/2 - 40, H/2 + 20);
           uiCtx.fillText("Press R for Replay Viewer", W/2 - 80, H/2 + 40);
           uiCtx.fillText("Press ENTER to play again", W/2 - 80, H/2 + 55);
       } else if (gameState === 3) {
-          uiCtx.fillText(`REPLAY MODE - Lvl ${replayLevels[replayLevelIdx].level+1}`, 10, 15);
-          uiCtx.fillText(`Frame ${replayFrameIdx}/${replayLevels[replayLevelIdx].frames.length}`, 10, 30);
-          uiCtx.fillText("<- Prev | Next ->", 10, 45);
-          uiCtx.fillText("ESC to return", 10, 60);
+          // Dark translucent header strip for replay
+          uiCtx.fillStyle = 'rgba(7, 12, 22, 0.82)';
+          uiCtx.fillRect(0, 0, W, 27);
+          uiCtx.fillStyle = 'rgba(0, 240, 255, 0.25)';
+          uiCtx.fillRect(0, 27, W, 1);
+
+          uiCtx.fillStyle = '#00f0ff';
+          uiCtx.fillText(`REPLAY MODE - Lvl ${replayLevels[replayLevelIdx].level+1}`, 8, 11);
+          uiCtx.fillStyle = '#94a3b8';
+          uiCtx.fillText(`Frame ${replayFrameIdx}/${replayLevels[replayLevelIdx].frames.length}`, W - 100, 11);
+          uiCtx.fillStyle = '#cbd5e1';
+          uiCtx.fillText("<- Prev | Next ->", 8, 22);
+          uiCtx.fillText("ESC to return", W - 88, 22);
       } else if (gameState === 4) {
           uiCtx.fillStyle = 'rgba(10, 16, 28, 0.9)';
           uiCtx.fillRect(20, 8, W - 40, H - 16);
           uiCtx.strokeStyle = '#00f0ff';
           uiCtx.strokeRect(20, 8, W - 40, H - 16);
           uiCtx.fillStyle = '#00f0ff';
+          uiCtx.font = '12px monospace';
           uiCtx.fillText("KEYBINDS", 35, 23);
 
           // Clickable [✕ Close] button in top right
@@ -3878,16 +3902,38 @@
           else if (currentLevel >= 20) biome = "Frost Caverns";
           else if (currentLevel >= 10) biome = "Cyber Labyrinth";
 
-          uiCtx.fillStyle = isCrouching ? '#00ffb4' : 'white';
-          uiCtx.fillText(`Lvl:${currentLevel+1}/45 [${biome}] K:${keysHeld} P:${hasPickaxe} C:${pathfinderCharges} S:${speedShoesCharges} F:${stunSprayCharges} T:${timeFreezeCharges} [${isCrouching ? "CROUCH" : "STAND"}]`, 10, 15);
-          uiCtx.fillStyle = 'white';
-          uiCtx.fillText(`Score:${score} Time:${elapsed.toFixed(1)}s Torch:${Math.max(0, Math.floor(torchTimer/1000))}s`, 10, 30);
-          uiCtx.fillText("F5:Save F9:Load", W - 110, 15);
-          
+          // Dark translucent header strip
+          uiCtx.fillStyle = 'rgba(7, 12, 22, 0.82)';
+          uiCtx.fillRect(0, 0, W, 27);
+          uiCtx.fillStyle = 'rgba(0, 240, 255, 0.25)';
+          uiCtx.fillRect(0, 27, W, 1);
+
+          // Line 1: Level/Biome and Quick Save/Load Hint
+          uiCtx.fillStyle = '#00f0ff';
+          uiCtx.fillText(`Lvl:${currentLevel+1}/45`, 6, 11);
+          uiCtx.fillStyle = '#94a3b8';
+          uiCtx.fillText(`[${biome}]`, 68, 11);
+
+          uiCtx.fillStyle = '#cbd5e1';
+          uiCtx.fillText("F5:Save F9:Load", W - 88, 11);
+
+          // Line 2: Compact Inventory / Charges & Stance
+          uiCtx.fillStyle = '#e2e8f0';
+          uiCtx.fillText(`K:${keysHeld} P:${hasPickaxe} C:${pathfinderCharges} S:${speedShoesCharges} F:${stunSprayCharges} T:${timeFreezeCharges}`, 6, 22);
+
+          uiCtx.fillStyle = isCrouching ? '#00ffb4' : '#64748b';
+          uiCtx.fillText(`[${isCrouching ? "CROUCH" : "STAND"}]`, 134, 22);
+
+          uiCtx.fillStyle = '#94a3b8';
+          let tTorch = Math.max(0, Math.floor(torchTimer/1000));
+          let statStr = `Sc:${score} T:${elapsed.toFixed(0)}s${tTorch > 0 ? ` 🕯${tTorch}s` : ''}`;
+          uiCtx.fillText(statStr, W - 100, 22);
+
           if (msgTimer > 0) {
               uiCtx.fillStyle = 'yellow';
+              uiCtx.font = '11px monospace';
               uiCtx.fillText(msgText, W/2 - 120, 45);
-              uiCtx.fillStyle = 'white';
+              uiCtx.font = '10px monospace';
           }
       }
       uiCtx.restore();
@@ -3916,12 +3962,7 @@
   });
 
   // Responsive UI Canvas resize
-  window.addEventListener('resize', () => {
-      const dpr = window.devicePixelRatio || 1;
-      uiCanvas.width = 800 * dpr;
-      uiCanvas.height = 600 * dpr;
-      uiCtx.scale(dpr, dpr);
-  });
+  window.addEventListener('resize', syncUiCanvas);
 
   // Auto-save descent before page unload
   window.addEventListener('beforeunload', () => {
