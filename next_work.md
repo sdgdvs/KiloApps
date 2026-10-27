@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_creator: kweb://deep-core
   kilo_graphics: KAlchemy
   kilo_soundscape: KStarship
-  kilo_tester: KColony
+  kilo_tester: KMaze
   kilo_usability: KColony
   kilo_qa: KCalendar
   kilo_expander: KBBS
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KQuest
-  timestamp: '2026-10-26T20:20:27-07:00'
+  agent: kilo-tester
+  app: KColony
+  timestamp: '2026-10-26T20:36:01-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -134,11 +134,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KQuest` | `KiloOS/public/apps/kquest.html` | Compose overworld & battle 6-channel JRPG chiptune suite (Royal Road `IV-V-iii-vi` town/overworld + Heroic `bVI-bVII-I` combat cadence, E-Piano & flute counterpoint, SPC700 echo) + spell/quest earcons. |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KColony`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -149,6 +148,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Audit system telemetry dashboard, process/memory graphs, diagnostic stress test toggles, and keyboard navigation. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Fix buyItem() calling getItemPrice(number) instead of string keys ('food','toy','nectar','crown','polish') which charges 50g for all items; fix getMood().label === 'Ecstatic' in startMinigame() and battleTurn() (+15% crit); and apply the +10 Sovereign Aura stat bonus upon collecting all 6 relics. |
+| `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KColony`
@@ -302,6 +302,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-26T20:36:01-07:00 — kilo-tester: KColony (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS (0 errors, web 137.0 KB, native 170.0 KB < 999 KB; startup, Vite & security_lint PASS).
+  - UI & Hotkeys: Added activeElement guards, space-launch for Mars Prime on tick===0, and Arrow/Space scroll prevention.
+  - Sandbox Resources: Preserved unlimited resources (power, maxPower, food, mat, advm, sci = 9999) in gameTick() across Web and C.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-26T20:20:27-07:00 — kilo-soundscape: KQuest (Overture of Valor & Steel and Sorcery — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 395.4 KB, native 99.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.09%, input 16.05%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.4s)).
   - Composition: Royal Road IV-V-iii-vi town/overworld + Heroic bVI-bVII-I combat cadence, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
@@ -326,8 +332,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: #start-screen clips bottom manual button at 623px height; .panel-col overflows vertically by 401px causing Arrow/Space keys to scroll #topbar off-screen; 20x20 #grid cells (419x419px with 1px gap) overflow 400x400 #grid border and canvases by 19px; 38 button <small> labels use 8px font.
   - Gameplay/Feature Findings: Sandbox mode (gameMode === 4) sets power/maxPower to 9999 on start but gameTick() immediately clamps maxPower back to 50 + batCount*50; pressing Space on #start-screen at tick === 0 is a no-op.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KColony`, `kilo-tester`->`KColony`] (un-quarantined `KColony` from Mature); advanced `kilo-review` to `KFortress`; next agent `kilo-creator`.
-
-- **2026-10-26T17:23:22-07:00 — kilo-expander: KMaze (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KMaze across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KBBS`; rotated active agent to `kilo-review`.

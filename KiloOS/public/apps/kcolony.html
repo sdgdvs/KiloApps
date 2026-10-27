@@ -45,7 +45,7 @@
     <div id="start-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(5,10,15,0.96); z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#00ffff;">
         <h1 style="text-shadow: 0 0 12px #00ffff; margin-bottom: 4px;">KCOLONY: PLANETARY EXPEDITIONS</h1>
         <p style="text-align: center; color: #00ffff; text-shadow: 0 0 5px #00ffff; margin-top: 0; margin-bottom: 15px; font-size: 13px;">Select Planetary Biome [1-7], Resume [9/F9] or Press [H] / [F1] for Help</p>
-        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(0)">[1] Mars Prime<br><small>Standard Balanced Expedition & Dust Storms</small></button>
+        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(0)">[1 / Space] Mars Prime<br><small>Standard Balanced Expedition & Dust Storms</small></button>
         <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(1)">[2] Cryo Tundra (Gliese 667)<br><small>Extreme Cold & Blizzards (-50% Solar, +50% Geothermal)</small></button>
         <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(2)">[3] Volcanic Inferno (Kepler 10b)<br><small>Heatwaves & Flares (+50% Mine Mat, Fast Breakdowns)</small></button>
         <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(3)">[4] Acid Swamp (Proxima b)<br><small>Corrosive Acid Rain & 2x Alien Swarms (+50% Hydro/Bio Food)</small></button>
@@ -331,6 +331,8 @@
         });
 
         window.addEventListener('keydown', (e) => {
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
             const key = e.key.toLowerCase();
             let numKey = e.key;
             if (e.code && e.code.startsWith('Numpad') && e.code.length === 7) {
@@ -368,7 +370,8 @@
                 return;
             }
             if (helpModal && helpModal.style.display !== 'none' && helpModal.style.display !== '') return;
-            if (gameState === 0) {
+            const startScreen = document.getElementById('start-screen');
+            if (gameState === 0 || (startScreen && startScreen.style.display !== 'none')) {
                 if (e.key === 'Enter') {
                     const resBtn = document.getElementById('btn-resume-mission');
                     if (tick > 0 && resBtn && resBtn.style.display !== 'none') {
@@ -384,7 +387,14 @@
                     quickLoad();
                 } else if (numKey === '0') {
                     importSave();
-                } else if (e.key === ' ' || e.key === 'Escape') {
+                } else if (e.key === ' ' || e.code === 'Space') {
+                    e.preventDefault();
+                    if (tick === 0) {
+                        startGame(0);
+                    } else {
+                        resumeMission();
+                    }
+                } else if (e.key === 'Escape') {
                     if (tick > 0) resumeMission();
                 }
                 return;
@@ -2027,7 +2037,7 @@
                 }
 
                 maxPop = habCount * 5 + bioCount * 8;
-                maxPower = 50 + batCount * 50 + (activeAnomaly === 4 ? 50 : 0);
+                maxPower = (gameMode === 4) ? 9999 : (50 + batCount * 50 + (activeAnomaly === 4 ? 50 : 0));
                 pwrProd += nukeCount * 20;
                 pwrProd += geoCount * (planetType === 1 ? 50 : 35);
                 pwrProd += cavernCount * 40;
@@ -2101,6 +2111,15 @@
                     }
                 } else if (pop > maxPop) {
                     happiness = Math.max(0, happiness - 10);
+                }
+
+                if (gameMode === 4) {
+                    maxPower = 9999;
+                    power = 9999;
+                    food = 9999;
+                    mat = 9999;
+                    advm = 9999;
+                    sci = 9999;
                 }
 
                 updateUI();

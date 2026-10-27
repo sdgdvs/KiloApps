@@ -450,10 +450,10 @@ void DrawMenu(HDC hdc, HFONT hFont, RECT rc) {
     SelectObject(hdc, hFont);
     
     DrawText(hdc, "KCOLONY: PLANETARY EXPEDITIONS & TECH TREE", -1, &(RECT){0, 35, rc.right, 65}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-    DrawText(hdc, "Select Planet Biome [1-7], Resume [8/F9]  |  Press [H] or [F1] for Administrator's Manual", -1, &(RECT){0, 65, rc.right, 90}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawText(hdc, "Select Planet Biome [1-7/Space], Resume [8/F9]  |  Press [H] or [F1] for Administrator's Manual", -1, &(RECT){0, 65, rc.right, 90}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     
     const char* titles[] = { 
-        "[1] MARS PRIME (STANDARD EXPEDITION)", 
+        "[1 / Space] MARS PRIME (STANDARD EXPEDITION)", 
         "[2] CRYO TUNDRA (GLIESE 667 - BLIZZARDS)", 
         "[3] VOLCANIC INFERNO (KEPLER 10B - HEATWAVES)", 
         "[4] ACID SWAMP (PROXIMA B - ALIEN SWARMS)", 
@@ -1468,6 +1468,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (wParam >= '1' && wParam <= '7') {
                     StartGame(hwnd, (int)(wParam - '1'));
                     return 0;
+                } else if (wParam == VK_SPACE || wParam == VK_RETURN) {
+                    if (tick == 0) {
+                        StartGame(hwnd, 0);
+                        return 0;
+                    }
                 } else if (wParam == '8' || wParam == VK_F9) {
                     LoadGame(hwnd);
                     return 0;
@@ -1867,7 +1872,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             
             maxPop = habCount * 5 + bioCount * 8;
-            maxPower = 50 + batCount * 50 + (activeAnomaly == 4 ? 50 : 0);
+            maxPower = (gameMode == 4) ? 9999 : (50 + batCount * 50 + (activeAnomaly == 4 ? 50 : 0));
             pwrProd += nukeCount * 20;
             pwrProd += geoCount * (planetType == 1 ? 50 : 35); // Geothermal boosted on Cryo
             pwrProd += cavernCount * 40; // Cavern Drill geothermal magma power
@@ -1942,6 +1947,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (pop > maxPop) {
                 happiness -= 10;
                 if (happiness < 0) happiness = 0;
+            }
+
+            if (gameMode == 4) {
+                maxPower = 9999;
+                power = 9999;
+                food = 9999;
+                mat = 9999;
+                advm = 9999;
+                sci = 9999;
             }
 
             // Scenario Win/Loss Checks
