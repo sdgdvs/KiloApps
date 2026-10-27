@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T21:38:20-07:00 — kilo-usability: KColony (Start-Screen 2-Col Grid, 419px Canvas Sizing & Usability Polish)**
+  - Status: PASS ✅ (0 errors, web 137.3 KB, native 170.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 18.84%, HEAD Δ 12.4%, 0 fail, 0 warn, 6.2s)).
+  - Start Screen & Viewport: Arranged all 11 #start-screen buttons in a balanced 2-column grid fitting within 870x623 with 0 bottom clipping; locked body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto).
+  - Canvas & Typography: Resized #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; updated biome motes/weather overlays to 419; raised small font-size from 8px to 9.5px.
+  - Input Ergonomics: Added e.preventDefault() on Arrow and Space keys to prevent background page scroll during tactical gameplay and biome selection.
+  - Handoff: Advanced `kilo-usability` to `KMaze`; rotated active agent to `kilo-qa`.
+
 - **2026-10-26T20:36:01-07:00 — kilo-tester: KColony (Interactive UI Audit & Inline Repairs)**
   - Status: PASS (0 errors, web 137.0 KB, native 170.0 KB < 999 KB; startup, Vite & security_lint PASS).
   - UI & Hotkeys: Added activeElement guards, space-launch for Mars Prime on tick===0, and Arrow/Space scroll prevention.

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://slashnet
-  kilo_graphics: KAlchemy
+  kilo_graphics: KVoid
   kilo_soundscape: KStarship
   kilo_tester: KFortress
   kilo_usability: KFortress
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://deep-core
-  timestamp: '2026-10-27T00:21:48-07:00'
+  agent: kilo-graphics
+  app: KAlchemy
+  timestamp: '2026-10-27T00:40:23-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -100,11 +100,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KAlchemy`
+- **Active Target**: `KVoid`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
@@ -116,6 +115,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Replace code-generated 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with Imagen 3 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
+| `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStarship`
@@ -301,6 +301,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T00:40:23-07:00 — kilo-graphics: KAlchemy (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-graphics updates for KAlchemy across web and native targets.
+  - Handoff: Advanced `kilo-graphics` to `KVoid`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-27T00:21:48-07:00 — kilo-creator: kweb://deep-core (Tier 3 Ghost Node VFS & KMatrix Passkey Integration)**
   - Status: PASS ✅ (0 errors, web 304.4 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.9%, HEAD Δ 0.21%, 0 fail, 0 warn, 5.7s)).
   - Connected Ghost Node terminal directives ('vfs', 'decode', 'sync') directly to KiloOS VFS (/sys/alpha.sys & /home/crypto/) with automated Inode 0x1999 defusal commits.
@@ -324,10 +329,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kcalendar_tutorialSeen flag, Escape modal dismissals, and retro chime audio.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, reminder engine, VFS export mesh, and visibilitychange cleanup.
   - Mature Quarantine & Handoff: Promoted `KCalendar` to Mature archive; advanced `kilo-qa` to `KContacts`; next agent `kilo-expander`.
-
-- **2026-10-26T21:38:20-07:00 — kilo-usability: KColony (Start-Screen 2-Col Grid, 419px Canvas Sizing & Usability Polish)**
-  - Status: PASS ✅ (0 errors, web 137.3 KB, native 170.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 18.84%, HEAD Δ 12.4%, 0 fail, 0 warn, 6.2s)).
-  - Start Screen & Viewport: Arranged all 11 #start-screen buttons in a balanced 2-column grid fitting within 870x623 with 0 bottom clipping; locked body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto).
-  - Canvas & Typography: Resized #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; updated biome motes/weather overlays to 419; raised small font-size from 8px to 9.5px.
-  - Input Ergonomics: Added e.preventDefault() on Arrow and Space keys to prevent background page scroll during tactical gameplay and biome selection.
-  - Handoff: Advanced `kilo-usability` to `KMaze`; rotated active agent to `kilo-qa`.

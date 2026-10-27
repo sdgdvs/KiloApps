@@ -383,6 +383,24 @@
       pointer-events: none;
     }
 
+    
+    .reagent-sprite-img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+      vertical-align: middle;
+      display: inline-block;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    .reagent-sprite-img.slot-sprite {
+      width: 32px;
+      height: 32px;
+    }
     .element-seal .element-icon {
       font-size: 1.6rem;
       line-height: 1;
@@ -503,10 +521,10 @@
       width: 154px;
       height: 154px;
       border-radius: 50%;
-      background: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 22%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><radialGradient id="crucCore" cx="50%25" cy="60%25" r="50%25"><stop offset="0%25" stop-color="%23f39c12" stop-opacity="0.9"/><stop offset="50%25" stop-color="%238e44ad" stop-opacity="0.6"/><stop offset="90%25" stop-color="%231a102f" stop-opacity="0.95"/></radialGradient><linearGradient id="goldRim" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23d4ac0d"/><stop offset="35%25" stop-color="%23f1c40f"/><stop offset="70%25" stop-color="%23b7950b"/><stop offset="100%25" stop-color="%23f39c12"/></linearGradient><linearGradient id="ironPot" x1="0" y1="0" x2="0" y2="1"><stop offset="0%25" stop-color="%232b2140"/><stop offset="60%25" stop-color="%23181228"/><stop offset="100%25" stop-color="%230b0816"/></linearGradient></defs><path d="M22,34 C22,72 32,88 50,88 C68,88 78,72 78,34 Z" fill="url(%23ironPot)" stroke="%23d4ac0d" stroke-width="1.8"/><ellipse cx="50" cy="58" rx="24" ry="22" fill="url(%23crucCore)"/><path d="M24,50 Q50,58 76,50" fill="none" stroke="%23d4ac0d" stroke-width="1.5" stroke-dasharray="2,3"/><path d="M26,62 Q50,70 74,62" fill="none" stroke="%23f1c40f" stroke-width="1" stroke-opacity="0.7"/><path d="M16,38 Q10,44 18,52 Q23,54 22,46 Z" fill="%23d4ac0d" stroke="%237d6608" stroke-width="1"/><path d="M84,38 Q90,44 82,52 Q77,54 78,46 Z" fill="%23d4ac0d" stroke="%237d6608" stroke-width="1"/><ellipse cx="50" cy="33" rx="29" ry="8" fill="url(%23goldRim)" stroke="%23f9e79f" stroke-width="1"/><ellipse cx="50" cy="33" rx="24" ry="5.5" fill="%23181228"/><ellipse cx="50" cy="33" rx="20" ry="4" fill="%23e67e22" fill-opacity="0.7"/><path d="M28,31 Q50,27 72,31" fill="none" stroke="%23ffffff" stroke-width="1" stroke-opacity="0.8"/></svg>'), radial-gradient(circle, rgba(155, 89, 182, 0.35) 0%, rgba(15, 14, 30, 0.95) 80%);
+      background: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 22%), url('../assets/sprites/kalchemy/vessel_crucible.png'), radial-gradient(circle, rgba(155, 89, 182, 0.35) 0%, rgba(15, 14, 30, 0.95) 80%);
       background-repeat: no-repeat;
       background-position: center;
-      background-size: contain;
+      background-size: 130px 130px;
       border: 2px dashed var(--accent-gold);
       display: flex;
       flex-direction: column;
@@ -520,15 +538,20 @@
     }
 
     .crucible-vessel.vessel-crucible {
-      background-image: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 22%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><radialGradient id="crucCore" cx="50%25" cy="60%25" r="50%25"><stop offset="0%25" stop-color="%23f39c12" stop-opacity="0.9"/><stop offset="50%25" stop-color="%238e44ad" stop-opacity="0.6"/><stop offset="90%25" stop-color="%231a102f" stop-opacity="0.95"/></radialGradient><linearGradient id="goldRim" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23d4ac0d"/><stop offset="35%25" stop-color="%23f1c40f"/><stop offset="70%25" stop-color="%23b7950b"/><stop offset="100%25" stop-color="%23f39c12"/></linearGradient><linearGradient id="ironPot" x1="0" y1="0" x2="0" y2="1"><stop offset="0%25" stop-color="%232b2140"/><stop offset="60%25" stop-color="%23181228"/><stop offset="100%25" stop-color="%230b0816"/></linearGradient></defs><path d="M22,34 C22,72 32,88 50,88 C68,88 78,72 78,34 Z" fill="url(%23ironPot)" stroke="%23d4ac0d" stroke-width="1.8"/><ellipse cx="50" cy="58" rx="24" ry="22" fill="url(%23crucCore)"/><path d="M24,50 Q50,58 76,50" fill="none" stroke="%23d4ac0d" stroke-width="1.5" stroke-dasharray="2,3"/><path d="M26,62 Q50,70 74,62" fill="none" stroke="%23f1c40f" stroke-width="1" stroke-opacity="0.7"/><path d="M16,38 Q10,44 18,52 Q23,54 22,46 Z" fill="%23d4ac0d" stroke="%237d6608" stroke-width="1"/><path d="M84,38 Q90,44 82,52 Q77,54 78,46 Z" fill="%23d4ac0d" stroke="%237d6608" stroke-width="1"/><ellipse cx="50" cy="33" rx="29" ry="8" fill="url(%23goldRim)" stroke="%23f9e79f" stroke-width="1"/><ellipse cx="50" cy="33" rx="24" ry="5.5" fill="%23181228"/><ellipse cx="50" cy="33" rx="20" ry="4" fill="%23e67e22" fill-opacity="0.7"/><path d="M28,31 Q50,27 72,31" fill="none" stroke="%23ffffff" stroke-width="1" stroke-opacity="0.8"/></svg>'), radial-gradient(circle, rgba(243, 156, 18, 0.3) 0%, rgba(15, 14, 30, 0.95) 80%);
+      background-image: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 22%), url('../assets/sprites/kalchemy/vessel_crucible.png'), radial-gradient(circle, rgba(243, 156, 18, 0.3) 0%, rgba(15, 14, 30, 0.95) 80%);
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 130px 130px;
     }
 
     .crucible-vessel.vessel-alembic {
       border-color: #2ecc71;
       box-shadow: 15px 25px 35px rgba(0, 0, 0, 0.85), 0 0 40px rgba(46, 204, 113, 0.5), inset 0 0 25px rgba(46, 204, 113, 0.35);
-      background-image: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 25%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><radialGradient id="alembicLiquid" cx="45%25" cy="65%25" r="45%25"><stop offset="0%25" stop-color="%232ecc71" stop-opacity="0.9"/><stop offset="50%25" stop-color="%2316a085" stop-opacity="0.75"/><stop offset="85%25" stop-color="%230e4b3c" stop-opacity="0.9"/><stop offset="100%25" stop-color="%2309251e" stop-opacity="0.95"/></radialGradient><linearGradient id="brassFit" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23b7950b"/><stop offset="50%25" stop-color="%23f1c40f"/><stop offset="100%25" stop-color="%237d6608"/></linearGradient></defs><path d="M30,86 L22,94 M70,86 L78,94 M50,87 L50,95" stroke="url(%23brassFit)" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="50" cy="85" rx="24" ry="4" fill="none" stroke="url(%23brassFit)" stroke-width="2"/><circle cx="50" cy="62" r="23" fill="url(%23alembicLiquid)" stroke="%2370d6ff" stroke-width="1.8" stroke-opacity="0.8"/><circle cx="44" cy="66" r="2" fill="%23ffffff" fill-opacity="0.8"/><circle cx="52" cy="72" r="3" fill="%23a3e4d7" fill-opacity="0.75"/><circle cx="58" cy="60" r="1.5" fill="%23ffffff" fill-opacity="0.9"/><circle cx="48" cy="54" r="2.5" fill="%2358d68d" fill-opacity="0.7"/><rect x="42" y="38" width="16" height="5" rx="1.5" fill="url(%23brassFit)" stroke="%23d4ac0d" stroke-width="0.8"/><path d="M44,38 C35,32 36,18 50,18 C64,18 65,32 56,38 Z" fill="rgba(112,214,255,0.18)" stroke="%2370d6ff" stroke-width="1.6"/><path d="M58,24 C72,22 84,32 86,52 C87,60 85,68 84,72" fill="none" stroke="%2370d6ff" stroke-width="3" stroke-linecap="round"/><path d="M58,24 C72,22 84,32 86,52 C87,60 85,68 84,72" fill="none" stroke="%23ffffff" stroke-width="1" stroke-opacity="0.7"/><circle cx="84" cy="76" r="2.2" fill="%232ecc71" stroke="%23ffffff" stroke-width="0.8"/><rect x="80" y="80" width="8" height="12" rx="2" fill="rgba(46,204,113,0.35)" stroke="%2370d6ff" stroke-width="1"/><path d="M34,54 A18,18 0 0,1 46,42" fill="none" stroke="%23ffffff" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.75"/><path d="M42,24 A8,8 0 0,1 48,20" fill="none" stroke="%23ffffff" stroke-width="1.8" stroke-linecap="round"/></svg>'), radial-gradient(circle, rgba(46, 204, 113, 0.3) 0%, rgba(10, 25, 20, 0.95) 80%);
+      background-image: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 25%), url('../assets/sprites/kalchemy/vessel_alembic.png'), radial-gradient(circle, rgba(46, 204, 113, 0.3) 0%, rgba(10, 25, 20, 0.95) 80%);
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 130px 130px;
     }
-
     .crucible-vessel.vessel-retort {
       border-color: #3498db;
       box-shadow: 15px 25px 35px rgba(0, 0, 0, 0.85), 0 0 40px rgba(52, 152, 219, 0.5), inset 0 0 25px rgba(52, 152, 219, 0.35);
@@ -554,14 +577,22 @@
     }
 
     .transmutation-circle.reacting .rune-ring {
-      animation: spinRunes 2s linear infinite;
-      box-shadow: 0 0 40px var(--glow-gold), inset 0 0 30px var(--glow-purple);
+      animation: runeTransmuteGlow 0.8s ease-in-out infinite alternate;
+      box-shadow: 0 0 45px var(--glow-gold), inset 0 0 35px var(--glow-purple);
       border-color: var(--accent-gold-light);
     }
 
-    @keyframes spinRunes {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+    @keyframes runeTransmuteGlow {
+      0% {
+        opacity: 0.75;
+        transform: scale(1);
+        filter: drop-shadow(0 0 12px var(--accent-gold));
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1.04);
+        filter: drop-shadow(0 0 32px var(--accent-gold-light)) drop-shadow(0 0 20px #e056fd);
+      }
     }
 
     @keyframes transmutationGlow {
@@ -2561,10 +2592,10 @@
 
     const ALL_ELEMENTS = [
       // Tier 1: Basic (4)
-      { id: 'fire', name: 'Fire', icon: '🔥', tier: 1, lore: "The primordial ember of creation, consuming all in heat and light.", basic: true },
-      { id: 'water', name: 'Water', icon: '💧', tier: 1, lore: "The flowing essence of life, cool, adaptable, and perpetual.", basic: true },
-      { id: 'earth', name: 'Earth', icon: '🌱', tier: 1, lore: "The steadfast soil and stone that anchors the living realm.", basic: true },
-      { id: 'air', name: 'Air', icon: '💨', tier: 1, lore: "The invisible current of wind that whispers through the sky.", basic: true },
+      { id: 'fire', name: 'Fire', icon: '🔥', sprite: '../assets/sprites/kalchemy/reagent_fire.png', tier: 1, lore: "The primordial ember of creation, consuming all in heat and light.", basic: true },
+      { id: 'water', name: 'Water', icon: '💧', sprite: '../assets/sprites/kalchemy/reagent_water.png', tier: 1, lore: "The flowing essence of life, cool, adaptable, and perpetual.", basic: true },
+      { id: 'earth', name: 'Earth', icon: '🌱', sprite: '../assets/sprites/kalchemy/reagent_earth.png', tier: 1, lore: "The steadfast soil and stone that anchors the living realm.", basic: true },
+      { id: 'air', name: 'Air', icon: '💨', sprite: '../assets/sprites/kalchemy/reagent_air.png', tier: 1, lore: "The invisible current of wind that whispers through the sky.", basic: true },
 
       // Tier 2: Nature (12)
       { id: 'steam', name: 'Steam', icon: '♨️', tier: 2, lore: "Scalded vapor born of fire's passion meeting water's grace.", basic: false },
@@ -4305,7 +4336,7 @@
           ${badgeTag}
           <div class="element-seal">
             <span class="seal-glyph">${getAlchSymbol(el)}</span>
-            <div class="element-icon">${el.icon}</div>
+            <div class="element-icon">${el.sprite ? `<img src="${el.sprite}" class="reagent-sprite-img" alt="${el.name}" onerror="if(this.src.indexOf('/assets/')!==-1){this.src='assets/sprites/kalchemy/reagent_${el.id}.png';}else{this.onerror=null;this.replaceWith(document.createTextNode('${el.icon}'));}" />` : el.icon}</div>
           </div>
           <div class="element-name">${el.name}</div>
         `;
@@ -4337,7 +4368,7 @@
         slot1.innerHTML = `
           <div class="element-seal slot-seal" style="border-color:${col1}">
             <span class="seal-glyph" style="color:${col1}">${getAlchSymbol(selectedSlots[0])}</span>
-            <div class="element-icon" style="font-size:1.6rem">${selectedSlots[0].icon}</div>
+            <div class="element-icon" style="font-size:1.6rem">${selectedSlots[0].sprite ? `<img src="${selectedSlots[0].sprite}" class="reagent-sprite-img slot-sprite" alt="${selectedSlots[0].name}" onerror="if(this.src.indexOf('/assets/')!==-1){this.src='assets/sprites/kalchemy/reagent_${selectedSlots[0].id}.png';}else{this.onerror=null;this.replaceWith(document.createTextNode('${selectedSlots[0].icon}'));}" />` : selectedSlots[0].icon}</div>
           </div>
           <span style="font-size:0.8rem; font-weight:600">${selectedSlots[0].name}</span>`;
         slot1.classList.add('active');
@@ -4358,7 +4389,7 @@
         slot2.innerHTML = `
           <div class="element-seal slot-seal" style="border-color:${col2}">
             <span class="seal-glyph" style="color:${col2}">${getAlchSymbol(selectedSlots[1])}</span>
-            <div class="element-icon" style="font-size:1.6rem">${selectedSlots[1].icon}</div>
+            <div class="element-icon" style="font-size:1.6rem">${selectedSlots[1].sprite ? `<img src="${selectedSlots[1].sprite}" class="reagent-sprite-img slot-sprite" alt="${selectedSlots[1].name}" onerror="if(this.src.indexOf('/assets/')!==-1){this.src='assets/sprites/kalchemy/reagent_${selectedSlots[1].id}.png';}else{this.onerror=null;this.replaceWith(document.createTextNode('${selectedSlots[1].icon}'));}" />` : selectedSlots[1].icon}</div>
           </div>
           <span style="font-size:0.8rem; font-weight:600">${selectedSlots[1].name}</span>`;
         slot2.classList.add('active');

@@ -3370,14 +3370,50 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (g_State.selectedEquipment == 3) {
                     POINT anvil[8] = {{cx-30, cy-15}, {cx+30, cy-15}, {cx+15, cy-5}, {cx+15, cy+10}, {cx+30, cy+20}, {cx-30, cy+20}, {cx-15, cy+10}, {cx-15, cy-5}};
                     Polygon(hdc, anvil, 8);
-                } else if (g_State.selectedEquipment == 1 || g_State.selectedEquipment == 2) {
+                } else if (g_State.selectedEquipment == 2) {
+                    // Ornate Alembic Distillation Glassware
+                    HPEN hBrassPen = CreatePen(PS_SOLID, 2, RGB(212, 172, 13));
+                    HGDIOBJ pOldStand = SelectObject(hdc, hBrassPen);
+                    MoveToEx(hdc, cx - 18, cy + 22, NULL); LineTo(hdc, cx - 26, cy + 32);
+                    MoveToEx(hdc, cx + 18, cy + 22, NULL); LineTo(hdc, cx + 26, cy + 32);
+                    MoveToEx(hdc, cx, cy + 22, NULL); LineTo(hdc, cx, cy + 33);
+                    SelectObject(hdc, pOldStand);
+                    DeleteObject(hBrassPen);
+
+                    HBRUSH hAlembicElixir = CreateSolidBrush(RGB(22, 160, 133));
+                    HGDIOBJ pOldElixir = SelectObject(hdc, hAlembicElixir);
+                    SelectObject(hdc, hPurplePen);
+                    Ellipse(hdc, cx - 24, cy - 2, cx + 24, cy + 24);
+                    SelectObject(hdc, pOldElixir);
+                    DeleteObject(hAlembicElixir);
+
+                    POINT alembicHead[3] = {{cx, cy - 28}, {cx + 20, cy}, {cx - 20, cy}};
+                    Polygon(hdc, alembicHead, 3);
+
+                    HPEN hGlassTube = CreatePen(PS_SOLID, 3, RGB(112, 214, 255));
+                    HGDIOBJ pOldTube = SelectObject(hdc, hGlassTube);
+                    MoveToEx(hdc, cx + 4, cy - 24, NULL);
+                    LineTo(hdc, cx + 32, cy - 12);
+                    LineTo(hdc, cx + 42, cy + 12);
+                    SelectObject(hdc, pOldTube);
+                    DeleteObject(hGlassTube);
+
+                    Ellipse(hdc, cx + 36, cy + 10, cx + 48, cy + 26);
+                } else if (g_State.selectedEquipment == 1) {
                     Ellipse(hdc, cx - 25, cy - 20, cx + 25, cy + 20);
                     MoveToEx(hdc, cx + 20, cy - 10, NULL);
                     LineTo(hdc, cx + 50, cy + 15);
                 } else {
-                    POINT flaskNeck[4] = {{cx-15, cy-25}, {cx+15, cy-25}, {cx+15, cy-5}, {cx-15, cy-5}};
+                    POINT flaskNeck[4] = {{cx-18, cy-25}, {cx+18, cy-25}, {cx+18, cy-8}, {cx-18, cy-8}};
                     Polygon(hdc, flaskNeck, 4);
-                    Ellipse(hdc, cx - 35, cy - 10, cx + 35, cy + 25);
+                    Ellipse(hdc, cx - 38, cy - 12, cx + 38, cy + 26);
+
+                    HPEN hHandlePen = CreatePen(PS_SOLID, 2, RGB(241, 196, 15));
+                    HGDIOBJ pOldHand = SelectObject(hdc, hHandlePen);
+                    Arc(hdc, cx - 46, cy - 6, cx - 34, cy + 14, cx - 38, cy + 14, cx - 38, cy - 6);
+                    Arc(hdc, cx + 34, cy - 6, cx + 46, cy + 14, cx + 38, cy - 6, cx + 38, cy + 14);
+                    SelectObject(hdc, pOldHand);
+                    DeleteObject(hHandlePen);
                     
                     int isValidCombo = 0;
                     if (g_State.slot1 >= 0 && g_State.slot2 >= 0) {
@@ -3406,7 +3442,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (g_State.selectedEquipment == 3) {
                     POINT hi[3] = {{cx-20, cy-12}, {cx-10, cy-12}, {cx-15, cy-8}};
                     Polygon(hdc, hi, 3);
-                } else if (g_State.selectedEquipment == 1 || g_State.selectedEquipment == 2) {
+                } else if (g_State.selectedEquipment == 2) {
+                    Ellipse(hdc, cx - 14, cy - 18, cx - 6, cy - 10);
+                    Ellipse(hdc, cx - 16, cy + 4, cx - 8, cy + 14);
+                } else if (g_State.selectedEquipment == 1) {
                     Ellipse(hdc, cx - 18, cy - 15, cx - 8, cy - 5);
                 } else {
                     Ellipse(hdc, cx - 25, cy - 5, cx - 15, cy + 10);
