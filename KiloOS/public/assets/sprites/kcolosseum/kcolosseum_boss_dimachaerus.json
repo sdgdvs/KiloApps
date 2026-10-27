@@ -1,0 +1,39 @@
+{
+  "frames": {
+    "kcolosseum_boss_dimachaerus_0": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 144,
+        "h": 144
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 144,
+        "h": 144
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 144
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "KiloApps Asset Pipeline",
+    "version": "1.0",
+    "image": "kcolosseum_boss_dimachaerus.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 144,
+      "h": 144
+    },
+    "scale": "1"
+  }
+}

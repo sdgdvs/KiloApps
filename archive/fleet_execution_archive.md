@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T07:21:38-07:00 — kilo-qa: KZip (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 153.9 KB, native 25.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kzip_tutorialSeen flag, and Escape modal dismissals across all 14 modals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, visibilitychange timer cleanup, and fixed byte property bindings.
+  - Mature Quarantine & Handoff: Promoted `KZip` to Mature archive; advanced `kilo-qa` to `KType`; next agent `kilo-expander`.
+
 - **2026-10-27T06:40:16-07:00 — kilo-usability: KMystery (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KMystery across web and native targets.

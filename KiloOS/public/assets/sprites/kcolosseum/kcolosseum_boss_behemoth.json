@@ -1,0 +1,39 @@
+{
+  "frames": {
+    "kcolosseum_boss_behemoth_0": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 160,
+        "h": 160
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 160,
+        "h": 160
+      },
+      "sourceSize": {
+        "w": 160,
+        "h": 160
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "KiloApps Asset Pipeline",
+    "version": "1.0",
+    "image": "kcolosseum_boss_behemoth.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 160,
+      "h": 160
+    },
+    "scale": "1"
+  }
+}

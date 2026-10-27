@@ -77,6 +77,8 @@ static const char* my_strstr(const char* haystack, const char* needle) {
 #define IDT_CAMPAIGN_NEXT 1001
 #define IDT_ANIM 1002
 
+void PlaySoundEffect(const char* type);
+
 typedef struct {
     char name[32];
     int cost;
@@ -410,6 +412,7 @@ void DealDamageToPlayer(int dmg, CardDef* cd, int cw, int ch) {
         SpawnFloater((float)cw * 0.25f, (float)ch * 0.40f, b, RGB(250, 204, 21));
     }
     if (playerShield > 0) {
+        PlaySoundEffect("shield");
         if (playerShield >= dmg) {
             playerShield -= dmg;
             char b[32]; wsprintf(b, "ABSORBED %d", dmg);
@@ -423,6 +426,7 @@ void DealDamageToPlayer(int dmg, CardDef* cd, int cw, int ch) {
     }
 
     if (dmg > 0) {
+        PlaySoundEffect("damage");
         playerHp -= dmg;
         playerHurtTimer = 0.35f;
         char b[32];
@@ -470,6 +474,7 @@ void DealDamageToOpponent(int dmg, CardDef* cd, int cw, int ch) {
         SpawnFloater((float)cw * 0.75f, (float)ch * 0.40f, b, RGB(250, 204, 21));
     }
     if (opponentShield > 0) {
+        PlaySoundEffect("shield");
         if (opponentShield >= dmg) {
             opponentShield -= dmg;
             char b[32]; wsprintf(b, "ABSORBED %d", dmg);
@@ -483,6 +488,7 @@ void DealDamageToOpponent(int dmg, CardDef* cd, int cw, int ch) {
     }
 
     if (dmg > 0) {
+        PlaySoundEffect("damage");
         opponentHp -= dmg;
         oppHurtTimer = 0.35f;
         char b[32];
@@ -540,6 +546,17 @@ void PlaySoundEffect(const char* type) {
     } else if (strcmp(type, "lose") == 0) {
         Beep(250, 100);
         Beep(120, 150);
+    } else if (strcmp(type, "card_draw") == 0) {
+        Beep(600, 25);
+    } else if (strcmp(type, "no_mana") == 0) {
+        Beep(110, 60);
+    } else if (strcmp(type, "turn_start") == 0) {
+        Beep(440, 40);
+        Beep(659, 60);
+    } else if (strcmp(type, "turn_end") == 0) {
+        Beep(330, 50);
+    } else if (strcmp(type, "click") == 0) {
+        Beep(1200, 15);
     }
 }
 
@@ -558,6 +575,7 @@ void DrawCard(int isOpponent) {
     } else {
         if (playerCount < 7 && playerDeckCount > 0) {
             playerHand[playerCount++] = playerDeck[my_rand() % playerDeckCount];
+            PlaySoundEffect("card_draw");
         }
     }
 }
@@ -1197,6 +1215,7 @@ void DrawSpellIconGDI(HDC hdc, int x, int y, int type) {
 static void CastPlayerCard(HWND hwnd, int cardIndex, int cw, int ch) {
     if (gameState != 0 || cardIndex < 0 || cardIndex >= playerCount) return;
     if (playerFreeze > 0) {
+        PlaySoundEffect("no_mana");
         lstrcpyA(arenaMsg, "You are frozen and cannot cast spells!");
         InvalidateRect(hwnd, NULL, FALSE);
         return;
@@ -1294,6 +1313,7 @@ static void CastPlayerCard(HWND hwnd, int cardIndex, int cw, int ch) {
         }
         playerCount--;
     } else {
+        PlaySoundEffect("no_mana");
         wsprintf(arenaMsg, "Not enough mana for %s!", cd.name);
     }
     InvalidateRect(hwnd, NULL, FALSE);
@@ -1466,6 +1486,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int cw = cr.right - cr.left, ch = cr.bottom - cr.top;
 
                 if (gameState == 0) {
+                    PlaySoundEffect("turn_end");
                     if (playerFreeze > 0) playerFreeze--;
 
                     if (opponentMaxMana < 10) opponentMaxMana++;
@@ -1504,6 +1525,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
 
                     if (gameState == 0) {
+                        PlaySoundEffect("turn_start");
                         if (playerMaxMana < 10) playerMaxMana++;
                         playerMana = playerMaxMana + playerOvercharge;
                         if (playerOvercharge > 0) {

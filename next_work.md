@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://cabled
   kilo_graphics: KVoid
-  kilo_soundscape: KWizard
+  kilo_soundscape: KVoid
   kilo_tester: KColosseum
   kilo_usability: KMaze
   kilo_qa: KType
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KColosseum
-  timestamp: '2026-10-27T09:22:17-07:00'
+  agent: kilo-soundscape
+  app: KWizard
+  timestamp: '2026-10-27T10:20:57-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -119,11 +119,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Active Target**: `KWizard`
+- **Active Target**: `KVoid`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Compose dark cosmic horror / event-horizon 6-channel suite (Whole-tone / Phrygian clusters, sub-bass drone, cavernous 260ms SPC700 delay, Geiger/hull-stress earcons). |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
@@ -133,6 +132,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KQuest` | `KiloOS/public/apps/kquest.html` | Compose overworld & battle 6-channel JRPG chiptune suite (Royal Road `IV-V-iii-vi` town/overworld + Heroic `bVI-bVII-I` combat cadence, E-Piano & flute counterpoint, SPC700 echo) + spell/quest earcons. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Compose bridge alert & deep-space exploration 6-channel FM suite (Lydian `#4` pad + tactical Phrygian Dominant combat march, sonar/shield/warp earcons). |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Compose mystical alchemical workshop 6-channel suite (Dorian/Lydian celesta bells, warm glass pad, bubbling FM cauldron transients, transmutation fanfare stingers). |
+| `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Active Target**: `KColosseum`
@@ -308,6 +308,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T10:20:57-07:00 — kilo-soundscape: KWizard (The Arcane Spire Duel — YM2612/SPC700 Chiptune Suite)**
+  - Status: PASS ✅ (0 errors, web 151.6 KB, native 12.8 KB < 999 KB; visual PASS).
+  - Composition: D Harmonic Minor, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
+  - Patches & DSP: Harpsichord/flute lead with delayed vibrato, walking FM bass, elemental spell earcons, Win32 parity.
+  - Handoff: Advanced `kilo-soundscape` to `KVoid`; rotated active agent to `kilo-tester`.
+
 - **2026-10-27T09:22:17-07:00 — kilo-graphics: KColosseum (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-graphics updates for KColosseum across web and native targets.
@@ -330,9 +336,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KMystery across web and native targets.
   - Handoff: Advanced `kilo-expander` to `KSteno`; rotated active agent to `kilo-review`.
-
-- **2026-10-27T07:21:38-07:00 — kilo-qa: KZip (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 153.9 KB, native 25.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, kzip_tutorialSeen flag, and Escape modal dismissals across all 14 modals.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, visibilitychange timer cleanup, and fixed byte property bindings.
-  - Mature Quarantine & Handoff: Promoted `KZip` to Mature archive; advanced `kilo-qa` to `KType`; next agent `kilo-expander`.

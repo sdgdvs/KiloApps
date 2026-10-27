@@ -715,8 +715,10 @@
             const vibGain = ctx.createGain();
             vib.frequency.setValueAtTime(6.0, t);
             vibGain.gain.setValueAtTime(0, t);
-            vibGain.gain.setValueAtTime(0, t + 0.18);
-            vibGain.gain.linearRampToValueAtTime(freq * 0.028, t + Math.min(dur, 0.30));
+            if (dur > 0.18) {
+                vibGain.gain.setValueAtTime(0, t + 0.18);
+                vibGain.gain.linearRampToValueAtTime(freq * 0.028, t + Math.min(dur, 0.30));
+            }
             vib.connect(vibGain);
             vibGain.connect(op1.frequency);
 
@@ -886,8 +888,10 @@
 
         function playFmHiHat(isOpen = false, vol = 0.09) {
             if (audioMuted) return;
-            const dur = isOpen ? 0.11 : 0.038;
-            playFM(1400, 11.0, 5.5, dur, vol, 'sawtooth', false);
+            const dur = isOpen ? 0.12 : 0.038;
+            const modRatio = isOpen ? 13.5 : 11.0;
+            const carrierFreq = isOpen ? 1800 : 1400;
+            playFM(carrierFreq, modRatio, 5.5, dur, vol, 'sawtooth', false);
         }
 
         function playNoiseBurst(duration = 0.12, vol = 0.25) {
@@ -949,15 +953,15 @@
             // Channel 3: Harmony Shell Voicings (3rd + 7th only - never double the 5th)
             shell: [
                 // Section A
-                [349.23, 554.37], 0, 0, 0, [349.23, 554.37], 0, 0, 0, // Bar 1 (Dm: F4 3rd, C#5 7th)
-                [233.08, 349.23], 0, 0, 0, [233.08, 349.23], 0, 0, 0, // Bar 2 (Gm: Bb3 3rd, F4 7th)
-                [293.66, 440.00], 0, 0, 0, [293.66, 440.00], 0, 0, 0, // Bar 3 (Bb: D4 3rd, A4 7th)
-                [277.18, 392.00], 0, 0, 0, [277.18, 392.00], 0, 0, 0, // Bar 4 (A7: C#4 3rd, G4 7th)
+                [349.23, 554.37], 0, [349.23, 554.37], 0, [349.23, 554.37], 0, [349.23, 554.37], 0, // Bar 1 (Dm: F4 3rd, C#5 7th)
+                [233.08, 349.23], 0, [233.08, 349.23], 0, [233.08, 349.23], 0, [233.08, 349.23], 0, // Bar 2 (Gm: Bb3 3rd, F4 7th)
+                [293.66, 440.00], 0, [293.66, 440.00], 0, [293.66, 440.00], 0, [293.66, 440.00], 0, // Bar 3 (Bb: D4 3rd, A4 7th)
+                [277.18, 392.00], 0, [277.18, 392.00], 0, [277.18, 392.00], 0, [277.18, 392.00], 0, // Bar 4 (A7: C#4 3rd, G4 7th)
                 // Section B
-                [349.23, 554.37], 0, 0, 0, [349.23, 554.37], 0, 0, 0, // Bar 5 (Dm: F4 3rd, C#5 7th)
-                [196.00, 277.18], 0, 0, 0, [196.00, 277.18], 0, 0, 0, // Bar 6 (Edim7: G3 3rd, C#4 7th)
-                [293.66, 440.00], 0, 0, 0, [293.66, 440.00], 0, 0, 0, // Bar 7 (Bb: D4 3rd, A4 7th)
-                [277.18, 392.00], 0, 0, 0, [277.18, 392.00], 0, 0, 0  // Bar 8 (A7: C#4 3rd, G4 7th)
+                [349.23, 554.37], 0, [349.23, 554.37], 0, [349.23, 554.37], 0, [349.23, 554.37], 0, // Bar 5 (Dm: F4 3rd, C#5 7th)
+                [196.00, 277.18], 0, [196.00, 277.18], 0, [196.00, 277.18], 0, [196.00, 277.18], 0, // Bar 6 (Edim7: G3 3rd, C#4 7th)
+                [293.66, 440.00], 0, [293.66, 440.00], 0, [293.66, 440.00], 0, [293.66, 440.00], 0, // Bar 7 (Bb: D4 3rd, A4 7th)
+                [277.18, 392.00], 0, [277.18, 392.00], 0, [277.18, 392.00], 0, [277.18, 392.00], 0  // Bar 8 (A7: C#4 3rd, G4 7th)
             ],
             // Channel 4: FM Bass (Walking Baroque FM Bass strictly below C3 130.81Hz)
             bass: [
@@ -1082,27 +1086,32 @@
 
                 if (type === 'fire') {
                     // Searing Pyromancy: fast biting FM sweep + crackling noise burst
-                    playFM(260, 2.75, 5.5, 0.26, 0.28, 'sawtooth', true);
-                    playNoiseBurst(0.16, 0.24);
+                    playFM(340, 2.75, 6.0, 0.28, 0.30, 'sawtooth', true);
+                    playNoiseBurst(0.18, 0.26);
                 } else if (type === 'ice') {
-                    // Cryomantic Frost Nova: dual crystal bell harmonics + SPC700 stereo delay
-                    playChimeBell(1174.66, 0.40, 0.26);
-                    playFM(1760.00, 3.5, 4.0, 0.32, 0.20, 'sine', true);
+                    // Cryomantic Frost Nova: dual crystal bell harmonics + ascending glissando with SPC700 stereo delay
+                    playChimeBell(1174.66, 0.42, 0.28);
+                    setTimeout(() => playFM(1760.00, 3.5, 4.2, 0.35, 0.22, 'sine', true), 40);
+                    setTimeout(() => playFM(2349.32, 3.5, 3.8, 0.30, 0.18, 'sine', true), 90);
                 } else if (type === 'arcane') {
                     // Eldritch Cosmic Surge: shimmering dual fifth harmonic with warm SPC700 reverb
                     playFM(587.33, 2.0, 3.5, 0.44, 0.26, 'sine', true);
                     playFM(880.00, 1.5, 2.4, 0.38, 0.20, 'sine', true);
+                    setTimeout(() => playChimeBell(1760.00, 0.32, 0.18), 70);
                 } else if (type === 'nature' || type === 'heal') {
-                    // Druidic Vitality: pastoral resonant wooden pipes
-                    playWizardLead(587.33, 0.38, 0.22);
-                    playCounterVoice(440.00, 0.38, 0.18);
+                    // Druidic Vitality: pastoral resonant wooden pipes ornament
+                    playWizardLead(440.00, 0.22, 0.20);
+                    setTimeout(() => playWizardLead(587.33, 0.32, 0.24), 70);
+                    setTimeout(() => playCounterVoice(880.00, 0.36, 0.16), 140);
                 } else if (type === 'poison') {
-                    // Venomancy Acid Squelch: downward resonant FM dive
-                    playFM(185, 4.33, 7.0, 0.34, 0.30, 'sawtooth', true);
+                    // Venomancy Acid Squelch: downward resonant dissonant FM dive
+                    playFM(220, 4.33, 7.5, 0.36, 0.32, 'sawtooth', true);
+                    setTimeout(() => playFM(155, 3.14, 6.0, 0.28, 0.24, 'sawtooth', true), 60);
                 } else if (type === 'lightning') {
                     // Electromancy Arc Crackle: high-velocity FM zap + thunder discharge
-                    playFM(880, 7.1, 7.5, 0.18, 0.32, 'sawtooth', true);
-                    playNoiseBurst(0.10, 0.30);
+                    playFM(880, 7.1, 8.0, 0.16, 0.34, 'sawtooth', true);
+                    playNoiseBurst(0.12, 0.32);
+                    setTimeout(() => playWizardBass(55.00, 0.26, 0.35), 30);
                 } else if (type === 'damage') {
                     // Deep Physical Impact: sub punch + noise thump
                     playWizardBass(65.41, 0.24, 0.36);
