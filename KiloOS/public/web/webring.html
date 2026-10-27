@@ -1758,6 +1758,9 @@
           <button class="btn-teleport" id="btnLaunchWarp" onclick="triggerStagedWarp()">
             <span>🚀</span> Engage Hyperspace Warp
           </button>
+          <button class="btn-teleport" id="btnCanonicalWarp" onclick="triggerCanonicalWarp()" style="background:linear-gradient(180deg, #d97706 0%, #b45309 100%); border-color:#fbbf24; color:#fff;">
+            <span>★</span> Random Canonical Leap (1 of 6)
+          </button>
           <button class="btn-teleport alt" onclick="triggerInstantWarp()">
             <span>⚡</span> Instant Leap (No Delay)
           </button>
@@ -2664,7 +2667,7 @@ Tune dial to match lithospheric harmonic frequency to isolate transit frames.
         </div>
         <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
           <label style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--text-muted);">FILTER:</label>
-          <button class="pill-btn active" id="btnTopoFilterAll" onclick="setTopologyFilter('all')">All (25)</button>
+          <button class="pill-btn active" id="btnTopoFilterAll" onclick="setTopologyFilter('all')">All Nodes</button>
           <button class="pill-btn" id="btnTopoFilterCanonical" onclick="setTopologyFilter('canonical')" style="color:var(--amber-bright); border-color:rgba(251,191,36,0.5);">★ Canonical Web (6)</button>
           <button class="pill-btn" id="btnTopoFilterDemo" onclick="setTopologyFilter('demoscene')">Demoscene</button>
           <button class="pill-btn" id="btnTopoFilterComm" onclick="setTopologyFilter('community')">Community</button>
@@ -2683,12 +2686,12 @@ Tune dial to match lithospheric harmonic frequency to isolate transit frames.
       <!-- Canonical Nodes Fast-Hop Tracer Deck -->
       <div style="margin-bottom:10px; background:#070b16; border:1px solid var(--border-med); border-radius:3px; padding:8px 12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:space-between;">
         <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-          <span style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--amber-bright);">★ CANONICAL TRACER:</span>
+          <span style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--amber-bright);">★ CANONICAL FLEET FOCUS:</span>
           <button type="button" class="pill-btn" onclick="focusTopologyNode('#023')" style="color:#34d399; border-color:rgba(52,211,153,0.5);" title="Inspect SlashNet: News for Nerds">📰 SlashNet (#023)</button>
           <button type="button" class="pill-btn" onclick="focusTopologyNode('#024')" style="color:#38bdf8; border-color:rgba(56,189,248,0.5);" title="Inspect Trapster P2P Chiptune Swarm">💿 Trapster (#024)</button>
           <button type="button" class="pill-btn" onclick="focusTopologyNode('#025')" style="color:#fbbf24; border-color:rgba(251,191,36,0.5);" title="Inspect Cabled Magazine 1999 Edition">⚡ Cabled (#025)</button>
-          <button type="button" class="pill-btn" onclick="focusTopologyNode('#026')" style="color:#4ade80; border-color:rgba(74,222,128,0.5);" title="Inspect The Scallion Satirical News">🧅 Scallion (#026)</button>
-          <button type="button" class="pill-btn" onclick="focusTopologyNode('#021')" style="color:#f472b6; border-color:rgba(244,114,182,0.5);" title="Inspect Assembly '99 Demoscene Vault">💾 Demoscene (#021)</button>
+          <button type="button" class="pill-btn" onclick="focusTopologyNode('#026')" style="color:#4ade80; border-color:rgba(74,222,128,0.5);" title="Inspect The Scallion Satirical News">🧅 The Scallion (#026)</button>
+          <button type="button" class="pill-btn" onclick="focusTopologyNode('#021')" style="color:#f472b6; border-color:rgba(244,114,182,0.5);" title="Inspect Assembly '99 Demoscene Vault">💾 Assembly '99 (#021)</button>
           <button type="button" class="pill-btn" onclick="focusTopologyNode('#022')" style="color:#a78bfa; border-color:rgba(167,139,250,0.5);" title="Inspect IETF Living RFC Workbench">📜 RFC Archive (#022)</button>
         </div>
         <div style="display:flex; gap:6px;">
@@ -5096,6 +5099,80 @@ function triggerInstantWarp() {
   window.location.href = candidate.url;
 }
 
+function triggerCanonicalWarp() {
+  if (typeof playSfx === 'function') playSfx('warp');
+  const canonNodes = ringNodes.filter(n => CANONICAL_IDS.has(n.id));
+  const candidate = canonNodes[Math.floor(Math.random() * canonNodes.length)] || ringNodes[0];
+  warpTarget = candidate;
+
+  const destBox = document.getElementById('warpDestBox');
+  const destName = document.getElementById('warpDestName');
+  const destUrl = document.getElementById('warpDestUrl');
+  const progressWrap = document.getElementById('warpProgressWrap');
+  const progressBar = document.getElementById('warpProgressBar');
+  const btnAbort = document.getElementById('btnAbortWarp');
+  const btnLaunch = document.getElementById('btnLaunchWarp');
+  const btnCanon = document.getElementById('btnCanonicalWarp');
+
+  if (destBox) destBox.style.borderColor = 'var(--amber-bright)';
+  if (destName) destName.textContent = `★ CANONICAL DESTINATION: ${candidate.name}`;
+  if (destUrl) destUrl.textContent = `COORDINATES: ${candidate.url} (Node ${candidate.id})`;
+  if (progressWrap) progressWrap.style.display = 'block';
+  if (btnAbort) btnAbort.style.display = 'inline-flex';
+  if (btnLaunch) btnLaunch.style.display = 'none';
+  if (btnCanon) btnCanon.style.display = 'none';
+
+  warpProgress = 0;
+  if (progressBar) {
+    progressBar.style.width = '0%';
+    progressBar.style.background = 'linear-gradient(90deg, #fbbf24, #ec4899)';
+  }
+
+  if (warpTimer) clearInterval(warpTimer);
+
+  warpTimer = setInterval(() => {
+    warpProgress += 10;
+    if (progressBar) progressBar.style.width = `${warpProgress}%`;
+
+    if (warpProgress >= 100) {
+      clearInterval(warpTimer);
+      warpTimer = null;
+      logNodeVisit(candidate.id);
+      window.location.href = candidate.url;
+    }
+  }, 120);
+}
+
+function focusTopologyNode(nodeId) {
+  const idx = ringNodes.findIndex(n => n.id === nodeId);
+  if (idx === -1) return;
+  const node = ringNodes[idx];
+
+  const canvas = document.getElementById('topologyCanvas');
+  const cx = canvas ? canvas.width / 2 : 440;
+  const cy = canvas ? canvas.height / 2 : 210;
+  const radius = 155;
+  const n = ringNodes.length;
+  const a = (idx / n) * Math.PI * 2 - Math.PI / 2;
+  const nx = cx + radius * Math.cos(a);
+  const ny = cy + radius * Math.sin(a);
+
+  topoHoverNode = { node, index: idx, x: nx, y: ny };
+  isTopoPingActive = true;
+  topoPingWave = 0;
+
+  const hudEl = document.getElementById('topoSellabel');
+  if (hudEl) {
+    hudEl.innerHTML = `<span style="color:var(--amber-bright); font-weight:bold;">★ ${node.name} (${node.id})</span> <span style="color:var(--green-bright); font-size:10px;">[CANONICAL 1999 DESTINATION]</span> &bull; Latency: ${node.latency}ms &bull; <a href="javascript:openNodeModal('${node.id}')" style="color:var(--cyan); text-decoration:underline;">Inspect Node Modal [Enter]</a>`;
+  }
+  if (typeof playFmTone === 'function') {
+    playFmTone(660, 1.2, 0.2, 0.06, 0.05, false);
+  }
+  if (typeof showNoticeToast === 'function') {
+    showNoticeToast(`Focused Canonical Node: ${node.name} (${node.id})`);
+  }
+}
+
 function abortWarp() {
   if (warpTimer) {
     clearInterval(warpTimer);
@@ -5113,6 +5190,8 @@ function abortWarp() {
   progressWrap.style.display = 'none';
   btnAbort.style.display = 'none';
   btnLaunch.style.display = 'inline-flex';
+  const btnCanon = document.getElementById('btnCanonicalWarp');
+  if (btnCanon) btnCanon.style.display = 'inline-flex';
 }
 
 /* =========================================================================
@@ -5203,6 +5282,7 @@ function updateTourDisplay() {
       { id: "demo", name: "DEMOSCENE VAULT", glyph: "💾", cat: "demoscene" },
       { id: "tool", name: "TOOLS & PORTALS", glyph: "🛠️", cat: "tools" },
       { id: "apps", name: "FLEET HIGHLIGHTS", glyph: "🚀", cat: "apps" },
+      { id: "canon", name: "CANONICAL FLEET", glyph: "★", cat: "canonical" },
       { id: "myst", name: "SUBTERRANEAN GHOST", glyph: "👁️", cat: "mystery" }
     ];
 
@@ -5210,6 +5290,8 @@ function updateTourDisplay() {
       let isCollected = false;
       if (s.cat === "mystery") {
         isCollected = history.some(id => id === "#015" || id === "#016" || id === "#017" || id === "#018" || id === "#019" || id === "#020");
+      } else if (s.cat === "canonical") {
+        isCollected = history.some(id => CANONICAL_IDS.has(id));
       } else {
         isCollected = history.some(id => {
           const match = ringNodes.find(n => n.id === id);
@@ -5428,6 +5510,15 @@ const BADGE_PRESETS = {
   }
 };
 
+const CANONICAL_PRESET_MAP = {
+  '#023': 'slashnet',
+  '#024': 'trapster',
+  '#025': 'cabled',
+  '#026': 'scallion',
+  '#021': 'demoscene',
+  '#022': 'rfc'
+};
+
 function applyMemberNodePreset(nodeId) {
   if (!nodeId) return;
   const matchIdx = resolveNodeMatch(nodeId);
@@ -5446,6 +5537,16 @@ function applyMemberNodePreset(nodeId) {
     else if (node.id === '#026') themeEl.value = 'win95';
     else if (node.id === '#021') themeEl.value = 'neon';
     else if (node.id === '#022') themeEl.value = 'terminal';
+  }
+
+  // Auto-sync 88x31 Micro Button preset if canonical
+  if (CANONICAL_PRESET_MAP[node.id]) {
+    const pKey = CANONICAL_PRESET_MAP[node.id];
+    const sel88 = document.getElementById('badgePresetSelect');
+    if (sel88) {
+      sel88.value = pKey;
+      if (typeof applyBadgePreset === 'function') applyBadgePreset(pKey);
+    }
   }
 
   if (typeof updateBadgePreview === 'function') updateBadgePreview();
@@ -5776,6 +5877,30 @@ function updateBadgePreview() {
   const container = document.getElementById('badgePreviewContainer');
   const snippetBox = document.getElementById('badgeSnippetOutput');
 
+  // Dynamic Neighbor Resolution based on member site
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory && !n.url.includes('webring.html') && n.url !== '#');
+  let matchedIdx = visibleNodes.findIndex(n => n.id.toLowerCase() === ringId.toLowerCase() || n.name.toLowerCase() === siteTitle.toLowerCase());
+  if (matchedIdx === -1) {
+    matchedIdx = visibleNodes.findIndex(n => n.id.replace('#', '') === ringId.replace('#', ''));
+  }
+
+  let prevNode = null;
+  let nextNode = null;
+  if (matchedIdx !== -1) {
+    const pIdx = (matchedIdx - 1 + visibleNodes.length) % visibleNodes.length;
+    const nIdx = (matchedIdx + 1) % visibleNodes.length;
+    prevNode = visibleNodes[pIdx];
+    nextNode = visibleNodes[nIdx];
+  } else {
+    prevNode = visibleNodes[visibleNodes.length - 1] || { url: '/web/portal.html', name: 'KiloNet Portal', id: '#001' };
+    nextNode = visibleNodes[0] || { url: '/web/geocities.html', name: 'CyberSpire Retro Shrine', id: '#002' };
+  }
+
+  const prevUrl = prevNode.url;
+  const nextUrl = nextNode.url;
+  const prevLabel = prevNode.badgeLabel || prevNode.name.substring(0, 16);
+  const nextLabel = nextNode.badgeLabel || nextNode.name.substring(0, 16);
+
   let colors = {
     bg: '#0e1526',
     border: '#38bdf8',
@@ -5802,19 +5927,19 @@ function updateBadgePreview() {
     htmlSnippet = `<!-- Central KiloNet Webring Widget (Style A: Classic) -->
 <div align="center" style="font-family:'Courier New', monospace; font-size:12px; margin:14px 0;">
   [ <a href="/web/webring.html">KiloNet Ring Hub</a> | 
-    <a href="/web/portal.html">&laquo; Prev</a> | 
-    <a href="/web/webring.html?warp=random">Random</a> | 
-    <a href="/web/geocities.html">Next &raquo;</a> ]
+    <a href="${prevUrl}">&laquo; Prev: ${prevLabel}</a> | 
+    <a href="/web/webring.html?action=random">Random Hop</a> | 
+    <a href="${nextUrl}">Next: ${nextLabel} &raquo;</a> ]
 </div>`;
-    previewMarkup = `<div style="font-family:var(--font-mono); font-size:12px; color:${colors.text}; padding:10px; border:1px dashed ${colors.border};">
+    previewMarkup = `<div style="font-family:var(--font-mono); font-size:12px; color:${colors.text}; padding:10px; border:1px dashed ${colors.border}; text-align:center;">
       [ <a href="/web/webring.html" style="color:${colors.accent};">KiloNet Ring Hub</a> | 
-        <a href="/web/portal.html" style="color:${colors.accent};">&laquo; Prev</a> | 
-        <a href="/web/webring.html" style="color:${colors.accent};">Random</a> | 
-        <a href="/web/geocities.html" style="color:${colors.accent};">Next &raquo;</a> ]
+        <a href="${prevUrl}" style="color:${colors.accent};">&laquo; Prev: ${prevLabel}</a> | 
+        <a href="/web/webring.html?action=random" style="color:${colors.accent};">Random Hop</a> | 
+        <a href="${nextUrl}" style="color:${colors.accent};">Next: ${nextLabel} &raquo;</a> ]
     </div>`;
   } else if (style === 'beveled') {
     htmlSnippet = `<!-- Central KiloNet Webring Widget (Style B: 3D Beveled Box) -->
-<table border="2" cellpadding="6" cellspacing="0" align="center" style="background:${colors.bg}; border-color:${colors.border}; color:${colors.text}; font-family:Arial, sans-serif; font-size:12px; max-width:440px;">
+<table border="2" cellpadding="6" cellspacing="0" align="center" style="background:${colors.bg}; border-color:${colors.border}; color:${colors.text}; font-family:Arial, sans-serif; font-size:12px; max-width:460px;">
   <tr>
     <td align="center" style="border-bottom:1px solid ${colors.border};">
       <strong>★ CENTRAL KILONET WEBRING ★</strong><br>
@@ -5823,50 +5948,50 @@ function updateBadgePreview() {
   </tr>
   <tr>
     <td align="center">
-      [ <a href="/web/portal.html" style="color:${colors.accent};">&laquo; Previous</a> ] • 
+      [ <a href="${prevUrl}" style="color:${colors.accent};">&laquo; Prev (${prevLabel})</a> ] • 
       [ <a href="/web/webring.html" style="color:${colors.accent};">Ring Hub</a> ] • 
-      [ <a href="/web/webring.html?warp=random" style="color:${colors.accent};">Random Jump</a> ] • 
-      [ <a href="/web/geocities.html" style="color:${colors.accent};">Next Site &raquo;</a> ]
+      [ <a href="/web/webring.html?action=random" style="color:${colors.accent};">Random Jump</a> ] • 
+      [ <a href="${nextUrl}" style="color:${colors.accent};">Next (${nextLabel}) &raquo;</a> ]
     </td>
   </tr>
 </table>`;
     previewMarkup = `
-      <div style="background:${colors.bg}; border:2px outset ${colors.border}; color:${colors.text}; font-family:var(--font-sans); font-size:12px; padding:10px; width:100%; max-width:440px;">
+      <div style="background:${colors.bg}; border:2px outset ${colors.border}; color:${colors.text}; font-family:var(--font-sans); font-size:12px; padding:10px; width:100%; max-width:460px; text-align:center;">
         <div style="border-bottom:1px solid ${colors.border}; padding-bottom:6px; margin-bottom:8px; font-weight:bold; color:${colors.accent};">
           ★ CENTRAL KILONET WEBRING ★<br>
           <span style="font-weight:normal; font-size:11px; color:${colors.text};">Member Site ${ringId}: ${siteTitle}</span>
         </div>
         <div style="font-family:var(--font-mono); font-size:11px;">
-          [ <a href="/web/portal.html" style="color:${colors.accent};">&laquo; Previous</a> ] • 
+          [ <a href="${prevUrl}" style="color:${colors.accent};">&laquo; Prev (${prevLabel})</a> ] • 
           [ <a href="/web/webring.html" style="color:${colors.accent};">Ring Hub</a> ] • 
-          [ <a href="/web/webring.html" style="color:${colors.accent};">Random Jump</a> ] • 
-          [ <a href="/web/geocities.html" style="color:${colors.accent};">Next Site &raquo;</a> ]
+          [ <a href="/web/webring.html?action=random" style="color:${colors.accent};">Random Jump</a> ] • 
+          [ <a href="${nextUrl}" style="color:${colors.accent};">Next (${nextLabel}) &raquo;</a> ]
         </div>
       </div>
     `;
   } else if (style === 'neon') {
     htmlSnippet = `<!-- Central KiloNet Webring Widget (Style C: Cyberpunk Neon HUD) -->
-<div align="center" style="background:${colors.bg}; border:2px solid ${colors.border}; box-shadow:0 0 10px ${colors.border}; padding:10px; max-width:480px; margin:14px auto; font-family:'Courier New', monospace; font-size:11px; color:${colors.text};">
+<div align="center" style="background:${colors.bg}; border:2px solid ${colors.border}; box-shadow:0 0 10px ${colors.border}; padding:10px; max-width:500px; margin:14px auto; font-family:'Courier New', monospace; font-size:11px; color:${colors.text};">
   <div style="color:${colors.accent}; font-weight:bold; letter-spacing:1px; margin-bottom:6px;">
-    // KILONET NODE LINK // ID: ${ringId}
+    // KILONET NODE LINK // ID: ${ringId} [${siteTitle}]
   </div>
   <div>
-    &lt;&lt; <a href="/web/portal.html" style="color:${colors.accent}; font-weight:bold;">PREV_NODE</a> | 
-    [ <a href="/web/webring.html" style="color:${colors.text}; font-weight:bold;">WEBRING_HUB</a> ] | 
-    [ <a href="/web/webring.html?warp=random" style="color:${colors.accent}; font-weight:bold;">WARP_RANDOM</a> ] | 
-    <a href="/web/geocities.html" style="color:${colors.accent}; font-weight:bold;">NEXT_NODE</a> &gt;&gt;
+    &lt;&lt; <a href="${prevUrl}" style="color:${colors.accent}; font-weight:bold;">PREV [${prevLabel}]</a> | 
+    [ <a href="/web/webring.html" style="color:${colors.text}; font-weight:bold;">RING_HUB</a> ] | 
+    [ <a href="/web/webring.html?action=random" style="color:${colors.accent}; font-weight:bold;">WARP_RANDOM</a> ] | 
+    <a href="${nextUrl}" style="color:${colors.accent}; font-weight:bold;">NEXT [${nextLabel}]</a> &gt;&gt;
   </div>
 </div>`;
     previewMarkup = `
-      <div style="background:${colors.bg}; border:2px solid ${colors.border}; box-shadow:0 0 12px ${colors.border}; padding:10px; width:100%; max-width:440px; font-family:var(--font-mono); font-size:11px; color:${colors.text};">
+      <div style="background:${colors.bg}; border:2px solid ${colors.border}; box-shadow:0 0 12px ${colors.border}; padding:10px; width:100%; max-width:480px; font-family:var(--font-mono); font-size:11px; color:${colors.text}; text-align:center;">
         <div style="color:${colors.accent}; font-weight:bold; letter-spacing:1px; margin-bottom:6px;">
-          // KILONET NODE LINK // ID: ${ringId}
+          // KILONET NODE LINK // ID: ${ringId} [${siteTitle}]
         </div>
         <div>
-          &lt;&lt; <a href="/web/portal.html" style="color:${colors.accent}; font-weight:bold;">PREV_NODE</a> | 
-          [ <a href="/web/webring.html" style="color:${colors.text}; font-weight:bold;">WEBRING_HUB</a> ] | 
-          [ <a href="/web/webring.html" style="color:${colors.accent}; font-weight:bold;">WARP_RANDOM</a> ] | 
-          <a href="/web/geocities.html" style="color:${colors.accent}; font-weight:bold;">NEXT_NODE</a> &gt;&gt;
+          &lt;&lt; <a href="${prevUrl}" style="color:${colors.accent}; font-weight:bold;">PREV [${prevLabel}]</a> | 
+          [ <a href="/web/webring.html" style="color:${colors.text}; font-weight:bold;">RING_HUB</a> ] | 
+          [ <a href="/web/webring.html?action=random" style="color:${colors.accent}; font-weight:bold;">WARP_RANDOM</a> ] | 
+          <a href="${nextUrl}" style="color:${colors.accent}; font-weight:bold;">NEXT [${nextLabel}]</a> &gt;&gt;
         </div>
       </div>
     `;
@@ -5878,7 +6003,7 @@ function updateBadgePreview() {
       <a href="/web/webring.html" target="_top">
         <span style="display:inline-block; width:88px; height:31px; line-height:31px; text-align:center; background:#0284c7; color:#ffffff; font-family:monospace; font-size:9px; font-weight:bold; border:1px solid #38bdf8;">KILONET RING</span>
       </a><br>
-      <small>[ <a href="/web/portal.html">&laquo; Prev</a> | <a href="/web/webring.html">Hub</a> | <a href="/web/geocities.html">Next &raquo;</a> ]</small>
+      <small>[ <a href="${prevUrl}">&laquo; Prev</a> | <a href="/web/webring.html">Hub</a> | <a href="/web/webring.html?action=random">Random</a> | <a href="${nextUrl}">Next &raquo;</a> ]</small>
     </td>
   </tr>
 </table>`;
@@ -5888,98 +6013,113 @@ function updateBadgePreview() {
           🌐 KILONET RING
         </div>
         <div style="color:${colors.text};">
-          [ <a href="/web/portal.html" style="color:${colors.accent};">&laquo; Prev</a> | 
+          [ <a href="${prevUrl}" style="color:${colors.accent};">&laquo; Prev: ${prevLabel}</a> | 
             <a href="/web/webring.html" style="color:${colors.accent};">Hub</a> | 
-            <a href="/web/geocities.html" style="color:${colors.accent};">Next &raquo;</a> ]
+            <a href="/web/webring.html?action=random" style="color:${colors.accent};">Random</a> | 
+            <a href="${nextUrl}" style="color:${colors.accent};">Next: ${nextLabel} &raquo;</a> ]
         </div>
       </div>
     `;
   } else if (style === 'marquee') {
     htmlSnippet = `<!-- Central KiloNet Webring Widget (Style E: Retro Marquee Ticker) -->
-<div style="background:${colors.bg}; border:1px solid ${colors.border}; padding:6px 10px; font-family:monospace; font-size:11px; color:${colors.text}; max-width:520px; margin:10px auto;">
+<div style="background:${colors.bg}; border:1px solid ${colors.border}; padding:6px 10px; font-family:monospace; font-size:11px; color:${colors.text}; max-width:540px; margin:10px auto;">
   <marquee scrollamount="3" behavior="scroll" direction="left">
     ★ MEMBER OF CENTRAL KILONET WEBRING [NODE ${ringId}: ${siteTitle}] ★ 
     [<a href="/web/webring.html" style="color:${colors.accent};">CENTRAL HUB</a>] • 
-    [<a href="/web/portal.html" style="color:${colors.accent};">&laquo; PREV SITE</a>] • 
-    [<a href="/web/webring.html?warp=random" style="color:${colors.accent};">RANDOM TELEPORT</a>] • 
-    [<a href="/web/geocities.html" style="color:${colors.accent};">NEXT SITE &raquo;</a>]
+    [<a href="${prevUrl}" style="color:${colors.accent};">&laquo; PREV: ${prevLabel}</a>] • 
+    [<a href="/web/webring.html?action=random" style="color:${colors.accent};">RANDOM TELEPORT</a>] • 
+    [<a href="${nextUrl}" style="color:${colors.accent};">NEXT: ${nextLabel} &raquo;</a>]
   </marquee>
 </div>`;
     previewMarkup = `
-      <div style="background:${colors.bg}; border:1px solid ${colors.border}; padding:8px 12px; width:100%; max-width:440px; font-family:var(--font-mono); font-size:11px; color:${colors.text};">
+      <div style="background:${colors.bg}; border:1px solid ${colors.border}; padding:8px 12px; width:100%; max-width:480px; font-family:var(--font-mono); font-size:11px; color:${colors.text};">
         <marquee scrollamount="3" behavior="scroll" direction="left">
           ★ MEMBER OF CENTRAL KILONET WEBRING [NODE ${ringId}: ${siteTitle}] ★ 
           [<a href="/web/webring.html" style="color:${colors.accent};">CENTRAL HUB</a>] • 
-          [<a href="/web/portal.html" style="color:${colors.accent};">&laquo; PREV SITE</a>] • 
-          [<a href="/web/webring.html?warp=random" style="color:${colors.accent};">RANDOM TELEPORT</a>] • 
-          [<a href="/web/geocities.html" style="color:${colors.accent};">NEXT SITE &raquo;</a>]
+          [<a href="${prevUrl}" style="color:${colors.accent};">&laquo; PREV: ${prevLabel}</a>] • 
+          [<a href="/web/webring.html?action=random" style="color:${colors.accent};">RANDOM TELEPORT</a>] • 
+          [<a href="${nextUrl}" style="color:${colors.accent};">NEXT: ${nextLabel} &raquo;</a>]
         </marquee>
       </div>
     `;
   } else if (style === 'dropdown') {
     htmlSnippet = `<!-- Central KiloNet Webring Widget (Style F: Netscape 4.7 Dropdown Quick Jump) -->
-<form onsubmit="if(this.ringjump.value)window.location.href=this.ringjump.value;return false;" style="margin:10px auto; max-width:440px; background:${colors.bg}; border:2px outset ${colors.border}; padding:8px; text-align:center; font-family:Arial,sans-serif; font-size:11px; color:${colors.text};">
-  <strong>KiloNet Webring Quick Jump:</strong><br>
-  <select name="ringjump" style="background:#000; color:#fff; border:1px solid ${colors.border}; font-size:11px; padding:2px; margin-top:4px;">
-    <option value="/web/webring.html">🌐 Ring Hub (${ringId})</option>
-    <option value="/web/portal.html">&laquo; Previous Site</option>
-    <option value="/web/geocities.html">Next Site &raquo;</option>
-    <option value="/web/webring.html?warp=random">🎲 Random Site</option>
+<form onsubmit="if(this.ringjump.value)window.location.href=this.ringjump.value;return false;" style="margin:10px auto; max-width:480px; background:${colors.bg}; border:2px outset ${colors.border}; padding:8px; text-align:center; font-family:Arial,sans-serif; font-size:11px; color:${colors.text};">
+  <strong>★ KiloNet Webring Quick Jump Console ★</strong><br>
+  <select name="ringjump" style="background:#000; color:#fff; border:1px solid ${colors.border}; font-size:11px; padding:3px; margin:6px 0; max-width:380px;">
+    <option value="/web/webring.html">🌐 Central Ring Hub (${ringId})</option>
+    <option value="${prevUrl}">&laquo; Previous Site (${prevLabel})</option>
+    <option value="${nextUrl}">Next Site (${nextLabel}) &raquo;</option>
+    <option value="/web/webring.html?action=random">🎲 Random Ring Hop</option>
+    <optgroup label="-- Canonical 1999 Fleet Destinations --">
+      <option value="/web/slashnet.html">📰 SlashNet: News for Nerds</option>
+      <option value="/web/trapster.html">💿 Trapster P2P Chiptune Swarm</option>
+      <option value="/web/cabled.html">⚡ Cabled Magazine (1999 Edition)</option>
+      <option value="/web/scallion.html">🧅 The Scallion: Satirical News</option>
+      <option value="/web/demoscene.html">💾 Assembly '99 Demoscene Vault</option>
+      <option value="/web/rfc_archive.html">📜 Living RFC Archive Workbench</option>
+    </optgroup>
   </select>
-  <input type="submit" value="Go!" style="background:${colors.border}; color:#000; font-weight:bold; font-size:11px; border:1px solid #fff; cursor:pointer;">
+  <input type="submit" value="Warp!" style="background:${colors.border}; color:#000; font-weight:bold; font-size:11px; border:1px solid #fff; padding:3px 8px; cursor:pointer;">
 </form>`;
     previewMarkup = `
-      <div style="background:${colors.bg}; border:2px outset ${colors.border}; padding:10px; width:100%; max-width:440px; text-align:center; font-family:var(--font-sans); font-size:11px; color:${colors.text};">
-        <strong>KiloNet Webring Quick Jump:</strong><br>
-        <div style="display:flex; justify-content:center; gap:6px; margin-top:6px;">
-          <select style="background:#000; color:#fff; border:1px solid ${colors.border}; font-size:11px; padding:3px;">
+      <div style="background:${colors.bg}; border:2px outset ${colors.border}; padding:10px; width:100%; max-width:480px; text-align:center; font-family:var(--font-sans); font-size:11px; color:${colors.text};">
+        <strong>★ KiloNet Webring Quick Jump Console ★</strong><br>
+        <div style="display:flex; justify-content:center; gap:6px; margin-top:6px; flex-wrap:wrap;">
+          <select style="background:#000; color:#fff; border:1px solid ${colors.border}; font-size:11px; padding:3px; max-width:320px;">
             <option>🌐 Ring Hub (${ringId})</option>
-            <option>&laquo; Previous Site</option>
-            <option>Next Site &raquo;</option>
-            <option>🎲 Random Site</option>
+            <option>&laquo; Prev (${prevLabel})</option>
+            <option>Next (${nextLabel}) &raquo;</option>
+            <option>🎲 Random Hop</option>
+            <option>-- 📰 SlashNet: News for Nerds --</option>
+            <option>-- 💿 Trapster P2P Chiptune Swarm --</option>
+            <option>-- ⚡ Cabled Magazine (1999) --</option>
+            <option>-- 🧅 The Scallion: Satire News --</option>
+            <option>-- 💾 Assembly '99 Demoscene --</option>
+            <option>-- 📜 Living RFC Archive Bench --</option>
           </select>
-          <button style="background:${colors.border}; color:#000; font-weight:bold; font-size:11px; border:1px solid #fff; padding:3px 8px; cursor:pointer;">Go!</button>
+          <button style="background:${colors.border}; color:#000; font-weight:bold; font-size:11px; border:1px solid #fff; padding:3px 8px; cursor:pointer;">Warp!</button>
         </div>
       </div>
     `;
   } else if (style === 'ascii') {
     htmlSnippet = `<!-- Central KiloNet Webring Widget (Style G: Lynx CP437 ASCII Terminal Box) -->
-<pre style="background:#000; color:${colors.accent}; font-family:'Courier New',monospace; font-size:11px; padding:8px; border:1px solid ${colors.border}; max-width:460px; margin:10px auto; text-align:left;">
-+------------------------------------------------------+
-| [KiloNet 1999 Webring] Node ${ringId.padEnd(5, ' ')} : ${siteTitle.substring(0, 22).padEnd(22, ' ')} |
-| &lt;&lt; [Prev] &lt;a href="/web/portal.html"&gt;Back&lt;/a&gt;       [Hub] &lt;a href="/web/webring.html"&gt;Central&lt;/a&gt;        |
-| &gt;&gt; [Next] &lt;a href="/web/geocities.html"&gt;Next&lt;/a&gt;       [Rand] &lt;a href="/web/webring.html?warp=random"&gt;Spin&lt;/a&gt;         |
-+------------------------------------------------------+
+<pre style="background:#000; color:${colors.accent}; font-family:'Courier New',monospace; font-size:11px; padding:8px; border:1px solid ${colors.border}; max-width:480px; margin:10px auto; text-align:left;">
++--------------------------------------------------------------+
+| [KiloNet 1999 Webring] Node ${ringId.padEnd(5, ' ')} : ${siteTitle.substring(0, 24).padEnd(24, ' ')} |
+| &lt;&lt; [Prev] &lt;a href="${prevUrl}"&gt;${prevLabel.substring(0, 10).padEnd(10, ' ')}&lt;/a&gt;   [Hub] &lt;a href="/web/webring.html"&gt;Central Hub&lt;/a&gt;      |
+| &gt;&gt; [Next] &lt;a href="${nextUrl}"&gt;${nextLabel.substring(0, 10).padEnd(10, ' ')}&lt;/a&gt;   [Rand] &lt;a href="/web/webring.html?action=random"&gt;Random Hop&lt;/a&gt;   |
++--------------------------------------------------------------+
 </pre>`;
     previewMarkup = `
-      <pre style="background:#000; color:${colors.accent}; font-family:var(--font-mono); font-size:11px; padding:8px; border:1px solid ${colors.border}; width:100%; max-width:440px; margin:0; text-align:left; overflow-x:auto;">
-+------------------------------------------------------+
-| [KiloNet 1999 Webring] Node ${ringId.padEnd(5, ' ')} : ${siteTitle.substring(0, 22).padEnd(22, ' ')} |
-| &lt;&lt; [Prev] <a href="/web/portal.html" style="color:${colors.accent};">Back</a>       [Hub] <a href="/web/webring.html" style="color:${colors.accent};">Central</a>        |
-| &gt;&gt; [Next] <a href="/web/geocities.html" style="color:${colors.accent};">Next</a>       [Rand] <a href="/web/webring.html?warp=random" style="color:${colors.accent};">Spin</a>         |
-+------------------------------------------------------+</pre>
+      <pre style="background:#000; color:${colors.accent}; font-family:var(--font-mono); font-size:11px; padding:8px; border:1px solid ${colors.border}; width:100%; max-width:480px; margin:0; text-align:left; overflow-x:auto;">
++--------------------------------------------------------------+
+| [KiloNet 1999 Webring] Node ${ringId.padEnd(5, ' ')} : ${siteTitle.substring(0, 24).padEnd(24, ' ')} |
+| &lt;&lt; [Prev] <a href="${prevUrl}" style="color:${colors.accent};">${prevLabel.substring(0, 10).padEnd(10, ' ')}</a>   [Hub] <a href="/web/webring.html" style="color:${colors.accent};">Central Hub</a>      |
+| &gt;&gt; [Next] <a href="${nextUrl}" style="color:${colors.accent};">${nextLabel.substring(0, 10).padEnd(10, ' ')}</a>   [Rand] <a href="/web/webring.html?action=random" style="color:${colors.accent};">Random Hop</a>   |
++--------------------------------------------------------------+</pre>
     `;
   } else if (style === 'matrix') {
     htmlSnippet = `<!-- Central KiloNet Webring Widget (Style H: Matrix Phosphor HUD) -->
-<div style="background:#020b05; border:2px solid #10b981; box-shadow:0 0 12px rgba(16,185,129,0.3); padding:10px; max-width:460px; margin:10px auto; font-family:'Courier New',monospace; font-size:11px; color:#34d399; text-align:center;">
+<div style="background:#020b05; border:2px solid #10b981; box-shadow:0 0 12px rgba(16,185,129,0.3); padding:10px; max-width:480px; margin:10px auto; font-family:'Courier New',monospace; font-size:11px; color:#34d399; text-align:center;">
   <div style="color:#10b981; font-weight:bold; letter-spacing:2px; margin-bottom:4px;">// KILONET_RING_NODE_TELEMETRY //</div>
   <div>NODE_ID: ${ringId} &bull; HOST: ${siteTitle}</div>
   <div style="margin-top:6px;">
-    [&lt;&lt; <a href="/web/portal.html" style="color:#6ee7b7; font-weight:bold;">PREV_ROUTE</a>] &bull; 
+    [&lt;&lt; <a href="${prevUrl}" style="color:#6ee7b7; font-weight:bold;">PREV (${prevLabel})</a>] &bull; 
     [<a href="/web/webring.html" style="color:#34d399;">RING_MATRIX</a>] &bull; 
-    [<a href="/web/webring.html?warp=random" style="color:#6ee7b7;">RANDOM_HOP</a>] &bull; 
-    [<a href="/web/geocities.html" style="color:#6ee7b7; font-weight:bold;">NEXT_ROUTE</a> &gt;&gt;]
+    [<a href="/web/webring.html?action=random" style="color:#6ee7b7;">RANDOM_HOP</a>] &bull; 
+    [<a href="${nextUrl}" style="color:#6ee7b7; font-weight:bold;">NEXT (${nextLabel})</a> &gt;&gt;]
   </div>
 </div>`;
     previewMarkup = `
-      <div style="background:#020b05; border:2px solid #10b981; box-shadow:0 0 12px rgba(16,185,129,0.3); padding:10px; width:100%; max-width:440px; font-family:var(--font-mono); font-size:11px; color:#34d399; text-align:center;">
+      <div style="background:#020b05; border:2px solid #10b981; box-shadow:0 0 12px rgba(16,185,129,0.3); padding:10px; width:100%; max-width:480px; font-family:var(--font-mono); font-size:11px; color:#34d399; text-align:center;">
         <div style="color:#10b981; font-weight:bold; letter-spacing:2px; margin-bottom:4px;">// KILONET_RING_NODE_TELEMETRY //</div>
         <div>NODE_ID: ${ringId} &bull; HOST: ${siteTitle}</div>
         <div style="margin-top:6px;">
-          [&lt;&lt; <a href="/web/portal.html" style="color:#6ee7b7; font-weight:bold;">PREV_ROUTE</a>] &bull; 
+          [&lt;&lt; <a href="${prevUrl}" style="color:#6ee7b7; font-weight:bold;">PREV (${prevLabel})</a>] &bull; 
           [<a href="/web/webring.html" style="color:#34d399;">RING_MATRIX</a>] &bull; 
-          [<a href="/web/webring.html?warp=random" style="color:#6ee7b7;">RANDOM_HOP</a>] &bull; 
-          [<a href="/web/geocities.html" style="color:#6ee7b7; font-weight:bold;">NEXT_ROUTE</a> &gt;&gt;]
+          [<a href="/web/webring.html?action=random" style="color:#6ee7b7;">RANDOM_HOP</a>] &bull; 
+          [<a href="${nextUrl}" style="color:#6ee7b7; font-weight:bold;">NEXT (${nextLabel})</a> &gt;&gt;]
         </div>
       </div>
     `;
@@ -6675,6 +6815,57 @@ function drawTopologyMap(canvas, ctx) {
     ctx.beginPath();
     ctx.arc(cx, cy, topoPingWave % (radius + 50), 0, Math.PI * 2);
     ctx.stroke();
+  }
+
+  // Draw Golden Optical Backbone Chords for Canonical Nodes
+  if (topoFilter === 'canonical' || topoFilter === 'all') {
+    const canonIndices = [];
+    for (let i = 0; i < n; i++) {
+      if (CANONICAL_IDS.has(ringNodes[i].id)) canonIndices.push(i);
+    }
+    if (canonIndices.length > 1) {
+      ctx.save();
+      ctx.strokeStyle = topoFilter === 'canonical' ? "rgba(251, 191, 36, 0.75)" : "rgba(251, 191, 36, 0.25)";
+      ctx.lineWidth = topoFilter === 'canonical' ? 2.5 : 1.2;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      for (let ci = 0; ci < canonIndices.length; ci++) {
+        const i1 = canonIndices[ci];
+        const i2 = canonIndices[(ci + 1) % canonIndices.length];
+        const a1 = (i1 / n) * Math.PI * 2 - Math.PI / 2;
+        const a2 = (i2 / n) * Math.PI * 2 - Math.PI / 2;
+        ctx.moveTo(cx + radius * Math.cos(a1), cy + radius * Math.sin(a1));
+        ctx.lineTo(cx + radius * Math.cos(a2), cy + radius * Math.sin(a2));
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Draw packet photon hopping across canonical nodes
+      if (topoFilter === 'canonical') {
+        const packetIdx = Math.floor((topoAngle * 1.5) % canonIndices.length);
+        const nextPacketIdx = (packetIdx + 1) % canonIndices.length;
+        const i1 = canonIndices[packetIdx];
+        const i2 = canonIndices[nextPacketIdx];
+        const prog = (topoAngle * 1.5) % 1;
+        const a1 = (i1 / n) * Math.PI * 2 - Math.PI / 2;
+        const a2 = (i2 / n) * Math.PI * 2 - Math.PI / 2;
+        const x1 = cx + radius * Math.cos(a1);
+        const y1 = cy + radius * Math.sin(a1);
+        const x2 = cx + radius * Math.cos(a2);
+        const y2 = cy + radius * Math.sin(a2);
+        const px = x1 + (x2 - x1) * prog;
+        const py = y1 + (y2 - y1) * prog;
+
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = "#fbbf24";
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      ctx.restore();
+    }
   }
 
   // Draw Center Hub Core
@@ -8825,7 +9016,13 @@ function renderSurfViewport() {
   const titleEl = document.getElementById('netscapeTitle');
   const locEl = document.getElementById('netscapeLocationUrl');
   if (titleEl) titleEl.textContent = `Netscape Communicator - [${node.name}]`;
-  if (locEl) locEl.textContent = node.url.startsWith('/') ? `kweb://${node.url.replace('/web/', '').replace('.html', '')}` : node.url;
+  if (locEl) {
+    if (node.url.includes('rfc_archive')) {
+      locEl.textContent = 'kweb://rfc-archive';
+    } else {
+      locEl.textContent = node.url.startsWith('/') ? `kweb://${node.url.replace('/web/', '').replace('.html', '')}` : node.url;
+    }
+  }
 
   // Viewport Content
   const viewport = document.getElementById('netscapeViewportArea');
@@ -9412,6 +9609,22 @@ function resolveNodeMatch(query) {
   const q = String(query).toLowerCase().trim();
   const cleanQ = q.replace(/^(kweb:\/\/|\/web\/)/, '').replace(/\.html$/, '').replace(/^#/, '');
   const normQ = cleanQ.replace(/[-_]/g, '');
+
+  const CANON_ALIASES = {
+    'slashnet': '#023', 'slashdot': '#023', 'cmdr_taco': '#023',
+    'trapster': '#024', 'napster': '#024', 'p2p': '#024',
+    'cabled': '#025', 'wired': '#025', 'cabledmag': '#025',
+    'scallion': '#026', 'thescallion': '#026', 'onion': '#026',
+    'demoscene': '#021', 'assembly99': '#021', 'scene99': '#021', 'flarelight': '#021',
+    'rfc-archive': '#022', 'rfc_archive': '#022', 'rfc1149': '#022', 'ietf': '#022', 'rfc': '#022'
+  };
+  if (CANON_ALIASES[cleanQ] || CANON_ALIASES[normQ]) {
+    const targetId = CANON_ALIASES[cleanQ] || CANON_ALIASES[normQ];
+    const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+    const cIdx = visibleNodes.findIndex(n => n.id === targetId);
+    if (cIdx !== -1) return cIdx;
+  }
+
   const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
   return visibleNodes.findIndex(n => {
     const nid = n.id.toLowerCase().replace('#', '');

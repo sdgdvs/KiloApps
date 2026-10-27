@@ -1321,52 +1321,91 @@
       }
 
       // 3-Tier Volumetric Parallax Nebulae (Deep cosmic dust, emission clouds, & ionized filaments)
-      // Tier 1: Deep Cosmic Gas Clouds (parallax 0.03)
-      for(let i=0; i<6; i++) {
+      // Tier 1: Deep Cosmic Gas Clouds (parallax 0.03) - Organic multi-lobe dark nebulae
+      for(let i=0; i<8; i++) {
+        const lobes = [];
+        const numLobes = 2 + Math.floor(Math.random() * 3);
+        const baseR = 480 + Math.random() * 380;
+        for (let l = 0; l < numLobes; l++) {
+          lobes.push({
+            dx: (Math.random() - 0.5) * baseR * 0.7,
+            dy: (Math.random() - 0.5) * baseR * 0.7,
+            r: baseR * (0.6 + Math.random() * 0.5)
+          });
+        }
         state.nebulas.push({
           tier: 1,
           parallax: 0.03,
           x: Math.floor(Math.random() * state.mapSize * 1.5) - (state.mapSize * 0.75),
           y: Math.floor(Math.random() * state.mapSize * 1.5) - (state.mapSize * 0.75),
-          radius: 550 + Math.random() * 450,
-          coreColor: 'rgba(50, 10, 80, 0.12)',
-          midColor: 'rgba(20, 10, 50, 0.07)',
-          outerColor: 'rgba(5, 5, 25, 0.0)'
+          radius: baseR,
+          lobes: lobes,
+          coreColor: 'rgba(38, 8, 60, 0.14)',
+          midColor: 'rgba(14, 8, 36, 0.08)',
+          outerColor: 'rgba(2, 2, 14, 0.0)'
         });
       }
       // Tier 2: Mid-range Emission & Reflection Nebulae with glowing ion cores (parallax 0.08)
       const nebulaPalettes = [
-        { core: 'rgba(0, 220, 255, 0.16)', mid: 'rgba(20, 60, 180, 0.09)', outer: 'rgba(0, 10, 40, 0)' },
-        { core: 'rgba(255, 50, 130, 0.15)', mid: 'rgba(120, 10, 100, 0.08)', outer: 'rgba(40, 0, 30, 0)' },
-        { core: 'rgba(255, 170, 0, 0.14)', mid: 'rgba(180, 50, 0, 0.07)', outer: 'rgba(30, 10, 0, 0)' },
-        { core: 'rgba(0, 255, 170, 0.14)', mid: 'rgba(0, 120, 120, 0.07)', outer: 'rgba(0, 20, 30, 0)' },
-        { core: 'rgba(170, 60, 255, 0.15)', mid: 'rgba(80, 10, 150, 0.08)', outer: 'rgba(20, 0, 40, 0)' }
+        { core: 'rgba(0, 220, 255, 0.18)', mid: 'rgba(20, 70, 190, 0.10)', outer: 'rgba(0, 10, 40, 0)', fil: 'rgba(120, 240, 255, 0.25)' },
+        { core: 'rgba(255, 50, 130, 0.18)', mid: 'rgba(130, 12, 110, 0.09)', outer: 'rgba(40, 0, 30, 0)', fil: 'rgba(255, 140, 200, 0.22)' },
+        { core: 'rgba(255, 170, 0, 0.16)', mid: 'rgba(190, 60, 0, 0.08)', outer: 'rgba(30, 10, 0, 0)', fil: 'rgba(255, 210, 80, 0.22)' },
+        { core: 'rgba(0, 255, 170, 0.16)', mid: 'rgba(0, 130, 130, 0.08)', outer: 'rgba(0, 20, 30, 0)', fil: 'rgba(100, 255, 210, 0.22)' },
+        { core: 'rgba(180, 70, 255, 0.17)', mid: 'rgba(90, 14, 160, 0.09)', outer: 'rgba(20, 0, 40, 0)', fil: 'rgba(220, 140, 255, 0.24)' }
       ];
-      for(let i=0; i<16; i++) {
+      for(let i=0; i<18; i++) {
         const pal = nebulaPalettes[i % nebulaPalettes.length];
+        const baseR = 260 + Math.random() * 260;
+        const lobes = [];
+        const numLobes = 3 + Math.floor(Math.random() * 3);
+        for (let l = 0; l < numLobes; l++) {
+          lobes.push({
+            dx: (Math.random() - 0.5) * baseR * 0.8,
+            dy: (Math.random() - 0.5) * baseR * 0.8,
+            r: baseR * (0.5 + Math.random() * 0.5)
+          });
+        }
+        // Embedded protostars within the emission nursery
+        const protoStars = [];
+        const numStars = 4 + Math.floor(Math.random() * 4);
+        for (let s = 0; s < numStars; s++) {
+          protoStars.push({
+            dx: (Math.random() - 0.5) * baseR * 0.7,
+            dy: (Math.random() - 0.5) * baseR * 0.7,
+            sz: 0.8 + Math.random() * 1.4,
+            tw: 0.002 + Math.random() * 0.004,
+            ph: Math.random() * Math.PI * 2
+          });
+        }
         state.nebulas.push({
           tier: 2,
           parallax: 0.08,
           x: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
           y: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
-          radius: 300 + Math.random() * 320,
+          radius: baseR * 1.4,
+          lobes: lobes,
+          protoStars: protoStars,
           coreColor: pal.core,
           midColor: pal.mid,
-          outerColor: pal.outer
+          outerColor: pal.outer,
+          filColor: pal.fil
         });
       }
       // Tier 3: Near Ionized Gas Filaments & Micro-Wisps (parallax 0.16)
-      for(let i=0; i<14; i++) {
+      for(let i=0; i<16; i++) {
         const pal = nebulaPalettes[(i + 2) % nebulaPalettes.length];
         state.nebulas.push({
           tier: 3,
           parallax: 0.16,
           x: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
           y: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
-          radius: 120 + Math.random() * 160,
+          radius: 110 + Math.random() * 140,
           coreColor: pal.core,
           midColor: pal.mid,
-          outerColor: pal.outer
+          outerColor: pal.outer,
+          filColor: pal.fil,
+          angle: Math.random() * Math.PI * 2,
+          curl: 0.2 + Math.random() * 0.5
         });
       }
     }
@@ -1377,18 +1416,29 @@
       const h = hullCanvas.height;
       hCtx.clearRect(0, 0, w, h);
 
-      // Dark tactical grid background
-      hCtx.fillStyle = '#02060f';
+      const time = Date.now();
+
+      // Dark tactical blueprint grid background
+      hCtx.fillStyle = '#020713';
       hCtx.fillRect(0, 0, w, h);
 
-      hCtx.strokeStyle = 'rgba(0, 80, 100, 0.25)';
+      hCtx.strokeStyle = 'rgba(0, 110, 140, 0.22)';
       hCtx.lineWidth = 1;
-      for (let x = 10; x < w; x += 16) {
+      for (let x = 8; x < w; x += 14) {
         hCtx.beginPath(); hCtx.moveTo(x, 0); hCtx.lineTo(x, h); hCtx.stroke();
       }
-      for (let y = 10; y < h; y += 16) {
+      for (let y = 7; y < h; y += 14) {
         hCtx.beginPath(); hCtx.moveTo(0, y); hCtx.lineTo(w, y); hCtx.stroke();
       }
+
+      // Vertical Diagnostic Laser Sweep Line (Clean vector sweep, zero border dots)
+      const scanY = (time * 0.035) % h;
+      hCtx.strokeStyle = 'rgba(0, 255, 220, 0.28)';
+      hCtx.lineWidth = 1;
+      hCtx.beginPath();
+      hCtx.moveTo(0, scanY);
+      hCtx.lineTo(w, scanY);
+      hCtx.stroke();
 
       const hp = state.resources.hull;
       const hullColor = hp > 65 ? '#00ffcc' : (hp > 30 ? '#ffaa00' : '#ff3344');
@@ -1405,41 +1455,73 @@
       hCtx.save();
       hCtx.translate(cx, cy);
 
-      // 1. Kinetic Shield Arc (outer defensive barrier)
+      // 1. Kinetic Shield Arc (outer defensive barrier with 4 harmonic nodes)
       const sLevel = (state.upgrades && state.upgrades.shields) || 1;
-      const shieldGlow = state.ship.shieldAlpha > 0.05 ? state.ship.shieldAlpha : 0.4;
-      hCtx.strokeStyle = hp > 30 ? `rgba(0, 220, 255, ${0.3 + shieldGlow * 0.5})` : `rgba(255, 80, 80, 0.5)`;
-      hCtx.lineWidth = 1.5;
+      const shieldGlow = state.ship.shieldAlpha > 0.05 ? state.ship.shieldAlpha : 0.35;
+      hCtx.strokeStyle = hp > 30 ? `rgba(0, 220, 255, ${0.35 + shieldGlow * 0.5})` : `rgba(255, 70, 70, 0.6)`;
+      hCtx.lineWidth = 1.4;
       hCtx.beginPath();
-      hCtx.ellipse(0, 0, 44, 26, 0, 0, Math.PI * 2);
+      hCtx.ellipse(0, 0, 46, 27, 0, 0, Math.PI * 2);
       hCtx.stroke();
 
-      // 2. Main Cruiser Hull Plates
-      hCtx.fillStyle = 'rgba(10, 25, 45, 0.9)';
+      // Shield Harmonic Phase Emitter Nodes
+      for (let i = 0; i < 4; i++) {
+        const ea = (i * Math.PI / 2) + (time * 0.0008);
+        const ex = Math.cos(ea) * 46;
+        const ey = Math.sin(ea) * 27;
+        hCtx.fillStyle = hp > 30 ? '#00e5ff' : '#ff4444';
+        hCtx.fillRect(ex - 1.5, ey - 1.5, 3, 3);
+      }
+
+      // 2. Main Titanium Composite Hull Plates & Interior Bulkheads
+      hCtx.fillStyle = 'rgba(10, 26, 48, 0.92)';
       hCtx.strokeStyle = hullColor;
-      hCtx.lineWidth = 1.2;
+      hCtx.lineWidth = 1.3;
       hCtx.beginPath();
-      hCtx.moveTo(34, 0); // Prow
-      hCtx.lineTo(18, -10);
-      hCtx.lineTo(0, -18); // Port wing tip
+      hCtx.moveTo(36, 0); // Prow sensor nose
+      hCtx.lineTo(20, -10);
+      hCtx.lineTo(4, -16);
+      hCtx.lineTo(-4, -18); // Port wing tip
       hCtx.lineTo(-24, -20); // Port nacelle outer
-      hCtx.lineTo(-30, -12); // Port engine aft
-      hCtx.lineTo(-20, -6);
-      hCtx.lineTo(-26, 0); // Center aft
-      hCtx.lineTo(-20, 6);
-      hCtx.lineTo(-30, 12); // Starboard engine aft
+      hCtx.lineTo(-32, -12); // Port engine aft
+      hCtx.lineTo(-22, -6);
+      hCtx.lineTo(-28, 0); // Center aft notch
+      hCtx.lineTo(-22, 6);
+      hCtx.lineTo(-32, 12); // Starboard engine aft
       hCtx.lineTo(-24, 20); // Starboard nacelle outer
-      hCtx.lineTo(0, 18); // Starboard wing tip
-      hCtx.lineTo(18, 10);
+      hCtx.lineTo(-4, 18); // Starboard wing tip
+      hCtx.lineTo(4, 16);
+      hCtx.lineTo(20, 10);
       hCtx.closePath();
       hCtx.fill();
       hCtx.stroke();
 
-      // 3. Forward Deflector / Sensor Dome
-      const scanOnline = !!(state.modules && state.modules.scanner);
-      hCtx.fillStyle = scanOnline ? '#00e5ff' : '#007799';
+      // Longitudinal Keel & Bulkhead Dividers
+      hCtx.strokeStyle = 'rgba(0, 200, 255, 0.4)';
+      hCtx.lineWidth = 0.8;
       hCtx.beginPath();
-      hCtx.arc(28, 0, 3.5, 0, Math.PI * 2);
+      hCtx.moveTo(28, 0); hCtx.lineTo(-24, 0); // Keel line
+      hCtx.moveTo(8, -10); hCtx.lineTo(8, 10); // Forward transverse bulkhead
+      hCtx.moveTo(-10, -12); hCtx.lineTo(-10, 12); // Engineering bulkhead
+      hCtx.stroke();
+
+      // Flashing damage cross-hatch if hull < 65%
+      if (hp <= 65) {
+        const alertStrobe = Math.floor(time / 250) % 2 === 0;
+        hCtx.strokeStyle = hp > 30 ? 'rgba(255, 170, 0, 0.6)' : (alertStrobe ? 'rgba(255, 50, 50, 0.8)' : 'rgba(255, 50, 50, 0.2)');
+        hCtx.lineWidth = 1;
+        hCtx.beginPath();
+        hCtx.moveTo(-6, -14); hCtx.lineTo(2, -6);
+        hCtx.moveTo(-2, -14); hCtx.lineTo(6, -6);
+        hCtx.moveTo(-18, 6); hCtx.lineTo(-10, 14);
+        hCtx.stroke();
+      }
+
+      // 3. Forward Subspace Sensor Dome
+      const scanOnline = !!(state.modules && state.modules.scanner);
+      hCtx.fillStyle = scanOnline ? '#00f0ff' : '#007799';
+      hCtx.beginPath();
+      hCtx.arc(30, 0, 3.5, 0, Math.PI * 2);
       hCtx.fill();
       hCtx.strokeStyle = '#ffffff';
       hCtx.lineWidth = 0.8;
@@ -1447,65 +1529,115 @@
 
       // 4. Command Bridge Module
       const mor = state.resources.morale;
-      hCtx.fillStyle = mor > 50 ? '#00ff88' : '#ffaa00';
-      hCtx.fillRect(10, -3, 8, 6);
+      hCtx.fillStyle = mor > 50 ? '#00ff88' : (mor > 25 ? '#ffaa00' : '#ff3344');
+      hCtx.fillRect(12, -3, 8, 6);
       hCtx.strokeStyle = '#ffffff';
-      hCtx.strokeRect(10, -3, 8, 6);
+      hCtx.strokeRect(12, -3, 8, 6);
 
-      // 5. Warp Reactor Core (Pulsing with fuel capacity)
+      // 5. Warp Reactor Core (Pulsing plasma containment with flowing power bus packets)
       const fuelP = Math.max(0, Math.min(1, state.resources.fuel / 10000));
-      const rPulse = 0.6 + 0.4 * Math.sin(Date.now() * 0.005);
-      hCtx.fillStyle = fuelP > 0.25 ? `rgba(0, 255, 255, ${0.4 + rPulse * 0.5})` : `rgba(255, 100, 0, ${0.4 + rPulse * 0.5})`;
+      const rPulse = 0.6 + 0.4 * Math.sin(time * 0.006);
+      hCtx.fillStyle = fuelP > 0.25 ? `rgba(0, 255, 255, ${0.45 + rPulse * 0.5})` : `rgba(255, 90, 0, ${0.45 + rPulse * 0.5})`;
       hCtx.beginPath();
-      hCtx.arc(-4, 0, 5, 0, Math.PI * 2);
+      hCtx.arc(-4, 0, 5.5, 0, Math.PI * 2);
       hCtx.fill();
       hCtx.strokeStyle = '#00ffff';
-      hCtx.lineWidth = 1;
+      hCtx.lineWidth = 1.1;
       hCtx.stroke();
+
+      // Flowing Power Conduit Packets (Reactor to Engines & Weapons)
+      const busPhase = (time * 0.03) % 24;
+      hCtx.fillStyle = '#ffffff';
+      // Toward engines
+      hCtx.fillRect(-4 - (busPhase * 0.9), -6, 1.8, 1.8);
+      hCtx.fillRect(-4 - (busPhase * 0.9), 5, 1.8, 1.8);
+      // Toward weapons
+      hCtx.fillRect(-4 + (busPhase * 0.4), -12, 1.8, 1.8);
+      hCtx.fillRect(-4 + (busPhase * 0.4), 11, 1.8, 1.8);
 
       // 6. Port & Starboard Weapons Hardpoints
       const wLevel = (state.upgrades && state.upgrades.weapons) || 1;
       hCtx.fillStyle = wLevel >= 3 ? '#ff3344' : '#ff9900';
-      hCtx.fillRect(4, -15, 6, 2.5);
-      hCtx.fillRect(4, 12.5, 6, 2.5);
+      hCtx.fillRect(4, -15, 7, 3);
+      hCtx.fillRect(4, 12, 7, 3);
+      hCtx.strokeStyle = '#ffffff';
+      hCtx.lineWidth = 0.6;
+      hCtx.strokeRect(4, -15, 7, 3);
+      hCtx.strokeRect(4, 12, 7, 3);
 
-      // 7. Engine Nacelles & Thruster Plumes
+      // 7. Warp Nacelles & Ion Plasma Field
       const eLevel = (state.upgrades && state.upgrades.engines) || 1;
       hCtx.fillStyle = '#00bbff';
-      hCtx.fillRect(-28, -14, 8, 4);
-      hCtx.fillRect(-28, 10, 8, 4);
+      hCtx.fillRect(-30, -15, 9, 5);
+      hCtx.fillRect(-30, 10, 9, 5);
+      hCtx.strokeStyle = 'rgba(0, 255, 255, 0.8)';
+      hCtx.lineWidth = 0.8;
+      hCtx.strokeRect(-30, -15, 9, 5);
+      hCtx.strokeRect(-30, 10, 9, 5);
+
       if (state.ship.moving) {
-        hCtx.strokeStyle = 'rgba(0, 255, 255, 0.8)';
+        hCtx.strokeStyle = 'rgba(0, 255, 255, 0.9)';
         hCtx.lineWidth = 1.5;
         hCtx.beginPath();
-        hCtx.moveTo(-28, -12); hCtx.lineTo(-35, -12);
-        hCtx.moveTo(-28, 12); hCtx.lineTo(-35, 12);
+        hCtx.moveTo(-30, -12.5); hCtx.lineTo(-37, -12.5);
+        hCtx.moveTo(-30, 12.5); hCtx.lineTo(-37, 12.5);
         hCtx.stroke();
       }
 
       hCtx.restore();
 
-      // Subsystem Telemetry Text Column
+      // Right Column Subsystem Telemetry with Progress Gauges
       hCtx.font = '9px "Courier New", monospace';
       hCtx.textAlign = 'left';
       hCtx.textBaseline = 'top';
 
-      const tx = 110;
-      let ty = 6;
-      hCtx.fillStyle = hp > 30 ? '#00e5ff' : '#ff4444';
-      hCtx.fillText(`SHLD: LVL ${sLevel}`, tx, ty);
-      ty += 14;
-      hCtx.fillStyle = '#ffaa44';
-      hCtx.fillText(`WPN : LVL ${wLevel}`, tx, ty);
-      ty += 14;
-      hCtx.fillStyle = '#66ffbb';
-      hCtx.fillText(`ENG : LVL ${eLevel}`, tx, ty);
-      ty += 14;
+      const tx = 112;
+      let ty = 5;
+
+      function drawMiniPipBar(label, lvl, maxLvl, col) {
+        hCtx.fillStyle = col;
+        hCtx.fillText(label, tx, ty);
+        const bx = tx + 42;
+        const by = ty + 2;
+        for (let p = 0; p < maxLvl; p++) {
+          if (p < lvl) {
+            hCtx.fillStyle = col;
+            hCtx.fillRect(bx + p * 8, by, 6, 6);
+          } else {
+            hCtx.strokeStyle = 'rgba(0, 100, 120, 0.5)';
+            hCtx.strokeRect(bx + p * 8, by, 6, 6);
+          }
+        }
+        ty += 12;
+      }
+
+      drawMiniPipBar('SHLD', sLevel, 4, hp > 30 ? '#00e5ff' : '#ff4444');
+      drawMiniPipBar('WEAP', wLevel, 4, '#ffaa33');
+      drawMiniPipBar('ENGN', eLevel, 4, '#34d399');
+
+      // Sensor Status
       hCtx.fillStyle = scanOnline ? '#00ffcc' : '#88aacc';
-      hCtx.fillText(`SENS: ${scanOnline ? 'SUBSPACE' : 'OPTICAL'}`, tx, ty);
-      ty += 14;
+      hCtx.fillText(`SENS [${scanOnline ? 'SUBSPACE' : 'OPTICAL'}]`, tx, ty);
+      ty += 12;
+
+      // Reactor Core Fuel % & Bar
       hCtx.fillStyle = fuelP > 0.25 ? '#38bdf8' : '#ff6644';
-      hCtx.fillText(`CORE: ${Math.round(fuelP * 100)}%`, tx, ty);
+      hCtx.fillText(`CORE ${Math.round(fuelP * 100)}%`, tx, ty);
+      const cbx = tx + 50;
+      hCtx.strokeStyle = 'rgba(0, 100, 140, 0.6)';
+      hCtx.strokeRect(cbx, ty + 2, 38, 5);
+      hCtx.fillStyle = fuelP > 0.25 ? '#38bdf8' : '#ff6644';
+      hCtx.fillRect(cbx, ty + 2, Math.round(38 * fuelP), 5);
+      ty += 12;
+
+      // Hull Armor Health Bar
+      hCtx.fillStyle = hullColor;
+      hCtx.fillText(`HULL ${hp}%`, tx, ty);
+      const hbx = tx + 50;
+      hCtx.strokeStyle = 'rgba(0, 100, 140, 0.6)';
+      hCtx.strokeRect(hbx, ty + 2, 38, 5);
+      hCtx.fillStyle = hullColor;
+      hCtx.fillRect(hbx, ty + 2, Math.round(38 * (hp / 100)), 5);
     }
 
     function drawTacticalEnemyCruiser(c, x, y, angle, type) {
@@ -1513,127 +1645,248 @@
       c.translate(x, y);
       c.rotate(angle);
 
+      const time = Date.now();
+
       // Distinct enemy silhouettes per hostile faction
       if (type === 'Pirates') {
-        // Jagged Pirate Raider silhouette
-        c.fillStyle = '#1e0505';
+        // Jagged Outlaw Corsair Raider silhouette
+        let pGrad = c.createLinearGradient(-16, -12, 16, 12);
+        pGrad.addColorStop(0, '#2e0a0a');
+        pGrad.addColorStop(0.5, '#190505');
+        pGrad.addColorStop(1, '#0c0202');
+
+        c.fillStyle = pGrad;
         c.strokeStyle = '#ff3333';
-        c.lineWidth = 1;
+        c.lineWidth = 1.2;
         c.beginPath();
-        c.moveTo(14, 0);
+        c.moveTo(17, 0); // Prow ramming beak
+        c.lineTo(8, -6);
+        c.lineTo(-2, -14); // Port wing tip
+        c.lineTo(-8, -5);
+        c.lineTo(-14, -8); // Port thruster
+        c.lineTo(-11, 0); // Aft notch
+        c.lineTo(-14, 8); // Starboard thruster
+        c.lineTo(-8, 5);
+        c.lineTo(-2, 14); // Starboard wing tip
+        c.lineTo(8, 6);
+        c.closePath();
+        c.fill();
+        c.stroke();
+
+        // Spiked Armor Spine & Turret Sponson
+        c.strokeStyle = '#ff7733';
+        c.lineWidth = 0.9;
+        c.beginPath();
+        c.moveTo(4, 0); c.lineTo(-8, 0);
+        c.moveTo(-2, -8); c.lineTo(4, 0); c.lineTo(-2, 8);
+        c.stroke();
+
+        // Crimson Command Slit
+        c.fillStyle = '#ff1100';
+        c.fillRect(0, -2, 5, 4);
+
+        // Jury-Rigged Engine Exhaust Flames
+        const fLen = 5 + (time % 100) / 18;
+        c.fillStyle = '#ff6600';
+        c.fillRect(-14 - fLen, -7, fLen, 2);
+        c.fillRect(-14 - fLen, 5, fLen, 2);
+
+      } else if (type === 'Fleet') {
+        // Heavy Imperial Dreadnought Battlecruiser (Stepped wedge capital warship)
+        let dGrad = c.createLinearGradient(-20, -12, 20, 12);
+        dGrad.addColorStop(0, '#1c2438');
+        dGrad.addColorStop(0.5, '#0f172a');
+        dGrad.addColorStop(1, '#060a12');
+
+        c.fillStyle = dGrad;
+        c.strokeStyle = '#ff4444';
+        c.lineWidth = 1.3;
+        c.beginPath();
+        c.moveTo(22, 0); // Armored Bow
+        c.lineTo(10, -9);
+        c.lineTo(-16, -12); // Port broadside
+        c.lineTo(-20, -5);
+        c.lineTo(-18, 0); // Center aft
+        c.lineTo(-20, 5);
+        c.lineTo(-16, 12); // Starboard broadside
+        c.lineTo(10, 9);
+        c.closePath();
+        c.fill();
+        c.stroke();
+
+        // Stepped Command Superstructure & Dual Turbolaser Barbettes
+        c.fillStyle = '#0b1120';
+        c.strokeStyle = '#38bdf8';
+        c.lineWidth = 0.9;
+        c.strokeRect(-4, -5, 10, 10);
+        c.fillRect(-4, -5, 10, 10);
+
+        c.fillStyle = '#00ffff';
+        c.fillRect(0, -7, 3, 2); // Port dorsal battery
+        c.fillRect(0, 5, 3, 2); // Starboard dorsal battery
+
+        // Ventral Hangar Slit
+        c.fillStyle = '#ff2244';
+        c.fillRect(10, -1.5, 4, 3);
+
+        // Heavy Triple Ion Drive Glow
+        c.fillStyle = '#38bdf8';
+        c.fillRect(-20, -8, 2, 4);
+        c.fillRect(-19, -2, 2, 4);
+        c.fillRect(-20, 4, 2, 4);
+
+      } else if (type === 'SyndicateFrigate') {
+        // Faceted Syndicate Diamond Railgun Frigate
+        let sGrad = c.createLinearGradient(-18, -8, 18, 8);
+        sGrad.addColorStop(0, '#283344');
+        sGrad.addColorStop(0.5, '#161e2e');
+        sGrad.addColorStop(1, '#090d16');
+
+        c.fillStyle = sGrad;
+        c.strokeStyle = '#f59e0b';
+        c.lineWidth = 1.1;
+        c.beginPath();
+        c.moveTo(24, 0); // Spinal railgun muzzle
         c.lineTo(6, -6);
-        c.lineTo(-4, -12);
-        c.lineTo(-8, -4);
-        c.lineTo(-12, -7);
-        c.lineTo(-10, 0);
-        c.lineTo(-12, 7);
-        c.lineTo(-8, 4);
-        c.lineTo(-4, 12);
+        c.lineTo(-14, -9); // Radiator fin
+        c.lineTo(-18, 0);
+        c.lineTo(-14, 9); // Radiator fin
         c.lineTo(6, 6);
         c.closePath();
         c.fill();
         c.stroke();
 
-        c.fillStyle = '#ff2200';
-        c.fillRect(-2, -1.5, 3, 3);
-        c.fillStyle = '#ff8800';
-        c.fillRect(-12, -3, 3, 2);
-        c.fillRect(-12, 1, 3, 2);
-      } else if (type === 'Fleet') {
-        // Heavy Imperial Dreadnought silhouette
-        c.fillStyle = '#121622';
-        c.strokeStyle = '#ff4444';
+        // Centerline Spinal Magnetic Railgun Barrel with glowing charge
+        c.strokeStyle = '#fbbf24';
         c.lineWidth = 1.2;
         c.beginPath();
-        c.moveTo(18, 0);
-        c.lineTo(8, -8);
-        c.lineTo(-14, -10);
-        c.lineTo(-18, -4);
-        c.lineTo(-16, 0);
-        c.lineTo(-18, 4);
-        c.lineTo(-14, 10);
-        c.lineTo(8, 8);
+        c.moveTo(-10, 0);
+        c.lineTo(24, 0);
+        c.stroke();
+
+        // Amber Radiator Panels
+        c.fillStyle = '#f59e0b';
+        c.fillRect(-8, -6, 8, 2);
+        c.fillRect(-8, 4, 8, 2);
+
+        // High-Impulse Vernier Thruster Glow
+        c.fillStyle = '#60a5fa';
+        c.fillRect(-18, -3, 2, 6);
+
+      } else if (type === 'XenonHunter') {
+        // Serrated Bio-Hunter Mantis Predator
+        let xGrad = c.createLinearGradient(-16, -10, 16, 10);
+        xGrad.addColorStop(0, '#3b0764');
+        xGrad.addColorStop(0.5, '#1e0436');
+        xGrad.addColorStop(1, '#0a0114');
+
+        c.fillStyle = xGrad;
+        c.strokeStyle = '#e879f9';
+        c.lineWidth = 1.2;
+        c.beginPath();
+        c.moveTo(18, 0); // Mandible apex
+        c.lineTo(8, -12); // Pincer claw
+        c.lineTo(2, -7);
+        c.lineTo(-4, -10);
+        c.lineTo(-16, -9); // Chitin tail
+        c.lineTo(-10, 0);
+        c.lineTo(-16, 9); // Chitin tail
+        c.lineTo(-4, 10);
+        c.lineTo(2, 7);
+        c.lineTo(8, 12); // Pincer claw
         c.closePath();
         c.fill();
         c.stroke();
 
-        c.fillStyle = '#ff0033';
-        c.fillRect(2, -2, 6, 4);
-        c.fillStyle = '#00ffff';
-        c.fillRect(-16, -6, 2, 4);
-        c.fillRect(-16, 2, 2, 4);
-      } else if (type === 'SyndicateFrigate') {
-        // Sleek Syndicate Railgun Frigate
-        c.fillStyle = '#1e293b';
-        c.strokeStyle = '#f59e0b';
-        c.lineWidth = 1;
+        // Bioluminescent Bio-Node Organs (Pulsing pink/green)
+        const bPulse = 0.5 + 0.5 * Math.sin(time * 0.008);
+        c.fillStyle = `rgba(244, 63, 94, ${0.6 + bPulse * 0.4})`;
+        c.beginPath();
+        c.arc(2, -3, 2.2, 0, Math.PI * 2);
+        c.arc(2, 3, 2.2, 0, Math.PI * 2);
+        c.fill();
+
+        // Venom Core Spitter
+        c.fillStyle = '#10b981';
+        c.fillRect(10, -1, 4, 2);
+
+      } else {
+        // Void Leviathan Bioship (Eldritch cosmic organism)
+        let lGrad = c.createLinearGradient(-18, -10, 18, 10);
+        lGrad.addColorStop(0, '#042f2e');
+        lGrad.addColorStop(0.5, '#021e1d');
+        lGrad.addColorStop(1, '#010f0e');
+
+        c.fillStyle = lGrad;
+        c.strokeStyle = '#10b981';
+        c.lineWidth = 1.4;
         c.beginPath();
         c.moveTo(20, 0);
-        c.lineTo(4, -5);
-        c.lineTo(-12, -8);
-        c.lineTo(-16, 0);
-        c.lineTo(-12, 8);
-        c.lineTo(4, 5);
+        c.quadraticCurveTo(8, -12, -14, -8);
+        c.lineTo(-19, 0);
+        c.quadraticCurveTo(-14, 8, 8, 12);
         c.closePath();
         c.fill();
         c.stroke();
 
-        c.fillStyle = '#ef4444';
-        c.fillRect(8, -1, 10, 2);
-      } else if (type === 'XenonHunter') {
-        // Serrated Bio-Hunter Mantis
-        c.fillStyle = '#2a0833';
-        c.strokeStyle = '#d946ef';
+        // Undulating Tentacle Appendages
+        const wave1 = Math.sin(time * 0.005) * 4;
+        const wave2 = Math.cos(time * 0.005) * 4;
+        c.strokeStyle = '#34d399';
         c.lineWidth = 1;
         c.beginPath();
-        c.moveTo(15, 0);
-        c.lineTo(4, -10);
-        c.lineTo(-2, -6);
-        c.lineTo(-14, -8);
-        c.lineTo(-8, 0);
-        c.lineTo(-14, 8);
-        c.lineTo(-2, 6);
-        c.lineTo(4, 10);
-        c.closePath();
-        c.fill();
+        c.moveTo(-16, -6); c.quadraticCurveTo(-24, -10 + wave1, -30, -7 + wave2);
+        c.moveTo(-19, 0); c.quadraticCurveTo(-28, wave2, -34, wave1);
+        c.moveTo(-16, 6); c.quadraticCurveTo(-24, 10 + wave2, -30, 7 + wave1);
         c.stroke();
 
-        c.fillStyle = '#f43f5e';
-        c.fillRect(4, -3, 2, 2);
-        c.fillRect(4, 1, 2, 2);
-      } else {
-        // Void Leviathan Bioship
-        c.fillStyle = '#041d1a';
-        c.strokeStyle = '#10b981';
-        c.lineWidth = 1.2;
+        // Glowing Emerald Gravitational Organ
+        const eyePulse = 0.6 + 0.4 * Math.sin(time * 0.006);
+        c.fillStyle = `rgba(52, 211, 153, ${eyePulse})`;
         c.beginPath();
-        c.moveTo(16, 0);
-        c.quadraticCurveTo(6, -9, -12, -6);
-        c.lineTo(-16, 0);
-        c.quadraticCurveTo(-12, 6, 6, 9);
-        c.closePath();
+        c.arc(2, 0, 3.5, 0, Math.PI * 2);
         c.fill();
+        c.strokeStyle = '#a7f3d0';
         c.stroke();
-
-        c.fillStyle = '#34d399';
-        c.beginPath();
-        c.arc(0, 0, 3, 0, Math.PI * 2);
-        c.fill();
       }
 
       c.restore();
 
-      // Hostile IFF tactical bracket & tag (clean vector box)
+      // Hostile Tactical Targeting Reticle & Threat Telemetry (Clean vector HUD)
       c.save();
-      c.strokeStyle = 'rgba(255, 60, 60, 0.7)';
-      c.lineWidth = 0.8;
-      const bSize = 14;
-      c.strokeRect(x - bSize, y - bSize, bSize * 2, bSize * 2);
+      c.strokeStyle = 'rgba(255, 60, 60, 0.75)';
+      c.lineWidth = 0.9;
+      const bSize = 16;
+
+      // Tactical Corner Brackets
+      const cLen = 5;
+      c.beginPath();
+      // TL
+      c.moveTo(x - bSize, y - bSize + cLen); c.lineTo(x - bSize, y - bSize); c.lineTo(x - bSize + cLen, y - bSize);
+      // TR
+      c.moveTo(x + bSize - cLen, y - bSize); c.lineTo(x + bSize, y - bSize); c.lineTo(x + bSize, y - bSize + cLen);
+      // BL
+      c.moveTo(x - bSize, y + bSize - cLen); c.lineTo(x - bSize, y + bSize); c.lineTo(x - bSize + cLen, y + bSize);
+      // BR
+      c.moveTo(x + bSize - cLen, y + bSize); c.lineTo(x + bSize, y + bSize); c.lineTo(x + bSize, y + bSize - cLen);
+      c.stroke();
+
+      // Directional Heading Indicator Pip
       c.fillStyle = '#ff4444';
+      c.beginPath();
+      c.arc(x + Math.cos(angle) * (bSize + 4), y + Math.sin(angle) * (bSize + 4), 1.5, 0, Math.PI * 2);
+      c.fill();
+
+      // Faction & Threat Identifier Tag
+      c.fillStyle = '#ff5555';
       c.font = '8px "Courier New", monospace';
       c.textAlign = 'center';
-      const label = type === 'Pirates' ? 'HOSTILE RAIDER' : (type === 'Fleet' ? 'DREADNOUGHT' : (type === 'SyndicateFrigate' ? 'STEALTH FRIGATE' : (type === 'XenonHunter' ? 'BIO-HUNTER' : 'LEVIATHAN')));
-      c.fillText(`[${label}]`, x, y - bSize - 2);
+      const label = type === 'Pirates' ? 'HOSTILE: CORSAIR' : 
+                    (type === 'Fleet' ? 'HOSTILE: DREADNOUGHT' : 
+                    (type === 'SyndicateFrigate' ? 'HOSTILE: STEALTH' : 
+                    (type === 'XenonHunter' ? 'HOSTILE: BIO-HUNTER' : 'ANOMALY: LEVIATHAN')));
+      c.fillText(`[${label}]`, x, y - bSize - 3);
+
       c.restore();
     }
 
@@ -2915,20 +3168,77 @@
       });
       ctx.globalAlpha = 1.0;
 
-      // Multi-Tier Parallax Volumetric Nebulae (Deep cosmic dust, emission clouds, & ionized filaments)
+      // Multi-Tier Parallax Volumetric Nebulae (Deep cosmic dust, multi-lobe emission clouds, & ionized filaments)
       state.nebulas.forEach(neb => {
         const pFactor = neb.parallax || 0.08;
         const screenX = centerX + (neb.x - state.ship.x * pFactor);
         const screenY = centerY + (neb.y - state.ship.y * pFactor);
         if (screenX > -neb.radius && screenX < canvas.width + neb.radius && screenY > -neb.radius && screenY < canvas.height + neb.radius) {
-          let grad = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, neb.radius);
-          grad.addColorStop(0, neb.coreColor || neb.color || 'rgba(0, 140, 255, 0.12)');
-          grad.addColorStop(0.45, neb.midColor || neb.color || 'rgba(0, 60, 180, 0.06)');
-          grad.addColorStop(1, neb.outerColor || 'rgba(0,0,0,0)');
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(screenX, screenY, neb.radius, 0, Math.PI * 2);
-          ctx.fill();
+          if (neb.lobes && neb.lobes.length > 0) {
+            // Render volumetric multi-lobe cloud cluster
+            for (let l = 0; l < neb.lobes.length; l++) {
+              const lobe = neb.lobes[l];
+              const lx = screenX + lobe.dx;
+              const ly = screenY + lobe.dy;
+              let grad = ctx.createRadialGradient(lx, ly, 0, lx, ly, lobe.r);
+              grad.addColorStop(0, neb.coreColor || 'rgba(0, 140, 255, 0.12)');
+              grad.addColorStop(0.45, neb.midColor || 'rgba(0, 60, 180, 0.06)');
+              grad.addColorStop(1, neb.outerColor || 'rgba(0,0,0,0)');
+              ctx.fillStyle = grad;
+              ctx.beginPath();
+              ctx.arc(lx, ly, lobe.r, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            // Render embedded protostars inside the emission zone
+            if (neb.protoStars) {
+              const time = Date.now();
+              for (let s = 0; s < neb.protoStars.length; s++) {
+                const ps = neb.protoStars[s];
+                const px = screenX + ps.dx;
+                const py = screenY + ps.dy;
+                const pTwinkle = Math.sin(time * ps.tw + ps.ph);
+                if (pTwinkle > -0.2) {
+                  ctx.fillStyle = '#ffffff';
+                  ctx.globalAlpha = Math.max(0.1, 0.4 + 0.5 * pTwinkle);
+                  ctx.beginPath();
+                  ctx.arc(px, py, ps.sz, 0, Math.PI * 2);
+                  ctx.fill();
+                }
+              }
+              ctx.globalAlpha = 1.0;
+            }
+          } else if (neb.tier === 3) {
+            // Ionized gas filament wisp
+            let grad = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, neb.radius);
+            grad.addColorStop(0, neb.coreColor || 'rgba(0, 220, 255, 0.14)');
+            grad.addColorStop(0.5, neb.midColor || 'rgba(20, 70, 190, 0.07)');
+            grad.addColorStop(1, neb.outerColor || 'rgba(0,0,0,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, neb.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Filament bezier thread
+            if (neb.filColor) {
+              ctx.strokeStyle = neb.filColor;
+              ctx.lineWidth = 1.2;
+              ctx.beginPath();
+              const ca = Math.cos(neb.angle);
+              const sa = Math.sin(neb.angle);
+              ctx.moveTo(screenX - ca * neb.radius * 0.7, screenY - sa * neb.radius * 0.7);
+              ctx.quadraticCurveTo(screenX + sa * neb.radius * 0.4, screenY - ca * neb.radius * 0.4, screenX + ca * neb.radius * 0.7, screenY + sa * neb.radius * 0.7);
+              ctx.stroke();
+            }
+          } else {
+            let grad = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, neb.radius);
+            grad.addColorStop(0, neb.coreColor || neb.color || 'rgba(0, 140, 255, 0.12)');
+            grad.addColorStop(0.45, neb.midColor || neb.color || 'rgba(0, 60, 180, 0.06)');
+            grad.addColorStop(1, neb.outerColor || 'rgba(0,0,0,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, neb.radius, 0, Math.PI * 2);
+            ctx.fill();
+          }
         }
       });
       

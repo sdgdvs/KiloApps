@@ -427,9 +427,9 @@
     "id": "kmaze",
     "title": "KMaze",
     "folder": "Games",
-    "webBytes": 154019,
+    "webBytes": 174867,
     "exeBytes": 62976,
-    "budgetPercent": 15.4
+    "budgetPercent": 17.5
   },
   {
     "id": "kmech",
@@ -467,7 +467,7 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 206706,
+    "webBytes": 206942,
     "exeBytes": 57856,
     "budgetPercent": 20.7
   },
@@ -595,9 +595,9 @@
     "id": "krss",
     "title": "KRSS",
     "folder": "Network",
-    "webBytes": 197028,
+    "webBytes": 198476,
     "exeBytes": 22016,
-    "budgetPercent": 19.7
+    "budgetPercent": 19.9
   },
   {
     "id": "ksanctuary",
