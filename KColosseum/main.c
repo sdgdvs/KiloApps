@@ -853,6 +853,56 @@ void EnterArena(int index) {
     SaveGameToFile("kcolosseum_save.dat");
 }
 
+void TriggerCombatVictory() {
+    enemyHp = 0;
+    g_enemyStance = 4;
+    UpdateCombatUI();
+    int reward = 100 + (arenaLevel * 50);
+    if (lstrcmpA(enemyFighter.name, "Ferocious Lion") == 0 || lstrcmpA(enemyFighter.name, "Armed Chariot") == 0 || enemyFighter.isTwins || enemyFighter.isBehemoth || enemyFighter.isPraetorian || enemyFighter.isDimachaerus) {
+        reward += 100 + (arenaLevel * 25);
+    }
+    if (enemyFighter.isPraetorian) {
+        reward += 150;
+        crowdFavor += 35;
+        if (crowdFavor > 100) crowdFavor = 100;
+    } else if (enemyFighter.isDimachaerus) {
+        reward += 180;
+        crowdFavor += 40;
+        if (crowdFavor > 100) crowdFavor = 100;
+    }
+    char buf[128];
+    wsprintfA(buf, "%s is defeated! You win %d Denarii!", enemyFighter.name, reward);
+    LogCombat(buf);
+    PlaySoundAsync(4);
+    funds += reward;
+    g_stats.victories++;
+    g_stats.totalGoldWon += reward;
+    if (lstrcmpA(enemyFighter.name, "Ferocious Lion") == 0 || enemyFighter.isBeast) g_stats.lionsSlain++;
+    if (lstrcmpA(enemyFighter.name, "Armed Chariot") == 0) g_stats.chariotsSlain++;
+    if (enemyFighter.isTwins) g_stats.twinsSlain++;
+    if (enemyFighter.isBehemoth) g_stats.behemothsSlain++;
+    if (enemyFighter.isPraetorian) g_stats.praetoriansSlain++;
+    if (enemyFighter.isDimachaerus) g_stats.executionersSlain++;
+    AddScreenShake(12);
+    SpawnParticles(135, 70, 25, 0, RGB(255, 215, 0));
+    SpawnParticles(275, 30, 20, 3, RGB(255, 215, 0));
+    AddFloatingText("VICTORY!", 275, 50, RGB(255, 215, 0));
+
+    if (arenaLevel < 10) {
+        arenaLevel++;
+        if (arenaLevel > g_stats.maxLevel) g_stats.maxLevel = arenaLevel;
+        wsprintfA(buf, "Your ludus advances to level %d!", arenaLevel);
+        LogCombat(buf);
+    }
+    UpdateUI();
+    combatOver = 1;
+    SetWindowTextA(hAttackBtn, "Leave");
+    EnableWindow(hDefendBtn, FALSE);
+    EnableWindow(hShowboatBtn, FALSE);
+    EnableWindow(hFleeBtn, FALSE);
+    SaveGameToFile("kcolosseum_save.dat");
+}
+
 void CombatAction(int action) {
     if (combatOver) {
         SwitchView(0);
@@ -981,52 +1031,7 @@ void CombatAction(int action) {
     }
 
     if (enemyHp <= 0) {
-        enemyHp = 0;
-        g_enemyStance = 4;
-        UpdateCombatUI();
-        int reward = 100 + (arenaLevel * 50);
-        if (lstrcmpA(enemyFighter.name, "Ferocious Lion") == 0 || lstrcmpA(enemyFighter.name, "Armed Chariot") == 0 || enemyFighter.isTwins || enemyFighter.isBehemoth || enemyFighter.isPraetorian || enemyFighter.isDimachaerus) {
-            reward += 100 + (arenaLevel * 25);
-        }
-        if (enemyFighter.isPraetorian) {
-            reward += 150;
-            crowdFavor += 35;
-            if (crowdFavor > 100) crowdFavor = 100;
-        } else if (enemyFighter.isDimachaerus) {
-            reward += 180;
-            crowdFavor += 40;
-            if (crowdFavor > 100) crowdFavor = 100;
-        }
-        wsprintfA(buf, "%s is defeated! You win %d Denarii!", enemyFighter.name, reward);
-        LogCombat(buf);
-        PlaySoundAsync(4);
-        funds += reward;
-        g_stats.victories++;
-        g_stats.totalGoldWon += reward;
-        if (lstrcmpA(enemyFighter.name, "Ferocious Lion") == 0 || enemyFighter.isBeast) g_stats.lionsSlain++;
-        if (lstrcmpA(enemyFighter.name, "Armed Chariot") == 0) g_stats.chariotsSlain++;
-        if (enemyFighter.isTwins) g_stats.twinsSlain++;
-        if (enemyFighter.isBehemoth) g_stats.behemothsSlain++;
-        if (enemyFighter.isPraetorian) g_stats.praetoriansSlain++;
-        if (enemyFighter.isDimachaerus) g_stats.executionersSlain++;
-        AddScreenShake(12);
-        SpawnParticles(135, 70, 25, 0, RGB(255, 215, 0));
-        SpawnParticles(275, 30, 20, 3, RGB(255, 215, 0));
-        AddFloatingText("VICTORY!", 275, 50, RGB(255, 215, 0));
-
-        if (arenaLevel < 10) {
-            arenaLevel++;
-            if (arenaLevel > g_stats.maxLevel) g_stats.maxLevel = arenaLevel;
-            wsprintfA(buf, "Your ludus advances to level %d!", arenaLevel);
-            LogCombat(buf);
-        }
-        UpdateUI();
-        combatOver = 1;
-        SetWindowTextA(hAttackBtn, "Leave");
-        EnableWindow(hDefendBtn, FALSE);
-        EnableWindow(hShowboatBtn, FALSE);
-        EnableWindow(hFleeBtn, FALSE);
-        SaveGameToFile("kcolosseum_save.dat");
+        TriggerCombatVictory();
         return;
     }
 
@@ -1126,6 +1131,10 @@ void CombatAction(int action) {
                 AddFloatingText(bashStr, 415, 70, RGB(255, 215, 0));
                 SpawnParticles(415, 95, 12, 0, RGB(255, 215, 0));
                 PlaySoundAsync(1);
+                if (enemyHp <= 0) {
+                    TriggerCombatVictory();
+                    return;
+                }
             }
         }
         
@@ -2208,7 +2217,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                           10, 10, 560, 30, hwnd, NULL, NULL, NULL);
             SendMessageA(hTitle, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
 
-            hStatsBtn = CreateWindowA("BUTTON", "Stats", WS_VISIBLE | WS_CHILD,
+            hStatsBtn = CreateWindowA("BUTTON", "Stats [T]", WS_VISIBLE | WS_CHILD,
                           425, 10, 70, 25, hwnd, (HMENU)ID_STATS_BUTTON, NULL, NULL);
             SendMessageA(hStatsBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
@@ -2464,6 +2473,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         }
         case WM_KEYDOWN: {
+            if (wParam == 'T') {
+                if (g_currentView == 3) SwitchView(0);
+                else if (g_currentView == 0) SwitchView(3);
+                return 0;
+            }
             if (wParam == VK_F5) {
                 QuickSave();
                 return 0;
@@ -2545,7 +2559,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     return 0;
                 }
             } else if (g_currentView == 3) {
-                if (wParam == 'S' || wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) {
+                if (wParam == 'T' || wParam == 'S' || wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) {
                     SwitchView(0);
                     return 0;
                 }
@@ -2736,6 +2750,11 @@ void MainEntry() {
         ShowWindow(hwnd, SW_SHOW);
         MSG msg = {0};
         while (GetMessageA(&msg, NULL, 0, 0)) {
+            if (msg.message == WM_KEYDOWN) {
+                if (msg.hwnd != hwnd) {
+                    SendMessageA(hwnd, WM_KEYDOWN, msg.wParam, msg.lParam);
+                }
+            }
             TranslateMessage(&msg);
             DispatchMessageA(&msg);
         }

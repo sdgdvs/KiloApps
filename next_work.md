@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_creator: kweb://cabled
   kilo_graphics: KVoid
   kilo_soundscape: KVoid
-  kilo_tester: KColosseum
+  kilo_tester: KMaze
   kilo_usability: KMaze
   kilo_qa: KType
   kilo_expander: KSteno
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KWizard
-  timestamp: '2026-10-27T10:20:57-07:00'
+  agent: kilo-tester
+  app: KColosseum
+  timestamp: '2026-10-27T10:40:21-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -135,11 +135,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KColosseum`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Wire all 4 dead Potemkin ludusFacilities perks in combatAction(), enterArena(), enterOnlineDuel(), and startSoloFallbackDuel() (armory +8/+16/+25% weapon dmg, banquet +10/+20/+30% starting crowdFavor, scriptorium +8/+16/+24% crit rate, shrine 12/24/36% fatal-blow survival at 1 HP in checkPlayerDeath()); call recordReplayRound() on every solo combat action, pass damageDealt to recordBattleStats(), and record/save flee outcomes; enable [W] hotkey for solo warcry with once-per-bout playerRallied guard, persist g.stance in getSavePayload(), reset ludusFacilities and currentArenaWager in resetLudus(), apply infirmary discount in updateUI()/healGladiator(), trigger immediate victory on fatal Shield Bash counter in kcolosseum.html and KColosseum/main.c, and route WM_KEYDOWN (including [T] Stats) in KColosseum/main.c GetMessageA loop. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -150,6 +149,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
+| `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Wire all 4 dead Potemkin ludusFacilities perks in combatAction(), enterArena(), enterOnlineDuel(), and startSoloFallbackDuel() (armory +8/+16/+25% weapon dmg, banquet +10/+20/+30% starting crowdFavor, scriptorium +8/+16/+24% crit rate, shrine 12/24/36% fatal-blow survival at 1 HP in checkPlayerDeath()); call recordReplayRound() on every solo combat action, pass damageDealt to recordBattleStats(), and record/save flee outcomes; enable [W] hotkey for solo warcry with once-per-bout playerRallied guard, persist g.stance in getSavePayload(), reset ludusFacilities and currentArenaWager in resetLudus(), apply infirmary discount in updateUI()/healGladiator(), trigger immediate victory on fatal Shield Bash counter in kcolosseum.html and KColosseum/main.c, and route WM_KEYDOWN (including [T] Stats) in KColosseum/main.c GetMessageA loop. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KMaze`
@@ -308,6 +308,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T10:40:21-07:00 — kilo-tester: KColosseum (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-tester updates for KColosseum across web and native targets.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-27T10:20:57-07:00 — kilo-soundscape: KWizard (The Arcane Spire Duel — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 151.6 KB, native 12.8 KB < 999 KB; visual PASS).
   - Composition: D Harmonic Minor, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
@@ -331,8 +336,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: Global li CSS breaks #tutorialModal ol layout and clips #btnTutorialEnter; 320px vertical overflow hides all gladiator cards below fold at 800x563; 100% geometric canvas programmer art; missing HiDPI scaling.
   - Feature/Gameplay Findings: 4 of 6 ludusFacilities (armory, banquet, shrine, scriptorium) are dead Potemkin stubs; solo combat never calls recordReplayRound() or tracks damageDealt; stance omitted from save payload; orphaned wager/sort/certificate helpers and Win32 focus hotkey loss.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KColosseum`, `kilo-tester`->`KColosseum`, `kilo-graphics`->`KColosseum`, `kilo-expander`->`KColosseum`] (un-quarantined `KColosseum` from Mature); advanced `kilo-review` to `KMatrix`; next agent `kilo-creator`.
-
-- **2026-10-27T07:41:15-07:00 — kilo-expander: KMystery (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KMystery across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KSteno`; rotated active agent to `kilo-review`.

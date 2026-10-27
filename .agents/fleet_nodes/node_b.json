@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 481,
+  "turns_executed": 483,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-27T15:40:00.807858+00:00",
-  "current_target": "kweb://trapster",
+  "last_heartbeat": "2026-10-27T17:40:13.149173+00:00",
+  "current_target": "KColosseum",
   "remote_command": "none"
 }

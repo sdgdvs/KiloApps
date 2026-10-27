@@ -1829,8 +1829,17 @@
       owned.forEach(g => {
         const li = document.createElement('li');
         const canvasId = `owned_port_${g.id}`;
-        const healAmt = Math.min(funds, g.damageTaken);
-        const healLabel = (funds >= g.damageTaken) ? `${g.damageTaken}D` : `${healAmt}/${g.damageTaken}D`;
+        const infLvl = (ludusFacilities && ludusFacilities.infirmary) || 0;
+        const discountRate = infLvl * 0.15;
+        const fullHealCost = Math.max(0, Math.round(g.damageTaken * (1 - discountRate)));
+        let healLabel = '';
+        if (funds >= fullHealCost) {
+          healLabel = `${fullHealCost}D`;
+        } else {
+          const maxAffordableHp = Math.min(g.damageTaken, Math.max(1, Math.floor(funds / Math.max(0.1, 1 - discountRate))));
+          const affordableCost = Math.min(funds, Math.round(maxAffordableHp * (1 - discountRate)));
+          healLabel = `${affordableCost}/${fullHealCost}D`;
+        }
         li.innerHTML = `
           <div class="gladiator-card" style="margin-bottom:6px;">
             <canvas id="${canvasId}" class="portrait-canvas" width="44" height="44"></canvas>
@@ -2124,13 +2133,21 @@
       if (g && g.damageTaken > 0 && funds > 0) {
         const infLvl = (ludusFacilities && ludusFacilities.infirmary) || 0;
         const discountRate = infLvl * 0.15;
-        let healAmt = Math.min(funds, g.damageTaken);
-        let chargedCost = Math.max(0, Math.round(healAmt * (1 - discountRate)));
+        const fullCost = Math.max(0, Math.round(g.damageTaken * (1 - discountRate)));
+        let healAmt = 0;
+        let chargedCost = 0;
+        if (funds >= fullCost) {
+          healAmt = g.damageTaken;
+          chargedCost = fullCost;
+        } else {
+          healAmt = Math.min(g.damageTaken, Math.max(1, Math.floor(funds / Math.max(0.1, 1 - discountRate))));
+          chargedCost = Math.min(funds, Math.round(healAmt * (1 - discountRate)));
+        }
         funds -= chargedCost;
-        g.damageTaken -= healAmt;
+        g.damageTaken = Math.max(0, g.damageTaken - healAmt);
         playSalveChime();
         updateDesc(g);
-        showToast(`🩹 Healed ${g.name} (+${healAmt} HP)!`, 'success');
+        showToast(`🩹 Healed ${g.name} (+${healAmt} HP for ${chargedCost}D)!`, 'success');
         saveGame();
         updateUI();
       }
@@ -4238,7 +4255,9 @@
       playerDefending = false;
       enemyDefending = false;
       enemyStaggered = false;
-      crowdFavor = 0;
+      playerRallied = false;
+      const banqLvl = (ludusFacilities && ludusFacilities.banquet) || 0;
+      crowdFavor = banqLvl * 10;
       particles = [];
       floaters = [];
       playerState = { stance: 'idle', timer: 0, flash: 0, lunge: 0 };
@@ -4258,7 +4277,7 @@
       const tbar = document.getElementById('duelTauntBar');
       if (tbar) tbar.style.display = 'none';
       const wc = document.getElementById('btnWarCry');
-      if (wc) wc.style.display = 'inline-block';
+      if (wc) { wc.style.display = 'inline-block'; wc.disabled = false; }
       const fl = document.getElementById('btnFlee');
       if (fl) fl.innerText = '🏃 Flee [F]';
       const ec = document.getElementById('duelEndControls');
@@ -4290,7 +4309,13 @@
       combatBusy = disabled;
       ['btnAttack', 'btnDefend', 'btnShowboat', 'btnWarCry', 'btnFlee'].forEach(id => {
         const btn = document.getElementById(id);
-        if (btn) btn.disabled = disabled;
+        if (btn) {
+          if (id === 'btnWarCry' && playerRallied && !disabled) {
+            btn.disabled = true;
+          } else {
+            btn.disabled = disabled;
+          }
+        }
       });
     }
     
@@ -4344,6 +4369,77 @@
       log.scrollTop = log.scrollHeight;
     }
 
+        function handleSoloVictory() {
+      if (combatOver) return;
+      const pX = arenaCanvas.width * 0.28;
+      const pY = arenaCanvas.height * 0.68;
+      enemyFighter.hp = 0;
+      enemyState.stance = 'dead';
+      updateCombatUI();
+      let reward = 100 + (arenaLevel * 50);
+      if (enemyFighter.isBeast || enemyFighter.isTwins || enemyFighter.name === "Armed Chariot" || enemyFighter.isBehemoth || enemyFighter.isPraetorian || enemyFighter.isDimachaerus) {
+        reward += 100 + (arenaLevel * 25);
+      }
+      if (enemyFighter.isPraetorian) {
+        reward += 150;
+        crowdFavor = Math.min(100, crowdFavor + 35);
+        playTrumpetFanfare();
+      } else if (enemyFighter.isDimachaerus) {
+        reward += 180;
+        crowdFavor = Math.min(100, crowdFavor + 40);
+        playTrumpetFanfare();
+      }
+      if (currentArenaWager > 0) {
+        const wagerPayout = Math.round(currentArenaWager * getWagerMultiplier());
+        funds += wagerPayout;
+        logCombat(`💰 <strong>Arena Wager Won!</strong> Paid out <span style="color:#ffd700;">+${wagerPayout} Denarii</span> (${getWagerMultiplier().toFixed(1)}x)!`);
+        reward += wagerPayout;
+        currentArenaWager = 0;
+        setArenaWager(0);
+      }
+      logCombat(`<strong>${enemyFighter.name} is defeated! You win ${reward} Denarii!</strong>`);
+      playVictory();
+      funds += reward;
+      addScreenShake(14);
+      spawnParticles(pX, pY - 30, 30, 'sparks', '#ffd700');
+      spawnParticles(arenaCanvas.width * 0.5, 40, 25, 'coins');
+      addFloatingText(`VICTORY! +${reward}D`, arenaCanvas.width * 0.5, 90, '#ffd700');
+      showToast(`🏆 Victory! Earned +${reward}D!`, 'success');
+      recordBattleStats('victory', {
+        fighterName: currentFighter.name,
+        enemyName: enemyFighter.name,
+        gold: reward,
+        peakFavor: crowdFavor,
+        damageDealt: currentMatchReplay ? currentMatchReplay.damageDealt : 0
+      });
+      finishCombatReplay('VICTORY', reward);
+      if (enemyFighter.isPraetorian || enemyFighter.isDimachaerus || arenaLevel >= 7) {
+        broadcastColosseumSignal('legendary_boss_slain');
+      }
+
+      let achievedChampion = false;
+      if (arenaLevel < 10) {
+        arenaLevel++;
+        logCombat(`<em>Your ludus advances to level ${arenaLevel}!</em>`);
+        if (arenaLevel === 10) {
+          achievedChampion = true;
+        }
+      } else if (arenaLevel >= 10) {
+        achievedChampion = true;
+      }
+      updateUI();
+      combatOver = true;
+      combatBusy = false;
+      if (achievedChampion) {
+        setTimeout(() => {
+          exitArena();
+          showVictoryModal();
+        }, 2400);
+      } else {
+        setTimeout(exitArena, 2400);
+      }
+    }
+
     function combatAction(action) {
       if (combatOver || combatBusy) return;
       if (isOnlineGame) {
@@ -4362,6 +4458,14 @@
       const eY = arenaCanvas.height * 0.68;
 
       if (action === 'warcry') {
+        if (playerRallied) {
+          showToast('⚠️ War Cry already bellowed for this bout!', 'warning');
+          setCombatButtonsDisabled(false);
+          return;
+        }
+        playerRallied = true;
+        const wc = document.getElementById('btnWarCry');
+        if (wc) wc.disabled = true;
         playerState.stance = 'showboat';
         setTimeout(() => { playerState.stance = playerDefending ? 'defend' : 'idle'; }, 500);
         playWarHorn();
@@ -4372,12 +4476,47 @@
         addFloatingText(`WAR CRY! +${favorGain}%`, pX, pY - 30, '#ffd700');
         spawnParticles(pX, pY - 20, 20, 'sparks', '#ffd700');
         checkCrowdFavor();
+        recordReplayRound({
+          actor: currentFighter.name,
+          action: 'War Cry',
+          hit: true,
+          dmg: 0,
+          favor: crowdFavor,
+          p1Hp: currentFighter.hp,
+          p2Hp: enemyFighter.hp,
+          isPlayer: true,
+          log: `${currentFighter.name} rallied with a War Cry.`
+        });
       }
 
       if (action === 'flee') {
+        recordReplayRound({
+          actor: currentFighter.name,
+          action: 'Flee',
+          hit: true,
+          dmg: 0,
+          favor: crowdFavor,
+          p1Hp: currentFighter.hp,
+          p2Hp: enemyFighter.hp,
+          isPlayer: true,
+          log: `${currentFighter.name} fled the arena in disgrace.`
+        });
+        if (currentArenaWager > 0) {
+          funds = Math.max(0, funds - currentArenaWager);
+          logCombat(`💸 <strong>Arena Wager Forfeited:</strong> -${currentArenaWager} Denarii.`);
+          currentArenaWager = 0;
+          setArenaWager(0);
+        }
         logCombat(`${currentFighter.name} flees the arena in disgrace!`);
         playDefeat();
         addFloatingText("FLED!", pX, pY - 30, '#ff4444');
+        recordBattleStats('fled', {
+          fighterName: currentFighter.name,
+          enemyName: enemyFighter ? enemyFighter.name : 'Arena Foe',
+          peakFavor: crowdFavor,
+          damageDealt: currentMatchReplay ? currentMatchReplay.damageDealt : 0
+        });
+        finishCombatReplay('FLED', 0);
         if (arenaLevel > 1) {
           arenaLevel--;
           logCombat(`<em>Your ludus drops to level ${arenaLevel}...</em>`);
@@ -4395,6 +4534,17 @@
         playerState.stance = 'defend';
         addFloatingText("DEFENDING", pX, pY - 30, '#ffd700');
         spawnParticles(pX, pY, 8, 'dust');
+        recordReplayRound({
+          actor: currentFighter.name,
+          action: 'Defend',
+          hit: true,
+          dmg: 0,
+          favor: crowdFavor,
+          p1Hp: currentFighter.hp,
+          p2Hp: enemyFighter.hp,
+          isPlayer: true,
+          log: `${currentFighter.name} took a defensive stance.`
+        });
       }
       
       if (action === 'showboat') {
@@ -4406,6 +4556,17 @@
         addFloatingText(`+${favorGain}% FAVOR`, pX, pY - 30, '#ffd700');
         spawnParticles(pX, pY - 20, 16, 'sparks', '#ffd700');
         checkCrowdFavor();
+        recordReplayRound({
+          actor: currentFighter.name,
+          action: 'Showboat',
+          hit: true,
+          dmg: 0,
+          favor: crowdFavor,
+          p1Hp: currentFighter.hp,
+          p2Hp: enemyFighter.hp,
+          isPlayer: true,
+          log: `${currentFighter.name} played to the crowd (+${favorGain}% favor).`
+        });
       }
       
       if (action === 'attack') {
@@ -4413,23 +4574,42 @@
         playerState.lunge = 45;
         setTimeout(() => { playerState.stance = playerDefending ? 'defend' : 'idle'; }, 300);
 
+        let effStr = getEffStr(currentFighter) + (playerRallied ? 3 : 0);
+        playerRallied = false;
+
         let hitChance = 75 + (getEffAgi(currentFighter) - getEffAgi(enemyFighter)) * 5;
         const pStance = currentFighter.stance || 'balanced';
         if (pStance === 'celeritas') hitChance += 15;
         if (enemyDefending) hitChance -= (enemyFighter.shield === 1 ? 50 : 30);
         if (Math.random() * 100 < hitChance) {
-          let dmg = Math.max(1, getEffStr(currentFighter) + Math.floor(Math.random() * 4));
+          let dmg = Math.max(1, effStr + Math.floor(Math.random() * 4));
           if (pStance === 'ferox') {
             dmg = Math.max(1, Math.round(dmg * 1.25));
           } else if (pStance === 'murus') {
             dmg = Math.max(1, Math.round(dmg * 0.80));
           }
-          if (pStance === 'celeritas' && Math.random() < 0.25) {
+
+          // Armory perk (+8% / +16% / +25% weapon damage)
+          const armLvl = (ludusFacilities && ludusFacilities.armory) || 0;
+          if (armLvl > 0 && currentFighter.weapon > 0) {
+            const armMult = armLvl === 1 ? 1.08 : (armLvl === 2 ? 1.16 : 1.25);
+            dmg = Math.max(1, Math.round(dmg * armMult));
+          }
+
+          // Scriptorium perk (+8% / +16% / +24% crit rate) + Celeritas crit
+          const scrLvl = (ludusFacilities && ludusFacilities.scriptorium) || 0;
+          const critChance = (pStance === 'celeritas' ? 0.25 : 0) + (scrLvl * 0.08);
+          if (critChance > 0 && Math.random() < critChance) {
             let critAmt = Math.max(2, Math.round(dmg * 0.4));
             dmg += critAmt;
             addFloatingText(`CRIT! +${critAmt}`, eX, eY - 50, '#00e5ff');
-            logCombat(`<strong>${currentFighter.name}</strong> lands a swift <strong>Celeritas Critical Strike</strong>!`);
+            if (pStance === 'celeritas') {
+              logCombat(`<strong>${currentFighter.name}</strong> lands a swift <strong>Celeritas Critical Strike</strong>!`);
+            } else {
+              logCombat(`<strong>${currentFighter.name}</strong> scores a tactical <strong>Critical Strike</strong>!`);
+            }
           }
+
           if (enemyDefending) {
             if (currentFighter.weapon === 3) {
               dmg = Math.max(1, dmg - (enemyFighter.shield === 1 ? 3 : 1));
@@ -4450,7 +4630,7 @@
           let flurryActive = (currentFighter.weapon === 3 && Math.random() < 0.28);
           let flurryDmg = 0;
           if (flurryActive) {
-            flurryDmg = Math.max(1, Math.floor(getEffStr(currentFighter) * 0.65) + Math.floor(Math.random() * 3));
+            flurryDmg = Math.max(1, Math.floor(effStr * 0.65) + Math.floor(Math.random() * 3));
             if (enemyDefending) flurryDmg = Math.max(1, flurryDmg - (enemyFighter.shield === 1 ? 2 : 1));
             dmg += flurryDmg;
           }
@@ -4461,7 +4641,7 @@
             addFloatingText("+FAVOR!", pX, pY - 45, '#ffd700');
           }
 
-          enemyFighter.hp -= dmg;
+          enemyFighter.hp = Math.max(0, enemyFighter.hp - dmg);
           crowdFavor += 5 + Math.floor(Math.random() * 11);
 
           if (rendActive) {
@@ -4494,72 +4674,41 @@
             spawnParticles(eX, eY, 10, 'dust');
           }
           checkCrowdFavor();
+
+          recordReplayRound({
+            actor: currentFighter.name,
+            action: 'Attack',
+            hit: true,
+            dmg: dmg,
+            favor: crowdFavor,
+            p1Hp: currentFighter.hp,
+            p2Hp: enemyFighter.hp,
+            isPlayer: true,
+            log: `${currentFighter.name} struck ${enemyFighter.name} for ${dmg} dmg.`
+          });
         } else {
           crowdFavor = Math.max(0, crowdFavor - 5);
           logCombat(`<strong>${currentFighter.name}</strong> misses!`);
           playMiss();
           addFloatingText("MISS!", eX, eY - 30, '#aaaaaa');
           spawnParticles(eX, eY + 20, 6, 'dust');
+
+          recordReplayRound({
+            actor: currentFighter.name,
+            action: 'Attack',
+            hit: false,
+            dmg: 0,
+            favor: crowdFavor,
+            p1Hp: currentFighter.hp,
+            p2Hp: enemyFighter.hp,
+            isPlayer: true,
+            log: `${currentFighter.name} attacked and missed.`
+          });
         }
       }
       
       if (enemyFighter.hp <= 0) {
-        enemyFighter.hp = 0;
-        enemyState.stance = 'dead';
-        updateCombatUI();
-        let reward = 100 + (arenaLevel * 50);
-        if (enemyFighter.isBeast || enemyFighter.isTwins || enemyFighter.name === "Armed Chariot" || enemyFighter.isBehemoth || enemyFighter.isPraetorian || enemyFighter.isDimachaerus) {
-            reward += 100 + (arenaLevel * 25);
-        }
-        if (enemyFighter.isPraetorian) {
-          reward += 150;
-          crowdFavor = Math.min(100, crowdFavor + 35);
-          playTrumpetFanfare();
-        } else if (enemyFighter.isDimachaerus) {
-          reward += 180;
-          crowdFavor = Math.min(100, crowdFavor + 40);
-          playTrumpetFanfare();
-        }
-        logCombat(`<strong>${enemyFighter.name} is defeated! You win ${reward} Denarii!</strong>`);
-        playVictory();
-        funds += reward;
-        addScreenShake(14);
-        spawnParticles(pX, pY - 30, 30, 'sparks', '#ffd700');
-        spawnParticles(arenaCanvas.width * 0.5, 40, 25, 'coins');
-        addFloatingText(`VICTORY! +${reward}D`, arenaCanvas.width * 0.5, 90, '#ffd700');
-        showToast(`🏆 Victory! Earned +${reward}D!`, 'success');
-        recordBattleStats('victory', {
-          fighterName: currentFighter.name,
-          enemyName: enemyFighter.name,
-          gold: reward,
-          peakFavor: crowdFavor
-        });
-        finishCombatReplay('VICTORY', reward);
-        if (enemyFighter.isPraetorian || enemyFighter.isDimachaerus || arenaLevel >= 7) {
-          broadcastColosseumSignal('legendary_boss_slain');
-        }
-
-        let achievedChampion = false;
-        if (arenaLevel < 10) {
-          arenaLevel++;
-          logCombat(`<em>Your ludus advances to level ${arenaLevel}!</em>`);
-          if (arenaLevel === 10) {
-            achievedChampion = true;
-          }
-        } else if (arenaLevel >= 10) {
-          achievedChampion = true;
-        }
-        updateUI();
-        combatOver = true;
-        combatBusy = false;
-        if (achievedChampion) {
-          setTimeout(() => {
-            exitArena();
-            showVictoryModal();
-          }, 2400);
-        } else {
-          setTimeout(exitArena, 2400);
-        }
+        handleSoloVictory();
         return;
       }
       
@@ -4573,6 +4722,17 @@
           enemyState.stance = 'defend';
           addFloatingText("DEFENDING", eX, eY - 30, '#ffd700');
           spawnParticles(eX, eY, 8, 'dust');
+          recordReplayRound({
+            actor: enemyFighter.name,
+            action: 'Defend',
+            hit: true,
+            dmg: 0,
+            favor: crowdFavor,
+            p1Hp: currentFighter.hp,
+            p2Hp: enemyFighter.hp,
+            isPlayer: false,
+            log: `${enemyFighter.name} took a defensive stance.`
+          });
         } else {
           enemyState.stance = 'attack';
           enemyState.lunge = 45;
@@ -4633,11 +4793,35 @@
               spawnParticles(pX, pY, 10, 'dust');
             }
             addFloatingText(`-${dmg}`, pX, pY - 30, '#ff2222');
+
+            recordReplayRound({
+              actor: enemyFighter.name,
+              action: 'Attack',
+              hit: true,
+              dmg: dmg,
+              favor: crowdFavor,
+              p1Hp: currentFighter.hp,
+              p2Hp: enemyFighter.hp,
+              isPlayer: false,
+              log: `${enemyFighter.name} struck ${currentFighter.name} for ${dmg} dmg.`
+            });
           } else {
             logCombat(`<strong>${enemyFighter.name}</strong> misses!`);
             playMiss();
             addFloatingText("MISS!", pX, pY - 30, '#aaaaaa');
             spawnParticles(pX, pY + 20, 6, 'dust');
+
+            recordReplayRound({
+              actor: enemyFighter.name,
+              action: 'Attack',
+              hit: false,
+              dmg: 0,
+              favor: crowdFavor,
+              p1Hp: currentFighter.hp,
+              p2Hp: enemyFighter.hp,
+              isPlayer: false,
+              log: `${enemyFighter.name} attacked and missed.`
+            });
 
             // Shield Bash Counter-Attack
             if (playerDefending && currentFighter.shield === 1) {
@@ -4647,6 +4831,23 @@
               addFloatingText(`BASH -${bashDmg}`, eX, eY - 30, '#ffd700');
               spawnParticles(eX, eY, 12, 'sparks', '#ffd700');
               playShieldBash();
+
+              recordReplayRound({
+                actor: currentFighter.name,
+                action: 'Shield Bash',
+                hit: true,
+                dmg: bashDmg,
+                favor: crowdFavor,
+                p1Hp: currentFighter.hp,
+                p2Hp: enemyFighter.hp,
+                isPlayer: true,
+                log: `${currentFighter.name} counter-bashed for ${bashDmg} dmg.`
+              });
+
+              if (enemyFighter.hp <= 0) {
+                handleSoloVictory();
+                return;
+              }
             }
           }
           
@@ -4727,6 +4928,20 @@
     }
 
     function checkPlayerDeath() {
+      const shrineLvl = (ludusFacilities && ludusFacilities.shrine) || 0;
+      if (shrineLvl > 0 && Math.random() < (shrineLvl * 0.12)) {
+        currentFighter.hp = 1;
+        currentFighter.damageTaken = Math.max(0, currentFighter.maxHp - 1);
+        playerState.stance = 'idle';
+        updateCombatUI();
+        logCombat(`🏛️ <strong>Mars & Bellona Intervene!</strong> ${currentFighter.name} survives a fatal blow with 1 HP!`);
+        addFloatingText("DEATH DEFIED! 1 HP", arenaCanvas.width * 0.28, arenaCanvas.height * 0.68 - 30, '#ffd700');
+        spawnParticles(arenaCanvas.width * 0.28, arenaCanvas.height * 0.68 - 20, 25, 'sparks', '#ffd700');
+        playTrumpetFanfare();
+        showToast(`🏛️ Shrine blessing! ${currentFighter.name} defied death!`, 'success');
+        if (!combatOver) setCombatButtonsDisabled(false);
+        return;
+      }
       currentFighter.hp = 0;
       playerState.stance = 'dead';
       updateCombatUI();
@@ -4735,10 +4950,17 @@
       showToast(`💀 ${currentFighter.name} has perished in the arena!`, 'warning');
       addScreenShake(12);
       addFloatingText("DEAD", arenaCanvas.width * 0.28, arenaCanvas.height * 0.68 - 30, '#ff0000');
+      if (currentArenaWager > 0) {
+        funds = Math.max(0, funds - currentArenaWager);
+        logCombat(`💸 <strong>Arena Wager Forfeited:</strong> -${currentArenaWager} Denarii.`);
+        currentArenaWager = 0;
+        setArenaWager(0);
+      }
       recordBattleStats('defeat', {
         fighterName: currentFighter.name,
         enemyName: enemyFighter ? enemyFighter.name : 'Arena Foe',
-        peakFavor: crowdFavor
+        peakFavor: crowdFavor,
+        damageDealt: currentMatchReplay ? currentMatchReplay.damageDealt : 0
       });
       finishCombatReplay('DEFEAT', 0);
       const deadIdx = owned.findIndex(g => g.id === currentFighter.id);
@@ -4942,6 +5164,7 @@
           weapon: g.weapon,
           armor: g.armor,
           shield: g.shield,
+          stance: g.stance || 'balanced',
           damageTaken: typeof g.damageTaken === 'number' ? g.damageTaken : 0,
           skinTone: g.skinTone
         })),
@@ -4955,6 +5178,7 @@
           weapon: g.weapon,
           armor: g.armor,
           shield: g.shield,
+          stance: g.stance || 'balanced',
           damageTaken: typeof g.damageTaken === 'number' ? g.damageTaken : 0,
           skinTone: g.skinTone
         })),
@@ -4998,6 +5222,7 @@
         owned.length = 0;
         data.owned.forEach(g => {
           if (typeof g.damageTaken !== 'number') g.damageTaken = 0;
+          if (!g.stance) g.stance = 'balanced';
           updateDesc(g);
           owned.push(g);
         });
@@ -5006,6 +5231,7 @@
         market.length = 0;
         data.market.forEach(g => {
           if (typeof g.damageTaken !== 'number') g.damageTaken = 0;
+          if (!g.stance) g.stance = 'balanced';
           updateDesc(g);
           market.push(g);
         });
@@ -5180,6 +5406,23 @@
       owned.length = 0;
       market.length = 0;
       market.push(generateGladiator(), generateGladiator(), generateGladiator());
+      ludusFacilities = {
+        infirmary: 0,
+        armory: 0,
+        palaestra: 0,
+        banquet: 0,
+        shrine: 0,
+        scriptorium: 0
+      };
+      currentArenaWager = 0;
+      ['btnWager0', 'btnWager25', 'btnWager50', 'btnWager100'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b) b.style.background = '#4a1f00';
+      });
+      const wager0 = document.getElementById('btnWager0');
+      if (wager0) wager0.style.background = '#228b22';
+      const oddsEl = document.getElementById('wagerOddsDisplay');
+      if (oddsEl) oddsEl.innerText = '(No Bet)';
       localStorage.removeItem('kcolosseum_save');
       localStorage.removeItem('kcolosseum_quicksave');
       if (document.getElementById('arenaPanel').style.display !== 'none') {
@@ -5968,7 +6211,8 @@
       enemyRallied = false;
       playerDefending = false;
       enemyDefending = false;
-      crowdFavor = 0;
+      const banqLvlOnline = (ludusFacilities && ludusFacilities.banquet) || 0;
+      crowdFavor = banqLvlOnline * 10;
       duelRoundNum = 1;
 
       const myChamp = getSelectedChampionData();
@@ -6349,6 +6593,20 @@
             dmg = Math.max(1, dmg - (enemyFighter.shield === 1 ? 5 : 3));
           }
 
+          const armLvlOnline = (ludusFacilities && ludusFacilities.armory) || 0;
+          if (armLvlOnline > 0 && (currentFighter.weapon || 0) > 0) {
+            const armMult = armLvlOnline === 1 ? 1.08 : (armLvlOnline === 2 ? 1.16 : 1.25);
+            dmg = Math.max(1, Math.round(dmg * armMult));
+          }
+
+          const scrLvlOnline = (ludusFacilities && ludusFacilities.scriptorium) || 0;
+          if (scrLvlOnline > 0 && Math.random() < scrLvlOnline * 0.08) {
+            let critAmt = Math.max(2, Math.round(dmg * 0.4));
+            dmg += critAmt;
+            addFloatingText(`CRIT! +${critAmt}`, eX, eY - 50, '#00e5ff');
+            logCombat(`<strong>${currentFighter.name}</strong> scores a tactical <strong>Critical Strike</strong>!`);
+          }
+
           if (currentFighter.weapon === 1 && Math.random() < 0.25) {
             rend = true;
             dmg += 4;
@@ -6508,7 +6766,8 @@
       enemyRallied = false;
       playerDefending = false;
       enemyDefending = false;
-      crowdFavor = 0;
+      const banqLvlFallback = (ludusFacilities && ludusFacilities.banquet) || 0;
+      crowdFavor = banqLvlFallback * 10;
       duelRoundNum = 1;
 
       showToast('⏳ 25s elapsed without peer. Engaging Cyber-Lanista Marcus (Subnet AI)!', 'warning');
@@ -6816,6 +7075,20 @@
         if (Math.random() * 100 < hitChance) {
           let dmg = Math.max(1, effStr + Math.floor(Math.random() * 4));
           if (enemyDefending) dmg = Math.max(1, dmg - (enemyFighter.shield === 1 ? 5 : 3));
+
+          const armLvlBot = (ludusFacilities && ludusFacilities.armory) || 0;
+          if (armLvlBot > 0 && (currentFighter.weapon || 0) > 0) {
+            const armMult = armLvlBot === 1 ? 1.08 : (armLvlBot === 2 ? 1.16 : 1.25);
+            dmg = Math.max(1, Math.round(dmg * armMult));
+          }
+
+          const scrLvlBot = (ludusFacilities && ludusFacilities.scriptorium) || 0;
+          if (scrLvlBot > 0 && Math.random() < scrLvlBot * 0.08) {
+            let critAmt = Math.max(2, Math.round(dmg * 0.4));
+            dmg += critAmt;
+            addFloatingText(`CRIT! +${critAmt}`, eX, eY - 50, '#00e5ff');
+            logCombat(`<strong>${currentFighter.name}</strong> scores a tactical <strong>Critical Strike</strong>!`);
+          }
           
           let rend = (currentFighter.weapon === 1 && Math.random() < 0.25);
           if (rend) dmg += 4;
@@ -7025,10 +7298,8 @@
           e.preventDefault();
           combatAction('showboat');
         } else if (e.key === 'w' || e.key === 'W') {
-          if (isOnlineGame || isCyberBotDuel) {
-            e.preventDefault();
-            combatAction('warcry');
-          }
+          e.preventDefault();
+          combatAction('warcry');
         } else if (e.key === '4' || e.key === 'f' || e.key === 'F') {
           e.preventDefault();
           combatAction('flee');
