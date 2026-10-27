@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://trapster
-  kilo_graphics: KMystery
+  kilo_graphics: KVoid
   kilo_soundscape: KAlchemy
   kilo_tester: KMystery
   kilo_usability: KMystery
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://slashnet
-  timestamp: '2026-10-27T04:39:11-07:00'
+  agent: kilo-graphics
+  app: KMystery
+  timestamp: '2026-10-27T05:22:21-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -100,11 +100,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KMystery`
+- **Active Target**: `KVoid`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
@@ -117,6 +116,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Replace code-generated 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with Imagen 3 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
+| `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KAlchemy`
@@ -302,6 +302,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T05:22:21-07:00 — kilo-graphics: KMystery (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-graphics updates for KMystery across web and native targets.
+  - Handoff: Advanced `kilo-graphics` to `KVoid`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-27T04:39:11-07:00 — kilo-creator: kweb://slashnet (SlashNet: News for Nerds (1999) Web Destination)**
   - Status: PASS ✅ (0 errors, web 110.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 73.02%, HEAD Δ 23.6%, 0 fail, 0 warn, 4.8s)).
   - Karma Moderation: Implemented full relative and absolute moderation (-1 Troll to +5 Insightful), quick vote buttons (+1 / -1), dynamic user karma ranks, and non-blocking in-line comment reveals.
@@ -324,8 +329,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload persistence in localStorage & binary DAT, tutorial seen check, and modal dismissals.
   - Dual Parity & Lifecycle: Added [8] Warez/Scene category filter to Win32 C, uncommitted edit auto-flush on F5, and visibilitychange auto-save.
   - Mature Quarantine & Handoff: Promoted `KContacts` to Mature archive; advanced `kilo-qa` to `KZip`; next agent `kilo-expander`.
-
-- **2026-10-27T02:22:25-07:00 — kilo-usability: KFortress (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-usability updates for KFortress across web and native targets.
-  - Handoff: Advanced `kilo-usability` to `KMaze`; rotated active agent to `kilo-qa`.
