@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-26T14:36:38-07:00 — kilo-graphics: KDragon (Imagen 3 2-Stage Sprites (Egg, Hatchling, Drake, Elder, Arena))**
+  - Status: PASS ✅ (0 errors, web 187.5 KB, native 151.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Replaced 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies.
+  - Maintained dual Win32 C GDI pixel rendering parity and verified zero perimeter glints/border dots.
+  - Handoff: Advanced `kilo-graphics` to `KStarship`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-26T14:20:12-07:00 — kilo-creator: kweb://rfc-archive (IETF 1999 Living RFC Workbench)**
   - Status: PASS ✅ (0 errors, web 81.2 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.01%, input 2.38%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.9s)).
   - Implemented RFC 1149/2549 Avian Carrier Simulator, RFC 2324 HTCPCP Coffee Pot Console (418 I'm a teapot), RFC 793 TCP Stepper, and Living RFC Vault.

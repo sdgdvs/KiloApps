@@ -540,8 +540,11 @@
     <button id="btnStun" class="hudBtn" onclick="useStunSpray()" title="Stun and freeze hunting Minotaurs (10s)"><span class="badge">F</span> Stun Spray</button>
     <button id="btnFreeze" class="hudBtn" onclick="useTimeFreeze()" title="Halt all monsters in the dungeon (10s)"><span class="badge">T</span> Time Freeze</button>
     <button id="btnCrouch" class="hudBtn" onclick="toggleCrouch()" title="Stealth crouch: silence footsteps and cushion trap damage"><span class="badge">X/Ctrl</span> Crouch</button>
+    <button id="btnMap" class="hudBtn" onclick="toggleMinimap()" title="Toggle explored-fog 2D Minimap (Tab)"><span class="badge">Tab</span> Map</button>
     <button id="btnSave" class="hudBtn" onclick="saveCheckpointGame()" title="Save current dungeon descent to checkpoint (F5)"><span class="badge">F5/V</span> Save</button>
     <button id="btnLoad" class="hudBtn" onclick="loadCheckpointGame()" title="Continue last saved checkpoint descent (F9)"><span class="badge">F9/L</span> Continue</button>
+    <button id="btnVFSSave" class="hudBtn" onclick="saveToVFS()" title="Export descent checkpoint to KiloOS VFS (/home/saves/kmaze_descent.json)"><span class="badge">💾</span> VFS Save</button>
+    <button id="btnVFSOpen" class="hudBtn" onclick="loadFromVFS()" title="Open descent checkpoint from KiloOS VFS (/home/saves/kmaze_descent.json)"><span class="badge">📂</span> VFS Open</button>
     <button id="btnHelp" class="hudBtn" onclick="toggleHelpModal()" title="View comprehensive guide, tile codex, and tips"><span class="badge">F1/H</span> Guide</button>
     <button id="btnKeys" class="hudBtn" onclick="toggleKeybinds()" title="Rebind control keys"><span class="badge">K</span> Keybinds</button>
     <button id="btnExport" class="hudBtn" onclick="exportStats()" title="Export best times and statistics to JSON"><span class="badge">E</span> Export</button>
@@ -566,11 +569,13 @@
             <div><span class="kbd">D / →</span> : Turn Right</div>
             <div><span class="kbd">Shift</span> : Sprint Run</div>
             <div><span class="kbd">X / Ctrl</span> : Stealth Crouch (Silence Footsteps)</div>
+            <div><span class="kbd">Tab</span> : <b>Explored Minimap</b> (Toggle Fog Map)</div>
+            <div><span class="kbd">Top Center</span> : <b>Cardinal & Objective Compass</b></div>
             <div><span class="kbd">Space / Enter</span> : Start / Proceed</div>
           </div>
           <div class="guideCard">
             <h3>⚔️ Active Relics & Abilities</h3>
-            <div><span class="kbd">P</span> : <b>Pickaxe</b> (Cleave walls, secrets, minotaurs)</div>
+            <div><span class="kbd">Left-Click / P</span> : <b>Pickaxe Strike</b> (Cleave walls, secrets, minotaurs)</div>
             <div><span class="kbd">C</span> : <b>Pathfinder</b> (Draws path to key & exit, 10s)</div>
             <div><span class="kbd">S / B</span> : <b>Speed Shoes</b> (Double velocity, 8s)</div>
             <div><span class="kbd">F</span> : <b>Stun Spray</b> (Freezes minotaurs, 10s)</div>
@@ -641,6 +646,42 @@
 </div>
 <input type="file" id="importFile" style="display:none" onchange="importStats(event)">
 <script>
+  // Standard KiloOS VFS & Cross-App IPC Bridge (graceful no-op when standalone)
+  const KiloVFS = {
+    write(path, data) {
+      try {
+        const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
+        window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title || 'KMaze', message: `Saved to VFS: ${path}` }, '*');
+      } catch (e) {}
+    },
+    read(path, cb) {
+      const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      const handler = (e) => {
+        if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+          window.removeEventListener('message', handler);
+          cb(e.data.data, e.data.path);
+        }
+      };
+      window.addEventListener('message', handler);
+      try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+    },
+    openPicker(cb) {
+      const reqId = 'open_' + Date.now();
+      const handler = (e) => {
+        if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+          window.removeEventListener('message', handler);
+          if (e.data.path) KiloVFS.read(e.data.path, cb);
+        }
+      };
+      window.addEventListener('message', handler);
+      try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
+    },
+    launchApp(targetApp, path = '') {
+      try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+    }
+  };
+
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
   const uiCanvas = document.getElementById('uiCanvas');
@@ -817,6 +858,33 @@
   let bossHP = 3;
   let map = JSON.parse(JSON.stringify(maps[currentLevel]));
   let isPathTile = [];
+
+  let showMinimap = true;
+  let explored = [];
+  function initExplored() {
+    explored = Array.from({length: map.length}, () => Array(map[0].length).fill(false));
+  }
+  function updateExploration() {
+    if (!explored || explored.length !== map.length || (explored[0] && explored[0].length !== map[0].length)) {
+      initExplored();
+    }
+    let vRadius = torchTimer > 0 ? 5 : 3;
+    let pxInt = Math.floor(pX), pyInt = Math.floor(pY);
+    for (let dx = -vRadius; dx <= vRadius; dx++) {
+      for (let dy = -vRadius; dy <= vRadius; dy++) {
+        if (dx * dx + dy * dy <= vRadius * vRadius + 1) {
+          let ex = pxInt + dx, ey = pyInt + dy;
+          if (ex >= 0 && ey >= 0 && ex < map.length && ey < map[0].length) {
+            explored[ex][ey] = true;
+          }
+        }
+      }
+    }
+  }
+  function toggleMinimap() {
+    showMinimap = !showMinimap;
+    showToast(showMinimap ? "Minimap [TAB]: ON" : "Minimap [TAB]: OFF", "info");
+  }
 
   let gameState = 0; // 0: Start, 1: Play, 2: Win, 3: Replay, 4: Keys
   let startTime = 0;
@@ -1160,6 +1228,119 @@
       }
   }
 
+  function saveToVFS() {
+      if (gameState !== 1) {
+          showToast("Start a dungeon descent first to save to VFS!", "warning");
+          return;
+      }
+      let saveData = {
+          currentLevel, score, keysHeld, hasCompass, speedBoost, hasPickaxe,
+          pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges,
+          pX, pY, dX, dY, planeX, planeY, map, isCrouching, bossHP,
+          torchTimer, pathfinderTimer, speedShoesTimer, stunSprayTimer, timeFreezeTimer,
+          explored,
+          elapsed: Date.now() - startTime,
+          exportedAt: new Date().toISOString()
+      };
+      safeSetStorage('kmaze_save', JSON.stringify(saveData));
+      safeSetStorage('kmaze_saveState', JSON.stringify(saveData));
+      KiloVFS.write('/home/saves/kmaze_descent.json', saveData);
+      msgText = "Saved to VFS: /home/saves/kmaze_descent.json";
+      msgTimer = 90;
+      playTone(900, 'sine', 0.2);
+      showToast("Descent checkpoint saved to /home/saves/kmaze_descent.json", "success");
+      updateSplashOverlay();
+  }
+
+  function applyDescentSave(data) {
+      try {
+          let saveData = typeof data === 'string' ? JSON.parse(data) : data;
+          if (saveData.checkpoint) saveData = saveData.checkpoint;
+          if (!saveData || !Array.isArray(saveData.map)) throw new Error("Invalid save data");
+          currentLevel = Number.isInteger(saveData.currentLevel) ? saveData.currentLevel : 0;
+          score = Number.isFinite(saveData.score) ? saveData.score : 0;
+          keysHeld = Number.isFinite(saveData.keysHeld) ? saveData.keysHeld : 0;
+          hasCompass = saveData.hasCompass ? 1 : 0;
+          speedBoost = saveData.speedBoost ? 1 : 0;
+          hasPickaxe = Number.isFinite(saveData.hasPickaxe) ? saveData.hasPickaxe : 1;
+          pathfinderCharges = Number.isFinite(saveData.pathfinderCharges) ? saveData.pathfinderCharges : 1;
+          speedShoesCharges = Number.isFinite(saveData.speedShoesCharges) ? saveData.speedShoesCharges : 1;
+          stunSprayCharges = Number.isFinite(saveData.stunSprayCharges) ? saveData.stunSprayCharges : 1;
+          timeFreezeCharges = Number.isFinite(saveData.timeFreezeCharges) ? saveData.timeFreezeCharges : 1;
+          pX = Number.isFinite(saveData.pX) ? saveData.pX : 1.5;
+          pY = Number.isFinite(saveData.pY) ? saveData.pY : 1.5;
+          dX = Number.isFinite(saveData.dX) ? saveData.dX : 1.0;
+          dY = Number.isFinite(saveData.dY) ? saveData.dY : 0.0;
+          planeX = Number.isFinite(saveData.planeX) ? saveData.planeX : 0.0;
+          planeY = Number.isFinite(saveData.planeY) ? saveData.planeY : 0.66;
+          map = saveData.map;
+          if (Array.isArray(saveData.explored) && saveData.explored.length === map.length) {
+              explored = saveData.explored;
+          } else {
+              initExplored();
+          }
+          isCrouching = !!saveData.isCrouching;
+          bossHP = Number.isFinite(saveData.bossHP) ? saveData.bossHP : ((currentLevel >= 40) ? 4 : 3);
+          torchTimer = Number.isFinite(saveData.torchTimer) ? saveData.torchTimer : 0;
+          pathfinderTimer = Number.isFinite(saveData.pathfinderTimer) ? saveData.pathfinderTimer : 0;
+          speedShoesTimer = Number.isFinite(saveData.speedShoesTimer) ? saveData.speedShoesTimer : 0;
+          stunSprayTimer = Number.isFinite(saveData.stunSprayTimer) ? saveData.stunSprayTimer : 0;
+          timeFreezeTimer = Number.isFinite(saveData.timeFreezeTimer) ? saveData.timeFreezeTimer : 0;
+          startTime = Date.now() - (Number.isFinite(saveData.elapsed) ? saveData.elapsed : 0);
+          gameState = 1;
+          replayLevels = [{
+              level: currentLevel,
+              map: JSON.parse(JSON.stringify(map)),
+              frames: []
+          }];
+          if (pathfinderTimer > 0) computePathfinderPath();
+          else isPathTile = [];
+          damageFlinchTimer = 0;
+          screenShakeTimer = 0;
+          screenShakeIntensity = 0.0;
+          screenShakeMaxTimer = 0;
+          muzzleFlashTimer = 0;
+          recoilOffset = 0;
+          minotaurTimer = 0;
+          for (let k in keys) keys[k] = false;
+          toggleHelpModal(false);
+          closeTutorial(true);
+          dismissFirstRunBanner();
+          safeSetStorage('kmaze_tutorialSeen', '1');
+          safeSetStorage('kmaze_save', JSON.stringify(saveData));
+          safeSetStorage('kmaze_saveState', JSON.stringify(saveData));
+          msgText = "Descent Checkpoint Loaded!";
+          msgTimer = 60;
+          playTone(900, 'sine', 0.2);
+          updateSplashOverlay();
+          return true;
+      } catch (err) {
+          console.warn("Failed to apply save:", err);
+          showToast("Corrupted or invalid checkpoint data!", "danger");
+          return false;
+      }
+  }
+
+  function loadFromVFS() {
+      if (window.parent !== window) {
+          KiloVFS.read('/home/saves/kmaze_descent.json', (data, path) => {
+              if (data && applyDescentSave(data)) {
+                  showToast("Loaded descent from VFS: /home/saves/kmaze_descent.json", "success");
+              } else {
+                  KiloVFS.openPicker((pickerData, pickerPath) => {
+                      if (pickerData && applyDescentSave(pickerData)) {
+                          showToast(`Loaded descent from VFS: ${pickerPath}`, "success");
+                      } else {
+                          showToast("No VFS save chosen or file empty.", "warning");
+                      }
+                  });
+              }
+          });
+      } else {
+          document.getElementById('importFile').click();
+      }
+  }
+
   function exportStats() {
       let sd = safeGetStorage('kmaze_saveState', null) || safeGetStorage('kmaze_save', null);
       let checkpoint = null;
@@ -1167,6 +1348,7 @@
           try { checkpoint = JSON.parse(sd); } catch(e) {}
       }
       let data = { bestTime, totalGames, totalEscapes, totalScore, keyBinds, checkpoint };
+      KiloVFS.write('/home/saves/kmaze_descent.json', data);
       let blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
       let a = document.createElement('a');
       let url = URL.createObjectURL(blob);
@@ -2061,11 +2243,13 @@
             pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges,
             pX, pY, dX, dY, planeX, planeY, map, isCrouching, bossHP,
             torchTimer, pathfinderTimer, speedShoesTimer, stunSprayTimer, timeFreezeTimer,
+            explored,
             elapsed: Date.now() - startTime
         };
         let ok1 = safeSetStorage('kmaze_save', JSON.stringify(saveData));
         let ok2 = safeSetStorage('kmaze_saveState', JSON.stringify(saveData));
         safeSetStorage('kmaze_tutorialSeen', '1');
+        KiloVFS.write('/home/saves/kmaze_descent.json', saveData);
         if (ok1 || ok2) {
             msgText = "Game Saved to Checkpoint!";
             msgTimer = 60;
@@ -2234,7 +2418,9 @@
           }
           msgTimer = 60;
       } else {
-          showToast("No destructible wall or monster in front to strike!", "warning");
+          recoilOffset = 12;
+          playTone(300, 'sine', 0.08);
+          showToast("Pickaxe swung! (No target in range)", "info");
       }
   }
 
@@ -2383,6 +2569,11 @@
           loadCheckpointGame();
           return;
       }
+      if (e.key === 'Tab') {
+          e.preventDefault();
+          toggleMinimap();
+          return;
+      }
 
       if (!hasMod) {
           keys[e.key] = true;
@@ -2469,6 +2660,10 @@
           startGame();
           return;
       }
+      if (gameState === 1 && e.button === 0) {
+          usePickaxe();
+          return;
+      }
       if (gameState === 4) {
           let rect = canvas.getBoundingClientRect();
           let cx = (e.clientX - rect.left) * (canvas.width / rect.width);
@@ -2512,6 +2707,16 @@
       if (modal && modal.classList.contains('open')) return;
       frameCount++;
       updateTextures();
+      updateExploration();
+
+      // Decay/clear shockwaves
+      for (let i = shockwaves.length - 1; i >= 0; i--) {
+          shockwaves[i].radius += 0.45;
+          shockwaves[i].life--;
+          if (shockwaves[i].life <= 0) {
+              shockwaves.splice(i, 1);
+          }
+      }
       
       if (msgTimer > 0) msgTimer--;
       if (pathfinderTimer > 0) {
@@ -3217,6 +3422,315 @@
       
       ctx.putImageData(imgData, 0, 0);
       
+
+  function drawCompass() {
+      if (gameState !== 1) return;
+      let cx = W / 2;
+      let cy = 2;
+      let cWidth = 90;
+      let cHeight = 12;
+
+      uiCtx.save();
+      uiCtx.fillStyle = 'rgba(10, 16, 28, 0.75)';
+      uiCtx.fillRect(cx - cWidth / 2, cy, cWidth, cHeight);
+      uiCtx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+      uiCtx.lineWidth = 1;
+      uiCtx.strokeRect(cx - cWidth / 2, cy, cWidth, cHeight);
+
+      let playerAngle = Math.atan2(dY, dX);
+      let headingDeg = (playerAngle * 180 / Math.PI + 90 + 360) % 360;
+
+      const cardinals = [
+          { label: 'N', deg: 0, color: '#ff4444' },
+          { label: 'NE', deg: 45, color: '#64748b' },
+          { label: 'E', deg: 90, color: '#38bdf8' },
+          { label: 'SE', deg: 135, color: '#64748b' },
+          { label: 'S', deg: 180, color: '#38bdf8' },
+          { label: 'SW', deg: 225, color: '#64748b' },
+          { label: 'W', deg: 270, color: '#38bdf8' },
+          { label: 'NW', deg: 315, color: '#64748b' }
+      ];
+
+      uiCtx.font = '7px monospace';
+      uiCtx.textAlign = 'center';
+      uiCtx.textBaseline = 'middle';
+
+      for (let c of cardinals) {
+          let diff = ((c.deg - headingDeg + 540) % 360) - 180;
+          if (Math.abs(diff) <= 45) {
+              let px = cx + diff * (cWidth * 0.45 / 45);
+              uiCtx.fillStyle = c.color;
+              uiCtx.fillText(c.label, px, cy + 6);
+              uiCtx.strokeStyle = c.color;
+              uiCtx.beginPath();
+              uiCtx.moveTo(px, cy + cHeight - 2);
+              uiCtx.lineTo(px, cy + cHeight);
+              uiCtx.stroke();
+          }
+      }
+
+      // Center pip
+      uiCtx.fillStyle = '#ffd700';
+      uiCtx.beginPath();
+      uiCtx.moveTo(cx - 3, cy);
+      uiCtx.lineTo(cx + 3, cy);
+      uiCtx.lineTo(cx, cy + 3);
+      uiCtx.closePath();
+      uiCtx.fill();
+
+      // Objective Needle (wired to hasCompass)
+      if (hasCompass > 0) {
+          let targetX = -1, targetY = -1;
+          let targetLabel = "EXIT";
+          let targetColor = "#00ffcc";
+
+          if (keysHeld === 0) {
+              for (let x = 0; x < map.length && targetX < 0; x++) {
+                  for (let y = 0; y < map[0].length; y++) {
+                      if (map[x][y] === 2 || map[x][y] === 15) {
+                          targetX = x + 0.5;
+                          targetY = y + 0.5;
+                          targetLabel = (map[x][y] === 15) ? "BOSS" : "KEY";
+                          targetColor = "#ffd700";
+                          break;
+                      }
+                  }
+              }
+          }
+          if (targetX < 0) {
+              for (let x = 0; x < map.length && targetX < 0; x++) {
+                  for (let y = 0; y < map[0].length; y++) {
+                      if (map[x][y] === 3 || map[x][y] === 38) {
+                          targetX = x + 0.5;
+                          targetY = y + 0.5;
+                          targetLabel = (map[x][y] === 38) ? "STAIRS" : "EXIT";
+                          targetColor = "#00ffcc";
+                          break;
+                      }
+                  }
+              }
+          }
+
+          if (targetX >= 0) {
+              let targetAngle = Math.atan2(targetY - pY, targetX - pX);
+              let targetDeg = (targetAngle * 180 / Math.PI + 90 + 360) % 360;
+              let objDiff = ((targetDeg - headingDeg + 540) % 360) - 180;
+              let clampedDiff = Math.max(-42, Math.min(42, objDiff * (cWidth * 0.45 / 45)));
+              let ox = cx + clampedDiff;
+              let distPaces = Math.hypot(targetX - pX, targetY - pY).toFixed(0);
+
+              uiCtx.fillStyle = targetColor;
+              uiCtx.beginPath();
+              uiCtx.moveTo(ox, cy + 2);
+              uiCtx.lineTo(ox + 3, cy + 6);
+              uiCtx.lineTo(ox, cy + 10);
+              uiCtx.lineTo(ox - 3, cy + 6);
+              uiCtx.closePath();
+              uiCtx.fill();
+
+              uiCtx.font = '7px monospace';
+              uiCtx.fillStyle = targetColor;
+              uiCtx.fillText(`${targetLabel} ${distPaces}m`, cx, cy + 19);
+          }
+      } else {
+          uiCtx.font = '6px monospace';
+          uiCtx.fillStyle = '#64748b';
+          uiCtx.fillText("[No Compass - Shrine/Tablet activates]", cx, cy + 18);
+      }
+      uiCtx.restore();
+  }
+
+  function drawPickaxeViewModel() {
+      if (gameState !== 1) return;
+      uiCtx.save();
+      let swingProgress = recoilOffset / 15.0;
+      let px = W - 38 + bobX * 0.6 + swayX * 0.4;
+      let py = H - 24 + bobY * 0.6;
+
+      let swingOffsetAngle = -swingProgress * 0.85;
+      let swingOffsetX = -swingProgress * 26;
+      let swingOffsetY = swingProgress * 20;
+
+      uiCtx.translate(px + swingOffsetX, py + swingOffsetY);
+      uiCtx.rotate(swingOffsetAngle);
+
+      if (recoilOffset > 4) {
+          uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+          uiCtx.lineWidth = 2;
+          uiCtx.beginPath();
+          uiCtx.arc(0, 0, 36, -Math.PI * 0.4, -Math.PI * 0.05);
+          uiCtx.stroke();
+      }
+
+      // Wooden shaft
+      uiCtx.strokeStyle = '#8B5A2B';
+      uiCtx.lineWidth = 4;
+      uiCtx.lineCap = 'round';
+      uiCtx.beginPath();
+      uiCtx.moveTo(14, 18);
+      uiCtx.lineTo(-12, -18);
+      uiCtx.stroke();
+
+      // Wood grain
+      uiCtx.strokeStyle = '#5c3a1e';
+      uiCtx.lineWidth = 1.5;
+      uiCtx.beginPath();
+      uiCtx.moveTo(12, 16);
+      uiCtx.lineTo(-10, -16);
+      uiCtx.stroke();
+
+      // Brass collar
+      uiCtx.fillStyle = '#ffd700';
+      uiCtx.fillRect(-15, -21, 6, 6);
+
+      // Curved steel head
+      uiCtx.strokeStyle = '#94a3b8';
+      uiCtx.lineWidth = 3.5;
+      uiCtx.lineCap = 'round';
+      uiCtx.beginPath();
+      uiCtx.moveTo(-26, -10);
+      uiCtx.quadraticCurveTo(-14, -20, 2, -26);
+      uiCtx.stroke();
+
+      // Silver pick tips
+      uiCtx.strokeStyle = '#f1f5f9';
+      uiCtx.lineWidth = 2;
+      uiCtx.beginPath();
+      uiCtx.moveTo(-27, -9);
+      uiCtx.lineTo(-24, -12);
+      uiCtx.moveTo(0, -25);
+      uiCtx.lineTo(3, -27);
+      uiCtx.stroke();
+
+      // Gauntlet holding shaft
+      uiCtx.fillStyle = '#4a2c11';
+      uiCtx.beginPath();
+      uiCtx.arc(12, 16, 5, 0, Math.PI * 2);
+      uiCtx.fill();
+
+      uiCtx.restore();
+  }
+
+  function drawScreenShockwaves() {
+      if (shockwaves.length === 0) return;
+      uiCtx.save();
+      for (let sw of shockwaves) {
+          let alpha = Math.max(0, sw.life / 20.0);
+          let r1 = sw.radius * 22;
+          let r2 = sw.radius * 36;
+          let r3 = sw.radius * 50;
+          let cx = W / 2;
+          let cy = H / 2;
+
+          uiCtx.strokeStyle = `rgba(255, 215, 0, ${alpha * 0.8})`;
+          uiCtx.lineWidth = 2.5;
+          uiCtx.beginPath();
+          uiCtx.arc(cx, cy, r1, 0, Math.PI * 2);
+          uiCtx.stroke();
+
+          uiCtx.strokeStyle = `rgba(0, 229, 255, ${alpha * 0.6})`;
+          uiCtx.lineWidth = 1.8;
+          uiCtx.beginPath();
+          uiCtx.arc(cx, cy, r2, 0, Math.PI * 2);
+          uiCtx.stroke();
+
+          if (alpha > 0.2) {
+              uiCtx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.4})`;
+              uiCtx.lineWidth = 1.0;
+              uiCtx.beginPath();
+              uiCtx.arc(cx, cy, r3, 0, Math.PI * 2);
+              uiCtx.stroke();
+          }
+      }
+      uiCtx.restore();
+  }
+
+  function drawMinimap() {
+      if (!showMinimap || gameState !== 1) return;
+      let mW = map.length, mH = map[0].length;
+      let boxSize = 64;
+      let boxX = W - boxSize - 8;
+      let boxY = 24;
+
+      uiCtx.save();
+      uiCtx.fillStyle = 'rgba(10, 15, 25, 0.85)';
+      uiCtx.fillRect(boxX, boxY, boxSize, boxSize);
+      uiCtx.strokeStyle = '#00f0ff88';
+      uiCtx.lineWidth = 1;
+      uiCtx.strokeRect(boxX, boxY, boxSize, boxSize);
+
+      uiCtx.fillStyle = '#38bdf8';
+      uiCtx.font = '8px monospace';
+      uiCtx.fillText("MAP [Tab]", boxX + 4, boxY + 8);
+
+      let padding = 10;
+      let availW = boxSize - padding * 2;
+      let availH = boxSize - padding * 2;
+      let cellW = availW / mW;
+      let cellH = availH / mH;
+
+      for (let x = 0; x < mW; x++) {
+          for (let y = 0; y < mH; y++) {
+              if (!explored[x] || !explored[x][y]) continue;
+              let t = map[x][y];
+              let cx = boxX + padding + x * cellW;
+              let cy = boxY + padding + y * cellH;
+
+              if (t === 1 || t === 7 || t === 20 || t === 21 || t === 22 || t === 27) {
+                  uiCtx.fillStyle = '#64748b';
+                  uiCtx.fillRect(cx, cy, Math.max(1, cellW), Math.max(1, cellH));
+              } else if (t === 2) {
+                  uiCtx.fillStyle = '#ffd700';
+                  uiCtx.fillRect(cx, cy, Math.max(2, cellW), Math.max(2, cellH));
+              } else if (t === 3 || t === 38) {
+                  uiCtx.fillStyle = '#00ffcc';
+                  uiCtx.fillRect(cx, cy, Math.max(2, cellW), Math.max(2, cellH));
+              } else if (t === 28) {
+                  uiCtx.fillStyle = '#f59e0b';
+                  uiCtx.fillRect(cx, cy, Math.max(2, cellW), Math.max(2, cellH));
+              } else if (t === 40) {
+                  uiCtx.fillStyle = '#00e5ff';
+                  uiCtx.fillRect(cx, cy, Math.max(2, cellW), Math.max(2, cellH));
+              } else if (t === 12 || t === 15) {
+                  uiCtx.fillStyle = '#ef4444';
+                  uiCtx.fillRect(cx, cy, Math.max(2, cellW), Math.max(2, cellH));
+              } else {
+                  uiCtx.fillStyle = '#1e293b';
+                  uiCtx.fillRect(cx, cy, Math.max(1, cellW), Math.max(1, cellH));
+              }
+          }
+      }
+
+      // Shockwaves on minimap
+      for (let sw of shockwaves) {
+          let swx = boxX + padding + sw.x * cellW;
+          let swy = boxY + padding + sw.y * cellH;
+          let swr = Math.max(2, (sw.radius || 0.5) * cellW * 3);
+          let alpha = Math.max(0, (sw.life || 10) / 20);
+          uiCtx.strokeStyle = `rgba(255, 215, 0, ${alpha})`;
+          uiCtx.beginPath();
+          uiCtx.arc(swx, swy, swr, 0, Math.PI * 2);
+          uiCtx.stroke();
+      }
+
+      // Player marker
+      let plx = boxX + padding + pX * cellW;
+      let ply = boxY + padding + pY * cellH;
+      uiCtx.fillStyle = '#00ffff';
+      uiCtx.beginPath();
+      uiCtx.arc(plx, ply, 2, 0, Math.PI * 2);
+      uiCtx.fill();
+
+      // Heading needle
+      uiCtx.strokeStyle = '#ffff00';
+      uiCtx.lineWidth = 1.2;
+      uiCtx.beginPath();
+      uiCtx.moveTo(plx, ply);
+      uiCtx.lineTo(plx + dX * 5, ply + dY * 5);
+      uiCtx.stroke();
+
+      uiCtx.restore();
+  }
       // 3. Draw Ambient Motes & 2D Concentric Shockwaves
       uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
       uiCtx.save();
@@ -3297,6 +3811,12 @@
 
           uiCtx.restore();
       }
+
+      // Draw Right-Hand Pickaxe viewmodel & 2D Concentric Shockwaves
+      drawPickaxeViewModel();
+      drawScreenShockwaves();
+      drawCompass();
+      drawMinimap();
       
       // 5. Draw UI
       uiCtx.fillStyle = 'white';
