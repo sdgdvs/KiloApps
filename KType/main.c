@@ -5,24 +5,108 @@
 #define W 1000
 #define H 800
 
-// --- Word Lists ---
+// --- Word Lists & Drill Banks ---
 const char* commonWords[] = {
     "hello", "world", "kilo", "system", "typing",
     "speed", "code", "native", "win32", "game",
     "fast", "keyboard", "monitor", "software", "mouse",
     "hardware", "interface", "compiler", "linker", "binary",
     "execute", "process", "thread", "memory", "storage",
-    "network", "server", "client", "packet", "router"
+    "network", "server", "client", "packet", "router",
+    "the", "about", "could", "state", "only",
+    "new", "year", "some", "take", "come",
+    "these", "know", "see", "use", "get",
+    "like", "then", "first", "work", "life",
+    "over", "think", "also", "back", "after",
+    "well", "way", "even", "want", "because"
 };
-int numCommonWords = 30;
+int numCommonWords = 60;
+
+const char* homeRowWords[] = {
+    "sad", "lad", "fall", "glad", "flask", "half", "dash",
+    "hall", "salad", "alaska", "adds", "flag", "glass", "fad",
+    "alls", "dash", "slash", "flash", "hash", "gash", "ska",
+    "jag", "gas", "had", "ask", "asks", "fads", "lads", "gals", "flasks"
+};
+int numHomeRowWords = 30;
+
+const char* topRowWords[] = {
+    "type", "power", "tree", "wire", "rope", "pipe", "pour",
+    "trip", "quiet", "write", "quote", "equip", "route", "tower",
+    "priority", "pepper", "poetry", "proper", "pottery", "report",
+    "writer", "torque", "terror", "root", "riot", "tiptoe", "weep",
+    "wipe", "pure", "pretty"
+};
+int numTopRowWords = 30;
+
+const char* bottomRowWords[] = {
+    "man", "cab", "van", "ban", "can", "zap", "box", "max",
+    "wax", "calm", "bank", "comb", "czar", "zoom", "zinc", "zombie",
+    "beacon", "carbon", "common", "combat", "climb", "cabin", "vex",
+    "exam", "civic", "mimic", "bomb", "noon", "moon", "cave"
+};
+int numBottomRowWords = 30;
 
 const char* codeWords[] = {
     "function", "return", "windows.h", "typedef", "struct",
     "createfont", "selectobject", "invalidaterect", "wndproc", "hinstance",
     "sendmessage", "createwindow", "postquitmessage", "bitblt", "freelibrary",
-    "regopenkey", "fillrect", "selectobject", "dispatchmessage", "registerclass"
+    "regopenkey", "fillrect", "dispatchmessage", "registerclass", "defwindowproc",
+    "getmessage", "translatemessage", "heapalloc", "heapfree", "getprocessheap",
+    "createfilea", "writefile", "readfile", "closehandle", "beep",
+    "createthread", "interlockedexchange", "textouta", "settextcolor", "setbkmode",
+    "loadicon", "loadcursor", "adjustwindowrect", "gettickcount", "exitprocess"
 };
-int numCodeWords = 20;
+int numCodeWords = 40;
+
+const char* benchmarkWords[] = {
+    "the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog",
+    "pack", "box", "with", "five", "dozen", "liquor", "jugs", "how",
+    "vexingly", "daft", "zebras", "jump", "sphinx", "black", "quartz",
+    "judge", "vow", "jackdaws", "love", "my", "big", "two", "driven",
+    "jocks", "help", "fax", "quiz", "bright", "wizards", "vex", "chubby", "kid"
+};
+int numBenchmarkWords = 40;
+
+// Presets: 0: Common English, 1: Home Row Drill, 2: Top Row Drill, 3: Bottom Row Drill, 4: Code Snippets, 5: Speed Benchmark
+int currentPreset = 0;
+
+const char* presetNames[] = {
+    "Common English", "Home Row Drill", "Top Row Drill", "Bottom Row Drill", "Code Snippets", "Speed Benchmark"
+};
+int numPresets = 6;
+
+const char* GetPresetWord(int presetIdx, int wordIdx) {
+    switch (presetIdx) {
+        case 1: return homeRowWords[wordIdx % numHomeRowWords];
+        case 2: return topRowWords[wordIdx % numTopRowWords];
+        case 3: return bottomRowWords[wordIdx % numBottomRowWords];
+        case 4: return codeWords[wordIdx % numCodeWords];
+        case 5: return benchmarkWords[wordIdx % numBenchmarkWords];
+        default: return commonWords[wordIdx % numCommonWords];
+    }
+}
+
+int GetPresetWordCount(int presetIdx) {
+    switch (presetIdx) {
+        case 1: return numHomeRowWords;
+        case 2: return numTopRowWords;
+        case 3: return numBottomRowWords;
+        case 4: return numCodeWords;
+        case 5: return numBenchmarkWords;
+        default: return numCommonWords;
+    }
+}
+
+const char* GetBenchmarkRank(DWORD wpm, DWORD acc) {
+    if (wpm >= 120 && acc >= 95) return "Grandmaster (Top 0.1%)";
+    if (wpm >= 100 && acc >= 94) return "Master (Top 1%)";
+    if (wpm >= 80 && acc >= 92) return "Expert (Top 5%)";
+    if (wpm >= 60 && acc >= 90) return "Pro (Top 20%)";
+    if (wpm >= 40 && acc >= 85) return "Intermediate";
+    if (wpm >= 25 && acc >= 80) return "Novice";
+    return "Beginner";
+}
 
 // --- Modes ---
 // 0: Arcade Cascade, 1: Timed Speed Test (30s), 2: Code Snippets, 3: Error Heatmap, 4: Help Screen
@@ -121,6 +205,7 @@ void SaveRegistryData() {
     if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\KiloApps\\KType", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS) {
         RegSetValueExA(hKey, "HighArcadeScore", 0, REG_DWORD, (BYTE*)&highArcadeScore, sizeof(DWORD));
         RegSetValueExA(hKey, "BestWPM", 0, REG_DWORD, (BYTE*)&bestWPM, sizeof(DWORD));
+        RegSetValueExA(hKey, "CurrentPreset", 0, REG_DWORD, (BYTE*)&currentPreset, sizeof(DWORD));
         RegCloseKey(hKey);
     }
 }
@@ -132,6 +217,9 @@ void LoadRegistryData() {
         RegQueryValueExA(hKey, "HighArcadeScore", NULL, NULL, (BYTE*)&highArcadeScore, &sz);
         sz = sizeof(DWORD);
         RegQueryValueExA(hKey, "BestWPM", NULL, NULL, (BYTE*)&bestWPM, &sz);
+        sz = sizeof(DWORD);
+        RegQueryValueExA(hKey, "CurrentPreset", NULL, NULL, (BYTE*)&currentPreset, &sz);
+        if (currentPreset < 0 || currentPreset >= numPresets) currentPreset = 0;
         RegCloseKey(hKey);
     }
 }
@@ -157,7 +245,7 @@ static void my_memcpy(void* dest, const void* src, size_t count) {
 
 typedef struct {
     DWORD magic; // 0x45505954 "TYPE"
-    DWORD version; // 1
+    DWORD version; // 3
     DWORD highArcadeScore;
     DWORD bestWPM;
     int currentMode;
@@ -181,6 +269,7 @@ typedef struct {
     int keyHits[26];
     int keyErrors[26];
     DWORD testElapsedSec;
+    int currentPreset;
 } KTypeSaveState;
 
 int SaveStateToFile(const char* filename) {
@@ -190,7 +279,7 @@ int SaveStateToFile(const char* filename) {
     KTypeSaveState state;
     memset(&state, 0, sizeof(state));
     state.magic = 0x45505954;
-    state.version = 2;
+    state.version = 3;
     state.highArcadeScore = highArcadeScore;
     state.bestWPM = bestWPM;
     state.currentMode = currentMode;
@@ -213,6 +302,7 @@ int SaveStateToFile(const char* filename) {
     my_memcpy(state.testWordPool, testWordPool, sizeof(testWordPool));
     my_memcpy(state.keyHits, keyHits, sizeof(keyHits));
     my_memcpy(state.keyErrors, keyErrors, sizeof(keyErrors));
+    state.currentPreset = currentPreset;
 
     if (testActive && testStartTime > 0) {
         DWORD curElapsed = (GetTickCount() - testStartTime) / 1000;
@@ -261,6 +351,9 @@ int LoadStateFromFile(const char* filename) {
     my_memcpy(testWordPool, state.testWordPool, sizeof(testWordPool));
     my_memcpy(keyHits, state.keyHits, sizeof(keyHits));
     my_memcpy(keyErrors, state.keyErrors, sizeof(keyErrors));
+    if (state.version >= 3) {
+        currentPreset = (state.currentPreset >= 0 && state.currentPreset < numPresets) ? state.currentPreset : 0;
+    }
 
     if (testActive) {
         DWORD elapsed = (state.version >= 2) ? state.testElapsedSec : 0;
@@ -313,8 +406,9 @@ void ResetSpeedTest() {
     finalWPM = 0;
     finalAcc = 100;
 
+    int effPreset = (currentMode == 2) ? 4 : currentPreset;
+    int count = GetPresetWordCount(effPreset);
     int i;
-    int count = (currentMode == 2) ? numCodeWords : numCommonWords;
     for (i = 0; i < 40; i++) {
         testWordPool[i] = MyRand() % count;
     }
@@ -489,10 +583,20 @@ void ExportCertificateBMP(HWND hwnd) {
     SelectObject(memDC, fontNormal);
     TextOutA(memDC, 280, 440, arcBuf, StrLen(arcBuf));
     
+    const char* rankStr = GetBenchmarkRank(bestWPM, 95);
+    char rankBuf[64] = "Benchmark Assessment: ";
+    int rp1 = StrLen(rankBuf), rp2 = 0;
+    while(rankStr[rp2] && rp1 < 63) { rankBuf[rp1++] = rankStr[rp2++]; }
+    rankBuf[rp1] = '\0';
+
+    SetTextColor(memDC, RGB(245, 158, 11));
+    SelectObject(memDC, fontNormal);
+    TextOutA(memDC, 280, 480, rankBuf, StrLen(rankBuf));
+
     SetTextColor(memDC, RGB(100, 116, 139));
     SelectObject(memDC, fontNormal);
     char dateBuf[64] = "Authorized by KiloOS System";
-    TextOutA(memDC, 280, 520, dateBuf, StrLen(dateBuf));
+    TextOutA(memDC, 280, 530, dateBuf, StrLen(dateBuf));
 
     SelectObject(memDC, oldFont);
     DeleteObject(fontTitle);
@@ -641,8 +745,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 break;
             }
             if (wParam == VK_TAB) { currentMode = 0; InvalidateRect(hwnd, NULL, TRUE); break; }
-            if (wParam == VK_F2) { currentMode = 1; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
-            if (wParam == VK_F3) { currentMode = 2; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
+            if (wParam == VK_F2) { currentMode = 1; currentPreset = 0; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
+            if (wParam == VK_F3) { currentMode = 2; currentPreset = 4; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
+            if (wParam == VK_F8) {
+                currentPreset = (currentPreset + 1) % numPresets;
+                if (currentMode != 1 && currentMode != 2) currentMode = 1;
+                ResetSpeedTest();
+                ShowNativeStatus(presetNames[currentPreset]);
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
             if (wParam == VK_F4) { currentMode = 3; InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F5) {
                 if (SaveStateToFile("ktype.dat")) {
@@ -713,21 +825,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int my = HIWORD(lParam);
             if (my < 40) {
                 // Top Header Bar
-                if (mx >= 10 && mx < 100) {
+                if (mx >= 10 && mx < 95) {
                     currentMode = 0;
                     InvalidateRect(hwnd, NULL, TRUE);
-                } else if (mx >= 100 && mx < 195) {
+                } else if (mx >= 95 && mx < 185) {
                     currentMode = 1;
+                    currentPreset = 0;
                     ResetSpeedTest();
                     InvalidateRect(hwnd, NULL, TRUE);
-                } else if (mx >= 195 && mx < 285) {
+                } else if (mx >= 185 && mx < 265) {
                     currentMode = 2;
+                    currentPreset = 4;
                     ResetSpeedTest();
                     InvalidateRect(hwnd, NULL, TRUE);
-                } else if (mx >= 285 && mx < 395) {
+                } else if (mx >= 265 && mx < 365) {
+                    currentMode = 1;
+                    currentPreset = (currentPreset + 1) % numPresets;
+                    ResetSpeedTest();
+                    ShowNativeStatus(presetNames[currentPreset]);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (mx >= 365 && mx < 475) {
                     currentMode = 3;
                     InvalidateRect(hwnd, NULL, TRUE);
-                } else if (mx >= 395 && mx < 495) {
+                } else if (mx >= 475 && mx < 570) {
                     if (currentMode == 4) {
                         MarkTutorialSeen();
                         currentMode = prevMode;
@@ -736,25 +856,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         currentMode = 4;
                     }
                     InvalidateRect(hwnd, NULL, TRUE);
-                } else if (mx >= 495 && mx < 580) {
+                } else if (mx >= 570 && mx < 650) {
                     if (SaveStateToFile("ktype.dat")) {
                         ShowNativeStatus("★ Saved to ktype.dat [F5]");
                     } else {
                         ShowNativeStatus("⚠ Failed to quicksave");
                     }
                     InvalidateRect(hwnd, NULL, TRUE);
-                } else if (mx >= 580 && mx < 665) {
+                } else if (mx >= 650 && mx < 735) {
                     if (LoadStateFromFile("ktype.dat")) {
                         ShowNativeStatus("★ Loaded from ktype.dat [F9]");
                     } else {
                         ShowNativeStatus("⚠ No quicksave (ktype.dat)");
                     }
                     InvalidateRect(hwnd, NULL, TRUE);
-                } else if (mx >= 665 && g_statusMsg[0]) {
+                } else if (mx >= 735 && g_statusMsg[0]) {
                     g_statusMsg[0] = '\0';
                     g_statusExpiry = 0;
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
+            } else if ((currentMode == 1 || currentMode == 2) && my >= 85 && my <= 120 && mx >= 30 && mx <= 350) {
+                // Click on Drill Bank Chip
+                currentPreset = (currentPreset + 1) % numPresets;
+                ResetSpeedTest();
+                ShowNativeStatus(presetNames[currentPreset]);
+                InvalidateRect(hwnd, NULL, TRUE);
             } else if (currentMode == 4) {
                 // Clicking anywhere in Help dismisses it
                 MarkTutorialSeen();
@@ -840,8 +966,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 lastKeyTime = nowTime;
 
-                const char** pool = (currentMode == 2) ? codeWords : commonWords;
-                const char* curWord = pool[testWordPool[testWordIndex]];
+                int effPreset = (currentMode == 2) ? 4 : currentPreset;
+                const char* curWord = GetPresetWord(effPreset, testWordPool[testWordIndex]);
                 int curWordLen = StrLen(curWord);
 
                 if (c == ' ') {
@@ -906,28 +1032,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(memDC, (currentMode == 0) ? RGB(0, 242, 254) : RGB(148, 163, 184));
             TextOutA(memDC, 15, 10, "Arcade", 6);
 
-            SetTextColor(memDC, (currentMode == 1) ? RGB(0, 242, 254) : RGB(148, 163, 184));
-            TextOutA(memDC, 115, 10, "F2: Speed", 9);
+            SetTextColor(memDC, (currentMode == 1 && currentPreset == 0) ? RGB(0, 242, 254) : RGB(148, 163, 184));
+            TextOutA(memDC, 100, 10, "F2: Speed", 9);
 
-            SetTextColor(memDC, (currentMode == 2) ? RGB(0, 242, 254) : RGB(148, 163, 184));
-            TextOutA(memDC, 210, 10, "F3: Code", 8);
+            SetTextColor(memDC, (currentMode == 2 || (currentMode == 1 && currentPreset == 4)) ? RGB(0, 242, 254) : RGB(148, 163, 184));
+            TextOutA(memDC, 195, 10, "F3: Code", 8);
+
+            SetTextColor(memDC, (currentMode == 1 && currentPreset != 0 && currentPreset != 4) ? RGB(0, 242, 254) : RGB(148, 163, 184));
+            TextOutA(memDC, 280, 10, "F8: Drills", 10);
 
             SetTextColor(memDC, (currentMode == 3) ? RGB(0, 242, 254) : RGB(148, 163, 184));
-            TextOutA(memDC, 295, 10, "F4: Heatmap", 11);
+            TextOutA(memDC, 380, 10, "F4: Heatmap", 11);
 
             SetTextColor(memDC, (currentMode == 4) ? RGB(0, 242, 254) : RGB(148, 163, 184));
-            TextOutA(memDC, 405, 10, "F1/H: Help", 10);
+            TextOutA(memDC, 490, 10, "F1/H: Help", 10);
 
             SetTextColor(memDC, RGB(16, 185, 129));
-            TextOutA(memDC, 505, 10, "F5: Save", 8);
+            TextOutA(memDC, 585, 10, "F5: Save", 8);
 
             SetTextColor(memDC, RGB(147, 197, 253));
-            TextOutA(memDC, 590, 10, "F9: Load", 8);
+            TextOutA(memDC, 665, 10, "F9: Load", 8);
 
             if (g_statusExpiry > GetTickCount() && g_statusMsg[0]) {
                 SelectObject(memDC, g_fontNav ? g_fontNav : GetStockObject(DEFAULT_GUI_FONT));
                 SetTextColor(memDC, RGB(245, 158, 11));
-                TextOutA(memDC, 675, 10, g_statusMsg, StrLen(g_statusMsg));
+                TextOutA(memDC, 745, 10, g_statusMsg, StrLen(g_statusMsg));
             }
 
             if (g_fontMain) SelectObject(memDC, g_fontMain);
@@ -1031,14 +1160,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(memDC, RGB(0, 242, 254));
                 TextOutA(memDC, 540, 60, bestBuf, StrLen(bestBuf));
 
+                // Drill Preset Chip HUD
+                int effPreset = (currentMode == 2) ? 4 : currentPreset;
+                char prBuf[64] = "Drill Bank [F8]: ";
+                const char* prName = presetNames[effPreset];
+                int pp1 = StrLen(prBuf), pp2 = 0;
+                while (prName[pp2] && pp1 < 63) { prBuf[pp1++] = prName[pp2++]; }
+                prBuf[pp1] = '\0';
+                SetTextColor(memDC, RGB(148, 163, 184));
+                TextOutA(memDC, 30, 95, prBuf, StrLen(prBuf));
+
                 // Words stream display
-                const char** pool = (currentMode == 2) ? codeWords : commonWords;
                 int startIdx = (testWordIndex >= 5) ? testWordIndex - 2 : 0;
                 int yPos = 140;
                 int i;
 
                 for (i = startIdx; i < startIdx + 8 && i < 40; i++) {
-                    const char* w = pool[testWordPool[i]];
+                    const char* w = GetPresetWord(effPreset, testWordPool[i]);
                     int jitterX = 0, jitterY = 0;
                     if (i == testWordIndex && currentCadence > 5) {
                         jitterX = (MyRand() % 4) - 2;
@@ -1066,8 +1204,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 if (testCompleted) {
+                    const char* rankStr = GetBenchmarkRank(finalWPM, finalAcc);
+                    char compBuf[128] = "Test Complete! Benchmark Rank: ";
+                    int cp1 = StrLen(compBuf), cp2 = 0;
+                    while (rankStr[cp2] && cp1 < 120) { compBuf[cp1++] = rankStr[cp2++]; }
+                    compBuf[cp1++] = ' '; compBuf[cp1++] = '|'; compBuf[cp1++] = ' ';
+                    const char* escMsg = "ESC: Restart (F8: Next Drill)";
+                    int ep2 = 0;
+                    while (escMsg[ep2] && cp1 < 127) { compBuf[cp1++] = escMsg[ep2++]; }
+                    compBuf[cp1] = '\0';
+
                     SetTextColor(memDC, RGB(16, 185, 129));
-                    TextOutA(memDC, 40, H - 40, "Test Complete! Press ESC to restart or start typing a new drill...", 67);
+                    TextOutA(memDC, 40, H - 40, compBuf, StrLen(compBuf));
                 } else if (!testActive && elapsedSec == 0) {
                     SetTextColor(memDC, RGB(148, 163, 184));
                     TextOutA(memDC, 40, H - 40, "Start typing any key to begin 30s Speed Test...", 46);
@@ -1142,17 +1290,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(memDC, RGB(0, 242, 254));
                 TextOutA(memDC, 30, 50, "KType Studio - Help & Controls", 30);
                 SetTextColor(memDC, RGB(248, 250, 252));
-                TextOutA(memDC, 30, 90, "Click / Tab / 1: Arcade Cascade Mode", 36);
-                TextOutA(memDC, 30, 120, "Click / F2 / 2: 30s Timed Speed Test", 36);
-                TextOutA(memDC, 30, 150, "Click / F3 / 3: Code Snippets Speed Test", 40);
-                TextOutA(memDC, 30, 180, "Click / F4 / 4: Finger Weakness Heatmap", 39);
-                TextOutA(memDC, 30, 210, "Click / F5: Quicksave Snapshot to ktype.dat", 43);
-                TextOutA(memDC, 30, 240, "Click / F9: Quickload Snapshot from ktype.dat", 45);
-                TextOutA(memDC, 30, 270, "F6: Export Heatmap to BMP", 25);
-                TextOutA(memDC, 30, 300, "F7: Export Certificate to BMP", 29);
-                TextOutA(memDC, 30, 330, "F1 / H: Toggle Help | ESC: Restart Mode / Back", 46);
+                TextOutA(memDC, 30, 85, "Click / Tab / 1: Arcade Cascade Mode", 36);
+                TextOutA(memDC, 30, 115, "Click / F2 / 2: 30s Timed Speed Test", 36);
+                TextOutA(memDC, 30, 145, "Click / F3 / 3: Code Snippets Speed Test", 40);
+                TextOutA(memDC, 30, 175, "Click / F8: Cycle Drill Banks & Speed Benchmark", 47);
+                TextOutA(memDC, 30, 205, "Click / F4 / 4: Finger Weakness Heatmap", 39);
+                TextOutA(memDC, 30, 235, "Click / F5: Quicksave Snapshot to ktype.dat", 43);
+                TextOutA(memDC, 30, 265, "Click / F9: Quickload Snapshot from ktype.dat", 45);
+                TextOutA(memDC, 30, 295, "F6: Export Heatmap to BMP", 25);
+                TextOutA(memDC, 30, 325, "F7: Export Certificate with Benchmark Rank", 42);
+                TextOutA(memDC, 30, 355, "F1 / H: Toggle Help | ESC: Restart Mode / Back", 46);
                 SetTextColor(memDC, RGB(16, 185, 129));
-                TextOutA(memDC, 30, 370, "ENTER or SPACE or Click: Exit Help & Start Typing", 49);
+                TextOutA(memDC, 30, 395, "ENTER or SPACE or Click: Exit Help & Start Typing", 49);
             }
 
             SelectObject(memDC, oldFont);

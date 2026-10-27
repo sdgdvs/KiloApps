@@ -237,6 +237,7 @@
 
   .chip-group {
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
   }
 
@@ -790,9 +791,13 @@
         <span class="control-label">Preset:</span>
         <div class="chip-group" id="preset-chips">
           <button class="chip active" onclick="setPreset(event, 'common')">Common English</button>
-          <button class="chip" onclick="setPreset(event, 'code')">Code Snippets</button>
-          <button class="chip" onclick="setPreset(event, 'symbols')">Punctuation & Numbers</button>
-          <button class="chip" onclick="setPreset(event, 'custom')">Custom Import</button>
+          <button class="chip" onclick="setPreset(event, 'benchmark')">⚡ Speed Benchmark</button>
+          <button class="chip" onclick="setPreset(event, 'homerow')">🏠 Home Row Drill</button>
+          <button class="chip" onclick="setPreset(event, 'toprow')">⬆️ Top Row Drill</button>
+          <button class="chip" onclick="setPreset(event, 'bottomrow')">⬇️ Bottom Row Drill</button>
+          <button class="chip" onclick="setPreset(event, 'code')">💻 Code Snippets</button>
+          <button class="chip" onclick="setPreset(event, 'symbols')">🔣 Punctuation & Numbers</button>
+          <button class="chip" onclick="setPreset(event, 'custom')">📄 Custom Import</button>
         </div>
       </div>
 
@@ -1226,8 +1231,8 @@
     </p>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
       <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
-        <div style="font-weight: 700; color: var(--accent-cyan); margin-bottom: 4px; font-size: 13px;">⚡ Speed Drills</div>
-        <div style="font-size: 12px; color: var(--text-muted);">Timed tests &amp; word drills across English, Code snippets, and symbols.</div>
+        <div style="font-weight: 700; color: var(--accent-cyan); margin-bottom: 4px; font-size: 13px;">⚡ Speed Drills &amp; Benchmark</div>
+        <div style="font-size: 12px; color: var(--text-muted);">Timed tests &amp; word drills across English, Home/Top/Bottom rows, Code, symbols, and Speed Benchmark.</div>
       </div>
       <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
         <div style="font-weight: 700; color: var(--accent-purple); margin-bottom: 4px; font-size: 13px;">🎮 Arcade Cascade</div>
@@ -1286,14 +1291,54 @@ const PRESETS = {
   common: [
     "the", "be", "of", "and", "a", "to", "in", "he", "have", "it", "that", "for", "they", "i", "with", "as", "not", "on", "she", "at", "by", "this", "we", "you", "do", "but", "from", "or", "which", "one", "would", "all", "will", "there", "say", "who", "make", "when", "can", "more", "if", "no", "man", "out", "other", "so", "what", "time", "up", "go", "about", "than", "into", "could", "state", "only", "new", "year", "some", "take", "come", "these", "know", "see", "use", "get", "like", "then", "first", "work", "life", "over", "think", "also", "back", "after", "use", "two", "how", "our", "work", "first", "well", "way", "even", "new", "want", "because", "any", "these", "give", "day", "most", "us"
   ],
+  benchmark: [
+    "the", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog",
+    "pack", "my", "box", "with", "five", "dozen", "liquor", "jugs",
+    "how", "vexingly", "quick", "daft", "zebras", "jump",
+    "sphinx", "of", "black", "quartz", "judge", "my", "vow",
+    "jackdaws", "love", "my", "big", "sphinx", "of", "quartz",
+    "two", "driven", "jocks", "help", "fax", "my", "big", "quiz",
+    "the", "five", "boxing", "wizards", "jump", "quickly",
+    "bright", "vixens", "jump", "dozy", "fowl", "quack",
+    "cozy", "lummox", "gives", "smart", "squid", "who", "asks", "for", "job", "pen"
+  ],
+  homerow: [
+    "sad", "lad", "fall", "glad", "flask", "half", "dash", "gash", "flash", "hall",
+    "salad", "alaska", "adds", "flag", "glass", "fad", "alls", "jads", "dada", "falls",
+    "hash", "jag", "gas", "had", "ask", "asks", "fads", "lads", "gals", "flasks",
+    "slash", "ska", "dash", "dads", "sash", "shah", "faqs", "hajj", "kala", "saga"
+  ],
+  toprow: [
+    "type", "power", "tree", "wire", "rope", "pipe", "pour", "trip", "quiet", "write",
+    "quote", "equip", "route", "tower", "priority", "pepper", "poetry", "proper", "pottery", "report",
+    "writer", "torque", "terror", "root", "riot", "tiptoe", "weep", "wipe", "pure", "pretty",
+    "equity", "upper", "query", "outer", "troop", "peril", "pot", "rot", "top"
+  ],
+  bottomrow: [
+    "man", "cab", "van", "ban", "can", "zap", "box", "max", "wax", "calm",
+    "bank", "comb", "czar", "zoom", "zinc", "zombie", "beacon", "carbon", "common", "combat",
+    "climb", "cabin", "vex", "exam", "civic", "mimic", "bomb", "noon", "moon", "cave",
+    "zone", "clan", "coin", "monk", "bacon", "zebra", "music", "magic", "panic", "toxic"
+  ],
   code: [
-    "function", "const", "let", "return", "document.getElementById", "addEventListener", "canvas.getContext('2d')", "if (active == true)", "for (let i = 0; i < count; i++)", "async function fetchData()", "try { process() } catch (err)", "import { useState } from 'react'", "struct Node* next = NULL;", "printf(\"%d\\n\", result);", "while (lives > 0) { update(); }", "Array.prototype.map.call", "border-radius: 12px;", "box-shadow: 0 4px 10px rgba(0,0,0,0.5);"
+    "function", "const", "let", "return", "document.getElementById", "addEventListener", "canvas.getContext('2d')", "if (active == true)", "for (let i = 0; i < count; i++)", "async function fetchData()", "try { process() } catch (err)", "import { useState } from 'react'", "struct Node* next = NULL;", "printf(\"%d\\n\", result);", "while (lives > 0) { update(); }", "Array.prototype.map.call", "border-radius: 12px;", "box-shadow: 0 4px 10px rgba(0,0,0,0.5);", "typedef struct { int x, y; } Point;", "DWORD dwBytesWritten = 0;", "CreateWindowExA(0, \"KTypeApp\", ...);", "RegOpenKeyExA(HKEY_CURRENT_USER, ...);"
   ],
   symbols: [
-    "user@domain.com", "$100.50", "value[idx] >= 45;", "(a + b) * (c / d)", "#define WIN32_LEAN_AND_MEAN", "127.0.0.1:8080", "{ key: 'value', id: 99 }", "System.out.println(\"Hi!\");", "x = y ? true : false;", "v1.0.4-beta"
+    "user@domain.com", "$100.50", "value[idx] >= 45;", "(a + b) * (c / d)", "#define WIN32_LEAN_AND_MEAN", "127.0.0.1:8080", "{ key: 'value', id: 99 }", "System.out.println(\"Hi!\");", "x = y ? true : false;", "v1.0.4-beta", "SELECT * FROM users WHERE id = 1;", "margin: 0px 12px 24px 0px;", "https://kiloapps.web.app/ktype"
   ],
   custom: ["Type your custom lesson text to practice here."]
 };
+
+// --- Typing Benchmark Evaluation ---
+function getBenchmarkTier(wpm, accuracy) {
+  if (wpm >= 120 && accuracy >= 95) return { rank: 'Grandmaster', badge: '👑 Grandmaster', minWpm: 120, desc: 'Top 0.1% Typist' };
+  if (wpm >= 100 && accuracy >= 94) return { rank: 'Master', badge: '💎 Master', minWpm: 100, desc: 'Top 1% Professional Typist' };
+  if (wpm >= 80 && accuracy >= 92) return { rank: 'Expert', badge: '⚡ Expert', minWpm: 80, desc: 'Top 5% Power User' };
+  if (wpm >= 60 && accuracy >= 90) return { rank: 'Pro', badge: '🚀 Pro', minWpm: 60, desc: 'Top 20% Fast Typist' };
+  if (wpm >= 40 && accuracy >= 85) return { rank: 'Intermediate', badge: '🎯 Intermediate', minWpm: 40, desc: 'Proficient Standard Typist' };
+  if (wpm >= 25 && accuracy >= 80) return { rank: 'Novice', badge: '📖 Novice', minWpm: 25, desc: 'Developing Typist' };
+  return { rank: 'Beginner', badge: '🐣 Beginner', minWpm: 0, desc: 'Foundational Keyboarding' };
+}
 
 // --- Keyboard Layout & Finger Mapping ---
 const KEYBOARD_LAYOUT = [
@@ -2021,6 +2066,8 @@ function finishTest() {
   const finalAcc = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
   const finalRaw = Math.round(totalKeystrokes / minutes);
 
+  const tier = getBenchmarkTier(finalWpm, finalAcc);
+
   // Save Session to History
   const session = {
     id: Date.now(),
@@ -2031,13 +2078,17 @@ function finishTest() {
     accuracy: finalAcc,
     cpm: finalRaw,
     errors: errorCount,
-    duration: `${Math.round(elapsedSec)}s`
+    duration: `${Math.round(elapsedSec)}s`,
+    benchmarkRank: tier.rank,
+    benchmarkBadge: tier.badge
   };
 
   testHistory.unshift(session);
   if (testHistory.length > 50) testHistory.pop();
   safeStorageSet('ktype_history', testHistory);
   safeStorageSet('ktype_heatmap', keyHeatmapData);
+
+  showToast(`🏁 Test Completed! ${finalWpm} WPM (${finalAcc}% Acc) · ${tier.badge}`, 'success');
 }
 
 // Input Listener
@@ -2585,16 +2636,33 @@ document.addEventListener('drop', e => {
   }
 });
 
-// Guard animation loops when tab is hidden or restored per architecture standards
+// Guard animation loops and test timer when tab is hidden or restored per architecture standards
+let testPausedByHidden = false;
+let testPauseTime = 0;
+
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     if (arcadeAnimationFrame) {
       cancelAnimationFrame(arcadeAnimationFrame);
       arcadeAnimationFrame = null;
     }
+    if (isTestActive && !testCompleted) {
+      testPausedByHidden = true;
+      testPauseTime = Date.now();
+      if (testTimer) {
+        clearInterval(testTimer);
+        testTimer = null;
+      }
+    }
   } else {
     if (arcadeRunning && currentTab === 'arcade' && !arcadeAnimationFrame) {
       arcadeAnimationFrame = requestAnimationFrame(arcadeLoop);
+    }
+    if (testPausedByHidden && isTestActive && !testCompleted) {
+      const pauseDuration = Date.now() - testPauseTime;
+      testStartTime += pauseDuration;
+      testPausedByHidden = false;
+      startTest((Date.now() - testStartTime) / 1000);
     }
   }
 });
@@ -2615,7 +2683,7 @@ function renderHistoryTable() {
     tr.innerHTML = `
       <td>${escapeHtml(item.date)}</td>
       <td><span class="badge">${escapeHtml(item.mode)}</span> (${escapeHtml(item.preset)})</td>
-      <td style="color: var(--accent-cyan); font-weight: 700;">${Number(item.wpm) || 0}</td>
+      <td style="color: var(--accent-cyan); font-weight: 700;">${Number(item.wpm) || 0} ${item.benchmarkBadge ? `<span style="font-size:11px;font-weight:normal;opacity:0.85;margin-left:4px;">(${escapeHtml(item.benchmarkBadge)})</span>` : ''}</td>
       <td>${Number(item.accuracy) || 0}%</td>
       <td>${Number(item.cpm) || 0}</td>
       <td style="color: ${errCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)'}">${errCount}</td>
@@ -2705,9 +2773,14 @@ function exportCertificate() {
   ctx.fillText(`Accuracy: ${bestTest.accuracy}%  |  Mode: ${bestTest.mode}`, canvas.width / 2, 420);
   ctx.fillText(`Errors: ${bestTest.errors}  |  Raw CPM: ${bestTest.cpm}`, canvas.width / 2, 460);
 
+  const tier = getBenchmarkTier(bestTest.wpm, bestTest.accuracy);
+  ctx.fillStyle = '#f59e0b';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillText(`Benchmark Assessment: ${tier.badge} (${tier.desc})`, canvas.width / 2, 500);
+
   ctx.fillStyle = '#64748b';
   ctx.font = '16px sans-serif';
-  ctx.fillText(`Date: ${bestTest.date}`, canvas.width / 2, 540);
+  ctx.fillText(`Date: ${bestTest.date}`, canvas.width / 2, 545);
   
   const link = document.createElement('a');
   link.download = 'ktype_certificate.png';

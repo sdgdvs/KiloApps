@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_soundscape: KVoid
   kilo_tester: KMaze
   kilo_usability: KColosseum
-  kilo_qa: KType
+  kilo_qa: KColor
   kilo_expander: KSteno
   kilo_review: KMatrix
 virtual_web_target: kweb://cabled
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KMaze
-  timestamp: '2026-10-27T11:22:20-07:00'
+  agent: kilo-qa
+  app: KType
+  timestamp: '2026-10-27T11:39:11-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -170,11 +170,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Add <meta charset='UTF-8'> to kmaze.html <head> to fix broken UTF-8 mojibake icons across splash, HUD, toasts, and canvas; compact top #uiCanvas and Win32 GDI HUD telemetry over a dark translucent header strip so Lvl/biome/charges text stops colliding with F5/F9 hint and clipping [STAND]/[CROUCH] at 320px width; move #toastContainer below top HUD (top 50px) and #firstRunBanner to bottom of #canvasWrapper; suppress duplicate gameState===0 canvas text behind #splashOverlay; and sync #uiCanvas dimensions/scaling cleanly on boot and resize. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KType`
+- **Active Target**: `KColor`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KType` | `KiloOS/public/apps/ktype.html`, `KType/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, typing speed WPM/accuracy benchmark, word drill banks, dual Win32 C parity, and promote to Mature table. |
 | `KColor` | `KiloOS/public/apps/kcolor.html`, `KColor/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, palette generator/harmony rules, HEX/RGB/HSL conversion, dual Win32 C parity, and promote to Mature table. |
 | `KTask` | `KiloOS/public/apps/ktask.html`, `KTask/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/task lifecycle management, memory telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, document reader pagination/zoom, bookmark state, dual Win32 C parity, and promote to Mature table. |
@@ -250,6 +249,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KType** | `KiloOS/public/apps/ktype.html` | Pass 5+ (2026-10-27) | Education / Typing | Complete typing ergonomics & arcade speed workstation with 6 drill banks (Home/Top/Bottom rows, Code, Benchmark), WPM/accuracy rank grading, F5/F9 persistence, and dual Win32 C parity. |
 | **KZip** | `KiloOS/public/apps/kzip.html` | Pass 5+ (2026-10-27) | System / Utilities | Complete archive studio with KZA/ZIP/TAR format support, RLE/Deflate algorithms, hex preview, batch extraction, CRC32/SHA-256 telemetry, F5/F9 state persistence, and dual Win32 C parity. |
 | **KContacts** | `KiloOS/public/apps/kcontacts.html` | Pass 5+ (2026-10-27) | Office / Productivity | Complete contact manager & address book with vCard 3.0/CSV/JSON/LDIF export/import, duplicate merging, 8-category filter, F5/F9 state persistence, and dual Win32 C parity. |
 | **KCalendar** | `KiloOS/public/apps/kcalendar.html` | Pass 5+ (2026-10-26) | Office / Productivity | Complete retro schedule/event workstation with Month/Week/Day/Agenda views, reminder alerts, VFS export mesh, retro chime audio, F5/F9 persistence, and dual Win32 C native build parity. |
@@ -308,6 +308,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T11:39:11-07:00 — kilo-qa: KType (Pass 5 QA, Dual Parity & Mature Graduation)**
+  - Status: PASS (0 errors, web 139.4 KB, native 26.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload across localStorage and ktype.dat, ktype_tutorialSeen flag, and Escape modal dismissals.
+  - Drills & Benchmarks: Added Home Row, Top Row, Bottom Row drills, speed benchmark corpus, and official typing rank tiers.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, visibilitychange timer pause, and clean native build.
+  - Mature Quarantine & Handoff: Promoted `KType` to Mature archive; advanced `kilo-qa` to `KColor`; next agent `kilo-expander`.
+
 - **2026-10-27T11:22:20-07:00 — kilo-usability: KMaze (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KMaze across web and native targets.
@@ -328,10 +335,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-graphics updates for KColosseum across web and native targets.
   - Handoff: Advanced `kilo-graphics` to `KVoid`; rotated active agent to `kilo-soundscape`.
-
-- **2026-10-27T08:39:33-07:00 — kilo-creator: kweb://trapster (Trapster P2P Chiptune & Tracker Exchange v1.0b Deep Expansion)**
-  - Status: PASS (0 errors, web 123.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Implemented searchable 1999 P2P node directory with 12 supernodes, ping simulation, node detail modal, and VFS roster export.
-  - Integrated simulated 56k/T1 download queue with auto-save (.mod/.trk) to /home/music/ and library auto-population.
-  - Expanded live YM2612/SPC700 previewer with dual-format .mod/.trk exports, KSynth FM patch bridge, and verified KNet routing.
-  - Handoff: Advanced `kilo-creator` to `kweb://cabled`; rotated active agent to `kilo-graphics`.
