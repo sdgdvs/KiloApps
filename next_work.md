@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://cabled
-  kilo_graphics: KColosseum
+  kilo_graphics: KVoid
   kilo_soundscape: KWizard
   kilo_tester: KColosseum
   kilo_usability: KColosseum
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://trapster
-  timestamp: '2026-10-27T08:39:33-07:00'
+  agent: kilo-graphics
+  app: KColosseum
+  timestamp: '2026-10-27T09:22:17-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -100,11 +100,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KColosseum`
+- **Active Target**: `KVoid`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art shapes in drawMiniPortrait(), drawGladiatorVisual(), drawLionVisual(), drawChariotVisual(), drawBehemothVisual(), drawPraetorianVisual(), drawDimachaerusVisual(), and drawArenaEnvironment() with Imagen 3 2-stage chroma-keyed gladiator/boss sprites and Flavian amphitheatre arena backdrop (<999 KB, keeping procedural fallback while loading and zero perimeter border glints). |
 | `KVoid` | `KiloOS/public/apps/kvoid.html` | Deep void survival visual upgrade: gravitational singularity lensing, derelict hull debris sprites, anomaly silhouettes, and glint sweep. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
@@ -118,6 +117,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
+| `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art shapes in drawMiniPortrait(), drawGladiatorVisual(), drawLionVisual(), drawChariotVisual(), drawBehemothVisual(), drawPraetorianVisual(), drawDimachaerusVisual(), and drawArenaEnvironment() with Imagen 3 2-stage chroma-keyed gladiator/boss sprites and Flavian amphitheatre arena backdrop (<999 KB, keeping procedural fallback while loading and zero perimeter border glints). |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KWizard`
@@ -304,6 +304,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T09:22:17-07:00 — kilo-graphics: KColosseum (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-graphics updates for KColosseum across web and native targets.
+  - Handoff: Advanced `kilo-graphics` to `KVoid`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-27T08:39:33-07:00 — kilo-creator: kweb://trapster (Trapster P2P Chiptune & Tracker Exchange v1.0b Deep Expansion)**
   - Status: PASS (0 errors, web 123.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Implemented searchable 1999 P2P node directory with 12 supernodes, ping simulation, node detail modal, and VFS roster export.
@@ -327,8 +332,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kzip_tutorialSeen flag, and Escape modal dismissals across all 14 modals.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, visibilitychange timer cleanup, and fixed byte property bindings.
   - Mature Quarantine & Handoff: Promoted `KZip` to Mature archive; advanced `kilo-qa` to `KType`; next agent `kilo-expander`.
-
-- **2026-10-27T06:40:16-07:00 — kilo-usability: KMystery (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-usability updates for KMystery across web and native targets.
-  - Handoff: Advanced `kilo-usability` to `KMaze`; rotated active agent to `kilo-qa`.

@@ -1601,8 +1601,73 @@
     const market = [generateGladiator(), generateGladiator(), generateGladiator()];
     const owned = [];
 
+    // =========================================================================
+    // KCOLOSSEUM 2-STAGE ASSET PIPELINE & SPRITE LOADER
+    // =========================================================================
+    const KCOLOSSEUM_ASSETS = {
+      bg: null,
+      sprites: {},
+      portraits: {}
+    };
+
+    function initColosseumAssets() {
+      function tryLoad(src1, src2, onLoad) {
+        const img = new Image();
+        img.onload = () => onLoad(img);
+        img.onerror = () => {
+          const fb = new Image();
+          fb.onload = () => onLoad(fb);
+          fb.src = src2;
+        };
+        img.src = src1;
+      }
+
+      // Flavian Amphitheatre Arena Backdrop
+      tryLoad(
+        '../assets/backgrounds/kcolosseum/colosseum_arena_bg.png',
+        'assets/backgrounds/kcolosseum/colosseum_arena_bg.png',
+        (img) => { KCOLOSSEUM_ASSETS.bg = img; }
+      );
+
+      // Gladiator Class Sprites & Mini-Portraits
+      const gladClasses = ['murmillo', 'thraex', 'retiarius', 'hoplomachus'];
+      for (const k of gladClasses) {
+        tryLoad(
+          `../assets/sprites/kcolosseum/kcolosseum_gladiator_${k}.png`,
+          `assets/sprites/kcolosseum/kcolosseum_gladiator_${k}.png`,
+          (img) => { KCOLOSSEUM_ASSETS.sprites[k] = img; }
+        );
+        tryLoad(
+          `../assets/sprites/kcolosseum/kcolosseum_portrait_${k}.png`,
+          `assets/sprites/kcolosseum/kcolosseum_portrait_${k}.png`,
+          (img) => {
+            KCOLOSSEUM_ASSETS.portraits[k] = img;
+            if (typeof updateUI === 'function') updateUI();
+          }
+        );
+      }
+
+      // Arena Boss Sprites
+      const bossKeys = ['lion', 'chariot', 'behemoth', 'praetorian', 'dimachaerus'];
+      for (const b of bossKeys) {
+        tryLoad(
+          `../assets/sprites/kcolosseum/kcolosseum_boss_${b}.png`,
+          `assets/sprites/kcolosseum/kcolosseum_boss_${b}.png`,
+          (img) => { KCOLOSSEUM_ASSETS.sprites['boss_' + b] = img; }
+        );
+      }
+    }
+    initColosseumAssets();
+
     function drawMiniPortrait(canvas, g) {
+      const gtype = g.weapon === 2 ? 'retiarius' : (g.weapon === 3 ? 'thraex' : (g.weapon === 1 ? 'murmillo' : 'hoplomachus'));
+      const pImg = KCOLOSSEUM_ASSETS.portraits[gtype];
       const ctx = canvas.getContext('2d');
+      if (pImg && pImg.complete && pImg.naturalWidth > 0) {
+        ctx.clearRect(0, 0, 44, 44);
+        ctx.drawImage(pImg, 0, 0, 44, 44);
+        return;
+      }
       ctx.clearRect(0, 0, 44, 44);
       // Background gradient
       const grad = ctx.createLinearGradient(0, 0, 0, 44);
@@ -2203,6 +2268,28 @@
       let drawX = x + (isEnemy ? -lungeX : lungeX);
       let drawY = y + (state.stance === 'dead' ? 25 : bob);
 
+      const gtype = g.weapon === 2 ? 'retiarius' : (g.weapon === 3 ? 'thraex' : (g.weapon === 1 ? 'murmillo' : 'hoplomachus'));
+      const spriteImg = KCOLOSSEUM_ASSETS.sprites[gtype];
+      if (spriteImg && spriteImg.complete && spriteImg.naturalWidth > 0) {
+        // Sand contact shadow
+        ctx.fillStyle = 'rgba(40, 20, 10, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(drawX, y + 26, 26, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.translate(drawX, drawY);
+        if (isEnemy) {
+          ctx.scale(-1, 1);
+        }
+        if (state.stance === 'dead') {
+          ctx.rotate(isEnemy ? -Math.PI / 2 : Math.PI / 2);
+          ctx.translate(0, 15);
+        }
+        ctx.drawImage(spriteImg, -48, -72, 96, 96);
+        ctx.restore();
+        return;
+      }
+
       if (state.stance === 'dead') {
         // Dramatic Defeat Collapse Pose: fallen gladiator, knocked-off helmet, dropped weapon on sand
         ctx.fillStyle = 'rgba(50, 8, 8, 0.45)';
@@ -2606,6 +2693,27 @@
       let drawX = x - lungeX;
       let drawY = y + bob;
 
+      const spriteImg = KCOLOSSEUM_ASSETS.sprites['boss_lion'];
+      if (spriteImg && spriteImg.complete && spriteImg.naturalWidth > 0) {
+        if (state.flash > 0) {
+          ctx.shadowColor = '#ff2200';
+          ctx.shadowBlur = 18;
+        }
+        ctx.fillStyle = 'rgba(40, 20, 10, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(drawX, y + 26, 38, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.translate(drawX, drawY);
+        if (state.stance === 'dead') {
+          ctx.rotate(-Math.PI / 2);
+          ctx.translate(0, 15);
+        }
+        ctx.drawImage(spriteImg, -70, -64, 140, 112);
+        ctx.restore();
+        return;
+      }
+
       if (state.stance === 'dead') {
         ctx.fillStyle = 'rgba(0,0,0,0.35)';
         ctx.beginPath();
@@ -2721,6 +2829,27 @@
       let lungeX = state.lunge || 0;
       let drawX = x - lungeX;
       let drawY = y;
+
+      const spriteImg = KCOLOSSEUM_ASSETS.sprites['boss_chariot'];
+      if (spriteImg && spriteImg.complete && spriteImg.naturalWidth > 0) {
+        if (state.flash > 0) {
+          ctx.shadowColor = '#ff2200';
+          ctx.shadowBlur = 18;
+        }
+        ctx.fillStyle = 'rgba(40, 20, 10, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(drawX, y + 28, 55, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.translate(drawX, drawY);
+        if (state.stance === 'dead') {
+          ctx.rotate(-0.35);
+          ctx.translate(0, 15);
+        }
+        ctx.drawImage(spriteImg, -96, -64, 170, 114);
+        ctx.restore();
+        return;
+      }
 
       if (state.stance === 'dead') {
         ctx.fillStyle = 'rgba(0,0,0,0.35)';
@@ -2855,6 +2984,23 @@
       let lungeX = state.lunge || 0;
       let drawX = x - lungeX;
       let drawY = y + (state.stance === 'dead' ? 26 : bob);
+
+      const spriteImg = KCOLOSSEUM_ASSETS.sprites['boss_behemoth'];
+      if (spriteImg && spriteImg.complete && spriteImg.naturalWidth > 0) {
+        ctx.fillStyle = 'rgba(40, 20, 10, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(drawX, y + 28, 44, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.translate(drawX, drawY);
+        if (state.stance === 'dead') {
+          ctx.rotate(-Math.PI / 2);
+          ctx.translate(0, 20);
+        }
+        ctx.drawImage(spriteImg, -70, -80, 140, 140);
+        ctx.restore();
+        return;
+      }
 
       if (state.stance === 'dead') {
         // Massive fallen giant pose
@@ -3070,6 +3216,23 @@
       let lungeX = state.lunge || 0;
       let drawX = x - lungeX;
       let drawY = y + (state.stance === 'dead' ? 24 : bob);
+
+      const spriteImg = KCOLOSSEUM_ASSETS.sprites['boss_praetorian'];
+      if (spriteImg && spriteImg.complete && spriteImg.naturalWidth > 0) {
+        ctx.fillStyle = 'rgba(40, 20, 10, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(drawX, y + 26, 36, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.translate(drawX, drawY);
+        if (state.stance === 'dead') {
+          ctx.rotate(-Math.PI / 2);
+          ctx.translate(0, 15);
+        }
+        ctx.drawImage(spriteImg, -64, -72, 128, 128);
+        ctx.restore();
+        return;
+      }
 
       if (state.stance === 'dead') {
         // Slumped imperial champion defeat pose on sand
@@ -3327,6 +3490,23 @@
       let drawX = x - lungeX;
       let drawY = y + (state.stance === 'dead' ? 24 : bob);
 
+      const spriteImg = KCOLOSSEUM_ASSETS.sprites['boss_dimachaerus'];
+      if (spriteImg && spriteImg.complete && spriteImg.naturalWidth > 0) {
+        ctx.fillStyle = 'rgba(40, 20, 10, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(drawX, y + 26, 36, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.translate(drawX, drawY);
+        if (state.stance === 'dead') {
+          ctx.rotate(-Math.PI / 2);
+          ctx.translate(0, 15);
+        }
+        ctx.drawImage(spriteImg, -64, -72, 128, 128);
+        ctx.restore();
+        return;
+      }
+
       if (state.stance === 'dead') {
         // Slumped Thracian defeat pose on sand
         ctx.fillStyle = 'rgba(25, 10, 10, 0.45)';
@@ -3571,6 +3751,38 @@
     }
 
     function drawArenaEnvironment(ctx, width, height, time) {
+      const bgImg = KCOLOSSEUM_ASSETS.bg;
+      if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
+        ctx.drawImage(bgImg, 0, 0, width, height);
+
+        // Dynamic Flickering Torches & Braziers overlay
+        for (let tx of [45, width - 55]) {
+          let flameFlicker = Math.sin(time * 15 + tx) * 3;
+          ctx.fillStyle = '#ff4500';
+          ctx.beginPath();
+          ctx.ellipse(tx + 2, height * 0.46, 6 + flameFlicker * 0.3, 10 + flameFlicker, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#ffd700';
+          ctx.beginPath();
+          ctx.ellipse(tx + 2, height * 0.47, 3, 6 + flameFlicker * 0.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Atmospheric God Rays angling through stone arches
+        ctx.save();
+        const beamGrad = ctx.createLinearGradient(0, 0, width * 0.7, height);
+        beamGrad.addColorStop(0, 'rgba(255, 235, 170, 0.08)');
+        beamGrad.addColorStop(0.5, 'rgba(255, 220, 140, 0.03)');
+        beamGrad.addColorStop(1, 'rgba(255, 210, 120, 0)');
+        ctx.fillStyle = beamGrad;
+        ctx.beginPath();
+        ctx.moveTo(40, 0); ctx.lineTo(160, 0); ctx.lineTo(width * 0.55, height); ctx.lineTo(width * 0.28, height);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+        return;
+      }
+
       // Sky / Upper Wall Gradient based on Arena League
       const skyGrad = ctx.createLinearGradient(0, 0, 0, height * 0.55);
       if (arenaLevel <= 2) { // Local Pits: Earthy clay and wood

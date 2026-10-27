@@ -459,15 +459,15 @@
     "id": "kmystery",
     "title": "KMystery",
     "folder": "Games",
-    "webBytes": 168222,
+    "webBytes": 184271,
     "exeBytes": 40960,
-    "budgetPercent": 16.8
+    "budgetPercent": 18.4
   },
   {
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 207677,
+    "webBytes": 208067,
     "exeBytes": 57856,
     "budgetPercent": 20.8
   },
@@ -835,8 +835,8 @@
     "id": "kzip",
     "title": "KZip",
     "folder": "System",
-    "webBytes": 157107,
-    "exeBytes": 25600,
-    "budgetPercent": 15.7
+    "webBytes": 157593,
+    "exeBytes": 26112,
+    "budgetPercent": 15.8
   }
 ]
