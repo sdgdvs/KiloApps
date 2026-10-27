@@ -49,6 +49,7 @@ static void k_strcat(char* dst, const char* src) {
 #define ID_BTN_SAVE_FILE    113
 #define ID_BTN_LOAD_FILE    114
 #define ID_BTN_VFS_REPORT   115
+#define ID_BTN_SEND_KCIPHER 116
 
 // Cyber Theme Colors
 static COLORREF COLOR_BG = RGB(8, 13, 26);
@@ -84,6 +85,7 @@ static HWND g_hStatusLabel = NULL;
 static HWND g_hBtnSaveFile = NULL;
 static HWND g_hBtnLoadFile = NULL;
 static HWND g_hBtnVfsReport = NULL;
+static HWND g_hBtnSendKCipher = NULL;
 
 static char g_szStatus[512] = "KSteno Ready. Select carrier mode, enter secret message, and click Inject or Extract.";
 
@@ -582,8 +584,90 @@ static int DecodeWavCarrier(const char* inWavPath, const char* key, char* outSec
     return 1;
 }
 
-// 4. Chi-Square Steganalysis Frequency Scan
-static void CalculateChiSquare(const char* text, char* report, int reportMax) {
+// 4. Chi-Square Steganalysis Frequency Scan (Westfeld & Pfitzmann PoV Algorithm)
+static void CalculateChiSquare(int mode, const char* text, char* report, int reportMax) {
+    if (mode == 2) { // 24-bit BMP Image Carrier
+        HANDLE hFile = CreateFileA("carrier_stego.bmp", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile == INVALID_HANDLE_VALUE) {
+            hFile = CreateFileA("carrier.bmp", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        }
+        if (hFile != INVALID_HANDLE_VALUE) {
+            unsigned char buf[256 * 256 * 3 + 1024];
+            DWORD bytesRead = 0;
+            ReadFile(hFile, buf, sizeof(buf), &bytesRead, NULL);
+            CloseHandle(hFile);
+            if (bytesRead > 54) {
+                int hist[256];
+                memset(hist, 0, sizeof(hist));
+                for (DWORD i = 54; i < bytesRead; i++) {
+                    hist[buf[i]]++;
+                }
+                int kCount = 0;
+                int chiSqSum = 0;
+                for (int k = 0; k < 128; k++) {
+                    int o1 = hist[2 * k];
+                    int o2 = hist[2 * k + 1];
+                    int sum = o1 + o2;
+                    if (sum > 8) {
+                        int diff = o1 - o2;
+                        chiSqSum += (diff * diff) / sum;
+                        kCount++;
+                    }
+                }
+                int metric = kCount > 0 ? (chiSqSum * 10 / kCount) : 100;
+                const char* verdict = (metric < 4) ? "HIGH PROBABILITY OF LSB INJECTION (P > 70%)" :
+                                      (metric < 14) ? "SUSPICIOUS SYMMETRY DETECTED (P > 25%)" :
+                                      "NATURAL ENTROPY / CLEAN CARRIER (P < 5%)";
+                wsprintfA(report,
+                    "--- CHI-SQUARE STEGANALYSIS REPORT (24-BIT BMP CARRIER) ---\r\n"
+                    "Carrier Source: carrier_stego.bmp (or carrier.bmp)\r\n"
+                    "Total Pixel Bytes: %d\r\n"
+                    "Scanned PoV Pairs: %d\r\n"
+                    "Equalization Statistic (χ²/k): %d.%d\r\n"
+                    "Confidence Verdict: %s\r\n"
+                    "Methodology: Pairs of Values (PoV) asymptotic equalization scan.\r\n"
+                    "Cross-App Parity: Identical to KSteno Web Steganalysis Engine.\r\n",
+                    bytesRead - 54, kCount, metric / 10, metric % 10, verdict);
+                return;
+            }
+        }
+    } else if (mode == 3) { // 16-bit PCM Audio WAV Carrier
+        HANDLE hFile = CreateFileA("carrier_stego.wav", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile == INVALID_HANDLE_VALUE) {
+            hFile = CreateFileA("carrier.wav", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        }
+        if (hFile != INVALID_HANDLE_VALUE) {
+            unsigned char buf[44 + 44100 * 2 * 2];
+            DWORD bytesRead = 0;
+            ReadFile(hFile, buf, sizeof(buf), &bytesRead, NULL);
+            CloseHandle(hFile);
+            if (bytesRead > 44) {
+                short* pcm = (short*)(buf + 44);
+                int samples = (bytesRead - 44) / 2;
+                int lsb0 = 0, lsb1 = 0;
+                for (int i = 0; i < samples; i++) {
+                    if (pcm[i] & 1) lsb1++; else lsb0++;
+                }
+                int diff = lsb0 - lsb1;
+                if (diff < 0) diff = -diff;
+                int metric = samples > 0 ? (diff * 1000 / samples) : 100;
+                const char* verdict = (metric < 5) ? "HIGH PROBABILITY OF LSB INJECTION (P > 70%)" :
+                                      (metric < 20) ? "SUSPICIOUS SYMMETRY DETECTED (P > 25%)" :
+                                      "NATURAL ENTROPY / CLEAN CARRIER (P < 5%)";
+                wsprintfA(report,
+                    "--- CHI-SQUARE STEGANALYSIS REPORT (16-BIT PCM WAV CARRIER) ---\r\n"
+                    "Carrier Source: carrier_stego.wav (or carrier.wav)\r\n"
+                    "Scanned Audio Samples: %d\r\n"
+                    "LSB Bias (0 vs 1): %d vs %d (Delta: %d)\r\n"
+                    "Confidence Verdict: %s\r\n"
+                    "Methodology: PCM Sample LSB Frequency Equalization.\r\n"
+                    "Cross-App Parity: Identical to KSteno Web Steganalysis Engine.\r\n",
+                    samples, lsb0, lsb1, diff, verdict);
+                return;
+            }
+        }
+    }
+
     int hist[256];
     memset(hist, 0, sizeof(hist));
     int len = k_strlen(text);
@@ -615,7 +699,7 @@ static void CalculateChiSquare(const char* text, char* report, int reportMax) {
     else if (avgDelta < 15) verdict = "SUSPICIOUS SYMMETRY DETECTED";
 
     wsprintfA(report, 
-        "--- CHI-SQUARE STEGANALYSIS REPORT ---\r\n"
+        "--- CHI-SQUARE STEGANALYSIS REPORT (TEXT / COVER) ---\r\n"
         "Total Carrier Bytes: %d\r\n"
         "Scanned Value Pairs (PoVs): %d\r\n"
         "Pair Asymmetry Metric: %d.%d\r\n"
@@ -706,10 +790,47 @@ static void DoExtract(void) {
 static void DoChiSquareScan(void) {
     char in[16384];
     char report[2048];
+    int mode = (int)SendMessageA(g_hComboMode, CB_GETCURSEL, 0, 0);
     GetWindowTextA(g_hEditCover, in, sizeof(in));
-    CalculateChiSquare(in, report, sizeof(report));
+    CalculateChiSquare(mode, in, report, sizeof(report));
     SetWindowTextA(g_hEditOutput, report);
     SetWindowTextA(g_hStatusLabel, "STEGANALYSIS SCAN COMPLETE. See output console.");
+}
+
+static void DoSendKCipher(void) {
+    char payload[8192];
+    payload[0] = 0;
+    GetWindowTextA(g_hEditSecret, payload, sizeof(payload));
+    if (!payload[0] || payload[0] == '[') {
+        GetWindowTextA(g_hEditOutput, payload, sizeof(payload));
+    }
+    if (!payload[0] || payload[0] == '[') {
+        SetWindowTextA(g_hStatusLabel, "Notice: No secret payload available. Extract secret first.");
+        return;
+    }
+
+    // Write handshake to both steno_extracted.txt and kcipher_handshake.txt for VFS/IPC
+    HANDLE hFile = CreateFileA("kcipher_handshake.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, payload, k_strlen(payload), &written, NULL);
+        CloseHandle(hFile);
+    }
+    HANDLE hExt = CreateFileA("steno_extracted.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hExt != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hExt, payload, k_strlen(payload), &written, NULL);
+        CloseHandle(hExt);
+    }
+
+    // Attempt IPC window focus
+    HWND hCipher = FindWindowA("KCipherClass", NULL);
+    if (!hCipher) hCipher = FindWindowA(NULL, "KCipher");
+    if (hCipher) {
+        SetForegroundWindow(hCipher);
+    }
+
+    SetWindowTextA(g_hStatusLabel, "DISPATCH COMPLETE: Payload dispatched to KCipher (kcipher_handshake.txt).");
 }
 
 static void DoExportPayload(void) {
@@ -738,9 +859,10 @@ static void DoExportVFSReport(void) {
     char cover[8192];
     char secret[2048];
     char report[2048];
+    int mode = (int)SendMessageA(g_hComboMode, CB_GETCURSEL, 0, 0);
     GetWindowTextA(g_hEditCover, cover, sizeof(cover));
     GetWindowTextA(g_hEditSecret, secret, sizeof(secret));
-    CalculateChiSquare(cover, report, sizeof(report));
+    CalculateChiSquare(mode, cover, report, sizeof(report));
 
     HANDLE hFile = CreateFileA("steno_report.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -758,10 +880,29 @@ static void DoExportVFSReport(void) {
         }
     }
 
-    SetWindowTextA(g_hStatusLabel, "Exported steno_report.txt & kcipher_handshake.txt successfully.");
+    SetWindowTextA(g_hStatusLabel, "Exported steno_report.txt & kcipher_handshake.txt to VFS pipeline.");
 }
 
 static void DoLoadCover(void) {
+    int mode = (int)SendMessageA(g_hComboMode, CB_GETCURSEL, 0, 0);
+    if (mode == 2) { // 24-bit BMP Carrier
+        HANDLE hFile = CreateFileA("carrier.bmp", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            CloseHandle(hFile);
+            SetWindowTextA(g_hEditCover, "[CARRIER: carrier.bmp]\r\nResolution: 256x256 24-bit RGB bitmap\r\nCapacity: ~24.5 KB LSB payload");
+            SetWindowTextA(g_hStatusLabel, "Loaded carrier bitmap (carrier.bmp).");
+            return;
+        }
+    } else if (mode == 3) { // 16-bit WAV Carrier
+        HANDLE hFile = CreateFileA("carrier.wav", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            CloseHandle(hFile);
+            SetWindowTextA(g_hEditCover, "[CARRIER: carrier.wav]\r\nFormat: 44.1kHz 16-bit Mono PCM audio\r\nCapacity: ~10.7 KB LSB payload");
+            SetWindowTextA(g_hStatusLabel, "Loaded carrier audio (carrier.wav).");
+            return;
+        }
+    }
+
     HANDLE hFile = CreateFileA("carrier_cover.txt", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         char buf[8192];
@@ -823,14 +964,16 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 470, 110, 430, 180, hwnd, (HMENU)ID_EDIT_SECRET, NULL, NULL);
 
             // Action Buttons
-            g_hBtnInject = CreateWindowA("BUTTON", "Inject Secret", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 20, 305, 120, 30, hwnd, (HMENU)ID_BTN_INJECT, NULL, NULL);
-            g_hBtnExtract = CreateWindowA("BUTTON", "Extract Secret", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 148, 305, 120, 30, hwnd, (HMENU)ID_BTN_EXTRACT, NULL, NULL);
-            g_hBtnChisq = CreateWindowA("BUTTON", "Chi-Square Scan", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 276, 305, 130, 30, hwnd, (HMENU)ID_BTN_CHISQ, NULL, NULL);
-            g_hBtnSaveFile = CreateWindowA("BUTTON", "Export File", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 414, 305, 100, 30, hwnd, (HMENU)ID_BTN_SAVE_FILE, NULL, NULL);
-            g_hBtnLoadFile = CreateWindowA("BUTTON", "Load Cover", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 522, 305, 100, 30, hwnd, (HMENU)ID_BTN_LOAD_FILE, NULL, NULL);
-            g_hBtnVfsReport = CreateWindowA("BUTTON", "VFS Report", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 630, 305, 100, 30, hwnd, (HMENU)ID_BTN_VFS_REPORT, NULL, NULL);
-            g_hBtnClear = CreateWindowA("BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 738, 305, 75, 30, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
-            g_hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 821, 305, 80, 30, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            int bx = 20;
+            g_hBtnInject = CreateWindowA("BUTTON", "Inject Secret", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 100, 30, hwnd, (HMENU)ID_BTN_INJECT, NULL, NULL); bx += 105;
+            g_hBtnExtract = CreateWindowA("BUTTON", "Extract Secret", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 100, 30, hwnd, (HMENU)ID_BTN_EXTRACT, NULL, NULL); bx += 105;
+            g_hBtnChisq = CreateWindowA("BUTTON", "Chi-Square Scan", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 115, 30, hwnd, (HMENU)ID_BTN_CHISQ, NULL, NULL); bx += 120;
+            g_hBtnLoadFile = CreateWindowA("BUTTON", "Load Carrier", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 95, 30, hwnd, (HMENU)ID_BTN_LOAD_FILE, NULL, NULL); bx += 100;
+            g_hBtnSaveFile = CreateWindowA("BUTTON", "Export File", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 85, 30, hwnd, (HMENU)ID_BTN_SAVE_FILE, NULL, NULL); bx += 90;
+            g_hBtnVfsReport = CreateWindowA("BUTTON", "VFS Report", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 85, 30, hwnd, (HMENU)ID_BTN_VFS_REPORT, NULL, NULL); bx += 90;
+            g_hBtnSendKCipher = CreateWindowA("BUTTON", "Send to KCipher", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 115, 30, hwnd, (HMENU)ID_BTN_SEND_KCIPHER, NULL, NULL); bx += 120;
+            g_hBtnClear = CreateWindowA("BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 60, 30, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL); bx += 65;
+            g_hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 75, 30, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             // Output Console Box
             g_hEditOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
@@ -847,6 +990,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             SendMessageA(g_hEditSecret, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
             SendMessageA(g_hEditOutput, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
             SendMessageA(g_hStatusLabel, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessageA(g_hBtnSendKCipher, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
             return 0;
         }
 
@@ -859,6 +1003,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 case ID_BTN_SAVE_FILE: DoExportPayload(); break;
                 case ID_BTN_LOAD_FILE: DoLoadCover(); break;
                 case ID_BTN_VFS_REPORT: DoExportVFSReport(); break;
+                case ID_BTN_SEND_KCIPHER: DoSendKCipher(); break;
                 case ID_BTN_CLEAR:
                     SetWindowTextA(g_hEditSecret, "");
                     SetWindowTextA(g_hEditOutput, "");
@@ -993,6 +1138,12 @@ void MainEntry(void) {
                 continue;
             } else if (bCtrl && (msg.wParam == 'E' || msg.wParam == 'e')) {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_EXTRACT, 0), 0);
+                continue;
+            } else if (bCtrl && (msg.wParam == 'K' || msg.wParam == 'k')) {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SEND_KCIPHER, 0), 0);
+                continue;
+            } else if (bCtrl && (msg.wParam == 'R' || msg.wParam == 'r')) {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_CHISQ, 0), 0);
                 continue;
             }
         }

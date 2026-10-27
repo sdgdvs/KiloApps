@@ -2336,6 +2336,8 @@
 
             <button class="btn btn-sm btn-primary" id="btn-steg-vfs-report" style="flex:1;">📊 Export χ² Report to VFS (/home/work/)</button>
 
+              <button class="btn btn-sm btn-accent" id="btn-steg-send-kcipher" style="flex:1;" title="Send extracted secret payload to KCipher">🔐 Send Payload to KCipher</button>
+
           </div>
 
           <strong>Theory:</strong> Westfeld-Pfitzmann Pairs of Values (PoVs) test evaluates equalization between 2k and 2k+1 pixel values. Natural images show asymmetry; LSB injection forces asymptotic symmetry.
@@ -5788,9 +5790,9 @@
 
 
 
-    window.onFirebaseLoaded = () => {
+    function initVFSAndIPCHooks() {
 
-            // VFS & IPC Hooks
+      // VFS & IPC Hooks
 
       document.getElementById('btn-img-vfs-open')?.addEventListener('click', openImageCarrierFromVFS);
 
@@ -5924,10 +5926,27 @@
 
 
 
-      initFirebaseIntegration(false);
+      document.getElementById('btn-steg-send-kcipher')?.addEventListener('click', () => {
+        let payload = document.getElementById('img-extract-output')?.textContent?.trim() ||
+                      document.getElementById('audio-extract-output')?.textContent?.trim() ||
+                      document.getElementById('text-extract-output')?.textContent?.trim() || '';
+        if (!payload || payload.startsWith('[ERROR:')) {
+          const key = document.getElementById('img-key-input')?.value || '';
+          const extracted = extractSecretFromImage(key);
+          if (extracted && !extracted.startsWith('[ERROR:')) {
+            payload = extracted;
+            document.getElementById('img-extract-output').textContent = extracted;
+          }
+        }
+        sendPayloadToKCipher(payload);
+      });
 
       checkIncomingVFSLaunch();
+      window.addEventListener('hashchange', checkIncomingVFSLaunch);
+    }
 
+    window.onFirebaseLoaded = () => {
+      initFirebaseIntegration(false);
     };
 
 
@@ -7803,6 +7822,8 @@
       updateAudioCapacityUI();
 
       initFirebaseIntegration();
+
+      initVFSAndIPCHooks();
 
     });
 

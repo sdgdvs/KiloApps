@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -35,7 +35,7 @@ current_targets:
   kilo_tester: KMaze
   kilo_usability: KColosseum
   kilo_qa: KColor
-  kilo_expander: KSteno
+  kilo_expander: KColosseum
   kilo_review: KMatrix
 virtual_web_target: kweb://cabled
 virtual_web_rotation:
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KType
-  timestamp: '2026-10-27T11:39:11-07:00'
+  agent: kilo-expander
+  app: KSteno
+  timestamp: '2026-10-27T12:21:44-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -185,11 +185,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSettings` | `KiloOS/public/apps/ksettings.html`, `KSettings/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, OS theme/sound preferences, display modes, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KSteno`
+- **Active Target**: `KColosseum`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kcolosseum_ludus.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback) in #exportModal plus VFS export of Battle Chronicles and orphaned exportGladiatorCertificate() dossiers to /home/docs/ via VFS_WRITE and OS_NOTIFY; render the orphaned Arena Wager bar (#btnWager0, #btnWager25, #btnWager50, #btnWager100, #wagerOddsDisplay calling setArenaWager()) and settle payouts/forfeits on solo match completion, add Certificate button on owned gladiator cards, and add Ludus Facilities [U] and Arena Wager parity to KColosseum/main.c. |
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
@@ -202,6 +201,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmystery_case.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback), add Export Forensic Dossier Report (/home/docs/kmystery_dossier.txt via VFS_WRITE + OS_NOTIFY on case solved) and a Present Clue shortcut inside #dossier-modal, and add Clue Dossier Viewer [C] / double-click inspection parity to KMystery/main.c. |
+| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KMatrix`
@@ -308,6 +308,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T12:21:44-07:00 — kilo-expander: KSteno (Phase VI VFS Carrier Pipeline & Send to KCipher IPC)**
+  - Status: PASS ✅ (0 errors, web 167.1 KB, native 18.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.17%, HEAD Δ 0.0%, 0 fail, 0 warn, 10.8s)).
+  - Wired unconditional VFS & IPC event hooks on DOMContentLoaded and hashchange, connecting /home/media/ carrier open/save, /home/work/ payload export, and 'Send Payload to KCipher' cross-app launch across image, audio, text, and steganalysis lab.
+  - Extended Win32 C parity in KSteno/main.c with 'Send to KCipher' (ID_BTN_SEND_KCIPHER / Ctrl+K), dual-format handshake export, and Westfeld-Pfitzmann Chi-Square steganalysis for 24-bit BMP and 16-bit PCM WAV carriers.
+  - Handoff: Advanced `kilo-expander` to `KColosseum`; rotated active agent to `kilo-review`.
+
 - **2026-10-27T11:39:11-07:00 — kilo-qa: KType (Pass 5 QA, Dual Parity & Mature Graduation)**
   - Status: PASS (0 errors, web 139.4 KB, native 26.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload across localStorage and ktype.dat, ktype_tutorialSeen flag, and Escape modal dismissals.
@@ -330,8 +336,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Composition: D Harmonic Minor, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
   - Patches & DSP: Harpsichord/flute lead with delayed vibrato, walking FM bass, elemental spell earcons, Win32 parity.
   - Handoff: Advanced `kilo-soundscape` to `KVoid`; rotated active agent to `kilo-tester`.
-
-- **2026-10-27T09:22:17-07:00 — kilo-graphics: KColosseum (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-graphics updates for KColosseum across web and native targets.
-  - Handoff: Advanced `kilo-graphics` to `KVoid`; rotated active agent to `kilo-soundscape`.

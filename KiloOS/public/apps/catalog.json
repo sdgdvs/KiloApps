@@ -187,9 +187,9 @@
     "id": "kcolosseum",
     "title": "KColosseum",
     "folder": "Games",
-    "webBytes": 284183,
-    "exeBytes": 39424,
-    "budgetPercent": 28.4
+    "webBytes": 302979,
+    "exeBytes": 40448,
+    "budgetPercent": 30.3
   },
   {
     "id": "kconnect4",
@@ -427,9 +427,9 @@
     "id": "kmaze",
     "title": "KMaze",
     "folder": "Games",
-    "webBytes": 174867,
-    "exeBytes": 62976,
-    "budgetPercent": 17.5
+    "webBytes": 176339,
+    "exeBytes": 63488,
+    "budgetPercent": 17.7
   },
   {
     "id": "kmech",
@@ -691,9 +691,9 @@
     "id": "ksteno",
     "title": "KSteno",
     "folder": "System",
-    "webBytes": 169937,
-    "exeBytes": 16384,
-    "budgetPercent": 17.0
+    "webBytes": 171089,
+    "exeBytes": 18944,
+    "budgetPercent": 17.1
   },
   {
     "id": "ksubmarine",
@@ -795,9 +795,9 @@
     "id": "ktype",
     "title": "KType",
     "folder": "Dev",
-    "webBytes": 138177,
-    "exeBytes": 22528,
-    "budgetPercent": 13.8
+    "webBytes": 142782,
+    "exeBytes": 26624,
+    "budgetPercent": 14.3
   },
   {
     "id": "kvault",
@@ -819,9 +819,9 @@
     "id": "kwizard",
     "title": "KWizard",
     "folder": "Games",
-    "webBytes": 154310,
-    "exeBytes": 12974,
-    "budgetPercent": 15.4
+    "webBytes": 155240,
+    "exeBytes": 13129,
+    "budgetPercent": 15.5
   },
   {
     "id": "kwords",
