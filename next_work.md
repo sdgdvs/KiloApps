@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-review
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,11 +32,11 @@ current_targets:
   kilo_creator: kweb://webring
   kilo_graphics: KStarship
   kilo_soundscape: KQuest
-  kilo_tester: KMaze
-  kilo_usability: KMaze
+  kilo_tester: KColony
+  kilo_usability: KColony
   kilo_qa: KCalendar
   kilo_expander: KBBS
-  kilo_review: KColony
+  kilo_review: KFortress
 virtual_web_target: kweb://webring
 virtual_web_rotation:
 - kweb://slashnet
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KMaze
-  timestamp: '2026-10-26T17:23:22-07:00'
+  agent: kilo-review
+  app: KColony
+  timestamp: '2026-10-26T17:31:56-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -134,10 +134,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Compose high-energy 6-channel YM2612 FM arcade synthwave theme (Ionian/Mixolydian, 5:3 swing groove, slap bass, brass lead, selective SPC700 delay) + harmonic brick-hit combo pitch escalator and powerup earcons. |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KMaze`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -150,10 +151,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Fix buyItem() calling getItemPrice(number) instead of string keys ('food','toy','nectar','crown','polish') which charges 50g for all items; fix getMood().label === 'Ecstatic' in startMinigame() and battleTurn() (+15% crit); and apply the +10 Sovereign Aura stat bonus upon collecting all 6 relics. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KMaze`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Arrange #start-screen buttons in a 2-column grid so all 11 fit within 870x623 without bottom clipping; lock body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto) and e.preventDefault() on Arrow/Space keys; resize #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; raise small font-size from 8px to 9.5px. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Add <meta charset='UTF-8'> to kmaze.html <head> to fix broken UTF-8 mojibake icons across splash, HUD, toasts, and canvas; compact top #uiCanvas and Win32 GDI HUD telemetry over a dark translucent header strip so Lvl/biome/charges text stops colliding with F5/F9 hint and clipping [STAND]/[CROUCH] at 320px width; move #toastContainer below top HUD (top 50px) and #firstRunBanner to bottom of #canvasWrapper; suppress duplicate gameState===0 canvas text behind #splashOverlay; and sync #uiCanvas dimensions/scaling cleanly on boot and resize. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -197,11 +199,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Add toggleable [Tab] explored-fog Minimap and top-center Cardinal/Objective Compass (wiring dead hasCompass on Lore Tablets/Shrines to point toward Key/Exit) plus right-hand Pickaxe swing viewmodel using recoilOffset, 2D concentric hit shockwaves, and #gameCanvas left-click attack in both kmaze.html and KMaze/main.c; and wire Phase VI KiloOS VFS Open/Save (/home/saves/kmaze_descent.json via postMessage with standalone fallback) into checkpoint/stats export and import. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
-- **Active Target**: `KColony`
+- **Active Target**: `KFortress`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + planetary colony grid, tech tree/expedition drawers, and resource ticker legibility; inject fixes via `--inject-fix`. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + tower defense pathing, wave controls, and sidebar ergonomics; inject fixes via `--inject-fix`. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + clue dossier viewer, forensic scanner, and interrogation dialog tree; inject fixes via `--inject-fix`. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + ludus management tabs, gladiator arena combat HUD, and button clipping; inject fixes via `--inject-fix`. |
@@ -231,6 +232,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSpace` | `KiloOS/public/apps/kspace.html`, `KSpace/main.c` | [Argon Audited 2026-10-26: Fixes queued -> kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | [Argon Audited 2026-10-26: Fixes queued -> kilo-expander, kilo-soundscape, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | [Argon Audited 2026-10-26: Fixes queued -> kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
+| `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | [Argon Audited 2026-10-26: Fixes queued -> kilo-tester, kilo-usability] Visual, feature & usability review. |
 
 ---
 
@@ -279,7 +281,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KNote** | `KiloOS/public/apps/knote.html` | Pass 6+ (2026-10-17) | Office / Notes | Feature-complete cybernetic notepad; multi-tab editing, find/replace, markdown preview, keyboard navigation, full state persistence. |
 | **KPaint** | `KiloOS/public/apps/kpaint.html` | Pass 6+ (2026-10-17) | Media / Graphics | Feature-complete 1999 digital art studio; 15 export formats, sprite reel animation, multi-layer engine, dual Win32 client parity, zero glints. |
 | **KGo** | `KiloOS/public/apps/kgo.html` | Pass 5 (2026-10-17) | Strategy / Board | Feature-complete Baduk/Go with 20-stage campaign, tsumego puzzle solver, AI personalities, SGF export/import, dual Win32 native client parity, full F5/F9 state persistence. |
-| **KColony** | `KiloOS/public/apps/kcolony.html` | Pass 6+ (2026-10-18) | Strategy / Simulation | 20-structure planetary colony simulation; 4 biomes, 7 modes, tech tree, expeditions, dual Win32 native client parity, YM2612 2-Op FM audio, full F5/F9 state persistence. |
 | **KSnake** | `KiloOS/public/apps/ksnake.html` | Pass 5 (2026-10-18) | Arcade / Classic | 30-stage campaign with branch choices, Gauntlet mode, Map Editor Lab, Replay Viewer (.ksr), online/AI duel, dual Win32 native client parity, full F5/F9 state persistence. |
 | **K2048** | `KiloOS/public/apps/k2048.html` | Pass 10+ (2026-10-18) | Puzzle / Arcade | 30-stage campaign, powerups, Threes ruleset, arcade duel multiplayer, FEN lab, replay viewer, full F5/F9 state persistence, dual Win32 native client parity. |
 | **KSudoku** | `KiloOS/public/apps/ksudoku.html` | Pass 8+ (2026-10-18) | Puzzle / Logic | 30-stage campaign, RFMS online duel, logic explainer, replay scrubber, puzzle manager, full F5/F9 state persistence, dual Win32 native client parity. |
@@ -300,6 +301,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-26T17:31:56-07:00 — kilo-review: KColony (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 870x623 and audited kcolony.html; dispatched 2 surgical fix specs to Flash queues).
+  - Visual/UX Findings: #start-screen clips bottom manual button at 623px height; .panel-col overflows vertically by 401px causing Arrow/Space keys to scroll #topbar off-screen; 20x20 #grid cells (419x419px with 1px gap) overflow 400x400 #grid border and canvases by 19px; 38 button <small> labels use 8px font.
+  - Gameplay/Feature Findings: Sandbox mode (gameMode === 4) sets power/maxPower to 9999 on start but gameTick() immediately clamps maxPower back to 50 + batCount*50; pressing Space on #start-screen at tick === 0 is a no-op.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KColony`, `kilo-tester`->`KColony`] (un-quarantined `KColony` from Mature); advanced `kilo-review` to `KFortress`; next agent `kilo-creator`.
 
 - **2026-10-26T17:23:22-07:00 — kilo-expander: KMaze (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
@@ -322,9 +329,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (0 errors, web 189.2 KB, native 151.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 1.29%, input 40.24%, HEAD Δ 0.02%, 0 fail, 0 warn, 7.3s)).
   - Fixed buyItem() string key prices, getMood().label === 'Ecstatic' in training minigames and battle (+15% crit), and +10 Sovereign Aura stat bonus across Web HTML and Win32 C.
   - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
-
-- **2026-10-26T15:19:30-07:00 — kilo-soundscape: KBreakout (Neon Deflector: Overdrive Matrix — YM2612/SPC700 Chiptune Suite)**
-  - Status: PASS (0 errors, web 190.8 KB, native 54.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Composition: D Mixolydian/Ionian mode, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove (~144 BPM).
-  - Patches & DSP: FM slap bass, brass lead with delayed vibrato, SPC700 stereo delay, harmonic combo escalator & cyber earcons.
-  - Handoff: Advanced `kilo-soundscape` to `KQuest`; rotated active agent to `kilo-tester`.
