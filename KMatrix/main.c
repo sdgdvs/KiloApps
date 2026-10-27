@@ -159,6 +159,28 @@ static void ShowScan(void) {
     }
 }
 
+static DWORD WINAPI WaterfallMorseThread(LPVOID lpParam) {
+    (void)lpParam;
+    // Morse for ECHO: E(.) C(-.-.) H(....) O(---) on 1999 Hz carrier
+    // E: .
+    Beep(1999, 60); Sleep(180);
+    // C: - . - .
+    Beep(1999, 180); Sleep(60);
+    Beep(1999, 60);  Sleep(60);
+    Beep(1999, 180); Sleep(60);
+    Beep(1999, 60);  Sleep(180);
+    // H: . . . .
+    Beep(1999, 60); Sleep(60);
+    Beep(1999, 60); Sleep(60);
+    Beep(1999, 60); Sleep(60);
+    Beep(1999, 60); Sleep(180);
+    // O: - - -
+    Beep(1999, 180); Sleep(60);
+    Beep(1999, 180); Sleep(60);
+    Beep(1999, 180);
+    return 0;
+}
+
 static DWORD WINAPI VictoryFanfareThread(LPVOID lpParam) {
     (void)lpParam;
     // 16-Bit Chiptune Victory Fanfare notes (Hz, ms)
@@ -221,6 +243,37 @@ static void QuickSaveState(void) {
         AppendOutput("[QUICKSAVE] Session state written to kmatrix.dat (F5).");
     } else {
         AppendOutput("[QUICKSAVE ERROR] Could not open kmatrix.dat for writing.");
+    }
+
+    // Persist breach state to /home/crypto/kmatrix_breach.json parity
+    HANDLE hJson = CreateFileA("kmatrix_breach.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hJson != INVALID_HANDLE_VALUE) {
+        char jsonBuf[1024];
+        int count = 0;
+        int i;
+        for (i = 0; i < NUM_SECTORS; i++) {
+            if (g_sectors[i].breached) count++;
+        }
+        wsprintfA(jsonBuf,
+            "{\r\n"
+            "  \"app\": \"KMatrix\",\r\n"
+            "  \"vfs_path\": \"/home/crypto/kmatrix_breach.json\",\r\n"
+            "  \"completed\": %s,\r\n"
+            "  \"breachedCount\": %d,\r\n"
+            "  \"totalSectors\": %d,\r\n"
+            "  \"passkey\": %s,\r\n"
+            "  \"clearanceLevel\": \"%s\"\r\n"
+            "}\r\n",
+            g_completed ? "true" : "false",
+            count,
+            NUM_SECTORS,
+            g_completed ? "\"ECHO-1999-ARCHITECT\"" : "null",
+            g_completed ? "ARCHITECT" : (count > 0 ? "FIELD_OPERATIVE" : "ANALYST")
+        );
+        DWORD jsonWritten = 0;
+        WriteFile(hJson, jsonBuf, (DWORD)lstrlenA(jsonBuf), &jsonWritten, NULL);
+        CloseHandle(hJson);
+        AppendOutput("[VFS WRITE] Breach state synced to /home/crypto/kmatrix_breach.json");
     }
 }
 
@@ -481,7 +534,8 @@ static void ProcessCommand(HWND hwnd, const char* input) {
         AppendOutput(" 2200 Hz  | |||||||.....                           | -28 dB [SPC700 ECHO FILTER]");
         AppendOutput(" 2400 Hz  | |||.........                           | -44 dB [HF CUTOFF]");
         AppendOutput("TELEMETRY: Carrier at 1999.00 Hz locked. YM2612 2-Op FM ratio: 2:1.");
-        Beep(1999, 150);
+        AppendOutput("CADENCE: Transmitting 2-Op FM Morse ECHO sequence (. / -.-. / .... / ---)...");
+        CreateThread(NULL, 0, WaterfallMorseThread, NULL, 0, NULL);
     } else if (k_strcasecmp(cmd, "override") == 0) {
         if (k_strcasecmp(arg1, "ECHO-1999-ARCHITECT") == 0) {
             AppendOutput("MASTER OVERRIDE ACCEPTED: All sectors breached.");
@@ -493,8 +547,10 @@ static void ProcessCommand(HWND hwnd, const char* input) {
         }
     } else if (k_strcasecmp(cmd, "vfs") == 0 || k_strcasecmp(cmd, "verify") == 0) {
         AppendOutput("--- KILOOS VFS SECTOR VERIFICATION ---");
-        AppendOutput("Querying /sys/alpha.sys in Win32 standalone mode...");
+        AppendOutput("Querying /sys/alpha.sys for subterranean passkey fragments...");
+        AppendOutput("Querying /sys/anomaly_capture.sig for intercepted signal frames...");
         AppendOutput("[VFS VERIFIED] Sector 04 (STORAGE_VFS) kernel interface ready.");
+        AppendOutput("[VFS SIGNAL] Intercept bridge active (/sys/anomaly_capture.sig).");
     } else if (k_strcasecmp(cmd, "save") == 0) {
         QuickSaveState();
     } else if (k_strcasecmp(cmd, "load") == 0) {

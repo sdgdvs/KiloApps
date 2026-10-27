@@ -1609,6 +1609,72 @@
     logTelemetry(`Subterranean codebook decrypter table accessed${filterStr ? ` [filter: ${filterStr}]` : ''}.`);
   }
 
+  // 2-Op FM Morse Cadence: Transmits "ECHO" (. / -.-. / .... / ---) on 1999 Hz carrier
+  function playFMMorseEchoCadence() {
+    if (!state.audioEnabled) return;
+    try {
+      initAudio();
+      if (!audioCtx) return;
+      const baseTime = audioCtx.currentTime;
+      const unit = 0.055; // 55ms time unit
+      const freq = 1999;
+      const modRatio = 2.0;
+
+      // Morse sequence for "ECHO": E(.), C(-.-.), H(....), O(---)
+      const morseElements = [
+        // E: .
+        { t: 0, d: 1 },
+        // C: - . - .
+        { t: 4, d: 3 },
+        { t: 8, d: 1 },
+        { t: 10, d: 3 },
+        { t: 14, d: 1 },
+        // H: . . . .
+        { t: 18, d: 1 },
+        { t: 20, d: 1 },
+        { t: 22, d: 1 },
+        { t: 24, d: 1 },
+        // O: - - -
+        { t: 28, d: 3 },
+        { t: 32, d: 3 },
+        { t: 36, d: 3 }
+      ];
+
+      morseElements.forEach(elem => {
+        const startTime = baseTime + (elem.t * unit);
+        const duration = elem.d * unit;
+
+        const carrier = audioCtx.createOscillator();
+        const modulator = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const masterGain = audioCtx.createGain();
+
+        carrier.type = 'sine';
+        modulator.type = 'sine';
+        carrier.frequency.setValueAtTime(freq, startTime);
+        modulator.frequency.setValueAtTime(freq * modRatio, startTime);
+
+        const baseMod = freq * 1.8;
+        modGain.gain.setValueAtTime(baseMod, startTime);
+        modGain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+
+        masterGain.gain.setValueAtTime(0.12, startTime);
+        masterGain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+        carrier.connect(masterGain);
+        masterGain.connect(audioCtx.destination);
+
+        modulator.start(startTime);
+        carrier.start(startTime);
+        modulator.stop(startTime + duration);
+        carrier.stop(startTime + duration);
+      });
+    } catch(e) {}
+  }
+
   // --- RF FREQUENCY WATERFALL & AUDIO TELEMETRY ---
   function cmdWaterfall() {
     printLine("=== RF FREQUENCY WATERFALL & SPECTRAL CASCADE ===", "cyan");
@@ -1630,24 +1696,11 @@
       printLine(`${r.freq} | ${r.bar} | ${r.snr}`, isLock ? "success" : "system");
     });
     printLine("TELEMETRY: Carrier at 1999.00 Hz locked. YM2612 2-Op FM modulation ratio: 2:1.", "cyan");
-    logTelemetry("Spectral waterfall scanned: 1999.00 Hz carrier peak detected (+18 dB SNR).");
+    printLine("CADENCE: 2-Op FM Morse ECHO sequence transmitted (. / -.-. / .... / ---).", "success");
+    logTelemetry("Spectral waterfall scanned: 1999.00 Hz carrier peak with Morse ECHO cadence.");
 
     if (state.audioEnabled) {
-      try {
-        initAudio();
-        if (audioCtx) {
-          const now = audioCtx.currentTime;
-          const osc = audioCtx.createOscillator();
-          const g = audioCtx.createGain();
-          osc.frequency.setValueAtTime(1999, now);
-          g.gain.setValueAtTime(0.08, now);
-          g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-          osc.connect(g);
-          g.connect(audioCtx.destination);
-          osc.start(now);
-          osc.stop(now + 0.35);
-        }
-      } catch(e) {}
+      playFMMorseEchoCadence();
     }
   }
 
@@ -1877,6 +1930,43 @@
   // --- STATE PERSISTENCE (QUICKSAVE/QUICKLOAD/JSON EXPORT) ---
   const STORAGE_KEY = 'kmatrix_save_state';
 
+  function persistVFSBreachState(notify = false) {
+    try {
+      const breachedCount = state.sectors.filter(s => s.status === 'BREACHED').length;
+      const breachPayload = {
+        app: "KMatrix",
+        version: "1.1.0",
+        timestamp: new Date().toISOString(),
+        completed: !!state.completed,
+        breachedCount: breachedCount,
+        totalSectors: state.sectors.length,
+        sectors: state.sectors.map(s => ({
+          id: s.id,
+          name: s.name,
+          status: s.status,
+          breached: s.status === 'BREACHED'
+        })),
+        passkey: state.completed ? "ECHO-1999-ARCHITECT" : null,
+        clearanceLevel: state.completed ? "ARCHITECT" : (breachedCount > 0 ? "FIELD_OPERATIVE" : "ANALYST")
+      };
+      const jsonStr = JSON.stringify(breachPayload, null, 2);
+      window.parent.postMessage({
+        type: 'VFS_WRITE',
+        path: '/home/crypto/kmatrix_breach.json',
+        data: jsonStr,
+        requestId: 'kmatrix_breach_' + Date.now()
+      }, '*');
+      if (notify) {
+        window.parent.postMessage({
+          type: 'OS_NOTIFY',
+          title: 'KMatrix // Terminal',
+          message: 'Breach state persisted to VFS: /home/crypto/kmatrix_breach.json'
+        }, '*');
+        printLine('[VFS WRITE] Breach state synced to /home/crypto/kmatrix_breach.json', 'cyan');
+      }
+    } catch(e) {}
+  }
+
   function saveState(notify = true) {
     try {
       const data = {
@@ -1890,6 +1980,7 @@
         savedAt: new Date().toISOString()
       };
       if (safeSet(STORAGE_KEY, data)) {
+        persistVFSBreachState(notify);
         if (notify) {
           printLine(`[QUICKSAVE] Session state stored to local storage (F5).`, "system");
           SFX.key();
@@ -2072,9 +2163,11 @@
       case 'verify':
         printLine("--- KILOOS VFS SECTOR VERIFICATION ---", "cyan");
         printLine("Querying /sys/alpha.sys for subterranean passkey fragments...", "system");
+        printLine("Querying /sys/anomaly_capture.sig for intercepted RF signal frames...", "system");
         try {
-          window.parent.postMessage({ type: 'VFS_READ', path: '/sys/alpha.sys', requestId: 'kmatrix_poll_' + Date.now() }, '*');
-          printLine("Dispatched VFS_READ request to KiloOS desktop bridge.", "system");
+          window.parent.postMessage({ type: 'VFS_READ', path: '/sys/alpha.sys', requestId: 'kmatrix_poll_alpha_' + Date.now() }, '*');
+          window.parent.postMessage({ type: 'VFS_READ', path: '/sys/anomaly_capture.sig', requestId: 'kmatrix_poll_sig_' + Date.now() }, '*');
+          printLine("Dispatched VFS_READ requests for /sys/alpha.sys and /sys/anomaly_capture.sig to KiloOS desktop bridge.", "system");
         } catch(e) {
           printLine("Unable to contact KiloOS desktop bridge (standalone window mode).", "alert");
         }
@@ -2165,6 +2258,7 @@
     'help', 'status', 'scan', 'analyze', 'dump', 'disasm', 'entropy', 'ping', 'traceroute', 'sniff',
     'matrix', 'rain', 'codebook', 'decrypt', 'waterfall', 'cascade', 'stats', 'breach', 'override', 'audio', 'theme', 'save', 'load', 'logexport',
     'clear', 'cls', 'ascend', 'director', 'climax', 'replay', 'cutscene', 'fanfare',
+    'vfs', 'verify',
     'MEM_HEAP', 'AUDIO_DSP', 'NET_RELAY', 'STORAGE_VFS', 'CORE_AI',
     '7F1999', '1999HZ', '10.19.99.4', 'RECOVERY_1999', 'AUTONOMOUS_FLEET'
   ];
@@ -2461,6 +2555,8 @@
     if (!e.data) return;
     if (e.data.type === 'VFS_READ_DONE') {
       const dataStr = String(e.data.data || '');
+      const reqPath = e.data.path || '';
+
       if (dataStr.includes('RECOVERY_1999') || dataStr.includes('1999-ARCH')) {
         vfsVerifiedSectors['STORAGE_VFS'] = true;
         const sec = state.sectors.find(s => s.id === 'STORAGE_VFS');
@@ -2471,20 +2567,27 @@
           logTelemetry('Sector STORAGE_VFS auto-breached via KiloOS VFS kernel fragment verification.');
           saveState(false);
           checkClimax();
+        } else {
+          printLine('[VFS QUERY] /sys/alpha.sys kernel fragment confirmed (STORAGE_VFS already breached).', 'dim');
         }
+      } else if (reqPath === '/sys/alpha.sys' || reqPath.endsWith('alpha.sys')) {
+        printLine('[VFS QUERY] /sys/alpha.sys inspected (' + dataStr.length + ' bytes received).', 'dim');
       }
-      if (dataStr.includes('KANOMALY_SIGNAL_V1') || (e.data.path && e.data.path.includes('anomaly_capture.sig'))) {
-        printLine('[VFS INGRESS] Subterranean signal frame intercepted from ' + (e.data.path || '/sys/anomaly_capture.sig') + '!', 'cyan');
+
+      if (dataStr.includes('KANOMALY_SIGNAL_V1') || reqPath.includes('anomaly_capture.sig')) {
+        printLine('[VFS INGRESS] Subterranean signal frame intercepted from ' + (reqPath || '/sys/anomaly_capture.sig') + '!', 'cyan');
         try {
           const sigJson = typeof e.data.data === 'string' ? JSON.parse(e.data.data) : e.data.data;
           if (sigJson && sigJson.lockedAnomaly) {
             printLine(`[DSP DECODER] Intercepted payload signature: "${sigJson.lockedAnomaly.sig}"`, 'system');
             printLine(`[DSP DECODER] Origin Station: ${sigJson.station ? sigJson.station.name : 'Unknown'} (${sigJson.receiver ? sigJson.receiver.tunedFreqKhz : '?'} kHz)`, 'dim');
+            let breachedAny = false;
             for (const s of state.sectors) {
               if (s.status !== 'BREACHED') {
                 const matchedKey = s.keys.find(k => sigJson.lockedAnomaly.sig.includes(k) || (sigJson.lockedAnomaly.lore && sigJson.lockedAnomaly.lore.includes(k)));
                 if (matchedKey) {
                   s.status = 'BREACHED';
+                  breachedAny = true;
                   renderHUD();
                   printLine(`[SECTOR DECRYPTED] Anomaly signal cross-correlated with ${s.name} (${matchedKey})!`, 'success');
                   logTelemetry(`Sector ${s.id} breached via subterranean anomaly demodulation.`);
@@ -2494,8 +2597,17 @@
                 }
               }
             }
+            if (!breachedAny) {
+              printLine(`[DSP DECODER] Signal frame active; no matching unbreached sector signatures.`, 'dim');
+            }
+          } else {
+            printLine('[VFS INGRESS] Signal carrier present; awaiting demodulated anomaly lock.', 'dim');
           }
-        } catch(err) {}
+        } catch(err) {
+          printLine('[VFS INGRESS] Raw telemetry captured from /sys/anomaly_capture.sig.', 'dim');
+        }
+      } else if (reqPath === '/sys/anomaly_capture.sig' || reqPath.endsWith('anomaly_capture.sig')) {
+        printLine('[VFS QUERY] /sys/anomaly_capture.sig inspected: No active signal frames.', 'dim');
       }
     } else if (e.data.type === 'VFS_CHANGED') {
       if (e.data.path === '/sys/alpha.sys' || e.data.path === '/sys/anomaly_capture.sig' || (typeof e.data.path === 'string' && e.data.path.startsWith('/home/crypto/'))) {
@@ -2517,7 +2629,8 @@
   window.addEventListener('hashchange', checkHashRoute);
 
   try {
-    window.parent.postMessage({ type: 'VFS_READ', path: '/sys/alpha.sys', requestId: 'kmatrix_init_' + Date.now() }, '*');
+    window.parent.postMessage({ type: 'VFS_READ', path: '/sys/alpha.sys', requestId: 'kmatrix_init_alpha_' + Date.now() }, '*');
+    window.parent.postMessage({ type: 'VFS_READ', path: '/sys/anomaly_capture.sig', requestId: 'kmatrix_init_sig_' + Date.now() }, '*');
   } catch(e) {}
 
   renderHUD();
