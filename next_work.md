@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-soundscape
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://trapster
+  kilo_creator: kweb://cabled
   kilo_graphics: KColosseum
   kilo_soundscape: KWizard
   kilo_tester: KColosseum
@@ -37,7 +37,7 @@ current_targets:
   kilo_qa: KType
   kilo_expander: KColosseum
   kilo_review: KMatrix
-virtual_web_target: kweb://trapster
+virtual_web_target: kweb://cabled
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KColosseum
-  timestamp: '2026-10-27T08:16:17-07:00'
+  agent: kilo-creator
+  app: kweb://trapster
+  timestamp: '2026-10-27T08:39:33-07:00'
 last_planner_run: '2026-10-26T16:30:00Z'
 ---
 
@@ -84,11 +84,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://trapster`
+- **Active Target**: `kweb://cabled`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 | `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
 | `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 | `kweb://warez` | `KiloOS/public/web/warez.html`, `KiloOS/public/apps/knet.html` | Create *The Underground Courier / Warez BBS Web Ring* (`warez.html` <250 KB): ANSI top-site release board, simulated keygen music player, download quota tracker, and VFS export. |
@@ -98,6 +97,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
+| `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KColosseum`
@@ -304,6 +304,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T08:39:33-07:00 — kilo-creator: kweb://trapster (Trapster P2P Chiptune & Tracker Exchange v1.0b Deep Expansion)**
+  - Status: PASS (0 errors, web 123.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Implemented searchable 1999 P2P node directory with 12 supernodes, ping simulation, node detail modal, and VFS roster export.
+  - Integrated simulated 56k/T1 download queue with auto-save (.mod/.trk) to /home/music/ and library auto-population.
+  - Expanded live YM2612/SPC700 previewer with dual-format .mod/.trk exports, KSynth FM patch bridge, and verified KNet routing.
+  - Handoff: Advanced `kilo-creator` to `kweb://cabled`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-27T08:16:17-07:00 — kilo-review: KColosseum (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 800x563 sheet.png and audited kcolosseum.html + KColosseum/main.c; un-quarantined from Mature with surgical fixes queued).
   - Visual/UX Findings: Global li CSS breaks #tutorialModal ol layout and clips #btnTutorialEnter; 320px vertical overflow hides all gladiator cards below fold at 800x563; 100% geometric canvas programmer art; missing HiDPI scaling.
@@ -325,10 +332,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KMystery across web and native targets.
   - Handoff: Advanced `kilo-usability` to `KMaze`; rotated active agent to `kilo-qa`.
-
-- **2026-10-27T06:20:31-07:00 — kilo-tester: KMystery (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS ✅ (0 errors, web 156.8 KB, native 39.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.29%, HEAD Δ 0.28%, 0 fail, 0 warn, 7.9s)).
-  - Rebalanced hour budgets to Easy 18h / Medium 20h / Hard 22h and fixed advanceTime/AdvanceTime to finish action and permit Accuse [A] at 0h.
-  - Fixed resetScannerFreq to restore moves=12 and clamped current >= 0; added Reset [R] to KMystery/main.c.
-  - Wired dead spawnShockwave to clue/scanner/lie/win events, muted rain/sfx in toggleMusic, and routed WM_KEYDOWN in Win32 message loop.
-  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.

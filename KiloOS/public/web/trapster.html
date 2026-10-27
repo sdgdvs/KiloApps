@@ -751,31 +751,53 @@
   /* --- TAB: SWARM TOPOLOGY & NETWORK --- */
   .topology-wrap {
     flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 300px;
-    gap: 8px;
-    overflow: hidden;
-  }
-  @media (max-width: 800px) {
-    .topology-wrap { grid-template-columns: 1fr; }
-  }
-  .topo-canvas-box {
-    background: #050b0d;
-    border: 2px inset #000;
-    position: relative;
-    overflow: hidden;
-  }
-  #topoCanvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
-  .topo-sidebar {
     display: flex;
     flex-direction: column;
     gap: 6px;
     overflow-y: auto;
   }
+  .node-stats-bar {
+    display: flex;
+    gap: 12px;
+    font-size: 10px;
+    background: #dfdfdf;
+    padding: 3px 6px;
+    border: 1px inset #808080;
+    align-items: center;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .node-control-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    margin: 2px 0;
+  }
+  .ping-tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-weight: bold;
+    display: inline-block;
+  }
+  .ping-fast { background: #dcfce7; color: #15803d; }
+  .ping-med  { background: #fef3c7; color: #b45309; }
+  .ping-slow { background: #fee2e2; color: #b91c1c; }
+  .tier-tag {
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-weight: bold;
+  }
+  .tier-academic   { background: #e0f2fe; color: #0369a1; }
+  .tier-demoscene  { background: #f3e8ff; color: #7e22ce; }
+  .tier-warez      { background: #fef08a; color: #854d0e; }
+  .tier-classified { background: #fed7aa; color: #c2410c; }
+
 
   /* Status Bar at Bottom */
   .status-bar {
@@ -906,7 +928,7 @@
       <span>📂 My Library</span>
     </button>
     <button class="tab-btn" id="btnTabTopo" onclick="switchTab('tab-topo')">
-      <span>🌐 Swarm Topology</span>
+      <span>🌐 Node Directory &amp; Topology</span>
     </button>
   </div>
 
@@ -991,10 +1013,11 @@
 
       <!-- Action Toolbar -->
       <div class="action-bar">
-        <div style="display:flex; gap:4px; align-items:center;">
+        <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
           <button class="btn-win btn-primary" id="btnDownloadSelected" onclick="downloadSelectedTrack()">📥 Get Selected Track</button>
           <button class="btn-win" id="btnPreviewSelected" onclick="previewSelectedTrack()">▶ Preview in Player</button>
-          <button class="btn-win" id="btnDirectVfs" onclick="saveSelectedDirectVfs()">💾 Direct Save to VFS</button>
+          <button class="btn-win" id="btnDirectVfsMod" onclick="saveSelectedDirectVfs('mod')">💾 Save .MOD to VFS</button>
+          <button class="btn-win" id="btnDirectVfsTrk" onclick="saveSelectedDirectVfs('trk')">💾 Save .TRK to VFS</button>
           <button class="btn-win" onclick="copyMagnetLink()">🔗 Copy P2P Hash</button>
           <button class="btn-win" onclick="showTrackNfo()">ℹ️ Module NFO</button>
         </div>
@@ -1042,10 +1065,12 @@
             </table>
           </div>
           <div class="action-bar" style="margin-top:4px;">
-            <div style="display:flex; gap:4px;">
+            <div style="display:flex; gap:4px; flex-wrap:wrap;">
               <button class="btn-win" onclick="pauseAllDownloads()">⏸ Pause All</button>
               <button class="btn-win" onclick="resumeAllDownloads()">▶ Resume All</button>
               <button class="btn-win" onclick="clearCompletedDownloads()">🧹 Clear Finished</button>
+              <button class="btn-win btn-primary" onclick="queueDemoPack()">⚡ Queue Demo Pack (56k)</button>
+              <button class="btn-win" onclick="saveAllFinishedToVfs()">💾 Save Finished (.mod &amp; .trk) to VFS</button>
             </div>
             <div style="font-size:10px;" id="totalDlSpeed">Total Inbound: 0.0 KB/s</div>
           </div>
@@ -1243,45 +1268,83 @@
       </div>
     </div>
 
-    <!-- TAB 6: SWARM TOPOLOGY -->
+    <!-- TAB 6: P2P NODE DIRECTORY & SWARM TOPOLOGY -->
     <div class="tab-panel" id="tab-topo">
       <div class="topology-wrap">
-        <div class="topo-canvas-box">
-          <canvas id="topoCanvas" width="500" height="340"></canvas>
+        <!-- Swarm Quick Metrics Banner -->
+        <div class="node-stats-bar bevel-inset">
+          <span>🌐 <strong>Trapster P2P Mesh:</strong> 12 Supernodes Online</span>
+          <span>👥 <strong>Active Swarm Peers:</strong> <span id="statActivePeers">2,418</span></span>
+          <span>🎵 <strong>Shared Tracker Modules:</strong> 48,210</span>
+          <span>⚡ <strong>Backbone Bandwidth:</strong> 1.24 Gbps</span>
+          <span style="margin-left:auto; color:#000080; font-weight:bold;">Primary Hub: <span id="lblPrimaryHub">rendezvous-01.kilonet</span></span>
         </div>
-        <div class="topo-sidebar">
-          <div class="section-label">P2P Routing Hubs</div>
-          <div class="table-container bevel-inset" style="height:150px;">
-            <table class="p2p-table">
-              <thead>
-                <tr>
-                  <th>Supernode Host</th>
-                  <th>IP Address</th>
-                  <th>Ping</th>
-                  <th>Peers</th>
-                </tr>
-              </thead>
-              <tbody id="topoHostsBody">
-                <tr><td>rendezvous-01.kilonet</td><td>198.41.0.12</td><td>14ms</td><td>512</td></tr>
-                <tr><td>mit-t1-relay.trapster</td><td>18.178.0.44</td><td>28ms</td><td>340</td></tr>
-                <tr><td>cmu-dorm-node.trapster</td><td>128.2.14.8</td><td>32ms</td><td>285</td></tr>
-                <tr><td>helsinki-mod-vault</td><td>130.237.1.99</td><td>58ms</td><td>192</td></tr>
-                <tr><td style="color:#f59e0b;">carlsbad-salt-7f</td><td>10.19.99.127</td><td>99ms</td><td>100</td></tr>
-              </tbody>
-            </table>
-          </div>
 
-          <div class="section-label" style="margin-top:6px;">Network Bandwidth Graph</div>
-          <div style="background:#000; border:2px inset #808080; height:80px; position:relative; overflow:hidden;">
-            <canvas id="bwGraphCanvas" width="280" height="80" style="width:100%; height:100%; display:block;"></canvas>
+        <!-- Searchable Node Directory Controls -->
+        <div class="node-control-bar">
+          <div style="display:flex; gap:6px; align-items:center; flex:1; flex-wrap:wrap;">
+            <label for="nodeSearchInput" style="font-weight:bold;">Search Nodes:</label>
+            <input type="text" id="nodeSearchInput" class="input-text bevel-field" style="width:180px;" placeholder="Host, IP, campus, group..." oninput="filterNodeDirectory()">
+            <select id="nodeTierFilter" class="input-select bevel-field" onchange="filterNodeDirectory()">
+              <option value="ALL">All Network Tiers (*.*)</option>
+              <option value="academic">Academic Campus Supernodes (T1/T3)</option>
+              <option value="demoscene">European Demoscene Hubs (Fiber)</option>
+              <option value="warez">Underground Courier Drops</option>
+              <option value="classified">Classified / Carlsbad (0x7F)</option>
+            </select>
           </div>
-
-          <div style="font-size:10px; color:#333; margin-top:4px; line-height:1.4;">
-            <strong>Protocol:</strong> Trapster P2P v1.0b / RFC-1999<br>
-            <strong>Port:</strong> 6667 / 6699 (TCP)<br>
-            <strong>Encrypted Sub-Relay:</strong> 10.19.99.7F (Subterranean Acoustic)
+          <div style="display:flex; gap:4px; flex-wrap:wrap;">
+            <button class="btn-win" onclick="pingAllNodes()">🔄 Ping All Nodes</button>
+            <button class="btn-win" onclick="exportNodeRosterVfs()">💾 Export Directory to VFS</button>
           </div>
         </div>
+
+        <!-- Searchable P2P Supernodes Table -->
+        <div class="table-container bevel-inset" style="height:150px; margin-bottom:4px;">
+          <table class="p2p-table" id="nodeDirTable">
+            <thead>
+              <tr>
+                <th onclick="sortNodes('host')">Supernode Host ▲▼</th>
+                <th onclick="sortNodes('ip')">IP Address</th>
+                <th onclick="sortNodes('location')">Location / Network</th>
+                <th onclick="sortNodes('line')">Line Speed</th>
+                <th onclick="sortNodes('ping')">Ping (RTT)</th>
+                <th onclick="sortNodes('peers')">Peers</th>
+                <th onclick="sortNodes('modules')">Cached Modules</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="topoHostsBody">
+              <!-- Populated dynamically by filterNodeDirectory() -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Lower Split: 2D Mesh Canvas & Bandwidth Diagnostics -->
+        <div style="display:grid; grid-template-columns:1fr 310px; gap:8px; height:155px; min-height:155px;">
+          <!-- 2D Canvas Mesh -->
+          <div class="topo-canvas-box">
+            <canvas id="topoCanvas" width="500" height="155"></canvas>
+            <div style="position:absolute; top:4px; left:6px; font-size:9px; color:#38bdf8; font-family:monospace; pointer-events:none;">
+              REAL-TIME PEER ROUTING CONSTELLATION (PACKET FLIGHT)
+            </div>
+          </div>
+
+          <!-- Bandwidth Graph & Diagnostics -->
+          <div style="display:flex; flex-direction:column; gap:4px; overflow:hidden;">
+            <div class="section-label" style="margin-bottom:0;">Backbone Activity Sparkline</div>
+            <div style="background:#000; border:2px inset #808080; height:65px; position:relative; overflow:hidden;">
+              <canvas id="bwGraphCanvas" width="300" height="65" style="width:100%; height:100%; display:block;"></canvas>
+            </div>
+            <div style="font-size:9px; color:#222; line-height:1.3; background:var(--win-bg); padding:3px 6px; border:1px inset #808080;">
+              <strong>Active Daemon:</strong> Trapster P2P v1.0b (RFC-1999)<br>
+              <strong>Listening Ports:</strong> 6667 / 6699 (TCP)<br>
+              <strong>Subterranean Relay:</strong> 10.19.99.7F (Acoustic Litho @ 1999Hz)<br>
+              <strong>Swarm Encryption:</strong> DES-CBC / Carlsbad 0x7F CRC32
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1346,6 +1409,26 @@
         <button class="btn-win btn-primary" onclick="confirmShareTrack()">Publish to Swarm</button>
         <button class="btn-win" onclick="closeShareModal()">Cancel</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Node Detail Modal -->
+<div class="modal-overlay" id="nodeDetailModal" style="display:none;">
+  <div class="modal-dialog bevel-outset" style="padding:10px; width:520px;">
+    <div class="title-bar" style="margin:-10px -10px 10px -10px;">
+      <div class="title-bar-text" id="nodeModalTitle">Supernode Host Specifications</div>
+      <button class="win-btn" onclick="closeNodeDetailModal()">×</button>
+    </div>
+    <div style="background:#000; color:#38bdf8; font-family:var(--font-mono); font-size:10px; padding:10px; border:2px inset #808080; height:240px; overflow-y:auto; white-space:pre-wrap; user-select:text;" id="nodeModalContent">
+      Loading host specifications...
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+      <div style="display:flex; gap:6px;">
+        <button class="btn-win btn-primary" id="btnModalConnect" onclick="connectActiveModalNode()">🟢 Connect as Primary Hub</button>
+        <button class="btn-win" id="btnModalFiles" onclick="browseActiveModalFiles()">📂 Browse Hosted Modules</button>
+      </div>
+      <button class="btn-win" onclick="closeNodeDetailModal()">Close</button>
     </div>
   </div>
 </div>
@@ -1654,6 +1737,52 @@ const TRACK_CATALOG = [
     ch2FmLead: [4, 3, 2, 0, 5, 4, 3, 2, 6, 5, 4, 2, 3, 4, 5, 7],
     ch3Bass:   [0, 0, 4, 4, 2, 2, 3, 3, 0, 0, 4, 4, 2, 2, 3, 3],
     nfo: "Release: Gothic Dreams\\nTracker: Scream Tracker 3\\nChannels: 8\\nAtmospheric tracker masterpiece with gothic choir chords"
+  },
+  {
+    id: 'trk-09',
+    title: 'Lithospheric Carrier',
+    artist: 'Transponder Team',
+    group: 'Carlsbad Intranet',
+    format: 'TRK',
+    size: 215400,
+    sizeStr: '210 KB',
+    channels: 6,
+    bpm: 115,
+    speed: 6,
+    user: 'transponder@10.19.99.127',
+    line: 'Acoustic (1999Hz)',
+    lineSpeedKb: 24,
+    ping: 99,
+    hash: '7f999127ca0b4e11',
+    filename: 'lithospheric_carrier.trk',
+    scaleNotes: [55, 57, 60, 62, 65, 67, 70, 72],
+    ch1Melody: [0, 2, 3, 2, 4, 3, 2, 0, 5, 4, 3, 2, 0, 2, 3, 5],
+    ch2FmLead: [4, 5, 7, 5, 4, 2, 0, 2, 4, 5, 6, 5, 4, 2, 0, 2],
+    ch3Bass:   [0, 0, 2, 2, 4, 4, 1, 1, 0, 0, 2, 2, 4, 4, 1, 1],
+    nfo: "Release: Lithospheric Carrier\nEngine: Carlsbad Transponder Sound Engine\nChannels: 6\nAcoustic subterranean carrier wave decoded at Carlsbad Salt Node 0x7F"
+  },
+  {
+    id: 'trk-10',
+    title: 'Amiga Dreams Forever',
+    artist: 'Amiga Elite',
+    group: 'Sanity',
+    format: 'MOD',
+    size: 268900,
+    sizeStr: '262 KB',
+    channels: 4,
+    bpm: 126,
+    speed: 6,
+    user: 'elite@aachen.de',
+    line: 'ATM (34M)',
+    lineSpeedKb: 420,
+    ping: 48,
+    hash: '5566778899aabbcc',
+    filename: 'amiga_dreams.mod',
+    scaleNotes: [60, 62, 65, 67, 69, 72, 74, 77],
+    ch1Melody: [0, 2, 4, 3, 5, 4, 2, 0, 6, 5, 4, 2, 0, 2, 4, 5],
+    ch2FmLead: [4, 5, 6, 5, 4, 2, 0, 2, 5, 6, 7, 6, 5, 4, 2, 0],
+    ch3Bass:   [0, 0, 3, 3, 5, 5, 2, 2, 0, 0, 3, 3, 5, 5, 2, 2],
+    nfo: "Release: Amiga Dreams Forever\nTracker: ProTracker v3.15\nChannels: 4\nPaula stereo panning demoparty module"
   }
 ];
 
@@ -2344,8 +2473,25 @@ let dlInterval = setInterval(() => {
       dl.status = 'Completed';
       dl.progressPct = 100;
       const trk = TRACK_CATALOG.find(t => t.id === dl.id);
-      if (trk) generateAndSaveVfsModule(trk);
-      showToast('Download Complete: ' + dl.filename);
+      if (trk) {
+        generateAndSaveVfsModule(trk, 'both');
+        if (!myLibrary.some(m => m.title === trk.title)) {
+          myLibrary.unshift({
+            id: 'dl-' + trk.id + '-' + Date.now(),
+            title: trk.title,
+            format: trk.format,
+            sizeStr: trk.sizeStr,
+            channels: trk.channels,
+            shared: true,
+            uploads: 1,
+            hash: trk.hash
+          });
+          safeSet('trapster_library', myLibrary);
+          renderLibraryTable();
+        }
+      }
+      safeSet('trapster_active_dl', activeDownloads);
+      showToast('Download Complete & Saved (.mod & .trk) to /home/music/: ' + dl.filename);
     }
   });
 
@@ -2443,28 +2589,152 @@ function updateConnectionSpeed() {
   showToast('Simulated bandwidth updated to: ' + userSpeedKb.toFixed(1) + ' KB/s');
 }
 
-// Generate Module Binary and Save to VFS
-function generateAndSaveVfsModule(trk) {
-  // Construct standard 1999 MOD / TRK header bytes representation
-  let trackerHeader = `TRAPSTER-MOD-DUMP: ${trk.filename}\nArtist: ${trk.artist}\nBPM: ${trk.bpm}\nChannels: ${trk.channels}\nFormat: ${trk.format}\nCRC32: ${trk.hash}\n\n`;
-  trackerHeader += `[HEADER_SIG]: M.K. (4-channel ProTracker compatible)\n`;
+
+// Construct standard ProTracker .MOD header bytes dump
+function generateModContent(trk) {
+  let content = `TRAPSTER-MOD-DUMP: ${trk.filename}\n`;
+  content += `TITLE: ${trk.title}\n`;
+  content += `ARTIST: ${trk.artist}\n`;
+  content += `GROUP: ${trk.group || 'Demogroup'}\n`;
+  content += `CHANNELS: ${trk.channels}\n`;
+  content += `BPM: ${trk.bpm}\n`;
+  content += `SPEED: ${trk.speed || 6}\n`;
+  content += `FORMAT: ProTracker M.K. Compatible\n`;
+  content += `CRC32: ${trk.hash}\n\n`;
+  content += `[HEADER_SIG]: M.K. (Paula 8-bit DAC Standard)\n`;
   for (let s = 1; s <= 15; s++) {
-    trackerHeader += `SMP #${s.toString().padStart(2, '0')}: Instrument_${s} len: ${1024 * s} fine: 0 vol: 64\n`;
+    content += `SMP #${s.toString().padStart(2, '0')}: Inst_${s} len: ${1024 * s} fine: 0 vol: 64\n`;
   }
-  trackerHeader += `\n[PATTERN_DATA_STREAM]:\n`;
+  content += `\n[PATTERN_DATA_STREAM]:\n`;
   for (let r = 0; r < 32; r++) {
-    trackerHeader += `ROW_${r.toString().padStart(2, '0')}: ${trk.ch1Melody[r % 16]} | ${trk.ch2FmLead[r % 16]} | ${trk.ch3Bass[r % 16]} | FX:00\n`;
+    const n1 = trk.ch1Melody ? trk.ch1Melody[r % trk.ch1Melody.length] : 0;
+    const n2 = trk.ch2FmLead ? trk.ch2FmLead[r % trk.ch2FmLead.length] : 0;
+    const n3 = trk.ch3Bass ? trk.ch3Bass[r % trk.ch3Bass.length] : 0;
+    content += `ROW_${r.toString().padStart(2, '0')}: N${n1.toString().padStart(2, '0')} 01 F00 | N${n2.toString().padStart(2, '0')} 02 C40 | N${n3.toString().padStart(2, '0')} 03 000 | 00 00 000\n`;
   }
-  saveToKiloVfs('/home/music/' + trk.filename, trackerHeader);
+  return content;
 }
 
-function saveCurrentTrackToVfs() {
+// Construct Carlsbad .TRK native sound engine format
+function generateTrkContent(trk) {
+  let content = `[TRK_CARLSBAD_TRACKER_V1]\n`;
+  content += `TITLE: ${trk.title}\n`;
+  content += `ARTIST: ${trk.artist}\n`;
+  content += `GROUP: ${trk.group || 'Carlsbad Demogroup'}\n`;
+  content += `CHANNELS: ${trk.channels}\n`;
+  content += `BPM: ${trk.bpm}\n`;
+  content += `SPEED: ${trk.speed || 6}\n`;
+  content += `CHIP_SPEC: YM2612_2OP_FM + SPC700_STEREO_DELAY\n`;
+  content += `CRC32: ${trk.hash}\n\n`;
+  content += `[FM_OPERATOR_CONFIG]\n`;
+  content += `OP1_MULT=2.0 TL=42 AR=31 DR=12 SR=4 RR=6 SL=2\n`;
+  content += `OP2_MULT=1.0 TL=00 AR=31 DR=16 SR=6 RR=8 SL=4\n`;
+  content += `FEEDBACK=4 ALGORITHM=4\n\n`;
+  content += `[SPC_DELAY_CONFIG]\n`;
+  content += `TIME_MS=180 FEEDBACK=0.35 CUTOFF_HZ=2200 STEREO_SEP=0.8\n\n`;
+  content += `[PATTERN_00]\n`;
+  for (let r = 0; r < 32; r++) {
+    const m = trk.ch1Melody ? trk.ch1Melody[r % trk.ch1Melody.length] : 0;
+    const fm = trk.ch2FmLead ? trk.ch2FmLead[r % trk.ch2FmLead.length] : 0;
+    const b = trk.ch3Bass ? trk.ch3Bass[r % trk.ch3Bass.length] : 0;
+    content += `ROW_${r.toString().padStart(2, '0')}: N${m.toString().padStart(2, '0')} V64 | FM${fm.toString().padStart(2, '0')} V58 | B${b.toString().padStart(2, '0')} V64 | FX00 00\n`;
+  }
+  return content;
+}
+
+// Generate Module Binary / Text and Save to VFS
+function generateAndSaveVfsModule(trk, format) {
+  const baseName = trk.filename.replace(/\.[^/.]+$/, "");
+  if (format === 'trk' || trk.format === 'TRK') {
+    saveToKiloVfs('/home/music/' + baseName + '.trk', generateTrkContent(trk));
+  } else if (format === 'mod' || trk.format === 'MOD') {
+    saveToKiloVfs('/home/music/' + baseName + '.mod', generateModContent(trk));
+  } else if (format === 'both') {
+    saveToKiloVfs('/home/music/' + baseName + '.mod', generateModContent(trk));
+    saveToKiloVfs('/home/music/' + baseName + '.trk', generateTrkContent(trk));
+  } else {
+    const ext = trk.filename.split('.').pop().toLowerCase();
+    const content = (ext === 'trk') ? generateTrkContent(trk) : generateModContent(trk);
+    saveToKiloVfs('/home/music/' + trk.filename, content);
+  }
+}
+
+function saveCurrentTrackToVfs(fmt = 'both') {
   if (!currentTrack) {
     showToast('No active track loaded to save');
     return;
   }
-  generateAndSaveVfsModule(currentTrack);
+  generateAndSaveVfsModule(currentTrack, fmt);
 }
+
+function saveSelectedDirectVfs(fmt = 'both') {
+  const trk = TRACK_CATALOG.find(t => t.id === selectedTrackId);
+  if (!trk) {
+    showToast('Select a track from the results first');
+    return;
+  }
+  generateAndSaveVfsModule(trk, fmt);
+}
+
+function queueDemoPack() {
+  const demoTracks = TRACK_CATALOG.slice(0, 3);
+  let added = 0;
+  demoTracks.forEach(trk => {
+    if (!activeDownloads.some(d => d.id === trk.id)) {
+      activeDownloads.push({
+        id: trk.id,
+        title: trk.title,
+        filename: trk.filename,
+        format: trk.format,
+        size: trk.size,
+        sizeStr: trk.sizeStr,
+        bytesDownloaded: 0,
+        speedKb: Math.min(userSpeedKb, trk.lineSpeedKb),
+        status: 'Connecting...',
+        progressPct: 0,
+        paused: false,
+        startTime: Date.now()
+      });
+      added++;
+    }
+  });
+  safeSet('trapster_active_dl', activeDownloads);
+  updateTransfersDisplay();
+  showToast(`Queued ${added} demopack tracker modules in 56k queue`);
+  switchTab('tab-transfers');
+}
+
+function saveAllFinishedToVfs() {
+  const finished = activeDownloads.filter(d => d.status === 'Completed');
+  if (finished.length === 0) {
+    showToast('No completed downloads in queue to save');
+    return;
+  }
+  finished.forEach(dl => {
+    const trk = TRACK_CATALOG.find(t => t.id === dl.id);
+    if (trk) generateAndSaveVfsModule(trk, 'both');
+  });
+  showToast(`Saved ${finished.length} completed tracks (.mod & .trk) to /home/music/`);
+}
+
+function exportFmToKSynth() {
+  if (!currentTrack) {
+    showToast('No active track loaded to export');
+    return;
+  }
+  const patch = {
+    name: currentTrack.title + ' FM Lead',
+    carrier: { mult: 1.0, tl: 0, ar: 31, dr: 16 },
+    modulator: { mult: 2.0, tl: 42, ar: 31, dr: 12 },
+    feedback: 4,
+    algorithm: 4,
+    spcEcho: { delayMs: 180, feedback: 0.35, lpCutoff: 2200 }
+  };
+  saveToKiloVfs('/home/music/' + currentTrack.title.toLowerCase().replace(/ /g, '_') + '_patch.fm', JSON.stringify(patch, null, 2));
+  launchInExternalApp('KSynth');
+  showToast('Exported FM Patch to KSynth & /home/music/');
+}
+
 
 // Populate Simulated Leecher Upload Queue
 function initUploadsQueue() {
@@ -2649,8 +2919,12 @@ function renderLibraryTable() {
       <td><input type="checkbox" ${item.shared ? 'checked' : ''} onchange="toggleShareItem(${idx}, this.checked)"> Shared</td>
       <td>${item.uploads} peers</td>
       <td>
-        <button class="btn-win" style="font-size:9px;" onclick="saveToKiloVfs('/home/music/' + '${item.title.toLowerCase().replace(/ /g, '_')}.${item.format.toLowerCase()}', 'TRAPSTER_LIB_FILE')">💾 VFS</button>
-        <button class="btn-win" style="font-size:9px;" onclick="removeLibraryItem(${idx})">✖</button>
+        <div style="display:flex; gap:2px;">
+          <button class="btn-win" style="font-size:9px; padding:1px 3px;" onclick="saveToKiloVfs('/home/music/' + '${item.title.toLowerCase().replace(/ /g, '_')}.mod', generateModContent(item))">💾 .MOD</button>
+          <button class="btn-win" style="font-size:9px; padding:1px 3px;" onclick="saveToKiloVfs('/home/music/' + '${item.title.toLowerCase().replace(/ /g, '_')}.trk', generateTrkContent(item))">💾 .TRK</button>
+          <button class="btn-win btn-primary" style="font-size:9px; padding:1px 3px;" onclick="loadTrackIntoPlayer(TRACK_CATALOG.find(t => t.title === '${item.title}') || TRACK_CATALOG[0]); switchTab('tab-player'); playerTogglePlay();">▶</button>
+          <button class="btn-win" style="font-size:9px; padding:1px 3px;" onclick="removeLibraryItem(${idx})">✖</button>
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
@@ -2929,6 +3203,363 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
+
+// --- Master P2P Node & Supernode Directory ---
+const P2P_NODE_DIRECTORY = [
+  {
+    id: 'node-01',
+    host: 'rendezvous-01.kilonet',
+    ip: '198.41.0.12',
+    name: 'KiloNet Master Rendezvous',
+    location: 'Geneva / Backbone',
+    tier: 'academic',
+    line: 'OC-3 (155M)',
+    lineSpeedKb: 1400,
+    ping: 14,
+    peers: 512,
+    modules: 12480,
+    os: 'Solaris 7 / UltraSPARC-II 400MHz',
+    hops: ['198.41.0.1 (Gateway)', '198.41.0.12 (rendezvous-01)']
+  },
+  {
+    id: 'node-02',
+    host: 'mit-t1-relay.trapster',
+    ip: '18.178.0.44',
+    name: 'MIT Athena Media Lab',
+    location: 'Cambridge, MA',
+    tier: 'academic',
+    line: 'T1 (1.54M)',
+    lineSpeedKb: 180,
+    ping: 28,
+    peers: 340,
+    modules: 8420,
+    os: 'IRIX 6.5 / SGI O2 R10000',
+    hops: ['18.0.0.1 (MIT Gate)', '18.178.0.1 (Athena Core)', '18.178.0.44 (mit-t1-relay)']
+  },
+  {
+    id: 'node-03',
+    host: 'cmu-dorm-node.trapster',
+    ip: '128.2.14.8',
+    name: 'Carnegie Mellon Andrew Node',
+    location: 'Pittsburgh, PA',
+    tier: 'academic',
+    line: 'T1 (1.54M)',
+    lineSpeedKb: 180,
+    ping: 32,
+    peers: 285,
+    modules: 6910,
+    os: 'Debian 2.1 Slink / Dual Pentium III',
+    hops: ['128.2.1.1 (CMU Gate)', '128.2.14.1 (Dorm LAN)', '128.2.14.8 (cmu-dorm-node)']
+  },
+  {
+    id: 'node-04',
+    host: 'helsinki-mod-vault',
+    ip: '130.237.1.99',
+    name: 'University of Helsinki CS Hub',
+    location: 'Helsinki, Finland',
+    tier: 'demoscene',
+    line: '100M Fiber',
+    lineSpeedKb: 850,
+    ping: 58,
+    peers: 192,
+    modules: 14200,
+    os: 'Linux 2.2.12 / DEC AlphaStation 600',
+    hops: ['130.237.0.1 (FUNET)', '130.237.1.1 (CS Gate)', '130.237.1.99 (mod-vault)']
+  },
+  {
+    id: 'node-05',
+    host: 'chalmers-tracker-cache',
+    ip: '129.16.2.22',
+    name: 'Chalmers University Tracker Node',
+    location: 'Gothenburg, Sweden',
+    tier: 'demoscene',
+    line: 'Fast Ethernet (100M)',
+    lineSpeedKb: 650,
+    ping: 64,
+    peers: 178,
+    modules: 9840,
+    os: 'FreeBSD 3.2-RELEASE / Dual P-II 450',
+    hops: ['129.16.1.1 (SUNET)', '129.16.2.1 (Chalmers Gate)', '129.16.2.22 (tracker-cache)']
+  },
+  {
+    id: 'node-06',
+    host: 'stanford-dorm-t1',
+    ip: '171.64.12.5',
+    name: 'Stanford Sweet Hall Cluster',
+    location: 'Palo Alto, CA',
+    tier: 'academic',
+    line: 'T1 (1.54M)',
+    lineSpeedKb: 180,
+    ping: 35,
+    peers: 210,
+    modules: 5630,
+    os: 'SunOS 5.7 / SPARCstation 20',
+    hops: ['171.64.1.1 (BARRNet)', '171.64.12.1 (Sweet LAN)', '171.64.12.5 (dorm-t1)']
+  },
+  {
+    id: 'node-07',
+    host: 'future-crew-scene-hub',
+    ip: '193.65.112.5',
+    name: 'Future Crew Assembly Mirror',
+    location: 'Espoo, Finland',
+    tier: 'demoscene',
+    line: 'Cable (2.0M)',
+    lineSpeedKb: 240,
+    ping: 52,
+    peers: 160,
+    modules: 11200,
+    os: 'FreeBSD 3.1 / Dual Celeron 450',
+    hops: ['193.65.0.1 (EUNet)', '193.65.112.1 (FC Gateway)', '193.65.112.5 (scene-hub)']
+  },
+  {
+    id: 'node-08',
+    host: 'berklee-soundlab-node',
+    ip: '192.195.40.8',
+    name: 'Berklee College MIDI Soundlab',
+    location: 'Boston, MA',
+    tier: 'academic',
+    line: 'ISDN (128k)',
+    lineSpeedKb: 16,
+    ping: 75,
+    peers: 94,
+    modules: 3410,
+    os: 'Mac OS 8.6 / Power Mac G3 350',
+    hops: ['192.195.1.1 (Berklee Gate)', '192.195.40.1 (MIDI Net)', '192.195.40.8 (soundlab)']
+  },
+  {
+    id: 'node-09',
+    host: 'aachen-demoscene-relay',
+    ip: '137.226.11.4',
+    name: 'RWTH Aachen Party Relay',
+    location: 'Aachen, Germany',
+    tier: 'demoscene',
+    line: 'ATM (34M)',
+    lineSpeedKb: 380,
+    ping: 61,
+    peers: 142,
+    modules: 8120,
+    os: 'Linux 2.2.10 / AMD K6-2 450',
+    hops: ['137.226.1.1 (DFN Backbone)', '137.226.11.1 (Informatik Gate)', '137.226.11.4 (relay)']
+  },
+  {
+    id: 'node-10',
+    host: 'razor1999-secure-drop',
+    ip: '207.46.130.14',
+    name: 'Underground Courier Vault',
+    location: 'Amsterdam, NL',
+    tier: 'warez',
+    line: 'Dual ISDN (128k)',
+    lineSpeedKb: 16,
+    ping: 82,
+    peers: 88,
+    modules: 4350,
+    os: 'OpenBSD 2.5 / Crypto Engine',
+    hops: ['207.46.1.1 (AMS-IX)', '207.46.130.1 (Drop Proxy)', '207.46.130.14 (drop)']
+  },
+  {
+    id: 'node-11',
+    host: 'tokyo-shibuya-modnet',
+    ip: '210.140.10.88',
+    name: 'Tokyo WIDE Chiptune Exchange',
+    location: 'Shibuya, Tokyo',
+    tier: 'demoscene',
+    line: 'OC-12 (622M)',
+    lineSpeedKb: 1800,
+    ping: 115,
+    peers: 320,
+    modules: 9400,
+    os: 'FreeBSD 3.3 / Netra T1',
+    hops: ['210.140.0.1 (WIDE Project)', '210.140.10.1 (Tokyo Hub)', '210.140.10.88 (modnet)']
+  },
+  {
+    id: 'node-12',
+    host: 'carlsbad-salt-7f',
+    ip: '10.19.99.127',
+    name: 'Sector 7F Acoustic Subcarrier',
+    location: 'Carlsbad Salt Formation, NM',
+    tier: 'classified',
+    line: 'Acoustic Subcarrier @ 1999Hz',
+    lineSpeedKb: 8,
+    ping: 99,
+    peers: 100,
+    modules: 1999,
+    os: 'ECHO-OS v1.99 / Lithospheric Transponder',
+    hops: ['10.19.99.1 (Salt Gateway)', '10.19.99.7F (Subterranean Terminal)', '10.19.99.127 (salt-vault-7f)']
+  }
+];
+
+let activeModalNodeId = 'node-01';
+let currentSortNodeField = 'host';
+let currentSortNodeAsc = true;
+
+// Populate & Filter Searchable P2P Node Directory
+function filterNodeDirectory() {
+  const query = (document.getElementById('nodeSearchInput')?.value || '').toLowerCase().trim();
+  const tier = document.getElementById('nodeTierFilter')?.value || 'ALL';
+  const tbody = document.getElementById('topoHostsBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  let list = P2P_NODE_DIRECTORY.filter(n => {
+    const matchTier = (tier === 'ALL') || (n.tier === tier);
+    const matchQuery = !query ||
+      n.host.toLowerCase().includes(query) ||
+      n.ip.toLowerCase().includes(query) ||
+      n.name.toLowerCase().includes(query) ||
+      n.location.toLowerCase().includes(query) ||
+      n.line.toLowerCase().includes(query);
+    return matchTier && matchQuery;
+  });
+
+  list.forEach(n => {
+    const tr = document.createElement('tr');
+    const pingClass = n.ping < 40 ? 'ping-fast' : (n.ping < 80 ? 'ping-med' : 'ping-slow');
+    const tierClass = 'tier-' + n.tier;
+    tr.innerHTML = `
+      <td><strong>${n.host}</strong></td>
+      <td><code>${n.ip}</code></td>
+      <td><span class="tier-tag ${tierClass}">[${n.tier.toUpperCase()}]</span> ${n.location}</td>
+      <td>${n.line}</td>
+      <td>
+        <span class="ping-tag ${pingClass}" id="ping-badge-${n.id}">${n.ping}ms</span>
+        <button class="btn-win" style="font-size:8px; padding:0 3px;" onclick="pingNode('${n.id}')">📡</button>
+      </td>
+      <td>${n.peers}</td>
+      <td>${n.modules.toLocaleString()}</td>
+      <td>
+        <div style="display:flex; gap:3px;">
+          <button class="btn-win btn-primary" style="font-size:9px; padding:1px 4px;" onclick="connectNode('${n.id}')">🟢 Connect</button>
+          <button class="btn-win" style="font-size:9px; padding:1px 4px;" onclick="queryNodeFiles('${n.id}')">📂 Files</button>
+          <button class="btn-win" style="font-size:9px; padding:1px 4px;" onclick="showNodeDetails('${n.id}')">ℹ️ Info</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function sortNodes(field) {
+  if (currentSortNodeField === field) {
+    currentSortNodeAsc = !currentSortNodeAsc;
+  } else {
+    currentSortNodeField = field;
+    currentSortNodeAsc = true;
+  }
+  P2P_NODE_DIRECTORY.sort((a, b) => {
+    let va = a[field], vb = b[field];
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    if (va < vb) return currentSortNodeAsc ? -1 : 1;
+    if (va > vb) return currentSortNodeAsc ? 1 : -1;
+    return 0;
+  });
+  filterNodeDirectory();
+}
+
+function pingNode(nodeId) {
+  const node = P2P_NODE_DIRECTORY.find(n => n.id === nodeId);
+  if (!node) return;
+  const badge = document.getElementById('ping-badge-' + nodeId);
+  if (badge) badge.textContent = '...';
+  setTimeout(() => {
+    const jitter = Math.floor(Math.random() * 11) - 5;
+    node.ping = Math.max(8, node.ping + jitter);
+    filterNodeDirectory();
+    showToast(`Ping ${node.host}: ${node.ping}ms round-trip`);
+  }, 220);
+}
+
+function pingAllNodes() {
+  showToast('Pinging all 12 supernodes in swarm...');
+  P2P_NODE_DIRECTORY.forEach((n, idx) => {
+    setTimeout(() => {
+      const jitter = Math.floor(Math.random() * 11) - 5;
+      n.ping = Math.max(8, n.ping + jitter);
+      if (idx === P2P_NODE_DIRECTORY.length - 1) {
+        filterNodeDirectory();
+        showToast('All supernodes pinged. Swarm latency refreshed.');
+      }
+    }, idx * 40);
+  });
+}
+
+function connectNode(nodeId) {
+  const node = P2P_NODE_DIRECTORY.find(n => n.id === nodeId);
+  if (!node) return;
+  const lbl = document.getElementById('lblPrimaryHub');
+  if (lbl) lbl.textContent = node.host;
+  const sbServer = document.getElementById('sbServer');
+  if (sbServer) sbServer.textContent = `🟢 ${node.host}:6667`;
+  showToast(`Swarm Connected: Primary hub set to ${node.host} (${node.peers} peers)`);
+}
+
+function queryNodeFiles(nodeId) {
+  const node = P2P_NODE_DIRECTORY.find(n => n.id === nodeId);
+  if (!node) return;
+  switchTab('tab-search');
+  const input = document.getElementById('searchQuery');
+  if (input) {
+    input.value = node.tier === 'classified' ? 'carlsbad' : (node.tier === 'demoscene' ? 'amiga' : node.host.split('.')[0]);
+    executeSearch();
+  }
+  showToast(`Filtering tracker modules relayed by ${node.host}`);
+}
+
+function showNodeDetails(nodeId) {
+  const node = P2P_NODE_DIRECTORY.find(n => n.id === nodeId);
+  if (!node) return;
+  activeModalNodeId = nodeId;
+  document.getElementById('nodeModalTitle').textContent = `Supernode Specification: ${node.host}`;
+  let text = `===========================================================\n`;
+  text += `TRAPSTER P2P SUPERNODE HARDWARE SPECIFICATION (1999)\n`;
+  text += `===========================================================\n\n`;
+  text += `Hostname:       ${node.host}\n`;
+  text += `IP Address:     ${node.ip}\n`;
+  text += `Designation:    ${node.name}\n`;
+  text += `Location:       ${node.location}\n`;
+  text += `Network Tier:   ${node.tier.toUpperCase()}\n`;
+  text += `Line Bandwidth: ${node.line} (~${node.lineSpeedKb} KB/s capacity)\n`;
+  text += `Reported Ping:  ${node.ping} ms RTT (UDP ICMP Echo)\n`;
+  text += `Active Peers:   ${node.peers} concurrent tracker clients\n`;
+  text += `Modules Cached: ${node.modules.toLocaleString()} .mod / .xm / .s3m / .it / .trk files\n`;
+  text += `Architecture:   ${node.os}\n`;
+  text += `Daemon Version: Trapster P2P Core v1.0b (RFC-1999 / TCP 6667 / 6699)\n\n`;
+  text += `--- SIMULATED TRACEROUTE (TTL HOP MAP) ---\n`;
+  node.hops.forEach((hop, i) => {
+    text += ` [Hop ${i + 1}]  ${(12 + i * 8)}ms  ${hop}\n`;
+  });
+  text += `\nStatus: ONLINE & RELAYING. Swarm health 99.8%.`;
+  document.getElementById('nodeModalContent').textContent = text;
+  document.getElementById('nodeDetailModal').style.display = 'flex';
+}
+
+function closeNodeDetailModal() {
+  const m = document.getElementById('nodeDetailModal');
+  if (m) m.style.display = 'none';
+}
+
+function connectActiveModalNode() {
+  connectNode(activeModalNodeId);
+  closeNodeDetailModal();
+}
+
+function browseActiveModalFiles() {
+  closeNodeDetailModal();
+  queryNodeFiles(activeModalNodeId);
+}
+
+function exportNodeRosterVfs() {
+  let roster = `# TRAPSTER P2P SUPERNODE ROSTER v1.0b\n`;
+  roster += `# Generated: 1999-10-27 | Protocol: RFC-1999 P2P Mesh\n`;
+  roster += `# Hostname                   IP              LineSpeed        Ping   Peers  Modules\n`;
+  roster += `---------------------------------------------------------------------------------------\n`;
+  P2P_NODE_DIRECTORY.forEach(n => {
+    roster += `${n.host.padEnd(28)} ${n.ip.padEnd(15)} ${n.line.padEnd(16)} ${(n.ping + 'ms').padEnd(6)} ${n.peers.toString().padEnd(6)} ${n.modules}\n`;
+  });
+  saveToKiloVfs('/home/music/trapster_nodes.txt', roster);
+  showToast('Exported 12 supernode routing records to /home/music/trapster_nodes.txt');
+}
+
 // --- Initialization ---
 window.addEventListener('DOMContentLoaded', () => {
   renderSearchResults(searchResults);
@@ -2937,6 +3568,7 @@ window.addEventListener('DOMContentLoaded', () => {
   renderChatMessages();
   initTopologyCanvas();
   updateTransfersDisplay();
+  filterNodeDirectory();
   const initialTrack = TRACK_CATALOG[0];
   loadTrackIntoPlayer(initialTrack);
 });

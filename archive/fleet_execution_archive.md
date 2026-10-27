@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T06:20:31-07:00 — kilo-tester: KMystery (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 156.8 KB, native 39.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.29%, HEAD Δ 0.28%, 0 fail, 0 warn, 7.9s)).
+  - Rebalanced hour budgets to Easy 18h / Medium 20h / Hard 22h and fixed advanceTime/AdvanceTime to finish action and permit Accuse [A] at 0h.
+  - Fixed resetScannerFreq to restore moves=12 and clamped current >= 0; added Reset [R] to KMystery/main.c.
+  - Wired dead spawnShockwave to clue/scanner/lie/win events, muted rain/sfx in toggleMusic, and routed WM_KEYDOWN in Win32 message loop.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-27T05:34:45-07:00 — kilo-soundscape: KAlchemy (The Hermetic Transmutation — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 271.3 KB, native 69.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.52%, 0 fail, 0 warn, 7.5s)).
   - Composition: D Dorian / F Lydian modal progression, 6-channel counterpoint, 3rd/7th shell voicings, 5:3 swing groove.
