@@ -814,14 +814,30 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         <span id="collab-btn-label">Collab<span class="btn-hint">[O]</span></span>
       </button>
-      <button class="btn btn-accent" onclick="document.getElementById('img-loader').click()" title="Import Image (Ctrl+O)" aria-label="Import Image">
+      <button class="btn btn-accent" onclick="openVFS()" title="Open Image from OS / Disk (Ctrl+O)" aria-label="Open Image">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-        Import<span class="btn-hint">[Ctrl+O]</span>
+        Open<span class="btn-hint">[Ctrl+O]</span>
       </button>
       <button class="btn btn-accent" onclick="saveVFS()" title="Save to OS (Ctrl+S)" aria-label="Save to OS">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
         Save<span class="btn-hint">[Ctrl+S]</span>
       </button>
+      <button class="btn" onclick="saveAsVFS()" title="Save As to OS (Ctrl+Shift+S)" aria-label="Save As to OS">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline></svg>
+        Save As<span class="btn-hint">[⇧S]</span>
+      </button>
+      <div style="display: flex; align-items: center; gap: 4px;">
+        <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Size:</span>
+        <select id="canvas-size-preset" onchange="applyCanvasPreset(this.value)" aria-label="Canvas Size Preset" style="background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--panel-border); border-radius: 4px; padding: 2px 4px; font-size: 11px;">
+          <option value="" disabled selected>Preset...</option>
+          <option value="32x32">32 x 32 (Icon)</option>
+          <option value="64x64">64 x 64 (Sprite)</option>
+          <option value="128x128">128 x 128 (Tile)</option>
+          <option value="320x240">320 x 240 (CGA/QVGA)</option>
+          <option value="640x480">640 x 480 (VGA)</option>
+          <option value="800x600">800 x 600 (SVGA)</option>
+        </select>
+      </div>
       <button class="btn btn-accent" onclick="quickSave()" title="Quicksave Snapshot (F5)" aria-label="Quicksave Snapshot">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
         QSave<span class="btn-hint">[F5]</span>
@@ -867,7 +883,7 @@
     </div>
   </div>
 
-  <input type="file" id="img-loader" style="display:none" accept="image/*,.pcx,.bmp,.tga" onchange="importImage(event)">
+  <input type="file" id="img-loader" style="display:none" accept="image/*,.pcx,.bmp,.tga,.json" onchange="importImage(event)">
 
   <!-- Help Modal Dialog -->
   <div id="help-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" onclick="handleBackdropClick(event)">
@@ -914,6 +930,7 @@
           <div class="shortcut-item"><kbd>F5</kbd><span>Quicksave Snapshot</span></div>
           <div class="shortcut-item"><kbd>F9</kbd><span>Quickload Snapshot</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>S</kbd><span>Save to OS / File</span></div>
+          <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd><span>Save As to VFS</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>O</kbd><span>Open Image (.PNG/.PCX/.BMP)</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>G</kbd><span>Toggle Pixel Grid</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Z</kbd><span>Undo</span></div>
@@ -1107,7 +1124,8 @@
       </div>
       <div class="modal-footer" style="justify-content: space-between; align-items: center;">
         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-          <button class="btn btn-accent" onclick="downloadAnsiFile()" title="Download raw .ANS file for BBS terminals">💾 Download .ANS</button>
+          <button class="btn btn-accent" onclick="saveAnsiToVFS()" title="Direct export to KiloOS VFS (/home/bbs/)">💾 Save to VFS (/home/bbs/)</button>
+          <button class="btn" onclick="downloadAnsiFile()" title="Download raw .ANS file for BBS terminals">💾 Download .ANS</button>
           <button class="btn" onclick="downloadAnsiTextFile()" title="Download plain text .TXT file">📄 Download .TXT</button>
           <button class="btn" onclick="copyAnsiToClipboard()" title="Copy ANSI escape sequence text to clipboard">📋 Copy ANSI</button>
         </div>
@@ -1285,6 +1303,19 @@
           </div>
         </div>
 
+        <!-- Canvas Size Presets -->
+        <div>
+          <div class="section-title">Canvas Size Presets</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+            <button class="btn" onclick="applyCanvasPreset('32x32')" title="Resize Canvas to 32x32 (Pixel Icon)">32 x 32</button>
+            <button class="btn" onclick="applyCanvasPreset('64x64')" title="Resize Canvas to 64x64 (Sprite)">64 x 64</button>
+            <button class="btn" onclick="applyCanvasPreset('128x128')" title="Resize Canvas to 128x128 (Game Tile)">128 x 128</button>
+            <button class="btn" onclick="applyCanvasPreset('320x240')" title="Resize Canvas to 320x240 (QVGA / Retro)">320 x 240</button>
+            <button class="btn" onclick="applyCanvasPreset('640x480')" title="Resize Canvas to 640x480 (VGA Standard)">640 x 480</button>
+            <button class="btn" onclick="applyCanvasPreset('800x600')" title="Resize Canvas to 800x600 (SVGA Default)">800 x 600</button>
+          </div>
+        </div>
+
         <!-- Canvas Transforms -->
         <div>
           <div class="section-title">Canvas Transform</div>
@@ -1363,7 +1394,8 @@
               <input type="checkbox" id="chk-onion-skin" onchange="toggleOnionSkin(this.checked)">
               🧅 Onion Skin
             </label>
-            <button class="btn btn-accent" onclick="exportSpriteSheet()" title="Stitch all frames into horizontal Sprite Sheet PNG">🖼️ Sheet PNG</button>
+            <button class="btn btn-accent" onclick="saveSpriteSheetToVFS()" title="Direct export Sprite Sheet to KiloOS VFS (/home/pictures/)">🖼️ VFS Sheet</button>
+            <button class="btn" onclick="exportSpriteSheet()" title="Stitch all frames into horizontal Sprite Sheet PNG">🖼️ Sheet PNG</button>
             <button class="btn" onclick="toggleAnimationDock()" style="padding: 2px 7px;">✕</button>
           </div>
         </div>
@@ -2787,6 +2819,25 @@
       if (e.target.id === 'ansi-modal') closeAnsiModal();
     }
 
+    async function saveAnsiToVFS() {
+      if (!currentAnsiText) return;
+      const fileName = 'ansi_' + Date.now().toString().slice(-6) + '.ans';
+      const path = `/home/bbs/${fileName}`;
+      try {
+        if (window.parent !== window) {
+          await sendToOS({ type: 'VFS_WRITE', path, data: currentAnsiText });
+          try {
+            window.parent.postMessage({ type: 'OS_NOTIFY', title: 'KPaint Pro', message: `Exported ANSI Art to ${path}` }, '*');
+          } catch (_) {}
+          showToast(`Exported to VFS: ${path}`);
+        } else {
+          downloadAnsiFile();
+        }
+      } catch (e) {
+        downloadAnsiFile();
+      }
+    }
+
     function downloadAnsiFile() {
       const blob = new Blob([currentAnsiText], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
@@ -3269,6 +3320,47 @@
 
       retroAudio.play('shape');
       showToast(`Exported ${count}-frame horizontal Sprite Sheet PNG + JSON metadata!`);
+    }
+
+    async function saveSpriteSheetToVFS() {
+      captureCurrentCanvasToFrame(currentAnimFrameIdx);
+      if (animFrames.length === 0) return;
+      const fw = canvas.width;
+      const fh = canvas.height;
+      const count = animFrames.length;
+
+      const sheet = document.createElement('canvas');
+      sheet.width = fw * count;
+      sheet.height = fh;
+      const sctx = sheet.getContext('2d');
+
+      const tempC = document.createElement('canvas');
+      tempC.width = fw;
+      tempC.height = fh;
+      const tctx = tempC.getContext('2d');
+
+      animFrames.forEach((frame, idx) => {
+        tctx.putImageData(frame.data, 0, 0);
+        sctx.drawImage(tempC, idx * fw, 0);
+      });
+
+      const url = sheet.toDataURL('image/png');
+      const fileName = `spritesheet_${Date.now().toString().slice(-6)}.png`;
+      const path = `/home/pictures/${fileName}`;
+
+      try {
+        if (window.parent !== window) {
+          await sendToOS({ type: 'VFS_WRITE', path, data: url });
+          try {
+            window.parent.postMessage({ type: 'OS_NOTIFY', title: 'KPaint Pro', message: `Exported sprite sheet to ${path}` }, '*');
+          } catch (_) {}
+          showToast(`Exported Sprite Sheet to VFS: ${path}`);
+        } else {
+          exportSpriteSheet();
+        }
+      } catch (e) {
+        exportSpriteSheet();
+      }
     }
 
     // Communication with KiloOS
@@ -4850,6 +4942,21 @@
       showToast(`Transformed canvas (${action}).`);
     }
 
+    function applyCanvasPreset(val) {
+      if (!val) return;
+      const parts = val.split('x');
+      if (parts.length !== 2) return;
+      const w = parseInt(parts[0], 10);
+      const h = parseInt(parts[1], 10);
+      if (isNaN(w) || isNaN(h) || w <= 0 || h <= 0) return;
+      resizeCanvas(w, h);
+      saveState();
+      retroAudio.play('shape');
+      showToast(`Canvas resized to ${w}x${h}`);
+      const sel = document.getElementById('canvas-size-preset');
+      if (sel) sel.value = '';
+    }
+
     function resizeCanvas(w, h) {
       layers.forEach(l => {
         const dt = l.ctx.getImageData(0, 0, l.canvas.width, l.canvas.height);
@@ -4861,6 +4968,7 @@
       previewCanvas.height = h;
       selCanvas.width = w;
       selCanvas.height = h;
+
       const onionCanvas = document.getElementById('onion-canvas');
       if (onionCanvas) {
         onionCanvas.width = w;
@@ -4868,6 +4976,50 @@
         onionCanvas.style.width = Math.round(w * currentZoom) + 'px';
         onionCanvas.style.height = Math.round(h * currentZoom) + 'px';
       }
+
+      const gridCanvas = document.getElementById('grid-canvas');
+      if (gridCanvas) {
+        gridCanvas.width = w;
+        gridCanvas.height = h;
+        gridCanvas.style.width = Math.round(w * currentZoom) + 'px';
+        gridCanvas.style.height = Math.round(h * currentZoom) + 'px';
+        updatePixelGrid();
+      }
+
+      if (animFrames && animFrames.length > 0) {
+        animFrames.forEach(frame => {
+          if (frame && frame.data) {
+            const temp = document.createElement('canvas');
+            temp.width = w;
+            temp.height = h;
+            const tctx = temp.getContext('2d');
+            const oldW = frame.width || frame.data.width;
+            const oldH = frame.height || frame.data.height;
+            const oldCanvas = document.createElement('canvas');
+            oldCanvas.width = oldW;
+            oldCanvas.height = oldH;
+            oldCanvas.getContext('2d').putImageData(frame.data, 0, 0);
+            tctx.drawImage(oldCanvas, 0, 0);
+
+            frame.data = tctx.getImageData(0, 0, w, h);
+            frame.width = w;
+            frame.height = h;
+
+            const thumbCanvas = document.createElement('canvas');
+            thumbCanvas.width = 48;
+            thumbCanvas.height = 36;
+            const thctx = thumbCanvas.getContext('2d');
+            thctx.imageSmoothingEnabled = false;
+            thctx.drawImage(temp, 0, 0, 48, 36);
+            frame.thumb = thumbCanvas.toDataURL('image/png');
+          }
+        });
+        if (animDockOpen) {
+          renderAnimFrameStrip();
+          updateOnionSkin();
+        }
+      }
+
       applyZoom();
       document.getElementById('lbl-dim').innerText = `${w} x ${h}`;
       updateBrushSettings();
@@ -4918,9 +5070,78 @@
       }
     }
 
+    function dataToArrayBuffer(data) {
+      if (data instanceof ArrayBuffer) return data;
+      if (ArrayBuffer.isView(data)) return data.buffer;
+      if (typeof data !== 'string') return null;
+      let base64 = data.trim();
+      const commaIdx = base64.indexOf(',');
+      if (commaIdx >= 0 && base64.slice(0, commaIdx).includes('base64')) {
+        base64 = base64.slice(commaIdx + 1);
+      }
+      try {
+        const binStr = atob(base64);
+        const len = binStr.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binStr.charCodeAt(i);
+        }
+        return bytes.buffer;
+      } catch (_) {
+        const len = data.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = data.charCodeAt(i) & 0xff;
+        }
+        return bytes.buffer;
+      }
+    }
+
+    function loadJsonPayload(payload, name = 'JSON Sprite') {
+      if (!payload) return;
+      if (payload.dataUrl) {
+        const img = new Image();
+        img.onload = () => {
+          if (img.width > 4096 || img.height > 4096) {
+            showToast("Image exceeds maximum dimensions (4096x4096).", 4000);
+            return;
+          }
+          if (img.width !== layers[0].canvas.width || img.height !== layers[0].canvas.height) {
+            resizeCanvas(img.width, img.height);
+          }
+          ctx.drawImage(img, 0, 0);
+          saveState();
+          retroAudio.play('shape');
+          showToast(`Loaded ${name} (${img.width}x${img.height})!`);
+        };
+        img.src = payload.dataUrl;
+      } else if (payload.width && payload.height && payload.layers) {
+        resizeCanvas(payload.width, payload.height);
+        saveState();
+        showToast(`Loaded JSON canvas structure (${payload.width}x${payload.height})!`);
+      } else {
+        showToast(`Unrecognized JSON sprite format in ${name}`, 3500);
+      }
+    }
+
     function importImage(e) {
       const file = e.target.files[0];
       if (!file) return;
+
+      if (file.name.toLowerCase().endsWith('.json')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const payload = JSON.parse(event.target.result);
+            loadJsonPayload(payload, file.name);
+          } catch (err) {
+            showToast(`Failed to parse JSON sprite: ${err.message}`, 4000);
+          }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+        return;
+      }
 
       if (file.name.toLowerCase().endsWith('.tga')) {
         const reader = new FileReader();
@@ -4992,6 +5213,46 @@
       e.target.value = '';
     }
 
+    async function openVFS() {
+      try {
+        if (window.parent === window) {
+          document.getElementById('img-loader').click();
+          return;
+        }
+        const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
+        if (res && res.path) {
+          await loadVFSFile(res.path);
+        } else if (!res) {
+          document.getElementById('img-loader').click();
+        }
+      } catch (e) {
+        document.getElementById('img-loader').click();
+      }
+    }
+
+    async function saveAsVFS() {
+      if (window.parent === window) {
+        exportImage('png');
+        showToast("Saved image locally (standalone mode)!");
+        return;
+      }
+      showToast("Save As to KiloOS...", 2000);
+      try {
+        const res = await sendToOS({ type: 'VFS_SHOW_SAVE' });
+        if (!res || !res.path) return;
+        currentVfsPath = res.path.endsWith('.png') ? res.path : res.path + '.png';
+        const data = getCompositedCanvas().toDataURL('image/png');
+        await sendToOS({ type: 'VFS_WRITE', path: currentVfsPath, data });
+        try {
+          window.parent.postMessage({ type: 'OS_NOTIFY', title: 'KPaint Pro', message: `Saved ${currentVfsPath} to VFS` }, '*');
+        } catch (_) {}
+        showToast(`Saved as ${currentVfsPath} to KiloOS!`);
+      } catch (err) {
+        exportImage('png');
+        showToast("Saved image locally!");
+      }
+    }
+
     // Save Logic with Standalone Timeout Fallback
     async function saveVFS() {
       showToast("Saving to KiloOS...", 2000);
@@ -5011,6 +5272,9 @@
           }
           const data = getCompositedCanvas().toDataURL('image/png');
           await sendToOS({ type: 'VFS_WRITE', path: currentVfsPath, data });
+          try {
+            window.parent.postMessage({ type: 'OS_NOTIFY', title: 'KPaint Pro', message: `Saved ${currentVfsPath} to VFS` }, '*');
+          } catch (_) {}
           return true;
         })();
         
@@ -6437,10 +6701,14 @@
           togglePixelGrid();
         } else if (e.key === 's' || e.key === 'S') {
           e.preventDefault();
-          saveVFS();
+          if (e.shiftKey) {
+            saveAsVFS();
+          } else {
+            saveVFS();
+          }
         } else if (e.key === 'o' || e.key === 'O') {
           e.preventDefault();
-          document.getElementById('img-loader').click();
+          openVFS();
         }
       } else if (!e.altKey) {
         const k = e.key.toLowerCase();
@@ -6536,7 +6804,57 @@
     async function loadVFSFile(path) {
       currentVfsPath = path;
       const res = await sendToOS({ type: 'VFS_READ', path });
-      if (res && res.data) {
+      if (!res || res.data == null) {
+        showToast(`Could not read ${path} from VFS`, 3500);
+        return;
+      }
+      const data = res.data;
+      const ext = (path.split('.').pop() || '').toLowerCase();
+
+      try {
+        if (ext === 'json' || (typeof data === 'string' && data.trim().startsWith('{') && !data.startsWith('data:'))) {
+          const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+          loadJsonPayload(parsed, path);
+          return;
+        }
+
+        if (ext === 'pcx') {
+          const buf = dataToArrayBuffer(data);
+          if (buf) {
+            const imgData = decodePCX(buf);
+            if (imgData.width > 4096 || imgData.height > 4096) throw new Error("PCX dimensions exceed 4096");
+            if (imgData.width !== layers[0].canvas.width || imgData.height !== layers[0].canvas.height) {
+              resizeCanvas(imgData.width, imgData.height);
+            }
+            ctx.putImageData(imgData, 0, 0);
+            saveState();
+            retroAudio.play('shape');
+            showToast(`Opened PCX from VFS: ${path} (${imgData.width}x${imgData.height})`);
+            return;
+          }
+        }
+
+        if (ext === 'tga') {
+          const buf = dataToArrayBuffer(data);
+          if (buf) {
+            const imgData = decodeTGA(buf);
+            if (imgData.width > 4096 || imgData.height > 4096) throw new Error("TGA dimensions exceed 4096");
+            if (imgData.width !== layers[0].canvas.width || imgData.height !== layers[0].canvas.height) {
+              resizeCanvas(imgData.width, imgData.height);
+            }
+            ctx.putImageData(imgData, 0, 0);
+            saveState();
+            retroAudio.play('shape');
+            showToast(`Opened TGA from VFS: ${path} (${imgData.width}x${imgData.height})`);
+            return;
+          }
+        }
+
+        let src = data;
+        if (typeof data === 'string' && !data.startsWith('data:')) {
+          if (ext === 'bmp') src = `data:image/bmp;base64,${data}`;
+          else src = `data:image/png;base64,${data}`;
+        }
         const img = new Image();
         img.onload = () => {
           if (img.width > 4096 || img.height > 4096) {
@@ -6548,9 +6866,15 @@
           }
           ctx.drawImage(img, 0, 0);
           saveState();
-          showToast(`Opened ${path}`);
+          retroAudio.play('shape');
+          showToast(`Opened ${path} (${img.width}x${img.height})`);
         };
-        img.src = res.data;
+        img.onerror = () => {
+          showToast(`Failed to parse image from ${path}`, 3500);
+        };
+        img.src = src;
+      } catch (err) {
+        showToast(`Error opening ${path}: ${err.message}`, 4000);
       }
     }
   </script>

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KMaze
   kilo_usability: KColosseum
   kilo_qa: KSys
-  kilo_expander: KPaint
+  kilo_expander: KStarForge
   kilo_review: KChart
 virtual_web_target: kweb://demoscene
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KGraph
-  timestamp: '2026-10-28T09:22:19-07:00'
+  agent: kilo-expander
+  app: KPaint
+  timestamp: '2026-10-28T09:40:35-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -188,11 +188,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KPaint`
+- **Active Target**: `KStarForge`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open (VFS_SHOW_OPEN -> VFS_READ supporting PNG/BMP/PCX/TGA/JSON with standalone #img-loader fallback), Save As VFS (Ctrl+Shift+S + OS_NOTIFY), and direct VFS export for .ANS (/home/bbs/) in #ansi-modal and Sprite Sheet (/home/pictures/) in #animation-dock; add Canvas Size presets (32x32, 64x64, 128x128, 320x240, 640x480, 800x600) calling resizeCanvas() + saveState() (syncing animFrames/#onion-canvas/#grid-canvas) with matching canvas size preset parity in KPaint/main.c. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmech_telemetry.json via postMessage with standalone fallback) into #modal-telemetry and add optional RFMS online mech duel behind an explicit Multiplayer Arena button. |
@@ -207,6 +206,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kcolosseum_ludus.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback) in #exportModal plus VFS export of Battle Chronicles and orphaned exportGladiatorCertificate() dossiers to /home/docs/ via VFS_WRITE and OS_NOTIFY; render the orphaned Arena Wager bar (#btnWager0, #btnWager25, #btnWager50, #btnWager100, #wagerOddsDisplay calling setArenaWager()) and settle payouts/forfeits on solo match completion, add Certificate button on owned gladiator cards, and add Ludus Facilities [U] and Arena Wager parity to KColosseum/main.c. |
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
+| `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open (VFS_SHOW_OPEN -> VFS_READ supporting PNG/BMP/PCX/TGA/JSON with standalone #img-loader fallback), Save As VFS (Ctrl+Shift+S + OS_NOTIFY), and direct VFS export for .ANS (/home/bbs/) in #ansi-modal and Sprite Sheet (/home/pictures/) in #animation-dock; add Canvas Size presets (32x32, 64x64, 128x128, 320x240, 640x480, 800x600) calling resizeCanvas() + saveState() (syncing animFrames/#onion-canvas/#grid-canvas) with matching canvas size preset parity in KPaint/main.c. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KChart`
@@ -312,6 +312,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-28T09:40:35-07:00 — kilo-expander: KPaint (KPaint VFS Open/Save As, Direct ANSI/Sprite Exports & Canvas Size Parity)**
+  - Status: PASS ✅ (0 errors, web 269.7 KB, native 41.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Wired VFS Open (PNG/BMP/PCX/TGA/JSON with fallback), Save As (Ctrl+Shift+S + OS_NOTIFY), direct VFS exports for .ANS (/home/bbs/) & Sprite Sheets (/home/pictures/).
+  - Added Canvas Size presets (32x32, 64x64, 128x128, 320x240, 640x480, 800x600) syncing animFrames/#onion-canvas/#grid-canvas with matching Win32 C parity.
+  - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-review`.
+
 - **2026-10-28T09:22:19-07:00 — kilo-qa: KGraph (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KGraph across web and native targets.
@@ -331,8 +337,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-28T01:31:38-07:00 — kilo-graphics: KMech (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement already integrated for KMech.
   - Handoff: Advanced `kilo-graphics` to `KSanctuary`; rotated active agent to `kilo-tester`.
-
-- **2026-10-28T01:23:18-07:00 — kilo-creator: kweb://geocities (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-creator updates for kweb://geocities across web and native targets.
-  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.

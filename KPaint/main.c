@@ -18,6 +18,8 @@ HBITMAP hbmCanvas = NULL;
 int lastX = 0, lastY = 0;
 HPEN hPen = NULL;
 HBRUSH hBrush = NULL;
+int canvasWidth = 800;
+int canvasHeight = 600;
 
 COLORREF curColor = RGB(0,0,0);
 COLORREF curColorSec = RGB(255,255,255);
@@ -51,6 +53,7 @@ HWND hBtnEdge, hBtnSharpen, hBtnEmboss, hBtnDither, hBtnScanlines;
 HWND hBtnSepia, hBtnCGA, hBtnExportC;
 HWND hBtnGameBoy, hBtnPixelize, hBtnSolarize, hBtnExportPPM, hBtnSwapColor, hBtnSignalArt;
 HWND hBtnExportPCX, hBtnExportXBM;
+HWND hBtnPreset32, hBtnPreset64, hBtnPreset128, hBtnPreset320, hBtnPreset640, hBtnPreset800;
 int mirrorMode = 0; // 0 = Normal, 1 = Horizontal Mirror
 
 HFONT hFont = NULL;
@@ -66,6 +69,8 @@ typedef struct {
     int brushShape;
     int currentTool;
     int mirrorMode;
+    int canvasWidth;
+    int canvasHeight;
 } KPaintQuickState;
 
 void PushUndo();
@@ -73,6 +78,7 @@ void PerformUndo();
 void PerformRedo();
 void UpdatePen();
 void UpdateTitleStatus(HWND hwnd);
+void ResizeCanvas(HWND hwnd, int newW, int newH);
 void GenerateDemoArtwork(HWND hwnd);
 void GenerateSignalArtwork(HWND hwnd);
 void FilterDither1Bit();
@@ -113,11 +119,38 @@ void UpdatePen() {
     }
 }
 
+void ResizeCanvas(HWND hwnd, int newW, int newH) {
+    if (newW <= 0 || newH <= 0) return;
+    PushUndo();
+    canvasWidth = newW;
+    canvasHeight = newH;
+
+    if (scrollX > max(0, canvasWidth - 100)) scrollX = 0;
+    if (scrollY > max(0, canvasHeight - 100)) scrollY = 0;
+
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+    SCROLLINFO si = {0};
+    si.cbSize = sizeof(SCROLLINFO);
+    si.fMask = SIF_RANGE | SIF_PAGE;
+    si.nMin = 0;
+    si.nMax = max(0, canvasHeight - 1);
+    si.nPage = rc.bottom;
+    SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+    si.nMax = max(0, canvasWidth - 1);
+    si.nPage = max(0, rc.right - 130);
+    SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
+
+    UpdateTitleStatus(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
 void UpdateTitleStatus(HWND hwnd) {
     const char* toolNames[] = {"Brush", "Line", "Rect", "Circle", "Spray", "Eraser", "Fill", "Pick"};
     const char* toolName = (currentTool >= 0 && currentTool <= 7) ? toolNames[currentTool] : "Brush";
     char title[320];
-    wsprintfA(title, "KPaint Pro - %s | %dpx (%s) | FG:#%02X%02X%02X BG:#%02X%02X%02X [X swap] | Mirror: %s | F5 QSave, F9 QLoad",
+    wsprintfA(title, "KPaint Pro [%dx%d] - %s | %dpx (%s) | FG:#%02X%02X%02X BG:#%02X%02X%02X [X swap] | Mirror: %s | F5 QSave, F9 QLoad",
+        canvasWidth, canvasHeight,
         toolName, curSize, brushShape ? "Square" : "Round",
         GetRValue(curColor), GetGValue(curColor), GetBValue(curColor),
         GetRValue(curColorSec), GetGValue(curColorSec), GetBValue(curColorSec),
@@ -997,26 +1030,27 @@ int SaveBitmap(const char* path, HBITMAP hbm) {
     HDC hdc = GetDC(NULL);
     BITMAPINFOHEADER bi = {0};
     bi.biSize = sizeof(BITMAPINFOHEADER);
-    bi.biWidth = 2000;
-    bi.biHeight = 2000;
+    bi.biWidth = canvasWidth;
+    bi.biHeight = canvasHeight;
     bi.biPlanes = 1;
     bi.biBitCount = 24;
     bi.biCompression = BI_RGB;
 
-    DWORD dwBmpSize = ((2000 * 24 + 31) / 32) * 4 * 2000;
+    DWORD dwBmpSize = ((canvasWidth * 24 + 31) / 32) * 4 * canvasHeight;
     HANDLE hDIB = GlobalAlloc(GHND, dwBmpSize);
     if (!hDIB) { ReleaseDC(NULL, hdc); return 0; }
     char* lpbitmap = (char*)GlobalLock(hDIB);
     if (!lpbitmap) { GlobalFree(hDIB); ReleaseDC(NULL, hdc); return 0; }
     
     HDC tempDC = CreateCompatibleDC(hdc);
-    HBITMAP tempBmp = CreateCompatibleBitmap(hdc, 2000, 2000);
+    HBITMAP tempBmp = CreateCompatibleBitmap(hdc, canvasWidth, canvasHeight);
     HBITMAP hOld = (HBITMAP)SelectObject(tempDC, tempBmp);
-    RECT tr = {0,0,2000,2000}; FillRect(tempDC, &tr, (HBRUSH)GetStockObject(WHITE_BRUSH));
-    BitBlt(tempDC, 0, 0, 2000, 2000, hdcMem, 0, 0, SRCCOPY);
+    RECT tr = {0, 0, canvasWidth, canvasHeight};
+    FillRect(tempDC, &tr, (HBRUSH)GetStockObject(WHITE_BRUSH));
+    BitBlt(tempDC, 0, 0, canvasWidth, canvasHeight, hdcMem, 0, 0, SRCCOPY);
     SelectObject(tempDC, hOld);
     
-    GetDIBits(hdc, tempBmp, 0, 2000, lpbitmap, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+    GetDIBits(hdc, tempBmp, 0, canvasHeight, lpbitmap, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
 
     int success = 0;
     HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -1057,6 +1091,9 @@ void LoadBitmapFile(HWND hwnd, const char* path) {
         SelectObject(hdcTemp, hOld);
         DeleteDC(hdcTemp);
         DeleteObject(hLoaded);
+        canvasWidth = bmp.bmWidth;
+        canvasHeight = bmp.bmHeight;
+        UpdateTitleStatus(hwnd);
         InvalidateRect(hwnd, NULL, FALSE);
     } else {
         MessageBoxA(hwnd, "Could not open BMP image file.", "KPaint Error", MB_OK | MB_ICONERROR);
@@ -1076,6 +1113,8 @@ void QuicksaveState(HWND hwnd) {
     st.brushShape = brushShape;
     st.currentTool = currentTool;
     st.mirrorMode = mirrorMode;
+    st.canvasWidth = canvasWidth;
+    st.canvasHeight = canvasHeight;
 
     HANDLE hFile = CreateFileA(QUICKSAVE_DAT, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -1116,6 +1155,10 @@ void QuickloadState(HWND hwnd) {
                 brushShape = st.brushShape;
                 currentTool = st.currentTool;
                 mirrorMode = st.mirrorMode;
+                if (st.canvasWidth > 0 && st.canvasHeight > 0) {
+                    canvasWidth = st.canvasWidth;
+                    canvasHeight = st.canvasHeight;
+                }
                 UpdatePen();
                 if (hBtnMirror) SetWindowTextA(hBtnMirror, mirrorMode ? "Mirror ON" : "Mirror [M]");
             }
@@ -1420,6 +1463,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnSignalArt = CreateWindowA("BUTTON", "Signal '99", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 663, 58, 22, hwnd, (HMENU)307, NULL, NULL);
             hBtnExportPCX = CreateWindowA("BUTTON", "PCX (24b)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 688, 58, 22, hwnd, (HMENU)521, NULL, NULL);
             hBtnExportXBM = CreateWindowA("BUTTON", "XBM (1b)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 688, 58, 22, hwnd, (HMENU)522, NULL, NULL);
+            hBtnPreset32 = CreateWindowA("BUTTON", "32x32", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 712, 58, 20, hwnd, (HMENU)901, NULL, NULL);
+            hBtnPreset64 = CreateWindowA("BUTTON", "64x64", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 712, 58, 20, hwnd, (HMENU)902, NULL, NULL);
+            hBtnPreset128 = CreateWindowA("BUTTON", "128x128", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 734, 58, 20, hwnd, (HMENU)903, NULL, NULL);
+            hBtnPreset320 = CreateWindowA("BUTTON", "320x240", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 734, 58, 20, hwnd, (HMENU)904, NULL, NULL);
+            hBtnPreset640 = CreateWindowA("BUTTON", "640x480", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 756, 58, 20, hwnd, (HMENU)905, NULL, NULL);
+            hBtnPreset800 = CreateWindowA("BUTTON", "800x600", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 756, 58, 20, hwnd, (HMENU)906, NULL, NULL);
 
             HWND controls[] = {
                 hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue, hBtnYellow, hBtnPurple, hBtnCustomColor,
@@ -1428,6 +1477,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 hBtnInvert, hBtnGray, hBtnBright, hBtnDark, hBtnFlipH, hBtnFlipV, hBtnRotate90, hBtnRotateCCW,
                 hBtnEdge, hBtnSharpen, hBtnEmboss, hBtnDither, hBtnScanlines, hBtnSepia, hBtnCGA, hBtnExportC,
                 hBtnUndo, hBtnRedo, hBtnOpen, hBtnSave, hBtnQuickSave, hBtnQuickLoad, hBtnClear, hBtnHelp, hBtnDemoArt,
+                hBtnPreset32, hBtnPreset64, hBtnPreset128, hBtnPreset320, hBtnPreset640, hBtnPreset800,
                 hBtnGameBoy, hBtnPixelize, hBtnSolarize, hBtnExportPPM, hBtnSwapColor, hBtnSignalArt,
                 hBtnExportPCX, hBtnExportXBM
             };
@@ -1572,6 +1622,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (id == 520) { ExportPPM(hwnd); }
             if (id == 521) { ExportPCX(hwnd); }
             if (id == 522) { ExportXBM(hwnd); }
+            if (id == 901) { ResizeCanvas(hwnd, 32, 32); }
+            if (id == 902) { ResizeCanvas(hwnd, 64, 64); }
+            if (id == 903) { ResizeCanvas(hwnd, 128, 128); }
+            if (id == 904) { ResizeCanvas(hwnd, 320, 240); }
+            if (id == 905) { ResizeCanvas(hwnd, 640, 480); }
+            if (id == 906) { ResizeCanvas(hwnd, 800, 600); }
+            if (id == 308) { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(302, 0), 0); }
 
             if (id == 304) { GenerateDemoArtwork(hwnd); }
             if (id == 307) { GenerateSignalArtwork(hwnd); }
@@ -1948,7 +2005,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             GetClientRect(hwnd, &r);
             RECT sidebar = {0, 0, 130, r.bottom};
             FillRect(hdc, &sidebar, (HBRUSH)(COLOR_BTNFACE + 1));
-            BitBlt(hdc, 130, 0, r.right - 130, r.bottom, hdcMem, scrollX, scrollY, SRCCOPY);
+
+            int pasteX = 130 + canvasWidth - scrollX;
+            int pasteY = canvasHeight - scrollY;
+            if (pasteX < r.right) {
+                RECT bgR = {max(130, pasteX), 0, r.right, r.bottom};
+                FillRect(hdc, &bgR, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+            }
+            if (pasteY < r.bottom) {
+                RECT bgB = {130, max(0, pasteY), r.right, r.bottom};
+                FillRect(hdc, &bgB, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+            }
+
+            int bltW = min(r.right - 130, max(0, canvasWidth - scrollX));
+            int bltH = min(r.bottom, max(0, canvasHeight - scrollY));
+            if (bltW > 0 && bltH > 0) {
+                BitBlt(hdc, 130, 0, bltW, bltH, hdcMem, scrollX, scrollY, SRCCOPY);
+            }
             EndPaint(hwnd, &ps);
             break;
         }
@@ -1957,9 +2030,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             si.cbSize = sizeof(SCROLLINFO);
             si.fMask = SIF_RANGE | SIF_PAGE;
             si.nMin = 0;
-            si.nMax = 1999;
+            si.nMax = max(0, canvasHeight - 1);
             si.nPage = HIWORD(lParam);
             SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+            si.nMax = max(0, canvasWidth - 1);
             si.nPage = max(0, LOWORD(lParam) - 130);
             SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
             break;
@@ -1973,7 +2047,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (action == SB_THUMBTRACK || action == SB_THUMBPOSITION) scrollY = HIWORD(wParam);
             RECT rc;
             GetClientRect(hwnd, &rc);
-            int maxScrollY = max(0, 2000 - rc.bottom);
+            int maxScrollY = max(0, canvasHeight - rc.bottom);
             if (scrollY < 0) scrollY = 0;
             if (scrollY > maxScrollY) scrollY = maxScrollY;
             SetScrollPos(hwnd, SB_VERT, scrollY, TRUE);
@@ -1990,7 +2064,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT rc;
             GetClientRect(hwnd, &rc);
             int visibleW = max(1, rc.right - 130);
-            int maxScrollX = max(0, 2000 - visibleW);
+            int maxScrollX = max(0, canvasWidth - visibleW);
             if (scrollX < 0) scrollX = 0;
             if (scrollX > maxScrollX) scrollX = maxScrollX;
             SetScrollPos(hwnd, SB_HORZ, scrollX, TRUE);
@@ -2032,7 +2106,17 @@ void __stdcall MainEntry() {
     RegisterClassA(&wc);
     RECT wr = {0, 0, 1140, 780};
     AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN, FALSE);
-    HWND hwnd = CreateWindowExA(0, "KPaintClass", "KPaint Pro - Press F1 or H for Help", WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, wc.hInstance, NULL);
+    HMENU hMenuBar = CreateMenu();
+    HMENU hSizeMenu = CreatePopupMenu();
+    AppendMenuA(hSizeMenu, MF_STRING, 901, "32 x 32 (Icon)");
+    AppendMenuA(hSizeMenu, MF_STRING, 902, "64 x 64 (Sprite)");
+    AppendMenuA(hSizeMenu, MF_STRING, 903, "128 x 128 (Tile)");
+    AppendMenuA(hSizeMenu, MF_STRING, 904, "320 x 240 (QVGA / CGA)");
+    AppendMenuA(hSizeMenu, MF_STRING, 905, "640 x 480 (VGA)");
+    AppendMenuA(hSizeMenu, MF_STRING, 906, "800 x 600 (SVGA)");
+    AppendMenuA(hMenuBar, MF_POPUP, (UINT_PTR)hSizeMenu, "&Canvas Size");
+
+    HWND hwnd = CreateWindowExA(0, "KPaintClass", "KPaint Pro - Press F1 or H for Help", WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, hMenuBar, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
@@ -2075,7 +2159,11 @@ void __stdcall MainEntry() {
                     InvalidateRect(hwnd, NULL, FALSE);
                     continue;
                 } else if (wParam == 'S' || wParam == 's') {
-                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(302, 0), 0);
+                    if (GetKeyState(VK_SHIFT) & 0x8000) {
+                        SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(308, 0), 0);
+                    } else {
+                        SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(302, 0), 0);
+                    }
                     continue;
                 } else if (wParam == 'O' || wParam == 'o') {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(303, 0), 0);

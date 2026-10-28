@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-28T01:23:18-07:00 — kilo-creator: kweb://geocities (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-creator updates for kweb://geocities across web and native targets.
+  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-28T00:33:58-07:00 — kilo-review: KPaint (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 1140x743 sheet.png and audited kpaint.html + KPaint/main.c; un-quarantined from Mature).
   - Visual/UX Findings: Color Palette and Layers are 100% scrolled off-screen on boot at 1140x743; updateCollabUI()/RetroAudioEngine.toggle() clobber .btn-hint; clearCanvasPrompt() uses blocking confirm().
