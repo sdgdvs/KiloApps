@@ -209,12 +209,12 @@ void CheckFirstRunTutorial(HWND hwnd) {
         const char* tut = 
             "=== Welcome to KDB Studio ===\r\n\r\n"
             "Quick Reference:\r\n"
-            "  • [F1] / [H]      : Help & Keyboard Shortcuts\r\n"
-            "  • [F5]           : Quicksave database snapshot\r\n"
-            "  • [F9]           : Quickload database snapshot\r\n"
-            "  • [/] or Ctrl+F  : Search and query records\r\n"
-            "  • [A]            : Analytics & Headcount distribution\r\n"
-            "  • [Enter]        : Add employee record / [Del]: Delete\r\n\r\n"
+            "  - [F1] / [H]      : Help & Keyboard Shortcuts\r\n"
+            "  - [F5]           : Quicksave database snapshot\r\n"
+            "  - [F9]           : Quickload database snapshot\r\n"
+            "  - [/] or Ctrl+F  : Search and query records\r\n"
+            "  - [A]            : Analytics & Headcount distribution\r\n"
+            "  - [Enter]        : Add employee record / [Del]: Delete\r\n\r\n"
             "Click OK to begin.";
         MessageBoxA(hwnd, tut, "KDB Studio Welcome Guide", MB_OK | MB_ICONINFORMATION);
     }
@@ -696,14 +696,14 @@ void ExportMarkdown(HWND hwnd) {
             }
 
             char buf[512];
-            const char* title = "# 📁 KDB Employee Directory & Analytics Report\r\n\r\n## 📊 Executive Summary\r\n";
+            const char* title = "# [DOC] KDB Employee Directory & Analytics Report\r\n\r\n## [STATS] Executive Summary\r\n";
             WriteFile(hFile, title, lstrlenA(title), &w, NULL);
 
             wsprintfA(buf, "- **Total Active Records**: %d\r\n- **Departments**: %d\r\n- **Next Suggested ID**: %d\r\n\r\n",
                 data_count, dept_total, maxId > 0 ? (maxId + 1) : (data_count + 101));
             WriteFile(hFile, buf, lstrlenA(buf), &w, NULL);
 
-            const char* deptHdr = "## 🏢 Department Breakdown\r\n\r\n| Department | Headcount |\r\n| :--- | :--- |\r\n";
+            const char* deptHdr = "##  Department Breakdown\r\n\r\n| Department | Headcount |\r\n| :--- | :--- |\r\n";
             WriteFile(hFile, deptHdr, lstrlenA(deptHdr), &w, NULL);
 
             for (int d = 0; d < dept_total; d++) {
@@ -711,7 +711,7 @@ void ExportMarkdown(HWND hwnd) {
                 WriteFile(hFile, buf, lstrlenA(buf), &w, NULL);
             }
 
-            const char* rosterHdr = "\r\n## 👥 Employee Roster\r\n\r\n| ID | Full Name | Department | Role |\r\n| :--- | :--- | :--- | :--- |\r\n";
+            const char* rosterHdr = "\r\n##  Employee Roster\r\n\r\n| ID | Full Name | Department | Role |\r\n| :--- | :--- | :--- | :--- |\r\n";
             WriteFile(hFile, rosterHdr, lstrlenA(rosterHdr), &w, NULL);
 
             for (int i = 0; i < data_count; i++) {
@@ -780,12 +780,12 @@ void ShowStats(HWND hwnd) {
 
     char msg[2048];
     char temp[128];
-    wsprintfA(msg, "📊 KDB Database Analytics & Metrics\r\n\r\nTotal Employees: %d\r\nDepartments: %d\r\nNext Suggested ID: %d\r\n\r\nDepartment Headcount Breakdown:\r\n",
+    wsprintfA(msg, "[STATS] KDB Database Analytics & Metrics\r\n\r\nTotal Employees: %d\r\nDepartments: %d\r\nNext Suggested ID: %d\r\n\r\nDepartment Headcount Breakdown:\r\n",
         data_count, dept_total, maxId > 0 ? (maxId + 1) : (data_count + 101));
 
     for (int d = 0; d < dept_total; d++) {
         int pct = data_count > 0 ? ((dept_counts[d] * 100) / data_count) : 0;
-        wsprintfA(temp, "  • %s: %d (%d%%)\r\n", depts[d], dept_counts[d], pct);
+        wsprintfA(temp, "  - %s: %d (%d%%)\r\n", depts[d], dept_counts[d], pct);
         if (lstrlenA(msg) + lstrlenA(temp) + 128 < (int)sizeof(msg)) {
             lstrcatA(msg, temp);
         }
@@ -801,32 +801,32 @@ void ShowHelpDialog(HWND hwnd) {
     const char* helpText = 
         "=== KDB Employee Database & Analytics ===\r\n\r\n"
         "[Keyboard Shortcuts & Accelerators]\r\n"
-        "  • F1 / H        : Show this Help & Shortcuts guide\r\n"
-        "  • F5            : Quicksave database snapshot\r\n"
-        "  • F9            : Quickload database snapshot\r\n"
-        "  • / or Ctrl+F   : Jump to & Focus Search / Query field\r\n"
-        "  • Ctrl+N        : Jump to Add Employee fields\r\n"
-        "  • A / Alt+A     : Department Analytics & Metrics\r\n"
-        "  • E / Alt+E     : Export Database as CSV file\r\n"
-        "  • I / Alt+I     : Import records from CSV file\r\n"
-        "  • J / Alt+J     : Export Database as JSON file\r\n"
-        "  • O / Alt+O     : Import records from JSON file\r\n"
-        "  • M / Alt+M     : Export Markdown (.md) Directory Report\r\n"
-        "  • L / Alt+L     : Reload database from storage\r\n"
-        "  • Esc           : Clear search query\r\n"
-        "  • Enter         : Submit in Add fields, focus table in search\r\n"
-        "  • Del           : Delete selected employee record\r\n\r\n"
+        "  - F1 / H        : Show this Help & Shortcuts guide\r\n"
+        "  - F5            : Quicksave database snapshot\r\n"
+        "  - F9            : Quickload database snapshot\r\n"
+        "  - / or Ctrl+F   : Jump to & Focus Search / Query field\r\n"
+        "  - Ctrl+N        : Jump to Add Employee fields\r\n"
+        "  - A / Alt+A     : Department Analytics & Metrics\r\n"
+        "  - E / Alt+E     : Export Database as CSV file\r\n"
+        "  - I / Alt+I     : Import records from CSV file\r\n"
+        "  - J / Alt+J     : Export Database as JSON file\r\n"
+        "  - O / Alt+O     : Import records from JSON file\r\n"
+        "  - M / Alt+M     : Export Markdown (.md) Directory Report\r\n"
+        "  - L / Alt+L     : Reload database from storage\r\n"
+        "  - Esc           : Clear search query\r\n"
+        "  - Enter         : Submit in Add fields, focus table in search\r\n"
+        "  - Del           : Delete selected employee record\r\n\r\n"
         "[Query & Search Syntax]\r\n"
-        "  • dept:eng      : Filter by department substring\r\n"
-        "  • role:lead     : Filter by role substring\r\n"
-        "  • name:alice    : Filter by employee name\r\n"
-        "  • id>102        : Employee ID greater than 102\r\n"
-        "  • id<105        : Employee ID less than 105\r\n"
-        "  • Multi-term    : Supports space-separated query terms\r\n\r\n"
+        "  - dept:eng      : Filter by department substring\r\n"
+        "  - role:lead     : Filter by role substring\r\n"
+        "  - name:alice    : Filter by employee name\r\n"
+        "  - id>102        : Employee ID greater than 102\r\n"
+        "  - id<105        : Employee ID less than 105\r\n"
+        "  - Multi-term    : Supports space-separated query terms\r\n\r\n"
         "[Features & Controls]\r\n"
-        "  • Double-click any record to populate fields for editing\r\n"
-        "  • Click any column header to sort Ascending / Descending\r\n"
-        "  • Enter a Key in the Crypto box to auto-encrypt your database.";
+        "  - Double-click any record to populate fields for editing\r\n"
+        "  - Click any column header to sort Ascending / Descending\r\n"
+        "  - Enter a Key in the Crypto box to auto-encrypt your database.";
     MessageBoxA(hwnd, helpText, "KDB Help & Reference Guide", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -1038,23 +1038,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 }
 
-                int dup = 0;
+                int existingIdx = -1;
                 for (int i = 0; i < data_count; i++) {
                     if (lstrcmpiA(data[i].id, newId) == 0) {
-                        dup = 1;
+                        existingIdx = i;
                         break;
                     }
                 }
-                if (dup) {
-                    MessageBoxA(hwnd, "An employee record with this ID already exists.", "Duplicate ID", MB_OK | MB_ICONWARNING);
-                    break;
-                }
 
-                lstrcpynA(data[data_count].id, newId, sizeof(data[data_count].id));
-                lstrcpynA(data[data_count].name, newName, sizeof(data[data_count].name));
-                lstrcpynA(data[data_count].dept, newDept, sizeof(data[data_count].dept));
-                lstrcpynA(data[data_count].role, newRole, sizeof(data[data_count].role));
-                data_count++;
+                if (existingIdx != -1) {
+                    lstrcpynA(data[existingIdx].name, newName, sizeof(data[existingIdx].name));
+                    lstrcpynA(data[existingIdx].dept, newDept, sizeof(data[existingIdx].dept));
+                    lstrcpynA(data[existingIdx].role, newRole, sizeof(data[existingIdx].role));
+                } else {
+                    if (data_count >= MAX_RECORDS) {
+                        MessageBoxA(hwnd, "Database capacity limit reached (200 records).", "Database Full", MB_OK | MB_ICONWARNING);
+                        break;
+                    }
+                    lstrcpynA(data[data_count].id, newId, sizeof(data[data_count].id));
+                    lstrcpynA(data[data_count].name, newName, sizeof(data[data_count].name));
+                    lstrcpynA(data[data_count].dept, newDept, sizeof(data[data_count].dept));
+                    lstrcpynA(data[data_count].role, newRole, sizeof(data[data_count].role));
+                    data_count++;
+                }
 
                 if (g_sortCol >= 0) SortRecords(g_sortCol, g_sortAsc);
                 SaveDataToFile();

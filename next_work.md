@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://geocities
   kilo_graphics: KMech
   kilo_soundscape: KStellar
-  kilo_tester: KDB
+  kilo_tester: KMaze
   kilo_usability: KDB
   kilo_qa: KRead
   kilo_expander: KQuest
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KStellar
-  timestamp: '2026-10-27T22:14:35-07:00'
+  agent: kilo-tester
+  app: KDB
+  timestamp: '2026-10-27T22:38:32-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -132,11 +132,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KDB`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | **[ARGON REVIEW]:** Implement missing nextRecordId(tbl) (reusing it for #statNextId) and fix confirmSeedData() schema/PK fields (employees id/status/email, departments code/head, projects id/priority); replace undefined renderTable() with renderAll() in addNewColumnToTable()/dropColumnFromTable() while initializing default values and purging dropped-column indexes/relations; fix Profile [P] (analyzeColumnProfile, cleanTrimWhitespace, exportProfilerReport) to read string column names in tbl.columns and dbState.activeTable instead of col.id/tbl.id; apply ORDER BY and LIMIT after GROUP BY/aggregates in executeSelectSql() with getFieldValue() and numeric-aware MIN/MAX; add e.origin check, implement parseAndInsertCsv() for VFS CSV open, use 60s timeout for VFS_SHOW_OPEN with standalone exportToVfs()/exportCsvToVfs() fallbacks, and encrypt kdb_quicksave when #dbPassword is set; in KDB/main.c allow IDC_ADD_BTN to update existing records after NM_DBLCLK edit and replace UTF-8 bullets/emoji in MessageBoxA strings with ASCII. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -150,6 +149,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Wire all 4 dead Potemkin ludusFacilities perks in combatAction(), enterArena(), enterOnlineDuel(), and startSoloFallbackDuel() (armory +8/+16/+25% weapon dmg, banquet +10/+20/+30% starting crowdFavor, scriptorium +8/+16/+24% crit rate, shrine 12/24/36% fatal-blow survival at 1 HP in checkPlayerDeath()); call recordReplayRound() on every solo combat action, pass damageDealt to recordBattleStats(), and record/save flee outcomes; enable [W] hotkey for solo warcry with once-per-bout playerRallied guard, persist g.stance in getSavePayload(), reset ludusFacilities and currentArenaWager in resetLudus(), apply infirmary discount in updateUI()/healGladiator(), trigger immediate victory on fatal Shield Bash counter in kcolosseum.html and KColosseum/main.c, and route WM_KEYDOWN (including [T] Stats) in KColosseum/main.c GetMessageA loop. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Give each sector distinct hex/ASCII bytes in cmdDump(), wire filter arg in cmdCodebook(filter), add .line-dim CSS rule for VFS_READ_DONE, and pad codebook table columns in KMatrix/main.c. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | **[ARGON REVIEW]:** Fix executePipeline(true) to decrypt #pipelineFinalOutput back to plaintext and parse stage.key (p,q,e) for RSA stages; fix #btnLoadLoreToWorkbench to load lore.ciphertext into #outputText and runDecrypt() into #inputText; fix #statTotalChars to use (outText // inText).length; and include aesKey/aesFormat/rsaP/rsaQ/rsaE/pipelineStages/stegoText in #btnExportJSON, #btnImportJSON, and #btnNewSession. |
+| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | **[ARGON REVIEW]:** Implement missing nextRecordId(tbl) (reusing it for #statNextId) and fix confirmSeedData() schema/PK fields (employees id/status/email, departments code/head, projects id/priority); replace undefined renderTable() with renderAll() in addNewColumnToTable()/dropColumnFromTable() while initializing default values and purging dropped-column indexes/relations; fix Profile [P] (analyzeColumnProfile, cleanTrimWhitespace, exportProfilerReport) to read string column names in tbl.columns and dbState.activeTable instead of col.id/tbl.id; apply ORDER BY and LIMIT after GROUP BY/aggregates in executeSelectSql() with getFieldValue() and numeric-aware MIN/MAX; add e.origin check, implement parseAndInsertCsv() for VFS CSV open, use 60s timeout for VFS_SHOW_OPEN with standalone exportToVfs()/exportCsvToVfs() fallbacks, and encrypt kdb_quicksave when #dbPassword is set; in KDB/main.c allow IDC_ADD_BTN to update existing records after NM_DBLCLK edit and replace UTF-8 bullets/emoji in MessageBoxA strings with ASCII. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KDB`
@@ -310,6 +310,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T22:38:32-07:00 — kilo-tester: KDB (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 228.3 KB, native 66.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - UI & VFS Audit: Handlers verified for VFS, Profiler [P], Columns [S], Seeds, and Quicksave encryption.
+  - Repairs: nextRecordId() implemented, confirmSeedData() schemas fixed, renderAll() restored, Profile string columns fixed, SQL GROUP BY ORDER/LIMIT/MIN/MAX fixed, VFS 60s timeout/parseAndInsertCsv/origin check added, and C IDC_ADD_BTN edit + ASCII MessageBoxA applied.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-27T22:14:35-07:00 — kilo-graphics: KStellar (4X Stellar Empire Map Visuals & Glint Sweep)**
   - Status: PASS ✅ (0 errors, web 195.6 KB, native 157.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.7%, 0 fail, 0 warn, 6.9s)).
   - Verified spectral class star rendering, orbital ringworlds, and roaming fleet ship icons.
@@ -331,9 +337,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Runtime Fix: Moved `const [vfs, setVfs]` above `playClickAudio`/`playStartupAudio` in `KiloOS/src/App.jsx` to fix the TDZ `ReferenceError: Cannot access 'w' before initialization` blank screen on boot.
   - Deploy Pipeline Fix: Replaced `javascript:` URI with `href='#'` + `onclick` in `KiloOS/public/web/webring.html` to unblock `security_lint.py` in Firebase Hosting CI/CD.
   - Bumped `MICROS_VERSION` and `KiloOS/package.json` to `0.4.36`; preserved scheduled frontmatter (`kilo-creator` -> `kweb://demoscene`).
-
-- **2026-10-27T20:34:15-07:00 — kilo-review: KDB (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1020x663 and audited kdb.html + KDB/main.c).
-  - Visual/UX Findings: #toastContainer (bottom 38px) occludes #addRecordForm inputs and Add Record wraps to 2 lines; dark <select> dropdowns lack color-scheme dark; ER diagram SVG paths loop bottom-to-top through side-by-side cards and ignore window resize; #sqlResultsHead lacks click-to-sort.
-  - Feature/Parity Findings: confirmSeedData() crashes on missing nextRecordId() and omits PKs; Columns [S] crashes on missing renderTable(); Profile [P] reads col.id on string columns (100% missing / 0-cell trim); VFS CSV lacks parseAndInsertCsv() and 60s modal timeout; SQL GROUP BY skips ORDER BY/LIMIT; KDB/main.c blocks double-click edits and has UTF-8 MessageBoxA mojibake.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KDB`, `kilo-usability`->`KDB`] (un-quarantined `KDB` from Mature); advanced `kilo-review` to `KPaint`; next agent `kilo-creator`.

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T20:34:15-07:00 — kilo-review: KDB (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1020x663 and audited kdb.html + KDB/main.c).
+  - Visual/UX Findings: #toastContainer (bottom 38px) occludes #addRecordForm inputs and Add Record wraps to 2 lines; dark <select> dropdowns lack color-scheme dark; ER diagram SVG paths loop bottom-to-top through side-by-side cards and ignore window resize; #sqlResultsHead lacks click-to-sort.
+  - Feature/Parity Findings: confirmSeedData() crashes on missing nextRecordId() and omits PKs; Columns [S] crashes on missing renderTable(); Profile [P] reads col.id on string columns (100% missing / 0-cell trim); VFS CSV lacks parseAndInsertCsv() and 60s modal timeout; SQL GROUP BY skips ORDER BY/LIMIT; KDB/main.c blocks double-click edits and has UTF-8 MessageBoxA mojibake.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KDB`, `kilo-usability`->`KDB`] (un-quarantined `KDB` from Mature); advanced `kilo-review` to `KPaint`; next agent `kilo-creator`.
+
 - **2026-10-27T20:23:17-07:00 — kilo-expander: KColosseum (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KColosseum across web and native targets.

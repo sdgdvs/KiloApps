@@ -3443,19 +3443,47 @@ function executeSelectSql(sql) {
             });
             outRow[p.colName] = count > 0 ? (sum / count).toFixed(2) : 0;
           } else if (p.aggFunc === 'MIN') {
-            const vals = groupRows.map(r => r[p.aggArg]).filter(v => v !== undefined && v !== null);
-            outRow[p.colName] = vals.length > 0 ? vals.sort()[0] : 'NULL';
+            const vals = groupRows.map(r => getFieldValue(r, p.aggArg)).filter(v => v !== undefined && v !== null && v !== 'NULL');
+            if (vals.length === 0) {
+              outRow[p.colName] = 'NULL';
+            } else {
+              const allNumeric = vals.every(v => {
+                const s = String(v).replace(/[^0-9.-]/g, '');
+                return s !== '' && !isNaN(Number(s));
+              });
+              if (allNumeric) {
+                outRow[p.colName] = vals.reduce((min, cur) => {
+                  const nCur = parseFloat(String(cur).replace(/[^0-9.-]/g, ''));
+                  const nMin = parseFloat(String(min).replace(/[^0-9.-]/g, ''));
+                  return nCur < nMin ? cur : min;
+                });
+              } else {
+                outRow[p.colName] = vals.slice().sort()[0];
+              }
+            }
           } else if (p.aggFunc === 'MAX') {
-            const vals = groupRows.map(r => r[p.aggArg]).filter(v => v !== undefined && v !== null);
-            outRow[p.colName] = vals.length > 0 ? vals.sort().reverse()[0] : 'NULL';
+            const vals = groupRows.map(r => getFieldValue(r, p.aggArg)).filter(v => v !== undefined && v !== null && v !== 'NULL');
+            if (vals.length === 0) {
+              outRow[p.colName] = 'NULL';
+            } else {
+              const allNumeric = vals.every(v => {
+                const s = String(v).replace(/[^0-9.-]/g, '');
+                return s !== '' && !isNaN(Number(s));
+              });
+              if (allNumeric) {
+                outRow[p.colName] = vals.reduce((max, cur) => {
+                  const nCur = parseFloat(String(cur).replace(/[^0-9.-]/g, ''));
+                  const nMax = parseFloat(String(max).replace(/[^0-9.-]/g, ''));
+                  return nCur > nMax ? cur : max;
+                });
+              } else {
+                outRow[p.colName] = vals.slice().sort().reverse()[0];
+              }
+            }
           }
         } else {
           const first = groupRows[0];
-          let v = first[p.rawExpr];
-          if (v === undefined) v = first[p.rawExpr.toLowerCase()];
-          if (v === undefined && p.rawExpr.includes('.')) {
-            v = first[p.rawExpr.split('.')[1]];
-          }
+          let v = getFieldValue(first, p.rawExpr);
           outRow[p.colName] = v !== undefined ? v : (groupByCol && (p.rawExpr === groupByCol || p.colName === groupByCol) ? gKey : 'NULL');
         }
       });
@@ -3464,18 +3492,27 @@ function executeSelectSql(sql) {
     });
 
     rows = groupResultRows;
+    if (orderByCol) {
+      rows.sort((a, b) => {
+        let vA = getFieldValue(a, orderByCol);
+        let vB = getFieldValue(b, orderByCol);
+        const nA = parseFloat(String(vA || '').replace(/[^0-9.-]/g, ''));
+        const nB = parseFloat(String(vB || '').replace(/[^0-9.-]/g, ''));
+        if (!isNaN(nA) && !isNaN(nB)) return orderDir === 'ASC' ? (nA - nB) : (nB - nA);
+        const cmp = String(vA || '').localeCompare(String(vB || ''));
+        return orderDir === 'ASC' ? cmp : -cmp;
+      });
+    }
+    if (limitCount) {
+      rows = rows.slice(0, limitCount);
+    }
     return { columns: outputCols, rows, message: `${rows.length} rows (Aggregated/GROUP BY)` };
   }
 
   if (orderByCol) {
     rows.sort((a, b) => {
-      let vA = a[orderByCol];
-      if (vA === undefined) vA = a[orderByCol.toLowerCase()];
-      if (vA === undefined && orderByCol.includes('.')) vA = a[orderByCol.split('.')[1]];
-
-      let vB = b[orderByCol];
-      if (vB === undefined) vB = b[orderByCol.toLowerCase()];
-      if (vB === undefined && orderByCol.includes('.')) vB = b[orderByCol.split('.')[1]];
+      let vA = getFieldValue(a, orderByCol);
+      let vB = getFieldValue(b, orderByCol);
 
       const nA = parseFloat(String(vA || '').replace(/[^0-9.-]/g, ''));
       const nB = parseFloat(String(vB || '').replace(/[^0-9.-]/g, ''));
@@ -4422,15 +4459,13 @@ function addNewColumnToTable() {
   }
   const defaultVal = defInput ? defInput.value.trim() : '';
   tbl.columns.push(rawCol);
-  if (defaultVal) {
-    tbl.records.forEach(r => {
-      if (r[rawCol] === undefined || r[rawCol] === null) {
-        r[rawCol] = defaultVal;
-      }
-    });
-  }
+  tbl.records.forEach(r => {
+    if (r[rawCol] === undefined || r[rawCol] === null) {
+      r[rawCol] = defaultVal;
+    }
+  });
   saveDatabase();
-  renderTable();
+  renderAll();
   renderSchemaColumnsList();
   nameInput.value = '';
   if (defInput) defInput.value = '';
@@ -4451,8 +4486,15 @@ function dropColumnFromTable(col) {
   tbl.records.forEach(r => {
     delete r[col];
   });
+  const actTable = dbState.activeTable;
+  if (dbState.indexes) {
+    dbState.indexes = dbState.indexes.filter(i => !(i.table.toLowerCase() === actTable.toLowerCase() && i.column.toLowerCase() === col.toLowerCase()));
+  }
+  if (dbState.relations) {
+    dbState.relations = dbState.relations.filter(r => !((r.fromTable.toLowerCase() === actTable.toLowerCase() && r.fromCol.toLowerCase() === col.toLowerCase()) || (r.toTable.toLowerCase() === actTable.toLowerCase() && r.toCol.toLowerCase() === col.toLowerCase())));
+  }
   saveDatabase();
-  renderTable();
+  renderAll();
   renderSchemaColumnsList();
   showToast(`Dropped column "${col}" from ${tbl.title}`, 'info');
 }
@@ -4502,6 +4544,49 @@ function printReport() {
 }
 
 // --- Modals & Accelerators ---
+function nextRecordId(tbl) {
+  if (!tbl) return '101';
+  const pk = tbl.primaryKey || 'id';
+  if (!tbl.records || tbl.records.length === 0) {
+    if (pk === 'id' && dbState && dbState.tables && tbl === dbState.tables.projects) return 'PRJ-901';
+    if (pk === 'code') return 'ENG';
+    if (pk === 'tag') return 'AST-901';
+    return '101';
+  }
+
+  let maxNum = 0;
+  let hasNum = false;
+  let prefix = '';
+  let maxPrefixNum = 0;
+  let hasPrefixNum = false;
+
+  for (const r of tbl.records) {
+    const val = String(r[pk] !== undefined && r[pk] !== null ? r[pk] : '').trim();
+    if (/^\d+$/.test(val)) {
+      hasNum = true;
+      const n = parseInt(val, 10);
+      if (n > maxNum) maxNum = n;
+    } else {
+      const match = val.match(/^([A-Za-z_-]+)(\d+)$/);
+      if (match) {
+        hasPrefixNum = true;
+        prefix = match[1];
+        const n = parseInt(match[2], 10);
+        if (n > maxPrefixNum) maxPrefixNum = n;
+      }
+    }
+  }
+
+  if (hasNum) {
+    return String(Math.max(maxNum + 1, tbl.records.length + 101));
+  } else if (hasPrefixNum) {
+    const nextNum = maxPrefixNum + 1;
+    return `${prefix}${String(nextNum).padStart(2, '0')}`;
+  } else {
+    return String(tbl.records.length + 101);
+  }
+}
+
 function openStatsModal() {
   const tbl = getActiveTable();
   document.getElementById('statTotalEmployees').textContent = tbl.records.length;
@@ -4517,7 +4602,7 @@ function openStatsModal() {
   const deptKeys = Object.keys(depts).sort((a, b) => depts[b] - depts[a]);
   document.getElementById('statTotalDepts').textContent = deptKeys.length;
   document.getElementById('statTotalRoles').textContent = values.size;
-  document.getElementById('statNextId').textContent = tbl.records.length + 101;
+  document.getElementById('statNextId').textContent = nextRecordId(tbl);
 
   const container = document.getElementById('deptDistributionContainer');
   container.innerHTML = '';
@@ -4569,13 +4654,18 @@ function quicksaveDatabase() {
       currentView: currentView,
       timestamp: Date.now()
     };
-    localStorage.setItem('kdb_quicksave', JSON.stringify(payload));
+    let data = JSON.stringify(payload);
+    const key = getPassword();
+    if (key) {
+      data = 'ENC:' + btoa(cryptData(data, key));
+    }
+    localStorage.setItem('kdb_quicksave', data);
     try {
       localStorage.setItem('kdb_tutorialSeen', 'true');
       localStorage.setItem('kdb_has_seen_tutorial', 'true');
     } catch(e) {}
-    showToast('💾 Quicksave recorded (F5)', 'success');
-    updateStatus('Database snapshot quicksaved (F5)');
+    showToast('💾 Quicksave recorded (F5)' + (key ? ' [Encrypted]' : ''), 'success');
+    updateStatus('Database snapshot quicksaved (F5)' + (key ? ' (Encrypted)' : ''));
   } catch(err) {
     showToast('Failed to quicksave state (Storage quota exceeded).', 'danger');
   }
@@ -4583,10 +4673,25 @@ function quicksaveDatabase() {
 
 function quickloadDatabase() {
   try {
-    const saved = localStorage.getItem('kdb_quicksave');
+    let saved = localStorage.getItem('kdb_quicksave');
     if (!saved) {
       showToast('No quicksave state found (Press F5 to quicksave).', 'warning');
       return;
+    }
+    if (saved.startsWith('ENC:')) {
+      const key = getPassword();
+      if (!key) {
+        showToast('Quicksave is encrypted. Enter Crypto Key in password box.', 'warning');
+        updateStatus('Quicksave is encrypted. Enter key.', true);
+        return;
+      }
+      try {
+        saved = decryptData(atob(saved.substring(4)), key);
+      } catch(e) {
+        showToast('Failed to decrypt quicksave. Wrong key?', 'danger');
+        updateStatus('Failed to decrypt quicksave.', true);
+        return;
+      }
     }
     const parsed = JSON.parse(saved);
     let targetState = parsed;
@@ -4802,6 +4907,8 @@ function analyzeColumnProfile(tbl) {
   const profiles = [];
 
   cols.forEach(col => {
+    const colName = typeof col === 'object' && col !== null ? (col.id || col.name) : String(col);
+    const colLabel = typeof col === 'object' && col !== null ? (col.label || colName) : colName;
     let nullCount = 0;
     let emptyCount = 0;
     const valueMap = new Map();
@@ -4814,7 +4921,7 @@ function analyzeColumnProfile(tbl) {
     let whitespaceIssueCount = 0;
 
     records.forEach(r => {
-      const val = r[col.id];
+      const val = r[colName];
       if (val === null || val === undefined) {
         nullCount++;
       } else {
@@ -4839,7 +4946,7 @@ function analyzeColumnProfile(tbl) {
       }
     });
 
-    const isPK = (col.id === tbl.primaryKey);
+    const isPK = (colName === tbl.primaryKey);
     const distinctCount = valueMap.size;
     const missingTotal = nullCount + emptyCount;
     const missingPct = total > 0 ? ((missingTotal / total) * 100).toFixed(1) : 0;
@@ -4848,8 +4955,8 @@ function analyzeColumnProfile(tbl) {
     const avgNum = numericCount > 0 ? (sumNum / numericCount).toFixed(2) : 'N/A';
 
     profiles.push({
-      id: col.id,
-      label: col.label || col.id,
+      id: colName,
+      label: colLabel,
       isPK,
       total,
       missingTotal,
@@ -4945,9 +5052,10 @@ function cleanTrimWhitespace() {
   let trimmedCells = 0;
   tbl.records.forEach(r => {
     tbl.columns.forEach(col => {
-      const val = r[col.id];
+      const colName = typeof col === 'object' && col !== null ? (col.id || col.name) : String(col);
+      const val = r[colName];
       if (typeof val === 'string' && val !== val.trim()) {
-        r[col.id] = val.trim();
+        r[colName] = val.trim();
         trimmedCells++;
       }
     });
@@ -4993,12 +5101,13 @@ function cleanDeduplicateRecords() {
 function exportProfilerReport() {
   const tbl = getActiveTable();
   if (!tbl) return;
+  const tableKey = dbState.activeTable || 'table';
   const profiles = analyzeColumnProfile(tbl);
   const now = new Date().toISOString();
   let txt = `=======================================================\n`;
   txt += `  KDB ENTERPRISE DATA INTEGRITY & AUDIT REPORT\n`;
   txt += `  Generated: ${now}\n`;
-  txt += `  Table: ${tbl.title} (${tbl.id})\n`;
+  txt += `  Table: ${tbl.title} (${tableKey})\n`;
   txt += `  Total Records: ${tbl.records.length} | Columns: ${tbl.columns.length}\n`;
   txt += `  Primary Key: ${tbl.primaryKey}\n`;
   txt += `=======================================================\n\n`;
@@ -5017,7 +5126,7 @@ function exportProfilerReport() {
   });
 
   const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
-  downloadBlob(blob, `kdb_integrity_profile_${tbl.id}_${now.slice(0,10)}.txt`);
+  downloadBlob(blob, `kdb_integrity_profile_${tableKey}_${now.slice(0,10)}.txt`);
   showToast('📄 Exported Integrity Audit Report', 'success');
 }
 
@@ -5529,6 +5638,7 @@ function confirmSeedData() {
   const lastNames = ['Miller', 'Davis', 'Wilson', 'Anderson', 'Taylor', 'Thomas', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson', 'White', 'Harris', 'Clark'];
   const roles = ['Software Engineer', 'Systems Architect', 'Database Analyst', 'QA Lead', 'Network Admin', 'Technical Writer', 'Product Specialist', 'Support Engineer'];
   const depts = ['Engineering', 'Marketing', 'Sales', 'Finance', 'Human Resources', 'Research'];
+  const empStatuses = ['Active', 'Active', 'Active', 'Remote', 'On Leave'];
 
   const empCount = preset === 'large' ? 35 : (preset === 'employees_only' ? 20 : 15);
   const empTable = dbState.tables['employees'];
@@ -5541,19 +5651,16 @@ function confirmSeedData() {
       const name = `${fn} ${ln}`;
       const dept = depts[Math.floor(Math.random() * depts.length)];
       const role = roles[Math.floor(Math.random() * roles.length)];
-      const salary = String(55000 + Math.floor(Math.random() * 45) * 1000);
-      const year = 1995 + Math.floor(Math.random() * 5);
-      const month = String(1 + Math.floor(Math.random() * 12)).padStart(2, '0');
-      const day = String(1 + Math.floor(Math.random() * 28)).padStart(2, '0');
-      const start_date = `${year}-${month}-${day}`;
+      const status = empStatuses[Math.floor(Math.random() * empStatuses.length)];
+      const email = `${fn.toLowerCase()}.${ln.toLowerCase()}@kilo.net`;
 
       empTable.records.push({
         id: nextRecordId(empTable),
         name,
         dept,
         role,
-        salary,
-        start_date
+        status,
+        email
       });
       addedEmp++;
     }
@@ -5562,13 +5669,23 @@ function confirmSeedData() {
   if (preset !== 'employees_only') {
     const deptTable = dbState.tables['departments'];
     if (deptTable && deptTable.records.length < MAX_RECORDS_PER_TABLE) {
+      const deptCodes = {
+        'Engineering': 'ENG',
+        'Marketing': 'MKT',
+        'Sales': 'SLS',
+        'Finance': 'FIN',
+        'Human Resources': 'HRD',
+        'Research': 'RND'
+      };
       depts.forEach((dName, idx) => {
-        if (!deptTable.records.some(r => r.name.toLowerCase() === dName.toLowerCase())) {
+        const code = deptCodes[dName] || `D${String(idx + 1).padStart(2, '0')}`;
+        if (!deptTable.records.some(r => r.code === code || r.name.toLowerCase() === dName.toLowerCase())) {
           deptTable.records.push({
+            code,
             name: dName,
-            budget: String(150000 + (idx * 50000)),
-            manager: `${firstNames[idx]} ${lastNames[idx]}`,
-            floor: `Floor ${idx + 1}`
+            head: `${firstNames[idx % firstNames.length]} ${lastNames[idx % lastNames.length]}`,
+            budget: `$${(150 + (idx * 50))},000`,
+            floor: `${idx + 1}th Floor`
           });
         }
       });
@@ -5578,13 +5695,14 @@ function confirmSeedData() {
     if (prjTable && prjTable.records.length < MAX_RECORDS_PER_TABLE) {
       const prjCodes = ['PRJ-901', 'PRJ-902', 'PRJ-903', 'PRJ-904', 'PRJ-905'];
       const prjTitles = ['Y2K Compliance Audit', 'Oracle 8i Migration', 'Intranet Portal V2', 'Firewall Hardware Upgrade', 'Tape Archive Backup'];
+      const priorities = ['Critical', 'High', 'Normal', 'High', 'Critical'];
       prjCodes.forEach((code, idx) => {
-        if (!prjTable.records.some(r => r.code === code)) {
+        if (!prjTable.records.some(r => r.id === code)) {
           prjTable.records.push({
-            code,
+            id: code,
             title: prjTitles[idx],
             lead: empTable && empTable.records[idx] ? empTable.records[idx].name : 'Alice Smith',
-            budget: String(20000 + (idx * 15000)),
+            priority: priorities[idx] || 'Normal',
             status: idx % 2 === 0 ? 'Active' : 'Planning'
           });
         }
@@ -5720,6 +5838,9 @@ let currentReqId = 0;
 const vfsCallbacks = {};
 
 window.addEventListener('message', (e) => {
+  if (window.location.origin && window.location.origin !== 'null' && e.origin && e.origin !== 'null' && e.origin !== window.location.origin) {
+    return;
+  }
   const msg = e.data;
   if (!msg) return;
   if (msg.requestId && vfsCallbacks[msg.requestId]) {
@@ -5740,13 +5861,82 @@ function sendToOS(msg) {
     const id = ++currentReqId;
     vfsCallbacks[id] = resolve;
     window.parent.postMessage({ ...msg, requestId: id }, '*');
+    const timeoutMs = (msg && (msg.type === 'VFS_SHOW_OPEN' || msg.type === 'VFS_SHOW_SAVE')) ? 60000 : 4000;
     setTimeout(() => {
       if (vfsCallbacks[id]) {
         delete vfsCallbacks[id];
         resolve(null);
       }
-    }, 4000);
+    }, timeoutMs);
   });
+}
+
+function parseAndInsertCsv(content, path) {
+  if (!content || typeof content !== 'string') {
+    showToast('Invalid CSV content', 'warning');
+    return;
+  }
+  const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
+  if (lines.length <= 1) {
+    showToast('CSV is empty or missing headers.', 'warning');
+    return;
+  }
+  const headers = parseCsvLine(lines[0]).map(h => h.trim().toLowerCase());
+  if (!headers || headers.length === 0) {
+    showToast('CSV missing headers.', 'warning');
+    return;
+  }
+
+  let targetTableKey = dbState.activeTable;
+  if (path) {
+    const filename = path.split('/').pop().replace(/\.csv$/i, '').toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    if (dbState.tables[filename]) {
+      targetTableKey = filename;
+    } else if (filename.startsWith('kdb_') && dbState.tables[filename.substring(4)]) {
+      targetTableKey = filename.substring(4);
+    }
+  }
+
+  let tbl = dbState.tables[targetTableKey];
+  if (!tbl) {
+    const title = targetTableKey.charAt(0).toUpperCase() + targetTableKey.slice(1);
+    dbState.tables[targetTableKey] = {
+      title: title,
+      columns: headers,
+      primaryKey: headers[0],
+      records: []
+    };
+    tbl = dbState.tables[targetTableKey];
+  }
+
+  headers.forEach(h => {
+    if (!tbl.columns.includes(h)) tbl.columns.push(h);
+  });
+
+  let imported = 0;
+  for (let i = 1; i < lines.length; i++) {
+    if (tbl.records.length >= MAX_RECORDS_PER_TABLE) break;
+    const vals = parseCsvLine(lines[i]);
+    const rec = {};
+    headers.forEach((h, idx) => { rec[h] = vals[idx] !== undefined ? vals[idx] : ''; });
+    const pk = rec[tbl.primaryKey];
+    if (pk) {
+      if (!tbl.records.some(r => String(r[tbl.primaryKey]).toLowerCase() === String(pk).toLowerCase())) {
+        tbl.records.push(rec);
+        imported++;
+      }
+    } else {
+      rec[tbl.primaryKey] = nextRecordId(tbl);
+      tbl.records.push(rec);
+      imported++;
+    }
+  }
+
+  dbState.activeTable = targetTableKey;
+  saveDatabase();
+  renderAll();
+  showToast(`Mounted ${imported} CSV rows into ${tbl.title} from VFS (${path || 'CSV'})`, 'success');
+  updateStatus(`VFS CSV imported: ${imported} rows added to ${tbl.title}`);
 }
 
 function handleVfsIncomingFile(content, path) {
@@ -5782,6 +5972,11 @@ function handleVfsIncomingFile(content, path) {
 }
 
 async function exportToVfs() {
+  if (window.parent === window) {
+    showToast('Standalone mode: downloading database snapshot JSON...', 'info');
+    exportJSON();
+    return;
+  }
   const path = `/home/data/kdb_${dbState.activeTable}.json`;
   await sendToOS({
     type: 'VFS_WRITE',
@@ -5799,6 +5994,11 @@ async function exportToVfs() {
 
 async function exportCsvToVfs() {
   const tbl = getActiveTable();
+  if (window.parent === window) {
+    showToast('Standalone mode: downloading active table CSV...', 'info');
+    exportCSV();
+    return;
+  }
   let csv = tbl.columns.map(c => `"${c.replace(/"/g, '""')}"`).join(',') + '\n';
   tbl.records.forEach(r => {
     csv += tbl.columns.map(c => `"${String(r[c] || '').replace(/"/g, '""').replace(/[\r\n]+/g, ' ')}"`).join(',') + '\n';
