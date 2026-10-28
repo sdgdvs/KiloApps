@@ -255,6 +255,17 @@
     
     <div style="text-align:center;">
       <div id="favorDisplay" style="font-weight:bold; color:#d4af37; background:#8b0000; padding:6px; margin-bottom:12px; border-radius:5px; border:1px solid #d4af37; letter-spacing:1px;">Crowd Favor: 0%</div>
+
+      <!-- Arena Wager Bar -->
+      <div id="arenaWagerBar" style="display:flex; justify-content:center; align-items:center; gap:8px; margin-bottom:12px; background:#2c1404; padding:6px 12px; border:1px solid #d4af37; border-radius:5px; font-size:0.9em; flex-wrap:wrap;">
+        <span style="color:#ffd700; font-weight:bold;">💰 Arena Wager:</span>
+        <button id="btnWager0" onclick="setArenaWager(0)" style="font-size:0.8em; padding:3px 8px; background:#228b22; color:#fff;">No Bet</button>
+        <button id="btnWager25" onclick="setArenaWager(25)" style="font-size:0.8em; padding:3px 8px; background:#4a1f00; color:#fff;">25D</button>
+        <button id="btnWager50" onclick="setArenaWager(50)" style="font-size:0.8em; padding:3px 8px; background:#4a1f00; color:#fff;">50D</button>
+        <button id="btnWager100" onclick="setArenaWager(100)" style="font-size:0.8em; padding:3px 8px; background:#4a1f00; color:#fff;">100D</button>
+        <span id="wagerOddsDisplay" style="color:#d4af37; font-weight:bold; margin-left:4px;">(No Bet)</span>
+      </div>
+
       <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
         <button id="btnAttack" onclick="combatAction('attack')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">⚔️ Attack [A]</button>
         <button id="btnDefend" onclick="combatAction('defend')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">🛡️ Defend [D]</button>
@@ -377,6 +388,8 @@
       <p style="margin-top:10px; font-size:0.95em;">Export your ludus roster and treasury to backup JSON or import an existing save.</p>
       
       <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+        <button id="btnVfsSaveLudus" onclick="vfsSaveLudus()" style="background:#004d40; border-color:#00e5ff; color:#fff;">🏛️ Save to VFS (/home/saves/)</button>
+        <button id="btnVfsOpenLudus" onclick="vfsOpenLudus()" style="background:#004d40; border-color:#00e5ff; color:#fff;">📂 Open from VFS</button>
         <button onclick="exportSave()">💾 Download Save File (.json)</button>
         <button onclick="copyExportText()">📋 Copy JSON to Clipboard</button>
         <button onclick="document.getElementById('importFileInput').click()">📂 Upload .json Save</button>
@@ -563,6 +576,7 @@
 
       <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
         <div style="display:flex; gap:8px;">
+          <button id="btnVfsReplayChronicle" onclick="exportChronicleToVFS()" style="background:#004d40; border-color:#00e5ff; color:#fff;">🏛️ Save to VFS (/home/docs/)</button>
           <button onclick="copyReplayChronicle()">📋 Copy Chronicle</button>
           <button onclick="downloadReplayReport()">💾 Download .txt</button>
           <button onclick="downloadReplayJson()">💾 Export .json</button>
@@ -1862,6 +1876,7 @@
           <div style="display:flex; gap:5px; width:100%; margin-top:4px; flex-wrap:wrap;">
             <button style="font-size:0.7em; background:#3d1a04; border-color:#d4af37; color:#ffd700;" onclick="cycleStance(${g.id})" title="Click to cycle combat tactics (Ferox / Murus / Celeritas / Equitas)">🥋 Tactic: ${getStanceInfo(g.stance || 'balanced').short}</button>
             <button style="font-size:0.7em; background:#221508; border-color:#888; color:#eee;" onclick="exportGladiatorDossier(${g.id})" title="Export champion dossier code to clipboard">📜 Share</button>
+            <button style="font-size:0.7em; background:#1b382b; border-color:#d4af37; color:#aaffaa;" onclick="exportGladiatorCertificate(${g.id})" title="Export Imperial Certificate dossier to VFS (/home/docs/)">📜 Certificate</button>
           </div>
           <div style="margin-top:6px; display:flex; gap:8px; width:100%;">
             <button style="font-size:0.75em; background:#228b22; color:#fff;" onclick="enterArena(${g.id})" ${g.damageTaken >= getEffVit(g) * 10 ? 'disabled' : ''}>⚔️ Fight in Arena</button>
@@ -1985,14 +2000,18 @@
         "========================================"
       ].join("\n");
 
+      const safeName = g.name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
+      const vfsPath = `/home/docs/gladiator_${safeName}_cert.txt`;
+      KiloVFS.write(vfsPath, cert);
+
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(cert).then(() => {
-          showToast(`📜 Copied ${g.name}'s Imperial Certificate!`, 'success');
+          showToast(`📜 ${g.name}'s Dossier saved to ${vfsPath} & copied!`, 'success');
         }).catch(() => {
-          prompt('Copy Imperial Certificate:', cert);
+          showToast(`📜 ${g.name}'s Dossier saved to ${vfsPath}!`, 'success');
         });
       } else {
-        prompt('Copy Imperial Certificate:', cert);
+        showToast(`📜 ${g.name}'s Dossier saved to ${vfsPath}!`, 'success');
       }
     }
 
@@ -4265,6 +4284,9 @@
       
       document.getElementById('dashboard').style.display = 'none';
       document.getElementById('arenaPanel').style.display = 'block';
+      const wb = document.getElementById('arenaWagerBar');
+      if (wb) wb.style.display = 'flex';
+      setArenaWager(0);
       if (!soundMuted) { initCrowdDrone(); setCrowdIntensity(0.04); startBgm('combat'); }
 
       // Ensure online duel overlays are reset for solo play
@@ -4307,7 +4329,7 @@
 
     function setCombatButtonsDisabled(disabled) {
       combatBusy = disabled;
-      ['btnAttack', 'btnDefend', 'btnShowboat', 'btnWarCry', 'btnFlee'].forEach(id => {
+      ['btnAttack', 'btnDefend', 'btnShowboat', 'btnWarCry', 'btnFlee', 'btnWager0', 'btnWager25', 'btnWager50', 'btnWager100'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
           if (id === 'btnWarCry' && playerRallied && !disabled) {
@@ -5324,6 +5346,140 @@
       }
     }
 
+    // ==========================================
+    // Phase VI KiloOS VFS & Inter-App IPC Bridge
+    // ==========================================
+    const KiloVFS = {
+      write(path, data) {
+        try {
+          const content = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+          window.parent.postMessage({ type: 'VFS_WRITE', path, data: content, requestId: 'w_' + Date.now() }, '*');
+          window.parent.postMessage({ type: 'OS_NOTIFY', title: 'KColosseum', message: `Saved to VFS: ${path}` }, '*');
+        } catch (e) {}
+      },
+      read(path, cb) {
+        const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const handler = (e) => {
+          if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+            window.removeEventListener('message', handler);
+            cb(e.data.data, e.data.path);
+          }
+        };
+        window.addEventListener('message', handler);
+        try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+      },
+      savePicker(defaultPath, data, cb) {
+        if (window.parent === window) {
+          if (cb) cb(null);
+          return;
+        }
+        const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const handler = (e) => {
+          if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+            window.removeEventListener('message', handler);
+            if (e.data.path) {
+              KiloVFS.write(e.data.path, data);
+              if (cb) cb(e.data.path);
+            }
+          }
+        };
+        window.addEventListener('message', handler);
+        try {
+          window.parent.postMessage({
+            type: 'VFS_SHOW_SAVE',
+            requestId: reqId,
+            defaultPath: defaultPath,
+            path: defaultPath
+          }, '*');
+        } catch (e) {
+          if (cb) cb(null);
+        }
+      },
+      openPicker(cb) {
+        if (window.parent === window) {
+          if (cb) cb(null, null);
+          return;
+        }
+        const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const handler = (e) => {
+          if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+            window.removeEventListener('message', handler);
+            if (e.data.path) {
+              KiloVFS.read(e.data.path, cb);
+            }
+          }
+        };
+        window.addEventListener('message', handler);
+        try {
+          window.parent.postMessage({
+            type: 'VFS_SHOW_OPEN',
+            requestId: reqId
+          }, '*');
+        } catch (e) {
+          if (cb) cb(null, null);
+        }
+      }
+    };
+
+    function vfsSaveLudus() {
+      const payload = getSavePayload();
+      const defaultPath = '/home/saves/kcolosseum_ludus.json';
+      if (window.parent !== window) {
+        KiloVFS.savePicker(defaultPath, payload, (savedPath) => {
+          if (savedPath) {
+            showToast(`🏛️ Ludus saved to VFS: ${savedPath}`, 'success');
+          } else {
+            exportSave();
+          }
+        });
+      } else {
+        exportSave();
+      }
+    }
+
+    function vfsOpenLudus() {
+      if (window.parent !== window) {
+        KiloVFS.openPicker((data, path) => {
+          if (data) {
+            try {
+              const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+              if (applySaveData(parsed)) {
+                saveGame();
+                closeAllModals();
+                showToast(`📂 Restored Ludus from VFS: ${path || '/home/saves/kcolosseum_ludus.json'}`, 'success');
+                playVictory();
+              } else {
+                showToast('⚠️ Invalid save data in VFS file.', 'warning');
+              }
+            } catch (e) {
+              showToast('⚠️ Failed to parse JSON from VFS.', 'warning');
+            }
+          } else {
+            const inp = document.getElementById('importFileInput');
+            if (inp) inp.click();
+          }
+        });
+      } else {
+        const inp = document.getElementById('importFileInput');
+        if (inp) inp.click();
+      }
+    }
+
+    function exportChronicleToVFS() {
+      const ta = document.getElementById('repTranscriptText');
+      let content = ta ? ta.value : '';
+      if (!content && currentMatchReplay) {
+        content = JSON.stringify(currentMatchReplay, null, 2);
+      }
+      if (!content) {
+        showToast('⚠️ No combat chronicle available to export.', 'warning');
+        return;
+      }
+      const vfsPath = `/home/docs/kcolosseum_chronicle_${Date.now()}.txt`;
+      KiloVFS.write(vfsPath, content);
+      showToast(`📜 Battle Chronicle exported to ${vfsPath}!`, 'success');
+    }
+
     function exportSave() {
       try {
         const payload = getSavePayload();
@@ -6206,6 +6362,9 @@
       isOnlineGame = true;
       isCyberBotDuel = false;
       combatOver = false;
+      const wb = document.getElementById('arenaWagerBar');
+      if (wb) wb.style.display = 'none';
+      currentArenaWager = 0;
       combatBusy = false;
       playerRallied = false;
       enemyRallied = false;
