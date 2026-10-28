@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KMaze
   kilo_usability: KColosseum
-  kilo_qa: KGraph
+  kilo_qa: KSys
   kilo_expander: KPaint
   kilo_review: KChart
 virtual_web_target: kweb://demoscene
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KPaint
-  timestamp: '2026-10-28T08:39:58-07:00'
+  agent: kilo-qa
+  app: KGraph
+  timestamp: '2026-10-28T09:22:19-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -175,17 +175,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Eliminate 1140x743 sidebar fold hiding Color Palette and Layers by adding a 3-tab .sidebar switcher (Draw / Layers / FX & Starters) while keeping 800x600 #canvas-wrapper centered (margin:auto) at 100% 1:1 pixel zoom so Draw tab fits all 14 Tools (compact 3-col grid), Color Palette (FG/BG + 12 swatches + preset + custom picker), Brush & Size (inline Round/Square [4]), and Symmetry [M] with 0px scroll; preserve span.btn-hint in updateCollabUI() and update #sound-icon in RetroAudioEngine.toggle() without widening #btn-sound; replace blocking confirm() in clearCanvasPrompt() with non-blocking 2-click armed confirmation. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KGraph`
+- **Active Target**: `KSys`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 | `KMandel` | `KiloOS/public/apps/kmandel.html`, `KMandel/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, fractal rendering zoom/pan coordinates, palette cycles, dual Win32 C parity, and promote to Mature table. |
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, waveform audio editor, spectrum visualizer, filter pipeline, dual Win32 C parity, and promote to Mature table. |
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, bitmap manipulation filters, canvas scaling, dual Win32 C parity, and promote to Mature table. |
 | `KSettings` | `KiloOS/public/apps/ksettings.html`, `KSettings/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, OS theme/sound preferences, display modes, dual Win32 C parity, and promote to Mature table. |
 | `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, document reader pagination/zoom, bookmark state, dual Win32 C parity, and promote to Mature table. |
+| `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KPaint`
@@ -312,6 +312,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-28T09:22:19-07:00 — kilo-qa: KGraph (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KGraph across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KSys`; rotated active agent to `kilo-expander`.
+
 - **2026-10-28T08:39:58-07:00 — kilo-usability: KPaint (Sidebar 3-Tab Switcher, Centered Canvas & Armed Clear Usability Pass)**
   - Status: PASS ✅ (0 errors, web 256.6 KB, native 39.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 55.9%, HEAD Δ 11.0%, 0 fail, 0 warn, 7.1s)).
   - Layout & Ergonomics: Added 3-tab .sidebar switcher (Draw / Layers / FX & Starters), 3-col tools grid, inline Round/Square [4] shape toggle, and centered 800x600 canvas (#canvas-wrapper margin:auto) with 0px fold scroll.
@@ -331,9 +336,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-creator updates for kweb://geocities across web and native targets.
   - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-28T00:33:58-07:00 — kilo-review: KPaint (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 1140x743 sheet.png and audited kpaint.html + KPaint/main.c; un-quarantined from Mature).
-  - Visual/UX Findings: Color Palette and Layers are 100% scrolled off-screen on boot at 1140x743; updateCollabUI()/RetroAudioEngine.toggle() clobber .btn-hint; clearCanvasPrompt() uses blocking confirm().
-  - Feature/Parity Findings: exportPaletteACT() throws ReferenceError; Shift-radial gradient unimplemented; Layer Opacity label/Undo/Quicksave and #onion-canvas zoom/cyan-keying broken; saveVFS() 1.2s timeout aborts VFS dialog; C main.c misses M/P/4 hotkeys in GetMessageA, mirrors across 1999 off-screen, and misuses lParam in WM_VSCROLL/WM_HSCROLL.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KPaint`, `kilo-usability`->`KPaint`, `kilo-expander`->`KPaint`] (un-quarantined `KPaint` from Mature); advanced `kilo-review` to `KChart`; next agent `kilo-creator`.

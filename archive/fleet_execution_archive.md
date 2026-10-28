@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-28T00:33:58-07:00 — kilo-review: KPaint (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 1140x743 sheet.png and audited kpaint.html + KPaint/main.c; un-quarantined from Mature).
+  - Visual/UX Findings: Color Palette and Layers are 100% scrolled off-screen on boot at 1140x743; updateCollabUI()/RetroAudioEngine.toggle() clobber .btn-hint; clearCanvasPrompt() uses blocking confirm().
+  - Feature/Parity Findings: exportPaletteACT() throws ReferenceError; Shift-radial gradient unimplemented; Layer Opacity label/Undo/Quicksave and #onion-canvas zoom/cyan-keying broken; saveVFS() 1.2s timeout aborts VFS dialog; C main.c misses M/P/4 hotkeys in GetMessageA, mirrors across 1999 off-screen, and misuses lParam in WM_VSCROLL/WM_HSCROLL.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KPaint`, `kilo-usability`->`KPaint`, `kilo-expander`->`KPaint`] (un-quarantined `KPaint` from Mature); advanced `kilo-review` to `KChart`; next agent `kilo-creator`.
+
 - **2026-10-28T00:23:26-07:00 — kilo-expander: KQuest (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KQuest across web and native targets.
