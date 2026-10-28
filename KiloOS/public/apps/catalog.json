@@ -340,7 +340,7 @@
     "title": "KGraph",
     "folder": "System",
     "webBytes": 149342,
-    "exeBytes": 36864,
+    "exeBytes": 37376,
     "budgetPercent": 14.9
   },
   {
@@ -467,7 +467,7 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 208306,
+    "webBytes": 208534,
     "exeBytes": 57856,
     "budgetPercent": 20.9
   },
@@ -507,9 +507,9 @@
     "id": "kpaint",
     "title": "KPaint",
     "folder": "Media",
-    "webBytes": 248375,
-    "exeBytes": 39936,
-    "budgetPercent": 24.9
+    "webBytes": 276183,
+    "exeBytes": 41984,
+    "budgetPercent": 27.6
   },
   {
     "id": "kpass",
