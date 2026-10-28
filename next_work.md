@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KSanctuary
   kilo_soundscape: KStellar
   kilo_tester: KMaze
-  kilo_usability: KPaint
+  kilo_usability: KColosseum
   kilo_qa: KGraph
   kilo_expander: KPaint
   kilo_review: KChart
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KPaint
-  timestamp: '2026-10-28T08:22:18-07:00'
+  timestamp: '2026-10-28T08:39:58-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -153,11 +153,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Fix exportPaletteACT() ReferenceErrors (undefined currentPalettePreset/hexToRgb and missing retro16 key) using #palette-preset value; implement promised Shift-radial gradient (createRadialGradient), right-click stop reversal, and hasSelection clipping in draw()/endPosition(); sync #layer-opacity-val text, onchange saveState(), and layer opacity across saveState()/restoreState() and quickSave()/quickLoad() (plus restore secondaryColor and currentZoom); sync #onion-canvas dimensions/CSS zoom across applyZoom()/resizeCanvas()/transformCanvas()/restoreState()/quickLoad(), key out white background with translucent cyan tint in updateOnionSkin(), and fix addAnimFrame() on upper layers; fix saveVFS() 1.2s timeout aborting KiloOS VFS_SHOW_SAVE (immediate fallback only when window.parent===window, 60s dialog timeout otherwise, e.origin check) and accept .tga/.bmp on drop; in KPaint/main.c add M/P/4 hotkeys to GetMessageA WM_KEYDOWN, mirror across visible canvas width instead of 1999-x, and use GetClientRect() in WM_VSCROLL/WM_HSCROLL. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KPaint`
+- **Active Target**: `KColosseum`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Eliminate 1140x743 sidebar fold hiding Color Palette and Layers by adding a 3-tab .sidebar switcher (Draw / Layers / FX & Starters) while keeping 800x600 #canvas-wrapper centered (margin:auto) at 100% 1:1 pixel zoom so Draw tab fits all 14 Tools (compact 3-col grid), Color Palette (FG/BG + 12 swatches + preset + custom picker), Brush & Size (inline Round/Square [4]), and Symmetry [M] with 0px scroll; preserve span.btn-hint in updateCollabUI() and update #sound-icon in RetroAudioEngine.toggle() without widening #btn-sound; replace blocking confirm() in clearCanvasPrompt() with non-blocking 2-click armed confirmation. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Scope global li card styling to #marketList > li and #ownedList > li so #tutorialModal ol li stops stretching and clipping #btnTutorialEnter; lock body to 100vh flex column at 800x563 by merging .top-nav, h1, and .funds into a compact header, removing the duplicate Empire Duel Arena banner, making #marketList and #ownedList independently scrollable with Sort by Prowess/HP buttons (sortGladiators), and compacting #arenaPanel (#arenaCanvas 185px, #combatLog 72px) for 0px overflow; add devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas, guard SELECT in keydown, and replace prompt() in importGladiatorDossier() with an in-DOM modal. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -173,6 +172,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Scale #matrixCanvas by devicePixelRatio in resizeMatrixRain(), refocus #termInput on modal close and .terminal-wrapper click, and add codebook/waterfall/vfs to #helpModal, cmdHelp(), and quick-action buttons. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | **[ARGON REVIEW]:** Fix right workbench .panel-header 2-line wrapping at 980x663 via white-space:nowrap and compact button labels so both pane headers align cleanly; pre-populate #inputText with sample text on boot/#btnSplashNew and runEncrypt() silently on init; abort #btnVFSSave when prompt() returns null; and update TUTORIAL_STEPS for Ctrl+1..6 and Pipeline/AES/RSA. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | **[ARGON REVIEW]:** Move #toastContainer from bottom 38px left 50% to top 52px right 16px so toasts stop occluding #addRecordForm inputs and bottom card buttons, and add white-space nowrap to .btn-primary so Add Record stays single-line; add color-scheme dark on :root and dark background/color on select option so dropdowns never render white-on-white; compact .header/.controls at 1020x663 to <=2 rows, add horizontal margin (6px 12px 0) to #sqlQueryBuilder and compact .sql-editor (height 62px) to preserve .sql-results-container scroll height, reset .sql-results-container scrollTop and #sqlPresetSelect on run, and wire click-to-sort on #sqlResultsHead th; fix renderSchemaDiagram() in #viewSchema to route SVG Bezier connectors with arrowheads horizontally between FK and PK .schema-col-item row edges, sync #schemaSvgOverlay to #schemaEntitiesGrid scroll size without forced min-height 500px, and redraw ER connectors on window resize; document [5] Schema and [X] Indexes in #helpModal/welcome toast and replace blocking confirm() in dropColumnFromTable()/removeRelation() with in-DOM confirmation. |
+| `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Eliminate 1140x743 sidebar fold hiding Color Palette and Layers by adding a 3-tab .sidebar switcher (Draw / Layers / FX & Starters) while keeping 800x600 #canvas-wrapper centered (margin:auto) at 100% 1:1 pixel zoom so Draw tab fits all 14 Tools (compact 3-col grid), Color Palette (FG/BG + 12 swatches + preset + custom picker), Brush & Size (inline Round/Square [4]), and Symmetry [M] with 0px scroll; preserve span.btn-hint in updateCollabUI() and update #sound-icon in RetroAudioEngine.toggle() without widening #btn-sound; replace blocking confirm() in clearCanvasPrompt() with non-blocking 2-click armed confirmation. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KGraph`
@@ -312,6 +312,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-28T08:39:58-07:00 — kilo-usability: KPaint (Sidebar 3-Tab Switcher, Centered Canvas & Armed Clear Usability Pass)**
+  - Status: PASS ✅ (0 errors, web 256.6 KB, native 39.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 55.9%, HEAD Δ 11.0%, 0 fail, 0 warn, 7.1s)).
+  - Layout & Ergonomics: Added 3-tab .sidebar switcher (Draw / Layers / FX & Starters), 3-col tools grid, inline Round/Square [4] shape toggle, and centered 800x600 canvas (#canvas-wrapper margin:auto) with 0px fold scroll.
+  - Controls & Audio: Non-blocking 2-click armed confirmation for clearCanvasPrompt(), preserved span.btn-hint in updateCollabUI(), and fixed RetroAudioEngine.toggle() icon update without button widening.
+  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
+
 - **2026-10-28T08:22:18-07:00 — kilo-tester: KPaint (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KPaint across web and native targets.
@@ -331,8 +337,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: Color Palette and Layers are 100% scrolled off-screen on boot at 1140x743; updateCollabUI()/RetroAudioEngine.toggle() clobber .btn-hint; clearCanvasPrompt() uses blocking confirm().
   - Feature/Parity Findings: exportPaletteACT() throws ReferenceError; Shift-radial gradient unimplemented; Layer Opacity label/Undo/Quicksave and #onion-canvas zoom/cyan-keying broken; saveVFS() 1.2s timeout aborts VFS dialog; C main.c misses M/P/4 hotkeys in GetMessageA, mirrors across 1999 off-screen, and misuses lParam in WM_VSCROLL/WM_HSCROLL.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KPaint`, `kilo-usability`->`KPaint`, `kilo-expander`->`KPaint`] (un-quarantined `KPaint` from Mature); advanced `kilo-review` to `KChart`; next agent `kilo-creator`.
-
-- **2026-10-28T00:23:26-07:00 — kilo-expander: KQuest (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KQuest across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-review`.

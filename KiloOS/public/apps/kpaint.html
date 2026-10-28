@@ -108,11 +108,55 @@
     border-right: 1px solid var(--panel-border);
     display: flex;
     flex-direction: column;
-    padding: 14px;
-    gap: 16px;
+    padding: 10px;
+    gap: 8px;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: rgba(255,255,255,0.2) transparent;
+    box-sizing: border-box;
+  }
+
+  /* Sidebar Tabs Switcher */
+  .sidebar-tabs {
+    display: flex;
+    gap: 3px;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 3px;
+    border-radius: 6px;
+    border: 1px solid var(--panel-border);
+    flex-shrink: 0;
+  }
+  .sidebar-tab {
+    flex: 1;
+    padding: 5px 3px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .sidebar-tab:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .sidebar-tab.active {
+    color: #ffffff;
+    background: var(--primary);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+  .sidebar-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sidebar-pane:not(.active) {
+    display: none !important;
   }
 
   .section-title {
@@ -127,8 +171,15 @@
   /* Grid Layouts for Buttons */
   .tool-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+  .tool-grid .btn {
+    padding: 5px 2px;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .palette-grid {
@@ -288,6 +339,8 @@
     background: #ffffff;
     transform-origin: top left;
     touch-action: none;
+    margin: auto;
+    flex-shrink: 0;
   }
 
   canvas {
@@ -1069,205 +1122,212 @@
   <div class="workspace">
     <!-- Sidebar Controls -->
     <div class="sidebar" role="region" aria-label="Tool Settings">
-      
-      <!-- Quick Starters -->
-      <div>
-        <div class="section-title">Quick Starters</div>
-        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-          <button class="btn btn-accent" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadDemoArtwork()" title="Generate Mountain Sunset Demo Art (D)">🎨 Demo Art [D]</button>
-          <button class="btn" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadSignalAnomalyTemplate()" title="1999 Subterranean Signal Spectrogram">📡 Signal '99</button>
-          <button class="btn" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadGridTemplate()" title="16x16 Pixel Art Grid">📐 Pixel Grid</button>
-          <button class="btn" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadDiagramTemplate()" title="Flowchart &amp; Diagram Template">📝 Diagram</button>
-          <button class="btn" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadRetroIconTemplate()" title="8-Bit Sprite Template">👾 8-Bit Sprite</button>
-        </div>
+      <!-- Sidebar Switcher (Draw / Layers / FX & Starters) -->
+      <div class="sidebar-tabs" role="tablist" aria-label="Sidebar Sections">
+        <button class="sidebar-tab active" id="tab-btn-draw" role="tab" aria-selected="true" aria-controls="sidebar-pane-draw" onclick="switchSidebarTab('draw')">Draw</button>
+        <button class="sidebar-tab" id="tab-btn-layers" role="tab" aria-selected="false" aria-controls="sidebar-pane-layers" onclick="switchSidebarTab('layers')">Layers</button>
+        <button class="sidebar-tab" id="tab-btn-fx" role="tab" aria-selected="false" aria-controls="sidebar-pane-fx" onclick="switchSidebarTab('fx')">FX &amp; Starters</button>
       </div>
 
-      <!-- Drawing Tools -->
-      <div>
-        <div class="section-title">Tools</div>
-        <div class="tool-grid">
-          <button class="btn active" id="tool-freehand" onclick="setTool('freehand')" title="Brush (B)" aria-label="Brush (B)">Brush [B]</button>
-          <button class="btn" id="tool-line" onclick="setTool('line')" title="Line (L)" aria-label="Line (L)">Line [L]</button>
-          <button class="btn" id="tool-curve" onclick="setTool('curve')" title="Bezier Curve (K)" aria-label="Bezier Curve (K)">Curve [K]</button>
-          <button class="btn" id="tool-rect" onclick="setTool('rect')" title="Rectangle (R)" aria-label="Rectangle (R)">Rect [R]</button>
-          <button class="btn" id="tool-ellipse" onclick="setTool('ellipse')" title="Ellipse / Circle (C)" aria-label="Ellipse (C)">Ellipse [C]</button>
-          <button class="btn" id="tool-fill" onclick="setTool('fill')" title="Bucket Fill (G)" aria-label="Bucket Fill (G)">Fill [G]</button>
-          <button class="btn" id="tool-replace" onclick="setTool('replace')" title="Color Replace (Shift+G)" aria-label="Color Replace (Shift+G)">Replace</button>
-          <button class="btn" id="tool-spray" onclick="setTool('spray')" title="Spray / Airbrush (A)" aria-label="Spray (A)">Spray [A]</button>
-          <button class="btn" id="tool-pipette" onclick="setTool('pipette')" title="Eyedropper (I)" aria-label="Eyedropper (I)">Pick [I]</button>
-          <button class="btn" id="tool-wand" onclick="setTool('wand')" title="Magic Wand (W)" aria-label="Magic Wand (W)">Wand [W]</button>
-          <button class="btn" id="tool-lasso" onclick="setTool('lasso')" title="Lasso (S)" aria-label="Lasso (S)">Lasso [S]</button>
-          <button class="btn" id="tool-eraser" onclick="setTool('eraser')" title="Eraser (E)" aria-label="Eraser (E)">Eraser [E]</button>
-          <button class="btn" id="tool-gradient" onclick="setTool('gradient')" title="Gradient Fill (J)" aria-label="Gradient Fill (J)">Grad [J]</button>
-          <button class="btn" id="tool-text" onclick="setTool('text')" title="Text Stamp (T)" aria-label="Text Stamp (T)">Text [T]</button>
-        </div>
-      </div>
-
-      <!-- Symmetry / Mirror Drawing -->
-      <div>
-        <div class="section-title">Symmetry / Mirror [M]</div>
-        <div style="display: flex; gap: 4px;">
-          <button class="btn active" id="btn-sym-none" style="flex: 1; font-size: 11px; padding: 5px 2px;" onclick="setSymmetry('none')" title="Normal Drawing (No Mirror)">Off</button>
-          <button class="btn" id="btn-sym-h" style="flex: 1; font-size: 11px; padding: 5px 2px;" onclick="setSymmetry('h')" title="Horizontal Mirror (Left &harr; Right)">Horiz</button>
-          <button class="btn" id="btn-sym-v" style="flex: 1; font-size: 11px; padding: 5px 2px;" onclick="setSymmetry('v')" title="Vertical Mirror (Top &harr; Bottom)">Vert</button>
-          <button class="btn" id="btn-sym-quad" style="flex: 1; font-size: 11px; padding: 5px 2px;" onclick="setSymmetry('quad')" title="4-Way Quad Kaleidoscope">4-Way</button>
-        </div>
-      </div>
-
-      <!-- Brush Settings -->
-      <div>
-        <div class="section-title">Brush &amp; Size</div>
-        <div class="control-group">
-          <div class="control-label">
-            <span>Size</span>
-            <span class="control-val" id="size-val">4px</span>
+      <!-- Tab 1: Draw -->
+      <div class="sidebar-pane active" id="sidebar-pane-draw">
+        <!-- Drawing Tools -->
+        <div>
+          <div class="section-title">Tools</div>
+          <div class="tool-grid">
+            <button class="btn active" id="tool-freehand" onclick="setTool('freehand')" title="Brush (B)" aria-label="Brush (B)">Brush [B]</button>
+            <button class="btn" id="tool-line" onclick="setTool('line')" title="Line (L)" aria-label="Line (L)">Line [L]</button>
+            <button class="btn" id="tool-curve" onclick="setTool('curve')" title="Bezier Curve (K)" aria-label="Bezier Curve (K)">Curve [K]</button>
+            <button class="btn" id="tool-rect" onclick="setTool('rect')" title="Rectangle (R)" aria-label="Rectangle (R)">Rect [R]</button>
+            <button class="btn" id="tool-ellipse" onclick="setTool('ellipse')" title="Ellipse / Circle (C)" aria-label="Ellipse (C)">Ellipse [C]</button>
+            <button class="btn" id="tool-fill" onclick="setTool('fill')" title="Bucket Fill (G)" aria-label="Bucket Fill (G)">Fill [G]</button>
+            <button class="btn" id="tool-replace" onclick="setTool('replace')" title="Color Replace (Shift+G)" aria-label="Color Replace (Shift+G)">Replace</button>
+            <button class="btn" id="tool-spray" onclick="setTool('spray')" title="Spray / Airbrush (A)" aria-label="Spray (A)">Spray [A]</button>
+            <button class="btn" id="tool-pipette" onclick="setTool('pipette')" title="Eyedropper (I)" aria-label="Eyedropper (I)">Pick [I]</button>
+            <button class="btn" id="tool-wand" onclick="setTool('wand')" title="Magic Wand (W)" aria-label="Magic Wand (W)">Wand [W]</button>
+            <button class="btn" id="tool-lasso" onclick="setTool('lasso')" title="Lasso (S)" aria-label="Lasso (S)">Lasso [S]</button>
+            <button class="btn" id="tool-eraser" onclick="setTool('eraser')" title="Eraser (E)" aria-label="Eraser (E)">Eraser [E]</button>
+            <button class="btn" id="tool-gradient" onclick="setTool('gradient')" title="Gradient Fill (J)" aria-label="Gradient Fill (J)">Grad [J]</button>
+            <button class="btn" id="tool-text" onclick="setTool('text')" title="Text Stamp (T)" aria-label="Text Stamp (T)">Text [T]</button>
           </div>
-          <input type="range" id="brush-size" min="1" max="80" value="4" oninput="updateBrushSettings()" aria-label="Brush Size">
         </div>
-        <div style="display: flex; gap: 4px; margin-top: 6px;">
-          <button class="btn" style="flex: 1; padding: 4px; font-size: 11px;" onclick="setBrushSize(2)" title="Brush Size 2px [1]">2px [1]</button>
-          <button class="btn" style="flex: 1; padding: 4px; font-size: 11px;" onclick="setBrushSize(6)" title="Brush Size 6px [2]">6px [2]</button>
-          <button class="btn" style="flex: 1; padding: 4px; font-size: 11px;" onclick="setBrushSize(14)" title="Brush Size 14px [3]">14px [3]</button>
-          <button class="btn" style="flex: 1; padding: 4px; font-size: 11px;" onclick="toggleBrushShape()" title="Toggle Round/Square Shape [4]">Shape [4]</button>
-        </div>
-        <div class="control-group" style="margin-top: 8px;">
-          <div class="control-label">
-            <span>Shape</span>
+
+        <!-- Symmetry / Mirror Drawing -->
+        <div>
+          <div class="section-title">Symmetry / Mirror [M]</div>
+          <div style="display: flex; gap: 4px;">
+            <button class="btn active" id="btn-sym-none" style="flex: 1; font-size: 11px; padding: 5px 2px;" onclick="setSymmetry('none')" title="Normal Drawing (No Mirror)">Off</button>
+            <button class="btn" id="btn-sym-h" style="flex: 1; font-size: 11px; padding: 5px 2px;" onclick="setSymmetry('h')" title="Horizontal Mirror (Left &harr; Right)">Horiz</button>
+            <button class="btn" id="btn-sym-v" style="flex: 1; font-size: 11px; padding: 5px 2px;" onclick="setSymmetry('v')" title="Vertical Mirror (Top &harr; Bottom)">Vert</button>
+            <button class="btn" id="btn-sym-quad" style="flex: 1; font-size: 11px; padding: 5px 2px;" onclick="setSymmetry('quad')" title="4-Way Quad Kaleidoscope">4-Way</button>
           </div>
-          <select id="brush-shape" onchange="updateBrushSettings()" aria-label="Brush Shape">
+        </div>
+
+        <!-- Brush Settings -->
+        <div>
+          <div class="section-title">Brush &amp; Size</div>
+          <div class="control-group">
+            <div class="control-label" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+              <span>Size: <strong class="control-val" id="size-val">4px</strong></span>
+              <div style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid var(--panel-border);">
+                <div class="brush-dot" id="brush-preview" style="width: 4px; height: 4px; background: #111111; border-radius: 50%;"></div>
+              </div>
+            </div>
+            <input type="range" id="brush-size" min="1" max="80" value="4" oninput="updateBrushSettings()" aria-label="Brush Size">
+          </div>
+          <div style="display: flex; gap: 4px; margin-top: 5px;">
+            <button class="btn" style="flex: 1; padding: 4px 2px; font-size: 11px;" onclick="setBrushSize(2)" title="Brush Size 2px [1]">2px [1]</button>
+            <button class="btn" style="flex: 1; padding: 4px 2px; font-size: 11px;" onclick="setBrushSize(6)" title="Brush Size 6px [2]">6px [2]</button>
+            <button class="btn" style="flex: 1; padding: 4px 2px; font-size: 11px;" onclick="setBrushSize(14)" title="Brush Size 14px [3]">14px [3]</button>
+            <button class="btn" id="btn-shape-toggle" style="flex: 1; padding: 4px 2px; font-size: 11px;" onclick="toggleBrushShape()" title="Toggle Round/Square Shape [4]">Round [4]</button>
+          </div>
+          <select id="brush-shape" onchange="updateBrushSettings()" aria-label="Brush Shape" style="display: none;">
             <option value="round">Round</option>
             <option value="square">Square</option>
           </select>
         </div>
-        <div class="brush-preview-box">
-          <div class="brush-dot" id="brush-preview"></div>
-        </div>
-      </div>
 
-      <!-- Color Palette -->
-      <div>
-        <div class="section-title">Color Palette</div>
-        <!-- Dual FG/BG Swatch Box -->
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; background: rgba(0,0,0,0.3); padding: 6px 8px; border-radius: 6px; border: 1px solid var(--panel-border);">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="position: relative; width: 38px; height: 32px;">
-              <div id="swatch-bg" onclick="setActiveColorSlot('bg')" title="Secondary (BG) Color - Right Click draws with this" style="position: absolute; right: 0; bottom: 0; width: 22px; height: 22px; background: #ffffff; border: 2px solid rgba(255,255,255,0.4); border-radius: 4px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.5);"></div>
-              <div id="swatch-fg" onclick="setActiveColorSlot('fg')" title="Primary (FG) Color - Left Click draws with this" style="position: absolute; left: 0; top: 0; width: 22px; height: 22px; background: #111111; border: 2px solid #ffffff; border-radius: 4px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.7); z-index: 2;"></div>
+        <!-- Color Palette -->
+        <div>
+          <div class="section-title">Color Palette</div>
+          <!-- Dual FG/BG Swatch Box -->
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--panel-border);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="position: relative; width: 34px; height: 28px;">
+                <div id="swatch-bg" onclick="setActiveColorSlot('bg')" title="Secondary (BG) Color - Right Click draws with this" style="position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; background: #ffffff; border: 2px solid rgba(255,255,255,0.4); border-radius: 4px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.5);"></div>
+                <div id="swatch-fg" onclick="setActiveColorSlot('fg')" title="Primary (FG) Color - Left Click draws with this" style="position: absolute; left: 0; top: 0; width: 18px; height: 18px; background: #111111; border: 2px solid #ffffff; border-radius: 4px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.7); z-index: 2;"></div>
+              </div>
+              <div style="display: flex; flex-direction: column;">
+                <span id="swatch-slot-label" style="font-size: 11px; font-weight: 600; color: var(--text-main);">FG: #111111</span>
+                <span id="swatch-sub-label" style="font-size: 10px; color: var(--text-muted);">BG: #FFFFFF</span>
+              </div>
             </div>
-            <div style="display: flex; flex-direction: column;">
-              <span id="swatch-slot-label" style="font-size: 11px; font-weight: 600; color: var(--text-main);">FG: #111111</span>
-              <span id="swatch-sub-label" style="font-size: 10px; color: var(--text-muted);">BG: #FFFFFF</span>
+            <button class="btn" onclick="swapColors()" title="Swap FG/BG Colors [X]" style="padding: 3px 8px; font-size: 11px;" aria-label="Swap Colors">⇄ [X]</button>
+          </div>
+          <div style="margin-bottom: 5px;">
+            <select id="palette-preset" onchange="loadPalettePreset()" aria-label="Color Palette Preset" style="padding: 4px 8px; font-size: 11px;">
+              <option value="classic">Classic Palette</option>
+              <option value="pastel">Pastel Dreams</option>
+              <option value="cyberpunk">Cyberpunk Neon</option>
+              <option value="earth">Earthy Tones</option>
+              <option value="retro16">Retro 16-Color (EGA/VGA)</option>
+            </select>
+          </div>
+          <div class="palette-grid" id="palette-grid" role="group" aria-label="Color Swatches" style="gap: 4px;">
+            <!-- Swatches dynamically loaded -->
+          </div>
+          <div class="custom-color-picker" style="margin-top: 4px; gap: 6px;">
+            <input type="color" id="color-picker" value="#111111" onchange="setCustomColor(this.value)" aria-label="Custom Color Picker" style="width: 26px; height: 26px;">
+            <span style="font-size: 11px; color: var(--text-muted);">Custom Color</span>
+          </div>
+        </div>
+
+        <!-- Clear Canvas -->
+        <div style="margin-top: 4px;">
+          <button id="btn-clear-canvas" class="btn" style="width: 100%; color: #ef4444; border-color: rgba(239, 68, 68, 0.3); padding: 5px 8px; font-size: 11px;" onclick="clearCanvasPrompt()" aria-label="Clear Canvas">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Clear Canvas
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab 2: Layers -->
+      <div class="sidebar-pane" id="sidebar-pane-layers">
+        <div>
+          <div class="section-title">Layers</div>
+          <div style="display: flex; gap: 4px; margin-bottom: 6px; flex-wrap: wrap;">
+            <button class="btn" style="flex:1; padding: 5px 4px; font-size: 11px;" onclick="addLayer()" aria-label="Add Layer">+ Add</button>
+            <button class="btn" style="flex:1; padding: 5px 4px; font-size: 11px;" onclick="duplicateLayer()" title="Duplicate Active Layer" aria-label="Duplicate Active Layer">Dup</button>
+            <button class="btn" style="flex:1; padding: 5px 4px; font-size: 11px;" onclick="mergeLayerDown()" aria-label="Merge Layer Down">Merge</button>
+            <button class="btn" style="flex:1; padding: 5px 4px; font-size: 11px;" onclick="flattenLayers()" title="Flatten All Layers" aria-label="Flatten All Layers">Flatten</button>
+            <button class="btn" style="flex:1; padding: 5px 4px; font-size: 11px;" onclick="deleteLayer()" aria-label="Delete Active Layer">Del</button>
+          </div>
+          <div class="control-group" style="margin-bottom: 6px;">
+            <div class="control-label">
+              <span>Layer Opacity</span>
+              <span class="control-val" id="layer-opacity-val">100%</span>
             </div>
+            <input type="range" id="layer-opacity" min="0" max="100" value="100" oninput="updateLayerOpacity(this.value)" onchange="saveState()" aria-label="Layer Opacity">
           </div>
-          <button class="btn" onclick="swapColors()" title="Swap FG/BG Colors [X]" style="padding: 3px 8px; font-size: 11px;" aria-label="Swap Colors">⇄ [X]</button>
-        </div>
-        <div style="margin-bottom: 8px;">
-          <select id="palette-preset" onchange="loadPalettePreset()" aria-label="Color Palette Preset">
-            <option value="classic">Classic Palette</option>
-            <option value="pastel">Pastel Dreams</option>
-            <option value="cyberpunk">Cyberpunk Neon</option>
-            <option value="earth">Earthy Tones</option>
-            <option value="retro16">Retro 16-Color (EGA/VGA)</option>
-          </select>
-        </div>
-        <div class="palette-grid" id="palette-grid" role="group" aria-label="Color Swatches">
-          <!-- Swatches dynamically loaded -->
-        </div>
-        <div class="custom-color-picker">
-          <input type="color" id="color-picker" value="#111111" onchange="setCustomColor(this.value)" aria-label="Custom Color Picker">
-          <span style="font-size: 12px; color: var(--text-muted);">Custom Color</span>
-        </div>
-      </div>
-
-      <!-- Image Filters -->
-      <div>
-        <div class="section-title">Image Adjustments</div>
-        <div class="filter-grid">
-          <button class="btn" onclick="applyFilter('invert')" title="Invert Colors [V]" aria-label="Invert Colors">Invert [V]</button>
-          <button class="btn" onclick="applyFilter('grayscale')" title="Grayscale [Y]" aria-label="Grayscale">Gray [Y]</button>
-          <button class="btn" onclick="applyFilter('brighten')" title="Brighten [+]" aria-label="Brighten">+Bright [+]</button>
-          <button class="btn" onclick="applyFilter('darken')" title="Darken [-]" aria-label="Darken">-Bright [-]</button>
-          <button class="btn" onclick="applyFilter('contrast')" aria-label="Increase Contrast">+Contrast</button>
-          <button class="btn" onclick="applyFilter('sepia')" title="Sepia Tone [P]" aria-label="Sepia Filter">Sepia [P]</button>
-
-          <button class="btn" onclick="applyDither('1bit')" title="Floyd-Steinberg 1-Bit Dither" aria-label="1-Bit Dither">Dither 1-Bit</button>
-          <button class="btn" onclick="applyDither('vga16')" title="Floyd-Steinberg 16-Color VGA Dither" aria-label="16-Color VGA Dither">VGA 16-Col</button>
-          <button class="btn" onclick="applyDither('gameboy')" title="Game Boy DMG-01 4-Shade Green" aria-label="Game Boy Dither">Game Boy</button>
-          <button class="btn" onclick="applyDither('amiga32')" title="Amiga OCS 32-Color Dither" aria-label="Amiga 32 Dither">Amiga 32</button>
-          <button class="btn" onclick="applyDither('c64')" title="Commodore 64 16-Color Dither" aria-label="C64 Dither">C64 16-Col</button>
-          <button class="btn" onclick="applyDither('cga')" title="CGA Mode 1 4-Color Dither" aria-label="CGA Dither">CGA 4-Col</button>
-          <button class="btn" onclick="applyPixelize(8)" title="Chunky 8px Retro Mosaic" aria-label="Pixelize">Pixelize</button>
-          <button class="btn" onclick="applyFilter('solarize')" title="Sabattier Solarization Inversion" aria-label="Solarize">Solarize</button>
-          <button class="btn" onclick="applyChromaticSplit()" title="Chromatic Aberration RGB Shift" aria-label="RGB Split">RGB Split</button>
-          <button class="btn" onclick="applyCRTBloom()" title="Phosphor Glow &amp; Bloom" aria-label="CRT Bloom">Bloom</button>
-          <button class="btn" onclick="applyFilter('posterize')" title="Posterize Quantization" aria-label="Posterize">Posterize</button>
-          <button class="btn" onclick="applyBoxBlur()" title="Soft Focus Box Blur" aria-label="Blur">Blur</button>
-          <button class="btn" onclick="applyCRTFilter()" title="CRT Scanlines &amp; Phosphor" aria-label="CRT Scanlines">CRT Raster</button>
-          <button class="btn" onclick="applyVignetteFilter()" title="Vignette Falloff" aria-label="Vignette">Vignette</button>
-
-          <button class="btn" onclick="applyConvolve('edge')" aria-label="Edge Detect">Edge Detect</button>
-          <button class="btn" onclick="applyConvolve('sharpen')" aria-label="Sharpen">Sharpen</button>
-          <button class="btn" onclick="applyConvolve('emboss')" aria-label="Emboss">Emboss</button>
-        </div>
-      </div>
-
-      <!-- Layers -->
-      <div>
-        <div class="section-title">Layers</div>
-        <div style="display: flex; gap: 4px; margin-bottom: 4px; flex-wrap: wrap;">
-          <button class="btn" style="flex:1" onclick="addLayer()" aria-label="Add Layer">+ Add</button>
-          <button class="btn" style="flex:1" onclick="duplicateLayer()" title="Duplicate Active Layer" aria-label="Duplicate Active Layer">Dup</button>
-          <button class="btn" style="flex:1" onclick="mergeLayerDown()" aria-label="Merge Layer Down">Merge</button>
-          <button class="btn" style="flex:1" onclick="flattenLayers()" title="Flatten All Layers" aria-label="Flatten All Layers">Flatten</button>
-          <button class="btn" style="flex:1" onclick="deleteLayer()" aria-label="Delete Active Layer">Del</button>
-        </div>
-        <div class="control-group" style="margin-bottom: 4px;">
-          <div class="control-label">
-            <span>Layer Opacity</span>
-            <span class="control-val" id="layer-opacity-val">100%</span>
+          <div class="control-group">
+            <div class="control-label">Blend Mode</div>
+            <select id="layer-blend" onchange="updateBlendMode()" aria-label="Layer Blend Mode">
+              <option value="source-over">Normal</option>
+              <option value="multiply">Multiply</option>
+              <option value="screen">Screen</option>
+              <option value="overlay">Overlay</option>
+            </select>
           </div>
-          <input type="range" id="layer-opacity" min="0" max="100" value="100" oninput="updateLayerOpacity(this.value)" onchange="saveState()" aria-label="Layer Opacity">
+          <div class="layers-panel" id="layers-list" role="listbox" aria-label="Layers List"></div>
         </div>
-        <div class="control-group">
-          <div class="control-label">Blend Mode</div>
-          <select id="layer-blend" onchange="updateBlendMode()" aria-label="Layer Blend Mode">
-            <option value="source-over">Normal</option>
-            <option value="multiply">Multiply</option>
-            <option value="screen">Screen</option>
-            <option value="overlay">Overlay</option>
-          </select>
-        </div>
-        <div class="layers-panel" id="layers-list" role="listbox" aria-label="Layers List"></div>
-      </div>
 
-      <!-- Selection Actions -->
-      <div>
-        <div class="section-title">Selection Tools</div>
-        <div class="filter-grid">
-          <button class="btn" onclick="fillSelection()" title="Fill Selected Area with Current Color" aria-label="Fill Selection">Fill Sel</button>
-          <button class="btn" onclick="invertSelection()" title="Invert Colors inside Selection" aria-label="Invert Selection">Invert Sel</button>
+        <!-- Selection Actions -->
+        <div>
+          <div class="section-title">Selection Tools</div>
+          <div class="filter-grid">
+            <button class="btn" onclick="fillSelection()" title="Fill Selected Area with Current Color" aria-label="Fill Selection">Fill Sel</button>
+            <button class="btn" onclick="invertSelection()" title="Invert Colors inside Selection" aria-label="Invert Selection">Invert Sel</button>
+          </div>
         </div>
       </div>
 
-      <!-- Canvas Transforms -->
-      <div>
-        <div class="section-title">Canvas Transform</div>
-        <div class="filter-grid">
-          <button class="btn" onclick="transformCanvas('rotate90cw')" aria-label="Rotate 90 Clockwise">Rotate 90° CW</button>
-          <button class="btn" onclick="transformCanvas('rotate90ccw')" aria-label="Rotate 90 Counter-Clockwise">Rotate 90° CCW</button>
-          <button class="btn" onclick="transformCanvas('fliph')" aria-label="Flip Horizontally">Flip Horiz</button>
-          <button class="btn" onclick="transformCanvas('flipv')" aria-label="Flip Vertically">Flip Vert</button>
+      <!-- Tab 3: FX & Starters -->
+      <div class="sidebar-pane" id="sidebar-pane-fx">
+        <!-- Quick Starters -->
+        <div>
+          <div class="section-title">Quick Starters</div>
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <button class="btn btn-accent" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadDemoArtwork()" title="Generate Mountain Sunset Demo Art (D)">🎨 Demo Art [D]</button>
+            <button class="btn" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadSignalAnomalyTemplate()" title="1999 Subterranean Signal Spectrogram">📡 Signal '99</button>
+            <button class="btn" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadGridTemplate()" title="16x16 Pixel Art Grid">📐 Pixel Grid</button>
+            <button class="btn" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadDiagramTemplate()" title="Flowchart &amp; Diagram Template">📝 Diagram</button>
+            <button class="btn" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadRetroIconTemplate()" title="8-Bit Sprite Template">👾 8-Bit Sprite</button>
+          </div>
+        </div>
+
+        <!-- Canvas Transforms -->
+        <div>
+          <div class="section-title">Canvas Transform</div>
+          <div class="filter-grid">
+            <button class="btn" onclick="transformCanvas('rotate90cw')" aria-label="Rotate 90 Clockwise">Rotate 90° CW</button>
+            <button class="btn" onclick="transformCanvas('rotate90ccw')" aria-label="Rotate 90 Counter-Clockwise">Rotate 90° CCW</button>
+            <button class="btn" onclick="transformCanvas('fliph')" aria-label="Flip Horizontally">Flip Horiz</button>
+            <button class="btn" onclick="transformCanvas('flipv')" aria-label="Flip Vertically">Flip Vert</button>
+          </div>
+        </div>
+
+        <!-- Image Filters -->
+        <div>
+          <div class="section-title">Image Adjustments</div>
+          <div class="filter-grid">
+            <button class="btn" onclick="applyFilter('invert')" title="Invert Colors [V]" aria-label="Invert Colors">Invert [V]</button>
+            <button class="btn" onclick="applyFilter('grayscale')" title="Grayscale [Y]" aria-label="Grayscale">Gray [Y]</button>
+            <button class="btn" onclick="applyFilter('brighten')" title="Brighten [+]" aria-label="Brighten">+Bright [+]</button>
+            <button class="btn" onclick="applyFilter('darken')" title="Darken [-]" aria-label="Darken">-Bright [-]</button>
+            <button class="btn" onclick="applyFilter('contrast')" aria-label="Increase Contrast">+Contrast</button>
+            <button class="btn" onclick="applyFilter('sepia')" title="Sepia Tone [P]" aria-label="Sepia Filter">Sepia [P]</button>
+
+            <button class="btn" onclick="applyDither('1bit')" title="Floyd-Steinberg 1-Bit Dither" aria-label="1-Bit Dither">Dither 1-Bit</button>
+            <button class="btn" onclick="applyDither('vga16')" title="Floyd-Steinberg 16-Color VGA Dither" aria-label="16-Color VGA Dither">VGA 16-Col</button>
+            <button class="btn" onclick="applyDither('gameboy')" title="Game Boy DMG-01 4-Shade Green" aria-label="Game Boy Dither">Game Boy</button>
+            <button class="btn" onclick="applyDither('amiga32')" title="Amiga OCS 32-Color Dither" aria-label="Amiga 32 Dither">Amiga 32</button>
+            <button class="btn" onclick="applyDither('c64')" title="Commodore 64 16-Color Dither" aria-label="C64 Dither">C64 16-Col</button>
+            <button class="btn" onclick="applyDither('cga')" title="CGA Mode 1 4-Color Dither" aria-label="CGA Dither">CGA 4-Col</button>
+            <button class="btn" onclick="applyPixelize(8)" title="Chunky 8px Retro Mosaic" aria-label="Pixelize">Pixelize</button>
+            <button class="btn" onclick="applyFilter('solarize')" title="Sabattier Solarization Inversion" aria-label="Solarize">Solarize</button>
+            <button class="btn" onclick="applyChromaticSplit()" title="Chromatic Aberration RGB Shift" aria-label="RGB Split">RGB Split</button>
+            <button class="btn" onclick="applyCRTBloom()" title="Phosphor Glow &amp; Bloom" aria-label="CRT Bloom">Bloom</button>
+            <button class="btn" onclick="applyFilter('posterize')" title="Posterize Quantization" aria-label="Posterize">Posterize</button>
+            <button class="btn" onclick="applyBoxBlur()" title="Soft Focus Box Blur" aria-label="Blur">Blur</button>
+            <button class="btn" onclick="applyCRTFilter()" title="CRT Scanlines &amp; Phosphor" aria-label="CRT Scanlines">CRT Raster</button>
+            <button class="btn" onclick="applyVignetteFilter()" title="Vignette Falloff" aria-label="Vignette">Vignette</button>
+
+            <button class="btn" onclick="applyConvolve('edge')" aria-label="Edge Detect">Edge Detect</button>
+            <button class="btn" onclick="applyConvolve('sharpen')" aria-label="Sharpen">Sharpen</button>
+            <button class="btn" onclick="applyConvolve('emboss')" aria-label="Emboss">Emboss</button>
+          </div>
         </div>
       </div>
-
-      <!-- Clear Canvas -->
-      <div style="margin-top: auto;">
-        <button class="btn" style="width: 100%; color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" onclick="clearCanvasPrompt()" aria-label="Clear Canvas">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-          Clear Canvas
-        </button>
-      </div>
-
     </div>
 
     <!-- Canvas Container -->
@@ -1352,6 +1412,22 @@
       } catch (e) {
         console.warn('[KPaint] Storage write failed:', e);
       }
+    }
+
+    function switchSidebarTab(tabName) {
+      const tabs = ['draw', 'layers', 'fx'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        const pane = document.getElementById(`sidebar-pane-${t}`);
+        const isActive = (t === tabName);
+        if (btn) {
+          btn.classList.toggle('active', isActive);
+          btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        }
+        if (pane) {
+          pane.classList.toggle('active', isActive);
+        }
+      });
     }
 
     // Universal Retro Audio Synthesizer (Yamaha YM2612 2-Operator FM & SNES SPC700 Delay DSP)
@@ -1447,8 +1523,8 @@
       toggle() {
         this.enabled = !this.enabled;
         try { localStorage.setItem('kpaint_sound', this.enabled ? '1' : '0'); } catch (_) {}
-        const btn = document.getElementById('btn-sound');
-        if (btn) btn.textContent = this.enabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+        const icon = document.getElementById('sound-icon');
+        if (icon) icon.textContent = this.enabled ? '🔊' : '🔇';
         showToast(this.enabled ? 'Yamaha YM2612 / SPC700 Audio: ON [U]' : 'Audio Muted [U]');
         if (this.enabled) this.play('chirp');
       }
@@ -3575,6 +3651,8 @@
       brushSize = parseInt(document.getElementById('brush-size').value, 10);
       brushShape = document.getElementById('brush-shape').value;
       document.getElementById('size-val').innerText = brushSize + 'px';
+      const shapeBtn = document.getElementById('btn-shape-toggle');
+      if (shapeBtn) shapeBtn.textContent = brushShape === 'square' ? 'Square [4]' : 'Round [4]';
 
       const previewDot = document.getElementById('brush-preview');
       previewDot.style.width = Math.min(brushSize, 30) + 'px';
@@ -4795,18 +4873,48 @@
       updateBrushSettings();
     }
 
+    let clearArmed = false;
+    let clearArmedTimer = null;
+
     function clearCanvasPrompt() {
-      if (confirm('Clear the active canvas layer?')) {
-        if (activeLayerIndex === 0) {
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        } else {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const btn = document.getElementById('btn-clear-canvas');
+      if (!clearArmed) {
+        clearArmed = true;
+        if (btn) {
+          btn.style.background = 'rgba(239, 68, 68, 0.25)';
+          btn.style.borderColor = '#ef4444';
+          btn.innerHTML = '⚠️ Click Again to Confirm Clear';
         }
-        pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-        clearSelection();
-        saveState();
-        showToast("Canvas layer cleared.");
+        showToast('Click Clear Canvas again within 3s to confirm', 3000);
+        if (clearArmedTimer) clearTimeout(clearArmedTimer);
+        clearArmedTimer = setTimeout(resetClearPrompt, 3000);
+        return;
+      }
+      resetClearPrompt();
+      if (activeLayerIndex === 0) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      clearSelection();
+      saveState();
+      retroAudio.play('clear');
+      showToast('Active canvas layer cleared.');
+    }
+
+    function resetClearPrompt() {
+      clearArmed = false;
+      if (clearArmedTimer) {
+        clearTimeout(clearArmedTimer);
+        clearArmedTimer = null;
+      }
+      const btn = document.getElementById('btn-clear-canvas');
+      if (btn) {
+        btn.style.background = '';
+        btn.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Clear Canvas';
       }
     }
 
@@ -5028,6 +5136,8 @@
       const sel = document.getElementById('brush-shape');
       brushShape = (brushShape === 'round') ? 'square' : 'round';
       if (sel) sel.value = brushShape;
+      const btn = document.getElementById('btn-shape-toggle');
+      if (btn) btn.textContent = brushShape === 'square' ? 'Square [4]' : 'Round [4]';
       updateBrushSettings();
       showToast(`Brush shape: ${brushShape}`);
     }
@@ -5682,7 +5792,7 @@
           pill.style.color = '#6ee7b7';
         }
         if (btn) btn.classList.add('btn-collab-active');
-        if (btnLabel) btnLabel.textContent = `🟢 ${currentCollabRoom}`;
+        if (btnLabel) btnLabel.innerHTML = `🟢 ${currentCollabRoom}<span class="btn-hint">[O]</span>`;
         if (btnConnect) btnConnect.textContent = '🔄 Re-sync Nick';
         if (btnDisconnect) btnDisconnect.style.display = 'block';
         if (btnShare) btnShare.style.display = 'block';
@@ -5694,7 +5804,7 @@
           pill.style.color = 'var(--text-muted)';
         }
         if (btn) btn.classList.remove('btn-collab-active');
-        if (btnLabel) btnLabel.textContent = 'Collab [O]';
+        if (btnLabel) btnLabel.innerHTML = 'Collab<span class="btn-hint">[O]</span>';
         if (btnConnect) btnConnect.textContent = '🚀 Join / Host Room';
         if (btnDisconnect) btnDisconnect.style.display = 'none';
         if (btnShare) btnShare.style.display = 'none';
@@ -6386,6 +6496,9 @@
 
     // Hash VFS Load support & Initialization
     window.onload = () => {
+      const icon = document.getElementById('sound-icon');
+      if (icon) icon.textContent = retroAudio.enabled ? '🔊' : '🔇';
+
       if (window.resizeTo) window.resizeTo(1140, 780);
       initCanvas();
       updateCollabUI();
