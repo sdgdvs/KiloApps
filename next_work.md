@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-review
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,11 +32,11 @@ current_targets:
   kilo_creator: kweb://warez
   kilo_graphics: KStellar
   kilo_soundscape: KStellar
-  kilo_tester: KMaze
-  kilo_usability: KColosseum
+  kilo_tester: KDB
+  kilo_usability: KDB
   kilo_qa: KRead
   kilo_expander: KQuest
-  kilo_review: KDB
+  kilo_review: KPaint
 virtual_web_target: kweb://warez
 virtual_web_rotation:
 - kweb://slashnet
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KColosseum
-  timestamp: '2026-10-27T20:23:17-07:00'
+  agent: kilo-review
+  app: KDB
+  timestamp: '2026-10-27T20:34:15-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -133,10 +133,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KMaze`
+- **Active Target**: `KDB`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | **[ARGON REVIEW]:** Implement missing nextRecordId(tbl) (reusing it for #statNextId) and fix confirmSeedData() schema/PK fields (employees id/status/email, departments code/head, projects id/priority); replace undefined renderTable() with renderAll() in addNewColumnToTable()/dropColumnFromTable() while initializing default values and purging dropped-column indexes/relations; fix Profile [P] (analyzeColumnProfile, cleanTrimWhitespace, exportProfilerReport) to read string column names in tbl.columns and dbState.activeTable instead of col.id/tbl.id; apply ORDER BY and LIMIT after GROUP BY/aggregates in executeSelectSql() with getFieldValue() and numeric-aware MIN/MAX; add e.origin check, implement parseAndInsertCsv() for VFS CSV open, use 60s timeout for VFS_SHOW_OPEN with standalone exportToVfs()/exportCsvToVfs() fallbacks, and encrypt kdb_quicksave when #dbPassword is set; in KDB/main.c allow IDC_ADD_BTN to update existing records after NM_DBLCLK edit and replace UTF-8 bullets/emoji in MessageBoxA strings with ASCII. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -152,10 +153,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | **[ARGON REVIEW]:** Fix executePipeline(true) to decrypt #pipelineFinalOutput back to plaintext and parse stage.key (p,q,e) for RSA stages; fix #btnLoadLoreToWorkbench to load lore.ciphertext into #outputText and runDecrypt() into #inputText; fix #statTotalChars to use (outText // inText).length; and include aesKey/aesFormat/rsaP/rsaQ/rsaE/pipelineStages/stegoText in #btnExportJSON, #btnImportJSON, and #btnNewSession. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KColosseum`
+- **Active Target**: `KDB`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | **[ARGON REVIEW]:** Move #toastContainer from bottom 38px left 50% to top 52px right 16px so toasts stop occluding #addRecordForm inputs and bottom card buttons, and add white-space nowrap to .btn-primary so Add Record stays single-line; add color-scheme dark on :root and dark background/color on select option so dropdowns never render white-on-white; compact .header/.controls at 1020x663 to <=2 rows, add horizontal margin (6px 12px 0) to #sqlQueryBuilder and compact .sql-editor (height 62px) to preserve .sql-results-container scroll height, reset .sql-results-container scrollTop and #sqlPresetSelect on run, and wire click-to-sort on #sqlResultsHead th; fix renderSchemaDiagram() in #viewSchema to route SVG Bezier connectors with arrowheads horizontally between FK and PK .schema-col-item row edges, sync #schemaSvgOverlay to #schemaEntitiesGrid scroll size without forced min-height 500px, and redraw ER connectors on window resize; document [5] Schema and [X] Indexes in #helpModal/welcome toast and replace blocking confirm() in dropColumnFromTable()/removeRelation() with in-DOM confirmation. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Scope global li card styling to #marketList > li and #ownedList > li so #tutorialModal ol li stops stretching and clipping #btnTutorialEnter; lock body to 100vh flex column at 800x563 by merging .top-nav, h1, and .funds into a compact header, removing the duplicate Empire Duel Arena banner, making #marketList and #ownedList independently scrollable with Sort by Prowess/HP buttons (sortGladiators), and compacting #arenaPanel (#arenaCanvas 185px, #combatLog 72px) for 0px overflow; add devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas, guard SELECT in keydown, and replace prompt() in importGladiatorDossier() with an in-DOM modal. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -205,11 +207,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kcolosseum_ludus.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback) in #exportModal plus VFS export of Battle Chronicles and orphaned exportGladiatorCertificate() dossiers to /home/docs/ via VFS_WRITE and OS_NOTIFY; render the orphaned Arena Wager bar (#btnWager0, #btnWager25, #btnWager50, #btnWager100, #wagerOddsDisplay calling setArenaWager()) and settle payouts/forfeits on solo match completion, add Certificate button on owned gladiator cards, and add Ludus Facilities [U] and Arena Wager parity to KColosseum/main.c. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
-- **Active Target**: `KDB`
+- **Active Target**: `KPaint`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + SQL studio, ER diagram canvas, and query result table scrolling; inject fixes via `--inject-fix`. |
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + digital art canvas, layer/sprite reel drawers, and tool palette layout; inject fixes via `--inject-fix`. |
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + spreadsheet grid, chart engine rendering, and regression overlays; inject fixes via `--inject-fix`. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + budget pie chart, ledger filters, and modal ergonomics; inject fixes via `--inject-fix`. |
@@ -239,6 +240,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | [Argon Audited 2026-10-27: Fixes queued -> kilo-expander, kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | [Argon Audited 2026-10-27: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | [Argon Audited 2026-10-27: Fixes queued -> kilo-tester, kilo-usability] Visual, feature & usability review. |
+| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | [Argon Audited 2026-10-27: Fixes queued -> kilo-tester, kilo-usability] Visual, feature & usability review. |
 
 ---
 
@@ -273,7 +275,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KVault** | `KiloOS/public/apps/kvault.html` | Pass 5+ (2026-10-24) | System / Security | Comprehensive client-side encrypted password & secret manager with AES-GCM/PBKDF2/WebCrypto, tree navigator, KeePass/CSV/ASCII export/import, F5/F9 state snapshots, and Win32 C parity. |
 | **KHash** | `KiloOS/public/apps/khash.html` | Pass 5+ (2026-10-24) | Security / Cryptography | Complete multi-algorithm checksum workstation (MD5, SHA1, SHA256, CRC32, Adler32, FNV-1a, Murmur3, CRC16), HMAC key generation, byte forensics/entropy, F5/F9 persistence, and dual Win32 C parity. |
 | **KSolitaire** | `KiloOS/public/apps/ksolitaire.html` | Pass 5+ (2026-10-23) | Games / Cards | Complete Klondike, Vegas & 20-stage Campaign Solitaire engine with F5/F9 state persistence, undo/redo stack, and native Win32 C build. |
-| **KDB** | `KiloOS/public/apps/kdb.html` | Pass 5+ (2026-10-23) | Productivity / Database & SQL | Enterprise relational table & SQL studio with multi-table schema designer, ER diagram, index simulator, VFS mount/export (/home/data/), KGraph IPC plotting, F5/F9 persistence, and dual Win32 C parity. |
 | **KConverter** | `KiloOS/public/apps/kconverter.html` | Pass 5+ (2026-10-23) | Productivity / Math & Units | High-precision engineering and dimensional unit converter across 14 physical categories with Smart Expression Parser, Batch tables, custom factors, F5/F9 persistence, and dual Win32 C parity. |
 | **KClip** | `KiloOS/public/apps/kclip.html` | Pass 5+ (2026-10-23) | Workstation & Utilities | Clipboard manager, 12 text transformation pipelines, regex find/replace, Diff/Hex inspector, F5/F9 persistence, and dual Win32 C parity. |
 | **KFont** | `KiloOS/public/apps/kfont.html` | Pass 5+ (2026-10-23) | Media / Typography | Complete typography workstation: 11 tabs, custom bitmap glyph editor & font bank, OTF axes, WCAG contrast matrix, C LOGFONT/JSON exports, F5/F9 persistence, dual Win32 C parity. |
@@ -310,6 +311,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T20:34:15-07:00 — kilo-review: KDB (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1020x663 and audited kdb.html + KDB/main.c).
+  - Visual/UX Findings: #toastContainer (bottom 38px) occludes #addRecordForm inputs and Add Record wraps to 2 lines; dark <select> dropdowns lack color-scheme dark; ER diagram SVG paths loop bottom-to-top through side-by-side cards and ignore window resize; #sqlResultsHead lacks click-to-sort.
+  - Feature/Parity Findings: confirmSeedData() crashes on missing nextRecordId() and omits PKs; Columns [S] crashes on missing renderTable(); Profile [P] reads col.id on string columns (100% missing / 0-cell trim); VFS CSV lacks parseAndInsertCsv() and 60s modal timeout; SQL GROUP BY skips ORDER BY/LIMIT; KDB/main.c blocks double-click edits and has UTF-8 MessageBoxA mojibake.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KDB`, `kilo-usability`->`KDB`] (un-quarantined `KDB` from Mature); advanced `kilo-review` to `KPaint`; next agent `kilo-creator`.
+
 - **2026-10-27T20:23:17-07:00 — kilo-expander: KColosseum (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KColosseum across web and native targets.
@@ -333,10 +340,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Workbench and Stats: #btnLoadLoreToWorkbench loads ciphertext to #outputText and runs runDecrypt(); #statTotalChars uses (outText || inText).length.
   - Session Sync: #btnExportJSON, #btnImportJSON, and #btnNewSession include aesKey, aesFormat, rsaP, rsaQ, rsaE, pipelineStages, and stegoText.
   - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
-
-- **2026-10-27T18:20:23-07:00 — kilo-soundscape: KCyber (Neon Grid Infiltration — YM2612/SPC700 Chiptune Suite)**
-  - Status: PASS ✅ (0 errors, web 116.8 KB, native 34.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Composition: D-Dorian netrunner breakbeat suite, 6-channel counterpoint, contrary digital bell arpeggios, 3rd/7th shell voicings, 5:3 swing groove.
-  - Patches & DSP: 2-Op FM acid bass with heat modulation, screaming dual FM ICE breach alarms, metallic FM hats, selective SPC700 stereo delay.
-  - Parity & Controls: Dual Win32 C parity with action earcons, Alt+M keyboard toggle, and in-game audio/mute terminal commands.
-  - Handoff: Advanced `kilo-soundscape` to `KStellar`; rotated active agent to `kilo-tester`.
