@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T23:22:16-07:00 — kilo-usability: KDB (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KDB across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
+
 - **2026-10-27T22:38:32-07:00 — kilo-tester: KDB (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 228.3 KB, native 66.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - UI & VFS Audit: Handlers verified for VFS, Profiler [P], Columns [S], Seeds, and Quicksave encryption.
