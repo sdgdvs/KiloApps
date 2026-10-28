@@ -566,14 +566,14 @@ static void CheckFirstRun(HWND hwnd) {
     MessageBoxA(hwnd,
         "Welcome to KCipher - Cryptographic Cipher Suite (1999 Edition)\n\n"
         "Quick Guide:\n"
-        "1. Select cipher from dropdown (Caesar, Vigenere, Rail Fence, Atbash, RC4).\n"
+        "1. Select cipher from dropdown (Caesar, Vigenere, Rail Fence, Atbash, RC4, XOR; Web: Pipeline/AES/RSA).\n"
         "2. Configure Key / Shift parameter.\n"
         "3. Enter or paste text into Plaintext Input.\n"
         "4. Click Encrypt [Ctrl+E] or Decrypt [Ctrl+D].\n\n"
         "Hotkeys:\n"
         "- Ctrl+E: Encrypt | Ctrl+D: Decrypt\n"
         "- Ctrl+S / F5: QuickSave snapshot | Ctrl+O / F9: QuickLoad snapshot\n"
-        "- F1 / H: Cipher Manual",
+        "- F1 / H: Cipher Manual | Ctrl+1..6: Tabs (Web)",
         "KCipher - First Run Guide", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -703,7 +703,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "5. RC4: Stream cipher with passphrase (hex output).\n\n"
                     "Shortcuts:\n"
                     "F1 / H: Manual | Esc: Clear Panes | Ctrl+E / Ctrl+Enter: Encrypt | Ctrl+D: Decrypt\n"
-                    "Ctrl+S / F5: QuickSave snapshot | Ctrl+O / F9: QuickLoad snapshot",
+                    "Ctrl+S / F5: QuickSave snapshot | Ctrl+O / F9: QuickLoad snapshot | Ctrl+1..6: Tabs (Web)",
                     "KCipher Manual", MB_OK | MB_ICONINFORMATION);
             } else if (wmId == ID_COMBO_CIPHER && HIWORD(wParam) == CBN_SELCHANGE) {
                 int sel = (int)SendMessageA(g_hComboCipher, CB_GETCURSEL, 0, 0);

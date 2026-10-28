@@ -309,6 +309,8 @@
       border-bottom: 1px solid var(--border);
       font-size: 12px;
       font-weight: 600;
+      white-space: nowrap;
+      gap: 6px;
     }
 
     .panel-body {
@@ -976,13 +978,13 @@
         <div class="panel">
           <div class="panel-header">
             <span>INPUT / PLAINTEXT</span>
-            <div style="display: flex; gap: 4px;">
+            <div style="display: flex; gap: 4px; align-items: center; white-space: nowrap;">
               <button class="btn btn-sm" id="btnSampleText">Sample</button>
               <button class="btn btn-sm" id="btnClearInput">Clear</button>
             </div>
           </div>
           <div class="panel-body">
-            <textarea id="inputText" class="text-box" placeholder="Enter plain text to encrypt or ciphertext to decrypt..."></textarea>
+            <textarea id="inputText" class="text-box" placeholder="Enter plain text to encrypt or ciphertext to decrypt...">THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG. Cryptography transforms plaintext into ciphertext to preserve confidential communication across open networks.</textarea>
           </div>
           <div class="panel-footer">
             <span id="inputStats">Chars: 0 | Words: 0 | Bytes: 0</span>
@@ -1010,12 +1012,12 @@
         <div class="panel">
           <div class="panel-header">
             <span>OUTPUT / CIPHERTEXT</span>
-            <div style="display: flex; gap: 4px;">
-              <button class="btn btn-sm" id="btnInspectKHex" title="Inspect Ciphertext in KHex Hex Editor">🔍 Inspect in KHex</button>
-              <button class="btn btn-sm" id="btnSendToKSteno" title="Send Ciphertext to KSteno Steganography">🕵️ To KSteno</button>
-              <button class="btn btn-sm" id="btnSendToFreq">📊 Analyze</button>
-              <button class="btn btn-sm" id="btnSendToStego">🖼️ To Stego</button>
-              <button class="btn btn-sm" id="btnClearOutput">Clear</button>
+            <div style="display: flex; gap: 3px; align-items: center; white-space: nowrap;">
+              <button class="btn btn-sm" id="btnInspectKHex" title="Inspect Ciphertext in KHex Hex Editor" style="padding: 2px 4px;">🔍 Hex</button>
+              <button class="btn btn-sm" id="btnSendToKSteno" title="Send Ciphertext to KSteno Steganography" style="padding: 2px 4px;">🕵️ Steno</button>
+              <button class="btn btn-sm" id="btnSendToFreq" title="Frequency Analysis" style="padding: 2px 4px;">📊 Freq</button>
+              <button class="btn btn-sm" id="btnSendToStego" title="Send to Steganography" style="padding: 2px 4px;">🖼️ Stego</button>
+              <button class="btn btn-sm" id="btnClearOutput" title="Clear Output" style="padding: 2px 4px;">Clear</button>
             </div>
           </div>
           <div class="panel-body">
@@ -2816,8 +2818,10 @@
       }
     }
 
+    const SAMPLE_TEXT = "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG. Cryptography transforms plaintext into ciphertext to preserve confidential communication across open networks.";
+
     // Execute Encryption
-    function runEncrypt() {
+    function runEncrypt(silent = false) {
       const input = elements.inputText.value;
       let output = '';
 
@@ -2855,7 +2859,7 @@
 
       elements.outputText.value = output;
       updateStats();
-      audio.playEncrypt();
+      if (!silent) audio.playEncrypt();
     }
 
     // Execute Decryption
@@ -3177,24 +3181,28 @@
 
     const TUTORIAL_STEPS = [
       {
-        title: "Step 1: The Cryptographic Workbench",
-        text: "KCipher provides authentic classical and 1990s ciphers: Caesar/ROT-13, Vigenère polyalphabetic, Rail Fence transposition, Substitution, RC4 stream, and XOR Vernam. Type or paste your message in the left panel and click ENCRYPT (or press Ctrl+Enter)."
+        title: "Step 1: The Cryptographic Workbench & Modern Ciphers",
+        text: "KCipher provides authentic classical and 1990s ciphers: Caesar/ROT-13, Vigenère polyalphabetic, Rail Fence transposition, Substitution, RC4 stream, XOR Vernam, Rijndael/AES-128 block cipher, and RSA asymmetric public-key encryption. Type or paste your message in the left panel and click ENCRYPT (or press Ctrl+Enter)."
       },
       {
-        title: "Step 2: Real-Time Frequency Analysis",
+        title: "Step 2: Multi-Stage Cipher Pipeline & Chaining",
+        text: "Construct complex defense-in-depth cryptosystems in the Cipher Pipeline tab. Chain multiple encryption algorithms in sequence (e.g., Substitution -> AES -> RC4), configure individual stage parameters, and re-order or inspect intermediate transforms."
+      },
+      {
+        title: "Step 3: Real-Time Frequency Analysis & IoC",
         text: "Switch to the Frequency Analysis tab to inspect letter distribution histograms. Compare your ciphertext against standard English (ETAOIN SHRDLU). The Index of Coincidence (IoC) tells you if you're dealing with a monoalphabetic or polyalphabetic cipher!"
       },
       {
-        title: "Step 3: Caesar Brute-Force Cracker",
+        title: "Step 4: Caesar Brute-Force Cracker",
         text: "Encountered an unknown shifted message? The Caesar Auto-Cracker tests all 25 possible shifts in milliseconds, scores each result using English quadgram statistics, and lets you apply the best plaintext with one click."
       },
       {
-        title: "Step 4: 1-Bit Image Steganography",
+        title: "Step 5: 1-Bit Image Steganography",
         text: "Need to hide secrets in plain sight? Use the Steganography Carrier to embed secret text directly into the least significant bit (LSB) of canvas image pixels without visual distortion. Save the PNG or inspect the raw bit-plane!"
       },
       {
-        title: "Step 5: Master Keyboard Shortcuts & Ergonomics",
-        text: "KCipher is built for high-speed cryptographic ergonomics:\n• [F1] / [H]: Open this Guide & Shortcuts Reference\n• [Esc]: Dismiss dialogs or clear active text panes\n• [Ctrl+Enter]: Run Encryption on Input\n• [Ctrl+Shift+Enter]: Run Decryption on Output\n• [Ctrl+1..5]: Instant Tab Navigation (Workbench, Freq, Cracker, Stego, Lore)\n• [F5] / [F9]: QuickSave and QuickLoad session snapshot"
+        title: "Step 6: Master Keyboard Shortcuts & Ergonomics",
+        text: "KCipher is built for high-speed cryptographic ergonomics:\n• [F1] / [H]: Open this Guide & Shortcuts Reference\n• [Esc]: Dismiss dialogs or clear active text panes\n• [Ctrl+Enter]: Run Encryption on Input\n• [Ctrl+Shift+Enter]: Run Decryption on Output\n• [Ctrl+S] / [Ctrl+O]: VFS QuickSave and Open (/home/crypto/)\n• [Ctrl+1..6]: Instant Tab Navigation (1: Workbench, 2: Pipeline, 3: Frequency, 4: Cracker, 5: Stego, 6: Lore)\n• [F5] / [F9]: QuickSave and QuickLoad session snapshot"
       }
     ];
 
@@ -3273,6 +3281,10 @@
       document.getElementById('btnSplashNew').addEventListener('click', () => {
         elements.splashOverlay.style.display = 'none';
         try { localStorage.setItem('kcipher_tutorialSeen', '1'); } catch (e) {}
+        if (!elements.inputText.value.trim()) {
+          elements.inputText.value = SAMPLE_TEXT;
+        }
+        runEncrypt();
         audio.playClick();
       });
 
@@ -3507,9 +3519,11 @@
           return;
         }
         const defaultPath = `/home/crypto/cipher_${Date.now().toString().slice(-6)}.enc`;
-        const path = prompt("Save ciphertext to KiloOS VFS path:", defaultPath) || defaultPath;
-        KiloVFS.write(path, textToSave);
-        showToast(`Saved to VFS: ${path}`);
+        const path = prompt("Save ciphertext to KiloOS VFS path:", defaultPath);
+        if (path === null) return;
+        const targetPath = path.trim() || defaultPath;
+        KiloVFS.write(targetPath, textToSave);
+        showToast(`Saved to VFS: ${targetPath}`);
         audio.playSave();
       });
 
@@ -3687,7 +3701,7 @@
 
       // Sample Text
       document.getElementById('btnSampleText').addEventListener('click', () => {
-        elements.inputText.value = "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG. Cryptography transforms plaintext into ciphertext to preserve confidential communication across open networks.";
+        elements.inputText.value = SAMPLE_TEXT;
         updateStats();
         if (state.liveTransform) runEncrypt();
         audio.playClick();
@@ -4277,12 +4291,16 @@
       });
 
       // Initial run & stego capacity
+      if (!elements.inputText.value.trim()) {
+        elements.inputText.value = SAMPLE_TEXT;
+      }
       renderPipeline();
       executePipeline(false);
       updateCipherControls();
       updateKeyGuards();
       updateStats();
       updateStegoCapacity();
+      runEncrypt(true);
 
       function checkIncomingVFSLaunch() {
         const rawHash = window.location.hash.replace(/^#/, '');

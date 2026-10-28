@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_graphics: KStellar
   kilo_soundscape: KStellar
   kilo_tester: KMaze
-  kilo_usability: KCipher
+  kilo_usability: KColosseum
   kilo_qa: KTask
   kilo_expander: KColosseum
   kilo_review: KDB
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KCipher
-  timestamp: '2026-10-27T18:35:32-07:00'
+  timestamp: '2026-10-27T19:20:36-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -152,11 +152,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | **[ARGON REVIEW]:** Fix executePipeline(true) to decrypt #pipelineFinalOutput back to plaintext and parse stage.key (p,q,e) for RSA stages; fix #btnLoadLoreToWorkbench to load lore.ciphertext into #outputText and runDecrypt() into #inputText; fix #statTotalChars to use (outText // inText).length; and include aesKey/aesFormat/rsaP/rsaQ/rsaE/pipelineStages/stegoText in #btnExportJSON, #btnImportJSON, and #btnNewSession. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KCipher`
+- **Active Target**: `KColosseum`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | **[ARGON REVIEW]:** Fix right workbench .panel-header 2-line wrapping at 980x663 via white-space:nowrap and compact button labels so both pane headers align cleanly; pre-populate #inputText with sample text on boot/#btnSplashNew and runEncrypt() silently on init; abort #btnVFSSave when prompt() returns null; and update TUTORIAL_STEPS for Ctrl+1..6 and Pipeline/AES/RSA. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Scope global li card styling to #marketList > li and #ownedList > li so #tutorialModal ol li stops stretching and clipping #btnTutorialEnter; lock body to 100vh flex column at 800x563 by merging .top-nav, h1, and .funds into a compact header, removing the duplicate Empire Duel Arena banner, making #marketList and #ownedList independently scrollable with Sort by Prowess/HP buttons (sortGladiators), and compacting #arenaPanel (#arenaCanvas 185px, #combatLog 72px) for 0px overflow; add devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas, guard SELECT in keydown, and replace prompt() in importGladiatorDossier() with an in-DOM modal. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -170,6 +169,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Add <meta charset='UTF-8'> to kmaze.html <head> to fix broken UTF-8 mojibake icons across splash, HUD, toasts, and canvas; compact top #uiCanvas and Win32 GDI HUD telemetry over a dark translucent header strip so Lvl/biome/charges text stops colliding with F5/F9 hint and clipping [STAND]/[CROUCH] at 320px width; move #toastContainer below top HUD (top 50px) and #firstRunBanner to bottom of #canvasWrapper; suppress duplicate gameState===0 canvas text behind #splashOverlay; and sync #uiCanvas dimensions/scaling cleanly on boot and resize. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Scale #matrixCanvas by devicePixelRatio in resizeMatrixRain(), refocus #termInput on modal close and .terminal-wrapper click, and add codebook/waterfall/vfs to #helpModal, cmdHelp(), and quick-action buttons. |
+| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | **[ARGON REVIEW]:** Fix right workbench .panel-header 2-line wrapping at 980x663 via white-space:nowrap and compact button labels so both pane headers align cleanly; pre-populate #inputText with sample text on boot/#btnSplashNew and runEncrypt() silently on init; abort #btnVFSSave when prompt() returns null; and update TUTORIAL_STEPS for Ctrl+1..6 and Pipeline/AES/RSA. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KTask`
@@ -310,6 +310,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T19:20:36-07:00 — kilo-usability: KCipher (Workbench Header Alignment & Usability Polish)**
+  - Status: PASS (0 errors, web 163.7 KB, native 14.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS 0 warn 0 cut-off).
+  - Layout: Fixed right workbench .panel-header 2-line wrapping with white-space:nowrap and compact button styling (Hex, Steno, Freq, Stego, Clear) for clean pane alignment.
+  - UX & Shortcuts: Pre-populated #inputText on boot/#btnSplashNew and ran silent runEncrypt() on init; aborted #btnVFSSave on prompt() null; expanded TUTORIAL_STEPS for Ctrl+1..6, Pipeline, AES, and RSA.
+  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
+
 - **2026-10-27T18:35:32-07:00 — kilo-tester: KCipher (Pipeline Decrypt and Lore Workbench Handoff Fixes)**
   - Status: PASS ✅ (web 158.1 KB, native 18.0 KB < 999 KB; startup, Vite and security_lint PASS; visual PASS).
   - Pipeline and RSA Fix: executePipeline(true) decrypts #pipelineFinalOutput back to plaintext and parses stage.key (p,q,e) for RSA.
@@ -333,9 +339,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Delivered The Scallion: interactive broadsheet with Ask A Sysadmin agony aunt terminal, Infographic Lab, Headline Forge, and VFS clipping export.
   - Added YM2612 2-Op FM + SPC700 stereo delay sound engine with [M] mute toggle and [F1]/[H] quick reference hotkeys modal.
   - Handoff: Advanced `kilo-creator` to `kweb://warez`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-27T16:32:02-07:00 — kilo-review: KCipher (Argon Visual, Feature & Usability Review (Mature Audit))**
-  - Status: AUDIT COMPLETE (inspected 980x663 sheet.png and audited kcipher.html + KCipher/main.c; un-quarantining KCipher with 2 surgical Flash fix specs).
-  - Visual/UX Findings: Right workbench .panel-header (OUTPUT / CIPHERTEXT) wraps title and 5 action buttons onto 2 lines at 980x663 misaligning panes; #inputText starts blank on boot/Start New Session leaving IoC at 0.000; canceling #btnVFSSave prompt() still writes to defaultPath.
-  - Feature/Logic Findings: executePipeline(true) reads #inputText instead of decrypting #pipelineFinalOutput and hardcodes RSA (61,53,17) ignoring stage.key; #btnLoadLoreToWorkbench puts ciphertext into #inputText where liveTransform double-encrypts it; #statTotalChars reads outText.length while calculateStats uses (outText || inText); JSON Export/Import omits AES/RSA/Pipeline.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KCipher`, `kilo-usability`->`KCipher`] (un-quarantined `KCipher` from Mature); advanced `kilo-review` to `KDB`; next agent `kilo-creator`.
