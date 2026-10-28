@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KMech
   kilo_soundscape: KStellar
   kilo_tester: KMaze
-  kilo_usability: KDB
+  kilo_usability: KColosseum
   kilo_qa: KRead
   kilo_expander: KQuest
   kilo_review: KPaint
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KDB
-  timestamp: '2026-10-27T22:38:32-07:00'
+  timestamp: '2026-10-27T23:22:16-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -152,11 +152,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | **[ARGON REVIEW]:** Implement missing nextRecordId(tbl) (reusing it for #statNextId) and fix confirmSeedData() schema/PK fields (employees id/status/email, departments code/head, projects id/priority); replace undefined renderTable() with renderAll() in addNewColumnToTable()/dropColumnFromTable() while initializing default values and purging dropped-column indexes/relations; fix Profile [P] (analyzeColumnProfile, cleanTrimWhitespace, exportProfilerReport) to read string column names in tbl.columns and dbState.activeTable instead of col.id/tbl.id; apply ORDER BY and LIMIT after GROUP BY/aggregates in executeSelectSql() with getFieldValue() and numeric-aware MIN/MAX; add e.origin check, implement parseAndInsertCsv() for VFS CSV open, use 60s timeout for VFS_SHOW_OPEN with standalone exportToVfs()/exportCsvToVfs() fallbacks, and encrypt kdb_quicksave when #dbPassword is set; in KDB/main.c allow IDC_ADD_BTN to update existing records after NM_DBLCLK edit and replace UTF-8 bullets/emoji in MessageBoxA strings with ASCII. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KDB`
+- **Active Target**: `KColosseum`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | **[ARGON REVIEW]:** Move #toastContainer from bottom 38px left 50% to top 52px right 16px so toasts stop occluding #addRecordForm inputs and bottom card buttons, and add white-space nowrap to .btn-primary so Add Record stays single-line; add color-scheme dark on :root and dark background/color on select option so dropdowns never render white-on-white; compact .header/.controls at 1020x663 to <=2 rows, add horizontal margin (6px 12px 0) to #sqlQueryBuilder and compact .sql-editor (height 62px) to preserve .sql-results-container scroll height, reset .sql-results-container scrollTop and #sqlPresetSelect on run, and wire click-to-sort on #sqlResultsHead th; fix renderSchemaDiagram() in #viewSchema to route SVG Bezier connectors with arrowheads horizontally between FK and PK .schema-col-item row edges, sync #schemaSvgOverlay to #schemaEntitiesGrid scroll size without forced min-height 500px, and redraw ER connectors on window resize; document [5] Schema and [X] Indexes in #helpModal/welcome toast and replace blocking confirm() in dropColumnFromTable()/removeRelation() with in-DOM confirmation. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Scope global li card styling to #marketList > li and #ownedList > li so #tutorialModal ol li stops stretching and clipping #btnTutorialEnter; lock body to 100vh flex column at 800x563 by merging .top-nav, h1, and .funds into a compact header, removing the duplicate Empire Duel Arena banner, making #marketList and #ownedList independently scrollable with Sort by Prowess/HP buttons (sortGladiators), and compacting #arenaPanel (#arenaCanvas 185px, #combatLog 72px) for 0px overflow; add devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas, guard SELECT in keydown, and replace prompt() in importGladiatorDossier() with an in-DOM modal. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | HiDPI telemetry oscilloscopes (`devicePixelRatio`), responsive grid cards at `<640px`, and keyboard tab switching (`[1-5]`). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -171,6 +170,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Add <meta charset='UTF-8'> to kmaze.html <head> to fix broken UTF-8 mojibake icons across splash, HUD, toasts, and canvas; compact top #uiCanvas and Win32 GDI HUD telemetry over a dark translucent header strip so Lvl/biome/charges text stops colliding with F5/F9 hint and clipping [STAND]/[CROUCH] at 320px width; move #toastContainer below top HUD (top 50px) and #firstRunBanner to bottom of #canvasWrapper; suppress duplicate gameState===0 canvas text behind #splashOverlay; and sync #uiCanvas dimensions/scaling cleanly on boot and resize. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Scale #matrixCanvas by devicePixelRatio in resizeMatrixRain(), refocus #termInput on modal close and .terminal-wrapper click, and add codebook/waterfall/vfs to #helpModal, cmdHelp(), and quick-action buttons. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | **[ARGON REVIEW]:** Fix right workbench .panel-header 2-line wrapping at 980x663 via white-space:nowrap and compact button labels so both pane headers align cleanly; pre-populate #inputText with sample text on boot/#btnSplashNew and runEncrypt() silently on init; abort #btnVFSSave when prompt() returns null; and update TUTORIAL_STEPS for Ctrl+1..6 and Pipeline/AES/RSA. |
+| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | **[ARGON REVIEW]:** Move #toastContainer from bottom 38px left 50% to top 52px right 16px so toasts stop occluding #addRecordForm inputs and bottom card buttons, and add white-space nowrap to .btn-primary so Add Record stays single-line; add color-scheme dark on :root and dark background/color on select option so dropdowns never render white-on-white; compact .header/.controls at 1020x663 to <=2 rows, add horizontal margin (6px 12px 0) to #sqlQueryBuilder and compact .sql-editor (height 62px) to preserve .sql-results-container scroll height, reset .sql-results-container scrollTop and #sqlPresetSelect on run, and wire click-to-sort on #sqlResultsHead th; fix renderSchemaDiagram() in #viewSchema to route SVG Bezier connectors with arrowheads horizontally between FK and PK .schema-col-item row edges, sync #schemaSvgOverlay to #schemaEntitiesGrid scroll size without forced min-height 500px, and redraw ER connectors on window resize; document [5] Schema and [X] Indexes in #helpModal/welcome toast and replace blocking confirm() in dropColumnFromTable()/removeRelation() with in-DOM confirmation. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KRead`
@@ -310,6 +310,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T23:22:16-07:00 — kilo-usability: KDB (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KDB across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
+
 - **2026-10-27T22:38:32-07:00 — kilo-tester: KDB (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 228.3 KB, native 66.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - UI & VFS Audit: Handlers verified for VFS, Profiler [P], Columns [S], Seeds, and Quicksave encryption.
@@ -331,9 +336,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-creator updates for kweb://warez across web and native targets.
   - Handoff: Advanced `kilo-creator` to `kweb://geocities`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-27T21:14:00-07:00 — kilo-adhoc: KiloOS & Firebase Hosting Recovery (v0.4.36)**
-  - Status: PASS ✅ (Vite build PASS, security_lint PASS, check_sizes PASS, headless Chrome boot & login verified).
-  - Runtime Fix: Moved `const [vfs, setVfs]` above `playClickAudio`/`playStartupAudio` in `KiloOS/src/App.jsx` to fix the TDZ `ReferenceError: Cannot access 'w' before initialization` blank screen on boot.
-  - Deploy Pipeline Fix: Replaced `javascript:` URI with `href='#'` + `onclick` in `KiloOS/public/web/webring.html` to unblock `security_lint.py` in Firebase Hosting CI/CD.
-  - Bumped `MICROS_VERSION` and `KiloOS/package.json` to `0.4.36`; preserved scheduled frontmatter (`kilo-creator` -> `kweb://demoscene`).

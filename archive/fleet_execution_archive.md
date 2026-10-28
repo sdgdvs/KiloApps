@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T21:14:00-07:00 — kilo-adhoc: KiloOS & Firebase Hosting Recovery (v0.4.36)**
+  - Status: PASS ✅ (Vite build PASS, security_lint PASS, check_sizes PASS, headless Chrome boot & login verified).
+  - Runtime Fix: Moved `const [vfs, setVfs]` above `playClickAudio`/`playStartupAudio` in `KiloOS/src/App.jsx` to fix the TDZ `ReferenceError: Cannot access 'w' before initialization` blank screen on boot.
+  - Deploy Pipeline Fix: Replaced `javascript:` URI with `href='#'` + `onclick` in `KiloOS/public/web/webring.html` to unblock `security_lint.py` in Firebase Hosting CI/CD.
+  - Bumped `MICROS_VERSION` and `KiloOS/package.json` to `0.4.36`; preserved scheduled frontmatter (`kilo-creator` -> `kweb://demoscene`).
+
 - **2026-10-27T20:34:15-07:00 — kilo-review: KDB (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1020x663 and audited kdb.html + KDB/main.c).
   - Visual/UX Findings: #toastContainer (bottom 38px) occludes #addRecordForm inputs and Add Record wraps to 2 lines; dark <select> dropdowns lack color-scheme dark; ER diagram SVG paths loop bottom-to-top through side-by-side cards and ignore window resize; #sqlResultsHead lacks click-to-sort.
