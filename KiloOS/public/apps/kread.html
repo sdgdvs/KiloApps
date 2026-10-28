@@ -1015,6 +1015,8 @@
     <button class="btn btn-sm" id="qsAlice" title="Load Alice in Wonderland Excerpt">✨ Alice</button>
     <button class="btn btn-sm" id="qsChronos" title="Load Chronos '99 Decrypted Telemetry">🛰️ Chronos '99</button>
     <span style="flex: 1;"></span>
+    <button class="btn btn-sm" id="btnPagePrev" title="Previous Page (PageUp / Shift+Space)">◀ Prev <kbd>PgUp</kbd></button>
+    <button class="btn btn-sm" id="btnPageNext" title="Next Page (PageDown / Space)">Next ▶ <kbd>PgDn</kbd></button>
     <button class="btn btn-sm" id="btnQuickCopy" title="Copy Active Document Text (Ctrl+Shift+C)">📋 Copy Doc <kbd>^C</kbd></button>
     <button class="btn btn-sm" id="btnQuickTheme" title="Cycle Reading Theme (T)">🎨 Theme <kbd>T</kbd></button>
   </div>
@@ -1124,6 +1126,7 @@
           <li><kbd>F2</kbd> - Rename Active Tab</li>
           <li><kbd>Ctrl</kbd> + <kbd>F</kbd> or <kbd>/</kbd> - Find Text in Document</li>
           <li><kbd>Ctrl</kbd> + <kbd>B</kbd> - Quick Add Bookmark</li>
+          <li><kbd>Ctrl</kbd> + <kbd>J</kbd> - Jump to Latest Bookmark</li>
           <li><kbd>B</kbd> / <kbd>N</kbd> / <kbd>O</kbd> - Toggle Bookmarks / Notes / Outline Drawer</li>
           <li><kbd>Alt</kbd> + <kbd>S</kbd> - Launch RSVP Speed Reader</li>
           <li><kbd>A</kbd> - Toggle Hands-Free Auto-Scroll</li>
@@ -1131,15 +1134,15 @@
           <li><kbd>T</kbd> - Cycle Reading Theme (Light/Dark/Sepia/Contrast)</li>
           <li><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> - Copy Entire Document Text</li>
           <li><kbd>Del</kbd> - Clear Active Document</li>
-          <li><kbd>Space</kbd> / <kbd>Shift+Space</kbd> - Page Scroll Down / Up</li>
+          <li><kbd>Space</kbd> / <kbd>Shift+Space</kbd> or <kbd>PageDown</kbd> / <kbd>PageUp</kbd> - Page Scroll Down / Up</li>
           <li><kbd>J</kbd> / <kbd>K</kbd> or <kbd>↓</kbd> / <kbd>↑</kbd> - Line Scroll</li>
           <li><kbd>Home</kbd> / <kbd>End</kbd> - Jump to Document Start / End</li>
           <li><kbd>Ctrl</kbd> + <kbd>S</kbd> - Open Reading Statistics</li>
-          <li><kbd>+</kbd> / <kbd>-</kbd> - Zoom Font Size (or adjust auto-scroll speed)</li>
+          <li><kbd>+</kbd> / <kbd>-</kbd> or <kbd>Ctrl</kbd> + <kbd>+</kbd> / <kbd>-</kbd> - Zoom Font Size (or adjust auto-scroll speed)</li>
+          <li><kbd>0</kbd> or <kbd>Ctrl</kbd> + <kbd>0</kbd> - Reset Font Size to Default (18px)</li>
           <li><kbd>F5</kbd> - Snapshot Quicksave Complete Workspace State</li>
           <li><kbd>F9</kbd> - Snapshot Quickload Complete Workspace State</li>
           <li><kbd>Shift</kbd> + <kbd>M</kbd> - Toggle Procedural YM2612 FM Audio & SPC700 Delay</li>
-          <li><kbd>0</kbd> - Reset Font Size to Default (18px)</li>
           <li><kbd>Esc</kbd> - Close Panels, Drawers, & Modals / Stop Auto-Scroll</li>
         </ul>
         <p><strong>Advanced E-Reader Capabilities:</strong></p>
@@ -1452,6 +1455,8 @@
     const qsChronos = document.getElementById('qsChronos');
     const btnQuickCopy = document.getElementById('btnQuickCopy');
     const btnQuickTheme = document.getElementById('btnQuickTheme');
+    const btnPagePrev = document.getElementById('btnPagePrev');
+    const btnPageNext = document.getElementById('btnPageNext');
 
     // Outline Drawer Elements
     const btnToggleOutline = document.getElementById('btnToggleOutline');
@@ -1891,12 +1896,14 @@
         
         // Restore scroll position
         const curTab = getActiveTab();
-        if (curTab && curTab.scroll) {
+        if (curTab && typeof curTab.scroll === 'number') {
           setTimeout(() => {
             readerContainer.scrollTo({ top: curTab.scroll, behavior: 'instant' });
             updateScrollProgress();
           }, 30);
         }
+        if (bookmarksDrawer && bookmarksDrawer.classList.contains('open')) renderBookmarks();
+        if (notesDrawer && notesDrawer.classList.contains('open')) renderNotes();
 
         playSfx('load');
         showToast(`📂 Restored quicksave snapshot (${tabs.length} tabs) [F9]`, '📂');
@@ -2573,14 +2580,20 @@
     // Scroll & Progress Tracking
     function updateScrollProgress() {
       const scrollable = readerContainer.scrollHeight - readerContainer.clientHeight;
+      const clientH = readerContainer.clientHeight || 1;
+      const totalPages = Math.max(1, Math.ceil(readerContainer.scrollHeight / clientH));
+      const curPage = scrollable > 0 
+        ? Math.min(totalPages, Math.max(1, Math.floor(readerContainer.scrollTop / clientH) + 1))
+        : 1;
+
       if (scrollable <= 0) {
         progressBar.style.width = '100%';
-        document.getElementById('sbProgress').textContent = '100% Read';
+        document.getElementById('sbProgress').textContent = '100% Read (Pg 1/1)';
         return;
       }
       const pct = Math.min(100, Math.max(0, Math.round((readerContainer.scrollTop / scrollable) * 100)));
       progressBar.style.width = pct + '%';
-      document.getElementById('sbProgress').textContent = pct + '% Read';
+      document.getElementById('sbProgress').textContent = `${pct}% Read (Pg ${curPage}/${totalPages})`;
     }
 
     let scrollTimeout;
@@ -2841,6 +2854,8 @@
     if (qsChronos) qsChronos.onclick = () => loadSampleDoc(SAMPLES.chronos);
     if (btnQuickCopy) btnQuickCopy.onclick = copyActiveDocumentText;
     if (btnQuickTheme) btnQuickTheme.onclick = cycleTheme;
+    if (btnPagePrev) btnPagePrev.onclick = () => { const d = readerContainer.clientHeight * 0.85; readerContainer.scrollBy({ top: -d, behavior: 'smooth' }); };
+    if (btnPageNext) btnPageNext.onclick = () => { const d = readerContainer.clientHeight * 0.85; readerContainer.scrollBy({ top: d, behavior: 'smooth' }); };
 
     // View Mode Toggle
     if (btnToggleMarkdown) {
@@ -3125,10 +3140,26 @@
 
     window.jumpToBookmark = (scrollPos) => {
       readerContainer.scrollTop = scrollPos;
+      const tab = getActiveTab();
+      if (tab) {
+        tab.scroll = scrollPos;
+        saveTabsSession();
+      }
+      updateScrollProgress();
       bookmarksDrawer.classList.remove('open');
       btnToggleBookmarks.classList.remove('active');
       showToast('Jumped to bookmark location', '📍');
     };
+
+    function jumpToLatestBookmark() {
+      const tab = getActiveTab();
+      if (!tab || !tab.bookmarks || tab.bookmarks.length === 0) {
+        showToast('No saved bookmarks in this tab [Press Ctrl+B to add]', '⚠️');
+        return;
+      }
+      const bm = tab.bookmarks[0];
+      jumpToBookmark(bm.scroll);
+    }
 
     window.deleteBookmark = (id) => {
       const tab = getActiveTab();
@@ -4138,6 +4169,9 @@
       } else if (ctrl && (e.key === 'b' || e.key === 'B')) {
         e.preventDefault();
         addBookmark();
+      } else if (ctrl && (e.key === 'j' || e.key === 'J')) {
+        e.preventDefault();
+        jumpToLatestBookmark();
       } else if (ctrl && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         updateStats();
@@ -4170,25 +4204,33 @@
       } else if ((ctrl && (e.key === 'f' || e.key === 'F')) || (e.key === '/' && !ctrl && !e.altKey)) {
         e.preventDefault();
         toggleSearchPanel();
-      } else if ((e.key === '+' || e.key === '=')) {
-        if (!ctrl && !e.altKey) {
+      } else if (e.key === 'PageDown' || ((e.key === ' ' || e.code === 'Space') && !e.shiftKey && !ctrl && !e.altKey)) {
+        e.preventDefault();
+        const delta = readerContainer.clientHeight * 0.85;
+        readerContainer.scrollBy({ top: delta, behavior: 'smooth' });
+      } else if (e.key === 'PageUp' || ((e.key === ' ' || e.code === 'Space') && e.shiftKey && !ctrl && !e.altKey)) {
+        e.preventDefault();
+        const delta = readerContainer.clientHeight * 0.85;
+        readerContainer.scrollBy({ top: -delta, behavior: 'smooth' });
+      } else if (e.key === '+' || e.key === '=' || (ctrl && (e.key === '+' || e.key === '='))) {
+        if (!e.altKey) {
           e.preventDefault();
-          if (autoScrollActive) {
+          if (autoScrollActive && !ctrl) {
             btnAutoScrollFaster.click();
           } else {
             btnFontUp.click();
           }
         }
-      } else if (e.key === '-') {
-        if (!ctrl && !e.altKey) {
+      } else if (e.key === '-' || (ctrl && (e.key === '-' || e.key === '_'))) {
+        if (!e.altKey) {
           e.preventDefault();
-          if (autoScrollActive) {
+          if (autoScrollActive && !ctrl) {
             btnAutoScrollSlower.click();
           } else {
             btnFontDown.click();
           }
         }
-      } else if (e.key === '0' && !ctrl && !e.altKey) {
+      } else if ((e.key === '0' || (ctrl && e.key === '0')) && !e.altKey) {
         e.preventDefault();
         fontSize = 18;
         safeSetItem('kread_fontsize', fontSize);
@@ -4226,10 +4268,6 @@
           const nextIdx = (curIdx + 1) % tabs.length;
           switchTab(tabs[nextIdx].id);
         }
-      } else if (e.key === ' ' && !ctrl && !e.altKey) {
-        e.preventDefault();
-        const delta = readerContainer.clientHeight * 0.75;
-        readerContainer.scrollBy({ top: e.shiftKey ? -delta : delta, behavior: 'smooth' });
       } else if ((e.key === 'j' || e.key === 'J' || e.key === 'ArrowDown') && !ctrl && !e.altKey) {
         readerContainer.scrollBy({ top: 70, behavior: 'smooth' });
       } else if ((e.key === 'k' || e.key === 'K' || e.key === 'ArrowUp') && !ctrl && !e.altKey) {

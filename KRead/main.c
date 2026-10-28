@@ -25,11 +25,13 @@ typedef struct {
     char* pszText;
     DWORD dwTextLen;
     DWORD dwBookmark;
+    DWORD dwScrollPos;
 } KREAD_TAB;
 
 static KREAD_TAB g_Tabs[MAX_TABS];
 static int g_NumTabs = 0;
 static int g_ActiveTab = 0;
+static int g_currentTheme = 0;
 
 static HWND g_hMainWnd = NULL;
 static HWND g_hTabCtrl = NULL;
@@ -201,7 +203,11 @@ void UpdateStatusBar() {
     int lineIdx = (int)SendMessageA(hEdit, EM_LINEFROMCHAR, selStart, 0) + 1;
     int lineStart = (int)SendMessageA(hEdit, EM_LINEINDEX, lineIdx - 1, 0);
     int colIdx = (int)selStart - lineStart + 1;
-    wsprintfA(szPart1, "Ln %d, Col %d | %d ch | %dpt", lineIdx, colIdx, docLen, currentFontSize);
+    int totalLines = hEdit ? (int)SendMessageA(hEdit, EM_GETLINECOUNT, 0, 0) : 1;
+    if (totalLines < 1) totalLines = 1;
+    int totalPages = max(1, (totalLines + 29) / 30);
+    int curPage = min(totalPages, max(1, (lineIdx + 29) / 30));
+    wsprintfA(szPart1, "Ln %d/%d (Pg %d/%d) | Col %d | %d ch | %dpt", lineIdx, totalLines, curPage, totalPages, colIdx, docLen, currentFontSize);
     SendMessageA(g_hStatus, SB_SETTEXTA, 1, (LPARAM)szPart1);
 
     if (g_bToastActive && g_szStatusToast[0]) {
@@ -257,10 +263,10 @@ void SetTheme(HWND hwnd, COLORREF bg, COLORREF text) {
 void SaveActiveTabState() {
     if (g_ActiveTab < 0 || g_ActiveTab >= g_NumTabs || !hEdit) return;
     
-    // Save bookmark / cursor
+    // Save cursor position without overwriting explicit bookmark
     DWORD start = 0, end = 0;
     SendMessageA(hEdit, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
-    g_Tabs[g_ActiveTab].dwBookmark = start;
+    g_Tabs[g_ActiveTab].dwScrollPos = start;
 
     // Save text
     int len = GetWindowTextLengthA(hEdit);
@@ -289,8 +295,8 @@ void LoadTabState(int index) {
         SetWindowTextA(hEdit, "");
     }
     
-    DWORD bm = g_Tabs[index].dwBookmark;
-    SendMessageA(hEdit, EM_SETSEL, bm, bm);
+    DWORD pos = g_Tabs[index].dwScrollPos;
+    SendMessageA(hEdit, EM_SETSEL, pos, pos);
     SendMessageA(hEdit, EM_SCROLLCARET, 0, 0);
     
     if (g_hTabCtrl) {
@@ -325,6 +331,7 @@ void AddNewTab(HWND hwnd, const char* title, const char* initialText) {
     }
 
     g_Tabs[newIdx].dwBookmark = 0;
+    g_Tabs[newIdx].dwScrollPos = 0;
     g_Tabs[newIdx].pszText = NULL;
     g_Tabs[newIdx].dwTextLen = 0;
 
@@ -358,6 +365,7 @@ void CloseCurrentTab(HWND hwnd) {
             g_Tabs[0].dwTextLen = 0;
         }
         g_Tabs[0].dwBookmark = 0;
+        g_Tabs[0].dwScrollPos = 0;
         lstrcpyA(g_Tabs[0].szTitle, "Untitled");
         
         TCITEMA tie;
@@ -391,7 +399,8 @@ void CloseCurrentTab(HWND hwnd) {
     LoadTabState(nextIdx);
 }
 
-#define QUICKSAVE_MAGIC 0x3244524B // "KRD2"
+#define QUICKSAVE_MAGIC 0x3344524B // "KRD3"
+#define QUICKSAVE_MAGIC_V2 0x3244524B // "KRD2"
 
 void QuicksaveNative(HWND hwnd) {
     SaveActiveTabState();
@@ -413,6 +422,7 @@ void QuicksaveNative(HWND hwnd) {
     for (int i = 0; i < g_NumTabs; i++) {
         WriteFile(hFile, g_Tabs[i].szTitle, sizeof(g_Tabs[i].szTitle), &written, NULL);
         WriteFile(hFile, &g_Tabs[i].dwBookmark, sizeof(DWORD), &written, NULL);
+        WriteFile(hFile, &g_Tabs[i].dwScrollPos, sizeof(DWORD), &written, NULL);
         WriteFile(hFile, &g_Tabs[i].dwTextLen, sizeof(DWORD), &written, NULL);
         if (g_Tabs[i].dwTextLen > 0 && g_Tabs[i].pszText) {
             WriteFile(hFile, g_Tabs[i].pszText, g_Tabs[i].dwTextLen, &written, NULL);
@@ -432,7 +442,7 @@ void QuickloadNative(HWND hwnd) {
     DWORD readBytes = 0;
     DWORD magic = 0;
     ReadFile(hFile, &magic, sizeof(DWORD), &readBytes, NULL);
-    if (magic != QUICKSAVE_MAGIC) {
+    if (magic != QUICKSAVE_MAGIC && magic != QUICKSAVE_MAGIC_V2) {
         CloseHandle(hFile);
         ShowNativeStatus("Invalid quicksave snapshot file format.");
         return;
@@ -475,6 +485,11 @@ void QuickloadNative(HWND hwnd) {
     for (int i = 0; i < g_NumTabs; i++) {
         ReadFile(hFile, g_Tabs[i].szTitle, sizeof(g_Tabs[i].szTitle), &readBytes, NULL);
         ReadFile(hFile, &g_Tabs[i].dwBookmark, sizeof(DWORD), &readBytes, NULL);
+        if (magic == QUICKSAVE_MAGIC) {
+            ReadFile(hFile, &g_Tabs[i].dwScrollPos, sizeof(DWORD), &readBytes, NULL);
+        } else {
+            g_Tabs[i].dwScrollPos = g_Tabs[i].dwBookmark;
+        }
         ReadFile(hFile, &g_Tabs[i].dwTextLen, sizeof(DWORD), &readBytes, NULL);
         g_Tabs[i].pszText = NULL;
         if (g_Tabs[i].dwTextLen > 0) {
@@ -918,6 +933,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hSubTheme, MF_STRING, 1011, "🌙 Dark Theme\tAlt+2");
             AppendMenuA(hSubTheme, MF_STRING, 1012, "📜 Sepia Theme\tAlt+3");
             AppendMenuA(hSubTheme, MF_STRING, 1013, "⚡ High-Contrast Theme\tAlt+4");
+            AppendMenuA(hSubTheme, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hSubTheme, MF_STRING, 1014, "Cycle Next Theme\tT");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubTheme, "Themes");
 
             // Font Menu
@@ -934,6 +951,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // View Menu
             HMENU hSubView = CreatePopupMenu();
             AppendMenuA(hSubView, MF_STRING, 1003, "Reading Statistics Engine\tCtrl+S");
+            AppendMenuA(hSubView, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hSubView, MF_STRING, 1026, "Next Page\tPgDn / Space");
+            AppendMenuA(hSubView, MF_STRING, 1027, "Previous Page\tPgUp / Shift+Space");
             AppendMenuA(hSubView, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hSubView, MF_STRING, 1062, "Toggle Sound FX\tM");
             AppendMenuA(hSubView, MF_STRING, 1008, "Help Guide\tF1 / H");
@@ -1216,10 +1236,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Themes
-            if (id == 1010) { SetTheme(hwnd, RGB(250, 250, 250), RGB(30, 30, 30)); ShowNativeStatus("Theme: Light [Alt+1]"); }
-            if (id == 1011) { SetTheme(hwnd, RGB(24, 24, 28), RGB(228, 228, 231)); ShowNativeStatus("Theme: Dark [Alt+2]"); }
-            if (id == 1012) { SetTheme(hwnd, RGB(251, 240, 217), RGB(67, 52, 34)); ShowNativeStatus("Theme: Sepia [Alt+3]"); }
-            if (id == 1013) { SetTheme(hwnd, RGB(0, 0, 0), RGB(0, 255, 102)); ShowNativeStatus("Theme: High-Contrast [Alt+4]"); }
+            if (id == 1010) { g_currentTheme = 0; SetTheme(hwnd, RGB(250, 250, 250), RGB(30, 30, 30)); ShowNativeStatus("Theme: Light [Alt+1]"); }
+            if (id == 1011) { g_currentTheme = 1; SetTheme(hwnd, RGB(24, 24, 28), RGB(228, 228, 231)); ShowNativeStatus("Theme: Dark [Alt+2]"); }
+            if (id == 1012) { g_currentTheme = 2; SetTheme(hwnd, RGB(251, 240, 217), RGB(67, 52, 34)); ShowNativeStatus("Theme: Sepia [Alt+3]"); }
+            if (id == 1013) { g_currentTheme = 3; SetTheme(hwnd, RGB(0, 0, 0), RGB(0, 255, 102)); ShowNativeStatus("Theme: High-Contrast [Alt+4]"); }
+            if (id == 1014) {
+                g_currentTheme = (g_currentTheme + 1) % 4;
+                SendMessageA(hwnd, WM_COMMAND, 1010 + g_currentTheme, 0);
+            }
+            if (id == 1026) {
+                SendMessageA(hEdit, WM_VSCROLL, SB_PAGEDOWN, 0);
+                UpdateStatusBar();
+            }
+            if (id == 1027) {
+                SendMessageA(hEdit, WM_VSCROLL, SB_PAGEUP, 0);
+                UpdateStatusBar();
+            }
 
             // Fonts
             if (id == 1020) { currentFontSize = min(currentFontSize + 2, 42); UpdateFont(hwnd); ShowNativeStatus("Font size increased"); UpdateStatusBar(); }
@@ -1354,15 +1386,39 @@ void __stdcall MainEntry() {
                 SendMessageA(hwnd, WM_COMMAND, 1003, 0);
                 continue;
             }
-            if (ctrl && (msg.wParam == VK_OEM_PLUS || msg.wParam == VK_ADD || msg.wParam == '=')) {
+            if (!ctrl && !alt && msg.wParam == VK_NEXT) {
+                SendMessageA(hwnd, WM_COMMAND, 1026, 0);
+                continue;
+            }
+            if (!ctrl && !alt && msg.wParam == VK_PRIOR) {
+                SendMessageA(hwnd, WM_COMMAND, 1027, 0);
+                continue;
+            }
+            if (!ctrl && !alt && msg.wParam == VK_SPACE) {
+                SendMessageA(hwnd, WM_COMMAND, shift ? 1027 : 1026, 0);
+                continue;
+            }
+            if (!ctrl && !shift && !alt && (msg.wParam == 'T' || msg.wParam == 't')) {
+                SendMessageA(hwnd, WM_COMMAND, 1014, 0);
+                continue;
+            }
+            if (!ctrl && !shift && !alt && (msg.wParam == VK_OEM_4 || msg.wParam == '[')) {
+                SendMessageA(hwnd, WM_COMMAND, 1033, 0);
+                continue;
+            }
+            if (!ctrl && !shift && !alt && (msg.wParam == VK_OEM_6 || msg.wParam == ']')) {
+                SendMessageA(hwnd, WM_COMMAND, 1032, 0);
+                continue;
+            }
+            if (!alt && (msg.wParam == VK_OEM_PLUS || msg.wParam == VK_ADD || msg.wParam == '=')) {
                 SendMessageA(hwnd, WM_COMMAND, 1020, 0);
                 continue;
             }
-            if (ctrl && (msg.wParam == VK_OEM_MINUS || msg.wParam == VK_SUBTRACT)) {
+            if (!alt && (msg.wParam == VK_OEM_MINUS || msg.wParam == VK_SUBTRACT)) {
                 SendMessageA(hwnd, WM_COMMAND, 1021, 0);
                 continue;
             }
-            if (ctrl && (msg.wParam == '0' || msg.wParam == VK_NUMPAD0)) {
+            if (!alt && (msg.wParam == '0' || msg.wParam == VK_NUMPAD0)) {
                 SendMessageA(hwnd, WM_COMMAND, 1025, 0);
                 continue;
             }

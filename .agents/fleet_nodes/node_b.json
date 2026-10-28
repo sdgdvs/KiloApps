@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 494,
+  "turns_executed": 496,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-28T04:41:06.120809+00:00",
-  "current_target": "kweb://warez",
+  "last_heartbeat": "2026-10-28T06:40:05.871635+00:00",
+  "current_target": "KRead",
   "remote_command": "none"
 }
