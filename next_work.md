@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://demoscene
   kilo_graphics: KSanctuary
   kilo_soundscape: KStellar
-  kilo_tester: KPaint
+  kilo_tester: KMaze
   kilo_usability: KPaint
   kilo_qa: KGraph
   kilo_expander: KPaint
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KMech
-  timestamp: '2026-10-28T01:31:38-07:00'
+  agent: kilo-tester
+  app: KPaint
+  timestamp: '2026-10-28T08:22:18-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -132,11 +132,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KPaint`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Fix exportPaletteACT() ReferenceErrors (undefined currentPalettePreset/hexToRgb and missing retro16 key) using #palette-preset value; implement promised Shift-radial gradient (createRadialGradient), right-click stop reversal, and hasSelection clipping in draw()/endPosition(); sync #layer-opacity-val text, onchange saveState(), and layer opacity across saveState()/restoreState() and quickSave()/quickLoad() (plus restore secondaryColor and currentZoom); sync #onion-canvas dimensions/CSS zoom across applyZoom()/resizeCanvas()/transformCanvas()/restoreState()/quickLoad(), key out white background with translucent cyan tint in updateOnionSkin(), and fix addAnimFrame() on upper layers; fix saveVFS() 1.2s timeout aborting KiloOS VFS_SHOW_SAVE (immediate fallback only when window.parent===window, 60s dialog timeout otherwise, e.origin check) and accept .tga/.bmp on drop; in KPaint/main.c add M/P/4 hotkeys to GetMessageA WM_KEYDOWN, mirror across visible canvas width instead of 1999-x, and use GetClientRect() in WM_VSCROLL/WM_HSCROLL. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -151,6 +150,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Give each sector distinct hex/ASCII bytes in cmdDump(), wire filter arg in cmdCodebook(filter), add .line-dim CSS rule for VFS_READ_DONE, and pad codebook table columns in KMatrix/main.c. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | **[ARGON REVIEW]:** Fix executePipeline(true) to decrypt #pipelineFinalOutput back to plaintext and parse stage.key (p,q,e) for RSA stages; fix #btnLoadLoreToWorkbench to load lore.ciphertext into #outputText and runDecrypt() into #inputText; fix #statTotalChars to use (outText // inText).length; and include aesKey/aesFormat/rsaP/rsaQ/rsaE/pipelineStages/stegoText in #btnExportJSON, #btnImportJSON, and #btnNewSession. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | **[ARGON REVIEW]:** Implement missing nextRecordId(tbl) (reusing it for #statNextId) and fix confirmSeedData() schema/PK fields (employees id/status/email, departments code/head, projects id/priority); replace undefined renderTable() with renderAll() in addNewColumnToTable()/dropColumnFromTable() while initializing default values and purging dropped-column indexes/relations; fix Profile [P] (analyzeColumnProfile, cleanTrimWhitespace, exportProfilerReport) to read string column names in tbl.columns and dbState.activeTable instead of col.id/tbl.id; apply ORDER BY and LIMIT after GROUP BY/aggregates in executeSelectSql() with getFieldValue() and numeric-aware MIN/MAX; add e.origin check, implement parseAndInsertCsv() for VFS CSV open, use 60s timeout for VFS_SHOW_OPEN with standalone exportToVfs()/exportCsvToVfs() fallbacks, and encrypt kdb_quicksave when #dbPassword is set; in KDB/main.c allow IDC_ADD_BTN to update existing records after NM_DBLCLK edit and replace UTF-8 bullets/emoji in MessageBoxA strings with ASCII. |
+| `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Fix exportPaletteACT() ReferenceErrors (undefined currentPalettePreset/hexToRgb and missing retro16 key) using #palette-preset value; implement promised Shift-radial gradient (createRadialGradient), right-click stop reversal, and hasSelection clipping in draw()/endPosition(); sync #layer-opacity-val text, onchange saveState(), and layer opacity across saveState()/restoreState() and quickSave()/quickLoad() (plus restore secondaryColor and currentZoom); sync #onion-canvas dimensions/CSS zoom across applyZoom()/resizeCanvas()/transformCanvas()/restoreState()/quickLoad(), key out white background with translucent cyan tint in updateOnionSkin(), and fix addAnimFrame() on upper layers; fix saveVFS() 1.2s timeout aborting KiloOS VFS_SHOW_SAVE (immediate fallback only when window.parent===window, 60s dialog timeout otherwise, e.origin check) and accept .tga/.bmp on drop; in KPaint/main.c add M/P/4 hotkeys to GetMessageA WM_KEYDOWN, mirror across visible canvas width instead of 1999-x, and use GetClientRect() in WM_VSCROLL/WM_HSCROLL. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KPaint`
@@ -312,6 +312,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-28T08:22:18-07:00 — kilo-tester: KPaint (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-tester updates for KPaint across web and native targets.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-28T01:31:38-07:00 — kilo-graphics: KMech (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement already integrated for KMech.
   - Handoff: Advanced `kilo-graphics` to `KSanctuary`; rotated active agent to `kilo-tester`.
@@ -331,8 +336,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KQuest across web and native targets.
   - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-review`.
-
-- **2026-10-27T23:40:14-07:00 — kilo-qa: KRead (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-qa updates for KRead across web and native targets.
-  - Handoff: Advanced `kilo-qa` to `KGraph`; rotated active agent to `kilo-expander`.

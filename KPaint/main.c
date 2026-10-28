@@ -1333,6 +1333,13 @@ void GenerateSignalArtwork(HWND hwnd) {
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
+static inline int GetMirrorX(HWND hwnd, int x) {
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+    int visW = max(1, rc.right - 130);
+    return 2 * scrollX + visW - 1 - x;
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -1662,6 +1669,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 curSize = 6; UpdatePen(); UpdateTitleStatus(hwnd);
             } else if (wParam == '3') {
                 curSize = 14; UpdatePen(); UpdateTitleStatus(hwnd);
+            } else if (wParam == '4' || wParam == VK_NUMPAD4) {
+                brushShape = 1 - brushShape;
+                SetWindowTextA(hBtnShapeToggle, brushShape ? "Square" : "Round");
+                UpdatePen(); UpdateTitleStatus(hwnd);
             } else if (wParam == 'V' || wParam == 'v') {
                 FilterInvert(); InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'Y' || wParam == 'y') {
@@ -1717,7 +1728,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MoveToEx(hdc, x + 130 - scrollX, y - scrollY, NULL);
                     LineTo(hdc, x + 130 - scrollX, y - scrollY);
                     if (mirrorMode) {
-                        int mx = 1999 - x;
+                        int mx = GetMirrorX(hwnd, x);
                         MoveToEx(hdc, mx + 130 - scrollX, y - scrollY, NULL);
                         LineTo(hdc, mx + 130 - scrollX, y - scrollY);
                     }
@@ -1725,7 +1736,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MoveToEx(hdcMem, x, y, NULL);
                     LineTo(hdcMem, x, y);
                     if (mirrorMode) {
-                        int mx = 1999 - x;
+                        int mx = GetMirrorX(hwnd, x);
                         MoveToEx(hdcMem, mx, y, NULL);
                         LineTo(hdcMem, mx, y);
                     }
@@ -1735,7 +1746,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int ry = (y + (i * 13) % curSize) - curSize / 2;
                         SetPixel(hdcMem, rx, ry, curColor);
                         if (mirrorMode) {
-                            int mx = 1999 - x;
+                            int mx = GetMirrorX(hwnd, x);
                             int mrx = (mx + (i * 7) % curSize) - curSize / 2;
                             SetPixel(hdcMem, mrx, ry, curColor);
                         }
@@ -1791,7 +1802,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MoveToEx(hdc, x + 130 - scrollX, y - scrollY, NULL);
                     LineTo(hdc, x + 130 - scrollX, y - scrollY);
                     if (mirrorMode) {
-                        int mx = 1999 - x;
+                        int mx = GetMirrorX(hwnd, x);
                         MoveToEx(hdc, mx + 130 - scrollX, y - scrollY, NULL);
                         LineTo(hdc, mx + 130 - scrollX, y - scrollY);
                     }
@@ -1800,7 +1811,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MoveToEx(hdcMem, x, y, NULL);
                     LineTo(hdcMem, x, y);
                     if (mirrorMode) {
-                        int mx = 1999 - x;
+                        int mx = GetMirrorX(hwnd, x);
                         MoveToEx(hdcMem, mx, y, NULL);
                         LineTo(hdcMem, mx, y);
                     }
@@ -1811,7 +1822,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int ry = (y + (i * 13) % curSize) - curSize / 2;
                         SetPixel(hdcMem, rx, ry, curColorSec);
                         if (mirrorMode) {
-                            int mx = 1999 - x;
+                            int mx = GetMirrorX(hwnd, x);
                             int mrx = (mx + (i * 7) % curSize) - curSize / 2;
                             SetPixel(hdcMem, mrx, ry, curColorSec);
                         }
@@ -1848,8 +1859,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MoveToEx(hdcMem, lastX, lastY, NULL);
                     LineTo(hdcMem, x, y);
                     if (mirrorMode) {
-                        int m_lastX = 1999 - lastX;
-                        int m_x = 1999 - x;
+                        int m_lastX = GetMirrorX(hwnd, lastX);
+                        int m_x = GetMirrorX(hwnd, x);
                         MoveToEx(hdc, m_lastX + 130 - scrollX, lastY - scrollY, NULL);
                         LineTo(hdc, m_x + 130 - scrollX, y - scrollY);
                         MoveToEx(hdcMem, m_lastX, lastY, NULL);
@@ -1862,7 +1873,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int ry = (y + (i * 13) % curSize) - curSize / 2;
                         SetPixel(hdcMem, rx, ry, drawColor);
                         if (mirrorMode) {
-                            int mx = 1999 - x;
+                            int mx = GetMirrorX(hwnd, x);
                             int mrx = (mx + (i * 7) % curSize) - curSize / 2;
                             SetPixel(hdcMem, mrx, ry, drawColor);
                         }
@@ -1914,8 +1925,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     else if (currentTool == 3) { Ellipse(hdcMem, startX, startY, x, y); }
 
                     if (mirrorMode) {
-                        int mStartX = 1999 - startX;
-                        int mX = 1999 - x;
+                        int mStartX = GetMirrorX(hwnd, startX);
+                        int mX = GetMirrorX(hwnd, x);
                         if (currentTool == 1) { MoveToEx(hdcMem, mStartX, startY, NULL); LineTo(hdcMem, mX, y); }
                         else if (currentTool == 2) { Rectangle(hdcMem, mX, startY, mStartX, y); }
                         else if (currentTool == 3) { Ellipse(hdcMem, mX, startY, mStartX, y); }
@@ -1959,9 +1970,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (action == SB_LINEDOWN) scrollY += 20;
             else if (action == SB_PAGEUP) scrollY -= 100;
             else if (action == SB_PAGEDOWN) scrollY += 100;
-            else if (action == SB_THUMBTRACK) scrollY = HIWORD(wParam);
+            else if (action == SB_THUMBTRACK || action == SB_THUMBPOSITION) scrollY = HIWORD(wParam);
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+            int maxScrollY = max(0, 2000 - rc.bottom);
             if (scrollY < 0) scrollY = 0;
-            if (scrollY > 2000 - HIWORD(lParam)) scrollY = max(0, 2000 - HIWORD(lParam));
+            if (scrollY > maxScrollY) scrollY = maxScrollY;
             SetScrollPos(hwnd, SB_VERT, scrollY, TRUE);
             InvalidateRect(hwnd, NULL, FALSE);
             break;
@@ -1972,9 +1986,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (action == SB_LINERIGHT) scrollX += 20;
             else if (action == SB_PAGELEFT) scrollX -= 100;
             else if (action == SB_PAGERIGHT) scrollX += 100;
-            else if (action == SB_THUMBTRACK) scrollX = HIWORD(wParam);
+            else if (action == SB_THUMBTRACK || action == SB_THUMBPOSITION) scrollX = HIWORD(wParam);
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+            int visibleW = max(1, rc.right - 130);
+            int maxScrollX = max(0, 2000 - visibleW);
             if (scrollX < 0) scrollX = 0;
-            if (scrollX > 2000 - (LOWORD(lParam) - 130)) scrollX = max(0, 2000 - (LOWORD(lParam) - 130));
+            if (scrollX > maxScrollX) scrollX = maxScrollX;
             SetScrollPos(hwnd, SB_HORZ, scrollX, TRUE);
             InvalidateRect(hwnd, NULL, FALSE);
             break;
@@ -2108,6 +2126,19 @@ void __stdcall MainEntry() {
                     continue;
                 } else if (wParam == '3') {
                     curSize = 14; UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == '4' || wParam == VK_NUMPAD4) {
+                    brushShape = 1 - brushShape;
+                    SetWindowTextA(hBtnShapeToggle, brushShape ? "Square" : "Round");
+                    UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == 'M' || wParam == 'm') {
+                    mirrorMode = 1 - mirrorMode;
+                    SetWindowTextA(hBtnMirror, mirrorMode ? "Mirror ON" : "Mirror [M]");
+                    UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == 'P' || wParam == 'p') {
+                    FilterSepia(); InvalidateRect(hwnd, NULL, FALSE);
                     continue;
                 } else if (wParam == 'V' || wParam == 'v') {
                     FilterInvert(); InvalidateRect(hwnd, NULL, FALSE);

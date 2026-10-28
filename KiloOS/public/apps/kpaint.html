@@ -1167,6 +1167,7 @@
             <option value="pastel">Pastel Dreams</option>
             <option value="cyberpunk">Cyberpunk Neon</option>
             <option value="earth">Earthy Tones</option>
+            <option value="retro16">Retro 16-Color (EGA/VGA)</option>
           </select>
         </div>
         <div class="palette-grid" id="palette-grid" role="group" aria-label="Color Swatches">
@@ -1225,7 +1226,7 @@
             <span>Layer Opacity</span>
             <span class="control-val" id="layer-opacity-val">100%</span>
           </div>
-          <input type="range" id="layer-opacity" min="0" max="100" value="100" oninput="updateLayerOpacity(this.value)" aria-label="Layer Opacity">
+          <input type="range" id="layer-opacity" min="0" max="100" value="100" oninput="updateLayerOpacity(this.value)" onchange="saveState()" aria-label="Layer Opacity">
         </div>
         <div class="control-group">
           <div class="control-label">Blend Mode</div>
@@ -1561,6 +1562,13 @@
       previewCanvas.style.height = dispH;
       selCanvas.style.width = dispW;
       selCanvas.style.height = dispH;
+      const onionCanvas = document.getElementById('onion-canvas');
+      if (onionCanvas) {
+        if (onionCanvas.width !== w) onionCanvas.width = w;
+        if (onionCanvas.height !== h) onionCanvas.height = h;
+        onionCanvas.style.width = dispW;
+        onionCanvas.style.height = dispH;
+      }
 
       const gridCanvas = document.getElementById('grid-canvas');
       if (gridCanvas) {
@@ -1603,7 +1611,8 @@
       classic: ['#111111', '#555555', '#aaaaaa', '#ffffff', '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c', '#3498db', '#9b59b6', '#34495e'],
       pastel: ['#fbf8cc', '#fde4cf', '#ffcfd2', '#f1c0e8', '#cfbaf0', '#a3c4f3', '#90dbf4', '#8eecf5', '#98f5e1', '#b9fbc0', '#6c757d', '#212529'],
       cyberpunk: ['#050505', '#ff0055', '#ff5000', '#ffcc00', '#00ff66', '#00ffff', '#0066ff', '#7000ff', '#b000ff', '#ff00b0', '#ffffff', '#22223b'],
-      earth: ['#2b1e1a', '#4a3525', '#6c584c', '#a3b18a', '#588157', '#3a5a40', '#344e41', '#d4a373', '#e9d8a6', '#ee9b00', '#ca6702', '#9b2226']
+      earth: ['#2b1e1a', '#4a3525', '#6c584c', '#a3b18a', '#588157', '#3a5a40', '#344e41', '#d4a373', '#e9d8a6', '#ee9b00', '#ca6702', '#9b2226'],
+      retro16: ['#000000', '#0000aa', '#00aa00', '#00aaaa', '#aa0000', '#aa00aa', '#aa5500', '#aaaaaa', '#555555', '#5555ff', '#55ff55', '#55ffff', '#ff5555', '#ff55ff', '#ffff55', '#ffffff']
     };
 
     function updateLayersUI() {
@@ -1636,7 +1645,10 @@
       if (layers[activeLayerIndex]) {
         document.getElementById('layer-blend').value = layers[activeLayerIndex].blend || 'source-over';
         const opSlider = document.getElementById('layer-opacity');
-        if (opSlider) opSlider.value = Math.round((layers[activeLayerIndex].opacity !== undefined ? layers[activeLayerIndex].opacity : 1.0) * 100);
+        const curOp = layers[activeLayerIndex].opacity !== undefined ? layers[activeLayerIndex].opacity : 1.0;
+        if (opSlider) opSlider.value = Math.round(curOp * 100);
+        const opVal = document.getElementById('layer-opacity-val');
+        if (opVal) opVal.innerText = Math.round(curOp * 100) + '%';
       }
     }
 
@@ -1783,6 +1795,8 @@
       if (layers[activeLayerIndex]) {
         layers[activeLayerIndex].opacity = op;
         layers[activeLayerIndex].canvas.style.opacity = op;
+        const valSpan = document.getElementById('layer-opacity-val');
+        if (valSpan) valSpan.innerText = Math.round(op * 100) + '%';
       }
     }
 
@@ -2138,14 +2152,14 @@
     <canvas id="view" width="${src.width}" height="${src.height}"></canvas>
     <div>Rendered by KPaint Pro 1999 Canvas Engine</div>
   </div>
-  <script>
+  
     const img = new Image();
     img.onload = () => {
       const c = document.getElementById('view');
       c.getContext('2d').drawImage(img, 0, 0);
     };
     img.src = "${dataUrl}";
-  <\/script>
+  
 </body>
 </html>`;
       const blob = new Blob([html], { type: 'text/html' });
@@ -2225,13 +2239,24 @@
       showToast("Exported Truevision 32-bit TGA texture image!");
     }
 
+    function hexToRgb(hex) {
+      if (!hex) return { r: 0, g: 0, b: 0 };
+      let c = hex.replace('#', '');
+      if (c.length === 3) c = c.split('').map(x => x + x).join('');
+      const num = parseInt(c, 16);
+      if (isNaN(num)) return { r: 0, g: 0, b: 0 };
+      return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+    }
+
     // Adobe Color Table (.ACT) Palette Export
     function exportPaletteACT() {
       closeExportDropdown();
-      const colors = PALETTES[currentPalettePreset] || PALETTES['retro16'];
+      const presetEl = document.getElementById('palette-preset');
+      const presetKey = (presetEl && presetEl.value && PALETTES[presetEl.value]) ? presetEl.value : 'classic';
+      const colors = PALETTES[presetKey] || PALETTES['retro16'] || PALETTES['classic'] || [];
       const act = new Uint8Array(772);
       for (let i = 0; i < 256; i++) {
-        const hex = colors[i % colors.length];
+        const hex = colors.length ? colors[i % colors.length] : '#000000';
         const rgb = hexToRgb(hex) || { r: 0, g: 0, b: 0 };
         act[i * 3] = rgb.r;
         act[i * 3 + 1] = rgb.g;
@@ -2245,13 +2270,13 @@
       const blob = new Blob([act], { type: 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.download = `kpaint_${currentPalettePreset}.act`;
+      a.download = `kpaint_${presetKey}.act`;
       a.href = url;
       document.body.appendChild(a);
       a.click();
       setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
       retroAudio.play('shape');
-      showToast(`Exported Adobe Color Table (.ACT) for ${currentPalettePreset}!`);
+      showToast(`Exported Adobe Color Table (.ACT) for ${presetKey}!`);
     }
 
     // Binary TGA Decoder (Truevision 24-bit / 32-bit uncompressed & RLE)
@@ -2883,14 +2908,16 @@
       tctx.imageSmoothingEnabled = false;
       tctx.drawImage(comp, 0, 0, 48, 36);
 
-      const frameData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const targetLayer = layers[activeLayerIndex] || layers[0];
+      const frameData = targetLayer.ctx.getImageData(0, 0, targetLayer.canvas.width, targetLayer.canvas.height);
       const thumbUrl = thumbCanvas.toDataURL('image/png');
 
       animFrames[idx] = {
         data: frameData,
+        layerIndex: activeLayerIndex,
         thumb: thumbUrl,
-        width: canvas.width,
-        height: canvas.height
+        width: targetLayer.canvas.width,
+        height: targetLayer.canvas.height
       };
     }
 
@@ -2934,14 +2961,28 @@
 
     function loadFrameToCanvas(idx) {
       if (!animFrames[idx]) return;
-      ctx.putImageData(animFrames[idx].data, 0, 0);
+      const f = animFrames[idx];
+      const lIdx = (f.layerIndex !== undefined && layers[f.layerIndex]) ? f.layerIndex : activeLayerIndex;
+      if (lIdx !== activeLayerIndex) {
+        selectLayer(lIdx);
+      }
+      const targetLayer = layers[activeLayerIndex];
+      if (activeLayerIndex > 0) {
+        targetLayer.ctx.clearRect(0, 0, targetLayer.canvas.width, targetLayer.canvas.height);
+      }
+      targetLayer.ctx.putImageData(f.data, 0, 0);
       saveState();
     }
 
     function addAnimFrame() {
       captureCurrentCanvasToFrame(currentAnimFrameIdx);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const targetLayer = layers[activeLayerIndex] || layers[0];
+      if (activeLayerIndex === 0) {
+        targetLayer.ctx.fillStyle = '#ffffff';
+        targetLayer.ctx.fillRect(0, 0, targetLayer.canvas.width, targetLayer.canvas.height);
+      } else {
+        targetLayer.ctx.clearRect(0, 0, targetLayer.canvas.width, targetLayer.canvas.height);
+      }
       saveState();
 
       currentAnimFrameIdx = animFrames.length;
@@ -2958,6 +2999,7 @@
       const cloneData = new ImageData(new Uint8ClampedArray(current.data.data), current.width, current.height);
       const newFrame = {
         data: cloneData,
+        layerIndex: current.layerIndex,
         thumb: current.thumb,
         width: current.width,
         height: current.height
@@ -3041,7 +3083,9 @@
     function animPlayStep() {
       currentAnimFrameIdx = (currentAnimFrameIdx + 1) % animFrames.length;
       if (animFrames[currentAnimFrameIdx]) {
-        ctx.putImageData(animFrames[currentAnimFrameIdx].data, 0, 0);
+        const f = animFrames[currentAnimFrameIdx];
+        const targetLayer = (f.layerIndex !== undefined && layers[f.layerIndex]) ? layers[f.layerIndex] : (layers[activeLayerIndex] || layers[0]);
+        targetLayer.ctx.putImageData(f.data, 0, 0);
       }
       const indicator = document.getElementById('anim-frame-indicator');
       if (indicator) indicator.textContent = `Frame ${currentAnimFrameIdx + 1}/${animFrames.length}`;
@@ -3064,20 +3108,36 @@
         onionCanvas.style.display = 'none';
         return;
       }
+      const w = layers[0].canvas.width;
+      const h = layers[0].canvas.height;
+      if (onionCanvas.width !== w || onionCanvas.height !== h) {
+        onionCanvas.width = w;
+        onionCanvas.height = h;
+      }
+      onionCanvas.style.width = Math.round(w * currentZoom) + 'px';
+      onionCanvas.style.height = Math.round(h * currentZoom) + 'px';
       onionCanvas.style.display = 'block';
       const octx = onionCanvas.getContext('2d');
       octx.clearRect(0, 0, onionCanvas.width, onionCanvas.height);
-      const prevData = animFrames[currentAnimFrameIdx - 1].data;
+      const prevFrame = animFrames[currentAnimFrameIdx - 1];
+      if (!prevFrame || !prevFrame.data) return;
+      const prevData = prevFrame.data;
 
-      const tempC = document.createElement('canvas');
-      tempC.width = canvas.width;
-      tempC.height = canvas.height;
-      tempC.getContext('2d').putImageData(prevData, 0, 0);
-
-      octx.save();
-      octx.globalAlpha = 0.35;
-      octx.drawImage(tempC, 0, 0);
-      octx.restore();
+      const onionImg = octx.createImageData(onionCanvas.width, onionCanvas.height);
+      const oData = onionImg.data;
+      const pData = prevData.data;
+      const len = Math.min(pData.length, oData.length);
+      for (let i = 0; i < len; i += 4) {
+        const a = pData[i + 3];
+        if (a === 0) continue;
+        const r = pData[i], g = pData[i + 1], b = pData[i + 2];
+        if (r >= 235 && g >= 235 && b >= 235) continue;
+        oData[i] = 34;
+        oData[i + 1] = 211;
+        oData[i + 2] = 238;
+        oData[i + 3] = Math.round(a * 0.45);
+      }
+      octx.putImageData(onionImg, 0, 0);
     }
 
     function exportSpriteSheet() {
@@ -3139,6 +3199,10 @@
     let currentReqId = 0;
     const callbacks = {};
     window.addEventListener('message', (e) => {
+      if (e.origin && window.location.origin && window.location.origin !== 'null' && window.location.origin !== 'file://' &&
+          e.origin !== window.location.origin && !e.origin.startsWith('http://localhost') && !e.origin.startsWith('http://127.0.0.1')) {
+        return;
+      }
       const msg = e.data;
       if (msg && callbacks[msg.requestId]) {
         callbacks[msg.requestId](msg);
@@ -3147,9 +3211,20 @@
     });
     function sendToOS(msg) {
       return new Promise((resolve) => {
+        if (window.parent === window) {
+          resolve(null);
+          return;
+        }
         const id = ++currentReqId;
         callbacks[id] = resolve;
         window.parent.postMessage({ ...msg, requestId: id }, '*');
+        const timeoutMs = (msg && (msg.type === 'VFS_SHOW_OPEN' || msg.type === 'VFS_SHOW_SAVE')) ? 60000 : 4000;
+        setTimeout(() => {
+          if (callbacks[id]) {
+            delete callbacks[id];
+            resolve(null);
+          }
+        }, timeoutMs);
       });
     }
 
@@ -3210,9 +3285,10 @@
         id: l.id,
         data: l.ctx.getImageData(0, 0, l.canvas.width, l.canvas.height),
         visible: l.visible,
-        blend: l.blend
+        blend: l.blend,
+        opacity: l.opacity !== undefined ? l.opacity : 1.0
       }));
-      undoStack.push({ state, w: layers[0].canvas.width, h: layers[0].canvas.height });
+      undoStack.push({ state, w: layers[0].canvas.width, h: layers[0].canvas.height, secondaryColor, currentZoom });
       redoStack.length = 0; // Clear redo
       updateHistoryButtons();
     }
@@ -3242,6 +3318,11 @@
         previewCanvas.height = entry.h;
         selCanvas.width = entry.w;
         selCanvas.height = entry.h;
+        const onionCanvas = document.getElementById('onion-canvas');
+        if (onionCanvas) {
+          onionCanvas.width = entry.w;
+          onionCanvas.height = entry.h;
+        }
         wrapper.style.width = entry.w + 'px';
         wrapper.style.height = entry.h + 'px';
         document.getElementById('lbl-dim').innerText = `${entry.w} x ${entry.h}`;
@@ -3264,17 +3345,28 @@
         layers[i].id = st.id;
         layers[i].visible = st.visible;
         layers[i].blend = st.blend;
+        layers[i].opacity = st.opacity !== undefined ? st.opacity : 1.0;
         layers[i].canvas.style.display = st.visible ? 'block' : 'none';
         layers[i].canvas.style.mixBlendMode = st.blend || 'source-over';
+        layers[i].canvas.style.opacity = layers[i].opacity;
         layers[i].ctx.putImageData(st.data, 0, 0);
       });
       
       activeLayerIndex = Math.min(activeLayerIndex, layers.length - 1);
       canvas = layers[activeLayerIndex].canvas;
       ctx = layers[activeLayerIndex].ctx;
+      if (entry.secondaryColor) {
+        secondaryColor = entry.secondaryColor;
+        updateSwatchUI();
+      }
+      if (entry.currentZoom !== undefined) {
+        currentZoom = entry.currentZoom;
+        applyZoom();
+      }
       updateLayersUI();
       updateBrushSettings();
       applyZoom();
+      updateOnionSkin();
     }
 
     function updateHistoryButtons() {
@@ -3758,10 +3850,21 @@
       if (currentTool === 'gradient') {
         pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
         drawSymmetryGuides();
-        const grad = ctx.createLinearGradient(startX, startY, pos.x, pos.y);
-        grad.addColorStop(0, currentColor);
-        grad.addColorStop(1, secondaryColor);
+        const isShift = e.shiftKey;
+        const isRightClick = isDrawingSecondary || (e.button === 2);
+        const col1 = isRightClick ? secondaryColor : currentColor;
+        const col2 = isRightClick ? currentColor : secondaryColor;
         ctx.save();
+        if (hasSelection) applySelectionClip(ctx);
+        let grad;
+        if (isShift) {
+          const r = Math.max(1, Math.hypot(pos.x - startX, pos.y - startY));
+          grad = ctx.createRadialGradient(startX, startY, 0, startX, startY, r);
+        } else {
+          grad = ctx.createLinearGradient(startX, startY, pos.x, pos.y);
+        }
+        grad.addColorStop(0, col1);
+        grad.addColorStop(1, col2);
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.restore();
@@ -3772,8 +3875,9 @@
             clientId: collabClientId,
             nick: collabClientNick,
             tool: 'gradient',
-            color: currentColor,
-            color2: secondaryColor,
+            color: col1,
+            color2: col2,
+            isRadial: isShift,
             startX,
             startY,
             endX: pos.x,
@@ -3834,7 +3938,10 @@
       }
 
       if (currentTool !== 'freehand' && currentTool !== 'eraser' && currentTool !== 'spray') {
+        ctx.save();
+        if (hasSelection) applySelectionClip(ctx);
         applySymmetricShape(ctx, currentTool, startX, startY, pos.x, pos.y, activeCol, brushSize, brushShape);
+        ctx.restore();
         pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
         drawSymmetryGuides();
         retroAudio.play('shape');
@@ -3922,10 +4029,21 @@
       }
 
       if (currentTool === 'freehand' || currentTool === 'eraser') {
-        drawSymmetricSegment(lastDrawX, lastDrawY, pos.x, pos.y, activeColor, brushSize, brushShape, compositeOp);
+        if (hasSelection) {
+          ctx.save();
+          applySelectionClip(ctx);
+          drawSymmetricSegment(lastDrawX, lastDrawY, pos.x, pos.y, activeColor, brushSize, brushShape, compositeOp);
+          ctx.restore();
+        } else {
+          drawSymmetricSegment(lastDrawX, lastDrawY, pos.x, pos.y, activeColor, brushSize, brushShape, compositeOp);
+        }
         lastDrawX = pos.x;
         lastDrawY = pos.y;
       } else if (currentTool === 'spray') {
+        if (hasSelection) {
+          ctx.save();
+          applySelectionClip(ctx);
+        }
         const density = Math.max(10, brushSize * 2);
         for (let i = 0; i < density; i++) {
           const offsetAngle = Math.random() * 2 * Math.PI;
@@ -3934,35 +4052,72 @@
           const py = pos.y + Math.sin(offsetAngle) * offsetRadius;
           applySprayDot(px, py, activeColor);
         }
+        if (hasSelection) {
+          ctx.restore();
+        }
         lastDrawX = pos.x;
         lastDrawY = pos.y;
       } else if (currentTool === 'gradient') {
         pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
         drawSymmetryGuides();
         pctx.save();
-        const grad = pctx.createLinearGradient(startX, startY, pos.x, pos.y);
-        grad.addColorStop(0, currentColor);
-        grad.addColorStop(1, secondaryColor);
+        if (hasSelection) applySelectionClip(pctx);
+        const isShift = e.shiftKey;
+        const isRightClick = isDrawingSecondary || (e.buttons === 2);
+        const col1 = isRightClick ? secondaryColor : currentColor;
+        const col2 = isRightClick ? currentColor : secondaryColor;
+        let grad;
+        if (isShift) {
+          const r = Math.max(1, Math.hypot(pos.x - startX, pos.y - startY));
+          grad = pctx.createRadialGradient(startX, startY, 0, startX, startY, r);
+        } else {
+          grad = pctx.createLinearGradient(startX, startY, pos.x, pos.y);
+        }
+        grad.addColorStop(0, col1);
+        grad.addColorStop(1, col2);
         pctx.strokeStyle = grad;
         pctx.lineWidth = Math.max(3, brushSize);
         pctx.beginPath();
-        pctx.moveTo(startX, startY);
-        pctx.lineTo(pos.x, pos.y);
+        if (isShift) {
+          const r = Math.max(1, Math.hypot(pos.x - startX, pos.y - startY));
+          pctx.arc(startX, startY, r, 0, 2 * Math.PI);
+        } else {
+          pctx.moveTo(startX, startY);
+          pctx.lineTo(pos.x, pos.y);
+        }
         pctx.stroke();
-        pctx.fillStyle = currentColor;
+        pctx.fillStyle = col1;
         pctx.beginPath(); pctx.arc(startX, startY, 4, 0, 2 * Math.PI); pctx.fill();
-        pctx.fillStyle = secondaryColor;
+        pctx.fillStyle = col2;
         pctx.beginPath(); pctx.arc(pos.x, pos.y, 4, 0, 2 * Math.PI); pctx.fill();
         pctx.restore();
       } else {
         // Shape preview
         pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
         drawSymmetryGuides();
+        pctx.save();
+        if (hasSelection) applySelectionClip(pctx);
         applySymmetricShape(pctx, currentTool, startX, startY, pos.x, pos.y, activeColor, brushSize, brushShape);
+        pctx.restore();
       }
     }
 
     let hasSelection = false;
+
+    function applySelectionClip(targetCtx) {
+      if (!hasSelection) return false;
+      if (lassoPoints && lassoPoints.length > 2) {
+        targetCtx.beginPath();
+        targetCtx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+        for (let i = 1; i < lassoPoints.length; i++) {
+          targetCtx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+        }
+        targetCtx.closePath();
+        targetCtx.clip();
+        return true;
+      }
+      return false;
+    }
 
     // Magic Wand Algorithm
     function runMagicWand(x, y) {
@@ -4602,6 +4757,13 @@
       previewCanvas.height = newH;
       selCanvas.width = newW;
       selCanvas.height = newH;
+      const onionCanvas = document.getElementById('onion-canvas');
+      if (onionCanvas) {
+        onionCanvas.width = newW;
+        onionCanvas.height = newH;
+        onionCanvas.style.width = Math.round(newW * currentZoom) + 'px';
+        onionCanvas.style.height = Math.round(newH * currentZoom) + 'px';
+      }
       applyZoom();
       document.getElementById('lbl-dim').innerText = `${newW} x ${newH}`;
       updateBrushSettings();
@@ -4621,6 +4783,13 @@
       previewCanvas.height = h;
       selCanvas.width = w;
       selCanvas.height = h;
+      const onionCanvas = document.getElementById('onion-canvas');
+      if (onionCanvas) {
+        onionCanvas.width = w;
+        onionCanvas.height = h;
+        onionCanvas.style.width = Math.round(w * currentZoom) + 'px';
+        onionCanvas.style.height = Math.round(h * currentZoom) + 'px';
+      }
       applyZoom();
       document.getElementById('lbl-dim').innerText = `${w} x ${h}`;
       updateBrushSettings();
@@ -4719,6 +4888,12 @@
     async function saveVFS() {
       showToast("Saving to KiloOS...", 2000);
       try {
+        if (window.parent === window) {
+          exportImage('png');
+          showToast("Saved image locally (standalone mode)!");
+          return;
+        }
+
         let saveTimeout;
         const osPromise = (async () => {
           if (!currentVfsPath) {
@@ -4732,7 +4907,7 @@
         })();
         
         const timeoutPromise = new Promise(resolve => {
-          saveTimeout = setTimeout(() => resolve('timeout'), 1200);
+          saveTimeout = setTimeout(() => resolve('timeout'), 60000);
         });
         
         const result = await Promise.race([osPromise, timeoutPromise]);
@@ -4742,7 +4917,7 @@
           showToast("Saved image to KiloOS Filesystem!");
         } else if (result === 'timeout') {
           exportImage('png');
-          showToast("Saved image locally (standalone mode)!");
+          showToast("Saved image locally (standalone fallback)!");
         }
       } catch (err) {
         exportImage('png');
@@ -4801,16 +4976,16 @@
     }, { passive: false });
 
     // Drag-and-Drop file import
-    const container = document.getElementById('container');
-    container.addEventListener('dragover', (e) => {
+    window.addEventListener('dragover', (e) => {
       e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
     });
-    container.addEventListener('drop', (e) => {
+    window.addEventListener('drop', (e) => {
       e.preventDefault();
-      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
         const file = e.dataTransfer.files[0];
-        if (file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.pcx')) {
+        const name = file.name.toLowerCase();
+        if (file.type.startsWith('image/') || name.endsWith('.pcx') || name.endsWith('.tga') || name.endsWith('.bmp') || name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg')) {
           const fakeEvt = { target: { files: [file], value: '' } };
           importImage(fakeEvt);
         }
@@ -5771,7 +5946,13 @@
       } else if (s.tool === 'fill') {
         floodFill(s.startX, s.startY, color);
       } else if (s.tool === 'gradient') {
-        const grad = targetCtx.createLinearGradient(s.startX, s.startY, s.endX, s.endY);
+        let grad;
+        if (s.isRadial) {
+          const r = Math.max(1, Math.hypot(s.endX - s.startX, s.endY - s.startY));
+          grad = targetCtx.createRadialGradient(s.startX, s.startY, 0, s.startX, s.startY, r);
+        } else {
+          grad = targetCtx.createLinearGradient(s.startX, s.startY, s.endX, s.endY);
+        }
         grad.addColorStop(0, s.color || '#111111');
         grad.addColorStop(1, s.color2 || '#ffffff');
         targetCtx.fillStyle = grad;
@@ -5913,6 +6094,7 @@
           id: l.id !== undefined ? l.id : idx,
           visible: l.visible !== false,
           blend: l.blend || 'source-over',
+          opacity: l.opacity !== undefined ? l.opacity : 1.0,
           dataUrl: l.canvas.toDataURL('image/png')
         }));
 
@@ -5923,6 +6105,7 @@
           h: layers[0].canvas.height,
           activeLayerIndex: activeLayerIndex || 0,
           currentColor: currentColor || '#000000',
+          secondaryColor: secondaryColor || '#ffffff',
           currentSize: parseInt(document.getElementById('brush-size').value, 10) || 6,
           brushShape: brushShape || 'round',
           currentTool: currentTool || 'freehand',
@@ -5978,6 +6161,11 @@
           previewCanvas.height = targetH;
           selCanvas.width = targetW;
           selCanvas.height = targetH;
+          const onionCanvas = document.getElementById('onion-canvas');
+          if (onionCanvas) {
+            onionCanvas.width = targetW;
+            onionCanvas.height = targetH;
+          }
           wrapper.style.width = targetW + 'px';
           wrapper.style.height = targetH + 'px';
           document.getElementById('lbl-dim').innerText = `${targetW} x ${targetH}`;
@@ -6003,8 +6191,10 @@
           layers[idx].id = sl.id !== undefined ? sl.id : idx;
           layers[idx].visible = sl.visible !== false;
           layers[idx].blend = sl.blend || 'source-over';
+          layers[idx].opacity = sl.opacity !== undefined ? sl.opacity : 1.0;
           layers[idx].canvas.style.display = layers[idx].visible ? 'block' : 'none';
           layers[idx].canvas.style.mixBlendMode = layers[idx].blend;
+          layers[idx].canvas.style.opacity = layers[idx].opacity;
 
           const img = new Image();
           img.onload = () => {
@@ -6029,10 +6219,19 @@
                 document.getElementById('palette-preset').value = snapshot.palettePreset;
                 loadPalettePreset();
               }
+              if (snapshot.secondaryColor) {
+                secondaryColor = snapshot.secondaryColor;
+                updateSwatchUI();
+              }
+              if (snapshot.currentZoom !== undefined) {
+                currentZoom = snapshot.currentZoom;
+                applyZoom();
+              }
               activeLayerIndex = Math.min(snapshot.activeLayerIndex || 0, layers.length - 1);
               canvas = layers[activeLayerIndex].canvas;
               ctx = layers[activeLayerIndex].ctx;
               updateLayersUI();
+              updateOnionSkin();
               saveState();
               const dateStr = new Date(snapshot.timestamp || Date.now()).toLocaleTimeString();
               showToast(`Quickload complete [F9] (restored state from ${dateStr}).`);
