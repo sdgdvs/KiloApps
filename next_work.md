@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://geocities
-  kilo_graphics: KStellar
+  kilo_graphics: KMech
   kilo_soundscape: KStellar
   kilo_tester: KDB
   kilo_usability: KDB
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://warez
-  timestamp: '2026-10-27T21:41:14-07:00'
+  agent: kilo-graphics
+  app: KStellar
+  timestamp: '2026-10-27T22:14:35-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://warez` | `KiloOS/public/web/warez.html`, `KiloOS/public/apps/knet.html` | Create *The Underground Courier / Warez BBS Web Ring* (`warez.html` <250 KB): ANSI top-site release board, simulated keygen music player, download quota tracker, and VFS export. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KStellar`
+- **Active Target**: `KMech`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Replace forbidden code-generated SVG mech primitives (getPlayerMechSVG and getEnemyMechSVG) with Imagen 3 2-stage chroma-keyed sprites for player chassis and enemy mech tiers. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
@@ -115,6 +114,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
+| `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -310,6 +310,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T22:14:35-07:00 — kilo-graphics: KStellar (4X Stellar Empire Map Visuals & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 195.6 KB, native 157.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.7%, 0 fail, 0 warn, 6.9s)).
+  - Verified spectral class star rendering, orbital ringworlds, and roaming fleet ship icons.
+  - Confirmed zero perimeter glints or traveling border dots; visual contact sheet verified clean.
+  - Handoff: Advanced `kilo-graphics` to `KMech`; rotated active agent to `kilo-tester`.
+
 - **2026-10-27T21:46:30-07:00 — kilo-adhoc: Fleet-Wide Procedural BGM Gate & Soundscape Pause**
   - Status: PASS ✅ (38 web apps & kweb pages gated, check_sizes PASS, security_lint PASS).
   - Audio Gate: Non-destructively gated all looping procedural BGM/tracker/drone entry points across 24 apps (including KColosseum) and 14 `kweb://` pages behind `window.__KILO_BGM_ENABLED` while preserving discrete UI/gameplay SFX and dedicated audio tools (`KSynth`, `KAudio`, `KRadio`).
@@ -331,8 +337,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: #toastContainer (bottom 38px) occludes #addRecordForm inputs and Add Record wraps to 2 lines; dark <select> dropdowns lack color-scheme dark; ER diagram SVG paths loop bottom-to-top through side-by-side cards and ignore window resize; #sqlResultsHead lacks click-to-sort.
   - Feature/Parity Findings: confirmSeedData() crashes on missing nextRecordId() and omits PKs; Columns [S] crashes on missing renderTable(); Profile [P] reads col.id on string columns (100% missing / 0-cell trim); VFS CSV lacks parseAndInsertCsv() and 60s modal timeout; SQL GROUP BY skips ORDER BY/LIMIT; KDB/main.c blocks double-click edits and has UTF-8 MessageBoxA mojibake.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KDB`, `kilo-usability`->`KDB`] (un-quarantined `KDB` from Mature); advanced `kilo-review` to `KPaint`; next agent `kilo-creator`.
-
-- **2026-10-27T20:23:17-07:00 — kilo-expander: KColosseum (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KColosseum across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KQuest`; rotated active agent to `kilo-review`.
