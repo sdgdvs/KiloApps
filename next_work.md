@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://rfc-archive
-  kilo_graphics: KSanctuary
+  kilo_graphics: KSubmarine
   kilo_soundscape: KStellar
   kilo_tester: KChart
   kilo_usability: KChart
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://demoscene
-  timestamp: '2026-10-28T11:20:04-07:00'
+  agent: kilo-graphics
+  app: KSanctuary
+  timestamp: '2026-10-28T11:36:13-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KSanctuary`
+- **Active Target**: `KSubmarine`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
 | `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
@@ -115,6 +114,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
+| `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -319,6 +319,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-28T11:36:13-07:00 — kilo-graphics: KSanctuary (Xenobiology Terrarium Visuals & Weather Polish)**
+  - Status: PASS ✅ (0 errors, web 459.8 KB, native 263.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.3%, HEAD Δ 0.07%, 0 fail, 0 warn, 5.2s)).
+  - Integrated Imagen 3 xenobiology flora sprite and refined terrarium dome habitat with animated alien fauna specimen.
+  - Polished atmospheric weather overlays (toxic rain, rad storm, blizzard, drought) with dual Win32 C parity in main.c.
+  - Conducted full glint sweep confirming zero rotating specular glints or traveling perimeter border dots.
+  - Handoff: Advanced `kilo-graphics` to `KSubmarine`; rotated active agent to `kilo-tester`.
+
 - **2026-10-28T11:20:04-07:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Party Vault)**
   - Status: PASS ✅ (0 errors, web 93.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Canvas 64K intro switcher with plasma, rotozoom, starfield, copper bars, and metaballs.
@@ -342,8 +349,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Wired VFS Open (PNG/BMP/PCX/TGA/JSON with fallback), Save As (Ctrl+Shift+S + OS_NOTIFY), direct VFS exports for .ANS (/home/bbs/) & Sprite Sheets (/home/pictures/).
   - Added Canvas Size presets (32x32, 64x64, 128x128, 320x240, 640x480, 800x600) syncing animFrames/#onion-canvas/#grid-canvas with matching Win32 C parity.
   - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-review`.
-
-- **2026-10-28T09:22:19-07:00 — kilo-qa: KGraph (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-qa updates for KGraph across web and native targets.
-  - Handoff: Advanced `kilo-qa` to `KSys`; rotated active agent to `kilo-expander`.

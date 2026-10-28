@@ -2619,16 +2619,26 @@ static void DrawFacilitySprite(HDC hdc, int x, int y, const char* facId, int act
         FillSolidRect(hdc, x + 9, y + 16, 2, 2, RGB(200, 240, 255));
         FillSolidRect(hdc, x + 19, y + 18, 2, 2, RGB(200, 240, 255));
     } else if (strcmp(facId, "farm") == 0) {
-        // Hydroponics Bay
-        FillSolidRect(hdc, x + 5, y + 4, 20, 3, RGB(180, 50, 210));
-        FillSolidRect(hdc, x + 7, y + 7, 16, 2, RGB(240, 140, 255));
-        FillSolidRect(hdc, x + 4, y + 21, 22, 5, RGB(55, 40, 25));
-        FillSolidRect(hdc, x + 7, y + 13, 3, 8, RGB(40, 200, 80));
-        FillSolidRect(hdc, x + 6, y + 11, 4, 3, RGB(60, 230, 100));
-        FillSolidRect(hdc, x + 14, y + 11, 3, 10, RGB(40, 200, 80));
-        FillSolidRect(hdc, x + 13, y + 9, 5, 3, RGB(60, 230, 100));
-        FillSolidRect(hdc, x + 21, y + 14, 3, 7, RGB(40, 200, 80));
-        FillSolidRect(hdc, x + 20, y + 12, 4, 3, RGB(60, 230, 100));
+        // Hydroponics & Xenobiology Biome Terrarium
+        // UV grow lamp bracket
+        FillSolidRect(hdc, x + 3, y + 4, 24, 3, RGB(180, 50, 210));
+        FillSolidRect(hdc, x + 5, y + 7, 20, 2, RGB(240, 140, 255));
+        // Substrate bed
+        FillSolidRect(hdc, x + 3, y + 22, 24, 5, RGB(55, 40, 25));
+        // Mutated Xenobiology flora stalks
+        FillSolidRect(hdc, x + 5, y + 14, 2, 8, RGB(40, 200, 80));
+        FillSolidRect(hdc, x + 4, y + 11, 4, 3, RGB(110, 231, 183));
+        FillSolidRect(hdc, x + 10, y + 12, 2, 10, RGB(40, 200, 80));
+        FillSolidRect(hdc, x + 9, y + 9, 4, 3, RGB(167, 243, 208));
+        // Bioluminescent Spore blossom
+        FillSolidRect(hdc, x + 10, y + 7, 2, 2, RGB(56, 189, 248));
+        // Specimen Terrarium Dome
+        FillSolidRect(hdc, x + 17, y + 11, 10, 11, RGB(10, 45, 30));
+        DrawBoxBorder(hdc, x + 17, y + 11, 10, 11, RGB(52, 211, 153));
+        // Specimen Critter
+        FillSolidRect(hdc, x + 20, y + 15, 4, 3, RGB(168, 85, 247));
+        FillSolidRect(hdc, x + 22, y + 15, 1, 1, RGB(56, 189, 248)); // eye
+        FillSolidRect(hdc, x + 19, y + 18, 6, 1, RGB(147, 51, 234)); // legs
     } else if (strcmp(facId, "quarters") == 0 || strcmp(facId, "quarters_ext") == 0) {
         // Living Quarters Bunks
         FillSolidRect(hdc, x + 5, y + 7, 20, 18, RGB(15, 20, 25));
@@ -3019,47 +3029,54 @@ static void DrawWeatherSprite(HDC hdc, int x, int y, int weatherType) {
     DrawBoxBorder(hdc, x, y, 32, 32, bCol);
 
     if (weatherType == 0) {
-        // Clear Sky / Smog Sun
-        FillSolidRect(hdc, x + 11, y + 7, 10, 10, RGB(245, 180, 30));
-        FillSolidRect(hdc, x + 13, y + 9, 6, 6, RGB(255, 230, 120));
-        FillSolidRect(hdc, x + 4, y + 20, 24, 7, RGB(100, 75, 50));
-        FillSolidRect(hdc, x + 9, y + 18, 12, 3, RGB(130, 95, 60));
+        // Clear Irradiated Sky: Smog sun with radiation corona and dust dunes
+        FillSolidRect(hdc, x + 11, y + 6, 10, 10, RGB(245, 180, 30));
+        FillSolidRect(hdc, x + 13, y + 8, 6, 6, RGB(255, 230, 120));
+        FillSolidRect(hdc, x + 7, y + 10, 2, 2, RGB(255, 215, 80));
+        FillSolidRect(hdc, x + 23, y + 10, 2, 2, RGB(255, 215, 80));
+        FillSolidRect(hdc, x + 15, y + 3, 2, 2, RGB(255, 215, 80));
+        FillSolidRect(hdc, x + 4, y + 19, 24, 8, RGB(80, 60, 40));
+        FillSolidRect(hdc, x + 8, y + 17, 14, 3, RGB(110, 85, 55));
     } else if (weatherType == 1) {
-        // Gamma Radiation Storm: Trefoil nuclear hazard symbol & lightning
-        FillSolidRect(hdc, x + 4, y + 4, 24, 24, RGB(20, 35, 18));
-        FillSolidRect(hdc, x + 14, y + 14, 4, 4, RGB(50, 230, 90));
-        FillSolidRect(hdc, x + 13, y + 8, 6, 4, RGB(50, 230, 90));
-        FillSolidRect(hdc, x + 8, y + 17, 5, 4, RGB(50, 230, 90));
-        FillSolidRect(hdc, x + 19, y + 17, 5, 4, RGB(50, 230, 90));
-        FillSolidRect(hdc, x + 5, y + 7, 2, 4, RGB(160, 255, 100));
-        FillSolidRect(hdc, x + 25, y + 10, 2, 5, RGB(160, 255, 100));
+        // Gamma Radiation Storm: High-contrast nuclear trefoil & ionization discharge
+        FillSolidRect(hdc, x + 4, y + 4, 24, 24, RGB(15, 30, 16));
+        FillSolidRect(hdc, x + 14, y + 14, 4, 4, RGB(16, 185, 129));
+        FillSolidRect(hdc, x + 12, y + 7, 8, 5, RGB(52, 211, 153));
+        FillSolidRect(hdc, x + 7, y + 16, 6, 5, RGB(52, 211, 153));
+        FillSolidRect(hdc, x + 19, y + 16, 6, 5, RGB(52, 211, 153));
+        FillSolidRect(hdc, x + 15, y + 15, 2, 2, RGB(255, 255, 255));
+        FillSolidRect(hdc, x + 5, y + 6, 2, 4, RGB(167, 243, 208));
+        FillSolidRect(hdc, x + 25, y + 9, 2, 5, RGB(167, 243, 208));
     } else if (weatherType == 2) {
-        // Severe Drought: Cracked soil & dried droplet
-        FillSolidRect(hdc, x + 4, y + 4, 24, 24, RGB(45, 30, 15));
-        FillSolidRect(hdc, x + 13, y + 7, 6, 8, RGB(40, 120, 180));
-        FillSolidRect(hdc, x + 15, y + 5, 2, 3, RGB(40, 120, 180));
-        FillSolidRect(hdc, x + 6, y + 18, 20, 2, RGB(15, 10, 5));
-        FillSolidRect(hdc, x + 12, y + 16, 2, 7, RGB(15, 10, 5));
-        FillSolidRect(hdc, x + 20, y + 18, 2, 6, RGB(15, 10, 5));
-        FillSolidRect(hdc, x + 5, y + 6, 4, 4, RGB(255, 210, 40));
+        // Severe Drought: Arid soil cracks & thermal evaporation waves
+        FillSolidRect(hdc, x + 4, y + 4, 24, 24, RGB(40, 25, 12));
+        FillSolidRect(hdc, x + 13, y + 6, 6, 8, RGB(245, 158, 11));
+        FillSolidRect(hdc, x + 15, y + 4, 2, 3, RGB(251, 191, 36));
+        FillSolidRect(hdc, x + 6, y + 17, 20, 3, RGB(20, 12, 6));
+        FillSolidRect(hdc, x + 11, y + 15, 2, 8, RGB(20, 12, 6));
+        FillSolidRect(hdc, x + 19, y + 17, 2, 7, RGB(20, 12, 6));
+        FillSolidRect(hdc, x + 5, y + 5, 4, 3, RGB(245, 158, 11));
+        FillSolidRect(hdc, x + 23, y + 8, 3, 2, RGB(245, 158, 11));
     } else if (weatherType == 3) {
-        // Acid Precipitation: Storm cloud & lime green caustic rain
-        FillSolidRect(hdc, x + 6, y + 6, 20, 8, RGB(55, 60, 65));
-        FillSolidRect(hdc, x + 9, y + 4, 12, 4, RGB(70, 75, 80));
-        FillSolidRect(hdc, x + 8, y + 16, 2, 4, RGB(80, 240, 60));
-        FillSolidRect(hdc, x + 15, y + 15, 2, 4, RGB(80, 240, 60));
-        FillSolidRect(hdc, x + 22, y + 17, 2, 4, RGB(80, 240, 60));
-        FillSolidRect(hdc, x + 5, y + 23, 22, 4, RGB(60, 50, 45));
-        FillSolidRect(hdc, x + 14, y + 21, 3, 2, RGB(160, 255, 100));
+        // Toxic Acid Precipitation: Heavy storm cloud & neon caustic droplets
+        FillSolidRect(hdc, x + 5, y + 5, 22, 9, RGB(45, 52, 55));
+        FillSolidRect(hdc, x + 8, y + 3, 14, 5, RGB(65, 75, 80));
+        FillSolidRect(hdc, x + 7, y + 16, 2, 5, RGB(74, 222, 128));
+        FillSolidRect(hdc, x + 14, y + 15, 2, 5, RGB(74, 222, 128));
+        FillSolidRect(hdc, x + 21, y + 17, 2, 5, RGB(74, 222, 128));
+        FillSolidRect(hdc, x + 5, y + 23, 22, 4, RGB(35, 45, 38));
+        FillSolidRect(hdc, x + 11, y + 21, 3, 2, RGB(167, 243, 208));
+        FillSolidRect(hdc, x + 18, y + 22, 3, 2, RGB(167, 243, 208));
     } else {
-        // Cryogenic Cold Snap: Deep navy background & cyan ice snowflake
-        FillSolidRect(hdc, x + 4, y + 4, 24, 24, RGB(10, 25, 45));
-        FillSolidRect(hdc, x + 15, y + 6, 2, 20, RGB(90, 210, 255));
-        FillSolidRect(hdc, x + 6, y + 15, 20, 2, RGB(90, 210, 255));
-        FillSolidRect(hdc, x + 10, y + 10, 3, 3, RGB(140, 235, 255));
-        FillSolidRect(hdc, x + 19, y + 10, 3, 3, RGB(140, 235, 255));
-        FillSolidRect(hdc, x + 10, y + 19, 3, 3, RGB(140, 235, 255));
-        FillSolidRect(hdc, x + 19, y + 19, 3, 3, RGB(140, 235, 255));
+        // Cryogenic Cold Snap: Sub-zero frost crystal snowflake with icy rime
+        FillSolidRect(hdc, x + 4, y + 4, 24, 24, RGB(8, 20, 38));
+        FillSolidRect(hdc, x + 15, y + 5, 2, 22, RGB(56, 189, 248));
+        FillSolidRect(hdc, x + 5, y + 15, 22, 2, RGB(56, 189, 248));
+        FillSolidRect(hdc, x + 10, y + 10, 3, 3, RGB(224, 242, 254));
+        FillSolidRect(hdc, x + 19, y + 10, 3, 3, RGB(224, 242, 254));
+        FillSolidRect(hdc, x + 10, y + 19, 3, 3, RGB(224, 242, 254));
+        FillSolidRect(hdc, x + 19, y + 19, 3, 3, RGB(224, 242, 254));
+        FillSolidRect(hdc, x + 14, y + 14, 4, 4, RGB(255, 255, 255));
     }
 }
 
