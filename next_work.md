@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-review
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,11 +31,11 @@ current_targets:
   kilo_creator: kweb://demoscene
   kilo_graphics: KSanctuary
   kilo_soundscape: KStellar
-  kilo_tester: KMaze
-  kilo_usability: KColosseum
+  kilo_tester: KChart
+  kilo_usability: KChart
   kilo_qa: KSys
-  kilo_expander: KStarForge
-  kilo_review: KChart
+  kilo_expander: KChart
+  kilo_review: KBudget
 virtual_web_target: kweb://demoscene
 virtual_web_rotation:
 - kweb://slashnet
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KPaint
-  timestamp: '2026-10-28T09:40:35-07:00'
+  agent: kilo-review
+  app: KChart
+  timestamp: '2026-10-28T10:33:19-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -132,10 +132,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KMaze`
+- **Active Target**: `KChart`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Support negative dataset values (such as deltaData() outputs) across renderAxesAndCartesian(), renderHorizontalBar(), and renderTrendOverlay() by scaling axes over [min(0,minVal), max(0,maxVal)] with a zero baseline instead of clamping with Math.max(0,...) and passing raw numeric values to renderTrendOverlay() so movavg/mean/corridor match computeStats(); reset trendStats.polyA/B/C=0 when count<3 and trendStats.expA/B=0 when posIndices.length<2, fix Poly badge negative sign formatting, and draw transposed trend overlays in renderHorizontalBar(); align Pie/Donut/Polar cx and outerR in handlePointerMove(), updateHoverCoordsForIndex(), and renderSonifyPlayhead() with renderPieOrDonut()/renderPolarCoxcomb(); make exportSvg() and #btnExportHtml render active chartType, currentTheme, and trend/target overlays instead of hardcoded vertical bars, wrap startup localStorage calls in try/catch, add Ctrl+Z preventDefault() undo, and stop sonifyInterval on visibilitychange; in KChart/main.c add Scatter View on [9] and Polar on [0] (NUM_MODES 10), widen WM_MOUSEMOVE Cartesian hit-testing with dynamic barW, add >=100 carry in FormatPolyEq(), and persist sorted label order in QuickSaveState()/QuickLoadState(). |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -153,10 +154,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Fix exportPaletteACT() ReferenceErrors (undefined currentPalettePreset/hexToRgb and missing retro16 key) using #palette-preset value; implement promised Shift-radial gradient (createRadialGradient), right-click stop reversal, and hasSelection clipping in draw()/endPosition(); sync #layer-opacity-val text, onchange saveState(), and layer opacity across saveState()/restoreState() and quickSave()/quickLoad() (plus restore secondaryColor and currentZoom); sync #onion-canvas dimensions/CSS zoom across applyZoom()/resizeCanvas()/transformCanvas()/restoreState()/quickLoad(), key out white background with translucent cyan tint in updateOnionSkin(), and fix addAnimFrame() on upper layers; fix saveVFS() 1.2s timeout aborting KiloOS VFS_SHOW_SAVE (immediate fallback only when window.parent===window, 60s dialog timeout otherwise, e.origin check) and accept .tga/.bmp on drop; in KPaint/main.c add M/P/4 hotkeys to GetMessageA WM_KEYDOWN, mirror across visible canvas width instead of 1999-x, and use GetClientRect() in WM_VSCROLL/WM_HSCROLL. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KColosseum`
+- **Active Target**: `KChart`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Eliminate 91px vertical overflow clipping .stats-grid at 1060x703 by locking body to 100vh overflow:hidden (with <=900px scroll fallback), compacting header into 1 row, separating left .panel-title from single-line #chartTypeGroup/#trendGroup toolbars, making .canvas-container and .table-wrapper flex:1 min-height:0, and setting .stats-grid to 8 columns; add e.preventDefault() on ArrowLeft/Right/Up/Down and Space outside inputs; move #toastContainer to top:52px right:16px and skip duplicate welcome toast when #helpModal opens on first boot; replace raw unrendered LaTeX dollar-sign formulas in #helpModal with clean Unicode math (y=mx+b, R2, y=ax2+bx+c, y=a*e^(bx), +-1 sigma, Sigma, Delta), add color-scheme:dark on :root and dark background/color on select option, remove external Google Fonts link, and keep #presetSelect synced to loaded preset. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Scope global li card styling to #marketList > li and #ownedList > li so #tutorialModal ol li stops stretching and clipping #btnTutorialEnter; lock body to 100vh flex column at 800x563 by merging .top-nav, h1, and .funds into a compact header, removing the duplicate Empire Duel Arena banner, making #marketList and #ownedList independently scrollable with Sort by Prowess/HP buttons (sortGladiators), and compacting #arenaPanel (#arenaCanvas 185px, #combatLog 72px) for 0px overflow; add devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas, guard SELECT in keydown, and replace prompt() in importGladiatorDossier() with an in-DOM modal. |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Orbit & navigation viewport ergonomics, touch/keyboard flight controls, HiDPI radar canvas scaling, and compact HUD. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -193,10 +195,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, client connection telemetry, broadcast console, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KStarForge`
+- **Active Target**: `KChart`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kchart.html: add VFS Open (VFS_SHOW_OPEN -> VFS_READ loading .csv and .json datasets from /home/data/ or /home/docs/, plus handling incoming FILE_OPEN / VFS_OPEN messages with event.origin === window.location.origin check and standalone #fileInput fallback when window.parent === window) and VFS Save (VFS_SHOW_SAVE / VFS_WRITE + OS_NOTIFY exporting .csv, .json, .svg, and .md reports to /home/data/ or /home/docs/ with standalone Blob download fallback). |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmech_telemetry.json via postMessage with standalone fallback) into #modal-telemetry and add optional RFMS online mech duel behind an explicit Multiplayer Arena button. |
@@ -214,11 +217,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open (VFS_SHOW_OPEN -> VFS_READ supporting PNG/BMP/PCX/TGA/JSON with standalone #img-loader fallback), Save As VFS (Ctrl+Shift+S + OS_NOTIFY), and direct VFS export for .ANS (/home/bbs/) in #ansi-modal and Sprite Sheet (/home/pictures/) in #animation-dock; add Canvas Size presets (32x32, 64x64, 128x128, 320x240, 640x480, 800x600) calling resizeCanvas() + saveState() (syncing animFrames/#onion-canvas/#grid-canvas) with matching canvas size preset parity in KPaint/main.c. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
-- **Active Target**: `KChart`
+- **Active Target**: `KBudget`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + spreadsheet grid, chart engine rendering, and regression overlays; inject fixes via `--inject-fix`. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + budget pie chart, ledger filters, and modal ergonomics; inject fixes via `--inject-fix`. |
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + card tableau spacing, drag/click responsiveness, and campaign HUD; inject fixes via `--inject-fix`. |
 | `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + board rendering, move history panel, and FEN/AI controls; inject fixes via `--inject-fix`. |
@@ -248,6 +250,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | [Argon Audited 2026-10-27: Fixes queued -> kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | [Argon Audited 2026-10-27: Fixes queued -> kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | [Argon Audited 2026-10-28: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
+| `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | [Argon Audited 2026-10-28: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 
 ---
 
@@ -305,7 +308,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KTetris** | `KiloOS/public/apps/ktetris.html` | Pass 10+ (2026-10-18) | Arcade / Classic | Full retro arcade physics, SRS rotation, hold piece, ghost piece, marathon/sprint/ultra modes, RFMS multiplayer, full F5/F9 state persistence, dual Win32 native client parity. |
 | **KFreecell** | `KiloOS/public/apps/kfreecell.html` | Pass 5 (2026-10-19) | Card / Solitaire | 4 game modes (incl. 20-stage campaign & time attack), 5 active skills, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity, zero glints. |
 | **KMatch3** | `KiloOS/public/apps/kmatch3.html` | Pass 5 (2026-10-19) | Puzzle / Match-3 | 20-stage campaign, Zen, Timed Rush & Duel Arena modes, Jewel King boss encounter, active skills, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity. |
-| **KChart** | `KiloOS/public/apps/kchart.html` | Pass 6+ (2026-10-20) | Office / Visualization | Feature-complete 1999 spreadsheet & business chart studio; 10 engines, regressions & OLS fit, YM2612 FM / SPC700 sonification, 7 export formats, dual Win32 C parity, full state persistence. |
 | **KSimon** | `KiloOS/public/apps/ksimon.html` | Pass 5 (2026-10-20) | Arcade / Memory | Feature-complete 3D audio-visual memory console; 9 modes (incl. 20-stage campaign & online duel), dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity, zero glints. |
 | **KWords** | `KiloOS/public/apps/kwords.html` | Pass 5 (2026-10-21) | Word / Puzzle | Feature-complete retro word search with 20-stage campaign, 12 themes, custom puzzle creator/import/export, replay scrubber, dual Win32 native client parity, full F5/F9 state persistence, first-run tutorial integrity. |
 | **KPad** | `KiloOS/public/apps/kpad.html` | Pass 6+ (2026-10-22) | Office / Code Editor | Feature-complete multi-tab code & text workstation; markdown split preview, outline sidebar with touch drag, regex workbench, hex inspector, AES-256 lock, dual Win32 C parity, full F5/F9 state persistence. |
@@ -316,6 +318,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-10-28T10:33:19-07:00 — kilo-review: KChart (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1060x703 and audited kchart.html + KChart/main.c; un-quarantined from Mature with surgical fixes dispatched to kilo-usability, kilo-tester, and kilo-expander).
+  - Visual/UX Findings: 91px vertical overflow clips 2nd row of .stats-grid at 1060x703; missing preventDefault() on Arrow/Space scrolls page 91px; raw unrendered LaTeX dollar-sign markup in #helpModal; #toastContainer occludes #helpModal footer and .stats-grid; missing dark select option styling and external Google Fonts CDN link.
+  - Feature/VFS Findings: Negative values from deltaData() are clamped to 0 across Cartesian/H-Bar/Trend renderers; exportSvg() and #btnExportHtml hardcode vertical bars regardless of chartType; Pie/Donut/Polar hover hit-testing cx/outerR mismatches renderer; stale poly/exp trendStats on <3 or <=0 pts; KChart/main.c missing Scatter [9]/[0] parity and QuickLoadState() scrambles sorted labels; zero Phase VI KiloOS VFS Open/Save integration.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KChart`, `kilo-tester`->`KChart`, `kilo-expander`->`KChart`] (un-quarantined `KChart` from Mature); advanced `kilo-review` to `KBudget`; next agent `kilo-creator`.
 
 - **2026-10-28T10:15:00-07:00 — kilo-planner: Fleet Orchestration (24-Hour Fleet Planning & Anti-Piling Queue Replenishment)**
   - Status: PASS ✅ (105 apps audited, 53 mature, 52 active; icon audit & log rotation clean).
@@ -339,8 +347,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Layout & Ergonomics: Added 3-tab .sidebar switcher (Draw / Layers / FX & Starters), 3-col tools grid, inline Round/Square [4] shape toggle, and centered 800x600 canvas (#canvas-wrapper margin:auto) with 0px fold scroll.
   - Controls & Audio: Non-blocking 2-click armed confirmation for clearCanvasPrompt(), preserved span.btn-hint in updateCollabUI(), and fixed RetroAudioEngine.toggle() icon update without button widening.
   - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
-
-- **2026-10-28T08:22:18-07:00 — kilo-tester: KPaint (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-tester updates for KPaint across web and native targets.
-  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
