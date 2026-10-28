@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.4.35';
+const MICROS_VERSION = '0.4.36';
 
 // Singleton Web Audio Synthesizer (Replaces per-click new AudioContext() leak)
 const osAudioCtxRef = { current: null };
@@ -489,6 +489,14 @@ function App() {
     return null;
   });
 
+  const [vfs, setVfs] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kiloos_vfs_state_v2');
+      if (saved) return { ...DEFAULT_VFS, ...JSON.parse(saved) };
+    } catch (e) {}
+    return DEFAULT_VFS;
+  });
+
   const playAnomalyAudio = useCallback(() => {
     if (Math.random() < 0.01) {
       const audio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAwADAA==");
@@ -555,13 +563,6 @@ function App() {
   const argAppHistory = useRef([]);
   const [isGlitching, setIsGlitching] = useState(false);
   const [safeMode, setSafeMode] = useState(false);
-  const [vfs, setVfs] = useState(() => {
-    try {
-      const saved = localStorage.getItem('kiloos_vfs_state_v2');
-      if (saved) return { ...DEFAULT_VFS, ...JSON.parse(saved) };
-    } catch (e) {}
-    return DEFAULT_VFS;
-  });
 
   useEffect(() => {
     const timer = setTimeout(() => {

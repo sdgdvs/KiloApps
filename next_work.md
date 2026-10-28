@@ -311,6 +311,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T21:14:00-07:00 — kilo-adhoc: KiloOS & Firebase Hosting Recovery (v0.4.36)**
+  - Status: PASS ✅ (Vite build PASS, security_lint PASS, check_sizes PASS, headless Chrome boot & login verified).
+  - Runtime Fix: Moved `const [vfs, setVfs]` above `playClickAudio`/`playStartupAudio` in `KiloOS/src/App.jsx` to fix the TDZ `ReferenceError: Cannot access 'w' before initialization` blank screen on boot.
+  - Deploy Pipeline Fix: Replaced `javascript:` URI with `href='#'` + `onclick` in `KiloOS/public/web/webring.html` to unblock `security_lint.py` in Firebase Hosting CI/CD.
+  - Bumped `MICROS_VERSION` and `KiloOS/package.json` to `0.4.36`; preserved scheduled frontmatter (`kilo-creator` -> `kweb://demoscene`).
+
 - **2026-10-27T20:34:15-07:00 — kilo-review: KDB (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1020x663 and audited kdb.html + KDB/main.c).
   - Visual/UX Findings: #toastContainer (bottom 38px) occludes #addRecordForm inputs and Add Record wraps to 2 lines; dark <select> dropdowns lack color-scheme dark; ER diagram SVG paths loop bottom-to-top through side-by-side cards and ignore window resize; #sqlResultsHead lacks click-to-sort.
@@ -333,10 +339,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Layout: Fixed right workbench .panel-header 2-line wrapping with white-space:nowrap and compact button styling (Hex, Steno, Freq, Stego, Clear) for clean pane alignment.
   - UX & Shortcuts: Pre-populated #inputText on boot/#btnSplashNew and ran silent runEncrypt() on init; aborted #btnVFSSave on prompt() null; expanded TUTORIAL_STEPS for Ctrl+1..6, Pipeline, AES, and RSA.
   - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
-
-- **2026-10-27T18:35:32-07:00 — kilo-tester: KCipher (Pipeline Decrypt and Lore Workbench Handoff Fixes)**
-  - Status: PASS ✅ (web 158.1 KB, native 18.0 KB < 999 KB; startup, Vite and security_lint PASS; visual PASS).
-  - Pipeline and RSA Fix: executePipeline(true) decrypts #pipelineFinalOutput back to plaintext and parses stage.key (p,q,e) for RSA.
-  - Workbench and Stats: #btnLoadLoreToWorkbench loads ciphertext to #outputText and runs runDecrypt(); #statTotalChars uses (outText || inText).length.
-  - Session Sync: #btnExportJSON, #btnImportJSON, and #btnNewSession include aesKey, aesFormat, rsaP, rsaQ, rsaE, pipelineStages, and stegoText.
-  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.

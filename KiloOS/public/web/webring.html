@@ -5163,7 +5163,7 @@ function focusTopologyNode(nodeId) {
 
   const hudEl = document.getElementById('topoSellabel');
   if (hudEl) {
-    hudEl.innerHTML = `<span style="color:var(--amber-bright); font-weight:bold;">★ ${node.name} (${node.id})</span> <span style="color:var(--green-bright); font-size:10px;">[CANONICAL 1999 DESTINATION]</span> &bull; Latency: ${node.latency}ms &bull; <a href="javascript:openNodeModal('${node.id}')" style="color:var(--cyan); text-decoration:underline;">Inspect Node Modal [Enter]</a>`;
+    hudEl.innerHTML = `<span style="color:var(--amber-bright); font-weight:bold;">★ ${node.name} (${node.id})</span> <span style="color:var(--green-bright); font-size:10px;">[CANONICAL 1999 DESTINATION]</span> &bull; Latency: ${node.latency}ms &bull; <a href="#" onclick="openNodeModal('${node.id}'); return false;" style="color:var(--cyan); text-decoration:underline;">Inspect Node Modal [Enter]</a>`;
   }
   if (typeof playFmTone === 'function') {
     playFmTone(660, 1.2, 0.2, 0.06, 0.05, false);

@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T18:35:32-07:00 — kilo-tester: KCipher (Pipeline Decrypt and Lore Workbench Handoff Fixes)**
+  - Status: PASS ✅ (web 158.1 KB, native 18.0 KB < 999 KB; startup, Vite and security_lint PASS; visual PASS).
+  - Pipeline and RSA Fix: executePipeline(true) decrypts #pipelineFinalOutput back to plaintext and parses stage.key (p,q,e) for RSA.
+  - Workbench and Stats: #btnLoadLoreToWorkbench loads ciphertext to #outputText and runs runDecrypt(); #statTotalChars uses (outText || inText).length.
+  - Session Sync: #btnExportJSON, #btnImportJSON, and #btnNewSession include aesKey, aesFormat, rsaP, rsaQ, rsaE, pipelineStages, and stegoText.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-27T18:20:23-07:00 — kilo-soundscape: KCyber (Neon Grid Infiltration — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 116.8 KB, native 34.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Composition: D-Dorian netrunner breakbeat suite, 6-channel counterpoint, contrary digital bell arpeggios, 3rd/7th shell voicings, 5:3 swing groove.
