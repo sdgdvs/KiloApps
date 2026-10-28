@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-28T08:39:58-07:00 — kilo-usability: KPaint (Sidebar 3-Tab Switcher, Centered Canvas & Armed Clear Usability Pass)**
+  - Status: PASS ✅ (0 errors, web 256.6 KB, native 39.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 55.9%, HEAD Δ 11.0%, 0 fail, 0 warn, 7.1s)).
+  - Layout & Ergonomics: Added 3-tab .sidebar switcher (Draw / Layers / FX & Starters), 3-col tools grid, inline Round/Square [4] shape toggle, and centered 800x600 canvas (#canvas-wrapper margin:auto) with 0px fold scroll.
+  - Controls & Audio: Non-blocking 2-click armed confirmation for clearCanvasPrompt(), preserved span.btn-hint in updateCollabUI(), and fixed RetroAudioEngine.toggle() icon update without button widening.
+  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
+
 - **2026-10-28T08:22:18-07:00 — kilo-tester: KPaint (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KPaint across web and native targets.

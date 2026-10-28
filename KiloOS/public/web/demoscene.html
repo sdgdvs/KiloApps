@@ -994,6 +994,22 @@
           <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">SlashNet: News for Nerds &amp; Beowulf cluster calculator.</div>
         </div>
         <div style="background:#15182c; border:1px solid var(--border-color); padding:10px; border-radius:4px;">
+          <strong style="color:var(--cyan-neon);"><a href="/web/cabled.html" onclick="navigateKnet('/web/cabled.html', event)">kweb://cabled</a></strong>
+          <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">Cabled Magazine '99 Neon Edition &amp; Y2K Readiness Audit.</div>
+        </div>
+        <div style="background:#15182c; border:1px solid var(--border-color); padding:10px; border-radius:4px;">
+          <strong style="color:var(--cyan-neon);"><a href="/web/scallion.html" onclick="navigateKnet('/web/scallion.html', event)">kweb://scallion</a></strong>
+          <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">The Scallion: Late-90s Tech &amp; Culture Satire News.</div>
+        </div>
+        <div style="background:#15182c; border:1px solid var(--border-color); padding:10px; border-radius:4px;">
+          <strong style="color:var(--cyan-neon);"><a href="/web/rfc_archive.html" onclick="navigateKnet('/web/rfc_archive.html', event)">kweb://rfc-archive</a></strong>
+          <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">IETF Living RFC Workbench (RFC 1149 &amp; 2324 HTCPCP).</div>
+        </div>
+        <div style="background:#15182c; border:1px solid var(--border-color); padding:10px; border-radius:4px;">
+          <strong style="color:var(--cyan-neon);"><a href="/web/geocities.html" onclick="navigateKnet('/web/geocities.html', event)">kweb://geocities</a></strong>
+          <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">GeoCities '99 Retro Homestead Neighborhoods.</div>
+        </div>
+        <div style="background:#15182c; border:1px solid var(--border-color); padding:10px; border-radius:4px;">
           <strong style="color:var(--cyan-neon);"><a href="/web/portal.html" onclick="navigateKnet('/web/portal.html', event)">kweb://portal</a></strong>
           <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">Central KiloNet 1999 Directory &amp; Shareware Depot.</div>
         </div>
@@ -1074,6 +1090,74 @@ function safeSet(key, val) {
   } catch (e) {}
 }
 
+// --- Discrete UI SFX Earcons (Rule 3) ---
+/**
+ * Plays short discrete Web Audio UI earcons with zero procedural looping.
+ * @param {'click'|'tab'|'effect'|'vote'|'vfs'|'modal'} type - Sound type
+ */
+function playUiSfx(type) {
+  if (isAudioMuted) return;
+  try {
+    initAudioEngine();
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    if (type === 'click') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(800, t);
+      gain.gain.setValueAtTime(0.04, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+      osc.start(t);
+      osc.stop(t + 0.03);
+    } else if (type === 'tab') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(540, t);
+      osc.frequency.exponentialRampToValueAtTime(720, t + 0.05);
+      gain.gain.setValueAtTime(0.05, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+      osc.start(t);
+      osc.stop(t + 0.05);
+    } else if (type === 'effect') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(440, t);
+      osc.frequency.exponentialRampToValueAtTime(880, t + 0.06);
+      gain.gain.setValueAtTime(0.03, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+      osc.start(t);
+      osc.stop(t + 0.06);
+    } else if (type === 'vote') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(660, t);
+      osc.frequency.exponentialRampToValueAtTime(990, t + 0.07);
+      gain.gain.setValueAtTime(0.06, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+      osc.start(t);
+      osc.stop(t + 0.07);
+    } else if (type === 'vfs') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1046, t);
+      osc.frequency.setValueAtTime(1318, t + 0.04);
+      gain.gain.setValueAtTime(0.06, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+      osc.start(t);
+      osc.stop(t + 0.09);
+    } else if (type === 'modal') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(700, t);
+      osc.frequency.exponentialRampToValueAtTime(350, t + 0.06);
+      gain.gain.setValueAtTime(0.03, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+      osc.start(t);
+      osc.stop(t + 0.06);
+    }
+  } catch (e) {}
+}
+
 // --- Toast & UI Alerts ---
 function showToast(msg) {
   const el = document.getElementById('toastAlert');
@@ -1099,12 +1183,14 @@ function updateCRTState() {
 }
 function toggleCRT() {
   crtEnabled = !crtEnabled;
+  playUiSfx('click');
   safeSet('demoscene_crt_enabled', crtEnabled);
   updateCRTState();
 }
 
 // --- Navigation Tabs ---
 function switchTab(tabId) {
+  playUiSfx('tab');
   document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
   
@@ -1130,6 +1216,7 @@ function navigateKnet(url, ev) {
 
 function saveToKiloVfs(vfsPath, contentStr) {
   try {
+    safeSet('vfs:' + vfsPath, contentStr);
     window.parent.postMessage({
       type: 'VFS_WRITE',
       path: vfsPath,
@@ -1142,6 +1229,7 @@ function saveToKiloVfs(vfsPath, contentStr) {
       message: 'Saved to VFS: ' + vfsPath
     }, '*');
   } catch (e) {}
+  playUiSfx('vfs');
   showToast('Saved to KiloOS VFS: ' + vfsPath);
 }
 
@@ -1163,6 +1251,10 @@ function navigateToRandomRing() {
     '/web/asm_temple.html',
     '/web/trapster.html',
     '/web/slashnet.html',
+    '/web/cabled.html',
+    '/web/scallion.html',
+    '/web/rfc_archive.html',
+    '/web/geocities.html',
     '/web/portal.html'
   ];
   const pick = nodes[Math.floor(Math.random() * nodes.length)];
@@ -1266,6 +1358,7 @@ window.addEventListener('mouseup', () => {
 
 function setEffect(name) {
   currentEffect = name;
+  playUiSfx('effect');
   document.querySelectorAll('.btn-effect').forEach(btn => {
     btn.classList.toggle('active', btn.textContent.toLowerCase().includes(name));
   });
@@ -1743,6 +1836,7 @@ function renderNfoList() {
 }
 
 function selectNfoFile(key) {
+  playUiSfx('click');
   activeNfoKey = key;
   renderNfoList();
   const nameEl = document.getElementById('nfoFileName');
@@ -1754,6 +1848,7 @@ function selectNfoFile(key) {
 }
 
 function changePhosphorTheme(theme) {
+  playUiSfx('click');
   const area = document.getElementById('nfoTextArea');
   if (!area) return;
   area.className = 'nfo-content-area theme-' + theme;
@@ -2031,6 +2126,7 @@ function renderCompoList() {
 }
 
 function voteEntry(id, delta) {
+  playUiSfx('vote');
   const currentVote = userVotes[id] || 0;
   const entry = compoEntries.find(e => e.id === id);
   if (!entry) return;
@@ -2093,10 +2189,12 @@ function exportBallotVFS() {
 
 // Modal controls for new compo entry
 function openNewEntryModal() {
+  playUiSfx('modal');
   const m = document.getElementById('modalNewEntry');
   if (m) m.style.display = 'flex';
 }
 function closeNewEntryModal() {
+  playUiSfx('click');
   const m = document.getElementById('modalNewEntry');
   if (m) m.style.display = 'none';
 }
@@ -2328,7 +2426,10 @@ function trackerTick() {
 }
 
 function toggleJukeboxBgm() {
-  if (!window.__KILO_BGM_ENABLED) return;
+  if (!window.__KILO_BGM_ENABLED) {
+    showToast('Chiptune preview disabled (procedural BGM awaiting Lyria-3.5 MIDI pipeline).');
+    return;
+  }
   isBgmPlaying = !isBgmPlaying;
   const btn = document.getElementById('btnJukeboxPlay');
   if (btn) btn.textContent = isBgmPlaying ? '⏸ Pause Track' : '▶ Play Track';
