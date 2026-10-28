@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-soundscape
+current_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -30,7 +30,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://warez
-  kilo_graphics: KCyber
+  kilo_graphics: KStellar
   kilo_soundscape: KCyber
   kilo_tester: KCipher
   kilo_usability: KCipher
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://scallion
-  timestamp: '2026-10-27T17:18:01-07:00'
+  agent: kilo-graphics
+  app: KCyber
+  timestamp: '2026-10-27T17:31:53-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -100,11 +100,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KCyber`
+- **Active Target**: `KStellar`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Replace forbidden code-generated SVG mech primitives (getPlayerMechSVG and getEnemyMechSVG) with Imagen 3 2-stage chroma-keyed sprites for player chassis and enemy mech tiers. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
@@ -116,6 +115,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
+| `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KCyber`
@@ -310,6 +310,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T17:31:53-07:00 — kilo-graphics: KCyber (Skip — Asset Suitability)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KCyber.
+  - Handoff: Advanced `kilo-graphics` to `KStellar`; rotated active agent to `kilo-soundscape`.
+
 - **2026-10-27T17:18:01-07:00 — kilo-creator: kweb://scallion (The Scallion: 1999 Satirical News Portal & Phase VI VFS Integration)**
   - Status: PASS ✅ (0 errors, web 101.9 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.03%, input 43.32%, HEAD Δ 28.07%, 0 fail, 0 warn, 5.9s)).
   - Delivered The Scallion: interactive broadsheet with Ask A Sysadmin agony aunt terminal, Infographic Lab, Headline Forge, and VFS clipping export.
@@ -334,10 +338,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kcolor_tutorialSeen flag, auto-restore on boot, and Escape modal dismissals.
   - Dual Parity & Harmonies: Added harmony palette generator (G), dual Win32 C 7-rule harmony rendering, and visibilitychange hygiene.
   - Mature Quarantine & Handoff: Promoted `KColor` to Mature archive; advanced `kilo-qa` to `KTask`; next agent `kilo-expander`.
-
-- **2026-10-27T15:20:56-07:00 — kilo-usability: KMatrix (UI/UX, HiDPI Canvas Scaling & Command Usability Polish)**
-  - Status: PASS ✅ (0 errors, web 97.0 KB, native 20.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - HiDPI Canvas: Scaled #matrixCanvas by devicePixelRatio in resizeMatrixRain() with requestAnimationFrame rendering.
-  - Focus & Ergonomics: Refocused #termInput on modal close/dismissal and .terminal-wrapper click.
-  - Command Discovery: Added codebook, waterfall, and vfs to #helpModal, cmdHelp(), and quick-action buttons across web & Win32 C.
-  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.

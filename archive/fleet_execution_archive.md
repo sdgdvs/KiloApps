@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T15:20:56-07:00 — kilo-usability: KMatrix (UI/UX, HiDPI Canvas Scaling & Command Usability Polish)**
+  - Status: PASS ✅ (0 errors, web 97.0 KB, native 20.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - HiDPI Canvas: Scaled #matrixCanvas by devicePixelRatio in resizeMatrixRain() with requestAnimationFrame rendering.
+  - Focus & Ergonomics: Refocused #termInput on modal close/dismissal and .terminal-wrapper click.
+  - Command Discovery: Added codebook, waterfall, and vfs to #helpModal, cmdHelp(), and quick-action buttons across web & Win32 C.
+  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
+
 - **2026-10-27T14:39:00-07:00 — kilo-tester: KMatrix (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 92.6 KB, native 19.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.51%, HEAD Δ 0.59%, 0 fail, 0 warn, 7.8s)).
   - Dump & Codebook: Distinct sector hex/ASCII dumps in cmdDump() & main.c, wired filter arg in cmdCodebook(filter).
