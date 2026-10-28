@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T15:35:39-07:00 — kilo-qa: KColor (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 72.8 KB, native 20.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 24.17%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.2s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kcolor_tutorialSeen flag, auto-restore on boot, and Escape modal dismissals.
+  - Dual Parity & Harmonies: Added harmony palette generator (G), dual Win32 C 7-rule harmony rendering, and visibilitychange hygiene.
+  - Mature Quarantine & Handoff: Promoted `KColor` to Mature archive; advanced `kilo-qa` to `KTask`; next agent `kilo-expander`.
+
 - **2026-10-27T15:20:56-07:00 — kilo-usability: KMatrix (UI/UX, HiDPI Canvas Scaling & Command Usability Polish)**
   - Status: PASS ✅ (0 errors, web 97.0 KB, native 20.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - HiDPI Canvas: Scaled #matrixCanvas by devicePixelRatio in resizeMatrixRain() with requestAnimationFrame rendering.

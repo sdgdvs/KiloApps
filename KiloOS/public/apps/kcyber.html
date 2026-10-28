@@ -525,13 +525,20 @@
     }
 
     // Channel 2: Cold Digital Bell Counter-Melody (High-MUL bell chime in contrary motion, SPC700 delay)
-    function playDigitalBell(freq, dur, vol = 0.11) {
+    function playDigitalBell(freq, dur, vol = 0.11, timeOffset = 0) {
       playFM(freq, 3.5, 3.2, dur, vol, {
         carrierType: 'sine',
         modType: 'sine',
         attack: 0.003,
         decay: dur * 0.45,
-        sendToDelay: true
+        sendToDelay: true,
+        timeOffset: timeOffset
+      });
+    }
+
+    function playDigitalBellArp(notes, stepDur = 0.045, vol = 0.08) {
+      notes.forEach((f, idx) => {
+        playDigitalBell(f, 0.24, vol, idx * stepDur);
       });
     }
 
@@ -638,24 +645,30 @@
 
     function playAlarm() {
       // Intrusive Dual-Tone Cyber Klaxon
-      for (let i = 0; i < 2; i++) {
-        playFM(783.99, 1.414, 2.0, 0.13, 0.14, {
-          timeOffset: i * 0.15,
+      for (let i = 0; i < 3; i++) {
+        playFM(880.0, 1.414, 2.5, 0.12, 0.16, {
+          timeOffset: i * 0.13,
           carrierType: 'square',
-          freqSlide: 587.33
+          freqSlide: 440.0
         });
       }
     }
 
     function playIceBreach() {
-      // Screaming FM sync alert for active ICE breach
-      playFM(880, 5.4, 6.0, 0.26, 0.22, {
+      // Screaming dual-operator FM sync siren for active ICE breach
+      playFM(987.77, 5.4, 6.2, 0.30, 0.24, {
         carrierType: 'sawtooth',
         modType: 'sine',
+        freqSlide: 180,
+        sendToDelay: true
+      });
+      playFM(1174.66, 3.0, 4.0, 0.25, 0.16, {
+        timeOffset: 0.04,
+        carrierType: 'square',
         freqSlide: 220,
         sendToDelay: true
       });
-      playNoiseBurst(0.18, 0.08, 1200, { filterType: 'highpass' });
+      playNoiseBurst(0.20, 0.10, 1400, { filterType: 'highpass' });
     }
 
     function playCloakStinger() {
@@ -755,23 +768,21 @@
       else if (s === 56) playCyberLead(P_CS5, 0.32, 0.13, true); // Chromatic Altered Dorian tension
       else if (s === 60) playCyberLead(P_D5, 0.45, 0.14, true); // Cadence resolution
 
-      // --- CHANNEL 2: COUNTER-MELODY (Cold Digital Bells - Contrary Motion & Solo Spotlight) ---
+      // --- CHANNEL 2: COUNTER-MELODY (Cold Digital Bells - Contrary Arpeggios & Solo Spotlight) ---
       if (s === 6) playDigitalBell(P_A5, 0.20, 0.09);
-      // Ch2 Solo Spotlight during Ch1 rest (Steps 14-22)
-      else if (s === 14) playDigitalBell(P_A5, 0.24, 0.11);
-      else if (s === 16) playDigitalBell(P_C6, 0.28, 0.12);
-      else if (s === 18) playDigitalBell(P_D6, 0.30, 0.13);
-      else if (s === 20) playDigitalBell(P_E6, 0.35, 0.14); // Crystalline peak
-      else if (s === 22) playDigitalBell(P_D6, 0.28, 0.12);
+      // Ch2 Solo Spotlight during Ch1 rest (Steps 14-22): Ascending Dorian crystal cascade
+      else if (s === 14) playDigitalBellArp([P_A5, P_C6, P_D6, P_E6], 0.04, 0.09);
+      else if (s === 18) playDigitalBell(P_D6, 0.30, 0.12);
+      else if (s === 20) playDigitalBellArp([P_E6, P_D6, P_C6, P_A5], 0.045, 0.10); // Crystalline peak waterfall
+      else if (s === 22) playDigitalBell(P_D6, 0.28, 0.11);
       else if (s === 26) playDigitalBell(P_D5, 0.24, 0.10);
       // Ch2 Contrary Cascade during Ch1 rest (Steps 42-46)
-      else if (s === 42) playDigitalBell(P_G5, 0.25, 0.11);
-      else if (s === 44) playDigitalBell(P_F5, 0.25, 0.11);
+      else if (s === 42) playDigitalBellArp([P_BB5, P_C6, P_D6, P_F5 * 2], 0.04, 0.10);
       else if (s === 46) playDigitalBell(P_D5, 0.28, 0.12);
       else if (s === 50) playDigitalBell(P_A5, 0.22, 0.10);
       else if (s === 54) playDigitalBell(P_G5, 0.22, 0.10);
       else if (s === 58) playDigitalBell(P_E5, 0.24, 0.11);
-      else if (s === 62) playDigitalBell(P_C6, 0.35, 0.13);
+      else if (s === 62) playDigitalBellArp([P_A5, P_CS5 * 2, P_E6, P_A5 * 2], 0.038, 0.11);
 
       // --- CHANNEL 3: HARMONY (Shell Voicings strictly 3rd + 7th, no 5th doubling) ---
       // Bar 0 (Dm9: F4 3rd + C5 7th)
@@ -2407,6 +2418,7 @@
         let guess = trimmed.toLowerCase();
         if (guess === 'abort' || guess === 'exit' || guess === 'quit' || guess === 'disconnect') {
           hacking_node = null;
+          playSlowStinger();
           printLine("Hacking aborted.");
           player_heat += 5;
           if (player_heat > 100) player_heat = 100;
@@ -2737,6 +2749,7 @@
           printLine("  load      - Quickload state from storage [F9]");
           printLine("  export    - Export deck state to JSON file");
           printLine("  import    - Import deck state from JSON file");
+          printLine("  audio     - Toggle FM soundscape music & SFX [M]");
           printLine("  tutorial  - Show runner orientation briefing");
           printLine("  exit      - Show session exit guidance");
           printLine("During hack:");
@@ -2809,6 +2822,13 @@
           break;
         case 'import':
           triggerImport();
+          break;
+        case 'audio':
+        case 'music':
+        case 'sound':
+        case 'mute':
+          toggleAudio();
+          printLine(bgmEnabled ? "[AUDIO] YM2612 2-Op FM / SPC700 soundscape ENABLED [M]." : "[AUDIO] YM2612 2-Op FM / SPC700 soundscape MUTED [M].");
           break;
         case 'tutorial':
         case 'briefing':

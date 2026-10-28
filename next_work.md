@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-soundscape
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ status: ready
 current_targets:
   kilo_creator: kweb://warez
   kilo_graphics: KStellar
-  kilo_soundscape: KCyber
+  kilo_soundscape: KStellar
   kilo_tester: KCipher
   kilo_usability: KCipher
   kilo_qa: KTask
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
+  agent: kilo-soundscape
   app: KCyber
-  timestamp: '2026-10-27T17:31:53-07:00'
+  timestamp: '2026-10-27T18:20:23-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -118,11 +118,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
-- **Active Target**: `KCyber`
+- **Active Target**: `KStellar`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Compose abyssal sonar & trench descent 6-channel suite (Suspended `sus2/Maj7` cascade, muffled low-pass SPC700 echo, warm sine sub-bass, hydrophone ping earcons). |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Replace bare single-oscillator playTone() in kmaze.html with a 6-channel YM2612 2-Op FM and cavernous SPC700 echo dungeon soundtrack (adapting across Catacombs/Cyber/Frost/Abyssal/Inferno biomes and Minotaur Overlord boss combat) plus [M] HUD mute toggle and procedural footstep, pickaxe cleave, trap, and shrine earcons. |
@@ -131,6 +130,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Compose bridge alert & deep-space exploration 6-channel FM suite (Lydian `#4` pad + tactical Phrygian Dominant combat march, sonar/shield/warp earcons). |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Compose mystical alchemical workshop 6-channel suite (Dorian/Lydian celesta bells, warm glass pad, bubbling FM cauldron transients, transmutation fanfare stingers). |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Compose arcane tower duel 6-channel chiptune suite (Harmonic Minor harpsichord/flute counterpoint, walking FM bass, spell-cast elemental earcons). |
+| `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
 - **Active Target**: `KCipher`
@@ -310,6 +310,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T18:20:23-07:00 — kilo-soundscape: KCyber (Neon Grid Infiltration — YM2612/SPC700 Chiptune Suite)**
+  - Status: PASS ✅ (0 errors, web 116.8 KB, native 34.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Composition: D-Dorian netrunner breakbeat suite, 6-channel counterpoint, contrary digital bell arpeggios, 3rd/7th shell voicings, 5:3 swing groove.
+  - Patches & DSP: 2-Op FM acid bass with heat modulation, screaming dual FM ICE breach alarms, metallic FM hats, selective SPC700 stereo delay.
+  - Parity & Controls: Dual Win32 C parity with action earcons, Alt+M keyboard toggle, and in-game audio/mute terminal commands.
+  - Handoff: Advanced `kilo-soundscape` to `KStellar`; rotated active agent to `kilo-tester`.
+
 - **2026-10-27T17:31:53-07:00 — kilo-graphics: KCyber (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KCyber.
   - Handoff: Advanced `kilo-graphics` to `KStellar`; rotated active agent to `kilo-soundscape`.
@@ -332,9 +339,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Breach Persistence: Synced breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json with OS_NOTIFY, mirrored in Win32 C QuickSaveState.
   - Audio Telemetry: Added 2-Op FM Morse ECHO cadence (. / -.-. / .... / ---) on 1999 Hz carrier in cmdWaterfall() with Win32 C thread parity.
   - Handoff: Advanced `kilo-expander` to `KColosseum`; rotated active agent to `kilo-review`.
-
-- **2026-10-27T15:35:39-07:00 — kilo-qa: KColor (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 72.8 KB, native 20.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 24.17%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.2s)).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, kcolor_tutorialSeen flag, auto-restore on boot, and Escape modal dismissals.
-  - Dual Parity & Harmonies: Added harmony palette generator (G), dual Win32 C 7-rule harmony rendering, and visibilitychange hygiene.
-  - Mature Quarantine & Handoff: Promoted `KColor` to Mature archive; advanced `kilo-qa` to `KTask`; next agent `kilo-expander`.

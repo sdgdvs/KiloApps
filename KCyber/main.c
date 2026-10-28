@@ -144,24 +144,55 @@ void GenerateMissions() {
     }
 }
 
+int sound_enabled = 1;
+
 void PlayKeyClack() { /* Beep on keypress disabled */ }
 void PlayAccessGranted() {
+    if (!sound_enabled) return;
     Beep(400, 100); Beep(600, 100); Beep(800, 200);
 }
 void PlayAccessDenied() {
+    if (!sound_enabled) return;
     Beep(150, 300); Beep(150, 400);
 }
 void PlayAlarm() {
+    if (!sound_enabled) return;
     Beep(600, 200); Beep(400, 200);
 }
 void PlayDialup() {
+    if (!sound_enabled) return;
     for(int i=0; i<10; i++) {
         Beep(500 + (my_rand() % 1000), 100);
     }
 }
-void PlayFailTone() { Beep(300, 100); }
-void PlayPatchSound() { Beep(520, 100); Beep(780, 150); }
-void PlayProbeSound() { Beep(900, 80); Beep(1200, 120); }
+void PlayFailTone() {
+    if (!sound_enabled) return;
+    Beep(300, 100);
+}
+void PlayPatchSound() {
+    if (!sound_enabled) return;
+    Beep(520, 100); Beep(780, 150);
+}
+void PlayProbeSound() {
+    if (!sound_enabled) return;
+    Beep(900, 80); Beep(1200, 120);
+}
+void PlayIceBreach() {
+    if (!sound_enabled) return;
+    Beep(880, 80); Beep(440, 100); Beep(220, 120);
+}
+void PlayCloakSound() {
+    if (!sound_enabled) return;
+    Beep(440, 60); Beep(587, 80); Beep(880, 100);
+}
+void PlaySlowSound() {
+    if (!sound_enabled) return;
+    Beep(440, 100); Beep(220, 150); Beep(110, 200);
+}
+void PlayCreditChime() {
+    if (!sound_enabled) return;
+    Beep(1046, 80); Beep(1318, 80); Beep(1568, 120);
+}
 
 
 void PrintLine(HWND hwnd, const char* text) {
@@ -520,6 +551,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         lstrcpynA(guess, cmd, MAX_LINE_LENGTH);
         if (lstrcmpiA(guess, "abort") == 0) {
             hacking_node = 0;
+            PlaySlowSound();
             PrintLine(hwnd, "Hacking aborted.");
             player_heat += 5;
             if (player_heat > 100) player_heat = 100;
@@ -550,6 +582,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
             if (tool_cloak > 0) {
                 tool_cloak--;
                 ice_frozen_ticks += 2;
+                PlayCloakSound();
                 wsprintfA(buffer, "[CLOAK] Activated. %d remaining. ICE blinded for 2 cycles.", tool_cloak);
                 PrintLine(hwnd, buffer);
                 RECT cr; GetClientRect(hwnd, &cr);
@@ -563,6 +596,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         if (lstrcmpiA(guess, "slow") == 0) {
             if (tool_slow > 0) {
                 tool_slow--;
+                PlaySlowSound();
                 wsprintfA(buffer, "[SLOW] Activated. %d remaining. Trace speed halved.", tool_slow);
                 PrintLine(hwnd, buffer);
                 int current_interval = 3000 - (player_heat * 15);
@@ -750,6 +784,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                     wsprintfA(buf, "Downloading %s...", args);
                     PrintLine(hwnd, buf);
                     player_credits += node_files[connected_node].value;
+                    PlayCreditChime();
                     wsprintfA(buf, "Download complete. Data value: %d credits.", node_files[connected_node].value);
                     PrintLine(hwnd, buf);
                     RECT cr; GetClientRect(hwnd, &cr);
@@ -816,6 +851,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, "  guide     - Open Runner's Guide (e.g. 'guide ice')");
         PrintLine(hwnd, "  save      - Quicksave cyberdeck state to kcyber_save.dat [F5]");
         PrintLine(hwnd, "  load      - Quickload state from kcyber_save.dat [F9]");
+        PrintLine(hwnd, "  audio     - Toggle cyberdeck sound effects [Alt+M]");
         PrintLine(hwnd, "  tutorial  - Display runner orientation briefing");
         PrintLine(hwnd, "During hack:");
         PrintLine(hwnd, "  abort     - Disconnect immediately");
@@ -990,6 +1026,11 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 PrintLine(hwnd, "Invalid contract ID.");
             }
         }
+    } else if (lstrcmpiA(command, "audio") == 0 || lstrcmpiA(command, "music") == 0 || lstrcmpiA(command, "sound") == 0 || lstrcmpiA(command, "mute") == 0) {
+        sound_enabled = !sound_enabled;
+        char buf[64];
+        wsprintfA(buf, "[AUDIO] Cyberdeck sound effects %s [Alt+M].", sound_enabled ? "ENABLED" : "MUTED");
+        PrintLine(hwnd, buf);
     } else if (lstrcmpiA(command, "map") == 0) {
         PrintLine(hwnd, "NETWORK TOPOLOGY:");
         PrintLine(hwnd, " [01] GATEWAY (LOCAL)");
@@ -1108,6 +1149,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         SpawnParticles(cr.right - 100, 95, 12, RGB(0, 220, 255), 3);
                         InvalidateRect(hwnd, NULL, FALSE);
                     } else {
+                        PlayIceBreach();
                         PlayAlarm();
                         player_mem -= ice_damage;
                         char buf[128];
@@ -1913,7 +1955,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         }
 
         case WM_KEYDOWN:
-            if (wParam == VK_F5) {
+            if ((wParam == 'M' || wParam == 'm') && (GetKeyState(VK_MENU) & 0x8000)) {
+                sound_enabled = !sound_enabled;
+                char buf[64];
+                wsprintfA(buf, "[AUDIO] Cyberdeck sound effects %s [Alt+M].", sound_enabled ? "ENABLED" : "MUTED");
+                PrintLine(hwnd, buf);
+                return 0;
+            } else if (wParam == VK_F5) {
                 SaveGameState(hwnd);
                 return 0;
             } else if (wParam == VK_F9) {
