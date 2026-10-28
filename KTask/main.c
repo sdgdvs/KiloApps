@@ -182,6 +182,77 @@ void my_escape_csv(const char* src, char* dest, int maxLen) {
     dest[d] = '\0';
 }
 
+
+typedef struct _PROCESS_MEMORY_COUNTERS {
+    DWORD cb;
+    DWORD PageFaultCount;
+    SIZE_T PeakWorkingSetSize;
+    SIZE_T WorkingSetSize;
+    SIZE_T QuotaPeakPagedPoolUsage;
+    SIZE_T QuotaPagedPoolUsage;
+    SIZE_T QuotaPeakNonPagedPoolUsage;
+    SIZE_T QuotaNonPagedPoolUsage;
+    SIZE_T PagefileUsage;
+    SIZE_T PeakPagefileUsage;
+} PROCESS_MEMORY_COUNTERS;
+
+typedef BOOL (WINAPI *PFN_GetProcessMemoryInfo)(HANDLE hProcess, PROCESS_MEMORY_COUNTERS* ppsmemCounters, DWORD cb);
+static PFN_GetProcessMemoryInfo g_pfnGetProcessMemoryInfo = NULL;
+static BOOL g_memInfoInit = FALSE;
+
+void InitMemoryApi(void) {
+    if (g_memInfoInit) return;
+    g_memInfoInit = TRUE;
+    HMODULE hKernel = GetModuleHandleA("kernel32.dll");
+    if (hKernel) {
+        g_pfnGetProcessMemoryInfo = (PFN_GetProcessMemoryInfo)GetProcAddress(hKernel, "K32GetProcessMemoryInfo");
+    }
+    if (!g_pfnGetProcessMemoryInfo) {
+        HMODULE hPsapi = LoadLibraryA("psapi.dll");
+        if (hPsapi) {
+            g_pfnGetProcessMemoryInfo = (PFN_GetProcessMemoryInfo)GetProcAddress(hPsapi, "GetProcessMemoryInfo");
+        }
+    }
+}
+
+DWORD GetProcessMemoryKB(DWORD pid) {
+    InitMemoryApi();
+    if (!g_pfnGetProcessMemoryInfo || pid == 0) return 0;
+    HANDLE hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+    if (!hProc) return 0;
+    PROCESS_MEMORY_COUNTERS pmc;
+    memset(&pmc, 0, sizeof(pmc));
+    pmc.cb = sizeof(pmc);
+    DWORD memKB = 0;
+    if (g_pfnGetProcessMemoryInfo(hProc, &pmc, sizeof(pmc))) {
+        memKB = (DWORD)(pmc.WorkingSetSize / 1024);
+    }
+    CloseHandle(hProc);
+    return memKB;
+}
+
+void format_memory_kb(DWORD kb, char* out) {
+    if (kb >= 1024) {
+        DWORD mb = kb / 1024;
+        DWORD dec = ((kb % 1024) * 10) / 1024;
+        char mbStr[16] = {0};
+        char decStr[4] = {0};
+        my_utoa(mb, mbStr);
+        my_utoa(dec, decStr);
+        my_strcpy(out, mbStr);
+        my_strcat(out, ".");
+        my_strcat(out, decStr);
+        my_strcat(out, " MB");
+    } else if (kb > 0) {
+        char kbStr[16] = {0};
+        my_utoa(kb, kbStr);
+        my_strcpy(out, kbStr);
+        my_strcat(out, " KB");
+    } else {
+        my_strcpy(out, "< 1 MB");
+    }
+}
+
 void LayoutControls(HWND hwnd) {
     RECT rc;
     GetClientRect(hwnd, &rc);
@@ -228,12 +299,13 @@ typedef struct {
     DWORD ppid;
     DWORD threads;
     LONG pri;
+    DWORD memKB;
     char szExeFile[MAX_PATH];
     BOOL displayed;
 } PROC_ENTRY;
 
 #define KTASK_SAVE_MAGIC 0x4B54534B  // "KTSK"
-#define KTASK_SAVE_VERSION 1
+#define KTASK_SAVE_VERSION 2
 #define MAX_SAVED_PROCS 128
 
 typedef struct {
@@ -244,6 +316,10 @@ typedef struct {
     char searchFilter[128];
     DWORD selectedPid;
     DWORD procCount;
+    DWORD totalMemoryLoad;
+    DWORD totalPhysMB;
+    DWORD availPhysMB;
+    DWORD totalThreads;
     PROC_ENTRY procs[MAX_SAVED_PROCS];
     DWORD checksum;
 } KTaskSaveData;
@@ -301,18 +377,28 @@ BOOL SaveStateToFile(const char* filename) {
         g_saveBuffer.selectedPid = (DWORD)SendMessageA(hListBox, LB_GETITEMDATA, currentSel, 0);
     }
 
+    MEMORYSTATUSEX memStatus;
+    memStatus.dwLength = sizeof(memStatus);
+    GlobalMemoryStatusEx(&memStatus);
+    g_saveBuffer.totalMemoryLoad = memStatus.dwMemoryLoad;
+    g_saveBuffer.totalPhysMB = (DWORD)(memStatus.ullTotalPhys / (1024 * 1024));
+    g_saveBuffer.availPhysMB = (DWORD)(memStatus.ullAvailPhys / (1024 * 1024));
+
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnapshot != INVALID_HANDLE_VALUE) {
         PROCESSENTRY32 pe32;
         pe32.dwSize = sizeof(PROCESSENTRY32);
         DWORD count = 0;
+        DWORD thrCount = 0;
         if (Process32First(hSnapshot, &pe32)) {
             do {
+                thrCount += pe32.cntThreads;
                 if (count < MAX_SAVED_PROCS) {
                     g_saveBuffer.procs[count].pid = pe32.th32ProcessID;
                     g_saveBuffer.procs[count].ppid = pe32.th32ParentProcessID;
                     g_saveBuffer.procs[count].threads = pe32.cntThreads;
                     g_saveBuffer.procs[count].pri = pe32.pcPriClassBase;
+                    g_saveBuffer.procs[count].memKB = GetProcessMemoryKB(pe32.th32ProcessID);
                     my_strcpy(g_saveBuffer.procs[count].szExeFile, pe32.szExeFile);
                     count++;
                 }
@@ -320,6 +406,7 @@ BOOL SaveStateToFile(const char* filename) {
         }
         CloseHandle(hSnapshot);
         g_saveBuffer.procCount = count;
+        g_saveBuffer.totalThreads = thrCount;
     }
 
     g_saveBuffer.checksum = CalculateKTaskChecksum(&g_saveBuffer);
@@ -369,16 +456,20 @@ BOOL LoadStateFromFile(const char* filename) {
         char pidStr[16] = {0};
         char thrStr[16] = {0};
         char priStr[16] = {0};
+        char memStr[24] = {0};
 
         my_utoa(g_saveBuffer.procs[i].pid, pidStr);
         my_utoa(g_saveBuffer.procs[i].threads, thrStr);
         my_itoa(g_saveBuffer.procs[i].pri, priStr);
+        format_memory_kb(g_saveBuffer.procs[i].memKB, memStr);
 
         my_strcpy(buf, "[PID: ");
         my_strcat(buf, pidStr);
         my_strcat(buf, "] ");
         my_strcat(buf, g_saveBuffer.procs[i].szExeFile);
-        my_strcat(buf, " (Threads: ");
+        my_strcat(buf, " (Mem: ");
+        my_strcat(buf, memStr);
+        my_strcat(buf, ", Threads: ");
         my_strcat(buf, thrStr);
         my_strcat(buf, ", BasePri: ");
         my_strcat(buf, priStr);
@@ -413,10 +504,14 @@ BOOL LoadStateFromFile(const char* filename) {
 
     char toast[128] = {0};
     char numStr[16] = {0};
+    char ramStr[16] = {0};
     my_utoa(g_saveBuffer.procCount, numStr);
+    my_utoa(g_saveBuffer.totalMemoryLoad, ramStr);
     my_strcpy(toast, "★ Restored snapshot (");
     my_strcat(toast, numStr);
-    my_strcat(toast, " tasks) from ktask.dat [F9] (Auto-refresh paused. Press R to resume)");
+    my_strcat(toast, " tasks, RAM: ");
+    my_strcat(toast, ramStr);
+    my_strcat(toast, "%) from ktask.dat [F9] (Auto-refresh paused. Press R to resume)");
     ShowNativeToast(toast);
 
     return TRUE;
@@ -482,6 +577,7 @@ void RefreshList() {
                 procList[shownTasks].ppid = pe32.th32ParentProcessID;
                 procList[shownTasks].threads = pe32.cntThreads;
                 procList[shownTasks].pri = pe32.pcPriClassBase;
+                procList[shownTasks].memKB = GetProcessMemoryKB(pe32.th32ProcessID);
                 my_strcpy(procList[shownTasks].szExeFile, pe32.szExeFile);
                 procList[shownTasks].displayed = FALSE;
             }
@@ -517,11 +613,16 @@ void RefreshList() {
                 my_utoa(procList[i].threads, thrStr);
                 my_itoa(procList[i].pri, priStr);
 
+                char memStr[24] = {0};
+                format_memory_kb(procList[i].memKB, memStr);
+
                 my_strcpy(buf, "[PID: ");
                 my_strcat(buf, pidStr);
                 my_strcat(buf, "] ");
                 my_strcat(buf, procList[i].szExeFile);
-                my_strcat(buf, " (Threads: ");
+                my_strcat(buf, " (Mem: ");
+                my_strcat(buf, memStr);
+                my_strcat(buf, ", Thr: ");
                 my_strcat(buf, thrStr);
                 my_strcat(buf, ", Pri: ");
                 my_strcat(buf, priStr);
@@ -540,11 +641,16 @@ void RefreshList() {
                         my_utoa(procList[c].pid, cpidStr);
                         my_utoa(procList[c].threads, cthrStr);
 
+                        char cmemStr[24] = {0};
+                        format_memory_kb(procList[c].memKB, cmemStr);
+
                         my_strcpy(cbuf, "  |-- [PID: ");
                         my_strcat(cbuf, cpidStr);
                         my_strcat(cbuf, "] ");
                         my_strcat(cbuf, procList[c].szExeFile);
-                        my_strcat(cbuf, " (Thr: ");
+                        my_strcat(cbuf, " (Mem: ");
+                        my_strcat(cbuf, cmemStr);
+                        my_strcat(cbuf, ", Thr: ");
                         my_strcat(cbuf, cthrStr);
                         my_strcat(cbuf, ")");
 
@@ -590,11 +696,16 @@ void RefreshList() {
             my_utoa(procList[i].threads, thrStr);
             my_itoa(procList[i].pri, priStr);
 
+            char memStr[24] = {0};
+            format_memory_kb(procList[i].memKB, memStr);
+
             my_strcpy(buf, "[PID: ");
             my_strcat(buf, pidStr);
             my_strcat(buf, "] ");
             my_strcat(buf, procList[i].szExeFile);
-            my_strcat(buf, " (Threads: ");
+            my_strcat(buf, " (Mem: ");
+            my_strcat(buf, memStr);
+            my_strcat(buf, ", Threads: ");
             my_strcat(buf, thrStr);
             my_strcat(buf, ", BasePri: ");
             my_strcat(buf, priStr);
@@ -829,6 +940,49 @@ void PerformInspectProcess(HWND parentHwnd) {
     }
     if (modCount == 0) {
         my_strncat(report, "  (Module query denied or unavailable for system process)\r\n", 65535);
+    }
+
+    // 2.5 Working Set & Memory Telemetry Counters
+    InitMemoryApi();
+    if (g_pfnGetProcessMemoryInfo) {
+        HANDLE hProcMem = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+        if (hProcMem) {
+            PROCESS_MEMORY_COUNTERS pmc;
+            memset(&pmc, 0, sizeof(pmc));
+            pmc.cb = sizeof(pmc);
+            if (g_pfnGetProcessMemoryInfo(hProcMem, &pmc, sizeof(pmc))) {
+                char memSec[512] = {0};
+                char wsStr[24] = {0};
+                char peakWsStr[24] = {0};
+                char pfStr[24] = {0};
+                char peakPfStr[24] = {0};
+                char faultsStr[16] = {0};
+
+                format_memory_kb((DWORD)(pmc.WorkingSetSize / 1024), wsStr);
+                format_memory_kb((DWORD)(pmc.PeakWorkingSetSize / 1024), peakWsStr);
+                format_memory_kb((DWORD)(pmc.PagefileUsage / 1024), pfStr);
+                format_memory_kb((DWORD)(pmc.PeakPagefileUsage / 1024), peakPfStr);
+                my_utoa(pmc.PageFaultCount, faultsStr);
+
+                my_strncat(report, "\r\n-------------------------------------------------------------------\r\n", 65535);
+                my_strncat(report, " 2.5 WORKING SET & MEMORY COUNTERS (PROCESS_MEMORY_COUNTERS)\r\n", 65535);
+                my_strncat(report, "-------------------------------------------------------------------\r\n", 65535);
+
+                my_strcpy(memSec, "  Working Set (RAM): ");
+                my_strcat(memSec, wsStr);
+                my_strcat(memSec, " | Peak Working Set: ");
+                my_strcat(memSec, peakWsStr);
+                my_strcat(memSec, "\r\n  Pagefile Usage:    ");
+                my_strcat(memSec, pfStr);
+                my_strcat(memSec, " | Peak Pagefile:    ");
+                my_strcat(memSec, peakPfStr);
+                my_strcat(memSec, "\r\n  Page Fault Count:  ");
+                my_strcat(memSec, faultsStr);
+                my_strcat(memSec, "\r\n");
+                my_strncat(report, memSec, 65535);
+            }
+            CloseHandle(hProcMem);
+        }
     }
 
     // 3. Virtual Memory Map
@@ -1249,6 +1403,14 @@ void PerformExportJSON(HWND hwnd) {
             my_itoa(pe32.pcPriClassBase, priStr);
             my_escape_json(pe32.szExeFile, escapedExe, sizeof(escapedExe));
 
+            DWORD mKB = GetProcessMemoryKB(pe32.th32ProcessID);
+            DWORD mMBInt = mKB / 1024;
+            DWORD mMBDec = ((mKB % 1024) * 10) / 1024;
+            char mMBStr[16] = {0};
+            char mDecStr[4] = {0};
+            my_utoa(mMBInt, mMBStr);
+            my_utoa(mMBDec, mDecStr);
+
             my_strcpy(lineBuf, "  {\"pid\": ");
             my_strcat(lineBuf, pidStr);
             my_strcat(lineBuf, ", \"ppid\": ");
@@ -1259,6 +1421,10 @@ void PerformExportJSON(HWND hwnd) {
             my_strcat(lineBuf, thrStr);
             my_strcat(lineBuf, ", \"basePriority\": ");
             my_strcat(lineBuf, priStr);
+            my_strcat(lineBuf, ", \"memoryMB\": ");
+            my_strcat(lineBuf, mMBStr);
+            my_strcat(lineBuf, ".");
+            my_strcat(lineBuf, mDecStr);
             my_strcat(lineBuf, "}");
 
             WriteFile(hFile, lineBuf, my_strlen(lineBuf), &written, NULL);
@@ -1697,9 +1863,8 @@ void __stdcall MainEntry() {
             ShowNativeToast("★ Restored saved state from ktask.dat [F9]");
         }
     } else if (!HasSeenTutorial()) {
-        ShowHelpDialog(hwnd);
         MarkTutorialSeen();
-        ShowNativeToast("Welcome to KTask! Process monitor initialized");
+        ShowNativeToast("Welcome to KTask! Press [F1] for Help & Shortcuts | [T] Tree | [F5] Save");
     }
 
     MSG msg;

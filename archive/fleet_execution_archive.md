@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T17:18:01-07:00 — kilo-creator: kweb://scallion (The Scallion: 1999 Satirical News Portal & Phase VI VFS Integration)**
+  - Status: PASS ✅ (0 errors, web 101.9 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.03%, input 43.32%, HEAD Δ 28.07%, 0 fail, 0 warn, 5.9s)).
+  - Delivered The Scallion: interactive broadsheet with Ask A Sysadmin agony aunt terminal, Infographic Lab, Headline Forge, and VFS clipping export.
+  - Added YM2612 2-Op FM + SPC700 stereo delay sound engine with [M] mute toggle and [F1]/[H] quick reference hotkeys modal.
+  - Handoff: Advanced `kilo-creator` to `kweb://warez`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-27T16:32:02-07:00 — kilo-review: KCipher (Argon Visual, Feature & Usability Review (Mature Audit))**
   - Status: AUDIT COMPLETE (inspected 980x663 sheet.png and audited kcipher.html + KCipher/main.c; un-quarantining KCipher with 2 surgical Flash fix specs).
   - Visual/UX Findings: Right workbench .panel-header (OUTPUT / CIPHERTEXT) wraps title and 5 action buttons onto 2 lines at 980x663 misaligning panes; #inputText starts blank on boot/Start New Session leaving IoC at 0.000; canceling #btnVFSSave prompt() still writes to defaultPath.

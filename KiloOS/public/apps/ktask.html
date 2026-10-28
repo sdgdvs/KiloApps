@@ -2133,6 +2133,11 @@
       setTimeout(() => playFMSound(880, 2.0, 1.5, 0.2, 0.18, 0.1), 80);
     }
 
+    function playLoadSound() {
+      playFMSound(880, 2.0, 1.5, 0.2, 0.18, 0.1);
+      setTimeout(() => playFMSound(660, 2.0, 1.5, 0.15, 0.12, 0.1), 80);
+    }
+
     function playPingSound() {
       playFMSound(1200, 3.0, 1.2, 0.25, 0.2, 0.12);
     }
@@ -2144,14 +2149,18 @@
     let baselineMemory = {};
     let consecutiveGrowthCounts = {};
 
-    function toggleDeltaMode() {
-      deltaMode = !deltaMode;
+    function updateDeltaModeButtonUI() {
       const btn = document.getElementById('deltaModeBtn');
       if (btn) {
         btn.classList.toggle('active', deltaMode);
         btn.style.background = deltaMode ? 'var(--primary-muted)' : '';
         btn.style.color = deltaMode ? 'var(--primary)' : '';
       }
+    }
+
+    function toggleDeltaMode() {
+      deltaMode = !deltaMode;
+      updateDeltaModeButtonUI();
       if (deltaMode && Object.keys(baselineMemory).length === 0) {
         zeroMemoryBaseline();
       } else {
@@ -2704,13 +2713,20 @@
     // Tutorial modal handlers
     function openTutorialModal() {
       const modal = document.getElementById('tutorialModal');
-      if (modal) modal.classList.add('active');
+      if (modal) {
+        modal.classList.add('active');
+        const startBtn = document.getElementById('startMonitoringBtn');
+        if (startBtn) startBtn.focus();
+      }
     }
 
     function closeTutorialModal() {
       const modal = document.getElementById('tutorialModal');
       if (modal) modal.classList.remove('active');
-      safeSetStorage('ktask_tutorialSeen', '1');
+      const dontShow = document.getElementById('dontShowTutorialAgain')?.checked ?? true;
+      if (dontShow) {
+        safeSetStorage('ktask_tutorialSeen', '1');
+      }
     }
 
     // Quicksave and Quickload snapshot handlers
@@ -2727,7 +2743,12 @@
           filter: document.getElementById('filterSelect')?.value || 'all',
           sort: document.getElementById('sortSelect')?.value || 'name',
           searchQuery: document.getElementById('searchInput')?.value || '',
-          selectedTaskId: selectedTaskId
+          selectedTaskId: selectedTaskId,
+          deltaMode: deltaMode,
+          baselineMemory: baselineMemory,
+          cpuHistory: cpuHistory,
+          memHistory: memHistory,
+          activeSockets: activeSockets
         };
         const ok = safeSetStorage('ktask_quicksave', JSON.stringify(payload));
         if (!ok) {
@@ -2735,8 +2756,9 @@
           return;
         }
         safeSetStorage('ktask_tutorialSeen', '1');
+        playSaveSound();
         const timeStr = new Date().toLocaleTimeString();
-        showToast(`★ Quicksave snapshot created at ${timeStr} [F5]`);
+        showToast('★ Quicksave snapshot created at ' + timeStr + ' [F5]');
       } catch (err) {
         showToast('Failed to save quicksave snapshot.');
       }
@@ -2764,6 +2786,16 @@
           viewMode = data.viewMode;
           updateViewModeButton();
         }
+        if (typeof data.deltaMode === 'boolean') {
+          deltaMode = data.deltaMode;
+          updateDeltaModeButtonUI();
+        }
+        if (data.baselineMemory && typeof data.baselineMemory === 'object') {
+          baselineMemory = data.baselineMemory;
+        }
+        if (Array.isArray(data.cpuHistory)) cpuHistory = [...data.cpuHistory];
+        if (Array.isArray(data.memHistory)) memHistory = [...data.memHistory];
+        if (Array.isArray(data.activeSockets)) activeSockets = [...data.activeSockets];
         if (data.activeTab && data.activeTab !== activeTab) {
           switchTab(data.activeTab);
         }
@@ -2783,9 +2815,11 @@
         saveUserSettings();
         selectedTaskId = data.selectedTaskId || allTasks[0]?.id || null;
         renderTasks();
+        renderNetworkSockets();
         safeSetStorage('ktask_tutorialSeen', '1');
+        playLoadSound();
         const timeStr = new Date(data.timestamp || Date.now()).toLocaleTimeString();
-        showToast(`📂 Loaded quicksave snapshot from ${timeStr} [F9] (Auto-refresh paused)`);
+        showToast('📂 Loaded quicksave snapshot from ' + timeStr + ' [F9] (Auto-refresh paused)');
       } catch (err) {
         showToast('Failed to load quicksave snapshot.');
       }
@@ -2805,7 +2839,12 @@
           sort: document.getElementById('sortSelect')?.value || 'name',
           searchQuery: document.getElementById('searchInput')?.value || '',
           selectedTaskId: selectedTaskId,
-          autoRefresh: document.getElementById('autoRefreshToggle')?.checked ?? true
+          autoRefresh: document.getElementById('autoRefreshToggle')?.checked ?? true,
+          deltaMode: deltaMode,
+          baselineMemory: baselineMemory,
+          cpuHistory: cpuHistory,
+          memHistory: memHistory,
+          activeSockets: activeSockets
         };
         safeSetStorage('ktask_session_state', JSON.stringify(state));
       } catch (e) {}
@@ -2825,6 +2864,16 @@
           viewMode = data.viewMode;
           updateViewModeButton();
         }
+        if (typeof data.deltaMode === 'boolean') {
+          deltaMode = data.deltaMode;
+          updateDeltaModeButtonUI();
+        }
+        if (data.baselineMemory && typeof data.baselineMemory === 'object') {
+          baselineMemory = data.baselineMemory;
+        }
+        if (Array.isArray(data.cpuHistory)) cpuHistory = [...data.cpuHistory];
+        if (Array.isArray(data.memHistory)) memHistory = [...data.memHistory];
+        if (Array.isArray(data.activeSockets)) activeSockets = [...data.activeSockets];
         if (data.activeTab && data.activeTab !== 'tasks') {
           switchTab(data.activeTab);
         }
