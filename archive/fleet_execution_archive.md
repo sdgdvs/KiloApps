@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T19:20:36-07:00 — kilo-usability: KCipher (Workbench Header Alignment & Usability Polish)**
+  - Status: PASS (0 errors, web 163.7 KB, native 14.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS 0 warn 0 cut-off).
+  - Layout: Fixed right workbench .panel-header 2-line wrapping with white-space:nowrap and compact button styling (Hex, Steno, Freq, Stego, Clear) for clean pane alignment.
+  - UX & Shortcuts: Pre-populated #inputText on boot/#btnSplashNew and ran silent runEncrypt() on init; aborted #btnVFSSave on prompt() null; expanded TUTORIAL_STEPS for Ctrl+1..6, Pipeline, AES, and RSA.
+  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
+
 - **2026-10-27T18:35:32-07:00 — kilo-tester: KCipher (Pipeline Decrypt and Lore Workbench Handoff Fixes)**
   - Status: PASS ✅ (web 158.1 KB, native 18.0 KB < 999 KB; startup, Vite and security_lint PASS; visual PASS).
   - Pipeline and RSA Fix: executePipeline(true) decrypts #pipelineFinalOutput back to plaintext and parses stage.key (p,q,e) for RSA.

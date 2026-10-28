@@ -1260,6 +1260,49 @@
     -= 1999 DEMOSCENE CRACKTRO VAULT • YM2612 FM CHIPTUNES • x86 REVERSE ENGINEERING LAB =-
   </div>
 
+  <!-- The Underground Courier / Warez BBS Web Ring Header Bar -->
+  <div class="webring-bar" style="background:#040911; border:1px solid #1e3a29; border-radius:4px; padding:6px 12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:11px;">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span style="color:var(--accent-yellow); font-size:14px;">⚡</span>
+      <span style="color:#e2e8f0; font-weight:bold; letter-spacing:1px;">THE UNDERGROUND COURIER / WAREZ BBS WEB RING</span>
+      <span style="color:#64748b; font-size:10px;">[RING MEMBER #003]</span>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center; font-size:10px;">
+      <a href="/web/trapster.html" class="btn-filter" style="text-decoration:none; padding:3px 8px; color:var(--accent-cyan); border-color:#0284c7;">« PREV: TRAPSTER P2P</a>
+      <a href="/web/webring.html?action=random" class="btn-filter" style="text-decoration:none; padding:3px 8px; color:var(--accent-yellow); border-color:#ca8a04;" title="Random Webring Hop">🎲 RANDOM RING NODE</a>
+      <a href="/web/demoscene.html" class="btn-filter" style="text-decoration:none; padding:3px 8px; color:var(--accent-green); border-color:#16a34a;">NEXT: ASSEMBLY '99 »</a>
+      <a href="/web/webring.html" class="btn-filter" style="text-decoration:none; padding:3px 8px; color:#c084fc; border-color:#9333ea;">🌐 WEBRING HUB</a>
+      <button class="btn-filter" style="padding:3px 8px; color:#94a3b8; border-color:#334155;" onclick="toggleWebringCodeSnippet()">[📜 CODE]</button>
+    </div>
+  </div>
+
+  <!-- Simulated Keygen Music Player Bar -->
+  <div class="keygen-player-bar" style="background:linear-gradient(90deg, #091322, #040911); border:1px solid #00ff6644; border-radius:4px; padding:8px 12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <button class="btn-gen" id="btnKeygenPlayerPlay" onclick="toggleKeygenAudio()" style="font-size:11px; padding:5px 12px;">▶ PLAY KEYGEN MUSIC</button>
+      <button class="btn-filter" onclick="jukeboxNext()" style="font-size:10px; padding:4px 8px;">⏭ NEXT CHIPTUNE</button>
+      <div style="display:flex; flex-direction:column;">
+        <div style="font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:1px;">NOW SYNTHESIZING // YM2612 FM + SPC700 ECHO:</div>
+        <div id="keygenPlayerTrackTitle" style="font-size:12px; font-weight:bold; color:var(--accent-cyan);">Mega Drive FM Rush (140 BPM)</div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <canvas id="keygenMiniViz" width="140" height="24" style="background:#02050b; border:1px solid #14243b; border-radius:2px;"></canvas>
+      <div style="display:flex; align-items:center; gap:6px; font-size:10px; color:#94a3b8;">
+        <span>VOL:</span>
+        <input type="range" min="0" max="100" value="80" oninput="setAudioVolume(this.value)" style="width:60px;" />
+        <button class="btn-filter" onclick="toggleAudioMute()" style="font-size:9px; padding:2px 6px;">MUTE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Webring Code Snippet Drawer -->
+  <div id="webringCodeBox" style="display:none; background:#02050b; border:1px dashed #ca8a04; border-radius:4px; padding:10px 14px; margin-bottom:12px; font-size:11px;">
+    <div style="color:var(--accent-yellow); font-weight:bold; margin-bottom:6px;">📋 1999 WEBRING HTML EMBED SNIPPET (PASTE ON YOUR HOMEPAGE):</div>
+    <textarea readonly style="width:100%; height:55px; background:#050a12; color:#38bdf8; border:1px solid #1e3a29; font-family:'Consolas',monospace; font-size:10px; padding:6px; resize:none;"><!-- Underground Courier Web Ring #003 -->
+<center><table border="1" cellpadding="3"><tr><td><font face="Verdana" size="1">Member of <b>The Underground Courier Web Ring</b><br>[<a href="kweb://trapster">Prev</a>] [<a href="kweb://warez">Member #003</a>] [<a href="kweb://demoscene">Next</a>] [<a href="kweb://webring">Random</a>]</font></td></tr></table></center></textarea>
+  </div>
+
   <div class="notice-banner">
     <span>⚠️ <strong>SCENE ARCHIVE &amp; REVERSE-ENGINEERING LAB:</strong> Authentic 1999 cracktros, Genesis FM &amp; SNES chiptunes, interactive x86 disassembler &amp; ANSI NFO studio.</span>
     <span style="font-size:10px; color:#fbcfe8;">NODE: 1999.0x7F // PROTOCOL: KWEB</span>
@@ -1298,25 +1341,79 @@
     <button class="tab-btn" onclick="switchMainTab('predb', this)">[ 🗄️ PRE-DB &amp; NUKE TRIBUNAL ]</button>
   </div>
 
-  <!-- ================================================================= -->
+    <!-- ================================================================= -->
   <!-- TAB 1: RELEASES & CRACKTROS -->
   <!-- ================================================================= -->
   <div id="tab-releases" class="tab-content active">
-    <!-- Filter & Search -->
+
+    <!-- Top-Site Download Quota & Ratio Tracker Box -->
+    <div class="quota-tracker-box" style="background:#071220; border:1px solid #1e3a29; border-radius:4px; padding:10px 14px; margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:12px; font-weight:bold; color:var(--accent-yellow);">⚡ TOP-SITE DOWNLOAD QUOTA &amp; RATIO TRACKER</span>
+          <span id="quotaStatusBadge" style="font-size:10px; font-weight:bold; padding:2px 6px; border-radius:3px; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid #10b981;">[VERIFIED COURIER]</span>
+        </div>
+        <div style="font-size:10px; color:#94a3b8;">
+          DAILY LEECH LIMIT: <strong style="color:var(--accent-cyan);">250.0 MB</strong> &bull; RATIO: <strong id="quotaRatioVal" style="color:var(--accent-green);">1:3.0</strong>
+        </div>
+      </div>
+      
+      <!-- Quota Progress Bar -->
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+        <div style="flex:1; height:12px; background:#02050b; border:1px solid #1e3a29; border-radius:3px; overflow:hidden; position:relative;">
+          <div id="quotaProgressBar" style="height:100%; width:75%; background:linear-gradient(90deg, #10b981, #facc15); transition:width 0.3s ease;"></div>
+        </div>
+        <div style="font-size:11px; font-weight:bold; color:var(--accent-green); white-space:nowrap;" id="quotaCreditsLabel">
+          187.5 MB REMAINING
+        </div>
+      </div>
+
+      <!-- Actions to earn / manage credits -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div style="font-size:10px; color:#64748b;">
+          Releases (.ZIP) cost 15 MB. .NFO &amp; .DIZ cost 0.2 MB. Keep ratio &ge; 1:3.0 to prevent glFTPd zipscript ban.
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn-filter" style="border-color:#10b981; color:#34d399; font-size:10px; padding:3px 8px;" onclick="seedCourierChunk()">[ ⚡ SEED CHUNK (+50 MB) ]</button>
+          <button class="btn-filter" style="border-color:#38bdf8; color:#38bdf8; font-size:10px; padding:3px 8px;" onclick="earnKeygenQuotaCredits()">[ 🔑 SOLVE KEYGEN (+25 MB) ]</button>
+          <button class="btn-filter" style="border-color:#ca8a04; color:#facc15; font-size:10px; padding:3px 8px;" onclick="resetDownloadQuota()">[ ↺ RESET QUOTA ]</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter & Search & View Mode Switcher -->
     <div class="control-bar">
-      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+      <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
         <button class="btn-filter active" onclick="filterReleases('all', this)">[ ALL RELEASES ]</button>
         <button class="btn-filter" onclick="filterReleases('crack', this)">[ CRACKS ]</button>
         <button class="btn-filter" onclick="filterReleases('keygen', this)">[ KEYGENS ]</button>
         <button class="btn-filter" onclick="filterReleases('trainer', this)">[ TRAINERS ]</button>
       </div>
-      <div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <div style="display:flex; gap:4px; align-items:center;">
+          <span style="font-size:10px; color:#64748b; font-weight:bold;">VIEW:</span>
+          <button class="btn-filter active" id="btnViewAnsi" style="font-size:10px; padding:3px 7px;" onclick="switchReleaseView('ansi')">📟 ANSI BOARD</button>
+          <button class="btn-filter" id="btnViewTable" style="font-size:10px; padding:3px 7px;" onclick="switchReleaseView('table')">📋 TABLE</button>
+        </div>
         <input type="text" id="searchInput" class="search-input" placeholder="Search releases or groups..." oninput="searchReleases(this.value)" />
       </div>
     </div>
 
-    <!-- Warez Table -->
-    <div class="table-container">
+    <!-- ANSI Top-Site Release Board Wrap -->
+    <div id="ansiReleaseBoardWrap" style="background:#02050b; border:1px solid #1e3a29; border-radius:4px; padding:12px; margin-bottom:20px; font-family:'Consolas',monospace;">
+      <div style="color:var(--accent-green); font-size:11px; white-space:pre; line-height:1.2; margin-bottom:10px; overflow-x:auto;">
+╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
+║ 0xRELEASE UNIX TOP-SITE RELEASE BOARD // GLFTPD v1.18.2 [OCTOBER 1999]                        ║
+║ HOST: GIGA-CORE:2121 • PIPE: OC-3 155 Mbps • AFFILS: [FLT] [RZR] [PDX] [SKD] [CLS] [CYB]     ║
+║ QUOTA: 1:3 RATIO ENFORCED • ZIPSCRIPT CRC32 VERIFIED • MIN SPEED: T1 (1.54 Mbps)              ║
+╚═══════════════════════════════════════════════════════════════════════════════════════════════╝</div>
+      <div id="ansiBoardContainer" style="display:flex; flex-direction:column; gap:4px;">
+        <!-- Populated via renderAnsiReleaseBoard() -->
+      </div>
+    </div>
+
+    <!-- Warez Table (Modern View) -->
+    <div class="table-container" id="tableReleaseBoardWrap" style="display:none;">
       <table class="release-table" id="releaseTable">
         <thead>
           <tr>
@@ -1328,7 +1425,7 @@
             <th>Cracktro</th>
             <th>NFO</th>
             <th>Disassemble</th>
-            <th>Files</th>
+            <th>Actions / VFS</th>
           </tr>
         </thead>
         <tbody id="releaseTableBody">
@@ -4425,18 +4522,22 @@ packing, unpacking, and binary instrumentation.`
   }
   </script>
 
-  <!-- Quick Nav to Clearnet & Webring -->
-  <div class="section-box" style="text-align:center;">
-    <div style="font-size:12px; color:#cbd5e1; margin-bottom:6px;">
-      [ 0xRELEASE SCENE COURIER • CENTRAL KILONET WEBRING MEMBER #003 ]
+    <!-- The Underground Courier / Warez BBS Web Ring Footer Bar -->
+  <div class="section-box" style="text-align:center; background:#040911; border:1px solid #1e3a29;">
+    <div style="font-size:12px; color:#cbd5e1; margin-bottom:8px; font-weight:bold; letter-spacing:1px;">
+      [ THE UNDERGROUND COURIER / WAREZ BBS WEB RING • MEMBER #003 ]
     </div>
-    <div style="font-size:11px;">
-      <a href="/web/geocities.html" style="color:var(--accent-cyan); margin:0 8px;">« Prev: CyberSpire's Shrine</a> |
-      <a href="/web/portal.html" style="color:var(--accent-green); margin:0 8px;">KiloNet Central Portal</a> |
-      <a href="/web/webring.html" style="color:var(--accent-yellow); margin:0 8px;">Central Webring Hub</a> |
-      <a href="/web/cybercafe.html" style="color:var(--accent-pink); margin:0 8px;">CyberCafe '99 Lounge</a> |
-      <a href="/web/users/neon_rider.html" style="color:var(--accent-purple); margin:0 8px;">~neon_rider's ASM Devlog</a> |
-      <a href="/web/asm_temple.html" style="color:#38bdf8; margin:0 8px;">x86 Opcode Temple »</a>
+    <div style="font-size:11px; margin-bottom:10px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+      <a href="/web/trapster.html" style="color:var(--accent-cyan); text-decoration:none;">« Prev: Trapster P2P Vault</a> |
+      <a href="/web/geocities.html" style="color:var(--accent-pink); text-decoration:none;">CyberSpire Retro Shrine</a> |
+      <a href="/web/portal.html" style="color:var(--accent-green); text-decoration:none;">KiloNet Central Portal</a> |
+      <a href="/web/webring.html" style="color:var(--accent-yellow); text-decoration:none;">Central Webring Hub</a> |
+      <button class="btn-filter" style="padding:2px 6px; font-size:10px; color:var(--accent-yellow); border-color:#ca8a04;" onclick="navigateRandomWebringNode()">🎲 Random Ring Node</button> |
+      <a href="/web/cybercafe.html" style="color:var(--accent-purple); text-decoration:none;">CyberCafe '99 Lounge</a> |
+      <a href="/web/demoscene.html" style="color:#38bdf8; text-decoration:none;">Assembly '99 Demoscene Vault »</a>
+    </div>
+    <div style="font-size:10px; color:#64748b;">
+      glFTPd 1.18.2 UNIX Top-Site System &bull; 1:3 Upload/Download Ratio Enforced &bull; KiloOS VFS Connected
     </div>
   </div>
 
@@ -4468,6 +4569,7 @@ packing, unpacking, and binary instrumentation.`
         <input type="text" id="serialOutput" class="keygen-input" readonly value="FLT-8B2A-99F1-44E2" />
         <button class="btn-gen" onclick="generateKey()">⚡ GENERATE</button>
         <button class="btn-filter" onclick="copyKey()">COPY</button>
+        <button class="btn-gen" style="border-color:#10b981; color:#34d399;" onclick="saveKeygenLicenseToVfs()">[ 💾 SAVE LICENSE TO VFS ]</button>
       </div>
 
       <!-- Patch Controls -->
@@ -4506,7 +4608,8 @@ packing, unpacking, and binary instrumentation.`
       <button class="btn-close" onclick="closeNfo()">[ X ] CLOSE</button>
     </div>
     <div class="nfo-content" id="nfoBody"></div>
-    <div style="padding:8px 12px; background:#02050b; border-top:1px solid #14243b; display:flex; justify-content:flex-end; gap:8px;">
+    <div style="padding:8px 12px; background:#02050b; border-top:1px solid #14243b; display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
+      <button class="btn-gen" style="border-color:#10b981; color:#34d399;" onclick="saveCurrentNfoToVfs()">[ 💾 SAVE NFO TO KILOOS VFS (/home/downloads/) ]</button>
       <button class="btn-gen" onclick="downloadCurrentNfo()">[ 💾 DOWNLOAD THIS .NFO ]</button>
       <button class="btn-close" onclick="closeNfo()">CLOSE</button>
     </div>
@@ -4894,6 +4997,7 @@ function searchReleases(query) {
 }
 
 function renderReleases() {
+  renderAnsiReleaseBoard();
   const tbody = document.getElementById('releaseTableBody');
   if (!tbody) return;
 
@@ -4925,6 +5029,8 @@ function renderReleases() {
       <td style="white-space:nowrap;">
         <button class="btn-dl" onclick="downloadReleaseDiz('${r.id}')">.DIZ</button>
         <button class="btn-dl" onclick="downloadReleaseNfo('${r.id}')">.NFO</button>
+        <button class="btn-dl" style="border-color:#10b981; color:#34d399;" onclick="saveReleaseToVfs('${r.id}')" title="Save release NFO and DIZ to KiloOS VFS">💾 VFS</button>
+        <button class="btn-dl" style="border-color:#ca8a04; color:#facc15;" onclick="downloadSimulatedZip('${r.id}')" title="Download simulated release archive (Costs 15 MB quota)">📦 .ZIP</button>
       </td>
     </tr>
   `).join('');
@@ -5677,6 +5783,7 @@ function toggleAudioMute() {
 }
 
 function updateJukeboxUI() {
+  updateKeygenPlayerUI();
   const song = SONGS[currentSongIndex];
   const btn = document.getElementById('btnJukeboxPlay');
   const badge = document.getElementById('jukeboxStatusBadge');
@@ -5723,6 +5830,22 @@ function startVizAnimation() {
       const bufferLength = analyserNode.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
       analyserNode.getByteFrequencyData(dataArray);
+
+      // Draw Keygen Mini Visualizer
+      const mCanvas = document.getElementById('keygenMiniViz');
+      if (mCanvas) {
+        const mCtx = mCanvas.getContext('2d');
+        mCtx.fillStyle = '#02050b';
+        mCtx.fillRect(0, 0, mCanvas.width, mCanvas.height);
+        const mBars = 16;
+        const mbw = Math.floor(mCanvas.width / mBars) - 1;
+        for (let b = 0; b < mBars; b++) {
+          const val = dataArray[b * 3] || 0;
+          const bh = (val / 255) * (mCanvas.height - 4);
+          mCtx.fillStyle = val > 180 ? '#ff0077' : val > 120 ? '#ffdd00' : '#00ff66';
+          mCtx.fillRect(b * (mbw + 1) + 1, mCanvas.height - bh - 2, mbw, bh);
+        }
+      }
 
       // Draw LED Peak Bars
       const barCount = 28;
@@ -6444,15 +6567,19 @@ to 1999Hz to establish coherent harmonic lock with the living machine.
 function downloadReleaseDiz(releaseId) {
   const rel = RELEASES.find(r => r.id === releaseId);
   if (!rel) return;
-  const diz = `[ .DIZ - ${rel.title} ]\n[ GROUP: ${rel.group} ]\n[ SUPPLIER: 0xRELEASE SCENE VAULT ]\n[ 100% RETRO VERIFIED CLEAN ]\n[ CEILING: < 999 KB ]\n`;
+  if (!checkAndDeductQuota(0.05, `${rel.id}.diz`)) return;
+  const diz = `[ .DIZ - ${rel.title} ]\n[ GROUP: ${rel.group} ]\n[ SUPPLIER: 0xRELEASE SCENE VAULT ]\n[ 100% RETRO VERIFIED CLEAN ]\n[ CRC32: 0x${rel.crc32 || '7F199942'} ]\n[ CEILING: < 999 KB ]\n`;
   downloadBlob(diz, `${rel.id}_file_id.diz`, 'text/plain');
+  showNoticeToast(`📄 Downloaded ${rel.id}_file_id.diz (-0.05 MB quota)`);
 }
 
 function downloadReleaseNfo(releaseId) {
   const rel = RELEASES.find(r => r.id === releaseId);
   if (!rel) return;
+  if (!checkAndDeductQuota(0.1, `${rel.id}.nfo`)) return;
   const rawNfo = buildDetailedNfo(rel).replace(/<[^>]+>/g, '');
   downloadBlob(rawNfo, `${rel.id}.nfo`, 'text/plain');
+  showNoticeToast(`📜 Downloaded ${rel.id}.nfo (-0.1 MB quota)`);
 }
 
 function downloadBlob(content, filename, type) {
@@ -11924,8 +12051,356 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+// ==========================================
+// THE UNDERGROUND COURIER / WAREZ BBS & VFS ENGINE
+// ==========================================
+const QUOTA_STORAGE_KEY = 'kweb_warez_quota_v1';
+const MAX_DAILY_QUOTA = 250.0; // MB
+let releaseViewMode = 'ansi'; // 'ansi' or 'table'
+
+function getStoredQuota() {
+  try {
+    const raw = localStorage.getItem(QUOTA_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return {
+    credits: 187.5,
+    downloadedMb: 62.5,
+    uploadedMb: 187.5,
+    ratio: 3.0,
+    racesWon: 0,
+    lastUpdate: Date.now()
+  };
+}
+
+function saveQuota(q) {
+  try {
+    localStorage.setItem(QUOTA_STORAGE_KEY, JSON.stringify(q));
+  } catch (e) {}
+}
+
+function updateQuotaUI() {
+  const q = getStoredQuota();
+  const creditsEl = document.getElementById('quotaCreditsLabel');
+  const barEl = document.getElementById('quotaProgressBar');
+  const ratioEl = document.getElementById('quotaRatioVal');
+  const badgeEl = document.getElementById('quotaStatusBadge');
+
+  if (creditsEl) creditsEl.textContent = `${q.credits.toFixed(1)} MB REMAINING`;
+  if (barEl) {
+    const pct = Math.min(100, Math.max(0, (q.credits / MAX_DAILY_QUOTA) * 100));
+    barEl.style.width = `${pct}%`;
+    barEl.style.background = pct > 40 
+      ? 'linear-gradient(90deg, #10b981, #facc15)' 
+      : pct > 15 
+        ? 'linear-gradient(90deg, #ca8a04, #f97316)' 
+        : 'linear-gradient(90deg, #dc2626, #ef4444)';
+  }
+  if (ratioEl) ratioEl.textContent = `1:${q.ratio.toFixed(1)}`;
+  if (badgeEl) {
+    if (q.credits <= 0) {
+      badgeEl.textContent = '[QUOTA DEPLETED - SEED REQUIRED]';
+      badgeEl.style.color = '#ef4444';
+      badgeEl.style.borderColor = '#dc2626';
+      badgeEl.style.background = 'rgba(239, 68, 68, 0.15)';
+    } else if (q.credits < 30) {
+      badgeEl.textContent = '[LOW CREDITS WARNING]';
+      badgeEl.style.color = '#facc15';
+      badgeEl.style.borderColor = '#ca8a04';
+      badgeEl.style.background = 'rgba(250, 204, 21, 0.15)';
+    } else {
+      badgeEl.textContent = '[VERIFIED COURIER]';
+      badgeEl.style.color = '#10b981';
+      badgeEl.style.borderColor = '#10b981';
+      badgeEl.style.background = 'rgba(16, 185, 129, 0.15)';
+    }
+  }
+}
+
+function checkAndDeductQuota(costMb, filename) {
+  const q = getStoredQuota();
+  if (q.credits < costMb) {
+    playBbsErrorTone();
+    alert(`⛔ 451 DOWNLOAD QUOTA EXCEEDED\n\nYour download credits (${q.credits.toFixed(1)} MB) are insufficient for "${filename}" (${costMb.toFixed(1)} MB).\n\nTop-site glFTPd ratio requirement: 1:3.\nPlease seed courier chunks or solve keygens to earn more credits.`);
+    return false;
+  }
+  q.credits = Math.max(0, +(q.credits - costMb).toFixed(1));
+  q.downloadedMb = +(q.downloadedMb + costMb).toFixed(1);
+  q.ratio = +(q.uploadedMb / Math.max(1, q.downloadedMb)).toFixed(2);
+  saveQuota(q);
+  updateQuotaUI();
+  playQuotaBeep();
+  return true;
+}
+
+function seedCourierChunk() {
+  const q = getStoredQuota();
+  q.credits = +(q.credits + 50.0).toFixed(1);
+  q.uploadedMb = +(q.uploadedMb + 50.0).toFixed(1);
+  q.ratio = +(q.uploadedMb / Math.max(1, q.downloadedMb)).toFixed(2);
+  saveQuota(q);
+  updateQuotaUI();
+  playCourierUploadBeep();
+  showNoticeToast('⚡ Seeded 50 MB archive chunk to US-GIGA-CORE! +50 MB credits granted.');
+}
+
+function earnKeygenQuotaCredits() {
+  const q = getStoredQuota();
+  q.credits = +(q.credits + 25.0).toFixed(1);
+  q.uploadedMb = +(q.uploadedMb + 25.0).toFixed(1);
+  q.ratio = +(q.uploadedMb / Math.max(1, q.downloadedMb)).toFixed(2);
+  saveQuota(q);
+  updateQuotaUI();
+  playQuotaBeep();
+  showNoticeToast('🔑 Keygen algorithm verified! +25 MB download credits awarded.');
+}
+
+function resetDownloadQuota() {
+  saveQuota({
+    credits: 250.0,
+    downloadedMb: 0.0,
+    uploadedMb: 250.0,
+    ratio: 3.0,
+    racesWon: 0,
+    lastUpdate: Date.now()
+  });
+  updateQuotaUI();
+  playQuotaBeep();
+  showNoticeToast('↺ Daily download quota reset to 250.0 MB (Ratio: 1:3.0).');
+}
+
+function playQuotaBeep() {
+  try {
+    if (!audioCtx) initAudio();
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.08);
+    g.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+    osc.connect(g);
+    g.connect(masterGain || audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.1);
+  } catch (e) {}
+}
+
+function playBbsErrorTone() {
+  try {
+    if (!audioCtx) initAudio();
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.25);
+    g.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+    osc.connect(g);
+    g.connect(masterGain || audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.25);
+  } catch (e) {}
+}
+
+function playCourierUploadBeep() {
+  try {
+    if (!audioCtx) initAudio();
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, now + i * 0.05);
+      g.gain.setValueAtTime(0.1, now + i * 0.05);
+      g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.08);
+      osc.connect(g);
+      g.connect(masterGain || audioCtx.destination);
+      osc.start(now + i * 0.05);
+      osc.stop(now + i * 0.05 + 0.08);
+    });
+  } catch (e) {}
+}
+
+// Keygen Music Player Bar Controls
+function toggleKeygenAudio() {
+  if (isSongPlaying) {
+    stopSong();
+  } else {
+    startSong(currentSongIndex);
+  }
+  updateKeygenPlayerUI();
+}
+
+function updateKeygenPlayerUI() {
+  const btn = document.getElementById('btnKeygenPlayerPlay');
+  const title = document.getElementById('keygenPlayerTrackTitle');
+  const song = SONGS[currentSongIndex];
+  if (btn) btn.textContent = isSongPlaying ? '⏸ PAUSE KEYGEN MUSIC' : '▶ PLAY KEYGEN MUSIC';
+  if (title && song) title.textContent = `[#0${currentSongIndex + 1}] ${song.name} (${song.bpm} BPM)`;
+}
+
+// KiloOS VFS Integration
+function saveToKiloVfs(vfsPath, contentStr, notifyTitle = '0xRELEASE Warez BBS') {
+  try {
+    window.parent.postMessage({
+      type: 'VFS_WRITE',
+      path: vfsPath,
+      data: contentStr,
+      requestId: 'vfs_' + Date.now()
+    }, '*');
+    window.parent.postMessage({
+      type: 'OS_NOTIFY',
+      title: notifyTitle,
+      message: 'Saved to VFS: ' + vfsPath
+    }, '*');
+    showNoticeToast('💾 Exported to KiloOS VFS: ' + vfsPath);
+  } catch (e) {
+    console.warn("VFS postMessage error:", e);
+  }
+}
+
+function saveReleaseToVfs(releaseId) {
+  const rel = RELEASES.find(r => r.id === releaseId);
+  if (!rel) return;
+  if (!checkAndDeductQuota(0.2, `${rel.id}.nfo`)) return;
+  
+  const rawNfo = buildDetailedNfo(rel).replace(/<[^>]+>/g, '');
+  const diz = `[ .DIZ - ${rel.title} ]\n[ GROUP: ${rel.group} ]\n[ SUPPLIER: 0xRELEASE SCENE VAULT ]\n[ 100% RETRO VERIFIED CLEAN ]\n[ CRC32: 0x${rel.crc32 || '7F199942'} ]\n`;
+
+  saveToKiloVfs(`/home/downloads/${rel.id}.nfo`, rawNfo);
+  saveToKiloVfs(`/home/warez/${rel.id}.diz`, diz);
+}
+
+function saveCurrentNfoToVfs() {
+  if (!currentModalNfoReleaseId) return;
+  const rel = RELEASES.find(r => r.id === currentModalNfoReleaseId);
+  if (!rel) return;
+  if (!checkAndDeductQuota(0.1, `${rel.id}.nfo`)) return;
+  const rawNfo = buildDetailedNfo(rel).replace(/<[^>]+>/g, '');
+  saveToKiloVfs(`/home/downloads/${rel.id}.nfo`, rawNfo);
+}
+
+function saveKeygenLicenseToVfs() {
+  const regName = document.getElementById('regNameInput') ? document.getElementById('regNameInput').value : 'KiloScener_1999';
+  const serial = document.getElementById('serialOutput') ? document.getElementById('serialOutput').value : 'FLT-8B2A-99F1-44E2';
+  const target = currentCracktroTarget || 'Software';
+  const content = `[ 0xRELEASE SCENE LICENSE REGISTRATION ]\n=========================================\nTARGET APPLICATION : ${target}\nREGISTERED USER    : ${regName}\nGENERATED SERIAL   : ${serial}\nVALIDATION CHECKSUM: 0x7F199942\nKEYMAKER ALGORITHM : YM2612-CRC32\nTIMESTAMP          : ${new Date().toISOString()}\n=========================================\n`;
+  saveToKiloVfs(`/home/warez/${regName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_license.txt`, content, 'Keymaker Registration');
+}
+
+function downloadSimulatedZip(releaseId) {
+  const rel = RELEASES.find(r => r.id === releaseId);
+  if (!rel) return;
+  const cost = 15.0; // MB
+  if (!checkAndDeductQuota(cost, `${rel.id}.zip`)) return;
+
+  const zipDummy = `PK\x03\x04\x14\x00\x00\x00\x08\x00[0xRELEASE TOP-SITE ARCHIVE: ${rel.title}]\nGroup: ${rel.group}\nMedia: ${rel.media}\nCRC32: 0x${rel.crc32 || '7F199942'}\nGlFTPd 1.18.2 Verified Clean.\n`;
+  downloadBlob(zipDummy, `${rel.id}.zip`, 'application/octet-stream');
+  showNoticeToast(`📦 Downloaded simulated release archive ${rel.id}.zip (-15 MB quota)`);
+}
+
+// ANSI Release Board & View Switcher
+function switchReleaseView(mode) {
+  releaseViewMode = mode;
+  const ansiWrap = document.getElementById('ansiReleaseBoardWrap');
+  const tableWrap = document.getElementById('tableReleaseBoardWrap');
+  const btnAnsi = document.getElementById('btnViewAnsi');
+  const btnTable = document.getElementById('btnViewTable');
+
+  if (mode === 'ansi') {
+    if (ansiWrap) ansiWrap.style.display = 'block';
+    if (tableWrap) tableWrap.style.display = 'none';
+    if (btnAnsi) btnAnsi.classList.add('active');
+    if (btnTable) btnTable.classList.remove('active');
+  } else {
+    if (ansiWrap) ansiWrap.style.display = 'none';
+    if (tableWrap) tableWrap.style.display = 'block';
+    if (btnAnsi) btnAnsi.classList.remove('active');
+    if (btnTable) btnTable.classList.add('active');
+  }
+}
+
+function renderAnsiReleaseBoard() {
+  const board = document.getElementById('ansiBoardContainer');
+  if (!board) return;
+
+  const filtered = RELEASES.filter(r => {
+    const matchType = (currentFilter === 'all') || (r.type === currentFilter);
+    const matchSearch = !currentSearch || 
+      r.title.toLowerCase().includes(currentSearch) ||
+      r.group.toLowerCase().includes(currentSearch) ||
+      r.targetExe.toLowerCase().includes(currentSearch);
+    return matchType && matchSearch;
+  });
+
+  board.innerHTML = filtered.map(r => `
+    <div class="ansi-release-card" style="background:#040911; border:1px solid #14243b; border-left:3px solid ${getGroupColor(r.group)}; padding:8px 12px; margin-bottom:8px; border-radius:2px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; flex-direction:column; gap:2px; flex:1; min-width:240px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="tag-group ${r.groupClass}">${r.group}</span>
+          <strong style="color:#d1fae5; font-size:12px;">${escapeHtml(r.title)}</strong>
+          <span style="font-size:10px; color:#38bdf8;">[${r.typeName}]</span>
+        </div>
+        <div style="font-size:10px; color:#64748b; font-family:'Consolas',monospace;">
+          DATE: <span style="color:#94a3b8;">${r.date}</span> &bull; MEDIA: <span style="color:#94a3b8;">${r.media}</span> &bull; TARGET: <span style="color:#94a3b8;">${r.targetExe}</span> &bull; CRC32: <span style="color:var(--accent-yellow);">0x${r.crc32 || '7F199942'}</span>
+        </div>
+      </div>
+      <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap;">
+        <button class="btn-cracktro" style="font-size:10px; padding:3px 7px;" onclick="launchCracktro('${r.id}')">⚡ CRACKTRO</button>
+        <button class="btn-nfo" style="font-size:10px; padding:3px 7px;" onclick="openNfo('${r.id}')">📜 NFO</button>
+        <button class="btn-dl" style="font-size:10px; padding:3px 6px;" onclick="downloadReleaseDiz('${r.id}')">.DIZ</button>
+        <button class="btn-dl" style="font-size:10px; padding:3px 6px;" onclick="downloadReleaseNfo('${r.id}')">.NFO</button>
+        <button class="btn-dl" style="font-size:10px; padding:3px 6px; border-color:#10b981; color:#34d399;" onclick="saveReleaseToVfs('${r.id}')" title="Save release NFO and DIZ to KiloOS VFS">💾 VFS</button>
+        <button class="btn-dl" style="font-size:10px; padding:3px 6px; border-color:#ca8a04; color:#facc15;" onclick="downloadSimulatedZip('${r.id}')" title="Download simulated release archive (Costs 15 MB quota)">📦 .ZIP</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function getGroupColor(group) {
+  if (group.includes('FLT') || group.includes('FLARELIGHT')) return '#00f0ff';
+  if (group.includes('RZR') || group.includes('RAZOR')) return '#00ff66';
+  if (group.includes('PDX') || group.includes('PARALAX')) return '#ff0077';
+  if (group.includes('SKD') || group.includes('SKID')) return '#ffdd00';
+  if (group.includes('CLS') || group.includes('KLASS')) return '#c084fc';
+  if (group.includes('CYB') || group.includes('CYBRID')) return '#fb923c';
+  return '#10b981';
+}
+
+function navigateRandomWebringNode() {
+  const nodes = [
+    '/web/portal.html',
+    '/web/trapster.html',
+    '/web/demoscene.html',
+    '/web/slashnet.html',
+    '/web/cabled.html',
+    '/web/scallion.html',
+    '/web/geocities.html',
+    '/web/cybercafe.html',
+    '/web/asm_temple.html',
+    '/web/rfc_archive.html'
+  ];
+  const dest = nodes[Math.floor(Math.random() * nodes.length)];
+  window.location.href = dest;
+}
+
+function toggleWebringCodeSnippet() {
+  const box = document.getElementById('webringCodeBox');
+  if (box) {
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+
+
 // Initial boot
 localShouts = getStoredShouts();
+updateQuotaUI();
+updateKeygenPlayerUI();
 renderReleases();
 renderTrackList();
 renderFmKeyboard();
@@ -11937,6 +12412,7 @@ initComposer();
 initSubterraneanSignals();
 initCourierTopSite();
 initPePackerLab();
+
 </script>
 
 <!-- ================================================================= -->
