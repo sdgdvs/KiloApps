@@ -780,6 +780,71 @@ void ExportHeroSheetToFile(void) {
     Beep(784, 100); Beep(988, 120);
 }
 
+void ExportHeroJSON(void) {
+    HANDLE hFile = CreateFileA("kquest_hero.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        LogMessage("Failed to create kquest_hero.json");
+        return;
+    }
+    char buf[2048];
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+    int achCount = 0;
+    for (int i = 0; i < 10; i++) {
+        if (g_Achievements[i]) achCount++;
+    }
+    int len = wsprintfA(buf,
+        "{\r\n"
+        "  \"app\": \"KQuest\",\r\n"
+        "  \"format\": \"KQuest-HeroSheet-v1\",\r\n"
+        "  \"exportedAt\": \"%04d-%02d-%02dT%02d:%02d:%02d\",\r\n"
+        "  \"player\": {\r\n"
+        "    \"name\": \"%s\",\r\n"
+        "    \"class\": \"%s\",\r\n"
+        "    \"level\": %d,\r\n"
+        "    \"hp\": %d,\r\n"
+        "    \"maxHp\": %d,\r\n"
+        "    \"mp\": %d,\r\n"
+        "    \"maxMp\": %d,\r\n"
+        "    \"gold\": %d,\r\n"
+        "    \"xp\": %d,\r\n"
+        "    \"str\": %d,\r\n"
+        "    \"def\": %d,\r\n"
+        "    \"floor\": %d,\r\n"
+        "    \"biome\": %d,\r\n"
+        "    \"arenaWave\": %d,\r\n"
+        "    \"arenaBestWave\": %d,\r\n"
+        "    \"arenaTokens\": %d,\r\n"
+        "    \"ngLevel\": %d\r\n"
+        "  },\r\n"
+        "  \"achievementsUnlocked\": %d,\r\n"
+        "  \"achievementsTotal\": 10\r\n"
+        "}\r\n",
+        st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond,
+        player.name,
+        player.heroClass,
+        player.level,
+        player.hp, player.maxHp,
+        player.mp, player.maxMp,
+        player.gold,
+        player.xp,
+        player.str + player.weaponBonusStr,
+        player.def + player.armorBonusDef,
+        player.floor,
+        player.biome,
+        player.arenaWave,
+        player.arenaBestWave,
+        player.arenaTokens,
+        player.ngLevel,
+        achCount
+    );
+    DWORD written = 0;
+    WriteFile(hFile, buf, (DWORD)len, &written, NULL);
+    CloseHandle(hFile);
+    LogMessage("Character Sheet JSON exported to kquest_hero.json!");
+    Beep(784, 100); Beep(988, 120);
+}
+
 void SaveToSlot(int slotIdx) {
     char fileName[64];
     wsprintfA(fileName, "kquest_slot%d.dat", slotIdx + 1);
@@ -1576,7 +1641,8 @@ void UpdateUI() {
             "🍻 RUSTY DRAGON TAVERN & INN\r\n"
             "• Barkeep: 'Rest your bones, hero! The Spire grows more treacherous with every descent.'\r\n"
             "• Side Quest: 'Bring 3 Iron Scrap, I'll pay 60 Gold.' (Current Scrap: %d)\r\n"
-            "• [1] Talk to Barkeep  |  [2] Listen to Rumors  |  [3] Drink Ale (5G, +20 HP)  |  [4] Turn in Scrap  |  [5] Back",
+            "• Co-Op Tavern Raid: Team up with Sir Valerie against Ignis the World-Eater!\r\n"
+            "• [1] Talk  |  [2] Rumors  |  [3] Ale (5G)  |  [4] Scrap Quest  |  [5] Back  |  [6] Co-Op Raid",
             player.ironScrap);
     } else if (gameState == STATE_ACHIEVEMENTS) {
         int count = 0;
@@ -1853,7 +1919,7 @@ void SetupButtons() {
             SetBtn(hBtn1, 1, "Refresh");
             SetBtn(hBtn2, 2, "Help & Codex");
             SetBtn(hBtn3, 3, "Export Dossier");
-            SetBtn(hBtn4, 4, "---");
+            SetBtn(hBtn4, 4, "Export JSON");
             SetBtn(hBtn5, 5, ngBtn);
             SetBtn(hBtn6, 6, "Back to Town");
             break;
@@ -1945,7 +2011,7 @@ void SetupButtons() {
             SetBtn(hBtn3, 3, "Buy Ale (5G)");
             SetBtn(hBtn4, 4, "Ask Side Quest");
             SetBtn(hBtn5, 5, "Back to Town");
-            SetBtn(hBtn6, 6, "---");
+            SetBtn(hBtn6, 6, "Co-Op Raid");
             break;
 
         case STATE_FACTIONS:
@@ -3745,6 +3811,10 @@ void HandleButton4() {
         UpdateUI();
         return;
     }
+    if (gameState == STATE_ACHIEVEMENTS) {
+        ExportHeroJSON();
+        return;
+    }
     if (gameState == STATE_SAVE_LOAD) {
         DeleteSlot(g_SelectedSaveSlot);
         SetupButtons();
@@ -4164,6 +4234,31 @@ void HandleButton6() {
         } else {
             LogMessage("Need 2 Iron Scrap to repair Castle Gate in siege!");
         }
+        return;
+    }
+    if (gameState == STATE_TAVERN) {
+        lstrcpyA(currentEnemy.name, "Ignis the Obsidian World-Eater (Raid Boss)");
+        currentEnemy.maxHp = 800; currentEnemy.hp = 800;
+        currentEnemy.str = 28; currentEnemy.def = 15;
+        currentEnemy.xp = 1500; currentEnemy.gold = 500;
+        currentEnemy.maxPhases = 1;
+        currentEnemy.phase = 1;
+        currentEnemy.burningTurns = 0;
+        currentEnemy.frozenTurns = 0;
+        currentEnemy.poisonedTurns = 0;
+        if (!player.companion.active || player.companion.isDown) {
+            player.companion.active = 1;
+            player.companion.isDown = 0;
+            player.companion.type = 0;
+            lstrcpyA(player.companion.name, "Sir Valerie (AI)");
+            player.companion.maxHp = 180;
+            player.companion.hp = 180;
+            player.companion.atk = 32;
+        }
+        gameState = STATE_COMBAT;
+        LogMessage("TAVERN CO-OP RAID LAUNCHED: Challenging Ignis the World-Eater with Sir Valerie!");
+        SetupButtons();
+        UpdateUI();
         return;
     }
     if (gameState == STATE_UTILS || gameState == STATE_REPLAYS || gameState == STATE_CONFIG) {
