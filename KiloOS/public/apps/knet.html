@@ -700,6 +700,7 @@
           <button class="btn-chip" data-url="kweb://trapster" style="color:#00ff66; border-color:rgba(0, 255, 102, 0.4);">🐱 Trapster</button>
           <button class="btn-chip" data-url="kweb://webring">🌐 Webring</button>
           <button class="btn-chip" data-url="kweb://geocities" style="color:#f0abfc;">✨ GeoCities</button>
+          <button class="btn-chip" data-url="kweb://geocities?nh=tokyo99" style="color:#38bdf8;">🎌 Tokyo99 Ring</button>
           <button class="btn-chip" data-url="kweb://cybercafe" style="color:#fbbf24; border-color:rgba(251, 191, 36, 0.4);">☕ CyberCafe</button>
           <button class="btn-chip" data-url="kweb://users/~neon_rider" style="color:#00ffcc; border-color:rgba(0, 255, 204, 0.4);">⚡ ~neon_rider</button>
           <button class="btn-chip" data-url="kweb://asm-temple" style="color:#fbbf24; border-color:rgba(245, 158, 11, 0.4);">⚡ ASM Temple</button>
@@ -1133,7 +1134,7 @@
           <tr><td><code>kweb://scallion</code></td><td>Access The Scallion: 1999 Satirical News, Ask A Sysadmin Column &amp; Infographic Lab</td></tr>
           <tr><td><code>kweb://trapster</code></td><td>Access Trapster P2P Chiptune &amp; Tracker Exchange v1.0b</td></tr>
           <tr><td><code>kweb://webring</code></td><td>Access Central KiloNet Webring Hub &amp; Node Directory</td></tr>
-          <tr><td><code>kweb://geocities</code></td><td>Access CyberSpire Retro Shrine, Amiga .MOD Vault, Diskmag Reader, 16-Bit SFX Lab, Web-Safe 216 Color Lab, Halite Crypt Dungeon RPG &amp; Odometer Marquee Forge</td></tr>
+          <tr><td><code>kweb://geocities</code></td><td>Access CyberSpire Retro Shrine, SiliconValley, Area51 &amp; Tokyo99 Homestead Web Rings, Hit Counters, Under-Construction GIFs, Amiga .MOD Vault, Diskmag Reader &amp; VFS HTML Export</td></tr>
           <tr><td><code>kweb://cybercafe</code></td><td>Access Underground BBS, Threaded Forums, ASCII Art Studio, 1999 LAN Arena, Visitor Guestbook, CCTV Surveillance &amp; ShoutCast NetRadio</td></tr>
           <tr><td><code>kweb://users/~neon_rider</code></td><td>Access ~neon_rider's Win32 ASM &amp; Demoscene Devlog</td></tr>
           <tr><td><code>kweb://asm-temple</code></td><td>Access x86 Assembly Programming Shrine &amp; Opcode Converter</td></tr>
@@ -2435,9 +2436,9 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
     } else if (url.toLowerCase() === 'kweb://geocities' || url.toLowerCase() === 'geocities' || url.toLowerCase().startsWith('kweb://geocities') || url.toLowerCase().startsWith('geocities.com') || url.toLowerCase().startsWith('http://geocities.com') || url.toLowerCase().startsWith('http://www.geocities.com') || url.toLowerCase().startsWith('www.geocities.com')) {
       let nh = '';
       const lower = url.toLowerCase();
-      ['area51', 'siliconvalley', 'beverlyhills', 'soho', 'enchantedforest'].forEach(n => {
-        if (lower.includes(n)) nh = n;
-      });
+      ['area51', 'siliconvalley', 'tokyo99', 'tokyo', 'beverlyhills', 'soho', 'enchantedforest', 'sunsetstrip', 'heartland'].forEach(n => {
+        if (lower.includes(n)) nh = (n === 'tokyo' ? 'tokyo99' : n);
+        });
       url = '/web/geocities.html' + (nh ? '?neighborhood=' + nh : '');
     } else if (url.toLowerCase() === 'kweb://cybercafe' || url.toLowerCase() === 'cybercafe' || url.toLowerCase() === 'kweb://cafe' || url.toLowerCase() === 'cafe' || url.toLowerCase() === 'kweb://bbs') {
       url = '/web/cybercafe.html';

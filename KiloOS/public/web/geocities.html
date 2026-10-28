@@ -752,6 +752,138 @@
     color: #fef08a;
   }
 
+  
+  body.theme-tokyo99, body.theme-tokyo {
+    --bg-dark: #0a0418;
+    --neon-pink: #ff007f;
+    --neon-cyan: #00f0ff;
+    --neon-yellow: #ffe600;
+    --neon-green: #39ff14;
+    --neon-purple: #bd00ff;
+    --card-bg: rgba(18, 8, 38, 0.95);
+    --border-color: #ff007f;
+    color: #00f0ff;
+  }
+
+  /* Homestead Under Construction Banner */
+  .homestead-under-construction {
+    margin-bottom: 10px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 10px #ffcc00;
+  }
+  .homestead-under-construction .hazard-bar {
+    height: 8px;
+    background: repeating-linear-gradient(45deg, #ffcc00, #ffcc00 12px, #000 12px, #000 24px);
+  }
+  .homestead-under-construction .hazard-content {
+    background: #000;
+    color: #ffff00;
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 4px 8px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 1px;
+  }
+
+  /* Homestead Personal Web Ring */
+  .homestead-webring-bar {
+    background: linear-gradient(90deg, #100520, #001530);
+    border: 2px ridge #00ffcc;
+    padding: 6px 12px;
+    margin: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+  }
+  .homestead-webring-bar .webring-label {
+    color: #ffff00;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .homestead-webring-bar .webring-nav-links a {
+    color: #38bdf8;
+    text-decoration: none;
+    padding: 1px 4px;
+    font-weight: bold;
+  }
+  .homestead-webring-bar .webring-nav-links a:hover {
+    color: #000;
+    background: #00ffff;
+  }
+
+  /* Retro Hit Counter Widget */
+  .retro-hit-counter-box {
+    text-align: center;
+    margin: 10px 0;
+    background: #000810;
+    border: 1px dashed #0088aa;
+    padding: 6px;
+  }
+  .retro-hit-counter-box .counter-label {
+    font-size: 10px;
+    font-weight: bold;
+    color: #ff00aa;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .retro-hit-counter {
+    display: inline-flex;
+    gap: 2px;
+    background: #000;
+    border: 2px inset #555;
+    padding: 2px 4px;
+  }
+  .odometer-digit {
+    background: #111;
+    color: #39ff14;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 1px 5px;
+    border: 1px solid #333;
+    box-shadow: inset 0 0 4px #000;
+  }
+
+  /* Homestead Guestbook Box */
+  .homestead-guestbook-box {
+    background: #030a14;
+    border: 2px groove #a855f7;
+    padding: 10px;
+    margin-top: 14px;
+  }
+  .hs-gb-title {
+    font-size: 12px;
+    font-weight: bold;
+    color: #f0abfc;
+    margin-bottom: 4px;
+  }
+
+  /* VFS Floating Toast */
+  .vfs-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #021a0e;
+    color: #39ff14;
+    border: 2px solid #00ff66;
+    padding: 8px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
+    z-index: 99999;
+    display: none;
+  }
+
   .neighborhood-bar {
     display: flex;
     flex-wrap: wrap;
@@ -2127,6 +2259,7 @@
     <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
       <span style="font-weight:bold; color:#ffff00;">🏘️ GeoCities Neighborhood:</span>
       <button class="neighborhood-btn active" id="btnThemeSilicon" onclick="setNeighborhood('siliconvalley')">SiliconValley</button>
+      <button class="neighborhood-btn" id="btnThemeTokyo" onclick="setNeighborhood('tokyo99')">Tokyo99</button>
       <button class="neighborhood-btn" id="btnThemeArea51" onclick="setNeighborhood('area51')">Area51</button>
       <button class="neighborhood-btn" id="btnThemeBeverly" onclick="setNeighborhood('beverlyhills')">BeverlyHills</button>
       <button class="neighborhood-btn" id="btnThemeSoHo" onclick="setNeighborhood('soho')">SoHo</button>
@@ -2210,6 +2343,7 @@
     <!-- Neighborhood Explorer Tab Bar -->
     <div class="nh-tab-bar">
       <button class="nh-tab-btn active" id="tabNhSilicon" onclick="switchExplorerNeighborhood('siliconvalley')">⚡ SiliconValley (Hardware &amp; Code)</button>
+      <button class="nh-tab-btn" id="tabNhTokyo" onclick="switchExplorerNeighborhood('tokyo99')">🎌 Tokyo99 (Anime, Mech &amp; J-Chiptunes)</button>
       <button class="nh-tab-btn" id="tabNhArea51" onclick="switchExplorerNeighborhood('area51')">🛸 Area51 (Sci-Fi &amp; SIGINT)</button>
       <button class="nh-tab-btn" id="tabNhBeverly" onclick="switchExplorerNeighborhood('beverlyhills')">💎 BeverlyHills (Dot-Com &amp; Glamour)</button>
       <button class="nh-tab-btn" id="tabNhSoHo" onclick="switchExplorerNeighborhood('soho')">🎨 SoHo (Text Art &amp; Acid Synths)</button>
@@ -2268,6 +2402,7 @@
         <span style="font-weight:bold; color:#000080;">Location:</span>
         <input type="text" id="hsModalUrlInput" style="flex:1; background:#fff; color:#000; border:1px inset #999; font-family:'Courier New', monospace; font-size:11px; padding:2px 6px;" readonly />
         <button class="tool-btn" style="background:#c0c0c0; color:#000; border:1px outset #fff; font-size:10px; padding:2px 6px;" onclick="copyHomesteadUrl()">📋 Copy</button>
+        <button class="tool-btn" style="background:#004422; color:#00ff66; border:1px outset #fff; font-size:10px; padding:2px 6px;" onclick="exportCurrentHomesteadVfs()">💾 Save to VFS</button>
       </div>
       <div class="homestead-modal-viewport" id="hsModalViewport">
         <!-- Rendered dynamically -->
@@ -3620,6 +3755,7 @@ Commands recognized: ATZ, ATDT, ATH0, ATI4.
             <select id="builderNeighborhood" onchange="updatePagePreview()" style="width:100%; background:#000; color:#fff; border:1px solid #0088aa; font-size:11px; padding:3px;">
               <option value="SiliconValley">SiliconValley (Cyber/Tech)</option>
               <option value="Area51">Area51 (Sci-Fi/UFO)</option>
+              <option value="Tokyo99">Tokyo99 (Anime/Mecha/J-Chiptune)</option>
               <option value="BeverlyHills">BeverlyHills (Glamour/Gold)</option>
               <option value="SoHo">SoHo (Bohemian/Art)</option>
               <option value="EnchantedForest">EnchantedForest (Fantasy)</option>
@@ -3652,7 +3788,11 @@ Commands recognized: ATZ, ATDT, ATH0, ATI4.
           <label><input type="checkbox" id="chkBuilderCounter" onchange="updatePagePreview()" checked> Hit Counter</label>
         </div>
 
-        <button class="btn-sign" style="width:100%; background:#005500; border-color:#00ff00;" onclick="downloadGeneratedPage()">
+        <div style="display:flex; gap:6px; margin-bottom:6px;">
+          <button class="btn-sign" style="flex:1; background:#005500; border-color:#00ff00;" onclick="downloadGeneratedPage()">💾 Download HTML</button>
+          <button class="btn-sign" style="flex:1; background:#004466; border-color:#00ffff;" onclick="saveGeneratedPageToVfs()">📁 Save to KiloOS VFS</button>
+        </div>
+        <button class="btn-sign" style="display:none;" onclick="downloadGeneratedPage()">
           💾 Download Standalone index.html (&lt;10 KB)
         </button>
         <button class="btn-sign" style="width:100%; margin-top:6px; background:#440055; border-color:#ff00ff;" onclick="publishHomesteadToDirectory()">
@@ -4444,6 +4584,7 @@ Commands recognized: ATZ, ATDT, ATH0, ATI4.
           <option value="all">All Neighborhoods (Global)</option>
           <option value="siliconvalley">SiliconValley</option>
           <option value="area51">Area51</option>
+          <option value="tokyo99">Tokyo99</option>
           <option value="beverlyhills">BeverlyHills</option>
           <option value="soho">SoHo</option>
           <option value="enchantedforest">EnchantedForest</option>
@@ -4460,6 +4601,7 @@ Commands recognized: ATZ, ATDT, ATH0, ATI4.
         <span style="font-size:10px; color:#88aacc;">Total Shouts: <span id="gbTotalCount">0</span></span>
         <button class="tool-btn" style="background:#004422; color:#00ff66; font-size:10px; padding:2px 6px;" onclick="exportGuestbookTxt()">💾 Export TXT</button>
         <button class="tool-btn" style="background:#002244; color:#38bdf8; font-size:10px; padding:2px 6px;" onclick="exportGuestbookHtml()">🌐 Export HTML</button>
+        <button class="tool-btn" style="background:#005522; color:#39ff14; font-size:10px; padding:2px 6px;" onclick="exportGuestbookVfs()">💾 Save to VFS</button>
       </div>
     </div>
 
@@ -5143,6 +5285,8 @@ const track5 = {
   ]
 };
 
+
+function rep8(arr) { const out = []; while (out.length < 16) out.push(...arr); return out.slice(0, 16); }
 
 // TRACK 6: Sunset Boulevard Overdrive (140 BPM - Grunge Rock Power Chords)
 const T6_LEAD_THEME = [
@@ -8212,7 +8356,7 @@ function playDemosceneChime() {
 // ============================================================================
 // GEOCITIES NEIGHBORHOOD THEMES
 // ============================================================================
-const NEIGHBORHOOD_NAMES = ['siliconvalley', 'area51', 'beverlyhills', 'soho', 'enchantedforest', 'sunsetstrip', 'heartland'];
+const NEIGHBORHOOD_NAMES = ['siliconvalley', 'area51', 'tokyo99', 'tokyo', 'beverlyhills', 'soho', 'enchantedforest', 'sunsetstrip', 'heartland'];
 let currentNeighborhood = localStorage.getItem('cyberspire_neighborhood') || 'siliconvalley';
 
 function setNeighborhood(name) {
@@ -9053,6 +9197,7 @@ function generateWeb10Html() {
   let vlink = "#00ff66";
 
   if (neigh === 'Area51') { bg = "#030d05"; fg = "#00ff44"; link = "#ffff00"; vlink = "#39ff14"; }
+  else if (neigh === 'Tokyo99' || neigh === 'Tokyo') { bg = "#0a0418"; fg = "#00f0ff"; link = "#ff007f"; vlink = "#ffe600"; }
   else if (neigh === 'BeverlyHills') { bg = "#070e1e"; fg = "#ffd700"; link = "#64b5f6"; vlink = "#ffe082"; }
   else if (neigh === 'SoHo') { bg = "#120905"; fg = "#ffb74d"; link = "#ff6f00"; vlink = "#d84315"; }
   else if (neigh === 'EnchantedForest') { bg = "#041208"; fg = "#80ffaa"; link = "#ff80bf"; vlink = "#50e3c2"; }
@@ -9152,7 +9297,7 @@ ${incCounter ? `
     const style = styleSelect ? styleSelect.value : 'sparkle';
     const color = colorSelect ? colorSelect.value : 'neon';
     const cnt = countRange ? countRange.value : '12';
-    snippetBox.value = '<script language="JavaScript">\n' +
+    snippetBox.value = '<' + 'script language="JavaScript">\n' +
       '// DHTML Mouse Trail \'99 by CyberSpire (Node #002 GeoCities)\n' +
       '// Style: ' + style + ' | Colors: ' + color + ' | Particles: ' + cnt + '\n' +
       'var trailStyle = "' + style + '", trailDensity = ' + cnt + ';\n' +
@@ -11826,6 +11971,68 @@ function initDiskmagReader() {
 // GEOCITIES NEIGHBORHOOD HOMESTEAD DIRECTORY & 1999 WEB 1.0 SHOWCASE
 // ============================================================================
 const HOMESTEADS_DATA = {
+
+  tokyo99: [
+    {
+      id: "hs_tok_01",
+      title: "Akihabara Super-Electric Town & Neo-Geo MVS Arcade Shrine",
+      webmaster: "~akiba_ryu",
+      address: "http://www.geocities.com/Tokyo/Akiba/1999/",
+      desc: "Chuo-dori junk shops, 68000+Z80 dual CPU arcade PCBs, step-down 100V voltage transformers, and Sega Saturn 4MB RAM cartridge import guides.",
+      tags: ["NeoGeo", "Akihabara", "Saturn", "MVS", "Arcade"],
+      views: 22400,
+      badge: "MVS 100MEGA SHOCK",
+      contentHtml: `<div style="background:#12051f; color:#ff77ff; font-family:'Courier New', monospace; padding:14px; border:2px outset #ff00aa;"><h2 style="color:#ffff00; text-align:center; margin:0 0 6px 0;">⚡ AKIHABARA ELECTRIC TOWN &amp; NEO-GEO MVS SHRINE ⚡</h2><marquee style="color:#00ffcc; background:#080014; padding:3px; border:1px solid #ff00aa;">★ 100 MEGA SHOCK PRO-GEAR SPEC ★ DUAL 68000 (12MHz) + Z80 (4MHz) ★ RADIANT SILVERGUN SATURN IMPORT BENCHMARKS ★</marquee><div style="margin:12px 0; background:rgba(0,0,0,0.7); padding:10px; border-left:4px solid #00ffff;"><p style="margin:0 0 8px 0; color:#fff;">Konnichiwa from Sotokanda! I scour the back-alley salvage bins of Akihabara Electric Town for original SNK Neo-Geo MVS arcade motherboards, Yamaha YM2610 sound chips, and 4MB Extended RAM cartridges for the Sega Saturn.</p><p style="margin:0 0 8px 0; color:#38bdf8;"><strong>Hardware Bench Spec '99:</strong> SNK MVS 1-Slot PCB consolized via RGB SCART to Sony Trinitron PVM-2030, Sega Saturn Model 2 (JP) with Action Replay 4M Plus running <em>Radiant Silvergun</em>, <em>X-Men vs Street Fighter</em> (zero loading time), and <em>Vampire Savior</em>.</p><table style="width:100%; border-collapse:collapse; margin-top:8px; font-size:11px;"><tr style="background:#28003a; color:#ffff00;"><th>Arcade / Console Platform</th><th>Sound Hardware</th><th>Max On-Screen Colors</th><th>RAM Spec</th></tr><tr><td>SNK Neo-Geo MVS</td><td>YM2610 (4 FM + 7 PCM)</td><td>4,096 / 65,536</td><td>64KB Main + 68KB Video</td></tr><tr><td>Sega Saturn (JP)</td><td>SCSP 32-ch 16-bit PCM</td><td>16.7 Million</td><td>2MB Main + 4MB Cart</td></tr><tr><td>Sony PlayStation</td><td>24-ch 16-bit ADPCM</td><td>16.7 Million</td><td>2MB Main + 1MB VRAM</td></tr></table></div></div>`
+    },
+    {
+      id: "hs_tok_02",
+      title: "EVA-01 Berserk Mode & Evangelion LaserDisc Analysis Shrine",
+      webmaster: "~nerv_operator",
+      address: "http://www.geocities.com/Tokyo/Nerv/1999/",
+      desc: "Neon Genesis Evangelion Genesis 0:1-0:14 Japanese LaserDisc transfer logs, S2 Engine synchronization ratios, and Gainax director's cut audio analysis.",
+      tags: ["Evangelion", "LaserDisc", "Gainax", "Anime", "Tokyo3"],
+      views: 38950,
+      badge: "SYNCHRO 400%",
+      contentHtml: `<div style="background:#0b0217; color:#c084fc; font-family:'Courier New', monospace; padding:14px; border:2px solid #a855f7;"><h2 style="color:#e879f9; text-align:center; margin:0 0 6px 0;">🚨 NERV TACTICAL OPERATION CENTER // TOKYO-3 ARCHIVE 🚨</h2><div style="background:#2e1065; border:1px solid #c084fc; padding:8px; text-align:center; font-size:11px; margin-bottom:10px; color:#facc15;">★ PATTERN BLOOD ORANGE: ANGEL IDENTIFIED ★ HARMONIC SYNCHRONIZATION RATE: 400.0% ★</div><p style="font-size:12px; margin:0 0 8px 0; color:#e2e8f0; line-height:1.5;">Welcome to GeoCities Tokyo-3 sector! We archive uncompressed NTSC video frames captured via Pioneer CLD-D704 LaserDisc player from the Japanese <em>Genesis 0:X</em> box sets. Includes comparison waveforms of Shiro Sagisu's orchestrations mastered on 24-bit DAT.</p><div style="background:#1e1b4b; padding:10px; border-left:4px solid #f43f5e; font-size:11px; line-height:1.5;"><p style="color:#fbcfe8; margin:0 0 4px 0;"><strong>Technical Dossier:</strong></p><p style="margin:0 0 4px 0;">• S2 Engine Biomechanical Core: Continuous non-dissipative power output.</p><p style="margin:0 0 4px 0;">• Neural Link Protocol: A10 nerve junction interface matching 1999Hz bedrock carrier harmonics.</p><p style="margin:0; color:#38bdf8;">• Gainax Fan Webring: Linked to 42 Japanese anime shrines across GeoCities Tokyo.</p></div></div>`
+    },
+    {
+      id: "hs_tok_03",
+      title: "Tokyo Cyber-Goth & Visual Kei Roland SC-88 MIDI Sanctuary",
+      webmaster: "~mana_goth",
+      address: "http://www.geocities.com/Tokyo/Midi/1999/",
+      desc: "Malice Mizer, X-Japan, and L'Arc~en~Ciel General Standard (GS) MIDI files sequenced for Roland Sound Canvas SC-88 Pro. Lace web borders and lace cursor trails.",
+      tags: ["VisualKei", "SC88", "MIDI", "Roland", "JRock"],
+      views: 19800,
+      badge: "ROLAND GS SC-88",
+      contentHtml: `<div style="background:#160210; color:#f472b6; font-family:'Courier New', monospace; padding:14px; border:2px dashed #ec4899;"><h2 style="color:#f43f5e; text-align:center; margin:0 0 6px 0;">🌹 ROSE &amp; LACE: VISUAL KEI ROLAND SC-88 MIDI VAULT 🌹</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5; color:#fbcfe8;">Enter the velvet twilight! In this sanctuary we celebrate neoclassical visual rock, harpsichord arpeggios, and symphonic rock sequenced with meticulous CC11 (Expression) and CC01 (Modulation) control curves for the Roland SC-88 Pro Sound Canvas.</p><div style="background:#3b0724; border:1px solid #f43f5e; padding:8px; font-size:11px; margin:8px 0;"><div style="color:#ffff00; font-weight:bold; margin-bottom:4px;">Auditioned GS Sound Canvas Track List:</div><ul style="margin:0; padding-left:18px; line-height:1.6; color:#fdf2f8;"><li><em>Gekka no Yasoukyoku</em> (Harpsichord + Choir + Fretless Bass)</li><li><em>Kurenai</em> (Dual Twin-Lead Guitar Overdrive + Double Bass Drum)</li><li><em>Winter Fall</em> (12-String Acoustic + Lush Hall Reverb)</li></ul></div></div>`
+    },
+    {
+      id: "hs_tok_04",
+      title: "PlayStation 12C508 Stealth Modchip & PocketStation VMS Minigames",
+      webmaster: "~psx_stealth",
+      address: "http://www.geocities.com/Tokyo/Modchip/1999/",
+      desc: "4-wire PIC12C508 stealth code for SCPH-7500 and SCPH-9000, NTSC-J to PAL subcarrier color fix oscillation crystals (4.433619 MHz), and PocketStation PDA minigame hex saves.",
+      tags: ["PlayStation", "Modchip", "PIC12C508", "PocketStation", "Hardware"],
+      views: 29100,
+      badge: "STEALTH PIC12C",
+      contentHtml: `<div style="background:#04091a; color:#93c5fd; font-family:'Courier New', monospace; padding:14px; border:2px solid #3b82f6;"><h2 style="color:#60a5fa; text-align:center; margin:0 0 6px 0;">🎮 PLAYSTATION HARDWARE LAB: 12C508 STEALTH &amp; POCKETSTATION 🎮</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5; color:#e0f2fe;">Dedicated to console preservation and hardware modding. Modern anti-mod games check for active modchip injection streams during boot; our stealth code powers down the PIC after sending the SCEI license string!</p><div style="background:#0f172a; border:1px solid #1d4ed8; padding:8px; font-size:11px; margin-bottom:8px;"><div style="color:#fde047; font-weight:bold; margin-bottom:4px;">SCPH-9000 Stealth Solder Pinouts:</div><pre style="background:#020617; color:#38bdf8; padding:6px; font-size:10px; margin:0;">Pin 1: VDD (+3.5V Standby)
+Pin 2: DATA (Subcode stream to CD-ROM DSP)
+Pin 6: GATE (WFCK Clock sync line)
+Pin 8: VSS (Ground reference plane)</pre></div></div>`
+    },
+    {
+      id: "hs_tok_05",
+      title: "Gundam Wing Mobile Suit Technical Blueprints & Colony Archives",
+      webmaster: "~oz_pilot",
+      address: "http://www.geocities.com/Tokyo/Gundam/1999/",
+      desc: "After Colony 195 mobile suit schematics: Wing Zero twin buster rifle reactor output, Tallgeese vernier acceleration G-load limits, and ASCII hangar schematics.",
+      tags: ["Gundam", "Mecha", "Anime", "Blueprints", "AfterColony"],
+      views: 16750,
+      badge: "GUNDANIUM ALLOY",
+      contentHtml: `<div style="background:#0f172a; color:#e2e8f0; font-family:'Courier New', monospace; padding:14px; border:2px solid #eab308;"><h2 style="color:#facc15; text-align:center; margin:0 0 6px 0;">⚔️ AFTER COLONY 195 // GUNDAM MOBILE SUIT BLUEPRINT VAULT ⚔️</h2><p style="font-size:12px; margin:0 0 8px 0; line-height:1.5; color:#cbd5e1;">Classified engineering files smuggled from the OZ Aerospace Armament Plant. Full thermal, armor composition, and thruster vectoring schematics for Gundanium-alloy suits.</p><table style="width:100%; border-collapse:collapse; margin-top:8px; font-size:11px;"><tr style="background:#1e293b; color:#facc15;"><th>Mobile Suit</th><th>Generator Output</th><th>Total Thrust</th><th>Armor Material</th></tr><tr><td>XXXG-00W0 Wing Zero</td><td>3,732 kW</td><td>88,150 kg</td><td>Gundanium Alloy</td></tr><tr><td>OZ-00MS Tallgeese</td><td>3,647 kW</td><td>87,000 kg</td><td>Titanium Alloy Composite</td></tr><tr><td>OZ-06MS Leo</td><td>1,073 kW</td><td>24,000 kg</td><td>Titanium Alloy</td></tr></table></div>`
+    }
+  ],
+
   siliconvalley: [
     {
       id: "hs_sv_01",
@@ -12233,6 +12440,8 @@ function switchExplorerNeighborhood(nh) {
   currentExplorerNh = nh;
   const map = {
     siliconvalley: 'tabNhSilicon',
+    tokyo99: 'tabNhTokyo',
+    tokyo: 'tabNhTokyo',
     area51: 'tabNhArea51',
     beverlyhills: 'tabNhBeverly',
     soho: 'tabNhSoHo',
@@ -12256,6 +12465,8 @@ function switchExplorerNeighborhood(nh) {
   const leadDesc = document.getElementById('nhLeadDesc');
   const titles = {
     siliconvalley: "SiliconValley Community Homesteads",
+    tokyo99: "Tokyo99 Anime Shrines, Akihabara Mods & J-Chiptune Vaults",
+    tokyo: "Tokyo99 Anime Shrines, Akihabara Mods & J-Chiptune Vaults",
     area51: "Area51 Homesteads & Unexplained Signals",
     beverlyhills: "BeverlyHills Dot-Com Mansions & Glamour",
     soho: "SoHo Digital Bohemia, ASCII Art & Acid Tracks",
@@ -12266,6 +12477,8 @@ function switchExplorerNeighborhood(nh) {
   };
   const descs = {
     siliconvalley: "For techies, hardware overclockers, x86 assembly wizards, and Linux kernel hackers.",
+    tokyo99: "Neo-Geo MVS arcade hardware, Evangelion LaserDisc analysis, visual kei Roland SC-88 MIDI, PlayStation stealth chips, and Gundam Wing blueprints.",
+    tokyo: "Neo-Geo MVS arcade hardware, Evangelion LaserDisc analysis, visual kei Roland SC-88 MIDI, PlayStation stealth chips, and Gundam Wing blueprints.",
     area51: "Classified radar anomalies, subterranean acoustic 1999Hz SIGINT, and black project leaks.",
     beverlyhills: "High-flying IPO millionaires, Roland SC-88 MIDI tributes, and cyber-couture.",
     soho: "Underground 80x25 ANSI art, TB-303 acid synths, baud-rate poetry, and digital zines.",
@@ -12338,13 +12551,19 @@ function renderHomesteadGrid() {
 
 function openHomesteadModal(id) {
   let item = null;
-  Object.values(HOMESTEADS_DATA).forEach(arr => {
-    const found = arr.find(h => h.id === id);
-    if (found) item = found;
+  let activeNh = currentExplorerNh;
+  if (activeNh === 'tokyo') activeNh = 'tokyo99';
+  Object.keys(HOMESTEADS_DATA).forEach(nhKey => {
+    const found = HOMESTEADS_DATA[nhKey].find(h => h.id === id);
+    if (found) {
+      item = found;
+      activeNh = nhKey;
+    }
   });
   if (!item) {
     const userList = getUserHomesteads();
     item = userList.find(h => h.id === id);
+    if (item) activeNh = item.neighborhood || 'community';
   }
   if (!item) return;
 
@@ -12355,11 +12574,99 @@ function openHomesteadModal(id) {
 
   if (titleEl) titleEl.textContent = `Netscape Communicator 4.0 - [${item.title}]`;
   if (urlInput) urlInput.value = item.address;
+
+  // Track dynamic hits
+  const viewKey = 'cyberspire_homestead_views_' + item.id;
+  let views = parseInt(localStorage.getItem(viewKey) || item.views || '1999', 10);
+  views += 1;
+  localStorage.setItem(viewKey, views.toString());
+
+  // Personal Webring links
+  let nhItems = (activeNh === 'community') ? getUserHomesteads() : (HOMESTEADS_DATA[activeNh] || []);
+  if (!nhItems.length) nhItems = [item];
+  const curIdx = Math.max(0, nhItems.findIndex(h => h.id === item.id));
+  const prevIdx = (curIdx - 1 + nhItems.length) % nhItems.length;
+  const nextIdx = (curIdx + 1) % nhItems.length;
+  const prevId = nhItems[prevIdx] ? nhItems[prevIdx].id : item.id;
+  const nextId = nhItems[nextIdx] ? nhItems[nextIdx].id : item.id;
+  const nhNameDisplay = capitalize(activeNh) + " Homestead Web Ring";
+
+  // Format Odometer digits
+  const digitStr = views.toString().padStart(6, '0');
+  const digitsHtml = digitStr.split('').map(d => `<span class="odometer-digit">${d}</span>`).join('');
+
   if (viewport) {
-    viewport.innerHTML = item.contentHtml || `
-      <div style="padding:16px; font-family:'Courier New', monospace;">
-        <h2>${escapeHtml(item.title)}</h2>
-        <p>${escapeHtml(item.desc)}</p>
+    viewport.innerHTML = `
+      <div class="homestead-page-container" style="padding:10px; font-family:'Courier New', monospace;">
+        <!-- Under Construction Banner -->
+        <div class="homestead-under-construction">
+          <div class="hazard-bar"></div>
+          <div class="hazard-content">
+            <span class="hazard-icon">🚧</span>
+            <span><strong>PAGE UNDER HEAVY RECONSTRUCTION</strong> &bull; EXCUSE OUR DUST &bull; BEST VIEWED IN NETSCAPE 4.0 AT 800x600</span>
+            <span class="hazard-icon">🚧</span>
+          </div>
+          <div class="hazard-bar"></div>
+        </div>
+
+        <!-- Personal Web Ring Header -->
+        <div class="homestead-webring-bar">
+          <div class="webring-label">
+            <span style="font-size:14px;">💍</span>
+            <strong>${nhNameDisplay}</strong> [Node #${curIdx + 1} of ${nhItems.length}]
+          </div>
+          <div class="webring-nav-links">
+            <a href="#homestead" onclick="openHomesteadModal('${prevId}'); return false;">&laquo; Prev Site</a> |
+            <a href="#homestead" onclick="openWebringHub('${activeNh}'); return false;">Ring Hub</a> |
+            <a href="#homestead" onclick="openHomesteadModal('${nextId}'); return false;">Next Site &raquo;</a> |
+            <a href="#homestead" onclick="traverseHomesteadRing('random'); return false;">Random 🎲</a>
+          </div>
+        </div>
+
+        <!-- Dynamic Hit Counter Widget -->
+        <div class="retro-hit-counter-box">
+          <span class="counter-label">★ VISITOR COUNTER ★</span>
+          <div class="retro-hit-counter">${digitsHtml}</div>
+          <div style="font-size:9px; color:#88aacc; margin-top:2px;">Server CGI: digits.cgi?df=${item.id}.dat&amp;style=odometer</div>
+        </div>
+
+        <!-- Main Homestead Content Body -->
+        <div class="homestead-main-content">
+          ${item.contentHtml || `<div style="padding:16px;"><h2>${escapeHtml(item.title)}</h2><p>${escapeHtml(item.desc)}</p></div>`}
+        </div>
+
+        <!-- Personal Web Ring Footer -->
+        <div class="homestead-webring-bar" style="margin-top:14px;">
+          <div class="webring-label">
+            <span>🌐 Member of GeoCities ${capitalize(activeNh)} Ring Master Alliance</span>
+          </div>
+          <div class="webring-nav-links">
+            <a href="#homestead" onclick="openHomesteadModal('${prevId}'); return false;">&laquo; Prev Site</a> |
+            <a href="#homestead" onclick="openWebringHub('${activeNh}'); return false;">Ring Hub</a> |
+            <a href="#homestead" onclick="openHomesteadModal('${nextId}'); return false;">Next Site &raquo;</a>
+          </div>
+        </div>
+
+        <!-- Homestead Personal Guestbook Quick Sign Box -->
+        <div class="homestead-guestbook-box">
+          <div class="hs-gb-title">📖 Sign ${escapeHtml(item.webmaster)}'s Homestead Guestbook</div>
+          <div style="font-size:11px; color:#cbd5e1; margin-bottom:6px;">
+            Leave an authentic 1999 cyber shout! Synced across all online cyber voyagers.
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;">
+            <input type="text" id="hsGbAliasInput" placeholder="Your Alias (e.g. CyberSurfer)" value="${localStorage.getItem('knet_alias') || 'Guest_' + Math.floor(Math.random()*900+100)}" style="flex:1; min-width:140px; background:#000; color:#00ffcc; border:1px solid #00ffff; font-family:'Courier New', monospace; font-size:11px; padding:3px 6px;" />
+            <input type="text" id="hsGbMessageInput" placeholder="Your shout (e.g. Awesome page! Greetings from ~neon_rider)..." style="flex:2; min-width:200px; background:#000; color:#ffff00; border:1px solid #ffff00; font-family:'Courier New', monospace; font-size:11px; padding:3px 6px;" />
+            <button class="tool-btn" style="background:#005522; color:#00ff66; padding:3px 10px; font-weight:bold;" onclick="submitHsGuestbookSign('${item.id}', '${activeNh}')">✍️ Sign Guestbook</button>
+          </div>
+          <div id="hsGbFeedback" style="font-size:10px; color:#39ff14; min-height:14px;"></div>
+        </div>
+
+        <!-- VFS & Save Actions Bar -->
+        <div style="display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; margin-top:12px; padding-top:10px; border-top:1px dashed #005577;">
+          <button class="tool-btn" style="background:#004422; color:#00ff66; font-size:11px; padding:4px 12px; font-weight:bold;" onclick="exportCurrentHomesteadVfs()">💾 Save Standalone HTML to KiloOS VFS (/home/web/)</button>
+          <button class="tool-btn" style="background:#002244; color:#38bdf8; font-size:11px; padding:4px 12px;" onclick="downloadHomesteadDirect('${item.id}')">🌐 Download HTML</button>
+          <button class="tool-btn" style="background:#221133; color:#f0abfc; font-size:11px; padding:4px 12px;" onclick="copyHomesteadUrl()">📋 Copy URL</button>
+        </div>
       </div>
     `;
   }
@@ -12369,6 +12676,215 @@ function openHomesteadModal(id) {
   currentActiveHomesteadId = item.id;
   markHomesteadVisited(item.id);
   playDemosceneChime();
+}
+
+function traverseHomesteadRing(dir) {
+  let activeNh = currentExplorerNh;
+  if (activeNh === 'tokyo') activeNh = 'tokyo99';
+  Object.keys(HOMESTEADS_DATA).forEach(nhKey => {
+    if (HOMESTEADS_DATA[nhKey].some(h => h.id === currentActiveHomesteadId)) {
+      activeNh = nhKey;
+    }
+  });
+  const list = (activeNh === 'community') ? getUserHomesteads() : (HOMESTEADS_DATA[activeNh] || []);
+  if (!list.length) return;
+
+  const curIdx = list.findIndex(h => h.id === currentActiveHomesteadId);
+  let nextIdx = 0;
+  if (dir === 'random') {
+    nextIdx = Math.floor(Math.random() * list.length);
+    if (nextIdx === curIdx && list.length > 1) {
+      nextIdx = (nextIdx + 1) % list.length;
+    }
+  } else {
+    nextIdx = (curIdx + dir + list.length) % list.length;
+  }
+  openHomesteadModal(list[nextIdx].id);
+}
+
+function openWebringHub(nh) {
+  if (nh && typeof switchExplorerNeighborhood === 'function') {
+    closeHomesteadModal();
+    switchExplorerNeighborhood(nh);
+    const explorer = document.getElementById('neighborhood-explorer');
+    if (explorer) explorer.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function submitHsGuestbookSign(homesteadId, nh) {
+  const aliasInput = document.getElementById('hsGbAliasInput');
+  const msgInput = document.getElementById('hsGbMessageInput');
+  const feedback = document.getElementById('hsGbFeedback');
+  const alias = (aliasInput ? aliasInput.value.trim() : '') || 'CyberVoyager';
+  const text = (msgInput ? msgInput.value.trim() : '');
+  if (!text) {
+    if (feedback) feedback.textContent = 'Please enter a message to sign!';
+    return;
+  }
+
+  const timeStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
+  const newEntry = {
+    alias: alias,
+    text: text,
+    time: timeStr,
+    neighborhood: nh || currentExplorerNh,
+    homesteadId: homesteadId
+  };
+
+  try {
+    let saved = JSON.parse(localStorage.getItem('knet_guestbook') || '[]');
+    saved.unshift(newEntry);
+    localStorage.setItem('knet_guestbook', JSON.stringify(saved.slice(0, 50)));
+    localStorage.setItem('knet_alias', alias);
+    renderGuestbook(saved);
+  } catch(e) {}
+
+  if (window.submitGuestbookToFirebase) {
+    window.submitGuestbookToFirebase(newEntry);
+  }
+
+  if (msgInput) msgInput.value = '';
+  if (feedback) feedback.textContent = '✅ Signed! Shout recorded in ' + capitalize(nh) + ' ring & Cyber Guestbook.';
+  playUiBeep(1500, 0.05);
+}
+
+function saveToKiloVfs(vfsPath, contentStr) {
+  try {
+    window.parent.postMessage({
+      type: 'VFS_WRITE',
+      path: vfsPath,
+      data: contentStr,
+      requestId: 'vfs_' + Date.now()
+    }, '*');
+    window.parent.postMessage({
+      type: 'OS_NOTIFY',
+      title: document.title,
+      message: 'Saved to VFS: ' + vfsPath
+    }, '*');
+  } catch (e) {
+    console.warn('VFS postMessage error:', e);
+  }
+  showVfsNotification(vfsPath);
+}
+
+function showVfsNotification(path) {
+  let toast = document.getElementById('geocitiesVfsToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'geocitiesVfsToast';
+    toast.className = 'vfs-toast';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `<strong>📁 KiloOS VFS Write</strong><br>Saved: <code>${escapeHtml(path)}</code>`;
+  toast.style.display = 'block';
+  setTimeout(() => {
+    toast.style.display = 'none';
+  }, 4000);
+}
+
+function generateStandaloneHomesteadHtml(item) {
+  const views = localStorage.getItem('cyberspire_homestead_views_' + item.id) || item.views || '1999';
+  const nh = item.neighborhood || currentExplorerNh || 'siliconvalley';
+  return `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>${escapeHtml(item.title)}</title>
+<style type="text/css">
+body { background: #000; color: #00ffcc; font-family: "Courier New", monospace; margin: 16px; padding: 0; }
+a { color: #ff00ff; }
+.card { border: 3px double #00ffff; background: #050a14; padding: 14px; max-width: 800px; margin: 0 auto; }
+.hazard { background: repeating-linear-gradient(45deg, #ffcc00, #ffcc00 12px, #000 12px, #000 24px); color: #000; font-weight: bold; text-align: center; padding: 6px; font-size: 11px; margin-bottom: 12px; }
+.webring { border: 1px dashed #ffff00; padding: 8px; text-align: center; font-size: 11px; background: rgba(0,0,0,0.6); margin: 12px 0; }
+.counter { background: #000; border: 2px inset #999; color: #00ff00; padding: 2px 6px; font-weight: bold; letter-spacing: 2px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="hazard">&#9888; UNDER HEAVY RECONSTRUCTION &#9888; EXCUSE OUR DUST &bull; 1999 RETRO WEB</div>
+  <div class="webring">
+    <strong>[ GeoCities ${capitalize(nh)} Personal Web Ring ]</strong><br>
+    [ <a href="/web/geocities.html?nh=${nh}">&laquo; Previous Site</a> | <a href="/web/geocities.html">GeoCities Hub</a> | <a href="/web/geocities.html?nh=${nh}">Next Site &raquo;</a> ]
+  </div>
+  <div style="text-align:center; margin-bottom:12px;">
+    <h1 style="color:#ffff00; font-size:20px; margin:0 0 4px 0;">${escapeHtml(item.title)}</h1>
+    <div style="font-size:11px; color:#88aacc;">Homestead Webmaster: <strong>${escapeHtml(item.webmaster)}</strong> &bull; Address: ${escapeHtml(item.address)}</div>
+  </div>
+  <div style="background:rgba(0,20,30,0.8); border:1px solid #005577; padding:12px; margin-bottom:12px;">
+    ${item.contentHtml || `<p>${escapeHtml(item.desc)}</p>`}
+  </div>
+  <div class="webring" style="text-align:center;">
+    <p>You are cyber visitor #<span class="counter">${views.toString().padStart(6, '0')}</span> to this homestead!</p>
+    <small>Exported from GeoCities Neighborhood Portal &bull; KiloOS 1999</small>
+  </div>
+</div>
+</body>
+</html>`;
+}
+
+function exportCurrentHomesteadVfs() {
+  if (!currentActiveHomesteadId) return;
+  let item = null;
+  Object.values(HOMESTEADS_DATA).forEach(arr => {
+    const f = arr.find(h => h.id === currentActiveHomesteadId);
+    if (f) item = f;
+  });
+  if (!item) {
+    const userList = getUserHomesteads();
+    item = userList.find(h => h.id === currentActiveHomesteadId);
+  }
+  if (!item) return;
+
+  const safeName = (item.webmaster || 'homestead').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+  const vfsPath = `/home/web/${safeName}_homestead.html`;
+  const htmlContent = generateStandaloneHomesteadHtml(item);
+  saveToKiloVfs(vfsPath, htmlContent);
+  playUiBeep(1800, 0.05);
+}
+
+function downloadHomesteadDirect(id) {
+  let item = null;
+  Object.values(HOMESTEADS_DATA).forEach(arr => {
+    const f = arr.find(h => h.id === id);
+    if (f) item = f;
+  });
+  if (!item) {
+    const userList = getUserHomesteads();
+    item = userList.find(h => h.id === id);
+  }
+  if (!item) return;
+
+  const htmlContent = generateStandaloneHomesteadHtml(item);
+  const blob = new Blob([htmlContent], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${item.id}_${item.webmaster.replace(/[^a-zA-Z0-9]/g, '')}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  playUiBeep(1600, 0.05);
+}
+
+function saveGeneratedPageToVfs() {
+  const html = generateWeb10Html();
+  const alias = (document.getElementById('builderAlias')?.value || "webmaster").replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+  const vfsPath = `/home/web/${alias}_index.html`;
+  saveToKiloVfs(vfsPath, html);
+  playUiBeep(1800, 0.05);
+}
+
+function exportGuestbookVfs() {
+  let saved = [];
+  try {
+    saved = JSON.parse(localStorage.getItem('knet_guestbook') || '[]');
+  } catch(e) {}
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>CyberSpire Guestbook Archive 1999</title><style>body{background:#000;color:#00ffcc;font-family:'Courier New',monospace;padding:20px;}.entry{border:1px solid #005577;padding:8px;margin-bottom:8px;background:#05101a;}</style></head><body><h1>📖 CyberSpire Guestbook Archive 1999</h1>`;
+  saved.forEach(e => {
+    html += `<div class="entry"><strong>${escapeHtml(e.alias)}</strong> (${escapeHtml(e.neighborhood || 'Global')}) - <em>${escapeHtml(e.time)}</em><br>${escapeHtml(e.text)}</div>`;
+  });
+  html += `</body></html>`;
+  saveToKiloVfs('/home/documents/CYBERSPIRE_GUESTBOOK.html', html);
+  playUiBeep(1800, 0.05);
 }
 
 function closeHomesteadModal() {
