@@ -1851,6 +1851,7 @@ function midiToFreq(m) {
 
 // Synthesize Tracker Channel Voices
 function playTrackerTick(row) {
+  if (!window.__KILO_BGM_ENABLED) return;
   if (!audioCtx || !isPlaying || !currentTrack) return;
   const now = audioCtx.currentTime;
   const t = currentTrack;
@@ -2008,6 +2009,7 @@ function playTrackerTick(row) {
 }
 
 function startSequencer() {
+  if (!window.__KILO_BGM_ENABLED) return;
   if (seqTimerId) clearInterval(seqTimerId);
   const bpm = (currentTrack && currentTrack.bpm) || 125;
   const tickIntervalMs = Math.round((60000 / bpm) / 4); // 16th note tracker ticks

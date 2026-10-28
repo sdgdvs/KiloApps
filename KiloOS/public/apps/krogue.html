@@ -1313,6 +1313,7 @@
         // Procedural Modal Chiptune Music Sequencer (YM2612 2-Op + SPC700 Delay)
         // 5:3 Rhythmic Swing-Tick Groove (~107 BPM eighth-note shuffle)
         function startMusicSequencer() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (seqTimer) {
                 clearTimeout(seqTimer);
                 seqTimer = null;
@@ -1329,6 +1330,7 @@
         }
 
         function scheduleBgmStep() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (audioMuted || !audioCtx) return;
             tickSequencerStep();
             const isEven = (seqStep % 2 === 0);
@@ -1338,6 +1340,7 @@
         }
 
         function tickSequencerStep() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (document.hidden || !audioCtx) return;
             const step = seqStep % 32;
             seqStep++;

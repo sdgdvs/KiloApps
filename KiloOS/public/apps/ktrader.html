@@ -3114,6 +3114,7 @@
 
 
     function playSoundscapeStep() {
+      if (!window.__KILO_BGM_ENABLED) return;
 
       if (!audioEnabled) return;
 
@@ -3320,6 +3321,7 @@
 
 
     function startSoundscape() {
+      if (!window.__KILO_BGM_ENABLED) return;
 
       if (soundscapeTimeoutId) return;
 
@@ -7852,4 +7854,3 @@
 </body>
 
 </html>
-

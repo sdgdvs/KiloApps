@@ -1394,6 +1394,7 @@ window.addEventListener('beforeunload', () => {
 
   // Swing-tick groove engine (5:3 shuffle swing ~138 BPM)
   function scheduleBgmStep() {
+    if (!window.__KILO_BGM_ENABLED) return;
     if (!bgmTimer) return;
     const isEven = (bgmStep % 2 === 0);
     const stepDelay = isEven ? 122 : 88;
@@ -1409,6 +1410,7 @@ window.addEventListener('beforeunload', () => {
   }
 
   function startBGM() {
+    if (!window.__KILO_BGM_ENABLED) return;
     if (bgmTimer) return;
     bgmTimer = setTimeout(scheduleBgmStep, 100);
   }

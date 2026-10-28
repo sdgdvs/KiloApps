@@ -1,10 +1,9 @@
 ---
 current_agent: kilo-graphics
-next_agent: kilo-soundscape
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
-- kilo-soundscape
 - kilo-tester
 - kilo-usability
 - kilo-qa
@@ -311,6 +310,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T21:46:30-07:00 — kilo-adhoc: Fleet-Wide Procedural BGM Gate & Soundscape Pause**
+  - Status: PASS ✅ (38 web apps & kweb pages gated, check_sizes PASS, security_lint PASS).
+  - Audio Gate: Non-destructively gated all looping procedural BGM/tracker/drone entry points across 24 apps (including KColosseum) and 14 `kweb://` pages behind `window.__KILO_BGM_ENABLED` while preserving discrete UI/gameplay SFX and dedicated audio tools (`KSynth`, `KAudio`, `KRadio`).
+  - Fleet Rotation: Removed `kilo-soundscape` from active rotation in `next_work.md`, `advance_turn.py`, and `orchestrate.py`, and dropped YM2612 procedural BGM mandates from `kilo-creator`, `kilo-review`, and `kilo-planner` awaiting future Lyria-3.5 -> MIDI pipeline.
+
 - **2026-10-27T21:41:14-07:00 — kilo-creator: kweb://warez (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-creator updates for kweb://warez across web and native targets.
@@ -332,9 +336,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KColosseum across web and native targets.
   - Handoff: Advanced `kilo-expander` to `KQuest`; rotated active agent to `kilo-review`.
-
-- **2026-10-27T19:38:39-07:00 — kilo-qa: KTask (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 177.8 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, ktask_tutorialSeen flag, and Escape modal dismissals.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup.
-  - Mature Quarantine & Handoff: Promoted `KTask` to Mature archive; advanced `kilo-qa` to `KRead`; next agent `kilo-expander`.

@@ -4495,6 +4495,7 @@ const BGM_TRACKS = [
 ];
 
 function toggleBgmPlayback() {
+  if (!window.__KILO_BGM_ENABLED) return;
   initAudio();
   const btn = document.getElementById('bgmToggleBtn');
   if (bgmPlaying) {
@@ -4511,6 +4512,7 @@ function toggleBgmPlayback() {
 }
 
 function startBgm() {
+  if (!window.__KILO_BGM_ENABLED) return;
   bgmPlaying = true;
   bgmStep = 0;
   playBgmStep();
@@ -12057,6 +12059,7 @@ function randomizeRadioGroove() {
 }
 
 function playRadioStep() {
+  if (!window.__KILO_BGM_ENABLED) return;
   if (!radioPlaying) return;
   setupRadioAudioPipeline();
   if (!audioCtx || !radioEqFilters.length) return;

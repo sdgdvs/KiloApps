@@ -2540,6 +2540,7 @@ const BGM_THEME = {
 };
 
 function scheduleBgmStep() {
+  if (!window.__KILO_BGM_ENABLED) return;
   if (!audioEnabled || currentPreset !== 'bgm') return;
 
   const step = bgmStep % 32;

@@ -2744,6 +2744,7 @@
             },
 
             startMusicSequencer() {
+              if (!window.__KILO_BGM_ENABLED) return;
                 this.stopMusicSequencer();
                 this.seqStep = 0;
                 this.scheduleNextStep();
@@ -2757,6 +2758,7 @@
             },
 
             scheduleNextStep() {
+              if (!window.__KILO_BGM_ENABLED) return;
                 if (!this.soundEnabled || !this.musicEnabled || !this.ctx) return;
                 this.tickSequencerStep();
                 // 5:3 subtle swing groove for dungeon crawl pacing:
@@ -2769,6 +2771,7 @@
             },
 
             tickSequencerStep() {
+              if (!window.__KILO_BGM_ENABLED) return;
                 const step = this.seqStep % 16;
                 this.seqStep++;
 
@@ -2885,6 +2888,7 @@
             },
 
             startAmbience() {
+              if (!window.__KILO_BGM_ENABLED) return;
                 if (!this.ctx || !this.ambienceEnabled || !this.soundEnabled) return;
                 if (this.ambienceOsc1) return;
                 try {

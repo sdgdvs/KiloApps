@@ -3391,6 +3391,7 @@
             }
 
             startMusicSequencer() {
+              if (!window.__KILO_BGM_ENABLED) return;
                 if (this.seqTimer) clearInterval(this.seqTimer);
                 this.seqStep = 0;
                 this.seqTimer = setInterval(() => {
@@ -3400,6 +3401,7 @@
             }
 
             tickSequencerStep() {
+              if (!window.__KILO_BGM_ENABLED) return;
                 const step = this.seqStep % 16;
                 this.seqStep++;
 

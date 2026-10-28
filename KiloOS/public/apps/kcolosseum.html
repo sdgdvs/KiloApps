@@ -986,6 +986,7 @@
     let crowdDroneSource = null;
 
     function initCrowdDrone() {
+      if (!window.__KILO_BGM_ENABLED) return;
       const ctx = initAudio();
       if (!ctx || crowdDroneGain) return;
       try {
@@ -1256,6 +1257,7 @@
     }
 
     function scheduleBgmStep() {
+      if (!window.__KILO_BGM_ENABLED) return;
       if (soundMuted) return;
       playBgmStep(bgmStep);
       bgmStep++;
@@ -1267,6 +1269,7 @@
     }
 
     function startBgm(mode = null) {
+      if (!window.__KILO_BGM_ENABLED) return;
       if (mode) bgmMode = mode;
       if (soundMuted) return;
       if (bgmTimer) clearTimeout(bgmTimer);

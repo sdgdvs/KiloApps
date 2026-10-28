@@ -2012,6 +2012,7 @@ function playRetroSound(type) {
 
 const SYNTH_SCALE = [130.81, 146.83, 164.81, 196.00, 220.00, 261.63, 293.66, 329.63, 392.00]; // Pentatonic
 function startSynthLoop() {
+  if (!window.__KILO_BGM_ENABLED) return;
   if (synthTimer) clearInterval(synthTimer);
   synthStep = 0;
   synthTimer = setInterval(() => {

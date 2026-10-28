@@ -5579,6 +5579,7 @@
     let bgmRunning = false;
 
     function startBgm() {
+      if (!window.__KILO_BGM_ENABLED) return;
       if (!soundEnabled || bgmRunning) return;
       initAudio();
       bgmRunning = true;
@@ -5594,6 +5595,7 @@
     }
 
     function scheduleBgmStep() {
+      if (!window.__KILO_BGM_ENABLED) return;
       if (!bgmRunning || !soundEnabled) return;
       // 5:3 Swing groove: 165ms on even steps, 110ms on odd steps (~109 BPM swing)
       const isEven = (bgmStep % 2 === 0);

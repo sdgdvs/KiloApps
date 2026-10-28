@@ -4681,6 +4681,7 @@ END TRANSMISSION // ESARL 1999</div>
   let ambientDroneNodes = null;
 
   function startAmbientDrone() {
+    if (!window.__KILO_BGM_ENABLED) return;
     if (!isAudioPowered) toggleAudioEngine();
     if (!audioCtx) return;
     if (isAmbientDroneActive) return;
@@ -4883,6 +4884,7 @@ END TRANSMISSION // ESARL 1999</div>
 
   // --- Sequencer Step Tick with 5:3 Swing Groove Engine ---
   function tickSoundscapeStep() {
+    if (!window.__KILO_BGM_ENABLED) return;
     if (!isSoundscapePlaying) return;
     const curTrack = SOUNDSCAPE_TRACKS[soundscapeTrackIdx];
     const totalSteps = curTrack.lead.length;
@@ -4924,6 +4926,7 @@ END TRANSMISSION // ESARL 1999</div>
   }
 
   function startSoundscape() {
+    if (!window.__KILO_BGM_ENABLED) return;
     if (!isAudioPowered) toggleAudioEngine();
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     isSoundscapePlaying = true;

@@ -858,6 +858,7 @@
 
     // Swing-Tick Groove Engine (5:3 alternating step durations)
     function scheduleNextBgmStep() {
+      if (!window.__KILO_BGM_ENABLED) return;
       if (!bgmEnabled) return;
       const isCombat = Boolean(ice_interval);
       const baseMs = isCombat ? 88 : 110;
@@ -871,6 +872,7 @@
     }
 
     function startBGM() {
+      if (!window.__KILO_BGM_ENABLED) return;
       stopBGM();
       if (!bgmEnabled) return;
       ensureAudio();

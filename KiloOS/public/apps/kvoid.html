@@ -1059,6 +1059,7 @@
         }
 
         function scheduleBgmStep() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (soundMuted || isDead || wonGame) {
                 bgmTimer = null;
                 return;
@@ -1072,6 +1073,7 @@
         }
 
         function startBgm() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (soundMuted || isDead || wonGame || bgmTimer) return;
             getAudioContext();
             bgmTimer = setTimeout(scheduleBgmStep, 50);

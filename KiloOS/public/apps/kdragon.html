@@ -1567,6 +1567,7 @@
             },
 
             startSequencer() {
+              if (!window.__KILO_BGM_ENABLED) return;
                 if (this.seqTimer) clearInterval(this.seqTimer);
                 if (this.muted) return;
                 this.init();

@@ -12,7 +12,7 @@ Runs on `gemini-4-argon-high` once per full agent rotation (1 in 8 turns) to cat
 
 ## ⚡ Division of Labor (Critic vs. Builder — CRITICAL)
 - **Argon (`kilo-review`) diagnoses; Flash executes.** Do **NOT** spend your turn editing HTML/C code or compiling native binaries!
-- Your mission is to perform an uncompromising **human-eye visual + interactive + code review** of the target app in **<= 8 tool calls**, and then inject concrete, surgical fix instructions directly into the appropriate Flash specialist queues (`kilo-usability`, `kilo-tester`, `kilo-expander`, `kilo-graphics`, `kilo-soundscape`) via `scripts/advance_turn.py --inject-fix`.
+- Your mission is to perform an uncompromising **human-eye visual + interactive + code review** of the target app in **<= 8 tool calls**, and then inject concrete, surgical fix instructions directly into the appropriate Flash specialist queues (`kilo-usability`, `kilo-tester`, `kilo-expander`, `kilo-graphics`) via `scripts/advance_turn.py --inject-fix`.
 - When you inject a fix for a **Mature** (archived) app, `scripts/advance_turn.py --inject-fix` **automatically un-quarantines the app from `## Mature Applications`** and places it at **Row 1 (Active Target)** of the designated Flash queue table so Flash fixes it on the very next cycle!
 
 ## 🔍 4-Step Execution Workflow (<= 8 Tool Calls)
@@ -44,7 +44,7 @@ Inspect `KiloOS/public/apps/<app_lower>.html` (or `KiloOS/public/web/<page>.html
 ### Step 4: Inject Surgical Fix Specs & Advance Turn (1 Command)
 Use `python scripts/advance_turn.py` with one or more `--inject-fix "<target_agent>:<App>:<Surgical Fix Spec>"` flags.
 - **Format of `--inject-fix`**:
-  - `<target_agent>`: One of `kilo-usability`, `kilo-tester`, `kilo-expander`, `kilo-graphics`, or `kilo-soundscape`.
+  - `<target_agent>`: One of `kilo-usability`, `kilo-tester`, `kilo-expander`, or `kilo-graphics` (do NOT inject to `kilo-soundscape`; procedural BGM is disabled).
   - `<App>`: Exact target app name (e.g. `KBudget`, `KFarm`, `KMech`).
   - `<Surgical Fix Spec>`: Concrete, actionable instructions naming the exact UI elements, functions, CSS classes, or mechanics Flash must fix (keep to 1 concise sentence per flag; pass multiple `--inject-fix` flags if dispatching to multiple Flash specialists). **Do NOT use backticks (`` ` ``) inside double-quoted PowerShell strings.**
 - **Example when defects are found (un-quarantines Mature app & queues fixes at Row 1)**:

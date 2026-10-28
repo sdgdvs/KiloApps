@@ -4541,6 +4541,7 @@ const TRACK_NAMES = {
 };
 
 function toggleBgmTrack() {
+  if (!window.__KILO_BGM_ENABLED) return;
   currentBgmTrack = (currentBgmTrack % 3) + 1;
   const trackText = document.getElementById('trackText');
   if (trackText) trackText.textContent = `TRACK ${currentBgmTrack}`;
@@ -4617,6 +4618,7 @@ function playBgmStep(stepIdx) {
 }
 
 function scheduleBgmStep() {
+  if (!window.__KILO_BGM_ENABLED) return;
   if (!isAudioEnabled || !isBgmPlaying) return;
   playBgmStep(bgmStep);
   bgmStep++;
@@ -4633,6 +4635,7 @@ function scheduleBgmStep() {
 }
 
 function startProceduralBgm() {
+  if (!window.__KILO_BGM_ENABLED) return;
   if (isBgmPlaying || !isAudioEnabled) return;
   isBgmPlaying = true;
   bgmStep = 0;

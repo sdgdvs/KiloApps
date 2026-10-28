@@ -625,6 +625,7 @@
     let humModGain = null;
     let humGain = null;
     function setHum(active) {
+      if (!window.__KILO_BGM_ENABLED) return;
       if (soundMuted || !audioCtx) {
         if (humOsc) {
           try {
@@ -1136,6 +1137,7 @@
 
     // 5:3 Swing-tick groove engine (~107 BPM explore, ~139 BPM combat)
     function scheduleBgmStep() {
+      if (!window.__KILO_BGM_ENABLED) return;
       if (soundMuted) {
         bgmTimer = null;
         return;
@@ -1154,6 +1156,7 @@
     }
 
     function startBGM() {
+      if (!window.__KILO_BGM_ENABLED) return;
       if (soundMuted || bgmTimer) return;
       scheduleBgmStep();
     }

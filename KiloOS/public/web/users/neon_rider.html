@@ -4486,6 +4486,7 @@ NOP</textarea>
   }
 
   function startSequencer() {
+    if (!window.__KILO_BGM_ENABLED) return;
     initAudio();
     if (audioCtx.state === 'suspended') audioCtx.resume();
     isSeqRunning = true;

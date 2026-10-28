@@ -983,10 +983,10 @@ def rotate_past_failed_argon_turn(failed_agent: str, failed_target: str) -> tupl
         if len(parts) >= 3:
             import yaml
             fm = yaml.safe_load(parts[1]) or {}
-            rotation = fm.get("agent_rotation") or [
-                "kilo-creator", "kilo-graphics", "kilo-soundscape",
+            rotation = [a for a in (fm.get("agent_rotation") or [
+                "kilo-creator", "kilo-graphics",
                 "kilo-tester", "kilo-usability", "kilo-qa", "kilo-expander", "kilo-review",
-            ]
+            ]) if a != "kilo-soundscape"]
             curr_idx = rotation.index(failed_agent) if failed_agent in rotation else 0
             next_agent = rotation[(curr_idx + 1) % len(rotation)]
             if next_agent == failed_agent and len(rotation) > 1:

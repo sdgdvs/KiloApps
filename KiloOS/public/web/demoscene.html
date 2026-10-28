@@ -2301,6 +2301,7 @@ function playPercussion(isSnare) {
 
 let songStep = 0;
 function trackerTick() {
+  if (!window.__KILO_BGM_ENABLED) return;
   const trk = TRACK_LIST[currentTrackIdx];
   const stepInMeasure = songStep % 16;
 
@@ -2327,6 +2328,7 @@ function trackerTick() {
 }
 
 function toggleJukeboxBgm() {
+  if (!window.__KILO_BGM_ENABLED) return;
   isBgmPlaying = !isBgmPlaying;
   const btn = document.getElementById('btnJukeboxPlay');
   if (btn) btn.textContent = isBgmPlaying ? '⏸ Pause Track' : '▶ Play Track';

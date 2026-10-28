@@ -5232,6 +5232,7 @@ function toggleAudioEngine() {
 }
 
 function toggleBgmEngine() {
+  if (!window.__KILO_BGM_ENABLED) return;
   initAudio();
   bgmEnabled = !bgmEnabled;
   const btn = document.getElementById('bgmToggleBtn');
@@ -5603,6 +5604,7 @@ function playBgmStep(stepIdx) {
 }
 
 function scheduleBgmStep() {
+  if (!window.__KILO_BGM_ENABLED) return;
   if (!audioEnabled || !isBgmPlaying) return;
   playBgmStep(bgmStep);
   bgmStep++;
@@ -5615,6 +5617,7 @@ function scheduleBgmStep() {
 }
 
 function startProceduralBgm() {
+  if (!window.__KILO_BGM_ENABLED) return;
   if (isBgmPlaying || !audioEnabled || !bgmEnabled) return;
   isBgmPlaying = true;
   bgmStep = 0;

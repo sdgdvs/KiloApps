@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-27T19:38:39-07:00 — kilo-qa: KTask (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 177.8 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, ktask_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KTask` to Mature archive; advanced `kilo-qa` to `KRead`; next agent `kilo-expander`.
+
 - **2026-10-27T19:20:36-07:00 — kilo-usability: KCipher (Workbench Header Alignment & Usability Polish)**
   - Status: PASS (0 errors, web 163.7 KB, native 14.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS 0 warn 0 cut-off).
   - Layout: Fixed right workbench .panel-header 2-line wrapping with white-space:nowrap and compact button styling (Hex, Steno, Freq, Stego, Clear) for clean pane alignment.

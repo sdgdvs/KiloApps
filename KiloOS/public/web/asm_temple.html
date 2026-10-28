@@ -5324,6 +5324,7 @@
 
   // --- Sequencer Step Tick with Swing-Groove Engine ---
   function tickStep() {
+    if (!window.__KILO_BGM_ENABLED) return;
     if (!isPlaying) return;
     const curTrack = TRACKS[trackIdx];
     const totalSteps = curTrack.lead.length;
@@ -5365,6 +5366,7 @@
   }
 
   function startPlayback() {
+    if (!window.__KILO_BGM_ENABLED) return;
     initAudio();
     if (audioCtx.state === 'suspended') audioCtx.resume();
     isPlaying = true;

@@ -1276,6 +1276,7 @@
             }
 
             startAmbientDrone() {
+              if (!window.__KILO_BGM_ENABLED) return;
                 if (!this.ctx || this.droneCarrier) return;
                 try {
                     this.droneGain = this.ctx.createGain();

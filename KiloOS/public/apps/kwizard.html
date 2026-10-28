@@ -623,6 +623,7 @@
 
         // Ambient Mystic Drone (Harmonic sub-octave with slow breathing LFO)
         function startAmbientDrone() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (audioMuted || ambientGain) return;
             const ctx = initAudio();
             if (!ctx) return;
@@ -1023,6 +1024,7 @@
         }
 
         function scheduleBgmStep() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (audioMuted || !isBgmRunning) return;
             const isEven = (bgmStep % 2 === 0);
             const nextDelay = isEven ? 168 : 108; // 5:3 subtle swing-tick groove
@@ -1032,6 +1034,7 @@
         }
 
         function startBgm() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (isBgmRunning || audioMuted) return;
             isBgmRunning = true;
             if (bgmTimer) clearTimeout(bgmTimer);

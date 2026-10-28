@@ -3335,6 +3335,7 @@ revealing the blueprint for the App #100 KMatrix singularity.
 
   // --- PROCEDURAL 6-CHANNEL CHIPTUNE JUKEBOX SEQUENCER (32-STEP THEMES) ---
   function stepJukebox() {
+    if (!window.__KILO_BGM_ENABLED) return;
     if (!state.audioEnabled || state.jukeboxTrack === 0) return;
     const step = jukeboxStep % 32;
 
@@ -3678,6 +3679,7 @@ revealing the blueprint for the App #100 KMatrix singularity.
   }
 
   function scheduleJukeboxStep() {
+    if (!window.__KILO_BGM_ENABLED) return;
     if (!state.audioEnabled || state.jukeboxTrack === 0) return;
     stepJukebox();
     jukeboxStep++;

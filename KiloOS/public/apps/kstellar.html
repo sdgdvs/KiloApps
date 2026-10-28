@@ -554,6 +554,7 @@
         }
 
         function startAmbientDrone() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (!audioCtx || !soundEnabled || !droneEnabled || droneOsc1) return;
             try {
                 droneGain = audioCtx.createGain();
@@ -748,6 +749,7 @@
         ];
 
         function stepFmMusic() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (!soundEnabled || !fmMusicEnabled || !audioCtx) return;
             const stepIdx = fmStep % CHORD_SHELLS.length;
             const chord = CHORD_SHELLS[stepIdx];
@@ -806,6 +808,7 @@
         }
 
         function scheduleNextFmStep() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (!audioCtx || !soundEnabled || !fmMusicEnabled) return;
             // 5:3 Swing-Tick Groove: alternating 175ms (even) / 105ms (odd)
             const isEven = (fmStep % 2 === 0);
@@ -817,6 +820,7 @@
         }
 
         function startFmMusic() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (!audioCtx || !soundEnabled || !fmMusicEnabled) return;
             if (fmMusicTimer) {
                 clearTimeout(fmMusicTimer);

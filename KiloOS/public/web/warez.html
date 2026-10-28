@@ -4431,6 +4431,7 @@ packing, unpacking, and binary instrumentation.`
   }
 
   function startDiskmagAudio() {
+    if (!window.__KILO_BGM_ENABLED) return;
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) return;
@@ -5719,6 +5720,7 @@ function updateTrackerRowDisplay(step, c1, c2, c3, c4) {
 }
 
 function startSong(index) {
+  if (!window.__KILO_BGM_ENABLED) return;
   initAudio();
   currentSongIndex = index;
   songStep = 0;

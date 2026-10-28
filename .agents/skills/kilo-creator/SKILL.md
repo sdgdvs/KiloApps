@@ -3,7 +3,7 @@ name: kilo-creator
 description: >-
   Designs and implements new applications, canonical 1999 Virtual Web destinations (kweb://...),
   and deep game worlds for the KiloApps fleet. Enforces Anti-Potemkin depth, KiloOS VFS/IPC
-  integration, RFMS online multiplayer, YM2612/SPC700 audio, <999 KB budgets, and 1-command verification/handoff.
+  integration, RFMS online multiplayer, discrete SFX earcons (no procedural BGM), <999 KB budgets, and 1-command verification/handoff.
 ---
 
 # KiloApps Creator Skill (`kilo-creator`)
@@ -68,7 +68,7 @@ When creating or expanding a Virtual 1999 Web destination in `KiloOS/public/web/
 ## 3. Mandatory Requirements for New OS Applications (`KiloOS/public/apps/k<name>.html`)
 1. **Start Splash & First-Run Tutorial**: Title overlay with version, New/Continue, Settings, Help (`[F1]`/`[H]`), and one-time skippable tutorial (`k<name>_tutorialSeen`).
 2. **State Persistence & VFS**: `[F5]` Quicksave, `[F9]` Quickload, JSON Export/Import, and KiloOS VFS (`VFS_READ`/`VFS_WRITE`) support.
-3. **Hardware Chiptune Audio**: Sega Genesis YM2612 2-Op FM + SNES SPC700 stereo delay (`180ms`, `2200Hz` LP filter) with `[M]` mute toggle and zero external audio files.
+3. **Discrete UI/Gameplay SFX Only (NO Procedural BGM)**: Include crisp, short Web Audio UI/gameplay SFX earcons with `[M]` mute toggle. Do **NOT** generate looping procedural background music or chiptune trackers (awaiting future Lyria-3.5 -> MIDI pipeline).
 4. **Online Multiplayer (RFMS) & No-Autostart Rule**:
    - Use `../assets/js/retro_multiplayer.js` (`soloTimeoutMs: 25000` with `onSoloFallback`).
    - **NEVER autostart into matchmaking on load**; require an explicit user click on "Connect / Multiplayer".

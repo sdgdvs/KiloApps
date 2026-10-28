@@ -1153,6 +1153,7 @@
 
     // Swing-Tick Groove Sequencer (Hardware composer 5:3 swing timing)
     function scheduleBgmStep() {
+      if (!window.__KILO_BGM_ENABLED) return;
       if (!bgmRunning || soundMuted) return;
       const inBattle = waveInProgress;
       const isBoss = inBattle && (wave % 5 === 0 || enemies.some(e => e.type === 'Ogre' || e.type === 'Wyvern' || e.type === 'Golem'));
@@ -1266,6 +1267,7 @@
     }
 
     function startBgm() {
+      if (!window.__KILO_BGM_ENABLED) return;
       if (bgmRunning) return;
       initAudio();
       bgmRunning = true;

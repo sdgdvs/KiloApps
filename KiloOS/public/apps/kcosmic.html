@@ -3840,6 +3840,7 @@
 
         // Procedural Ambient Soundscapes
         function startSoundscape() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (!audioCtx || !soundscapeGain) return;
             clearSoundscapeNodes();
 

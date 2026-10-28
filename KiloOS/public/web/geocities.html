@@ -6451,6 +6451,7 @@ function renderTrackerRoll(track, pIdx, sIdx) {
 }
 
 function startScheduler() {
+  if (!window.__KILO_BGM_ENABLED) return;
   if (schedulerTimer) clearInterval(schedulerTimer);
   nextNoteTime = audioCtx.currentTime + 0.05;
   schedulerTimer = setInterval(schedule, 25);
@@ -11677,6 +11678,7 @@ const DISKMAG_CHORDS = [
 let diskmagChordStep = 0;
 
 function startDiskmagBgm() {
+  if (!window.__KILO_BGM_ENABLED) return;
   if (diskmagBgmInterval) clearInterval(diskmagBgmInterval);
   playDiskmagArpChord();
   diskmagBgmInterval = setInterval(playDiskmagArpChord, 2400);

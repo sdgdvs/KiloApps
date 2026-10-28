@@ -770,6 +770,7 @@
             }
 
             startSequencer() {
+              if (!window.__KILO_BGM_ENABLED) return;
                 if (this.timer) clearInterval(this.timer);
                 const stepInterval = (60 / this.bpm / 2) * 1000;
 

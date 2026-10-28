@@ -18,7 +18,7 @@ Invoked automatically every 24 hours by `scripts/orchestrate.py` to replenish th
 
 ## Planning Rules (CRITICAL — Prevent Queue Collapse!)
 1. **Never Pile Multiple Agents Onto the Same App Simultaneously**:
-   - Stagger `current_targets` across the queues so `kilo-graphics`, `kilo-soundscape`, `kilo-tester`, `kilo-usability`, `kilo-qa`, and `kilo-expander` each work on **different** non-mature applications in parallel without git merge conflicts or redundant passes.
+   - Stagger `current_targets` across the queues so `kilo-graphics`, `kilo-tester`, `kilo-usability`, `kilo-qa`, and `kilo-expander` each work on **different** non-mature applications in parallel without git merge conflicts or redundant passes (`kilo-soundscape` is paused/removed from rotation).
 2. **Maintain 8–12 Target Rows Per Mission Pipeline Table**:
    - Every section (`### 1.` through `### 8.`) in `next_work.md` uses a 3-column Markdown table (`| Target | Primary Files | Phase VI Mission Spec (<999 KB) |`).
    - Keep each table stocked with 8–12 distinct targets so `scripts/advance_turn.py` and `scripts/orchestrate.py` have a deep, self-advancing runway for 50+ turns.

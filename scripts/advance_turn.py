@@ -408,10 +408,10 @@ def main() -> int:
             subprocess.run([sys.executable, "-m", "pip", "install", "-q", "pyyaml"], check=False)
             import yaml
         fm = yaml.safe_load(parts[1]) or {}
-        rotation = fm.get("agent_rotation") or [
-            "kilo-creator", "kilo-graphics", "kilo-soundscape",
+        rotation = [a for a in (fm.get("agent_rotation") or [
+            "kilo-creator", "kilo-graphics",
             "kilo-tester", "kilo-usability", "kilo-qa", "kilo-expander", "kilo-review",
-        ]
+        ]) if a != "kilo-soundscape"]
         curr_idx = rotation.index(args.agent) if args.agent in rotation else 0
         next_agent = rotation[(curr_idx + 1) % len(rotation)]
         after_next = rotation[(curr_idx + 2) % len(rotation)]

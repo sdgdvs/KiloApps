@@ -3190,6 +3190,7 @@
         const STEP_DURATION = 0.22; // ~68 BPM Wasteland Desolation Tempo
 
         function scheduleBgmStep() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (!isBgmRunning || !audioCtx || !musicEnabled) return;
             try {
                 const now = audioCtx.currentTime;
@@ -3226,6 +3227,7 @@
         }
 
         function startBgm() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (isBgmRunning || !soundEnabled || !musicEnabled) return;
             isBgmRunning = true;
             initAudio();
@@ -3378,6 +3380,7 @@
         }
 
         function startAmbientWind() {
+          if (!window.__KILO_BGM_ENABLED) return;
             if (!soundEnabled || !audioCtx || isAmbientWindPlaying) return;
             try {
                 const bufferSize = audioCtx.sampleRate * 2;

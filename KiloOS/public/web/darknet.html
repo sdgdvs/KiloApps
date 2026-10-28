@@ -3765,6 +3765,7 @@ class DarknetSoundEngine {
      CHIPTUNE JUKEBOX: 4 ADVANCED GENRE TRACKS WITH VOICE LEADING & SWING
      ------------------------------------------------------------------------- */
   startMusic(trackIdx = 0) {
+    if (!window.__KILO_BGM_ENABLED) return;
     this.init();
     this.stopMusic();
     this.currentTrack = trackIdx;
@@ -4351,6 +4352,7 @@ function toggleAudioMute() {
 }
 
 function toggleCarrierDrone() {
+  if (!window.__KILO_BGM_ENABLED) return;
   const active = snd.toggleCarrier();
   const btn = document.getElementById('btnCarrier');
   btn.style.background = active ? 'var(--phosphor)' : '';
@@ -4359,6 +4361,7 @@ function toggleCarrierDrone() {
 }
 
 function toggleMusicPlayback() {
+  if (!window.__KILO_BGM_ENABLED) return;
   const btn = document.getElementById('btnPlayMusic');
   if (snd.musicPlaying) {
     snd.stopMusic();

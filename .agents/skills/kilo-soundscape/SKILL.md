@@ -6,9 +6,10 @@ description: >-
   1-command verification/handoff.
 ---
 
-# KiloApps Procedural Audio & Soundscape Skill (`kilo-soundscape`)
+# KiloApps Procedural Audio & Soundscape Skill (`kilo-soundscape` — PAUSED)
 
-Executes one procedural chiptune audio overhaul per turn modelled on 16-bit hardware composers (Yuzo Koshiro, Koji Kondo, Tim Follin, Nobuo Uematsu). Zero external audio files — 100% Web Audio API.
+> **STATUS: PAUSED / DISABLED ACROSS FLEET**
+> Looping procedural Web Audio BGM / chiptune trackers are disabled across all KiloApps (`window.__KILO_BGM_ENABLED` gate) pending a future Lyria-3.5 -> MIDI workflow. Do **NOT** add or enable procedural BGM loops. If invoked, skip immediately via `advance_turn.py`.
 
 ## ⚡ Flash Execution & Tool-Budget Protocol (CRITICAL)
 - **Tool Call Budget (<= 32 tool calls)** & **Commit Checkpoint (~16 tool calls)**:

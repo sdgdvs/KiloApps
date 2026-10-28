@@ -2995,6 +2995,7 @@
                 },
 
                 startMusicSequencer() {
+                  if (!window.__KILO_BGM_ENABLED) return;
                     this.stopMusicSequencer();
                     this.seqStep = 0;
                     this.scheduleNextStep();
@@ -3008,6 +3009,7 @@
                 },
 
                 scheduleNextStep() {
+                  if (!window.__KILO_BGM_ENABLED) return;
                     if (!this.soundEnabled || !this.musicEnabled || !this.ctx) return;
                     this.tickSequencerStep();
                     // 5:3 subtle swing-tick groove:
@@ -3020,6 +3022,7 @@
                 },
 
                 tickSequencerStep() {
+                  if (!window.__KILO_BGM_ENABLED) return;
                     const step = this.seqStep % 16;
                     this.seqStep++;
 

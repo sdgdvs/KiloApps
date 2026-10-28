@@ -3708,6 +3708,7 @@
   // Swing-Tick Sequencer Engine (5:3 Shuffle Swing with Fright Tempo Shift)
   // -------------------------------------------------------------------------
   function scheduleBgmStep() {
+    if (!window.__KILO_BGM_ENABLED) return;
       if (!bgmTimer) return;
       const isFright = frightTimer > 0;
       const isEven = (bgmStep % 2 === 0);
@@ -3745,6 +3746,7 @@
   }
 
   function startBgm() {
+    if (!window.__KILO_BGM_ENABLED) return;
       if (!bgmTimer) {
           ensureAudioCtx();
           bgmStep = 0;
