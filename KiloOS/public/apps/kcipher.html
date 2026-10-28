@@ -2593,7 +2593,13 @@
     }
 
     function executePipeline(decrypt = false) {
-      let currentText = elements.inputText.value || "TRANSMISSION_ALPHA_1999";
+      const finalArea = document.getElementById('pipelineFinalOutput');
+      let currentText;
+      if (decrypt) {
+        currentText = (finalArea && finalArea.value) ? finalArea.value : (elements.inputText.value || "TRANSMISSION_ALPHA_1999");
+      } else {
+        currentText = elements.inputText.value || "TRANSMISSION_ALPHA_1999";
+      }
       const stages = decrypt ? [...pipelineState.stages].reverse() : pipelineState.stages;
 
       stages.forEach((stage) => {
@@ -2623,9 +2629,14 @@
           case 'aes':
             out = cipherAES(currentText, stage.key || 'ARCHITECT_1999!', decrypt, 'hex');
             break;
-          case 'rsa':
-            out = cipherRSA(currentText, 61, 53, 17, decrypt);
+          case 'rsa': {
+            const parts = (stage.key || '').split(/[,\s]+/).map(v => parseInt(v.trim(), 10)).filter(v => !isNaN(v));
+            const rsaP = parts[0] || 61;
+            const rsaQ = parts[1] || 53;
+            const rsaE = parts[2] || 17;
+            out = cipherRSA(currentText, rsaP, rsaQ, rsaE, decrypt);
             break;
+          }
           default:
             out = currentText;
         }
@@ -2633,7 +2644,6 @@
         currentText = out;
       });
 
-      const finalArea = document.getElementById('pipelineFinalOutput');
       if (finalArea) finalArea.value = currentText;
 
       const pStats = document.getElementById('pipelineStats');
@@ -2913,7 +2923,7 @@
       document.getElementById('statIoC').textContent = stats.ioc.toFixed(3);
       if (document.getElementById('statChi2')) document.getElementById('statChi2').textContent = stats.chi2 ? stats.chi2.toFixed(2) : '0.00';
       document.getElementById('statEntropy').textContent = `${stats.entropy.toFixed(2)} bits`;
-      document.getElementById('statTotalChars').textContent = outText.length;
+      document.getElementById('statTotalChars').textContent = (outText || inText).length;
       document.getElementById('statAlphaLetters').textContent = stats.totalAlpha;
 
       // Top letters
@@ -3823,9 +3833,10 @@
 
       document.getElementById('btnLoadLoreToWorkbench').addEventListener('click', () => {
         const activeIdx = Array.from(document.querySelectorAll('.lore-item')).findIndex(item => item.classList.contains('active'));
-        const lore = LORE_INTERCEPTS[activeIdx];
-        elements.inputText.value = lore.ciphertext;
-        elements.outputText.value = '';
+        const lore = LORE_INTERCEPTS[activeIdx >= 0 ? activeIdx : 0];
+        if (!lore) return;
+        elements.outputText.value = lore.ciphertext;
+        elements.inputText.value = '';
         elements.cipherSelect.value = lore.cipher;
         state.cipher = lore.cipher;
         if (lore.cipher === 'rot13') {
@@ -3842,6 +3853,10 @@
             elements.rc4Key.value = lore.key;
             state.rc4Key = lore.key;
           }
+          if (lore.cipher === 'xor') {
+            elements.xorKey.value = lore.key;
+            state.xorKey = lore.key;
+          }
         }
         if (lore.rails) {
           elements.railCount.value = lore.rails;
@@ -3849,7 +3864,7 @@
           state.railCount = lore.rails;
         }
         updateCipherControls();
-        updateStats();
+        runDecrypt();
         switchTab('tabWorkbench');
         showToast('Transmission loaded into Workbench!');
         audio.playClick();
@@ -3881,6 +3896,23 @@
         state.xorKey = 'SECRET';
         elements.xorFormat.value = 'hex';
         state.xorFormat = 'hex';
+        if (elements.aesKey) elements.aesKey.value = 'ARCHITECT_1999!';
+        state.aesKey = 'ARCHITECT_1999!';
+        if (elements.aesFormat) elements.aesFormat.value = 'hex';
+        state.aesFormat = 'hex';
+        if (elements.rsaP) elements.rsaP.value = '61';
+        state.rsaP = 61;
+        if (elements.rsaQ) elements.rsaQ.value = '53';
+        state.rsaQ = 53;
+        if (elements.rsaE) elements.rsaE.value = '17';
+        state.rsaE = 17;
+        pipelineState.stages = [
+          { id: 1, cipher: 'rot13', key: '7', output: '' },
+          { id: 2, cipher: 'vigenere', key: 'ARCHITECT', output: '' },
+          { id: 3, cipher: 'xor', key: 'SECRET', output: '' }
+        ];
+        pipelineState.nextId = 4;
+        renderPipeline();
         const stegoText = document.getElementById('stegoText');
         if (stegoText) stegoText.value = '';
         const tbody = document.getElementById('crackerTableBody');
@@ -3914,6 +3946,13 @@
           rc4Format: state.rc4Format,
           xorKey: state.xorKey,
           xorFormat: state.xorFormat,
+          aesKey: elements.aesKey ? elements.aesKey.value : state.aesKey,
+          aesFormat: elements.aesFormat ? elements.aesFormat.value : state.aesFormat,
+          rsaP: elements.rsaP ? parseInt(elements.rsaP.value, 10) : state.rsaP,
+          rsaQ: elements.rsaQ ? parseInt(elements.rsaQ.value, 10) : state.rsaQ,
+          rsaE: elements.rsaE ? parseInt(elements.rsaE.value, 10) : state.rsaE,
+          pipelineStages: pipelineState.stages,
+          stegoText: document.getElementById('stegoText') ? document.getElementById('stegoText').value : '',
           timestamp: new Date().toISOString()
         };
         const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -3979,6 +4018,35 @@
             if (data.xorFormat) {
               elements.xorFormat.value = data.xorFormat;
               state.xorFormat = data.xorFormat;
+            }
+            if (data.aesKey) {
+              if (elements.aesKey) elements.aesKey.value = data.aesKey;
+              state.aesKey = data.aesKey;
+            }
+            if (data.aesFormat) {
+              if (elements.aesFormat) elements.aesFormat.value = data.aesFormat;
+              state.aesFormat = data.aesFormat;
+            }
+            if (data.rsaP) {
+              if (elements.rsaP) elements.rsaP.value = data.rsaP;
+              state.rsaP = parseInt(data.rsaP, 10);
+            }
+            if (data.rsaQ) {
+              if (elements.rsaQ) elements.rsaQ.value = data.rsaQ;
+              state.rsaQ = parseInt(data.rsaQ, 10);
+            }
+            if (data.rsaE) {
+              if (elements.rsaE) elements.rsaE.value = data.rsaE;
+              state.rsaE = parseInt(data.rsaE, 10);
+            }
+            if (data.pipelineStages && Array.isArray(data.pipelineStages)) {
+              pipelineState.stages = data.pipelineStages;
+              renderPipeline();
+            }
+            if (typeof data.stegoText === 'string') {
+              const stegoEl = document.getElementById('stegoText');
+              if (stegoEl) stegoEl.value = data.stegoText;
+              updateStegoCapacity();
             }
             updateCipherControls();
             updateStats();

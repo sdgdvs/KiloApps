@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_creator: kweb://warez
   kilo_graphics: KStellar
   kilo_soundscape: KStellar
-  kilo_tester: KCipher
+  kilo_tester: KMaze
   kilo_usability: KCipher
   kilo_qa: KTask
   kilo_expander: KColosseum
@@ -57,9 +57,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-soundscape
-  app: KCyber
-  timestamp: '2026-10-27T18:20:23-07:00'
+  agent: kilo-tester
+  app: KCipher
+  timestamp: '2026-10-27T18:35:32-07:00'
 last_planner_run: '2026-10-27T16:35:09Z'
 ---
 
@@ -133,11 +133,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KCipher`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | **[ARGON REVIEW]:** Fix executePipeline(true) to decrypt #pipelineFinalOutput back to plaintext and parse stage.key (p,q,e) for RSA stages; fix #btnLoadLoreToWorkbench to load lore.ciphertext into #outputText and runDecrypt() into #inputText; fix #statTotalChars to use (outText // inText).length; and include aesKey/aesFormat/rsaP/rsaQ/rsaE/pipelineStages/stegoText in #btnExportJSON, #btnImportJSON, and #btnNewSession. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -150,6 +149,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Wire all 4 dead Potemkin ludusFacilities perks in combatAction(), enterArena(), enterOnlineDuel(), and startSoloFallbackDuel() (armory +8/+16/+25% weapon dmg, banquet +10/+20/+30% starting crowdFavor, scriptorium +8/+16/+24% crit rate, shrine 12/24/36% fatal-blow survival at 1 HP in checkPlayerDeath()); call recordReplayRound() on every solo combat action, pass damageDealt to recordBattleStats(), and record/save flee outcomes; enable [W] hotkey for solo warcry with once-per-bout playerRallied guard, persist g.stance in getSavePayload(), reset ludusFacilities and currentArenaWager in resetLudus(), apply infirmary discount in updateUI()/healGladiator(), trigger immediate victory on fatal Shield Bash counter in kcolosseum.html and KColosseum/main.c, and route WM_KEYDOWN (including [T] Stats) in KColosseum/main.c GetMessageA loop. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Give each sector distinct hex/ASCII bytes in cmdDump(), wire filter arg in cmdCodebook(filter), add .line-dim CSS rule for VFS_READ_DONE, and pad codebook table columns in KMatrix/main.c. |
+| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | **[ARGON REVIEW]:** Fix executePipeline(true) to decrypt #pipelineFinalOutput back to plaintext and parse stage.key (p,q,e) for RSA stages; fix #btnLoadLoreToWorkbench to load lore.ciphertext into #outputText and runDecrypt() into #inputText; fix #statTotalChars to use (outText // inText).length; and include aesKey/aesFormat/rsaP/rsaQ/rsaE/pipelineStages/stegoText in #btnExportJSON, #btnImportJSON, and #btnNewSession. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KCipher`
@@ -310,6 +310,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-27T18:35:32-07:00 — kilo-tester: KCipher (Pipeline Decrypt and Lore Workbench Handoff Fixes)**
+  - Status: PASS ✅ (web 158.1 KB, native 18.0 KB < 999 KB; startup, Vite and security_lint PASS; visual PASS).
+  - Pipeline and RSA Fix: executePipeline(true) decrypts #pipelineFinalOutput back to plaintext and parses stage.key (p,q,e) for RSA.
+  - Workbench and Stats: #btnLoadLoreToWorkbench loads ciphertext to #outputText and runs runDecrypt(); #statTotalChars uses (outText || inText).length.
+  - Session Sync: #btnExportJSON, #btnImportJSON, and #btnNewSession include aesKey, aesFormat, rsaP, rsaQ, rsaE, pipelineStages, and stegoText.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-27T18:20:23-07:00 — kilo-soundscape: KCyber (Neon Grid Infiltration — YM2612/SPC700 Chiptune Suite)**
   - Status: PASS ✅ (0 errors, web 116.8 KB, native 34.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Composition: D-Dorian netrunner breakbeat suite, 6-channel counterpoint, contrary digital bell arpeggios, 3rd/7th shell voicings, 5:3 swing groove.
@@ -332,10 +339,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: Right workbench .panel-header (OUTPUT / CIPHERTEXT) wraps title and 5 action buttons onto 2 lines at 980x663 misaligning panes; #inputText starts blank on boot/Start New Session leaving IoC at 0.000; canceling #btnVFSSave prompt() still writes to defaultPath.
   - Feature/Logic Findings: executePipeline(true) reads #inputText instead of decrypting #pipelineFinalOutput and hardcodes RSA (61,53,17) ignoring stage.key; #btnLoadLoreToWorkbench puts ciphertext into #inputText where liveTransform double-encrypts it; #statTotalChars reads outText.length while calculateStats uses (outText || inText); JSON Export/Import omits AES/RSA/Pipeline.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KCipher`, `kilo-usability`->`KCipher`] (un-quarantined `KCipher` from Mature); advanced `kilo-review` to `KDB`; next agent `kilo-creator`.
-
-- **2026-10-27T16:18:51-07:00 — kilo-expander: KMatrix (KMatrix (VFS Mesh & 2-Op FM Morse Cadence Deep Expansion))**
-  - Status: PASS ✅ (0 errors, web 101.5 KB, native 21.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - VFS Ingress & Mesh: Added vfs and verify to AUTOCOMPLETE_LIST, querying both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal status.
-  - Breach Persistence: Synced breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json with OS_NOTIFY, mirrored in Win32 C QuickSaveState.
-  - Audio Telemetry: Added 2-Op FM Morse ECHO cadence (. / -.-. / .... / ---) on 1999 Hz carrier in cmdWaterfall() with Win32 C thread parity.
-  - Handoff: Advanced `kilo-expander` to `KColosseum`; rotated active agent to `kilo-review`.
