@@ -729,6 +729,7 @@
     </div>
     <div class="telemetry-tools">
       <span class="badge-retro">KILONET VIRTUAL EDITION</span>
+      <button class="btn-telemetry" id="btnHelpToggle" onclick="openHelpModal()" title="Help &amp; Shortcuts [F1]/[H]">❓ HELP [F1]</button>
       <button class="btn-telemetry" id="btnAudioToggle" onclick="toggleAudio()" title="Toggle Web Audio SFX [M]">🔊 SFX [M]</button>
       <button class="btn-telemetry" onclick="exportFrontPageVfs()" title="Save current edition text to KiloOS VFS [S]">💾 SAVE VFS [S]</button>
       <button class="btn-telemetry" onclick="printFrontPage()" title="Print broadsheet page [P]">🖨️ PRINT [P]</button>
@@ -1339,6 +1340,45 @@
     </div>
   </div>
 
+  <!-- Help & Shortcuts Modal [F1] / [H] -->
+  <div class="modal-overlay" id="helpModal" onclick="closeHelpModal(event)">
+    <div class="modal-content" style="max-width:580px;" onclick="event.stopPropagation()">
+      <button class="modal-close-btn" onclick="closeHelpModalDirect()">✕</button>
+      <div style="font-family:var(--font-mono); font-size:11px; color:var(--scallion-green); font-weight:bold; margin-bottom:6px;">
+        RETRO WEBPAGE GUIDE &amp; TELEMETRY
+      </div>
+      <h2 style="font-family:var(--font-serif-headline); font-size:24px; line-height:1.2; font-weight:900; margin-bottom:12px; color:var(--scallion-green-dark);">
+        The Scallion (1999) Quick Reference &amp; Hotkeys
+      </h2>
+      <div style="font-size:13px; line-height:1.6; color:var(--scallion-ink); margin-bottom:16px;">
+        <p style="margin-bottom:10px;">
+          Welcome to America's Finest 1999 Satirical Broadsheet. Designed exclusively for late-90s resolution and KiloOS VFS integration.
+        </p>
+        <table style="width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:12px; margin-bottom:14px;">
+          <tr style="border-bottom:1px solid var(--scallion-border-light);"><th style="text-align:left; padding:4px 0;">KEY</th><th style="text-align:left; padding:4px 0;">ACTION</th></tr>
+          <tr><td style="padding:4px 0;"><strong>[1]</strong></td><td>Jump to Front Page Broadsheet</td></tr>
+          <tr><td style="padding:4px 0;"><strong>[2]</strong></td><td>Jump to Ask A Sysadmin Column</td></tr>
+          <tr><td style="padding:4px 0;"><strong>[3]</strong></td><td>Jump to Infographic Lab (Modem &amp; Bunker)</td></tr>
+          <tr><td style="padding:4px 0;"><strong>[4]</strong></td><td>Jump to Front-Page Headline Forge</td></tr>
+          <tr><td style="padding:4px 0;"><strong>[5]</strong></td><td>Jump to Polls &amp; Op-Ed Syndicate</td></tr>
+          <tr><td style="padding:4px 0;"><strong>[6]</strong></td><td>Jump to Classifieds '99 &amp; Personals</td></tr>
+          <tr><td style="padding:4px 0;"><strong>[M]</strong></td><td>Toggle YM2612 FM / Audio SFX</td></tr>
+          <tr><td style="padding:4px 0;"><strong>[S]</strong></td><td>Export Front Page to KiloOS VFS</td></tr>
+          <tr><td style="padding:4px 0;"><strong>[P]</strong></td><td>Print Current Page</td></tr>
+          <tr><td style="padding:4px 0;"><strong>[R]</strong></td><td>Randomize Headline Forge</td></tr>
+          <tr><td style="padding:4px 0;"><strong>[F1] / [H]</strong></td><td>Open This Hotkey Guide</td></tr>
+          <tr><td style="padding:4px 0;"><strong>[Esc]</strong></td><td>Close Open Story / Help Dialog</td></tr>
+        </table>
+        <p style="font-size:11px; color:var(--scallion-ink-muted); font-style:italic;">
+          Clearnet URL: <code>kweb://scallion</code> &bull; KiloOS VFS Spool Path: <code>/home/downloads/</code>
+        </p>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button class="btn-scallion" onclick="closeHelpModalDirect()">Understood</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Notification Toast -->
   <div class="toast-notice" id="scallionToast">Saved to VFS</div>
 
@@ -1390,48 +1430,146 @@ function safeSet(key, val) {
   } catch (e) {}
 }
 
-// --- Procedural Web Audio Engine ---
+// --- Audio Synthesizer (YM2612 2-Op FM + SPC700 Stereo Delay Standard) ---
 let audioCtx = null;
-let soundEnabled = true;
+let soundEnabled = safeGet('scallion_sound_enabled', true);
+let spcDelayNode = null;
 
+/**
+ * Initializes Web Audio Context with SNES SPC700 stereo delay line
+ * @returns {AudioContext|null}
+ */
 function initAudio() {
-  if (!audioCtx && (window.AudioContext || window.webkitAudioContext)) {
+  if (audioCtx) return audioCtx;
+  try {
     const AudioCtor = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioCtor();
+    if (AudioCtor) {
+      audioCtx = new AudioCtor();
+      // SPC700 stereo delay: 180ms delay, 2200Hz LP filter, 0.28 feedback
+      const delay = audioCtx.createDelay(1.0);
+      delay.delayTime.setValueAtTime(0.18, audioCtx.currentTime);
+      const feedback = audioCtx.createGain();
+      feedback.gain.setValueAtTime(0.28, audioCtx.currentTime);
+      const lpFilter = audioCtx.createBiquadFilter();
+      lpFilter.type = 'lowpass';
+      lpFilter.frequency.setValueAtTime(2200, audioCtx.currentTime);
+
+      delay.connect(lpFilter);
+      lpFilter.connect(feedback);
+      feedback.connect(delay);
+      lpFilter.connect(audioCtx.destination);
+      spcDelayNode = delay;
+    }
+  } catch (e) {}
+  return audioCtx;
+}
+
+/** Toggles procedural SFX on/off */
+function toggleAudio() {
+  soundEnabled = !soundEnabled;
+  safeSet('scallion_sound_enabled', soundEnabled);
+  const btn = document.getElementById('btnAudioToggle');
+  if (btn) btn.textContent = soundEnabled ? '🔊 SFX [M]' : '🔇 SFX [M]';
+  if (soundEnabled) {
+    playFmNote(880, 0.08, 2.0, 1.8, 0.12);
+    showToast('Sound Effects Enabled [M]');
+  } else {
+    showToast('Sound Effects Muted [M]');
   }
 }
 
-function toggleAudio() {
-  soundEnabled = !soundEnabled;
-  const btn = document.getElementById('btnAudioToggle');
-  if (btn) btn.textContent = soundEnabled ? '🔊 SFX [M]' : '🔇 SFX [M]';
-  if (soundEnabled) playRetroSound(880, 0.06);
-}
-
-function playRetroSound(freq, duration, type) {
+/**
+ * Plays a basic procedural chiptune tone with delay routing
+ * @param {number} freq - Tone frequency in Hz
+ * @param {number} duration - Duration in seconds
+ * @param {OscillatorType} [type='sine'] - Waveform type
+ * @param {number} [vol=0.08] - Amplitude volume
+ */
+function playRetroSound(freq, duration = 0.08, type = 'sine', vol = 0.08) {
   if (!soundEnabled) return;
   try {
-    initAudio();
-    if (!audioCtx) return;
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
+    const ctx = initAudio();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
     osc.type = type || 'sine';
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
+    gain.connect(ctx.destination);
+    if (spcDelayNode && vol > 0.05) {
+      gain.connect(spcDelayNode);
+    }
+    osc.start(t);
+    osc.stop(t + duration);
   } catch (e) {}
 }
 
+/**
+ * Sega Genesis YM2612 2-Operator FM synthesizer note
+ * @param {number} carrierFreq - Carrier frequency in Hz
+ * @param {number} [dur=0.18] - Note duration in seconds
+ * @param {number} [modRatio=2.0] - Modulator to carrier frequency ratio
+ * @param {number} [modIndex=2.5] - Modulation depth index
+ * @param {number} [vol=0.12] - Output gain
+ */
+function playFmNote(carrierFreq, dur = 0.18, modRatio = 2.0, modIndex = 2.5, vol = 0.12) {
+  if (!soundEnabled) return;
+  try {
+    const ctx = initAudio();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    const t = ctx.currentTime;
+    const carrier = ctx.createOscillator();
+    const modulator = ctx.createOscillator();
+    const modGain = ctx.createGain();
+    const masterGain = ctx.createGain();
+
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(carrierFreq, t);
+
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(carrierFreq * modRatio, t);
+
+    const dev = carrierFreq * modRatio * modIndex;
+    modGain.gain.setValueAtTime(dev, t);
+    modGain.gain.exponentialRampToValueAtTime(0.01, t + dur);
+
+    masterGain.gain.setValueAtTime(vol, t);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+    carrier.connect(masterGain);
+    masterGain.connect(ctx.destination);
+    if (spcDelayNode) {
+      masterGain.connect(spcDelayNode);
+    }
+
+    modulator.start(t);
+    carrier.start(t);
+    modulator.stop(t + dur);
+    carrier.stop(t + dur);
+  } catch (e) {}
+}
+
+/** Mechanical teletype typewriter click */
 function playTeletypeSound() {
   if (!soundEnabled) return;
   const clicks = [1200, 1400, 950, 1100];
   const freq = clicks[Math.floor(Math.random() * clicks.length)];
-  playRetroSound(freq, 0.03, 'square');
+  playRetroSound(freq, 0.025, 'square', 0.04);
+}
+
+/** Late-90s wire service news bulletin tri-tone stinger */
+function playNewsBulletinJingle() {
+  if (!soundEnabled) return;
+  playFmNote(523.25, 0.12, 1.5, 2.0, 0.1);
+  setTimeout(() => playFmNote(659.25, 0.12, 1.5, 2.0, 0.1), 100);
+  setTimeout(() => playFmNote(783.99, 0.22, 2.0, 3.0, 0.12), 200);
 }
 
 // --- Notification Toast ---
@@ -1805,16 +1943,21 @@ RECOMMENDATION: Disregard your computer. Go to the supply room, requisition all 
 
   lastSysadminResponse = response;
 
-  // Teletype typewriter simulation
+  // Teletype typewriter simulation with lifecycle cleanup
+  if (sysadminTypewriterTimer) {
+    clearInterval(sysadminTypewriterTimer);
+    sysadminTypewriterTimer = null;
+  }
   let idx = 0;
   outEl.textContent = `[TICKET #${Math.floor(Math.random()*9000)+1000} RESOLUTION]\n`;
-  const timer = setInterval(() => {
+  sysadminTypewriterTimer = setInterval(() => {
     if (idx < response.length) {
       outEl.textContent += response.charAt(idx);
       if (idx % 4 === 0) playTeletypeSound();
       idx++;
     } else {
-      clearInterval(timer);
+      clearInterval(sysadminTypewriterTimer);
+      sysadminTypewriterTimer = null;
       statusEl.textContent = "STATUS: RESOLVED (TICKET CLOSED)";
       playRetroSound(740, 0.08);
       showToast('Sysadmin advice generated.');
@@ -1831,7 +1974,13 @@ function saveSysadminVfs() {
   saveToKiloVfs('/home/downloads/sysadmin_advice.txt', content);
 }
 
+let sysadminTypewriterTimer = null;
+
 function clearSysadminTerminal() {
+  if (sysadminTypewriterTimer) {
+    clearInterval(sysadminTypewriterTimer);
+    sysadminTypewriterTimer = null;
+  }
   document.getElementById('sysadminOutput').textContent = "[SYSADMIN DISPATCH TERMINAL READY]\n> Awaiting user ticket input...";
   document.getElementById('terminalStatus').textContent = "STATUS: IDLE";
   lastSysadminResponse = "";
@@ -2153,12 +2302,39 @@ function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+
+/** Opens the help & keyboard shortcuts modal */
+function openHelpModal() {
+  const m = document.getElementById('helpModal');
+  if (m) m.classList.add('active');
+  playRetroSound(660, 0.05);
+}
+
+/** Closes the help modal directly */
+function closeHelpModalDirect() {
+  const m = document.getElementById('helpModal');
+  if (m) m.classList.remove('active');
+  playRetroSound(420, 0.04);
+}
+
+/**
+ * Closes the help modal when clicking the outer backdrop
+ * @param {MouseEvent} e
+ */
+function closeHelpModal(e) {
+  if (e && e.target && e.target.id === 'helpModal') {
+    closeHelpModalDirect();
+  }
+}
+
 // --- Initialization & Keyboard Navigation ---
 window.addEventListener('DOMContentLoaded', () => {
   renderPoll();
   renderUserLetters();
   updatePanicDisplay();
   buildCustomHeadline();
+  const btn = document.getElementById('btnAudioToggle');
+  if (btn) btn.textContent = soundEnabled ? '🔊 SFX [M]' : '🔇 SFX [M]';
 });
 
 window.addEventListener('keydown', (e) => {
@@ -2166,9 +2342,15 @@ window.addEventListener('keydown', (e) => {
   const isInput = targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT';
 
   if (e.key === 'Escape') {
-    const modal = document.getElementById('articleModal');
-    if (modal && modal.classList.contains('active')) {
+    const articleModal = document.getElementById('articleModal');
+    if (articleModal && articleModal.classList.contains('active')) {
       closeArticleModalDirect();
+      e.preventDefault();
+      return;
+    }
+    const helpModal = document.getElementById('helpModal');
+    if (helpModal && helpModal.classList.contains('active')) {
+      closeHelpModalDirect();
       e.preventDefault();
       return;
     }
@@ -2209,6 +2391,12 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
   } else if (keyLower === 'p' && !e.ctrlKey && !e.metaKey) {
     printFrontPage();
+    e.preventDefault();
+  } else if (keyLower === 'h' || e.key === 'F1') {
+    openHelpModal();
+    e.preventDefault();
+  } else if (keyLower === 'r') {
+    randomizeForge();
     e.preventDefault();
   }
 });
