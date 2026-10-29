@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://deep-core
+  kilo_creator: kweb://slashnet
   kilo_graphics: KBreakout
   kilo_soundscape: KStellar
   kilo_tester: KChess
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KImage
   kilo_expander: KChess
   kilo_review: KGo
-virtual_web_target: kweb://deep-core
+virtual_web_target: kweb://slashnet
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KChess
-  timestamp: '2026-10-29T08:18:18-07:00'
+  agent: kilo-creator
+  app: kweb://deep-core
+  timestamp: '2026-10-29T08:39:45-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://deep-core`
+- **Active Target**: `kweb://slashnet`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 | `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
+| `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KBreakout`
@@ -325,6 +325,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T08:39:45-07:00 — kilo-creator: kweb://deep-core (Deep Core Ghost Node VFS & Passkey Climax Integration)**
+  - Status: PASS ✅ (0 errors, web 300.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.78%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.0s)).
+  - Connected Tier 3 Ghost Node terminal directly to KiloOS VFS (/sys/alpha.sys & /home/crypto/) with real-time bridge and fallback sync.
+  - Decoded Sector 04 fragment (RECOVERY_1999 & 1999-ARCH) automatically written to VFS to authenticate KMatrix verification.
+  - Handoff: Advanced `kilo-creator` to `kweb://slashnet`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-29T08:18:18-07:00 — kilo-review: KChess (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 800x903 sheet.png + full code audit of kchess.html and KChess/main.c; un-quarantined KChess to Row 1).
   - Visual/UX Findings: Eval bar (x=72..88) collides with rank labels (x=75); main.c capRc (y=52..127) paints over top file labels and Rank 8; #help-modal clips Got It button; #toast-container covers bottom status bar; no live Move History panel or drag-and-drop.
@@ -347,8 +353,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KSolitaire across web and native targets.
   - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
-
-- **2026-10-29T06:22:22-07:00 — kilo-tester: KSolitaire (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-tester updates for KSolitaire across web and native targets.
-  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.

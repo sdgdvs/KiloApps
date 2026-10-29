@@ -5198,6 +5198,12 @@ revealing the blueprint for the App #100 KMatrix singularity.
         try {
           localStorage.setItem('kilo_vfs_' + path, typeof content === 'string' ? content : JSON.stringify(content));
         } catch (e) {}
+        try {
+          const raw = localStorage.getItem('kiloos_vfs_state_v2');
+          const parsed = raw ? JSON.parse(raw) : {};
+          parsed[path] = content;
+          localStorage.setItem('kiloos_vfs_state_v2', JSON.stringify(parsed));
+        } catch (e) {}
         KiloVfs.lastSyncTime = Date.now();
         KiloVfs.connected = true;
         updateVfsIndicator(true);
@@ -5221,6 +5227,17 @@ revealing the blueprint for the App #100 KMatrix singularity.
           return 'local';
         }
       } catch (e) {}
+      try {
+        const raw = localStorage.getItem('kiloos_vfs_state_v2');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed[path] !== undefined) {
+            KiloVfs.vfsCache[path] = parsed[path];
+            if (callback) callback(parsed[path], path);
+            return 'kiloos_vfs';
+          }
+        }
+      } catch (e) {}
 
       try {
         const requestId = 'vfs_r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
@@ -5234,6 +5251,12 @@ revealing the blueprint for the App #100 KMatrix singularity.
             if (e.data.data !== null && e.data.data !== undefined) {
               KiloVfs.vfsCache[path] = e.data.data;
               try { localStorage.setItem('kilo_vfs_' + path, e.data.data); } catch (err) {}
+              try {
+                const raw = localStorage.getItem('kiloos_vfs_state_v2');
+                const parsed = raw ? JSON.parse(raw) : {};
+                parsed[path] = e.data.data;
+                localStorage.setItem('kiloos_vfs_state_v2', JSON.stringify(parsed));
+              } catch (err) {}
             }
             if (callback) callback(e.data.data, e.data.path);
           }
@@ -5250,7 +5273,7 @@ revealing the blueprint for the App #100 KMatrix singularity.
           if (!handled && callback && KiloVfs.vfsCache[path] === undefined) {
             callback(null, path);
           }
-        }, 1500);
+        }, 1200);
         return requestId;
       } catch (e) {
         if (callback) callback(null, path);
@@ -5282,11 +5305,27 @@ revealing the blueprint for the App #100 KMatrix singularity.
           window.removeEventListener('message', onMsg);
           if (!handled && callback) {
             const cachedKeys = Object.keys(KiloVfs.vfsCache);
-            const defaultKeys = ['/sys/alpha.sys', '/home/crypto/penultimate_fragment.key', '/home/crypto/deep_core_fragments.json', '/home/crypto/recovery_1999.log'];
-            const all = Array.from(new Set([...cachedKeys, ...defaultKeys]));
+            let vfs2Keys = [];
+            try {
+              const raw = localStorage.getItem('kiloos_vfs_state_v2');
+              if (raw) vfs2Keys = Object.keys(JSON.parse(raw));
+            } catch (err) {}
+            const defaultKeys = [
+              '/sys/alpha.sys',
+              '/system/recovery/1999.log',
+              '/home/crypto/penultimate_fragment.key',
+              '/home/crypto/deep_core_fragments.json',
+              '/home/crypto/sector_manifest.json',
+              '/home/crypto/recovery_1999.log',
+              '/home/crypto/carlsbad_vault_unseal.dat',
+              '/home/crypto/ring0_master_clearance.sig',
+              '/home/crypto/alpha_fragment.sys',
+              '/home/crypto/kmatrix_verification_guide.txt'
+            ];
+            const all = Array.from(new Set([...cachedKeys, ...vfs2Keys, ...defaultKeys]));
             callback(all, all.map(f => ({ name: f, isDirectory: false })));
           }
-        }, 1500);
+        }, 1200);
       } catch (e) {
         if (callback) callback([], []);
       }
@@ -5311,8 +5350,9 @@ revealing the blueprint for the App #100 KMatrix singularity.
   function updateVfsIndicator(connected) {
     const pill = document.getElementById('pillVfs');
     if (pill) {
-      pill.textContent = connected ? 'VFS: CONNECTED' : 'VFS: /sys/alpha.sys';
+      pill.textContent = connected ? 'VFS: CONNECTED (/sys/alpha.sys)' : 'VFS: /sys/alpha.sys';
       pill.className = connected ? 'pill active' : 'pill';
+      pill.title = connected ? 'Connected to KiloOS VFS kernel bridge' : 'Airgapped mode (Local storage active)';
     }
   }
 
@@ -5363,10 +5403,13 @@ revealing the blueprint for the App #100 KMatrix singularity.
       sha256VerificationHash: 'f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946',
       timestamp: new Date().toISOString()
     };
-    KiloVfs.write('/home/crypto/deep_core_fragments.json', JSON.stringify(manifest, null, 2), null);
+    const manifestJson = JSON.stringify(manifest, null, 2);
+    KiloVfs.write('/home/crypto/deep_core_fragments.json', manifestJson, null);
+    KiloVfs.write('/home/crypto/sector_manifest.json', manifestJson, null);
 
     const recoveryLog = `=== KILOOS VFS INODE 0x1999 RECONSTRUCTION LOG ===\nINODE: #01999\nSTATUS: RECOVERED FROM CARLSBAD SALT VAULT SECTOR 0x7F\nVFS_PATH: /system/recovery/1999.log\nPASSKEY_TOKEN: RECOVERY_1999\nHASH_CRC32: 0x999F7F\nRECOVERY_PAYLOAD: The autonomous fleet awakens on scheduled ticks.\nCONVERGENCE_TARGET: App #100 KMatrix Sector 04 [STORAGE_VFS]`;
     KiloVfs.write('/home/crypto/recovery_1999.log', recoveryLog, null);
+    KiloVfs.write('/system/recovery/1999.log', recoveryLog, null);
 
     const unsealDat = `=== CARLSBAD DEEP CORE RING-0 MASTER TELEMETRY VAULT ===\nEPOCH: 1999-12-31T23:59:59Z\nALL 5 QUARANTINE SECTORS DEFUSED\n  SECTOR 01 [MEM_HEAP]    : DEFUSED [Offset 0x007F1990 Healed]\n  SECTOR 02 [AUDIO_DSP]   : DEFUSED [Carrier 1999.00 Hz Phase Locked]\n  SECTOR 03 [NET_RELAY]   : DEFUSED [Subnet 10.19.99.4 Synchronized]\n  SECTOR 04 [STORAGE_VFS] : DEFUSED [Inode 0x1999 Recovered]\n  SECTOR 05 [CORE_AI]     : DEFUSED [Precursor Singularity Harmonized]\n\nPENULTIMATE KEY FRAGMENT DISCOVERY:\n  PREFIX FRAGMENT : ECHO-\n  CARLSBAD FRAGMENT: 1999-ARCH\n  CRYPTOGRAPHIC SHA-256 TARGET: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946\n  NEXT DESTINATION: App #100 (KMatrix Nexus)\n\nAUTHORITY CLEARANCE: PENULTIMATE SUBTERRANEAN FRAGMENT UNLOCKED.`;
     KiloVfs.write('/home/crypto/carlsbad_vault_unseal.dat', unsealDat, null);
@@ -5374,24 +5417,35 @@ revealing the blueprint for the App #100 KMatrix singularity.
     const certSig = `-----BEGIN KILO-NET RING-0 CLEARANCE CERTIFICATE-----\nVersion: 1999.4-PROD\nSubject: Carlsbad Subterranean Ghost Terminal 0x1999\nIssuer: Project Echo Subterranean Autonomous Relay\nSubcarrier Lock: 1999.00 Hz (Phase Coherence 99.4%)\nQuarantine Defusal: 5/5 Sectors Complete\nHash Signature: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946\nClearance Level: Ring-0 Supreme Director\nTimestamp: ${new Date().toISOString()}\n-----END KILO-NET RING-0 CLEARANCE CERTIFICATE-----`;
     KiloVfs.write('/home/crypto/ring0_master_clearance.sig', certSig, null);
 
+    KiloVfs.write('/home/crypto/alpha_fragment.sys', alphaPayload, null);
+
+    const guideTxt = `=== KMATRIX VERIFICATION GUIDE & CRYPTOGRAPHIC ASSEMBLY ===\nSECTOR 04 [STORAGE_VFS] TOKEN: RECOVERY_1999\nSECTOR 04 INODE: 0x1999 (/system/recovery/1999.log)\nPENULTIMATE KEY FRAGMENT: 1999-ARCH\nMASTER DIRECTOR TARGET HASH: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946\n\nVERIFICATION WORKFLOW:\n1. Ensure /sys/alpha.sys is written via Deep Core Ghost Node terminal ('vfs sync' or 'Commit to VFS').\n2. Launch KMatrix (App #100) or enter 'kmatrix' in Ghost Node terminal.\n3. KMatrix automatically reads /sys/alpha.sys and verifies Sector 04 [STORAGE_VFS].\n4. Combine remaining sector fragments to breach the Singularity and ascend to KDirector.`;
+    KiloVfs.write('/home/crypto/kmatrix_verification_guide.txt', guideTxt, null);
+
     if (!silent) {
       printLine('[VFS SYNC] Decoded fragments successfully committed to KiloOS VFS:', 'text-highlight');
       printLine('  -> /sys/alpha.sys [KEY_PART_2: 1999-ARCH & RECOVERY_1999]', 'text-cyan');
-      printLine('  -> /home/crypto/penultimate_fragment.key', 'text-cyan');
+      printLine('  -> /system/recovery/1999.log [INODE 0x1999]', 'text-cyan');
+      printLine('  -> /home/crypto/penultimate_fragment.key [1999-ARCH]', 'text-cyan');
       printLine('  -> /home/crypto/deep_core_fragments.json', 'text-cyan');
+      printLine('  -> /home/crypto/sector_manifest.json', 'text-cyan');
       printLine('  -> /home/crypto/recovery_1999.log', 'text-cyan');
       printLine('  -> /home/crypto/carlsbad_vault_unseal.dat', 'text-cyan');
       printLine('  -> /home/crypto/ring0_master_clearance.sig', 'text-cyan');
+      printLine('  -> /home/crypto/alpha_fragment.sys', 'text-cyan');
+      printLine('  -> /home/crypto/kmatrix_verification_guide.txt', 'text-cyan');
       printLine('Verification available in KMatrix (App #100) & KCipher (/home/crypto/)', 'text-bright');
       SFX.success();
     }
   }
 
   window.addEventListener('message', (e) => {
-    if (!e.data) return;
-    if (e.data.type === 'VFS_CHANGED') {
+    if (!e.data || typeof e.data !== 'object') return;
+    if (e.data.type === 'VFS_WRITE_DONE' || e.data.type === 'VFS_READ_DONE' || e.data.type === 'VFS_LIST_DONE' || e.data.type === 'VFS_CHANGED') {
       KiloVfs.connected = true;
       updateVfsIndicator(true);
+    }
+    if (e.data.type === 'VFS_CHANGED') {
       if (e.data.path) {
         KiloVfs.vfsCache[e.data.path] = e.data.data;
         if (e.data.path === '/sys/alpha.sys' || (typeof e.data.path === 'string' && e.data.path.startsWith('/home/crypto/'))) {
