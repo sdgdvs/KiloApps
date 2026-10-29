@@ -577,7 +577,7 @@
       <div class="brand-tagline">News for Nerds. Stuff that matters.</div>
     </div>
     <div class="masthead-status">
-      <div>📅 <span id="currentDate">Fri Oct 23 1999</span></div>
+      <div>📅 <span id="currentDate">Sat Oct 23 1999</span></div>
       <div>User: <strong id="usernameDisplay">Anonymous Coward</strong></div>
       <div>Karma: <span class="karma-pill" id="userKarmaDisplay">Good (42)</span></div>
       <div>Mod Points: <span class="mod-points-pill" id="userModPointsDisplay">5</span></div>
@@ -668,6 +668,11 @@
         <ul class="slashbox-list">
           <li>🏠 <a href="/web/portal.html" onclick="navigateTo('/web/portal.html', event)">kweb://portal</a></li>
           <li>🌐 <a href="/web/webring.html" onclick="navigateTo('/web/webring.html', event)">kweb://webring</a></li>
+          <li>🐱 <a href="/web/trapster.html" onclick="navigateTo('/web/trapster.html', event)">kweb://trapster</a></li>
+          <li>⚡ <a href="/web/cabled.html" onclick="navigateTo('/web/cabled.html', event)">kweb://cabled</a></li>
+          <li>🧅 <a href="/web/scallion.html" onclick="navigateTo('/web/scallion.html', event)">kweb://scallion</a></li>
+          <li>💾 <a href="/web/demoscene.html" onclick="navigateTo('/web/demoscene.html', event)">kweb://demoscene</a></li>
+          <li>📜 <a href="/web/rfc_archive.html" onclick="navigateTo('/web/rfc_archive.html', event)">kweb://rfc-archive</a></li>
           <li>✨ <a href="/web/geocities.html" onclick="navigateTo('/web/geocities.html', event)">kweb://geocities</a></li>
           <li>☕ <a href="/web/cybercafe.html" onclick="navigateTo('/web/cybercafe.html', event)">kweb://cybercafe</a></li>
           <li>💾 <a href="/web/warez.html" onclick="navigateTo('/web/warez.html', event)">kweb://warez</a></li>
@@ -2584,6 +2589,43 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
+// --- Deep Navigation & Route Handling ---
+function handleInitialNavigation() {
+  const hash = window.location.hash.replace('#', '').toLowerCase();
+  const params = new URLSearchParams(window.location.search);
+  const secParam = (params.get('section') || params.get('sec') || hash).toLowerCase();
+  if (['stories', 'beowulf', 'kernel', 'poll', 'vfs'].includes(secParam)) {
+    switchSection(secParam);
+  } else if (secParam.startsWith('story-')) {
+    switchSection('stories');
+    const targetStory = document.getElementById(secParam);
+    if (targetStory) {
+      const box = document.getElementById('comments-' + secParam);
+      if (box && box.style.display === 'none') {
+        toggleStoryComments(secParam);
+      }
+      setTimeout(() => targetStory.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+    }
+  }
+}
+
+window.addEventListener('hashchange', () => {
+  const h = window.location.hash.replace('#', '').toLowerCase();
+  if (['stories', 'beowulf', 'kernel', 'poll', 'vfs'].includes(h)) {
+    switchSection(h);
+  } else if (h.startsWith('story-')) {
+    switchSection('stories');
+    const target = document.getElementById(h);
+    if (target) {
+      const box = document.getElementById('comments-' + h);
+      if (box && box.style.display === 'none') {
+        toggleStoryComments(h);
+      }
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+});
+
 // --- Initialization ---
 window.addEventListener('DOMContentLoaded', () => {
   updateUserInfoBar();
@@ -2593,6 +2635,7 @@ window.addEventListener('DOMContentLoaded', () => {
   renderComments('story-3');
   calculateClusterMetrics();
   renderPolls();
+  handleInitialNavigation();
 });
 </script>
 </body>

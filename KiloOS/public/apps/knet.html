@@ -2419,8 +2419,25 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
       url = '/web/portal.html';
     } else if (url.toLowerCase() === 'kweb://trapster' || url.toLowerCase() === 'kweb://trapster/' || url.toLowerCase() === 'trapster' || url.toLowerCase() === 'trapster/' || url.toLowerCase() === 'kweb://napster' || url.toLowerCase() === 'napster' || url.toLowerCase() === 'kweb://trapster.org' || url.toLowerCase() === 'trapster.org' || url.toLowerCase() === 'kweb://trapster.com' || url.toLowerCase() === 'trapster.com' || url.toLowerCase() === 'www.trapster.org' || url.toLowerCase() === 'www.trapster.com' || url.toLowerCase() === 'http://trapster.org' || url.toLowerCase() === 'http://trapster.com') {
       url = '/web/trapster.html';
-    } else if (url.toLowerCase() === 'kweb://slashnet' || url.toLowerCase() === 'slashnet' || url.toLowerCase() === 'kweb://slashdot' || url.toLowerCase() === 'slashdot' || url.toLowerCase() === 'kweb://slashnet.org' || url.toLowerCase() === 'slashnet.org') {
-      url = '/web/slashnet.html';
+    } else if (url.toLowerCase() === 'kweb://slashnet' || url.toLowerCase() === 'kweb://slashnet/' || url.toLowerCase() === 'slashnet' || url.toLowerCase() === 'slashnet/' || url.toLowerCase() === 'kweb://slashdot' || url.toLowerCase() === 'kweb://slashdot/' || url.toLowerCase() === 'slashdot' || url.toLowerCase() === 'slashdot/' || url.toLowerCase() === 'kweb://slashnet.org' || url.toLowerCase() === 'kweb://slashnet.org/' || url.toLowerCase() === 'slashnet.org' || url.toLowerCase() === 'slashnet.org/' || url.toLowerCase() === 'www.slashnet.org' || url.toLowerCase() === 'http://slashnet.org' || url.toLowerCase() === 'http://www.slashnet.org' || url.toLowerCase().startsWith('kweb://slashnet#') || url.toLowerCase().startsWith('kweb://slashnet?') || url.toLowerCase().startsWith('kweb://slashnet/')) {
+      let sub = '';
+      const lower = url.toLowerCase();
+      if (lower.includes('#')) {
+        sub = url.substring(url.indexOf('#'));
+      } else if (lower.includes('?')) {
+        sub = url.substring(url.indexOf('?'));
+      } else if (lower.includes('/beowulf')) {
+        sub = '#beowulf';
+      } else if (lower.includes('/kernel')) {
+        sub = '#kernel';
+      } else if (lower.includes('/poll')) {
+        sub = '#poll';
+      } else if (lower.includes('/vfs')) {
+        sub = '#vfs';
+      } else if (lower.includes('/stories')) {
+        sub = '#stories';
+      }
+      url = '/web/slashnet.html' + sub;
     } else if (url.toLowerCase() === 'kweb://cabled' || url.toLowerCase() === 'cabled' || url.toLowerCase() === 'kweb://cabled.com' || url.toLowerCase() === 'kweb://cabled.html' || url.toLowerCase() === 'kweb://wired' || url.toLowerCase() === 'wired') {
       url = '/web/cabled.html';
     } else if (url.toLowerCase() === 'kweb://scallion' || url.toLowerCase() === 'scallion' || url.toLowerCase() === 'kweb://thescallion' || url.toLowerCase() === 'thescallion' || url.toLowerCase() === 'kweb://scallion.html' || url.toLowerCase() === 'kweb://onion' || url.toLowerCase() === 'onion') {

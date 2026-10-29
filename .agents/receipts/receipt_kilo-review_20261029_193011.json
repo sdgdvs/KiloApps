@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-29T19:30:11.565338+00:00",
+  "agent": "kilo-review",
+  "model": "gemini-4-argon-high",
+  "target": "KGo",
+  "duration_seconds": 10.67,
+  "returncode": 3,
+  "success": false,
+  "provenance": null
+}
