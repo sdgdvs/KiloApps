@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KMaze
   kilo_usability: KColosseum
-  kilo_qa: KMandel
+  kilo_qa: KAudio
   kilo_expander: KBudget
   kilo_review: KSolitaire
 virtual_web_target: kweb://webring
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KBudget
-  timestamp: '2026-10-29T02:39:12-07:00'
+  agent: kilo-qa
+  app: KMandel
+  timestamp: '2026-10-29T03:19:14-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -179,11 +179,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | **[ARGON REVIEW]:** Eliminate 920x613 vertical clipping hiding #pie-chart (1% visible), #category-legend, and #pagination-controls by setting .main-content and .glass-panel to overflow:hidden min-height:0 (keeping <=820px scroll fallback), arranging .summary-cards-container as a compact 2-column grid, sizing #chart-container to 170px with a 160x160 HiDPI #pie-chart, and scrolling #category-legend and .transaction-list independently; focus the first control in trapModalFocus(), remove the #data-modal Enter/Space closeDataModal() interceptor that blocks focused buttons, guard background hotkeys when any .modal-overlay.active is open, make Escape close only the active modal, replace blocking confirm() in deleteTransaction()/loadSampleData()/clearAllData() with in-DOM confirmation, move #toast to top:56px right:16px, add color-scheme:dark + dark select option styles, and remove the Google Fonts @import. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KMandel`
+- **Active Target**: `KAudio`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMandel` | `KiloOS/public/apps/kmandel.html`, `KMandel/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, fractal rendering zoom/pan coordinates, palette cycles, dual Win32 C parity, and promote to Mature table. |
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, waveform audio editor, spectrum visualizer, filter pipeline, dual Win32 C parity, and promote to Mature table. |
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, bitmap manipulation filters, canvas scaling, dual Win32 C parity, and promote to Mature table. |
 | `KSettings` | `KiloOS/public/apps/ksettings.html`, `KSettings/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, OS theme/sound preferences, display modes, dual Win32 C parity, and promote to Mature table. |
@@ -265,6 +264,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KMandel** | `KiloOS/public/apps/kmandel.html` | Pass 5+ (2026-10-29) | Media / Fractal Studio | Complete ultra-deep fractal explorer (8 formulas, 18 landmarks, Julia mode, YM2612 FM audio, smooth potential, 4K export) with F5/F9 persistence, zero-stutter iterBuffer palette cycling, and dual Win32 C parity. |
 | **KTask** | `KiloOS/public/apps/ktask.html` | Pass 5+ (2026-10-27) | System / Diagnostics | Complete task & system diagnostic suite with live process tree, thread/module/virtual memory inspector, memory telemetry, F5/F9 persistence, and dual Win32 C parity. |
 | **KColor** | `KiloOS/public/apps/kcolor.html` | Pass 5+ (2026-10-27) | Productivity / Design | Complete color picker & palette studio with RGB/HSL/HSV/CMYK conversions, WCAG 2.1 contrast checker, 7-rule harmony palette generator (G), F5/F9 persistence, and dual Win32 C parity. |
 | **KVoid** | `KiloOS/public/apps/kvoid.html` | Pass 5+ (2026-10-27) | Games / Survival | Deep void survival roguelite; 6-channel YM2612 FM / 260ms SPC700 suite, F5/F9 state persistence, dual Win32 C parity. |
@@ -321,6 +321,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T03:19:14-07:00 — kilo-qa: KMandel (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 126.0 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 27.05%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.3s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kmandel_tutorialSeen flag, bottom-center toast stack, and Escape dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, instant iterBuffer color cycling, and visibilitychange cleanup.
+  - Mature Quarantine & Handoff: Promoted `KMandel` to Mature archive; advanced `kilo-qa` to `KAudio`; next agent `kilo-expander`.
+
 - **2026-10-29T02:39:12-07:00 — kilo-usability: KBudget (Usability, HiDPI Canvas & Responsive Layout Polish)**
   - Status: PASS ✅ (0 errors, web 121.6 KB, native 167.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Layout & HiDPI: eliminated 920x613 vertical clipping with overflow:hidden and min-height:0; arranged summary cards as 2-column grid; sized #chart-container to 170px with 160x160 HiDPI doughnut pie chart.
@@ -342,9 +348,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Enhanced RFC 1149/2549 Avian Carrier simulator with dynamic weather particles (storm/falcon/wind), RFC 2549 dual-carrier swarm, and real-time parameter syncing.
   - Polished RFC 2324 HTCPCP console with animated ceramic 418 Teapot easter egg and standalone VFS download fallback.
   - Handoff: Advanced `kilo-creator` to `kweb://webring`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-29T00:34:11-07:00 — kilo-review: KBudget (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 920x613 sheet.png and audited kbudget.html + KBudget/main.c; un-quarantined from Mature with surgical fixes queued).
-  - Visual & Modal UX Findings: #pie-chart (only 1% visible), #category-legend, and #pagination-controls clip below the 920x613 fold; #data-modal Enter/Space handler closes modal instead of activating focused buttons; trapModalFocus() leaves focus outside modal and Escape calls all 5 close handlers; #toast overlaps .statusbar; missing dark select styling and blocking confirm() dialogs.
-  - Feature, VFS & Win32 Findings: Custom CSV/JSON categories lump into Other and break category-click filtering; currency header/statusbar labels fail to update on F9/JSON/Settings save; #budget-goal-card disagrees with statusbar; KiloVFS lacks e.origin validation, VFS_SHOW_SAVE, and FILE_OPEN IPC; KBudget/main.c has hardcoded 2026-07-12 date, unfiltered GDI Pie() 360-deg rounding bug, and missing LBN_DBLCLK/type filter.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KBudget`, `kilo-tester`->`KBudget`, `kilo-expander`->`KBudget`] (un-quarantined `KBudget` from Mature); advanced `kilo-review` to `KSolitaire`; next agent `kilo-creator`.

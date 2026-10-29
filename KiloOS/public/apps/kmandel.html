@@ -382,14 +382,16 @@
   /* Toast Notification System */
   #toast-container {
     position: absolute;
-    top: 20px;
-    left: 20px;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 1000;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     gap: 8px;
     pointer-events: none;
-    max-width: 380px;
+    max-width: 420px;
+    width: auto;
   }
   .toast {
     background: rgba(11, 19, 36, 0.94);
@@ -418,11 +420,11 @@
   .toast.toast-purple { border-left-color: #a855f7; }
   .toast.hiding {
     opacity: 0;
-    transform: translateX(-20px);
+    transform: translateY(16px);
   }
   @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateX(-20px); }
-    to { opacity: 1; transform: translateX(0); }
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   .help-header-row {
     display: flex;
@@ -555,7 +557,7 @@
       font-size: 11px;
     }
     #toast-container {
-      top: 10px;
+      bottom: 12px;
       left: 50%;
       transform: translateX(-50%);
       width: 90%;
@@ -1506,6 +1508,7 @@
       if (smoothShading) document.getElementById('btn-smooth').classList.add('btn-active');
       else document.getElementById('btn-smooth').classList.remove('btn-active');
 
+      updateDisplays();
       updateUndoRedoButtons();
     }
     
@@ -3059,6 +3062,10 @@
       }
     });
 
+    const savedSnapshot = safeGetStorage('kmandel_quicksave', null);
+    if (savedSnapshot) {
+      loadState(savedSnapshot);
+    }
     saveState();
     requestRender();
 

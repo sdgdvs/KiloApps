@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T00:34:11-07:00 — kilo-review: KBudget (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 920x613 sheet.png and audited kbudget.html + KBudget/main.c; un-quarantined from Mature with surgical fixes queued).
+  - Visual & Modal UX Findings: #pie-chart (only 1% visible), #category-legend, and #pagination-controls clip below the 920x613 fold; #data-modal Enter/Space handler closes modal instead of activating focused buttons; trapModalFocus() leaves focus outside modal and Escape calls all 5 close handlers; #toast overlaps .statusbar; missing dark select styling and blocking confirm() dialogs.
+  - Feature, VFS & Win32 Findings: Custom CSV/JSON categories lump into Other and break category-click filtering; currency header/statusbar labels fail to update on F9/JSON/Settings save; #budget-goal-card disagrees with statusbar; KiloVFS lacks e.origin validation, VFS_SHOW_SAVE, and FILE_OPEN IPC; KBudget/main.c has hardcoded 2026-07-12 date, unfiltered GDI Pie() 360-deg rounding bug, and missing LBN_DBLCLK/type filter.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KBudget`, `kilo-tester`->`KBudget`, `kilo-expander`->`KBudget`] (un-quarantined `KBudget` from Mature); advanced `kilo-review` to `KSolitaire`; next agent `kilo-creator`.
+
 - **2026-10-29T00:23:18-07:00 — kilo-expander: KChart (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KChart across web and native targets.

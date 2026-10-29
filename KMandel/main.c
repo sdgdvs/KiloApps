@@ -10,6 +10,7 @@ int _fltused = 0;
 
 HBITMAP hBitmap = NULL;
 DWORD* pixels = NULL;
+static unsigned short* iterBuffer = NULL;
 int bmpW = 0, bmpH = 0;
 
 double minRe = -2.0, maxRe = 1.0;
@@ -256,6 +257,7 @@ void GetColors(unsigned int n, unsigned int iter, int t, unsigned char* r, unsig
 
 typedef struct {
     DWORD* buffer;
+    unsigned short* iterBuf;
     int width;
     int height;
     int startY;
@@ -330,10 +332,12 @@ DWORD WINAPI RenderThreadProc(LPVOID lpParam) {
             }
             if (isInside) {
                 task->buffer[y * task->width + x] = 0; // Black
+                if (task->iterBuf) task->iterBuf[y * task->width + x] = 0;
             } else {
                 unsigned char r, g, b;
                 GetColors(n, task->mIter, task->th, &r, &g, &b);
                 task->buffer[y * task->width + x] = (r << 16) | (g << 8) | b;
+                if (task->iterBuf) task->iterBuf[y * task->width + x] = (unsigned short)(n + 1);
             }
         }
     }
@@ -353,6 +357,7 @@ void RenderMandelbrotToBuffer(DWORD* buffer, int width, int height) {
 
     for (int i = 0; i < NUM_RENDER_THREADS; i++) {
         tasks[i].buffer = buffer;
+        tasks[i].iterBuf = (buffer == pixels) ? iterBuffer : NULL;
         tasks[i].width = width;
         tasks[i].height = height;
         tasks[i].startY = i * chunkH;
@@ -402,6 +407,12 @@ void ResizeBitmap(HWND hwnd, int width, int height) {
     HDC hdc = GetDC(hwnd);
     hBitmap = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, (void**)&pixels, NULL, 0);
     ReleaseDC(hwnd, hdc);
+    
+    if (iterBuffer) {
+        HeapFree(GetProcessHeap(), 0, iterBuffer);
+        iterBuffer = NULL;
+    }
+    iterBuffer = (unsigned short*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, width * height * sizeof(unsigned short));
     
     bmpW = width;
     bmpH = height;
@@ -620,6 +631,21 @@ static void CheckFirstRunTutorial(HWND hwnd) {
     }
 }
 
+static void RecolorBuffer(DWORD* buffer, unsigned short* iters, int width, int height) {
+    if (!buffer || !iters || width <= 0 || height <= 0) return;
+    int total = width * height;
+    for (int i = 0; i < total; i++) {
+        unsigned short it = iters[i];
+        if (it == 0) {
+            buffer[i] = 0;
+        } else {
+            unsigned char r, g, b;
+            GetColors((unsigned int)(it - 1), max_iter, theme, &r, &g, &b);
+            buffer[i] = (r << 16) | (g << 8) | b;
+        }
+    }
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -638,13 +664,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_TIMER: {
             if (wParam == 1) {
                 // Update 60 FPS color cycling if active
-                if (colorCycleActive && pixels && bmpW > 0 && bmpH > 0) {
+                if (colorCycleActive && pixels && iterBuffer && bmpW > 0 && bmpH > 0) {
                     colorCyclePhase += 0.02;
                     if (colorCyclePhase >= 1.0) colorCyclePhase -= 1.0;
-                    RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
-                }
-
-                if (colorCycleActive) {
+                    RecolorBuffer(pixels, iterBuffer, bmpW, bmpH);
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
             }
@@ -1012,7 +1035,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawCornerFiligreeGDI(hdcMem, bmpW, bmpH);
                 
                 // 7. Draw HUD Badge
-                RECT textBg = { 12, bmpH - 46, 560, bmpH - 12 };
+                int hudMaxW = bmpW - 24;
+                if (hudMaxW > 560) hudMaxW = 560;
+                RECT textBg = { 12, bmpH - 46, 12 + hudMaxW, bmpH - 12 };
                 HBRUSH hHudBrush = CreateSolidBrush(RGB(11, 19, 36));
                 HPEN hHudPen = CreatePen(PS_SOLID, 2, RGB(96, 165, 250));
                 HBRUSH hOldBrush = (HBRUSH)SelectObject(hdcMem, hHudBrush);
@@ -1076,6 +1101,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(g_hHudFont);
                 g_hHudFont = NULL;
             }
+            if (iterBuffer) {
+                HeapFree(GetProcessHeap(), 0, iterBuffer);
+                iterBuffer = NULL;
+            }
             if (hBitmap) {
                 DeleteObject(hBitmap);
                 hBitmap = NULL;
@@ -1117,7 +1146,24 @@ void MainEntry() {
     HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel Pro - [F1] Help | Drag to Pan | Scroll/Click to Zoom", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
-    LoadQuicksaveFromFile();
+    if (LoadQuicksaveFromFile()) {
+        minRe = quicksaveState.minRe;
+        maxRe = quicksaveState.maxRe;
+        minIm = quicksaveState.minIm;
+        maxIm = quicksaveState.maxIm;
+        max_iter = quicksaveState.max_iter;
+        isJulia = quicksaveState.isJulia;
+        juliaCRe = quicksaveState.juliaCRe;
+        juliaCIm = quicksaveState.juliaCIm;
+        theme = quicksaveState.theme;
+        fractalType = quicksaveState.fractalType;
+        customColor1[0] = quicksaveState.cc1[0];
+        customColor1[1] = quicksaveState.cc1[1];
+        customColor1[2] = quicksaveState.cc1[2];
+        customColor2[0] = quicksaveState.cc2[0];
+        customColor2[1] = quicksaveState.cc2[1];
+        customColor2[2] = quicksaveState.cc2[2];
+    }
     SaveState(); // Save initial state
 
     ShowWindow(hwnd, SW_SHOWNORMAL);
