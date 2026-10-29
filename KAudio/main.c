@@ -65,6 +65,7 @@ int delayEnabled = 1;
 int delayTimeMs = 250;
 int delayFeedback = 45; // Percent
 int driveEnabled = 0;
+int filterEnabled = 1; // 1 = Lowpass Active (3200 Hz), 0 = Bypassed
 int visMode = 0; // 0 = Waveform Oscilloscope, 1 = FFT Spectrum Analyzer
 float spectrumBars[32] = {0};
 
@@ -93,7 +94,7 @@ typedef struct {
 #pragma pack(push, 1)
 typedef struct {
     DWORD magic;       // 0x4B415544 ("KAUD")
-    DWORD version;     // 1
+    DWORD version;     // 2
     int instrument;
     int octaveShift;
     int delayEnabled;
@@ -102,13 +103,14 @@ typedef struct {
     int driveEnabled;
     int visMode;
     int seqPattern[16];
+    int filterEnabled;
 } AudioSaveState;
 #pragma pack(pop)
 
 void SaveAudioState() {
     AudioSaveState st;
     st.magic = 0x4B415544;
-    st.version = 1;
+    st.version = 2;
     st.instrument = instrument;
     st.octaveShift = octaveShift;
     st.delayEnabled = delayEnabled;
@@ -117,6 +119,7 @@ void SaveAudioState() {
     st.driveEnabled = driveEnabled;
     st.visMode = visMode;
     for (int i = 0; i < 16; i++) st.seqPattern[i] = seqPattern[i];
+    st.filterEnabled = filterEnabled;
 
     HANDLE hFile = CreateFileA("kaudio_state.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -133,8 +136,8 @@ int LoadAudioState() {
     DWORD bytesRead = 0;
     BOOL res = ReadFile(hFile, &st, sizeof(AudioSaveState), &bytesRead, NULL);
     CloseHandle(hFile);
-    if (!res || bytesRead < sizeof(AudioSaveState)) return 0;
-    if (st.magic != 0x4B415544 || st.version != 1) return 0;
+    if (!res || bytesRead < sizeof(AudioSaveState) - sizeof(int)) return 0;
+    if (st.magic != 0x4B415544 || (st.version != 1 && st.version != 2)) return 0;
 
     if (st.instrument >= 0 && st.instrument < 128) instrument = st.instrument;
     if (st.octaveShift >= -4 && st.octaveShift <= 4) octaveShift = st.octaveShift;
@@ -144,6 +147,11 @@ int LoadAudioState() {
     driveEnabled = (st.driveEnabled != 0);
     visMode = (st.visMode != 0);
     for (int i = 0; i < 16; i++) seqPattern[i] = (st.seqPattern[i] != 0);
+    if (st.version >= 2 && bytesRead >= sizeof(AudioSaveState)) {
+        filterEnabled = (st.filterEnabled != 0);
+    } else {
+        filterEnabled = 1;
+    }
 
     return 1;
 }
@@ -151,7 +159,7 @@ int LoadAudioState() {
 void QuickSaveState(HWND hwnd) {
     AudioSaveState st;
     st.magic = 0x4B415544;
-    st.version = 1;
+    st.version = 2;
     st.instrument = instrument;
     st.octaveShift = octaveShift;
     st.delayEnabled = delayEnabled;
@@ -160,6 +168,7 @@ void QuickSaveState(HWND hwnd) {
     st.driveEnabled = driveEnabled;
     st.visMode = visMode;
     for (int i = 0; i < 16; i++) st.seqPattern[i] = seqPattern[i];
+    st.filterEnabled = filterEnabled;
 
     HANDLE hFile = CreateFileA("kaudio_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -180,8 +189,8 @@ int QuickLoadState(HWND hwnd) {
     DWORD bytesRead = 0;
     BOOL res = ReadFile(hFile, &st, sizeof(AudioSaveState), &bytesRead, NULL);
     CloseHandle(hFile);
-    if (!res || bytesRead < sizeof(AudioSaveState)) return 0;
-    if (st.magic != 0x4B415544 || st.version != 1) return 0;
+    if (!res || bytesRead < sizeof(AudioSaveState) - sizeof(int)) return 0;
+    if (st.magic != 0x4B415544 || (st.version != 1 && st.version != 2)) return 0;
 
     if (st.instrument >= 0 && st.instrument < 128) {
         instrument = st.instrument;
@@ -194,6 +203,11 @@ int QuickLoadState(HWND hwnd) {
     driveEnabled = (st.driveEnabled != 0);
     visMode = (st.visMode != 0);
     for (int i = 0; i < 16; i++) seqPattern[i] = (st.seqPattern[i] != 0);
+    if (st.version >= 2 && bytesRead >= sizeof(AudioSaveState)) {
+        filterEnabled = (st.filterEnabled != 0);
+    } else {
+        filterEnabled = 1;
+    }
 
     SetStatus(hwnd, "🔄 Quickload Restored from kaudio_quicksave.dat! [F9]", 2500);
     InvalidateRect(hwnd, NULL, FALSE);
@@ -297,10 +311,16 @@ void ExportPresetWav(HWND hwnd) {
 
     short sampleBuf[1024];
     DWORD bufIdx = 0;
+    double lpPrevSFX = 0.0;
     for (DWORD i = 0; i < totalSamples; i++) {
         double t = (double)i / (double)sampleRate;
         double freq = 150.0 + 450.0 * (t / (double)durationSec);
         double rawVal = (MyFmod(t * freq, 1.0) > 0.5) ? 0.4 : -0.4;
+        if (filterEnabled) {
+            const double alpha = 0.31;
+            rawVal = lpPrevSFX + alpha * (rawVal - lpPrevSFX);
+            lpPrevSFX = rawVal;
+        }
         sampleBuf[bufIdx++] = (short)(rawVal * 32767.0);
         if (bufIdx == 1024) {
             WriteFile(hFile, sampleBuf, bufIdx * sizeof(short), &written, NULL);
@@ -451,6 +471,14 @@ void ExportWavFile(HWND hwnd) {
         }
 
         double rawVal = (MyFmod(t * freq, 1.0) > 0.5) ? 0.35 : -0.35;
+
+        // Apply Lowpass Filter DSP (cutoff ~3200 Hz: alpha = 0.31)
+        if (filterEnabled) {
+            static double lpPrev = 0.0;
+            const double alpha = 0.31;
+            rawVal = lpPrev + alpha * (rawVal - lpPrev);
+            lpPrev = rawVal;
+        }
 
         // Apply Overdrive / Soft Clipping if enabled
         if (driveEnabled) {
@@ -644,10 +672,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (x >= 140 && x <= 210) { PlaySoundFX(3); SetStatus(hwnd, "💥 [3] Explosion FX Triggered", 1600); }
                 else if (x >= 215 && x <= 265) { PlaySoundFX(4); SetStatus(hwnd, "🪙 [4] Coin FX Triggered", 1600); }
                 else if (x >= 270 && x <= 340) { PlaySoundFX(5); SetStatus(hwnd, "⚡ [5] Powerup FX Triggered", 1600); }
-                else if (x >= 350 && x <= 460) { ExportWavFile(hwnd); }
-                else if (x >= 470 && x <= 580) { delayEnabled = !delayEnabled; SetStatus(hwnd, delayEnabled ? "Delay / Echo Enabled [L]" : "Delay / Echo Disabled [L]", 1800); SaveAudioState(); }
-                else if (x >= 590 && x <= 700) { driveEnabled = !driveEnabled; SetStatus(hwnd, driveEnabled ? "Overdrive Enabled [O]" : "Overdrive Disabled [O]", 1800); SaveAudioState(); }
-                else if (x >= 710 && x <= 860) { visMode = !visMode; SetStatus(hwnd, visMode ? "Visualizer: FFT Spectrum [V]" : "Visualizer: Oscilloscope [V]", 1800); SaveAudioState(); }
+                else if (x >= 348 && x <= 452) { ExportWavFile(hwnd); }
+                else if (x >= 458 && x <= 560) { delayEnabled = !delayEnabled; SetStatus(hwnd, delayEnabled ? "Delay / Echo Enabled [L]" : "Delay / Echo Disabled [L]", 1800); SaveAudioState(); }
+                else if (x >= 566 && x <= 668) { driveEnabled = !driveEnabled; SetStatus(hwnd, driveEnabled ? "Overdrive Enabled [O]" : "Overdrive Disabled [O]", 1800); SaveAudioState(); }
+                else if (x >= 674 && x <= 784) { filterEnabled = !filterEnabled; SetStatus(hwnd, filterEnabled ? "Lowpass Filter: 3.2 kHz [Q]" : "Lowpass Filter: Bypassed [Q]", 1800); SaveAudioState(); }
+                else if (x >= 790 && x <= 930) { visMode = !visMode; SetStatus(hwnd, visMode ? "Visualizer: FFT Spectrum [V]" : "Visualizer: Oscilloscope [V]", 1800); SaveAudioState(); }
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+
+            // Check Visualizer Canvas Click (y: 75 to 160, x: 10 to W - 10)
+            if (y >= 75 && y <= 160 && x >= 10 && x <= W - 10) {
+                visMode = !visMode;
+                SetStatus(hwnd, visMode ? "Visualizer: FFT Spectrum [V]" : "Visualizer: Oscilloscope [V]", 1800);
+                SaveAudioState();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
@@ -825,6 +863,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
+            if ((wParam == 'Q' || (wParam == 'F' && (GetKeyState(VK_CONTROL) & 0x8000))) && !isRepeat) {
+                filterEnabled = !filterEnabled;
+                SetStatus(hwnd, filterEnabled ? "🎛️ Lowpass Filter: 3.2 kHz [Q]" : "🎛️ Lowpass Filter: Bypassed [Q]", 1800);
+                SaveAudioState();
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
             if ((wParam == VK_F1 || wParam == VK_OEM_2 || (showHelp && (wParam == 'H' || wParam == 'h'))) && !isRepeat) {
                 showHelp = !showHelp;
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -955,10 +1000,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Title & Status Header
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(56, 189, 248));
-            char title[160];
-            wsprintfA(title, "KAudio Pro Workstation | Inst: %d | Oct: %+d | Dly: %s | Drv: %s | Vis: %s | P: Seq [%s]",
+            char title[180];
+            wsprintfA(title, "KAudio Pro Workstation | Inst: %d | Oct: %+d | Dly: %s | Drv: %s | Filt: %s | Vis: %s | Seq: %s",
                       instrument, octaveShift, delayEnabled ? "ON" : "OFF", driveEnabled ? "ON" : "OFF",
-                      visMode ? "FFT Spectrum" : "Oscilloscope", seqPlaying ? "PLAY" : "STOP");
+                      filterEnabled ? "ON" : "OFF", visMode ? "FFT Spectrum" : "Oscilloscope",
+                      seqPlaying ? "PLAY" : "STOP");
             TextOutA(memDC, 10, 8, title, lstrlenA(title));
 
             // Top Help Button [F1]
@@ -974,6 +1020,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH exportBrush = CreateSolidBrush(RGB(14, 165, 233));
             HBRUSH dlyBrush = CreateSolidBrush(delayEnabled ? RGB(2, 132, 199) : RGB(30, 41, 59));
             HBRUSH drvBrush = CreateSolidBrush(driveEnabled ? RGB(225, 29, 72) : RGB(30, 41, 59));
+            HBRUSH filtBrush = CreateSolidBrush(filterEnabled ? RGB(16, 185, 129) : RGB(30, 41, 59));
             HBRUSH visBrush = CreateSolidBrush(visMode ? RGB(99, 102, 241) : RGB(30, 41, 59));
 
             SetTextColor(memDC, RGB(241, 245, 249));
@@ -983,25 +1030,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT r3 = {140, 35, 210, 65}; FillRect(memDC, &r3, btnBrush); TextOutA(memDC, 144, 42, "[3] Explode", 11);
             RECT r4 = {215, 35, 265, 65}; FillRect(memDC, &r4, btnBrush); TextOutA(memDC, 219, 42, "[4] Coin", 8);
             RECT r5 = {270, 35, 340, 65}; FillRect(memDC, &r5, btnBrush); TextOutA(memDC, 274, 42, "[5] Power", 9);
-            RECT rExp = {350, 35, 460, 65}; FillRect(memDC, &rExp, exportBrush); TextOutA(memDC, 356, 42, "💾 Export WAV [E]", 18);
+            RECT rExp = {348, 35, 452, 65}; FillRect(memDC, &rExp, exportBrush); TextOutA(memDC, 354, 42, "💾 WAV [E]", 10);
 
             // DSP FX Toggle Buttons
-            RECT rDly = {470, 35, 580, 65}; FillRect(memDC, &rDly, dlyBrush);
+            RECT rDly = {458, 35, 560, 65}; FillRect(memDC, &rDly, dlyBrush);
             char dlyText[32]; wsprintfA(dlyText, "Delay: %s [L]", delayEnabled ? "ON" : "OFF");
-            TextOutA(memDC, 478, 42, dlyText, lstrlenA(dlyText));
+            TextOutA(memDC, 464, 42, dlyText, lstrlenA(dlyText));
 
-            RECT rDrv = {590, 35, 700, 65}; FillRect(memDC, &rDrv, drvBrush);
+            RECT rDrv = {566, 35, 668, 65}; FillRect(memDC, &rDrv, drvBrush);
             char drvText[32]; wsprintfA(drvText, "Drive: %s [O]", driveEnabled ? "ON" : "OFF");
-            TextOutA(memDC, 598, 42, drvText, lstrlenA(drvText));
+            TextOutA(memDC, 572, 42, drvText, lstrlenA(drvText));
 
-            RECT rVis = {710, 35, 860, 65}; FillRect(memDC, &rVis, visBrush);
+            RECT rFilt = {674, 35, 784, 65}; FillRect(memDC, &rFilt, filtBrush);
+            char filtText[32]; wsprintfA(filtText, "LP Filt: %s [Q]", filterEnabled ? "ON" : "OFF");
+            TextOutA(memDC, 680, 42, filtText, lstrlenA(filtText));
+
+            RECT rVis = {790, 35, 930, 65}; FillRect(memDC, &rVis, visBrush);
             char visText[32]; wsprintfA(visText, "Vis: %s [V]", visMode ? "Spectrum" : "Scope");
-            TextOutA(memDC, 718, 42, visText, lstrlenA(visText));
+            TextOutA(memDC, 796, 42, visText, lstrlenA(visText));
 
             DeleteObject(btnBrush);
             DeleteObject(exportBrush);
             DeleteObject(dlyBrush);
             DeleteObject(drvBrush);
+            DeleteObject(filtBrush);
             DeleteObject(visBrush);
 
             // Draw Visualizer Canvas (y: 75-160)
@@ -1158,7 +1210,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, helpRc.left + 20, helpRc.top + 108, "Arrows L/R: Transpose Octave (-4 to +4)", 39);
                 TextOutA(memDC, helpRc.left + 20, helpRc.top + 130, "Z / X: Live Performance Record / Playback", 41);
                 TextOutA(memDC, helpRc.left + 20, helpRc.top + 152, "P / C: Start-Stop Sequencer / Clear Grid Pattern", 48);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 174, "L / O: Toggle Stereo Delay / Overdrive Saturation", 49);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 174, "L / O / Q: Stereo Delay / Overdrive / Lowpass Filter", 52);
                 TextOutA(memDC, helpRc.left + 20, helpRc.top + 196, "V: Toggle Oscilloscope / FFT Spectrum Analyzer", 46);
                 TextOutA(memDC, helpRc.left + 20, helpRc.top + 218, "E / M: Export Master WAV [E] / Standard MIDI [M]", 48);
                 TextOutA(memDC, helpRc.left + 20, helpRc.top + 240, "S: Export SFX Sample WAV | F5/F9: Quicksave/Load", 48);

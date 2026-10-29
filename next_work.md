@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KMaze
   kilo_usability: KColosseum
-  kilo_qa: KAudio
+  kilo_qa: KImage
   kilo_expander: KSolitaire
   kilo_review: KChess
 virtual_web_target: kweb://deep-core
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KSolitaire
-  timestamp: '2026-10-29T06:40:16-07:00'
+  agent: kilo-qa
+  app: KAudio
+  timestamp: '2026-10-29T07:22:18-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -181,11 +181,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | **[ARGON REVIEW]:** Remove position:relative from .card.face-down in ksolitaire.html so face-down tableau cards stay position:absolute at top:offsetY instead of stacking in normal flow below face-up cards (eliminating 376px vertical overflow at 940x763); lock body to 100vh overflow:hidden (with <=640px scroll fallback), compact header/toolbar into <=2 rows with tighter tableau step compression on deep columns, refresh boardEl.getBoundingClientRect() in fxLoop instead of stale cachedBoardRect, add pointer drag-and-drop with floating card/stack preview and valid drop highlights in ksolitaire.html (plus WM_MOUSEMOVE/WM_LBUTTONUP drag parity in KSolitaire/main.c), display live Campaign/Vegas/X-Ray HUD telemetry (Foundations X/targetCards, Passes stockPasses/maxStockPasses, Suit-Lock slot badges + thaw rule in #help-modal, X-Ray countdown), add color-scheme:dark + dark select option styles, replace prompt()/confirm() in savePlayerNamePrompt()/resetStats() with in-DOM UI, and make Arrow keys move a visible .kb-focus ring across stock/waste/foundations/tableau with Enter to select/move. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KAudio`
+- **Active Target**: `KImage`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, waveform audio editor, spectrum visualizer, filter pipeline, dual Win32 C parity, and promote to Mature table. |
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, bitmap manipulation filters, canvas scaling, dual Win32 C parity, and promote to Mature table. |
 | `KSettings` | `KiloOS/public/apps/ksettings.html`, `KSettings/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, OS theme/sound preferences, display modes, dual Win32 C parity, and promote to Mature table. |
 | `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, document reader pagination/zoom, bookmark state, dual Win32 C parity, and promote to Mature table. |
@@ -196,6 +195,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, channel switcher, offline message spool, dual Win32 C parity, and promote to Mature table. |
 | `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, client connection telemetry, broadcast console, dual Win32 C parity, and promote to Mature table. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
+| `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, waveform audio editor, spectrum visualizer, filter pipeline, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KSolitaire`
@@ -323,6 +323,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T07:22:18-07:00 — kilo-qa: KAudio (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KAudio across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KImage`; rotated active agent to `kilo-expander`.
+
 - **2026-10-29T06:40:16-07:00 — kilo-usability: KSolitaire (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KSolitaire across web and native targets.
@@ -343,9 +348,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Synchronized badge/widget generator with correct theme palettes and canonical 88x31 archetypes.
   - Expanded random/next ring traversal with scope=canonical closed loop and enriched portal.html links.
   - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-29T04:16:32-07:00 — kilo-review: KSolitaire (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 940x763 sheet.png and audited ksolitaire.html + KSolitaire/main.c; un-quarantined from Mature and queued surgical fixes).
-  - Visual/UX Findings: .card.face-down position:relative breaks tableau stacking in sheet.png (376px overflow); 3-row toolbar bloat; stale cachedBoardRect; no card drag-and-drop; missing Campaign target/pass HUD; destructive Arrow nav.
-  - Feature/C/VFS Findings: Broken web dblclick (innerHTML wipe); Stage 11 pass-cap bug; thawAdjacent spanning non-adjacent cols; Replay overwriting live match; C UseShuffleStock stock_cnt buffer overflow + DrawTextA mojibake + sheen sweep; zero VFS mesh.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KSolitaire`, `kilo-tester`->`KSolitaire`, `kilo-expander`->`KSolitaire`] (un-quarantined `KSolitaire` from Mature); advanced `kilo-review` to `KChess`; next agent `kilo-creator`.

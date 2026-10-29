@@ -886,7 +886,7 @@
       <strong style="text-align: right; color: #38bdf8;">Arrow Keys ← / →</strong> <span>Shift Octave (-4 to +4)</span>
       <strong style="text-align: right; color: #38bdf8;">Z / X</strong> <span>Live Record / Playback Performance</span>
       <strong style="text-align: right; color: #38bdf8;">Space / P / C</strong> <span>Start/Pause Sequencer / Clear Grid Pattern</span>
-      <strong style="text-align: right; color: #38bdf8;">L / O / B / N / V</strong> <span>Toggle Delay / Overdrive / Bitcrusher / Chorus / Vis Mode</span>
+      <strong style="text-align: right; color: #38bdf8;">L / O / Q / B / N / V</strong> <span>Toggle Delay / Overdrive / Filter / Bitcrush / Chorus / Vis Mode</span>
       <strong style="text-align: right; color: #34d399;">Ctrl + J</strong> <span>Toggle Online Collaborative Jam Room Modal</span>
       <strong style="text-align: right; color: #38bdf8;">F5 / F9</strong> <span>Quicksave / Quickload State</span>
       <strong style="text-align: right; color: #38bdf8;">Ctrl + S / Ctrl + O</strong> <span>Save / Open JSON Synthesizer Projects</span>
@@ -2464,6 +2464,11 @@
     visualizerStarted = true;
     const canvas = document.getElementById('visCanvas');
     const canvasCtx = canvas.getContext('2d');
+    canvas.style.cursor = 'pointer';
+    canvas.title = 'Click to toggle Oscilloscope / FFT Spectrum visualizer mode [V]';
+    canvas.addEventListener('click', () => {
+      if (btnVisMode) btnVisMode.click();
+    });
 
     function draw() {
       visAnimId = requestAnimationFrame(draw);
@@ -2777,6 +2782,17 @@
         chkChorus.checked = !chkChorus.checked;
         chkChorus.onchange();
         showToast(chkChorus.checked ? '🌊 Stereo Chorus Enabled [N]' : 'Stereo Chorus Disabled [N]', 'info', 1800);
+      }
+      return;
+    }
+
+    if (e.key.toUpperCase() === 'Q' && !e.repeat && !e.ctrlKey) {
+      if (filterType) {
+        const types = ['lowpass', 'bandpass', 'highpass', 'notch'];
+        let curIdx = types.indexOf(filterType.value);
+        filterType.value = types[(curIdx + 1) % types.length];
+        filterType.onchange();
+        showToast(`🎛️ Filter Type: ${filterType.value.toUpperCase()} [Q]`, 'info', 1600);
       }
       return;
     }

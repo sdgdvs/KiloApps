@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T04:16:32-07:00 — kilo-review: KSolitaire (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 940x763 sheet.png and audited ksolitaire.html + KSolitaire/main.c; un-quarantined from Mature and queued surgical fixes).
+  - Visual/UX Findings: .card.face-down position:relative breaks tableau stacking in sheet.png (376px overflow); 3-row toolbar bloat; stale cachedBoardRect; no card drag-and-drop; missing Campaign target/pass HUD; destructive Arrow nav.
+  - Feature/C/VFS Findings: Broken web dblclick (innerHTML wipe); Stage 11 pass-cap bug; thawAdjacent spanning non-adjacent cols; Replay overwriting live match; C UseShuffleStock stock_cnt buffer overflow + DrawTextA mojibake + sheen sweep; zero VFS mesh.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KSolitaire`, `kilo-tester`->`KSolitaire`, `kilo-expander`->`KSolitaire`] (un-quarantined `KSolitaire` from Mature); advanced `kilo-review` to `KChess`; next agent `kilo-creator`.
+
 - **2026-10-29T03:41:15-07:00 — kilo-expander: KBudget (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KBudget across web and native targets.
