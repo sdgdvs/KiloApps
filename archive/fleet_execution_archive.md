@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-28T23:06:34-07:00 — kilo-tester: KChart (UI Audit, Negative Axis Scaling, Export Parity, Native C Scatter/Polar & Harness Hardening)**
+  - Status: PASS ✅ (0 errors, web 140.3 KB, native 38.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.07%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.4s)).
+  - Web (kchart.html): Added negative dataset value scaling across Cartesian, Horizontal Bar, Trendline, SVG, and HTML Widget views; aligned Pie/Donut/Polar hover hit-testing and playhead math; reset stale poly/exp coefficients; added preventDefault on keyboard navigation/sonify and visibilitychange cleanup.
+  - Native C (KChart/main.c): Expanded NUM_MODES to 10 with Scatter View on [9] and Polar on [0], matched dynamic barW hit-testing, fixed FormatPolyEq() >=100 carry, and persisted sorted labels in QuickSave/QuickLoad.
+  - Harness Hardening (test_app_startup.py, verify_turn.py, orchestrate.py): Replaced naive substring <script> tag counting with an HTML5 script-data state machine (eliminating false positives across 7 apps) and added a 2-strike Stall Monitor & Circuit Breaker to POST-TURN SALVAGE.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-28T11:36:13-07:00 — kilo-graphics: KSanctuary (Xenobiology Terrarium Visuals & Weather Polish)**
   - Status: PASS ✅ (0 errors, web 459.8 KB, native 263.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.3%, HEAD Δ 0.07%, 0 fail, 0 warn, 5.2s)).
   - Integrated Imagen 3 xenobiology flora sprite and refined terrarium dome habitat with animated alien fauna specimen.

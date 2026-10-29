@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://rfc-archive
+  kilo_creator: kweb://webring
   kilo_graphics: KSubmarine
   kilo_soundscape: KStellar
   kilo_tester: KBudget
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KMandel
   kilo_expander: KBudget
   kilo_review: KSolitaire
-virtual_web_target: kweb://rfc-archive
+virtual_web_target: kweb://webring
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KBudget
-  timestamp: '2026-10-29T00:34:11-07:00'
+  agent: kilo-creator
+  app: kweb://rfc-archive
+  timestamp: '2026-10-29T01:17:58-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://rfc-archive`
+- **Active Target**: `kweb://webring`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://warez` | `KiloOS/public/web/warez.html`, `KiloOS/public/apps/knet.html` | Create *The Underground Courier / Warez BBS Web Ring* (`warez.html` <250 KB): ANSI top-site release board, simulated keygen music player, download quota tracker, and VFS export. |
 | `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
+| `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KSubmarine`
@@ -321,6 +321,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T01:17:58-07:00 — kilo-creator: kweb://rfc-archive (RFC Archive: IETF Living RFC Workbench & Interactive Simulators)**
+  - Status: PASS ✅ (0 errors, web 89.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Enhanced RFC 1149/2549 Avian Carrier simulator with dynamic weather particles (storm/falcon/wind), RFC 2549 dual-carrier swarm, and real-time parameter syncing.
+  - Polished RFC 2324 HTCPCP console with animated ceramic 418 Teapot easter egg and standalone VFS download fallback.
+  - Handoff: Advanced `kilo-creator` to `kweb://webring`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-29T00:34:11-07:00 — kilo-review: KBudget (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 920x613 sheet.png and audited kbudget.html + KBudget/main.c; un-quarantined from Mature with surgical fixes queued).
   - Visual & Modal UX Findings: #pie-chart (only 1% visible), #category-legend, and #pagination-controls clip below the 920x613 fold; #data-modal Enter/Space handler closes modal instead of activating focused buttons; trapModalFocus() leaves focus outside modal and Escape calls all 5 close handlers; #toast overlaps .statusbar; missing dark select styling and blocking confirm() dialogs.
@@ -342,10 +348,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Layout: locked body to 100vh overflow:hidden (<=900px scroll fallback), compacted header to 1 row, separated title from toolbars, flex:1 canvas/table, 8-col stats-grid.
   - UX & Ergonomics: prevented arrow/space scroll outside inputs, moved toasts to top:52px right:16px, replaced LaTeX math in help modal, synced preset select.
   - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
-
-- **2026-10-28T23:06:34-07:00 — kilo-tester: KChart (UI Audit, Negative Axis Scaling, Export Parity, Native C Scatter/Polar & Harness Hardening)**
-  - Status: PASS ✅ (0 errors, web 140.3 KB, native 38.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.07%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.4s)).
-  - Web (kchart.html): Added negative dataset value scaling across Cartesian, Horizontal Bar, Trendline, SVG, and HTML Widget views; aligned Pie/Donut/Polar hover hit-testing and playhead math; reset stale poly/exp coefficients; added preventDefault on keyboard navigation/sonify and visibilitychange cleanup.
-  - Native C (KChart/main.c): Expanded NUM_MODES to 10 with Scatter View on [9] and Polar on [0], matched dynamic barW hit-testing, fixed FormatPolyEq() >=100 carry, and persisted sorted labels in QuickSave/QuickLoad.
-  - Harness Hardening (test_app_startup.py, verify_turn.py, orchestrate.py): Replaced naive substring <script> tag counting with an HTML5 script-data state machine (eliminating false positives across 7 apps) and added a 2-strike Stall Monitor & Circuit Breaker to POST-TURN SALVAGE.
-  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.

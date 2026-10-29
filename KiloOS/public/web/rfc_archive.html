@@ -868,11 +868,19 @@ let audioMuted = safeGet('kweb_rfc_muted', false);
 let spcDelayNode = null;
 
 function initAudio() {
-  if (audioCtx) return audioCtx;
+  if (audioCtx) {
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
   try {
     const AudioClass = window.AudioContext || window.webkitAudioContext;
     if (AudioClass) {
       audioCtx = new AudioClass();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
       // SPC700 stereo delay line: 180ms delay, 2200Hz LP filter, 0.28 feedback
       const delay = audioCtx.createDelay(1.0);
       delay.delayTime.setValueAtTime(0.18, audioCtx.currentTime);
@@ -1048,6 +1056,20 @@ function saveToKiloVfs(vfsPath, contentStr) {
   } catch (e) {
     showToast('VFS write error: ' + (e.message || e));
   }
+  // Standalone browser fallback if opened outside KiloOS iframe
+  if (window.parent === window || !window.parent) {
+    try {
+      const blob = new Blob([contentStr], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = vfsPath.split('/').pop() || 'download.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {}
+  }
 }
 
 function launchKiloApp(appFile, args) {
@@ -1164,6 +1186,54 @@ function resizeAvianCanvas() {
 window.addEventListener('resize', resizeAvianCanvas);
 resizeAvianCanvas();
 
+// Weather effect particles
+const rainParticles = [];
+for (let i = 0; i < 45; i++) {
+  rainParticles.push({
+    x: Math.random() * 850,
+    y: Math.random() * 320,
+    speed: 6 + Math.random() * 6,
+    len: 12 + Math.random() * 12
+  });
+}
+const windParticles = [];
+for (let i = 0; i < 25; i++) {
+  windParticles.push({
+    x: Math.random() * 850,
+    y: 40 + Math.random() * 220,
+    speed: 7 + Math.random() * 9,
+    len: 25 + Math.random() * 35
+  });
+}
+
+function updateAvianParamLabels() {
+  const selWeather = document.getElementById('selWeather');
+  const selQoS = document.getElementById('selQoS');
+  const selPktCount = document.getElementById('selPktCount');
+  const selMTU = document.getElementById('selMTU');
+
+  const weatherMap = {
+    clear: 'Clear Skies (0% Loss, Tailwind)',
+    wind: 'Crosswinds (15% Loss, Turb.)',
+    storm: 'Thunderstorm Gale (40% Loss)',
+    falcon: 'Falcon Predator Zone (75% Loss)'
+  };
+  const qosMap = {
+    best_effort: '00: Best Effort (Columba livia)',
+    low_latency: '01: Low Latency (Homing Carrier Duck)',
+    high_reliability: '10: High Reliability (Armored Kevlar)',
+    dual_stream: '11: Dual Carrier Redundant Swarm'
+  };
+
+  const dw = document.getElementById('dispWeather');
+  const dq = document.getElementById('dispQoS');
+  const dp = document.getElementById('dispPktMtu');
+
+  if (dw && selWeather) dw.textContent = weatherMap[selWeather.value] || selWeather.value;
+  if (dq && selQoS) dq.textContent = qosMap[selQoS.value] || selQoS.value;
+  if (dp && selPktCount && selMTU) dp.textContent = `${selPktCount.value} Pkts / ${selMTU.value} Octets`;
+}
+
 class PigeonPacket {
   constructor(seq, total, weather, qos, mtu) {
     this.seq = seq;
@@ -1178,12 +1248,14 @@ class PigeonPacket {
     this.targetY = 160 + (Math.random() * 40 - 20);
     this.progress = 0;
     this.wingAngle = 0;
+    this.wingAngle2 = 0.5;
     this.wingSpeed = 0.25;
     this.speed = 0.0035 * (qos === 'low_latency' ? 1.4 : 1.0);
     this.state = 'flying_out'; // flying_out, returning, delivered, downed
     this.lost = false;
     this.downedReason = '';
-    this.color = qos === 'high_reliability' ? '#fbbf24' : (qos === 'low_latency' ? '#38bdf8' : '#e2e8f0');
+    this.color = qos === 'high_reliability' ? '#fbbf24' : (qos === 'low_latency' ? '#38bdf8' : (qos === 'dual_stream' ? '#c084fc' : '#e2e8f0'));
+    this.isDual = (qos === 'dual_stream');
 
     // Calculate packet loss probability
     let lossProb = 0.0;
@@ -1191,6 +1263,10 @@ class PigeonPacket {
     if (weather === 'storm') lossProb = 0.40;
     if (weather === 'falcon') lossProb = 0.75;
     if (qos === 'high_reliability') lossProb *= 0.2; // Armored
+    if (qos === 'dual_stream') {
+      // Both carriers must be downed for total loss: P(both) = lossProb^2
+      lossProb = lossProb * lossProb;
+    }
     if (Math.random() < lossProb) {
       this.lost = true;
       if (weather === 'falcon') this.downedReason = 'Carrier Downed by Peregrine Falcon (RFC 1149 Predation)';
@@ -1201,6 +1277,7 @@ class PigeonPacket {
 
   update() {
     this.wingAngle += this.wingSpeed;
+    if (this.isDual) this.wingAngle2 += this.wingSpeed * 1.05;
     if (this.state === 'flying_out') {
       this.progress += this.speed;
       this.x = 40 + (this.targetX - 40) * this.progress;
@@ -1215,7 +1292,8 @@ class PigeonPacket {
           this.state = 'returning';
           this.progress = 0;
           playPigeonCoo();
-          logAvian(`Host Bravo received icmp_seq=${this.seq} (${this.mtu} octets) -> Sending Avian Echo-Reply`);
+          const extraInfo = this.isDual ? ' (Dual-Carrier Swarm)' : '';
+          logAvian(`Host Bravo received icmp_seq=${this.seq} (${this.mtu} octets)${extraInfo} -> Sending Avian Echo-Reply`);
         }
       }
     } else if (this.state === 'returning') {
@@ -1228,7 +1306,8 @@ class PigeonPacket {
         avianRx++;
         updateAvianStats();
         const rtt = (2800 + Math.random() * 1200 * (this.qos === 'low_latency' ? 0.6 : 1.0)).toFixed(1);
-        logAvian(`${this.mtu} bytes from 192.168.2.1: icmp_seq=${this.seq} ttl=255 time=${rtt} ms (pigeon #${this.seq})`);
+        const qosTag = this.qos === 'low_latency' ? ' [Duck Low-Lat]' : (this.qos === 'high_reliability' ? ' [Armored]' : (this.qos === 'dual_stream' ? ' [Dual-Redundant]' : ''));
+        logAvian(`${this.mtu} bytes from 192.168.2.1: icmp_seq=${this.seq} ttl=255 time=${rtt} ms (pigeon #${this.seq}${qosTag})`);
         playTone(880, 0.08, 'sine', 0.1);
       }
     }
@@ -1247,6 +1326,35 @@ class PigeonPacket {
     }
 
     const direction = this.state === 'returning' ? -1 : 1;
+
+    // If dual carrier, draw secondary companion carrier
+    if (this.isDual) {
+      ctx.save();
+      ctx.translate(this.x + (direction > 0 ? -16 : 16), this.y - 12);
+      ctx.scale(direction, 1);
+      ctx.fillStyle = '#a855f7';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 9, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(7, -3, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      const wY2 = Math.sin(this.wingAngle2) * 7;
+      ctx.strokeStyle = '#a855f7';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-2, 0);
+      ctx.lineTo(-5, wY2);
+      ctx.lineTo(3, wY2);
+      ctx.stroke();
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(-3, 3, 7, 3);
+      ctx.strokeStyle = '#854d0e';
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(-3, 3, 7, 3);
+      ctx.restore();
+    }
+
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.scale(direction, 1);
@@ -1301,13 +1409,67 @@ function renderAvianScene() {
   const h = 320;
   avianCtx.clearRect(0, 0, w, h);
 
-  // Background Sky Gradient
-  const sky = avianCtx.createLinearGradient(0, 0, 0, h);
-  sky.addColorStop(0, '#060a12');
-  sky.addColorStop(0.7, '#131e2f');
-  sky.addColorStop(1, '#1b2c44');
+  const curWeather = document.getElementById('selWeather')?.value || 'clear';
+  const now = Date.now() * 0.001;
+
+  // Background Sky Gradient adapted to weather
+  let sky;
+  if (curWeather === 'storm') {
+    sky = avianCtx.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, '#04040c');
+    sky.addColorStop(0.7, '#0d0d1e');
+    sky.addColorStop(1, '#181228');
+  } else if (curWeather === 'falcon') {
+    sky = avianCtx.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, '#14050d');
+    sky.addColorStop(0.6, '#280c1b');
+    sky.addColorStop(1, '#3a1422');
+  } else if (curWeather === 'wind') {
+    sky = avianCtx.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, '#060a14');
+    sky.addColorStop(0.7, '#101b2a');
+    sky.addColorStop(1, '#162338');
+  } else {
+    sky = avianCtx.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, '#060a12');
+    sky.addColorStop(0.7, '#131e2f');
+    sky.addColorStop(1, '#1b2c44');
+  }
   avianCtx.fillStyle = sky;
   avianCtx.fillRect(0, 0, w, h);
+
+  // Storm lightning flash
+  if (curWeather === 'storm' && Math.random() < 0.012) {
+    avianCtx.fillStyle = 'rgba(235, 245, 255, 0.35)';
+    avianCtx.fillRect(0, 0, w, h);
+  }
+
+  // Circling Peregrine Falcon in upper predator sky
+  if (curWeather === 'falcon') {
+    const fx = w * 0.5 + Math.cos(now * 0.8) * (w * 0.28);
+    const fy = 55 + Math.sin(now * 1.6) * 16;
+    avianCtx.save();
+    avianCtx.translate(fx, fy);
+    avianCtx.scale(Math.sin(now * 0.8) > 0 ? 1 : -1, 1);
+    avianCtx.fillStyle = '#0f172a';
+    avianCtx.beginPath();
+    avianCtx.ellipse(0, 0, 13, 5, -0.1, 0, Math.PI * 2);
+    avianCtx.fill();
+    const fWing = Math.sin(now * 3.5) * 5;
+    avianCtx.beginPath();
+    avianCtx.moveTo(-3, 0);
+    avianCtx.lineTo(-12, -13 + fWing);
+    avianCtx.lineTo(6, 0);
+    avianCtx.lineTo(-12, 13 - fWing);
+    avianCtx.fill();
+    avianCtx.fillStyle = '#f59e0b';
+    avianCtx.beginPath();
+    avianCtx.moveTo(13, -1);
+    avianCtx.lineTo(18, 0);
+    avianCtx.lineTo(13, 2);
+    avianCtx.fill();
+    avianCtx.restore();
+  }
 
   // Distant Mountains
   avianCtx.fillStyle = '#101a28';
@@ -1330,12 +1492,41 @@ function renderAvianScene() {
   avianCtx.lineTo(w, h);
   avianCtx.fill();
 
+  // Wind streaks
+  if (curWeather === 'wind') {
+    avianCtx.strokeStyle = 'rgba(203, 213, 225, 0.22)';
+    avianCtx.lineWidth = 1.2;
+    avianCtx.beginPath();
+    for (const wd of windParticles) {
+      wd.x -= wd.speed;
+      if (wd.x < -wd.len) { wd.x = w + 20; wd.y = 40 + Math.random() * 240; }
+      avianCtx.moveTo(wd.x, wd.y);
+      avianCtx.lineTo(wd.x - wd.len, wd.y + 1);
+    }
+    avianCtx.stroke();
+  }
+
+  // Rain falling in storm
+  if (curWeather === 'storm') {
+    avianCtx.strokeStyle = 'rgba(147, 197, 253, 0.45)';
+    avianCtx.lineWidth = 1;
+    avianCtx.beginPath();
+    for (const r of rainParticles) {
+      r.y += r.speed;
+      r.x -= r.speed * 0.3;
+      if (r.y > h) { r.y = -10; r.x = Math.random() * w; }
+      if (r.x < 0) r.x = w + 10;
+      avianCtx.moveTo(r.x, r.y);
+      avianCtx.lineTo(r.x - 4, r.y + r.len);
+    }
+    avianCtx.stroke();
+  }
+
   // Host Alpha Station (Left Roost)
   avianCtx.fillStyle = '#334155';
   avianCtx.fillRect(20, h - 90, 40, 50);
   avianCtx.fillStyle = '#38bdf8';
   avianCtx.fillRect(26, h - 80, 8, 8);
-  // Radio Mast & Spire
   avianCtx.strokeStyle = '#64748b';
   avianCtx.lineWidth = 2;
   avianCtx.beginPath();
@@ -1351,7 +1542,6 @@ function renderAvianScene() {
   avianCtx.fillRect(w - 60, h - 110, 40, 70);
   avianCtx.fillStyle = '#fbbf24';
   avianCtx.fillRect(w - 54, h - 100, 8, 8);
-  // Antenna
   avianCtx.strokeStyle = '#64748b';
   avianCtx.lineWidth = 2;
   avianCtx.beginPath();
@@ -1363,7 +1553,6 @@ function renderAvianScene() {
   avianCtx.fillText('Host Bravo (192.168.2.1)', w - 160, h - 150);
 
   // Ambient moving cloud and beacon light
-  const now = Date.now() * 0.001;
   const cloudX = ((now * 15) % (w + 100)) - 50;
   avianCtx.fillStyle = 'rgba(255, 255, 255, 0.08)';
   avianCtx.beginPath();
@@ -1404,6 +1593,13 @@ function updateAvianStats() {
   avianStatsDisp.textContent = `Tx: ${avianTx} | Rx: ${avianRx} | Loss: ${lossRate}%`;
   safeSet('kweb_rfc_avian_stats', { tx: avianTx, rx: avianRx });
 }
+
+// Wire interactive weather/QoS/MTU parameter syncing
+document.getElementById('selWeather')?.addEventListener('change', updateAvianParamLabels);
+document.getElementById('selQoS')?.addEventListener('change', updateAvianParamLabels);
+document.getElementById('selPktCount')?.addEventListener('change', updateAvianParamLabels);
+document.getElementById('selMTU')?.addEventListener('change', updateAvianParamLabels);
+updateAvianParamLabels();
 
 document.getElementById('btnDispatchFlock').addEventListener('click', () => {
   const weather = document.getElementById('selWeather').value;
@@ -1549,9 +1745,67 @@ function renderPot() {
 
   // If status is 418 I'm a teapot visual easter egg
   if (potState.isTeapot) {
-    potCtx.fillStyle = '#f43f5e';
-    potCtx.font = '14px monospace';
-    potCtx.fillText("418 I'M A TEAPOT!", 85, 155);
+    // Teapot bay clear & ceramic teapot rendering
+    potCtx.fillStyle = '#090d16';
+    potCtx.fillRect(75, 95, 150, 130);
+
+    // Teapot bulbous body
+    potCtx.fillStyle = '#e11d48';
+    potCtx.beginPath();
+    potCtx.ellipse(145, 165, 42, 34, 0, 0, Math.PI * 2);
+    potCtx.fill();
+    potCtx.strokeStyle = '#fda4af';
+    potCtx.lineWidth = 2;
+    potCtx.stroke();
+
+    // Decorative antique gold band
+    potCtx.strokeStyle = '#fde047';
+    potCtx.lineWidth = 3;
+    potCtx.beginPath();
+    potCtx.arc(145, 165, 36, -0.3, Math.PI + 0.3);
+    potCtx.stroke();
+
+    // Curved pouring spout (left)
+    potCtx.strokeStyle = '#e11d48';
+    potCtx.lineWidth = 8;
+    potCtx.lineCap = 'round';
+    potCtx.beginPath();
+    potCtx.moveTo(115, 172);
+    potCtx.quadraticCurveTo(84, 160, 92, 136);
+    potCtx.stroke();
+
+    // Spout steam puffs
+    const nowSec = Date.now() * 0.003;
+    potCtx.fillStyle = 'rgba(254, 205, 211, 0.7)';
+    for (let s = 0; s < 3; s++) {
+      const puffX = 90 - s * 6 + Math.sin(nowSec * 2 + s) * 4;
+      const puffY = 130 - s * 10 - ((Date.now() * 0.04) % 18);
+      potCtx.beginPath();
+      potCtx.arc(puffX, puffY, 3 + s * 1.5, 0, Math.PI * 2);
+      potCtx.fill();
+    }
+
+    // Teapot Handle (right)
+    potCtx.strokeStyle = '#f59e0b';
+    potCtx.lineWidth = 4;
+    potCtx.beginPath();
+    potCtx.arc(188, 165, 18, -Math.PI * 0.45, Math.PI * 0.45);
+    potCtx.stroke();
+
+    // Teapot Lid & Knob
+    potCtx.fillStyle = '#be123c';
+    potCtx.beginPath();
+    potCtx.ellipse(145, 132, 22, 7, 0, 0, Math.PI * 2);
+    potCtx.fill();
+    potCtx.fillStyle = '#fde047';
+    potCtx.beginPath();
+    potCtx.arc(145, 122, 5, 0, Math.PI * 2);
+    potCtx.fill();
+
+    // Warning Badge
+    potCtx.fillStyle = '#ffe4e6';
+    potCtx.font = 'bold 12px monospace';
+    potCtx.fillText("418 I'M A TEAPOT", 96, 212);
   }
 
   requestAnimationFrame(renderPot);
@@ -1850,7 +2104,7 @@ function stepTcp() {
       clearInterval(tcpAutoTimer);
       tcpAutoTimer = null;
       const btn = document.getElementById('btnAutoPlayTcp');
-      if (btn) btn.textContent = '▶️ Auto Step';
+      if (btn) btn.textContent = '⚡ Auto-Run Scenario';
     }
   }
 }
@@ -1862,7 +2116,7 @@ document.getElementById('btnAutoPlayTcp').addEventListener('click', () => {
   if (tcpAutoTimer) {
     clearInterval(tcpAutoTimer);
     tcpAutoTimer = null;
-    if (btn) btn.textContent = '▶️ Auto Step';
+    if (btn) btn.textContent = '⚡ Auto-Run Scenario';
     return;
   }
   if (btn) btn.textContent = '⏸️ Pause';
@@ -1879,7 +2133,7 @@ function resetTcp() {
     clearInterval(tcpAutoTimer);
     tcpAutoTimer = null;
     const btn = document.getElementById('btnAutoPlayTcp');
-    if (btn) btn.textContent = '▶️ Auto Step';
+    if (btn) btn.textContent = '⚡ Auto-Run Scenario';
   }
   tcpStep = 0;
   badgeClientState.textContent = 'CLOSED';
