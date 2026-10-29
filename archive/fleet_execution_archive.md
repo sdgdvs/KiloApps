@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-28T11:20:04-07:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Party Vault)**
+  - Status: PASS ✅ (0 errors, web 93.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Canvas 64K intro switcher with plasma, rotozoom, starfield, copper bars, and metaballs.
+  - ANSI .NFO viewer with VFS save, party voting board, and discrete Web Audio UI earcons.
+  - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-28T10:33:19-07:00 — kilo-review: KChart (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1060x703 and audited kchart.html + KChart/main.c; un-quarantined from Mature with surgical fixes dispatched to kilo-usability, kilo-tester, and kilo-expander).
   - Visual/UX Findings: 91px vertical overflow clips 2nd row of .stats-grid at 1060x703; missing preventDefault() on Arrow/Space scrolls page 91px; raw unrendered LaTeX dollar-sign markup in #helpModal; #toastContainer occludes #helpModal footer and .stats-grid; missing dark select option styling and external Google Fonts CDN link.

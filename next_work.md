@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KMaze
   kilo_usability: KColosseum
   kilo_qa: KMandel
-  kilo_expander: KChart
+  kilo_expander: KStarForge
   kilo_review: KBudget
 virtual_web_target: kweb://rfc-archive
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KSys
-  timestamp: '2026-10-28T23:40:15-07:00'
+  agent: kilo-expander
+  app: KChart
+  timestamp: '2026-10-29T00:23:18-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -195,11 +195,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KChart`
+- **Active Target**: `KStarForge`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kchart.html: add VFS Open (VFS_SHOW_OPEN -> VFS_READ loading .csv and .json datasets from /home/data/ or /home/docs/, plus handling incoming FILE_OPEN / VFS_OPEN messages with event.origin === window.location.origin check and standalone #fileInput fallback when window.parent === window) and VFS Save (VFS_SHOW_SAVE / VFS_WRITE + OS_NOTIFY exporting .csv, .json, .svg, and .md reports to /home/data/ or /home/docs/ with standalone Blob download fallback). |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmech_telemetry.json via postMessage with standalone fallback) into #modal-telemetry and add optional RFMS online mech duel behind an explicit Multiplayer Arena button. |
@@ -215,6 +214,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kcolosseum_ludus.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback) in #exportModal plus VFS export of Battle Chronicles and orphaned exportGladiatorCertificate() dossiers to /home/docs/ via VFS_WRITE and OS_NOTIFY; render the orphaned Arena Wager bar (#btnWager0, #btnWager25, #btnWager50, #btnWager100, #wagerOddsDisplay calling setArenaWager()) and settle payouts/forfeits on solo match completion, add Certificate button on owned gladiator cards, and add Ludus Facilities [U] and Arena Wager parity to KColosseum/main.c. |
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open (VFS_SHOW_OPEN -> VFS_READ supporting PNG/BMP/PCX/TGA/JSON with standalone #img-loader fallback), Save As VFS (Ctrl+Shift+S + OS_NOTIFY), and direct VFS export for .ANS (/home/bbs/) in #ansi-modal and Sprite Sheet (/home/pictures/) in #animation-dock; add Canvas Size presets (32x32, 64x64, 128x128, 320x240, 640x480, 800x600) calling resizeCanvas() + saveState() (syncing animFrames/#onion-canvas/#grid-canvas) with matching canvas size preset parity in KPaint/main.c. |
+| `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kchart.html: add VFS Open (VFS_SHOW_OPEN -> VFS_READ loading .csv and .json datasets from /home/data/ or /home/docs/, plus handling incoming FILE_OPEN / VFS_OPEN messages with event.origin === window.location.origin check and standalone #fileInput fallback when window.parent === window) and VFS Save (VFS_SHOW_SAVE / VFS_WRITE + OS_NOTIFY exporting .csv, .json, .svg, and .md reports to /home/data/ or /home/docs/ with standalone Blob download fallback). |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KBudget`
@@ -319,6 +319,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T00:23:18-07:00 — kilo-expander: KChart (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KChart across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-review`.
+
 - **2026-10-28T23:40:15-07:00 — kilo-qa: KSys (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KSys across web and native targets.
@@ -343,9 +348,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Polished atmospheric weather overlays (toxic rain, rad storm, blizzard, drought) with dual Win32 C parity in main.c.
   - Conducted full glint sweep confirming zero rotating specular glints or traveling perimeter border dots.
   - Handoff: Advanced `kilo-graphics` to `KSubmarine`; rotated active agent to `kilo-tester`.
-
-- **2026-10-28T11:20:04-07:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Party Vault)**
-  - Status: PASS ✅ (0 errors, web 93.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Canvas 64K intro switcher with plasma, rotozoom, starfield, copper bars, and metaballs.
-  - ANSI .NFO viewer with VFS save, party voting board, and discrete Web Audio UI earcons.
-  - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.

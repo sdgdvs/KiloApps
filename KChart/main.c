@@ -141,6 +141,7 @@ HWND hBtnToggle;
 HWND hBtnTheme;
 HWND hBtnTrend;
 HWND hBtnSort;
+HWND hBtnExport;
 HWND hBtnCopy;
 HWND hBtnHelp;
 HFONT hBtnFont = NULL;
@@ -318,6 +319,50 @@ void CalculateStats() {
     }
 }
 
+void ExportDatasetFiles(void) {
+    char buf[1024];
+    DWORD written = 0;
+
+    // 1. CSV
+    int len = wsprintfA(buf, "Label,Value\r\n");
+    for (int i = 0; i < NUM_ITEMS; i++) {
+        len += wsprintfA(buf + len, "\"%s\",%d\r\n", labels[i], values[i]);
+    }
+    HANDLE hCsv = CreateFileA("kchart_data.csv", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hCsv != INVALID_HANDLE_VALUE) {
+        WriteFile(hCsv, buf, len, &written, NULL);
+        CloseHandle(hCsv);
+    }
+
+    // 2. JSON
+    len = wsprintfA(buf, "[\r\n");
+    for (int i = 0; i < NUM_ITEMS; i++) {
+        len += wsprintfA(buf + len, "  { \"label\": \"%s\", \"value\": %d }%s\r\n",
+            labels[i], values[i], (i == NUM_ITEMS - 1) ? "" : ",");
+    }
+    len += wsprintfA(buf + len, "]\r\n");
+    HANDLE hJson = CreateFileA("kchart_data.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hJson != INVALID_HANDLE_VALUE) {
+        WriteFile(hJson, buf, len, &written, NULL);
+        CloseHandle(hJson);
+    }
+
+    // 3. Markdown report
+    len = wsprintfA(buf, "### KChart Studio Data Report\r\n\r\n| # | Label | Value |\r\n|---|---|---|\r\n");
+    for (int i = 0; i < NUM_ITEMS; i++) {
+        len += wsprintfA(buf + len, "| %d | %s | %d |\r\n", i + 1, labels[i], values[i]);
+    }
+    len += wsprintfA(buf + len, "\r\n**Stats**: Mean: %d | Median: %d | StdDev: %d | Min: %d | Max: %d | Total: %d\r\n",
+        statMean, statMedian, statStdDev, statMin, statMax, statTotal);
+    HANDLE hMd = CreateFileA("kchart_report.md", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hMd != INVALID_HANDLE_VALUE) {
+        WriteFile(hMd, buf, len, &written, NULL);
+        CloseHandle(hMd);
+    }
+
+    SetStatus("Exported kchart_data.csv, .json, and .md!");
+}
+
 void CopyDataToClipboard(HWND hwnd) {
     char buf[512];
     int len = wsprintfA(buf, "KChart Studio Data Export\r\nMode: %s | Theme: %s\r\n\r\nLabel\tValue\r\n",
@@ -369,7 +414,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  [S]           : Sort Dataset Ascending\n"
         "  [Left]/[Right]: Select / Navigate data point\n"
         "  [Up]/[Down]   : Nudge selected value (+5 / -5)\n"
-        "  [Ctrl+C]      : Copy dataset and summary statistics to Clipboard\n"
+        "  [Ctrl+C]      : Copy dataset and summary statistics to Clipboard\n"\
+        "  [E] / [Ctrl+S]: Export dataset to CSV, JSON, and Markdown reports\n"
         "  [Esc]         : Deselect current data point\n\n"
         "MOUSE CONTROLS:\n"
         "  - Hover over bars, points, pie slices, radar spokes, or petals for interactive tooltips\n"
@@ -538,8 +584,8 @@ void LayoutButtons(HWND hwnd) {
     int clientW = rc.right - rc.left;
     int clientH = rc.bottom - rc.top;
 
-    if (hBtnPreset && hBtnRandomize && hBtnToggle && hBtnTheme && hBtnTrend && hBtnSort && hBtnCopy && hBtnHelp) {
-        int btnCount = 8;
+    if (hBtnPreset && hBtnRandomize && hBtnToggle && hBtnTheme && hBtnTrend && hBtnSort && hBtnExport && hBtnCopy && hBtnHelp) {
+        int btnCount = 9;
         int btnW = SCALE(86);
         int btnH = SCALE(28);
         int gap = SCALE(6);
@@ -554,7 +600,7 @@ void LayoutButtons(HWND hwnd) {
         int startX = (clientW - totalW) / 2;
         if (startX < 4) startX = 4;
 
-        HWND btns[8] = { hBtnPreset, hBtnRandomize, hBtnToggle, hBtnTheme, hBtnTrend, hBtnSort, hBtnCopy, hBtnHelp };
+        HWND btns[9] = { hBtnPreset, hBtnRandomize, hBtnToggle, hBtnTheme, hBtnTrend, hBtnSort, hBtnExport, hBtnCopy, hBtnHelp };
         for (int i = 0; i < btnCount; i++) {
             SetWindowPos(btns[i], NULL, startX + i * (btnW + gap), btnY, btnW, btnH, SWP_NOZORDER);
         }
@@ -583,6 +629,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnSort = CreateWindowEx(0, "BUTTON", "Sort [S]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                 0, 0, 86, 28, hwnd, (HMENU)4, NULL, NULL);
+            hBtnExport = CreateWindowEx(0, "BUTTON", "Export [E]",
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+                0, 0, 86, 28, hwnd, (HMENU)9, NULL, NULL);
             hBtnCopy = CreateWindowEx(0, "BUTTON", "Copy [^C]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                 0, 0, 86, 28, hwnd, (HMENU)8, NULL, NULL);
@@ -598,6 +647,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBtnTheme, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnTrend, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnSort, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
+            SendMessage(hBtnExport, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnCopy, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             
@@ -801,6 +851,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     target[i] = 10 + (MyRand() % 90);
                 }
                 SetStatus("Generated randomized dataset");
+            } else if (isCtrl && (wParam == 'S' || wParam == 's')) {
+                ExportDatasetFiles();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'E' || wParam == 'e') {
+                ExportDatasetFiles();
+                InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'S' || wParam == 's') {
                 SendMessage(hwnd, WM_COMMAND, 4, 0);
             } else if (wParam == VK_LEFT) {
@@ -907,6 +963,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char buf[64];
                 wsprintfA(buf, "Loaded Preset: %s", presetNames[currentPreset]);
                 SetStatus(buf);
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (cmdId == 9) { // Export
+                ExportDatasetFiles();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (cmdId == 8) { // Copy
                 CopyDataToClipboard(hwnd);
