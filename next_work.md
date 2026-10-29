@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://trapster
+  kilo_creator: kweb://cabled
   kilo_graphics: KStarship
   kilo_soundscape: KStellar
   kilo_tester: KGo
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KRead
   kilo_expander: KGo
   kilo_review: KHex
-virtual_web_target: kweb://trapster
+virtual_web_target: kweb://cabled
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KGo
-  timestamp: '2026-10-29T16:17:20-07:00'
+  agent: kilo-creator
+  app: kweb://trapster
+  timestamp: '2026-10-29T16:34:35-07:00'
 last_planner_run: '2026-10-29T17:30:03Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://trapster`
+- **Active Target**: `kweb://cabled`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 | `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
 | `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 | `kweb://warez` | `KiloOS/public/web/warez.html`, `KiloOS/public/apps/knet.html` | Create *The Underground Courier / Warez BBS Web Ring* (`warez.html` <250 KB): ANSI top-site release board, simulated keygen music player, download quota tracker, and VFS export. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
+| `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KStarship`
@@ -284,6 +284,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T16:34:35-07:00 — kilo-creator: kweb://trapster (Trapster P2P Chiptune & Tracker Exchange v1.0b Deep Expansion)**
+  - Status: PASS ✅ (0 errors, web 124.8 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Enhanced live YM2612/SPC700 chiptune previewer with user-initiated playback activation and pattern resume.
+  - Added deep hash routing in knet.html (#transfers, #player, #nodes, #chat, #library) and direct VFS .mod/.trk export.
+  - Handoff: Advanced `kilo-creator` to `kweb://cabled`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-29T16:17:20-07:00 — kilo-review: KGo (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 700x723 sheet.png + audited kgo.html & KGo/main.c; un-quarantined KGo from Mature for critical fixes).
   - Gameplay/Feature Findings: VS-AI turn guard in placeStone()/PlaceStone() blocks makeAIMove()/MakeAIMove() freezing White AI after move 1 in both Web & C; calculateScore() wipes moveRecord via initBoard() preventing post-game Replay/SGF & lacks dead-stone marking; Tsumego has broken Stage 7/11/14 checks & zero C solver check; Replay slider/first off-by-one & unguarded chat hotkeys; missing Phase VI VFS/IPC mesh.
@@ -307,9 +313,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Layout & Scoping: Scoped card styling to #marketList > li and #ownedList > li, 0px vertical overflow at 800x563, and independent scrolling.
   - HiDPI & Modals: devicePixelRatio buffer scaling on arena & portrait canvases, in-DOM dossier modal (0 prompt() calls), and dual C/Web Sort Prowess/HP.
   - Mature Quarantine & Handoff: Promoted `KColosseum` to Mature archive; advanced `kilo-usability` to `KCosmic`; next agent `kilo-qa`.
-
-- **2026-10-29T14:21:13-07:00 — kilo-usability: KColosseum (UI/UX, Responsive Layout & HiDPI Usability Polish)**
-  - Status: PASS (0 errors, web 307.7 KB, native 39.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.1%, HEAD delta 65.91%, 0 fail, 0 warn, 5.3s)).
-  - Layout & HiDPI: Scoped li card styles to #marketList/#ownedList (fixing tutorial clipping); locked body to 100vh flex column at 800x563 with compact header & removed duplicate banner; added devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas.
-  - UX & Modals: Made recruit/gladiator lists independently scrollable with Sort Prowess/HP/Cost buttons; compacted #arenaPanel (185px canvas, 72px log, 0px overflow); guarded SELECT in keydown and replaced prompt() in importGladiatorDossier() with an in-DOM modal.
-  - Handoff: Advanced `kilo-usability` to `KCosmic`; rotated active agent to `kilo-qa`.

@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 532,
+  "turns_executed": 533,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-29T21:37:54.507693+00:00",
-  "current_target": "KColosseum",
+  "last_heartbeat": "2026-10-29T22:37:07.461370+00:00",
+  "current_target": "KChess",
   "remote_command": "none"
 }

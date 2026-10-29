@@ -1466,6 +1466,11 @@ function safeSet(key, val) {
 }
 
 // --- KiloOS VFS & IPC Integration ---
+/**
+ * Saves file content directly to KiloOS VFS and notifies shell
+ * @param {string} vfsPath - Target path in /home/music/
+ * @param {string} contentStr - File content data
+ */
 function saveToKiloVfs(vfsPath, contentStr) {
   try {
     window.parent.postMessage({
@@ -2013,7 +2018,7 @@ function startSequencer() {
   if (seqTimerId) clearInterval(seqTimerId);
   const bpm = (currentTrack && currentTrack.bpm) || 125;
   const tickIntervalMs = Math.round((60000 / bpm) / 4); // 16th note tracker ticks
-  let row = 0;
+  let row = currentPatternRow || 0;
   seqTimerId = setInterval(() => {
     if (!isPlaying) return;
     playTrackerTick(row);
@@ -2059,6 +2064,7 @@ function playerTogglePlay() {
   isPlaying = !isPlaying;
   const btn = document.getElementById('btnPlayPause');
   if (isPlaying) {
+    window.__KILO_BGM_ENABLED = true;
     btn.textContent = '⏸';
     startSequencer();
     showToast('Playing: ' + currentTrack.title);
@@ -2082,7 +2088,10 @@ function playerNextTrack() {
   const nextTrack = TRACK_CATALOG[(curIdx + 1) % TRACK_CATALOG.length];
   selectedTrackId = nextTrack.id;
   loadTrackIntoPlayer(nextTrack);
-  if (isPlaying) startSequencer();
+  if (isPlaying) {
+    window.__KILO_BGM_ENABLED = true;
+    startSequencer();
+  }
 }
 
 function playerPrevTrack() {
@@ -2090,7 +2099,10 @@ function playerPrevTrack() {
   const prevTrack = TRACK_CATALOG[(curIdx - 1 + TRACK_CATALOG.length) % TRACK_CATALOG.length];
   selectedTrackId = prevTrack.id;
   loadTrackIntoPlayer(prevTrack);
-  if (isPlaying) startSequencer();
+  if (isPlaying) {
+    window.__KILO_BGM_ENABLED = true;
+    startSequencer();
+  }
 }
 
 function playerToggleLoop() {
@@ -2395,18 +2407,21 @@ function downloadSelectedTrack() {
   switchTab('tab-transfers');
 }
 
+/**
+ * Previews the selected track in the live chiptune player
+ */
 function previewSelectedTrack() {
   const trk = TRACK_CATALOG.find(t => t.id === selectedTrackId);
   if (!trk) return;
+  window.__KILO_BGM_ENABLED = true;
   loadTrackIntoPlayer(trk);
   switchTab('tab-player');
-  playerTogglePlay();
-}
-
-function saveSelectedDirectVfs() {
-  const trk = TRACK_CATALOG.find(t => t.id === selectedTrackId);
-  if (!trk) return;
-  generateAndSaveVfsModule(trk);
+  if (!isPlaying) {
+    playerTogglePlay();
+  } else {
+    startSequencer();
+    showToast('Playing: ' + currentTrack.title);
+  }
 }
 
 function copyMagnetLink() {
@@ -2578,9 +2593,15 @@ function clearCompletedDownloads() {
 function playCompletedTrack(trkId) {
   const trk = TRACK_CATALOG.find(t => t.id === trkId);
   if (trk) {
+    window.__KILO_BGM_ENABLED = true;
     loadTrackIntoPlayer(trk);
     switchTab('tab-player');
-    playerTogglePlay();
+    if (!isPlaying) {
+      playerTogglePlay();
+    } else {
+      startSequencer();
+      showToast('Playing: ' + currentTrack.title);
+    }
   }
 }
 
@@ -3573,6 +3594,19 @@ window.addEventListener('DOMContentLoaded', () => {
   filterNodeDirectory();
   const initialTrack = TRACK_CATALOG[0];
   loadTrackIntoPlayer(initialTrack);
+
+  // Hash route navigation for kweb deep links
+  function handleHashRoute() {
+    const hash = (window.location.hash || '').toLowerCase();
+    if (hash === '#transfers' || hash === '#dl') switchTab('tab-transfers');
+    else if (hash === '#player' || hash === '#play') switchTab('tab-player');
+    else if (hash === '#chat' || hash === '#irc') switchTab('tab-chat');
+    else if (hash === '#library') switchTab('tab-library');
+    else if (hash === '#nodes' || hash === '#topo' || hash === '#directory') switchTab('tab-topo');
+    else if (hash === '#search') switchTab('tab-search');
+  }
+  handleHashRoute();
+  window.addEventListener('hashchange', handleHashRoute);
 });
 </script>
 

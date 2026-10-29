@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T14:21:13-07:00 — kilo-usability: KColosseum (UI/UX, Responsive Layout & HiDPI Usability Polish)**
+  - Status: PASS (0 errors, web 307.7 KB, native 39.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.1%, HEAD delta 65.91%, 0 fail, 0 warn, 5.3s)).
+  - Layout & HiDPI: Scoped li card styles to #marketList/#ownedList (fixing tutorial clipping); locked body to 100vh flex column at 800x563 with compact header & removed duplicate banner; added devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas.
+  - UX & Modals: Made recruit/gladiator lists independently scrollable with Sort Prowess/HP/Cost buttons; compacted #arenaPanel (185px canvas, 72px log, 0px overflow); guarded SELECT in keydown and replaced prompt() in importGladiatorDossier() with an in-DOM modal.
+  - Handoff: Advanced `kilo-usability` to `KCosmic`; rotated active agent to `kilo-qa`.
+
 - **2026-10-29T13:39:20-07:00 — kilo-tester: KMaze (KMaze controls & mechanics overhaul)**
   - Default speed keybind migrated to B/b avoiding backward-walk conflict
   - Fixed pickaxe wall auto-consumption and require P for cracked walls
