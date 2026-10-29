@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KSubmarine
   kilo_soundscape: KStellar
   kilo_tester: KMaze
-  kilo_usability: KChart
+  kilo_usability: KColosseum
   kilo_qa: KSys
   kilo_expander: KChart
   kilo_review: KBudget
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KChart
-  timestamp: '2026-10-28T23:06:34-07:00'
+  timestamp: '2026-10-28T23:21:25-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -154,11 +154,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Support negative dataset values (such as deltaData() outputs) across renderAxesAndCartesian(), renderHorizontalBar(), and renderTrendOverlay() by scaling axes over [min(0,minVal), max(0,maxVal)] with a zero baseline instead of clamping with Math.max(0,...) and passing raw numeric values to renderTrendOverlay() so movavg/mean/corridor match computeStats(); reset trendStats.polyA/B/C=0 when count<3 and trendStats.expA/B=0 when posIndices.length<2, fix Poly badge negative sign formatting, and draw transposed trend overlays in renderHorizontalBar(); align Pie/Donut/Polar cx and outerR in handlePointerMove(), updateHoverCoordsForIndex(), and renderSonifyPlayhead() with renderPieOrDonut()/renderPolarCoxcomb(); make exportSvg() and #btnExportHtml render active chartType, currentTheme, and trend/target overlays instead of hardcoded vertical bars, wrap startup localStorage calls in try/catch, add Ctrl+Z preventDefault() undo, and stop sonifyInterval on visibilitychange; in KChart/main.c add Scatter View on [9] and Polar on [0] (NUM_MODES 10), widen WM_MOUSEMOVE Cartesian hit-testing with dynamic barW, add >=100 carry in FormatPolyEq(), and persist sorted label order in QuickSaveState()/QuickLoadState(). |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KChart`
+- **Active Target**: `KColosseum`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Eliminate 91px vertical overflow clipping .stats-grid at 1060x703 by locking body to 100vh overflow:hidden (with <=900px scroll fallback), compacting header into 1 row, separating left .panel-title from single-line #chartTypeGroup/#trendGroup toolbars, making .canvas-container and .table-wrapper flex:1 min-height:0, and setting .stats-grid to 8 columns; add e.preventDefault() on ArrowLeft/Right/Up/Down and Space outside inputs; move #toastContainer to top:52px right:16px and skip duplicate welcome toast when #helpModal opens on first boot; replace raw unrendered LaTeX dollar-sign formulas in #helpModal with clean Unicode math (y=mx+b, R2, y=ax2+bx+c, y=a*e^(bx), +-1 sigma, Sigma, Delta), add color-scheme:dark on :root and dark background/color on select option, remove external Google Fonts link, and keep #presetSelect synced to loaded preset. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Scope global li card styling to #marketList > li and #ownedList > li so #tutorialModal ol li stops stretching and clipping #btnTutorialEnter; lock body to 100vh flex column at 800x563 by merging .top-nav, h1, and .funds into a compact header, removing the duplicate Empire Duel Arena banner, making #marketList and #ownedList independently scrollable with Sort by Prowess/HP buttons (sortGladiators), and compacting #arenaPanel (#arenaCanvas 185px, #combatLog 72px) for 0px overflow; add devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas, guard SELECT in keydown, and replace prompt() in importGladiatorDossier() with an in-DOM modal. |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Orbit & navigation viewport ergonomics, touch/keyboard flight controls, HiDPI radar canvas scaling, and compact HUD. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -175,6 +174,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | **[ARGON REVIEW]:** Fix right workbench .panel-header 2-line wrapping at 980x663 via white-space:nowrap and compact button labels so both pane headers align cleanly; pre-populate #inputText with sample text on boot/#btnSplashNew and runEncrypt() silently on init; abort #btnVFSSave when prompt() returns null; and update TUTORIAL_STEPS for Ctrl+1..6 and Pipeline/AES/RSA. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | **[ARGON REVIEW]:** Move #toastContainer from bottom 38px left 50% to top 52px right 16px so toasts stop occluding #addRecordForm inputs and bottom card buttons, and add white-space nowrap to .btn-primary so Add Record stays single-line; add color-scheme dark on :root and dark background/color on select option so dropdowns never render white-on-white; compact .header/.controls at 1020x663 to <=2 rows, add horizontal margin (6px 12px 0) to #sqlQueryBuilder and compact .sql-editor (height 62px) to preserve .sql-results-container scroll height, reset .sql-results-container scrollTop and #sqlPresetSelect on run, and wire click-to-sort on #sqlResultsHead th; fix renderSchemaDiagram() in #viewSchema to route SVG Bezier connectors with arrowheads horizontally between FK and PK .schema-col-item row edges, sync #schemaSvgOverlay to #schemaEntitiesGrid scroll size without forced min-height 500px, and redraw ER connectors on window resize; document [5] Schema and [X] Indexes in #helpModal/welcome toast and replace blocking confirm() in dropColumnFromTable()/removeRelation() with in-DOM confirmation. |
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Eliminate 1140x743 sidebar fold hiding Color Palette and Layers by adding a 3-tab .sidebar switcher (Draw / Layers / FX & Starters) while keeping 800x600 #canvas-wrapper centered (margin:auto) at 100% 1:1 pixel zoom so Draw tab fits all 14 Tools (compact 3-col grid), Color Palette (FG/BG + 12 swatches + preset + custom picker), Brush & Size (inline Round/Square [4]), and Symmetry [M] with 0px scroll; preserve span.btn-hint in updateCollabUI() and update #sound-icon in RetroAudioEngine.toggle() without widening #btn-sound; replace blocking confirm() in clearCanvasPrompt() with non-blocking 2-click armed confirmation. |
+| `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Eliminate 91px vertical overflow clipping .stats-grid at 1060x703 by locking body to 100vh overflow:hidden (with <=900px scroll fallback), compacting header into 1 row, separating left .panel-title from single-line #chartTypeGroup/#trendGroup toolbars, making .canvas-container and .table-wrapper flex:1 min-height:0, and setting .stats-grid to 8 columns; add e.preventDefault() on ArrowLeft/Right/Up/Down and Space outside inputs; move #toastContainer to top:52px right:16px and skip duplicate welcome toast when #helpModal opens on first boot; replace raw unrendered LaTeX dollar-sign formulas in #helpModal with clean Unicode math (y=mx+b, R2, y=ax2+bx+c, y=a*e^(bx), +-1 sigma, Sigma, Delta), add color-scheme:dark on :root and dark background/color on select option, remove external Google Fonts link, and keep #presetSelect synced to loaded preset. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KSys`
@@ -319,6 +319,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-28T23:21:25-07:00 — kilo-usability: KChart (Usability & Layout Polish)**
+  - Status: PASS (0 errors, web 141.8 KB, native 38.5 KB < 999 KB; visual PASS 0 fail 0 warn 0px overflow).
+  - Layout: locked body to 100vh overflow:hidden (<=900px scroll fallback), compacted header to 1 row, separated title from toolbars, flex:1 canvas/table, 8-col stats-grid.
+  - UX & Ergonomics: prevented arrow/space scroll outside inputs, moved toasts to top:52px right:16px, replaced LaTeX math in help modal, synced preset select.
+  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
+
 - **2026-10-28T23:06:34-07:00 — kilo-tester: KChart (UI Audit, Negative Axis Scaling, Export Parity, Native C Scatter/Polar & Harness Hardening)**
   - Status: PASS ✅ (0 errors, web 140.3 KB, native 38.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.07%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.4s)).
   - Web (kchart.html): Added negative dataset value scaling across Cartesian, Horizontal Bar, Trendline, SVG, and HTML Widget views; aligned Pie/Donut/Polar hover hit-testing and playhead math; reset stale poly/exp coefficients; added preventDefault on keyboard navigation/sonify and visibilitychange cleanup.
@@ -344,9 +350,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: 91px vertical overflow clips 2nd row of .stats-grid at 1060x703; missing preventDefault() on Arrow/Space scrolls page 91px; raw unrendered LaTeX dollar-sign markup in #helpModal; #toastContainer occludes #helpModal footer and .stats-grid; missing dark select option styling and external Google Fonts CDN link.
   - Feature/VFS Findings: Negative values from deltaData() are clamped to 0 across Cartesian/H-Bar/Trend renderers; exportSvg() and #btnExportHtml hardcode vertical bars regardless of chartType; Pie/Donut/Polar hover hit-testing cx/outerR mismatches renderer; stale poly/exp trendStats on <3 or <=0 pts; KChart/main.c missing Scatter [9]/[0] parity and QuickLoadState() scrambles sorted labels; zero Phase VI KiloOS VFS Open/Save integration.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KChart`, `kilo-tester`->`KChart`, `kilo-expander`->`KChart`] (un-quarantined `KChart` from Mature); advanced `kilo-review` to `KBudget`; next agent `kilo-creator`.
-
-- **2026-10-28T10:15:00-07:00 — kilo-planner: Fleet Orchestration (24-Hour Fleet Planning & Anti-Piling Queue Replenishment)**
-  - Status: PASS ✅ (105 apps audited, 53 mature, 52 active; icon audit & log rotation clean).
-  - Anti-Piling & Hygiene: Replaced mature KMech in kilo-graphics with KCosmic; replaced conflicting KSys in kilo-tester (-> KRogue) and kilo-usability (-> KCosmic).
-  - Queue Replenishment: Replenished kilo-qa (+KRadio, +KMail, +KMedia, +KChat, +KChatServer to 12 targets) maintaining deep 8-12 target runways across all queues.
-  - Verification & Sync: All queues verified against Mature quarantine; updated last_planner_run timestamp.

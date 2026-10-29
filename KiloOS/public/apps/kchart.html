@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KChart Studio - Advanced Data Visualization & Analytics Suite</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
+    color-scheme: dark;
     --bg-color: #09090b;
     --card-bg: rgba(24, 24, 27, 0.75);
     --card-border: rgba(255, 255, 255, 0.1);
@@ -25,16 +25,26 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #09090b 70%);
     color: var(--text-main);
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    min-height: 100vh;
+    height: 100vh;
+    max-height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow-x: hidden;
+    overflow: hidden;
+  }
+
+  @media (max-width: 900px) {
+    body {
+      height: auto;
+      max-height: none;
+      min-height: 100vh;
+      overflow-y: auto;
+    }
   }
 
   /* Header Bar */
@@ -42,72 +52,91 @@
     background: rgba(15, 15, 20, 0.85);
     backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--card-border);
-    padding: 8px 16px;
+    padding: 4px 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: sticky;
     top: 0;
     z-index: 100;
+    flex-shrink: 0;
+    gap: 6px;
+    white-space: nowrap;
   }
 
   .logo-title {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 14px;
     letter-spacing: -0.02em;
     color: #ffffff;
     flex-shrink: 0;
   }
 
   .logo-icon {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    border-radius: 7px;
+    border-radius: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
-    box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+    font-size: 11px;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
   }
 
   .header-actions {
     display: flex;
-    gap: 6px;
+    gap: 3px;
     align-items: center;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .header-actions::-webkit-scrollbar {
+    display: none;
   }
 
   .header-actions button, .header-actions .btn {
-    padding: 5px 9px;
-    font-size: 11px;
-    gap: 4px;
+    padding: 3px 5px;
+    font-size: 10.5px;
+    gap: 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .header-actions select {
-    padding: 5px 8px;
-    font-size: 11px;
+    padding: 3px 5px;
+    font-size: 10.5px;
+    max-width: 125px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   /* Main Workspace Layout */
   .workspace {
     display: grid;
     grid-template-columns: 1fr 340px;
-    gap: 14px;
-    padding: 14px 16px;
+    gap: 10px;
+    padding: 10px 12px;
     flex: 1;
+    min-height: 0;
     max-width: 1640px;
     width: 100%;
     margin: 0 auto;
+    overflow: hidden;
   }
 
-  @media (max-width: 1024px) {
+  @media (max-width: 900px) {
     .workspace {
       grid-template-columns: 1fr;
+      overflow: visible;
+      height: auto;
+      min-height: auto;
     }
   }
 
@@ -211,32 +240,49 @@
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: 12px;
-    padding: 14px 16px;
+    padding: 10px 12px;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  @media (max-width: 900px) {
+    .panel-card {
+      min-height: auto;
+      overflow: visible;
+    }
   }
 
   .panel-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     color: #e4e4e7;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
     gap: 8px;
+    flex-shrink: 0;
   }
 
   /* Toolbar */
   .toolbar {
     display: flex;
     gap: 6px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    flex-shrink: 0;
+  }
+  .toolbar::-webkit-scrollbar {
+    display: none;
   }
 
   .btn-group {
@@ -246,7 +292,9 @@
     border-radius: 8px;
     padding: 2px;
     gap: 2px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   button, .btn {
@@ -293,7 +341,13 @@
     box-shadow: 0 2px 8px rgba(59, 130, 246, 0.45);
   }
 
+  select option {
+    background: #18181b;
+    color: #f4f4f5;
+  }
+
   select {
+    color-scheme: dark;
     padding: 6px 10px;
     font-size: 12px;
     font-weight: 500;
@@ -314,11 +368,19 @@
   .canvas-container {
     position: relative;
     width: 100%;
-    height: clamp(340px, 46vh, 430px);
+    flex: 1;
+    min-height: 0;
     background: rgba(0, 0, 0, 0.28);
     border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     overflow: hidden;
+  }
+
+  @media (max-width: 900px) {
+    .canvas-container {
+      height: 340px;
+      flex: none;
+    }
   }
 
   canvas {
@@ -340,42 +402,71 @@
   /* Stats Grid */
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   .stat-box {
     background: rgba(255, 255, 255, 0.035);
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: 8px;
-    padding: 8px 10px;
+    padding: 5px 6px;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
+    min-width: 0;
+    text-align: center;
   }
 
   .stat-label {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .stat-value {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 700;
     color: #ffffff;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 900px) {
+    .stats-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  @media (max-width: 540px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 
   /* Table Editor */
   .table-wrapper {
-    max-height: 280px;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     border-radius: 8px;
     border: 1px solid var(--card-border);
     background: rgba(0, 0, 0, 0.2);
+  }
+
+  @media (max-width: 900px) {
+    .table-wrapper {
+      max-height: 240px;
+      flex: none;
+    }
   }
 
   table {
@@ -531,15 +622,14 @@
     font-weight: 500;
   }
 
-  /* Toast Notification System (Centered Bottom to Prevent Occlusion of Inputs & Drop Zone) */
+  /* Toast Notification System */
   #toastContainer {
     position: fixed;
-    bottom: 16px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 52px;
+    right: 16px;
     display: flex;
-    flex-direction: column-reverse;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-end;
     gap: 8px;
     z-index: 9999;
     pointer-events: none;
@@ -574,7 +664,7 @@
   .toast.toast-out { opacity: 0; transform: translateY(10px) scale(0.95); }
 
   @keyframes toastSlideUp {
-    from { opacity: 0; transform: translateY(12px) scale(0.96); }
+    from { opacity: 0; transform: translateY(-8px) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
@@ -737,7 +827,7 @@
     <button id="btnHelp" aria-label="Help"><span class="kbd-badge">F1</span> Help</button>
     <button id="btnQuickSave" title="QuickSave dataset and layout snapshot (F5)"><span class="kbd-badge">F5</span> 💾 Save</button>
     <button id="btnQuickLoad" title="QuickLoad saved snapshot (F9)"><span class="kbd-badge">F9</span> 📂 Load</button>
-    <button id="btnCopyData" title="Copy dataset & statistics to clipboard (Ctrl+C)"><span class="kbd-badge">Ctrl+C</span> 📋 Copy</button>
+    <button id="btnCopyData" title="Copy dataset & statistics to clipboard (Ctrl+C)"><span class="kbd-badge">^C</span> 📋 Copy</button>
     <button id="btnExportSvg" title="Export Scalable Vector Graphic">📐 SVG</button>
     <button id="btnExportPng" title="Export PNG raster image">📷 PNG</button>
     <button id="btnExportMd" title="Export GitHub Markdown Table">📝 MD</button>
@@ -754,30 +844,30 @@
   <!-- Left Side: Main Chart & Controls -->
   <div class="panel-card">
     <div class="panel-title">
-      <span>Visualization Canvas <span style="font-size: 11px; color: var(--accent); font-weight: 600; margin-left: 8px; background: rgba(59,130,246,0.12); padding: 2px 6px; border-radius: 4px;">[Press F1 / H for Help | T for Trend | U to Sonify]</span></span>
-      <div class="toolbar">
-        <div class="btn-group" id="chartTypeGroup" title="Select Visualization Engine (Press 1-0)">
-          <button data-type="bar" class="active"><span class="kbd-badge">1</span>Bar</button>
-          <button data-type="line"><span class="kbd-badge">2</span>Line</button>
-          <button data-type="area"><span class="kbd-badge">3</span>Area</button>
-          <button data-type="pie"><span class="kbd-badge">4</span>Pie</button>
-          <button data-type="donut"><span class="kbd-badge">5</span>Donut</button>
-          <button data-type="radar"><span class="kbd-badge">6</span>Radar</button>
-          <button data-type="hbar"><span class="kbd-badge">7</span>H-Bar</button>
-          <button data-type="step"><span class="kbd-badge">8</span>Step</button>
-          <button data-type="scatter"><span class="kbd-badge">9</span>Scatter</button>
-          <button data-type="polar"><span class="kbd-badge">0</span>Polar</button>
-        </div>
-        <div class="btn-group" id="trendGroup" title="Trendline & Regression Analysis Overlay (Press 'T' to cycle)">
-          <button data-trend="none" class="active">Trend: Off</button>
-          <button data-trend="linear">Linear Fit</button>
-          <button data-trend="poly2">Poly (x²)</button>
-          <button data-trend="exp">Exp (eˣ)</button>
-          <button data-trend="movavg">Mov Avg</button>
-          <button data-trend="mean">Mean</button>
-          <button data-trend="corridor">Corridor (±σ)</button>
-        </div>
-        <button id="btnRandomize"><span class="kbd-badge">R</span>🎲 Randomize</button>
+      <span>Visualization Canvas <span class="help-hint-pill">[Press F1 / H for Help | T for Trend | U to Sonify]</span></span>
+      <button id="btnRandomize" class="btn-sm"><span class="kbd-badge">R</span>🎲 Randomize</button>
+    </div>
+    <div class="toolbar">
+      <div class="btn-group" id="chartTypeGroup" title="Select Visualization Engine (Press 1-0)">
+        <button data-type="bar" class="active"><span class="kbd-badge">1</span>Bar</button>
+        <button data-type="line"><span class="kbd-badge">2</span>Line</button>
+        <button data-type="area"><span class="kbd-badge">3</span>Area</button>
+        <button data-type="pie"><span class="kbd-badge">4</span>Pie</button>
+        <button data-type="donut"><span class="kbd-badge">5</span>Donut</button>
+        <button data-type="radar"><span class="kbd-badge">6</span>Radar</button>
+        <button data-type="hbar"><span class="kbd-badge">7</span>H-Bar</button>
+        <button data-type="step"><span class="kbd-badge">8</span>Step</button>
+        <button data-type="scatter"><span class="kbd-badge">9</span>Scatter</button>
+        <button data-type="polar"><span class="kbd-badge">0</span>Polar</button>
+      </div>
+      <div class="btn-group" id="trendGroup" title="Trendline & Regression Analysis Overlay (Press 'T' to cycle)">
+        <button data-trend="none" class="active">Trend: Off</button>
+        <button data-trend="linear">Linear Fit</button>
+        <button data-trend="poly2">Poly (x²)</button>
+        <button data-trend="exp">Exp (eˣ)</button>
+        <button data-trend="movavg">Mov Avg</button>
+        <button data-trend="mean">Mean</button>
+        <button data-trend="corridor">Corridor (±σ)</button>
       </div>
     </div>
 
@@ -878,7 +968,7 @@
         <ol style="padding-left: 20px; margin-top: 4px; display: flex; flex-direction: column; gap: 6px;">
           <li><strong>Choose or Load Data:</strong> Pick a preset from the dropdown (or press <span class="kbd-badge">P</span>), drag &amp; drop a CSV/JSON file, or edit labels and values in the Data Table.</li>
           <li><strong>Select Visualization Engine:</strong> Press <span class="kbd-badge">1</span>&ndash;<span class="kbd-badge">0</span> or click the toolbar buttons to switch between 10 visualization modes: Bar, Line, Area, Pie, Donut, Radar, Horizontal Bar, Stepped Waveform, Scatter Plot, and Polar Coxcomb Rose.</li>
-          <li><strong>Analyze Trends &amp; Regressions:</strong> Press <span class="kbd-badge">T</span> to cycle overlays: Linear OLS Fit ($y=mx+b$), 2nd-Order Quadratic Polynomial ($y=ax^2+bx+c$), Exponential Fit ($y=ae^{bx}$), Moving Average, Mean Baseline, and Confidence Corridor ($\pm\sigma$).</li>
+          <li><strong>Analyze Trends &amp; Regressions:</strong> Press <span class="kbd-badge">T</span> to cycle overlays: Linear OLS Fit (y = mx + b), 2nd-Order Quadratic Polynomial (y = ax² + bx + c), Exponential Fit (y = a·e^(bx)), Moving Average, Mean Baseline, and Confidence Corridor (±σ).</li>
           <li><strong>Sonify &amp; Export:</strong> Press <span class="kbd-badge">U</span> to hear the dataset sonified with the Sega Genesis YM2612 FM Sound Chip &amp; SNES SPC700 stereo delay echo, and export vector SVG, raster PNG, Markdown table, C code array, standalone HTML, CSV, or JSON.</li>
         </ol>
       </div>
@@ -893,12 +983,12 @@
         <div class="help-section-title">📈 3. Mathematical Regressions &amp; Curve Fitting</div>
         <p>Overlay advanced mathematical models onto charts (Press 'T' to cycle):
         <ul style="padding-left: 20px; margin-top: 4px;">
-          <li><strong>Linear Fit:</strong> Ordinary Least Squares ($y = mx + b$) regression with slope and $R^2$ goodness-of-fit.</li>
-          <li><strong>Polynomial Quadratic Fit:</strong> Exact 2nd-order parabola ($y = ax^2 + bx + c$) solved via matrix Cramer's rule.</li>
-          <li><strong>Exponential Fit:</strong> Log-linearized growth/decay curve ($y = a \cdot e^{bx}$).</li>
+          <li><strong>Linear Fit:</strong> Ordinary Least Squares (y = mx + b) regression with slope and R² goodness-of-fit.</li>
+          <li><strong>Polynomial Quadratic Fit:</strong> Exact 2nd-order parabola (y = ax² + bx + c) solved via matrix Cramer's rule.</li>
+          <li><strong>Exponential Fit:</strong> Log-linearized growth/decay curve (y = a·e^(bx)).</li>
           <li><strong>Moving Average:</strong> 3-point rolling window smoothed trend curve.</li>
           <li><strong>Mean Baseline:</strong> Arithmetic dataset mean reference line.</li>
-          <li><strong>Confidence Corridor:</strong> Shaded $\pm 1\sigma$ standard deviation band and extrema envelope.</li>
+          <li><strong>Confidence Corridor:</strong> Shaded ±1σ standard deviation band and extrema envelope.</li>
         </ul>
         </p>
       </div>
@@ -910,7 +1000,7 @@
 
       <div>
         <div class="help-section-title">🧮 5. Data Operations &amp; Benchmarks</div>
-        <p>Execute one-click mathematical transformations on your dataset: <strong>Normalize (0–100%)</strong>, <strong>Cumulative Sum ($\Sigma$)</strong>, <strong>Discrete Differential ($\Delta$)</strong>, <strong>Gaussian Smoothing</strong>, and <strong>Reverse</strong>, with full <strong>Undo (Z)</strong> support. Set a custom <strong>Benchmark / Target Line</strong> to evaluate KPI performance in real time.</p>
+        <p>Execute one-click mathematical transformations on your dataset: <strong>Normalize (0–100%)</strong>, <strong>Cumulative Sum (Σ)</strong>, <strong>Discrete Differential (Δ)</strong>, <strong>Gaussian Smoothing</strong>, and <strong>Reverse</strong>, with full <strong>Undo (Z)</strong> support. Set a custom <strong>Benchmark / Target Line</strong> to evaluate KPI performance in real time.</p>
       </div>
 
       <div>
@@ -3157,7 +3247,7 @@
     showToast(`Color Theme: ${document.getElementById('themeSelect').selectedOptions[0].text}`, 'info', '🎨');
   };
 
-  let lastLoadedPreset = 'sales';
+  let lastLoadedPreset = '';
   document.getElementById('presetSelect').onchange = (e) => {
     const val = e.target.value;
     if (val && PRESETS[val]) {
@@ -3169,7 +3259,8 @@
       updateAll();
       playSfx('mode');
       showToast(`Loaded Preset: ${presetName}`, 'success', '📊');
-      e.target.value = '';
+      // Keep select value synced to loaded preset
+      e.target.value = val;
     }
   };
 
@@ -3819,6 +3910,10 @@ ${'</scr' + 'ipt>'}
       return;
     }
 
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+    }
+
     if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
       e.preventDefault();
       copyDataToClipboard();
@@ -3973,7 +4068,7 @@ ${'</scr' + 'ipt>'}
     try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch (e) {}
     setTimeout(() => {
       openHelpModal();
-      showToast("Welcome to KChart Studio! Review user guide & shortcuts.", "info", "📊");
+      // Skip duplicate welcome toast when help modal opens on first boot
     }, 400);
   } else {
     if (!seenTutorial) {
