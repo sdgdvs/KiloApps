@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-28T23:21:25-07:00 — kilo-usability: KChart (Usability & Layout Polish)**
+  - Status: PASS (0 errors, web 141.8 KB, native 38.5 KB < 999 KB; visual PASS 0 fail 0 warn 0px overflow).
+  - Layout: locked body to 100vh overflow:hidden (<=900px scroll fallback), compacted header to 1 row, separated title from toolbars, flex:1 canvas/table, 8-col stats-grid.
+  - UX & Ergonomics: prevented arrow/space scroll outside inputs, moved toasts to top:52px right:16px, replaced LaTeX math in help modal, synced preset select.
+  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
+
 - **2026-10-28T23:06:34-07:00 — kilo-tester: KChart (UI Audit, Negative Axis Scaling, Export Parity, Native C Scatter/Polar & Harness Hardening)**
   - Status: PASS ✅ (0 errors, web 140.3 KB, native 38.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.07%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.4s)).
   - Web (kchart.html): Added negative dataset value scaling across Cartesian, Horizontal Bar, Trendline, SVG, and HTML Widget views; aligned Pie/Donut/Polar hover hit-testing and playhead math; reset stale poly/exp coefficients; added preventDefault on keyboard navigation/sonify and visibilitychange cleanup.

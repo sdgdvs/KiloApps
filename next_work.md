@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://webring
-  kilo_graphics: KSubmarine
+  kilo_graphics: KWizard
   kilo_soundscape: KStellar
   kilo_tester: KBudget
   kilo_usability: KBudget
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://rfc-archive
-  timestamp: '2026-10-29T01:17:58-07:00'
+  agent: kilo-graphics
+  app: KSubmarine
+  timestamp: '2026-10-29T01:32:13-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KSubmarine`
+- **Active Target**: `KWizard`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
 | `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
@@ -115,6 +114,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
+| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -321,6 +321,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T01:32:13-07:00 — kilo-graphics: KSubmarine (Skip — Asset Suitability & Sonar CRT Scope)**
+  - ⏭️ Skip — Imagen 3 replacement not appropriate for KSubmarine sonar CRT vector scope.
+  - Handoff: Advanced `kilo-graphics` to `KWizard`; rotated active agent to `kilo-tester`.
+
 - **2026-10-29T01:17:58-07:00 — kilo-creator: kweb://rfc-archive (RFC Archive: IETF Living RFC Workbench & Interactive Simulators)**
   - Status: PASS ✅ (0 errors, web 89.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Enhanced RFC 1149/2549 Avian Carrier simulator with dynamic weather particles (storm/falcon/wind), RFC 2549 dual-carrier swarm, and real-time parameter syncing.
@@ -342,9 +346,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KSys across web and native targets.
   - Handoff: Advanced `kilo-qa` to `KMandel`; rotated active agent to `kilo-expander`.
-
-- **2026-10-28T23:21:25-07:00 — kilo-usability: KChart (Usability & Layout Polish)**
-  - Status: PASS (0 errors, web 141.8 KB, native 38.5 KB < 999 KB; visual PASS 0 fail 0 warn 0px overflow).
-  - Layout: locked body to 100vh overflow:hidden (<=900px scroll fallback), compacted header to 1 row, separated title from toolbars, flex:1 canvas/table, 8-col stats-grid.
-  - UX & Ergonomics: prevented arrow/space scroll outside inputs, moved toasts to top:52px right:16px, replaced LaTeX math in help modal, synced preset select.
-  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
