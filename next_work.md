@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://webring
+  kilo_creator: kweb://deep-core
   kilo_graphics: KWizard
   kilo_soundscape: KStellar
   kilo_tester: KSolitaire
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KAudio
   kilo_expander: KSolitaire
   kilo_review: KChess
-virtual_web_target: kweb://webring
+virtual_web_target: kweb://deep-core
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KSolitaire
-  timestamp: '2026-10-29T04:16:32-07:00'
+  agent: kilo-creator
+  app: kweb://webring
+  timestamp: '2026-10-29T04:38:49-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://webring`
+- **Active Target**: `kweb://deep-core`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
+| `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KWizard`
@@ -323,6 +323,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T04:38:49-07:00 — kilo-creator: kweb://webring (RingMaster Canonical Nodes Integration & Traversal Expansion)**
+  - Status: PASS ✅ (0 errors, web 450.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) into RingMaster topology map with station tags and quick focus.
+  - Synchronized badge/widget generator with correct theme palettes and canonical 88x31 archetypes.
+  - Expanded random/next ring traversal with scope=canonical closed loop and enriched portal.html links.
+  - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-29T04:16:32-07:00 — kilo-review: KSolitaire (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 940x763 sheet.png and audited ksolitaire.html + KSolitaire/main.c; un-quarantined from Mature and queued surgical fixes).
   - Visual/UX Findings: .card.face-down position:relative breaks tableau stacking in sheet.png (376px overflow); 3-row toolbar bloat; stale cachedBoardRect; no card drag-and-drop; missing Campaign target/pass HUD; destructive Arrow nav.
@@ -346,8 +353,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Ergonomics & Modals: focused first control in trapModalFocus(); removed #data-modal Enter/Space interceptor; guarded background hotkeys when modals active; Escape closes only active modal.
   - Dialogs & Styling: replaced blocking confirm() with styled in-DOM confirmation dialog; moved #toast to top:56px right:16px; added color-scheme:dark + dark select option styles; removed Google Fonts import.
   - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
-
-- **2026-10-29T02:22:24-07:00 — kilo-tester: KBudget (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-tester updates for KBudget across web and native targets.
-  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.

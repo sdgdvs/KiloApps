@@ -5534,12 +5534,12 @@ function applyMemberNodePreset(nodeId) {
 
   const themeEl = document.getElementById('badgeThemeSelect');
   if (themeEl) {
-    if (node.id === '#023') themeEl.value = 'matrix';
+    if (node.id === '#023') themeEl.value = 'green';
     else if (node.id === '#024') themeEl.value = 'cyan';
-    else if (node.id === '#025') themeEl.value = 'gold';
-    else if (node.id === '#026') themeEl.value = 'win95';
-    else if (node.id === '#021') themeEl.value = 'neon';
-    else if (node.id === '#022') themeEl.value = 'terminal';
+    else if (node.id === '#025') themeEl.value = 'amber';
+    else if (node.id === '#026') themeEl.value = 'gray';
+    else if (node.id === '#021') themeEl.value = 'purple';
+    else if (node.id === '#022') themeEl.value = 'cyan';
   }
 
   // Auto-sync 88x31 Micro Button preset if canonical
@@ -6509,16 +6509,23 @@ function toggleTopologyDirection() {
 }
 
 function focusTopologyNode(nodeId) {
-  const idx = resolveNodeMatch(nodeId);
-  if (idx === -1) return;
-  const node = ringNodes[idx];
+  let node = ringNodes.find(n => n.id === nodeId);
+  if (!node) {
+    const matchIdx = resolveNodeMatch(nodeId);
+    if (matchIdx !== -1) {
+      const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+      node = visibleNodes[matchIdx];
+    }
+  }
+  if (!node) return;
+  const fullIdx = ringNodes.findIndex(n => n.id === node.id);
   switchTab('tab-topology');
-  topoHoverNode = { node: node, index: idx };
+  topoHoverNode = { node: node, index: fullIdx };
   const hudEl = document.getElementById('topoSellabel');
   if (hudEl) {
-    hudEl.innerHTML = `<span style="color:var(--amber-bright); font-weight:bold;">★ ${node.name} (${node.id})</span> <span style="color:var(--green-bright); font-size:10px;">[CANONICAL 1999 DESTINATION]</span> • Latency: ${node.latency}ms • Cat: ${node.category.toUpperCase()}`;
+    hudEl.innerHTML = `<span style="color:var(--amber-bright); font-weight:bold;">★ ${node.name} (${node.id})</span> <span style="color:var(--green-bright); font-size:10px;">[CANONICAL 1999 DESTINATION]</span> • Latency: ${node.latency}ms • Cat: ${node.category.toUpperCase()} • <a href="${node.url}" style="color:var(--cyan); text-decoration:underline;">Visit Site »</a>`;
   }
-  const freq = 520 + (idx % 6) * 110;
+  const freq = 520 + (fullIdx % 6) * 110;
   playFmTone(freq, 1.2, 0.4, 0.08, 0.08, false);
   openNodeModal(node.id);
   showNoticeToast(`Focused Canonical Node: ${node.name} (${node.id})`);
@@ -6991,6 +6998,17 @@ function drawTopologyMap(canvas, ctx) {
     const lx = cx + labelDist * Math.cos(a);
     const ly = cy + labelDist * Math.sin(a);
     ctx.fillText(node.id, lx, ly);
+
+    // Canonical Station Name Tag in Canonical Filter Mode
+    if (isCanonical && (topoFilter === 'canonical' || isHovered)) {
+      ctx.fillStyle = isHovered ? "#38bdf8" : "#fbbf24";
+      ctx.font = "bold 9px Tahoma, sans-serif";
+      const tagDist = radius + (isHovered ? 38 : 32);
+      const tx = cx + tagDist * Math.cos(a);
+      const ty = cy + tagDist * Math.sin(a);
+      const tagText = (node.badgeLabel || node.name).substring(0, 14);
+      ctx.fillText(tagText, tx, ty);
+    }
 
     ctx.restore();
   }
@@ -7903,12 +7921,19 @@ function openNodeModal(nodeId) {
   const body = document.getElementById('modalNodeBody');
   const launchBtn = document.getElementById('modalLaunchBtn');
 
-  // Calculate ring neighbors
+  // Calculate ring neighbors (using visible nodes so public links skip hidden transponders)
   const idx = ringNodes.findIndex(n => n.id === nodeId);
-  const prevIdx = (idx - 1 + ringNodes.length) % ringNodes.length;
-  const nextIdx = (idx + 1) % ringNodes.length;
-  const prevNode = ringNodes[prevIdx];
-  const nextNode = ringNodes[nextIdx];
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  const vIdx = visibleNodes.findIndex(n => n.id === nodeId);
+  let prevNode = null;
+  let nextNode = null;
+  if (vIdx !== -1) {
+    prevNode = visibleNodes[(vIdx - 1 + visibleNodes.length) % visibleNodes.length];
+    nextNode = visibleNodes[(vIdx + 1) % visibleNodes.length];
+  } else {
+    prevNode = ringNodes[(idx - 1 + ringNodes.length) % ringNodes.length];
+    nextNode = ringNodes[(idx + 1) % ringNodes.length];
+  }
 
   if (node.isDead) {
     title.textContent = `Ring Telemetry: ${node.name} (${node.id})`;
@@ -7981,6 +8006,13 @@ function openNodeModal(nodeId) {
       <a href="${node.url}" class="btn-teleport" style="padding:6px 12px; font-size:11px; text-decoration:none;">
         <span>🚀</span> Visit Site Directly
       </a>
+      ${CANONICAL_IDS.has(node.id) ? `
+      <button class="btn-action" onclick="closeNodeModal(); focusTopologyNode('${node.id}');" style="padding:6px 12px; font-size:11px; color:var(--amber-bright); border-color:var(--amber);">
+        <span>🕸️</span> Focus in RingMaster Map
+      </button>
+      <button class="btn-action" onclick="closeNodeModal(); switchTab('tab-badge'); applyMemberNodePreset('${node.id}');" style="padding:6px 12px; font-size:11px; color:var(--green-bright); border-color:var(--green);">
+        <span>🎨</span> Design Badge &amp; Widget
+      </button>` : ''}
       <button class="btn-action" onclick="closeNodeModal(); surfToNode('${node.id}');" style="padding:6px 12px; font-size:11px;">
         <span>🏄</span> Open in Netscape Surfer
       </button>
@@ -9034,10 +9066,11 @@ function renderSurfViewport() {
     viewport.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid var(--border-med); padding-bottom:8px; flex-wrap:wrap; gap:8px;">
         <div>
-          <div style="font-size:16px; font-weight:bold; color:var(--cyan); display:flex; align-items:center; gap:8px;">
+          <div style="font-size:16px; font-weight:bold; color:var(--cyan); display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <span>${node.num <= 3 ? '🏛️' : node.num <= 7 ? '💾' : '🚀'}</span> ${node.name}
             <span class="node-badge" style="background:#0284c7;">${node.id}</span>
             <span class="node-cat cat-${node.category}">${node.category.toUpperCase()}</span>
+            ${CANONICAL_IDS.has(node.id) ? '<span class="node-badge" style="background:#b45309; color:#fde047; font-weight:bold;">★ CANONICAL 1999 DESTINATION</span>' : ''}
           </div>
           <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-top:2px;">
             Webmaster: <strong style="color:var(--amber-bright);">${node.handle}</strong> &bull; Latency: <strong style="color:var(--green-bright);">${node.latency}ms</strong> &bull; Size: ~${sizeKb} KB
@@ -9614,12 +9647,12 @@ function resolveNodeMatch(query) {
   const normQ = cleanQ.replace(/[-_]/g, '');
 
   const CANON_ALIASES = {
-    'slashnet': '#023', 'slashdot': '#023', 'cmdr_taco': '#023',
-    'trapster': '#024', 'napster': '#024', 'p2p': '#024',
-    'cabled': '#025', 'wired': '#025', 'cabledmag': '#025',
-    'scallion': '#026', 'thescallion': '#026', 'onion': '#026',
-    'demoscene': '#021', 'assembly99': '#021', 'scene99': '#021', 'flarelight': '#021',
-    'rfc-archive': '#022', 'rfc_archive': '#022', 'rfc1149': '#022', 'ietf': '#022', 'rfc': '#022'
+    'slashnet': '#023', 'slashdot': '#023', 'cmdr_taco': '#023', 'cmdrtaco': '#023', '23': '#023',
+    'trapster': '#024', 'napster': '#024', 'p2p': '#024', '24': '#024',
+    'cabled': '#025', 'wired': '#025', 'cabledmag': '#025', '25': '#025',
+    'scallion': '#026', 'thescallion': '#026', 'onion': '#026', '26': '#026',
+    'demoscene': '#021', 'assembly99': '#021', 'scene99': '#021', 'flarelight': '#021', 'assembly': '#021', '21': '#021',
+    'rfc-archive': '#022', 'rfc_archive': '#022', 'rfc1149': '#022', 'ietf': '#022', 'rfc': '#022', '22': '#022'
   };
   if (CANON_ALIASES[cleanQ] || CANON_ALIASES[normQ]) {
     const targetId = CANON_ALIASES[cleanQ] || CANON_ALIASES[normQ];
@@ -9703,21 +9736,36 @@ window.addEventListener('DOMContentLoaded', () => {
     if (urlEl) urlEl.textContent = dest.url.startsWith('/') ? `kweb://${dest.url.replace('/web/', '').replace('.html', '')}` : dest.url;
     triggerStagedWarp();
   } else if (ringAction === 'next' || ringAction === 'prev' || ringAction === 'skip') {
-    const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+    const isCanonScope = (scopeParam === 'canonical' || scopeParam === 'canon');
+    const traversalPool = isCanonScope
+      ? ringNodes.filter(n => CANONICAL_IDS.has(n.id))
+      : ringNodes.filter(n => !n.hiddenFromDirectory);
+
     let matchedIdx = 0;
     if (targetId) {
-      const foundIdx = resolveNodeMatch(targetId);
-      if (foundIdx !== -1) matchedIdx = foundIdx;
+      const matchIdx = resolveNodeMatch(targetId);
+      if (matchIdx !== -1) {
+        const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+        const targetNode = visibleNodes[matchIdx];
+        if (targetNode) {
+          const poolIdx = traversalPool.findIndex(n => n.id === targetNode.id);
+          if (poolIdx !== -1) matchedIdx = poolIdx;
+        }
+      }
     }
     const step = ringAction === 'next' ? 1 : ringAction === 'skip' ? 2 : -1;
-    currentSurfIndex = (matchedIdx + step + visibleNodes.length) % visibleNodes.length;
-    const dest = visibleNodes[currentSurfIndex];
+    const nextIdx = (matchedIdx + step + traversalPool.length) % traversalPool.length;
+    const dest = traversalPool[nextIdx] || traversalPool[0];
 
     if (urlParams.get('direct') === '1' || urlParams.get('warp') === '1') {
       logNodeVisit(dest.id);
       window.location.href = dest.url;
       return;
     }
+
+    const fullVisibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+    const surfIdx = fullVisibleNodes.findIndex(n => n.id === dest.id);
+    if (surfIdx !== -1) currentSurfIndex = surfIdx;
 
     switchTab('tab-surf');
     renderSurfViewport();

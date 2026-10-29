@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T02:22:24-07:00 — kilo-tester: KBudget (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-tester updates for KBudget across web and native targets.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-29T01:32:13-07:00 — kilo-graphics: KSubmarine (Skip — Asset Suitability & Sonar CRT Scope)**
   - ⏭️ Skip — Imagen 3 replacement not appropriate for KSubmarine sonar CRT vector scope.
   - Handoff: Advanced `kilo-graphics` to `KWizard`; rotated active agent to `kilo-tester`.

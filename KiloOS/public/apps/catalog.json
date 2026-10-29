@@ -83,9 +83,9 @@
     "id": "kbudget",
     "title": "KBudget",
     "folder": "Office",
-    "webBytes": 124564,
-    "exeBytes": 171520,
-    "budgetPercent": 12.5
+    "webBytes": 136419,
+    "exeBytes": 172544,
+    "budgetPercent": 13.7
   },
   {
     "id": "kcalc",
@@ -403,8 +403,8 @@
     "id": "kmandel",
     "title": "KMandel",
     "folder": "Media",
-    "webBytes": 128759,
-    "exeBytes": 22016,
+    "webBytes": 128983,
+    "exeBytes": 22528,
     "budgetPercent": 12.9
   },
   {
