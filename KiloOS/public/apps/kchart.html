@@ -1336,7 +1336,15 @@
         trendStats.polyA = polyA;
         trendStats.polyB = polyB;
         trendStats.polyC = polyC;
+      } else {
+        trendStats.polyA = 0;
+        trendStats.polyB = 0;
+        trendStats.polyC = 0;
       }
+    } else {
+      trendStats.polyA = 0;
+      trendStats.polyB = 0;
+      trendStats.polyC = 0;
     }
 
     // Exponential Fit (y = a * e^(bx))
@@ -1361,7 +1369,13 @@
         const lna = (sumLny - expB * sumX) / mCount;
         trendStats.expB = expB;
         trendStats.expA = Math.exp(lna);
+      } else {
+        trendStats.expA = 0;
+        trendStats.expB = 0;
       }
+    } else {
+      trendStats.expA = 0;
+      trendStats.expB = 0;
     }
 
     // Benchmark Target Line Metrics
@@ -1518,7 +1532,8 @@
       hoverX = canvasW / 2;
       hoverY = padT + idx * stepY + stepY / 2;
     } else if (chartType === 'pie' || chartType === 'donut' || chartType === 'polar') {
-      hoverX = canvasW / 2 - 60;
+      const legW = canvasW < 440 ? Math.max(85, Math.floor(canvasW * 0.28)) : 140;
+      hoverX = Math.max(70, (canvasW - legW) / 2);
       hoverY = canvasH / 2;
     } else if (chartType === 'radar') {
       hoverX = canvasW / 2;
@@ -1640,12 +1655,14 @@
       ctx.lineTo(canvasW, py);
       ctx.stroke();
     } else if (chartType === 'pie' || chartType === 'donut' || chartType === 'radar' || chartType === 'polar') {
-      const cx = canvasW / 2 - (chartType === 'radar' ? 0 : 60);
+      const legW = canvasW < 440 ? Math.max(85, Math.floor(canvasW * 0.28)) : 140;
+      const cx = chartType === 'radar' ? canvasW / 2 : Math.max(70, (canvasW - legW) / 2);
       const cy = canvasH / 2;
+      const outerR = chartType === 'radar' ? Math.min(canvasW, canvasH) * 0.35 : Math.min((canvasW - legW) * 0.42, canvasH * 0.38);
       ctx.strokeStyle = "#38bdf8";
       ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.arc(cx, cy, Math.min(canvasW, canvasH) * 0.40, 0, Math.PI * 2);
+      ctx.arc(cx, cy, outerR + 6, 0, Math.PI * 2);
       ctx.stroke();
     } else {
       const padL = 50, padR = 25;
@@ -1695,8 +1712,12 @@
       ctx.restore();
     }
 
-    const vals = data.map(d => Math.max(0, Number(d.value) || 0));
-    const maxVal = Math.max(1, ...vals);
+    const vals = data.map(d => Number(d.value) || 0);
+    const minVal = Math.min(0, ...vals);
+    const maxVal = Math.max(minVal < 0 ? 0 : 1, ...vals);
+    const range = Math.max(1, maxVal - minVal);
+    const valToY = (v) => padT + chartH - ((v - minVal) / range) * chartH;
+    const zeroY = valToY(0);
 
     // Y Axis Grid & Labels
     ctx.font = "11px 'Inter', sans-serif";
@@ -1707,8 +1728,8 @@
     const ticks = 5;
     for (let i = 0; i <= ticks; i++) {
       const y = padT + (chartH / ticks) * i;
-      const rawVal = maxVal - (maxVal / ticks) * i;
-      const valStr = maxVal < 10 ? rawVal.toFixed(1) : Math.round(rawVal).toString();
+      const rawVal = maxVal - (range / ticks) * i;
+      const valStr = range < 10 ? rawVal.toFixed(1) : Math.round(rawVal).toString();
 
       ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
       ctx.lineWidth = 1;
@@ -1718,6 +1739,15 @@
       ctx.stroke();
 
       ctx.fillText(valStr, padL - 8, y);
+    }
+
+    if (minVal < 0) {
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+      ctx.lineWidth = 1.25;
+      ctx.beginPath();
+      ctx.moveTo(padL, zeroY);
+      ctx.lineTo(padL + chartW, zeroY);
+      ctx.stroke();
     }
 
     // Draw Axes
@@ -1734,9 +1764,10 @@
     if (chartType === 'bar') {
       for (let i = 0; i < n; i++) {
         const val = vals[i];
-        const bh = (val / maxVal) * chartH;
+        const yVal = valToY(val);
+        const by = Math.min(zeroY, yVal);
+        const bh = Math.abs(zeroY - yVal);
         const bx = padL + i * step + (step - barW) / 2;
-        const by = padT + chartH - bh;
         const isHov = hoveredIndex === i;
 
         if (bh > 0.5) {
@@ -1754,9 +1785,8 @@
       const pts = [];
       for (let i = 0; i < n; i++) {
         const val = vals[i];
-        const bh = (val / maxVal) * chartH;
         const bx = padL + i * step + step / 2;
-        const by = padT + chartH - bh;
+        const by = valToY(val);
         pts.push({ x: bx, y: by });
       }
 
@@ -1766,9 +1796,9 @@
         grad.addColorStop(1, getColor(0).replace("rgb", "rgba").replace(")", ", 0.0)"));
 
         ctx.beginPath();
-        ctx.moveTo(pts[0].x, padT + chartH);
+        ctx.moveTo(pts[0].x, zeroY);
         pts.forEach(p => ctx.lineTo(p.x, p.y));
-        ctx.lineTo(pts[pts.length - 1].x, padT + chartH);
+        ctx.lineTo(pts[pts.length - 1].x, zeroY);
         ctx.closePath();
         ctx.fillStyle = grad;
         ctx.fill();
@@ -1802,9 +1832,8 @@
       const pts = [];
       for (let i = 0; i < n; i++) {
         const val = vals[i];
-        const bh = (val / maxVal) * chartH;
         const bx = padL + i * step + step / 2;
-        const by = padT + chartH - bh;
+        const by = valToY(val);
         pts.push({ x: bx, y: by });
       }
 
@@ -1813,14 +1842,14 @@
       grad.addColorStop(0, getColor(0).replace("rgb", "rgba").replace(")", ", 0.35)"));
       grad.addColorStop(1, getColor(0).replace("rgb", "rgba").replace(")", ", 0.0)"));
       ctx.beginPath();
-      ctx.moveTo(padL, padT + chartH);
+      ctx.moveTo(padL, zeroY);
       ctx.lineTo(pts[0].x, pts[0].y);
       for (let i = 0; i < n - 1; i++) {
         ctx.lineTo(pts[i + 1].x, pts[i].y);
         ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
       }
       ctx.lineTo(padL + chartW, pts[n - 1].y);
-      ctx.lineTo(padL + chartW, padT + chartH);
+      ctx.lineTo(padL + chartW, zeroY);
       ctx.closePath();
       ctx.fillStyle = grad;
       ctx.fill();
@@ -1852,9 +1881,8 @@
       // Scatter Plot with Crosshair Inspection
       for (let i = 0; i < n; i++) {
         const val = vals[i];
-        const bh = (val / maxVal) * chartH;
         const px = padL + i * step + step / 2;
-        const py = padT + chartH - bh;
+        const py = valToY(val);
         const isHov = hoveredIndex === i;
 
         if (isHov) {
@@ -1887,7 +1915,7 @@
 
     // Benchmark Target Line
     if (targetEnabled) {
-      const yTarget = padT + chartH - (Math.max(0, targetValue) / maxVal) * chartH;
+      const yTarget = Math.max(padT, Math.min(padT + chartH, valToY(targetValue)));
       ctx.save();
       ctx.strokeStyle = "#f59e0b";
       ctx.lineWidth = 2;
@@ -1907,7 +1935,7 @@
     }
 
     if (trendMode !== 'none') {
-      renderTrendOverlay(padL, padT, chartW, chartH, maxVal, step, barW, vals);
+      renderTrendOverlay(padL, padT, chartW, chartH, maxVal, step, barW, vals, minVal);
     }
 
     drawTooltipCartesian(padL, padT, chartW, chartH, maxVal, step, barW);
@@ -1916,8 +1944,10 @@
   // 2. Horizontal Bar Chart (hbar)
   function renderHorizontalBar() {
     const n = data.length;
-    const vals = data.map(d => Math.max(0, Number(d.value) || 0));
-    const maxVal = Math.max(1, ...vals);
+    const vals = data.map(d => Number(d.value) || 0);
+    const minVal = Math.min(0, ...vals);
+    const maxVal = Math.max(minVal < 0 ? 0 : 1, ...vals);
+    const range = Math.max(1, maxVal - minVal);
 
     ctx.font = "11px 'Inter', sans-serif";
     const maxLabW = Math.max(50, ...data.map(d => ctx.measureText(d.label || '').width));
@@ -1926,6 +1956,8 @@
     const padR = 40, padT = 30, padB = 40;
     const chartW = canvasW - padL - padR;
     const chartH = canvasH - padT - padB;
+    const valToX = (v) => padL + ((v - minVal) / range) * chartW;
+    const zeroX = valToX(0);
 
     // Vertical grid ticks across X axis
     ctx.font = "11px 'Inter', sans-serif";
@@ -1936,8 +1968,8 @@
     const ticks = 5;
     for (let i = 0; i <= ticks; i++) {
       const x = padL + (chartW / ticks) * i;
-      const rawVal = (maxVal / ticks) * i;
-      const valStr = maxVal < 10 ? rawVal.toFixed(1) : Math.round(rawVal).toString();
+      const rawVal = minVal + (range / ticks) * i;
+      const valStr = range < 10 ? rawVal.toFixed(1) : Math.round(rawVal).toString();
 
       ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
       ctx.lineWidth = 1;
@@ -1947,6 +1979,15 @@
       ctx.stroke();
 
       ctx.fillText(valStr, x, padT + chartH + 8);
+    }
+
+    if (minVal < 0) {
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+      ctx.lineWidth = 1.25;
+      ctx.beginPath();
+      ctx.moveTo(zeroX, padT);
+      ctx.lineTo(zeroX, padT + chartH);
+      ctx.stroke();
     }
 
     // Axes
@@ -1963,8 +2004,9 @@
 
     for (let i = 0; i < n; i++) {
       const val = vals[i];
-      const bw = (val / maxVal) * chartW;
-      const bx = padL;
+      const xVal = valToX(val);
+      const bx = Math.min(zeroX, xVal);
+      const bw = Math.abs(xVal - zeroX);
       const by = padT + i * stepY + (stepY - barH) / 2;
       const isHov = hoveredIndex === i;
 
@@ -1996,12 +2038,12 @@
       ctx.textAlign = "left";
       ctx.fillStyle = isHov ? "#ffffff" : "#d4d4d8";
       ctx.font = "600 11px 'Inter', sans-serif";
-      ctx.fillText(val.toString(), bx + bw + 6, by + barH / 2);
+      ctx.fillText(val.toString(), Math.max(zeroX, xVal) + 6, by + barH / 2);
     }
 
     // Benchmark Target Line
     if (targetEnabled) {
-      const xTarget = padL + (Math.max(0, targetValue) / maxVal) * chartW;
+      const xTarget = Math.max(padL, Math.min(padL + chartW, valToX(targetValue)));
       ctx.save();
       ctx.strokeStyle = "#f59e0b";
       ctx.lineWidth = 2;
@@ -2015,6 +2057,33 @@
       ctx.font = "700 10px 'Inter', sans-serif";
       ctx.textAlign = "left";
       ctx.fillText(`TARGET: ${targetValue}`, xTarget + 4, padT + 12);
+      ctx.restore();
+    }
+
+    if (trendMode !== 'none' && n >= 2) {
+      ctx.save();
+      ctx.lineWidth = 2.2;
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = "#facc15";
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        let vHat = vals[i];
+        if (trendMode === 'linear') vHat = trendStats.slope * i + trendStats.intercept;
+        else if (trendMode === 'poly2') vHat = trendStats.polyA * i * i + trendStats.polyB * i + trendStats.polyC;
+        else if (trendMode === 'exp' && trendStats.expA > 0) vHat = trendStats.expA * Math.exp(trendStats.expB * i);
+        else if (trendMode === 'mean' || trendMode === 'corridor') vHat = vals.reduce((a, b) => a + b, 0) / n;
+        else if (trendMode === 'movavg') {
+          const s = Math.max(0, i - 1), e = Math.min(n - 1, i + 1);
+          let sum = 0;
+          for (let k = s; k <= e; k++) sum += vals[k];
+          vHat = sum / (e - s + 1);
+        }
+        const tx = Math.max(padL, Math.min(padL + chartW, valToX(vHat)));
+        const ty = padT + i * stepY + stepY / 2;
+        if (i === 0) ctx.moveTo(tx, ty);
+        else ctx.lineTo(tx, ty);
+      }
+      ctx.stroke();
       ctx.restore();
     }
 
@@ -2134,9 +2203,11 @@
   }
 
   // 4. Trendline & Curve Fitting Overlays
-  function renderTrendOverlay(padL, padT, chartW, chartH, maxVal, step, barW, vals) {
+  function renderTrendOverlay(padL, padT, chartW, chartH, maxVal, step, barW, vals, minVal = 0) {
     const n = data.length;
     if (n < 2 || trendMode === 'none') return;
+    const range = Math.max(1, maxVal - minVal);
+    const valToY = (v) => Math.max(padT, Math.min(padT + chartH, padT + chartH - ((v - minVal) / range) * chartH));
 
     ctx.save();
     if (trendMode === 'linear') {
@@ -2144,8 +2215,8 @@
       const x1 = padL + (n - 1) * step + step / 2;
       const yHat0 = trendStats.slope * 0 + trendStats.intercept;
       const yHat1 = trendStats.slope * (n - 1) + trendStats.intercept;
-      const y0 = padT + chartH - (Math.max(0, yHat0) / maxVal) * chartH;
-      const y1 = padT + chartH - (Math.max(0, yHat1) / maxVal) * chartH;
+      const y0 = valToY(yHat0);
+      const y1 = valToY(yHat1);
 
       ctx.beginPath();
       ctx.moveTo(x0, y0);
@@ -2175,7 +2246,7 @@
         const t = (s / samples) * (n - 1);
         const yHat = trendStats.polyA * t * t + trendStats.polyB * t + trendStats.polyC;
         const px = padL + t * step + step / 2;
-        const py = padT + chartH - (Math.max(0, yHat) / maxVal) * chartH;
+        const py = valToY(yHat);
         if (s === 0) ctx.moveTo(px, py);
         else ctx.lineTo(px, py);
       }
@@ -2186,7 +2257,7 @@
       ctx.shadowBlur = 8;
       ctx.stroke();
 
-      const badgeTxt = `Poly: y = ${trendStats.polyA.toFixed(2)}x² + ${trendStats.polyB.toFixed(2)}x + ${trendStats.polyC.toFixed(1)}`;
+      const badgeTxt = `Poly: y = ${trendStats.polyA.toFixed(2)}x² ${trendStats.polyB >= 0 ? '+ ' : '- '}${Math.abs(trendStats.polyB).toFixed(2)}x ${trendStats.polyC >= 0 ? '+ ' : '- '}${Math.abs(trendStats.polyC).toFixed(1)}`;
       drawTrendBadge(badgeTxt, "#fbbf24", "rgba(245, 158, 11, 0.5)", padL, padT, chartW);
 
     } else if (trendMode === 'exp' && trendStats.expA > 0) {
@@ -2197,7 +2268,7 @@
         const t = (s / samples) * (n - 1);
         const yHat = trendStats.expA * Math.exp(trendStats.expB * t);
         const px = padL + t * step + step / 2;
-        const py = padT + chartH - (Math.max(0, yHat) / maxVal) * chartH;
+        const py = valToY(yHat);
         if (s === 0) ctx.moveTo(px, py);
         else ctx.lineTo(px, py);
       }
@@ -2223,7 +2294,7 @@
         }
         const maVal = sum / count;
         const x = padL + i * step + step / 2;
-        const y = padT + chartH - (maVal / maxVal) * chartH;
+        const y = valToY(maVal);
         maPts.push({ x, y });
       }
 
@@ -2244,7 +2315,7 @@
     } else if (trendMode === 'mean') {
       const total = vals.reduce((a, b) => a + b, 0);
       const mean = total / n;
-      const yMean = padT + chartH - (mean / maxVal) * chartH;
+      const yMean = valToY(mean);
 
       ctx.beginPath();
       ctx.moveTo(padL, yMean);
@@ -2265,9 +2336,9 @@
       const variance = vals.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / n;
       const stdDev = Math.sqrt(variance);
 
-      const yMean = padT + chartH - (mean / maxVal) * chartH;
-      const yUpper = padT + chartH - (Math.min(maxVal, mean + stdDev) / maxVal) * chartH;
-      const yLower = padT + chartH - (Math.max(0, mean - stdDev) / maxVal) * chartH;
+      const yMean = valToY(mean);
+      const yUpper = valToY(mean + stdDev);
+      const yLower = valToY(mean - stdDev);
 
       // Shaded corridor band
       ctx.fillStyle = "rgba(16, 185, 129, 0.14)";
@@ -2561,12 +2632,13 @@
     if (n === 0) return;
 
     if (chartType === 'pie' || chartType === 'donut') {
-      const cx = canvasW / 2 - 60;
+      const legW = canvasW < 440 ? Math.max(85, Math.floor(canvasW * 0.28)) : 140;
+      const cx = Math.max(70, (canvasW - legW) / 2);
       const cy = canvasH / 2;
       const dx = hoverX - cx;
       const dy = hoverY - cy;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const outerR = Math.min(canvasW, canvasH) * 0.35;
+      const outerR = Math.min((canvasW - legW) * 0.42, canvasH * 0.38);
       const innerR = chartType === 'donut' ? outerR * 0.55 : 0;
       const total = data.reduce((a, b) => a + Math.max(0, Number(b.value) || 0), 0) || 1;
 
@@ -2585,12 +2657,13 @@
         }
       }
     } else if (chartType === 'polar') {
-      const cx = canvasW / 2 - 60;
+      const legW = canvasW < 440 ? Math.max(85, Math.floor(canvasW * 0.28)) : 140;
+      const cx = Math.max(70, (canvasW - legW) / 2);
       const cy = canvasH / 2;
       const dx = hoverX - cx;
       const dy = hoverY - cy;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const maxR = Math.min(canvasW, canvasH) * 0.36;
+      const maxR = Math.min((canvasW - legW) * 0.42, canvasH * 0.38);
       const angleStep = (Math.PI * 2) / n;
 
       if (dist <= maxR + 10) {
@@ -3339,37 +3412,78 @@
       showToast("No data to export.", "warning", "⚠️");
       return;
     }
+    const palette = THEMES[currentTheme] || THEMES.teal;
     const htmlWidget = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <title>KChart Standalone Widget</title>
 <style>
-  body { margin:0; background:#09090b; color:#fff; font-family:sans-serif; display:flex; flex-direction:column; align-items:center; padding:20px; }
-  h2 { margin:0 0 10px 0; font-size:16px; color:#60a5fa; }
+  body { margin:0; background:#09090b; color:#fff; font-family:system-ui,sans-serif; display:flex; flex-direction:column; align-items:center; padding:20px; }
+  h2 { margin:0 0 10px 0; font-size:16px; color:${palette[0]}; }
   canvas { background:#18181b; border:1px solid #333; border-radius:8px; max-width:100%; }
 </style>
 </head>
 <body>
-<h2>KChart Studio — ${chartType.toUpperCase()} View</h2>
+<h2>KChart Studio — ${chartType.toUpperCase()} View (${currentTheme.toUpperCase()})</h2>
 <canvas id="c" width="800" height="500"></canvas>
-<script>
+${'<scr' + 'ipt>'}
   const data = ${JSON.stringify(data)};
+  const palette = ${JSON.stringify(palette)};
+  const chartType = ${JSON.stringify(chartType)};
+  const targetEnabled = ${JSON.stringify(targetEnabled)};
+  const targetValue = ${JSON.stringify(targetValue)};
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d');
-  const max = Math.max(1, ...data.map(d => Math.max(0, d.value)));
-  const step = 700 / data.length;
+  const vals = data.map(d => Number(d.value) || 0);
+  const minVal = Math.min(0, ...vals);
+  const maxVal = Math.max(minVal < 0 ? 0 : 1, ...vals);
+  const range = Math.max(1, maxVal - minVal);
+  const padL = 60, padT = 40, chartW = 700, chartH = 400;
+  const valToY = v => padT + chartH - ((v - minVal) / range) * chartH;
+  const zeroY = valToY(0);
+  const step = chartW / Math.max(1, data.length);
   ctx.strokeStyle = '#333';
-  ctx.strokeRect(50, 40, 700, 400);
-  data.forEach((d, i) => {
-    const bh = (d.value / max) * 400;
-    const bx = 60 + i * step;
-    ctx.fillStyle = '#3b82f6';
-    ctx.fillRect(bx, 440 - bh, Math.min(40, step * 0.7), bh);
-    ctx.fillStyle = '#fff';
-    ctx.fillText(d.label, bx, 460);
-  });
-<\/script>
+  ctx.strokeRect(padL, padT, chartW, chartH);
+  if (chartType === 'pie' || chartType === 'donut') {
+    const total = vals.reduce((a, b) => a + Math.max(0, b), 0) || 1;
+    let ang = -Math.PI / 2;
+    data.forEach((d, i) => {
+      const slice = (Math.max(0, vals[i]) / total) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(400, 250, 160, ang, ang + slice);
+      if (chartType === 'donut') ctx.arc(400, 250, 88, ang + slice, ang, true);
+      else ctx.lineTo(400, 250);
+      ctx.closePath();
+      ctx.fillStyle = palette[i % palette.length];
+      ctx.fill();
+      ang += slice;
+    });
+  } else {
+    if (chartType === 'line' || chartType === 'area' || chartType === 'step') {
+      ctx.beginPath();
+      data.forEach((d, i) => {
+        const x = padL + i * step + step / 2, y = valToY(vals[i]);
+        if (i === 0) ctx.moveTo(x, y);
+        else if (chartType === 'step') { ctx.lineTo(x, valToY(vals[i - 1])); ctx.lineTo(x, y); }
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = palette[0];
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+    data.forEach((d, i) => {
+      const yVal = valToY(vals[i]);
+      const bx = padL + i * step + step * 0.15, bw = Math.min(44, step * 0.7);
+      ctx.fillStyle = palette[i % palette.length];
+      if (chartType === 'bar') ctx.fillRect(bx, Math.min(zeroY, yVal), bw, Math.max(1, Math.abs(zeroY - yVal)));
+      else { ctx.beginPath(); ctx.arc(padL + i * step + step / 2, yVal, 5, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = '#d4d4d8';
+      ctx.textAlign = 'center';
+      ctx.fillText(d.label, padL + i * step + step / 2, padT + chartH + 20);
+    });
+  }
+${'</scr' + 'ipt>'}
 </body>
 </html>`;
 
@@ -3396,8 +3510,12 @@
     const padL = 60, padR = 40, padT = 40, padB = 60;
     const chartW = width - padL - padR;
     const chartH = height - padT - padB;
-    const vals = data.map(d => Math.max(0, Number(d.value) || 0));
-    const maxVal = Math.max(1, ...vals);
+    const vals = data.map(d => Number(d.value) || 0);
+    const minVal = Math.min(0, ...vals);
+    const maxVal = Math.max(minVal < 0 ? 0 : 1, ...vals);
+    const range = Math.max(1, maxVal - minVal);
+    const valToY = (v) => padT + chartH - ((v - minVal) / range) * chartH;
+    const zeroY = valToY(0);
     const palette = THEMES[currentTheme] || THEMES.teal;
 
     let svg = `<?xml version="1.0" encoding="UTF-8"?>\n`;
@@ -3414,29 +3532,79 @@
     svg += `  <text x="${padL}" y="26" fill="#f4f4f5" font-size="16" font-weight="bold">KChart Studio - ${chartType.toUpperCase()} View</text>\n`;
     svg += `  <text x="${width - padR}" y="26" fill="#a1a1aa" font-size="12" text-anchor="end">Theme: ${currentTheme.toUpperCase()} | Total: ${vals.reduce((a,b)=>a+b,0)}</text>\n`;
 
-    // Cartesian Grid
-    const ticks = 5;
-    for (let i = 0; i <= ticks; i++) {
-      const y = padT + (chartH / ticks) * i;
-      const rawVal = maxVal - (maxVal / ticks) * i;
-      const valNum = maxVal < 10 ? rawVal.toFixed(1) : Math.round(rawVal).toString();
-      svg += `  <line x1="${padL}" y1="${y}" x2="${padL + chartW}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>\n`;
-      svg += `  <text x="${padL - 10}" y="${y + 4}" fill="#71717a" font-size="11" text-anchor="end">${valNum}</text>\n`;
-    }
+    if (chartType === 'pie' || chartType === 'donut' || chartType === 'polar') {
+      const cx = width / 2 - 40, cy = height / 2 + 10, outerR = 165;
+      const innerR = chartType === 'donut' ? outerR * 0.55 : 0;
+      const total = vals.reduce((a, b) => a + Math.max(0, b), 0) || 1;
+      let startAngle = -Math.PI / 2;
+      for (let i = 0; i < n; i++) {
+        const v = Math.max(0, vals[i]);
+        const sliceAngle = chartType === 'polar' ? (Math.PI * 2) / n : (v / total) * Math.PI * 2;
+        const r = chartType === 'polar' ? (v / Math.max(1, maxVal)) * outerR : outerR;
+        const endAngle = startAngle + sliceAngle;
+        const x1 = cx + Math.cos(startAngle) * r, y1 = cy + Math.sin(startAngle) * r;
+        const x2 = cx + Math.cos(endAngle) * r, y2 = cy + Math.sin(endAngle) * r;
+        const largeArc = sliceAngle > Math.PI ? 1 : 0;
+        const col = palette[i % palette.length];
+        if (innerR > 0) {
+          const ix1 = cx + Math.cos(endAngle) * innerR, iy1 = cy + Math.sin(endAngle) * innerR;
+          const ix2 = cx + Math.cos(startAngle) * innerR, iy2 = cy + Math.sin(startAngle) * innerR;
+          svg += `  <path d="M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} L ${ix1} ${iy1} A ${innerR} ${innerR} 0 ${largeArc} 0 ${ix2} ${iy2} Z" fill="${col}"/>\n`;
+        } else {
+          svg += `  <path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z" fill="${col}"/>\n`;
+        }
+        startAngle = endAngle;
+      }
+    } else {
+      // Cartesian Grid
+      const ticks = 5;
+      for (let i = 0; i <= ticks; i++) {
+        const y = padT + (chartH / ticks) * i;
+        const rawVal = maxVal - (range / ticks) * i;
+        const valNum = range < 10 ? rawVal.toFixed(1) : Math.round(rawVal).toString();
+        svg += `  <line x1="${padL}" y1="${y}" x2="${padL + chartW}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>\n`;
+        svg += `  <text x="${padL - 10}" y="${y + 4}" fill="#71717a" font-size="11" text-anchor="end">${valNum}</text>\n`;
+      }
 
-    svg += `  <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + chartH}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>\n`;
-    svg += `  <line x1="${padL}" y1="${padT + chartH}" x2="${padL + chartW}" y2="${padT + chartH}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>\n`;
+      svg += `  <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + chartH}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>\n`;
+      svg += `  <line x1="${padL}" y1="${padT + chartH}" x2="${padL + chartW}" y2="${padT + chartH}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>\n`;
 
-    const step = chartW / n;
-    const barW = Math.min(48, Math.max(16, step * 0.6));
+      const step = chartW / n;
+      const barW = Math.min(48, Math.max(16, step * 0.6));
 
-    for (let i = 0; i < n; i++) {
-      const bh = (vals[i] / maxVal) * chartH;
-      const bx = padL + i * step + (step - barW) / 2;
-      const by = padT + chartH - bh;
-      const col = palette[i % palette.length];
-      svg += `  <rect x="${bx}" y="${by}" width="${barW}" height="${bh}" rx="4" fill="${col}"/>\n`;
-      svg += `  <text x="${bx + barW / 2}" y="${padT + chartH + 18}" fill="#a1a1aa" font-size="11" text-anchor="middle">${escapeHtml(data[i].label)}</text>\n`;
+      if (chartType === 'line' || chartType === 'area' || chartType === 'step') {
+        const pts = vals.map((v, i) => `${padL + i * step + step / 2},${valToY(v)}`).join(' ');
+        if (chartType === 'area') {
+          const firstX = padL + step / 2, lastX = padL + (n - 1) * step + step / 2;
+          svg += `  <polygon points="${firstX},${zeroY} ${pts} ${lastX},${zeroY}" fill="url(#chartGrad)"/>\n`;
+        }
+        svg += `  <polyline fill="none" stroke="${palette[0]}" stroke-width="3" points="${pts}"/>\n`;
+      }
+
+      for (let i = 0; i < n; i++) {
+        const yVal = valToY(vals[i]);
+        const bx = padL + i * step + (step - barW) / 2;
+        const cxPt = padL + i * step + step / 2;
+        const col = palette[i % palette.length];
+        if (chartType === 'bar' || chartType === 'hbar') {
+          const by = Math.min(zeroY, yVal);
+          const bh = Math.max(1, Math.abs(zeroY - yVal));
+          svg += `  <rect x="${bx}" y="${by}" width="${barW}" height="${bh}" rx="4" fill="${col}"/>\n`;
+        } else {
+          svg += `  <circle cx="${cxPt}" cy="${yVal}" r="5" fill="${col}"/>\n`;
+        }
+        svg += `  <text x="${cxPt}" y="${padT + chartH + 18}" fill="#a1a1aa" font-size="11" text-anchor="middle">${escapeHtml(data[i].label)}</text>\n`;
+      }
+
+      if (targetEnabled) {
+        const yT = Math.max(padT, Math.min(padT + chartH, valToY(targetValue)));
+        svg += `  <line x1="${padL}" y1="${yT}" x2="${padL + chartW}" y2="${yT}" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,5"/>\n`;
+      }
+      if (trendMode === 'linear' && n >= 2) {
+        const x0 = padL + step / 2, x1 = padL + (n - 1) * step + step / 2;
+        const y0 = valToY(trendStats.intercept), y1 = valToY(trendStats.slope * (n - 1) + trendStats.intercept);
+        svg += `  <line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#facc15" stroke-width="2.5" stroke-dasharray="8,5"/>\n`;
+      }
     }
 
     svg += `</svg>\n`;
@@ -3711,8 +3879,13 @@
     } else if (e.key === 'd' || e.key === 'D') {
       document.getElementById('btnSortDesc').click();
     } else if (e.key === 'z' || e.key === 'Z') {
+      e.preventDefault();
       undoTransform();
+    } else if (e.key === ' ') {
+      e.preventDefault();
+      sonifyDataset();
     } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
       if (data.length > 0) {
         if (hoveredIndex === -1) {
           hoveredIndex = data.length - 1;
@@ -3725,6 +3898,7 @@
         if (activeTr && activeTr.scrollIntoView) activeTr.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
     } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
       if (data.length > 0) {
         if (hoveredIndex === -1) {
           hoveredIndex = 0;
@@ -3737,6 +3911,7 @@
         if (activeTr && activeTr.scrollIntoView) activeTr.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
     } else if (e.key === 'ArrowUp' || e.key === '+' || e.key === '=') {
+      e.preventDefault();
       if (data.length > 0) {
         if (isSonifying) stopSonification(true);
         pushUndo();
@@ -3747,11 +3922,12 @@
         showToast(`Nudged ${data[idx].label}: ${data[idx].value}`, 'info', '▲');
       }
     } else if (e.key === 'ArrowDown' || e.key === '-' || e.key === '_') {
+      e.preventDefault();
       if (data.length > 0) {
         if (isSonifying) stopSonification(true);
         pushUndo();
         const idx = (hoveredIndex >= 0 && hoveredIndex < data.length) ? hoveredIndex : 0;
-        data[idx].value = Math.max(0, Math.round((Number(data[idx].value) || 0) - 5));
+        data[idx].value = Math.round((Number(data[idx].value) || 0) - 5);
         updateAll();
         playSfx('down');
         showToast(`Nudged ${data[idx].label}: ${data[idx].value}`, 'info', '▼');
@@ -3771,6 +3947,12 @@
     }
   });
 
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && isSonifying) {
+      stopSonification(true);
+    }
+  });
+
   // Init
   const stateRestored = loadSavedState();
   resizeCanvas();
@@ -3781,16 +3963,22 @@
   }
 
   // Startup tutorial onboarding check (Pass 5 Integrity Guard)
-  const seenTutorial = localStorage.getItem(TUTORIAL_KEY);
-  const hasSavedSnapshot = !!localStorage.getItem(QUICKSAVE_KEY);
+  let seenTutorial = null;
+  let hasSavedSnapshot = false;
+  try {
+    seenTutorial = localStorage.getItem(TUTORIAL_KEY);
+    hasSavedSnapshot = !!localStorage.getItem(QUICKSAVE_KEY);
+  } catch (e) {}
   if (!seenTutorial && !stateRestored && !hasSavedSnapshot) {
-    localStorage.setItem(TUTORIAL_KEY, '1');
+    try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch (e) {}
     setTimeout(() => {
       openHelpModal();
       showToast("Welcome to KChart Studio! Review user guide & shortcuts.", "info", "📊");
     }, 400);
   } else {
-    if (!seenTutorial) localStorage.setItem(TUTORIAL_KEY, '1');
+    if (!seenTutorial) {
+      try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch (e) {}
+    }
     setTimeout(() => {
       showToast(stateRestored ? "Restored saved workspace session! Press F1 for Help." : "Welcome to KChart Studio! Press F1 for Help.", "info", "📊");
     }, 350);

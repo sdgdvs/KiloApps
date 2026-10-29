@@ -143,13 +143,14 @@ def main() -> int:
 
     # 3. Startup / Syntax check (fast inline CSS brace & script balance check when visual_probe runs; full CDP startup check if --no-visual)
     if html_path and html_path.exists():
-        from scripts.test_app_startup import check_css_brace_balance
+        from scripts.test_app_startup import check_css_brace_balance, check_script_tag_balance
         raw_html = html_path.read_text(encoding="utf-8", errors="replace")
         css_ok, open_braces, err_line = check_css_brace_balance(raw_html)
         if not css_ok:
             errors.append(f"CSS syntax error in {html_path.name}: {open_braces} unclosed brace(s) near line {err_line}")
-        if "<script" in raw_html and raw_html.count("<script") != raw_html.count("</script>"):
-            errors.append(f"Unbalanced <script> tags in {html_path.name}")
+        script_ok, script_err = check_script_tag_balance(raw_html)
+        if not script_ok:
+            errors.append(f"Unbalanced <script> tags in {html_path.name}: {script_err}")
     if not is_kweb and args.no_visual:
         uv_bin = shutil.which("uv")
         cmd = [uv_bin, "run", "scripts/test_app_startup.py", "--app", args.app] if uv_bin else [sys.executable, "scripts/test_app_startup.py", "--app", args.app]
@@ -162,11 +163,7 @@ def main() -> int:
     elif not is_kweb:
         print(f"[STARTUP PASS] {args.app} CSS/script syntax clean (CDP startup & modal dismissal unified into visual_probe).")
     elif html_path and html_path.exists():
-        txt = html_path.read_text(encoding="utf-8", errors="replace")
-        if "<script" in txt and txt.count("<script") != txt.count("</script>"):
-            errors.append(f"Unbalanced <script> tags in {html_path.name}")
-        else:
-            print(f"[WEB NODE PASS] {html_path.name} structure verified.")
+        print(f"[WEB NODE PASS] {html_path.name} structure verified.")
 
     # 3b. Visual & gameplay probe (screenshots, trusted-input playtest, HEAD before/after sheet)
     visual_summary = "skipped"

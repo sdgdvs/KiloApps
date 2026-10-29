@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://rfc-archive
   kilo_graphics: KSubmarine
   kilo_soundscape: KStellar
-  kilo_tester: KChart
+  kilo_tester: KMaze
   kilo_usability: KChart
   kilo_qa: KSys
   kilo_expander: KChart
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KSanctuary
-  timestamp: '2026-10-28T11:36:13-07:00'
+  agent: kilo-tester
+  app: KChart
+  timestamp: '2026-10-28T23:06:34-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -132,11 +132,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KChart`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Support negative dataset values (such as deltaData() outputs) across renderAxesAndCartesian(), renderHorizontalBar(), and renderTrendOverlay() by scaling axes over [min(0,minVal), max(0,maxVal)] with a zero baseline instead of clamping with Math.max(0,...) and passing raw numeric values to renderTrendOverlay() so movavg/mean/corridor match computeStats(); reset trendStats.polyA/B/C=0 when count<3 and trendStats.expA/B=0 when posIndices.length<2, fix Poly badge negative sign formatting, and draw transposed trend overlays in renderHorizontalBar(); align Pie/Donut/Polar cx and outerR in handlePointerMove(), updateHoverCoordsForIndex(), and renderSonifyPlayhead() with renderPieOrDonut()/renderPolarCoxcomb(); make exportSvg() and #btnExportHtml render active chartType, currentTheme, and trend/target overlays instead of hardcoded vertical bars, wrap startup localStorage calls in try/catch, add Ctrl+Z preventDefault() undo, and stop sonifyInterval on visibilitychange; in KChart/main.c add Scatter View on [9] and Polar on [0] (NUM_MODES 10), widen WM_MOUSEMOVE Cartesian hit-testing with dynamic barW, add >=100 carry in FormatPolyEq(), and persist sorted label order in QuickSaveState()/QuickLoadState(). |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -152,6 +151,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | **[ARGON REVIEW]:** Fix executePipeline(true) to decrypt #pipelineFinalOutput back to plaintext and parse stage.key (p,q,e) for RSA stages; fix #btnLoadLoreToWorkbench to load lore.ciphertext into #outputText and runDecrypt() into #inputText; fix #statTotalChars to use (outText // inText).length; and include aesKey/aesFormat/rsaP/rsaQ/rsaE/pipelineStages/stegoText in #btnExportJSON, #btnImportJSON, and #btnNewSession. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | **[ARGON REVIEW]:** Implement missing nextRecordId(tbl) (reusing it for #statNextId) and fix confirmSeedData() schema/PK fields (employees id/status/email, departments code/head, projects id/priority); replace undefined renderTable() with renderAll() in addNewColumnToTable()/dropColumnFromTable() while initializing default values and purging dropped-column indexes/relations; fix Profile [P] (analyzeColumnProfile, cleanTrimWhitespace, exportProfilerReport) to read string column names in tbl.columns and dbState.activeTable instead of col.id/tbl.id; apply ORDER BY and LIMIT after GROUP BY/aggregates in executeSelectSql() with getFieldValue() and numeric-aware MIN/MAX; add e.origin check, implement parseAndInsertCsv() for VFS CSV open, use 60s timeout for VFS_SHOW_OPEN with standalone exportToVfs()/exportCsvToVfs() fallbacks, and encrypt kdb_quicksave when #dbPassword is set; in KDB/main.c allow IDC_ADD_BTN to update existing records after NM_DBLCLK edit and replace UTF-8 bullets/emoji in MessageBoxA strings with ASCII. |
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Fix exportPaletteACT() ReferenceErrors (undefined currentPalettePreset/hexToRgb and missing retro16 key) using #palette-preset value; implement promised Shift-radial gradient (createRadialGradient), right-click stop reversal, and hasSelection clipping in draw()/endPosition(); sync #layer-opacity-val text, onchange saveState(), and layer opacity across saveState()/restoreState() and quickSave()/quickLoad() (plus restore secondaryColor and currentZoom); sync #onion-canvas dimensions/CSS zoom across applyZoom()/resizeCanvas()/transformCanvas()/restoreState()/quickLoad(), key out white background with translucent cyan tint in updateOnionSkin(), and fix addAnimFrame() on upper layers; fix saveVFS() 1.2s timeout aborting KiloOS VFS_SHOW_SAVE (immediate fallback only when window.parent===window, 60s dialog timeout otherwise, e.origin check) and accept .tga/.bmp on drop; in KPaint/main.c add M/P/4 hotkeys to GetMessageA WM_KEYDOWN, mirror across visible canvas width instead of 1999-x, and use GetClientRect() in WM_VSCROLL/WM_HSCROLL. |
+| `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Support negative dataset values (such as deltaData() outputs) across renderAxesAndCartesian(), renderHorizontalBar(), and renderTrendOverlay() by scaling axes over [min(0,minVal), max(0,maxVal)] with a zero baseline instead of clamping with Math.max(0,...) and passing raw numeric values to renderTrendOverlay() so movavg/mean/corridor match computeStats(); reset trendStats.polyA/B/C=0 when count<3 and trendStats.expA/B=0 when posIndices.length<2, fix Poly badge negative sign formatting, and draw transposed trend overlays in renderHorizontalBar(); align Pie/Donut/Polar cx and outerR in handlePointerMove(), updateHoverCoordsForIndex(), and renderSonifyPlayhead() with renderPieOrDonut()/renderPolarCoxcomb(); make exportSvg() and #btnExportHtml render active chartType, currentTheme, and trend/target overlays instead of hardcoded vertical bars, wrap startup localStorage calls in try/catch, add Ctrl+Z preventDefault() undo, and stop sonifyInterval on visibilitychange; in KChart/main.c add Scatter View on [9] and Polar on [0] (NUM_MODES 10), widen WM_MOUSEMOVE Cartesian hit-testing with dynamic barW, add >=100 carry in FormatPolyEq(), and persist sorted label order in QuickSaveState()/QuickLoadState(). |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KChart`
@@ -319,6 +319,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-28T23:06:34-07:00 — kilo-tester: KChart (UI Audit, Negative Axis Scaling, Export Parity, Native C Scatter/Polar & Harness Hardening)**
+  - Status: PASS ✅ (0 errors, web 140.3 KB, native 38.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.07%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.4s)).
+  - Web (kchart.html): Added negative dataset value scaling across Cartesian, Horizontal Bar, Trendline, SVG, and HTML Widget views; aligned Pie/Donut/Polar hover hit-testing and playhead math; reset stale poly/exp coefficients; added preventDefault on keyboard navigation/sonify and visibilitychange cleanup.
+  - Native C (KChart/main.c): Expanded NUM_MODES to 10 with Scatter View on [9] and Polar on [0], matched dynamic barW hit-testing, fixed FormatPolyEq() >=100 carry, and persisted sorted labels in QuickSave/QuickLoad.
+  - Harness Hardening (test_app_startup.py, verify_turn.py, orchestrate.py): Replaced naive substring <script> tag counting with an HTML5 script-data state machine (eliminating false positives across 7 apps) and added a 2-strike Stall Monitor & Circuit Breaker to POST-TURN SALVAGE.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-28T11:36:13-07:00 — kilo-graphics: KSanctuary (Xenobiology Terrarium Visuals & Weather Polish)**
   - Status: PASS ✅ (0 errors, web 459.8 KB, native 263.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.3%, HEAD Δ 0.07%, 0 fail, 0 warn, 5.2s)).
   - Integrated Imagen 3 xenobiology flora sprite and refined terrarium dome habitat with animated alien fauna specimen.
@@ -343,9 +350,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Anti-Piling & Hygiene: Replaced mature KMech in kilo-graphics with KCosmic; replaced conflicting KSys in kilo-tester (-> KRogue) and kilo-usability (-> KCosmic).
   - Queue Replenishment: Replenished kilo-qa (+KRadio, +KMail, +KMedia, +KChat, +KChatServer to 12 targets) maintaining deep 8-12 target runways across all queues.
   - Verification & Sync: All queues verified against Mature quarantine; updated last_planner_run timestamp.
-
-- **2026-10-28T09:40:35-07:00 — kilo-expander: KPaint (KPaint VFS Open/Save As, Direct ANSI/Sprite Exports & Canvas Size Parity)**
-  - Status: PASS ✅ (0 errors, web 269.7 KB, native 41.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Wired VFS Open (PNG/BMP/PCX/TGA/JSON with fallback), Save As (Ctrl+Shift+S + OS_NOTIFY), direct VFS exports for .ANS (/home/bbs/) & Sprite Sheets (/home/pictures/).
-  - Added Canvas Size presets (32x32, 64x64, 128x128, 320x240, 640x480, 800x600) syncing animFrames/#onion-canvas/#grid-canvas with matching Win32 C parity.
-  - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-review`.

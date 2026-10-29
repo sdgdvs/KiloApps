@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-28T09:40:35-07:00 — kilo-expander: KPaint (KPaint VFS Open/Save As, Direct ANSI/Sprite Exports & Canvas Size Parity)**
+  - Status: PASS ✅ (0 errors, web 269.7 KB, native 41.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Wired VFS Open (PNG/BMP/PCX/TGA/JSON with fallback), Save As (Ctrl+Shift+S + OS_NOTIFY), direct VFS exports for .ANS (/home/bbs/) & Sprite Sheets (/home/pictures/).
+  - Added Canvas Size presets (32x32, 64x64, 128x128, 320x240, 640x480, 800x600) syncing animFrames/#onion-canvas/#grid-canvas with matching Win32 C parity.
+  - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-review`.
+
 - **2026-10-28T09:22:19-07:00 — kilo-qa: KGraph (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KGraph across web and native targets.

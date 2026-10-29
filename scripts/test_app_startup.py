@@ -89,6 +89,42 @@ def check_css_brace_balance(html_content: str) -> Tuple[bool, int, Optional[int]
     return (open_braces == 0), open_braces, first_unbalanced_line
 
 
+def check_script_tag_balance(html_content: str) -> Tuple[bool, Optional[str]]:
+    """Checks for unclosed or stray <script> tags using an HTML5 script-data state machine.
+
+    Avoids false positives on `<script.bat>`, regexes like `/<script[\\s>]/i`,
+    or JS template literals containing `<script>...<\\/script>`.
+    """
+    in_script = False
+    open_line = 0
+    open_pos = 0
+    for m in re.finditer(r"<\s*(/?)\s*script(?:\s+[^>]*)?\s*>", html_content, re.IGNORECASE):
+        is_close = bool(m.group(1))
+        line_no = html_content.count("\n", 0, m.start()) + 1
+        if not in_script:
+            if is_close:
+                return False, f"Stray closing </script> at line {line_no} with no matching <script>"
+            in_script = True
+            open_line = line_no
+            open_pos = m.end()
+        else:
+            if is_close:
+                in_script = False
+            else:
+                next_close = re.search(r"<\s*/\s*script\s*>", html_content[m.end():], re.IGNORECASE)
+                block_end = m.end() + (next_close.start() if next_close else len(html_content))
+                block_slice = html_content[open_pos:block_end].lower()
+                if r"<\/script" not in block_slice and "</scr" not in block_slice:
+                    return (
+                        False,
+                        f"Unclosed <script> at line {open_line} before <script> at line {line_no} "
+                        f"(if inside a JS string literal, escape the closing tag as <\\/script>)",
+                    )
+    if in_script:
+        return False, f"Unclosed <script> tag opened at line {open_line} (missing </script> before EOF)"
+    return True, None
+
+
 async def run_cdp_audit(app_name: str, browser_path: str, port: int) -> Dict[str, Any]:
     import websockets
 

@@ -1224,6 +1224,7 @@ def main():
                 return
 
             log(f"Spawning agent execution via agy (timeout: {timeout_min}m)...")
+            pre_last_run = dict(frontmatter.get("last_run") or {}) if isinstance(frontmatter.get("last_run"), dict) else frontmatter.get("last_run")
             start_time = datetime.datetime.now()
 
             # Execute agy
@@ -1300,25 +1301,44 @@ def main():
                     lint_res = subprocess.run([sys.executable, "scripts/security_lint.py"], cwd=str(REPO_ROOT), capture_output=True)
                     if lint_res.returncode == 0:
                         subprocess.run(["git", "add", "-u"], cwd=str(REPO_ROOT), capture_output=True)
+                        subprocess.run(["git", "add", ".agents/receipts", ".agents/fleet_nodes"], cwd=str(REPO_ROOT), capture_output=True)
                         subprocess.run(["git", "commit", "-m", f"feat({agent}): auto-salvage completed turn for {target_app}"], cwd=str(REPO_ROOT), capture_output=True)
                         log(f"[POST-TURN SALVAGE] Committed completed turn for {agent} ({target_app}).")
                 elif target_app:
-                    app_status = subprocess.run(
-                        ["git", "status", "--porcelain", "KiloOS/public"],
+                    wt_status = subprocess.run(
+                        ["git", "status", "--porcelain", "--untracked-files=no"],
                         cwd=str(REPO_ROOT),
                         capture_output=True,
                         text=True,
                     )
-                    if app_status.returncode == 0 and app_status.stdout.strip():
-                        log(f"[POST-TURN SALVAGE] Detected uncommitted app edits for {agent} ({target_app}) before handoff. Running verify_turn.py...")
+                    modified_code = [
+                        ln for ln in (wt_status.stdout or "").splitlines()
+                        if ln.strip() and not any(p in ln for p in (".agents/", "logs/", "docs/gallery/review/"))
+                    ]
+                    if modified_code:
+                        log(f"[POST-TURN SALVAGE] Detected uncommitted app edits ({len(modified_code)} file(s)) for {agent} ({target_app}) before handoff. Running verify_turn.py...")
                         v_res = subprocess.run(
                             [sys.executable, "scripts/verify_turn.py", "--app", target_app, "--build-native"],
                             cwd=str(REPO_ROOT),
                             capture_output=True,
                             text=True,
+                            encoding="utf-8",
+                            errors="replace",
                             stdin=subprocess.DEVNULL,
                             timeout=90,
                         )
+                        if v_res.returncode != 0 and "Visual probe FAIL" in (v_res.stdout or ""):
+                            log(f"[POST-TURN SALVAGE] Visual probe failed on {target_app}; retrying verify_turn.py with --no-visual to salvage code edits...")
+                            v_res = subprocess.run(
+                                [sys.executable, "scripts/verify_turn.py", "--app", target_app, "--build-native", "--no-visual"],
+                                cwd=str(REPO_ROOT),
+                                capture_output=True,
+                                text=True,
+                                encoding="utf-8",
+                                errors="replace",
+                                stdin=subprocess.DEVNULL,
+                                timeout=60,
+                            )
                         if v_res.returncode == 0:
                             adv_res = subprocess.run(
                                 [
@@ -1332,12 +1352,67 @@ def main():
                                 cwd=str(REPO_ROOT),
                                 capture_output=True,
                                 text=True,
+                                encoding="utf-8",
+                                errors="replace",
                                 stdin=subprocess.DEVNULL,
                             )
                             if adv_res.returncode == 0:
                                 subprocess.run(["git", "add", "-u"], cwd=str(REPO_ROOT), capture_output=True)
+                                subprocess.run(["git", "add", ".agents/receipts", ".agents/fleet_nodes"], cwd=str(REPO_ROOT), capture_output=True)
                                 subprocess.run(["git", "commit", "-m", f"feat({agent}): auto-salvage verified turn for {target_app}"], cwd=str(REPO_ROOT), capture_output=True)
                                 log(f"[POST-TURN SALVAGE] Verified, advanced queue, and committed turn for {agent} ({target_app})!")
+                        else:
+                            v_err = ((v_res.stdout or "") + "\n" + (v_res.stderr or "")).strip()[-600:]
+                            log(f"[POST-TURN SALVAGE] Verification failed for {target_app} (code {v_res.returncode}):\n{v_err}")
+
+                # Stall Monitor & Circuit Breaker: prevent any single (agent, target) from looping indefinitely
+                if target_app and agent != "kilo-planner":
+                    try:
+                        post_fm = parse_frontmatter(NEXT_WORK_FILE.read_text(encoding="utf-8", errors="replace"))
+                        post_last_run = post_fm.get("last_run")
+                        queue_advanced = (post_fm.get("current_agent") != agent) or (post_last_run != pre_last_run)
+                        s_data = load_session_data(node_id=node_id, auto_heal=True)
+                        stall_key = f"{agent}:{target_app}"
+                        if queue_advanced:
+                            if s_data.get("stall_count", 0) > 0:
+                                s_data["stall_key"] = ""
+                                s_data["stall_count"] = 0
+                                atomic_write_json(SESSION_FILE, s_data)
+                        else:
+                            prev_key = s_data.get("stall_key", "")
+                            stall_count = (int(s_data.get("stall_count", 0)) + 1) if prev_key == stall_key else 1
+                            s_data["stall_key"] = stall_key
+                            s_data["stall_count"] = stall_count
+                            atomic_write_json(SESSION_FILE, s_data)
+                            log(f"[STALL MONITOR] Turn did not advance queue for {stall_key} (consecutive stall #{stall_count}/2).")
+                            if stall_count >= 2:
+                                log(f"[STALL CIRCUIT BREAKER] {stall_key} stalled {stall_count} consecutive times! Reverting dirty working tree and auto-rotating queue.")
+                                subprocess.run(["git", "checkout", "--", "."], cwd=str(REPO_ROOT), capture_output=True)
+                                cb_res = subprocess.run(
+                                    [
+                                        sys.executable, "scripts/advance_turn.py",
+                                        "--agent", agent,
+                                        "--app", target_app,
+                                        "--title", "Stall Circuit Breaker (Auto-Rotated After Consecutive Timeouts)",
+                                        "--bullet", f"Status: ROTATED ⚠️ (circuit breaker triggered after {stall_count} consecutive stalled turns on {target_app}).",
+                                        "--bullet", f"Reverted unverified working tree edits and rotated {target_app} to queue bottom so fleet execution continues.",
+                                    ],
+                                    cwd=str(REPO_ROOT),
+                                    capture_output=True,
+                                    text=True,
+                                    encoding="utf-8",
+                                    errors="replace",
+                                    stdin=subprocess.DEVNULL,
+                                )
+                                if cb_res.returncode == 0:
+                                    s_data["stall_key"] = ""
+                                    s_data["stall_count"] = 0
+                                    atomic_write_json(SESSION_FILE, s_data)
+                                    subprocess.run(["git", "add", "next_work.md", "archive/fleet_execution_archive.md", ".agents/fleet_nodes", ".agents/receipts"], cwd=str(REPO_ROOT), capture_output=True)
+                                    subprocess.run(["git", "commit", "-m", f"chore(orchestrator): circuit-breaker auto-rotate past stalled {agent} turn on {target_app}"], cwd=str(REPO_ROOT), capture_output=True)
+                                    log(f"[STALL CIRCUIT BREAKER] Auto-rotated past {stall_key} and committed queue advance.")
+                    except Exception as cb_err:
+                        log(f"Warning in stall circuit breaker check: {cb_err}")
 
                 # Post-turn 0-token rotation: ensure new logs written by agent don't exceed cap
                 rot_res = rotate_next_work_logs(next_work_path=NEXT_WORK_FILE)
