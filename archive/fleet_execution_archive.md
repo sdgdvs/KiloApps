@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T11:39:15-07:00 — kilo-qa: KImage (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 167.7 KB, native 27.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 8.59%, HEAD Δ 0.11%, 0 fail, 0 warn, 5.1s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kimage_tutorialSeen flag, safe storage, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, Fit canvas scaling, and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KImage` to Mature archive; advanced `kilo-qa` to `KSettings`; next agent `kilo-expander`.
+
 - **2026-10-29T11:22:20-07:00 — kilo-usability: KChess (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KChess across web and native targets.

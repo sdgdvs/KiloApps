@@ -415,6 +415,21 @@ void UpdateUI() {
     }
 }
 
+void SortGladiatorsByProwess(void) {
+    for (int i = 0; i < owned_count - 1; i++) {
+        for (int j = 0; j < owned_count - i - 1; j++) {
+            int pA = owned[j].str + owned[j].agi + owned[j].weapon * 2;
+            int pB = owned[j+1].str + owned[j+1].agi + owned[j+1].weapon * 2;
+            if (pB > pA) {
+                Gladiator tmp = owned[j];
+                owned[j] = owned[j+1];
+                owned[j+1] = tmp;
+            }
+        }
+    }
+    UpdateUI();
+}
+
 void BuyGladiator(int index) {
     if (index >= 0 && index < market_count && funds >= market[index].cost) {
         funds -= market[index].cost;
@@ -2531,6 +2546,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 }
             } else if (g_currentView == 0) {
+                if (wParam == 'P') {
+                    SortGladiatorsByProwess();
+                    return 0;
+                }
                 if (wParam == 'S') {
                     SwitchView(3);
                     return 0;
