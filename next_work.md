@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-review
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,11 +31,11 @@ current_targets:
   kilo_creator: kweb://webring
   kilo_graphics: KWizard
   kilo_soundscape: KStellar
-  kilo_tester: KMaze
-  kilo_usability: KColosseum
+  kilo_tester: KSolitaire
+  kilo_usability: KSolitaire
   kilo_qa: KAudio
-  kilo_expander: KStarForge
-  kilo_review: KSolitaire
+  kilo_expander: KSolitaire
+  kilo_review: KChess
 virtual_web_target: kweb://webring
 virtual_web_rotation:
 - kweb://slashnet
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KBudget
-  timestamp: '2026-10-29T03:41:15-07:00'
+  agent: kilo-review
+  app: KSolitaire
+  timestamp: '2026-10-29T04:16:32-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -132,10 +132,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KMaze`
+- **Active Target**: `KSolitaire`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | **[ARGON REVIEW]:** Fix broken double-click auto-move to foundation in ksolitaire.html (render() innerHTML wipe on click #1 destroys the .card node before dblclick fires—use timestamp double-tap detection or slot delegation) and start game timer + clear selection on double/right-click foundation moves in both ksolitaire.html and KSolitaire/main.c; honor Stage 11 1-pass cap via explicit maxPasses in CAMPAIGN_STAGES and disable #draw-mode-select during Campaign/Duel; fix thawAdjacent()/ThawAdjacent() to thaw only columns within distance 1 of srcCol or dstCol instead of spanning min..max; move saveState(true) after empty-stock/pass-cap guards in handleStockClick(), call saveState() after stock draw/card flip, and push undo before charge/score deduction in useXRayVision()/UseMagicWand(); snapshot/restore live game state and pause timer when opening/closing #replay-modal; force Classic 52-card rules on Duel start and prevent CyberBot-99 infinite two-column oscillation; and in KSolitaire/main.c reset state.stock_cnt=0 in UseShuffleStock() to fix duplicate-card buffer overflow, replace UTF-8 suit labels in DrawTextA with DrawSuitGDI(), remove traveling DrawSheenSweeps(), fan up to 3 waste cards in Draw 3, and call SaveGameState()/UpdateWindowTitle()/CheckWin() on tableau flip. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -155,10 +156,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | **[ARGON REVIEW]:** Add an explicit category filter state/#filter-category-select with click-again toggle-off on #pie-chart slices, #category-legend, and .transaction-category badges (using encodeURIComponent/dataset instead of raw onclick string interpolation and syncing with #active-filter-bar and F5/F9); aggregate all custom CSV/JSON expense categories in render() instead of lumping into Other, compute dynamic canvas center/radius in renderChart()/drawChartCenter()/onmousemove, and format <1000 center totals with .toFixed(2); call updateCurrencyLabels() in quickloadState(), parseAndLoadJSON(), and settingsForm submit; align #budget-goal-card and updateStatusbar() on the same target month expenditure, support quoted CSV fields, and dedupe matching item.id on JSON import; in KBudget/main.c guard malloc(0), use GetLocalTime() + amount>0 validation in AddDialogProc, wire LBN_DBLCLK/VK_RETURN on hList to Edit, add date/amount search + Type filter combo, sync WM_PAINT pie totals/legend with active filters while guarding (x1,y1)==(x2,y2) GDI Pie() 360-deg wrap, and fix the SetClassLongPtr brush leak. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KColosseum`
+- **Active Target**: `KSolitaire`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | **[ARGON REVIEW]:** Remove position:relative from .card.face-down in ksolitaire.html so face-down tableau cards stay position:absolute at top:offsetY instead of stacking in normal flow below face-up cards (eliminating 376px vertical overflow at 940x763); lock body to 100vh overflow:hidden (with <=640px scroll fallback), compact header/toolbar into <=2 rows with tighter tableau step compression on deep columns, refresh boardEl.getBoundingClientRect() in fxLoop instead of stale cachedBoardRect, add pointer drag-and-drop with floating card/stack preview and valid drop highlights in ksolitaire.html (plus WM_MOUSEMOVE/WM_LBUTTONUP drag parity in KSolitaire/main.c), display live Campaign/Vegas/X-Ray HUD telemetry (Foundations X/targetCards, Passes stockPasses/maxStockPasses, Suit-Lock slot badges + thaw rule in #help-modal, X-Ray countdown), add color-scheme:dark + dark select option styles, replace prompt()/confirm() in savePlayerNamePrompt()/resetStats() with in-DOM UI, and make Arrow keys move a visible .kb-focus ring across stock/waste/foundations/tableau with Enter to select/move. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Scope global li card styling to #marketList > li and #ownedList > li so #tutorialModal ol li stops stretching and clipping #btnTutorialEnter; lock body to 100vh flex column at 800x563 by merging .top-nav, h1, and .funds into a compact header, removing the duplicate Empire Duel Arena banner, making #marketList and #ownedList independently scrollable with Sort by Prowess/HP buttons (sortGladiators), and compacting #arenaPanel (#arenaCanvas 185px, #combatLog 72px) for 0px overflow; add devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas, guard SELECT in keydown, and replace prompt() in importGladiatorDossier() with an in-DOM modal. |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Orbit & navigation viewport ergonomics, touch/keyboard flight controls, HiDPI radar canvas scaling, and compact HUD. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -196,10 +198,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KStarForge`
+- **Active Target**: `KSolitaire`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into ksolitaire.html: add VFS Save (VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY) and VFS Open (VFS_SHOW_OPEN -> VFS_READ) with mandatory event.origin === window.location.origin checks, 60s dialog cleanup timeouts, and standalone Blob download / file-input fallbacks when window.parent === window for .ksol replays (/home/replays/) in #replay-modal and game saves/stats .json (/home/saves/) in #stats-modal, plus handle incoming FILE_OPEN / VFS_OPEN messages from KiloOS File Browser to auto-load .ksol replays or .json saves. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmech_telemetry.json via postMessage with standalone fallback) into #modal-telemetry and add optional RFMS online mech duel behind an explicit Multiplayer Arena button. |
@@ -219,11 +222,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | **[ARGON REVIEW]:** Harden KiloVFS in kbudget.html with mandatory e.origin === window.location.origin checks and 60s cleanup timeouts on all message listeners, upgrade exportToVFS() to use VFS_SHOW_SAVE defaulting to /home/data/kbudget_ledger.csv and /home/data/kbudget_backup.json before VFS_WRITE + OS_NOTIFY (with standalone download/file-picker fallbacks in exportToVFS() and importFromVFS()), handle incoming FILE_OPEN / VFS_OPEN messages to load .csv/.json ledgers from File Browser, and add an Open in KChart IPC button writing /home/data/kbudget_categories.csv + dispatching OS_LAUNCH_APP (appId kchart). |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
-- **Active Target**: `KSolitaire`
+- **Active Target**: `KChess`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + card tableau spacing, drag/click responsiveness, and campaign HUD; inject fixes via `--inject-fix`. |
 | `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + board rendering, move history panel, and FEN/AI controls; inject fixes via `--inject-fix`. |
 | `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + goban stone legibility, territory scoring, and tsumego solver UX; inject fixes via `--inject-fix`. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + hex byte grid, disassembler pane, and VFS file loading; inject fixes via `--inject-fix`. |
@@ -253,6 +255,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | [Argon Audited 2026-10-28: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | [Argon Audited 2026-10-28: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | [Argon Audited 2026-10-29: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
+| `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | [Argon Audited 2026-10-29: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 
 ---
 
@@ -286,7 +289,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KJournal** | `KiloOS/public/apps/kjournal.html` | Pass 5+ (2026-10-24) | Productivity / Writing & Journal | Complete encrypted retro journal workstation with rich markdown preview, mood tags, PIN lock, calendar navigator, F5/F9 persistence, and dual Win32 C parity. |
 | **KVault** | `KiloOS/public/apps/kvault.html` | Pass 5+ (2026-10-24) | System / Security | Comprehensive client-side encrypted password & secret manager with AES-GCM/PBKDF2/WebCrypto, tree navigator, KeePass/CSV/ASCII export/import, F5/F9 state snapshots, and Win32 C parity. |
 | **KHash** | `KiloOS/public/apps/khash.html` | Pass 5+ (2026-10-24) | Security / Cryptography | Complete multi-algorithm checksum workstation (MD5, SHA1, SHA256, CRC32, Adler32, FNV-1a, Murmur3, CRC16), HMAC key generation, byte forensics/entropy, F5/F9 persistence, and dual Win32 C parity. |
-| **KSolitaire** | `KiloOS/public/apps/ksolitaire.html` | Pass 5+ (2026-10-23) | Games / Cards | Complete Klondike, Vegas & 20-stage Campaign Solitaire engine with F5/F9 state persistence, undo/redo stack, and native Win32 C build. |
 | **KConverter** | `KiloOS/public/apps/kconverter.html` | Pass 5+ (2026-10-23) | Productivity / Math & Units | High-precision engineering and dimensional unit converter across 14 physical categories with Smart Expression Parser, Batch tables, custom factors, F5/F9 persistence, and dual Win32 C parity. |
 | **KClip** | `KiloOS/public/apps/kclip.html` | Pass 5+ (2026-10-23) | Workstation & Utilities | Clipboard manager, 12 text transformation pipelines, regex find/replace, Diff/Hex inspector, F5/F9 persistence, and dual Win32 C parity. |
 | **KFont** | `KiloOS/public/apps/kfont.html` | Pass 5+ (2026-10-23) | Media / Typography | Complete typography workstation: 11 tabs, custom bitmap glyph editor & font bank, OTF axes, WCAG contrast matrix, C LOGFONT/JSON exports, F5/F9 persistence, dual Win32 C parity. |
@@ -321,6 +323,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T04:16:32-07:00 — kilo-review: KSolitaire (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 940x763 sheet.png and audited ksolitaire.html + KSolitaire/main.c; un-quarantined from Mature and queued surgical fixes).
+  - Visual/UX Findings: .card.face-down position:relative breaks tableau stacking in sheet.png (376px overflow); 3-row toolbar bloat; stale cachedBoardRect; no card drag-and-drop; missing Campaign target/pass HUD; destructive Arrow nav.
+  - Feature/C/VFS Findings: Broken web dblclick (innerHTML wipe); Stage 11 pass-cap bug; thawAdjacent spanning non-adjacent cols; Replay overwriting live match; C UseShuffleStock stock_cnt buffer overflow + DrawTextA mojibake + sheen sweep; zero VFS mesh.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KSolitaire`, `kilo-tester`->`KSolitaire`, `kilo-expander`->`KSolitaire`] (un-quarantined `KSolitaire` from Mature); advanced `kilo-review` to `KChess`; next agent `kilo-creator`.
+
 - **2026-10-29T03:41:15-07:00 — kilo-expander: KBudget (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KBudget across web and native targets.
@@ -343,7 +351,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KBudget across web and native targets.
   - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
-
-- **2026-10-29T01:32:13-07:00 — kilo-graphics: KSubmarine (Skip — Asset Suitability & Sonar CRT Scope)**
-  - ⏭️ Skip — Imagen 3 replacement not appropriate for KSubmarine sonar CRT vector scope.
-  - Handoff: Advanced `kilo-graphics` to `KWizard`; rotated active agent to `kilo-tester`.

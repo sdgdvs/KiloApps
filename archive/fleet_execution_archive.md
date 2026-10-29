@@ -4,6 +4,10 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T01:32:13-07:00 — kilo-graphics: KSubmarine (Skip — Asset Suitability & Sonar CRT Scope)**
+  - ⏭️ Skip — Imagen 3 replacement not appropriate for KSubmarine sonar CRT vector scope.
+  - Handoff: Advanced `kilo-graphics` to `KWizard`; rotated active agent to `kilo-tester`.
+
 - **2026-10-29T01:17:58-07:00 — kilo-creator: kweb://rfc-archive (RFC Archive: IETF Living RFC Workbench & Interactive Simulators)**
   - Status: PASS ✅ (0 errors, web 89.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Enhanced RFC 1149/2549 Avian Carrier simulator with dynamic weather particles (storm/falcon/wind), RFC 2549 dual-carrier swarm, and real-time parameter syncing.
