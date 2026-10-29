@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T02:39:12-07:00 — kilo-usability: KBudget (Usability, HiDPI Canvas & Responsive Layout Polish)**
+  - Status: PASS ✅ (0 errors, web 121.6 KB, native 167.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Layout & HiDPI: eliminated 920x613 vertical clipping with overflow:hidden and min-height:0; arranged summary cards as 2-column grid; sized #chart-container to 170px with 160x160 HiDPI doughnut pie chart.
+  - Ergonomics & Modals: focused first control in trapModalFocus(); removed #data-modal Enter/Space interceptor; guarded background hotkeys when modals active; Escape closes only active modal.
+  - Dialogs & Styling: replaced blocking confirm() with styled in-DOM confirmation dialog; moved #toast to top:56px right:16px; added color-scheme:dark + dark select option styles; removed Google Fonts import.
+  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
+
 - **2026-10-29T02:22:24-07:00 — kilo-tester: KBudget (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KBudget across web and native targets.
