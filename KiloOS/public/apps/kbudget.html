@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KBudget</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
         :root {
+            color-scheme: dark;
             --bg-color: #0f172a;
             --text-color: #f8fafc;
             --glass-bg: rgba(30, 41, 59, 0.7);
@@ -23,7 +22,16 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        select {
+            color-scheme: dark;
+        }
+
+        select option {
+            background-color: #1e293b;
+            color: #f8fafc;
         }
 
         body {
@@ -82,43 +90,49 @@
 
         .main-content {
             flex: 1;
-            padding: 1.25rem 1.5rem;
-            overflow-y: auto;
+            padding: 0.85rem 1.15rem;
+            overflow: hidden;
+            min-height: 0;
             display: grid;
             grid-template-columns: 290px 1fr;
-            gap: 1.5rem;
+            gap: 1.15rem;
         }
 
         .glass-panel {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
-            padding: 1.25rem;
+            padding: 0.85rem 1rem;
             backdrop-filter: blur(10px);
             display: flex;
             flex-direction: column;
             min-width: 0;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .glass-panel h2 {
-            font-size: 1.25rem;
-            margin-bottom: 1.5rem;
+            font-size: 1.15rem;
+            margin-bottom: 0.55rem;
             font-weight: 600;
+            flex-shrink: 0;
         }
 
         .summary-cards-container {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.45rem;
+            flex-shrink: 0;
         }
 
         .summary-card {
             text-align: center;
-            padding: 0.85rem 1rem;
+            padding: 0.45rem 0.5rem;
             border-radius: 8px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--glass-border);
             transition: transform 0.2s, background 0.2s, border-color 0.2s;
+            min-width: 0;
         }
 
         .summary-card:hover {
@@ -214,15 +228,21 @@
         }
 
         .summary-card h3 {
-            font-size: 0.875rem;
+            font-size: 0.72rem;
             color: #94a3b8;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.2rem;
             font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .summary-card p {
-            font-size: 1.5rem;
+            font-size: 1.05rem;
             font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .text-success { color: var(--success-color); }
@@ -231,10 +251,12 @@
 
         .transaction-list {
             flex: 1;
+            min-height: 0;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 0.5rem;
+            padding-right: 2px;
         }
 
         .transaction-item {
@@ -242,7 +264,7 @@
             justify-content: space-between;
             align-items: center;
             background: rgba(255, 255, 255, 0.03);
-            padding: 0.85rem 1rem;
+            padding: 0.65rem 0.85rem;
             border-radius: 8px;
             border: 1px solid var(--glass-border);
             transition: transform 0.2s, background 0.2s;
@@ -444,32 +466,47 @@
 
         #chart-container {
             width: 100%;
-            height: 220px;
-            margin-top: 1rem;
+            height: 170px;
+            min-height: 170px;
+            margin-top: 0.35rem;
             background: rgba(255, 255, 255, 0.02);
             border-radius: 8px;
             border: 1px solid var(--glass-border);
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 10px;
+            padding: 4px;
+            flex-shrink: 0;
+        }
+
+        #category-legend {
+            margin-top: 0.4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            font-size: 0.78rem;
+            flex: 1;
+            min-height: 50px;
+            overflow-y: auto;
+            padding-right: 4px;
         }
 
         .toast {
             position: fixed;
-            bottom: 24px;
-            right: 24px;
+            top: 56px;
+            right: 16px;
+            bottom: auto;
             background: #1e293b;
             color: #f8fafc;
             border: 1px solid var(--glass-border);
             border-radius: 8px;
-            padding: 0.75rem 1.25rem;
-            font-size: 0.9rem;
+            padding: 0.65rem 1.1rem;
+            font-size: 0.85rem;
             font-weight: 500;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
             z-index: 3000;
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(-8px);
             pointer-events: none;
             transition: opacity 0.25s ease, transform 0.25s ease;
             display: flex;
@@ -518,6 +555,11 @@
                 padding: 0.85rem;
                 gap: 1rem;
                 overflow-y: visible;
+                min-height: auto;
+            }
+            .glass-panel {
+                overflow: visible;
+                min-height: auto;
             }
             .summary-cards-container {
                 display: grid;
@@ -526,6 +568,14 @@
             }
             .summary-card {
                 margin-bottom: 0;
+            }
+            #category-legend {
+                max-height: 180px;
+                flex: none;
+            }
+            .transaction-list {
+                max-height: none;
+                overflow-y: visible;
             }
             .statusbar {
                 font-size: 0.72rem;
@@ -602,29 +652,29 @@
                     <p class="text-danger" id="total-expense">-$0.00</p>
                 </div>
                 <div class="summary-card" id="budget-goal-card" style="cursor: pointer;" onclick="openSettingsModal()" tabindex="0" role="button" aria-label="Monthly Budget Target. Click or press Enter to adjust." title="Click to adjust monthly budget goal">
-                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                        <h3 style="margin-bottom: 0;">Monthly Budget</h3>
-                        <span id="budget-goal-status" style="font-size: 0.75rem; color: #94a3b8;">No goal</span>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 4px;">
+                        <h3 style="margin-bottom: 0;">Budget</h3>
+                        <span id="budget-goal-status" style="font-size: 0.68rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">No goal</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 0.35rem;">
-                        <p id="budget-goal-display" style="font-size: 1.05rem; font-weight: 600; color: #f1f5f9; margin: 0;">$0.00</p>
-                        <span id="budget-goal-remaining" style="font-size: 0.8rem; color: #94a3b8;"></span>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 0.2rem; gap: 4px;">
+                        <p id="budget-goal-display" style="font-size: 1.05rem; font-weight: 700; color: #f1f5f9; margin: 0;">$0.00</p>
+                        <span id="budget-goal-remaining" style="font-size: 0.7rem; color: #94a3b8; white-space: nowrap;"></span>
                     </div>
-                    <div style="background: rgba(255,255,255,0.1); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 0.45rem;">
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 4px; height: 5px; overflow: hidden; margin-top: 0.3rem;">
                         <div id="budget-goal-bar" style="background: #10b981; height: 100%; width: 0%; transition: width 0.3s, background-color 0.3s;"></div>
                     </div>
                 </div>
             </div>
-            <h3 style="font-size: 1rem; margin-top: 1.5rem; color: #cbd5e1; font-weight: 500;">Expenses by Category</h3>
+            <h3 style="font-size: 0.88rem; margin-top: 0.5rem; color: #cbd5e1; font-weight: 500; flex-shrink: 0;">Expenses by Category</h3>
             <div id="chart-container">
-                <canvas id="pie-chart" width="200" height="200"></canvas>
+                <canvas id="pie-chart" width="160" height="160" style="width: 160px; height: 160px;"></canvas>
             </div>
-            <div id="category-legend" style="margin-top: 0.65rem; display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.8rem; max-height: 140px; overflow-y: auto; padding-right: 4px;"></div>
+            <div id="category-legend"></div>
         </aside>
         
         <section class="glass-panel">
             <h2>Transactions</h2>
-            <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
+            <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; flex-shrink: 0;">
                 <div style="position: relative; flex: 1; min-width: 180px; display: flex; align-items: center;">
                     <input type="text" id="search-input" class="form-control" placeholder="Search description, category, or amount... (/ to focus)" style="width: 100%; margin-bottom: 0; padding-right: 1.8rem;" oninput="updateSearchClearBtn(); currentPage = 1; render()">
                     <button id="clear-search-btn" type="button" onclick="clearFilters()" style="position: absolute; right: 8px; background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 1.1rem; line-height: 1; display: none; padding: 2px 4px;" title="Clear search">&times;</button>
@@ -644,18 +694,18 @@
                     <option value="amount-asc">Amount (Lowest First)</option>
                 </select>
             </div>
-            <div id="active-filter-bar" style="display: none; align-items: center; justify-content: space-between; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; padding: 0.35rem 0.65rem; margin-bottom: 0.5rem; font-size: 0.82rem;">
+            <div id="active-filter-bar" style="display: none; align-items: center; justify-content: space-between; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; padding: 0.35rem 0.65rem; margin-bottom: 0.4rem; font-size: 0.82rem; flex-shrink: 0;">
                 <span id="active-filter-label" style="color: #93c5fd; font-weight: 500;"></span>
                 <button type="button" onclick="clearFilters()" style="background: transparent; border: none; color: #93c5fd; cursor: pointer; font-size: 0.8rem; text-decoration: underline; padding: 2px 6px;" title="Clear filter (Esc)">Clear Filter (Esc)</button>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.35rem 0.75rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; border-bottom: 1px solid var(--glass-border); margin-bottom: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; padding: 0.3rem 0.75rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; border-bottom: 1px solid var(--glass-border); margin-bottom: 0.4rem; flex-shrink: 0;">
                 <span>Description &amp; Category</span>
                 <span style="margin-right: 4.5rem;">Amount</span>
             </div>
             <div class="transaction-list" id="transaction-list">
                 <!-- Transactions injected via JS -->
             </div>
-            <div id="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+            <div id="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.6rem; flex-shrink: 0;">
                 <button class="btn btn-outline" style="color: white; opacity: 0.5; cursor: not-allowed;" id="prev-page-btn" onclick="changePage(-1)" disabled>Previous Page</button>
                 <span id="page-indicator" style="color: #94a3b8; font-size: 0.9rem;">Page 1 of 1</span>
                 <button class="btn btn-outline" style="color: white; opacity: 0.5; cursor: not-allowed;" id="next-page-btn" onclick="changePage(1)" disabled>Next Page</button>
@@ -844,8 +894,8 @@
                 <div>
                     <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: #cbd5e1;">Presets &amp; Reset</h3>
                     <div style="display: flex; gap: 0.5rem;">
-                        <button type="button" class="btn btn-outline" style="flex: 1; color: white;" onclick="loadSampleData(); closeDataModal();">Sample Demo</button>
-                        <button type="button" class="btn btn-outline text-danger" style="flex: 1; border-color: rgba(239,68,68,0.4);" onclick="clearAllData(); closeDataModal();">Clear All</button>
+                        <button type="button" class="btn btn-outline" style="flex: 1; color: white;" onclick="closeDataModal(); loadSampleData();">Sample Demo</button>
+                        <button type="button" class="btn btn-outline text-danger" style="flex: 1; border-color: rgba(239,68,68,0.4);" onclick="closeDataModal(); clearAllData();">Clear All</button>
                     </div>
                 </div>
             </div>
@@ -881,6 +931,21 @@
             </div>
             <div class="modal-actions" style="margin-top: 1.25rem;">
                 <button type="button" class="btn" onclick="closeTutorialModal()">Get Started</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Dialog Modal -->
+    <div class="modal-overlay" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 id="confirm-title">Confirm Action</h2>
+                <button type="button" class="modal-close-btn" id="confirm-cancel-x" onclick="closeConfirmDialog()" aria-label="Close dialog">&times;</button>
+            </div>
+            <p id="confirm-message" style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem;"></p>
+            <div class="modal-actions" style="margin-top: 1rem;">
+                <button type="button" class="btn btn-outline" id="confirm-cancel-btn" onclick="closeConfirmDialog()" style="color: white;">Cancel</button>
+                <button type="button" class="btn" id="confirm-ok-btn">Confirm</button>
             </div>
         </div>
     </div>
@@ -1012,10 +1077,59 @@
         // Focus Management & Trapping
         let activeModalPrevFocus = null;
 
+        let confirmCallback = null;
+
+        function showConfirmDialog(title, message, onConfirm, isDanger = true) {
+            const confirmModal = document.getElementById('confirm-modal');
+            const titleEl = document.getElementById('confirm-title');
+            const msgEl = document.getElementById('confirm-message');
+            const okBtn = document.getElementById('confirm-ok-btn');
+            const cancelBtn = document.getElementById('confirm-cancel-btn');
+            if (!confirmModal) {
+                if (window.confirm(message)) onConfirm();
+                return;
+            }
+            if (titleEl) titleEl.textContent = title || 'Confirm Action';
+            if (msgEl) msgEl.textContent = message;
+            if (okBtn) {
+                if (isDanger) {
+                    okBtn.className = 'btn text-danger';
+                    okBtn.style.background = 'rgba(239, 68, 68, 0.2)';
+                    okBtn.style.borderColor = 'var(--danger-color)';
+                } else {
+                    okBtn.className = 'btn';
+                    okBtn.style.background = 'var(--primary-color)';
+                    okBtn.style.borderColor = 'transparent';
+                }
+                okBtn.onclick = () => {
+                    const cb = confirmCallback;
+                    closeConfirmDialog();
+                    if (typeof cb === 'function') cb();
+                };
+            }
+            confirmCallback = onConfirm;
+            trapModalFocus(confirmModal);
+            confirmModal.classList.add('active');
+            setTimeout(() => {
+                if (cancelBtn) cancelBtn.focus();
+            }, 40);
+        }
+
+        function closeConfirmDialog() {
+            const confirmModal = document.getElementById('confirm-modal');
+            if (confirmModal && confirmModal.classList.contains('active')) {
+                confirmModal.classList.remove('active');
+                releaseModalFocus();
+                confirmCallback = null;
+                return true;
+            }
+            return false;
+        }
+
         function trapModalFocus(modalEl) {
             if (!modalEl) return;
             activeModalPrevFocus = document.activeElement;
-            const focusable = modalEl.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+            const focusable = Array.from(modalEl.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'));
             if (focusable.length > 0) {
                 const first = focusable[0];
                 const last = focusable[focusable.length - 1];
@@ -1034,6 +1148,10 @@
                         }
                     }
                 };
+                // Focus first control in modal
+                setTimeout(() => {
+                    first.focus();
+                }, 30);
             }
         }
 
@@ -1472,19 +1590,25 @@
 
         function deleteTransaction(id) {
             id = decodeURIComponent(id);
-            if (!confirm("Are you sure you want to delete this transaction?")) {
-                return;
-            }
-            if (editingTransactionId && String(editingTransactionId) === String(id)) {
-                closeModal();
-            }
-            const prevLen = transactions.length;
-            transactions = transactions.filter(t => String(t.id) !== String(id));
-            if (transactions.length < prevLen) {
-                saveTransactions();
-                render();
-                showToast("Transaction deleted", "info");
-            }
+            const t = transactions.find(x => String(x.id) === String(id));
+            const desc = t ? `"${t.description || t.category}"` : 'this transaction';
+            showConfirmDialog(
+                'Delete Transaction',
+                `Are you sure you want to delete ${desc}?`,
+                () => {
+                    if (editingTransactionId && String(editingTransactionId) === String(id)) {
+                        closeModal();
+                    }
+                    const prevLen = transactions.length;
+                    transactions = transactions.filter(t => String(t.id) !== String(id));
+                    if (transactions.length < prevLen) {
+                        saveTransactions();
+                        render();
+                        showToast("Transaction deleted", "info");
+                    }
+                },
+                true
+            );
         }
 
         function getCSVString() {
@@ -1684,40 +1808,58 @@
         }
 
         function loadSampleData() {
-            if (transactions.length > 0 && !confirm("Replace current transactions with sample demo ledger?")) {
-                return;
-            }
-            const today = new Date();
-            const dStr = (offsetDays) => {
-                const d = new Date(today);
-                d.setDate(d.getDate() - offsetDays);
-                return d.toLocaleDateString('en-CA');
+            const performLoad = () => {
+                const today = new Date();
+                const dStr = (offsetDays) => {
+                    const d = new Date(today);
+                    d.setDate(d.getDate() - offsetDays);
+                    return d.toLocaleDateString('en-CA');
+                };
+                transactions = [
+                    { id: 'sample-1', type: 'income', amount: 3200.00, category: 'Salary', date: dStr(1), description: 'TechCorp Monthly Paycheck' },
+                    { id: 'sample-2', type: 'expense', amount: 850.00, category: 'Utilities', date: dStr(2), description: 'Apartment Rent & Power' },
+                    { id: 'sample-3', type: 'expense', amount: 124.50, category: 'Food', date: dStr(3), description: 'Weekly Groceries Mart' },
+                    { id: 'sample-4', type: 'expense', amount: 29.95, category: 'Utilities', date: dStr(4), description: '56k Dial-Up Internet ISP' },
+                    { id: 'sample-5', type: 'expense', amount: 45.00, category: 'Transport', date: dStr(5), description: 'Gasoline Station Fill-up' },
+                    { id: 'sample-6', type: 'expense', amount: 69.99, category: 'Entertainment', date: dStr(6), description: 'Tremor III Arena CD-ROM' },
+                    { id: 'sample-7', type: 'income', amount: 350.00, category: 'Freelance', date: dStr(7), description: 'HTML Webpage Consulting' },
+                    { id: 'sample-8', type: 'expense', amount: 84.20, category: 'Shopping', date: dStr(8), description: '128MB SDRAM DIMM Upgrade' }
+                ];
+                saveTransactions();
+                currentPage = 1;
+                render();
+                showToast("Loaded sample ledger! (8 entries)", "success");
             };
-            transactions = [
-                { id: 'sample-1', type: 'income', amount: 3200.00, category: 'Salary', date: dStr(1), description: 'TechCorp Monthly Paycheck' },
-                { id: 'sample-2', type: 'expense', amount: 850.00, category: 'Utilities', date: dStr(2), description: 'Apartment Rent & Power' },
-                { id: 'sample-3', type: 'expense', amount: 124.50, category: 'Food', date: dStr(3), description: 'Weekly Groceries Mart' },
-                { id: 'sample-4', type: 'expense', amount: 29.95, category: 'Utilities', date: dStr(4), description: '56k Dial-Up Internet ISP' },
-                { id: 'sample-5', type: 'expense', amount: 45.00, category: 'Transport', date: dStr(5), description: 'Gasoline Station Fill-up' },
-                { id: 'sample-6', type: 'expense', amount: 69.99, category: 'Entertainment', date: dStr(6), description: 'Tremor III Arena CD-ROM' },
-                { id: 'sample-7', type: 'income', amount: 350.00, category: 'Freelance', date: dStr(7), description: 'HTML Webpage Consulting' },
-                { id: 'sample-8', type: 'expense', amount: 84.20, category: 'Shopping', date: dStr(8), description: '128MB SDRAM DIMM Upgrade' }
-            ];
-            saveTransactions();
-            currentPage = 1;
-            render();
-            showToast("Loaded sample ledger! (8 entries)", "success");
+
+            if (transactions.length > 0) {
+                showConfirmDialog(
+                    'Load Sample Ledger',
+                    'Replace current ledger transactions with the sample demo data?',
+                    performLoad,
+                    false
+                );
+            } else {
+                performLoad();
+            }
         }
 
         function clearAllData() {
-            if (!confirm("Are you sure you want to clear all transactions? This cannot be undone unless quicksaved.")) {
+            if (transactions.length === 0) {
+                showToast("Ledger is already empty.", "info");
                 return;
             }
-            transactions = [];
-            saveTransactions();
-            currentPage = 1;
-            render();
-            showToast("Cleared all transactions.", "info");
+            showConfirmDialog(
+                'Clear All Ledger Data',
+                'Are you sure you want to clear all transactions? This cannot be undone unless restored from a quicksave snapshot.',
+                () => {
+                    transactions = [];
+                    saveTransactions();
+                    currentPage = 1;
+                    render();
+                    showToast("Cleared all transactions.", "info");
+                },
+                true
+            );
         }
 
         function updateSearchClearBtn() {
@@ -2040,11 +2182,11 @@
             ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.scale(dpr, dpr);
             
-            const width = parseFloat(canvas.style.width) || canvas.width / dpr || 200;
-            const height = parseFloat(canvas.style.height) || canvas.height / dpr || 200;
-            const centerX = width / 2;
-            const centerY = height / 2;
-            const radius = Math.min(centerX, centerY) * 0.9;
+            const width = 160;
+            const height = 160;
+            const centerX = 80;
+            const centerY = 80;
+            const radius = 72;
 
             // Donut hole cutout for crisp ergonomic readout
             ctx.beginPath();
@@ -2059,23 +2201,23 @@
                 ctx.fillStyle = slice.color || '#3b82f6';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.font = 'bold 9.5px Inter, system-ui, sans-serif';
+                ctx.font = 'bold 8.5px system-ui, -apple-system, sans-serif';
                 const catShort = slice.cat.length > 8 ? slice.cat.substring(0, 7) + '…' : slice.cat;
-                ctx.fillText(catShort.toUpperCase(), centerX, centerY - 9);
+                ctx.fillText(catShort.toUpperCase(), centerX, centerY - 8);
                 ctx.fillStyle = '#f8fafc';
-                ctx.font = 'bold 11px Inter, system-ui, sans-serif';
-                ctx.fillText(`${formatCurrency(slice.val)}`, centerX, centerY + 3);
+                ctx.font = 'bold 10px system-ui, -apple-system, sans-serif';
+                ctx.fillText(`${formatCurrency(slice.val)}`, centerX, centerY + 2);
                 ctx.fillStyle = '#94a3b8';
-                ctx.font = '8.5px Inter, system-ui, sans-serif';
-                ctx.fillText(`${slice.pct}% share`, centerX, centerY + 15);
+                ctx.font = '8px system-ui, -apple-system, sans-serif';
+                ctx.fillText(`${slice.pct}% share`, centerX, centerY + 13);
             } else {
                 ctx.fillStyle = '#94a3b8';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.font = '10px Inter, system-ui, sans-serif';
-                ctx.fillText('EXPENSES', centerX, centerY - 7);
+                ctx.font = '9px system-ui, -apple-system, sans-serif';
+                ctx.fillText('EXPENSES', centerX, centerY - 6);
                 ctx.fillStyle = '#f8fafc';
-                ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+                ctx.font = 'bold 10.5px system-ui, -apple-system, sans-serif';
                 let totalStr;
                 if (cachedChartTotalExpense >= 10000) {
                     totalStr = `${Math.round(cachedChartTotalExpense / 1000)}k`;
@@ -2084,7 +2226,7 @@
                 } else {
                     totalStr = cachedChartTotalExpense.toFixed(2);
                 }
-                ctx.fillText(`${currencySymbol}${totalStr}`, centerX, centerY + 8);
+                ctx.fillText(`${currencySymbol}${totalStr}`, centerX, centerY + 7);
             }
         }
 
@@ -2094,38 +2236,38 @@
             const ctx = canvas.getContext('2d');
             cachedChartTotalExpense = totalExpense;
             
-            // HiDPI sharp rendering with devicePixelRatio scaling
+            // HiDPI sharp rendering with devicePixelRatio scaling (160x160 CSS pixels)
             const dpr = window.devicePixelRatio || 1;
-            const targetPx = Math.round(200 * dpr);
+            const targetPx = Math.round(160 * dpr);
             if (canvas.width !== targetPx || canvas.height !== targetPx) {
                 canvas.width = targetPx;
                 canvas.height = targetPx;
-                canvas.style.width = '200px';
-                canvas.style.height = '200px';
+                canvas.style.width = '160px';
+                canvas.style.height = '160px';
             }
             ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.scale(dpr, dpr);
-            ctx.clearRect(0, 0, 200, 200);
+            ctx.clearRect(0, 0, 160, 160);
             
-            const width = parseFloat(canvas.style.width) || 200;
-            const height = parseFloat(canvas.style.height) || 200;
-            const centerX = width / 2;
-            const centerY = height / 2;
-            const radius = Math.min(centerX, centerY) * 0.9;
+            const width = 160;
+            const height = 160;
+            const centerX = 80;
+            const centerY = 80;
+            const radius = 72;
             currentChartSlices = [];
             
             if (totalExpense === 0) {
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-                ctx.lineWidth = 14;
+                ctx.lineWidth = 12;
                 ctx.stroke();
 
                 ctx.fillStyle = '#64748b';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.font = '12px Inter, system-ui, sans-serif';
-                ctx.fillText('No expenses to chart', centerX, centerY);
+                ctx.font = '11px system-ui, -apple-system, sans-serif';
+                ctx.fillText('No expenses', centerX, centerY);
                 const legendEl = document.getElementById('category-legend');
                 if (legendEl) legendEl.innerHTML = '<span style="color:#64748b; font-size:0.75rem; text-align:center;">No categorized expenses</span>';
                 return;
@@ -2157,7 +2299,7 @@
                     ctx.fillStyle = '#ffffff';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+                    ctx.font = 'bold 9px system-ui, -apple-system, sans-serif';
                     if (val / totalExpense > 0.08) {
                         ctx.fillText(cat.substring(0,3), labelX, labelY - 5);
                         ctx.fillText(pct + '%', labelX, labelY + 6);
@@ -2309,13 +2451,35 @@
             });
         }
 
+        const confirmModalEl = document.getElementById('confirm-modal');
+        if (confirmModalEl) {
+            confirmModalEl.addEventListener('click', (e) => {
+                if (e.target === confirmModalEl) closeConfirmDialog();
+            });
+        }
+
         // Keyboard Shortcuts
         document.addEventListener('keydown', (e) => {
             const activeEl = document.activeElement;
             const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target?.tagName) || (activeEl && ['INPUT', 'SELECT', 'TEXTAREA'].includes(activeEl.tagName));
             
-            // Global Hotkeys (even when in inputs)
+            // Global Escape handling: dismiss confirmation, close active modal, or clear search/filters
             if (e.key === 'Escape') {
+                if (closeConfirmDialog()) {
+                    e.preventDefault();
+                    return;
+                }
+                const activeModal = document.querySelector('.modal-overlay.active');
+                if (activeModal) {
+                    e.preventDefault();
+                    if (activeModal.id === 'modal') closeModal();
+                    else if (activeModal.id === 'settings-modal') closeSettingsModal();
+                    else if (activeModal.id === 'help-modal') closeHelpModal();
+                    else if (activeModal.id === 'data-modal') closeDataModal();
+                    else if (activeModal.id === 'tutorial-modal') closeTutorialModal();
+                    else if (activeModal.id === 'confirm-modal') closeConfirmDialog();
+                    return;
+                }
                 const searchEl = document.getElementById('search-input');
                 if (document.activeElement === searchEl) {
                     if (searchEl.value) {
@@ -2326,15 +2490,17 @@
                     searchEl.blur();
                     return;
                 }
-                closeModal();
-                closeSettingsModal();
-                closeHelpModal();
-                closeDataModal();
-                closeTutorialModal();
+                const filterType = document.getElementById('filter-type-select');
+                const filterCat = document.getElementById('filter-category-select');
+                if ((searchEl && searchEl.value) || (filterType && filterType.value !== 'all') || (filterCat && filterCat.value !== 'all')) {
+                    clearFilters();
+                    return;
+                }
                 return;
             }
 
-            // Enter or Space closes open non-interactive modals when not typing
+            // Enter or Space closes open non-interactive info modals when not typing or focused on a control
+            // (#data-modal interceptor removed so focused buttons can activate naturally)
             if ((e.key === 'Enter' || e.key === ' ') && !isInput) {
                 if (helpModal && helpModal.classList.contains('active')) {
                     e.preventDefault();
@@ -2346,11 +2512,12 @@
                     closeTutorialModal();
                     return;
                 }
-                if (dataModal && dataModal.classList.contains('active')) {
-                    e.preventDefault();
-                    closeDataModal();
-                    return;
-                }
+            }
+
+            // Guard background hotkeys when any modal is open
+            const anyActiveModal = document.querySelector('.modal-overlay.active');
+            if (anyActiveModal) {
+                return;
             }
 
             if (e.key === 'F5') {

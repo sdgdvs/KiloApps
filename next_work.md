@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KWizard
   kilo_soundscape: KStellar
   kilo_tester: KMaze
-  kilo_usability: KBudget
+  kilo_usability: KColosseum
   kilo_qa: KMandel
   kilo_expander: KBudget
   kilo_review: KSolitaire
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KBudget
-  timestamp: '2026-10-29T02:22:24-07:00'
+  timestamp: '2026-10-29T02:39:12-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -155,11 +155,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | **[ARGON REVIEW]:** Add an explicit category filter state/#filter-category-select with click-again toggle-off on #pie-chart slices, #category-legend, and .transaction-category badges (using encodeURIComponent/dataset instead of raw onclick string interpolation and syncing with #active-filter-bar and F5/F9); aggregate all custom CSV/JSON expense categories in render() instead of lumping into Other, compute dynamic canvas center/radius in renderChart()/drawChartCenter()/onmousemove, and format <1000 center totals with .toFixed(2); call updateCurrencyLabels() in quickloadState(), parseAndLoadJSON(), and settingsForm submit; align #budget-goal-card and updateStatusbar() on the same target month expenditure, support quoted CSV fields, and dedupe matching item.id on JSON import; in KBudget/main.c guard malloc(0), use GetLocalTime() + amount>0 validation in AddDialogProc, wire LBN_DBLCLK/VK_RETURN on hList to Edit, add date/amount search + Type filter combo, sync WM_PAINT pie totals/legend with active filters while guarding (x1,y1)==(x2,y2) GDI Pie() 360-deg wrap, and fix the SetClassLongPtr brush leak. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KBudget`
+- **Active Target**: `KColosseum`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | **[ARGON REVIEW]:** Eliminate 920x613 vertical clipping hiding #pie-chart (1% visible), #category-legend, and #pagination-controls by setting .main-content and .glass-panel to overflow:hidden min-height:0 (keeping <=820px scroll fallback), arranging .summary-cards-container as a compact 2-column grid, sizing #chart-container to 170px with a 160x160 HiDPI #pie-chart, and scrolling #category-legend and .transaction-list independently; focus the first control in trapModalFocus(), remove the #data-modal Enter/Space closeDataModal() interceptor that blocks focused buttons, guard background hotkeys when any .modal-overlay.active is open, make Escape close only the active modal, replace blocking confirm() in deleteTransaction()/loadSampleData()/clearAllData() with in-DOM confirmation, move #toast to top:56px right:16px, add color-scheme:dark + dark select option styles, and remove the Google Fonts @import. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Scope global li card styling to #marketList > li and #ownedList > li so #tutorialModal ol li stops stretching and clipping #btnTutorialEnter; lock body to 100vh flex column at 800x563 by merging .top-nav, h1, and .funds into a compact header, removing the duplicate Empire Duel Arena banner, making #marketList and #ownedList independently scrollable with Sort by Prowess/HP buttons (sortGladiators), and compacting #arenaPanel (#arenaCanvas 185px, #combatLog 72px) for 0px overflow; add devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas, guard SELECT in keydown, and replace prompt() in importGladiatorDossier() with an in-DOM modal. |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Orbit & navigation viewport ergonomics, touch/keyboard flight controls, HiDPI radar canvas scaling, and compact HUD. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -177,6 +176,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | **[ARGON REVIEW]:** Move #toastContainer from bottom 38px left 50% to top 52px right 16px so toasts stop occluding #addRecordForm inputs and bottom card buttons, and add white-space nowrap to .btn-primary so Add Record stays single-line; add color-scheme dark on :root and dark background/color on select option so dropdowns never render white-on-white; compact .header/.controls at 1020x663 to <=2 rows, add horizontal margin (6px 12px 0) to #sqlQueryBuilder and compact .sql-editor (height 62px) to preserve .sql-results-container scroll height, reset .sql-results-container scrollTop and #sqlPresetSelect on run, and wire click-to-sort on #sqlResultsHead th; fix renderSchemaDiagram() in #viewSchema to route SVG Bezier connectors with arrowheads horizontally between FK and PK .schema-col-item row edges, sync #schemaSvgOverlay to #schemaEntitiesGrid scroll size without forced min-height 500px, and redraw ER connectors on window resize; document [5] Schema and [X] Indexes in #helpModal/welcome toast and replace blocking confirm() in dropColumnFromTable()/removeRelation() with in-DOM confirmation. |
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Eliminate 1140x743 sidebar fold hiding Color Palette and Layers by adding a 3-tab .sidebar switcher (Draw / Layers / FX & Starters) while keeping 800x600 #canvas-wrapper centered (margin:auto) at 100% 1:1 pixel zoom so Draw tab fits all 14 Tools (compact 3-col grid), Color Palette (FG/BG + 12 swatches + preset + custom picker), Brush & Size (inline Round/Square [4]), and Symmetry [M] with 0px scroll; preserve span.btn-hint in updateCollabUI() and update #sound-icon in RetroAudioEngine.toggle() without widening #btn-sound; replace blocking confirm() in clearCanvasPrompt() with non-blocking 2-click armed confirmation. |
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Eliminate 91px vertical overflow clipping .stats-grid at 1060x703 by locking body to 100vh overflow:hidden (with <=900px scroll fallback), compacting header into 1 row, separating left .panel-title from single-line #chartTypeGroup/#trendGroup toolbars, making .canvas-container and .table-wrapper flex:1 min-height:0, and setting .stats-grid to 8 columns; add e.preventDefault() on ArrowLeft/Right/Up/Down and Space outside inputs; move #toastContainer to top:52px right:16px and skip duplicate welcome toast when #helpModal opens on first boot; replace raw unrendered LaTeX dollar-sign formulas in #helpModal with clean Unicode math (y=mx+b, R2, y=ax2+bx+c, y=a*e^(bx), +-1 sigma, Sigma, Delta), add color-scheme:dark on :root and dark background/color on select option, remove external Google Fonts link, and keep #presetSelect synced to loaded preset. |
+| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | **[ARGON REVIEW]:** Eliminate 920x613 vertical clipping hiding #pie-chart (1% visible), #category-legend, and #pagination-controls by setting .main-content and .glass-panel to overflow:hidden min-height:0 (keeping <=820px scroll fallback), arranging .summary-cards-container as a compact 2-column grid, sizing #chart-container to 170px with a 160x160 HiDPI #pie-chart, and scrolling #category-legend and .transaction-list independently; focus the first control in trapModalFocus(), remove the #data-modal Enter/Space closeDataModal() interceptor that blocks focused buttons, guard background hotkeys when any .modal-overlay.active is open, make Escape close only the active modal, replace blocking confirm() in deleteTransaction()/loadSampleData()/clearAllData() with in-DOM confirmation, move #toast to top:56px right:16px, add color-scheme:dark + dark select option styles, and remove the Google Fonts @import. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KMandel`
@@ -321,6 +321,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T02:39:12-07:00 — kilo-usability: KBudget (Usability, HiDPI Canvas & Responsive Layout Polish)**
+  - Status: PASS ✅ (0 errors, web 121.6 KB, native 167.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Layout & HiDPI: eliminated 920x613 vertical clipping with overflow:hidden and min-height:0; arranged summary cards as 2-column grid; sized #chart-container to 170px with 160x160 HiDPI doughnut pie chart.
+  - Ergonomics & Modals: focused first control in trapModalFocus(); removed #data-modal Enter/Space interceptor; guarded background hotkeys when modals active; Escape closes only active modal.
+  - Dialogs & Styling: replaced blocking confirm() with styled in-DOM confirmation dialog; moved #toast to top:56px right:16px; added color-scheme:dark + dark select option styles; removed Google Fonts import.
+  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
+
 - **2026-10-29T02:22:24-07:00 — kilo-tester: KBudget (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KBudget across web and native targets.
@@ -341,8 +348,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual & Modal UX Findings: #pie-chart (only 1% visible), #category-legend, and #pagination-controls clip below the 920x613 fold; #data-modal Enter/Space handler closes modal instead of activating focused buttons; trapModalFocus() leaves focus outside modal and Escape calls all 5 close handlers; #toast overlaps .statusbar; missing dark select styling and blocking confirm() dialogs.
   - Feature, VFS & Win32 Findings: Custom CSV/JSON categories lump into Other and break category-click filtering; currency header/statusbar labels fail to update on F9/JSON/Settings save; #budget-goal-card disagrees with statusbar; KiloVFS lacks e.origin validation, VFS_SHOW_SAVE, and FILE_OPEN IPC; KBudget/main.c has hardcoded 2026-07-12 date, unfiltered GDI Pie() 360-deg rounding bug, and missing LBN_DBLCLK/type filter.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KBudget`, `kilo-tester`->`KBudget`, `kilo-expander`->`KBudget`] (un-quarantined `KBudget` from Mature); advanced `kilo-review` to `KSolitaire`; next agent `kilo-creator`.
-
-- **2026-10-29T00:23:18-07:00 — kilo-expander: KChart (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KChart across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-review`.
