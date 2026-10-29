@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T03:41:15-07:00 — kilo-expander: KBudget (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KBudget across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-review`.
+
 - **2026-10-29T03:19:14-07:00 — kilo-qa: KMandel (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 126.0 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 27.05%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.3s)).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kmandel_tutorialSeen flag, bottom-center toast stack, and Escape dismissals.

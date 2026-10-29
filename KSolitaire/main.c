@@ -236,6 +236,14 @@ int selectedType = -1; // 0=waste, 1=tableau, 2=foundation
 int selectedPile = -1;
 int selectedCardIdx = -1;
 
+int isDragging = 0;
+int dragType = -1;
+int dragPile = -1;
+int dragCardIdx = -1;
+int dragStartX = 0, dragStartY = 0;
+int dragCurX = 0, dragCurY = 0;
+int dragOffsetX = 0, dragOffsetY = 0;
+
 int hintSrcType = -1, hintSrcPile = -1, hintSrcIdx = -1;
 int hintDstType = -1, hintDstPile = -1;
 
@@ -564,6 +572,7 @@ void ClearSelectionAndHints() {
     selectedPile = -1;
     selectedCardIdx = -1;
     hintSrcType = -1;
+    isDragging = 0;
 }
 
 void NewGame(HWND hwnd) {
@@ -2208,6 +2217,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 selectedType = 0;
                 selectedPile = 0;
                 selectedCardIdx = state.waste_cnt - 1;
+                isDragging = 1;
+                dragType = 0;
+                dragPile = 0;
+                dragCardIdx = state.waste_cnt - 1;
+                dragStartX = mx;
+                dragStartY = my;
+                dragCurX = mx;
+                dragCurY = my;
+                dragOffsetX = mx - wasteX;
+                dragOffsetY = my - wasteY;
+                SetCapture(hwnd);
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
@@ -2224,6 +2244,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         selectedType = 2;
                         selectedPile = f;
                         selectedCardIdx = state.foundation_cnt[f] - 1;
+                        isDragging = 1;
+                        dragType = 2;
+                        dragPile = f;
+                        dragCardIdx = state.foundation_cnt[f] - 1;
+                        dragStartX = mx;
+                        dragStartY = my;
+                        dragCurX = mx;
+                        dragCurY = my;
+                        dragOffsetX = mx - fx;
+                        dragOffsetY = my - fy;
+                        SetCapture(hwnd);
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
                     return 0;
@@ -2272,6 +2303,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     selectedType = 1;
                                     selectedPile = t;
                                     selectedCardIdx = c;
+                                    isDragging = 1;
+                                    dragType = 1;
+                                    dragPile = t;
+                                    dragCardIdx = c;
+                                    dragStartX = mx;
+                                    dragStartY = my;
+                                    dragCurX = mx;
+                                    dragCurY = my;
+                                    dragOffsetX = mx - tx;
+                                    dragOffsetY = my - cy;
+                                    SetCapture(hwnd);
                                     InvalidateRect(hwnd, NULL, FALSE);
                                 }
                                 return 0;
@@ -2282,6 +2324,51 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+        case WM_MOUSEMOVE: {
+            if (isDragging && (wParam & MK_LBUTTON)) {
+                dragCurX = LOWORD(lParam);
+                dragCurY = HIWORD(lParam) - 35;
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            break;
+        }
+        case WM_LBUTTONUP: {
+            if (isDragging) {
+                ReleaseCapture();
+                int mx = LOWORD(lParam);
+                int my = HIWORD(lParam) - 35;
+                int dist = abs(mx - dragStartX) + abs(my - dragStartY);
+                if (dist > 8) {
+                    int foundationStartX = GAP_X + 3 * (CARD_W + GAP_X);
+                    int dropped = 0;
+                    for (int f = 0; f < 4; f++) {
+                        int fx = foundationStartX + f * (CARD_W + GAP_X);
+                        int fy = GAP_Y;
+                        if (mx >= fx - 10 && mx <= fx + CARD_W + 10 && my >= fy - 10 && my <= fy + CARD_H + 10) {
+                            AttemptMove(dragType, dragPile, dragCardIdx, 2, f, hwnd);
+                            dropped = 1;
+                            break;
+                        }
+                    }
+                    if (!dropped) {
+                        int tableauStartY = GAP_Y + CARD_H + GAP_Y;
+                        for (int t = 0; t < 7; t++) {
+                            int tx = GAP_X + t * (CARD_W + GAP_X);
+                            int tCount = state.tableau_cnt[t];
+                            int bottomY = (tCount == 0) ? (tableauStartY + CARD_H) : (tableauStartY + (tCount - 1) * 24 + CARD_H);
+                            if (mx >= tx - 10 && mx <= tx + CARD_W + 10 && my >= tableauStartY - 10 && my <= bottomY + 40) {
+                                AttemptMove(dragType, dragPile, dragCardIdx, 1, t, hwnd);
+                                dropped = 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+                isDragging = 0;
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
             break;
         }
         case WM_LBUTTONDBLCLK: {
@@ -2739,6 +2826,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         } else {
                             DrawCardGDI(memDC, card, tx, cy, isSel, isHS, isHD);
                         }
+                    }
+                }
+            }
+
+            // Floating Drag Preview
+            if (isDragging && (abs(dragCurX - dragStartX) + abs(dragCurY - dragStartY) > 8)) {
+                int floatX = dragCurX - dragOffsetX;
+                int floatY = dragCurY - dragOffsetY;
+                if (dragType == 0 && state.waste_cnt > 0) {
+                    Card topWaste = state.waste[state.waste_cnt - 1];
+                    DrawCardGDI(memDC, topWaste, floatX, floatY, 1, 0, 0);
+                } else if (dragType == 2 && dragPile >= 0 && state.foundation_cnt[dragPile] > 0) {
+                    Card topF = state.foundations[dragPile][state.foundation_cnt[dragPile] - 1];
+                    DrawCardGDI(memDC, topF, floatX, floatY, 1, 0, 0);
+                } else if (dragType == 1 && dragPile >= 0) {
+                    int tCount = state.tableau_cnt[dragPile];
+                    for (int c = dragCardIdx; c < tCount; c++) {
+                        Card cCard = state.tableau[dragPile][c];
+                        DrawCardGDI(memDC, cCard, floatX, floatY + (c - dragCardIdx) * 24, 1, 0, 0);
                     }
                 }
             }

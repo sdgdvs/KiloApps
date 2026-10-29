@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KBreakout
   kilo_soundscape: KStellar
   kilo_tester: KMaze
-  kilo_usability: KSolitaire
+  kilo_usability: KColosseum
   kilo_qa: KAudio
   kilo_expander: KSolitaire
   kilo_review: KChess
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KSolitaire
-  timestamp: '2026-10-29T06:22:22-07:00'
+  timestamp: '2026-10-29T06:40:16-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -156,11 +156,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | **[ARGON REVIEW]:** Fix broken double-click auto-move to foundation in ksolitaire.html (render() innerHTML wipe on click #1 destroys the .card node before dblclick fires—use timestamp double-tap detection or slot delegation) and start game timer + clear selection on double/right-click foundation moves in both ksolitaire.html and KSolitaire/main.c; honor Stage 11 1-pass cap via explicit maxPasses in CAMPAIGN_STAGES and disable #draw-mode-select during Campaign/Duel; fix thawAdjacent()/ThawAdjacent() to thaw only columns within distance 1 of srcCol or dstCol instead of spanning min..max; move saveState(true) after empty-stock/pass-cap guards in handleStockClick(), call saveState() after stock draw/card flip, and push undo before charge/score deduction in useXRayVision()/UseMagicWand(); snapshot/restore live game state and pause timer when opening/closing #replay-modal; force Classic 52-card rules on Duel start and prevent CyberBot-99 infinite two-column oscillation; and in KSolitaire/main.c reset state.stock_cnt=0 in UseShuffleStock() to fix duplicate-card buffer overflow, replace UTF-8 suit labels in DrawTextA with DrawSuitGDI(), remove traveling DrawSheenSweeps(), fan up to 3 waste cards in Draw 3, and call SaveGameState()/UpdateWindowTitle()/CheckWin() on tableau flip. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KSolitaire`
+- **Active Target**: `KColosseum`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | **[ARGON REVIEW]:** Remove position:relative from .card.face-down in ksolitaire.html so face-down tableau cards stay position:absolute at top:offsetY instead of stacking in normal flow below face-up cards (eliminating 376px vertical overflow at 940x763); lock body to 100vh overflow:hidden (with <=640px scroll fallback), compact header/toolbar into <=2 rows with tighter tableau step compression on deep columns, refresh boardEl.getBoundingClientRect() in fxLoop instead of stale cachedBoardRect, add pointer drag-and-drop with floating card/stack preview and valid drop highlights in ksolitaire.html (plus WM_MOUSEMOVE/WM_LBUTTONUP drag parity in KSolitaire/main.c), display live Campaign/Vegas/X-Ray HUD telemetry (Foundations X/targetCards, Passes stockPasses/maxStockPasses, Suit-Lock slot badges + thaw rule in #help-modal, X-Ray countdown), add color-scheme:dark + dark select option styles, replace prompt()/confirm() in savePlayerNamePrompt()/resetStats() with in-DOM UI, and make Arrow keys move a visible .kb-focus ring across stock/waste/foundations/tableau with Enter to select/move. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Scope global li card styling to #marketList > li and #ownedList > li so #tutorialModal ol li stops stretching and clipping #btnTutorialEnter; lock body to 100vh flex column at 800x563 by merging .top-nav, h1, and .funds into a compact header, removing the duplicate Empire Duel Arena banner, making #marketList and #ownedList independently scrollable with Sort by Prowess/HP buttons (sortGladiators), and compacting #arenaPanel (#arenaCanvas 185px, #combatLog 72px) for 0px overflow; add devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas, guard SELECT in keydown, and replace prompt() in importGladiatorDossier() with an in-DOM modal. |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Orbit & navigation viewport ergonomics, touch/keyboard flight controls, HiDPI radar canvas scaling, and compact HUD. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -179,6 +178,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Eliminate 1140x743 sidebar fold hiding Color Palette and Layers by adding a 3-tab .sidebar switcher (Draw / Layers / FX & Starters) while keeping 800x600 #canvas-wrapper centered (margin:auto) at 100% 1:1 pixel zoom so Draw tab fits all 14 Tools (compact 3-col grid), Color Palette (FG/BG + 12 swatches + preset + custom picker), Brush & Size (inline Round/Square [4]), and Symmetry [M] with 0px scroll; preserve span.btn-hint in updateCollabUI() and update #sound-icon in RetroAudioEngine.toggle() without widening #btn-sound; replace blocking confirm() in clearCanvasPrompt() with non-blocking 2-click armed confirmation. |
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Eliminate 91px vertical overflow clipping .stats-grid at 1060x703 by locking body to 100vh overflow:hidden (with <=900px scroll fallback), compacting header into 1 row, separating left .panel-title from single-line #chartTypeGroup/#trendGroup toolbars, making .canvas-container and .table-wrapper flex:1 min-height:0, and setting .stats-grid to 8 columns; add e.preventDefault() on ArrowLeft/Right/Up/Down and Space outside inputs; move #toastContainer to top:52px right:16px and skip duplicate welcome toast when #helpModal opens on first boot; replace raw unrendered LaTeX dollar-sign formulas in #helpModal with clean Unicode math (y=mx+b, R2, y=ax2+bx+c, y=a*e^(bx), +-1 sigma, Sigma, Delta), add color-scheme:dark on :root and dark background/color on select option, remove external Google Fonts link, and keep #presetSelect synced to loaded preset. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | **[ARGON REVIEW]:** Eliminate 920x613 vertical clipping hiding #pie-chart (1% visible), #category-legend, and #pagination-controls by setting .main-content and .glass-panel to overflow:hidden min-height:0 (keeping <=820px scroll fallback), arranging .summary-cards-container as a compact 2-column grid, sizing #chart-container to 170px with a 160x160 HiDPI #pie-chart, and scrolling #category-legend and .transaction-list independently; focus the first control in trapModalFocus(), remove the #data-modal Enter/Space closeDataModal() interceptor that blocks focused buttons, guard background hotkeys when any .modal-overlay.active is open, make Escape close only the active modal, replace blocking confirm() in deleteTransaction()/loadSampleData()/clearAllData() with in-DOM confirmation, move #toast to top:56px right:16px, add color-scheme:dark + dark select option styles, and remove the Google Fonts @import. |
+| `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | **[ARGON REVIEW]:** Remove position:relative from .card.face-down in ksolitaire.html so face-down tableau cards stay position:absolute at top:offsetY instead of stacking in normal flow below face-up cards (eliminating 376px vertical overflow at 940x763); lock body to 100vh overflow:hidden (with <=640px scroll fallback), compact header/toolbar into <=2 rows with tighter tableau step compression on deep columns, refresh boardEl.getBoundingClientRect() in fxLoop instead of stale cachedBoardRect, add pointer drag-and-drop with floating card/stack preview and valid drop highlights in ksolitaire.html (plus WM_MOUSEMOVE/WM_LBUTTONUP drag parity in KSolitaire/main.c), display live Campaign/Vegas/X-Ray HUD telemetry (Foundations X/targetCards, Passes stockPasses/maxStockPasses, Suit-Lock slot badges + thaw rule in #help-modal, X-Ray countdown), add color-scheme:dark + dark select option styles, replace prompt()/confirm() in savePlayerNamePrompt()/resetStats() with in-DOM UI, and make Arrow keys move a visible .kb-focus ring across stock/waste/foundations/tableau with Enter to select/move. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KAudio`
@@ -323,6 +323,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T06:40:16-07:00 — kilo-usability: KSolitaire (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KSolitaire across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.
+
 - **2026-10-29T06:22:22-07:00 — kilo-tester: KSolitaire (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KSolitaire across web and native targets.
@@ -344,8 +349,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: .card.face-down position:relative breaks tableau stacking in sheet.png (376px overflow); 3-row toolbar bloat; stale cachedBoardRect; no card drag-and-drop; missing Campaign target/pass HUD; destructive Arrow nav.
   - Feature/C/VFS Findings: Broken web dblclick (innerHTML wipe); Stage 11 pass-cap bug; thawAdjacent spanning non-adjacent cols; Replay overwriting live match; C UseShuffleStock stock_cnt buffer overflow + DrawTextA mojibake + sheen sweep; zero VFS mesh.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KSolitaire`, `kilo-tester`->`KSolitaire`, `kilo-expander`->`KSolitaire`] (un-quarantined `KSolitaire` from Mature); advanced `kilo-review` to `KChess`; next agent `kilo-creator`.
-
-- **2026-10-29T03:41:15-07:00 — kilo-expander: KBudget (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KBudget across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-review`.
