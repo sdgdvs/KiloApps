@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KScript
   kilo_usability: KCosmic
-  kilo_qa: KSettings
+  kilo_qa: KRead
   kilo_expander: KChess
   kilo_review: KGo
 virtual_web_target: kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KColosseum
-  timestamp: '2026-10-29T14:37:27-07:00'
+  agent: kilo-qa
+  app: KSettings
+  timestamp: '2026-10-29T15:20:00-07:00'
 last_planner_run: '2026-10-29T17:30:03Z'
 ---
 
@@ -165,11 +165,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChess` | Shift chessboard left (TS=64, OX=64, OY=124, Eval Bar at x=18..34, left rank labels at x=48, right rank labels at x=590) to fix drawEvalBar() colliding with rank 8..1 labels, fix KChess/main.c capRc ({20,46,W-20,94}) painting over top file labels and Rank 8, and render a live interactive Move History & Clocks panel (x=606..744, y=118..642) in both kchess.html and KChess/main.c with White/Black clocks, scrollable 2-column SAN move list, active-ply highlight, wheel scroll, and click-to-jump; add warm champagne/ivory outer rim stroke on Black pieces (!isWhite) in drawChessPieceSprite() and DrawChessPiece() for dark-square contrast; compact #help-modal .modal-card (2-col shortcuts) so #help-close-btn fits 800x903 without clipping, add white-space | **[ARGON REVIEW]:** nowrap to .menu-bar/#menu-status-badge/.menu-btn-quickhelp (removing duplicate canvas Help badge), and move #toast-container to top:48px right:16px while skipping redundant boot welcome toast; add pointer drag-and-drop piece movement in kchess.html and KChess/main.c (WM_MOUSEMOVE/WM_LBUTTONUP), wire ArrowLeft/Right in #replay-modal to replayStepPrev()/replayStepNext(), let focused modal buttons handle Enter/Space without primaryBtn hijacking, and replace prompt() in editorExportFEN() with #fen-modal. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KSettings`
+- **Active Target**: `KRead`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSettings` | `KiloOS/public/apps/ksettings.html`, `KSettings/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, OS theme/sound preferences, display modes, dual Win32 C parity, and promote to Mature table. |
 | `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, document reader pagination/zoom, bookmark state, dual Win32 C parity, and promote to Mature table. |
 | `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
 | `KRadio` | `KiloOS/public/apps/kradio.html`, `KRadio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, station presets, audio stream buffer, visualizer, dual Win32 C parity, and promote to Mature table. |
@@ -225,6 +224,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KSettings** | `KiloOS/public/apps/ksettings.html` | Pass 5+ (2026-10-29) | System / Configuration | Complete system control panel & preferences suite; theme presets, audio diagnostics, 5 display modes, VFS sync, F5/F9 state persistence, and dual Win32 C parity. |
 | **KColosseum** | `KiloOS/public/apps/kcolosseum.html` | Pass 5+ (2026-10-29) | Games / RPG & Simulation | Complete Roman gladiator ludus & arena RPG; RFMS multiplayer duels, F5/F9 persistence, VFS mesh, HiDPI canvas, and dual Win32 C parity. |
 | **KImage** | `KiloOS/public/apps/kimage.html` | Pass 5+ (2026-10-29) | Media / Imaging | Feature-complete image studio with 8 presets, 3x3 convolution kernels, retro dithering palettes, steganography, F5/F9 state persistence, and dual Win32 C parity. |
 | **KMandel** | `KiloOS/public/apps/kmandel.html` | Pass 5+ (2026-10-29) | Media / Fractal Studio | Complete ultra-deep fractal explorer (8 formulas, 18 landmarks, Julia mode, YM2612 FM audio, smooth potential, 4K export) with F5/F9 persistence, zero-stutter iterBuffer palette cycling, and dual Win32 C parity. |
@@ -282,6 +282,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T15:20:00-07:00 — kilo-qa: KSettings (Pass 5 QA, Dual Parity & Mature Graduation)**
+  - Status: PASS ✅ (0 errors, web 80.1 KB, native 17.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 10.27%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.0s)).
+  - State & Display: Added Display Modes (Standard, CRT Scanlines, Amber CRT, Green Phosphor, High Contrast) with F5/F9 persistence & VFS sync.
+  - Dual Parity: Created KSettings Win32 C native app (main.c, build.bat, icon, app.rc) matching Web control panel with zero errors (17.0 KB).
+  - Mature Quarantine & Handoff: Promoted `KSettings` to Mature archive; advanced `kilo-qa` to `KRead`; next agent `kilo-expander`.
+
 - **2026-10-29T14:37:27-07:00 — kilo-usability: KColosseum (UI/UX, Responsive Layout, HiDPI Canvas & Keyboard Usability Polish)**
   - Status: PASS ✅ (0 errors, web 309.8 KB, native 39.5 KB < 999 KB; visual PASS 0 fail, 0 warn).
   - Layout & Scoping: Scoped card styling to #marketList > li and #ownedList > li, 0px vertical overflow at 800x563, and independent scrolling.
@@ -304,10 +310,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-29T13:13:34-07:00 — kilo-graphics: KDragon (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KDragon.
   - Handoff: Advanced `kilo-graphics` to `KStarship`; rotated active agent to `kilo-tester`.
-
-- **2026-10-29T12:35:21-07:00 — kilo-creator: kweb://slashnet (SlashNet: News for Nerds (1999))**
-  - Status: PASS ✅ (0 errors, web 109.8 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Interactive Karma moderation (-1 Troll to +5 Insightful), threshold comment filter (-1 to +5), and hotkey shortcuts.
-  - Beowulf cluster LINPACK calculator with rack LEDs, Linux 2.2 compile/boot simulator, and KiloOS VFS export center.
-  - Integrated robust URL routing (subpaths/hashes/domains) in knet.html and linked in 1999 central webring.
-  - Handoff: Advanced `kilo-creator` to `kweb://trapster`; rotated active agent to `kilo-graphics`.

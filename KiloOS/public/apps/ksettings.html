@@ -49,6 +49,40 @@
     outline-offset: 2px;
   }
 
+  /* Display Mode Filters */
+  body.mode-crt::after {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(rgba(18, 16, 16, 0) 0px, rgba(18, 16, 16, 0) 2px, rgba(0, 0, 0, 0.28) 2px, rgba(0, 0, 0, 0.28) 4px);
+    z-index: 9999;
+  }
+  body.mode-amber {
+    --accent: #FF9100;
+    --accent-hover: #FFA000;
+    --text-main: #FFB300;
+    --bg-dark: #140A00;
+    --card-bg: #241400;
+    --card-border: #4D2A00;
+  }
+  body.mode-green {
+    --accent: #00E676;
+    --accent-hover: #00C853;
+    --text-main: #00FF66;
+    --bg-dark: #001407;
+    --card-bg: #00220c;
+    --card-border: #004d1a;
+  }
+  body.mode-contrast {
+    --bg-dark: #000000;
+    --card-bg: #080808;
+    --card-border: #ffffff;
+    --text-main: #ffffff;
+    --accent: #00e5ff;
+  }
+
   body, html {
     width: 100%;
     height: 100%;
@@ -853,6 +887,21 @@
             <button class="btn btn-sm" onclick="applyPreset('#00E5FF', true)">Midnight Ice</button>
           </div>
         </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📺 Display Modes & CRT Filter</div>
+            <span style="font-size:11px; color:var(--text-muted);">VFS (/.sys_settings_display_mode)</span>
+          </div>
+          <div class="setting-desc" style="margin-bottom:8px;">Select display output rasterization and retro phosphorus screen filter:</div>
+          <div class="items-grid" id="displayModesGrid">
+            <button class="btn btn-sm btn-primary" id="btnModeStandard" onclick="setDisplayMode('standard')">🖥️ Standard 32-bit GUI</button>
+            <button class="btn btn-sm" id="btnModeCrt" onclick="setDisplayMode('crt')">📺 Retro CRT Scanlines</button>
+            <button class="btn btn-sm" id="btnModeAmber" onclick="setDisplayMode('amber')">🟠 Amber Monochrome CRT</button>
+            <button class="btn btn-sm" id="btnModeGreen" onclick="setDisplayMode('green')">🟢 Phosphor Green Terminal</button>
+            <button class="btn btn-sm" id="btnModeContrast" onclick="setDisplayMode('contrast')">⬛ High Contrast Mono</button>
+          </div>
+        </div>
       </section>
 
       <!-- Panel 2: Sound & Audio -->
@@ -1208,6 +1257,7 @@
       highContrast: false,
       soundEnabled: true,
       soundVolume: 80,
+      displayMode: 'standard',
       activeTab: 'personalization',
       pinnedApps: ['kpad', 'kcalc', 'knet'],
       timestamp: Date.now()
@@ -1546,6 +1596,35 @@
       if (previewBtn) previewBtn.style.backgroundColor = state.accentColor;
     }
 
+    async function setDisplayMode(mode, silent = false) {
+      const validModes = ['standard', 'crt', 'amber', 'green', 'contrast'];
+      if (!validModes.includes(mode)) mode = 'standard';
+      state.displayMode = mode;
+
+      document.body.classList.remove('mode-crt', 'mode-amber', 'mode-green', 'mode-contrast');
+      if (mode !== 'standard') {
+        document.body.classList.add(`mode-${mode}`);
+      }
+
+      const btns = {
+        standard: document.getElementById('btnModeStandard'),
+        crt: document.getElementById('btnModeCrt'),
+        amber: document.getElementById('btnModeAmber'),
+        green: document.getElementById('btnModeGreen'),
+        contrast: document.getElementById('btnModeContrast')
+      };
+      Object.keys(btns).forEach(k => {
+        if (btns[k]) {
+          if (k === mode) btns[k].classList.add('btn-primary');
+          else btns[k].classList.remove('btn-primary');
+        }
+      });
+
+      safeSetStorage('ksettings_displayMode', mode);
+      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_display_mode', data: mode });
+      if (!silent) showToast(`Display Mode: ${mode.toUpperCase()}`, '📺');
+    }
+
     function applyPreset(color, anim) {
       setAccentColor(color, true);
       updateAnimations(anim, true);
@@ -1782,6 +1861,8 @@
       await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_sound', data: state.soundEnabled ? 'true' : 'false' });
       await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_volume', data: (state.soundVolume / 100).toFixed(2) });
       await sendToOS({ type: 'VFS_WRITE', path: '/.sys_pinned_apps', data: JSON.stringify(state.pinnedApps) });
+      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_display_mode', data: state.displayMode || 'standard' });
+      safeSetStorage('ksettings_displayMode', state.displayMode || 'standard');
 
       const saveInfo = document.getElementById('footerSaveInfo');
       if (saveInfo) saveInfo.textContent = `Saved: ${new Date().toLocaleTimeString()}`;
@@ -1819,6 +1900,7 @@
       }
 
       renderPinnedApps();
+      setDisplayMode(state.displayMode || 'standard', true);
       switchTab(state.activeTab || 'personalization');
 
       const saveInfo = document.getElementById('footerSaveInfo');
@@ -1939,6 +2021,8 @@
       state.soundEnabled = true;
       state.soundVolume = 80;
       state.pinnedApps = ['kpad', 'kcalc', 'knet'];
+      state.displayMode = 'standard';
+      setDisplayMode('standard', true);
 
       setAccentColor('#2196F3', true);
       updateAnimations(true, true);
@@ -2200,6 +2284,14 @@
       }
 
       state.highContrast = safeGetStorage('ksettings_highContrast', false);
+
+      const dispRes = await sendToOS({ type: 'VFS_READ', path: '/.sys_settings_display_mode' });
+      if (dispRes && dispRes.data) {
+        state.displayMode = dispRes.data;
+      } else {
+        state.displayMode = safeGetStorage('ksettings_displayMode', 'standard');
+      }
+      setDisplayMode(state.displayMode, true);
 
       // Apply state to DOM controls
       setAccentColor(state.accentColor, true);
