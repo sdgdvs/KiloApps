@@ -57,6 +57,7 @@
     z-index: 100;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    white-space: nowrap;
   }
   .menu-brand {
     font-weight: 700;
@@ -138,6 +139,10 @@
     cursor: pointer;
     font-weight: 600;
     transition: all 0.15s;
+    white-space: nowrap;
+  }
+  #menu-status-badge {
+    white-space: nowrap;
   }
   .menu-btn-quickhelp:hover {
     background: #334155;
@@ -175,7 +180,7 @@
 
   /* Toast Notifications (Positioned safely below modals to avoid occlusion) */
   #toast-container {
-    position: fixed; bottom: 24px; right: 20px; z-index: 950;
+    position: fixed; top: 48px; right: 16px; z-index: 950;
     display: flex; flex-direction: column; gap: 8px; pointer-events: none;
     max-width: 320px;
   }
@@ -406,7 +411,7 @@
     </div>
 
     <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
-      <span id="menu-status-badge" style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; color: #5eead4; font-weight: 600;">Standard vs Easy AI</span>
+      <span id="menu-status-badge" style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; color: #5eead4; font-weight: 600; white-space: nowrap;">Standard vs Easy AI</span>
       <button onclick="openHelpModal()" class="menu-btn-quickhelp" title="Help & Controls [F1]">Help [F1]</button>
     </div>
   </div>
@@ -429,51 +434,49 @@
 
   <!-- Help & User Guide Modal -->
   <div id="help-modal" class="modal-overlay" onclick="handleBackdropClick(event, 'help-modal')">
-    <div class="modal-card" style="width: 520px; max-height: 85vh; overflow-y: auto;">
-      <h3>KChess Guide & Controls <span class="close-btn" onclick="closeModals()">&times;</span></h3>
+    <div class="modal-card" style="width: 580px; max-height: 85vh; padding: 14px 18px; box-sizing: border-box;">
+      <h3 style="margin-bottom: 8px;">KChess Guide & Controls <span class="close-btn" onclick="closeModals()">&times;</span></h3>
       
-      <div style="margin-bottom: 12px;">
-        <div style="font-size:13px; font-weight:bold; color:#38bdf8; margin-bottom:4px;">Game Modes (Menu Bar / Click / Hotkeys):</div>
-        <div style="font-size:12px; color:#cbd5e1; line-height:1.5;">
-          <div><span class="mode-badge" style="cursor:pointer;" onclick="startStandardGame(1)" title="Standard Game vs Easy AI">Standard</span> Full standard 8x8 chess vs Easy AI (White moves first) or 2-player pass-and-play. (Default)</div>
-          <div><span class="mode-badge" style="cursor:pointer;" onclick="setMode(0)" title="Switch to Campaign Mode">Campaign</span> 20 progressive historical & tactical endgame scenarios against advancing AI.</div>
-          <div><span class="mode-badge" style="cursor:pointer;" onclick="setMode(2)" title="Switch to Puzzle Mode">Puzzles</span> Tactical checkmate and endgame challenge scenarios.</div>
-          <div><span class="mode-badge" style="cursor:pointer;" onclick="setMode(3)" title="Switch to Blitz Clock">Blitz</span> Fast-paced 3-minute blitz clock speed chess.</div>
-          <div><span class="mode-badge" style="cursor:pointer; background:#064e3b; border-color:#10b981; color:#6ee7b7;" onclick="openMultiplayerModal()" title="Online Multiplayer">🌐 Online</span> Optional real-time cross-computer multiplayer via Firebase RTDB lobby.</div>
+      <div style="margin-bottom: 8px;">
+        <div style="font-size:12px; font-weight:bold; color:#38bdf8; margin-bottom:3px;">Game Modes:</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size:11px; color:#cbd5e1;">
+          <div><span class="mode-badge" style="cursor:pointer;" onclick="startStandardGame(1)">Standard</span> 8x8 vs Easy AI / 2P</div>
+          <div><span class="mode-badge" style="cursor:pointer;" onclick="setMode(0)">Campaign</span> 20 endgame scenarios</div>
+          <div><span class="mode-badge" style="cursor:pointer;" onclick="setMode(2)">Puzzles</span> Tactical mate challenges</div>
+          <div><span class="mode-badge" style="cursor:pointer;" onclick="setMode(3)">Blitz</span> Speed chess clocks</div>
+          <div style="grid-column: span 2;"><span class="mode-badge" style="cursor:pointer; background:#064e3b; border-color:#10b981; color:#6ee7b7;" onclick="openMultiplayerModal()">🌐 Online</span> Real-time Firebase RTDB multiplayer</div>
         </div>
       </div>
 
-      <div style="font-size:13px; font-weight:bold; color:#5eead4; margin-bottom:4px;">Keyboard Shortcuts & Controls:</div>
-      <table class="help-table">
-        <tr><td><kbd>F1</kbd> / <kbd>?</kbd></td><td>Open this Help & Controls guide</td></tr>
-        <tr><td><kbd>1</kbd> - <kbd>4</kbd></td><td>Set AI Difficulty (1: Easy, 2: Med, 3: Hard, 4: Master)</td></tr>
-        <tr><td><kbd>P</kbd></td><td>Cycle AI Difficulty (Easy, Medium, Hard, Master)</td></tr>
-        <tr><td><kbd>O</kbd></td><td>Open Online Multiplayer Matchmaking (Optional)</td></tr>
-        <tr><td><kbd>H</kbd></td><td>Calculate & Display Best AI Move Hint</td></tr>
-        <tr><td><kbd>F</kbd></td><td>Activate Time Freeze Skill (Skip AI turn / +15s Blitz)</td></tr>
-        <tr><td><kbd>U</kbd> / <kbd>Y</kbd></td><td>Undo / Redo Move (interactive stack)</td></tr>
-        <tr><td><kbd>V</kbd></td><td>Interactive Move Replay &amp; History Inspector</td></tr>
-        <tr><td><kbd>B</kbd></td><td>Opening Book Explorer (learn &amp; practice openings)</td></tr>
-        <tr><td><kbd>A</kbd></td><td>Deep Positional &amp; Tactical Engine Analysis</td></tr>
-        <tr><td><kbd>C</kbd></td><td>Custom Board &amp; Position Editor (Setup Scenarios)</td></tr>
-        <tr><td><kbd>S</kbd> / <kbd>F5</kbd></td><td>Quick Save Game State to storage</td></tr>
-        <tr><td><kbd>L</kbd> / <kbd>F9</kbd></td><td>Quick Load Saved Game State</td></tr>
-        <tr><td><kbd>X</kbd></td><td>Toggle Live Engine Evaluation Bar (Centipawn gauge)</td></tr>
-        <tr><td><kbd>K</kbd></td><td>Cycle Clock Time Control (Blitz / Bullet / Rapid / Classical)</td></tr>
-        <tr><td><kbd>M</kbd></td><td>Switch Game Mode (Standard / Campaign / Puzzle / Blitz)</td></tr>
-        <tr><td><kbd>T</kbd></td><td>Toggle vs AI / 2-Player Pass-and-Play Mode</td></tr>
-        <tr><td><kbd>E</kbd></td><td>FEN Position Manager (Export / Load FEN string)</td></tr>
-        <tr><td><kbd>G</kbd></td><td>PGN Move History (Export / Import PGN notation)</td></tr>
-        <tr><td><kbd>R</kbd></td><td>New Game / Restart / Rematch</td></tr>
-        <tr><td><kbd>&uarr;&darr;&larr;&rarr;</kbd> + <kbd>Enter</kbd></td><td>Keyboard Board Navigation & Move Execution</td></tr>
-        <tr><td><kbd>Esc</kbd></td><td>Deselect current piece / Close Modals</td></tr>
-      </table>
-
-      <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.4;">
-        Features: Optional cross-computer Firebase RTDB multiplayer, Real-time ECO Opening Book detector, Material Score advantage calculator, 3D Ornate Board lighting.
+      <div style="font-size:12px; font-weight:bold; color:#5eead4; margin-bottom:4px;">Keyboard Shortcuts & Controls (2-Column):</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3px 14px; font-size: 11px;">
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>F1</kbd> / <kbd>?</kbd></span><span>Help Guide</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>1</kbd>-<kbd>4</kbd> / <kbd>P</kbd></span><span>AI Difficulty</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>H</kbd></span><span>Best Move Hint</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>F</kbd></span><span>Freeze (+15s)</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>U</kbd> / <kbd>Y</kbd></span><span>Undo / Redo</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>V</kbd></span><span>Replay Inspector</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>B</kbd></span><span>Opening Book</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>A</kbd></span><span>Engine Analysis</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>C</kbd></span><span>Board Editor</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>S</kbd> / <kbd>F5</kbd></span><span>Save State</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>L</kbd> / <kbd>F9</kbd></span><span>Load State</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>X</kbd></span><span>Eval Bar Gauge</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>K</kbd></span><span>Time Control</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>M</kbd> / <kbd>T</kbd></span><span>Mode / 2-Player</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>E</kbd> / <kbd>G</kbd></span><span>FEN / PGN Manager</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>O</kbd></span><span>Multiplayer Lobby</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>R</kbd></span><span>Restart Game</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>Drag &amp; Drop</kbd></span><span>Piece Movement</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>Arrows</kbd>+<kbd>Enter</kbd></span><span>Keyboard Play</span></div>
+        <div style="display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid rgba(51,65,85,0.4);"><span style="color:#5eead4; font-weight:600;"><kbd>Esc</kbd></span><span>Deselect / Close</span></div>
       </div>
 
-      <div class="btn-group" style="margin-top:16px;">
+      <div style="font-size:10px; color:#94a3b8; margin-top:8px; line-height:1.3;">
+        Features: Live Move History &amp; Clocks panel, drag-and-drop piece movement, ECO opening detector, centipawn eval bar.
+      </div>
+
+      <div class="btn-group" style="margin-top:10px;">
         <button id="help-close-btn" class="primary modal-close" onclick="closeModals()">Got It (Esc)</button>
       </div>
     </div>
@@ -764,9 +767,9 @@
   updateCanvasDPI();
   window.addEventListener('resize', updateCanvasDPI);
 
-  const TS = 70;
-  const OX = 100;
-  const OY = 120;
+  const TS = 64;
+  const OX = 64;
+  const OY = 124;
 
   let board = [
       [10, 8, 9, 11, 12, 9, 8, 10],
@@ -917,10 +920,10 @@
 
   function drawEvalBar(ctx) {
       if (!showEvalBar) return;
-      const barX = 72;
-      const barY = OY; // 120
+      const barX = 18;
+      const barY = OY; // 124
       const barW = 16;
-      const barH = 8 * TS; // 560
+      const barH = 8 * TS; // 512
 
       let targetScore = 0;
       if (gameOver) {
@@ -2300,7 +2303,22 @@
               closeModals();
               return;
           }
+          if (activeModal.id === 'replay-modal') {
+              if (k === 'ArrowLeft') {
+                  e.preventDefault();
+                  replayStepPrev();
+                  return;
+              }
+              if (k === 'ArrowRight') {
+                  e.preventDefault();
+                  replayStepNext();
+                  return;
+              }
+          }
           if (k === 'Enter' || k === ' ') {
+              if (document.activeElement && document.activeElement.tagName === 'BUTTON') {
+                  return; // Let focused modal button handle Enter/Space without primaryBtn hijacking
+              }
               e.preventDefault();
               const primaryBtn = activeModal.querySelector('button.primary, button.modal-close, button');
               if (primaryBtn) primaryBtn.click();
@@ -3510,14 +3528,13 @@
       if (!editorValidate()) return;
       const fen = generateEditorFEN();
       if (navigator.clipboard) {
-          navigator.clipboard.writeText(fen).then(() => {
-              showToast('FEN copied to clipboard!', 'success');
-          }).catch(() => {
-              prompt('Copy custom FEN:', fen);
-          });
-      } else {
-          prompt('Copy custom FEN:', fen);
+          navigator.clipboard.writeText(fen).catch(() => {});
       }
+      closeModals();
+      const fenInput = document.getElementById('fen-input');
+      if (fenInput) fenInput.value = fen;
+      openFENModal();
+      showToast('FEN exported to FEN Manager!', 'success');
   }
 
   function editorApplyToGame() {
@@ -4209,6 +4226,13 @@
       const mx = (e.clientX - rect.left) * (W / rect.width);
       const my = (e.clientY - rect.top) * (H / rect.height);
 
+      if (isDragging) {
+          dragX = mx;
+          dragY = my;
+          cvs.style.cursor = 'grabbing';
+          return;
+      }
+
       let cursor = 'default';
       let foundBtn = null;
 
@@ -4224,10 +4248,11 @@
 
       // Check top title / mode toggle
       if (my >= 15 && my <= 45 && mx >= 25 && mx <= 280) cursor = 'pointer';
-      // Check top Help button
-      if (my >= 15 && my <= 45 && mx >= W / 2 - 90 && mx <= W / 2 + 90) cursor = 'pointer';
       // Check bottom status bar
       if (my >= 800 && my <= 845 && mx >= 50 && mx <= W - 50) cursor = 'pointer';
+
+      // Check side panel move list
+      if (mx >= 606 && mx <= 744 && my >= 240 && my <= 642) cursor = 'pointer';
 
       // Check board squares
       const tx = Math.floor((mx - OX) / TS);
@@ -4243,6 +4268,12 @@
   };
 
   cvs.onpointerleave = () => {
+      if (isDragging) {
+          isDragging = false;
+          dragPiece = 0;
+          dragSx = -1;
+          dragSy = -1;
+      }
       hoverBtnId = null;
       cvs.style.cursor = 'default';
   };
@@ -4251,6 +4282,23 @@
       const rect = cvs.getBoundingClientRect();
       const mx = (e.clientX - rect.left) * (W / rect.width);
       const my = (e.clientY - rect.top) * (H / rect.height);
+
+      // Side panel Move History click-to-jump (x: 606..744, y: 240..642)
+      if (mx >= 606 && mx <= 744 && my >= 240 && my <= 642) {
+          const r = Math.floor((my - 240) / 19);
+          const moveNum = panelScroll + r + 1;
+          const wPly = (moveNum - 1) * 2 + 1;
+          const bPly = (moveNum - 1) * 2 + 2;
+          if (mx >= 632 && mx < 684 && wPly < moveHistoryStack.length) {
+              restoreHistoryState(wPly);
+              playSound('move');
+              return;
+          } else if (mx >= 684 && mx <= 738 && bPly < moveHistoryStack.length) {
+              restoreHistoryState(bPly);
+              playSound('move');
+              return;
+          }
+      }
 
       // Top mode title click (switch mode or toggle vs AI)
       if (my >= 15 && my <= 45 && mx >= 25 && mx <= 280) {
@@ -4261,12 +4309,6 @@
           } else {
               handleHotkey('m');
           }
-          return;
-      }
-
-      // Top Center Help button click
-      if (my >= 15 && my <= 45 && mx >= W / 2 - 90 && mx <= W / 2 + 90) {
-          openHelpModal();
           return;
       }
 
@@ -4296,15 +4338,78 @@
       handleSquareClick(tx, ty);
   }
 
-  let lastPointerDownTime = 0;
   cvs.onpointerdown = (e) => {
-      lastPointerDownTime = performance.now();
+      const rect = cvs.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (W / rect.width);
+      const my = (e.clientY - rect.top) * (H / rect.height);
+
+      // Check if clicking a movable piece on the board to initiate drag-and-drop
+      const tx = Math.floor((mx - OX) / TS);
+      const ty = Math.floor((my - OY) / TS);
+      if (tx >= 0 && tx < 8 && ty >= 0 && ty < 8 && !gameOver) {
+          const p = board[ty][tx];
+          if (p !== 0) {
+              const isWhite = p <= 6;
+              const canDrag = !isOnlineGame ? ((whiteTurn && isWhite) || (!whiteTurn && !isWhite && !aiMode))
+                                            : ((myPlayerNum === 1 && whiteTurn && isWhite) || (myPlayerNum === 2 && !whiteTurn && !isWhite));
+              if (canDrag) {
+                  isDragging = true;
+                  dragPiece = p;
+                  dragSx = tx;
+                  dragSy = ty;
+                  dragX = mx;
+                  dragY = my;
+                  selX = tx;
+                  selY = ty;
+                  try { cvs.setPointerCapture(e.pointerId); } catch(err) {}
+                  return;
+              }
+          }
+      }
+
       handleCanvasClick(e);
   };
-  cvs.onmousedown = (e) => {
-      if (performance.now() - lastPointerDownTime < 300) return; // Debounce dual pointerdown + mousedown events
-      handleCanvasClick(e);
+
+  cvs.onpointerup = (e) => {
+      if (isDragging) {
+          const rect = cvs.getBoundingClientRect();
+          const mx = (e.clientX - rect.left) * (W / rect.width);
+          const my = (e.clientY - rect.top) * (H / rect.height);
+          const dstX = Math.floor((mx - OX) / TS);
+          const dstY = Math.floor((my - OY) / TS);
+
+          try { cvs.releasePointerCapture(e.pointerId); } catch(err) {}
+          isDragging = false;
+
+          if (dstX >= 0 && dstX < 8 && dstY >= 0 && dstY < 8 && !(dstX === dragSx && dstY === dragSy)) {
+              if (isValidMove(dragSx, dragSy, dstX, dstY, false) && !simulatedMoveLeavesCheck(dragSx, dragSy, dstX, dstY, whiteTurn)) {
+                  const curSx = dragSx, curSy = dragSy;
+                  selX = -1; selY = -1;
+                  performMove(curSx, curSy, dstX, dstY);
+                  if (aiMode && !whiteTurn && !gameOver) {
+                      setTimeout(doBlackAIMove, 350);
+                  }
+                  dragPiece = 0; dragSx = -1; dragSy = -1;
+                  return;
+              }
+          }
+          dragPiece = 0; dragSx = -1; dragSy = -1;
+      }
   };
+
+  cvs.addEventListener('wheel', (e) => {
+      const rect = cvs.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (W / rect.width);
+      const my = (e.clientY - rect.top) * (H / rect.height);
+      if (mx >= 606 && mx <= 744 && my >= 118 && my <= 642) {
+          e.preventDefault();
+          const totalPlies = Math.max(0, moveHistoryStack.length - 1);
+          const totalMoves = Math.ceil(totalPlies / 2);
+          const maxScroll = Math.max(0, totalMoves - 20);
+          if (e.deltaY > 0) panelScroll = Math.min(maxScroll, panelScroll + 1);
+          else if (e.deltaY < 0) panelScroll = Math.max(0, panelScroll - 1);
+      }
+  }, { passive: false });
 
   function drawChessPieceSprite(ctx, p, x, y, size, alpha = 1.0, scale = 1.0) {
       if (p === 0) return;
@@ -4331,7 +4436,7 @@
       blackGrad.addColorStop(1, '#0a0300'); // Deep shadow
 
       ctx.fillStyle = isWhite ? whiteGrad : blackGrad;
-      ctx.strokeStyle = isWhite ? 'rgba(15, 23, 42, 0.8)' : 'rgba(0, 0, 0, 0.9)';
+      ctx.strokeStyle = isWhite ? 'rgba(15, 23, 42, 0.8)' : '#fde68a'; // Warm champagne/ivory outer rim for dark square contrast
       ctx.lineWidth = Math.max(1.5, size * 0.04);
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
@@ -4543,6 +4648,172 @@
       return { whiteCaptured, blackCaptured, diff };
   }
 
+    // Live Interactive Move History & Clocks Panel State & Renderer
+  let panelScroll = 0;
+  let isDragging = false;
+  let dragPiece = 0;
+  let dragSx = -1, dragSy = -1;
+  let dragX = 0, dragY = 0;
+
+  function formatClockTime(sec) {
+      if (sec < 0) sec = 0;
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  }
+
+  function drawSidePanel(ctx) {
+      const px = 606, py = 118, pw = 138, ph = 524;
+      ctx.save();
+
+      // Outer panel container frame
+      ctx.fillStyle = 'rgba(11, 17, 32, 0.95)';
+      ctx.beginPath();
+      ctx.roundRect(px, py, pw, ph, 8);
+      ctx.fill();
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      drawOrnateCornerFiligree(ctx, px, py, pw, ph, 12, '#d4af37', '#fef08a');
+
+      // Clocks Header
+      ctx.font = "bold 10px 'Inter', sans-serif";
+      ctx.fillStyle = "#94a3b8";
+      ctx.textAlign = "center";
+      ctx.fillText("MATCH CLOCKS", px + pw / 2, py + 16);
+
+      // White Clock Card
+      const wActive = !gameOver && whiteTurn;
+      const wBoxY = py + 22, cBoxW = 122, cBoxH = 26, cBoxX = px + 8;
+      ctx.fillStyle = wActive ? "rgba(30, 58, 138, 0.85)" : "rgba(15, 23, 42, 0.8)";
+      ctx.beginPath();
+      ctx.roundRect(cBoxX, wBoxY, cBoxW, cBoxH, 5);
+      ctx.fill();
+      ctx.strokeStyle = wActive ? "#38bdf8" : "#334155";
+      ctx.lineWidth = wActive ? 1.5 : 1;
+      ctx.stroke();
+
+      ctx.font = "bold 11px monospace";
+      ctx.fillStyle = wActive ? "#38bdf8" : "#cbd5e1";
+      ctx.textAlign = "left";
+      ctx.fillText("⚪ W:", cBoxX + 6, wBoxY + 17);
+      ctx.textAlign = "right";
+      ctx.fillStyle = wActive ? "#ffffff" : "#cbd5e1";
+      ctx.fillText(formatClockTime(blitzTimeWhite), cBoxX + cBoxW - 6, wBoxY + 17);
+
+      // Black Clock Card
+      const bActive = !gameOver && !whiteTurn;
+      const bBoxY = py + 52;
+      ctx.fillStyle = bActive ? "rgba(30, 58, 138, 0.85)" : "rgba(15, 23, 42, 0.8)";
+      ctx.beginPath();
+      ctx.roundRect(cBoxX, bBoxY, cBoxW, cBoxH, 5);
+      ctx.fill();
+      ctx.strokeStyle = bActive ? "#38bdf8" : "#334155";
+      ctx.lineWidth = bActive ? 1.5 : 1;
+      ctx.stroke();
+
+      ctx.font = "bold 11px monospace";
+      ctx.fillStyle = bActive ? "#38bdf8" : "#cbd5e1";
+      ctx.textAlign = "left";
+      ctx.fillText("⚫ B:", cBoxX + 6, bBoxY + 17);
+      ctx.textAlign = "right";
+      ctx.fillStyle = bActive ? "#ffffff" : "#cbd5e1";
+      ctx.fillText(formatClockTime(blitzTimeBlack), cBoxX + cBoxW - 6, bBoxY + 17);
+
+      // Section divider
+      ctx.strokeStyle = "rgba(51, 65, 85, 0.7)";
+      ctx.beginPath();
+      ctx.moveTo(px + 8, py + 86);
+      ctx.lineTo(px + pw - 8, py + 86);
+      ctx.stroke();
+
+      // Move History Header
+      ctx.font = "bold 10px 'Inter', sans-serif";
+      ctx.fillStyle = "#5eead4";
+      ctx.textAlign = "center";
+      ctx.fillText("MOVE HISTORY", px + pw / 2, py + 100);
+
+      // Column Labels (#, White, Black)
+      ctx.font = "bold 10px monospace";
+      ctx.fillStyle = "#64748b";
+      ctx.textAlign = "left";
+      ctx.fillText("#", px + 8, py + 114);
+      ctx.fillText("White", px + 30, py + 114);
+      ctx.fillText("Black", px + 82, py + 114);
+
+      ctx.strokeStyle = "rgba(51, 65, 85, 0.5)";
+      ctx.beginPath();
+      ctx.moveTo(px + 6, py + 118);
+      ctx.lineTo(px + pw - 6, py + 118);
+      ctx.stroke();
+
+      // Move List Rows
+      const totalPlies = Math.max(0, moveHistoryStack.length - 1);
+      const totalMoves = Math.ceil(totalPlies / 2);
+      const visibleRows = 20;
+      const rowH = 19;
+      const startY = py + 122;
+
+      // Auto-keep current ply in view
+      if (historyIndex > 0) {
+          const curMove = Math.floor((historyIndex - 1) / 2);
+          if (curMove < panelScroll) panelScroll = curMove;
+          else if (curMove >= panelScroll + visibleRows) panelScroll = curMove - visibleRows + 1;
+      }
+      const maxScroll = Math.max(0, totalMoves - visibleRows);
+      panelScroll = Math.max(0, Math.min(maxScroll, panelScroll));
+
+      for (let r = 0; r < visibleRows; r++) {
+          const moveNum = panelScroll + r + 1;
+          if (moveNum > totalMoves) break;
+          const rowY = startY + r * rowH;
+          const wPly = (moveNum - 1) * 2 + 1;
+          const bPly = (moveNum - 1) * 2 + 2;
+
+          // Move number
+          ctx.font = "10px monospace";
+          ctx.fillStyle = "#94a3b8";
+          ctx.textAlign = "left";
+          ctx.fillText(moveNum + ".", px + 8, rowY + 13);
+
+          // White move
+          if (wPly < moveHistoryStack.length) {
+              const san = moveHistoryStack[wPly].moveSAN || '';
+              if (historyIndex === wPly) {
+                  ctx.fillStyle = "#0284c7";
+                  ctx.beginPath();
+                  ctx.roundRect(px + 26, rowY + 1, 50, 16, 3);
+                  ctx.fill();
+                  ctx.fillStyle = "#ffffff";
+                  ctx.font = "bold 10px monospace";
+              } else {
+                  ctx.fillStyle = "#e2e8f0";
+                  ctx.font = "10px monospace";
+              }
+              ctx.fillText(san, px + 29, rowY + 13);
+          }
+
+          // Black move
+          if (bPly < moveHistoryStack.length) {
+              const san = moveHistoryStack[bPly].moveSAN || '';
+              if (historyIndex === bPly) {
+                  ctx.fillStyle = "#0284c7";
+                  ctx.beginPath();
+                  ctx.roundRect(px + 78, rowY + 1, 50, 16, 3);
+                  ctx.fill();
+                  ctx.fillStyle = "#ffffff";
+                  ctx.font = "bold 10px monospace";
+              } else {
+                  ctx.fillStyle = "#e2e8f0";
+                  ctx.font = "10px monospace";
+              }
+              ctx.fillText(san, px + 81, rowY + 13);
+          }
+      }
+
+      ctx.restore();
+  }
+
   function drawBoard() {
       ctx.save();
       if (performance.now() < screenShakeUntil) {
@@ -4622,10 +4893,10 @@
       for (let i = 0; i < 8; i++) {
           let fx = OX + i * TS + TS / 2;
           let ry = OY + i * TS + TS / 2;
-          ctx.fillText(files[i], fx, OY - 12);
-          ctx.fillText(files[i], fx, OY + TS * 8 + 25);
-          ctx.fillText(8 - i, OX - 25, ry);
-          ctx.fillText(8 - i, OX + TS * 8 + 25, ry);
+          ctx.fillText(files[i], fx, OY - 14);
+          ctx.fillText(files[i], fx, OY + TS * 8 + 20);
+          ctx.fillText(8 - i, 48, ry);   // Left rank labels at x=48
+          ctx.fillText(8 - i, 590, ry);  // Right rank labels at x=590
       }
 
       let inCheckX = -1, inCheckY = -1;
@@ -4775,7 +5046,8 @@
 
               let p = board[y][x];
               let isAnimatingThisPiece = moveAnimation && Math.floor((moveAnimation.toX - OX) / TS) === x && Math.floor((moveAnimation.toY - OY) / TS) === y;
-              if (p !== 0 && !isAnimatingThisPiece) {
+              let isDraggingThisPiece = isDragging && x === dragSx && y === dragSy;
+              if (p !== 0 && !isAnimatingThisPiece && !isDraggingThisPiece) {
                   let bob = Math.sin(performance.now() * 0.002 + x + y) * 2.5;
                   drawChessPieceSprite(ctx, p, px + TS / 2, py + TS / 2 + bob, TS);
               }
@@ -4982,23 +5254,8 @@
 
       ctx.fillText(modeText, 30, 35);
 
-      // Top Center Help Prompt Badge
-      let helpBtnW = 160, helpBtnH = 26;
-      let helpBtnX = W / 2 - helpBtnW / 2, helpBtnY = 22;
-      ctx.save();
-      ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
-      ctx.beginPath();
-      ctx.roundRect(helpBtnX, helpBtnY, helpBtnW, helpBtnH, 6);
-      ctx.fill();
-      ctx.strokeStyle = "#334155";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.fillStyle = "#5eead4";
-      ctx.font = "bold 12px 'Inter', sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("Help & Controls [F1 / ?]", W / 2, helpBtnY + helpBtnH / 2);
-      ctx.restore();
+      // Render Live Interactive Move History & Clocks Panel (x=606..744, y=118..642)
+      drawSidePanel(ctx);
 
       ctx.font = "bold 15px 'Inter', sans-serif";
       ctx.fillStyle = "#ffffff";
@@ -5101,6 +5358,10 @@
           let lastMoveStr = (historyIndex > 0 && moveHistoryStack[historyIndex].moveSAN) ? ` | Last: ${moveHistoryStack[historyIndex].moveSAN} (Press H for Hint)` : " | Press F1 for Help, H for AI Hint";
           ctx.fillText(turnStr + lastMoveStr, W / 2, H - 40);
       }
+
+      if (isDragging && dragPiece !== 0) {
+          drawChessPieceSprite(ctx, dragPiece, dragX, dragY, TS, 1.0, 1.18);
+      }
       ctx.restore();
   }
 
@@ -5169,7 +5430,7 @@
   if (!tutorialSeen && !hasQuicksave) {
       setTimeout(() => {
           openHelpModal();
-          showToast("Welcome to KChess! Review rules & controls to begin.", "info", 5000);
+          // Redundant boot welcome toast skipped per mission spec
           safeSetStorage(TUTORIAL_KEY, '1');
       }, 400);
   }
