@@ -670,6 +670,7 @@
                 <canvas id="pie-chart" width="160" height="160" style="width: 160px; height: 160px;"></canvas>
             </div>
             <div id="category-legend"></div>
+            <button type="button" class="btn btn-outline" id="btn-open-kchart" style="width: 100%; margin-top: 0.4rem; font-size: 0.8rem; padding: 4px 8px; color: #93c5fd; border-color: rgba(147, 197, 253, 0.3); flex-shrink: 0;" onclick="openInKChart()" title="Export category breakdown to /home/data/kbudget_categories.csv and launch KChart via IPC">📊 Open in KChart [Ctrl+K]</button>
         </aside>
         
         <section class="glass-panel">
@@ -724,6 +725,7 @@
             <span class="shortcut-pill" onclick="cycleCurrency()" title="Cycle Currency [Alt+C]" tabindex="0" role="button" id="status-cur-pill"><kbd>Alt+C</kbd> $</span>
             <span class="shortcut-pill" onclick="openModal()" title="Add Transaction [Ctrl+N]" tabindex="0" role="button"><kbd>Ctrl+N</kbd> +New</span>
             <span class="shortcut-pill" onclick="openDataModal()" title="Import / Export VFS [Ctrl+E]" tabindex="0" role="button"><kbd>Ctrl+E</kbd> VFS</span>
+            <span class="shortcut-pill" onclick="openInKChart()" title="Export categories to /home/data/kbudget_categories.csv and open in KChart [Ctrl+K]" tabindex="0" role="button"><kbd>Ctrl+K</kbd> KChart</span>
         </div>
     </footer>
 
@@ -833,6 +835,7 @@
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">F1</kbd> / <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">H</kbd></td><td>Help &amp; Shortcuts Guide</td></tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Alt + C</kbd> / <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">C</kbd></td><td>Cycle Currency Symbol</td></tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Ctrl + E</kbd></td><td>VFS &amp; Data Hub</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Ctrl + K</kbd></td><td>Open in KChart (IPC)</td></tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">&uarr; / &darr;</kbd></td><td>Navigate Ledger Rows</td></tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Enter / Del</kbd></td><td>Edit / Delete Selected Item</td></tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Ctrl + S</kbd></td><td>Save to VFS / Export CSV</td></tr>
@@ -889,6 +892,7 @@
                         <button type="button" class="btn btn-outline" style="flex: 1; min-width: 120px; color: white;" onclick="exportToVFS('csv'); closeDataModal();">Save CSV to VFS</button>
                         <button type="button" class="btn btn-outline" style="flex: 1; min-width: 120px; color: white;" onclick="exportToVFS('json'); closeDataModal();">Backup to VFS</button>
                         <button type="button" class="btn btn-outline" style="flex: 1; min-width: 120px; color: white;" onclick="importFromVFS(); closeDataModal();">Open from VFS</button>
+                        <button type="button" class="btn btn-outline" id="btn-open-kchart-modal" style="flex: 1; min-width: 130px; color: #60a5fa; border-color: rgba(96, 165, 250, 0.4);" onclick="openInKChart(); closeDataModal();" title="Export category breakdown to /home/data/kbudget_categories.csv and launch KChart">📊 Open in KChart</button>
                     </div>
                 </div>
                 <div>
@@ -1032,6 +1036,7 @@
             updateCategories();
             updateCurrencyLabels();
             render();
+            checkInitialHashFile();
 
             // First-run tutorial flag check: never interrupt restored sessions
             try {
@@ -1258,6 +1263,7 @@
             safeSet('kbudget_currency', currencySymbol);
             updateCurrencyLabels();
             render();
+            checkInitialHashFile();
         }
 
         function updateCurrencyLabels() {
@@ -1726,7 +1732,7 @@
             input.click();
         }
 
-        // KiloOS VFS Integration
+// KiloOS VFS & Inter-App IPC Integration (Hardened with origin checks & 60s listener cleanup)
         const KiloVFS = {
             write(path, data) {
                 try {
@@ -1741,57 +1747,217 @@
                 }
             },
             read(path, cb) {
+                if (window.parent === window) {
+                    if (cb) cb(null, path);
+                    return;
+                }
                 const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let cleanupTimer = null;
                 const handler = (e) => {
+                    // Mandatory e.origin === window.location.origin check
+                    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                        return;
+                    }
                     if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
                         window.removeEventListener('message', handler);
-                        cb(e.data.data, e.data.path);
+                        if (cb) cb(e.data.data, e.data.path);
                     }
                 };
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, path);
+                }, 60000); // 60s cleanup timeout
                 window.addEventListener('message', handler);
                 try {
                     window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
-                } catch (e) {}
+                } catch (e) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, path);
+                }
+            },
+            showSave(defaultPath, cb) {
+                if (window.parent === window) {
+                    if (cb) cb(null);
+                    return;
+                }
+                const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let cleanupTimer = null;
+                const handler = (e) => {
+                    // Mandatory e.origin === window.location.origin check
+                    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                        return;
+                    }
+                    if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(e.data.path);
+                    }
+                };
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null);
+                }, 60000); // 60s cleanup timeout
+                window.addEventListener('message', handler);
+                try {
+                    window.parent.postMessage({
+                        type: 'VFS_SHOW_SAVE',
+                        requestId: reqId,
+                        defaultPath: defaultPath,
+                        path: defaultPath
+                    }, '*');
+                } catch (e) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null);
+                }
             },
             openPicker(cb) {
-                const reqId = 'open_' + Date.now();
+                if (window.parent === window) {
+                    if (cb) cb(null, null);
+                    return;
+                }
+                const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let cleanupTimer = null;
                 const handler = (e) => {
+                    // Mandatory e.origin === window.location.origin check
+                    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                        return;
+                    }
                     if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
                         window.removeEventListener('message', handler);
                         if (e.data.path) {
                             KiloVFS.read(e.data.path, cb);
+                        } else if (cb) {
+                            cb(null, null);
                         }
                     }
                 };
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, null);
+                }, 60000); // 60s cleanup timeout
                 window.addEventListener('message', handler);
                 try {
                     window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
                 } catch (e) {
-                    showToast('VFS open error', 'danger');
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, null);
                 }
+            },
+            launchApp(targetApp, path = '') {
+                try {
+                    window.parent.postMessage({
+                        type: 'OS_LAUNCH_APP',
+                        targetApp,
+                        appId: targetApp,
+                        path
+                    }, '*');
+                } catch (e) {}
             }
         };
 
-        function exportToVFS(format) {
+        // Global incoming KiloOS IPC message receiver (File Browser file associations, VFS events)
+        window.addEventListener('message', (e) => {
+            // Mandatory e.origin === window.location.origin check
+            if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                return;
+            }
+            const msg = e.data;
+            if (!msg || typeof msg !== 'object') return;
+            if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+                const filePath = msg.path || '';
+                const fileContent = msg.data !== undefined ? msg.data : msg.content;
+                if (fileContent !== undefined && fileContent !== null) {
+                    const p = filePath.toLowerCase();
+                    if (p.endsWith('.json') || (typeof fileContent === 'string' && fileContent.trim().startsWith('{'))) {
+                        parseAndLoadJSON(fileContent);
+                    } else {
+                        parseAndLoadCSV(fileContent);
+                    }
+                    showToast(`Opened ${filePath || 'file'} from File Browser ✅`, 'success');
+                } else if (filePath) {
+                    KiloVFS.read(filePath, (data, path) => {
+                        if (!data) {
+                            showToast(`Could not open file: ${filePath}`, 'warning');
+                            return;
+                        }
+                        const p = (path || filePath).toLowerCase();
+                        if (p.endsWith('.json') || (typeof data === 'string' && data.trim().startsWith('{'))) {
+                            parseAndLoadJSON(data);
+                        } else {
+                            parseAndLoadCSV(data);
+                        }
+                        showToast(`Opened ${path || filePath} from File Browser ✅`, 'success');
+                    });
+                }
+            }
+        });
+
+        function checkInitialHashFile() {
+            if (window.location.hash && window.location.hash.length > 1) {
+                const hashPath = decodeURIComponent(window.location.hash.slice(1));
+                if (hashPath && (hashPath.endsWith('.csv') || hashPath.endsWith('.json'))) {
+                    KiloVFS.read(hashPath, (data, path) => {
+                        if (!data) return;
+                        const p = (path || hashPath).toLowerCase();
+                        if (p.endsWith('.json') || (typeof data === 'string' && data.trim().startsWith('{'))) {
+                            parseAndLoadJSON(data);
+                        } else {
+                            parseAndLoadCSV(data);
+                        }
+                        showToast(`Loaded ${path || hashPath} on boot ✅`, 'success');
+                    });
+                }
+            }
+        }
+
+        function exportToVFS(format = 'csv') {
             const isIframe = window.parent && window.parent !== window;
             if (!isIframe) {
-                showToast('VFS only active inside KiloOS. Downloading locally...', 'info');
+                showToast('Standalone mode: Downloading ledger locally...', 'info');
                 if (format === 'csv') exportCSV();
                 else exportJSON();
                 return;
             }
-            const dateStr = new Date().toISOString().slice(0, 10);
-            if (format === 'csv') {
-                KiloVFS.write(`documents/kbudget_${dateStr}.csv`, getCSVString());
-            } else {
-                KiloVFS.write(`documents/kbudget_backup_${dateStr}.json`, getJSONString());
-            }
+
+            const defaultPath = format === 'csv'
+                ? '/home/data/kbudget_ledger.csv'
+                : '/home/data/kbudget_backup.json';
+            const payload = format === 'csv' ? getCSVString() : getJSONString();
+
+            KiloVFS.showSave(defaultPath, (selectedPath) => {
+                if (selectedPath === null) return; // User cancelled dialog
+                const targetPath = selectedPath || defaultPath;
+                KiloVFS.write(targetPath, payload);
+            });
         }
 
         function importFromVFS() {
             const isIframe = window.parent && window.parent !== window;
             if (!isIframe) {
-                showToast('VFS only active inside KiloOS. Use local file import.', 'warning');
+                showToast('Standalone mode: Select local CSV or JSON ledger...', 'info');
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.csv,.json,text/csv,application/json';
+                input.onchange = e => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = event => {
+                        const content = event.target.result;
+                        if (file.name.toLowerCase().endsWith('.json') || (typeof content === 'string' && content.trim().startsWith('{'))) {
+                            parseAndLoadJSON(content);
+                        } else {
+                            parseAndLoadCSV(content);
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
                 return;
             }
             KiloVFS.openPicker((content, path) => {
@@ -1801,10 +1967,58 @@
                 }
                 if (path && path.toLowerCase().endsWith('.json')) {
                     parseAndLoadJSON(content);
+                } else if (typeof content === 'string' && content.trim().startsWith('{')) {
+                    parseAndLoadJSON(content);
                 } else {
                     parseAndLoadCSV(content);
                 }
             });
+        }
+
+        function getCategoriesCSVString() {
+            let csv = "Label,Value\n";
+            const totals = {};
+            transactions.forEach(t => {
+                if (t.type === 'expense') {
+                    const cat = t.category || 'Other';
+                    totals[cat] = (totals[cat] || 0) + (Number(t.amount) || 0);
+                }
+            });
+            const sortedCats = Object.keys(totals).sort((a, b) => totals[b] - totals[a]);
+            if (sortedCats.length === 0) {
+                csv += '"No Expenses",0\n';
+            } else {
+                sortedCats.forEach(cat => {
+                    const clean = cat.replace(/"/g, '""');
+                    csv += `"${clean}",${totals[cat].toFixed(2)}\n`;
+                });
+            }
+            return csv;
+        }
+
+        function openInKChart() {
+            const csvContent = getCategoriesCSVString();
+            const targetPath = '/home/data/kbudget_categories.csv';
+            const isIframe = window.parent && window.parent !== window;
+            if (!isIframe) {
+                showToast('Standalone mode: Downloading categories CSV for KChart...', 'info');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'kbudget_categories.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                return;
+            }
+
+            // 1. Write categories CSV to VFS
+            KiloVFS.write(targetPath, csvContent);
+            // 2. Dispatch OS_LAUNCH_APP to launch KChart with dataset
+            KiloVFS.launchApp('kchart', targetPath);
+            showToast('Exported categories to /home/data/kbudget_categories.csv & launched KChart 📊', 'success');
         }
 
         function loadSampleData() {
@@ -2572,6 +2786,10 @@
                     case 'e':
                         e.preventDefault();
                         openDataModal();
+                        break;
+                    case 'k':
+                        e.preventDefault();
+                        openInKChart();
                         break;
                 }
             } else if (!isInput) {

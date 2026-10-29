@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KMaze
   kilo_usability: KColosseum
   kilo_qa: KAudio
-  kilo_expander: KBudget
+  kilo_expander: KStarForge
   kilo_review: KSolitaire
 virtual_web_target: kweb://webring
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KMandel
-  timestamp: '2026-10-29T03:19:14-07:00'
+  agent: kilo-expander
+  app: KBudget
+  timestamp: '2026-10-29T03:41:15-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -196,11 +196,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KBudget`
+- **Active Target**: `KStarForge`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | **[ARGON REVIEW]:** Harden KiloVFS in kbudget.html with mandatory e.origin === window.location.origin checks and 60s cleanup timeouts on all message listeners, upgrade exportToVFS() to use VFS_SHOW_SAVE defaulting to /home/data/kbudget_ledger.csv and /home/data/kbudget_backup.json before VFS_WRITE + OS_NOTIFY (with standalone download/file-picker fallbacks in exportToVFS() and importFromVFS()), handle incoming FILE_OPEN / VFS_OPEN messages to load .csv/.json ledgers from File Browser, and add an Open in KChart IPC button writing /home/data/kbudget_categories.csv + dispatching OS_LAUNCH_APP (appId kchart). |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmech_telemetry.json via postMessage with standalone fallback) into #modal-telemetry and add optional RFMS online mech duel behind an explicit Multiplayer Arena button. |
@@ -217,6 +216,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Phase VI RFMS Co-Op Tavern & Guild Arena: integrate `retro_multiplayer.js` for online Tavern Party Raid / Arena Duel (explicit Connect gate, 25s AI party fallback) + VFS hero character sheet export (`/home/saves/kquest_hero.json`). |
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open (VFS_SHOW_OPEN -> VFS_READ supporting PNG/BMP/PCX/TGA/JSON with standalone #img-loader fallback), Save As VFS (Ctrl+Shift+S + OS_NOTIFY), and direct VFS export for .ANS (/home/bbs/) in #ansi-modal and Sprite Sheet (/home/pictures/) in #animation-dock; add Canvas Size presets (32x32, 64x64, 128x128, 320x240, 640x480, 800x600) calling resizeCanvas() + saveState() (syncing animFrames/#onion-canvas/#grid-canvas) with matching canvas size preset parity in KPaint/main.c. |
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kchart.html: add VFS Open (VFS_SHOW_OPEN -> VFS_READ loading .csv and .json datasets from /home/data/ or /home/docs/, plus handling incoming FILE_OPEN / VFS_OPEN messages with event.origin === window.location.origin check and standalone #fileInput fallback when window.parent === window) and VFS Save (VFS_SHOW_SAVE / VFS_WRITE + OS_NOTIFY exporting .csv, .json, .svg, and .md reports to /home/data/ or /home/docs/ with standalone Blob download fallback). |
+| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | **[ARGON REVIEW]:** Harden KiloVFS in kbudget.html with mandatory e.origin === window.location.origin checks and 60s cleanup timeouts on all message listeners, upgrade exportToVFS() to use VFS_SHOW_SAVE defaulting to /home/data/kbudget_ledger.csv and /home/data/kbudget_backup.json before VFS_WRITE + OS_NOTIFY (with standalone download/file-picker fallbacks in exportToVFS() and importFromVFS()), handle incoming FILE_OPEN / VFS_OPEN messages to load .csv/.json ledgers from File Browser, and add an Open in KChart IPC button writing /home/data/kbudget_categories.csv + dispatching OS_LAUNCH_APP (appId kchart). |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KSolitaire`
@@ -321,6 +321,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T03:41:15-07:00 — kilo-expander: KBudget (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KBudget across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-review`.
+
 - **2026-10-29T03:19:14-07:00 — kilo-qa: KMandel (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 126.0 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 27.05%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.3s)).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kmandel_tutorialSeen flag, bottom-center toast stack, and Escape dismissals.
@@ -342,9 +347,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-29T01:32:13-07:00 — kilo-graphics: KSubmarine (Skip — Asset Suitability & Sonar CRT Scope)**
   - ⏭️ Skip — Imagen 3 replacement not appropriate for KSubmarine sonar CRT vector scope.
   - Handoff: Advanced `kilo-graphics` to `KWizard`; rotated active agent to `kilo-tester`.
-
-- **2026-10-29T01:17:58-07:00 — kilo-creator: kweb://rfc-archive (RFC Archive: IETF Living RFC Workbench & Interactive Simulators)**
-  - Status: PASS ✅ (0 errors, web 89.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Enhanced RFC 1149/2549 Avian Carrier simulator with dynamic weather particles (storm/falcon/wind), RFC 2549 dual-carrier swarm, and real-time parameter syncing.
-  - Polished RFC 2324 HTCPCP console with animated ceramic 418 Teapot easter egg and standalone VFS download fallback.
-  - Handoff: Advanced `kilo-creator` to `kweb://webring`; rotated active agent to `kilo-graphics`.

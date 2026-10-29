@@ -88,6 +88,7 @@ void ShowHelp(HWND hwnd) {
         "- Ctrl+F: Focus the search box\n"
         "- Ctrl+S: Export ledger to CSV spreadsheet\n"
         "- Ctrl+O: Import ledger from CSV spreadsheet\n"
+        "- Ctrl+K: Export category summary to kbudget_categories.csv for KChart\n"
         "- Alt+C or C: Cycle currency symbol ($ / EUR / GBP / JPY / CHF)\n"
         "- Delete: Delete selected transaction\n"
         "- Left / Right Arrow: Previous / Next page\n"
@@ -525,7 +526,7 @@ INT_PTR CALLBACK SettingsDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
 void ExportCSV(HWND hwnd) {
     OPENFILENAMEA ofn;
-    char szFile[MAX_PATH] = "kbudget_export.csv";
+    char szFile[MAX_PATH] = "kbudget_ledger.csv";
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
@@ -557,7 +558,53 @@ void ExportCSV(HWND hwnd) {
                     desc);
             }
             fclose(f);
-            MessageBoxA(hwnd, "Export successful!", "Success", MB_OK);
+            MessageBoxA(hwnd, "Export successful (kbudget_ledger.csv)!", "Success", MB_OK);
+        }
+    }
+}
+
+void ExportCategoriesCSV(HWND hwnd) {
+    OPENFILENAMEA ofn;
+    char szFile[MAX_PATH] = "kbudget_categories.csv";
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "CSV Files\0*.csv\0All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrDefExt = "csv";
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+
+    if (GetSaveFileNameA(&ofn)) {
+        FILE *f = fopen(szFile, "w");
+        if (f) {
+            fprintf(f, "Label,Value\n");
+            const char* cats[] = {"Food", "Transport", "Utilities", "Entertainment", "Shopping", "Health", "Other"};
+            int num_cats = 7;
+            double totals[7] = {0};
+            for (int i = 0; i < num_transactions; i++) {
+                if (!transactions[i].is_income) {
+                    int found = 0;
+                    for (int c = 0; c < num_cats; c++) {
+                        if (_stricmp(transactions[i].category, cats[c]) == 0) {
+                            totals[c] += transactions[i].amount;
+                            found = 1;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        totals[num_cats - 1] += transactions[i].amount;
+                    }
+                }
+            }
+            for (int c = 0; c < num_cats; c++) {
+                if (totals[c] > 0) {
+                    fprintf(f, "\"%s\",%.2f\n", cats[c], totals[c]);
+                }
+            }
+            fclose(f);
+            MessageBoxA(hwnd, "Exported category summary (kbudget_categories.csv) for KChart!", "Success", MB_OK);
         }
     }
 }
@@ -670,6 +717,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 125, 204, 100, 26, hwnd, (HMENU)11, NULL, NULL);
             hBtnHelp = CreateWindow("BUTTON", "Help & Guide [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 20, 232, 205, 26, hwnd, (HMENU)14, NULL, NULL);
+            HWND hBtnChart = CreateWindow("BUTTON", "Chart Export (KChart) [Ctrl+K]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                20, 260, 205, 26, hwnd, (HMENU)15, NULL, NULL);
                 
             hSearchEdit = CreateWindow("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
                 250, 15, 340, 25, hwnd, (HMENU)4, NULL, NULL);
@@ -712,6 +761,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnSettings, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnPrint, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnChart, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnPrev, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hLblPage, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -812,6 +862,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 NativeQuickLoad(hwnd);
             } else if (LOWORD(wParam) == 14) {
                 ShowHelp(hwnd);
+            } else if (LOWORD(wParam) == 15) {
+                ExportCategoriesCSV(hwnd);
             }
             break;
             
@@ -997,6 +1049,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     bHandled = TRUE;
                 } else if (msg.wParam == 'O' || msg.wParam == 'o') {
                     SendMessage(hMainWnd, WM_COMMAND, 2, 0);
+                    bHandled = TRUE;
+                } else if (msg.wParam == 'K' || msg.wParam == 'k') {
+                    SendMessage(hMainWnd, WM_COMMAND, 15, 0);
                     bHandled = TRUE;
                 }
             } else if (!isEdit) {
