@@ -46,6 +46,7 @@
 #define ID_BTN_SWAPRB      133
 #define ID_BTN_QUICKSAVE   134
 #define ID_BTN_QUICKLOAD   135
+#define ID_BTN_ZOOM_FIT    136
 
 // Global State
 HBITMAP g_hBmpWork = NULL;
@@ -308,21 +309,41 @@ void QuickSave(HWND hwnd) {
     }
     if (SaveBitmapToFile("kimage_quicksave.bmp")) {
         MarkTutorialSeen();
+        HANDLE hState = CreateFileA("kimage_state.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hState != INVALID_HANDLE_VALUE) {
+            float stateFloats[4] = { g_zoom, 0.0f, 0.0f, 0.0f };
+            DWORD written = 0;
+            WriteFile(hState, stateFloats, sizeof(stateFloats), &written, NULL);
+            CloseHandle(hState);
+        }
         MessageBoxA(hwnd, "Snapshot quicksaved to 'kimage_quicksave.bmp' [F5].", "KImage Quicksave", MB_OK | MB_ICONINFORMATION);
     } else {
         MessageBoxA(hwnd, "Failed to quicksave snapshot.", "KImage Error", MB_OK | MB_ICONERROR);
     }
 }
 
-void QuickLoad(HWND hwnd) {
+void QuickLoad(HWND hwnd, BOOL silent) {
     DWORD attr = GetFileAttributesA("kimage_quicksave.bmp");
     if (attr == INVALID_FILE_ATTRIBUTES) {
-        MessageBoxA(hwnd, "No quicksave snapshot found ('kimage_quicksave.bmp'). Press F5 to save first.", "KImage", MB_OK | MB_ICONWARNING);
+        if (!silent) MessageBoxA(hwnd, "No quicksave snapshot found ('kimage_quicksave.bmp'). Press F5 to save first.", "KImage", MB_OK | MB_ICONWARNING);
         return;
     }
     LoadBitmapFile(hwnd, "kimage_quicksave.bmp");
+    HANDLE hState = CreateFileA("kimage_state.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hState != INVALID_HANDLE_VALUE) {
+        float stateFloats[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
+        DWORD readBytes = 0;
+        if (ReadFile(hState, stateFloats, sizeof(stateFloats), &readBytes, NULL) && readBytes >= sizeof(float)) {
+            if (stateFloats[0] > 0.05f && stateFloats[0] <= 10.0f) {
+                g_zoom = stateFloats[0];
+            }
+        }
+        CloseHandle(hState);
+    }
     MarkTutorialSeen();
-    MessageBoxA(hwnd, "Snapshot restored from 'kimage_quicksave.bmp' [F9].", "KImage Quickload", MB_OK | MB_ICONINFORMATION);
+    if (!silent) {
+        MessageBoxA(hwnd, "Snapshot restored from 'kimage_quicksave.bmp' [F9].", "KImage Quickload", MB_OK | MB_ICONINFORMATION);
+    }
 }
 
 void SaveFileDlg(HWND hwnd) {
@@ -833,6 +854,7 @@ void ShowHelpDialog(HWND hwnd) {
         "• + / - : Zoom In / Out\n"
         "• Mouse Wheel : Zoom In / Out\n"
         "• 0 / Home : Reset Zoom (1:1)\n"
+        "• W : Fit Image to Window / Canvas Viewport\n"
         "• [ / ] : Rotate ↺ -90° / ↻ +90°\n"
         "• C : Toggle Interactive Crop Tool\n"
         "• D : Toggle Annotation Brush Tool\n"
@@ -897,6 +919,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hBtn = CreateWindowEx(0, "BUTTON", "1:1", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 32, btnH, hwnd, (HMENU)ID_BTN_ZOOM_RESET, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 38;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "Fit", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 32, btnH, hwnd, (HMENU)ID_BTN_ZOOM_FIT, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 36;
 
             hBtn = CreateWindowEx(0, "BUTTON", "↺", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 28, btnH, hwnd, (HMENU)ID_BTN_ROT_CCW, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 30;
@@ -1002,6 +1027,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case ID_BTN_ZOOM_RESET:
                     g_zoom = 1.0f;
                     InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                case ID_BTN_ZOOM_FIT:
+                    if (g_bmpW > 0 && g_bmpH > 0) {
+                        RECT rcClient;
+                        GetClientRect(hwnd, &rcClient);
+                        int availW = rcClient.right - rcClient.left - SIDEBAR_WIDTH - 20;
+                        int availH = rcClient.bottom - rcClient.top - TOOLBAR_HEIGHT - 20;
+                        if (availW > 10 && availH > 10) {
+                            float scaleW = (float)availW / (float)g_bmpW;
+                            float scaleH = (float)availH / (float)g_bmpH;
+                            g_zoom = (scaleW < scaleH) ? scaleW : scaleH;
+                            if (g_zoom > 1.0f) g_zoom = 1.0f;
+                            if (g_zoom < 0.05f) g_zoom = 0.05f;
+                            InvalidateRect(hwnd, NULL, TRUE);
+                        }
+                    }
                     break;
                 case ID_BTN_ROT_CCW:
                     RotateImage90(0);
@@ -1112,7 +1153,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     QuickSave(hwnd);
                     break;
                 case ID_BTN_QUICKLOAD:
-                    QuickLoad(hwnd);
+                    QuickLoad(hwnd, FALSE);
                     break;
                 case ID_BTN_PLAY:
                     g_slideshowPlaying = !g_slideshowPlaying;
@@ -1206,6 +1247,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_ZOOM_OUT, 0);
             } else if (wParam == '0' || wParam == VK_HOME) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_ZOOM_RESET, 0);
+            } else if (wParam == 'W' || wParam == 'w') {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_ZOOM_FIT, 0);
             }
             break;
         }
@@ -1501,11 +1544,10 @@ void MainEntry() {
 
     // Pass 5 First-run Tutorial Integrity & Saved State Startup Check
     if (HasSavedState()) {
-        QuickLoad(hwnd);
+        QuickLoad(hwnd, TRUE);
         MarkTutorialSeen();
     } else if (!HasSeenTutorial()) {
         CreateDemoImage(hwnd);
-        ShowHelpDialog(hwnd);
         MarkTutorialSeen();
     }
 
@@ -1530,6 +1572,9 @@ void MainEntry() {
                 continue;
             } else if (!ctrl && (msg.wParam == 'N' || msg.wParam == 'n')) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_DEMO, 0);
+                continue;
+            } else if (!ctrl && (msg.wParam == 'W' || msg.wParam == 'w')) {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_ZOOM_FIT, 0);
                 continue;
             } else if (msg.wParam == VK_ESCAPE) {
                 if (g_cropMode || g_drawMode) {

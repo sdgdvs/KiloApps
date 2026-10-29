@@ -679,6 +679,7 @@
       <span id="zoomLevel" style="font-size:12px; min-width:44px; text-align:center;">100%</span>
       <button id="btnZoomIn" class="icon-btn" title="Zoom In (+)">+</button>
       <button id="btnZoomReset" title="Reset Zoom & Pan (0)">1:1</button>
+      <button id="btnZoomFit" title="Fit Canvas to Viewport (W)">Fit</button>
       <button id="btnPixelMode" title="Toggle Crisp Pixel Art Mode (P)" style="font-size:12px; padding:6px 9px;">Crisp</button>
       <button id="btnToggleRight" title="Histogram & Metadata (I)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -1212,6 +1213,7 @@
             <div class="shortcut-item"><span>Toggle Fullscreen</span><kbd>F</kbd></div>
             <div class="shortcut-item"><span>Zoom & Pan Canvas</span><kbd>+</kbd> / <kbd>-</kbd> / <kbd>Drag</kbd></div>
             <div class="shortcut-item"><span>Reset Zoom & Center</span><kbd>0</kbd></div>
+            <div class="shortcut-item"><span>Fit to Viewport</span><kbd>W</kbd></div>
             <div class="shortcut-item"><span>Switch Tabs 1-7</span><kbd>1</kbd> .. <kbd>7</kbd></div>
             <div class="shortcut-item"><span>Close Modal / Cancel</span><kbd>Esc</kbd></div>
           </div>
@@ -1261,7 +1263,7 @@
     adjustments: { brightness: 0, contrast: 0, blur: 0, saturation: 0, preset: 'none' },
     crop: { active: false, x: 0, y: 0, w: 0, h: 0 },
     draw: { active: false, isDrawing: false, color: '#3b82f6', size: 4, paths: [] },
-    slideshow: { playing: false, timer: null, animFrame: null, startTime: 0, interval: 3000 }
+    slideshow: { playing: false, timer: null, animFrame: null, startTime: 0, interval: 3000, wasPlaying: false }
   };
 
   // UI Elements
@@ -1282,6 +1284,7 @@
     btnZoomIn: document.getElementById('btnZoomIn'),
     btnZoomOut: document.getElementById('btnZoomOut'),
     btnZoomReset: document.getElementById('btnZoomReset'),
+    btnZoomFit: document.getElementById('btnZoomFit'),
     zoomLevel: document.getElementById('zoomLevel'),
     histCanvas: document.getElementById('histCanvas'),
     histCtx: document.getElementById('histCanvas').getContext('2d'),
@@ -1322,16 +1325,41 @@
     }, duration);
   }
 
-  // First-run Onboarding Prompt (never interrupts restored sessions)
+  // Storage Safety Helpers (Architecture & Quality Standards)
+  function safeGet(key, fallback) {
+    try {
+      const v = localStorage.getItem(key);
+      if (v === null) return fallback;
+      try { return JSON.parse(v); } catch (_) { return v; }
+    } catch (_) {
+      return fallback;
+    }
+  }
+  function safeSet(key, value) {
+    try {
+      const str = typeof value === 'string' ? value : JSON.stringify(value);
+      localStorage.setItem(key, str);
+    } catch (e) {
+      console.warn('[KiloApp] Storage write failed:', e);
+    }
+  }
+
+  // Pass 5 First-run Tutorial Integrity & Quicksave Session Auto-Restore
   try {
-    const tutorialSeen = localStorage.getItem('kimage_tutorialSeen') || localStorage.getItem('kimage_tutorial_seen');
-    const hasQuicksave = !!localStorage.getItem('kimage_quicksave');
-    if (!tutorialSeen && !hasQuicksave) {
+    const rawSaved = localStorage.getItem('kimage_quicksave');
+    if (rawSaved) {
       setTimeout(() => {
-        showToast('Welcome to KImage Pro! Press H or F1 for Studio Guide & Hotkeys', 'info', 4500);
-      }, 500);
-      localStorage.setItem('kimage_tutorialSeen', '1');
-      localStorage.setItem('kimage_tutorial_seen', '1');
+        quickLoadState(true);
+      }, 80);
+    } else {
+      const tutorialSeen = localStorage.getItem('kimage_tutorialSeen') || localStorage.getItem('kimage_tutorial_seen');
+      if (!tutorialSeen) {
+        setTimeout(() => {
+          showToast('Welcome to KImage Pro! Press H or F1 for Studio Guide & Hotkeys', 'info', 4500);
+        }, 500);
+        localStorage.setItem('kimage_tutorialSeen', '1');
+        localStorage.setItem('kimage_tutorial_seen', '1');
+      }
     }
   } catch (_) {}
 
@@ -1656,6 +1684,8 @@
       state.panY = 0;
       renderCanvas();
       showToast("Zoom reset (1:1)", "info");
+    } else if (e.key === 'w' || e.key === 'W') {
+      fitToView();
     } else if (e.key === 'ArrowLeft') {
       if (state.playlist.length > 0) {
         selectImage((state.currentIndex - 1 + state.playlist.length) % state.playlist.length);
@@ -2350,6 +2380,7 @@
       off.getContext('2d').drawImage(item.img, 0, 0);
       let baseData = off.toDataURL('image/png');
 
+      const currentActiveTab = document.querySelector('#leftPanel .tab-btn.active')?.dataset.tab || 'tabAdjust';
       const snap = {
         name: item.name || 'snapshot.png',
         type: item.type || 'image/png',
@@ -2357,6 +2388,11 @@
         rotation: state.rotation,
         flipH: state.flipH,
         flipV: state.flipV,
+        zoom: state.zoom,
+        panX: state.panX,
+        panY: state.panY,
+        pixelated: state.pixelated,
+        activeTab: currentActiveTab,
         adjustments: { ...state.adjustments },
         drawPaths: JSON.parse(JSON.stringify(state.draw.paths)),
         stegoSecret: document.getElementById('stegoInput')?.value || '',
@@ -2394,17 +2430,17 @@
     }
   }
 
-  function quickLoadState() {
+  function quickLoadState(silent = false) {
     try {
       const raw = localStorage.getItem('kimage_quicksave');
       if (!raw) {
-        showToast("No quicksaved snapshot found. Press F5 to save first.", "warning");
+        if (!silent) showToast("No quicksaved snapshot found. Press F5 to save first.", "warning");
         return;
       }
       const snap = JSON.parse(raw);
       const dataSrc = snap.baseData || snap.imgData;
       if (!dataSrc) {
-        showToast("Quicksave data corrupted", "error");
+        if (!silent) showToast("Quicksave data corrupted", "error");
         return;
       }
       const img = new Image();
@@ -2437,9 +2473,13 @@
         state.rotation = snap.rotation || 0;
         state.flipH = snap.flipH || 1;
         state.flipV = snap.flipV || 1;
-        state.zoom = 1;
-        state.panX = 0;
-        state.panY = 0;
+        state.zoom = snap.zoom !== undefined ? snap.zoom : 1;
+        state.panX = snap.panX || 0;
+        state.panY = snap.panY || 0;
+        state.pixelated = !!snap.pixelated;
+        if (btnPixelMode) {
+          btnPixelMode.classList.toggle('active', state.pixelated);
+        }
         state.adjustments = snap.adjustments || { brightness: 0, contrast: 0, blur: 0, saturation: 0, preset: 'none' };
         state.draw.paths = snap.drawPaths || [];
         if (snap.stegoSecret && document.getElementById('stegoInput')) {
@@ -2469,18 +2509,28 @@
         ui.canvasWrapper.classList.remove('hidden');
 
         selectImage(0, true);
+        if (snap.activeTab) {
+          switchTab(snap.activeTab);
+        }
+        ui.canvasWrapper.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+        ui.zoomLevel.textContent = `${Math.round(state.zoom * 100)}%`;
+        if (ui.mainCanvas) {
+          ui.mainCanvas.style.imageRendering = state.pixelated ? 'pixelated' : 'auto';
+        }
         try {
           localStorage.setItem('kimage_tutorialSeen', '1');
           localStorage.setItem('kimage_tutorial_seen', '1');
         } catch (_) {}
-        showToast("Restored quicksaved session snapshot [F9]!", "success");
+        if (!silent) {
+          showToast("Restored quicksaved session snapshot [F9]!", "success");
+        }
       };
       img.onerror = () => {
-        showToast("Failed to load quicksave snapshot image", "error");
+        if (!silent) showToast("Failed to load quicksave snapshot image", "error");
       };
       img.src = dataSrc;
     } catch (_) {
-      showToast("Failed to restore quicksave snapshot", "error");
+      if (!silent) showToast("Failed to restore quicksave snapshot", "error");
     }
   }
   document.getElementById('btnQuickSave')?.addEventListener('click', quickSaveState);
@@ -3293,6 +3343,22 @@
     renderCanvas();
     showToast("Zoom reset (1:1)", "info");
   };
+  function fitToView() {
+    if (!ui.mainCanvas.width || !ui.mainCanvas.height) return;
+    const availW = ui.workspace.clientWidth - 48;
+    const availH = ui.workspace.clientHeight - 48;
+    if (availW <= 0 || availH <= 0) return;
+    const scale = Math.min(availW / ui.mainCanvas.width, availH / ui.mainCanvas.height, 1.0);
+    state.zoom = Math.max(0.1, Number(scale.toFixed(2)));
+    state.panX = 0;
+    state.panY = 0;
+    ui.canvasWrapper.style.transform = `translate(0px, 0px) scale(${state.zoom})`;
+    ui.zoomLevel.textContent = `${Math.round(state.zoom * 100)}%`;
+    showToast(`Scaled to fit viewport (${Math.round(state.zoom * 100)}%)`, 'info');
+  }
+  if (ui.btnZoomFit) {
+    ui.btnZoomFit.onclick = fitToView;
+  }
 
   // Toggle Right Inspector
   const btnToggleRight = document.getElementById('btnToggleRight');
@@ -4328,6 +4394,22 @@
     const divisor = gcd(w, h);
     return `${w / divisor}:${h / divisor}`;
   }
+
+  // Lifecycle & Resource Hygiene: pause long-running loops when backgrounded
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (state.slideshow.playing) {
+        state.slideshow.wasPlaying = true;
+        cancelAnimationFrame(state.slideshow.animFrame);
+      }
+    } else {
+      if (state.slideshow.playing && state.slideshow.wasPlaying) {
+        state.slideshow.wasPlaying = false;
+        state.slideshow.startTime = performance.now();
+        state.slideshow.animFrame = requestAnimationFrame(runSlideshowLoop);
+      }
+    }
+  });
 
   window.addEventListener('beforeunload', () => {
     if (state.slideshow.playing) {

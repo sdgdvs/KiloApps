@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T08:18:18-07:00 — kilo-review: KChess (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 800x903 sheet.png + full code audit of kchess.html and KChess/main.c; un-quarantined KChess to Row 1).
+  - Visual/UX Findings: Eval bar (x=72..88) collides with rank labels (x=75); main.c capRc (y=52..127) paints over top file labels and Rank 8; #help-modal clips Got It button; #toast-container covers bottom status bar; no live Move History panel or drag-and-drop.
+  - Engine/Feature Findings: evaluateBoardStatic() sign inverted in drawEvalBar()/refreshAnalysisModal(); main.c GenerateFEN() omits R/r corrupting pieces; 17 odd-ply openings + Black-to-move FEN/Editor/Replay soft-lock AI; blitzIncrement dead and resetGame() overwrites clock formats.
+  - OS Mesh Findings: Zero KiloOS VFS/IPC integration for .pgn, .fen, or .json saves.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KChess`, `kilo-usability`->`KChess`, `kilo-expander`->`KChess`] (un-quarantined `KChess` from Mature); advanced `kilo-review` to `KGo`; next agent `kilo-creator`.
+
 - **2026-10-29T07:38:38-07:00 — kilo-expander: KSolitaire (Phase VI KiloOS VFS & IPC Mesh Integration)**
   - Status: PASS ✅ (0 errors, web 168.1 KB, native 49.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 64.99%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.6s)).
   - Wired KiloVFS Save (VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY) and Open (VFS_SHOW_OPEN -> VFS_READ) with origin validation and 60s cleanup timeouts.
