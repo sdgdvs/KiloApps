@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KMaze
   kilo_usability: KColosseum
   kilo_qa: KSettings
-  kilo_expander: KStarForge
+  kilo_expander: KChess
   kilo_review: KGo
 virtual_web_target: kweb://slashnet
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KImage
-  timestamp: '2026-10-29T11:39:15-07:00'
+  agent: kilo-expander
+  app: KStarForge
+  timestamp: '2026-10-29T12:18:52-07:00'
 last_planner_run: '2026-10-29T17:30:03Z'
 ---
 
@@ -182,11 +182,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, waveform audio editor, spectrum visualizer, filter pipeline, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KStarForge`
+- **Active Target**: `KChess`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kchess.html using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with mandatory event.origin === window.location.origin checks, 60s dialog cleanup timeouts, and standalone Blob download / file-input fallbacks when window.parent === window for .json game saves (/home/saves/kchess_save.json) in Game menu, .pgn match records (/home/docs/kchess_match.pgn) in #pgn-modal, and .fen positions (/home/docs/kchess_position.fen) in #fen-modal and #editor-modal, plus handle incoming FILE_OPEN / VFS_OPEN messages from KiloOS File Browser to auto-load .pgn/.fen/.json files and add an Open PGN in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad) in #pgn-modal. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmech_telemetry.json via postMessage with standalone fallback) into #modal-telemetry and add optional RFMS online mech duel behind an explicit Multiplayer Arena button. |
@@ -198,6 +197,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmystery_case.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback), add Export Forensic Dossier Report (/home/docs/kmystery_dossier.txt via VFS_WRITE + OS_NOTIFY on case solved) and a Present Clue shortcut inside #dossier-modal, and add Clue Dossier Viewer [C] / double-click inspection parity to KMystery/main.c. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
+| `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KGo`
@@ -282,6 +282,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T12:18:52-07:00 — kilo-expander: KStarForge (KStarForge Phase VI RFMS Blueprint Exchange & Tactical Skirmish)**
+  - Status: PASS ✅ (web 322.3 KB, native 30.5 KB < 999 KB, 0 errors, visual probe clean).
+  - Integrated retro_multiplayer.js for online ship blueprint exchange & tactical test skirmish with explicit Connect gate and 25s AI fallback.
+  - Wired KiloOS VFS /home/blueprints/ save/load, openPicker, hash URL launch, and cross-app IPC (KHex, KPad, File Browser).
+  - Dual Win32 C parity: tactical skirmish [K], blueprint file export/import (kstarforge.bp) [E/V/L], and quicksave/load [F5/F9].
+  - Handoff: Advanced `kilo-expander` to `KChess`; rotated active agent to `kilo-review`.
+
 - **2026-10-29T11:39:15-07:00 — kilo-qa: KImage (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 167.7 KB, native 27.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 8.59%, HEAD Δ 0.11%, 0 fail, 0 warn, 5.1s)).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kimage_tutorialSeen flag, safe storage, and Escape modal dismissals.
@@ -303,9 +310,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Textured metallic/crystalline bricks, plasma paddle slipstream & ball trails, boss hazard visuals, and zero perimeter border dots verified in Web and Win32 C.
   - Glint sweep verified: zero specular glints or traveling perimeter border dots across Web and C.
   - Handoff: Advanced `kilo-graphics` to `KDragon`; rotated active agent to `kilo-tester`.
-
-- **2026-10-29T08:39:45-07:00 — kilo-creator: kweb://deep-core (Deep Core Ghost Node VFS & Passkey Climax Integration)**
-  - Status: PASS ✅ (0 errors, web 300.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.78%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.0s)).
-  - Connected Tier 3 Ghost Node terminal directly to KiloOS VFS (/sys/alpha.sys & /home/crypto/) with real-time bridge and fallback sync.
-  - Decoded Sector 04 fragment (RECOVERY_1999 & 1999-ARCH) automatically written to VFS to authenticate KMatrix verification.
-  - Handoff: Advanced `kilo-creator` to `kweb://slashnet`; rotated active agent to `kilo-graphics`.

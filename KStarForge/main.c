@@ -969,8 +969,10 @@ static void DrawGame(HDC hdc, RECT* rc) {
         TextOutA(memDC, 240, 320, "[F] Shakedown Orbital Flight Range", 34);
         TextOutA(memDC, 240, 355, "[H] Engineering Operations Manual", 33);
         TextOutA(memDC, 240, 390, "[F5] Quicksave | [F9] Quickload", 31);
+        TextOutA(memDC, 240, 420, "[K] Tactical Skirmish (Rival Flagship)", 39);
+        TextOutA(memDC, 240, 450, "[E/L] Blueprint File Mesh (kstarforge.bp)", 41);
         SetTextColor(memDC, RGB(100, 130, 160));
-        TextOutA(memDC, 210, 480, "LUDONARRATIVE FLEET DIRECTIVE // ORBITAL MATRIX READY", 53);
+        TextOutA(memDC, 210, 500, "LUDONARRATIVE FLEET DIRECTIVE // ORBITAL MATRIX READY", 53);
     }
     else if (g_game.state == STATE_BLUEPRINT) {
         /* Blueprint Editor */
@@ -1118,7 +1120,11 @@ static void DrawGame(HDC hdc, RECT* rc) {
         wsprintfA(sModeBuf, "[S] Sym: %s | [T] Archetype (%d/6) | [M] Audio | [R] Reset | [SPACE] Drydock",
             g_game.symmetryMode ? "ON" : "OFF", g_game.currentTemplate + 1);
         SetTextColor(memDC, RGB(120, 160, 200));
-        TextOutA(memDC, px + 15, ty + 140, sModeBuf, lstrlenA(sModeBuf));
+        TextOutA(memDC, px + 15, ty + 135, sModeBuf, lstrlenA(sModeBuf));
+
+        char bpBuf[128];
+        wsprintfA(bpBuf, "[E/V] Export BP (kstarforge.bp) | [L] Import BP | [K] Skirmish | [F5/F9] Save/Load");
+        TextOutA(memDC, px + 15, ty + 155, bpBuf, lstrlenA(bpBuf));
     }
     else if (g_game.state == STATE_DRYDOCK) {
         /* Drydock Assembly */
@@ -1603,7 +1609,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 g_game.symmetryMode = !g_game.symmetryMode;
                 SetToast(g_game.symmetryMode ? "SYMMETRY: ON" : "SYMMETRY: OFF");
                 PlaySfx(1);
-            } else if (wParam == 'E' && g_game.state == STATE_BLUEPRINT) {
+            } else if ((wParam == 'E' || wParam == 'V') && g_game.state == STATE_BLUEPRINT) {
                 SaveBlueprintFile();
             } else if (wParam == 'L' && g_game.state == STATE_BLUEPRINT) {
                 LoadBlueprintFile();
@@ -1712,6 +1718,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 } else if (my >= 345 && my <= 375) {
                     g_game.state = STATE_HELP;
                     PlaySfx(1);
+                } else if (my >= 415 && my <= 445) {
+                    StartTacticalSkirmish();
                 }
             }
             else if (g_game.state == STATE_BLUEPRINT) {

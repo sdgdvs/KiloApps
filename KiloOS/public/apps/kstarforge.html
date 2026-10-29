@@ -5360,13 +5360,22 @@
             loadBlueprintCode(input) {
                 try {
                     let parsed = null;
-                    if (input.startsWith('KSF-BP-v1-')) {
-                        const b64 = input.replace('KSF-BP-v1-', '');
-                        parsed = JSON.parse(atob(b64));
-                    } else {
-                        parsed = JSON.parse(input);
+                    if (typeof input === 'object' && input !== null) {
+                        parsed = input;
+                    } else if (typeof input === 'string') {
+                        const trimmed = input.trim();
+                        if (trimmed.startsWith('KSF-BP-v1-')) {
+                            const b64 = trimmed.replace('KSF-BP-v1-', '');
+                            parsed = JSON.parse(atob(b64));
+                        } else {
+                            parsed = JSON.parse(trimmed);
+                        }
                     }
                     if (!parsed) return false;
+
+                    if (parsed.blueprintCode && typeof parsed.blueprintCode === 'string' && parsed.blueprintCode.startsWith('KSF-BP-v1-')) {
+                        return this.loadBlueprintCode(parsed.blueprintCode);
+                    }
 
                     // Initialize empty grid
                     const size = 14;
@@ -6137,20 +6146,33 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
         const KiloVFS = {
             write(path, data) {
                 try {
-                    window.parent.postMessage({ type: 'VFS_WRITE', path, data: typeof data === 'string' ? data : JSON.stringify(data, null, 2), requestId: 'w_' + Date.now() }, '*');
-                    window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: `Saved to VFS: ${path}` }, '*');
+                    const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                    try { localStorage.setItem('kstarforge_vfs_' + path, payload); } catch (e) {}
+                    window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
+                    window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: 'Saved to VFS: ' + path }, '*');
                 } catch (e) {}
             },
             read(path, cb) {
                 const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let completed = false;
                 const handler = (e) => {
                     if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
                         window.removeEventListener('message', handler);
+                        completed = true;
                         cb(e.data.data, e.data.path);
                     }
                 };
                 window.addEventListener('message', handler);
                 try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+                setTimeout(() => {
+                    if (!completed) {
+                        const local = localStorage.getItem('kstarforge_vfs_' + path);
+                        if (local) {
+                            window.removeEventListener('message', handler);
+                            cb(local, path);
+                        }
+                    }
+                }, 350);
             },
             openPicker(cb) {
                 const reqId = 'open_' + Date.now();
@@ -6740,12 +6762,23 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
             }
         });
 
+        function checkIncomingVFSLaunch() {
+            const rawHash = window.location.hash.replace(/^#/, '');
+            if (!rawHash) return;
+            const path = decodeURIComponent(rawHash);
+            if (path.startsWith('/')) {
+                starforgeVFS.loadBlueprintFromPath(path);
+            }
+        }
+        window.addEventListener('hashchange', checkIncomingVFSLaunch);
+
         // Initialize state & components
         setupCanvases();
         state.loadDefaultVanguard();
         populateModulePalette();
         updateUI();
         renderBlueprintGrid();
+        checkIncomingVFSLaunch();
     </script>
 </body>
 </html>
