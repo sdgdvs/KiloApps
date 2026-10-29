@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://deep-core
   kilo_graphics: KBreakout
   kilo_soundscape: KStellar
-  kilo_tester: KSolitaire
+  kilo_tester: KMaze
   kilo_usability: KSolitaire
   kilo_qa: KAudio
   kilo_expander: KSolitaire
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KStarDredge
-  timestamp: '2026-10-29T05:33:01-07:00'
+  agent: kilo-tester
+  app: KSolitaire
+  timestamp: '2026-10-29T06:22:22-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -132,11 +132,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KSolitaire`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | **[ARGON REVIEW]:** Fix broken double-click auto-move to foundation in ksolitaire.html (render() innerHTML wipe on click #1 destroys the .card node before dblclick fires—use timestamp double-tap detection or slot delegation) and start game timer + clear selection on double/right-click foundation moves in both ksolitaire.html and KSolitaire/main.c; honor Stage 11 1-pass cap via explicit maxPasses in CAMPAIGN_STAGES and disable #draw-mode-select during Campaign/Duel; fix thawAdjacent()/ThawAdjacent() to thaw only columns within distance 1 of srcCol or dstCol instead of spanning min..max; move saveState(true) after empty-stock/pass-cap guards in handleStockClick(), call saveState() after stock draw/card flip, and push undo before charge/score deduction in useXRayVision()/UseMagicWand(); snapshot/restore live game state and pause timer when opening/closing #replay-modal; force Classic 52-card rules on Duel start and prevent CyberBot-99 infinite two-column oscillation; and in KSolitaire/main.c reset state.stock_cnt=0 in UseShuffleStock() to fix duplicate-card buffer overflow, replace UTF-8 suit labels in DrawTextA with DrawSuitGDI(), remove traveling DrawSheenSweeps(), fan up to 3 waste cards in Draw 3, and call SaveGameState()/UpdateWindowTitle()/CheckWin() on tableau flip. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -154,6 +153,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Fix exportPaletteACT() ReferenceErrors (undefined currentPalettePreset/hexToRgb and missing retro16 key) using #palette-preset value; implement promised Shift-radial gradient (createRadialGradient), right-click stop reversal, and hasSelection clipping in draw()/endPosition(); sync #layer-opacity-val text, onchange saveState(), and layer opacity across saveState()/restoreState() and quickSave()/quickLoad() (plus restore secondaryColor and currentZoom); sync #onion-canvas dimensions/CSS zoom across applyZoom()/resizeCanvas()/transformCanvas()/restoreState()/quickLoad(), key out white background with translucent cyan tint in updateOnionSkin(), and fix addAnimFrame() on upper layers; fix saveVFS() 1.2s timeout aborting KiloOS VFS_SHOW_SAVE (immediate fallback only when window.parent===window, 60s dialog timeout otherwise, e.origin check) and accept .tga/.bmp on drop; in KPaint/main.c add M/P/4 hotkeys to GetMessageA WM_KEYDOWN, mirror across visible canvas width instead of 1999-x, and use GetClientRect() in WM_VSCROLL/WM_HSCROLL. |
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Support negative dataset values (such as deltaData() outputs) across renderAxesAndCartesian(), renderHorizontalBar(), and renderTrendOverlay() by scaling axes over [min(0,minVal), max(0,maxVal)] with a zero baseline instead of clamping with Math.max(0,...) and passing raw numeric values to renderTrendOverlay() so movavg/mean/corridor match computeStats(); reset trendStats.polyA/B/C=0 when count<3 and trendStats.expA/B=0 when posIndices.length<2, fix Poly badge negative sign formatting, and draw transposed trend overlays in renderHorizontalBar(); align Pie/Donut/Polar cx and outerR in handlePointerMove(), updateHoverCoordsForIndex(), and renderSonifyPlayhead() with renderPieOrDonut()/renderPolarCoxcomb(); make exportSvg() and #btnExportHtml render active chartType, currentTheme, and trend/target overlays instead of hardcoded vertical bars, wrap startup localStorage calls in try/catch, add Ctrl+Z preventDefault() undo, and stop sonifyInterval on visibilitychange; in KChart/main.c add Scatter View on [9] and Polar on [0] (NUM_MODES 10), widen WM_MOUSEMOVE Cartesian hit-testing with dynamic barW, add >=100 carry in FormatPolyEq(), and persist sorted label order in QuickSaveState()/QuickLoadState(). |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | **[ARGON REVIEW]:** Add an explicit category filter state/#filter-category-select with click-again toggle-off on #pie-chart slices, #category-legend, and .transaction-category badges (using encodeURIComponent/dataset instead of raw onclick string interpolation and syncing with #active-filter-bar and F5/F9); aggregate all custom CSV/JSON expense categories in render() instead of lumping into Other, compute dynamic canvas center/radius in renderChart()/drawChartCenter()/onmousemove, and format <1000 center totals with .toFixed(2); call updateCurrencyLabels() in quickloadState(), parseAndLoadJSON(), and settingsForm submit; align #budget-goal-card and updateStatusbar() on the same target month expenditure, support quoted CSV fields, and dedupe matching item.id on JSON import; in KBudget/main.c guard malloc(0), use GetLocalTime() + amount>0 validation in AddDialogProc, wire LBN_DBLCLK/VK_RETURN on hList to Edit, add date/amount search + Type filter combo, sync WM_PAINT pie totals/legend with active filters while guarding (x1,y1)==(x2,y2) GDI Pie() 360-deg wrap, and fix the SetClassLongPtr brush leak. |
+| `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | **[ARGON REVIEW]:** Fix broken double-click auto-move to foundation in ksolitaire.html (render() innerHTML wipe on click #1 destroys the .card node before dblclick fires—use timestamp double-tap detection or slot delegation) and start game timer + clear selection on double/right-click foundation moves in both ksolitaire.html and KSolitaire/main.c; honor Stage 11 1-pass cap via explicit maxPasses in CAMPAIGN_STAGES and disable #draw-mode-select during Campaign/Duel; fix thawAdjacent()/ThawAdjacent() to thaw only columns within distance 1 of srcCol or dstCol instead of spanning min..max; move saveState(true) after empty-stock/pass-cap guards in handleStockClick(), call saveState() after stock draw/card flip, and push undo before charge/score deduction in useXRayVision()/UseMagicWand(); snapshot/restore live game state and pause timer when opening/closing #replay-modal; force Classic 52-card rules on Duel start and prevent CyberBot-99 infinite two-column oscillation; and in KSolitaire/main.c reset state.stock_cnt=0 in UseShuffleStock() to fix duplicate-card buffer overflow, replace UTF-8 suit labels in DrawTextA with DrawSuitGDI(), remove traveling DrawSheenSweeps(), fan up to 3 waste cards in Draw 3, and call SaveGameState()/UpdateWindowTitle()/CheckWin() on tableau flip. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KSolitaire`
@@ -323,6 +323,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T06:22:22-07:00 — kilo-tester: KSolitaire (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-tester updates for KSolitaire across web and native targets.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-29T05:33:01-07:00 — kilo-graphics: KStarDredge (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate (pure vector CRT phosphor simulation); glint sweep clean.
   - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-tester`.
@@ -344,9 +349,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KBudget across web and native targets.
   - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-review`.
-
-- **2026-10-29T03:19:14-07:00 — kilo-qa: KMandel (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 126.0 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 27.05%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.3s)).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, kmandel_tutorialSeen flag, bottom-center toast stack, and Escape dismissals.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, instant iterBuffer color cycling, and visibilitychange cleanup.
-  - Mature Quarantine & Handoff: Promoted `KMandel` to Mature archive; advanced `kilo-qa` to `KAudio`; next agent `kilo-expander`.

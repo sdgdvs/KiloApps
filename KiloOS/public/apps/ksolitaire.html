@@ -1154,7 +1154,7 @@ const RANKS = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 
 
 const CAMPAIGN_STAGES = [
   { stage: 1,  name: "Beginner's Luck",       drawMode: 1, vegasRules: false, suitLocked: false, frozenCards: 0, targetCards: 20, desc: "Draw 1 - Target: 20 Foundation Cards" },
-  { stage: 2,  name: "Double Pass",           drawMode: 1, vegasRules: false, suitLocked: false, frozenCards: 0, targetCards: 24, desc: "Draw 1 - Limited Stock Recycling (2 Passes)" },
+  { stage: 2,  name: "Double Pass",           drawMode: 1, vegasRules: false, suitLocked: false, frozenCards: 0, targetCards: 24, maxPasses: 2, desc: "Draw 1 - Limited Stock Recycling (2 Passes)" },
   { stage: 3,  name: "Cold Snap",             drawMode: 1, vegasRules: false, suitLocked: false, frozenCards: 1, targetCards: 28, desc: "Draw 1 - 1 Frozen Card in Tableau" },
   { stage: 4,  name: "Suit Lock 101",         drawMode: 1, vegasRules: false, suitLocked: true,  frozenCards: 0, targetCards: 32, desc: "Draw 1 - Foundations Suit-Locked" },
   { stage: 5,  name: "Vegas Debut",           drawMode: 1, vegasRules: true,  suitLocked: false, frozenCards: 0, targetCards: 36, desc: "Draw 1 - Vegas Money Rules (-$52 Start)" },
@@ -1163,7 +1163,7 @@ const CAMPAIGN_STAGES = [
   { stage: 8,  name: "High Roller Vegas",     drawMode: 3, vegasRules: true,  suitLocked: false, frozenCards: 0, targetCards: 40, desc: "Draw 3 - Vegas Money Rules" },
   { stage: 9,  name: "Lock & Freeze",         drawMode: 1, vegasRules: false, suitLocked: true,  frozenCards: 2, targetCards: 44, desc: "Draw 1 - Suit Lock + 2 Frozen Cards" },
   { stage: 10, name: "Deep Freeze",           drawMode: 3, vegasRules: false, suitLocked: false, frozenCards: 3, targetCards: 44, desc: "Draw 3 - 3 Frozen Cards" },
-  { stage: 11, name: "Vegas Strict",          drawMode: 3, vegasRules: true,  suitLocked: false, frozenCards: 0, targetCards: 44, desc: "Draw 3 - Vegas Rules (1 Pass Only)" },
+  { stage: 11, name: "Vegas Strict",          drawMode: 3, vegasRules: true,  suitLocked: false, frozenCards: 0, targetCards: 44, maxPasses: 1, desc: "Draw 3 - Vegas Rules (1 Pass Only)" },
   { stage: 12, name: "Glacial Suits",         drawMode: 1, vegasRules: false, suitLocked: true,  frozenCards: 3, targetCards: 48, desc: "Draw 1 - Suit Lock + 3 Frozen Cards" },
   { stage: 13, name: "Suit Master",           drawMode: 3, vegasRules: false, suitLocked: true,  frozenCards: 0, targetCards: 48, desc: "Draw 3 - Suit-Locked Foundations" },
   { stage: 14, name: "Arctic Blast",          drawMode: 1, vegasRules: false, suitLocked: false, frozenCards: 4, targetCards: 48, desc: "Draw 1 - 4 Frozen Cards" },
@@ -2561,7 +2561,7 @@ function newGame(forcedSeed = null) {
     targetCards = cfg.targetCards;
     frozenCount = cfg.frozenCards;
     scoreCount = vegasRules ? -52 : 0;
-    maxStockPasses = vegasRules ? (drawMode === 1 ? 1 : 3) : (cfg.stage === 2 ? 2 : 0);
+    maxStockPasses = (cfg.maxPasses !== undefined) ? cfg.maxPasses : (vegasRules ? (drawMode === 1 ? 1 : 3) : 0);
     document.getElementById('mode-desc').textContent = `Campaign Stage ${campaignStage}/20: ${cfg.name} (Press [H] or [F1] for Hint)`;
     document.getElementById('sub-info').textContent = cfg.desc;
     let stageSel = document.getElementById('stage-select');
@@ -2586,7 +2586,11 @@ function newGame(forcedSeed = null) {
     document.getElementById('sub-info').textContent = "";
   }
 
-  document.getElementById('draw-mode-select').value = drawMode;
+  const drawSel = document.getElementById('draw-mode-select');
+  if (drawSel) {
+    drawSel.value = drawMode;
+    drawSel.disabled = (gameMode === 'campaign' || isDuelActive);
+  }
   document.getElementById('score-label').textContent = vegasRules ? "Cash" : "Score";
 
   let deck;
@@ -4400,6 +4404,7 @@ function changeStage(val) {
 }
 
 function changeDrawMode(val) {
+  if (gameMode === 'campaign' || isDuelActive) return;
   drawMode = parseInt(val);
   newGame();
 }

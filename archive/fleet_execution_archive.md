@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T03:19:14-07:00 — kilo-qa: KMandel (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 126.0 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 27.05%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.3s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kmandel_tutorialSeen flag, bottom-center toast stack, and Escape dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, instant iterBuffer color cycling, and visibilitychange cleanup.
+  - Mature Quarantine & Handoff: Promoted `KMandel` to Mature archive; advanced `kilo-qa` to `KAudio`; next agent `kilo-expander`.
+
 - **2026-10-29T02:39:12-07:00 — kilo-usability: KBudget (Usability, HiDPI Canvas & Responsive Layout Polish)**
   - Status: PASS ✅ (0 errors, web 121.6 KB, native 167.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Layout & HiDPI: eliminated 920x613 vertical clipping with overflow:hidden and min-height:0; arranged summary cards as 2-column grid; sized #chart-container to 170px with 160x160 HiDPI doughnut pie chart.
