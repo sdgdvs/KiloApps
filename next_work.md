@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-review
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,11 +31,11 @@ current_targets:
   kilo_creator: kweb://deep-core
   kilo_graphics: KBreakout
   kilo_soundscape: KStellar
-  kilo_tester: KMaze
-  kilo_usability: KColosseum
+  kilo_tester: KChess
+  kilo_usability: KChess
   kilo_qa: KImage
-  kilo_expander: KStarForge
-  kilo_review: KChess
+  kilo_expander: KChess
+  kilo_review: KGo
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
 - kweb://slashnet
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KSolitaire
-  timestamp: '2026-10-29T07:38:38-07:00'
+  agent: kilo-review
+  app: KChess
+  timestamp: '2026-10-29T08:18:18-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -132,10 +132,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KMaze`
+- **Active Target**: `KChess`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | **[ARGON REVIEW]:** Negate evaluateBoardStatic() in drawEvalBar() and refreshAnalysisModal() so White advantage displays positive pawns instead of Black winning; fix KChess/main.c GenerateFEN() pieceMap missing R and r (space+PNBRQKpnbrqk) and append =Q in GetSAN(); trigger doBlackAIMove / SetTimer(1,350) whenever aiMode && !whiteTurn && !gameOver across loadOpeningToBoard() (fixing 17 odd-ply openings + accurate turn toast), applyFEN()/ImportFromClipboard(), editorApplyToGame(), applyPGN(), loadGameState()/LoadGameStateFromFile(), handleFileImport(), handleHotkey(t) (plus add T and 1..4 hotkeys in main.c), and closeModals() after #replay-modal; require sx===4 && sy===7/0 for castling in isValidMove()/IsValidMove(), sync castling flags with home-square pieces in resetGame()/ResetGame(), infer KQkq in generateEditorFEN(), and check (board[selY][selX] % 6 === 1) before drawing red en-passant capture rings; add SAN disambiguation and +/# suffixes in getSAN()/GetSAN(), pass silent=true to performMove() inside loadPGN() (suppressing audio/toast/shake/stats side effects), store centipawn eval on pushHistoryState() for real centipawn-loss accuracy in renderReplayTable() while preserving gameOver/winner per ply in restoreHistoryState(), honor CLOCK_FORMATS time and blitzIncrement in resetGame()/cycleClockFormat()/performMove(), and advance puzzleIndex on gameMode==2 && winner==1 in KChess/main.c. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -156,10 +157,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | **[ARGON REVIEW]:** Fix broken double-click auto-move to foundation in ksolitaire.html (render() innerHTML wipe on click #1 destroys the .card node before dblclick fires—use timestamp double-tap detection or slot delegation) and start game timer + clear selection on double/right-click foundation moves in both ksolitaire.html and KSolitaire/main.c; honor Stage 11 1-pass cap via explicit maxPasses in CAMPAIGN_STAGES and disable #draw-mode-select during Campaign/Duel; fix thawAdjacent()/ThawAdjacent() to thaw only columns within distance 1 of srcCol or dstCol instead of spanning min..max; move saveState(true) after empty-stock/pass-cap guards in handleStockClick(), call saveState() after stock draw/card flip, and push undo before charge/score deduction in useXRayVision()/UseMagicWand(); snapshot/restore live game state and pause timer when opening/closing #replay-modal; force Classic 52-card rules on Duel start and prevent CyberBot-99 infinite two-column oscillation; and in KSolitaire/main.c reset state.stock_cnt=0 in UseShuffleStock() to fix duplicate-card buffer overflow, replace UTF-8 suit labels in DrawTextA with DrawSuitGDI(), remove traveling DrawSheenSweeps(), fan up to 3 waste cards in Draw 3, and call SaveGameState()/UpdateWindowTitle()/CheckWin() on tableau flip. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KColosseum`
+- **Active Target**: `KChess`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KChess` | Shift chessboard left (TS=64, OX=64, OY=124, Eval Bar at x=18..34, left rank labels at x=48, right rank labels at x=590) to fix drawEvalBar() colliding with rank 8..1 labels, fix KChess/main.c capRc ({20,46,W-20,94}) painting over top file labels and Rank 8, and render a live interactive Move History & Clocks panel (x=606..744, y=118..642) in both kchess.html and KChess/main.c with White/Black clocks, scrollable 2-column SAN move list, active-ply highlight, wheel scroll, and click-to-jump; add warm champagne/ivory outer rim stroke on Black pieces (!isWhite) in drawChessPieceSprite() and DrawChessPiece() for dark-square contrast; compact #help-modal .modal-card (2-col shortcuts) so #help-close-btn fits 800x903 without clipping, add white-space | **[ARGON REVIEW]:** nowrap to .menu-bar/#menu-status-badge/.menu-btn-quickhelp (removing duplicate canvas Help badge), and move #toast-container to top:48px right:16px while skipping redundant boot welcome toast; add pointer drag-and-drop piece movement in kchess.html and KChess/main.c (WM_MOUSEMOVE/WM_LBUTTONUP), wire ArrowLeft/Right in #replay-modal to replayStepPrev()/replayStepNext(), let focused modal buttons handle Enter/Space without primaryBtn hijacking, and replace prompt() in editorExportFEN() with #fen-modal. |
 | `KColosseum` | `KiloOS/public/apps/kcolosseum.html`, `KColosseum/main.c` | **[ARGON REVIEW]:** Scope global li card styling to #marketList > li and #ownedList > li so #tutorialModal ol li stops stretching and clipping #btnTutorialEnter; lock body to 100vh flex column at 800x563 by merging .top-nav, h1, and .funds into a compact header, removing the duplicate Empire Duel Arena banner, making #marketList and #ownedList independently scrollable with Sort by Prowess/HP buttons (sortGladiators), and compacting #arenaPanel (#arenaCanvas 185px, #combatLog 72px) for 0px overflow; add devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas, guard SELECT in keydown, and replace prompt() in importGladiatorDossier() with an in-DOM modal. |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Orbit & navigation viewport ergonomics, touch/keyboard flight controls, HiDPI radar canvas scaling, and compact HUD. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
@@ -198,10 +200,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, waveform audio editor, spectrum visualizer, filter pipeline, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KStarForge`
+- **Active Target**: `KChess`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kchess.html using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with mandatory event.origin === window.location.origin checks, 60s dialog cleanup timeouts, and standalone Blob download / file-input fallbacks when window.parent === window for .json game saves (/home/saves/kchess_save.json) in Game menu, .pgn match records (/home/docs/kchess_match.pgn) in #pgn-modal, and .fen positions (/home/docs/kchess_position.fen) in #fen-modal and #editor-modal, plus handle incoming FILE_OPEN / VFS_OPEN messages from KiloOS File Browser to auto-load .pgn/.fen/.json files and add an Open PGN in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad) in #pgn-modal. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmech_telemetry.json via postMessage with standalone fallback) into #modal-telemetry and add optional RFMS online mech duel behind an explicit Multiplayer Arena button. |
@@ -222,11 +225,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into ksolitaire.html: add VFS Save (VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY) and VFS Open (VFS_SHOW_OPEN -> VFS_READ) with mandatory event.origin === window.location.origin checks, 60s dialog cleanup timeouts, and standalone Blob download / file-input fallbacks when window.parent === window for .ksol replays (/home/replays/) in #replay-modal and game saves/stats .json (/home/saves/) in #stats-modal, plus handle incoming FILE_OPEN / VFS_OPEN messages from KiloOS File Browser to auto-load .ksol replays or .json saves. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
-- **Active Target**: `KChess`
+- **Active Target**: `KGo`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + board rendering, move history panel, and FEN/AI controls; inject fixes via `--inject-fix`. |
 | `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + goban stone legibility, territory scoring, and tsumego solver UX; inject fixes via `--inject-fix`. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + hex byte grid, disassembler pane, and VFS file loading; inject fixes via `--inject-fix`. |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Argon Visual, Feature & Usability Review (Mature Audit): inspect `sheet.png` + bitmap glyph editor, WCAG contrast matrix, and tab responsiveness; inject fixes via `--inject-fix`. |
@@ -256,6 +258,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | [Argon Audited 2026-10-28: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | [Argon Audited 2026-10-29: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | [Argon Audited 2026-10-29: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
+| `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | [Argon Audited 2026-10-29: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 
 ---
 
@@ -301,7 +304,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KMines** | `KiloOS/public/apps/kmines.html` | Pass 8+ (2026-10-15) | Puzzle | Complete classic minesweeper with retro styling, timer persistence, custom difficulty. |
 | **KPong** | `KiloOS/public/apps/kpong.html` | Pass 9+ (2026-10-15) | Arcade | Full retro arcade physics, AI paddle tiers, local two-player, CRT curvature shaders. |
 | **KAsteroids** | `KiloOS/public/apps/kasteroids.html` | Pass 8+ (2026-10-16) | Arcade | Pure vector wireframe physics, particle explosions, high score persistence. |
-| **KChess** | `KiloOS/public/apps/kchess.html` | Pass 9+ (2026-10-15) | Strategy / Board | Complete chess engine, move validation, FEN/PGN import/export, RFMS multiplayer. |
 | **KConnect4** | `KiloOS/public/apps/kconnect4.html` | Pass 6+ (2026-10-07) | Strategy / Board | Complete connect 4 engine, minimax AI, win animations, RFMS multiplayer. |
 | **KHangman** | `KiloOS/public/apps/khangman.html` | Pass 5 (2026-10-17) | Word / Puzzle | 20-stage campaign, blitz mode, custom word bank studio, dual Win32 native client, full F5/F9 state persistence. |
 | **KNote** | `KiloOS/public/apps/knote.html` | Pass 6+ (2026-10-17) | Office / Notes | Feature-complete cybernetic notepad; multi-tab editing, find/replace, markdown preview, keyboard navigation, full state persistence. |
@@ -323,6 +325,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T08:18:18-07:00 — kilo-review: KChess (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 800x903 sheet.png + full code audit of kchess.html and KChess/main.c; un-quarantined KChess to Row 1).
+  - Visual/UX Findings: Eval bar (x=72..88) collides with rank labels (x=75); main.c capRc (y=52..127) paints over top file labels and Rank 8; #help-modal clips Got It button; #toast-container covers bottom status bar; no live Move History panel or drag-and-drop.
+  - Engine/Feature Findings: evaluateBoardStatic() sign inverted in drawEvalBar()/refreshAnalysisModal(); main.c GenerateFEN() omits R/r corrupting pieces; 17 odd-ply openings + Black-to-move FEN/Editor/Replay soft-lock AI; blitzIncrement dead and resetGame() overwrites clock formats.
+  - OS Mesh Findings: Zero KiloOS VFS/IPC integration for .pgn, .fen, or .json saves.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KChess`, `kilo-usability`->`KChess`, `kilo-expander`->`KChess`] (un-quarantined `KChess` from Mature); advanced `kilo-review` to `KGo`; next agent `kilo-creator`.
+
 - **2026-10-29T07:38:38-07:00 — kilo-expander: KSolitaire (Phase VI KiloOS VFS & IPC Mesh Integration)**
   - Status: PASS ✅ (0 errors, web 168.1 KB, native 49.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 64.99%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.6s)).
   - Wired KiloVFS Save (VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY) and Open (VFS_SHOW_OPEN -> VFS_READ) with origin validation and 60s cleanup timeouts.
@@ -343,7 +352,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KSolitaire across web and native targets.
   - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
-
-- **2026-10-29T05:33:01-07:00 — kilo-graphics: KStarDredge (Skip — Asset Suitability)**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate (pure vector CRT phosphor simulation); glint sweep clean.
-  - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-tester`.
