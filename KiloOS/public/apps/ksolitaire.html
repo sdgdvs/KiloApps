@@ -980,10 +980,10 @@
       <div style="display:flex; gap: 6px; flex-wrap: wrap;">
         <button class="btn btn-warning" onclick="resetStats()" aria-label="Reset statistics">Clear</button>
         <button class="btn btn-primary" onclick="exportStats()" aria-label="Export statistics JSON">Export Stats</button>
-        <button class="btn btn-primary" onclick="document.getElementById('import-file').click()" aria-label="Import statistics JSON">Import Stats</button>
+        <button class="btn btn-primary" onclick="openStatsFileDialog()" aria-label="Import statistics JSON">Import Stats</button>
         <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importStats(event)">
         <button class="btn btn-primary" onclick="exportSaveFile()" aria-label="Export game save JSON">Export Save</button>
-        <button class="btn btn-primary" onclick="document.getElementById('import-save-file').click()" aria-label="Import game save JSON">Import Save</button>
+        <button class="btn btn-primary" onclick="openSaveFileDialog()" aria-label="Import game save JSON">Import Save</button>
         <input type="file" id="import-save-file" style="display:none;" accept=".json" onchange="importSaveFile(event)">
       </div>
       <button class="btn btn-primary" onclick="closeStatsModal()" aria-label="Close dialog">Close</button>
@@ -1086,7 +1086,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; border-top:1px solid #334155; padding-top:12px;">
       <div style="display:flex; gap:6px;">
         <button class="btn btn-primary" onclick="exportReplayFile()" title="Export Replay (.ksol)">Export .ksol</button>
-        <button class="btn btn-primary" onclick="document.getElementById('import-replay-file').click()" title="Import Replay (.ksol)">Import .ksol</button>
+        <button class="btn btn-primary" onclick="openReplayFileDialog()" title="Import Replay (.ksol)">Import .ksol</button>
         <input type="file" id="import-replay-file" style="display:none;" accept=".ksol,.json" onchange="importReplayFile(event)">
       </div>
       <button class="btn btn-primary" onclick="closeReplayModal()">Close</button>
@@ -1536,6 +1536,306 @@ function changeReplaySpeed(val) {
   }
 }
 
+// ==========================================
+// Phase VI KiloOS VFS & Inter-App IPC Bridge
+// ==========================================
+const KiloVFS = {
+  isSupported() {
+    return window.parent && window.parent !== window;
+  },
+  write(path, data) {
+    try {
+      const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+      window.parent.postMessage({
+        type: 'VFS_WRITE',
+        path,
+        data: payload,
+        requestId: 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)
+      }, '*');
+      window.parent.postMessage({
+        type: 'OS_NOTIFY',
+        title: document.title || 'KSolitaire',
+        message: `Saved to VFS: ${path}`
+      }, '*');
+    } catch (e) {}
+  },
+  read(path, cb) {
+    if (!KiloVFS.isSupported()) {
+      if (cb) cb(null, path);
+      return;
+    }
+    const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    let cleanupTimer = null;
+    const handler = (e) => {
+      // Mandatory event.origin === window.location.origin check
+      if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+        return;
+      }
+      if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(e.data.data, e.data.path || path);
+      }
+    };
+    cleanupTimer = setTimeout(() => {
+      window.removeEventListener('message', handler);
+      if (cb) cb(null, path);
+    }, 60000); // 60s cleanup timeout
+    window.addEventListener('message', handler);
+    try {
+      window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
+    } catch (e) {
+      if (cleanupTimer) clearTimeout(cleanupTimer);
+      window.removeEventListener('message', handler);
+      if (cb) cb(null, path);
+    }
+  },
+  showSave(defaultPath, data, cb) {
+    if (!KiloVFS.isSupported()) {
+      if (cb) cb(null);
+      return;
+    }
+    const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    let cleanupTimer = null;
+    const handler = (e) => {
+      // Mandatory event.origin === window.location.origin check
+      if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+        return;
+      }
+      if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (e.data.path) {
+          KiloVFS.write(e.data.path, data);
+          if (cb) cb(e.data.path);
+        } else if (cb) {
+          cb(null);
+        }
+      }
+    };
+    cleanupTimer = setTimeout(() => {
+      window.removeEventListener('message', handler);
+      if (cb) cb(null);
+    }, 60000); // 60s dialog cleanup timeout
+    window.addEventListener('message', handler);
+    try {
+      window.parent.postMessage({
+        type: 'VFS_SHOW_SAVE',
+        requestId: reqId,
+        defaultPath: defaultPath,
+        path: defaultPath
+      }, '*');
+    } catch (e) {
+      if (cleanupTimer) clearTimeout(cleanupTimer);
+      window.removeEventListener('message', handler);
+      if (cb) cb(null);
+    }
+  },
+  openPicker(cb) {
+    if (!KiloVFS.isSupported()) {
+      if (cb) cb(null, null);
+      return;
+    }
+    const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    let cleanupTimer = null;
+    const handler = (e) => {
+      // Mandatory event.origin === window.location.origin check
+      if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+        return;
+      }
+      if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (e.data.path) {
+          KiloVFS.read(e.data.path, cb);
+        } else if (cb) {
+          cb(null, null);
+        }
+      }
+    };
+    cleanupTimer = setTimeout(() => {
+      window.removeEventListener('message', handler);
+      if (cb) cb(null, null);
+    }, 60000); // 60s dialog cleanup timeout
+    window.addEventListener('message', handler);
+    try {
+      window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
+    } catch (e) {
+      if (cleanupTimer) clearTimeout(cleanupTimer);
+      window.removeEventListener('message', handler);
+      if (cb) cb(null, null);
+    }
+  },
+  launchApp(targetApp, path = '') {
+    try {
+      window.parent.postMessage({
+        type: 'OS_LAUNCH_APP',
+        targetApp,
+        appId: targetApp,
+        path
+      }, '*');
+    } catch (e) {}
+  }
+};
+
+function loadReplayPayload(data) {
+  let parsed = data;
+  if (typeof data === 'string') {
+    try {
+      parsed = JSON.parse(data);
+    } catch (e) {
+      return false;
+    }
+  }
+  if (!parsed || !Array.isArray(parsed.history) || parsed.dealSeed === undefined) {
+    return false;
+  }
+  currentDealSeed = parsed.dealSeed;
+  moveHistory = parsed.history;
+  replayStep = 1;
+  if (moveHistory.length > 0 && moveHistory[0].snapshot) {
+    restoreReplaySnapshot(moveHistory[0].snapshot);
+  }
+  openReplayModal();
+  updateReplayUI();
+  return true;
+}
+
+function loadSavePayload(data) {
+  let parsed = data;
+  if (typeof data === 'string') {
+    try {
+      parsed = JSON.parse(data);
+    } catch (e) {
+      return false;
+    }
+  }
+  if (!parsed || typeof parsed !== 'object') return false;
+  if (restoreGameState(parsed)) {
+    closeAllModals();
+    return true;
+  }
+  return false;
+}
+
+function loadStatsPayload(data) {
+  let imported = data;
+  if (typeof data === 'string') {
+    try {
+      imported = JSON.parse(data);
+    } catch (e) {
+      return false;
+    }
+  }
+  if (!imported || typeof imported !== 'object' || (imported.played === undefined && imported.highScore === undefined)) {
+    return false;
+  }
+  stats = {
+    played: Math.max(0, parseInt(imported.played) || 0),
+    wins: Math.max(0, parseInt(imported.wins) || 0),
+    currentStreak: Math.max(0, parseInt(imported.currentStreak) || 0),
+    bestStreak: Math.max(0, parseInt(imported.bestStreak) || 0),
+    highScore: parseInt(imported.highScore) || 0,
+    vegasCash: parseInt(imported.vegasCash) || 0,
+    maxCampaignStage: Math.min(20, Math.max(1, parseInt(imported.maxCampaignStage) || 1)),
+    bestTimeD1: imported.bestTimeD1 ? Math.max(0, parseInt(imported.bestTimeD1)) : null,
+    bestTimeD3: imported.bestTimeD3 ? Math.max(0, parseInt(imported.bestTimeD3)) : null
+  };
+  saveStats();
+  openStatsModal();
+  return true;
+}
+
+function handleIncomingFileData(content, path = '') {
+  let parsed = content;
+  if (typeof content === 'string') {
+    try {
+      parsed = JSON.parse(content);
+    } catch (err) {
+      showToast(`Error parsing file data: ${path || 'file'}`);
+      return false;
+    }
+  }
+  if (!parsed || typeof parsed !== 'object') {
+    showToast(`Invalid file format: ${path || 'file'}`);
+    return false;
+  }
+
+  // Check if it's a replay (.ksol or has history array & dealSeed)
+  if (Array.isArray(parsed.history) && parsed.dealSeed !== undefined) {
+    if (loadReplayPayload(parsed)) {
+      showToast(`Auto-loaded replay: ${path || 'replay.ksol'} ✅`);
+      return true;
+    }
+  }
+
+  // Check if it's a game save snapshot (has stock, tableau, foundations)
+  if (parsed.stock && parsed.tableau && parsed.foundations) {
+    if (restoreGameState(parsed)) {
+      closeAllModals();
+      showToast(`Auto-loaded game save: ${path || 'save.json'} ✅`);
+      return true;
+    }
+  }
+
+  // Check if it's stats JSON (has played or highScore)
+  if (parsed.played !== undefined || parsed.highScore !== undefined) {
+    if (loadStatsPayload(parsed)) {
+      showToast(`Auto-loaded statistics: ${path || 'stats.json'} ✅`);
+      return true;
+    }
+  }
+
+  showToast(`Unrecognized KSolitaire file: ${path || 'file'}`);
+  return false;
+}
+
+// Global incoming KiloOS IPC message receiver (File Browser file associations, VFS events)
+window.addEventListener('message', (e) => {
+  // Mandatory event.origin === window.location.origin check
+  if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+    return;
+  }
+  const msg = e.data;
+  if (!msg || typeof msg !== 'object') return;
+  if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+    const filePath = msg.path || '';
+    const fileContent = msg.data !== undefined ? msg.data : msg.content;
+    if (fileContent !== undefined && fileContent !== null) {
+      handleIncomingFileData(fileContent, filePath);
+    } else if (filePath) {
+      KiloVFS.read(filePath, (data, path) => {
+        if (!data) {
+          showToast(`Could not read file from VFS: ${filePath}`);
+          return;
+        }
+        handleIncomingFileData(data, path || filePath);
+      });
+    }
+  }
+});
+
+function checkInitialHashFile() {
+  try {
+    const hash = window.location.hash;
+    if (hash && hash.includes('file=')) {
+      const match = hash.match(/file=([^&]+)/);
+      if (match && match[1]) {
+        const filePath = decodeURIComponent(match[1]);
+        if (filePath && window.parent && window.parent !== window) {
+          setTimeout(() => {
+            KiloVFS.read(filePath, (data, path) => {
+              if (data) {
+                handleIncomingFileData(data, path || filePath);
+              }
+            });
+          }, 300);
+        }
+      }
+    }
+  } catch (e) {}
+}
+
 function exportReplayFile() {
   try {
     const replayData = {
@@ -1551,42 +1851,55 @@ function exportReplayFile() {
       history: moveHistory
     };
     const jsonStr = JSON.stringify(replayData, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const dl = document.createElement('a');
-    dl.href = url;
-    dl.download = `ksolitaire_replay_deal${currentDealSeed}.ksol`;
-    document.body.appendChild(dl);
-    dl.click();
-    document.body.removeChild(dl);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    showToast("Replay recording exported (.ksol)!");
+    if (window.parent && window.parent !== window) {
+      const defaultPath = `/home/replays/ksolitaire_replay_deal${currentDealSeed}.ksol`;
+      KiloVFS.showSave(defaultPath, jsonStr, (savedPath) => {
+        if (savedPath) {
+          showToast(`Replay saved to VFS: ${savedPath}`);
+        }
+      });
+    } else {
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const dl = document.createElement('a');
+      dl.href = url;
+      dl.download = `ksolitaire_replay_deal${currentDealSeed}.ksol`;
+      document.body.appendChild(dl);
+      dl.click();
+      document.body.removeChild(dl);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast("Replay recording exported (.ksol)!");
+    }
   } catch(e) {
     showToast("Error exporting replay.");
   }
 }
 
+function openReplayFileDialog() {
+  if (window.parent && window.parent !== window) {
+    KiloVFS.openPicker((data, path) => {
+      if (!data) return;
+      if (loadReplayPayload(data)) {
+        showToast(`Loaded replay from VFS: ${path || 'replay.ksol'}`);
+      } else {
+        showToast("Invalid .ksol replay file from VFS.");
+      }
+    });
+  } else {
+    document.getElementById('import-replay-file').click();
+  }
+}
+
 function importReplayFile(event) {
-  const file = event.target.files[0];
+  const file = event.target.files && event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
+  reader.onerror = () => showToast("Error reading replay file.");
   reader.onload = (e) => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (data && Array.isArray(data.history) && data.dealSeed) {
-        currentDealSeed = data.dealSeed;
-        moveHistory = data.history;
-        replayStep = 1;
-        if (moveHistory.length > 0 && moveHistory[0].snapshot) {
-          restoreReplaySnapshot(moveHistory[0].snapshot);
-        }
-        updateReplayUI();
-        showToast(`Loaded replay for Deal #${currentDealSeed} (${moveHistory.length} moves)!`);
-      } else {
-        showToast("Invalid .ksol replay file.");
-      }
-    } catch(err) {
-      showToast("Error parsing replay file.");
+    if (loadReplayPayload(e.target.result)) {
+      showToast(`Loaded replay for Deal #${currentDealSeed} (${moveHistory.length} moves)!`);
+    } else {
+      showToast("Invalid .ksol replay file.");
     }
   };
   reader.readAsText(file);
@@ -2198,6 +2511,7 @@ function safeSetStorage(key, val) {
 function init() {
   loadStats();
   populateStageSelect();
+  checkInitialHashFile();
 
   // Restore saved deck theme, felt color, and sound preference
   let savedTheme = safeGetStorage('ksolitaire_theme', 'theme-navy');
@@ -2920,37 +3234,53 @@ function exportSaveFile() {
   try {
     const snap = getGameStateSnapshot();
     const jsonStr = JSON.stringify(snap, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const dl = document.createElement('a');
-    dl.href = url;
-    dl.download = `ksolitaire_save_${gameMode}.json`;
-    document.body.appendChild(dl);
-    dl.click();
-    document.body.removeChild(dl);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    showToast("Game save exported to JSON.");
+    if (window.parent && window.parent !== window) {
+      const defaultPath = `/home/saves/ksolitaire_save_${gameMode}.json`;
+      KiloVFS.showSave(defaultPath, jsonStr, (savedPath) => {
+        if (savedPath) showToast(`Game save saved to VFS: ${savedPath}`);
+      });
+    } else {
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const dl = document.createElement('a');
+      dl.href = url;
+      dl.download = `ksolitaire_save_${gameMode}.json`;
+      document.body.appendChild(dl);
+      dl.click();
+      document.body.removeChild(dl);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast("Game save exported to JSON.");
+    }
   } catch(e) {
     showToast("Error exporting game save.");
   }
 }
 
+function openSaveFileDialog() {
+  if (window.parent && window.parent !== window) {
+    KiloVFS.openPicker((data, path) => {
+      if (!data) return;
+      if (loadSavePayload(data)) {
+        showToast(`Game save loaded from VFS: ${path || 'save.json'}`);
+      } else {
+        showToast("Invalid game save file from VFS.");
+      }
+    });
+  } else {
+    document.getElementById('import-save-file').click();
+  }
+}
+
 function importSaveFile(event) {
-  const file = event.target.files[0];
+  const file = event.target.files && event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onerror = () => showToast("Error reading save file.");
   reader.onload = (e) => {
-    try {
-      const snap = JSON.parse(e.target.result);
-      if (restoreGameState(snap)) {
-        closeStatsModal();
-        showToast("Game save loaded successfully!");
-      } else {
-        showToast("Invalid game save file.");
-      }
-    } catch(err) {
-      showToast("Error parsing save JSON.");
+    if (loadSavePayload(e.target.result)) {
+      showToast("Game save loaded successfully!");
+    } else {
+      showToast("Invalid game save file.");
     }
   };
   reader.readAsText(file);
@@ -4501,55 +4831,59 @@ function resetStats() {
 function exportStats() {
   try {
     const jsonStr = JSON.stringify(stats, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const dlAnchorElem = document.createElement('a');
-    dlAnchorElem.href = url;
-    dlAnchorElem.download = "ksolitaire_stats.json";
-    document.body.appendChild(dlAnchorElem);
-    dlAnchorElem.click();
-    document.body.removeChild(dlAnchorElem);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    showToast("Statistics exported to ksolitaire_stats.json");
+    if (window.parent && window.parent !== window) {
+      const defaultPath = `/home/saves/ksolitaire_stats.json`;
+      KiloVFS.showSave(defaultPath, jsonStr, (savedPath) => {
+        if (savedPath) showToast(`Statistics saved to VFS: ${savedPath}`);
+      });
+    } else {
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const dlAnchorElem = document.createElement('a');
+      dlAnchorElem.href = url;
+      dlAnchorElem.download = "ksolitaire_stats.json";
+      document.body.appendChild(dlAnchorElem);
+      dlAnchorElem.click();
+      document.body.removeChild(dlAnchorElem);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast("Statistics exported to ksolitaire_stats.json");
+    }
   } catch (e) {
     showToast("Error exporting statistics.");
   }
 }
 
+function openStatsFileDialog() {
+  if (window.parent && window.parent !== window) {
+    KiloVFS.openPicker((data, path) => {
+      if (!data) return;
+      if (loadStatsPayload(data)) {
+        showToast(`Statistics loaded from VFS: ${path || 'stats.json'}`);
+      } else {
+        showToast("Invalid statistics JSON from VFS.");
+      }
+    });
+  } else {
+    document.getElementById('import-file').click();
+  }
+}
+
 function importStats(event) {
-  const file = event.target.files[0];
+  const file = event.target.files && event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onerror = function() {
     showToast("Error reading JSON file.");
   };
   reader.onload = function(e) {
-    try {
-      const imported = JSON.parse(e.target.result);
-      if (imported && typeof imported === 'object' && typeof imported.played !== 'undefined') {
-        stats = {
-          played: Math.max(0, parseInt(imported.played) || 0),
-          wins: Math.max(0, parseInt(imported.wins) || 0),
-          currentStreak: Math.max(0, parseInt(imported.currentStreak) || 0),
-          bestStreak: Math.max(0, parseInt(imported.bestStreak) || 0),
-          highScore: parseInt(imported.highScore) || 0,
-          vegasCash: parseInt(imported.vegasCash) || 0,
-          maxCampaignStage: Math.min(20, Math.max(1, parseInt(imported.maxCampaignStage) || 1)),
-          bestTimeD1: imported.bestTimeD1 ? Math.max(0, parseInt(imported.bestTimeD1)) : null,
-          bestTimeD3: imported.bestTimeD3 ? Math.max(0, parseInt(imported.bestTimeD3)) : null
-        };
-        saveStats();
-        openStatsModal();
-        showToast("Statistics imported successfully!");
-      } else {
-        showToast("Error: Invalid JSON schema.");
-      }
-    } catch(err) {
-      showToast("Error reading JSON file.");
+    if (loadStatsPayload(e.target.result)) {
+      showToast("Statistics imported successfully!");
+    } else {
+      showToast("Error: Invalid JSON schema.");
     }
   };
   reader.readAsText(file);
-  event.target.value = ''; // Reset input
+  event.target.value = '';
 }
 
 // Start App

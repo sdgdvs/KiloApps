@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KMaze
   kilo_usability: KColosseum
   kilo_qa: KImage
-  kilo_expander: KSolitaire
+  kilo_expander: KStarForge
   kilo_review: KChess
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KAudio
-  timestamp: '2026-10-29T07:22:18-07:00'
+  agent: kilo-expander
+  app: KSolitaire
+  timestamp: '2026-10-29T07:38:38-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -198,11 +198,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, waveform audio editor, spectrum visualizer, filter pipeline, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KSolitaire`
+- **Active Target**: `KStarForge`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into ksolitaire.html: add VFS Save (VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY) and VFS Open (VFS_SHOW_OPEN -> VFS_READ) with mandatory event.origin === window.location.origin checks, 60s dialog cleanup timeouts, and standalone Blob download / file-input fallbacks when window.parent === window for .ksol replays (/home/replays/) in #replay-modal and game saves/stats .json (/home/saves/) in #stats-modal, plus handle incoming FILE_OPEN / VFS_OPEN messages from KiloOS File Browser to auto-load .ksol replays or .json saves. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmech_telemetry.json via postMessage with standalone fallback) into #modal-telemetry and add optional RFMS online mech duel behind an explicit Multiplayer Arena button. |
@@ -220,6 +219,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open (VFS_SHOW_OPEN -> VFS_READ supporting PNG/BMP/PCX/TGA/JSON with standalone #img-loader fallback), Save As VFS (Ctrl+Shift+S + OS_NOTIFY), and direct VFS export for .ANS (/home/bbs/) in #ansi-modal and Sprite Sheet (/home/pictures/) in #animation-dock; add Canvas Size presets (32x32, 64x64, 128x128, 320x240, 640x480, 800x600) calling resizeCanvas() + saveState() (syncing animFrames/#onion-canvas/#grid-canvas) with matching canvas size preset parity in KPaint/main.c. |
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kchart.html: add VFS Open (VFS_SHOW_OPEN -> VFS_READ loading .csv and .json datasets from /home/data/ or /home/docs/, plus handling incoming FILE_OPEN / VFS_OPEN messages with event.origin === window.location.origin check and standalone #fileInput fallback when window.parent === window) and VFS Save (VFS_SHOW_SAVE / VFS_WRITE + OS_NOTIFY exporting .csv, .json, .svg, and .md reports to /home/data/ or /home/docs/ with standalone Blob download fallback). |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | **[ARGON REVIEW]:** Harden KiloVFS in kbudget.html with mandatory e.origin === window.location.origin checks and 60s cleanup timeouts on all message listeners, upgrade exportToVFS() to use VFS_SHOW_SAVE defaulting to /home/data/kbudget_ledger.csv and /home/data/kbudget_backup.json before VFS_WRITE + OS_NOTIFY (with standalone download/file-picker fallbacks in exportToVFS() and importFromVFS()), handle incoming FILE_OPEN / VFS_OPEN messages to load .csv/.json ledgers from File Browser, and add an Open in KChart IPC button writing /home/data/kbudget_categories.csv + dispatching OS_LAUNCH_APP (appId kchart). |
+| `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into ksolitaire.html: add VFS Save (VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY) and VFS Open (VFS_SHOW_OPEN -> VFS_READ) with mandatory event.origin === window.location.origin checks, 60s dialog cleanup timeouts, and standalone Blob download / file-input fallbacks when window.parent === window for .ksol replays (/home/replays/) in #replay-modal and game saves/stats .json (/home/saves/) in #stats-modal, plus handle incoming FILE_OPEN / VFS_OPEN messages from KiloOS File Browser to auto-load .ksol replays or .json saves. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KChess`
@@ -323,6 +323,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T07:38:38-07:00 — kilo-expander: KSolitaire (Phase VI KiloOS VFS & IPC Mesh Integration)**
+  - Status: PASS ✅ (0 errors, web 168.1 KB, native 49.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 64.99%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.6s)).
+  - Wired KiloVFS Save (VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY) and Open (VFS_SHOW_OPEN -> VFS_READ) with origin validation and 60s cleanup timeouts.
+  - Added standalone Blob download / file-input fallbacks and auto-loading for .ksol replays (/home/replays/) and .json saves/stats (/home/saves/) via FILE_OPEN/VFS_OPEN IPC.
+  - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-review`.
+
 - **2026-10-29T07:22:18-07:00 — kilo-qa: KAudio (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KAudio across web and native targets.
@@ -341,10 +347,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-29T05:33:01-07:00 — kilo-graphics: KStarDredge (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate (pure vector CRT phosphor simulation); glint sweep clean.
   - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-tester`.
-
-- **2026-10-29T04:38:49-07:00 — kilo-creator: kweb://webring (RingMaster Canonical Nodes Integration & Traversal Expansion)**
-  - Status: PASS ✅ (0 errors, web 450.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) into RingMaster topology map with station tags and quick focus.
-  - Synchronized badge/widget generator with correct theme palettes and canonical 88x31 archetypes.
-  - Expanded random/next ring traversal with scope=canonical closed loop and enriched portal.html links.
-  - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.
