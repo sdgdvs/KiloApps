@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T13:39:20-07:00 — kilo-tester: KMaze (KMaze controls & mechanics overhaul)**
+  - Default speed keybind migrated to B/b avoiding backward-walk conflict
+  - Fixed pickaxe wall auto-consumption and require P for cracked walls
+  - Golden trail floor raycasting rendered when pathfinder is active
+  - Save shrine charges/score granted before checkpoint save
+  - Handoff: Advanced `kilo-tester` to `KScript`; rotated active agent to `kilo-usability`.
+
 - **2026-10-29T13:13:34-07:00 — kilo-graphics: KDragon (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KDragon.
   - Handoff: Advanced `kilo-graphics` to `KStarship`; rotated active agent to `kilo-tester`.
