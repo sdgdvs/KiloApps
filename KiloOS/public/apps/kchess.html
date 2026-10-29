@@ -275,10 +275,10 @@
         </div>
         <div class="menu-divider"></div>
         <div class="menu-dropdown-entry" onclick="exportSaveJSON()">
-          <span>📤 Export Save File (.json)</span>
+          <span>📤 Save Game to VFS / Disk (.json)</span>
         </div>
         <div class="menu-dropdown-entry" onclick="triggerImportJSON()">
-          <span>📥 Import Save File (.json)</span>
+          <span>📥 Open Game from VFS / Disk (.json)</span>
         </div>
       </div>
     </div>
@@ -488,14 +488,17 @@
       <h3>FEN Position Manager <span class="close-btn" onclick="closeModals()">&times;</span></h3>
       <p style="font-size:12px; color:#94a3b8; margin-top:0;">Export or Load Forsyth-Edwards Notation string:</p>
       <input type="text" id="fen-input" spellcheck="false" placeholder="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" onkeydown="if(event.key==='Enter') applyFEN()">
-      <div class="btn-group">
+      <div class="btn-group" style="flex-wrap: wrap; gap: 6px;">
         <button onclick="openPGNModal()">PGN View [G]</button>
+        <button onclick="saveFENFile()">💾 Save .fen</button>
+        <button onclick="triggerImportFEN()">📂 Open .fen</button>
         <button onclick="copyFEN()">Copy FEN</button>
         <button class="primary" onclick="applyFEN()">Load FEN</button>
         <button class="modal-close" onclick="closeModals()">Close [Esc]</button>
       </div>
     </div>
   </div>
+  <input type="file" id="import-fen-input" accept=".fen,.txt" style="display:none;" onchange="handleFENFileImport(event)">
 
   <!-- PGN Import / Export Modal -->
   <div id="pgn-modal" class="modal-overlay" onclick="handleBackdropClick(event, 'pgn-modal')">
@@ -503,10 +506,11 @@
       <h3>PGN Move History <span class="close-btn" onclick="closeModals()">&times;</span></h3>
       <p style="font-size:12px; color:#94a3b8; margin-top:0;">Portable Game Notation (PGN) format:</p>
       <textarea id="pgn-input" rows="8" spellcheck="false"></textarea>
-      <div class="btn-group" style="flex-wrap: wrap;">
+      <div class="btn-group" style="flex-wrap: wrap; gap: 6px;">
         <button onclick="openFENModal()">FEN View [E]</button>
-        <button onclick="downloadPGNFile()">💾 Download .pgn</button>
+        <button onclick="downloadPGNFile()">💾 Save .pgn</button>
         <button onclick="triggerImportPGN()">📂 Open .pgn File</button>
+        <button id="open-pgn-kpad-btn" onclick="openPGNInKPad()">📝 Open PGN in KPad</button>
         <button onclick="copyPGN()">Copy PGN</button>
         <button class="primary" onclick="applyPGN()">Import Text</button>
         <button class="modal-close" onclick="closeModals()">Close [Esc]</button>
@@ -640,9 +644,10 @@
         </div>
       </div>
 
-      <div class="btn-group">
+      <div class="btn-group" style="flex-wrap: wrap; gap: 6px;">
         <button class="primary" onclick="editorApplyToGame()">▶ Play Position</button>
         <button onclick="editorExportFEN()">📋 Export FEN</button>
+        <button onclick="editorSaveFENFile()">💾 Save .fen</button>
         <button class="modal-close" onclick="closeModals()">Close [Esc]</button>
       </div>
     </div>
@@ -738,6 +743,171 @@
 <script src="../assets/js/retro_multiplayer.js"></script>
 
 <script>
+  // ==========================================
+  // Phase VI KiloOS VFS & Inter-App IPC Bridge
+  // ==========================================
+  const KiloVFS = {
+    isSupported() {
+      return typeof window !== 'undefined' && window.parent && window.parent !== window;
+    },
+    write(path, data) {
+      try {
+        const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        window.parent.postMessage({
+          type: 'VFS_WRITE',
+          path,
+          data: payload,
+          requestId: 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)
+        }, '*');
+        window.parent.postMessage({
+          type: 'OS_NOTIFY',
+          title: document.title || 'KChess',
+          message: `Saved to VFS: ${path}`
+        }, '*');
+      } catch (e) {
+        console.warn('[KiloVFS] write failed:', e);
+      }
+    },
+    read(path, cb) {
+      if (!KiloVFS.isSupported()) {
+        if (cb) cb(null, path);
+        return;
+      }
+      const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (cb) cb(e.data.data, e.data.path || path);
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, path);
+      }, 60000); // 60s dialog cleanup timeout
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, path);
+      }
+    },
+    showSave(defaultPath, data, cb) {
+      if (!KiloVFS.isSupported()) {
+        if (cb) cb(null);
+        return;
+      }
+      const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (e.data.path) {
+            KiloVFS.write(e.data.path, data);
+            if (cb) cb(e.data.path);
+          } else if (cb) {
+            cb(null);
+          }
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null);
+      }, 60000); // 60s dialog cleanup timeout
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({
+          type: 'VFS_SHOW_SAVE',
+          requestId: reqId,
+          defaultPath: defaultPath,
+          path: defaultPath
+        }, '*');
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null);
+      }
+    },
+    openPicker(cb) {
+      if (!KiloVFS.isSupported()) {
+        if (cb) cb(null, null);
+        return;
+      }
+      const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (e.data.path) {
+            KiloVFS.read(e.data.path, cb);
+          } else if (cb) {
+            cb(null, null);
+          }
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, null);
+      }, 60000); // 60s dialog cleanup timeout
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, null);
+      }
+    },
+    launchApp(targetApp, path = '') {
+      try {
+        window.parent.postMessage({
+          type: 'OS_LAUNCH_APP',
+          targetApp,
+          appId: targetApp,
+          path
+        }, '*');
+      } catch (e) {}
+    }
+  };
+
+  // Incoming VFS/OS Message Dispatcher
+  window.addEventListener('message', (e) => {
+    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+      return;
+    }
+    const msg = e.data;
+    if (!msg || typeof msg !== 'object') return;
+    if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+      const filePath = msg.path || '';
+      const fileContent = msg.data !== undefined ? msg.data : msg.content;
+      if (fileContent !== undefined && fileContent !== null) {
+        handleIncomingFileData(fileContent, filePath);
+      } else if (filePath) {
+        KiloVFS.read(filePath, (data, path) => {
+          if (data) {
+            handleIncomingFileData(data, path || filePath);
+          } else {
+            showToast(`Could not read file from VFS: ${filePath}`, 'warn');
+          }
+        });
+      }
+    }
+  });
+
   const cvs = document.getElementById('cvs');
   const ctx = cvs.getContext('2d');
   
@@ -1718,35 +1888,85 @@
   }
 
   // --------------------------------------------------------------------------
-  // Quick Save & Quick Load State Engine (F5 / F9)
+  // Game State Serialization & Save/Load Engine
   // --------------------------------------------------------------------------
+  function getFullGameStateObject() {
+      return {
+          board: board.map(row => [...row]),
+          whiteTurn: whiteTurn,
+          wKingMoved: wKingMoved, wRookLMoved: wRookLMoved, wRookRMoved: wRookRMoved,
+          bKingMoved: bKingMoved, bRookLMoved: bRookLMoved, bRookRMoved: bRookRMoved,
+          epX: epX, epY: epY,
+          lastMoveSx: lastMoveSx, lastMoveSy: lastMoveSy, lastMoveTx: lastMoveTx, lastMoveTy: lastMoveTy,
+          gameMode: gameMode,
+          currentStage: currentStage,
+          puzzleIndex: puzzleIndex,
+          aiPersonality: aiPersonality,
+          aiMode: aiMode,
+          gameOver: gameOver,
+          winner: winner,
+          blitzTimeWhite: blitzTimeWhite,
+          blitzTimeBlack: blitzTimeBlack,
+          freezePowerups: freezePowerups,
+          blackFrozen: blackFrozen,
+          moveHistoryStack: moveHistoryStack,
+          historyIndex: historyIndex,
+          exportTime: new Date().toISOString()
+      };
+  }
+
+  function applySaveState(state) {
+      if (!state || !Array.isArray(state.board) || state.board.length !== 8) {
+          throw new Error("Invalid KChess save data structure");
+      }
+      board = state.board.map(row => [...row]);
+      whiteTurn = Boolean(state.whiteTurn);
+      wKingMoved = Boolean(state.wKingMoved);
+      wRookLMoved = Boolean(state.wRookLMoved);
+      wRookRMoved = Boolean(state.wRookRMoved);
+      bKingMoved = Boolean(state.bKingMoved);
+      bRookLMoved = Boolean(state.bRookLMoved);
+      bRookRMoved = Boolean(state.bRookRMoved);
+      epX = state.epX !== undefined ? state.epX : -1;
+      epY = state.epY !== undefined ? state.epY : -1;
+      lastMoveSx = state.lastMoveSx !== undefined ? state.lastMoveSx : -1;
+      lastMoveSy = state.lastMoveSy !== undefined ? state.lastMoveSy : -1;
+      lastMoveTx = state.lastMoveTx !== undefined ? state.lastMoveTx : -1;
+      lastMoveTy = state.lastMoveTy !== undefined ? state.lastMoveTy : -1;
+      gameMode = state.gameMode !== undefined ? state.gameMode : 1;
+      currentStage = state.currentStage || 1;
+      puzzleIndex = state.puzzleIndex || 0;
+      aiPersonality = state.aiPersonality || 1;
+      aiMode = state.aiMode !== undefined ? state.aiMode : true;
+      gameOver = Boolean(state.gameOver);
+      winner = state.winner || 0;
+      blitzTimeWhite = state.blitzTimeWhite || 180.0;
+      blitzTimeBlack = state.blitzTimeBlack || 180.0;
+      freezePowerups = state.freezePowerups !== undefined ? state.freezePowerups : 3;
+      blackFrozen = Boolean(state.blackFrozen);
+      moveHistoryStack = state.moveHistoryStack || [];
+      historyIndex = state.historyIndex !== undefined ? state.historyIndex : (moveHistoryStack.length - 1);
+      selX = -1; selY = -1;
+      hintActive = true;
+      hintText = "Game State Loaded!";
+      moveAnimation = null;
+      particles = [];
+      shockwaves = [];
+      lastTick = performance.now();
+      safeSetStorage(TUTORIAL_KEY, '1');
+      safeSetStorage('kchess_save_state', JSON.stringify(state));
+      updateMenuIndicators();
+      playSound('move');
+      updateAriaStatus("Game state loaded");
+  }
+
   function saveGameState() {
       if (isOnlineGame) {
           showToast("Game save disabled in Online Multiplayer match", "warn");
           return;
       }
       try {
-          const state = {
-              board: board.map(row => [...row]),
-              whiteTurn: whiteTurn,
-              wKingMoved: wKingMoved, wRookLMoved: wRookLMoved, wRookRMoved: wRookRMoved,
-              bKingMoved: bKingMoved, bRookLMoved: bRookLMoved, bRookRMoved: bRookRMoved,
-              epX: epX, epY: epY,
-              lastMoveSx: lastMoveSx, lastMoveSy: lastMoveSy, lastMoveTx: lastMoveTx, lastMoveTy: lastMoveTy,
-              gameMode: gameMode,
-              currentStage: currentStage,
-              puzzleIndex: puzzleIndex,
-              aiPersonality: aiPersonality,
-              aiMode: aiMode,
-              gameOver: gameOver,
-              winner: winner,
-              blitzTimeWhite: blitzTimeWhite,
-              blitzTimeBlack: blitzTimeBlack,
-              freezePowerups: freezePowerups,
-              blackFrozen: blackFrozen,
-              moveHistoryStack: moveHistoryStack,
-              historyIndex: historyIndex
-          };
+          const state = getFullGameStateObject();
           safeSetStorage('kchess_save_state', JSON.stringify(state));
           safeSetStorage(TUTORIAL_KEY, '1');
           hintText = "Game State Saved (F5)!";
@@ -1774,37 +1994,8 @@
               return false;
           }
           const state = JSON.parse(data);
-          board = state.board.map(row => [...row]);
-          whiteTurn = state.whiteTurn;
-          wKingMoved = state.wKingMoved; wRookLMoved = state.wRookLMoved; wRookRMoved = state.wRookRMoved;
-          bKingMoved = state.bKingMoved; bRookLMoved = state.bRookLMoved; bRookRMoved = state.bRookRMoved;
-          epX = state.epX; epY = state.epY;
-          lastMoveSx = state.lastMoveSx; lastMoveSy = state.lastMoveSy;
-          lastMoveTx = state.lastMoveTx; lastMoveTy = state.lastMoveTy;
-          gameMode = state.gameMode;
-          currentStage = state.currentStage;
-          puzzleIndex = state.puzzleIndex || 0;
-          aiPersonality = state.aiPersonality;
-          aiMode = state.aiMode;
-          gameOver = state.gameOver;
-          winner = state.winner;
-          blitzTimeWhite = state.blitzTimeWhite;
-          blitzTimeBlack = state.blitzTimeBlack;
-          freezePowerups = state.freezePowerups;
-          blackFrozen = state.blackFrozen;
-          moveHistoryStack = state.moveHistoryStack || [];
-          historyIndex = state.historyIndex !== undefined ? state.historyIndex : (moveHistoryStack.length - 1);
-          selX = -1; selY = -1;
-          hintActive = true;
+          applySaveState(state);
           hintText = "Game State Loaded (F9)!";
-          moveAnimation = null;
-          particles = [];
-          shockwaves = [];
-          lastTick = performance.now();
-          safeSetStorage(TUTORIAL_KEY, '1');
-          updateMenuIndicators();
-          playSound('move');
-          updateAriaStatus("Game state loaded");
           showToast("Game state loaded (F9)!", "success");
           return true;
       } catch (e) {
@@ -1820,39 +2011,27 @@
           return;
       }
       try {
-          const state = {
-              board: board.map(row => [...row]),
-              whiteTurn: whiteTurn,
-              wKingMoved: wKingMoved, wRookLMoved: wRookLMoved, wRookRMoved: wRookRMoved,
-              bKingMoved: bKingMoved, bRookLMoved: bRookLMoved, bRookRMoved: bRookRMoved,
-              epX: epX, epY: epY,
-              lastMoveSx: lastMoveSx, lastMoveSy: lastMoveSy, lastMoveTx: lastMoveTx, lastMoveTy: lastMoveTy,
-              gameMode: gameMode,
-              currentStage: currentStage,
-              puzzleIndex: puzzleIndex,
-              aiPersonality: aiPersonality,
-              aiMode: aiMode,
-              gameOver: gameOver,
-              winner: winner,
-              blitzTimeWhite: blitzTimeWhite,
-              blitzTimeBlack: blitzTimeBlack,
-              freezePowerups: freezePowerups,
-              blackFrozen: blackFrozen,
-              moveHistoryStack: moveHistoryStack,
-              historyIndex: historyIndex,
-              exportTime: new Date().toISOString()
-          };
+          const state = getFullGameStateObject();
           const jsonStr = JSON.stringify(state, null, 2);
-          const blob = new Blob([jsonStr], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `kchess_save_${Date.now()}.json`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          showToast("Saved game state exported to JSON file!", "success");
+          if (KiloVFS.isSupported()) {
+              KiloVFS.showSave('/home/saves/kchess_save.json', jsonStr, (savedPath) => {
+                  if (savedPath) {
+                      showToast(`Game saved to ${savedPath}!`, "success");
+                  }
+              });
+          } else {
+              // Standalone Blob download fallback when window.parent === window
+              const blob = new Blob([jsonStr], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `kchess_save_${Date.now()}.json`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+              showToast("Saved game state exported to JSON file!", "success");
+          }
       } catch (e) {
           console.error(e);
           showToast("Failed to export save state: " + e.message, "warn");
@@ -1864,8 +2043,17 @@
           showToast("Game import disabled during Online Multiplayer match", "warn");
           return;
       }
-      const fileInput = document.getElementById('import-file-input');
-      if (fileInput) fileInput.click();
+      if (KiloVFS.isSupported()) {
+          KiloVFS.openPicker((data, path) => {
+              if (data) {
+                  handleIncomingFileData(data, path || '/home/saves/kchess_save.json');
+              }
+          });
+      } else {
+          // Standalone file-input fallback when window.parent === window
+          const fileInput = document.getElementById('import-file-input');
+          if (fileInput) fileInput.click();
+      }
   }
 
   function handleFileImport(e) {
@@ -1875,48 +2063,7 @@
       reader.onload = (event) => {
           try {
               const state = JSON.parse(event.target.result);
-              if (!state || !Array.isArray(state.board) || state.board.length !== 8) {
-                  throw new Error("Invalid KChess save data structure");
-              }
-              board = state.board.map(row => [...row]);
-              whiteTurn = Boolean(state.whiteTurn);
-              wKingMoved = Boolean(state.wKingMoved);
-              wRookLMoved = Boolean(state.wRookLMoved);
-              wRookRMoved = Boolean(state.wRookRMoved);
-              bKingMoved = Boolean(state.bKingMoved);
-              bRookLMoved = Boolean(state.bRookLMoved);
-              bRookRMoved = Boolean(state.bRookRMoved);
-              epX = state.epX !== undefined ? state.epX : -1;
-              epY = state.epY !== undefined ? state.epY : -1;
-              lastMoveSx = state.lastMoveSx !== undefined ? state.lastMoveSx : -1;
-              lastMoveSy = state.lastMoveSy !== undefined ? state.lastMoveSy : -1;
-              lastMoveTx = state.lastMoveTx !== undefined ? state.lastMoveTx : -1;
-              lastMoveTy = state.lastMoveTy !== undefined ? state.lastMoveTy : -1;
-              gameMode = state.gameMode !== undefined ? state.gameMode : 1;
-              currentStage = state.currentStage || 1;
-              puzzleIndex = state.puzzleIndex || 0;
-              aiPersonality = state.aiPersonality || 1;
-              aiMode = state.aiMode !== undefined ? state.aiMode : true;
-              gameOver = Boolean(state.gameOver);
-              winner = state.winner || 0;
-              blitzTimeWhite = state.blitzTimeWhite || 180.0;
-              blitzTimeBlack = state.blitzTimeBlack || 180.0;
-              freezePowerups = state.freezePowerups !== undefined ? state.freezePowerups : 3;
-              blackFrozen = Boolean(state.blackFrozen);
-              moveHistoryStack = state.moveHistoryStack || [];
-              historyIndex = state.historyIndex !== undefined ? state.historyIndex : (moveHistoryStack.length - 1);
-              selX = -1; selY = -1;
-              hintActive = true;
-              hintText = "Imported JSON Loaded!";
-              moveAnimation = null;
-              particles = [];
-              shockwaves = [];
-              lastTick = performance.now();
-              safeSetStorage(TUTORIAL_KEY, '1');
-              safeSetStorage('kchess_save_state', JSON.stringify(state));
-              updateMenuIndicators();
-              playSound('move');
-              updateAriaStatus("Imported game state loaded");
+              applySaveState(state);
               showToast("JSON save imported successfully!", "success");
           } catch (err) {
               console.error(err);
@@ -1925,6 +2072,54 @@
       };
       reader.readAsText(file);
       e.target.value = '';
+  }
+
+  function handleIncomingFileData(content, filePath) {
+      if (!content) return false;
+      const pathStr = (filePath || '').toLowerCase();
+
+      // 1. JSON Game Save
+      if (pathStr.endsWith('.json') || (typeof content === 'string' && content.trim().startsWith('{'))) {
+          try {
+              const state = typeof content === 'object' ? content : JSON.parse(content);
+              if (state && Array.isArray(state.board) && state.board.length === 8) {
+                  applySaveState(state);
+                  showToast(`Game save loaded from ${filePath || 'file'}!`, "success");
+                  return true;
+              }
+          } catch (e) {}
+      }
+
+      const text = typeof content === 'string' ? content.trim() : '';
+
+      // 2. FEN Position string
+      if (pathStr.endsWith('.fen') || (text.split('/').length === 8 && !text.includes('\n'))) {
+          if (loadFEN(text)) {
+              showToast(`FEN position loaded from ${filePath || 'file'}!`, "success");
+              return true;
+          }
+      }
+
+      // 3. PGN Match record
+      if (pathStr.endsWith('.pgn') || text.includes('[Event') || text.includes('1.')) {
+          if (loadPGN(text)) {
+              showToast(`PGN match history loaded from ${filePath || 'file'}!`, "success");
+              return true;
+          }
+      }
+
+      // Fallbacks
+      if (loadFEN(text)) {
+          showToast(`Position loaded from ${filePath || 'file'}!`, "success");
+          return true;
+      }
+      if (loadPGN(text)) {
+          showToast(`PGN record loaded from ${filePath || 'file'}!`, "success");
+          return true;
+      }
+
+      showToast(`Unrecognized chess file format: ${filePath || 'unknown'}`, "warn");
+      return false;
   }
 
   // --------------------------------------------------------------------------
@@ -2996,23 +3191,101 @@
       showToast("PGN copied to clipboard!", "success");
   }
 
+  function saveFENFile() {
+      const fen = document.getElementById('fen-input').value || getFEN();
+      if (KiloVFS.isSupported()) {
+          KiloVFS.showSave('/home/docs/kchess_position.fen', fen, (savedPath) => {
+              if (savedPath) {
+                  showToast(`Saved FEN position to ${savedPath}!`, "success");
+              }
+          });
+      } else {
+          // Standalone Blob download fallback when window.parent === window
+          const blob = new Blob([fen], { type: 'text/plain;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `kchess_position_${Date.now()}.fen`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast("FEN position downloaded!", "success");
+      }
+  }
+
+  function triggerImportFEN() {
+      if (isOnlineGame) {
+          showToast("Loading FEN disabled during active Online match", "warn");
+          return;
+      }
+      if (KiloVFS.isSupported()) {
+          KiloVFS.openPicker((data, path) => {
+              if (data) {
+                  document.getElementById('fen-input').value = data.trim();
+                  applyFEN();
+              }
+          });
+      } else {
+          // Standalone file-input fallback when window.parent === window
+          const inp = document.getElementById('import-fen-input');
+          if (inp) inp.click();
+      }
+  }
+
+  function handleFENFileImport(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+          const content = evt.target.result;
+          document.getElementById('fen-input').value = (content || '').trim();
+          applyFEN();
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+  }
+
   function downloadPGNFile() {
-      const pgn = getPGN();
-      const blob = new Blob([pgn], { type: 'application/x-chess-pgn;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `kchess_${new Date().toISOString().slice(0, 10)}.pgn`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showToast("PGN file downloaded!", "success");
+      const pgn = document.getElementById('pgn-input').value || getPGN();
+      if (KiloVFS.isSupported()) {
+          KiloVFS.showSave('/home/docs/kchess_match.pgn', pgn, (savedPath) => {
+              if (savedPath) {
+                  showToast(`Saved PGN match to ${savedPath}!`, "success");
+              }
+          });
+      } else {
+          // Standalone Blob download fallback when window.parent === window
+          const blob = new Blob([pgn], { type: 'application/x-chess-pgn;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `kchess_${new Date().toISOString().slice(0, 10)}.pgn`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast("PGN file downloaded!", "success");
+      }
   }
 
   function triggerImportPGN() {
-      const inp = document.getElementById('import-pgn-input');
-      if (inp) inp.click();
+      if (isOnlineGame) {
+          showToast("Importing PGN disabled during active Online match", "warn");
+          return;
+      }
+      if (KiloVFS.isSupported()) {
+          KiloVFS.openPicker((data, path) => {
+              if (data) {
+                  document.getElementById('pgn-input').value = data;
+                  applyPGN();
+              }
+          });
+      } else {
+          // Standalone file-input fallback when window.parent === window
+          const inp = document.getElementById('import-pgn-input');
+          if (inp) inp.click();
+      }
   }
 
   function handlePGNFileImport(e) {
@@ -3026,6 +3299,18 @@
       };
       reader.readAsText(file);
       e.target.value = '';
+  }
+
+  function openPGNInKPad() {
+      const pgn = document.getElementById('pgn-input').value || getPGN();
+      if (!KiloVFS.isSupported()) {
+          showToast("KPad IPC launch is available when running inside KiloOS!", "info");
+          return;
+      }
+      const path = '/home/docs/kchess_match.pgn';
+      KiloVFS.write(path, pgn);
+      KiloVFS.launchApp('kpad', path);
+      showToast("Opening PGN in KPad...", "success");
   }
 
   function applyPGN() {
@@ -3535,6 +3820,30 @@
       if (fenInput) fenInput.value = fen;
       openFENModal();
       showToast('FEN exported to FEN Manager!', 'success');
+  }
+
+  function editorSaveFENFile() {
+      if (!editorValidate()) return;
+      const fen = generateEditorFEN();
+      if (KiloVFS.isSupported()) {
+          KiloVFS.showSave('/home/docs/kchess_position.fen', fen, (savedPath) => {
+              if (savedPath) {
+                  showToast(`Saved editor position to ${savedPath}!`, "success");
+              }
+          });
+      } else {
+          // Standalone Blob download fallback when window.parent === window
+          const blob = new Blob([fen], { type: 'text/plain;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `kchess_position_${Date.now()}.fen`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast("Editor position downloaded (.fen)!", "success");
+      }
   }
 
   function editorApplyToGame() {
@@ -5434,6 +5743,29 @@
           safeSetStorage(TUTORIAL_KEY, '1');
       }, 400);
   }
+
+  function checkInitialHashFile() {
+      try {
+          const hash = window.location.hash;
+          if (hash && hash.includes('file=')) {
+              const match = hash.match(/file=([^&]+)/);
+              if (match && match[1]) {
+                  const filePath = decodeURIComponent(match[1]);
+                  if (filePath && KiloVFS.isSupported()) {
+                      setTimeout(() => {
+                          KiloVFS.read(filePath, (data, path) => {
+                              if (data) {
+                                  handleIncomingFileData(data, path || filePath);
+                              }
+                          });
+                      }, 350);
+                  }
+              }
+          }
+      } catch (e) {}
+  }
+
+  checkInitialHashFile();
 </script>
 </body>
 </html>
