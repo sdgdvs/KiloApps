@@ -413,11 +413,11 @@
   <div id="importDossierModal" class="modal-backdrop" onclick="if(event.target===this)closeAllModals()" style="display:none;">
     <div class="panel" style="width:85%; max-width:540px; background:#fdf5e6; color:#333; position:relative; box-sizing:border-box;">
       <button class="modal-close btn-close" onclick="closeAllModals()" style="position:absolute; top:12px; right:12px;">Close [Esc]</button>
-      <h2 style="border-bottom:2px solid #d4af37; padding-bottom:6px; margin-top:0; font-size:1.1em;">📥 Import Gladiator Dossier</h2>
-      <p style="font-size:0.95em; margin:10px 0;">Paste a shared Gladiator Dossier code (e.g. <code>GLAD-...</code>) below to induct the veteran warrior into your Ludus:</p>
+      <h2 id="dossierModalTitle" style="border-bottom:2px solid #d4af37; padding-bottom:6px; margin-top:0; font-size:1.1em;">📥 Import Gladiator Dossier</h2>
+      <p id="dossierModalDesc" style="font-size:0.95em; margin:10px 0;">Paste a shared Gladiator Dossier code (e.g. <code>GLAD-...</code>) below to induct the veteran warrior into your Ludus:</p>
       <input type="text" id="dossierCodeInput" placeholder="GLAD-eyJtYWdpYyI6..." style="width:100%; box-sizing:border-box; padding:8px 10px; font-family:monospace; font-size:0.9em; border:1px solid #d4af37; border-radius:4px; margin-bottom:12px;" onkeydown="if(event.key==='Enter')submitImportGladiatorDossier()">
-      <div style="display:flex; justify-content:space-between; gap:10px;">
-        <button onclick="submitImportGladiatorDossier()" style="background:#228b22; color:#fff; padding:6px 16px;">⚔️ Induct Gladiator</button>
+      <div id="dossierModalActions" style="display:flex; justify-content:space-between; gap:10px;">
+        <button id="btnDossierAction" onclick="submitImportGladiatorDossier()" style="background:#228b22; color:#fff; padding:6px 16px;">⚔️ Induct Gladiator</button>
         <button onclick="closeAllModals()">Cancel</button>
       </div>
     </div>
@@ -1595,13 +1595,48 @@
         };
         const code = 'GLAD-' + btoa(JSON.stringify(payload));
         if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(code);
-          showToast(`📋 Gladiator code copied for ${g.name}!`, 'success');
+          navigator.clipboard.writeText(code).then(() => {
+            showToast(`📋 Gladiator code copied for ${g.name}!`, 'success');
+          }).catch(() => {
+            showDossierModalForExport(g.name, code);
+          });
         } else {
-          prompt(`Gladiator Dossier Code for ${g.name}:`, code);
+          showDossierModalForExport(g.name, code);
         }
       } catch (e) {
         showToast('Export failed: ' + e.message, 'warning');
+      }
+    }
+
+    function showDossierModalForExport(name, code) {
+      const modal = document.getElementById('importDossierModal');
+      if (modal) {
+        modal.style.display = 'flex';
+        const title = document.getElementById('dossierModalTitle');
+        if (title) title.textContent = `📜 Gladiator Dossier: ${name}`;
+        const desc = document.getElementById('dossierModalDesc');
+        if (desc) desc.textContent = 'Gladiator Dossier code (copy and share with other Lanistas):';
+        const input = document.getElementById('dossierCodeInput');
+        if (input) {
+          input.value = code;
+          input.readOnly = true;
+          setTimeout(() => { input.focus(); input.select(); }, 50);
+        }
+        const actionBtn = document.getElementById('btnDossierAction');
+        if (actionBtn) {
+          actionBtn.textContent = '📋 Copy Code';
+          actionBtn.onclick = function() {
+            if (input) {
+              input.select();
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(input.value);
+              } else {
+                document.execCommand('copy');
+              }
+              showToast('📋 Code copied to clipboard!', 'success');
+            }
+          };
+        }
       }
     }
 
@@ -1609,10 +1644,20 @@
       const modal = document.getElementById('importDossierModal');
       if (modal) {
         modal.style.display = 'flex';
+        const title = document.getElementById('dossierModalTitle');
+        if (title) title.textContent = '📥 Import Gladiator Dossier';
+        const desc = document.getElementById('dossierModalDesc');
+        if (desc) desc.innerHTML = 'Paste a shared Gladiator Dossier code (e.g. <code>GLAD-...</code>) below to induct the veteran warrior into your Ludus:';
         const input = document.getElementById('dossierCodeInput');
         if (input) {
           input.value = '';
+          input.readOnly = false;
           setTimeout(() => input.focus(), 50);
+        }
+        const actionBtn = document.getElementById('btnDossierAction');
+        if (actionBtn) {
+          actionBtn.textContent = '⚔️ Induct Gladiator';
+          actionBtn.onclick = submitImportGladiatorDossier;
         }
       }
     }
@@ -1658,12 +1703,19 @@
     }
 
     function sortGladiators(listType, criterion) {
+      if (criterion === undefined && (listType === 'prowess' || listType === 'hp' || listType === 'stat' || listType === 'cost')) {
+        criterion = (listType === 'stat') ? 'prowess' : listType;
+        listType = 'owned';
+      }
       const list = (listType === 'market') ? market : owned;
-      if (!list || list.length <= 1) return;
-      if (criterion === 'prowess') {
+      if (!list || list.length <= 1) {
+        showToast('Roster already ordered.', 'info');
+        return;
+      }
+      if (criterion === 'prowess' || criterion === 'stat') {
         list.sort((a, b) => {
-          const pA = (a.str || 0) + (a.agi || 0) + (a.weapon || 0) * 2;
-          const pB = (b.str || 0) + (b.agi || 0) + (b.weapon || 0) * 2;
+          const pA = getEffStr(a) + getEffAgi(a) + (a.weapon || 0) * 2;
+          const pB = getEffStr(b) + getEffAgi(b) + (b.weapon || 0) * 2;
           return pB - pA;
         });
       } else if (criterion === 'hp') {
@@ -1677,6 +1729,7 @@
       } else if (criterion === 'cost') {
         list.sort((a, b) => (a.cost || 0) - (b.cost || 0));
       }
+      saveGame();
       updateUI();
       showToast(`🏛️ Sorted ${listType === 'market' ? 'Recruits' : 'Gladiators'} by ${criterion.toUpperCase()}!`, 'success');
     }
@@ -1872,6 +1925,7 @@
         ctx.fillRect(4, 26, 9, 14);
         ctx.strokeRect(4, 26, 9, 14);
       }
+      ctx.restore();
     }
 
     function refreshMarket() {
@@ -2064,21 +2118,7 @@
       return 1.8 + (lvl * 0.35);
     }
 
-    function sortGladiators(mode) {
-      if (!owned || owned.length <= 1) {
-        showToast('Roster already ordered.', 'info');
-        return;
-      }
-      if (mode === 'stat') {
-        owned.sort((a, b) => (getEffStr(b) + getEffAgi(b) + getEffVit(b)) - (getEffStr(a) + getEffAgi(a) + getEffVit(a)));
-        showToast('⚡ Sorted roster by combined combat prowess!', 'info');
-      } else if (mode === 'hp') {
-        owned.sort((a, b) => (getEffVit(b) * 10 - b.damageTaken) - (getEffVit(a) * 10 - a.damageTaken));
-        showToast('❤️ Sorted roster by current health!', 'info');
-      }
-      saveGame();
-      updateUI();
-    }
+
 
     function exportGladiatorCertificate(id) {
       const g = owned.find(item => item.id === id);
@@ -4127,17 +4167,15 @@
     function renderArenaLoop(timestamp) {
       if (!arenaCtx) return;
       const dpr = window.devicePixelRatio || 1;
-      const w = ARENA_LOGICAL_W;
-      const h = ARENA_LOGICAL_H;
-      const targetW = Math.round(w * dpr);
-      const targetH = Math.round(h * dpr);
-      if (ARENA_LOGICAL_W !== targetW || ARENA_LOGICAL_H !== targetH) {
-        ARENA_LOGICAL_W = targetW;
-        ARENA_LOGICAL_H = targetH;
+      const targetW = Math.round(ARENA_LOGICAL_W * dpr);
+      const targetH = Math.round(ARENA_LOGICAL_H * dpr);
+      if (arenaCanvas.width !== targetW || arenaCanvas.height !== targetH) {
+        arenaCanvas.width = targetW;
+        arenaCanvas.height = targetH;
       }
       arenaCanvas.style.width = '100%';
-      arenaCanvas.style.maxWidth = w + 'px';
-      arenaCanvas.style.height = h + 'px';
+      arenaCanvas.style.maxWidth = ARENA_LOGICAL_W + 'px';
+      arenaCanvas.style.height = ARENA_LOGICAL_H + 'px';
 
       const time = timestamp * 0.001;
 
@@ -7463,7 +7501,8 @@
       const repOpen = document.getElementById('replayModal') && document.getElementById('replayModal').style.display === 'flex';
       const stOpen = document.getElementById('statsModal') && document.getElementById('statsModal').style.display === 'flex';
       const facOpen = document.getElementById('facilitiesModal') && document.getElementById('facilitiesModal').style.display === 'flex';
-      const anyModalOpen = helpOpen || tutOpen || expOpen || vicOpen || mpOpen || invOpen || repOpen || stOpen || facOpen;
+      const impOpen = document.getElementById('importDossierModal') && document.getElementById('importDossierModal').style.display === 'flex';
+      const anyModalOpen = helpOpen || tutOpen || expOpen || vicOpen || mpOpen || invOpen || repOpen || stOpen || facOpen || impOpen;
       const arenaOpen = document.getElementById('arenaPanel') && document.getElementById('arenaPanel').style.display !== 'none';
 
       if (e.key === 'Escape') {
@@ -7586,6 +7625,9 @@
       if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
         refreshMarket();
+      } else if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        sortGladiators('owned', 'prowess');
       } else if (e.key === '1' && market[0]) {
         buyGladiator(market[0].id);
       } else if (e.key === '2' && market[1]) {

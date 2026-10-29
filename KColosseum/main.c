@@ -430,6 +430,23 @@ void SortGladiatorsByProwess(void) {
     UpdateUI();
 }
 
+void SortGladiatorsByHP(void) {
+    for (int i = 0; i < owned_count - 1; i++) {
+        for (int j = 0; j < owned_count - i - 1; j++) {
+            int maxHpA = (owned[j].vit + (owned[j].armor == 1 ? 5 : 0)) * 10;
+            int maxHpB = (owned[j+1].vit + (owned[j+1].armor == 1 ? 5 : 0)) * 10;
+            int hpA = maxHpA - owned[j].damageTaken;
+            int hpB = maxHpB - owned[j+1].damageTaken;
+            if (hpB > hpA) {
+                Gladiator tmp = owned[j];
+                owned[j] = owned[j+1];
+                owned[j+1] = tmp;
+            }
+        }
+    }
+    UpdateUI();
+}
+
 void BuyGladiator(int index) {
     if (index >= 0 && index < market_count && funds >= market[index].cost) {
         funds -= market[index].cost;
@@ -2353,7 +2370,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                   "F5 / F9: Quicksave / Quickload Ludus snapshot | F1 / H: Lanista's Guide\n"
                                   "M: Toggle Audio Mute | Esc: Dismiss Guide / Return to Ludus / Flee\n"
                                   "A / 1: Attack | D / 2: Defend | S / 3: Showboat | F / 4: Flee | Space: Action\n"
-                                  "R: Refresh recruit market (50D) | 1, 2, 3: Quick-recruit market fighters\n\n"
+                                  "R: Refresh recruit market (50D) | 1, 2, 3: Quick-recruit | P / O: Sort Prowess / HP\n\n"
                                   "COMBAT TACTICS & WEAPON MASTERY:\n"
                                   "Attack: Uses STR for damage, AGI for hit chance vs enemy AGI.\n"
                                   "Gladius: Rend bleed (+4) | Trident: Entangle | Twin Sica: 28% Flurry strike!\n"
@@ -2548,6 +2565,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (g_currentView == 0) {
                 if (wParam == 'P') {
                     SortGladiatorsByProwess();
+                    return 0;
+                }
+                if (wParam == 'O') {
+                    SortGladiatorsByHP();
                     return 0;
                 }
                 if (wParam == 'S') {
