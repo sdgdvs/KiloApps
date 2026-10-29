@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://slashnet
   kilo_graphics: KDragon
   kilo_soundscape: KStellar
-  kilo_tester: KChess
+  kilo_tester: KMaze
   kilo_usability: KChess
   kilo_qa: KImage
   kilo_expander: KChess
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KBreakout
-  timestamp: '2026-10-29T09:18:48-07:00'
+  agent: kilo-tester
+  app: KChess
+  timestamp: '2026-10-29T09:40:16-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -132,11 +132,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KChess`
+- **Active Target**: `KMaze`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | **[ARGON REVIEW]:** Negate evaluateBoardStatic() in drawEvalBar() and refreshAnalysisModal() so White advantage displays positive pawns instead of Black winning; fix KChess/main.c GenerateFEN() pieceMap missing R and r (space+PNBRQKpnbrqk) and append =Q in GetSAN(); trigger doBlackAIMove / SetTimer(1,350) whenever aiMode && !whiteTurn && !gameOver across loadOpeningToBoard() (fixing 17 odd-ply openings + accurate turn toast), applyFEN()/ImportFromClipboard(), editorApplyToGame(), applyPGN(), loadGameState()/LoadGameStateFromFile(), handleFileImport(), handleHotkey(t) (plus add T and 1..4 hotkeys in main.c), and closeModals() after #replay-modal; require sx===4 && sy===7/0 for castling in isValidMove()/IsValidMove(), sync castling flags with home-square pieces in resetGame()/ResetGame(), infer KQkq in generateEditorFEN(), and check (board[selY][selX] % 6 === 1) before drawing red en-passant capture rings; add SAN disambiguation and +/# suffixes in getSAN()/GetSAN(), pass silent=true to performMove() inside loadPGN() (suppressing audio/toast/shake/stats side effects), store centipawn eval on pushHistoryState() for real centipawn-loss accuracy in renderReplayTable() while preserving gameOver/winner per ply in restoreHistoryState(), honor CLOCK_FORMATS time and blitzIncrement in resetGame()/cycleClockFormat()/performMove(), and advance puzzleIndex on gameMode==2 && winner==1 in KChess/main.c. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
@@ -155,6 +154,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Support negative dataset values (such as deltaData() outputs) across renderAxesAndCartesian(), renderHorizontalBar(), and renderTrendOverlay() by scaling axes over [min(0,minVal), max(0,maxVal)] with a zero baseline instead of clamping with Math.max(0,...) and passing raw numeric values to renderTrendOverlay() so movavg/mean/corridor match computeStats(); reset trendStats.polyA/B/C=0 when count<3 and trendStats.expA/B=0 when posIndices.length<2, fix Poly badge negative sign formatting, and draw transposed trend overlays in renderHorizontalBar(); align Pie/Donut/Polar cx and outerR in handlePointerMove(), updateHoverCoordsForIndex(), and renderSonifyPlayhead() with renderPieOrDonut()/renderPolarCoxcomb(); make exportSvg() and #btnExportHtml render active chartType, currentTheme, and trend/target overlays instead of hardcoded vertical bars, wrap startup localStorage calls in try/catch, add Ctrl+Z preventDefault() undo, and stop sonifyInterval on visibilitychange; in KChart/main.c add Scatter View on [9] and Polar on [0] (NUM_MODES 10), widen WM_MOUSEMOVE Cartesian hit-testing with dynamic barW, add >=100 carry in FormatPolyEq(), and persist sorted label order in QuickSaveState()/QuickLoadState(). |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | **[ARGON REVIEW]:** Add an explicit category filter state/#filter-category-select with click-again toggle-off on #pie-chart slices, #category-legend, and .transaction-category badges (using encodeURIComponent/dataset instead of raw onclick string interpolation and syncing with #active-filter-bar and F5/F9); aggregate all custom CSV/JSON expense categories in render() instead of lumping into Other, compute dynamic canvas center/radius in renderChart()/drawChartCenter()/onmousemove, and format <1000 center totals with .toFixed(2); call updateCurrencyLabels() in quickloadState(), parseAndLoadJSON(), and settingsForm submit; align #budget-goal-card and updateStatusbar() on the same target month expenditure, support quoted CSV fields, and dedupe matching item.id on JSON import; in KBudget/main.c guard malloc(0), use GetLocalTime() + amount>0 validation in AddDialogProc, wire LBN_DBLCLK/VK_RETURN on hList to Edit, add date/amount search + Type filter combo, sync WM_PAINT pie totals/legend with active filters while guarding (x1,y1)==(x2,y2) GDI Pie() 360-deg wrap, and fix the SetClassLongPtr brush leak. |
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | **[ARGON REVIEW]:** Fix broken double-click auto-move to foundation in ksolitaire.html (render() innerHTML wipe on click #1 destroys the .card node before dblclick fires—use timestamp double-tap detection or slot delegation) and start game timer + clear selection on double/right-click foundation moves in both ksolitaire.html and KSolitaire/main.c; honor Stage 11 1-pass cap via explicit maxPasses in CAMPAIGN_STAGES and disable #draw-mode-select during Campaign/Duel; fix thawAdjacent()/ThawAdjacent() to thaw only columns within distance 1 of srcCol or dstCol instead of spanning min..max; move saveState(true) after empty-stock/pass-cap guards in handleStockClick(), call saveState() after stock draw/card flip, and push undo before charge/score deduction in useXRayVision()/UseMagicWand(); snapshot/restore live game state and pause timer when opening/closing #replay-modal; force Classic 52-card rules on Duel start and prevent CyberBot-99 infinite two-column oscillation; and in KSolitaire/main.c reset state.stock_cnt=0 in UseShuffleStock() to fix duplicate-card buffer overflow, replace UTF-8 suit labels in DrawTextA with DrawSuitGDI(), remove traveling DrawSheenSweeps(), fan up to 3 waste cards in Draw 3, and call SaveGameState()/UpdateWindowTitle()/CheckWin() on tableau flip. |
+| `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | **[ARGON REVIEW]:** Negate evaluateBoardStatic() in drawEvalBar() and refreshAnalysisModal() so White advantage displays positive pawns instead of Black winning; fix KChess/main.c GenerateFEN() pieceMap missing R and r (space+PNBRQKpnbrqk) and append =Q in GetSAN(); trigger doBlackAIMove / SetTimer(1,350) whenever aiMode && !whiteTurn && !gameOver across loadOpeningToBoard() (fixing 17 odd-ply openings + accurate turn toast), applyFEN()/ImportFromClipboard(), editorApplyToGame(), applyPGN(), loadGameState()/LoadGameStateFromFile(), handleFileImport(), handleHotkey(t) (plus add T and 1..4 hotkeys in main.c), and closeModals() after #replay-modal; require sx===4 && sy===7/0 for castling in isValidMove()/IsValidMove(), sync castling flags with home-square pieces in resetGame()/ResetGame(), infer KQkq in generateEditorFEN(), and check (board[selY][selX] % 6 === 1) before drawing red en-passant capture rings; add SAN disambiguation and +/# suffixes in getSAN()/GetSAN(), pass silent=true to performMove() inside loadPGN() (suppressing audio/toast/shake/stats side effects), store centipawn eval on pushHistoryState() for real centipawn-loss accuracy in renderReplayTable() while preserving gameOver/winner per ply in restoreHistoryState(), honor CLOCK_FORMATS time and blitzIncrement in resetGame()/cycleClockFormat()/performMove(), and advance puzzleIndex on gameMode==2 && winner==1 in KChess/main.c. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KChess`
@@ -325,6 +325,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T09:40:16-07:00 — kilo-tester: KChess (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-tester updates for KChess across web and native targets.
+  - Handoff: Advanced `kilo-tester` to `KMaze`; rotated active agent to `kilo-usability`.
+
 - **2026-10-29T09:18:48-07:00 — kilo-graphics: KBreakout (Arcade Visuals & Dual C Parity Polish)**
   - Status: PASS ✅ (0 errors, web 186.9 KB, native 55.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 17.26%, HEAD Δ 0.01%, 0 fail, 0 warn, 7.1s)).
   - Textured metallic/crystalline bricks, plasma paddle slipstream & ball trails, boss hazard visuals, and zero perimeter border dots verified in Web and Win32 C.
@@ -349,8 +354,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Wired KiloVFS Save (VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY) and Open (VFS_SHOW_OPEN -> VFS_READ) with origin validation and 60s cleanup timeouts.
   - Added standalone Blob download / file-input fallbacks and auto-loading for .ksol replays (/home/replays/) and .json saves/stats (/home/saves/) via FILE_OPEN/VFS_OPEN IPC.
   - Handoff: Advanced `kilo-expander` to `KStarForge`; rotated active agent to `kilo-review`.
-
-- **2026-10-29T07:22:18-07:00 — kilo-qa: KAudio (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-qa updates for KAudio across web and native targets.
-  - Handoff: Advanced `kilo-qa` to `KImage`; rotated active agent to `kilo-expander`.

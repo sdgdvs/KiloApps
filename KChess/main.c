@@ -480,7 +480,7 @@ int IsValidMove(int sx, int sy, int tx, int ty, int isAttackCheck) {
         if (adx <= 1 && ady <= 1) return 1;
         if (!isAttackCheck && dy == 0 && adx == 2) {
             if (isWhite) {
-                if (wKingMoved) return 0;
+                if (wKingMoved || sx != 4 || sy != 7) return 0;
                 if (tx == 6 && !wRookRMoved && board[7][7] == 4 && board[7][5] == 0 && board[7][6] == 0) {
                     if (!IsSquareAttacked(4, 7, 0) && !IsSquareAttacked(5, 7, 0) && !IsSquareAttacked(6, 7, 0)) return 1;
                 }
@@ -488,7 +488,7 @@ int IsValidMove(int sx, int sy, int tx, int ty, int isAttackCheck) {
                     if (!IsSquareAttacked(4, 7, 0) && !IsSquareAttacked(3, 7, 0) && !IsSquareAttacked(2, 7, 0)) return 1;
                 }
             } else {
-                if (bKingMoved) return 0;
+                if (bKingMoved || sx != 4 || sy != 0) return 0;
                 if (tx == 6 && !bRookRMoved && board[0][7] == 10 && board[0][5] == 0 && board[0][6] == 0) {
                     if (!IsSquareAttacked(4, 0, 1) && !IsSquareAttacked(5, 0, 1) && !IsSquareAttacked(6, 0, 1)) return 1;
                 }
@@ -784,6 +784,7 @@ void GetOptimalHintMove(int* outSx, int* outSy, int* outTx, int* outTy) {
 
 static void GetSAN(int sx, int sy, int tx, int ty, int p, int isCapture, char* outBuf) {
     int pType = p > 6 ? p - 6 : p;
+    int isWhite = (p <= 6);
     char files[] = "abcdefgh";
     char targetSquare[4];
     targetSquare[0] = files[tx];
@@ -793,25 +794,72 @@ static void GetSAN(int sx, int sy, int tx, int ty, int p, int isCapture, char* o
     if (pType == 6 && my_abs(tx - sx) == 2) {
         if (tx == 6) { wsprintfA(outBuf, "O-O"); }
         else { wsprintfA(outBuf, "O-O-O"); }
-        return;
-    }
-
-    char pLetters[] = "  NBRQK";
-    char letter = pLetters[pType];
-
-    if (pType == 1) { // Pawn
-        if (isCapture) {
-            wsprintfA(outBuf, "%cx%s", files[sx], targetSquare);
-        } else {
-            wsprintfA(outBuf, "%s", targetSquare);
-        }
     } else {
-        if (isCapture) {
-            wsprintfA(outBuf, "%cx%s", letter, targetSquare);
+        char pLetters[] = "  NBRQK";
+        char letter = pLetters[pType];
+
+        if (pType == 1) { // Pawn
+            if (isCapture) {
+                wsprintfA(outBuf, "%cx%s", files[sx], targetSquare);
+            } else {
+                wsprintfA(outBuf, "%s", targetSquare);
+            }
+            if (ty == 0 || ty == 7) {
+                lstrcatA(outBuf, "=Q");
+            }
         } else {
-            wsprintfA(outBuf, "%c%s", letter, targetSquare);
+            char dis[3];
+            dis[0] = '\0';
+            int candCount = 0;
+            int sameFile = 0, sameRank = 0;
+            for (int y = 0; y < 8; y++) {
+                for (int x = 0; x < 8; x++) {
+                    if (x == sx && y == sy) continue;
+                    if (board[y][x] == p) {
+                        if (IsValidMove(x, y, tx, ty, 0) && !SimulatedMoveLeavesCheck(x, y, tx, ty, isWhite)) {
+                            candCount++;
+                            if (x == sx) sameFile = 1;
+                            if (y == sy) sameRank = 1;
+                        }
+                    }
+                }
+            }
+            if (candCount > 0) {
+                if (!sameFile) {
+                    dis[0] = files[sx]; dis[1] = '\0';
+                } else if (!sameRank) {
+                    dis[0] = '8' - sy; dis[1] = '\0';
+                } else {
+                    dis[0] = files[sx]; dis[1] = '8' - sy; dis[2] = '\0';
+                }
+            }
+            if (isCapture) {
+                wsprintfA(outBuf, "%c%sx%s", letter, dis, targetSquare);
+            } else {
+                wsprintfA(outBuf, "%c%s%s", letter, dis, targetSquare);
+            }
         }
     }
+
+    MoveState ms;
+    MakeMoveSim(sx, sy, tx, ty, &ms);
+    int oppWhite = !isWhite;
+    int oppKing = oppWhite ? 6 : 12;
+    int kx = -1, ky = -1;
+    for (int y = 0; y < 8; y++) {
+        for (int x = 0; x < 8; x++) {
+            if (board[y][x] == oppKing) { kx = x; ky = y; break; }
+        }
+        if (kx != -1) break;
+    }
+    if (kx != -1 && IsSquareAttacked(kx, ky, isWhite)) {
+        if (!HasLegalMoves(oppWhite)) {
+            lstrcatA(outBuf, "#");
+        } else {
+            lstrcatA(outBuf, "+");
+        }
+    }
+    UnmakeMoveSim(sx, sy, tx, ty, &ms);
 }
 
 static void PushHistoryState(const char* san) {
@@ -1140,7 +1188,7 @@ static void GetDetectedOpening(char* outBuf, int maxLen) {
 
 static void GenerateFEN(char* outFen) {
     int pos = 0;
-    const char pieceMap[] = " PNBQKpnbqk";
+    const char pieceMap[] = " PNBRQKpnbrqk";
     for (int y = 0; y < 8; y++) {
         int empty = 0;
         for (int x = 0; x < 8; x++) {
@@ -1381,6 +1429,13 @@ void ResetGame(void) {
     } else {
         for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
     }
+
+    wKingMoved = (board[7][4] != 6);
+    wRookLMoved = (board[7][0] != 4);
+    wRookRMoved = (board[7][7] != 4);
+    bKingMoved = (board[0][4] != 12);
+    bRookLMoved = (board[0][0] != 10);
+    bRookRMoved = (board[0][7] != 10);
 
     freezePowerups = 3;
     selX = -1; selY = -1;
@@ -1849,6 +1904,8 @@ static void HandleSquareClick(HWND hwnd, int tx, int ty) {
     if (gameOver) {
         if (gameMode == 0 && winner == 1 && currentStage < 20) {
             currentStage++;
+        } else if (gameMode == 2 && winner == 1) {
+            puzzleIndex = (puzzleIndex + 1) % 6;
         }
         ResetGame();
         InvalidateRect(hwnd, NULL, FALSE);
@@ -1912,6 +1969,9 @@ static void ImportFromClipboard(HWND hwnd) {
         wsprintfA(hintText, "FEN imported from clipboard!");
         hintActive = 1;
         MessageBeep(MB_OK);
+        if (aiMode && !whiteTurn && !gameOver) {
+            SetTimer(hwnd, 1, 350, NULL);
+        }
     } else {
         wsprintfA(hintText, "Invalid FEN clipboard data!");
         hintActive = 1;
@@ -1933,6 +1993,8 @@ static void ShowHelpDialog(HWND hwnd) {
         "  [U] / [Y]      : Undo / Redo Move (interactive move stack)\n"
         "  [S] / [F5]     : Quick Save Game State to Disk (kchess_save.dat)\n"
         "  [L] / [F9]     : Quick Load Game State from Disk\n"
+        "  [T]            : Toggle AI Opponent / 2-Player Pass & Play\n"
+        "  [1-4]          : Set AI Difficulty (Easy, Medium, Hard, Master)\n"
         "  [M]            : Switch Game Mode (Campaign / Free / Puzzle / Blitz)\n"
         "  [P]            : Cycle AI Personality (Easy, Medium, Hard, Master)\n"
         "  [E]            : Copy FEN Position to Clipboard\n"
@@ -2541,8 +2603,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (gameOver && gameMode == 0 && winner == 1) {
                     if (currentStage < 20) currentStage++;
                     else { currentStage = 1; }
+                } else if (gameOver && gameMode == 2 && winner == 1) {
+                    puzzleIndex = (puzzleIndex + 1) % 6;
                 }
                 ResetGame();
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'T') { // TOGGLE AI MODE
+                aiMode = !aiMode;
+                wsprintfA(hintText, aiMode ? "AI Opponent Enabled" : "2-Player Pass & Play");
+                hintActive = 1;
+                MessageBeep(MB_OK);
+                if (aiMode && !whiteTurn && !gameOver) {
+                    SetTimer(hwnd, 1, 350, NULL);
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam >= '1' && wParam <= '4') { // SET AI DIFFICULTY
+                aiPersonality = (int)(wParam - '0');
+                wsprintfA(hintText, "AI Difficulty: %s", diffNames[aiPersonality - 1]);
+                hintActive = 1;
+                MessageBeep(MB_OK);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'M') {
                 gameMode = (gameMode + 1) % 4;
@@ -2596,6 +2675,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     wsprintfA(hintText, "Game State Loaded (F9)!");
                     hintActive = 1;
                     MessageBeep(MB_OK);
+                    if (aiMode && !whiteTurn && !gameOver) {
+                        SetTimer(hwnd, 1, 350, NULL);
+                    }
                 } else {
                     wsprintfA(hintText, "No Saved State Found (F9)!");
                     hintActive = 1;
