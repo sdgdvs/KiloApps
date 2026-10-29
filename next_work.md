@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KMaze
   kilo_usability: KColosseum
-  kilo_qa: KSys
+  kilo_qa: KMandel
   kilo_expander: KChart
   kilo_review: KBudget
 virtual_web_target: kweb://rfc-archive
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KChart
-  timestamp: '2026-10-28T23:21:25-07:00'
+  agent: kilo-qa
+  app: KSys
+  timestamp: '2026-10-28T23:40:15-07:00'
 last_planner_run: '2026-10-28T17:15:00Z'
 ---
 
@@ -177,11 +177,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | **[ARGON REVIEW]:** Eliminate 91px vertical overflow clipping .stats-grid at 1060x703 by locking body to 100vh overflow:hidden (with <=900px scroll fallback), compacting header into 1 row, separating left .panel-title from single-line #chartTypeGroup/#trendGroup toolbars, making .canvas-container and .table-wrapper flex:1 min-height:0, and setting .stats-grid to 8 columns; add e.preventDefault() on ArrowLeft/Right/Up/Down and Space outside inputs; move #toastContainer to top:52px right:16px and skip duplicate welcome toast when #helpModal opens on first boot; replace raw unrendered LaTeX dollar-sign formulas in #helpModal with clean Unicode math (y=mx+b, R2, y=ax2+bx+c, y=a*e^(bx), +-1 sigma, Sigma, Delta), add color-scheme:dark on :root and dark background/color on select option, remove external Google Fonts link, and keep #presetSelect synced to loaded preset. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KSys`
+- **Active Target**: `KMandel`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 | `KMandel` | `KiloOS/public/apps/kmandel.html`, `KMandel/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, fractal rendering zoom/pan coordinates, palette cycles, dual Win32 C parity, and promote to Mature table. |
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, waveform audio editor, spectrum visualizer, filter pipeline, dual Win32 C parity, and promote to Mature table. |
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, bitmap manipulation filters, canvas scaling, dual Win32 C parity, and promote to Mature table. |
@@ -193,6 +192,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, media playlist management, playback controls, dual Win32 C parity, and promote to Mature table. |
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, channel switcher, offline message spool, dual Win32 C parity, and promote to Mature table. |
 | `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, client connection telemetry, broadcast console, dual Win32 C parity, and promote to Mature table. |
+| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KChart`
@@ -319,6 +319,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-28T23:40:15-07:00 — kilo-qa: KSys (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KSys across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KMandel`; rotated active agent to `kilo-expander`.
+
 - **2026-10-28T23:21:25-07:00 — kilo-usability: KChart (Usability & Layout Polish)**
   - Status: PASS (0 errors, web 141.8 KB, native 38.5 KB < 999 KB; visual PASS 0 fail 0 warn 0px overflow).
   - Layout: locked body to 100vh overflow:hidden (<=900px scroll fallback), compacted header to 1 row, separated title from toolbars, flex:1 canvas/table, 8-col stats-grid.
@@ -344,9 +349,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Canvas 64K intro switcher with plasma, rotozoom, starfield, copper bars, and metaballs.
   - ANSI .NFO viewer with VFS save, party voting board, and discrete Web Audio UI earcons.
   - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-28T10:33:19-07:00 — kilo-review: KChart (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1060x703 and audited kchart.html + KChart/main.c; un-quarantined from Mature with surgical fixes dispatched to kilo-usability, kilo-tester, and kilo-expander).
-  - Visual/UX Findings: 91px vertical overflow clips 2nd row of .stats-grid at 1060x703; missing preventDefault() on Arrow/Space scrolls page 91px; raw unrendered LaTeX dollar-sign markup in #helpModal; #toastContainer occludes #helpModal footer and .stats-grid; missing dark select option styling and external Google Fonts CDN link.
-  - Feature/VFS Findings: Negative values from deltaData() are clamped to 0 across Cartesian/H-Bar/Trend renderers; exportSvg() and #btnExportHtml hardcode vertical bars regardless of chartType; Pie/Donut/Polar hover hit-testing cx/outerR mismatches renderer; stale poly/exp trendStats on <3 or <=0 pts; KChart/main.c missing Scatter [9]/[0] parity and QuickLoadState() scrambles sorted labels; zero Phase VI KiloOS VFS Open/Save integration.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KChart`, `kilo-tester`->`KChart`, `kilo-expander`->`KChart`] (un-quarantined `KChart` from Mature); advanced `kilo-review` to `KBudget`; next agent `kilo-creator`.

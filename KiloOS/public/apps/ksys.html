@@ -1988,7 +1988,12 @@
         activeTab: activeTabId,
         serviceFilterStatus: svcFilter ? svcFilter.value : 'all',
         logFilterLevel: logFilter ? logFilter.value : 'ALL',
-        hexSource: hexSource ? hexSource.value : 'telemetry'
+        hexSource: hexSource ? hexSource.value : 'telemetry',
+        isStressActive: isStressActive,
+        stressCycleCount: stressCycleCount,
+        activeServiceView: typeof activeServiceView !== 'undefined' ? activeServiceView : 'services',
+        cpuHistory: Array.isArray(cpuHistory) ? cpuHistory.slice(-30) : [],
+        memHistory: Array.isArray(memHistory) ? memHistory.slice(-30) : []
       };
       safeSetStorage('ksys_quicksave_v1', snapshot);
       safeSetStorage('ksys_tutorialSeen', '1');
@@ -2101,6 +2106,24 @@
         hexSource.value = snapshot.hexSource;
         if (typeof loadHexBufferSource === 'function') loadHexBufferSource();
       }
+    }
+
+    if (snapshot.activeServiceView && typeof switchServiceView === 'function') {
+      switchServiceView(snapshot.activeServiceView);
+    }
+    if (Array.isArray(snapshot.cpuHistory) && snapshot.cpuHistory.length > 0) {
+      cpuHistory.length = 0;
+      snapshot.cpuHistory.forEach(v => cpuHistory.push(v));
+    }
+    if (Array.isArray(snapshot.memHistory) && snapshot.memHistory.length > 0) {
+      memHistory.length = 0;
+      snapshot.memHistory.forEach(v => memHistory.push(v));
+    }
+    if (snapshot.stressCycleCount !== undefined) {
+      stressCycleCount = snapshot.stressCycleCount;
+    }
+    if (snapshot.isStressActive !== undefined && snapshot.isStressActive !== isStressActive) {
+      toggleContinuousStress();
     }
 
     renderServices();
@@ -4596,6 +4619,7 @@
     if (timerSparklines) { clearInterval(timerSparklines); timerSparklines = null; }
     if (timerHealth) { clearInterval(timerHealth); timerHealth = null; }
     if (timerSpectrum) { clearInterval(timerSpectrum); timerSpectrum = null; }
+    if (stressInterval) { clearInterval(stressInterval); stressInterval = null; }
   }
 
   function autoSaveState() {
@@ -4614,7 +4638,12 @@
         activeTab: activeTabId,
         serviceFilterStatus: svcFilter ? svcFilter.value : 'all',
         logFilterLevel: logFilter ? logFilter.value : 'ALL',
-        hexSource: hexSource ? hexSource.value : 'telemetry'
+        hexSource: hexSource ? hexSource.value : 'telemetry',
+        isStressActive: isStressActive,
+        stressCycleCount: stressCycleCount,
+        activeServiceView: typeof activeServiceView !== 'undefined' ? activeServiceView : 'services',
+        cpuHistory: Array.isArray(cpuHistory) ? cpuHistory.slice(-30) : [],
+        memHistory: Array.isArray(memHistory) ? memHistory.slice(-30) : []
       };
       safeSetStorage('ksys_state_v1', state);
     } catch(e) {}
@@ -4649,6 +4678,10 @@
       timerSparklines = setInterval(updateTelemetrySparklines, 1000);
       timerHealth = setInterval(updateSystemHealth, 2000);
       timerSpectrum = setInterval(updateCpuSpectrum, 1000);
+      if (isStressActive && !stressInterval) {
+        toggleContinuousStress();
+        toggleContinuousStress();
+      }
     }
   });
 

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-28T10:33:19-07:00 — kilo-review: KChart (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1060x703 and audited kchart.html + KChart/main.c; un-quarantined from Mature with surgical fixes dispatched to kilo-usability, kilo-tester, and kilo-expander).
+  - Visual/UX Findings: 91px vertical overflow clips 2nd row of .stats-grid at 1060x703; missing preventDefault() on Arrow/Space scrolls page 91px; raw unrendered LaTeX dollar-sign markup in #helpModal; #toastContainer occludes #helpModal footer and .stats-grid; missing dark select option styling and external Google Fonts CDN link.
+  - Feature/VFS Findings: Negative values from deltaData() are clamped to 0 across Cartesian/H-Bar/Trend renderers; exportSvg() and #btnExportHtml hardcode vertical bars regardless of chartType; Pie/Donut/Polar hover hit-testing cx/outerR mismatches renderer; stale poly/exp trendStats on <3 or <=0 pts; KChart/main.c missing Scatter [9]/[0] parity and QuickLoadState() scrambles sorted labels; zero Phase VI KiloOS VFS Open/Save integration.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KChart`, `kilo-tester`->`KChart`, `kilo-expander`->`KChart`] (un-quarantined `KChart` from Mature); advanced `kilo-review` to `KBudget`; next agent `kilo-creator`.
+
 - **2026-10-28T10:15:00-07:00 — kilo-planner: Fleet Orchestration (24-Hour Fleet Planning & Anti-Piling Queue Replenishment)**
   - Status: PASS ✅ (105 apps audited, 53 mature, 52 active; icon audit & log rotation clean).
   - Anti-Piling & Hygiene: Replaced mature KMech in kilo-graphics with KCosmic; replaced conflicting KSys in kilo-tester (-> KRogue) and kilo-usability (-> KCosmic).
