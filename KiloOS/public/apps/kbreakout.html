@@ -3391,12 +3391,14 @@ function drawBrick(r, c, type, bx, by, hp) {
         ctx.fillRect(bx + BR_W - 3, by + 1, 2, BR_H - 2);
 
         // Internal crystalline light refraction facet
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(bx + 4, by + BR_H - 4);
         ctx.lineTo(bx + BR_W * 0.4, by + 3);
         ctx.lineTo(bx + BR_W - 4, by + BR_H - 4);
+        ctx.moveTo(bx + BR_W * 0.4, by + 3);
+        ctx.lineTo(bx + BR_W / 2, by + BR_H - 3);
         ctx.stroke();
 
         // Inner crystalline core highlight
@@ -3969,6 +3971,27 @@ function drawSculptedPaddle(ctx, px, py, pw, ph) {
     // Dual plasma ion thruster nozzles & exhaust plume trails
     let thrustFlicker = (frame % 4 < 2) ? 1.15 : 0.75;
     let tLeftX = px + 9, tRightX = px + pw - 9, tY = py + ph;
+
+    // Horizontal plasma slipstream wake streamer when maneuvering
+    if (Math.abs(pad_vx) > 0.5) {
+        let isRight = pad_vx > 0;
+        let wakeGrad = ctx.createLinearGradient(isRight ? px : px + pw, py, isRight ? px - 18 : px + pw + 18, py);
+        wakeGrad.addColorStop(0, chaos_mode ? 'rgba(255, 0, 200, 0.5)' : 'rgba(0, 229, 255, 0.5)');
+        wakeGrad.addColorStop(1, 'rgba(0, 100, 255, 0)');
+        ctx.fillStyle = wakeGrad;
+        ctx.beginPath();
+        if (isRight) {
+            ctx.moveTo(px, py + 1);
+            ctx.lineTo(px - 16, py + ph / 2);
+            ctx.lineTo(px, py + ph - 1);
+        } else {
+            ctx.moveTo(px + pw, py + 1);
+            ctx.lineTo(px + pw + 16, py + ph / 2);
+            ctx.lineTo(px + pw, py + ph - 1);
+        }
+        ctx.closePath();
+        ctx.fill();
+    }
     
     // Outer high-energy plasma plume
     let plumeGrad = ctx.createLinearGradient(0, tY, 0, tY + 11 * thrustFlicker);

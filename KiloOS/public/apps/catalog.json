@@ -43,9 +43,9 @@
     "id": "kaudio",
     "title": "KAudio",
     "folder": "Media",
-    "webBytes": 153261,
-    "exeBytes": 23040,
-    "budgetPercent": 15.3
+    "webBytes": 150205,
+    "exeBytes": 23552,
+    "budgetPercent": 15.0
   },
   {
     "id": "kbase",
@@ -643,9 +643,9 @@
     "id": "ksolitaire",
     "title": "KSolitaire",
     "folder": "Games",
-    "webBytes": 161168,
-    "exeBytes": 49152,
-    "budgetPercent": 16.1
+    "webBytes": 172102,
+    "exeBytes": 50176,
+    "budgetPercent": 17.2
   },
   {
     "id": "kspace",

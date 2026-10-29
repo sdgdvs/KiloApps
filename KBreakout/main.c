@@ -534,12 +534,26 @@ void DrawGDIBrick(HDC hdc, int r, int c, int type, int bx, int by, int hp) {
         MoveToEx(hdc, bx + 4, by + 3, NULL); LineTo(hdc, bx + BR_W - 4, by + BR_H - 3);
         MoveToEx(hdc, bx + BR_W - 4, by + 3, NULL); LineTo(hdc, bx + 4, by + BR_H - 3);
         DeleteObject(steelPen);
+
+        // Brushed metallic horizontal specular streak
+        HPEN streakPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+        SelectObject(hdc, streakPen);
+        MoveToEx(hdc, bx + 3, by + (int)(BR_H * 0.35f), NULL);
+        LineTo(hdc, bx + BR_W - 3, by + (int)(BR_H * 0.35f));
+        DeleteObject(streakPen);
     } else if (type == 3) {
         HPEN stripePen = CreatePen(PS_SOLID, 1, RGB(255, 220, 160));
         SelectObject(hdc, stripePen);
         MoveToEx(hdc, bx + 6, by + 2, NULL); LineTo(hdc, bx + 6, by + BR_H - 2);
         MoveToEx(hdc, bx + BR_W - 6, by + 2, NULL); LineTo(hdc, bx + BR_W - 6, by + BR_H - 2);
         DeleteObject(stripePen);
+
+        // Brushed metallic horizontal specular streak
+        HPEN streakPen = CreatePen(PS_SOLID, 1, RGB(255, 240, 200));
+        SelectObject(hdc, streakPen);
+        MoveToEx(hdc, bx + 3, by + (int)(BR_H * 0.35f), NULL);
+        LineTo(hdc, bx + BR_W - 3, by + (int)(BR_H * 0.35f));
+        DeleteObject(streakPen);
     } else if (type == 4) {
         // --- TYPE 4: EXPLOSIVE / ORDNANCE DEMOLITION BRICK ---
         // Dark military charcoal body
@@ -670,6 +684,23 @@ void DrawGDIBrick(HDC hdc, int r, int c, int type, int bx, int by, int hp) {
             SelectObject(hdc, oldP);
             DeleteObject(crackPen);
         }
+    } else {
+        // Crystalline gemstone cut with refractive interior facets
+        HPEN facetPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+        HGDIOBJ oldFP = SelectObject(hdc, facetPen);
+        MoveToEx(hdc, bx + 4, by + BR_H - 4, NULL);
+        LineTo(hdc, bx + (int)(BR_W * 0.4f), by + 3);
+        LineTo(hdc, bx + BR_W - 4, by + BR_H - 4);
+        MoveToEx(hdc, bx + (int)(BR_W * 0.4f), by + 3, NULL);
+        LineTo(hdc, bx + BR_W / 2, by + BR_H - 3);
+
+        // Inner crystalline core highlight
+        HBRUSH cCore = CreateSolidBrush(RGB(255, 255, 255));
+        RECT ccr = { bx + BR_W / 2 - 1, by + 3, bx + BR_W / 2 + 1, by + 5 };
+        FillRect(hdc, &ccr, cCore);
+        DeleteObject(cCore);
+        SelectObject(hdc, oldFP);
+        DeleteObject(facetPen);
     }
 
     SelectObject(hdc, oldPen);
@@ -2548,6 +2579,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(memDC, oldTB);
                 DeleteObject(tPen);
                 DeleteObject(tBr);
+
+                // Horizontal plasma slipstream wake streamer when moving
+                if (pad_vx != 0) {
+                    int isRight = (pad_vx > 0);
+                    int wake_x = isRight ? (dp_x - 6) : (dp_x + dp_w + 6);
+                    HPEN wPen = CreatePen(PS_SOLID, 1, chaos_mode ? RGB(255, 0, 200) : RGB(0, 229, 255));
+                    HGDIOBJ oldWP = SelectObject(memDC, wPen);
+                    MoveToEx(memDC, isRight ? dp_x : dp_x + dp_w, dp_y + 1, NULL);
+                    LineTo(memDC, wake_x, dp_y + dp_h / 2);
+                    LineTo(memDC, isRight ? dp_x : dp_x + dp_w, dp_y + dp_h - 1);
+                    SelectObject(memDC, oldWP);
+                    DeleteObject(wPen);
+                }
 
                 // Magnetic tractor beam capture field between paddle and stuck ball
                 for (int i = 0; i < MAX_BALLS; i++) {
