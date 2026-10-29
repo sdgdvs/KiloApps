@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://trapster
   kilo_graphics: KStarship
   kilo_soundscape: KStellar
-  kilo_tester: KMaze
+  kilo_tester: KScript
   kilo_usability: KColosseum
   kilo_qa: KSettings
   kilo_expander: KChess
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KDragon
-  timestamp: '2026-10-29T13:13:34-07:00'
+  agent: kilo-tester
+  app: KMaze
+  timestamp: '2026-10-29T13:39:20-07:00'
 last_planner_run: '2026-10-29T17:30:03Z'
 ---
 
@@ -132,11 +132,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KMaze`
+- **Active Target**: `KScript`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Fix #garage-rank not updating in updateGarage() (call getPilotRank(playerLevel)); implement actual enemyStunned=true stun effect on Head/Cockpit hit (currentTargetLimb===0) so enemyTurn() skips attack and vents heat per Manual; auto-restore kmech_save on boot; and trigger enemy overheat burnout damage when EMP pushes enemy heat over maxHeat. |
@@ -146,6 +145,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
+| `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KColosseum`
@@ -282,6 +282,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T13:39:20-07:00 — kilo-tester: KMaze (KMaze controls & mechanics overhaul)**
+  - Default speed keybind migrated to B/b avoiding backward-walk conflict
+  - Fixed pickaxe wall auto-consumption and require P for cracked walls
+  - Golden trail floor raycasting rendered when pathfinder is active
+  - Save shrine charges/score granted before checkpoint save
+  - Handoff: Advanced `kilo-tester` to `KScript`; rotated active agent to `kilo-usability`.
+
 - **2026-10-29T13:13:34-07:00 — kilo-graphics: KDragon (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KDragon.
   - Handoff: Advanced `kilo-graphics` to `KStarship`; rotated active agent to `kilo-tester`.
@@ -305,8 +312,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kimage_tutorialSeen flag, safe storage, and Escape modal dismissals.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, Fit canvas scaling, and visibilitychange timer cleanup.
   - Mature Quarantine & Handoff: Promoted `KImage` to Mature archive; advanced `kilo-qa` to `KSettings`; next agent `kilo-expander`.
-
-- **2026-10-29T11:22:20-07:00 — kilo-usability: KChess (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-usability updates for KChess across web and native targets.
-  - Handoff: Advanced `kilo-usability` to `KColosseum`; rotated active agent to `kilo-qa`.

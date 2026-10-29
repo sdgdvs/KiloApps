@@ -542,7 +542,7 @@
     <button id="btnTutorial" class="hudBtn" onclick="openTutorialOverlay()" title="Tactical Onboarding Briefing (4 Steps)"><span class="badge">🎓</span> Tutorial</button>
     <button id="btnPickaxe" class="hudBtn" onclick="usePickaxe()" title="Cleave cracked or illusionary walls & attack monsters"><span class="badge">P</span> Break Wall</button>
     <button id="btnPathfinder" class="hudBtn" onclick="usePathfinder()" title="Reveal shortest path to key and exit (10s)"><span class="badge">C</span> Pathfinder</button>
-    <button id="btnSpeed" class="hudBtn" onclick="useSpeedShoes()" title="Double movement speed (8s)"><span class="badge">S/B</span> Speed</button>
+    <button id="btnSpeed" class="hudBtn" onclick="useSpeedShoes()" title="Double movement speed (8s)"><span class="badge">B</span> Speed</button>
     <button id="btnStun" class="hudBtn" onclick="useStunSpray()" title="Stun and freeze hunting Minotaurs (10s)"><span class="badge">F</span> Stun Spray</button>
     <button id="btnFreeze" class="hudBtn" onclick="useTimeFreeze()" title="Halt all monsters in the dungeon (10s)"><span class="badge">T</span> Time Freeze</button>
     <button id="btnCrouch" class="hudBtn" onclick="toggleCrouch()" title="Stealth crouch: silence footsteps and cushion trap damage"><span class="badge">X/Ctrl</span> Crouch</button>
@@ -956,7 +956,7 @@
       right: 'ArrowRight',
       pickaxe: 'p',
       pathfinder: 'c',
-      speed: 's',
+      speed: 'b',
       stun: 'f',
       freeze: 't',
       crouch: 'x'
@@ -967,7 +967,9 @@
       try {
           let parsedBinds = JSON.parse(savedBinds);
           if (parsedBinds && typeof parsedBinds === 'object') {
+              if (parsedBinds.speed === 's' || parsedBinds.speed === 'S') parsedBinds.speed = 'b';
               Object.assign(keyBinds, parsedBinds);
+              safeSetStorage('kmaze_keybinds', JSON.stringify(keyBinds));
           }
       } catch (e) {}
   }
@@ -1054,7 +1056,7 @@
       {
           badge: "STEP 2 OF 4 • ANCIENT RELICS & TOOLS",
           heading: "⚔️ Wield Dungeon Tools & Relics",
-          content: `<p><b>Pickaxe (<span class="kbd">P</span> / <span class="kbd">1</span>):</b> Cleave cracked walls, smash secret illusory barriers, and strike dangerous beasts.</p><p><b>Pathfinder (<span class="kbd">C</span> / <span class="kbd">2</span>):</b> Summons a luminous golden trail showing the shortest route to the chamber key and exit portal for 10s.</p><p><b>Speed Shoes (<span class="kbd">S</span> / <span class="kbd">B</span> / <span class="kbd">3</span>):</b> Grants a double-velocity surge for 8s to cross hazards and outrun monsters.</p>`
+          content: `<p><b>Pickaxe (<span class="kbd">P</span> / <span class="kbd">1</span>):</b> Cleave cracked walls, smash secret illusory barriers, and strike dangerous beasts.</p><p><b>Pathfinder (<span class="kbd">C</span> / <span class="kbd">2</span>):</b> Summons a luminous golden trail showing the shortest route to the chamber key and exit portal for 10s.</p><p><b>Speed Shoes (<span class="kbd">B</span> / <span class="kbd">3</span>):</b> Grants a double-velocity surge for 8s to cross hazards and outrun monsters.</p>`
       },
       {
           badge: "STEP 3 OF 4 • COMBAT & LABYRINTH HAZARDS",
@@ -1172,6 +1174,7 @@
       totalGames++;
       safeSetStorage('kmaze_games', totalGames);
       replayLevels = [];
+      shockwaves = [];
       nextLevel();
       updateSplashOverlay();
 
@@ -1314,6 +1317,7 @@
           muzzleFlashTimer = 0;
           recoilOffset = 0;
           minotaurTimer = 0;
+          shockwaves = [];
           for (let k in keys) keys[k] = false;
           toggleHelpModal(false);
           closeTutorial(true);
@@ -2183,6 +2187,7 @@
       stunSprayTimer = 0;
       timeFreezeTimer = 0;
       torchTimer = 0;
+      shockwaves = [];
 
       if (currentLevel > 44) {
           gameState = 2;
@@ -2511,6 +2516,19 @@
       // Unlock Web Audio context safely on user gesture
       if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
+      if (waitingForKey) {
+          e.preventDefault();
+          if (e.key === 'Escape') {
+              waitingForKey = null;
+          } else {
+              keyBinds[waitingForKey] = e.key;
+              safeSetStorage('kmaze_keybinds', JSON.stringify(keyBinds));
+              showToast(`Bound [${waitingForKey}] to key '${e.key}'`, "success");
+              waitingForKey = null;
+          }
+          return;
+      }
+
       const tutModal = document.getElementById('tutorialModal');
       const isTutOpen = tutModal && tutModal.classList.contains('open');
 
@@ -2616,17 +2634,7 @@
           toggleKeybinds();
       }
       if (gameState === 4) {
-          if (waitingForKey) {
-              if (e.key === 'Escape') {
-                  waitingForKey = null;
-              } else {
-                  keyBinds[waitingForKey] = e.key;
-                  safeSetStorage('kmaze_keybinds', JSON.stringify(keyBinds));
-                  showToast(`Bound [${waitingForKey}] to key '${e.key}'`, "success");
-                  waitingForKey = null;
-              }
-              return;
-          }
+          return;
       } else if (gameState === 3 && !hasMod) {
           if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
               replayFrameIdx = Math.min(replayFrameIdx + 1, Math.max(0, replayLevels[replayLevelIdx].frames.length - 1));
@@ -2647,7 +2655,7 @@
               let k = e.key.toLowerCase();
               if (k === (keyBinds.pickaxe || 'p').toLowerCase() || k === '1') usePickaxe();
               if (k === (keyBinds.pathfinder || 'c').toLowerCase() || k === '2') usePathfinder();
-              if (k === (keyBinds.speed || 's').toLowerCase() || k === 'b' || k === '3') useSpeedShoes();
+              if (k === (keyBinds.speed || 'b').toLowerCase() || k === 'b' || k === '3') useSpeedShoes();
               if (k === (keyBinds.stun || 'f').toLowerCase() || k === '4') useStunSpray();
               if (k === (keyBinds.freeze || 't').toLowerCase() || k === '5') useTimeFreeze();
               if (k === (keyBinds.crouch || 'x').toLowerCase() || k === '6') toggleCrouch();
@@ -2779,7 +2787,7 @@
                   btnSpd.innerHTML = `<span class="badge">S/B</span> Speed (${sSec}s)`;
                   btnSpd.classList.add('active');
               } else {
-                  btnSpd.innerHTML = `<span class="badge">S/B</span> Speed (${speedShoesCharges})`;
+                  btnSpd.innerHTML = `<span class="badge">B</span> Speed (${speedShoesCharges})`;
                   btnSpd.classList.remove('active');
               }
           }
@@ -2907,29 +2915,13 @@
       
       let tryMove = (mx, my) => {
           let val = map[Math.floor(mx)] && map[Math.floor(mx)][Math.floor(my)];
-          if ([0,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,19,25,26,28,29,38,39,40].includes(val)) return true;
+          if ([0,2,3,5,6,8,9,10,11,12,13,14,15,16,17,19,25,26,28,29,38,39,40].includes(val)) return true;
           if (val === 4) {
               if (keysHeld > 0) {
                   keysHeld--;
                   map[Math.floor(mx)][Math.floor(my)] = 0;
                   playTone(400, 'square', 0.1);
                   addParticles(W/2, H/2, '#0099ff', 20);
-                  return true;
-              }
-          }
-          if (val === 1 || val === 20 || val === 21 || val === 22 || val === 27 || val === 39) {
-              if (hasPickaxe > 0 && Math.floor(mx) > 0 && Math.floor(my) > 0 && Math.floor(mx) < map.length - 1 && Math.floor(my) < map[0].length - 1) {
-                  hasPickaxe--;
-                  map[Math.floor(mx)][Math.floor(my)] = 0;
-                  playTone(400, 'square', 0.1);
-                  if (val === 39) {
-                      score += 150;
-                      addParticles(W/2, H/2, '#b432ff', 45);
-                      msgText = "Illusionary Wall Shattered! (+150 Score)";
-                  } else {
-                      addParticles(W/2, H/2, '#a06030', 25);
-                  }
-                  msgTimer = 60;
                   return true;
               }
           }
@@ -2983,7 +2975,6 @@
           msgText = "+1 Pathfinder!"; msgTimer = 60;
       } else if (curVal === 9) {
           speedShoesCharges++;
-          speedBoost = 1;
           score += 50;
           map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(600, 'sine', 0.2);
@@ -3083,13 +3074,13 @@
           msgText = "Cursed Relic: +500 Score, Lost Speed/Nav!"; msgTimer = 60;
       } else if (curVal === 28) { // Save Shrine
           map[Math.floor(pX)][Math.floor(pY)] = 0;
-          saveCheckpointGame();
           hasPickaxe++;
           pathfinderCharges++;
           speedShoesCharges++;
           stunSprayCharges++;
           timeFreezeCharges++;
           score += 300;
+          saveCheckpointGame();
           playTone(900, 'sine', 0.3);
           addParticles(W/2, H/2, '#ffd700', 35);
           msgText = "Ancient Save Shrine Activated! Checkpoint Saved!";
@@ -3263,11 +3254,11 @@
               }
 
               // Scan for local light sources (tile 28, 29, 38)
-              let minCX = Math.max(0, cellX - 3), maxCX = Math.min(map.length - 1, cellX + 3);
-              let minCY = Math.max(0, cellY - 3), maxCY = Math.min(map[0].length - 1, cellY + 3);
+              let minCX = Math.max(0, cellX - 3), maxCX = Math.min(drawMap.length - 1, cellX + 3);
+              let minCY = Math.max(0, cellY - 3), maxCY = Math.min(drawMap[0].length - 1, cellY + 3);
               for (let scx = minCX; scx <= maxCX; scx++) {
                   for (let scy = minCY; scy <= maxCY; scy++) {
-                      let sv = map[scx] && map[scx][scy];
+                      let sv = drawMap[scx] && drawMap[scx][scy];
                       if (sv === 29 || sv === 28 || sv === 38) {
                           let sDist = Math.sqrt((floorX - (scx + 0.5))**2 + (floorY - (scy + 0.5))**2);
                           if (sDist < 4.5) {
@@ -3293,6 +3284,14 @@
               let r = (srcCol & 0xFF) * lightR;
               let g = ((srcCol >> 8) & 0xFF) * lightG;
               let b = ((srcCol >> 16) & 0xFF) * lightB;
+
+              if (isFloor && pathfinderTimer > 0 && cellX >= 0 && cellY >= 0 && cellX < drawMap.length && cellY < drawMap[0].length && isPathTile[cellX] && isPathTile[cellX][cellY]) {
+                  let glow = 0.75 + 0.25 * Math.sin((frameCount * 0.15) + (cellX * 2 + cellY * 3));
+                  r = Math.min(255, r + 180 * glow);
+                  g = Math.min(255, g + 150 * glow);
+                  b = Math.min(255, b + 20 * glow);
+              }
+
               buf32[y * W + x] = (255 << 24) | (Math.min(255, Math.max(0, b)) << 16) | (Math.min(255, Math.max(0, g)) << 8) | Math.min(255, Math.max(0, r));
           }
       }
@@ -3313,10 +3312,10 @@
           
           let stepX, stepY, hit = 0, side = 0;
           
-          if (rayDX < 0) { stepX = -1; sideDistX = (pX - mapX) * deltaDistX; }
-          else           { stepX = 1;  sideDistX = (mapX + 1.0 - pX) * deltaDistX; }
-          if (rayDY < 0) { stepY = -1; sideDistY = (pY - mapY) * deltaDistY; }
-          else           { stepY = 1;  sideDistY = (mapY + 1.0 - pY) * deltaDistY; }
+          if (rayDX < 0) { stepX = -1; sideDistX = (drawPX - mapX) * deltaDistX; }
+          else           { stepX = 1;  sideDistX = (mapX + 1.0 - drawPX) * deltaDistX; }
+          if (rayDY < 0) { stepY = -1; sideDistY = (drawPY - mapY) * deltaDistY; }
+          else           { stepY = 1;  sideDistY = (mapY + 1.0 - drawPY) * deltaDistY; }
           
           while (hit === 0) {
               if (sideDistX < sideDistY) {
@@ -3332,8 +3331,8 @@
           }
           
           if (hit === 12 || hit === 15) {
-              let dx_m = pX - (mapX + 0.5);
-              let dy_m = pY - (mapY + 0.5);
+              let dx_m = drawPX - (mapX + 0.5);
+              let dy_m = drawPY - (mapY + 0.5);
               let pAngle = Math.atan2(dy_m, dx_m);
               let mAngle = (minotaurFacingDir[mapX] && minotaurFacingDir[mapX][mapY] ? minotaurFacingDir[mapX][mapY] : 0) * (Math.PI / 4.0);
               let diff = pAngle - mAngle;
@@ -3392,11 +3391,11 @@
               lightB += att * flicker * 0.65;
           }
 
-          let minCX = Math.max(0, mapX - 3), maxCX = Math.min(map.length - 1, mapX + 3);
-          let minCY = Math.max(0, mapY - 3), maxCY = Math.min(map[0].length - 1, mapY + 3);
+          let minCX = Math.max(0, mapX - 3), maxCX = Math.min(drawMap.length - 1, mapX + 3);
+          let minCY = Math.max(0, mapY - 3), maxCY = Math.min(drawMap[0].length - 1, mapY + 3);
           for (let scx = minCX; scx <= maxCX; scx++) {
               for (let scy = minCY; scy <= maxCY; scy++) {
-                  let sv = map[scx] && map[scx][scy];
+                  let sv = drawMap[scx] && drawMap[scx][scy];
                   if (sv === 29 || sv === 28 || sv === 38) {
                       let sDist = Math.sqrt((actualWX - (scx + 0.5))**2 + (actualWY - (scy + 0.5))**2);
                       if (sDist < 4.5) {

@@ -355,7 +355,7 @@ float dX = 1.0f, dY = 0.0f;
 float planeX = 0.0f, planeY = 0.66f;
 
 typedef struct { int up, down, left, right, pickaxe, pathfinder, speed, stun, freeze, crouch; } KeyBinds;
-KeyBinds keyBinds = { VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT, 'P', 'C', 'S', 'F', 'T', 'X' };
+KeyBinds keyBinds = { VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT, 'P', 'C', 'B', 'F', 'T', 'X' };
 int waitingForKey = 0;
 int prevState = 0;
 
@@ -956,7 +956,7 @@ void SetMapValue(int x, int y, int v) {
 
 int TryMove(int x, int y) {
     int val = GetMapValue(x, y);
-    if (val == 0 || val == 2 || val == 3 || val == 5 || val == 6 || val == 7 || val == 8 || val == 9 || val == 10 || val == 11 || val == 12 || val == 13 || val == 14 || val == 15 || val == 16 || val == 17 || val == 19 || val == 25 || val == 26 || val == 28 || val == 29 || val == 38 || val == 39 || val == 40) return 1;
+    if (val == 0 || val == 2 || val == 3 || val == 5 || val == 6 || val == 8 || val == 9 || val == 10 || val == 11 || val == 12 || val == 13 || val == 14 || val == 15 || val == 16 || val == 17 || val == 19 || val == 25 || val == 26 || val == 28 || val == 29 || val == 38 || val == 39 || val == 40) return 1;
     if (val == 4) {
         if (keysHeld > 0) {
             keysHeld--;
@@ -964,21 +964,6 @@ int TryMove(int x, int y) {
             PlayGameSound(MB_ICONEXCLAMATION);
             AddParticles(160.0f, 120.0f, RGB(0, 150, 255), 20);
             return 1;
-        }
-    }
-    if (val == 1 || val == 20 || val == 21 || val == 22 || val == 27 || val == 39) {
-        if (hasPickaxe > 0 && x > 0 && y > 0) {
-            int mapW = currentLevel >= 10 ? curRandW : 15;
-            int mapH = currentLevel >= 10 ? curRandH : 15;
-            if (currentLevel == 0 || currentLevel == 3) { mapW = 10; mapH = 10; }
-            else if (currentLevel == 1 || currentLevel == 4 || currentLevel == 5 || currentLevel == 7 || currentLevel == 8) { mapW = 12; mapH = 12; }
-            if (x < mapW - 1 && y < mapH - 1) {
-                hasPickaxe--;
-                SetMapValue(x, y, 0);
-                PlayGameSound(MB_ICONEXCLAMATION);
-                AddParticles(160.0f, 120.0f, RGB(180, 100, 50), 25);
-                return 1;
-            }
         }
     }
     return 0;
@@ -1374,6 +1359,7 @@ void SaveCheckpoint() {
 }
 
 void LoadCheckpoint() {
+    shockwaveCount = 0;
     HANDLE hLoad = CreateFileA("kmaze_save.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hLoad != INVALID_HANDLE_VALUE) {
         DWORD readBytes = 0;
@@ -1481,6 +1467,7 @@ void InitGame() {
 }
 
 void NextLevel() {
+    shockwaveCount = 0;
     keysHeld = 0;
     speedBoost = 0;
     hasPickaxe = 1;
@@ -1594,6 +1581,7 @@ void CheckFirstRunTutorial(HWND hwnd) {
 static int activeKeyCooldown = 0;
 
 void StartNewGame(HWND hwnd) {
+    shockwaveCount = 0;
     gameState = 1;
     startTime = GetTickCount();
     currentLevel = -1;
@@ -1967,8 +1955,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 strcpy(msgText, "+1 Pathfinder!"); msgTimer = 60;
             } else if (curVal == 9) {
                 speedShoesCharges++;
-                speedBoost = 1;
-                score += 50;
+                                score += 50;
                 SetMapValue((int)pX, (int)pY, 0);
                 PlayGameSound(MB_ICONASTERISK);
                 AddParticles(160.0f, 120.0f, RGB(255, 255, 0), 15);
@@ -2064,26 +2051,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 strcpy(msgText, "Cursed Relic: +500 Score, Lost Speed/Nav!"); msgTimer = 60;
             } else if (curVal == 28) { // Save Shrine Checkpoint
                 SetMapValue((int)pX, (int)pY, 0);
+                hasPickaxe++;
+                pathfinderCharges++;
+                speedShoesCharges++;
+                stunSprayCharges++;
+                timeFreezeCharges++;
+                score += 300;
+
                 checkpointLevel = currentLevel;
                 checkpointScore = score;
                 checkpointPX = pX;
                 checkpointPY = pY;
                 checkpointKeys = keysHeld;
-                checkpointPickaxe = hasPickaxe + 1;
-                checkpointPathfinder = pathfinderCharges + 1;
-                checkpointSpeed = speedShoesCharges + 1;
-                checkpointStun = stunSprayCharges + 1;
-                checkpointFreeze = timeFreezeCharges + 1;
+                checkpointPickaxe = hasPickaxe;
+                checkpointPathfinder = pathfinderCharges;
+                checkpointSpeed = speedShoesCharges;
+                checkpointStun = stunSprayCharges;
+                checkpointFreeze = timeFreezeCharges;
                 checkpointMapW = curRandW;
                 checkpointMapH = curRandH;
                 for (int i = 0; i < 45; i++) for (int j = 0; j < 45; j++) checkpointMap[i][j] = GetMapValue(i, j);
                 
-                score += 300;
-                hasPickaxe = checkpointPickaxe;
-                pathfinderCharges = checkpointPathfinder;
-                speedShoesCharges = checkpointSpeed;
-                stunSprayCharges = checkpointStun;
-                timeFreezeCharges = checkpointFreeze;
                 SaveCheckpoint();
                 
                 PlayGameSound(MB_ICONASTERISK);
@@ -2267,7 +2255,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int maxCY = (cellY + 3 >= 45) ? 44 : cellY + 3;
                         for (int scx = minCX; scx <= maxCX; scx++) {
                             for (int scy = minCY; scy <= maxCY; scy++) {
-                                int sv = GetMapValue(scx, scy);
+                                int sv = (gameState == 3 && scx >= 0 && scy >= 0 && scx < 45 && scy < 45) ? replayMap[scx][scy] : GetMapValue(scx, scy);
                                 if (sv == 29 || sv == 28 || sv == 38) {
                                     float sDist = (float)sqrt((floorX - (scx + 0.5f))*(floorX - (scx + 0.5f)) + (floorY - (scy + 0.5f))*(floorY - (scy + 0.5f)));
                                     if (sDist < 4.5f) {
@@ -2294,6 +2282,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         float fR = (srcCol & 0xFF) * lightR;
                         float fG = ((srcCol >> 8) & 0xFF) * lightG;
                         float fB = ((srcCol >> 16) & 0xFF) * lightB;
+
+                        if (isFloor && pathfinderTimer > 0 && cellX >= 0 && cellY >= 0 && cellX < 45 && cellY < 45 && isPathTile[cellX][cellY]) {
+                            float glow = 0.75f + 0.25f * (float)sin(animFrameCount * 0.15f + cellX * 2 + cellY * 3);
+                            fR += 180.0f * glow;
+                            fG += 150.0f * glow;
+                            fB += 20.0f * glow;
+                        }
                         if (fR > 255.0f) fR = 255.0f; if (fR < 0.0f) fR = 0.0f;
                         if (fG > 255.0f) fG = 255.0f; if (fG < 0.0f) fG = 0.0f;
                         if (fB > 255.0f) fB = 255.0f; if (fB < 0.0f) fB = 0.0f;
@@ -2318,10 +2313,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     
                     int stepX, stepY, hit = 0, side = 0;
                     
-                    if (rayDX < 0) { stepX = -1; sideDistX = (pX - mapX) * deltaDistX; }
-                    else           { stepX = 1;  sideDistX = (mapX + 1.0f - pX) * deltaDistX; }
-                    if (rayDY < 0) { stepY = -1; sideDistY = (pY - mapY) * deltaDistY; }
-                    else           { stepY = 1;  sideDistY = (mapY + 1.0f - pY) * deltaDistY; }
+                    if (rayDX < 0) { stepX = -1; sideDistX = (drawPX - mapX) * deltaDistX; }
+                    else           { stepX = 1;  sideDistX = (mapX + 1.0f - drawPX) * deltaDistX; }
+                    if (rayDY < 0) { stepY = -1; sideDistY = (drawPY - mapY) * deltaDistY; }
+                    else           { stepY = 1;  sideDistY = (mapY + 1.0f - drawPY) * deltaDistY; }
                     
                     while (hit == 0) {
                         if (sideDistX < sideDistY) {
@@ -2338,8 +2333,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     
                     if (hit == 12 || hit == 15) {
-                        float dx_m = pX - (mapX + 0.5f);
-                        float dy_m = pY - (mapY + 0.5f);
+                        float dx_m = drawPX - (mapX + 0.5f);
+                        float dy_m = drawPY - (mapY + 0.5f);
                         float pAngle = (float)atan2(dy_m, dx_m);
                         float mAngle = minotaurFacingDir[mapX][mapY] * (float)(PI / 4.0f);
                         float diff = pAngle - mAngle;
@@ -2404,7 +2399,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int maxCY = (mapY + 3 >= 45) ? 44 : mapY + 3;
                     for (int scx = minCX; scx <= maxCX; scx++) {
                         for (int scy = minCY; scy <= maxCY; scy++) {
-                            int sv = GetMapValue(scx, scy);
+                            int sv = (gameState == 3 && scx >= 0 && scy >= 0 && scx < 45 && scy < 45) ? replayMap[scx][scy] : GetMapValue(scx, scy);
                             if (sv == 29 || sv == 28 || sv == 38) {
                                 float sDist = (float)sqrt((actualWX - (scx + 0.5f))*(actualWX - (scx + 0.5f)) + (actualWY - (scy + 0.5f))*(actualWY - (scy + 0.5f)));
                                 if (sDist < 4.5f) {
@@ -2638,7 +2633,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Active Items Legend HUD
             if (gameState == 1) {
                 char itemText[180];
-                wsprintfA(itemText, "[1/P]Break [2/C]Path:%ds [3/S]Speed:%ds [4/F]Stun:%ds [5/T]Freeze:%ds [6/X]Crouch:%s [F5/V]Save [F9/L]Load", pathfinderTimer/1000, speedShoesTimer/1000, stunSprayTimer/1000, timeFreezeTimer/1000, isCrouching ? "ON" : "OFF");
+                wsprintfA(itemText, "[1/P]Break [2/C]Path:%ds [3/B]Speed:%ds [4/F]Stun:%ds [5/T]Freeze:%ds [6/X]Crouch:%s [F5/V]Save [F9/L]Load", pathfinderTimer/1000, speedShoesTimer/1000, stunSprayTimer/1000, timeFreezeTimer/1000, isCrouching ? "ON" : "OFF");
                 SetTextColor(hdc, RGB(0, 0, 0));
                 TextOutA(hdc, 22, clientRect.bottom - 28, itemText, lstrlenA(itemText));
                 SetTextColor(hdc, RGB(0, 255, 255));
@@ -2661,6 +2656,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN: {
+            if (gameState == 4 && waitingForKey > 0) {
+                if (wParam == VK_ESCAPE) {
+                    waitingForKey = 0;
+                } else {
+                    if (waitingForKey == 1) keyBinds.up = (int)wParam;
+                    else if (waitingForKey == 2) keyBinds.down = (int)wParam;
+                    else if (waitingForKey == 3) keyBinds.left = (int)wParam;
+                    else if (waitingForKey == 4) keyBinds.right = (int)wParam;
+                    else if (waitingForKey == 5) keyBinds.pickaxe = (int)wParam;
+                    else if (waitingForKey == 6) keyBinds.pathfinder = (int)wParam;
+                    else if (waitingForKey == 7) keyBinds.speed = (int)wParam;
+                    else if (waitingForKey == 8) keyBinds.stun = (int)wParam;
+                    else if (waitingForKey == 9) keyBinds.freeze = (int)wParam;
+                    else if (waitingForKey == 10) keyBinds.crouch = (int)wParam;
+                    waitingForKey = 0;
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
             if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                 ShowHelpDialog(hwnd);
                 break;
@@ -2712,19 +2726,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             if (gameState == 4) {
                 if (wParam == VK_ESCAPE) { waitingForKey = 0; gameState = prevState; }
-                else if (waitingForKey > 0) {
-                    if (waitingForKey == 1) keyBinds.up = (int)wParam;
-                    if (waitingForKey == 2) keyBinds.down = (int)wParam;
-                    if (waitingForKey == 3) keyBinds.left = (int)wParam;
-                    if (waitingForKey == 4) keyBinds.right = (int)wParam;
-                    if (waitingForKey == 5) keyBinds.pickaxe = (int)wParam;
-                    if (waitingForKey == 6) keyBinds.pathfinder = (int)wParam;
-                    if (waitingForKey == 7) keyBinds.speed = (int)wParam;
-                    if (waitingForKey == 8) keyBinds.stun = (int)wParam;
-                    if (waitingForKey == 9) keyBinds.freeze = (int)wParam;
-                    if (waitingForKey == 10) keyBinds.crouch = (int)wParam;
-                    waitingForKey = 0;
-                }
             }
             if (gameState == 3) {
                 if (wParam == VK_ESCAPE) { gameState = 2; }
