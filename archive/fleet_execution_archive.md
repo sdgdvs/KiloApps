@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-28T23:40:15-07:00 — kilo-qa: KSys (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KSys across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KMandel`; rotated active agent to `kilo-expander`.
+
 - **2026-10-28T23:21:25-07:00 — kilo-usability: KChart (Usability & Layout Polish)**
   - Status: PASS (0 errors, web 141.8 KB, native 38.5 KB < 999 KB; visual PASS 0 fail 0 warn 0px overflow).
   - Layout: locked body to 100vh overflow:hidden (<=900px scroll fallback), compacted header to 1 row, separated title from toolbars, flex:1 canvas/table, 8-col stats-grid.

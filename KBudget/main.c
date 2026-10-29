@@ -31,6 +31,7 @@ HWND hBtnSettings;
 HWND hBtnSave, hBtnLoad, hBtnHelp;
 HWND hStatus;
 HWND hSearchEdit;
+HWND hTypeCombo;
 HWND hSortCombo;
 HWND hLblTotal, hLblIncome, hLblExpense, hLblGoal;
 HWND hBtnPrev, hBtnNext, hLblPage;
@@ -331,18 +332,31 @@ void UpdateUI() {
     
     SendMessage(hList, LB_RESETCONTENT, 0, 0);
     
-    int *filtered = (int*)malloc(num_transactions * sizeof(int));
+    int alloc_size = (num_transactions > 0) ? num_transactions : 1;
+    int *filtered = (int*)malloc(alloc_size * sizeof(int));
+    if (!filtered) return;
     int filtered_count = 0;
     
+    int typeFilter = hTypeCombo ? (int)SendMessage(hTypeCombo, CB_GETCURSEL, 0, 0) : 0;
+
     for (int i = 0; i < num_transactions; i++) {
-        char catLower[64], descLower[128];
+        if (typeFilter == 1 && transactions[i].is_income) continue;
+        if (typeFilter == 2 && !transactions[i].is_income) continue;
+
+        char catLower[64], descLower[128], dateLower[32], amtBuf[32];
         strncpy(catLower, transactions[i].category, 64);
         strncpy(descLower, transactions[i].description, 128);
+        strncpy(dateLower, transactions[i].date, 32);
         for(int j = 0; catLower[j]; j++) catLower[j] = tolower((unsigned char)catLower[j]);
         for(int j = 0; descLower[j]; j++) descLower[j] = tolower((unsigned char)descLower[j]);
+        for(int j = 0; dateLower[j]; j++) dateLower[j] = tolower((unsigned char)dateLower[j]);
+        snprintf(amtBuf, sizeof(amtBuf), "%.2f", transactions[i].amount);
         
         if (searchTerm[0] != '\0') {
-            if (strstr(catLower, searchTerm) == NULL && strstr(descLower, searchTerm) == NULL) {
+            if (strstr(catLower, searchTerm) == NULL && 
+                strstr(descLower, searchTerm) == NULL &&
+                strstr(dateLower, searchTerm) == NULL &&
+                strstr(amtBuf, searchTerm) == NULL) {
                 continue;
             }
         }
@@ -423,20 +437,30 @@ INT_PTR CALLBACK AddDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 SetDlgItemText(hwndDlg, IDC_DESC_EDIT, t->description);
                 SetDlgItemText(hwndDlg, IDC_DATE_EDIT, t->date);
             } else {
+                SYSTEMTIME st;
+                GetLocalTime(&st);
+                char dateBuf[32];
+                snprintf(dateBuf, sizeof(dateBuf), "%04d-%02d-%02d", st.wYear, st.wMonth, st.wDay);
                 SetDlgItemText(hwndDlg, IDC_TYPE_EDIT, "0");
                 SetDlgItemText(hwndDlg, IDC_AMOUNT_EDIT, "0.00");
                 SetDlgItemText(hwndDlg, IDC_CAT_EDIT, "Food");
                 SetDlgItemText(hwndDlg, IDC_DESC_EDIT, "Lunch");
-                SetDlgItemText(hwndDlg, IDC_DATE_EDIT, "2026-07-12");
+                SetDlgItemText(hwndDlg, IDC_DATE_EDIT, dateBuf);
             }
             return TRUE;
             
         case WM_COMMAND:
             if (LOWORD(wParam) == IDOK) {
+                char amtStr[32];
+                GetDlgItemText(hwndDlg, IDC_AMOUNT_EDIT, amtStr, sizeof(amtStr));
+                double amtVal = atof(amtStr);
+                if (amtVal <= 0.0) {
+                    MessageBoxA(hwndDlg, "Please enter a valid positive amount greater than 0.", "Invalid Amount", MB_OK | MB_ICONWARNING);
+                    return TRUE;
+                }
                 if (editing_index >= 0 || num_transactions < MAX_TRANSACTIONS) {
-                    char typeStr[32], amtStr[32];
+                    char typeStr[32];
                     GetDlgItemText(hwndDlg, IDC_TYPE_EDIT, typeStr, sizeof(typeStr));
-                    GetDlgItemText(hwndDlg, IDC_AMOUNT_EDIT, amtStr, sizeof(amtStr));
                     
                     Transaction *t;
                     if (editing_index >= 0) {
@@ -447,7 +471,7 @@ INT_PTR CALLBACK AddDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     }
                     
                     t->is_income = atoi(typeStr);
-                    t->amount = atof(amtStr);
+                    t->amount = amtVal;
                     GetDlgItemText(hwndDlg, IDC_CAT_EDIT, t->category, sizeof(t->category));
                     GetDlgItemText(hwndDlg, IDC_DESC_EDIT, t->description, sizeof(t->description));
                     GetDlgItemText(hwndDlg, IDC_DATE_EDIT, t->date, sizeof(t->date));
