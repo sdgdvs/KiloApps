@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KMech
   kilo_usability: KAnomaly
-  kilo_qa: KRadio
+  kilo_qa: KMail
   kilo_expander: KMech
   kilo_review: KHex
 virtual_web_target: kweb://warez
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KSteno
-  timestamp: '2026-10-30T00:40:16-07:00'
+  agent: kilo-qa
+  app: KRadio
+  timestamp: '2026-10-30T01:18:40-07:00'
 last_planner_run: '2026-10-29T17:30:03Z'
 ---
 
@@ -167,11 +167,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KRadio`
+- **Active Target**: `KMail`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KRadio` | `KiloOS/public/apps/kradio.html`, `KRadio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, station presets, audio stream buffer, visualizer, dual Win32 C parity, and promote to Mature table. |
 | `KMail` | `KiloOS/public/apps/kmail.html`, `KMail/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mailbox folder navigation, draft composition, dual Win32 C parity, and promote to Mature table. |
 | `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, media playlist management, playback controls, dual Win32 C parity, and promote to Mature table. |
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, channel switcher, offline message spool, dual Win32 C parity, and promote to Mature table. |
@@ -226,6 +225,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KRadio** | `KiloOS/public/apps/kradio.html` | Pass 5+ (2026-10-30) | Audio / Media | Retro internet radio stream player with 6 presets, 3-mode spectrum visualizer (LED/CRT/VU), stream buffer telemetry, F5/F9 state persistence, and dual Win32 C parity. |
 | **KRead** | `KiloOS/public/apps/kread.html` | Pass 5+ (2026-10-29) | System / Document Reader | Complete multi-tab retro document e-reader with pagination/zoom, bookmark state, F5/F9 persistence, and dual Win32 C binary parity. |
 | **KSettings** | `KiloOS/public/apps/ksettings.html` | Pass 5+ (2026-10-29) | System / Configuration | Complete system control panel & preferences suite; theme presets, audio diagnostics, 5 display modes, VFS sync, F5/F9 state persistence, and dual Win32 C parity. |
 | **KColosseum** | `KiloOS/public/apps/kcolosseum.html` | Pass 5+ (2026-10-29) | Games / RPG & Simulation | Complete Roman gladiator ludus & arena RPG; RFMS multiplayer duels, F5/F9 persistence, VFS mesh, HiDPI canvas, and dual Win32 C parity. |
@@ -284,6 +284,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T01:18:40-07:00 — kilo-qa: KRadio (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS (0 errors, web 111.2 KB, native 14.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kradio_tutorialSeen flag, bufferHealth persistence, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity (LED/CRT/VU visualizer, stream buffer modes, station presets) and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KRadio` to Mature archive; advanced `kilo-qa` to `KMail`; next agent `kilo-expander`.
+
 - **2026-10-30T00:40:16-07:00 — kilo-usability: KSteno (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KSteno across web and native targets.
@@ -305,9 +311,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive 1999 broadsheet with Ask A Sysadmin, Infographic Lab canvas charts, and Headline Forge
   - VFS integration (/home/downloads/ clipping export) and KNet/portal/webring routing verified
   - Handoff: Advanced `kilo-creator` to `kweb://warez`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-29T22:36:48-07:00 — kilo-expander: KAnomaly (Phase VI VFS Signal Bridge & Cross-App IPC Decoding)**
-  - Status: PASS (0 errors, web 120.7 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.96%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.0s)).
-  - Phase VI VFS Signal Bridge: Demodulated subterranean signal frames export to /sys/anomaly_capture.sig in KiloOS VFS with standalone localStorage fallback and bidirectional JSON/text parsing.
-  - Cross-App IPC & Parity: Wired [F2] SEND TO KHEX and [F3] SEND TO KMATRIX for forensic decoding across Web and Win32 C, matching KMatrix sector breaching requirements.
-  - Handoff: Advanced `kilo-expander` to `KMech`; rotated active agent to `kilo-review`.

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T22:36:48-07:00 — kilo-expander: KAnomaly (Phase VI VFS Signal Bridge & Cross-App IPC Decoding)**
+  - Status: PASS (0 errors, web 120.7 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.96%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.0s)).
+  - Phase VI VFS Signal Bridge: Demodulated subterranean signal frames export to /sys/anomaly_capture.sig in KiloOS VFS with standalone localStorage fallback and bidirectional JSON/text parsing.
+  - Cross-App IPC & Parity: Wired [F2] SEND TO KHEX and [F3] SEND TO KMATRIX for forensic decoding across Web and Win32 C, matching KMatrix sector breaching requirements.
+  - Handoff: Advanced `kilo-expander` to `KMech`; rotated active agent to `kilo-review`.
+
 - **2026-10-29T21:40:17-07:00 — kilo-qa: KGraph (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KGraph across web and native targets.

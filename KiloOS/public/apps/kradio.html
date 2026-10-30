@@ -1677,10 +1677,20 @@
         }
         btnVizMode.addEventListener('click', cycleVizMode);
         canvas.addEventListener('click', cycleVizMode);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && !vizRafId) {
+                vizRafId = requestAnimationFrame(drawVisualizer);
+            }
+        });
 
         // HiDPI Visualizer Animation Loop
+        let vizRafId = null;
         function drawVisualizer() {
-            requestAnimationFrame(drawVisualizer);
+            if (document.hidden) {
+                vizRafId = null;
+                return;
+            }
+            vizRafId = requestAnimationFrame(drawVisualizer);
             if (!ctx) return;
             const w = canvas.width / dpr;
             const h = canvas.height / dpr;
@@ -2182,6 +2192,7 @@
                     treble: parseFloat(eqTreble.value),
                     preamp: parseFloat(eqPreamp.value)
                 },
+                bufferHealth: diagBuffer ? diagBuffer.textContent : '100% HEALTHY',
                 timestamp: Date.now()
             };
             const ok = safeSetStorage('kradio_quicksave', JSON.stringify(state));
@@ -2217,6 +2228,9 @@
                     applyEqValues();
                 }
 
+                if (state.bufferHealth && diagBuffer) {
+                    diagBuffer.textContent = state.bufferHealth;
+                }
                 if (typeof state.volume === 'number') {
                     updateVolume(state.volume);
                 }
@@ -2649,6 +2663,7 @@
                     closeDirectory();
                     return;
                 }
+                return;
             }
 
             // Quicksave (F5) & Quickload (F9)
