@@ -1137,6 +1137,8 @@
           <tr><td><code>kweb://slashnet</code></td><td>Access SlashNet: News for Nerds (1999), Karma Moderation &amp; Beowulf Cluster Calc</td></tr>
           <tr><td><code>kweb://cabled</code></td><td>Access Cabled Magazine (1999 Edition), Y2K Readiness Audit, Dot-Com IPO Simulator &amp; Jargon Watch</td></tr>
           <tr><td><code>kweb://scallion</code></td><td>Access The Scallion: 1999 Satirical News, Ask A Sysadmin Column &amp; Infographic Lab</td></tr>
+          <tr><td><code>kweb://demoscene</code></td><td>Access Assembly '99 Demoscene Party Vault, 64K Intro Switcher, ANSI .NFO Studio &amp; Voting Board</td></tr>
+          <tr><td><code>kweb://rfc-archive</code></td><td>Access Living RFC Archive Workbench, RFC 1149 Avian Carrier Simulator &amp; HTCPCP Console</td></tr>
           <tr><td><code>kweb://trapster</code></td><td>Access Trapster P2P Chiptune &amp; Tracker Exchange v1.0b</td></tr>
           <tr><td><code>kweb://webring</code></td><td>Access Central KiloNet Webring Hub &amp; Node Directory</td></tr>
           <tr><td><code>kweb://geocities</code></td><td>Access CyberSpire Retro Shrine, SiliconValley, Area51 &amp; Tokyo99 Homestead Web Rings, Hit Counters, Under-Construction GIFs, Amiga .MOD Vault, Diskmag Reader &amp; VFS HTML Export</td></tr>
@@ -2481,8 +2483,13 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
       url = '/web/cabled.html' + sub;
     } else if (url.toLowerCase() === 'kweb://scallion' || url.toLowerCase() === 'scallion' || url.toLowerCase() === 'kweb://thescallion' || url.toLowerCase() === 'thescallion' || url.toLowerCase() === 'kweb://scallion.html' || url.toLowerCase() === 'kweb://onion' || url.toLowerCase() === 'onion') {
       url = '/web/scallion.html';
-    } else if (url.toLowerCase() === 'kweb://demoscene' || url.toLowerCase() === 'demoscene' || url.toLowerCase() === 'kweb://assembly99' || url.toLowerCase() === 'assembly99' || url.toLowerCase() === 'kweb://demoscene.html' || url.toLowerCase() === 'kweb://scene99' || url.toLowerCase() === 'scene99') {
-      url = '/web/demoscene.html';
+    } else if (url.toLowerCase() === 'kweb://demoscene' || url.toLowerCase().startsWith('kweb://demoscene/') || url.toLowerCase().startsWith('kweb://demoscene#') || url.toLowerCase().startsWith('kweb://demoscene?') || url.toLowerCase() === 'demoscene' || url.toLowerCase().startsWith('demoscene/') || url.toLowerCase() === 'kweb://assembly99' || url.toLowerCase().startsWith('kweb://assembly99/') || url.toLowerCase().startsWith('kweb://assembly99#') || url.toLowerCase() === 'assembly99' || url.toLowerCase() === 'kweb://demoscene.html' || url.toLowerCase() === 'kweb://scene99' || url.toLowerCase() === 'scene99') {
+      let sub = '';
+      const hIdx = url.indexOf('#');
+      const qIdx = url.indexOf('?');
+      if (hIdx !== -1) sub = url.substring(hIdx);
+      else if (qIdx !== -1) sub = url.substring(qIdx);
+      url = '/web/demoscene.html' + sub;
     } else if (url.toLowerCase() === 'kweb://rfc-archive' || url.toLowerCase() === 'rfc-archive' || url.toLowerCase() === 'kweb://rfc_archive' || url.toLowerCase() === 'rfc_archive' || url.toLowerCase() === 'kweb://rfc' || url.toLowerCase() === 'rfc' || url.toLowerCase() === 'kweb://rfc-archive.html' || url.toLowerCase() === 'kweb://ietf' || url.toLowerCase() === 'ietf') {
       url = '/web/rfc_archive.html';
     } else if (url.toLowerCase().startsWith('kweb://webring') || url.toLowerCase().startsWith('webring?') || url.toLowerCase() === 'webring') {

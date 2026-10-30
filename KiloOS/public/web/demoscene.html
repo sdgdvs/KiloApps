@@ -723,6 +723,7 @@
 
     <div class="nav-actions">
       <button class="btn-mini" onclick="saveActiveIntroVFS()">💾 Dump Frame to VFS</button>
+      <button class="btn-mini" onclick="savePartyVaultZipVFS()">📦 Spool Vault (.ZIP)</button>
       <button class="btn-mini" onclick="launchInKHex()">🔍 Open in KHex</button>
     </div>
   </div>
@@ -1198,6 +1199,12 @@ function switchTab(tabId) {
   const targetBtn = document.querySelector(`.nav-tab-btn[data-tab="${tabId}"]`);
   if (targetPane) targetPane.classList.add('active');
   if (targetBtn) targetBtn.classList.add('active');
+
+  try {
+    if (history.replaceState) {
+      history.replaceState(null, '', '#' + tabId);
+    }
+  } catch (e) {}
 
   // Trigger resize or restart if switching back to effects
   if (tabId === 'tab-effects' && isPaused) {
@@ -1696,6 +1703,27 @@ function rasterLoop(now) {
       el.scrollLeft = Math.floor(scrollerPos);
     }
   }
+}
+
+function savePartyVaultZipVFS() {
+  const archiveManifest = `========================================================================
+ASSEMBLY '99 DEMOSCENE PARTY VAULT // ARCHIVE PACKAGE MANIFEST
+Venue: Hartwall Areena, Helsinki, Finland (August 5-8, 1999)
+Integrity Checksum: CRC32: 0x7F199942 | MD5: 99a55e1b42d064c18f1999e0
+Destination: /home/downloads/assembly99_party_vault.zip
+========================================================================
+[CONTENTS]
+/64k/FLARELIGHT_Neural_Eclipse.exe  (64,812 bytes) [1st Place 64K Intro]
+/64k/DEEPPIXEL_Silicon_Dreams.exe   (4,096 bytes)  [2nd Place 64K Intro]
+/64k/PULSE_Horizon.exe              (65,114 bytes) [3rd Place 64K Intro]
+/demo/SUBLIME_Copper_Horizon.zip    (12.4 MB)      [1st Place Combined Demo]
+/music/RAZOR_SecondReality.xm       (482 KB)       [FastTracker 2 32-ch XM]
+/nfo/FLARELIGHT_Neural_Eclipse.nfo  (4,281 bytes)  [Official Party NFO]
+/nfo/DEEPPIXEL_Silicon_Dreams.nfo   (1,080 bytes)  [Official Party NFO]
+/docs/RESULTS.TXT                   (18,400 bytes) [Full Compo Final Scores]
+========================================================================
+Certified by Assembly '99 Organizing Committee.`;
+  saveToKiloVfs('/home/downloads/assembly99_party_vault.zip', archiveManifest);
 }
 
 function saveActiveIntroVFS() {
@@ -2591,6 +2619,35 @@ window.addEventListener('DOMContentLoaded', () => {
   selectNfoFile(activeNfoKey);
   renderCompoList();
   renderTrackGrid();
+
+  // Parse URL Hash & Search Query Parameters for deep linking
+  try {
+    const hash = window.location.hash.replace('#', '').toLowerCase();
+    if (hash) {
+      if (hash.includes('nfo')) switchTab('tab-nfo');
+      else if (hash.includes('vote') || hash.includes('compo')) switchTab('tab-voting');
+      else if (hash.includes('juke') || hash.includes('music') || hash.includes('audio')) switchTab('tab-jukebox');
+      else if (hash.includes('ring') || hash.includes('web')) switchTab('tab-webring');
+      else if (hash.includes('effect') || hash.includes('intro')) switchTab('tab-effects');
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const ef = params.get('effect');
+    if (ef && ['plasma', 'rotozoom', 'starfield', 'copper', 'metaballs'].includes(ef)) {
+      setEffect(ef);
+    }
+    const pal = params.get('palette');
+    if (pal && ['cyber', 'fire', 'copper', 'acid'].includes(pal)) {
+      activePalette = pal;
+      const pSel = document.getElementById('paramPalette');
+      if (pSel) pSel.value = pal;
+    }
+    const nfoParam = params.get('nfo');
+    if (nfoParam && NFO_FILES[nfoParam]) {
+      selectNfoFile(nfoParam);
+      switchTab('tab-nfo');
+    }
+  } catch (e) {}
 
   // Start Canvas animation
   requestAnimationFrame(rasterLoop);
