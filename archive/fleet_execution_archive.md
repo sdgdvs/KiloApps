@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T04:22:20-07:00 — kilo-usability: KAnomaly (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KAnomaly across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KTrader`; rotated active agent to `kilo-qa`.
+
 - **2026-10-30T03:35:59-07:00 — kilo-tester: KMech (Interactive UI Audit & Combat Telemetry Fixes)**
   - Status: PASS ✅ (0 errors, web 180.5 KB, native 38.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - UI & Combat Repairs: Fixed #garage-rank update on level-up, verified enemyStunned headshot mechanics in enemyTurn(), auto-restored telemetry on boot, and aligned EMP overheat burnout damage in both Web and Win32 C.

@@ -1799,7 +1799,7 @@
 
       previousActiveElement = document.activeElement;
 
-      const focusable = modalEl.querySelectorAll('button:not([disabled]), [tabindex]:not([tabindex="-1"]), input:not([disabled])');
+      const focusable = modalEl.querySelectorAll('button:not([disabled]), [tabindex]:not([tabindex="-1"]), input:not([disabled]), select:not([disabled])');
 
       if (focusable.length > 0) {
 
@@ -7467,7 +7467,7 @@
 
       if (e.key === 'Tab' && activeModal) {
 
-        const focusable = Array.from(activeModal.querySelectorAll('button:not([disabled]), [tabindex]:not([tabindex="-1"]), input:not([disabled])'));
+        const focusable = Array.from(activeModal.querySelectorAll('button:not([disabled]), [tabindex]:not([tabindex="-1"]), input:not([disabled]), select:not([disabled])'));
 
         if (focusable.length > 0) {
 
