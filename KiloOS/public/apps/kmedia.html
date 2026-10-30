@@ -1638,6 +1638,7 @@
   if (UI.btnEmptyDemo) UI.btnEmptyDemo.onclick = loadDemoSuite;
 
   // --- Sidebar Tab Navigation (4 Tabs) ---
+  let activeTabIdx = 0;
   const tabs = [
     { btn: document.getElementById('tabPlaylist'), panel: document.getElementById('panelPlaylist') },
     { btn: document.getElementById('tabAudio'), panel: document.getElementById('panelAudio') },
@@ -1646,6 +1647,7 @@
   ];
 
   function switchTab(index) {
+    activeTabIdx = index;
     tabs.forEach((t, idx) => {
       const active = idx === index;
       t.btn.classList.toggle('active', active);
@@ -1771,8 +1773,14 @@
     }
   }
 
+  let visAnimId = null;
+
   function drawVisualizer() {
-    requestAnimationFrame(drawVisualizer);
+    if (document.hidden) {
+      visAnimId = null;
+      return;
+    }
+    visAnimId = requestAnimationFrame(drawVisualizer);
     if (!analyser) return;
     if (UI.mediaPlayer.paused && !UI.mediaPlayer.currentTime) {
       drawIdleVisualizer();
@@ -1959,6 +1967,20 @@
       }
     }
   }
+
+  // Lifecycle & Resource Hygiene: Pause RAF visualizer when document is hidden
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (visAnimId) {
+        cancelAnimationFrame(visAnimId);
+        visAnimId = null;
+      }
+    } else {
+      if (!visAnimId) {
+        drawVisualizer();
+      }
+    }
+  });
 
   // --- File Input & Playlist Handling ---
   UI.btnAdd.onclick = () => UI.fileInput.click();
@@ -3409,6 +3431,8 @@
       const state = {
         version: 1,
         timestamp: Date.now(),
+        activeTab: activeTabIdx,
+        sidebarCollapsed: UI.sidebar ? UI.sidebar.classList.contains('collapsed') : false,
         playlist: playlist.map(item => ({
           name: item.name,
           durationStr: item.durationStr || '',
@@ -3609,6 +3633,20 @@
         setPlaybackSpeed(state.playbackSpeed % speeds.length);
       }
 
+      // Restore Active Tab & Sidebar State
+      if (typeof state.activeTab === 'number') {
+        switchTab(state.activeTab % tabs.length);
+      }
+      if (state.sidebarCollapsed !== undefined && UI.sidebar) {
+        const isCol = !!state.sidebarCollapsed;
+        UI.sidebar.classList.toggle('collapsed', isCol);
+        document.body.classList.toggle('sidebar-collapsed', isCol);
+        if (UI.btnToggleSidebar) {
+          UI.btnToggleSidebar.textContent = isCol ? '▶ Sidebar [Tab]' : '◀ Sidebar [Tab]';
+        }
+        resizeCanvas();
+      }
+
       // Restore Visualizer Mode & Palette
       if (typeof state.visualizerMode === 'number') {
         currentVisMode = state.visualizerMode;
@@ -3714,16 +3752,17 @@
 
   function openHelp() {
     helpOverlay.style.display = 'flex';
+    safeSetStorage('kmedia_tutorialSeen', '1');
     if (chkDoNotShow) {
-      chkDoNotShow.checked = safeGetStorage('kmedia_tutorialSeen', '0') === '1';
+      chkDoNotShow.checked = true;
     }
     const closeBtn = document.getElementById('btnCloseHelp');
     if (closeBtn) closeBtn.focus();
   }
   function closeHelp() {
     helpOverlay.style.display = 'none';
-    if (chkDoNotShow) {
-      safeSetStorage('kmedia_tutorialSeen', chkDoNotShow.checked ? '1' : '0');
+    if (chkDoNotShow && !chkDoNotShow.checked) {
+      safeSetStorage('kmedia_tutorialSeen', '0');
     } else {
       safeSetStorage('kmedia_tutorialSeen', '1');
     }
@@ -3745,6 +3784,35 @@
 
   // --- Keyboard Shortcuts & Navigation ---
   window.addEventListener('keydown', (e) => {
+    // 1. Modal dialog dismissal priority (Escape / Enter / Space)
+    if (helpOverlay && helpOverlay.style.display === 'flex') {
+      if (e.key === 'Escape' || e.key === 'Enter' || e.code === 'Space') {
+        closeHelp();
+        e.preventDefault();
+        return;
+      }
+    }
+
+    // 2. Global Quicksave (F5) & Quickload (F9) State Persistence
+    if (e.key === 'F5') {
+      quickSaveState();
+      e.preventDefault();
+      return;
+    }
+    if (e.key === 'F9') {
+      quickLoadState();
+      e.preventDefault();
+      return;
+    }
+
+    // 3. F1 / Help Toggle
+    if ((!e.ctrlKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === 'h') || e.key === 'F1') {
+      if (helpOverlay && helpOverlay.style.display === 'flex') closeHelp();
+      else openHelp();
+      e.preventDefault();
+      return;
+    }
+
     if (document.activeElement === UI.searchInput || document.activeElement === UI.partyChatInput || document.activeElement === UI.partyRoomInput) {
       if (e.key === 'Escape') {
         if (document.activeElement.value) {
@@ -3779,33 +3847,6 @@
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
       addCuePoint();
       e.preventDefault();
-      return;
-    }
-
-    if ((!e.ctrlKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === 'h') || e.key === 'F1') {
-      if (helpOverlay.style.display === 'flex') closeHelp();
-      else openHelp();
-      e.preventDefault();
-      return;
-    }
-
-    if (e.key === 'F5') {
-      quickSaveState();
-      e.preventDefault();
-      return;
-    }
-
-    if (e.key === 'F9') {
-      quickLoadState();
-      e.preventDefault();
-      return;
-    }
-
-    if (helpOverlay.style.display === 'flex') {
-      if (e.key === 'Escape' || e.key === 'Enter' || e.code === 'Space') {
-        closeHelp();
-        e.preventDefault();
-      }
       return;
     }
 
@@ -3904,6 +3945,10 @@
   });
 
   window.addEventListener('beforeunload', () => {
+    if (visAnimId) {
+      cancelAnimationFrame(visAnimId);
+      visAnimId = null;
+    }
     playlist.forEach(item => {
       if (item.url) {
         try { URL.revokeObjectURL(item.url); } catch(e) {}

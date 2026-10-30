@@ -37,7 +37,7 @@ char* my_strrchr(const char* str, int ch) {
 
 HWND g_hwndMain;
 HWND hTitle, hEditSearch, hBtnOpen, hBtnPlay, hBtnStop, hBtnPrev, hBtnNext, hBtnRem, hBtnClear, hBtnMode, hBtnSpeed, hBtnExport, hListBox, hSubText, hBtnHelp;
-HWND hBtnSeekBack, hBtnSeekFwd, hTimeStatus, hBtnSave, hBtnLoad;
+HWND hBtnSeekBack, hBtnSeekFwd, hTimeStatus, hBtnSave, hBtnLoad, hBtnDemo;
 
 HFONT g_hFont = NULL;
 HFONT g_hSubFont = NULL;
@@ -66,6 +66,10 @@ typedef struct {
 
 Subtitle g_subs[500];
 int g_subCount = 0;
+
+void PlayTrackByIndex(int masterIdx);
+void RefilterPlaylist();
+void ShowHelpDialog(HWND hwnd);
 
 int str_to_int(const char* str) {
     int val = 0;
@@ -250,6 +254,72 @@ void AddTrack(const char* path) {
     if (g_trackCount < MAX_TRACKS) {
         lstrcpyA(g_tracks[g_trackCount], path);
         g_trackCount++;
+    }
+}
+
+void GenerateDemoWav(const char* filename) {
+    HANDLE h = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h == INVALID_HANDLE_VALUE) return;
+    
+    int sampleRate = 22050;
+    int durationSecs = 4;
+    int dataSize = sampleRate * durationSecs;
+    int fileSize = 36 + dataSize;
+    
+    BYTE header[44] = {
+        'R','I','F','F',
+        (BYTE)(fileSize & 0xFF), (BYTE)((fileSize >> 8) & 0xFF), (BYTE)((fileSize >> 16) & 0xFF), (BYTE)((fileSize >> 24) & 0xFF),
+        'W','A','V','E',
+        'f','m','t',' ',
+        16, 0, 0, 0,
+        1, 0,
+        1, 0,
+        (BYTE)(sampleRate & 0xFF), (BYTE)((sampleRate >> 8) & 0xFF), (BYTE)((sampleRate >> 16) & 0xFF), (BYTE)((sampleRate >> 24) & 0xFF),
+        (BYTE)(sampleRate & 0xFF), (BYTE)((sampleRate >> 8) & 0xFF), (BYTE)((sampleRate >> 16) & 0xFF), (BYTE)((sampleRate >> 24) & 0xFF),
+        1, 0,
+        8, 0,
+        'd','a','t','a',
+        (BYTE)(dataSize & 0xFF), (BYTE)((dataSize >> 8) & 0xFF), (BYTE)((dataSize >> 16) & 0xFF), (BYTE)((dataSize >> 24) & 0xFF)
+    };
+    DWORD written = 0;
+    WriteFile(h, header, 44, &written, NULL);
+    
+    BYTE buffer[1024];
+    int bufPos = 0;
+    int notes[] = { 220, 261, 330, 392, 440, 523, 659, 784 };
+    for (int t = 0; t < dataSize; t++) {
+        int noteIdx = (t / (sampleRate / 4)) % 8;
+        int freq = notes[noteIdx];
+        int phase = (t * freq) % sampleRate;
+        int val = (phase < (sampleRate / 2)) ? 190 : 65;
+        buffer[bufPos++] = (BYTE)val;
+        if (bufPos >= (int)sizeof(buffer)) {
+            WriteFile(h, buffer, bufPos, &written, NULL);
+            bufPos = 0;
+        }
+    }
+    if (bufPos > 0) {
+        WriteFile(h, buffer, bufPos, &written, NULL);
+    }
+    CloseHandle(h);
+}
+
+void LoadDemoTrack() {
+    const char* demoFile = "kmedia_demo.wav";
+    GenerateDemoWav(demoFile);
+    int found = 0;
+    for (int i = 0; i < g_trackCount; i++) {
+        if (lstrcmpA(g_tracks[i], demoFile) == 0) {
+            found = 1;
+            PlayTrackByIndex(i);
+            break;
+        }
+    }
+    if (!found) {
+        int idx = g_trackCount;
+        AddTrack(demoFile);
+        RefilterPlaylist();
+        PlayTrackByIndex(idx);
     }
 }
 
@@ -496,6 +566,7 @@ void ShowHelpDialog(HWND hwnd) {
         "  Enter (Search)   Focus and play matching track\n"
         "  Esc (Search)     Clear search filter\n"
         "  H / F1           Show this Help dialog\n"
+        "  Demo Button      Generate & play retro chiptune audio\n"
         "  Drag & Drop      Drop audio, video, or subtitles\n"
         "  Double Click     Play track from playlist\n",
         "KMedia Help", MB_OK | MB_ICONINFORMATION);
@@ -772,8 +843,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                465, 124, 85, 26, hwnd, (HMENU)13, NULL, NULL);
+                465, 124, 80, 26, hwnd, (HMENU)13, NULL, NULL);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)g_hFont, TRUE);
+
+            hBtnDemo = CreateWindowEx(0, "BUTTON", "Demo",
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+                550, 124, 70, 26, hwnd, (HMENU)18, NULL, NULL);
+            SendMessage(hBtnDemo, WM_SETFONT, (WPARAM)g_hFont, TRUE);
             
             // ListBox
             hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
@@ -926,6 +1002,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 QuickLoadState(g_hwndMain);
             } else if (LOWORD(wParam) == 13) {
                 ShowHelpDialog(g_hwndMain);
+            } else if (LOWORD(wParam) == 18) {
+                LoadDemoTrack();
             } else if (LOWORD(wParam) == 14) {
                 SeekRelative(-5000);
             } else if (LOWORD(wParam) == 15) {
