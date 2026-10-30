@@ -4280,17 +4280,7 @@
 
                 } catch (e) {}
 
-                setTimeout(() => {
 
-                    if (!resolved) {
-
-                        window.removeEventListener('message', handler);
-
-                        importTelemetryFromFile();
-
-                    }
-
-                }, 500);
 
             },
 
@@ -4445,6 +4435,34 @@
 
 
         function quickLoad() {
+
+            if (KiloVFS.isEmbedded()) {
+
+                KiloVFS.read('/home/saves/kmech_telemetry.json', (data) => {
+
+                    if (data) {
+
+                        applyImportedTelemetry(data);
+
+                        return;
+
+                    }
+
+                    quickLoadFallback();
+
+                });
+
+            } else {
+
+                quickLoadFallback();
+
+            }
+
+        }
+
+
+
+        function quickLoadFallback() {
 
             try {
 
@@ -7801,6 +7819,8 @@
                     e.preventDefault();
 
                     closeTelemetryModal();
+
+                    closeMultiplayerArenaModal();
 
                 }
 

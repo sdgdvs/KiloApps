@@ -852,7 +852,34 @@ void ActionDefend() {
     }
 }
 
+bool isArenaBattle = false;
+
+void StartArenaBattle() {
+    isArenaBattle = true;
+    int tierIdx = (battleCount - 1) / 2;
+    if (tierIdx >= NUM_ENEMY_TIERS) tierIdx = NUM_ENEMY_TIERS - 1;
+    
+    int tierScale = (battleCount - 1);
+    enemyStats.maxHp = (int)((enemyTiers[tierIdx].hp + (tierScale * 6)) * 1.15f);
+    enemyStats.hp = enemyStats.maxHp;
+    enemyStats.atk = enemyTiers[tierIdx].atk + (tierScale * 1) + 2;
+    enemyStats.def = enemyTiers[tierIdx].def + (tierScale / 2) + 1;
+    enemyStats.maxHeat = enemyTiers[tierIdx].maxHeat + (tierScale * 4);
+    enemyStats.heat = 0;
+    playerStats.heat = 0;
+    isDefending = false;
+    enemyIsDefending = false;
+    enemyStunned = false;
+    evadeTacticalBonus = 0.0f;
+    for (int i=0; i<5; i++) playerLimbDamage[i] = 0;
+    clearLogs();
+    addLog("ARENA ENGAGED: Neural Combat Simulator vs Synthetic Rival!");
+    Beep(500, 100); Beep(700, 100); Beep(900, 200);
+    gameState = STATE_BATTLE;
+}
+
 void StartBattle() {
+    isArenaBattle = false;
     int tierIdx = (battleCount - 1) / 2;
     if (tierIdx >= NUM_ENEMY_TIERS) tierIdx = NUM_ENEMY_TIERS - 1;
     
@@ -878,25 +905,41 @@ void StartBattle() {
 }
 
 void ReturnToGarage() {
-    if (playerStats.hp <= 0) {
-        playerStats.hp = playerStats.maxHp;
-        lstrcpyA(garageInfo, "Mech rebuilt. Campaign restarted.");
+    if (isArenaBattle) {
+        isArenaBattle = false;
+        if (playerStats.hp <= 0) {
+            playerStats.hp = playerStats.maxHp / 2;
+            if (playerStats.hp < 25) playerStats.hp = 25;
+            lstrcpyA(garageInfo, "Arena duel concluded. Mech recovered with minor hull stress.");
+            addLog("Arena duel concluded. Mech recovered with minor hull stress.");
+        } else {
+            lstrcpyA(garageInfo, "Arena victory logged! 150 Credits awarded to pilot ledger.");
+            addLog("Arena victory logged! 150 Credits awarded to pilot ledger.");
+            credits += 150;
+        }
     } else {
-        lstrcpyA(garageInfo, "Returned to garage. Ready for loadout.");
+        if (playerStats.hp <= 0) {
+            playerStats.hp = playerStats.maxHp;
+            lstrcpyA(garageInfo, "Mech rebuilt. Campaign restarted.");
+        } else {
+            lstrcpyA(garageInfo, "Returned to garage. Ready for loadout.");
+        }
     }
     QuickSaveNative();
     gameState = STATE_GARAGE;
 }
 
 // Button areas
-RECT rectRepair  = {  40, 280, 260, 315 };
-RECT rectDeploy  = { 300, 280, 520, 315 };
-RECT rectUseSal  = {  40, 325, 260, 360 };
-RECT rectSellSal = { 300, 325, 520, 360 };
+RECT rectDeploy  = {  25, 280, 195, 315 };
+RECT rectArena   = { 210, 280, 385, 315 };
+RECT rectRepair  = { 400, 280, 570, 315 };
+RECT rectUseSal  = {  25, 325, 290, 360 };
+RECT rectSellSal = { 305, 325, 570, 360 };
 
-RECT rectSave    = {  40, 370, 180, 405 };
-RECT rectLoad    = { 200, 370, 340, 405 };
-RECT rectHelp    = { 360, 370, 520, 405 };
+RECT rectSave    = {  25, 370, 155, 405 };
+RECT rectLoad    = { 165, 370, 295, 405 };
+RECT rectTelem   = { 305, 370, 435, 405 };
+RECT rectHelp    = { 445, 370, 570, 405 };
 
 RECT rectTarget = { 40, 410, 180, 445 };
 RECT rectAttack = { 200, 410, 340, 445 };
@@ -1478,6 +1521,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (PtInRectLocal(&rectDeploy, x, y)) {
                     StartBattle();
                     InvalidateRect(hwnd, NULL, TRUE);
+                } else if (PtInRectLocal(&rectArena, x, y)) {
+                    StartArenaBattle();
+                    InvalidateRect(hwnd, NULL, TRUE);
                 } else if (PtInRectLocal(&rectRepair, x, y)) {
                     int missingHp = playerStats.maxHp - playerStats.hp;
                     if (missingHp <= 0) {
@@ -1540,6 +1586,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (PtInRectLocal(&rectLoad, x, y)) {
                     QuickLoadNative();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (PtInRectLocal(&rectTelem, x, y)) {
+                    ExportTelemetryJSON();
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (PtInRectLocal(&rectHelp, x, y)) {
                     gameState = STATE_HELP;
@@ -1678,13 +1727,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawTextA(memDC, "[4] SPECIAL", -1, &lsp, DT_CENTER | DT_SINGLELINE);
                 DrawButton(memDC, &rectSpec, specials[equipSpec].name);
 
+                DrawButton(memDC, &rectDeploy, "Deploy [D]");
+                DrawButton(memDC, &rectArena, "Arena Duel [P]");
                 DrawButton(memDC, &rectRepair, "Repair [R]");
-                DrawButton(memDC, &rectDeploy, "Deploy to Battle [D]");
                 DrawButton(memDC, &rectUseSal, "Use Salvage [U] (+50 HP)");
                 DrawButton(memDC, &rectSellSal, "Sell Salvage [S] (+50 CR)");
                 DrawButton(memDC, &rectSave, "Save [F5]");
                 DrawButton(memDC, &rectLoad, "Load [F9]");
-                DrawButton(memDC, &rectHelp, "Pilot Manual [F1]");
+                DrawButton(memDC, &rectTelem, "Telem [F2]");
+                DrawButton(memDC, &rectHelp, "Manual [F1]");
             } else if (gameState == STATE_BATTLE || gameState == STATE_POST_BATTLE) {
                 // Apply Screen Shake offset
                 int shakeX = 0, shakeY = 0;
@@ -1738,7 +1789,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 // Enemy Mech Stats
                 char bufE[64];
-                wsprintfA(bufE, "Enemy Mech HP: %d | HEAT: %d", enemyStats.hp, enemyStats.heat);
+                if (isArenaBattle) {
+                    wsprintfA(bufE, "[ARENA] Synthetic Rival HP: %d | HEAT: %d", enemyStats.hp, enemyStats.heat);
+                } else {
+                    wsprintfA(bufE, "Enemy Mech HP: %d | HEAT: %d", enemyStats.hp, enemyStats.heat);
+                }
                 SetTextColor(memDC, RGB(255, 80, 80));
                 TextOutA(memDC, 350, 42, bufE, lstrlenA(bufE));
                 
@@ -1938,9 +1993,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     StartBattle();
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (wParam == 'P') {
-                    StartBattle();
-                    lstrcpyA(garageInfo, "ARENA ENGAGED: Neural Combat Simulator vs Synthetic Rival!");
-                    addLog("ARENA ENGAGED: Neural Combat Simulator vs Synthetic Rival!");
+                    StartArenaBattle();
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (wParam == 'R') {
                     int missingHp = playerStats.maxHp - playerStats.hp;
