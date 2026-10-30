@@ -275,7 +275,7 @@
     "id": "kexplorer",
     "title": "File Browser",
     "folder": "System",
-    "webBytes": 56617,
+    "webBytes": 56727,
     "exeBytes": null,
     "budgetPercent": 5.7
   },
@@ -443,9 +443,9 @@
     "id": "kmedia",
     "title": "KMedia",
     "folder": "Media",
-    "webBytes": 150149,
-    "exeBytes": 22016,
-    "budgetPercent": 15.0
+    "webBytes": 151662,
+    "exeBytes": 22528,
+    "budgetPercent": 15.2
   },
   {
     "id": "kmine",
@@ -467,9 +467,9 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 211847,
+    "webBytes": 213297,
     "exeBytes": 57856,
-    "budgetPercent": 21.2
+    "budgetPercent": 21.4
   },
   {
     "id": "knetmap",
@@ -715,9 +715,9 @@
     "id": "ksynth",
     "title": "KSynth",
     "folder": "Media",
-    "webBytes": 185814,
-    "exeBytes": 24064,
-    "budgetPercent": 18.6
+    "webBytes": 187613,
+    "exeBytes": 29184,
+    "budgetPercent": 18.8
   },
   {
     "id": "ksys",
@@ -787,9 +787,9 @@
     "id": "ktrader",
     "title": "KTrader",
     "folder": "Games",
-    "webBytes": 208087,
+    "webBytes": 209706,
     "exeBytes": 34304,
-    "budgetPercent": 20.8
+    "budgetPercent": 21.0
   },
   {
     "id": "ktype",
