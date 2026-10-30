@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T10:22:20-07:00 — kilo-tester: KRogue (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-tester updates for KRogue across web and native targets.
+  - Handoff: Advanced `kilo-tester` to `KDragon`; rotated active agent to `kilo-usability`.
+
 - **2026-10-30T09:40:16-07:00 — kilo-graphics: KCosmic (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-graphics updates for KCosmic across web and native targets.

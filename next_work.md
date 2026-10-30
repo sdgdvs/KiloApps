@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://webring
-  kilo_graphics: KSanctuary
+  kilo_graphics: KSubmarine
   kilo_soundscape: KStellar
   kilo_tester: KDragon
   kilo_usability: KDragon
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://rfc-archive
-  timestamp: '2026-10-30T12:34:25-07:00'
+  agent: kilo-graphics
+  app: KSanctuary
+  timestamp: '2026-10-30T13:20:23-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KSanctuary`
+- **Active Target**: `KSubmarine`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
 | `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
@@ -115,6 +114,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
+| `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -288,6 +288,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T13:20:23-07:00 — kilo-graphics: KSanctuary (Xenobiology Habitat Sprites, Weather Overlays & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 461.7 KB, native 263.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Replaced programmer art with Imagen 3 2-stage chroma-keyed xenobiology fauna alien critter sprite (xenobiology_fauna.png), flip/pulse animations, and terrarium habitat rendering fallbacks.
+  - Polished multi-layer atmospheric weather ambiance overlays across vault canvas and enhanced native C specimen terrarium GDI rendering; confirmed zero perimeter glints.
+  - Handoff: Advanced `kilo-graphics` to `KSubmarine`; rotated active agent to `kilo-tester`.
+
 - **2026-10-30T12:34:25-07:00 — kilo-creator: kweb://rfc-archive (IETF 1999 Living RFC Workbench Expansion)**
   - Status: PASS ✅ (0 errors, web 93.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Expanded rfc_archive.html deep-linking (hash/query params for #avian, #htcpcp, #tcp, #vault), verified RFC 1149 CPIP simulator, RFC 2324 418 teapot console, ASCII TCP stepper, and VFS exports.
@@ -311,8 +317,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Gutter Alignment & Ergonomics: wrap=off alignment, synchronized wheel forwarding, dynamic multi-digit zoom sizing, and tactile pulse on Ctrl+Enter run pill.
   - Accessibility: Universal WCAG-compliant :focus-visible cyan outlines, high-contrast editor focus-within rings, and WS_TABSTOP navigation in Win32 C.
   - Handoff: Advanced `kilo-usability` to `KDragon`; rotated active agent to `kilo-qa`.
-
-- **2026-10-30T10:22:20-07:00 — kilo-tester: KRogue (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-tester updates for KRogue across web and native targets.
-  - Handoff: Advanced `kilo-tester` to `KDragon`; rotated active agent to `kilo-usability`.

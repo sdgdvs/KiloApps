@@ -4036,6 +4036,14 @@
             }
         };
 
+        const xenobiologyFaunaImg = new Image();
+        xenobiologyFaunaImg.src = '../assets/sprites/ksanctuary/xenobiology_fauna.png';
+        xenobiologyFaunaImg.onerror = () => {
+            if (xenobiologyFaunaImg.src.indexOf('/assets/') !== -1) {
+                xenobiologyFaunaImg.src = 'assets/sprites/ksanctuary/xenobiology_fauna.png';
+            }
+        };
+
         const VAULT_ROOM_SPECS = [
             { id: 'cmd', name: 'OVERSEER COMMAND', level: 1, x: 78, y: 18, w: 128, h: 52, color: '#10b981', staffKey: 'cmd' },
             { id: 'farm', name: 'HYDROPONICS BAY', level: 1, x: 210, y: 18, w: 135, h: 52, color: '#a855f7', staffKey: 'farm' },
@@ -4552,31 +4560,43 @@
                     const critterY = domeY + 3 + Math.cos(t * 3.5) * 2;
                     const faceDir = critterOsc >= 0 ? 1 : -1;
 
-                    // Alien specimen carapace & glowing eyes
-                    ctx.fillStyle = '#7e22ce';
-                    ctx.fillRect(critterX - 4, critterY - 3, 8, 5);
-                    ctx.fillStyle = '#a855f7';
-                    ctx.fillRect(critterX - 3, critterY - 4, 6, 3);
-                    ctx.fillStyle = '#c084fc';
-                    ctx.fillRect(critterX - 2, critterY - 5, 4, 2);
-                    // Pincer claws
-                    ctx.fillStyle = '#6b21a8';
-                    ctx.fillRect(critterX + (faceDir > 0 ? 4 : -5), critterY - 2, 2, 2);
-                    // Bioluminescent eye dots
-                    ctx.fillStyle = '#38bdf8';
-                    ctx.fillRect(critterX + (faceDir > 0 ? 2 : -3), critterY - 3, 1.5, 1.5);
-                    ctx.fillStyle = '#a7f3d0';
-                    ctx.fillRect(critterX + (faceDir > 0 ? 0 : -1), critterY - 3, 1, 1);
+                    if (xenobiologyFaunaImg.complete && xenobiologyFaunaImg.naturalWidth > 0) {
+                        ctx.save();
+                        ctx.translate(critterX, critterY);
+                        if (faceDir < 0) ctx.scale(-1, 1);
+                        ctx.drawImage(xenobiologyFaunaImg, -10, -10, 20, 20);
+                        // Subtle bioluminescent eye pulse
+                        const eyePulse = 0.5 + Math.sin(t * 6) * 0.35;
+                        ctx.fillStyle = 'rgba(56, 189, 248, ' + eyePulse + ')';
+                        ctx.fillRect(faceDir > 0 ? 1 : -2, -3, 2, 2);
+                        ctx.restore();
+                    } else {
+                        // Alien specimen carapace & glowing eyes
+                        ctx.fillStyle = '#7e22ce';
+                        ctx.fillRect(critterX - 4, critterY - 3, 8, 5);
+                        ctx.fillStyle = '#a855f7';
+                        ctx.fillRect(critterX - 3, critterY - 4, 6, 3);
+                        ctx.fillStyle = '#c084fc';
+                        ctx.fillRect(critterX - 2, critterY - 5, 4, 2);
+                        // Pincer claws
+                        ctx.fillStyle = '#6b21a8';
+                        ctx.fillRect(critterX + (faceDir > 0 ? 4 : -5), critterY - 2, 2, 2);
+                        // Bioluminescent eye dots
+                        ctx.fillStyle = '#38bdf8';
+                        ctx.fillRect(critterX + (faceDir > 0 ? 2 : -3), critterY - 3, 1.5, 1.5);
+                        ctx.fillStyle = '#a7f3d0';
+                        ctx.fillRect(critterX + (faceDir > 0 ? 0 : -1), critterY - 3, 1, 1);
 
-                    // Specimen scuttling legs / tendrils
-                    ctx.strokeStyle = '#9333ea';
-                    ctx.lineWidth = 0.8;
-                    const legTick = Math.sin(t * 12) * 1.5;
-                    ctx.beginPath();
-                    ctx.moveTo(critterX - 3, critterY + 2); ctx.lineTo(critterX - 6, critterY + 5 + legTick);
-                    ctx.moveTo(critterX, critterY + 2);     ctx.lineTo(critterX, critterY + 5 - legTick);
-                    ctx.moveTo(critterX + 3, critterY + 2); ctx.lineTo(critterX + 6, critterY + 5 + legTick);
-                    ctx.stroke();
+                        // Specimen scuttling legs / tendrils
+                        ctx.strokeStyle = '#9333ea';
+                        ctx.lineWidth = 0.8;
+                        const legTick = Math.sin(t * 12) * 1.5;
+                        ctx.beginPath();
+                        ctx.moveTo(critterX - 3, critterY + 2); ctx.lineTo(critterX - 6, critterY + 5 + legTick);
+                        ctx.moveTo(critterX, critterY + 2);     ctx.lineTo(critterX, critterY + 5 - legTick);
+                        ctx.moveTo(critterX + 3, critterY + 2); ctx.lineTo(critterX + 6, critterY + 5 + legTick);
+                        ctx.stroke();
+                    }
 
                     // Terrarium aeration bubbler
                     for (let b = 0; b < 3; b++) {
@@ -4793,6 +4813,19 @@
             }
 
             // Static atmospheric ambient baseline (zero floating dot particles)
+            if (wType === 1) { // Rad storm ambient emerald haze
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.03)';
+                ctx.fillRect(0, 14, w, h - 14);
+            } else if (wType === 3) { // Toxic rain ambient caustic vapor
+                ctx.fillStyle = 'rgba(74, 222, 128, 0.03)';
+                ctx.fillRect(0, 14, w, h - 14);
+            } else if (wType === 4) { // Cold snap icy rime
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.025)';
+                ctx.fillRect(0, 14, w, h - 14);
+            } else if (wType === 2) { // Drought warm amber solar wash
+                ctx.fillStyle = 'rgba(245, 158, 11, 0.025)';
+                ctx.fillRect(0, 14, w, h - 14);
+            }
         }
 
         function updateVaultCutawayRooms() {

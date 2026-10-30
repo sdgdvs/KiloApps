@@ -2632,13 +2632,19 @@ static void DrawFacilitySprite(HDC hdc, int x, int y, const char* facId, int act
         FillSolidRect(hdc, x + 9, y + 9, 4, 3, RGB(167, 243, 208));
         // Bioluminescent Spore blossom
         FillSolidRect(hdc, x + 10, y + 7, 2, 2, RGB(56, 189, 248));
-        // Specimen Terrarium Dome
+        // Specimen Terrarium Dome (Containment Chamber)
         FillSolidRect(hdc, x + 17, y + 11, 10, 11, RGB(10, 45, 30));
         DrawBoxBorder(hdc, x + 17, y + 11, 10, 11, RGB(52, 211, 153));
-        // Specimen Critter
-        FillSolidRect(hdc, x + 20, y + 15, 4, 3, RGB(168, 85, 247));
-        FillSolidRect(hdc, x + 22, y + 15, 1, 1, RGB(56, 189, 248)); // eye
-        FillSolidRect(hdc, x + 19, y + 18, 6, 1, RGB(147, 51, 234)); // legs
+        FillSolidRect(hdc, x + 18, y + 12, 3, 1, RGB(167, 243, 208)); // static glass rim
+        // Specimen Alien Critter (Bioluminescent Fauna Sprite)
+        FillSolidRect(hdc, x + 19, y + 15, 6, 4, RGB(126, 34, 206)); // purple carapace
+        FillSolidRect(hdc, x + 20, y + 14, 4, 2, RGB(168, 85, 247)); // dorsal crest
+        FillSolidRect(hdc, x + 21, y + 13, 2, 1, RGB(192, 132, 252)); // shell highlight
+        FillSolidRect(hdc, x + 24, y + 15, 2, 2, RGB(107, 33, 168)); // pincer claw
+        FillSolidRect(hdc, x + 23, y + 14, 1, 1, RGB(56, 189, 248)); // glowing eye
+        FillSolidRect(hdc, x + 19, y + 19, 2, 2, RGB(147, 51, 234)); // rear leg
+        FillSolidRect(hdc, x + 22, y + 19, 2, 2, RGB(147, 51, 234)); // front leg
+        FillSolidRect(hdc, x + 18, y + 17, 1, 1, RGB(110, 231, 183)); // bio-spore bubble
     } else if (strcmp(facId, "quarters") == 0 || strcmp(facId, "quarters_ext") == 0) {
         // Living Quarters Bunks
         FillSolidRect(hdc, x + 5, y + 7, 20, 18, RGB(15, 20, 25));
