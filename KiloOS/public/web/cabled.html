@@ -1919,12 +1919,33 @@ function showToast(msg) {
   }
 }
 
+/**
+ * Smoothly scrolls viewport to designated section ID and updates navigation state
+ * @param {string} id
+ */
 function scrollToSection(id) {
   const el = document.getElementById(id);
   if (el) {
     el.scrollIntoView({ behavior: 'smooth' });
+    updateActiveNavChip(id);
     playRetroSound('click');
   }
+}
+
+/**
+ * Updates active highlighting on navigation chip buttons
+ * @param {string} id
+ */
+function updateActiveNavChip(id) {
+  const chips = document.querySelectorAll('.nav-chip');
+  chips.forEach(chip => {
+    const onclickAttr = chip.getAttribute('onclick') || '';
+    if (onclickAttr.indexOf(id) !== -1) {
+      chip.classList.add('active');
+    } else {
+      chip.classList.remove('active');
+    }
+  });
 }
 
 // --- Procedural Web Audio Synth Engine (YM2612 / Ambient Synth) ---
@@ -2866,6 +2887,28 @@ window.addEventListener('DOMContentLoaded', () => {
       exportY2kCertificateVFS();
     }
   });
+
+  if (window.location.hash) {
+    const targetId = window.location.hash.substring(1);
+    if (document.getElementById(targetId)) {
+      setTimeout(() => scrollToSection(targetId), 120);
+    }
+  }
+
+  if ('IntersectionObserver' in window) {
+    const sectionIds = ['sec-cover', 'sec-y2k', 'sec-ipo', 'sec-jargon', 'sec-hype', 'sec-fetish', 'sec-vfs'];
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          updateActiveNavChip(entry.target.id);
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sectionIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+  }
 
   window.addEventListener('resize', () => {
     drawPortfolioChart();

@@ -2455,8 +2455,25 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
         sub = '#stories';
       }
       url = '/web/slashnet.html' + sub;
-    } else if (url.toLowerCase() === 'kweb://cabled' || url.toLowerCase() === 'cabled' || url.toLowerCase() === 'kweb://cabled.com' || url.toLowerCase() === 'kweb://cabled.html' || url.toLowerCase() === 'kweb://wired' || url.toLowerCase() === 'wired') {
-      url = '/web/cabled.html';
+    } else if (url.toLowerCase() === 'kweb://cabled' || url.toLowerCase() === 'kweb://cabled/' || url.toLowerCase() === 'cabled' || url.toLowerCase() === 'cabled/' || url.toLowerCase() === 'kweb://cabled.com' || url.toLowerCase() === 'kweb://cabled.com/' || url.toLowerCase() === 'kweb://cabled.html' || url.toLowerCase() === 'kweb://wired' || url.toLowerCase() === 'kweb://wired/' || url.toLowerCase() === 'wired' || url.toLowerCase() === 'wired/' || url.toLowerCase().startsWith('kweb://cabled#') || url.toLowerCase().startsWith('kweb://cabled?') || url.toLowerCase().startsWith('kweb://cabled/')) {
+      let sub = '';
+      const lower = url.toLowerCase();
+      if (lower.includes('#')) {
+        sub = lower.substring(lower.indexOf('#'));
+      } else if (lower.includes('/y2k') || lower.includes('/audit')) {
+        sub = '#sec-y2k';
+      } else if (lower.includes('/ipo') || lower.includes('/stocks') || lower.includes('/market')) {
+        sub = '#sec-ipo';
+      } else if (lower.includes('/jargon') || lower.includes('/lexicon')) {
+        sub = '#sec-jargon';
+      } else if (lower.includes('/hype') || lower.includes('/matrix')) {
+        sub = '#sec-hype';
+      } else if (lower.includes('/fetish') || lower.includes('/gadgets') || lower.includes('/hardware')) {
+        sub = '#sec-fetish';
+      } else if (lower.includes('/vfs') || lower.includes('/export')) {
+        sub = '#sec-vfs';
+      }
+      url = '/web/cabled.html' + sub;
     } else if (url.toLowerCase() === 'kweb://scallion' || url.toLowerCase() === 'scallion' || url.toLowerCase() === 'kweb://thescallion' || url.toLowerCase() === 'thescallion' || url.toLowerCase() === 'kweb://scallion.html' || url.toLowerCase() === 'kweb://onion' || url.toLowerCase() === 'onion') {
       url = '/web/scallion.html';
     } else if (url.toLowerCase() === 'kweb://demoscene' || url.toLowerCase() === 'demoscene' || url.toLowerCase() === 'kweb://assembly99' || url.toLowerCase() === 'assembly99' || url.toLowerCase() === 'kweb://demoscene.html' || url.toLowerCase() === 'kweb://scene99' || url.toLowerCase() === 'scene99') {
