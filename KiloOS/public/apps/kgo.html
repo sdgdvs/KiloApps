@@ -1327,8 +1327,9 @@
         <textarea id="sgfExportText" readonly rows="4" style="width: 100%; box-sizing: border-box; background: #0a0704; border: 1px solid #73502b; color: #a5d6a7; font-family: monospace; font-size: 0.8em; padding: 6px; border-radius: 4px; resize: vertical;"></textarea>
         <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
           <button onclick="copySgfToClipboard()" style="background:#2e7d32; border-color:#81c784; font-weight:bold;">📋 Copy SGF</button>
-          <button onclick="downloadSgfFile()" style="background:#0277bd; border-color:#4fc3f7; font-weight:bold;">💾 Download .sgf File</button>
-          <button onclick="exportJsonState()" style="background:#37474f; border-color:#78909c;">Backup JSON</button>
+          <button onclick="downloadSgfFile()" style="background:#0277bd; border-color:#4fc3f7; font-weight:bold;">💾 Save .sgf</button>
+          <button id="open-sgf-kpad-btn" onclick="openSgfInKPad()" style="background:#4a148c; border-color:#ba68c8; font-weight:bold;">📝 Open SGF in KPad</button>
+          <button onclick="exportJsonState()" style="background:#37474f; border-color:#78909c;">💾 Backup JSON</button>
         </div>
       </div>
 
@@ -1337,10 +1338,10 @@
         <textarea id="sgfImportText" placeholder="Paste standard SGF text code here (e.g. (;GM[1]SZ[19]...))" rows="4" style="width: 100%; box-sizing: border-box; background: #0a0704; border: 1px solid #73502b; color: #fff; font-family: monospace; font-size: 0.8em; padding: 6px; border-radius: 4px; resize: vertical;"></textarea>
         <div style="display: flex; gap: 8px; margin-top: 6px; align-items: center; flex-wrap: wrap;">
           <input type="file" id="sgfFileInput" accept=".sgf,.txt" style="display: none;" onchange="handleSgfFileUpload(event)">
-          <button onclick="document.getElementById('sgfFileInput').click()" style="background:#4e342e; border-color:#8d6e63;">📁 Open .sgf File...</button>
+          <button onclick="triggerImportSgf()" style="background:#4e342e; border-color:#8d6e63;">📁 Open .sgf File...</button>
           <button onclick="parseAndLoadSGF()" style="background:#ef6c00; border-color:#ffb74d; font-weight:bold;">⚔️ Import &amp; Replay Match</button>
           <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="importJsonState(this.files[0])">
-          <button onclick="document.getElementById('jsonFileInput').click()" style="background:#263238; border-color:#546e7a;">Restore JSON</button>
+          <button onclick="triggerImportJson()" style="background:#263238; border-color:#546e7a;">📂 Restore JSON...</button>
         </div>
       </div>
     </div>
@@ -1386,6 +1387,171 @@
   </script>
 
 <script>
+  // ==========================================
+  // Phase VI KiloOS VFS & Inter-App IPC Bridge
+  // ==========================================
+  const KiloVFS = {
+    isSupported() {
+      return typeof window !== 'undefined' && window.parent && window.parent !== window;
+    },
+    write(path, data) {
+      try {
+        const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        window.parent.postMessage({
+          type: 'VFS_WRITE',
+          path,
+          data: payload,
+          requestId: 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)
+        }, '*');
+        window.parent.postMessage({
+          type: 'OS_NOTIFY',
+          title: document.title || 'KGo',
+          message: `Saved to VFS: ${path}`
+        }, '*');
+      } catch (e) {
+        console.warn('[KiloVFS] write failed:', e);
+      }
+    },
+    read(path, cb) {
+      if (!KiloVFS.isSupported()) {
+        if (cb) cb(null, path);
+        return;
+      }
+      const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (cb) cb(e.data.data, e.data.path || path);
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, path);
+      }, 60000); // 60s dialog cleanup timeout
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, path);
+      }
+    },
+    showSave(defaultPath, data, cb) {
+      if (!KiloVFS.isSupported()) {
+        if (cb) cb(null);
+        return;
+      }
+      const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (e.data.path) {
+            KiloVFS.write(e.data.path, data);
+            if (cb) cb(e.data.path);
+          } else if (cb) {
+            cb(null);
+          }
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null);
+      }, 60000); // 60s dialog cleanup timeout
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({
+          type: 'VFS_SHOW_SAVE',
+          requestId: reqId,
+          defaultPath: defaultPath,
+          path: defaultPath
+        }, '*');
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null);
+      }
+    },
+    openPicker(cb) {
+      if (!KiloVFS.isSupported()) {
+        if (cb) cb(null, null);
+        return;
+      }
+      const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (e.data.path) {
+            KiloVFS.read(e.data.path, cb);
+          } else if (cb) {
+            cb(null, null);
+          }
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, null);
+      }, 60000); // 60s dialog cleanup timeout
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, null);
+      }
+    },
+    launchApp(targetApp, path = '') {
+      try {
+        window.parent.postMessage({
+          type: 'OS_LAUNCH_APP',
+          targetApp,
+          appId: targetApp,
+          path
+        }, '*');
+      } catch (e) {}
+    }
+  };
+
+  // Incoming VFS/OS Message Dispatcher
+  window.addEventListener('message', (e) => {
+    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+      return;
+    }
+    const msg = e.data;
+    if (!msg || typeof msg !== 'object') return;
+    if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+      const filePath = msg.path || '';
+      const fileContent = msg.data !== undefined ? msg.data : msg.content;
+      if (fileContent !== undefined && fileContent !== null) {
+        handleIncomingFileData(fileContent, filePath);
+      } else if (filePath) {
+        KiloVFS.read(filePath, (data, path) => {
+          if (data) {
+            handleIncomingFileData(data, path || filePath);
+          } else {
+            showToast(`Could not read file from VFS: ${filePath}`, 'warning');
+          }
+        });
+      }
+    }
+  });
+
   const boardEl = document.getElementById('board');
   const boardContainerEl = document.getElementById('board-container');
   let shakeMagnitude = 0;
@@ -2749,40 +2915,75 @@
 
   function downloadSgfFile() {
     const txt = document.getElementById('sgfExportText');
-    if (!txt || !txt.value) return;
-    const blob = new Blob([txt.value], { type: 'application/x-go-sgf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `kgo_match_${Date.now()}.sgf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast('💾 SGF file downloaded!', 'success');
+    const sgfContent = (txt && txt.value) ? txt.value : generateSGF();
+    if (KiloVFS.isSupported()) {
+      KiloVFS.showSave('/home/docs/kgo_match.sgf', sgfContent, (savedPath) => {
+        if (savedPath) {
+          showToast(`Saved SGF match to ${savedPath}!`, 'success');
+        }
+      });
+    } else {
+      const blob = new Blob([sgfContent], { type: 'application/x-go-sgf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kgo_match_${Date.now()}.sgf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('💾 SGF file downloaded!', 'success');
+    }
+  }
+
+  function openSgfInKPad() {
+    const txt = document.getElementById('sgfExportText');
+    const sgfContent = (txt && txt.value) ? txt.value : generateSGF();
+    if (!KiloVFS.isSupported()) {
+      showToast('KPad IPC launch is available when running inside KiloOS!', 'info');
+      return;
+    }
+    const path = '/home/docs/kgo_match.sgf';
+    KiloVFS.write(path, sgfContent);
+    KiloVFS.launchApp('kpad', path);
+    showToast('Opening SGF in KPad...', 'success');
+  }
+
+  function triggerImportSgf() {
+    if (isOnlineGame) {
+      showToast('SGF import disabled during active Online match', 'warning');
+      return;
+    }
+    if (KiloVFS.isSupported()) {
+      KiloVFS.openPicker((data, path) => {
+        if (data) {
+          handleIncomingFileData(data, path || '/home/docs/kgo_match.sgf');
+        }
+      });
+    } else {
+      const inp = document.getElementById('sgfFileInput');
+      if (inp) inp.click();
+    }
   }
 
   function handleSgfFileUpload(e) {
-    const file = e.target.files[0];
+    const file = e.target.files && e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (event) => {
       const importArea = document.getElementById('sgfImportText');
       if (importArea) importArea.value = event.target.result;
-      showToast(`📄 Loaded file: ${file.name}`, 'info');
+      handleIncomingFileData(event.target.result, file.name);
     };
     reader.readAsText(file);
+    e.target.value = '';
   }
 
-  function parseAndLoadSGF() {
-    const importArea = document.getElementById('sgfImportText');
-    if (!importArea || !importArea.value.trim()) {
-      showToast('Please paste or upload an SGF string first.', 'warning');
-      return;
-    }
-    const content = importArea.value.trim();
-    
-    const szMatch = content.match(/SZ\[(\d+)\]/i);
+  function loadSgfContent(content) {
+    if (!content || !content.trim()) return false;
+    const text = content.trim();
+
+    const szMatch = text.match(/SZ\[(\d+)\]/i);
     let newSize = 19;
     if (szMatch) {
       const parsedSize = parseInt(szMatch[1]);
@@ -2791,7 +2992,7 @@
       }
     }
 
-    const kmMatch = content.match(/KM\[([0-9.]+)\]/i);
+    const kmMatch = text.match(/KM\[([0-9.]+)\]/i);
     let newKomi = 6.5;
     if (kmMatch) {
       newKomi = parseFloat(kmMatch[1]);
@@ -2799,12 +3000,13 @@
 
     size = newSize;
     currentKomi = newKomi;
-    document.getElementById('board-size').value = size;
+    const szSelect = document.getElementById('board-size');
+    if (szSelect) szSelect.value = size;
     initBoard();
 
     const setupRegex = /A([BW])((?:\[[a-z]{2}\])+)/gi;
     let setupMatch;
-    while ((setupMatch = setupRegex.exec(content)) !== null) {
+    while ((setupMatch = setupRegex.exec(text)) !== null) {
       const color = setupMatch[1].toUpperCase();
       const coordStr = setupMatch[2];
       const coords = coordStr.match(/\[([a-z]{2})\]/gi);
@@ -2824,7 +3026,7 @@
     const moveRegex = /;([BW])\[([a-z]{0,2})\]/gi;
     let mMatch;
     let moveNum = 1;
-    while ((mMatch = moveRegex.exec(content)) !== null) {
+    while ((mMatch = moveRegex.exec(text)) !== null) {
       const color = mMatch[1].toUpperCase();
       const cStr = mMatch[2].toLowerCase();
       let isPass = (!cStr || cStr === '' || (cStr === 'tt' && size === 19));
@@ -2862,6 +3064,44 @@
     drawBoard();
     showToast(`✅ Loaded SGF match (${moveRecord.length} moves on ${size}x${size})! Opening Replay mode...`, 'success');
     enterReplayMode();
+    return true;
+  }
+
+  function parseAndLoadSGF() {
+    const importArea = document.getElementById('sgfImportText');
+    if (!importArea || !importArea.value.trim()) {
+      showToast('Please paste or upload an SGF string first.', 'warning');
+      return;
+    }
+    loadSgfContent(importArea.value.trim());
+  }
+
+  function handleIncomingFileData(content, filePath) {
+    if (!content) return false;
+    const pathStr = (filePath || '').toLowerCase();
+
+    // 1. JSON Game Save
+    if (pathStr.endsWith('.json') || (typeof content === 'string' && content.trim().startsWith('{'))) {
+      try {
+        const state = typeof content === 'object' ? content : JSON.parse(content);
+        if (state && (state.board || state.app === 'KGo')) {
+          restoreFullState(state);
+          closeAllModals();
+          showToast(`Game save loaded from ${filePath || 'file'}!`, 'success');
+          return true;
+        }
+      } catch (e) {}
+    }
+
+    // 2. SGF Match Record
+    const text = typeof content === 'string' ? content.trim() : '';
+    if (pathStr.endsWith('.sgf') || text.includes('(;') || text.includes('SZ[')) {
+      if (loadSgfContent(text)) {
+        showToast(`SGF match loaded from ${filePath || 'file'}!`, 'success');
+        return true;
+      }
+    }
+    return false;
   }
 
   /* --- Quicksave (F5) & Quickload (F9) + JSON Backup --- */
@@ -2940,20 +3180,49 @@
       timestamp: Date.now()
     };
     const jsonStr = JSON.stringify(state, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `kgo_save_${Date.now()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast('💾 JSON backup file downloaded!', 'success');
+    if (KiloVFS.isSupported()) {
+      KiloVFS.showSave('/home/saves/kgo_save.json', jsonStr, (savedPath) => {
+        if (savedPath) {
+          showToast(`Game saved to ${savedPath}!`, 'success');
+        }
+      });
+    } else {
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kgo_save_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('💾 JSON backup file downloaded!', 'success');
+    }
   }
 
-  function importJsonState(file) {
-    if (!file) return;
+  function triggerImportJson() {
+    if (isOnlineGame) {
+      showToast('Game import disabled during Online Multiplayer match', 'warning');
+      return;
+    }
+    if (KiloVFS.isSupported()) {
+      KiloVFS.openPicker((data, path) => {
+        if (data) {
+          handleIncomingFileData(data, path || '/home/saves/kgo_save.json');
+        }
+      });
+    } else {
+      const fileInput = document.getElementById('jsonFileInput');
+      if (fileInput) fileInput.click();
+    }
+  }
+
+  function importJsonState(fileOrData) {
+    if (!fileOrData) return;
+    if (typeof fileOrData === 'string' || (typeof fileOrData === 'object' && !(fileOrData instanceof File))) {
+      handleIncomingFileData(fileOrData, '/home/saves/kgo_save.json');
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -2965,7 +3234,7 @@
         showToast('Invalid JSON save file format.', 'warning');
       }
     };
-    reader.readAsText(file);
+    reader.readAsText(fileOrData);
   }
 
   function restoreFullState(state) {
@@ -4394,9 +4663,14 @@
 
   window.copySgfToClipboard = copySgfToClipboard;
   window.downloadSgfFile = downloadSgfFile;
+  window.openSgfInKPad = openSgfInKPad;
+  window.triggerImportSgf = triggerImportSgf;
   window.handleSgfFileUpload = handleSgfFileUpload;
+  window.loadSgfContent = loadSgfContent;
   window.parseAndLoadSGF = parseAndLoadSGF;
+  window.handleIncomingFileData = handleIncomingFileData;
   window.exportJsonState = exportJsonState;
+  window.triggerImportJson = triggerImportJson;
   window.importJsonState = importJsonState;
   window.quickSaveGame = quickSaveGame;
   window.quickLoadGame = quickLoadGame;

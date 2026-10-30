@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
+#include <ctype.h>
+
+static HWND hCbSize = NULL;
 
 #define ID_BTN_PASS 101
 #define ID_BTN_RESIGN 102
@@ -1140,6 +1143,155 @@ void ExportGameToSGF(HWND hwnd, const char* filename) {
     MessageBox(hwnd, buf, "SGF Export", MB_OK | MB_ICONINFORMATION);
 }
 
+int ImportGameFromSGF(HWND hwnd, const char* filename) {
+    FILE* f = fopen(filename, "r");
+    if (!f) {
+        char errBuf[256];
+        sprintf(errBuf, "Could not open '%s' for reading.\n\nMake sure an SGF file exists in the application directory.", filename);
+        MessageBox(hwnd, errBuf, "Import SGF", MB_OK | MB_ICONWARNING);
+        return 0;
+    }
+    fseek(f, 0, SEEK_END);
+    long fsize = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    if (fsize <= 0 || fsize > 1024 * 1024) {
+        fclose(f);
+        MessageBox(hwnd, "Invalid or empty SGF file.", "Import SGF", MB_OK | MB_ICONWARNING);
+        return 0;
+    }
+    char* buf = (char*)malloc(fsize + 1);
+    if (!buf) {
+        fclose(f);
+        MessageBox(hwnd, "Memory allocation error.", "Import SGF", MB_OK | MB_ICONERROR);
+        return 0;
+    }
+    size_t readBytes = fread(buf, 1, fsize, f);
+    buf[readBytes] = '\0';
+    fclose(f);
+
+    // 1. Board size SZ[...]
+    char* szPtr = strstr(buf, "SZ[");
+    if (szPtr) {
+        int parsedSize = atoi(szPtr + 3);
+        if (parsedSize == 9 || parsedSize == 13 || parsedSize == 19) {
+            boardSize = parsedSize;
+            if (hCbSize) {
+                int sel = (boardSize == 9) ? 0 : (boardSize == 13 ? 1 : 2);
+                SendMessage(hCbSize, CB_SETCURSEL, sel, 0);
+            }
+        }
+    }
+
+    // 2. Komi KM[...]
+    char* kmPtr = strstr(buf, "KM[");
+    if (kmPtr) {
+        currentKomi = (float)atof(kmPtr + 3);
+    }
+
+    // Initialize clean board
+    InitBoard();
+
+    // 3. Handicap / Setup stones: AB[...] and AW[...]
+    char* p = buf;
+    while ((p = strstr(p, "A")) != NULL) {
+        char colChar = p[1];
+        if ((colChar == 'B' || colChar == 'W') && p[2] == '[') {
+            int stoneColor = (colChar == 'B') ? 1 : 2;
+            char* cPtr = p + 2;
+            while (*cPtr == '[') {
+                char xChar = (char)tolower((unsigned char)cPtr[1]);
+                char yChar = (char)tolower((unsigned char)cPtr[2]);
+                if (cPtr[3] == ']' && xChar >= 'a' && yChar >= 'a') {
+                    int sx = xChar - 'a';
+                    int sy = yChar - 'a';
+                    if (sx >= 0 && sx < boardSize && sy >= 0 && sy < boardSize) {
+                        board[sy][sx] = (char)stoneColor;
+                    }
+                    cPtr += 4;
+                } else {
+                    break;
+                }
+            }
+            p = cPtr;
+        } else {
+            p++;
+        }
+    }
+
+    // 4. Parse sequential moves: ;B[...] or ;W[...]
+    p = buf;
+    int importedMoves = 0;
+    while ((p = strchr(p, ';')) != NULL) {
+        p++; // skip ';'
+        while (*p == ' ' || *p == '\r' || *p == '\n' || *p == '\t') p++;
+        if (*p != 'B' && *p != 'W' && *p != 'b' && *p != 'w') {
+            continue;
+        }
+        int moveColor = (*p == 'B' || *p == 'b') ? 1 : 2;
+        p++; // skip color
+        while (*p == ' ' || *p == '\r' || *p == '\n' || *p == '\t') p++;
+        if (*p != '[') continue;
+        p++; // skip '['
+        
+        int isPass = 0;
+        int mx = -1, my = -1;
+        if (*p == ']') {
+            isPass = 1;
+            p++;
+        } else if (p[0] == 't' && p[1] == 't' && p[2] == ']' && boardSize == 19) {
+            isPass = 1;
+            p += 3;
+        } else if (p[0] >= 'a' && p[0] <= 'z' && p[1] >= 'a' && p[1] <= 'z' && p[2] == ']') {
+            mx = p[0] - 'a';
+            my = p[1] - 'a';
+            p += 3;
+            if (mx < 0 || mx >= boardSize || my < 0 || my >= boardSize) {
+                isPass = 1;
+                mx = -1;
+                my = -1;
+            }
+        } else {
+            while (*p && *p != ']') p++;
+            if (*p == ']') p++;
+            isPass = 1;
+        }
+
+        if (nativeMoveCount < MAX_NATIVE_MOVES) {
+            nativeMoves[nativeMoveCount].x = mx;
+            nativeMoves[nativeMoveCount].y = my;
+            nativeMoves[nativeMoveCount].color = moveColor;
+            nativeMoves[nativeMoveCount].pass = isPass;
+            nativeMoveCount++;
+        }
+
+        if (!isPass && mx >= 0 && mx < boardSize && my >= 0 && my < boardSize) {
+            board[my][mx] = (char)moveColor;
+            lastMoveX = mx;
+            lastMoveY = my;
+            int opp = (moveColor == 1) ? 2 : 1;
+            CheckCaptures(opp, 0);
+        }
+
+        importedMoves++;
+        currentPlayer = (moveColor == 1) ? 2 : 1;
+    }
+
+    free(buf);
+
+    consecutivePasses = 0;
+    undoCount = 0;
+    redoCount = 0;
+    hintX = -1;
+    hintY = -1;
+    InvalidateRect(hwnd, NULL, TRUE);
+
+    char notifyBuf[256];
+    sprintf(notifyBuf, "Successfully imported SGF match from %s!\n\nBoard Size: %dx%d | Komi: %.1f | Moves: %d",
+            filename, boardSize, currentKomi, importedMoves);
+    MessageBox(hwnd, notifyBuf, "SGF Import", MB_OK | MB_ICONINFORMATION);
+    return 1;
+}
+
 void InitBoard() {
     consecutivePasses = 0;
     nativeMoveCount = 0;
@@ -1262,7 +1414,7 @@ void CalculateScore(HWND hwnd) {
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    static HWND hBtnPass, hBtnResign, hBtnNew, hCbSize, hCbAi, hCbDifficulty;
+    static HWND hBtnPass, hBtnResign, hBtnNew, hCbAi, hCbDifficulty;
 
     switch (uMsg) {
         case WM_CREATE:
@@ -1434,6 +1586,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
                 return 0;
+            } else if (wParam == 'I' || wParam == 'i') {
+                ImportGameFromSGF(hwnd, "kgo_game.sgf");
             } else if (wParam == 'U' || wParam == 'u') {
                 DoUndo(hwnd);
             } else if (wParam == 'H' || wParam == 'h') {
@@ -2159,7 +2313,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SetTextColor(memDC, RGB(255, 215, 0));
                 TextOut(memDC, 20, 595, hintStr, strlen(hintStr));
             } else {
-                const char *hotkeyHelp = "Shortcuts: [F1] Help  [F5] Save  [F9] Load  [C] Coords  [M] Move#  [H] Hint  [S] Analyzer  [T] Terr  [U] Undo  [P] Pass";
+                const char *hotkeyHelp = "Shortcuts: [F1] Help  [F5] Save  [F9] Load  [I] SGF  [C] Coords  [M] Move#  [H] Hint  [S] Analyzer  [T] Terr  [U] Undo  [P] Pass";
                 SetTextColor(memDC, RGB(180, 190, 200));
                 TextOut(memDC, 20, 595, hotkeyHelp, strlen(hotkeyHelp));
             }
@@ -2294,7 +2448,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 showMoveNumbers = !showMoveNumbers;
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == ID_BTN_SGF) {
-                ExportGameToSGF(hwnd, "kgo_game.sgf");
+                int res = MessageBox(hwnd,
+                    "SGF Match Manager\n\n"
+                    "Select an action:\n"
+                    "• [Yes]    : Export current match to 'kgo_game.sgf'\n"
+                    "• [No]     : Import match from 'kgo_game.sgf'\n"
+                    "• [Cancel] : Close dialog",
+                    "SGF Manager", MB_YESNOCANCEL | MB_ICONQUESTION);
+                if (res == IDYES) {
+                    ExportGameToSGF(hwnd, "kgo_game.sgf");
+                } else if (res == IDNO) {
+                    ImportGameFromSGF(hwnd, "kgo_game.sgf");
+                }
             } else if (LOWORD(wParam) == ID_BTN_HELP) {
                 MessageBox(hwnd, 
                     "Goal: Control more territory (empty intersections) than your opponent.\n\n"
@@ -2320,7 +2485,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     "Game Modes:\n"
                     "- Campaign: 20 progressive historical Baduk stages\n"
                     "- Tsumego: Life-and-death tactical puzzle solver\n"
-                    "- SGF: Export standard Smart Game Format match record",
+                    "- SGF: Export / Import standard Smart Game Format match record (kgo_game.sgf, [I] key)",
                     "How to Play KGo", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_CB_SIZE && HIWORD(wParam) == CBN_SELCHANGE) {
                 int sel = SendMessage(hCbSize, CB_GETCURSEL, 0, 0);
