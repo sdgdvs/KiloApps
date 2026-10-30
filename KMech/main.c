@@ -761,14 +761,14 @@ void ActionAttack() {
         
         // EMP Arc Disruptor extra enemy heat
         if (equipWpn == 4) {
-            enemyStats.heat += 20;
+            enemyStats.heat += 16;
             if (enemyStats.heat > enemyStats.maxHeat) {
                 int burnoutDmg = 15;
                 enemyStats.hp -= burnoutDmg;
                 addLog("CRITICAL ENEMY OVERHEAT! Burnout dealt 15 internal damage!");
                 AddShockwave(440.0f, 145.0f, 35.0f, RGB(255, 60, 20), 4.0f);
             }
-            addLog("EMP arc overloaded enemy capacitors (+20 heat)!");
+            addLog("EMP arc overloaded enemy capacitors (+16 heat)!");
         } else if (equipWpn == 5) {
             addLog("Particle lance pierced directly through armor plating!");
         }
@@ -1935,7 +1935,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "- Anywhere: [F1/H/Esc] Open / Close Pilot's Manual\n\n"
                     "WEAPON ARSENAL & SYSTEMS:\n"
                     "- Pulse Laser (Low heat) | Heavy Gauss (High kinetic) | Twin Autocannons (Burst)\n"
-                    "- Plasma Mortar (Matter shell) | EMP Disruptor (+20 enemy heat)\n"
+                    "- Plasma Mortar (Matter shell) | EMP Disruptor (+16 enemy heat)\n"
                     "- Particle Beam Lance (Pierces 50% DEF) | Swarm Missiles (Explosive collateral splash)\n\n"
                     "TACTICAL COMBAT & SUBSYSTEM TARGETING:\n"
                     "- Head: Precision 3.0x lethal strike (Stuns enemy systems) | Torso: Center mass 80% hit\n"
@@ -2097,10 +2097,13 @@ void MainEntry() {
     
     // First-run tutorial check: Launch Pilot's Manual on fresh installation
     if (GetFileAttributesA("kmech_tutorial.dat") == INVALID_FILE_ATTRIBUTES &&
-        GetFileAttributesA("kmech_save.dat") == INVALID_FILE_ATTRIBUTES) {
+        GetFileAttributesA("kmech_save.dat") == INVALID_FILE_ATTRIBUTES &&
+        GetFileAttributesA("kmech_telemetry.json") == INVALID_FILE_ATTRIBUTES) {
         gameState = STATE_HELP;
     } else if (GetFileAttributesA("kmech_save.dat") != INVALID_FILE_ATTRIBUTES) {
         QuickLoadNative();
+    } else if (GetFileAttributesA("kmech_telemetry.json") != INVALID_FILE_ATTRIBUTES) {
+        ImportTelemetryJSON();
     }
     
     HINSTANCE hInstance = GetModuleHandle(NULL);
