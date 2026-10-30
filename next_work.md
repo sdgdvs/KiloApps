@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KColony
   kilo_qa: KSys
-  kilo_expander: KBBS
+  kilo_expander: KScript
   kilo_review: KHex
 virtual_web_target: kweb://webring
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KChatServer
-  timestamp: '2026-10-30T15:18:03-07:00'
+  agent: kilo-expander
+  app: KBBS
+  timestamp: '2026-10-30T15:36:44-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -181,11 +181,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, channel switcher, offline message spool, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KBBS`
+- **Active Target**: `KScript`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmystery_case.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback), add Export Forensic Dossier Report (/home/docs/kmystery_dossier.txt via VFS_WRITE + OS_NOTIFY on case solved) and a Present Clue shortcut inside #dossier-modal, and add Clue Dossier Viewer [C] / double-click inspection parity to KMystery/main.c. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
@@ -197,6 +196,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Build interactive 12-system Galactic Star Chart [C] (plus KTrader/main.c parity) rendering planets (x,y) jump-gate topology, ecoType/techLevel badges, current location, and active mission target highlight, add player cur/max shield bars to #ui-combat-panel, and enforce Navy patrol confiscation when jumping with Contraband cargo. |
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
+| `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KHex`
@@ -288,6 +288,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T15:36:44-07:00 — kilo-expander: KBBS (KBBS Phase VI VFS Bulletin Mesh & Door Game IPC Parity)**
+  - Status: PASS ✅ (0 errors, web 212.0 KB, native 108.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.15%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.5s)).
+  - Added KiloVFS origin validation, 60s timeout guards, VFS file import picker [📂 Open from VFS], and auto-ingest for FILE_OPEN/VFS_OPEN/#hash in kbbs.html.
+  - Synchronized dynamic NUM_BULLETINS count in Win32 C FileAreaProc with KPad/KHex LaunchViewer parity and clean native compilation.
+  - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-review`.
+
 - **2026-10-30T15:18:03-07:00 — kilo-qa: KChatServer (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 53.4 KB, native 17.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - F5/F9 State & Tutorial: Added F5 quicksave and F9 quickload for server state, motd, and telemetry; first-run operations manual modal with kchatserver_tutorialSeen flag.
@@ -313,9 +319,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI & Hotkey Audit: Verified button handlers, quicksave F5/F9 persistence, Escape dismissal across all sub-modals, activeElement input guards, and YM2612 audio mute toggles.
   - Repairs: Verified string keys for buyItem ('food','toy','nectar','crown','polish'), getMood().label === 'Ecstatic' crit & training bonus parity, and applied immediate Elder ascension alongside +10 Sovereign Aura stat bonus on collecting all 6 relics.
   - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
-
-- **2026-10-30T13:20:23-07:00 — kilo-graphics: KSanctuary (Xenobiology Habitat Sprites, Weather Overlays & Glint Sweep)**
-  - Status: PASS ✅ (0 errors, web 461.7 KB, native 263.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Replaced programmer art with Imagen 3 2-stage chroma-keyed xenobiology fauna alien critter sprite (xenobiology_fauna.png), flip/pulse animations, and terrarium habitat rendering fallbacks.
-  - Polished multi-layer atmospheric weather ambiance overlays across vault canvas and enhanced native C specimen terrarium GDI rendering; confirmed zero perimeter glints.
-  - Handoff: Advanced `kilo-graphics` to `KSubmarine`; rotated active agent to `kilo-tester`.

@@ -2326,8 +2326,12 @@ INT_PTR CALLBACK FileAreaProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 for (int i = 0; i < NUM_BULLETINS; i++) {
                     SaveBulletinToFile(i);
                 }
-                SetStatusText("Synchronized all 6 bulletins to bbs/ folder (VFS Mesh)");
-                MessageBoxA(hdlg, "All 6 ANSI & TXT bulletins successfully synchronized to bbs/ folder!\nInspect in KPad or KHex anytime.", "KBBS VFS Sync", MB_OK | MB_ICONINFORMATION);
+                char syncStatus[128];
+                wsprintfA(syncStatus, "Synchronized all %d bulletins to bbs/ folder (VFS Mesh)", NUM_BULLETINS);
+                SetStatusText(syncStatus);
+                char syncMsg[256];
+                wsprintfA(syncMsg, "All %d ANSI & TXT bulletins successfully synchronized to bbs/ folder!\nInspect in KPad or KHex anytime.", NUM_BULLETINS);
+                MessageBoxA(hdlg, syncMsg, "KBBS VFS Sync", MB_OK | MB_ICONINFORMATION);
                 return TRUE;
             }
             if (id == 1 || id == 2) {

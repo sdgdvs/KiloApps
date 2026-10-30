@@ -374,6 +374,7 @@
                         <option value="classified">Classified Transmissions</option>
                     </select>
                     <input type="text" id="fileSearchInput" placeholder="Search bulletins by filename, author, tag..." style="flex:1; min-width:180px; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px 10px; border-radius:6px; outline:none;" oninput="renderFileAreaList()">
+                    <button class="btn-sub" onclick="openBulletinFromVFS()" title="Open and import ANSI/text file from KiloOS VFS">📂 Open from VFS</button>
                     <button class="btn-secondary" onclick="exportAllBulletinsToVFS()" title="Sync all bulletins to KiloOS VFS /home/bbs/">Sync All to VFS</button>
                 </div>
                 <div style="flex: 1; display: flex; overflow: hidden;">
@@ -690,29 +691,50 @@ SEND:"secret\r"'></textarea>
         },
         read(path, cb) {
             const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+            let cleanupTimer = null;
             const handler = (e) => {
+                if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                    return;
+                }
                 if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
                     window.removeEventListener('message', handler);
-                    cb(e.data.data, e.data.path);
+                    if (cb) cb(e.data.data, e.data.path || path);
                 }
             };
+            cleanupTimer = setTimeout(() => {
+                window.removeEventListener('message', handler);
+                if (cb) cb(null, path);
+            }, 60000);
             window.addEventListener('message', handler);
             try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
             if (window.parent === window) {
                 try {
                     const fallback = localStorage.getItem('vfs:' + path);
-                    if (fallback !== null) setTimeout(() => cb(fallback, path), 10);
+                    if (fallback !== null) setTimeout(() => {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(fallback, path);
+                    }, 10);
                 } catch (e) {}
             }
         },
         openPicker(cb) {
             const reqId = 'open_' + Date.now();
+            let cleanupTimer = null;
             const handler = (e) => {
+                if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                    return;
+                }
                 if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
                     window.removeEventListener('message', handler);
                     if (e.data.path) KiloVFS.read(e.data.path, cb);
                 }
             };
+            cleanupTimer = setTimeout(() => {
+                window.removeEventListener('message', handler);
+            }, 60000);
             window.addEventListener('message', handler);
             try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
         },
@@ -3523,6 +3545,111 @@ Hardware: Dual Pentium III 500 MHz, USRobotics Courier V.Everything 56K
         processData(file.content + "\r\n");
         showToast(`Streamed ${file.name} to terminal screen!`, "success");
     }
+
+    function openBulletinFromVFS() {
+        KiloVFS.openPicker((data, path) => {
+            if (!data) return;
+            const filename = (path || 'VFS_BULLETIN.TXT').split('/').pop();
+            const entry = {
+                name: filename,
+                title: `VFS Document: ${filename}`,
+                size: data.length,
+                date: new Date().toISOString().slice(0, 10),
+                uploader: "KiloOS VFS Import",
+                category: "system",
+                desc: `Ingested directly from KiloOS VFS path (${path}). Inspect in KPad or KHex.`,
+                content: data
+            };
+            const existingIdx = bbsBulletins.findIndex(b => b.name === filename);
+            if (existingIdx >= 0) {
+                bbsBulletins[existingIdx] = entry;
+            } else {
+                bbsBulletins.unshift(entry);
+            }
+            renderFileAreaList();
+            selectBulletinFile(existingIdx >= 0 ? existingIdx : 0);
+            showToast(`Loaded ${filename} from VFS into File Area!`, "success");
+        });
+    }
+
+    function handleIncomingVfsPath(path) {
+        if (!path) return;
+        const cleanPath = path.startsWith('#') ? path.slice(1) : path;
+        if (!cleanPath) return;
+        KiloVFS.read(cleanPath, (data, resolvedPath) => {
+            if (data) {
+                const filename = (resolvedPath || cleanPath).split('/').pop() || 'INCOMING.TXT';
+                const entry = {
+                    name: filename,
+                    title: `External Document: ${filename}`,
+                    size: data.length,
+                    date: new Date().toISOString().slice(0, 10),
+                    uploader: "KiloOS VFS Ingest",
+                    category: "system",
+                    desc: `Ingested from KiloOS VFS (${resolvedPath || cleanPath}). Inspect in KPad or KHex.`,
+                    content: data
+                };
+                const existingIdx = bbsBulletins.findIndex(b => b.name === filename);
+                if (existingIdx >= 0) {
+                    bbsBulletins[existingIdx] = entry;
+                } else {
+                    bbsBulletins.unshift(entry);
+                }
+                showFileArea();
+                selectBulletinFile(existingIdx >= 0 ? existingIdx : 0);
+                showToast(`Opened ${filename} from VFS!`, "success");
+            }
+        });
+    }
+
+    // Listen for incoming VFS documents or file open events
+    window.addEventListener('message', (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+            return;
+        }
+        const msg = e.data;
+        if (!msg || typeof msg !== 'object') return;
+        if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+            const filePath = msg.path || '';
+            const fileContent = msg.data !== undefined ? msg.data : msg.content;
+            if (fileContent !== undefined && fileContent !== null) {
+                const filename = filePath ? filePath.split('/').pop() : 'INGEST.TXT';
+                const entry = {
+                    name: filename,
+                    title: `External Document: ${filename}`,
+                    size: fileContent.length,
+                    date: new Date().toISOString().slice(0, 10),
+                    uploader: "KiloOS Ingest",
+                    category: "system",
+                    desc: `Ingested from KiloOS VFS (${filePath || 'direct stream'}). Inspect in KPad or KHex.`,
+                    content: fileContent
+                };
+                const existingIdx = bbsBulletins.findIndex(b => b.name === filename);
+                if (existingIdx >= 0) {
+                    bbsBulletins[existingIdx] = entry;
+                } else {
+                    bbsBulletins.unshift(entry);
+                }
+                showFileArea();
+                selectBulletinFile(existingIdx >= 0 ? existingIdx : 0);
+                showToast(`Opened ${filename} in KBBS!`, "success");
+            } else if (filePath) {
+                handleIncomingVfsPath(filePath);
+            }
+        }
+    });
+
+    // Check for file passed via URL hash on boot
+    window.addEventListener('DOMContentLoaded', () => {
+        if (window.location.hash && window.location.hash.length > 1) {
+            handleIncomingVfsPath(decodeURIComponent(window.location.hash));
+        }
+    });
+    window.addEventListener('hashchange', () => {
+        if (window.location.hash && window.location.hash.length > 1) {
+            handleIncomingVfsPath(decodeURIComponent(window.location.hash));
+        }
+    });
 
     // Door Game VFS Mesh Exporters
     function exportLordToVFS(targetApp) {
