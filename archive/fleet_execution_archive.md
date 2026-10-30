@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T09:18:26-07:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Party Vault)**
+  - Status: PASS ✅ (0 errors, web 93.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 37.48%, input 36.11%, HEAD Δ 0.2%, 0 fail, 0 warn, 7.7s)).
+  - Implemented real-time 64K intro Canvas effect switcher (plasma, rotozoom, 3D starfield, copper bars, metaballs) with parameter sliders and CRT toggle.
+  - Equipped ANSI .NFO studio, compo voting board with score persistence, VFS vault spooling (/home/downloads/), and KNet URL resolver routing.
+  - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-30T08:41:02-07:00 — kilo-expander: KSynth (Phase VI VFS Patch Bank & Cross-App Bridge for KSynth)**
   - Status: PASS ✅ (0 errors, web 183.2 KB, native 28.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.12%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.1s)).
   - Phase VI VFS Patch Bank: Auto-seeded and wired 2-Op FM patch presets (.fm) to /home/music/, added Trapster P2P patch conversion, and registered .fm file associations in kexplorer.

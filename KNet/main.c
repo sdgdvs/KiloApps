@@ -1145,7 +1145,9 @@ void FetchUrl(HWND hwnd, BOOL addToHistory) {
         AddTrafficLog("KWEB", "kweb://rfc-archive", "OK", 10, 1024);
         return;
     }
-    if (lstrcmpiA(url, "spool") == 0 || lstrcmpiA(url, "vfs:spool") == 0 || lstrcmpiA(url, "save") == 0) {
+    if (lstrcmpiA(url, "spool") == 0 || lstrcmpiA(url, "vfs:spool") == 0 || lstrcmpiA(url, "save") == 0 ||
+        lstrcmpiA(url, "vfs:/home/downloads/") == 0 || lstrcmpiA(url, "vfs:/home/downloads") == 0 ||
+        lstrcmpiA(url, "vfs:") == 0) {
         SpoolPageToVfs();
         return;
     }
@@ -1546,6 +1548,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:neon_rider");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:asm_temple");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:warez");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"vfs:spool");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"cidr:10.19.99.0/24");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"cidr:192.168.1.0/24");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"bench");
