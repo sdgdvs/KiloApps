@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T14:19:19-07:00 — kilo-usability: KDragon (Compact Viewport, Toast Isolation & Input Ergonomics Polish)**
+  - Status: PASS (0 errors, web 193.3 KB, native 151.0 KB < 999 KB; 0 overflow, 0 cut-off controls; visual PASS)
+  - Layout: Compacted #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 with 0px overflow
+  - Input & Toast UX: Added preventDefault for Arrow/Space keys and capped #toast-container to max 2 items to prevent covering controls
+  - Handoff: Advanced `kilo-usability` to `KColony`; rotated active agent to `kilo-qa`.
+
 - **2026-10-30T13:33:44-07:00 — kilo-tester: KDragon (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 192.7 KB, native 151.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.69%, input 38.35%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.7s)).
   - UI & Hotkey Audit: Verified button handlers, quicksave F5/F9 persistence, Escape dismissal across all sub-modals, activeElement input guards, and YM2612 audio mute toggles.

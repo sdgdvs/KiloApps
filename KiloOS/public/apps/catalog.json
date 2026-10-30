@@ -59,9 +59,9 @@
     "id": "kbbs",
     "title": "KBBS",
     "folder": "Network",
-    "webBytes": 211040,
+    "webBytes": 217083,
     "exeBytes": 110592,
-    "budgetPercent": 21.1
+    "budgetPercent": 21.7
   },
   {
     "id": "kbookmark",
@@ -115,17 +115,17 @@
     "id": "kchat",
     "title": "KChat",
     "folder": "Network",
-    "webBytes": 101818,
-    "exeBytes": 29696,
-    "budgetPercent": 10.2
+    "webBytes": 116465,
+    "exeBytes": 30208,
+    "budgetPercent": 11.7
   },
   {
     "id": "kchatserver",
     "title": "KChat Server",
     "folder": "Network",
-    "webBytes": 24241,
-    "exeBytes": 13824,
-    "budgetPercent": 2.4
+    "webBytes": 56090,
+    "exeBytes": 17920,
+    "budgetPercent": 5.6
   },
   {
     "id": "kchess",
@@ -267,9 +267,9 @@
     "id": "kdragon",
     "title": "KDragon",
     "folder": "Games",
-    "webBytes": 196823,
+    "webBytes": 200302,
     "exeBytes": 154624,
-    "budgetPercent": 19.7
+    "budgetPercent": 20.1
   },
   {
     "id": "kexplorer",
@@ -467,9 +467,9 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 213297,
+    "webBytes": 214658,
     "exeBytes": 57856,
-    "budgetPercent": 21.4
+    "budgetPercent": 21.5
   },
   {
     "id": "knetmap",
@@ -603,9 +603,9 @@
     "id": "ksanctuary",
     "title": "KSanctuary",
     "folder": "Games",
-    "webBytes": 470814,
-    "exeBytes": 269312,
-    "budgetPercent": 47.1
+    "webBytes": 472731,
+    "exeBytes": 269824,
+    "budgetPercent": 47.3
   },
   {
     "id": "kscript",

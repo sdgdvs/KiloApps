@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://webring
+  kilo_creator: kweb://deep-core
   kilo_graphics: KSubmarine
   kilo_soundscape: KStellar
   kilo_tester: KHex
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KSys
   kilo_expander: KHex
   kilo_review: KFont
-virtual_web_target: kweb://webring
+virtual_web_target: kweb://deep-core
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KHex
-  timestamp: '2026-10-30T16:15:42-07:00'
+  agent: kilo-creator
+  app: kweb://webring
+  timestamp: '2026-10-30T16:38:38-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://webring`
+- **Active Target**: `kweb://deep-core`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
+| `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KSubmarine`
@@ -290,6 +290,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T16:38:38-07:00 — kilo-creator: kweb://webring (Canonical 1999 Web Nodes RingMaster Integration & Traversal)**
+  - Status: PASS ✅ (0 errors, web 457.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 2.58%, input 19.73%, HEAD Δ 2.36%, 0 fail, 0 warn, 4.9s)).
+  - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) into RingMaster topology map, badge generator, and bidirectional ring traversal.
+  - Added 1-click canonical widget presets in Tab 11, Netscape Surfer fast-hops in Tab 8, AS-1999 BGP canonical prefix routes in Tab 10, and updated directory & audit count metrics.
+  - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-30T16:15:42-07:00 — kilo-review: KHex (Argon Visual, Feature & Usability Review)**
   - Status: DEFECTS FOUND (inspected 980x783 sheet.png, khex.html, and KHex/main.c; un-quarantined KHex from Mature and queued surgical fixes).
   - Visual/UX Findings: 127px vertical overflow clips 32-bit bitfield and status bar at 980x783; 32 .bit-num nodes at 8.8px (<9px); centered #toastContainer occludes .tab-nav clicks; duplicate tab badge 9 on Struct tab.
@@ -314,10 +320,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Viewport & Layout: Compacted #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 with overflow:hidden and 0px scroll.
   - Toast Isolation: Anchored #toast-container to top-right with pointer-events:none and max-height:110px, completely isolating it from #controls and #message-log.
   - Keyboard Ergonomics: Bound e.preventDefault() for Arrow/Space keys to eliminate page scrolling, added button-to-button Arrow navigation, Tab focus trapping in #help-modal, and Win32 C parity for 'K' shop shortcut.
-  - Handoff: Advanced `kilo-usability` to `KColony`; rotated active agent to `kilo-qa`.
-
-- **2026-10-30T14:19:19-07:00 — kilo-usability: KDragon (Compact Viewport, Toast Isolation & Input Ergonomics Polish)**
-  - Status: PASS (0 errors, web 193.3 KB, native 151.0 KB < 999 KB; 0 overflow, 0 cut-off controls; visual PASS)
-  - Layout: Compacted #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 with 0px overflow
-  - Input & Toast UX: Added preventDefault for Arrow/Space keys and capped #toast-container to max 2 items to prevent covering controls
   - Handoff: Advanced `kilo-usability` to `KColony`; rotated active agent to `kilo-qa`.

@@ -1702,7 +1702,8 @@
       <!-- Filters & Search -->
       <div class="filter-row">
         <div class="filter-pills" id="categoryFilters">
-          <button class="pill-btn active" data-cat="all" onclick="filterRingNodes('all')">All Nodes (<span id="countAll">18</span>)</button>
+          <button class="pill-btn active" data-cat="all" onclick="filterRingNodes('all')">All Nodes (<span id="countAll">24</span>)</button>
+          <button class="pill-btn" data-cat="canonical" onclick="filterRingNodes('canonical')" style="color:var(--amber-bright); border-color:rgba(251,191,36,0.5);">★ Canonical Fleet (<span id="countCanonical">6</span>)</button>
           <button class="pill-btn" data-cat="community" onclick="filterRingNodes('community')">Community &amp; Shrines (<span id="countCommunity">2</span>)</button>
           <button class="pill-btn" data-cat="demoscene" onclick="filterRingNodes('demoscene')">Demoscene &amp; Hacker (<span id="countDemoscene">4</span>)</button>
           <button class="pill-btn" data-cat="tools" onclick="filterRingNodes('tools')">Tools &amp; Portals (<span id="countTools">8</span>)</button>
@@ -1804,7 +1805,7 @@
       <div class="tour-card">
         <div>
           <strong>Exploration Status:</strong>
-          <span id="tourProgressText" style="color:var(--cyan);">0 of 18 Nodes Visited (0%)</span>
+          <span id="tourProgressText" style="color:var(--cyan);">0 of 24 Nodes Visited (0%)</span>
         </div>
         <div>
           <button class="btn-teleport alt" onclick="triggerRingTourNext()" style="padding:4px 10px; font-size:11px;">
@@ -2731,6 +2732,17 @@ Tune dial to match lithospheric harmonic frequency to isolate transit frames.
         Cruise through member homepages, demoscene vaults, and network shrines in an authentic period Netscape 4.7 simulator. Set your dwell timer to let the ring tour advance hands-free, throttle simulated modem connection speeds, hear procedural dial-up handshakes and hop chimes, or bookmark your favorite stops into a Netscape bookmarks.html archive.
       </div>
 
+      <!-- Canonical Quick-Hop Cruising Bar -->
+      <div style="margin-bottom:10px; background:#070b16; border:1px solid var(--border-med); border-radius:3px; padding:6px 10px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+        <span style="font-family:var(--font-mono); font-size:10px; font-weight:bold; color:var(--amber-bright);">★ CANONICAL QUICK-HOPS:</span>
+        <button type="button" class="pill-btn" onclick="surfToNode('#023')" style="color:#34d399; font-size:10px;" title="Hop to SlashNet: News for Nerds">📰 SlashNet (#023)</button>
+        <button type="button" class="pill-btn" onclick="surfToNode('#024')" style="color:#38bdf8; font-size:10px;" title="Hop to Trapster P2P Chiptune Swarm">💿 Trapster (#024)</button>
+        <button type="button" class="pill-btn" onclick="surfToNode('#025')" style="color:#fbbf24; font-size:10px;" title="Hop to Cabled Magazine 1999 Edition">⚡ Cabled (#025)</button>
+        <button type="button" class="pill-btn" onclick="surfToNode('#026')" style="color:#4ade80; font-size:10px;" title="Hop to The Scallion Satirical News">🧅 The Scallion (#026)</button>
+        <button type="button" class="pill-btn" onclick="surfToNode('#021')" style="color:#f472b6; font-size:10px;" title="Hop to Assembly '99 Demoscene Vault">💾 Assembly '99 (#021)</button>
+        <button type="button" class="pill-btn" onclick="surfToNode('#022')" style="color:#a78bfa; font-size:10px;" title="Hop to IETF Living RFC Workbench">📜 RFC Archive (#022)</button>
+      </div>
+
       <!-- Auto-Tour Controls Bar -->
       <div class="filter-row" style="margin-bottom:12px;">
         <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
@@ -2953,7 +2965,7 @@ Tune dial to match lithospheric harmonic frequency to isolate transit frames.
       <div class="validator-console" id="validatorTerminalLog">
 [KILONET 1999 RINGMASTER COMPLIANCE ENGINE READY]
 Select a member node or custom site URL above and press [Run Deep Audit].
-All 18 registered consortium nodes and custom submissions are checked against the 1999 Consortium Bylaws:
+All 24 registered consortium nodes and custom submissions are checked against the 1999 Consortium Bylaws:
 - HTML 4.01 Strict semantic parsing
 - Ring Navigation Anchor & Widget verification
 - 999 Kilobyte hard asset limit
@@ -3318,6 +3330,19 @@ Monitoring transit sessions...
                 <option value="terminal">Monochrome Phosphor Green CRT</option>
                 <option value="minimal">Minimalist 1-Line Modern Compact</option>
               </select>
+            </div>
+
+            <!-- 1-Click Canonical Site Presets -->
+            <div style="margin-bottom:10px;">
+              <div style="font-family:var(--font-mono); font-size:10px; color:var(--amber-bright); margin-bottom:4px; font-weight:bold;">★ 1-CLICK CANONICAL SITE PRESET:</div>
+              <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                <button type="button" class="pill-btn" onclick="applyWidgetNodePreset('#023')" style="color:#34d399; font-size:10px;">📰 SlashNet</button>
+                <button type="button" class="pill-btn" onclick="applyWidgetNodePreset('#024')" style="color:#38bdf8; font-size:10px;">💿 Trapster</button>
+                <button type="button" class="pill-btn" onclick="applyWidgetNodePreset('#025')" style="color:#fbbf24; font-size:10px;">⚡ Cabled</button>
+                <button type="button" class="pill-btn" onclick="applyWidgetNodePreset('#026')" style="color:#4ade80; font-size:10px;">🧅 Scallion</button>
+                <button type="button" class="pill-btn" onclick="applyWidgetNodePreset('#021')" style="color:#f472b6; font-size:10px;">💾 Demoscene</button>
+                <button type="button" class="pill-btn" onclick="applyWidgetNodePreset('#022')" style="color:#a78bfa; font-size:10px;">📜 RFC Archive</button>
+              </div>
             </div>
 
             <div style="margin-bottom:10px;">
@@ -4910,7 +4935,9 @@ function renderDirectoryTable() {
 
   const filtered = ringNodes.filter(node => {
     if (node.hiddenFromDirectory) return false;
+    const isCanon = CANONICAL_IDS.has(node.id);
     const matchesCat = (activeCategoryFilter === 'all') || 
+      (activeCategoryFilter === 'canonical' && isCanon) ||
       (node.category === activeCategoryFilter) || 
       (activeCategoryFilter === 'community_submissions' && (node.isCommunity || node.category === 'community_submission' || node.category === 'submission'));
     const matchesQuery = !query || 
@@ -4929,11 +4956,13 @@ function renderDirectoryTable() {
   }
 
   filtered.forEach(node => {
+    const isCanon = CANONICAL_IDS.has(node.id);
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><span class="node-badge">${node.id}</span></td>
+      <td><span class="node-badge" ${isCanon ? 'style="background:#b45309; color:#fde047; font-weight:bold;"' : ''}>${node.id}</span></td>
       <td>
-        <strong style="color:var(--text-primary); font-size:13px;">${node.name}</strong><br>
+        <strong style="color:var(--text-primary); font-size:13px;">${isCanon ? '★ ' : ''}${node.name}</strong>
+        ${isCanon ? '<span class="node-badge" style="background:#b45309; color:#fde047; font-size:9px; margin-left:4px;">CANONICAL</span>' : ''}<br>
         <span style="color:var(--text-dim); font-size:11px; font-family:var(--font-mono);">Webmaster: ${node.handle}</span>
       </td>
       <td>
@@ -4951,6 +4980,9 @@ function renderDirectoryTable() {
           <button class="btn-action" onclick="openNodeModal('${node.id}')">
             <span>🔍</span> Info
           </button>
+          ${isCanon ? `<button class="btn-action" onclick="focusTopologyNode('${node.id}')" style="color:var(--amber-bright); border-color:var(--amber);" title="Focus in RingMaster Topology Map">
+            <span>🕸️</span> Topo
+          </button>` : ''}
         </div>
       </td>
     `;
@@ -5239,16 +5271,16 @@ function updateTourDisplay() {
     let rankTitle = "Novice Hopper";
     let rankBg = "#b45309";
     let rankColor = "#fbbf24";
-    if (count >= 18) {
+    if (count >= 24) {
       rankTitle = "Grand Ringmaster '99 ★";
       rankBg = "#059669"; rankColor = "#34d399";
-    } else if (count >= 14) {
+    } else if (count >= 18) {
       rankTitle = "Lithospheric Explorer";
       rankBg = "#0284c7"; rankColor = "#38bdf8";
-    } else if (count >= 9) {
+    } else if (count >= 12) {
       rankTitle = "Cyber Demoscener";
       rankBg = "#9333ea"; rankColor = "#f472b6";
-    } else if (count >= 5) {
+    } else if (count >= 6) {
       rankTitle = "Netscape Pilgrim";
       rankBg = "#0369a1"; rankColor = "#7dd3fc";
     } else if (count === 0) {
@@ -5343,6 +5375,7 @@ function updateDirectoryCounts() {
   const tools = visibleNodes.filter(n => n.category === 'tools').length;
   const apps = visibleNodes.filter(n => n.category === 'apps').length;
   const subs = visibleNodes.filter(n => n.isCommunity || n.category === 'community_submission' || n.category === 'submission').length;
+  const canon = visibleNodes.filter(n => CANONICAL_IDS.has(n.id)).length;
 
   const elAll = document.getElementById('countAll');
   if (elAll) elAll.textContent = total;
@@ -5356,6 +5389,8 @@ function updateDirectoryCounts() {
   if (elApps) elApps.textContent = apps;
   const elSubs = document.getElementById('countSubmissions');
   if (elSubs) elSubs.textContent = subs;
+  const elCanon = document.getElementById('countCanonical');
+  if (elCanon) elCanon.textContent = canon;
 
   const activeCount = document.getElementById('activeNodesCount');
   if (activeCount) activeCount.textContent = total;
@@ -5880,9 +5915,24 @@ function updateBadgePreview() {
   const container = document.getElementById('badgePreviewContainer');
   const snippetBox = document.getElementById('badgeSnippetOutput');
 
-  // Dynamic Neighbor Resolution based on member site
+  // Dynamic Neighbor Resolution based on member site (with alias and canonical support)
   const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory && !n.url.includes('webring.html') && n.url !== '#');
-  let matchedIdx = visibleNodes.findIndex(n => n.id.toLowerCase() === ringId.toLowerCase() || n.name.toLowerCase() === siteTitle.toLowerCase());
+  let matchedIdx = -1;
+  const matchById = resolveNodeMatch(ringId);
+  if (matchById !== -1) {
+    const targetNode = ringNodes.filter(n => !n.hiddenFromDirectory)[matchById];
+    if (targetNode) matchedIdx = visibleNodes.findIndex(n => n.id === targetNode.id);
+  }
+  if (matchedIdx === -1) {
+    const matchByTitle = resolveNodeMatch(siteTitle);
+    if (matchByTitle !== -1) {
+      const targetNode = ringNodes.filter(n => !n.hiddenFromDirectory)[matchByTitle];
+      if (targetNode) matchedIdx = visibleNodes.findIndex(n => n.id === targetNode.id);
+    }
+  }
+  if (matchedIdx === -1) {
+    matchedIdx = visibleNodes.findIndex(n => n.id.toLowerCase() === ringId.toLowerCase() || n.name.toLowerCase() === siteTitle.toLowerCase());
+  }
   if (matchedIdx === -1) {
     matchedIdx = visibleNodes.findIndex(n => n.id.replace('#', '') === ringId.replace('#', ''));
   }
@@ -8029,8 +8079,15 @@ function openNodeModal(nodeId) {
 }
 
 function surfToNode(nodeId) {
-  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
-  const idx = visibleNodes.findIndex(n => n.id === nodeId);
+  let eligibleNodes = getSurfEligibleNodes();
+  let idx = eligibleNodes.findIndex(n => n.id === nodeId);
+  if (idx === -1) {
+    surfScope = 'all';
+    const scopeSel = document.getElementById('surfScopeSelect');
+    if (scopeSel) scopeSel.value = 'all';
+    eligibleNodes = getSurfEligibleNodes();
+    idx = eligibleNodes.findIndex(n => n.id === nodeId);
+  }
   if (idx !== -1) {
     currentSurfIndex = idx;
     switchTab('tab-surf');
@@ -9387,7 +9444,7 @@ function populateValidatorTargets() {
   ringNodes.forEach(node => {
     const opt = document.createElement('option');
     opt.value = node.id;
-    opt.textContent = `${node.id} — ${node.name} (${node.url})`;
+    opt.textContent = `${CANONICAL_IDS.has(node.id) ? '★ ' : ''}${node.id} — ${node.name} (${node.url})`;
     sel.appendChild(opt);
   });
 }
@@ -9763,12 +9820,7 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const fullVisibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
-    const surfIdx = fullVisibleNodes.findIndex(n => n.id === dest.id);
-    if (surfIdx !== -1) currentSurfIndex = surfIdx;
-
-    switchTab('tab-surf');
-    renderSurfViewport();
+    surfToNode(dest.id);
     if (typeof showNoticeToast === 'function') {
       showNoticeToast(`Ring Traversal [${ringAction.toUpperCase()}]: Hop to ${dest.name} (${dest.id})`);
     }
@@ -9824,6 +9876,84 @@ let bgpRoutes = [
     netmask: "255.255.255.0",
     broadcast: "204.71.200.255",
     reason: "eBGP route announced from MCI WorldCom Tier-1 transit gateway"
+  },
+  {
+    prefix: "199.249.112.0/24",
+    proto: "BGP-4",
+    nexthop: "199.249.112.1",
+    aspath: "1999 1056",
+    med: 20,
+    localpref: 150,
+    status: "ESTABLISHED",
+    community: "1999:CANONICAL",
+    netmask: "255.255.255.0",
+    broadcast: "199.249.112.255",
+    reason: "SlashNet News for Nerds canonical node #023"
+  },
+  {
+    prefix: "198.41.0.0/24",
+    proto: "BGP-4",
+    nexthop: "198.41.0.1",
+    aspath: "1999 2200",
+    med: 25,
+    localpref: 140,
+    status: "ESTABLISHED",
+    community: "1999:CANONICAL",
+    netmask: "255.255.255.0",
+    broadcast: "198.41.0.255",
+    reason: "Trapster P2P Chiptune Swarm canonical node #024"
+  },
+  {
+    prefix: "207.46.130.0/24",
+    proto: "BGP-4",
+    nexthop: "207.46.130.1",
+    aspath: "1999 1239",
+    med: 22,
+    localpref: 145,
+    status: "ESTABLISHED",
+    community: "1999:CANONICAL",
+    netmask: "255.255.255.0",
+    broadcast: "207.46.130.255",
+    reason: "Cabled Magazine 1999 Edition canonical node #025"
+  },
+  {
+    prefix: "209.185.108.0/24",
+    proto: "BGP-4",
+    nexthop: "209.185.108.1",
+    aspath: "1999 3561",
+    med: 24,
+    localpref: 140,
+    status: "ESTABLISHED",
+    community: "1999:CANONICAL",
+    netmask: "255.255.255.0",
+    broadcast: "209.185.108.255",
+    reason: "The Scallion Satirical News Wire canonical node #026"
+  },
+  {
+    prefix: "194.109.13.0/24",
+    proto: "BGP-4",
+    nexthop: "194.109.13.1",
+    aspath: "1999 3269",
+    med: 18,
+    localpref: 160,
+    status: "ESTABLISHED",
+    community: "1999:CANONICAL",
+    netmask: "255.255.255.0",
+    broadcast: "194.109.13.255",
+    reason: "Assembly '99 Demoscene Vault canonical node #021"
+  },
+  {
+    prefix: "198.32.0.0/24",
+    proto: "BGP-4",
+    nexthop: "198.32.0.1",
+    aspath: "1999 2686",
+    med: 15,
+    localpref: 170,
+    status: "ESTABLISHED",
+    community: "1999:CANONICAL",
+    netmask: "255.255.255.0",
+    broadcast: "198.32.0.255",
+    reason: "IETF 1999 Living RFC Protocol Workbench canonical node #022"
   },
   {
     prefix: "10.19.99.0/24",
@@ -10638,6 +10768,29 @@ document.addEventListener('visibilitychange', () => {
 // ==========================================
 let simulatedTotalHits = 1482904;
 let simulatedDailyJumps = 42810;
+
+function applyWidgetNodePreset(nodeId) {
+  const matchIdx = resolveNodeMatch(nodeId);
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  const node = matchIdx !== -1 ? visibleNodes[matchIdx] : ringNodes.find(n => n.id === nodeId);
+  if (!node) return;
+  const siteIdEl = document.getElementById('widgetSiteIdInput');
+  const siteTitleEl = document.getElementById('widgetSiteTitleInput');
+  const themeEl = document.getElementById('widgetThemeSelect');
+  if (siteIdEl) siteIdEl.value = node.id.replace('#', '');
+  if (siteTitleEl) siteTitleEl.value = node.name;
+  if (themeEl) {
+    if (node.id === '#023') themeEl.value = 'terminal';
+    else if (node.id === '#024') themeEl.value = 'cyber';
+    else if (node.id === '#025') themeEl.value = 'gold';
+    else if (node.id === '#026') themeEl.value = 'minimal';
+    else if (node.id === '#021') themeEl.value = 'cyber';
+    else if (node.id === '#022') themeEl.value = 'classic';
+  }
+  updateWidgetPreview();
+  if (typeof playSfx === 'function') playSfx('badge');
+  showNoticeToast(`Loaded widget preset for ${node.name} (${node.id})`);
+}
 
 function updateWidgetPreview() {
   const themeEl = document.getElementById('widgetThemeSelect');
