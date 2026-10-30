@@ -270,6 +270,7 @@
             cursor: grab;
             image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
+            touch-action: none;
         }
 
         canvas#stellarCanvas:active {
@@ -284,7 +285,8 @@
             flex-direction: column;
             gap: 8px;
             pointer-events: none;
-            max-width: 320px;
+            max-width: min(340px, calc(100% - 20px));
+            z-index: 7;
         }
 
         .overlay-card {
@@ -292,9 +294,10 @@
             border: 1px solid var(--border-stellar);
             border-left: 3px solid var(--accent-cyan);
             border-radius: 4px;
-            padding: 8px 12px;
+            padding: 6px 10px;
             pointer-events: auto;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
         }
 
         .overlay-title {
@@ -302,52 +305,195 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--accent-cyan);
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 6px;
         }
 
         .overlay-text {
             font-size: 11px;
             color: var(--text-bright);
-            line-height: 1.4;
+            line-height: 1.35;
+        }
+
+        .overlay-card.compact .overlay-text {
+            display: none;
+        }
+
+        .hud-toggle-btn {
+            background: transparent;
+            border: 1px solid var(--border-stellar);
+            color: var(--accent-cyan);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            padding: 0;
+            transition: all 0.15s;
+        }
+        .hud-toggle-btn:hover {
+            background: rgba(0, 240, 255, 0.2);
+            border-color: var(--accent-cyan);
+        }
+
+        .hud-mini-radar {
+            display: block;
+            border-radius: 50%;
+            border: 1px solid var(--accent-cyan);
+            background: #020712;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .hud-mini-radar:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 12px var(--accent-cyan);
         }
 
         .viewport-controls {
             position: absolute;
-            bottom: 12px;
-            left: 12px;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
             display: flex;
-            gap: 6px;
+            flex-wrap: wrap;
+            gap: 4px;
             pointer-events: auto;
             z-index: 5;
+            max-width: calc(100% - 92px);
+        }
+
+        .nav-btn-group {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            align-items: center;
         }
 
         .nav-btn {
-            background: rgba(10, 17, 32, 0.92);
+            background: rgba(10, 17, 32, 0.94);
             border: 1px solid var(--border-stellar);
             color: var(--text-primary);
-            padding: 4px 9px;
-            border-radius: 4px;
+            padding: 3px 7px;
+            border-radius: 3px;
             font-family: var(--font-mono);
-            font-size: 11px;
+            font-size: 10px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.15s;
+            white-space: nowrap;
+            touch-action: manipulation;
         }
 
         .nav-btn:hover {
             border-color: var(--accent-cyan);
             color: var(--accent-cyan);
-            background: rgba(0, 240, 255, 0.1);
+            background: rgba(0, 240, 255, 0.12);
+        }
+
+        .nav-btn:focus-visible, button:focus-visible, select:focus-visible {
+            outline: 2px solid var(--accent-cyan);
+            outline-offset: 1px;
+        }
+
+        /* Virtual Flight Thrusters & Pan HUD */
+        .flight-thrusters-hud {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            width: 74px;
+            height: 74px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+            z-index: 6;
+            background: rgba(8, 14, 26, 0.88);
+            border: 1px solid var(--border-stellar);
+            border-radius: 6px;
+            padding: 2px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+            pointer-events: auto;
+        }
+
+        .thruster-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            color: var(--accent-cyan);
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 2px;
+            cursor: pointer;
+            touch-action: manipulation;
+            user-select: none;
+            transition: all 0.1s;
+        }
+
+        .thruster-btn:hover, .thruster-btn:active {
+            background: var(--accent-cyan);
+            color: #020712;
+            box-shadow: 0 0 6px var(--accent-cyan);
+        }
+
+        .th-up { grid-column: 2; grid-row: 1; }
+        .th-left { grid-column: 1; grid-row: 2; }
+        .th-center { grid-column: 2; grid-row: 2; font-size: 8px; font-weight: bold; }
+        .th-right { grid-column: 3; grid-row: 2; }
+        .th-down { grid-column: 2; grid-row: 3; }
+
+        /* Threat Radar Box in Sidebar */
+        .threat-radar-box {
+            position: relative;
+            background: #030814;
+            border: 1px solid var(--border-stellar);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 0 16px rgba(0,0,0,0.8);
+        }
+
+        #threatRadarCanvas {
+            display: block;
+            width: 100%;
+            height: 130px;
+        }
+
+        .radar-telemetry-badge {
+            position: absolute;
+            bottom: 4px;
+            left: 6px;
+            right: 6px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: var(--accent-cyan);
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(4, 10, 20, 0.85);
+            padding: 2px 5px;
+            border-radius: 2px;
+            border: 1px solid rgba(0, 240, 255, 0.2);
         }
 
         /* Selection Card in Viewport */
         .selection-card {
             position: absolute;
-            top: 10px;
+            top: 36px;
             right: 10px;
             width: 250px;
+            max-width: calc(100% - 20px);
+            max-height: calc(100% - 80px);
+            overflow-y: auto;
             background: rgba(10, 17, 32, 0.96);
             border: 1px solid var(--accent-blue);
             border-radius: 4px;
@@ -1965,6 +2111,56 @@
             100% { transform: translateY(0); opacity: 1; }
         }
 
+        /* Responsive Ergonomics & Viewport Scaling */
+        @media (max-width: 950px) {
+            .sidebar {
+                width: 340px;
+            }
+            .stats-bar {
+                gap: 6px;
+            }
+            .stat-badge {
+                padding: 2px 6px;
+                font-size: 10px;
+            }
+            .footer-controls .sfx-trigger {
+                display: none;
+            }
+        }
+
+        @media (max-width: 780px) {
+            .sidebar {
+                width: 290px;
+            }
+            .title {
+                font-size: 13px;
+            }
+            .subtitle {
+                display: none;
+            }
+            .carto-badge {
+                display: none;
+            }
+            .footer-controls span:first-child {
+                display: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .workspace {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: 45%;
+                border-left: none;
+                border-top: 1px solid var(--border-stellar);
+            }
+            .viewport-container {
+                height: 55%;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -2034,36 +2230,59 @@
             <div class="carto-corner br"></div>
             <div class="carto-badge" id="cartoBadge">RA 19h 54m 36s | DEC +44° 01' 00" | CARTOGRAPHY: ACTIVE</div>
 
-            <!-- Top Left System HUD Overlay -->
-            <div class="viewport-overlay">
-                <div class="overlay-card">
-                    <div class="overlay-title">
-                        <span id="sectorTitle">Sector: Kepler-186 System</span>
-                        <span style="font-size:9px; color:var(--accent-emerald);" id="sectorScan">SCAN: NOMINAL</span>
-                    </div>
-                    <div class="overlay-text" id="sectorSubtext">
-                        Primary Target: <strong id="hudTargetName">Aethelgard Prime</strong> <span id="hudTargetBadge" class="class-badge class-toxic">Toxic Greenhouse</span><br>
-                        System Star: <strong id="hudStarName">Kepler-186 Helios</strong> (<span id="hudStarType">Red Dwarf M1V</span>) | Catalog: <strong id="hudPlanetCount">4 Worlds</strong>
+            <!-- Top Left System HUD Overlay (Compact Ergonomic Design) -->
+            <div class="viewport-overlay" id="viewportOverlay">
+                <div class="overlay-card" id="hudOverlayCard">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <canvas id="hudMiniRadar" width="46" height="46" class="hud-mini-radar" title="Tactical Astrometric Threat Sweep (Click to open Hazards Radar)"></canvas>
+                        <div style="flex:1; min-width:0;">
+                            <div class="overlay-title">
+                                <span id="sectorTitle" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Kepler-186 System</span>
+                                <div style="display:flex; align-items:center; gap:4px;">
+                                    <span style="font-size:9px; color:var(--accent-emerald);" id="sectorScan">NOMINAL</span>
+                                    <button class="hud-toggle-btn" id="btnToggleHud" title="Toggle compact HUD strip" aria-label="Toggle compact HUD strip">—</button>
+                                </div>
+                            </div>
+                            <div class="overlay-text" id="sectorSubtext">
+                                Target: <strong id="hudTargetName">Aethelgard Prime</strong> <span id="hudTargetBadge" class="class-badge class-toxic">Toxic</span><br>
+                                Star: <strong id="hudStarName">Kepler-186</strong> (<span id="hudStarType">M1V</span>) | Catalog: <strong id="hudPlanetCount">4 Worlds</strong>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Viewport Navigation Controls -->
-            <div class="viewport-controls">
-                <select class="nav-btn" id="selSystem" title="Switch Star System"></select>
-                <button class="nav-btn" id="btnScanSector" title="Procedurally survey new star system">🎲 Scan Sector</button>
-                <button class="nav-btn" id="btnCenterPlanet">Focus Target</button>
-                <button class="nav-btn" id="btnCenterFleet">Focus Ark</button>
-                <button class="nav-btn" id="btnZoomIn">Zoom +</button>
-                <button class="nav-btn" id="btnZoomOut">Zoom -</button>
-                <button class="nav-btn" id="btnResetView">Reset View</button>
-                <button class="nav-btn" id="btnCrtTheme" title="Cycle Retro CRT Phosphor Theme">CRT: P4 Cyan</button>
-                <button class="nav-btn" id="btnGridToggle" title="Toggle Cartography Grid & AU Range Rings">Grid: ON</button>
-                <button class="nav-btn" id="btnPhosphorGlow" title="Toggle CRT Phosphor Glow">Glow: ON</button>
-                <button class="nav-btn" id="btnOpenCodex" title="Open Fleet Admiral's Codex (H / F1)" style="border-color:var(--accent-cyan); color:var(--accent-cyan); font-weight:bold;">📜 Codex [H]</button>
-                <button class="nav-btn" id="btnQuickSave" title="Quicksave expedition (F5)">💾 Save [F5]</button>
-                <button class="nav-btn" id="btnQuickLoad" title="Quickload expedition (F9)">📂 Load [F9]</button>
-                <button class="nav-btn" id="btnBackupData" title="JSON Save / Backup">⚙️ Backup</button>
+            <!-- Viewport Navigation Controls (Grouped Ergonomic Toolbar) -->
+            <div class="viewport-controls" id="viewportControls">
+                <div class="nav-btn-group">
+                    <select class="nav-btn" id="selSystem" title="Switch Star System"></select>
+                    <button class="nav-btn" id="btnScanSector" title="Procedurally survey new star system (G)">🎲 Scan [G]</button>
+                </div>
+                <div class="nav-btn-group">
+                    <button class="nav-btn" id="btnCenterPlanet" title="Focus Active Planet (P)">Target [P]</button>
+                    <button class="nav-btn" id="btnCenterFleet" title="Focus Ark Flotilla (F)">Ark [F]</button>
+                    <button class="nav-btn" id="btnZoomIn" title="Zoom In (+ / E)">+ [E]</button>
+                    <button class="nav-btn" id="btnZoomOut" title="Zoom Out (- / Q)">- [Q]</button>
+                    <button class="nav-btn" id="btnResetView" title="Reset Camera View (R / Home)">Reset [R]</button>
+                </div>
+                <div class="nav-btn-group">
+                    <button class="nav-btn" id="btnCrtTheme" title="Cycle Retro CRT Phosphor Theme (C)">CRT: P4 Cyan</button>
+                    <button class="nav-btn" id="btnGridToggle" title="Toggle Cartography Grid & AU Range Rings">Grid: ON</button>
+                    <button class="nav-btn" id="btnPhosphorGlow" title="Toggle CRT Phosphor Glow">Glow: ON</button>
+                    <button class="nav-btn" id="btnOpenCodex" title="Open Fleet Admiral's Codex (H / F1)" style="border-color:var(--accent-cyan); color:var(--accent-cyan); font-weight:bold;">📜 Codex [H]</button>
+                    <button class="nav-btn" id="btnQuickSave" title="Quicksave expedition (F5)">💾 Save [F5]</button>
+                    <button class="nav-btn" id="btnQuickLoad" title="Quickload expedition (F9)">📂 Load [F9]</button>
+                    <button class="nav-btn" id="btnBackupData" title="JSON Save / Backup (B)">⚙️ Backup</button>
+                </div>
+            </div>
+
+            <!-- Virtual Flight Thrusters & Pan HUD -->
+            <div class="flight-thrusters-hud" id="flightThrustersHud" title="Orbital Pan & Flight Thrusters [WASD / Arrows]">
+                <button class="thruster-btn th-up" id="btnThrustUp" title="Pitch / Pan Up [W / Up]">▲</button>
+                <button class="thruster-btn th-left" id="btnThrustLeft" title="Yaw / Pan Left [A / Left]">◀</button>
+                <button class="thruster-btn th-center" id="btnThrustCenter" title="Center on Ark [F]">ARK</button>
+                <button class="thruster-btn th-right" id="btnThrustRight" title="Yaw / Pan Right [D / Right]">▶</button>
+                <button class="thruster-btn th-down" id="btnThrustDown" title="Pitch / Pan Down [S / Down]">▼</button>
             </div>
 
             <!-- Context Selection Inspector Panel (Appears on click) -->
@@ -3158,6 +3377,15 @@
                 <div class="section-header">
                     <span>Cosmic Hazard Threat Radar</span>
                     <span id="badgeHazardStatus" class="crisis-badge safe">THREAT LEVEL: LOW</span>
+                </div>
+
+                <!-- HiDPI Astrometric Threat Radar Canvas -->
+                <div class="threat-radar-box">
+                    <canvas id="threatRadarCanvas" width="376" height="130"></canvas>
+                    <div class="radar-telemetry-badge" id="radarTelemetryBadge">
+                        <span>SWEEP: 360° // RANGE: 500 AU</span>
+                        <span id="radarThreatFlag" style="color:var(--accent-emerald);">STATUS: CLEAR</span>
+                    </div>
                 </div>
 
                 <!-- Active Crisis Incident Card -->
@@ -5638,9 +5866,15 @@
         const ctx = canvas.getContext('2d');
         const container = document.getElementById('canvasContainer');
 
+        const threatRadarCanvas = document.getElementById('threatRadarCanvas');
+        const threatRadarCtx = threatRadarCanvas ? threatRadarCanvas.getContext('2d') : null;
+        const hudMiniRadarCanvas = document.getElementById('hudMiniRadar');
+        const hudMiniRadarCtx = hudMiniRadarCanvas ? hudMiniRadarCanvas.getContext('2d') : null;
+
         let viewW = 600, viewH = 500;
         let dpr = 1;
         const statCycleEl = document.getElementById('statCycle');
+
         function resize() {
             dpr = Math.min(2, window.devicePixelRatio || 1);
             viewW = container.clientWidth || 600;
@@ -5649,9 +5883,234 @@
             canvas.height = Math.round(viewH * dpr);
             canvas.style.width = viewW + 'px';
             canvas.style.height = viewH + 'px';
+
+            if (threatRadarCanvas && threatRadarCanvas.clientWidth > 0) {
+                const trW = threatRadarCanvas.clientWidth;
+                const trH = threatRadarCanvas.clientHeight || 130;
+                threatRadarCanvas.width = Math.round(trW * dpr);
+                threatRadarCanvas.height = Math.round(trH * dpr);
+            }
+            if (hudMiniRadarCanvas) {
+                const mrW = hudMiniRadarCanvas.clientWidth || 46;
+                const mrH = hudMiniRadarCanvas.clientHeight || 46;
+                hudMiniRadarCanvas.width = Math.round(mrW * dpr);
+                hudMiniRadarCanvas.height = Math.round(mrH * dpr);
+            }
         }
         window.addEventListener('resize', resize);
         resize();
+
+        // --- HiDPI Astrometric Threat Radar Rendering ---
+        function drawThreatRadar() {
+            const time = sim.time;
+            const sweepAng = (time * 2.2) % (Math.PI * 2);
+            const isCrisis = sim.crisisActive;
+
+            // 1. Render Main Hazards Radar Canvas (if visible)
+            if (threatRadarCanvas && threatRadarCtx && threatRadarCanvas.width > 0) {
+                const w = threatRadarCanvas.width;
+                const h = threatRadarCanvas.height;
+                const rCtx = threatRadarCtx;
+                rCtx.setTransform(1, 0, 0, 1, 0, 0);
+                rCtx.clearRect(0, 0, w, h);
+
+                const cX = Math.round(h * 0.52);
+                const cY = Math.round(h * 0.5);
+                const radius = Math.round(h * 0.44);
+
+                // Scope background
+                rCtx.fillStyle = isCrisis ? 'rgba(36, 10, 16, 0.95)' : 'rgba(4, 12, 22, 0.95)';
+                rCtx.beginPath();
+                rCtx.arc(cX, cY, radius, 0, Math.PI * 2);
+                rCtx.fill();
+
+                // Concentric Range Rings
+                rCtx.strokeStyle = isCrisis ? 'rgba(244, 63, 94, 0.4)' : 'rgba(0, 240, 255, 0.35)';
+                rCtx.lineWidth = 1 * dpr;
+                [0.25, 0.5, 0.75, 1.0].forEach(frac => {
+                    rCtx.beginPath();
+                    rCtx.arc(cX, cY, radius * frac, 0, Math.PI * 2);
+                    rCtx.stroke();
+                });
+
+                // Crosshairs
+                rCtx.strokeStyle = isCrisis ? 'rgba(244, 63, 94, 0.25)' : 'rgba(0, 240, 255, 0.2)';
+                rCtx.beginPath();
+                rCtx.moveTo(cX - radius, cY); rCtx.lineTo(cX + radius, cY);
+                rCtx.moveTo(cX, cY - radius); rCtx.lineTo(cX, cY + radius);
+                rCtx.stroke();
+
+                // Rotating Radar Sweep Line & Trail
+                const swX = cX + Math.cos(sweepAng) * radius;
+                const swY = cY + Math.sin(sweepAng) * radius;
+                rCtx.strokeStyle = isCrisis ? '#f43f5e' : '#00f0ff';
+                rCtx.lineWidth = 1.5 * dpr;
+                rCtx.beginPath();
+                rCtx.moveTo(cX, cY);
+                rCtx.lineTo(swX, swY);
+                rCtx.stroke();
+
+                // Sweep Trail Sector
+                rCtx.fillStyle = isCrisis ? 'rgba(244, 63, 94, 0.15)' : 'rgba(0, 240, 255, 0.12)';
+                rCtx.beginPath();
+                rCtx.moveTo(cX, cY);
+                rCtx.arc(cX, cY, radius, sweepAng - 0.45, sweepAng);
+                rCtx.closePath();
+                rCtx.fill();
+
+                // Helios Star blip at center
+                rCtx.fillStyle = '#f59e0b';
+                rCtx.beginPath();
+                rCtx.arc(cX, cY, 3 * dpr, 0, Math.PI * 2);
+                rCtx.fill();
+
+                // Celestial Bodies blips
+                celestialBodies.forEach(b => {
+                    if (b.isPlanet) {
+                        const distFrac = Math.min(0.92, (b.orbitDist || 300) / 520);
+                        const bX = cX + Math.cos(b.angle || 0) * (radius * distFrac);
+                        const bY = cY + Math.sin(b.angle || 0) * (radius * distFrac);
+                        rCtx.fillStyle = b.id === sim.activePlanetId ? '#00f0ff' : '#10b981';
+                        rCtx.beginPath();
+                        rCtx.arc(bX, bY, 2.5 * dpr, 0, Math.PI * 2);
+                        rCtx.fill();
+                    }
+                });
+
+                // Fleet Blip
+                if (fleet.length > 0) {
+                    const fX = cX + Math.cos(fleet[0].angle || 0) * (radius * 0.65);
+                    const fY = cY + Math.sin(fleet[0].angle || 0) * (radius * 0.65);
+                    rCtx.fillStyle = '#38bdf8';
+                    rCtx.beginPath();
+                    rCtx.arc(fX, fY, 2 * dpr, 0, Math.PI * 2);
+                    rCtx.fill();
+                }
+
+                // If Crisis active: render incoming threat vector
+                if (isCrisis) {
+                    const thAng = 2.4;
+                    const thDist = radius * 0.95;
+                    const thX = cX + Math.cos(thAng) * thDist;
+                    const thY = cY + Math.sin(thAng) * thDist;
+
+                    rCtx.strokeStyle = '#f43f5e';
+                    rCtx.setLineDash([3 * dpr, 3 * dpr]);
+                    rCtx.lineWidth = 1.5 * dpr;
+                    rCtx.beginPath();
+                    rCtx.moveTo(thX, thY);
+                    rCtx.lineTo(cX, cY);
+                    rCtx.stroke();
+                    rCtx.setLineDash([]);
+
+                    // Pulsing threat blip
+                    const pulse = 4 * dpr + Math.sin(time * 8) * 1.5 * dpr;
+                    rCtx.fillStyle = '#f43f5e';
+                    rCtx.beginPath();
+                    rCtx.arc(thX, thY, pulse, 0, Math.PI * 2);
+                    rCtx.fill();
+                }
+
+                // Scope Border
+                rCtx.strokeStyle = isCrisis ? '#f43f5e' : '#1c3156';
+                rCtx.lineWidth = 2 * dpr;
+                rCtx.beginPath();
+                rCtx.arc(cX, cY, radius, 0, Math.PI * 2);
+                rCtx.stroke();
+
+                // Telemetry summary text on right side of radar canvas
+                const textLeft = Math.round(cX + radius + 12 * dpr);
+                rCtx.font = `${Math.round(10 * dpr)}px 'Consolas', 'Courier New', monospace`;
+                rCtx.textBaseline = 'top';
+
+                if (isCrisis) {
+                    rCtx.fillStyle = '#f43f5e';
+                    rCtx.fillText('ALERT: THREAT INBOUND', textLeft, Math.round(14 * dpr));
+                    rCtx.fillStyle = '#cbd5e1';
+                    rCtx.fillText(`ETA: ${(sim.crisisTimer > 0 ? sim.crisisTimer : 0).toFixed(1)}s`, textLeft, Math.round(32 * dpr));
+                    rCtx.fillStyle = '#f59e0b';
+                    rCtx.fillText('DEFENSIVE ACTION REQ', textLeft, Math.round(50 * dpr));
+                } else {
+                    rCtx.fillStyle = '#10b981';
+                    rCtx.fillText('SWEEP: 360° NOMINAL', textLeft, Math.round(14 * dpr));
+                    rCtx.fillStyle = '#64748b';
+                    rCtx.fillText('All 500 AU Orbits Clear', textLeft, Math.round(32 * dpr));
+                    rCtx.fillStyle = '#00f0ff';
+                    rCtx.fillText('Early Warning: ACTIVE', textLeft, Math.round(50 * dpr));
+                }
+            }
+
+            // 2. Render HUD Mini-Radar (In Viewport Overlay)
+            if (hudMiniRadarCanvas && hudMiniRadarCtx && hudMiniRadarCanvas.width > 0) {
+                const w = hudMiniRadarCanvas.width;
+                const h = hudMiniRadarCanvas.height;
+                const mCtx = hudMiniRadarCtx;
+                mCtx.setTransform(1, 0, 0, 1, 0, 0);
+                mCtx.clearRect(0, 0, w, h);
+
+                const cX = w / 2;
+                const cY = h / 2;
+                const radius = Math.min(cX, cY) - 2 * dpr;
+
+                // Scope background
+                mCtx.fillStyle = isCrisis ? 'rgba(40, 10, 18, 0.95)' : 'rgba(3, 8, 16, 0.95)';
+                mCtx.beginPath();
+                mCtx.arc(cX, cY, radius, 0, Math.PI * 2);
+                mCtx.fill();
+
+                // Range Rings
+                mCtx.strokeStyle = isCrisis ? 'rgba(244, 63, 94, 0.4)' : 'rgba(0, 240, 255, 0.3)';
+                mCtx.lineWidth = 1 * dpr;
+                mCtx.beginPath();
+                mCtx.arc(cX, cY, radius * 0.55, 0, Math.PI * 2);
+                mCtx.arc(cX, cY, radius, 0, Math.PI * 2);
+                mCtx.stroke();
+
+                // Sweep Beam
+                const swX = cX + Math.cos(sweepAng) * radius;
+                const swY = cY + Math.sin(sweepAng) * radius;
+                mCtx.strokeStyle = isCrisis ? '#f43f5e' : '#00f0ff';
+                mCtx.lineWidth = 1.2 * dpr;
+                mCtx.beginPath();
+                mCtx.moveTo(cX, cY); mCtx.lineTo(swX, swY);
+                mCtx.stroke();
+
+                // Sweep Arc Glow
+                mCtx.fillStyle = isCrisis ? 'rgba(244, 63, 94, 0.2)' : 'rgba(0, 240, 255, 0.15)';
+                mCtx.beginPath();
+                mCtx.moveTo(cX, cY);
+                mCtx.arc(cX, cY, radius, sweepAng - 0.5, sweepAng);
+                mCtx.closePath();
+                mCtx.fill();
+
+                // Center Star
+                mCtx.fillStyle = '#f59e0b';
+                mCtx.beginPath();
+                mCtx.arc(cX, cY, 2 * dpr, 0, Math.PI * 2);
+                mCtx.fill();
+
+                // Target Planet
+                mCtx.fillStyle = '#00f0ff';
+                mCtx.beginPath();
+                mCtx.arc(cX + radius * 0.6, cY - radius * 0.2, 2 * dpr, 0, Math.PI * 2);
+                mCtx.fill();
+
+                // Flashing Danger Blip if crisis
+                if (isCrisis) {
+                    mCtx.fillStyle = Math.sin(time * 8) > 0 ? '#f43f5e' : '#fbbf24';
+                    mCtx.beginPath();
+                    mCtx.arc(cX - radius * 0.5, cY + radius * 0.4, 2.5 * dpr, 0, Math.PI * 2);
+                    mCtx.fill();
+                }
+
+                // Scope Rim
+                mCtx.strokeStyle = isCrisis ? '#f43f5e' : '#00f0ff';
+                mCtx.lineWidth = 1.5 * dpr;
+                mCtx.beginPath();
+                mCtx.arc(cX, cY, radius, 0, Math.PI * 2);
+                mCtx.stroke();
+            }
+        }
 
         // --- Terraforming Calculation Logic ---
         function calculatePlanetHabitability(p) {
@@ -8321,37 +8780,40 @@
             }
 
             drawAudioVisualizer();
+            drawThreatRadar();
             requestAnimationFrame(render);
         }
 
-        // --- Viewport Navigation & Interaction ---
+        // --- Viewport Navigation & Interaction Helpers ---
+        function findEntityAt(clickX, clickY) {
+            let found = null;
+            fleet.forEach(s => {
+                if (s.currX && Math.hypot(s.currX - clickX, s.currY - clickY) < 20) {
+                    found = s;
+                }
+            });
+            if (!found) {
+                celestialBodies.forEach(b => {
+                    if (b.currX && Math.hypot(b.currX - clickX, b.currY - clickY) < (b.radius * sim.zoom + 12)) {
+                        found = b;
+                    }
+                });
+            }
+            return found;
+        }
+
+        // --- Mouse Flight & Navigation ---
         canvas.addEventListener('mousedown', (e) => {
             initAudio();
             sim.isDragging = true;
             sim.lastMouseX = e.clientX;
             sim.lastMouseY = e.clientY;
 
-            // Check if clicked an object
             const rect = canvas.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
 
-            let found = null;
-            // Check fleet
-            fleet.forEach(s => {
-                if (s.currX && Math.hypot(s.currX - clickX, s.currY - clickY) < 18) {
-                    found = s;
-                }
-            });
-            // Check celestial bodies
-            if (!found) {
-                celestialBodies.forEach(b => {
-                    if (b.currX && Math.hypot(b.currX - clickX, b.currY - clickY) < (b.radius * sim.zoom + 10)) {
-                        found = b;
-                    }
-                });
-            }
-
+            const found = findEntityAt(clickX, clickY);
             if (found) {
                 selectEntity(found);
                 playSound('click');
@@ -8373,12 +8835,131 @@
             sim.isDragging = false;
         });
 
+        // Double-click to focus and center view on celestial body or fleet ship
+        canvas.addEventListener('dblclick', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            const found = findEntityAt(clickX, clickY);
+            if (found) {
+                selectEntity(found);
+                if (found.currX !== undefined && found.currY !== undefined) {
+                    sim.camX -= (found.currX - viewW / 2);
+                    sim.camY -= (found.currY - viewH / 2);
+                    playSound('success');
+                }
+            }
+        });
+
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             initAudio();
             const delta = e.deltaY > 0 ? 0.9 : 1.1;
             sim.zoom = Math.max(0.4, Math.min(2.5, sim.zoom * delta));
         }, { passive: false });
+
+        // --- Touch Flight & Navigation Controls ---
+        let touchStartDist = 0;
+        let isTouching = false;
+        let lastTouchX = 0;
+        let lastTouchY = 0;
+        let touchStartTime = 0;
+
+        canvas.addEventListener('touchstart', (e) => {
+            initAudio();
+            if (e.touches.length === 1) {
+                isTouching = true;
+                lastTouchX = e.touches[0].clientX;
+                lastTouchY = e.touches[0].clientY;
+                touchStartTime = performance.now();
+            } else if (e.touches.length === 2) {
+                isTouching = false;
+                touchStartDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 1 && isTouching) {
+                const dx = e.touches[0].clientX - lastTouchX;
+                const dy = e.touches[0].clientY - lastTouchY;
+                sim.camX += dx;
+                sim.camY += dy;
+                lastTouchX = e.touches[0].clientX;
+                lastTouchY = e.touches[0].clientY;
+            } else if (e.touches.length === 2 && touchStartDist > 0) {
+                const curDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                const ratio = curDist / touchStartDist;
+                sim.zoom = Math.max(0.4, Math.min(2.5, sim.zoom * ratio));
+                touchStartDist = curDist;
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (e) => {
+            if (isTouching && e.changedTouches.length === 1) {
+                const elapsed = performance.now() - touchStartTime;
+                const distMoved = Math.hypot(
+                    e.changedTouches[0].clientX - lastTouchX,
+                    e.changedTouches[0].clientY - lastTouchY
+                );
+                if (elapsed < 320 && distMoved < 14) {
+                    const rect = canvas.getBoundingClientRect();
+                    const clickX = e.changedTouches[0].clientX - rect.left;
+                    const clickY = e.changedTouches[0].clientY - rect.top;
+                    const found = findEntityAt(clickX, clickY);
+                    if (found) {
+                        selectEntity(found);
+                        playSound('click');
+                    }
+                }
+            }
+            if (e.touches.length === 0) {
+                isTouching = false;
+                touchStartDist = 0;
+            }
+        });
+
+        // --- Virtual Flight Thrusters & HUD Listeners ---
+        const btnThrustUp = document.getElementById('btnThrustUp');
+        const btnThrustDown = document.getElementById('btnThrustDown');
+        const btnThrustLeft = document.getElementById('btnThrustLeft');
+        const btnThrustRight = document.getElementById('btnThrustRight');
+        const btnThrustCenter = document.getElementById('btnThrustCenter');
+
+        if (btnThrustUp) btnThrustUp.addEventListener('click', () => { sim.camY += 45 / sim.zoom; playSound('click'); });
+        if (btnThrustDown) btnThrustDown.addEventListener('click', () => { sim.camY -= 45 / sim.zoom; playSound('click'); });
+        if (btnThrustLeft) btnThrustLeft.addEventListener('click', () => { sim.camX += 45 / sim.zoom; playSound('click'); });
+        if (btnThrustRight) btnThrustRight.addEventListener('click', () => { sim.camX -= 45 / sim.zoom; playSound('click'); });
+        if (btnThrustCenter) btnThrustCenter.addEventListener('click', () => {
+            const btnCenterFleet = document.getElementById('btnCenterFleet');
+            if (btnCenterFleet) btnCenterFleet.click();
+        });
+
+        // HUD Card Toggle & Mini-Radar Quick Switch
+        const btnToggleHud = document.getElementById('btnToggleHud');
+        const hudOverlayCard = document.getElementById('hudOverlayCard');
+        if (btnToggleHud && hudOverlayCard) {
+            btnToggleHud.addEventListener('click', (e) => {
+                e.stopPropagation();
+                hudOverlayCard.classList.toggle('compact');
+                btnToggleHud.textContent = hudOverlayCard.classList.contains('compact') ? '+' : '—';
+                playSound('click');
+            });
+        }
+
+        if (hudMiniRadarCanvas) {
+            hudMiniRadarCanvas.addEventListener('click', () => {
+                switchTab('tab-hazards');
+                playSound('click');
+                resize();
+            });
+        }
 
         // Selection Inspector
         function selectEntity(item) {
@@ -8563,7 +9144,12 @@
             const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
             if (btn) btn.classList.add('active');
             const target = document.getElementById(tabId);
-            if (target) target.classList.add('active');
+            if (target) {
+                target.classList.add('active');
+                if (tabId === 'tab-hazards') {
+                    requestAnimationFrame(resize);
+                }
+            }
         }
 
         document.querySelectorAll('.tab-btn').forEach(btn => {

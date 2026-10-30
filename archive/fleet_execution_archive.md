@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T18:34:42-07:00 — kilo-qa: KRead (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 162.2 KB, native 31.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kread_tutorialSeen flag, and Escape modal/dialog dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, font zoom/pagination/bookmarks, and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KRead` to Mature archive; advanced `kilo-qa` to `KGraph`; next agent `kilo-expander`.
+
 - **2026-10-29T18:22:16-07:00 — kilo-usability: KGo (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KGo across web and native targets.

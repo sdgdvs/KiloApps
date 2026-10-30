@@ -4963,9 +4963,9 @@ static void RenderUI(HDC hdc, int width, int height) {
     // G. Automated Supply Trade Routes & Logistics Infrastructure
     DrawTradeRoutesGDI(hdc, cx, cy, z, sim.time);
 
-    // I. Viewport Top Overlay Card
-    int ovW = 340;
-    int ovH = 68;
+    // I. Viewport Top Overlay Card (Compact Astrometric HUD)
+    int ovW = 270;
+    int ovH = 64;
     FillSolidRect(hdc, 10, headerH + 10, ovW, ovH, theme->bgPanel);
     FrameSolidRect(hdc, 10, headerH + 10, ovW, ovH, theme->border);
     FillSolidRect(hdc, 10, headerH + 10, 3, ovH, theme->primary);
@@ -4973,20 +4973,20 @@ static void RenderUI(HDC hdc, int width, int height) {
     SetTextColor(hdc, theme->primary);
     SelectObject(hdc, hFontSmall);
     sprintf(buf, "SECTOR: %s [%s]", CURR_SYS.name, CURR_SYS.spectralClass);
-    TextOutA(hdc, 20, headerH + 15, buf, (int)strlen(buf));
+    TextOutA(hdc, 18, headerH + 13, buf, (int)strlen(buf));
 
     SetTextColor(hdc, theme->textBright);
-    sprintf(buf, "Target: %s [%s: %s]", actP->name, g_exoplanetClasses[actP->pClass].code, g_exoplanetClasses[actP->pClass].name);
-    TextOutA(hdc, 20, headerH + 30, buf, (int)strlen(buf));
+    sprintf(buf, "Target: %s [%s]", actP->name, g_exoplanetClasses[actP->pClass].code);
+    TextOutA(hdc, 18, headerH + 28, buf, (int)strlen(buf));
 
     SetTextColor(hdc, COLOR_EMERALD);
-    sprintf(buf, "Biometrics: %.2fatm | %.1fC | %.1f%% O2 | Hab: %.1f%%",
+    sprintf(buf, "%.2fatm | %.1fC | %.1f%% O2 | Hab: %.1f%%",
         sim.pressure, sim.temp, sim.oxygen, sim.habitability);
-    TextOutA(hdc, 20, headerH + 46, buf, (int)strlen(buf));
+    TextOutA(hdc, 18, headerH + 44, buf, (int)strlen(buf));
 
     // Next System & Scan Sector buttons
-    AddButton(BID_SYS_CYCLE, 10 + ovW + 8, headerH + 10, 100, 24, "Next Sys [S]", NULL, 1);
-    AddButton(BID_SYS_SCAN, 10 + ovW + 8, headerH + 38, 100, 24, "Scan Sector [G]", NULL, 1);
+    AddButton(BID_SYS_CYCLE, 10 + ovW + 6, headerH + 10, 92, 22, "Next Sys [S]", NULL, 1);
+    AddButton(BID_SYS_SCAN, 10 + ovW + 6, headerH + 36, 92, 22, "Scan [G]", NULL, 1);
 
     // Planet Roster Buttons across top
     int rstX = 10 + ovW + 116;
@@ -5011,19 +5011,23 @@ static void RenderUI(HDC hdc, int width, int height) {
         DeleteObject(hScanlinePen);
     }
 
-    // J. Viewport Navigation Buttons (Bottom-Left of Viewport)
-    int navY = headerH + viewportH - 30;
-    AddButton(BID_FOCUS_PLANET, 10, navY, 82, 22, "Focus Planet", NULL, 1);
-    AddButton(BID_FOCUS_ARK, 96, navY, 74, 22, "Focus Ark", NULL, 1);
-    AddButton(BID_ZOOM_IN, 174, navY, 56, 22, "Zoom +", NULL, 1);
-    AddButton(BID_ZOOM_OUT, 234, navY, 56, 22, "Zoom -", NULL, 1);
-    AddButton(BID_RESET_VIEW, 294, navY, 52, 22, "Reset", NULL, 1);
-    AddButton(BID_THEME_TOGGLE, 350, navY, 96, 22, g_crtThemes[g_crtTheme].name, NULL, 1);
-    AddButton(BID_GRID_TOGGLE, 450, navY, 68, 22, g_showGrid ? "Grid: ON" : "Grid: OFF", NULL, 1);
-    AddButton(BID_GLOW_TOGGLE, 522, navY, 68, 22, g_phosphorGlow ? "Glow: ON" : "Glow: OFF", NULL, 1);
-    AddButton(BID_OPEN_CODEX, 596, navY, 76, 22, "Codex [H]", NULL, 1);
-    AddButton(BID_QUICKSAVE, 676, navY, 70, 22, "Save [F5]", NULL, 1);
-    AddButton(BID_QUICKLOAD, 750, navY, 70, 22, "Load [F9]", NULL, 1);
+    // J. Viewport Navigation Buttons (Bottom-Left 2-Row Ergonomic Toolbar)
+    int navY1 = headerH + viewportH - 52;
+    int navY2 = headerH + viewportH - 26;
+    // Row 1: Orbit Flight & Focus Controls (fits cleanly in 420px < viewportW)
+    AddButton(BID_FOCUS_PLANET, 8, navY1, 74, 22, "Target [P]", NULL, 1);
+    AddButton(BID_FOCUS_ARK, 86, navY1, 68, 22, "Ark [F]", NULL, 1);
+    AddButton(BID_ZOOM_IN, 158, navY1, 48, 22, "+ [E]", NULL, 1);
+    AddButton(BID_ZOOM_OUT, 210, navY1, 48, 22, "- [Q]", NULL, 1);
+    AddButton(BID_RESET_VIEW, 262, navY1, 48, 22, "Rst [R]", NULL, 1);
+    AddButton(BID_GRID_TOGGLE, 314, navY1, 56, 22, g_showGrid ? "Grid:ON" : "Grid:OFF", NULL, 1);
+    AddButton(BID_GLOW_TOGGLE, 374, navY1, 56, 22, g_phosphorGlow ? "Glow:ON" : "Glow:OFF", NULL, 1);
+
+    // Row 2: CRT, Codex, & Quicksave Operations (fits cleanly in 300px < viewportW)
+    AddButton(BID_THEME_TOGGLE, 8, navY2, 86, 22, g_crtThemes[g_crtTheme].name, NULL, 1);
+    AddButton(BID_OPEN_CODEX, 98, navY2, 68, 22, "Codex [H]", NULL, 1);
+    AddButton(BID_QUICKSAVE, 170, navY2, 64, 22, "Save [F5]", NULL, 1);
+    AddButton(BID_QUICKLOAD, 238, navY2, 64, 22, "Load [F9]", NULL, 1);
 
     // K. Viewport Selection Card (if something selected)
     if (sim.selectedType != 0) {
@@ -6012,39 +6016,90 @@ static void RenderUI(HDC hdc, int width, int height) {
         TextOutA(hdc, sbX + 12, contentY, "ASTROMETRIC THREAT RADAR", 24);
 
         int ry = contentY + 18;
-        COLORREF radarBg = sim.crisisActive ? RGB(40, 12, 18) : COLOR_BG_CARD;
-        COLORREF radarBorder = sim.crisisActive ? COLOR_ROSE : COLOR_BORDER;
-        FillSolidRect(hdc, sbX + 12, ry, sidebarW - 24, 80, radarBg);
-        FrameSolidRect(hdc, sbX + 12, ry, sidebarW - 24, 80, radarBorder);
+        int radarH = 96;
+        COLORREF radarBg = sim.crisisActive ? RGB(36, 12, 18) : RGB(4, 12, 22);
+        COLORREF radarBorder = sim.crisisActive ? COLOR_ROSE : COLOR_CYAN;
+        FillSolidRect(hdc, sbX + 12, ry, sidebarW - 24, radarH, radarBg);
+        FrameSolidRect(hdc, sbX + 12, ry, sidebarW - 24, radarH, radarBorder);
 
+        // Circular Tactical Astrometric Radar Display (Left Scope)
+        int rcX = sbX + 12 + 48;
+        int rcY = ry + 48;
+        HBRUSH hScopeBrush = CreateSolidBrush(sim.crisisActive ? RGB(26, 8, 12) : RGB(2, 8, 14));
+        HPEN hRingPen = CreatePen(PS_SOLID, 1, sim.crisisActive ? RGB(90, 25, 35) : RGB(20, 60, 80));
+        HGDIOBJ hOldBr = SelectObject(hdc, hScopeBrush);
+        HGDIOBJ hOldPn = SelectObject(hdc, hRingPen);
+        Ellipse(hdc, rcX - 42, rcY - 42, rcX + 42, rcY + 42);
+        Ellipse(hdc, rcX - 22, rcY - 22, rcX + 22, rcY + 22);
+        MoveToEx(hdc, rcX - 42, rcY, NULL); LineTo(hdc, rcX + 42, rcY);
+        MoveToEx(hdc, rcX, rcY - 42, NULL); LineTo(hdc, rcX, rcY + 42);
+
+        // Rotating Radar Sweep Beam
+        float swA = sim.time * 2.4f;
+        int sx = rcX + (int)(cosf(swA) * 40.0f);
+        int sy = rcY + (int)(sinf(swA) * 40.0f);
+        HPEN hSweepPen = CreatePen(PS_SOLID, 1, sim.crisisActive ? COLOR_ROSE : COLOR_CYAN);
+        SelectObject(hdc, hSweepPen);
+        MoveToEx(hdc, rcX, rcY, NULL); LineTo(hdc, sx, sy);
+        DeleteObject(hSweepPen);
+
+        // Celestial & Fleet Radar Blips
+        FillSolidRect(hdc, rcX - 1, rcY - 1, 3, 3, RGB(255, 230, 0)); // Star
+        FillSolidRect(hdc, rcX + 20, rcY - 10, 3, 3, COLOR_CYAN);      // Target Planet
+        FillSolidRect(hdc, rcX + 16, rcY - 16, 2, 2, COLOR_BLUE);      // Ark Flotilla
+
+        if (sim.crisisActive) {
+            // Pulsing Inbound Threat Vector Arrow
+            HPEN hThreatPen = CreatePen(PS_SOLID, 2, COLOR_ROSE);
+            SelectObject(hdc, hThreatPen);
+            int thX = rcX + (int)(cosf(2.5f) * 38.0f);
+            int thY = rcY + (int)(sinf(2.5f) * 38.0f);
+            MoveToEx(hdc, thX, thY, NULL); LineTo(hdc, rcX + 20, rcY - 10);
+            FillSolidRect(hdc, thX - 2, thY - 2, 5, 5, COLOR_ROSE);
+            DeleteObject(hThreatPen);
+        }
+        SelectObject(hdc, hOldPn);
+        SelectObject(hdc, hOldBr);
+        DeleteObject(hRingPen);
+        DeleteObject(hScopeBrush);
+
+        // Right Telemetry & Alert Info
+        int tX = sbX + 12 + 100;
+        int tW = sidebarW - 24 - 108;
         SelectObject(hdc, hFontBold);
         if (sim.crisisActive) {
             const char* names[] = {"None", "SOLAR FLARE / CORONAL WAVE", "ASTEROID / CHONDRITE IMPACT", "TECTONIC CRUSTAL QUAKE", "VIRULENT XENO-BLIGHT", "IONOSPHERIC MAGNETIC TEMPEST"};
             SetTextColor(hdc, COLOR_ROSE);
-            sprintf(buf, "[CRITICAL ALERT] %s", names[sim.crisisType]);
-            TextOutA(hdc, sbX + 20, ry + 10, buf, (int)strlen(buf));
+            sprintf(buf, "[ALERT] %s", names[sim.crisisType]);
+            TextOutA(hdc, tX, ry + 8, buf, (int)strlen(buf));
 
             SelectObject(hdc, hFontSmall);
             SetTextColor(hdc, COLOR_TEXT_BRIGHT);
-            sprintf(buf, "Class-%d Event | Time to Impact: %.1fs", sim.crisisSeverity, (sim.crisisTimer > 0.0f ? sim.crisisTimer : 0.0f));
-            TextOutA(hdc, sbX + 20, ry + 32, buf, (int)strlen(buf));
+            sprintf(buf, "Class-%d Threat | Impact ETA: %.1fs", sim.crisisSeverity, (sim.crisisTimer > 0.0f ? sim.crisisTimer : 0.0f));
+            TextOutA(hdc, tX, ry + 28, buf, (int)strlen(buf));
 
             // Countdown progress bar
-            FillSolidRect(hdc, sbX + 20, ry + 54, sidebarW - 40, 10, RGB(50, 15, 20));
+            FillSolidRect(hdc, tX, ry + 50, tW, 10, RGB(50, 15, 20));
             float pct = (sim.crisisMaxTime > 0.0f) ? (sim.crisisTimer / sim.crisisMaxTime) : 0.0f;
             if (pct < 0.0f) pct = 0.0f; if (pct > 1.0f) pct = 1.0f;
-            FillSolidRect(hdc, sbX + 20, ry + 54, (int)((sidebarW - 40) * pct), 10, COLOR_ROSE);
+            FillSolidRect(hdc, tX, ry + 50, (int)(tW * pct), 10, COLOR_ROSE);
+
+            SetTextColor(hdc, COLOR_AMBER);
+            TextOutA(hdc, tX, ry + 68, "Status: DEFENSIVE MITIGATION REQUIRED", 37);
         } else {
             SetTextColor(hdc, COLOR_EMERALD);
-            TextOutA(hdc, sbX + 20, ry + 12, "[STATUS] THREAT LEVEL: NOMINAL", 30);
+            TextOutA(hdc, tX, ry + 10, "[STATUS] THREAT: NOMINAL", 24);
             SelectObject(hdc, hFontSmall);
+            SetTextColor(hdc, COLOR_TEXT_BRIGHT);
+            TextOutA(hdc, tX, ry + 30, "Astrometric Radar Sweep: 360 DEG", 32);
             SetTextColor(hdc, COLOR_TEXT_PRI);
-            TextOutA(hdc, sbX + 20, ry + 34, "Astrometric sensor telemetry: No imminent", 41);
-            TextOutA(hdc, sbX + 20, ry + 50, "solar flares, chondrites, or quakes detected.", 45);
+            TextOutA(hdc, tX, ry + 48, "Sensors report all heliospheric orbits clear.", 45);
+            SetTextColor(hdc, COLOR_CYAN);
+            TextOutA(hdc, tX, ry + 68, "Early Warning Grid: 500 AU ACTIVE", 33);
         }
 
         // Tactical Countermeasures Section
-        int cty = ry + 88;
+        int cty = ry + radarH + 8;
         SetTextColor(hdc, COLOR_AMBER);
         SelectObject(hdc, hFontBold);
         TextOutA(hdc, sbX + 12, cty, "TACTICAL COUNTERMEASURES", 24);
@@ -6840,12 +6895,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     PlaySoundFx(SFX_CLICK);
                     break;
                 case 'M':
-                case 'm':
                     g_soundEnabled = !g_soundEnabled;
                     PlaySoundFx(SFX_CLICK);
                     break;
-                case 'A':
-                case 'a': {
+                case 'A': {
                     CycleSoundscapeMode();
                     char msgBuf[96];
                     sprintf(msgBuf, "Cosmic Soundscape Synthesizer shifted to: [%s].", GetSoundscapeLabel());
@@ -6853,28 +6906,24 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     break;
                 }
                 case 'S':
-                case 's':
                     LoadStarSystem((g_currentSystem + 1) % g_systemCount);
                     PlaySoundFx(SFX_SUCCESS);
                     break;
                 case 'G':
-                case 'g':
                     GenerateProceduralStarSystem();
                     break;
                 case 'T':
-                case 't':
                     if (sim.selectedType == 2 && sim.selectedIndex >= 0 && sim.selectedIndex < CURR_SYS.bodyCount) {
                         SetActivePlanet(sim.selectedIndex);
                         PlaySoundFx(SFX_SUCCESS);
                     }
                     break;
                 case 'R':
-                case 'r':
+                case VK_HOME:
                     sim.camX = 0; sim.camY = 0; sim.zoom = 1.0f;
                     PlaySoundFx(SFX_CLICK);
                     break;
-                case 'P':
-                case 'p': {
+                case 'P': {
                     CelestialBody* curActP = GetActivePlanet();
                     sim.selectedType = 2;
                     sim.selectedIndex = CURR_SYS.activePlanetIndex;
@@ -6883,6 +6932,40 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     PlaySoundFx(SFX_CLICK);
                     break;
                 }
+                case 'F': {
+                    sim.selectedType = 5;
+                    sim.selectedIndex = 0;
+                    sim.camX = -fleet[0].currX + (winW - 380) / 2 + sim.camX;
+                    sim.camY = -fleet[0].currY + (winH - 80) / 2 + sim.camY;
+                    PlaySoundFx(SFX_CLICK);
+                    break;
+                }
+                case VK_UP:
+                case 'W':
+                    sim.camY += (int)(45 / sim.zoom);
+                    break;
+                case VK_DOWN:
+                    sim.camY -= (int)(45 / sim.zoom);
+                    break;
+                case VK_LEFT:
+                    sim.camX += (int)(45 / sim.zoom);
+                    break;
+                case VK_RIGHT:
+                case 'D':
+                    sim.camX -= (int)(45 / sim.zoom);
+                    break;
+                case VK_OEM_PLUS:
+                case VK_ADD:
+                case 'E':
+                    sim.zoom *= 1.2f;
+                    if (sim.zoom > 2.5f) sim.zoom = 2.5f;
+                    break;
+                case VK_OEM_MINUS:
+                case VK_SUBTRACT:
+                case 'Q':
+                    sim.zoom *= 0.8f;
+                    if (sim.zoom < 0.4f) sim.zoom = 0.4f;
+                    break;
                 case VK_ESCAPE:
                     sim.selectedType = 0;
                     break;
