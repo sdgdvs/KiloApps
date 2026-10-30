@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T23:40:17-07:00 — kilo-graphics: KMystery (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-graphics updates for KMystery across web and native targets.
+  - Handoff: Advanced `kilo-graphics` to `KCyber`; rotated active agent to `kilo-tester`.
+
 - **2026-10-29T23:17:01-07:00 — kilo-creator: kweb://scallion (The Scallion 1999 Satirical News Web Portal)**
   - Status: PASS (0 errors, web 101.4 KB < 999 KB; visual probe PASS)
   - Interactive 1999 broadsheet with Ask A Sysadmin, Infographic Lab canvas charts, and Headline Forge
