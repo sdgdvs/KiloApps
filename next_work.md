@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KScript
   kilo_usability: KCosmic
-  kilo_qa: KRead
+  kilo_qa: KGraph
   kilo_expander: KGo
   kilo_review: KHex
 virtual_web_target: kweb://cabled
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KGo
-  timestamp: '2026-10-29T18:22:16-07:00'
+  agent: kilo-qa
+  app: KRead
+  timestamp: '2026-10-29T18:34:42-07:00'
 last_planner_run: '2026-10-29T17:30:03Z'
 ---
 
@@ -167,11 +167,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Eliminate 216px vertical overflow at 700x723 in kgo.html by locking body to 100vh flex column with overflow hidden, merging h1 and .status-container into a compact top bar, collapsing the redundant 3-row #hotkey-bar (and removing misleading /WASD label since S toggles Analyzer), tightening .board/.board-container/.controls padding, and making getCellSize() viewport-responsive so 9x9, 13x13, and 19x19 boards plus all controls fit 100% visible with 0px scroll; raise kbd, badge, .stone-num-label, .liberty-badge, and .ko-overlay font sizes to >= 10px (0 tiny-text warnings); remove random rotate() on .stone so 3D lighting stays top-left and move numbers (M) never render upside-down, and append .last-move-aura/.ripple/.ripple-outer to .cell instead of overflow-hidden .stone; replace blocking alert() dialogs for Stats/Campaign/Score with Esc-dismissible in-DOM modals, pause idle updateScreenShake rAF loop, and change KGo/main.c Goban coordinates from invisible mahogany RGB(75,48,24) to gold RGB(255,220,110). |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KRead`
+- **Active Target**: `KGraph`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, document reader pagination/zoom, bookmark state, dual Win32 C parity, and promote to Mature table. |
 | `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
 | `KRadio` | `KiloOS/public/apps/kradio.html`, `KRadio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, station presets, audio stream buffer, visualizer, dual Win32 C parity, and promote to Mature table. |
 | `KMail` | `KiloOS/public/apps/kmail.html`, `KMail/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mailbox folder navigation, draft composition, dual Win32 C parity, and promote to Mature table. |
@@ -227,6 +226,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KRead** | `KiloOS/public/apps/kread.html` | Pass 5+ (2026-10-29) | System / Document Reader | Complete multi-tab retro document e-reader with pagination/zoom, bookmark state, F5/F9 persistence, and dual Win32 C binary parity. |
 | **KSettings** | `KiloOS/public/apps/ksettings.html` | Pass 5+ (2026-10-29) | System / Configuration | Complete system control panel & preferences suite; theme presets, audio diagnostics, 5 display modes, VFS sync, F5/F9 state persistence, and dual Win32 C parity. |
 | **KColosseum** | `KiloOS/public/apps/kcolosseum.html` | Pass 5+ (2026-10-29) | Games / RPG & Simulation | Complete Roman gladiator ludus & arena RPG; RFMS multiplayer duels, F5/F9 persistence, VFS mesh, HiDPI canvas, and dual Win32 C parity. |
 | **KImage** | `KiloOS/public/apps/kimage.html` | Pass 5+ (2026-10-29) | Media / Imaging | Feature-complete image studio with 8 presets, 3x3 convolution kernels, retro dithering palettes, steganography, F5/F9 state persistence, and dual Win32 C parity. |
@@ -284,6 +284,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T18:34:42-07:00 — kilo-qa: KRead (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 162.2 KB, native 31.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kread_tutorialSeen flag, and Escape modal/dialog dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, font zoom/pagination/bookmarks, and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KRead` to Mature archive; advanced `kilo-qa` to `KGraph`; next agent `kilo-expander`.
+
 - **2026-10-29T18:22:16-07:00 — kilo-usability: KGo (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KGo across web and native targets.
@@ -304,9 +310,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Enhanced live YM2612/SPC700 chiptune previewer with user-initiated playback activation and pattern resume.
   - Added deep hash routing in knet.html (#transfers, #player, #nodes, #chat, #library) and direct VFS .mod/.trk export.
   - Handoff: Advanced `kilo-creator` to `kweb://cabled`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-29T16:17:20-07:00 — kilo-review: KGo (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 700x723 sheet.png + audited kgo.html & KGo/main.c; un-quarantined KGo from Mature for critical fixes).
-  - Gameplay/Feature Findings: VS-AI turn guard in placeStone()/PlaceStone() blocks makeAIMove()/MakeAIMove() freezing White AI after move 1 in both Web & C; calculateScore() wipes moveRecord via initBoard() preventing post-game Replay/SGF & lacks dead-stone marking; Tsumego has broken Stage 7/11/14 checks & zero C solver check; Replay slider/first off-by-one & unguarded chat hotkeys; missing Phase VI VFS/IPC mesh.
-  - Visual/UX Findings: 216px vertical overflow at 700x723 clips entire .controls dock off-screen; 15 <9px kbd tiny-text nodes; random .stone rotate() turns move numbers upside-down while .stone overflow-hidden clips ripples/auras; KGo/main.c draws RGB(75,48,24) coords invisibly on RGB(74,46,20) frame.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KGo`, `kilo-usability`->`KGo`, `kilo-expander`->`KGo`] (un-quarantined `KGo` from Mature); advanced `kilo-review` to `KHex`; next agent `kilo-creator`.

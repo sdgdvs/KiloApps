@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T16:17:20-07:00 — kilo-review: KGo (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 700x723 sheet.png + audited kgo.html & KGo/main.c; un-quarantined KGo from Mature for critical fixes).
+  - Gameplay/Feature Findings: VS-AI turn guard in placeStone()/PlaceStone() blocks makeAIMove()/MakeAIMove() freezing White AI after move 1 in both Web & C; calculateScore() wipes moveRecord via initBoard() preventing post-game Replay/SGF & lacks dead-stone marking; Tsumego has broken Stage 7/11/14 checks & zero C solver check; Replay slider/first off-by-one & unguarded chat hotkeys; missing Phase VI VFS/IPC mesh.
+  - Visual/UX Findings: 216px vertical overflow at 700x723 clips entire .controls dock off-screen; 15 <9px kbd tiny-text nodes; random .stone rotate() turns move numbers upside-down while .stone overflow-hidden clips ripples/auras; KGo/main.c draws RGB(75,48,24) coords invisibly on RGB(74,46,20) frame.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KGo`, `kilo-usability`->`KGo`, `kilo-expander`->`KGo`] (un-quarantined `KGo` from Mature); advanced `kilo-review` to `KHex`; next agent `kilo-creator`.
+
 - **2026-10-29T15:36:48-07:00 — kilo-expander: KChess (Phase VI KiloOS VFS & IPC Mesh Integration)**
   - Status: PASS ✅ (0 errors, web 243.9 KB, native 54.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 37.96%, HEAD Δ 0.92%, 0 fail, 0 warn, 9.1s)).
   - Wired KiloVFS VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ with origin checks and 60s timeout for JSON game saves (/home/saves/kchess_save.json), PGN match records (/home/docs/kchess_match.pgn), and FEN positions (/home/docs/kchess_position.fen) with standalone Blob/file-input fallbacks.

@@ -131,9 +131,9 @@
     "id": "kchess",
     "title": "KChess",
     "folder": "Games",
-    "webBytes": 238095,
+    "webBytes": 249723,
     "exeBytes": 55296,
-    "budgetPercent": 23.8
+    "budgetPercent": 25.0
   },
   {
     "id": "kchrono",
@@ -187,9 +187,9 @@
     "id": "kcolosseum",
     "title": "KColosseum",
     "folder": "Games",
-    "webBytes": 310461,
+    "webBytes": 317272,
     "exeBytes": 40448,
-    "budgetPercent": 31.1
+    "budgetPercent": 31.8
   },
   {
     "id": "kconnect4",
@@ -331,7 +331,7 @@
     "id": "kgo",
     "title": "KGo",
     "folder": "Games",
-    "webBytes": 172160,
+    "webBytes": 171627,
     "exeBytes": 179712,
     "budgetPercent": 17.2
   },
@@ -427,9 +427,9 @@
     "id": "kmaze",
     "title": "KMaze",
     "folder": "Games",
-    "webBytes": 176339,
-    "exeBytes": 63488,
-    "budgetPercent": 17.7
+    "webBytes": 176246,
+    "exeBytes": 64000,
+    "budgetPercent": 17.6
   },
   {
     "id": "kmech",
@@ -467,9 +467,9 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 208534,
+    "webBytes": 210596,
     "exeBytes": 57856,
-    "budgetPercent": 20.9
+    "budgetPercent": 21.1
   },
   {
     "id": "knetmap",
@@ -619,9 +619,9 @@
     "id": "ksettings",
     "title": "Settings",
     "folder": "System",
-    "webBytes": 78095,
+    "webBytes": 82051,
     "exeBytes": null,
-    "budgetPercent": 7.8
+    "budgetPercent": 8.2
   },
   {
     "id": "ksimon",
@@ -675,9 +675,9 @@
     "id": "kstarship",
     "title": "KStarship",
     "folder": "Games",
-    "webBytes": 214153,
-    "exeBytes": 152064,
-    "budgetPercent": 21.4
+    "webBytes": 215278,
+    "exeBytes": 154112,
+    "budgetPercent": 21.5
   },
   {
     "id": "kstellar",

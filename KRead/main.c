@@ -513,6 +513,14 @@ void QuickloadNative(HWND hwnd) {
     SetTheme(hwnd, g_bgColor, g_textColor);
     LoadTabState(g_ActiveTab);
     PlaySfx(9);
+    if (GetFileAttributesA("kread_tutorialSeen.dat") == INVALID_FILE_ATTRIBUTES) {
+        HANDLE hSeen = CreateFileA("kread_tutorialSeen.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hSeen != INVALID_HANDLE_VALUE) {
+            DWORD w = 0;
+            WriteFile(hSeen, "1", 1, &w, NULL);
+            CloseHandle(hSeen);
+        }
+    }
     ShowNativeStatus("Quicksave snapshot restored from kread_quicksave.dat [F9]");
 }
 
@@ -533,6 +541,8 @@ void CheckFirstRunTutorial(HWND hwnd) {
             "  Ctrl + 1..9    : Direct Switch to Tab 1 through 9\n"
             "  Ctrl + B / J   : Add Bookmark / Jump to Bookmark\n"
             "  Ctrl + F       : Find Text in Active Document\n"
+            "  PgUp / PgDn    : Previous / Next Page Scroll (or Space / Shift+Space)\n"
+            "  + / - / 0      : Zoom In / Zoom Out / Reset Font Size\n"
             "  F5             : Quicksave Workspace Snapshot\n"
             "  F9             : Quickload Workspace Snapshot\n"
             "  M              : Toggle Sound FX (Mute / Unmute)\n"
@@ -1329,6 +1339,14 @@ void __stdcall MainEntry() {
 
             if (msg.wParam == VK_F5) {
                 QuicksaveNative(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_ESCAPE) {
+                if (g_hFindDlg) {
+                    DestroyWindow(g_hFindDlg);
+                    g_hFindDlg = NULL;
+                    SetFocus(hEdit);
+                }
                 continue;
             }
             if (msg.wParam == VK_F9) {

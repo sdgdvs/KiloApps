@@ -1904,6 +1904,8 @@
         }
         if (bookmarksDrawer && bookmarksDrawer.classList.contains('open')) renderBookmarks();
         if (notesDrawer && notesDrawer.classList.contains('open')) renderNotes();
+        if (tutorialModal) tutorialModal.classList.remove('open');
+        safeSetItem('kread_tutorialSeen', '1');
 
         playSfx('load');
         showToast(`📂 Restored quicksave snapshot (${tabs.length} tabs) [F9]`, '📂');
