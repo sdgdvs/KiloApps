@@ -331,6 +331,8 @@
                 <button id="btn-save-slot" class="btn-action" style="border-color: #9f7aea; background: #322659; color: #d6bcfa;" onclick="cycleSaveSlot()" title="Click to cycle save slot (1, 2, 3)" aria-label="Cycle Save Slot">[Slot 1]</button>
                 <button class="btn-action" onclick="saveGame()" title="Quicksave Game [F5 / S]" aria-label="Save Game">[F5 / S] Save</button>
                 <button class="btn-action" onclick="loadGame()" title="Quickload Game [F9 / L]" aria-label="Load Game">[F9 / L] Load</button>
+                <button class="btn-action" style="border-color: #38bdf8; background: #0c4a6e; color: #bae6fd;" onclick="saveToVFS()" title="Save Run to KiloOS VFS" aria-label="Save Run to VFS">VFS Save</button>
+                <button class="btn-action" style="border-color: #38bdf8; background: #0c4a6e; color: #bae6fd;" onclick="loadFromVFS()" title="Load Run from KiloOS VFS" aria-label="Load Run from VFS">VFS Load</button>
             </div>
             <div id="virtual-dpad" style="display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 2px; flex-wrap: wrap;">
                 <div style="display: grid; grid-template-columns: repeat(3, 34px); gap: 4px;">
@@ -470,7 +472,10 @@
                     <button class="btn-modal-close" style="border-color: #ecc94b; color: #ecc94b;" onclick="importDungeonFENPrompt()">📥 Import FEN</button>
                     <button class="btn-modal-close" style="border-color: #48bb78; color: #9ae6b4;" onclick="exportSaveFile()">💾 Export Save</button>
                     <button class="btn-modal-close" style="border-color: #38bdf8; color: #bae6fd;" onclick="importSaveFilePrompt()">📥 Import Save</button>
+                    <button class="btn-modal-close" style="border-color: #48bb78; color: #9ae6b4;" onclick="saveToVFS()">💾 Save VFS</button>
+                    <button class="btn-modal-close" style="border-color: #38bdf8; color: #bae6fd;" onclick="loadFromVFS()">📂 Load VFS</button>
                     <button class="btn-modal-close" style="border-color: #d69e2e; color: #fefcbf;" onclick="exportMorgueFile()">📜 Morgue Sheet</button>
+                    <button class="btn-modal-close" style="border-color: #d69e2e; color: #fefcbf;" onclick="exportMorgueToVFS()">📜 VFS Morgue</button>
                     <button class="btn-modal-close" onclick="closeModal('modal-inventory')">Close [ESC]</button>
                 </div>
             </div>
@@ -772,6 +777,189 @@
         const COLS = 40;
         const ROWS = 20;
         const TILE = 22;
+
+        /* --- KILOAPPS STORAGE DEFENSE --- */
+        function safeStorageGet(key, fallback = null) {
+            try {
+                const val = localStorage.getItem(key);
+                return val !== null ? val : fallback;
+            } catch (e) {
+                return fallback;
+            }
+        }
+        function safeStorageSet(key, value) {
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (e) {
+                console.warn('[KRogue] Storage write failed for ' + key + ':', e.message);
+                return false;
+            }
+        }
+        function safeStorageRemove(key) {
+            try {
+                localStorage.removeItem(key);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        /* =========================================================
+           KILOOS VFS & CROSS-APP IPC BRIDGE
+           ========================================================= */
+        const KiloVFS = {
+            write(path, data, notify = true) {
+                try {
+                    const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                    window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
+                    if (notify) {
+                        window.parent.postMessage({ type: 'OS_NOTIFY', title: 'KRogue', message: `Saved to VFS: ${path}` }, '*');
+                    }
+                } catch (e) {}
+            },
+            read(path, cb) {
+                const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                const handler = (e) => {
+                    if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                        window.removeEventListener('message', handler);
+                        cb(e.data.data, e.data.path);
+                    }
+                };
+                window.addEventListener('message', handler);
+                try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+            },
+            openPicker(cb) {
+                const reqId = 'open_' + Date.now();
+                const handler = (e) => {
+                    if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                        window.removeEventListener('message', handler);
+                        if (e.data.path) KiloVFS.read(e.data.path, cb);
+                    }
+                };
+                window.addEventListener('message', handler);
+                try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
+            },
+            savePicker(defaultPath, data, cb) {
+                const reqId = 'save_' + Date.now();
+                const handler = (e) => {
+                    if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+                        window.removeEventListener('message', handler);
+                        if (e.data.path) {
+                            KiloVFS.write(e.data.path, data);
+                            if (cb) cb(e.data.path);
+                        }
+                    }
+                };
+                window.addEventListener('message', handler);
+                try {
+                    window.parent.postMessage({
+                        type: 'VFS_SHOW_SAVE',
+                        requestId: reqId,
+                        defaultPath: defaultPath,
+                        path: defaultPath
+                    }, '*');
+                } catch (e) {
+                    if (cb) cb(null);
+                }
+            },
+            launchApp(targetApp, path = '') {
+                try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+            }
+        };
+
+        function saveToVFS() {
+            if (state !== 1 && !safeStorageGet('krogue_save')) {
+                showToast("No active or saved run to save to VFS!", "warning");
+                return;
+            }
+            try {
+                let savePayload = (state === 1) ? {
+                    player, equipment, inventory, dlevel, total_kills, msgs,
+                    map, monsters, items, traps, knownSpells, currentSeedVal, difficulty,
+                    pet, inVault, currentVault, savedFloorData,
+                    exportTimestamp: Date.now(),
+                    saveFormatVersion: "1.99"
+                } : JSON.parse(safeStorageGet('krogue_save') || '{}');
+
+                const defaultPath = `/home/games/krogue_d${savePayload.dlevel || 1}_${Date.now().toString().slice(-4)}.json`;
+                if (window.parent && window.parent !== window) {
+                    KiloVFS.savePicker(defaultPath, JSON.stringify(savePayload, null, 2), (path) => {
+                        if (path) {
+                            showToast(`Saved run to VFS: ${path}`, 'success');
+                            addMsg(`Run saved to VFS: ${path}`, 'good');
+                        }
+                    });
+                } else {
+                    KiloVFS.write(defaultPath, JSON.stringify(savePayload, null, 2));
+                    showToast(`Saved to VFS: ${defaultPath}`, 'success');
+                }
+            } catch (e) {
+                showToast("Failed to save to VFS: " + e.message, 'error');
+            }
+        }
+
+        function loadFromVFS() {
+            if (window.parent && window.parent !== window) {
+                KiloVFS.openPicker((data, path) => {
+                    if (data) {
+                        try {
+                            const d = typeof data === 'string' ? JSON.parse(data) : data;
+                            if (!d || !d.player || !d.dlevel) {
+                                throw new Error("Invalid KRogue save format.");
+                            }
+                            safeStorageSet('krogue_save', JSON.stringify(d));
+                            loadGame();
+                            closeModal('modal-inventory');
+                            showToast(`Loaded run from VFS: ${path || 'file'}!`, 'success');
+                        } catch (err) {
+                            showToast("Failed to parse VFS run: " + err.message, 'error');
+                        }
+                    }
+                });
+            } else {
+                showToast("KiloOS VFS is only available inside KiloOS desktop.", "info");
+            }
+        }
+
+        function exportMorgueToVFS() {
+            try {
+                const morgueText = generateMorgueString();
+                const defaultPath = `/home/games/morgue_${(player && player.class) || 'hero'}_${Date.now().toString().slice(-4)}.txt`;
+                if (window.parent && window.parent !== window) {
+                    KiloVFS.savePicker(defaultPath, morgueText, (path) => {
+                        if (path) {
+                            showToast(`Morgue exported to VFS: ${path}`, 'success');
+                            addMsg(`Morgue saved to ${path}`, 'good');
+                        }
+                    });
+                } else {
+                    KiloVFS.write(defaultPath, morgueText);
+                    showToast(`Morgue saved to VFS: ${defaultPath}`, 'success');
+                }
+            } catch (e) {
+                showToast("Failed to export morgue to VFS: " + e.message, 'error');
+            }
+        }
+
+        window.addEventListener('message', (e) => {
+            if (!e.data) return;
+            if (e.data.type === 'VFS_OPEN' && e.data.path) {
+                KiloVFS.read(e.data.path, (data) => {
+                    if (data) {
+                        try {
+                            const d = typeof data === 'string' ? JSON.parse(data) : data;
+                            if (d && d.player && d.dlevel) {
+                                safeStorageSet('krogue_save', JSON.stringify(d));
+                                loadGame();
+                                showToast(`Loaded save from VFS: ${e.data.path}`, 'success');
+                            }
+                        } catch(err) {}
+                    }
+                });
+            }
+        });
+
         
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -1725,7 +1913,7 @@
 
         // Multiplayer Duel & Phantom Race State
         let rMultiplayer = null;
-        let myPlayerName = localStorage.getItem('krogue_player_name') || ("Hero_" + Math.floor(1000 + Math.random() * 9000));
+        let myPlayerName = safeStorageGet('krogue_player_name') || ("Hero_" + Math.floor(1000 + Math.random() * 9000));
         let isDuelMode = false;
         let isDuelOnline = false;
         let isCyberBotDuel = false;
@@ -2136,7 +2324,7 @@
             try {
                 let seenTutorial = localStorage.getItem('krogue_tutorialSeen');
                 if (!seenTutorial) {
-                    localStorage.setItem('krogue_tutorialSeen', 'true');
+                    safeStorageSet('krogue_tutorialSeen', 'true');
                     tutorialTimeout = setTimeout(() => { openHelp(); }, 350);
                 }
             } catch(e) {}
@@ -3060,7 +3248,7 @@ gba(229, 62, 62, );
                 ctx.fillStyle = '#68d391'; ctx.font = 'bold 20px sans-serif';
                 ctx.fillText("Press [ENTER / Click] to Select Hero & Start New Run", C_WIDTH / 2, 250);
 
-                let hasSave = !!localStorage.getItem('krogue_save');
+                let hasSave = !!safeStorageGet('krogue_save');
                 ctx.fillStyle = hasSave ? '#ecc94b' : '#718096'; ctx.font = 'bold 15px sans-serif';
                 ctx.fillText(hasSave ? "Press [L / F9] to Resume Saved Run" : "No saved run active", C_WIDTH / 2, 290);
 
@@ -3797,7 +3985,13 @@ gba(229, 62, 62, );
             loadState: { label: 'Quick Load', keys: ['F9', 'l', 'L'] }
         };
 
-        let keybinds = JSON.parse(localStorage.getItem('krogue_keybinds_v3') || 'null');
+        let keybinds = null;
+        try {
+            const rawKb = safeStorageGet('krogue_keybinds_v3');
+            if (rawKb) keybinds = JSON.parse(rawKb);
+        } catch (e) {
+            keybinds = null;
+        }
         if (!keybinds) { keybinds = JSON.parse(JSON.stringify(defaultKeybinds)); }
 
         function isActionKey(e, actionName) {
@@ -3844,7 +4038,7 @@ gba(229, 62, 62, );
 
         function resetKeybinds() {
             keybinds = JSON.parse(JSON.stringify(defaultKeybinds));
-            localStorage.setItem('krogue_keybinds_v3', JSON.stringify(keybinds));
+            safeStorageSet('krogue_keybinds_v3', JSON.stringify(keybinds));
             rebindingAction = null;
             document.getElementById('keybinds-notice').innerText = 'Controls reset to default.';
             showToast('Controls reset to default.', 'info');
@@ -3853,7 +4047,7 @@ gba(229, 62, 62, );
 
         // High Score / Run History JSON Export & Import
         function exportLeaderboardJSON() {
-            let history = localStorage.getItem('krogue_leaderboard') || '[]';
+            let history = safeStorageGet('krogue_leaderboard', '[]');
             let blob = new Blob([history], { type: 'application/json' });
             let url = URL.createObjectURL(blob);
             let a = document.createElement('a');
@@ -3893,7 +4087,7 @@ gba(229, 62, 62, );
                         }
                     });
                     history.sort((a, b) => (b.score || 0) - (a.score || 0));
-                    localStorage.setItem('krogue_leaderboard', JSON.stringify(history));
+                    safeStorageSet('krogue_leaderboard', JSON.stringify(history));
                     openLeaderboard();
                     addMsg(`Imported ${addedCount} run history entries!`, 'good');
                     showToast(`Imported ${addedCount} run history entries!`, 'success');
@@ -3907,7 +4101,7 @@ gba(229, 62, 62, );
 
         function clearLeaderboard() {
             if (confirm("Are you sure you want to clear all run history and leaderboard records?")) {
-                localStorage.removeItem('krogue_leaderboard');
+                safeStorageRemove('krogue_leaderboard');
                 openLeaderboard();
                 addMsg("Leaderboard history cleared.", 'good');
                 showToast("Leaderboard history cleared.", 'info');
@@ -3917,7 +4111,10 @@ gba(229, 62, 62, );
         function openLeaderboard() {
             closeAllModalsExcept('modal-leaderboard');
             clearAllToasts();
-            let history = JSON.parse(localStorage.getItem('krogue_leaderboard') || '[]');
+            let history = [];
+            try {
+                history = JSON.parse(safeStorageGet('krogue_leaderboard', '[]'));
+            } catch (e) { history = []; }
             let tbody = document.getElementById('lead-tbody');
             if (history.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #718096;">No runs recorded yet.</td></tr>';
@@ -3939,7 +4136,10 @@ gba(229, 62, 62, );
         }
 
         function saveRunToLeaderboard(result) {
-            let history = JSON.parse(localStorage.getItem('krogue_leaderboard') || '[]');
+            let history = [];
+            try {
+                history = JSON.parse(safeStorageGet('krogue_leaderboard', '[]'));
+            } catch (e) { history = []; }
             let score = dlevel * 100 + total_kills * 25 + player.gold * 2 + player.level * 50;
             let lTitle = LOADOUT_DATA[player.class] && LOADOUT_DATA[player.class][player.loadout] ? LOADOUT_DATA[player.class][player.loadout].title : player.class.toUpperCase();
             history.push({
@@ -3947,7 +4147,7 @@ gba(229, 62, 62, );
                 gold: player.gold, score: score, seed: player.seedStr, result: result, date: new Date().toLocaleDateString()
             });
             history.sort((a, b) => b.score - a.score);
-            localStorage.setItem('krogue_leaderboard', JSON.stringify(history));
+            safeStorageSet('krogue_leaderboard', JSON.stringify(history));
         }
 
         function closeModal(id) {
@@ -3956,7 +4156,7 @@ gba(229, 62, 62, );
         }
 
         function openHelp() {
-            localStorage.setItem('krogue_tutorialSeen', 'true');
+            safeStorageSet('krogue_tutorialSeen', 'true');
             closeAllModalsExcept('modal-help');
             clearAllToasts();
             document.getElementById('modal-help').style.display = 'flex';
@@ -4460,7 +4660,7 @@ gba(229, 62, 62, );
                     } else {
                         initMap();
                     }
-                    localStorage.setItem('krogue_tutorialSeen', 'true');
+                    safeStorageSet('krogue_tutorialSeen', 'true');
                     updateAbilityButton();
                     updateMsgBox();
                     updatePetHUD();
@@ -4479,7 +4679,7 @@ gba(229, 62, 62, );
 
         /* --- SAVE FILE EXPORT & IMPORT UTILITIES --- */
         function exportSaveFile() {
-            if (state !== 1 && !localStorage.getItem('krogue_save')) {
+            if (state !== 1 && !safeStorageGet('krogue_save')) {
                 showToast("No active or saved run to export!", "warning");
                 return;
             }
@@ -4540,15 +4740,15 @@ gba(229, 62, 62, );
         }
 
         /* --- ROGUELIKE MORGUE & CHARACTER MEMORIAL DUMP --- */
-        function exportMorgueFile() {
+        function generateMorgueString() {
             let outcome = state === 3 ? "VICTORY" : (state === 2 ? "DEFEAT (SLAIN)" : "ACTIVE HERO EXPEDITION");
             let dateStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
             let sep = "================================================================================";
             let subSep = "--------------------------------------------------------------------------------";
             
-            let pName = player.name || 'Hero';
-            let pRace = (player.race || 'human').toUpperCase();
-            let pClass = (player.class || 'warrior').toUpperCase();
+            let pName = (player && player.name) || 'Hero';
+            let pRace = (player && player.race ? player.race : 'human').toUpperCase();
+            let pClass = (player && player.class ? player.class : 'warrior').toUpperCase();
 
             let lines = [
                 sep,
@@ -4557,7 +4757,7 @@ gba(229, 62, 62, );
                 sep,
                 `Timestamp:     ${dateStr}`,
                 `Outcome:       ${outcome}`,
-                `Seed:          ${currentSeedVal || player.seedStr || 'DEFAULT'}`,
+                `Seed:          ${currentSeedVal || (player && player.seedStr) || 'DEFAULT'}`,
                 `Dungeon Floor: DLVL ${dlevel}`,
                 `Total Kills:   ${total_kills}`,
                 `Difficulty:    ${difficulty || 'Normal'}`,
@@ -4566,28 +4766,28 @@ gba(229, 62, 62, );
                 "                              HERO STATUS",
                 subSep,
                 `Character:     ${pName} the ${pRace} ${pClass}`,
-                `Level / XP:    Level ${player.lvl || 1}  (XP: ${player.xp || 0} / Next: ${(player.lvl || 1) * 20})`,
-                `Hit Points:    ${player.hp} / ${player.max_hp}`,
-                `Mana Points:   ${player.mp} / ${player.max_mp}`,
-                `Food Satiety:  ${player.food} / ${player.max_food || 300}`,
-                `Gold Coins:    ${player.gold || 0} GP`,
-                `Attack Power:  ${player.atk || 0}  (+Equipment)`,
-                `Defense Armor: ${player.def || 0}  (+Equipment)`,
+                `Level / XP:    Level ${(player && player.lvl) || 1}  (XP: ${(player && player.xp) || 0} / Next: ${((player && player.lvl) || 1) * 20})`,
+                `Hit Points:    ${(player && player.hp) || 0} / ${(player && player.max_hp) || 0}`,
+                `Mana Points:   ${(player && player.mp) || 0} / ${(player && player.max_mp) || 0}`,
+                `Food Satiety:  ${(player && player.food) || 0} / ${(player && player.max_food) || 300}`,
+                `Gold Coins:    ${(player && player.gold) || 0} GP`,
+                `Attack Power:  ${(player && player.atk) || 0}  (+Equipment)`,
+                `Defense Armor: ${(player && player.def) || 0}  (+Equipment)`,
                 "",
                 subSep,
                 "                           EQUIPPED ARTIFACTS",
                 subSep,
-                `Main Hand:     ${equipment.weapon ? equipment.weapon.name + (equipment.weapon.bonus ? ` (+${equipment.weapon.bonus})` : '') : '(unarmed)'}`,
-                `Body Armor:    ${equipment.armor ? equipment.armor.name + (equipment.armor.bonus ? ` (+${equipment.armor.bonus})` : '') : '(unarmored)'}`,
-                `Shield / Off:  ${equipment.shield ? equipment.shield.name + (equipment.shield.bonus ? ` (+${equipment.shield.bonus})` : '') : '(none)'}`,
-                `Ring / Trinket:${equipment.ring ? equipment.ring.name : '(none)'}`,
+                `Main Hand:     ${equipment && equipment.weapon ? equipment.weapon.name + (equipment.weapon.bonus ? ` (+${equipment.weapon.bonus})` : '') : '(unarmed)'}`,
+                `Body Armor:    ${equipment && equipment.armor ? equipment.armor.name + (equipment.armor.bonus ? ` (+${equipment.armor.bonus})` : '') : '(unarmored)'}`,
+                `Shield / Off:  ${equipment && equipment.shield ? equipment.shield.name + (equipment.shield.bonus ? ` (+${equipment.shield.bonus})` : '') : '(none)'}`,
+                `Ring / Trinket:${equipment && equipment.ring ? equipment.ring.name : '(none)'}`,
                 "",
                 subSep,
                 "                            BACKPACK INVENTORY",
                 subSep
             ];
 
-            if (inventory.length === 0) {
+            if (!inventory || inventory.length === 0) {
                 lines.push("  (Backpack is empty)");
             } else {
                 inventory.forEach((it, i) => {
@@ -4619,7 +4819,7 @@ gba(229, 62, 62, );
             }
 
             try {
-                let kills = JSON.parse(localStorage.getItem('krogue_bestiary_kills') || '{}');
+                let kills = JSON.parse(safeStorageGet('krogue_bestiary_kills', '{}'));
                 let killKeys = Object.keys(kills);
                 if (killKeys.length > 0) {
                     lines.push("");
@@ -4636,12 +4836,12 @@ gba(229, 62, 62, );
             lines.push(subSep);
             lines.push("                         FINAL ADVENTURE LOG");
             lines.push(subSep);
-            let recentMsgs = msgs.slice(-20);
+            let recentMsgs = msgs ? msgs.slice(-20) : [];
             recentMsgs.forEach(m => lines.push(`  > ${typeof m === 'object' ? m.text : m}`));
 
-            const monsterCount = monsters.filter(m => m.hp > 0).length;
-            const itemCount = items.length;
-            const fen = `KROGUE-FEN:1:KR-${player.seedStr || currentSeedVal || '0'}:POS=${player.x},${player.y}:HP=${player.hp}/${player.max_hp}:MP=${player.mp}/${player.max_mp}:GLD=${player.gold}:KLS=${total_kills}:M=${monsterCount}:I=${itemCount}`;
+            const monsterCount = (monsters || []).filter(m => m.hp > 0).length;
+            const itemCount = (items || []).length;
+            const fen = `KROGUE-FEN:1:KR-${(player && player.seedStr) || currentSeedVal || '0'}:POS=${(player && player.x) || 0},${(player && player.y) || 0}:HP=${(player && player.hp) || 0}/${(player && player.max_hp) || 0}:MP=${(player && player.mp) || 0}/${(player && player.max_mp) || 0}:GLD=${(player && player.gold) || 0}:KLS=${total_kills}:M=${monsterCount}:I=${itemCount}`;
             lines.push("");
             lines.push(subSep);
             lines.push("                         DUNGEON FEN RECORD");
@@ -4652,18 +4852,26 @@ gba(229, 62, 62, );
             lines.push("             End of KRogue Memorial - KiloApps Alternate 1999");
             lines.push(sep);
 
-            let txt = lines.join("\r\n");
-            let blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
-            let dl = document.createElement("a");
-            dl.href = URL.createObjectURL(blob);
-            dl.download = `krogue_morgue_${player.class || 'hero'}_d${dlevel}_${Date.now()}.txt`;
-            document.body.appendChild(dl);
-            dl.click();
-            document.body.removeChild(dl);
-            URL.revokeObjectURL(dl.href);
+            return lines.join("\r\n");
+        }
 
-            addMsg("Exported Hero Morgue & Character Sheet!", 'good');
-            showToast("Exported Hero Morgue Dump (.txt)!", 'success');
+        function exportMorgueFile() {
+            try {
+                let txt = generateMorgueString();
+                let blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
+                let dl = document.createElement("a");
+                dl.href = URL.createObjectURL(blob);
+                dl.download = `krogue_morgue_${(player && player.class) || 'hero'}_d${dlevel}_${Date.now()}.txt`;
+                document.body.appendChild(dl);
+                dl.click();
+                document.body.removeChild(dl);
+                URL.revokeObjectURL(dl.href);
+
+                addMsg("Exported Hero Morgue & Character Sheet!", 'good');
+                showToast("Exported Hero Morgue Dump (.txt)!", 'success');
+            } catch(e) {
+                showToast("Failed to export morgue: " + e.message, 'error');
+            }
         }
 
         /* --- RETRO FIREBASE MULTIPLAYER SERVICE (RFMS) INTEGRATION --- */
@@ -4737,7 +4945,7 @@ gba(229, 62, 62, );
             const val = input.value.trim().substring(0, 16);
             if (val) {
                 myPlayerName = val;
-                localStorage.setItem('krogue_player_name', val);
+                safeStorageSet('krogue_player_name', val);
                 if (rMultiplayer) rMultiplayer.playerName = val;
                 showToast(`Hero name set to: ${myPlayerName}`, 'info');
             }
@@ -6164,7 +6372,7 @@ gba(229, 62, 62, );
             if (rebindingAction) {
                 if (e.key !== 'Escape') {
                     keybinds[rebindingAction].keys = [e.key];
-                    localStorage.setItem('krogue_keybinds_v3', JSON.stringify(keybinds));
+                    safeStorageSet('krogue_keybinds_v3', JSON.stringify(keybinds));
                     document.getElementById('keybinds-notice').innerText = `Bound ${keybinds[rebindingAction].label} to [${e.key}]!`;
                     showToast(`Bound ${keybinds[rebindingAction].label} to [${e.key}]!`, 'success');
                 } else {
@@ -6197,6 +6405,19 @@ gba(229, 62, 62, );
                 if (leadModal && leadModal.style.display !== 'none') { e.preventDefault(); closeModal('modal-leaderboard'); return; }
             }
 
+            // Don't intercept shortcuts when user is typing in inputs, textareas, or selects
+            const isTyping = document.activeElement && (
+                document.activeElement.tagName === 'INPUT' ||
+                document.activeElement.tagName === 'TEXTAREA' ||
+                document.activeElement.tagName === 'SELECT'
+            );
+            if (isTyping) {
+                if (document.activeElement.tagName === 'INPUT' && e.key === 'Enter') {
+                    confirmStartGame();
+                }
+                return;
+            }
+
             // Quick actions for Anvil modal with 1-4
             let anvilModal = document.getElementById('modal-anvil');
             if (anvilModal && anvilModal.style.display !== 'none') {
@@ -6204,14 +6425,6 @@ gba(229, 62, 62, );
                 if (e.key === '2') { craftAtAnvil('reinforce'); e.preventDefault(); return; }
                 if (e.key === '3') { craftAtAnvil('socket'); e.preventDefault(); return; }
                 if (e.key === '4') { craftAtAnvil('temper'); e.preventDefault(); return; }
-            }
-
-            // Don't intercept shortcuts when user is typing in inputs
-            if (document.activeElement && document.activeElement.tagName === 'INPUT') {
-                if (e.key === 'Enter') {
-                    confirmStartGame();
-                }
-                return;
             }
 
             // Guard against browser accelerator combinations (Ctrl+S, Ctrl+L, Ctrl+T, Ctrl+H, etc.)
@@ -6325,7 +6538,7 @@ gba(229, 62, 62, );
             const pxY = (e.clientY - rect.top) / rect.height * C_HEIGHT;
 
             if (state === 0) {
-                let hasSave = !!localStorage.getItem('krogue_save');
+                let hasSave = !!safeStorageGet('krogue_save');
                 if (hasSave && pxY >= 270 && pxY <= 308) {
                     loadGame();
                     return;
@@ -6374,8 +6587,8 @@ gba(229, 62, 62, );
         });
         setTimeout(() => {
             initRetroMultiplayer();
-            let hasSave = !!localStorage.getItem('krogue_save');
-            let seenTutorial = !!localStorage.getItem('krogue_tutorialSeen');
+            let hasSave = !!safeStorageGet('krogue_save');
+            let seenTutorial = !!safeStorageGet('krogue_tutorialSeen');
             if (hasSave) {
                 showToast("Saved run detected! Press [F9] or click Resume to continue.", "info", 4500);
             } else if (!seenTutorial) {

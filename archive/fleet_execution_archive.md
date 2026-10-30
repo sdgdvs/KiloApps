@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T07:40:14-07:00 — kilo-usability: KTrader (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KTrader across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KScript`; rotated active agent to `kilo-qa`.
+
 - **2026-10-30T06:33:25-07:00 — kilo-tester: KTrader (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 203.3 KB, native 33.5 KB < 999 KB; visual PASS).
   - Verified travel() futures/duel jump progression, getSavePayload serialization, and broadcastDuelState.

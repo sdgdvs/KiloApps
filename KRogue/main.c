@@ -1040,6 +1040,73 @@ void get_key_name_str(int vk, char* out) {
     else { wsprintfA(out, "0x%X", vk); }
 }
 
+void export_morgue_file() {
+    Entity* p = &g.entities[0];
+    HANDLE hFile = CreateFileA("krogue_morgue.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char buf[512];
+        DWORD written;
+        #define M_WRITE(s) WriteFile(hFile, s, (DWORD)str_len(s), &written, NULL)
+        M_WRITE("================================================================================\r\n");
+        M_WRITE("                    KROGUE v1.99 - WIN32 MEMORIAL & MORGUE FILE\r\n");
+        M_WRITE("                       Alternate Reality OS / Retro 1999 Dungeons\r\n");
+        M_WRITE("================================================================================\r\n");
+        wsprintfA(buf, "Outcome:       %s\r\n", g.state == 10 ? "VICTORY" : (g.state == 1 ? "DEFEAT (SLAIN)" : "ACTIVE EXPEDITION"));
+        M_WRITE(buf);
+        wsprintfA(buf, "Seed:          %u\r\n", g.seed);
+        M_WRITE(buf);
+        wsprintfA(buf, "Dungeon Floor: DLVL %d\r\n", g.dlevel);
+        M_WRITE(buf);
+        wsprintfA(buf, "Total Kills:   %d\r\n\r\n", g.total_kills);
+        M_WRITE(buf);
+        M_WRITE("--------------------------------------------------------------------------------\r\n");
+        M_WRITE("                              HERO STATUS\r\n");
+        M_WRITE("--------------------------------------------------------------------------------\r\n");
+        wsprintfA(buf, "Character:     %s (Level %d, XP %d)\r\n", p->name[0] ? p->name : "Hero", p->level, p->xp);
+        M_WRITE(buf);
+        wsprintfA(buf, "Hit Points:    %d / %d\r\n", p->hp, p->max_hp);
+        M_WRITE(buf);
+        wsprintfA(buf, "Mana Points:   %d / %d\r\n", p->mp, p->max_mp);
+        M_WRITE(buf);
+        wsprintfA(buf, "Gold Coins:    %d GP\r\n", p->gold);
+        M_WRITE(buf);
+        wsprintfA(buf, "Attack/Def:    ATK %d / DEF %d\r\n\r\n", p->atk, p->def);
+        M_WRITE(buf);
+        M_WRITE("--------------------------------------------------------------------------------\r\n");
+        M_WRITE("                           EQUIPPED ARTIFACTS\r\n");
+        M_WRITE("--------------------------------------------------------------------------------\r\n");
+        wsprintfA(buf, "Main Hand:     %s\r\n", g.equip_weapon.active ? g.equip_weapon.name : "(unarmed)");
+        M_WRITE(buf);
+        wsprintfA(buf, "Body Armor:    %s\r\n", g.equip_armor.active ? g.equip_armor.name : "(unarmored)");
+        M_WRITE(buf);
+        wsprintfA(buf, "Shield:        %s\r\n", g.equip_shield.active ? g.equip_shield.name : "(none)");
+        M_WRITE(buf);
+        wsprintfA(buf, "Ring:          %s\r\n\r\n", g.equip_ring.active ? g.equip_ring.name : "(none)");
+        M_WRITE(buf);
+        M_WRITE("--------------------------------------------------------------------------------\r\n");
+        M_WRITE("                            BACKPACK INVENTORY\r\n");
+        M_WRITE("--------------------------------------------------------------------------------\r\n");
+        int inv_count = 0;
+        for (int i = 0; i < MAX_INVENTORY; i++) {
+            if (g.inventory[i].active) {
+                inv_count++;
+                wsprintfA(buf, "  [%d] %s (Val: %d)\r\n", i + 1, g.inventory[i].name, g.inventory[i].val);
+                M_WRITE(buf);
+            }
+        }
+        if (inv_count == 0) {
+            M_WRITE("  (Backpack is empty)\r\n");
+        }
+        M_WRITE("\r\n================================================================================\r\n");
+        M_WRITE("             End of KRogue Memorial - KiloApps Alternate 1999\r\n");
+        M_WRITE("================================================================================\r\n");
+        #undef M_WRITE
+        CloseHandle(hFile);
+        add_msg("Morgue memorial saved to krogue_morgue.txt!");
+        show_toast("Morgue File Exported!", RGB(100, 255, 100), 2500);
+    }
+}
+
 void record_run(int victory) {
     load_leaderboard();
     Entity* p = &g.entities[0];
@@ -1074,6 +1141,7 @@ void record_run(int victory) {
         if (g_leaderboard_count < 10) g_leaderboard_count++;
         save_leaderboard();
     }
+    export_morgue_file();
 }
 
 Entity* get_player() { return &g.entities[0]; }
@@ -3486,7 +3554,7 @@ void draw_game(HDC hdc) {
             SetTextColor(memDC, RGB(200, 200, 200));
             TextOutA(memDC, W/2 * char_w - 150, H/2 * char_h, "The darkness of the dungeon claims your soul.", 45);
             SetTextColor(memDC, RGB(255, 215, 0));
-            TextOutA(memDC, W/2 * char_w - 165, H/2 * char_h + 24, "Press [R / Enter / Space] to Restart | [F9] Load", 48);
+            TextOutA(memDC, W/2 * char_w - 180, H/2 * char_h + 24, "Press [R / Enter / Space] to Restart | [F9] Load | [M] Morgue", 61);
         } else if(g.state == 10) {
             SetTextColor(memDC, RGB(255, 215, 0)); // Gold color
             SetBkColor(memDC, RGB(0,0,0));
@@ -3494,7 +3562,7 @@ void draw_game(HDC hdc) {
             SetTextColor(memDC, RGB(104, 211, 145));
             TextOutA(memDC, W/2 * char_w - 140, H/2 * char_h, "You have vanquished True Astaroth!", 34);
             SetTextColor(memDC, RGB(200, 200, 200));
-            TextOutA(memDC, W/2 * char_w - 165, H/2 * char_h + 24, "Press [R / Enter / Space] to Restart | [F9] Load", 48);
+            TextOutA(memDC, W/2 * char_w - 180, H/2 * char_h + 24, "Press [R / Enter / Space] to Restart | [F9] Load | [M] Morgue", 61);
         }
     } else if(g.state == 9 && g.active_shopkeeper) { // shop
         SetTextColor(memDC, RGB(255,255,255));
@@ -4392,6 +4460,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if(wParam == VK_F9 || wParam == 'L') load_game();
                 if(wParam == 'P') export_replay_krr();
                 if(wParam == 'X') export_dungeon_fen();
+                if(wParam == 'M') export_morgue_file();
             } else if(g.state == 0) { // play
                 if(wParam == g_keybinds.up || wParam == VK_UP || wParam == VK_NUMPAD8) move_player(0, -1);
                 else if(wParam == g_keybinds.down || wParam == VK_DOWN || wParam == VK_NUMPAD2) move_player(0, 1);
