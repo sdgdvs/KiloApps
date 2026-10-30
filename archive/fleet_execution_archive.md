@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T21:40:17-07:00 — kilo-qa: KGraph (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KGraph across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KRadio`; rotated active agent to `kilo-expander`.
+
 - **2026-10-29T21:22:25-07:00 — kilo-usability: KCosmic (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KCosmic across web and native targets.

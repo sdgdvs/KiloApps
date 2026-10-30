@@ -701,49 +701,37 @@
 
 
     .progress-bar-bg {
-
       width: 100%;
-
-      height: 8px;
-
-      background: var(--surface);
-
+      height: 10px;
+      background: var(--surface-2);
       border: 1px solid var(--border);
-
-      border-radius: 3px;
-
+      border-radius: 4px;
       overflow: hidden;
-
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+      position: relative;
     }
-
-
 
     .progress-bar-fill {
-
       height: 100%;
-
       width: 0%;
-
-      background: var(--primary);
-
-      transition: width 0.2s, background-color 0.2s;
-
+      background: linear-gradient(90deg, var(--primary) 0%, #00f0ff 100%);
+      background-size: 20px 20px;
+      background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 6px, transparent 6px, transparent 12px);
+      transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s;
     }
-
-
 
     .progress-bar-fill.warning {
-
-      background: var(--warning);
-
+      background: linear-gradient(90deg, #d97706 0%, #f59e0b 100%);
     }
 
-
-
     .progress-bar-fill.danger {
+      background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+      animation: pulse-danger-bar 1s infinite alternate;
+    }
 
-      background: var(--danger);
-
+    @keyframes pulse-danger-bar {
+      0% { opacity: 0.85; }
+      100% { opacity: 1.0; filter: brightness(1.2); }
     }
 
 
@@ -767,25 +755,145 @@
 
 
     .canvas-viewport {
-
       background: #000;
-
       border: 1px solid var(--border);
-
       border-radius: 4px;
-
       display: flex;
-
       align-items: center;
-
       justify-content: center;
-
       position: relative;
-
       overflow: hidden;
-
       min-height: 380px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
 
+    .canvas-viewport.drag-active,
+    .audio-visualizer-box.drag-active {
+      border-color: var(--primary) !important;
+      box-shadow: inset 0 0 25px rgba(0, 210, 255, 0.35), 0 0 15px rgba(0, 210, 255, 0.45) !important;
+    }
+
+    .carrier-drop-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 13, 26, 0.88);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease-in-out;
+      z-index: 6;
+      border: 2px dashed var(--primary);
+      border-radius: 4px;
+    }
+
+    .canvas-viewport.drag-active .carrier-drop-overlay,
+    .audio-visualizer-box.drag-active .carrier-drop-overlay {
+      opacity: 1;
+    }
+
+    .drop-overlay-content {
+      text-align: center;
+      color: var(--primary);
+      animation: pulse-overlay 1.5s infinite ease-in-out;
+    }
+
+    .drop-overlay-icon {
+      font-size: 36px;
+      margin-bottom: 6px;
+    }
+
+    .drop-overlay-title {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .drop-overlay-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    @keyframes pulse-overlay {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.03); opacity: 1; }
+    }
+
+    .bitplane-coord-hud {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(14, 23, 42, 0.92);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 3px;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .vfs-carrier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+      padding: 2px;
+    }
+
+    .vfs-carrier-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+
+    .vfs-carrier-card:hover {
+      background: var(--surface-hover);
+      border-color: var(--primary);
+    }
+
+    .vfs-carrier-card.selected {
+      border-color: var(--primary);
+      background: var(--surface-2);
+      box-shadow: 0 0 8px rgba(0, 210, 255, 0.3);
+    }
+
+    .vfs-carrier-card:focus-visible {
+      outline: 2px solid var(--border-focus);
+    }
+
+    .vfs-carrier-name {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .vfs-carrier-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .vfs-carrier-meta {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--accent);
+      margin-top: auto;
     }
 
 
@@ -1646,11 +1754,19 @@
 
 
 
-          <div class="canvas-viewport" id="image-dropzone">
+          <div class="canvas-viewport" id="image-dropzone" tabindex="0" role="region" aria-label="Stego Carrier Image Viewport (Drop image file here)">
 
             <span class="canvas-overlay-tag" id="canvas-mode-tag">MODE: 24-BIT RGB CARRIER</span>
 
             <canvas id="image-canvas" class="carrier-canvas" width="512" height="384"></canvas>
+
+            <div class="carrier-drop-overlay" id="image-drop-overlay">
+              <div class="drop-overlay-content">
+                <div class="drop-overlay-icon">📥</div>
+                <div class="drop-overlay-title">DROP CARRIER IMAGE HERE</div>
+                <div class="drop-overlay-hint">Supports PNG, BMP, GIF, JPEG lossless carriers</div>
+              </div>
+            </div>
 
           </div>
 
@@ -1774,13 +1890,19 @@
 
             <div class="capacity-header">
 
-              <span>SECRET PAYLOAD</span>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-weight:700; color:var(--text);">SECRET PAYLOAD</span>
+                <span class="badge" id="img-capacity-status-badge">OPTIMAL</span>
+              </div>
 
-              <span id="img-capacity-text">0 / 75,494 Bytes (0%)</span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span id="img-capacity-text">0 / 75,494 Bytes (0%)</span>
+                <span class="badge" id="img-capacity-remain-badge">Remaining: 73.7 KB</span>
+              </div>
 
             </div>
 
-            <div class="progress-bar-bg">
+            <div class="progress-bar-bg" role="progressbar" id="img-capacity-progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Image carrier payload capacity usage">
 
               <div class="progress-bar-fill" id="img-capacity-bar"></div>
 
@@ -1888,9 +2010,17 @@
 
 
 
-          <div class="audio-visualizer-box" id="audio-dropzone" title="Drag and drop a .wav carrier file here">
+          <div class="audio-visualizer-box" id="audio-dropzone" tabindex="0" role="region" aria-label="Audio Waveform Viewport (Drop .wav carrier here)" title="Drag and drop a .wav carrier file here">
 
             <canvas id="audio-canvas" class="waveform-canvas"></canvas>
+
+            <div class="carrier-drop-overlay" id="audio-drop-overlay">
+              <div class="drop-overlay-content">
+                <div class="drop-overlay-icon">🎧</div>
+                <div class="drop-overlay-title">DROP WAV CARRIER AUDIO HERE</div>
+                <div class="drop-overlay-hint">Supports 16-bit PCM .WAV mono/stereo</div>
+              </div>
+            </div>
 
           </div>
 
@@ -1972,13 +2102,19 @@
 
             <div class="capacity-header">
 
-              <span>AUDIO PAYLOAD BUFFER</span>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-weight:700; color:var(--text);">AUDIO PAYLOAD BUFFER</span>
+                <span class="badge" id="audio-capacity-status-badge">OPTIMAL</span>
+              </div>
 
-              <span id="audio-capacity-text">0 / 16,537 Bytes (0%)</span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span id="audio-capacity-text">0 / 16,537 Bytes (0%)</span>
+                <span class="badge" id="audio-capacity-remain-badge">Remaining: 16.1 KB</span>
+              </div>
 
             </div>
 
-            <div class="progress-bar-bg">
+            <div class="progress-bar-bg" role="progressbar" id="audio-capacity-progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Audio carrier payload capacity usage">
 
               <div class="progress-bar-fill" id="audio-capacity-bar"></div>
 
@@ -2136,6 +2272,30 @@
 
 
 
+          <div class="capacity-container" style="margin-bottom:6px;">
+
+            <div class="capacity-header">
+
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-weight:700; color:var(--text);">TEXT CARRIER CAPACITY</span>
+                <span class="badge" id="text-capacity-status-badge">OPTIMAL</span>
+              </div>
+
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span id="text-capacity-text">0 / 2,048 Bytes (0%)</span>
+                <span class="badge" id="text-capacity-remain-badge">Remaining: 2.0 KB</span>
+              </div>
+
+            </div>
+
+            <div class="progress-bar-bg" role="progressbar" id="text-capacity-progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Text carrier payload capacity usage">
+
+              <div class="progress-bar-fill" id="text-capacity-bar"></div>
+
+            </div>
+
+          </div>
+
           <div>
 
             <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Covert Secret Message:</label>
@@ -2220,9 +2380,13 @@
 
 
 
-          <div class="canvas-viewport" style="min-height:360px;">
+          <div class="canvas-viewport" id="analysis-viewport" style="min-height:360px;" tabindex="0" role="region" aria-label="Bitplane Analysis Viewport">
+
+            <span class="canvas-overlay-tag" id="analysis-hud-tag">BITPLANE 0 (LSB) | 512x384</span>
 
             <canvas id="analysis-canvas" class="carrier-canvas" width="512" height="384"></canvas>
+
+            <div class="bitplane-coord-hud" id="bitplane-coord-hud" style="display:none;">X:0 Y:0 | RGB:(0,0,0) | Bit:0</div>
 
           </div>
 
@@ -2247,6 +2411,12 @@
               <option value="b">Blue</option>
 
             </select>
+
+            <div style="display:flex; gap:4px; margin-left:auto;">
+              <button class="btn btn-sm active" id="btn-bitplane-fit" title="Fit to container">Fit</button>
+              <button class="btn btn-sm" id="btn-bitplane-1x" title="1:1 Exact pixel size">1:1</button>
+              <button class="btn btn-sm" id="btn-bitplane-2x" title="2x Nearest-neighbor zoom">2x</button>
+            </div>
 
           </div>
 
@@ -2803,6 +2973,80 @@
       <div class="modal-footer">
 
         <button class="btn btn-primary" id="btn-settings-save">Save Settings</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- VFS CARRIER VAULT & PICKER MODAL -->
+
+  <div class="modal-overlay" id="modal-vfs-picker" style="display:none;" role="dialog" aria-modal="true" aria-label="KiloOS VFS Carrier Vault" aria-hidden="true">
+
+    <div class="modal-window" style="max-width:680px;" tabindex="-1">
+
+      <div class="modal-header">
+
+        <div style="display:flex; align-items:center; gap:8px;">
+
+          <span style="font-size:16px;">📂</span>
+
+          <span style="font-weight:700; color:var(--primary);">KiloOS VFS Carrier Vault</span>
+
+        </div>
+
+        <button class="tool-btn" id="btn-vfs-picker-close" aria-label="Close VFS Picker dialog" style="font-size:16px;">✕</button>
+
+      </div>
+
+      <div class="modal-body" style="font-size:12px; gap:12px;">
+
+        <p style="color:var(--text-muted);">Select a pre-staged carrier image from the KiloOS VFS media vault (`/home/media/`), specify a custom virtual path, or upload a local image file.</p>
+
+        
+
+        <div style="font-weight:600; color:var(--text); font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">Available VFS Media Carriers:</div>
+
+        <div class="vfs-carrier-grid" id="vfs-carrier-list" role="listbox" aria-label="VFS Carrier Presets">
+
+        </div>
+
+
+
+        <div style="border-top:1px solid var(--border); padding-top:10px; display:flex; flex-direction:column; gap:6px;">
+
+          <label for="vfs-carrier-custom-path" style="font-size:11px; font-weight:600; color:var(--text-muted);">Custom VFS File Path:</label>
+
+          <div style="display:flex; gap:8px;">
+
+            <input type="text" id="vfs-carrier-custom-path" value="/home/media/carrier.png" style="flex:1; font-family:var(--font-mono);">
+
+            <button class="btn btn-sm" id="btn-vfs-carrier-load-custom">📂 Load Path</button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="modal-footer" style="justify-content:space-between;">
+
+        <label class="btn btn-sm" style="cursor:pointer;">
+
+          📁 Browse Local File <input type="file" id="vfs-picker-local-file" accept="image/*" style="display:none;">
+
+        </label>
+
+        <div style="display:flex; gap:8px;">
+
+          <button class="btn btn-sm" id="btn-vfs-picker-cancel">Cancel</button>
+
+          <button class="btn btn-primary" id="btn-vfs-picker-confirm">Select Carrier</button>
+
+        </div>
 
       </div>
 

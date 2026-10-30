@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <commdlg.h>
+#include <shellapi.h>
 
 void* __cdecl memset(void* p, int c, size_t sz) {
     char* pb = (char*)p;
@@ -50,6 +51,7 @@ static void k_strcat(char* dst, const char* src) {
 #define ID_BTN_LOAD_FILE    114
 #define ID_BTN_VFS_REPORT   115
 #define ID_BTN_SEND_KCIPHER 116
+#define ID_CAPACITY_LABEL   117
 
 // Cyber Theme Colors
 static COLORREF COLOR_BG = RGB(8, 13, 26);
@@ -82,12 +84,40 @@ static HWND g_hBtnClear = NULL;
 static HWND g_hBtnHelp = NULL;
 static HWND g_hBtnCopy = NULL;
 static HWND g_hStatusLabel = NULL;
+static HWND g_hCapacityLabel = NULL;
 static HWND g_hBtnSaveFile = NULL;
 static HWND g_hBtnLoadFile = NULL;
 static HWND g_hBtnVfsReport = NULL;
 static HWND g_hBtnSendKCipher = NULL;
 
 static char g_szStatus[512] = "KSteno Ready. Select carrier mode, enter secret message, and click Inject or Extract.";
+
+static void UpdateCapacityStatus(void) {
+    if (!g_hCapacityLabel || !g_hEditSecret || !g_hComboMode) return;
+    char secret[4096];
+    secret[0] = 0;
+    GetWindowTextA(g_hEditSecret, secret, sizeof(secret));
+    int secLen = k_strlen(secret);
+    int mode = (int)SendMessageA(g_hComboMode, CB_GETCURSEL, 0, 0);
+    int maxCap = 2000;
+    const char* modeName = "Text Whitespace";
+    if (mode == 2) {
+        maxCap = 24576; // 256x256 * 3 / 8
+        modeName = "24-bit BMP";
+    } else if (mode == 3) {
+        maxCap = 10752; // Audio
+        modeName = "16-bit WAV";
+    } else if (mode == 1) {
+        maxCap = 2000;
+        modeName = "Zero-Width";
+    }
+    int pct = maxCap > 0 ? (secLen * 100) / maxCap : 0;
+    char capBuf[256];
+    wsprintfA(capBuf, "CAPACITY [%s]: %d / %d B (%d%%) | %s",
+        modeName, secLen, maxCap, pct,
+        pct > 100 ? "OVERFLOW" : (pct > 75 ? "DENSE" : "OPTIMAL"));
+    SetWindowTextA(g_hCapacityLabel, capBuf);
+}
 
 // RC4 Stream Cipher for payload protection
 static void RC4Crypt(const char* key, const unsigned char* in, unsigned char* out, int len) {
@@ -1037,6 +1067,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             // Status Label
             g_hStatusLabel = CreateWindowA("STATIC", g_szStatus, WS_CHILD | WS_VISIBLE, 20, 515, 880, 20, hwnd, (HMENU)ID_STATUS_LABEL, NULL, NULL);
 
+            // Capacity Progress & Limit Label
+            g_hCapacityLabel = CreateWindowA("STATIC", "", WS_CHILD | WS_VISIBLE, 470, 92, 430, 16, hwnd, (HMENU)ID_CAPACITY_LABEL, NULL, NULL);
+
+            // Drag-and-drop carrier support
+            DragAcceptFiles(hwnd, TRUE);
+
             // Apply Fonts
             SendMessageA(g_hComboMode, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
             SendMessageA(g_hEditKey, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
@@ -1044,12 +1080,56 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             SendMessageA(g_hEditSecret, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
             SendMessageA(g_hEditOutput, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
             SendMessageA(g_hStatusLabel, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessageA(g_hCapacityLabel, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
             SendMessageA(g_hBtnSendKCipher, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            UpdateCapacityStatus();
+            return 0;
+        }
+
+        case WM_DROPFILES: {
+            HDROP hDrop = (HDROP)wParam;
+            char szFile[MAX_PATH];
+            if (DragQueryFileA(hDrop, 0, szFile, sizeof(szFile))) {
+                int len = k_strlen(szFile);
+                if (len > 4) {
+                    const char* ext = szFile + len - 4;
+                    if (ext[0] == '.' && (ext[1] == 'b' || ext[1] == 'B') && (ext[2] == 'm' || ext[2] == 'M') && (ext[3] == 'p' || ext[3] == 'P')) {
+                        CopyFileA(szFile, "carrier.bmp", FALSE);
+                        SendMessageA(g_hComboMode, CB_SETCURSEL, 2, 0);
+                        SetWindowTextA(g_hEditCover, "[CARRIER: carrier.bmp]\r\nImported via drag-and-drop.\r\nFormat: 24-bit BMP image\r\nCapacity: ~24.5 KB LSB payload");
+                        SetWindowTextA(g_hStatusLabel, "SUCCESS: Drag-and-drop BMP carrier imported (carrier.bmp).");
+                    } else if (ext[0] == '.' && (ext[1] == 'w' || ext[1] == 'W') && (ext[2] == 'a' || ext[2] == 'A') && (ext[3] == 'v' || ext[3] == 'V')) {
+                        CopyFileA(szFile, "carrier.wav", FALSE);
+                        SendMessageA(g_hComboMode, CB_SETCURSEL, 3, 0);
+                        SetWindowTextA(g_hEditCover, "[CARRIER: carrier.wav]\r\nImported via drag-and-drop.\r\nFormat: 16-bit PCM audio\r\nCapacity: ~10.7 KB LSB payload");
+                        SetWindowTextA(g_hStatusLabel, "SUCCESS: Drag-and-drop WAV carrier imported (carrier.wav).");
+                    } else {
+                        HANDLE h = CreateFileA(szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                        if (h != INVALID_HANDLE_VALUE) {
+                            char buf[8192];
+                            DWORD r = 0;
+                            ReadFile(h, buf, sizeof(buf) - 1, &r, NULL);
+                            buf[r] = 0;
+                            CloseHandle(h);
+                            SetWindowTextA(g_hEditCover, buf);
+                            SetWindowTextA(g_hStatusLabel, "SUCCESS: Drag-and-drop text carrier imported.");
+                        }
+                    }
+                }
+                UpdateCapacityStatus();
+            }
+            DragFinish(hDrop);
             return 0;
         }
 
         case WM_COMMAND: {
             int wmId = LOWORD(wParam);
+            int wmCode = HIWORD(wParam);
+            if (wmCode == EN_CHANGE && (HWND)lParam == g_hEditSecret) {
+                UpdateCapacityStatus();
+            } else if (wmCode == CBN_SELCHANGE && (HWND)lParam == g_hComboMode) {
+                UpdateCapacityStatus();
+            }
             switch (wmId) {
                 case ID_BTN_INJECT:  DoInject(); break;
                 case ID_BTN_EXTRACT: DoExtract(); break;
@@ -1107,8 +1187,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             TextOutA(hdc, 20, 54, "Carrier Mode:", 13);
             TextOutA(hdc, 440, 54, "Passphrase:", 11);
 
-            TextOutA(hdc, 20, 90, "Cover Text / Host Carrier:", 26);
-            TextOutA(hdc, 470, 90, "Secret Payload Message:", 23);
+            TextOutA(hdc, 20, 90, "Cover Text / Host (Drag-and-Drop Supported):", 44);
+            TextOutA(hdc, 470, 72, "Secret Payload Message:", 23);
 
             TextOutA(hdc, 20, 332, "Carrier Console Output:", 23);
 
@@ -1201,8 +1281,10 @@ void MainEntry(void) {
                 continue;
             }
         }
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
+        if (!IsDialogMessageA(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+        }
     }
 
     ExitProcess((UINT)msg.wParam);
