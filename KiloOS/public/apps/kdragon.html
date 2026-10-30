@@ -63,6 +63,7 @@
             z-index: 5;
             transition: transform 0.05s ease-out;
             box-sizing: border-box;
+            overflow: hidden;
         }
 
         /* Ornate corner filigree styling */
@@ -163,14 +164,15 @@
 
         .entity-display {
             margin: 2px auto;
-            min-height: 74px;
-            max-height: 80px;
+            min-height: 72px;
+            max-height: 84px;
             display: flex;
             justify-content: center;
             align-items: center;
             background: radial-gradient(circle, rgba(255,248,220,0.6) 0%, rgba(210,180,140,0.2) 60%, transparent 85%);
             border-radius: 50%;
             padding: 2px;
+            position: relative;
         }
 
         .shop-card {
@@ -203,7 +205,7 @@
 
         .message-log {
             margin-top: 3px;
-            height: 58px;
+            height: 56px;
             overflow-y: auto;
             background: rgba(255, 250, 240, 0.6);
             padding: 2px 6px;
@@ -261,8 +263,8 @@
 
         #toast-container {
             position: fixed;
-            top: 6px;
-            right: 12px;
+            top: 8px;
+            right: 14px;
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -270,7 +272,7 @@
             gap: 4px;
             pointer-events: none;
             max-width: 250px;
-            max-height: 115px;
+            max-height: 110px;
             overflow: hidden;
             width: auto;
         }
@@ -393,6 +395,7 @@
 </head>
 <body>
     <canvas id="vfx-canvas"></canvas>
+    <div id="toast-container" aria-live="polite"></div>
     <div class="container" id="main-container">
         <div class="corner-filigree corner-tl"></div>
         <div class="corner-filigree corner-tr"></div>
@@ -2385,6 +2388,7 @@
                 // Comprehensive global keyboard navigation
                 let lastActiveElement = null;
                 window.addEventListener('keydown', (e) => {
+                    const hm = document.getElementById('help-modal');
                     // Prevent page scrolling on Arrow, Space, and Page navigation keys during gameplay
                     const isNavKey = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Up', 'Down', 'Left', 'Right', 'Space', ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key) ||
                                      e.code === 'Space' || (typeof e.code === 'string' && (e.code.startsWith('Arrow') || e.code.startsWith('Page') || e.code === 'Home' || e.code === 'End'));
@@ -2393,11 +2397,49 @@
                             e.preventDefault();
                             if ((e.key === ' ' || e.code === 'Space') && document.activeElement?.tagName === 'BUTTON') {
                                 document.activeElement.click();
+                                return;
                             }
                         }
                     }
                     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
                     if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+                    // Modal focus trap for Help dialog
+                    if (hm && hm.style.display === 'block') {
+                        if (e.key === 'Tab') {
+                            const focusables = hm.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                            if (focusables.length > 0) {
+                                const first = focusables[0];
+                                const last = focusables[focusables.length - 1];
+                                if (e.shiftKey && document.activeElement === first) {
+                                    e.preventDefault();
+                                    last.focus();
+                                } else if (!e.shiftKey && document.activeElement === last) {
+                                    e.preventDefault();
+                                    first.focus();
+                                }
+                            }
+                            return;
+                        }
+                    }
+
+                    // Arrow key navigation between visible buttons
+                    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Left', 'Right', 'Up', 'Down'].includes(e.key)) {
+                        const visibleButtons = Array.from(document.querySelectorAll('.controls:not([style*="display: none"]) button:not(:disabled), #start-screen:not([style*="display: none"]) button:not(:disabled)'));
+                        if (visibleButtons.length > 0) {
+                            const currentIdx = visibleButtons.indexOf(document.activeElement);
+                            let nextIdx = 0;
+                            if (currentIdx !== -1) {
+                                if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'Right' || e.key === 'Down') {
+                                    nextIdx = (currentIdx + 1) % visibleButtons.length;
+                                } else {
+                                    nextIdx = (currentIdx - 1 + visibleButtons.length) % visibleButtons.length;
+                                }
+                            }
+                            visibleButtons[nextIdx]?.focus();
+                            return;
+                        }
+                    }
 
                     if (e.key === 'F5') {
                         e.preventDefault();
@@ -2412,12 +2454,11 @@
 
                     if (e.key === 'F1' || e.key.toLowerCase() === 'h') {
                         e.preventDefault();
-                        const hm = document.getElementById('help-modal');
-                        const isClosing = hm.style.display === 'block';
+                        const isClosing = hm && hm.style.display === 'block';
                         if (isClosing) {
                             hm.style.display = 'none';
                             lastActiveElement?.focus?.();
-                        } else {
+                        } else if (hm) {
                             lastActiveElement = document.activeElement;
                             hm.style.display = 'block';
                             document.getElementById('btn-close-help-bottom')?.focus();
@@ -2432,8 +2473,7 @@
                         return;
                     }
                     if (e.key === 'Escape') {
-                        const hm = document.getElementById('help-modal');
-                        if (hm.style.display === 'block') {
+                        if (hm && hm.style.display === 'block') {
                             hm.style.display = 'none';
                             lastActiveElement?.focus?.();
                             return;
@@ -2480,7 +2520,6 @@
                     }
 
                     // Suppress background keys while Help modal is open, but allow Enter/Space to dismiss
-                    const hm = document.getElementById('help-modal');
                     if (hm && hm.style.display === 'block') {
                         if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
@@ -2671,26 +2710,26 @@
                     const enemyPct = Math.max(0, Math.min(100, Math.round((this.battleState.enemyHp / this.battleState.enemyMaxHp) * 100)));
 
                     document.getElementById('entity-art').innerHTML = `
-                        <div style="display:flex; flex-direction:column; align-items:center; gap:8px; width:100%; position:relative;">
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; width:100%; position:relative;">
                             <div style="display:flex; justify-content:space-between; width:380px; align-items:flex-end;">
                                 <div style="display:flex; flex-direction:column; align-items:center;">
-                                    <span style="font-size:12px; font-weight:bold; color:#f7e0b5; margin-bottom:2px;">${this.getStageTitle()} (${this.element})</span>
+                                    <span style="font-size:11px; font-weight:bold; color:#f7e0b5; margin-bottom:1px;">${this.getStageTitle()} (${this.element})</span>
                                     ${playerSvg}
                                 </div>
-                                <div style="font-weight:900; color:#ff4444; font-size:26px; font-family:'Cinzel',serif; text-shadow:0 0 8px rgba(255,0,0,0.6); margin-bottom:40px;">VS</div>
+                                <div style="font-weight:900; color:#ff4444; font-size:20px; font-family:'Cinzel',serif; text-shadow:0 0 8px rgba(255,0,0,0.6); margin-bottom:20px;">VS</div>
                                 <div style="display:flex; flex-direction:column; align-items:center;">
-                                    <span style="font-size:12px; font-weight:bold; color:#f7e0b5; margin-bottom:2px;">${this.battleState.enemy.name} <span style="background:${this.battleState.enemy.color}; color:#fff; font-size:10px; padding:1px 5px; border-radius:3px;">${this.battleState.enemy.element}</span></span>
+                                    <span style="font-size:11px; font-weight:bold; color:#f7e0b5; margin-bottom:1px;">${this.battleState.enemy.name} <span style="background:${this.battleState.enemy.color}; color:#fff; font-size:9px; padding:1px 4px; border-radius:3px;">${this.battleState.enemy.element}</span></span>
                                     <div style="transform: scaleX(-1);">${enemySvg}</div>
                                 </div>
                             </div>
-                            <div style="display:flex; justify-content:space-between; width:380px; gap:12px;">
-                                <div style="flex:1; background:rgba(0,0,0,0.5); border:1px solid #5a3814; border-radius:4px; padding:2px; height:20px; position:relative; overflow:hidden;">
+                            <div style="display:flex; justify-content:space-between; width:380px; gap:8px;">
+                                <div style="flex:1; background:rgba(0,0,0,0.5); border:1px solid #5a3814; border-radius:4px; padding:1px; height:16px; position:relative; overflow:hidden;">
                                     <div style="height:100%; width:${playerPct}%; background:linear-gradient(90deg, #40c057, #69db7c); border-radius:2px; transition:width 0.25s ease;"></div>
-                                    <span style="position:absolute; top:2px; left:0; width:100%; text-align:center; font-size:11px; font-weight:bold; color:#fff; text-shadow:1px 1px 2px #000;">HP: ${Math.max(0, this.battleState.playerHp)}/${this.battleState.playerMaxHp}</span>
+                                    <span style="position:absolute; top:0; left:0; width:100%; text-align:center; font-size:10px; font-weight:bold; color:#fff; text-shadow:1px 1px 2px #000;">HP: ${Math.max(0, this.battleState.playerHp)}/${this.battleState.playerMaxHp}</span>
                                 </div>
-                                <div style="flex:1; background:rgba(0,0,0,0.5); border:1px solid #5a3814; border-radius:4px; padding:2px; height:20px; position:relative; overflow:hidden;">
+                                <div style="flex:1; background:rgba(0,0,0,0.5); border:1px solid #5a3814; border-radius:4px; padding:1px; height:16px; position:relative; overflow:hidden;">
                                     <div style="height:100%; width:${enemyPct}%; background:linear-gradient(90deg, #fa5252, #ff8787); border-radius:2px; transition:width 0.25s ease;"></div>
-                                    <span style="position:absolute; top:2px; left:0; width:100%; text-align:center; font-size:11px; font-weight:bold; color:#fff; text-shadow:1px 1px 2px #000;">HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp}</span>
+                                    <span style="position:absolute; top:0; left:0; width:100%; text-align:center; font-size:10px; font-weight:bold; color:#fff; text-shadow:1px 1px 2px #000;">HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp}</span>
                                 </div>
                             </div>
                         </div>`;

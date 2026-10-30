@@ -2144,7 +2144,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 } else if (wParam == '6' || wParam == 'B' || wParam == 'b') {
                     SendMessage(hwnd, WM_COMMAND, BTN_BATTLE, 0);
                     continue;
-                } else if (wParam == '7' || wParam == 'M' || wParam == 'm') {
+                } else if (wParam == '7' || wParam == 'K' || wParam == 'k') {
                     SendMessage(hwnd, WM_COMMAND, BTN_SHOP, 0);
                     continue;
                 }

@@ -58,7 +58,7 @@ virtual_web_rotation:
 last_run:
   agent: kilo-usability
   app: KDragon
-  timestamp: '2026-10-30T14:19:19-07:00'
+  timestamp: '2026-10-30T14:36:44-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -288,6 +288,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T14:36:44-07:00 — kilo-usability: KDragon (Usability, Viewport & Keyboard Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 195.6 KB, native 151.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.57%, input 33.51%, HEAD Δ 1.44%, 0 fail, 0 warn, 6.6s)).
+  - Viewport & Layout: Compacted #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 with overflow:hidden and 0px scroll.
+  - Toast Isolation: Anchored #toast-container to top-right with pointer-events:none and max-height:110px, completely isolating it from #controls and #message-log.
+  - Keyboard Ergonomics: Bound e.preventDefault() for Arrow/Space keys to eliminate page scrolling, added button-to-button Arrow navigation, Tab focus trapping in #help-modal, and Win32 C parity for 'K' shop shortcut.
+  - Handoff: Advanced `kilo-usability` to `KColony`; rotated active agent to `kilo-qa`.
+
 - **2026-10-30T14:19:19-07:00 — kilo-usability: KDragon (Compact Viewport, Toast Isolation & Input Ergonomics Polish)**
   - Status: PASS (0 errors, web 193.3 KB, native 151.0 KB < 999 KB; 0 overflow, 0 cut-off controls; visual PASS)
   - Layout: Compacted #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 with 0px overflow
@@ -311,9 +318,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Expanded rfc_archive.html deep-linking (hash/query params for #avian, #htcpcp, #tcp, #vault), verified RFC 1149 CPIP simulator, RFC 2324 418 teapot console, ASCII TCP stepper, and VFS exports.
   - Enhanced KNet router to seamlessly resolve kweb://rfc-archive subpaths, queries, and hash fragments with zero clipping.
   - Handoff: Advanced `kilo-creator` to `kweb://webring`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-30T12:17:42-07:00 — kilo-expander: KNet (Phase VI VFS & TINAG Hardening & kweb:// Parody Routing)**
-  - Status: PASS ✅ (0 errors, web 203.8 KB, native 56.5 KB < 999 KB; startup, Vite & security_lint PASS; visual WARN (anim 0.35%, input 1.71%, HEAD Δ 0.0%, 0 fail, 1 warn, 5.6s)).
-  - Enforced TINAG secrecy: removed Tier 3 darknet nodes from surface bookmark chips while preserving address-bar routing.
-  - Added direct VFS Spool bookmark chips and routed new canonical 1999 parodies with dual Win32 C parity.
-  - Handoff: Advanced `kilo-expander` to `KBBS`; rotated active agent to `kilo-review`.
