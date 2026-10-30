@@ -2,11 +2,12 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <stdlib.h>
+#include <shellapi.h>
 
 #define W 660
 #define H 495
 
-HWND hComboPreset, hComboWave, hBtnPlay, hBtnSeq, hBtnExportWav, hBtnHelp, hBtnSave, hBtnLoad, hBtnExportFm, hBtnImportFm, hFreq, hAttack, hDecay, hSustain, hRelease;
+HWND hComboPreset, hComboWave, hBtnPlay, hBtnSeq, hBtnExportWav, hBtnHelp, hBtnSave, hBtnLoad, hBtnExportFm, hBtnImportFm, hBtnPlayRadio, hBtnShareTrap, hFreq, hAttack, hDecay, hSustain, hRelease;
 HWND hDelayTime, hDelayFdbk, hDelayMix;
 HWND hComboArp, hArpBpm, hArpOct;
 HWND hScopeWnd, hPianoWnd, hStatusText;
@@ -680,7 +681,13 @@ static void extract_json_str(const char* json, const char* key, char* out, int m
 }
 
 void ExportFmPreset(HWND hwnd, const char* filename) {
-    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    CreateDirectoryA("music", NULL);
+    const char* target = (filename && filename[0]) ? filename : "music\\ksynth_patch.fm";
+    HANDLE hFile = CreateFileA(target, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        target = "ksynth_patch.fm";
+        hFile = CreateFileA(target, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    }
     if (hFile == INVALID_HANDLE_VALUE) {
         MessageBoxA(hwnd, "Could not open file for writing FM preset.", "Export Error", MB_OK | MB_ICONERROR);
         return;
@@ -711,6 +718,9 @@ void ExportFmPreset(HWND hwnd, const char* filename) {
         "  \"engineMode\": \"fm\",\r\n"
         "  \"osc1Wave\": \"%s\",\r\n"
         "  \"freq\": %s,\r\n"
+        "  \"fmRatio\": 2.0,\r\n"
+        "  \"fmModDepth\": 0.40,\r\n"
+        "  \"fmFeedback\": 0.20,\r\n"
         "  \"attack\": %s,\r\n"
         "  \"decay\": %s,\r\n"
         "  \"sustain\": %s,\r\n"
@@ -727,16 +737,21 @@ void ExportFmPreset(HWND hwnd, const char* filename) {
     WriteFile(hFile, json, len, &written, NULL);
     CloseHandle(hFile);
 
-    char msg[128];
-    wsprintfA(msg, "Exported 2-Op FM patch preset to %s!", filename);
+    char msg[160];
+    wsprintfA(msg, "Exported 2-Op FM patch preset to %s!", target);
     UpdateStatusText(msg);
     MessageBoxA(hwnd, msg, "KSynth FM Patch Export", MB_OK | MB_ICONINFORMATION);
 }
 
 BOOL ImportFmPreset(HWND hwnd, const char* filename) {
-    HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    const char* target = (filename && filename[0]) ? filename : "music\\ksynth_patch.fm";
+    HANDLE hFile = CreateFileA(target, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
-        UpdateStatusText("⚠ Could not open FM patch file (ksynth_patch.fm)");
+        target = "ksynth_patch.fm";
+        hFile = CreateFileA(target, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    }
+    if (hFile == INVALID_HANDLE_VALUE) {
+        UpdateStatusText("⚠ Could not open FM patch file (music\\ksynth_patch.fm)");
         return FALSE;
     }
 
@@ -788,11 +803,85 @@ BOOL ImportFmPreset(HWND hwnd, const char* filename) {
 
     SendMessage(hComboPreset, CB_SETCURSEL, -1, 0);
 
-    char msg[128];
-    wsprintfA(msg, "★ Loaded FM patch preset from %s", filename);
+    char msg[160];
+    wsprintfA(msg, "★ Loaded FM patch preset from %s", target);
     UpdateStatusText(msg);
     PlayTone();
     return TRUE;
+}
+
+void PlayTrackInKRadio(HWND hwnd) {
+    if (bufferSampleCount <= 0) {
+        PlayTone();
+    }
+    CreateDirectoryA("music", NULL);
+    const char* outPath = "music\\ksynth_track.wav";
+    HANDLE hFile = CreateFileA(outPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        outPath = "ksynth_track.wav";
+        hFile = CreateFileA(outPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    }
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD dataSize = (DWORD)(bufferSampleCount * sizeof(short));
+        DWORD fileSize = 36 + dataSize;
+        DWORD written = 0;
+        unsigned char hdr[44];
+        hdr[0] = 'R'; hdr[1] = 'I'; hdr[2] = 'F'; hdr[3] = 'F';
+        hdr[4] = (unsigned char)(fileSize & 0xFF);
+        hdr[5] = (unsigned char)((fileSize >> 8) & 0xFF);
+        hdr[6] = (unsigned char)((fileSize >> 16) & 0xFF);
+        hdr[7] = (unsigned char)((fileSize >> 24) & 0xFF);
+        hdr[8] = 'W'; hdr[9] = 'A'; hdr[10] = 'V'; hdr[11] = 'E';
+        hdr[12] = 'f'; hdr[13] = 'm'; hdr[14] = 't'; hdr[15] = ' ';
+        hdr[16] = 16; hdr[17] = 0; hdr[18] = 0; hdr[19] = 0;
+        hdr[20] = 1; hdr[21] = 0; // PCM
+        hdr[22] = 1; hdr[23] = 0; // Mono
+        DWORD sr = SAMPLE_RATE;
+        hdr[24] = (unsigned char)(sr & 0xFF);
+        hdr[25] = (unsigned char)((sr >> 8) & 0xFF);
+        hdr[26] = (unsigned char)((sr >> 16) & 0xFF);
+        hdr[27] = (unsigned char)((sr >> 24) & 0xFF);
+        DWORD br = SAMPLE_RATE * 2;
+        hdr[28] = (unsigned char)(br & 0xFF);
+        hdr[29] = (unsigned char)((br >> 8) & 0xFF);
+        hdr[30] = (unsigned char)((br >> 16) & 0xFF);
+        hdr[31] = (unsigned char)((br >> 24) & 0xFF);
+        hdr[32] = 2; hdr[33] = 0; // Align
+        hdr[34] = 16; hdr[35] = 0; // 16-bit
+        hdr[36] = 'd'; hdr[37] = 'a'; hdr[38] = 't'; hdr[39] = 'a';
+        hdr[40] = (unsigned char)(dataSize & 0xFF);
+        hdr[41] = (unsigned char)((dataSize >> 8) & 0xFF);
+        hdr[42] = (unsigned char)((dataSize >> 16) & 0xFF);
+        hdr[43] = (unsigned char)((dataSize >> 24) & 0xFF);
+        WriteFile(hFile, hdr, 44, &written, NULL);
+        WriteFile(hFile, buffer, dataSize, &written, NULL);
+        CloseHandle(hFile);
+    }
+    HINSTANCE hInst = ShellExecuteA(hwnd, "open", "KRadio.exe", "music\\ksynth_track.wav", NULL, SW_SHOWNORMAL);
+    if ((INT_PTR)hInst <= 32) {
+        ShellExecuteA(hwnd, "open", "..\\KRadio\\KRadio.exe", "music\\ksynth_track.wav", NULL, SW_SHOWNORMAL);
+    }
+    UpdateStatusText("📻 Rendered track to music\\ksynth_track.wav & tuned KRadio!");
+    MessageBoxA(hwnd, "Track rendered to music\\ksynth_track.wav\nReady for playback in KRadio workstation!", "KRadio Bridge", MB_OK | MB_ICONINFORMATION);
+}
+
+void ShareInTrapster(HWND hwnd) {
+    ExportFmPreset(hwnd, "music\\ksynth_patch.fm");
+    CreateDirectoryA("music", NULL);
+    HANDLE hFile = CreateFileA("music\\trapster_shared.txt", GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        SetFilePointer(hFile, 0, NULL, FILE_END);
+        const char* entry = "FILE=ksynth_patch.fm|TYPE=2OP_FM|CH=2|BITRATE=44.1k|SHARED=TRUE|SEED=1999\r\n";
+        DWORD written = 0;
+        WriteFile(hFile, entry, (DWORD)lstrlenA(entry), &written, NULL);
+        CloseHandle(hFile);
+    }
+    HINSTANCE hInst = ShellExecuteA(hwnd, "open", "knet.exe", "kweb://trapster", NULL, SW_SHOWNORMAL);
+    if ((INT_PTR)hInst <= 32) {
+        ShellExecuteA(hwnd, "open", "..\\knet\\knet.exe", "kweb://trapster", NULL, SW_SHOWNORMAL);
+    }
+    UpdateStatusText("🐱 Published 2-Op FM patch to Trapster P2P swarm catalog!");
+    MessageBoxA(hwnd, "2-Op FM preset exported to music\\ksynth_patch.fm\nCataloged for Trapster P2P swarm exchange!", "Trapster P2P Swarm", MB_OK | MB_ICONINFORMATION);
 }
 
 #define KSYNTH_SAVE_MAGIC 0x4B53594E // "KSYN"
@@ -966,6 +1055,10 @@ void ShowHelp(HWND hwnd) {
         "  [E] / [Ctrl+S]: Export sound to 16-bit 44.1 kHz WAV file\n"
         "  [1] - [9]     : Direct preset switch (Lead, Bass, Pad, 8-Bit, Bell, Noise, FM, SPC, Beacon)\n"
         "  [Z] / [X]     : Shift keyboard octave down / up (-2 to +2)\n"
+        "  [Shift+S]     : Export 2-Op FM patch preset (.fm) to music\\ (VFS)\n"
+        "  [Shift+O]     : Import 2-Op FM patch preset (.fm) from music\\ (VFS)\n"
+        "  [Shift+R]     : Render audio to music\\ksynth_track.wav and tune KRadio\n"
+        "  [Shift+T]     : Publish 2-Op FM preset to Trapster P2P swarm catalog\n"
         "  [Esc]         : Panic (stop sound) / Unfocus edit fields / Dismiss\n"
         "  [Enter]       : Play tone while editing frequency or ADSR fields\n"
         "  [F1] or [?]   : Display this Help guide\n\n"
@@ -1057,6 +1150,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnSave      = CreateScaledWindowEx(0, "BUTTON", "💾 Quicksave [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 388, 118, 26, hwnd, (HMENU)5, NULL, NULL);
             hBtnLoad      = CreateScaledWindowEx(0, "BUTTON", "📂 Quickload [F9]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 137, 388, 123, 26, hwnd, (HMENU)6, NULL, NULL);
 
+            // Buttons Row 3: FM Patch Bank VFS: Export [Shift+S], Import [Shift+O]
+            hBtnExportFm  = CreateScaledWindowEx(0, "BUTTON", "💾 .FM [Shift+S]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 418, 118, 26, hwnd, (HMENU)7, NULL, NULL);
+            hBtnImportFm  = CreateScaledWindowEx(0, "BUTTON", "📂 Open .FM [Shift+O]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 137, 418, 123, 26, hwnd, (HMENU)8, NULL, NULL);
+
+            // Buttons Row 4: Cross-App Workstation Bridges: KRadio [Shift+R], Trapster [Shift+T]
+            hBtnPlayRadio = CreateScaledWindowEx(0, "BUTTON", "📻 KRadio [Shift+R]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 448, 118, 26, hwnd, (HMENU)9, NULL, NULL);
+            hBtnShareTrap = CreateScaledWindowEx(0, "BUTTON", "🐱 Trapster [Shift+T]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 137, 448, 123, 26, hwnd, (HMENU)10, NULL, NULL);
+
             // Oscilloscope Box Window
             WNDCLASS sc = {0};
             sc.lpfnWndProc = ScopeProc;
@@ -1078,6 +1179,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Keyboard navigation hint & Status label
             CreateScaledWindowEx(0, "STATIC", "Keys: [A-K] Oct 4 | [Z/X] Octave Shift | [1-6] Presets", WS_CHILD | WS_VISIBLE, 280, 344, 350, 18, hwnd, NULL, NULL, NULL);
             hStatusText = CreateScaledWindowEx(0, "STATIC", "Ready | Press [Space] or [A-K] to play sound | [F1] Help", WS_CHILD | WS_VISIBLE, 280, 368, 350, 46, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "VFS Audio: /home/music/ (*.fm / *.wav) | KRadio & Trapster", WS_CHILD | WS_VISIBLE, 280, 418, 350, 20, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Shortcuts: [Shift+S/O] FM Patch | [Shift+R] Radio | [Shift+T] P2P", WS_CHILD | WS_VISIBLE, 280, 444, 350, 24, hwnd, NULL, NULL, NULL);
 
             // Subclass edit controls
             HWND editControls[] = { hFreq, hAttack, hDecay, hSustain, hRelease, hDelayTime, hDelayFdbk, hDelayMix };
@@ -1123,6 +1226,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else {
                     UpdateStatusText("⚠ No quicksave file found (ksynth.dat)");
                 }
+            } else if (LOWORD(wParam) == 7) {
+                ExportFmPreset(hwnd, "music\\ksynth_patch.fm");
+            } else if (LOWORD(wParam) == 8) {
+                ImportFmPreset(hwnd, "music\\ksynth_patch.fm");
+            } else if (LOWORD(wParam) == 9) {
+                PlayTrackInKRadio(hwnd);
+            } else if (LOWORD(wParam) == 10) {
+                ShareInTrapster(hwnd);
             } else if (HIWORD(wParam) == CBN_SELCHANGE && (HWND)lParam == hComboPreset) {
                 int sel = SendMessage(hComboPreset, CB_GETCURSEL, 0, 0);
                 ApplyPreset(sel);
@@ -1209,6 +1320,24 @@ void MainEntry() {
                               hFocus == hSustain || hFocus == hRelease || hFocus == hDelayTime ||
                               hFocus == hDelayFdbk || hFocus == hDelayMix);
             if (!isEditing) {
+                if (GetKeyState(VK_SHIFT) & 0x8000) {
+                    if (key == 'S') {
+                        ExportFmPreset(hwnd, "music\\ksynth_patch.fm");
+                        continue;
+                    }
+                    if (key == 'O') {
+                        ImportFmPreset(hwnd, "music\\ksynth_patch.fm");
+                        continue;
+                    }
+                    if (key == 'R') {
+                        PlayTrackInKRadio(hwnd);
+                        continue;
+                    }
+                    if (key == 'T') {
+                        ShareInTrapster(hwnd);
+                        continue;
+                    }
+                }
                 if (key == VK_F5) {
                     SaveStateToFile("ksynth.dat");
                     UpdateStatusText("★ Workstation quicksaved to ksynth.dat [F5]");

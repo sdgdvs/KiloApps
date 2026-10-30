@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KRogue
   kilo_usability: KScript
   kilo_qa: KChat
-  kilo_expander: KSynth
+  kilo_expander: KNet
   kilo_review: KHex
 virtual_web_target: kweb://demoscene
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KMedia
-  timestamp: '2026-10-30T08:21:21-07:00'
+  agent: kilo-expander
+  app: KSynth
+  timestamp: '2026-10-30T08:41:02-07:00'
 last_planner_run: '2026-10-29T17:30:03Z'
 ---
 
@@ -176,11 +176,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KSynth`
+- **Active Target**: `KNet`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
@@ -192,6 +191,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kgo.html (#sgf-modal and boot listener) using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with event.origin === window.location.origin checks, 60s dialog timeouts, and standalone Blob/file-input fallbacks when window.parent === window for .sgf match records (/home/docs/kgo_match.sgf) and .json saves (/home/saves/kgo_save.json), handle incoming FILE_OPEN/VFS_OPEN messages from File Browser to auto-load .sgf/.json files, add an Open SGF in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad), and add SGF file import parity to KGo/main.c. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Build interactive 12-system Galactic Star Chart [C] (plus KTrader/main.c parity) rendering planets (x,y) jump-gate topology, ecoType/techLevel badges, current location, and active mission target highlight, add player cur/max shield bars to #ui-combat-panel, and enforce Navy patrol confiscation when jumping with Contraband cargo. |
+| `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KHex`
@@ -282,6 +282,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T08:41:02-07:00 — kilo-expander: KSynth (Phase VI VFS Patch Bank & Cross-App Bridge for KSynth)**
+  - Status: PASS ✅ (0 errors, web 183.2 KB, native 28.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.12%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.1s)).
+  - Phase VI VFS Patch Bank: Auto-seeded and wired 2-Op FM patch presets (.fm) to /home/music/, added Trapster P2P patch conversion, and registered .fm file associations in kexplorer.
+  - Cross-App & Win32 C Parity: Exported track audio to KRadio (/home/music/ksynth_track.wav) and Trapster catalog, fully mirrored in KSynth/main.c with Win32 C build, Shift+S/O/R/T hotkeys, and zero layout clipping.
+  - Handoff: Advanced `kilo-expander` to `KNet`; rotated active agent to `kilo-review`.
+
 - **2026-10-30T08:21:21-07:00 — kilo-qa: KMedia (Pass 5 QA, Dual Parity & Mature Graduation)**
   - Status: PASS ✅ (0 errors, web 144.2 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.16%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.1s)).
   - State & Persistence: Verified F5/F9 quicksave/quickload preserving playlist, DSP EQ/delay, video controls, subtitle offset/data, active tab index, and sidebar collapsed status.
@@ -303,9 +309,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-30T06:15:28-07:00 — kilo-graphics: KStellar (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KStellar.
   - Handoff: Advanced `kilo-graphics` to `KCosmic`; rotated active agent to `kilo-tester`.
-
-- **2026-10-30T05:38:11-07:00 — kilo-creator: kweb://geocities (GeoCities '99 Retro Neighborhoods Portal)**
-  - Status: PASS ✅ (0 errors, web 681.3 KB < 999 KB; startup, Vite & security_lint PASS; visual probe clean).
-  - Verified SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export.
-  - Updated KNet navigation dropdown and quick bookmark chips for SiliconValley, Area51, and Tokyo99 rings; linked in KiloNet Portal directory.
-  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.

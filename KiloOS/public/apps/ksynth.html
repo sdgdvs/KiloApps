@@ -3388,6 +3388,15 @@
 
   function applyPreset(p) {
     if (!p || typeof p !== 'object') return;
+    // Support Trapster P2P swarm patch format
+    if (p.carrier && p.modulator) {
+      if (!p.engineMode) p.engineMode = 'fm';
+      if (p.fmRatio === undefined && p.modulator.mult) p.fmRatio = p.modulator.mult;
+      if (p.fmModDepth === undefined && p.modulator.tl !== undefined) p.fmModDepth = Math.max(0, Math.min(1, (64 - p.modulator.tl) / 64));
+      if (p.fmFeedback === undefined && p.feedback !== undefined) p.fmFeedback = Math.max(0, Math.min(1, p.feedback / 7.0));
+      if (p.delayTime === undefined && p.spcEcho) p.delayTime = (p.spcEcho.delayMs || 180) / 1000;
+      if (p.delayFdbk === undefined && p.spcEcho) p.delayFdbk = p.spcEcho.feedback || 0.35;
+    }
     const validWaves = ['sawtooth', 'square', 'sine', 'triangle', 'noise'];
     const validFilterTypes = ['lowpass', 'highpass', 'bandpass'];
 
@@ -4724,9 +4733,13 @@
 
   // Phase VI VFS Patch / Hash Initialization
   function checkVfsInitialPatch() {
+    const search = window.location.search || '';
+    const sParams = new URLSearchParams(search);
+    const searchPath = sParams.get('file') || sParams.get('path') || sParams.get('patch') || '';
     const hash = window.location.hash || '';
-    if (hash.includes('.fm') || hash.includes('/home/music/')) {
-      const cleanPath = hash.replace(/^#/, '');
+    const targetPath = (hash.includes('.fm') || hash.includes('/home/music/')) ? hash.replace(/^#/, '') : searchPath;
+    if (targetPath.includes('.fm') || targetPath.includes('/home/music/')) {
+      const cleanPath = targetPath.startsWith('#') ? targetPath.slice(1) : targetPath;
       const bankKey = cleanPath.split('/').pop();
       if (FM_VFS_BANK[bankKey]) {
         applyFmPatch(FM_VFS_BANK[bankKey], bankKey);
@@ -4744,8 +4757,17 @@
   }
   window.addEventListener('hashchange', checkVfsInitialPatch);
   window.addEventListener('message', (e) => {
-    if (e.data && e.data.type === 'VFS_LOAD_PATCH' && e.data.patch) {
+    if (e.data && (e.data.type === 'VFS_LOAD_PATCH' || e.data.type === 'OS_OPEN_FILE') && e.data.patch) {
       applyFmPatch(e.data.patch, e.data.path || 'vfs_patch.fm');
+    } else if (e.data && e.data.type === 'OS_OPEN_FILE' && e.data.path) {
+      KiloVFS.read(e.data.path, (data) => {
+        if (data) {
+          try {
+            const p = typeof data === 'string' ? JSON.parse(data) : data;
+            applyFmPatch(p, e.data.path);
+          } catch (err) {}
+        }
+      });
     }
   });
   const initHash = window.location.hash || '';
@@ -4755,6 +4777,18 @@
     // Load saved patch on initial start
     loadSavedPatch();
   }
+
+  // Seed initial FM patch bank into VFS so File Browser (kexplorer) can browse /home/music/
+  try {
+    if (!localStorage.getItem('ksynth_vfs_seeded')) {
+      localStorage.setItem('ksynth_vfs_seeded', '1');
+      setTimeout(() => {
+        for (const [fname, patch] of Object.entries(FM_VFS_BANK)) {
+          KiloVFS.write('/home/music/' + fname, patch);
+        }
+      }, 600);
+    }
+  } catch (e) {}
 
   // Initialize standardized Retro Multiplayer (Rule 12 RFMS)
   initRetroMultiplayer();

@@ -1013,6 +1013,10 @@
       if (lower.endsWith('.wav') || lower.endsWith('.mp3') || lower.endsWith('.ogg') || lower.endsWith('.mid') || lower.endsWith('.m4a') || lower.endsWith('.flac')) {
         return 'kaudio';
       }
+      // 2-Op FM Patch Bank -> KSynth
+      if (lower.endsWith('.fm')) {
+        return 'ksynth';
+      }
       // Graphics -> KPaint
       if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.gif') || lower.endsWith('.bmp') || lower.endsWith('.ico') || lower.endsWith('.svg') || lower.endsWith('.webp')) {
         return 'kpaint';
