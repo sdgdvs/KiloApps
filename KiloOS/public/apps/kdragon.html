@@ -1998,6 +1998,14 @@
                 VFX.addShockwave(width / 2, height / 2, '#ffd700', 140);
                 VFX.addFloatingText(width / 2, height / 2 - 60, "SOVEREIGN AURA +10 ALL STATS", "#ffd700", 22);
                 this.spawnParticles('#ffd700', 40);
+                if (this.state === 'adult') {
+                    this.state = 'elder';
+                    this.log(`👑 ASCENSION! Your ${this.element} Dragon has ascended into an ELDER SOVEREIGN WYRM!`);
+                    this.showToast(`👑 <b>ELDER ASCENSION!</b> Dragon evolved into an <b>ELDER SOVEREIGN WYRM</b>!`, "gold", 8000);
+                    AudioEngine.playPreset('evolution');
+                    AudioEngine.setTrack('sanctuary');
+                    this.spawnParticles('#ffd700', 50, 'player', true);
+                }
                 this.updateUI();
             },
 

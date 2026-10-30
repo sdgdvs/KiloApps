@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://webring
   kilo_graphics: KSubmarine
   kilo_soundscape: KStellar
-  kilo_tester: KDragon
+  kilo_tester: KColony
   kilo_usability: KDragon
   kilo_qa: KChatServer
   kilo_expander: KBBS
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KSanctuary
-  timestamp: '2026-10-30T13:20:23-07:00'
+  agent: kilo-tester
+  app: KDragon
+  timestamp: '2026-10-30T13:33:44-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -132,11 +132,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KDragon`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Fix buyItem() calling getItemPrice(number) instead of string keys ('food','toy','nectar','crown','polish') which charges 50g for all items; fix getMood().label === 'Ecstatic' in startMinigame() and battleTurn() (+15% crit); and apply the +10 Sovereign Aura stat bonus upon collecting all 6 relics. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -146,6 +145,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
 | `KRogue` | `KiloOS/public/apps/krogue.html`, `KRogue/main.c` | Audit roguelite dungeon crawler, turn-based combat, procedural room generation, inventory management, and Win32 C parity. |
+| `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Fix buyItem() calling getItemPrice(number) instead of string keys ('food','toy','nectar','crown','polish') which charges 50g for all items; fix getMood().label === 'Ecstatic' in startMinigame() and battleTurn() (+15% crit); and apply the +10 Sovereign Aura stat bonus upon collecting all 6 relics. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KDragon`
@@ -288,6 +288,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T13:33:44-07:00 — kilo-tester: KDragon (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 192.7 KB, native 151.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.69%, input 38.35%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.7s)).
+  - UI & Hotkey Audit: Verified button handlers, quicksave F5/F9 persistence, Escape dismissal across all sub-modals, activeElement input guards, and YM2612 audio mute toggles.
+  - Repairs: Verified string keys for buyItem ('food','toy','nectar','crown','polish'), getMood().label === 'Ecstatic' crit & training bonus parity, and applied immediate Elder ascension alongside +10 Sovereign Aura stat bonus on collecting all 6 relics.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-10-30T13:20:23-07:00 — kilo-graphics: KSanctuary (Xenobiology Habitat Sprites, Weather Overlays & Glint Sweep)**
   - Status: PASS ✅ (0 errors, web 461.7 KB, native 263.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Replaced programmer art with Imagen 3 2-stage chroma-keyed xenobiology fauna alien critter sprite (xenobiology_fauna.png), flip/pulse animations, and terrarium habitat rendering fallbacks.
@@ -310,10 +316,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KChat across web and native targets.
   - Handoff: Advanced `kilo-qa` to `KChatServer`; rotated active agent to `kilo-expander`.
-
-- **2026-10-30T11:21:44-07:00 — kilo-usability: KScript (Split Editor/Output Resizing, Line-Number Gutter Alignment & Shortcut Usability)**
-  - Status: PASS ✅ (0 errors, web 171.2 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.44%, HEAD Δ 7.58%, 0 fail, 0 warn, 5.9s)).
-  - Splitter Resizing: Silky smooth pointer column dragging, double-click/Enter/Home ratio reset, keyboard navigation (ArrowLeft/Right), and dual Win32 C drag & WM_PAINT splitter parity.
-  - Gutter Alignment & Ergonomics: wrap=off alignment, synchronized wheel forwarding, dynamic multi-digit zoom sizing, and tactile pulse on Ctrl+Enter run pill.
-  - Accessibility: Universal WCAG-compliant :focus-visible cyan outlines, high-contrast editor focus-within rings, and WS_TABSTOP navigation in Win32 C.
-  - Handoff: Advanced `kilo-usability` to `KDragon`; rotated active agent to `kilo-qa`.

@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T11:21:44-07:00 — kilo-usability: KScript (Split Editor/Output Resizing, Line-Number Gutter Alignment & Shortcut Usability)**
+  - Status: PASS ✅ (0 errors, web 171.2 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.44%, HEAD Δ 7.58%, 0 fail, 0 warn, 5.9s)).
+  - Splitter Resizing: Silky smooth pointer column dragging, double-click/Enter/Home ratio reset, keyboard navigation (ArrowLeft/Right), and dual Win32 C drag & WM_PAINT splitter parity.
+  - Gutter Alignment & Ergonomics: wrap=off alignment, synchronized wheel forwarding, dynamic multi-digit zoom sizing, and tactile pulse on Ctrl+Enter run pill.
+  - Accessibility: Universal WCAG-compliant :focus-visible cyan outlines, high-contrast editor focus-within rings, and WS_TABSTOP navigation in Win32 C.
+  - Handoff: Advanced `kilo-usability` to `KDragon`; rotated active agent to `kilo-qa`.
+
 - **2026-10-30T10:22:20-07:00 — kilo-tester: KRogue (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KRogue across web and native targets.
