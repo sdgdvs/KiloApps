@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://geocities
+  kilo_creator: kweb://demoscene
   kilo_graphics: KStellar
   kilo_soundscape: KStellar
   kilo_tester: KTrader
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KMedia
   kilo_expander: KSynth
   kilo_review: KHex
-virtual_web_target: kweb://geocities
+virtual_web_target: kweb://demoscene
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KTrader
-  timestamp: '2026-10-30T05:23:17-07:00'
+  agent: kilo-creator
+  app: kweb://geocities
+  timestamp: '2026-10-30T05:38:11-07:00'
 last_planner_run: '2026-10-29T17:30:03Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://geocities`
+- **Active Target**: `kweb://demoscene`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
 | `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 | `kweb://warez` | `KiloOS/public/web/warez.html`, `KiloOS/public/apps/knet.html` | Create *The Underground Courier / Warez BBS Web Ring* (`warez.html` <250 KB): ANSI top-site release board, simulated keygen music player, download quota tracker, and VFS export. |
+| `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KStellar`
@@ -282,6 +282,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T05:38:11-07:00 — kilo-creator: kweb://geocities (GeoCities '99 Retro Neighborhoods Portal)**
+  - Status: PASS ✅ (0 errors, web 681.3 KB < 999 KB; startup, Vite & security_lint PASS; visual probe clean).
+  - Verified SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export.
+  - Updated KNet navigation dropdown and quick bookmark chips for SiliconValley, Area51, and Tokyo99 rings; linked in KiloNet Portal directory.
+  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-30T05:23:17-07:00 — kilo-expander: KTrader (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KTrader across web and native targets.
@@ -302,9 +308,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (0 errors, web 180.5 KB, native 38.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - UI & Combat Repairs: Fixed #garage-rank update on level-up, verified enemyStunned headshot mechanics in enemyTurn(), auto-restored telemetry on boot, and aligned EMP overheat burnout damage in both Web and Win32 C.
   - Mature Quarantine & Handoff: Promoted `KMech` to Mature archive; advanced `kilo-tester` to `KTrader`; next agent `kilo-usability`.
-
-- **2026-10-30T03:18:57-07:00 — kilo-tester: KMech (Interactive UI Audit & Combat Telemetry Repairs)**
-  - Status: PASS ✅ (0 errors, web 180.5 KB, native 38.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.15%, input 16.13%, HEAD Δ 0.13%, 0 fail, 0 warn, 5.1s)).
-  - Pilot Rank & Boot Telemetry: Wired updateGarage() in showScreen('garage') and boot pipeline to ensure #garage-rank updates to getPilotRank(playerLevel), and auto-restored kmech_save on boot with VFS fallback.
-  - Combat & Win32 C Parity: Verified enemyStunned headshot mechanics in enemyTurn() cooling vents, confirmed EMP overheat burnout damage (>maxHeat), and added GetPilotRank() and enemy cooling vent parity to KMech/main.c.
-  - Handoff: Advanced `kilo-tester` to `KTrader`; rotated active agent to `kilo-usability`.

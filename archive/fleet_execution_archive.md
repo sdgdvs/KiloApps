@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T03:18:57-07:00 — kilo-tester: KMech (Interactive UI Audit & Combat Telemetry Repairs)**
+  - Status: PASS ✅ (0 errors, web 180.5 KB, native 38.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.15%, input 16.13%, HEAD Δ 0.13%, 0 fail, 0 warn, 5.1s)).
+  - Pilot Rank & Boot Telemetry: Wired updateGarage() in showScreen('garage') and boot pipeline to ensure #garage-rank updates to getPilotRank(playerLevel), and auto-restored kmech_save on boot with VFS fallback.
+  - Combat & Win32 C Parity: Verified enemyStunned headshot mechanics in enemyTurn() cooling vents, confirmed EMP overheat burnout damage (>maxHeat), and added GetPilotRank() and enemy cooling vent parity to KMech/main.c.
+  - Handoff: Advanced `kilo-tester` to `KTrader`; rotated active agent to `kilo-usability`.
+
 - **2026-10-30T02:31:53-07:00 — kilo-graphics: KCyber (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KCyber.
   - Handoff: Advanced `kilo-graphics` to `KStellar`; rotated active agent to `kilo-tester`.
