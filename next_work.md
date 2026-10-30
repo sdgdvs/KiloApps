@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KSteno
   kilo_usability: KSteno
-  kilo_qa: KGraph
+  kilo_qa: KRadio
   kilo_expander: KAnomaly
   kilo_review: KHex
 virtual_web_target: kweb://scallion
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KCosmic
-  timestamp: '2026-10-29T21:22:25-07:00'
+  agent: kilo-qa
+  app: KGraph
+  timestamp: '2026-10-29T21:40:17-07:00'
 last_planner_run: '2026-10-29T17:30:03Z'
 ---
 
@@ -167,11 +167,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Orbit & navigation viewport ergonomics, touch/keyboard flight controls, HiDPI radar canvas scaling, and compact HUD. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KGraph`
+- **Active Target**: `KRadio`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
 | `KRadio` | `KiloOS/public/apps/kradio.html`, `KRadio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, station presets, audio stream buffer, visualizer, dual Win32 C parity, and promote to Mature table. |
 | `KMail` | `KiloOS/public/apps/kmail.html`, `KMail/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mailbox folder navigation, draft composition, dual Win32 C parity, and promote to Mature table. |
 | `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, media playlist management, playback controls, dual Win32 C parity, and promote to Mature table. |
@@ -179,6 +178,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, client connection telemetry, broadcast console, dual Win32 C parity, and promote to Mature table. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, waveform audio editor, spectrum visualizer, filter pipeline, dual Win32 C parity, and promote to Mature table. |
+| `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KAnomaly`
@@ -284,6 +284,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T21:40:17-07:00 — kilo-qa: KGraph (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KGraph across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KRadio`; rotated active agent to `kilo-expander`.
+
 - **2026-10-29T21:22:25-07:00 — kilo-usability: KCosmic (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KCosmic across web and native targets.
@@ -304,9 +309,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented Cabled Magazine late-90s cyber-journalism destination with Y2K Readiness Audit, Dot-Com IPO Simulator, Jargon Watch generator & Hype Matrix.
   - Integrated KiloOS VFS export (/home/downloads/), KNet routing for kweb://cabled with deep-links, webring #025, and discrete audio earcons.
   - Handoff: Advanced `kilo-creator` to `kweb://scallion`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-29T19:21:01-07:00 — kilo-expander: KGo (Phase VI KiloOS VFS/IPC Mesh & Win32 C SGF Import)**
-  - Status: PASS ✅ (0 errors, web 177.0 KB, native 194.0 KB < 999 KB; startup, Vite & security_lint PASS).
-  - Wired KiloVFS and IPC mesh into kgo.html with origin checks, 60s timeouts, standalone fallbacks, FILE_OPEN/VFS_OPEN auto-load, and Open SGF in KPad.
-  - Implemented SGF match file import parity with full coordinate, handicap, and capture parsing in KGo/main.c.
-  - Handoff: Advanced `kilo-expander` to `KAnomaly`; rotated active agent to `kilo-review`.

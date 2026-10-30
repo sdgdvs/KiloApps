@@ -191,13 +191,23 @@ static RootPoint roots[64];
 static int root_count = 0;
 
 // Win32 Control Handles & State
+typedef struct {
+    double x;
+    double y;
+} DataPoint;
+
+#define MAX_DATASET 256
+static DataPoint g_dataset[MAX_DATASET];
+static int g_datasetCount = 0;
+static BOOL g_showDataset = TRUE;
+
 static HWND g_hWnd = NULL;
 static HWND hInputs[MAX_FUNCS];
 static HWND hChecks[MAX_FUNCS];
 static HWND hLabels[MAX_FUNCS];
 static HWND hClrBtn[MAX_FUNCS];
 static HWND hPlotBtn, hZoomIn, hZoomOut, hResetBtn, hRootsBtn, hPresetBtn, hHelpBtn, hModeBtn, hSaveBtn, hCopyBtn, hStatus;
-static HWND hIntegralBtn, hTangentBtn, hSonifyBtn, hExportCsvBtn, hQuickSaveBtn, hQuickLoadBtn;
+static HWND hIntegralBtn, hTangentBtn, hSonifyBtn, hExportCsvBtn, hImportCsvBtn, hQuickSaveBtn, hQuickLoadBtn;
 static HFONT hFontSmall, hFontBold;
 static HBRUSH hTopBgBrush = NULL;
 static HBRUSH hEditBgBrush = NULL;
@@ -365,7 +375,75 @@ typedef struct {
     int show_tangent;
     char expr[MAX_FUNCS][128];
     int enabled[MAX_FUNCS];
+    int dataset_count;
+    double dataset_x[MAX_DATASET];
+    double dataset_y[MAX_DATASET];
+    int show_dataset;
 } KGraphSaveData;
+
+static void LoadCSVData(HWND hwnd) {
+    char filename[MAX_PATH] = "KGraph_points.csv";
+    OPENFILENAMEA ofn;
+    memset(&ofn, 0, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFilter = "CSV / Data Files (*.csv;*.txt)\0*.csv;*.txt\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = filename;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+
+    if (!GetOpenFileNameA(&ofn)) {
+        if (GetFileAttributesA("KGraph_points.csv") != INVALID_FILE_ATTRIBUTES) {
+            strcpy(filename, "KGraph_points.csv");
+        } else {
+            ShowNativeStatus("CSV import cancelled.");
+            return;
+        }
+    }
+
+    FILE* f = fopen(filename, "r");
+    if (!f) {
+        ShowNativeStatus("Failed to open CSV file for import.");
+        return;
+    }
+
+    char line[256];
+    g_datasetCount = 0;
+    while (fgets(line, sizeof(line), f) && g_datasetCount < MAX_DATASET) {
+        char* p = line;
+        while (*p == ' ' || *p == '\t') p++;
+        if (*p == '\0' || *p == '#' || *p == '\r' || *p == '\n') continue;
+
+        double x = 0.0, y = 0.0;
+        char* comma = NULL;
+        for (char* s = p; *s; s++) {
+            if (*s == ',') { comma = s; break; }
+        }
+        if (comma) {
+            *comma = '\0';
+            char* end1 = NULL;
+            char* end2 = NULL;
+            x = strtod(p, &end1);
+            y = strtod(comma + 1, &end2);
+            if (end1 != p && end2 != (comma + 1)) {
+                g_dataset[g_datasetCount].x = x;
+                g_dataset[g_datasetCount].y = y;
+                g_datasetCount++;
+            }
+        }
+    }
+    fclose(f);
+
+    if (g_datasetCount > 0) {
+        g_showDataset = TRUE;
+        char msg[128];
+        snprintf(msg, sizeof(msg), "Imported %d dataset points from %s! [O]", g_datasetCount, filename);
+        ShowNativeStatus(msg);
+        if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
+    } else {
+        ShowNativeStatus("CSV import: No valid x,y numeric points found.");
+    }
+}
 
 static BOOL HasSeenTutorial(void) {
     DWORD attr = GetFileAttributesA("kgraph_tutorial.dat");
@@ -407,6 +485,12 @@ static BOOL QuickSaveState(HWND hwnd) {
         data.expr[i][127] = '\0';
         data.enabled[i] = funcs[i].enabled;
     }
+    data.dataset_count = g_datasetCount;
+    data.show_dataset = g_showDataset ? 1 : 0;
+    for (int i = 0; i < g_datasetCount && i < MAX_DATASET; i++) {
+        data.dataset_x[i] = g_dataset[i].x;
+        data.dataset_y[i] = g_dataset[i].y;
+    }
 
     HANDLE hFile = CreateFileA("kgraph_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -429,7 +513,7 @@ static BOOL QuickLoadState(HWND hwnd) {
         DWORD bytesRead = 0;
         BOOL ok = ReadFile(hFile, &data, sizeof(data), &bytesRead, NULL);
         CloseHandle(hFile);
-        if (ok && bytesRead == sizeof(data) && data.magic[0] == 'K' && data.magic[1] == 'G' && data.magic[2] == 'R' && data.magic[3] == 'P') {
+        if (ok && bytesRead >= 820 && data.magic[0] == 'K' && data.magic[1] == 'G' && data.magic[2] == 'R' && data.magic[3] == 'P') {
             if (data.mode >= 0 && data.mode <= 2) {
                 g_mode = (PlotMode)data.mode;
             }
@@ -446,6 +530,17 @@ static BOOL QuickLoadState(HWND hwnd) {
                 strncpy(funcs[i].expr, data.expr[i], 127);
                 funcs[i].expr[127] = '\0';
                 funcs[i].enabled = data.enabled[i];
+            }
+
+            if (bytesRead >= sizeof(KGraphSaveData)) {
+                g_datasetCount = data.dataset_count;
+                if (g_datasetCount < 0) g_datasetCount = 0;
+                if (g_datasetCount > MAX_DATASET) g_datasetCount = MAX_DATASET;
+                g_showDataset = data.show_dataset;
+                for (int i = 0; i < g_datasetCount; i++) {
+                    g_dataset[i].x = data.dataset_x[i];
+                    g_dataset[i].y = data.dataset_y[i];
+                }
             }
 
             if (hModeBtn) {
@@ -503,6 +598,7 @@ static void ShowHelpDialog(HWND hwnd) {
         "• Quickload [F9] : Restore graph session & expressions from disk\n"
         "• Save BMP [S] / Ctrl+S : Save graph snapshot to KGraph_snapshot.bmp\n"
         "• Export CSV [E] : Save sampled coordinates to KGraph_points.csv\n"
+        "• Import CSV [O] : Load x,y dataset into scatter plot\n"
         "• Copy [C] / Ctrl+C : Copy sampled points to Windows clipboard\n"
         "• Clr Buttons : Quick 1-click expression clear\n"
         "• F1 or H : Open this Help guide",
@@ -530,6 +626,14 @@ static LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
         } else if (wParam == VK_F9) {
             HWND hParent = GetParent(hwnd);
             if (hParent) QuickLoadState(hParent);
+            return 0;
+        } else if ((wParam == 'O' || wParam == 'o') && (GetKeyState(VK_CONTROL) & 0x8000)) {
+            HWND hParent = GetParent(hwnd);
+            if (hParent) SendMessageA(hParent, WM_COMMAND, 1017, 0);
+            return 0;
+        } else if ((wParam == 'E' || wParam == 'e') && (GetKeyState(VK_CONTROL) & 0x8000)) {
+            HWND hParent = GetParent(hwnd);
+            if (hParent) SendMessageA(hParent, WM_COMMAND, 1014, 0);
             return 0;
         }
     }
@@ -757,11 +861,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hPresetBtn   = CreateWindowA("BUTTON", "Presets [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(674, g_dpi, 96), MulDiv(35, g_dpi, 96), MulDiv(96, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1006, NULL, NULL);
 
             // Right side toolbar row 3 (Y=64)
-            hSaveBtn      = CreateWindowA("BUTTON", "Save BMP [S]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(344, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(88, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1009, NULL, NULL);
-            hExportCsvBtn = CreateWindowA("BUTTON", "CSV [E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(436, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(68, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1014, NULL, NULL);
-            hCopyBtn      = CreateWindowA("BUTTON", "Copy [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(508, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(68, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1010, NULL, NULL);
-            hQuickSaveBtn = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(580, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(88, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1015, NULL, NULL);
-            hQuickLoadBtn = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(672, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(88, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1016, NULL, NULL);
+            hSaveBtn      = CreateWindowA("BUTTON", "Save BMP [S]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(344, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(76, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1009, NULL, NULL);
+            hExportCsvBtn = CreateWindowA("BUTTON", "CSV Out [E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(422, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(70, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1014, NULL, NULL);
+            hImportCsvBtn = CreateWindowA("BUTTON", "CSV In [O]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(494, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(68, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1017, NULL, NULL);
+            hCopyBtn      = CreateWindowA("BUTTON", "Copy [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(564, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(58, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1010, NULL, NULL);
+            hQuickSaveBtn = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(624, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(68, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1015, NULL, NULL);
+            hQuickLoadBtn = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(694, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(68, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1016, NULL, NULL);
 
             // Status bar at row 4 (Y=94)
             hStatus = CreateWindowA("STATIC", "Welcome to KGraph Studio! Drag or use Arrow keys to pan, scroll wheel or +/- to zoom, Space to Sonify, F1 for Help.", WS_CHILD | WS_VISIBLE | SS_LEFT, MulDiv(10, g_dpi, 96), MulDiv(94, g_dpi, 96), MulDiv(760, g_dpi, 96), MulDiv(22, g_dpi, 96), hwnd, NULL, NULL, NULL);
@@ -780,6 +885,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hHelpBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hSaveBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hExportCsvBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hImportCsvBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hCopyBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hQuickSaveBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hQuickLoadBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
@@ -952,6 +1058,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SonifyActiveCurve(hwnd);
             } else if (id == 1014) { // Export CSV
                 SaveCSVData(hwnd);
+            } else if (id == 1017) { // Import CSV
+                LoadCSVData(hwnd);
             } else if (id == 1015) { // QuickSave [F5]
                 QuickSaveState(hwnd);
             } else if (id == 1016) { // QuickLoad [F9]
@@ -1026,6 +1134,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessageA(hwnd, WM_COMMAND, 1013, 0);
             } else if (wParam == 'E' || wParam == 'e') {
                 SendMessageA(hwnd, WM_COMMAND, 1014, 0);
+            } else if (wParam == 'O' || wParam == 'o') {
+                SendMessageA(hwnd, WM_COMMAND, 1017, 0);
             } else if (wParam == VK_ADD || wParam == VK_OEM_PLUS || wParam == VK_PRIOR) {
                 SendMessageA(hwnd, WM_COMMAND, 1002, 0);
             } else if (wParam == VK_SUBTRACT || wParam == VK_OEM_MINUS || wParam == VK_NEXT) {
@@ -1374,6 +1484,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                         DeleteObject(plotPen);
                     }
+                }
+
+                // Dataset Scatter Points & Connecting Line
+                if (g_showDataset && g_datasetCount > 0) {
+                    HPEN dataPen = CreatePen(PS_DOT, 1, RGB(245, 158, 11));
+                    SelectObject(memDC, dataPen);
+                    HBRUSH dataBrush = CreateSolidBrush(RGB(251, 191, 36));
+                    SelectObject(memDC, dataBrush);
+                    int first = 1;
+                    for (int i = 0; i < g_datasetCount; i++) {
+                        int px = rect.left + (int)((g_dataset[i].x - (view_cx - view_scale)) / (2.0 * view_scale) * w);
+                        int py = canvasTop + (int)(h - (g_dataset[i].y - (view_cy - view_scale)) / (2.0 * view_scale) * h);
+                        if (px >= rect.left - 20 && px <= rect.right + 20 && py >= canvasTop - 20 && py <= rect.bottom + 20) {
+                            POINT pts[4] = {
+                                {px, py - 4},
+                                {px + 4, py},
+                                {px, py + 4},
+                                {px - 4, py}
+                            };
+                            Polygon(memDC, pts, 4);
+                            if (first) { MoveToEx(memDC, px, py, NULL); first = 0; }
+                            else { LineTo(memDC, px, py); }
+                        } else {
+                            first = 1;
+                        }
+                    }
+                    DeleteObject(dataPen);
+                    DeleteObject(dataBrush);
                 }
 
                 // Hover Crosshairs

@@ -994,6 +994,10 @@
           <button class="dropdown-item" onclick="exportCSV(); closeExportMenu();" title="Export CSV Data Points (E)">
             <span>📊 Export CSV</span> <span class="shortcut-badge">E</span>
           </button>
+          <label class="dropdown-item" style="cursor:pointer; margin:0;" title="Import CSV Dataset Points (Ctrl+I or I)">
+            <span>📥 Import CSV Points</span> <span class="shortcut-badge">I</span>
+            <input type="file" id="csvFileInput" accept=".csv,.txt,.tsv,.dat" style="display:none" onchange="importCSVFile(event); closeExportMenu();">
+          </label>
           <div class="dropdown-divider"></div>
           <button class="dropdown-item" onclick="exportJSON(); closeExportMenu();" title="Save Configuration to JSON">
             <span>💾 Save Config (JSON)</span>
@@ -1039,6 +1043,7 @@
         <div class="tab-btn" onclick="switchTab('tabCalc')">[2] Calculus</div>
         <div class="tab-btn" onclick="switchTab('tabRoots')">[3] Analysis</div>
         <div class="tab-btn" onclick="switchTab('tabPresets')">[4] Presets</div>
+        <div class="tab-btn" onclick="switchTab('tabDataset')">[5] Dataset</div>
       </div>
       
       <!-- Functions Tab -->
@@ -1184,6 +1189,46 @@
         <div class="section-title">Preset Library</div>
         <div id="presetGrid"></div>
       </div>
+
+      <!-- Dataset Tab -->
+      <div class="tab-content" id="tabDataset">
+        <div class="section-title">Dataset &amp; Scatter Plot</div>
+        <div class="control-group">
+          <div style="display:flex; gap:6px; margin-bottom:8px;">
+            <label class="btn btn-primary" style="flex:1; text-align:center; cursor:pointer; margin:0; justify-content:center;" title="Import CSV / TXT Data Points">
+              📂 CSV File
+              <input type="file" id="csvFileInputTab" accept=".csv,.txt,.tsv,.dat" style="display:none" onchange="importCSVFile(event)">
+            </label>
+            <button class="btn" style="flex:1; justify-content:center;" onclick="exportDatasetCSV()" title="Export current dataset to CSV">📊 Export</button>
+            <button class="btn" style="flex:0.7; justify-content:center;" onclick="clearDataset()" title="Clear all dataset points">✕ Clear</button>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; font-size:12px; margin-bottom:8px;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="checkbox" id="chkShowDataset" checked onchange="toggleShowDataset(this.checked)">
+              <span>Show Scatter Points (Diamonds)</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="checkbox" id="chkConnectDataset" checked onchange="toggleConnectLines(this.checked)">
+              <span>Connect Points with Line</span>
+            </label>
+          </div>
+          <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;" id="datasetCountLabel">
+            Points Loaded: 0
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:12px;">Sample Datasets</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:12px;">
+          <button class="preset-chip" style="width:100%;" onclick="loadDatasetPreset('sine_noise')">🌊 Sine + Noise</button>
+          <button class="preset-chip" style="width:100%;" onclick="loadDatasetPreset('damped')">📉 Damped Wave</button>
+          <button class="preset-chip" style="width:100%;" onclick="loadDatasetPreset('logistic')">📈 Logistic Growth</button>
+          <button class="preset-chip" style="width:100%;" onclick="loadDatasetPreset('parabola')">🎯 Parabola Fit</button>
+        </div>
+
+        <div class="section-title">Manual Data Entry</div>
+        <textarea id="datasetManualInput" placeholder="Enter x, y pairs (one per line):&#10;-4.0, 1.2&#10;-2.0, 2.5&#10;0.0, 0.8&#10;2.0, -1.5&#10;4.0, 3.2" style="width:100%; height:80px; background:#0f172a; color:#f8fafc; border:1px solid #334155; border-radius:4px; font-family:monospace; font-size:11px; padding:6px; resize:vertical; margin-bottom:6px;"></textarea>
+        <button class="btn" style="width:100%; justify-content:center;" onclick="loadManualDataset()">📥 Load Text Points</button>
+      </div>
       
     </div>
     
@@ -1254,13 +1299,14 @@
             <tr><td><span class="kbd-key">Ctrl+B</span> / <span class="kbd-key">\</span> / <span class="kbd-key">[</span></td><td>Toggle collapsible function sidebar (maximize canvas)</td></tr>
             <tr><td><span class="kbd-key">Enter</span></td><td>Plot / re-evaluate expressions immediately</td></tr>
             <tr><td><span class="kbd-key">←</span> <span class="kbd-key">→</span> <span class="kbd-key">↑</span> <span class="kbd-key">↓</span></td><td>Smoothly pan viewport across canvas</td></tr>
-            <tr><td><span class="kbd-key">1</span> / <span class="kbd-key">2</span> / <span class="kbd-key">3</span> / <span class="kbd-key">4</span></td><td>Switch tabs: Functions, Calculus, Analysis, Presets</td></tr>
+            <tr><td><span class="kbd-key">1</span> - <span class="kbd-key">5</span></td><td>Switch tabs: Functions, Calculus, Analysis, Presets, Dataset</td></tr>
             <tr><td><span class="kbd-key">C</span> / <span class="kbd-key">P</span> / <span class="kbd-key">M</span></td><td>Switch plot modes: [C]artesian, [P]olar, Para[M]etric</td></tr>
             <tr><td><span class="kbd-key">+</span> / <span class="kbd-key">-</span> (or <span class="kbd-key">PgUp</span>/<span class="kbd-key">PgDn</span>)</td><td>Zoom viewport in / out</td></tr>
             <tr><td><span class="kbd-key">0</span> / <span class="kbd-key">R</span> / <span class="kbd-key">Home</span></td><td>Reset viewport to origin and default [-10, 10] range</td></tr>
             <tr><td><span class="kbd-key">Ctrl+S</span></td><td>Export high-res PNG graph snapshot</td></tr>
             <tr><td><span class="kbd-key">Ctrl+E</span></td><td>Export scalable vector graphics (SVG)</td></tr>
             <tr><td><span class="kbd-key">E</span></td><td>Export sampled curve points to CSV</td></tr>
+            <tr><td><span class="kbd-key">I</span> / <span class="kbd-key">Ctrl+I</span></td><td>Import CSV dataset points into scatter plot</td></tr>
             <tr><td><span class="kbd-key">Ctrl+O</span> / <span class="kbd-key">O</span></td><td>Load saved graph configuration JSON</td></tr>
             <tr><td><span class="kbd-key">Esc</span></td><td>Unfocus input fields or close any active modal dialog</td></tr>
           </tbody>
@@ -1351,10 +1397,176 @@
     // DOM Elements
     const canvas = document.getElementById('graphCanvas');
     const ctx = canvas.getContext('2d');
+
+    // --- Storage Safety Helpers (Pass 5 QA & quality-standards.md) ---
+    /**
+     * @param {string} key
+     * @param {*} fallback
+     * @returns {*}
+     */
+    function safeGet(key, fallback) {
+      try {
+        const v = localStorage.getItem(key);
+        if (v === null || v === undefined) return fallback;
+        try { return JSON.parse(v); } catch(e) { return v; }
+      } catch(e) { return fallback; }
+    }
+
+    /**
+     * @param {string} key
+     * @param {*} value
+     */
+    function safeSet(key, value) {
+      try {
+        const str = typeof value === 'string' ? value : JSON.stringify(value);
+        localStorage.setItem(key, str);
+      } catch(e) {
+        console.warn('[KGraph] Storage write failed:', e);
+      }
+    }
+
+    // --- Dataset State & Data Point Management ---
+    /** @typedef {{ x: number, y: number }} DatasetPoint */
+    /** @type {DatasetPoint[]} */
+    let datasetPoints = [];
+    let showDataset = true;
+    let connectDatasetLines = true;
+
+    function updateDatasetUI() {
+      const lbl = document.getElementById('datasetCountLabel');
+      if (lbl) lbl.textContent = `Points Loaded: ${datasetPoints.length}`;
+      const chkShow = document.getElementById('chkShowDataset');
+      if (chkShow) chkShow.checked = showDataset;
+      const chkConn = document.getElementById('chkConnectDataset');
+      if (chkConn) chkConn.checked = connectDatasetLines;
+    }
+
+    function toggleShowDataset(checked) {
+      showDataset = checked;
+      drawGraph();
+    }
+
+    function toggleConnectLines(checked) {
+      connectDatasetLines = checked;
+      drawGraph();
+    }
+
+    function clearDataset() {
+      datasetPoints = [];
+      updateDatasetUI();
+      drawGraph();
+      showToast('🗑️ Dataset points cleared.');
+    }
+
+    function importCSVText(text) {
+      if (!text) return 0;
+      const lines = text.split(/\r?\n/);
+      const points = [];
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        if (!line || line.startsWith('#')) continue;
+        const parts = line.split(/[,\t;]/).map(s => s.trim());
+        if (parts.length >= 2) {
+          const x = parseFloat(parts[0]);
+          const y = parseFloat(parts[1]);
+          if (!isNaN(x) && !isNaN(y) && isFinite(x) && isFinite(y)) {
+            points.push({ x, y });
+          }
+        }
+      }
+      if (points.length > 0) {
+        points.sort((a, b) => a.x - b.x);
+        datasetPoints = points;
+        showDataset = true;
+        updateDatasetUI();
+        drawGraph();
+        playSfx('load');
+        showToast(`📊 Imported ${points.length} dataset points!`);
+        return points.length;
+      } else {
+        showToast('⚠️ No valid numeric (x, y) points found in CSV.');
+        return 0;
+      }
+    }
+
+    function importCSVFile(event) {
+      const file = event.target?.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        importCSVText(e.target.result);
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function loadManualDataset() {
+      const el = document.getElementById('datasetManualInput');
+      if (!el || !el.value.trim()) {
+        showToast('⚠️ Please enter x, y points in the text box.');
+        return;
+      }
+      importCSVText(el.value);
+    }
+
+    function exportDatasetCSV() {
+      if (datasetPoints.length === 0) {
+        showToast('⚠️ No dataset points loaded to export.');
+        return;
+      }
+      let csv = 'x,y\n';
+      datasetPoints.forEach(pt => {
+        csv += `${pt.x.toFixed(5)},${pt.y.toFixed(5)}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'KGraph_dataset.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      playSfx('export');
+      showToast(`📊 Exported ${datasetPoints.length} points to CSV!`);
+    }
+
+    function loadDatasetPreset(type) {
+      const points = [];
+      if (type === 'sine_noise') {
+        for (let x = -8; x <= 8; x += 0.5) {
+          const noise = (Math.sin(x * 12.3) + Math.cos(x * 7.1)) * 0.35;
+          const y = 3.5 * Math.sin(0.75 * x) + noise;
+          points.push({ x: parseFloat(x.toFixed(2)), y: parseFloat(y.toFixed(3)) });
+        }
+      } else if (type === 'damped') {
+        for (let x = 0; x <= 10; x += 0.25) {
+          const y = 4.5 * Math.exp(-0.25 * x) * Math.cos(2.0 * x);
+          points.push({ x: parseFloat(x.toFixed(2)), y: parseFloat(y.toFixed(3)) });
+        }
+      } else if (type === 'logistic') {
+        for (let x = -6; x <= 6; x += 0.4) {
+          const y = 6.0 / (1.0 + Math.exp(-1.2 * x)) - 3.0;
+          points.push({ x: parseFloat(x.toFixed(2)), y: parseFloat(y.toFixed(3)) });
+        }
+      } else if (type === 'parabola') {
+        for (let x = -5; x <= 5; x += 0.4) {
+          const noise = (Math.sin(x * 5.4)) * 0.4;
+          const y = 0.25 * x * x - 3.0 + noise;
+          points.push({ x: parseFloat(x.toFixed(2)), y: parseFloat(y.toFixed(3)) });
+        }
+      }
+      datasetPoints = points;
+      showDataset = true;
+      updateDatasetUI();
+      drawGraph();
+      playSfx('load');
+      showToast(`📊 Loaded preset: ${type} (${points.length} points)`);
+    }
     
     // --- Universal Yamaha YM2612 2-Operator FM Synthesizer & SNES SPC700 Delay Audio Architecture ---
     let audioCtx = null;
-    let audioMuted = localStorage.getItem('kgraph_muted') === 'true';
+    let audioMuted = safeGet('kgraph_muted', 'false') === 'true' || safeGet('kgraph_muted', false) === true;
     let isSonifying = false;
     let sonifyProgress = 0;
     let sonifyX = 0;
@@ -1385,7 +1597,7 @@
 
     function toggleMute() {
       audioMuted = !audioMuted;
-      localStorage.setItem('kgraph_muted', audioMuted ? 'true' : 'false');
+      safeSet('kgraph_muted', audioMuted ? 'true' : 'false');
       updateMuteUI();
       showToast(audioMuted ? '🔇 Sound muted' : '🔊 Sound enabled (Yamaha YM2612 FM / SPC700 Delay)');
     }
@@ -2154,11 +2366,14 @@
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       
-      const btnMap = { tabFuncs: 0, tabCalc: 1, tabRoots: 2, tabPresets: 3 };
-      document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
-      document.getElementById(tabId).classList.add('active');
+      const btnMap = { tabFuncs: 0, tabCalc: 1, tabRoots: 2, tabPresets: 3, tabDataset: 4 };
+      if (btnMap[tabId] !== undefined) {
+        document.querySelectorAll('.tab-btn')[btnMap[tabId]]?.classList.add('active');
+      }
+      document.getElementById(tabId)?.classList.add('active');
       
       if (tabId === 'tabCalc') updateCalcResults();
+      if (tabId === 'tabDataset') updateDatasetUI();
     }
 
     // --- State Updaters ---
@@ -2917,6 +3132,51 @@
         });
       }
       
+      // --- Render Dataset Scatter Points & Polyline ---
+      if (showDataset && datasetPoints.length > 0) {
+        if (connectDatasetLines && datasetPoints.length > 1) {
+          ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+          ctx.lineWidth = 1.6;
+          ctx.setLineDash([3, 2]);
+          ctx.beginPath();
+          let dFirst = true;
+          datasetPoints.forEach(pt => {
+            const px = toScreenX(pt.x, width);
+            const py = toScreenY(pt.y, height);
+            if (dFirst) { ctx.moveTo(px, py); dFirst = false; }
+            else { ctx.lineTo(px, py); }
+          });
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        datasetPoints.forEach(pt => {
+          const px = toScreenX(pt.x, width);
+          const py = toScreenY(pt.y, height);
+          if (px >= -20 && px <= width + 20 && py >= -20 && py <= height + 20) {
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.moveTo(px, py - 5);
+            ctx.lineTo(px + 5, py);
+            ctx.lineTo(px, py + 5);
+            ctx.lineTo(px - 5, py);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+
+            // Hover tooltip if mouse near
+            const dist = Math.hypot(px - toScreenX(currentHoverX, width), py - toScreenY(currentHoverY, height));
+            if (dist < 10) {
+              ctx.fillStyle = '#fef08a';
+              ctx.font = 'bold 11px monospace';
+              ctx.fillText(`(${pt.x.toFixed(2)}, ${pt.y.toFixed(2)})`, px + 8, py - 4);
+            }
+          }
+        });
+      }
+      
       // Hover Tracing Crosshair & Readout
       const hoverPx = toScreenX(currentHoverX, width);
       const hoverPy = toScreenY(currentHoverY, height);
@@ -3344,6 +3604,28 @@
         });
       }
       
+      // Dataset Scatter Points & Polyline in SVG
+      if (showDataset && datasetPoints.length > 0) {
+        if (connectDatasetLines && datasetPoints.length > 1) {
+          let dPath = '';
+          let dFirst = true;
+          datasetPoints.forEach(pt => {
+            const px = ((pt.x - minX) / (2 * view_scale)) * width;
+            const py = height - ((pt.y - minY) / view_h) * height;
+            if (dFirst) { dPath += `M ${px.toFixed(1)} ${py.toFixed(1)} `; dFirst = false; }
+            else { dPath += `L ${px.toFixed(1)} ${py.toFixed(1)} `; }
+          });
+          if (dPath) {
+            svg += `  <path d="${dPath}" fill="none" stroke="#f59e0b" stroke-width="1.6" stroke-dasharray="3,2" />\n`;
+          }
+        }
+        datasetPoints.forEach(pt => {
+          const px = ((pt.x - minX) / (2 * view_scale)) * width;
+          const py = height - ((pt.y - minY) / view_h) * height;
+          svg += `  <polygon points="${px.toFixed(1)},${(py - 5).toFixed(1)} ${(px + 5).toFixed(1)},${py.toFixed(1)} ${px.toFixed(1)},${(py + 5).toFixed(1)} ${(px - 5).toFixed(1)},${py.toFixed(1)}" fill="#fbbf24" stroke="#0f172a" stroke-width="1" />\n`;
+        });
+      }
+      
       svg += `</svg>\n`;
 
       const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
@@ -3460,6 +3742,9 @@
         showTangent: showTangent,
         showCoordsHUD: isReadoutVisible,
         audioMuted: audioMuted,
+        datasetPoints: datasetPoints,
+        showDataset: showDataset,
+        connectDatasetLines: connectDatasetLines,
         savedAt: Date.now()
       };
       const json = JSON.stringify(config, null, 2);
@@ -3550,9 +3835,15 @@
           }
           if (config.audioMuted !== undefined) {
             audioMuted = !!config.audioMuted;
-            localStorage.setItem('kgraph_muted', audioMuted ? 'true' : 'false');
+            safeSet('kgraph_muted', audioMuted ? 'true' : 'false');
             updateMuteUI();
           }
+          if (config.datasetPoints && Array.isArray(config.datasetPoints)) {
+            datasetPoints = config.datasetPoints;
+          }
+          if (config.showDataset !== undefined) showDataset = !!config.showDataset;
+          if (config.connectDatasetLines !== undefined) connectDatasetLines = !!config.connectDatasetLines;
+          updateDatasetUI();
           
           setPlotMode(currentMode);
           updateCalcResults();
@@ -3599,11 +3890,14 @@
           showTangent: showTangent,
           showCoordsHUD: isReadoutVisible,
           audioMuted: audioMuted,
+          datasetPoints: datasetPoints,
+          showDataset: showDataset,
+          connectDatasetLines: connectDatasetLines,
           savedAt: Date.now()
         };
-        localStorage.setItem('kgraph_quicksave', JSON.stringify(config));
-        localStorage.setItem('kgraph_tutorialSeen', 'true');
-        localStorage.setItem('kgraph_firstRunSeen', 'true');
+        safeSet('kgraph_quicksave', config);
+        safeSet('kgraph_tutorialSeen', 'true');
+        safeSet('kgraph_firstRunSeen', 'true');
         playSfx('save');
         showToast('💾 State QuickSaved to storage! [F5]');
         return true;
@@ -3615,12 +3909,11 @@
 
     function quickLoad() {
       try {
-        const raw = localStorage.getItem('kgraph_quicksave');
-        if (!raw) {
+        const config = safeGet('kgraph_quicksave', null);
+        if (!config) {
           showToast('⚠️ No quicksave found! Press F5 to save state.');
           return false;
         }
-        const config = JSON.parse(raw);
         if (config.cartesianFuncs && Array.isArray(config.cartesianFuncs)) cartesianFuncs = config.cartesianFuncs;
         if (config.polarFuncs && Array.isArray(config.polarFuncs)) polarFuncs = config.polarFuncs;
         if (config.parametricCurves && Array.isArray(config.parametricCurves)) parametricCurves = config.parametricCurves;
@@ -3689,12 +3982,18 @@
         }
         if (config.audioMuted !== undefined) {
           audioMuted = !!config.audioMuted;
-          localStorage.setItem('kgraph_muted', audioMuted ? 'true' : 'false');
+          safeSet('kgraph_muted', audioMuted ? 'true' : 'false');
           updateMuteUI();
         }
+        if (config.datasetPoints && Array.isArray(config.datasetPoints)) {
+          datasetPoints = config.datasetPoints;
+        }
+        if (config.showDataset !== undefined) showDataset = !!config.showDataset;
+        if (config.connectDatasetLines !== undefined) connectDatasetLines = !!config.connectDatasetLines;
+        updateDatasetUI();
 
-        localStorage.setItem('kgraph_tutorialSeen', 'true');
-        localStorage.setItem('kgraph_firstRunSeen', 'true');
+        safeSet('kgraph_tutorialSeen', 'true');
+        safeSet('kgraph_firstRunSeen', 'true');
 
         setPlotMode(currentMode);
         updateCalcResults();
@@ -3766,17 +4065,17 @@
     }
 
     // First-run tutorial onboarding check (Pass 5 State & Tutorial Integrity)
-    const hasSeenTutorial = localStorage.getItem('kgraph_tutorialSeen') || localStorage.getItem('kgraph_firstRunSeen');
-    const hasSavedState = !!localStorage.getItem('kgraph_quicksave');
+    const hasSeenTutorial = safeGet('kgraph_tutorialSeen', false) || safeGet('kgraph_firstRunSeen', false);
+    const hasSavedState = !!safeGet('kgraph_quicksave', null);
     if (!hasSeenTutorial && !hasSavedState) {
       setTimeout(() => {
         showToast("👋 Welcome to KGraph Studio!\nPress F1 or H for Help & Shortcuts.\nDrag or use arrow keys to pan, scroll wheel or +/- to zoom.\nF5 to Quicksave | F9 to Quickload.", 6500);
-        localStorage.setItem('kgraph_tutorialSeen', 'true');
-        localStorage.setItem('kgraph_firstRunSeen', 'true');
+        safeSet('kgraph_tutorialSeen', 'true');
+        safeSet('kgraph_firstRunSeen', 'true');
       }, 400);
     } else {
-      localStorage.setItem('kgraph_tutorialSeen', 'true');
-      localStorage.setItem('kgraph_firstRunSeen', 'true');
+      safeSet('kgraph_tutorialSeen', 'true');
+      safeSet('kgraph_firstRunSeen', 'true');
     }
 
     // Close dropdown on outside click
@@ -3889,6 +4188,12 @@
           exportSVG();
           return;
         }
+        if (e.key.toLowerCase() === 'i') {
+          e.preventDefault();
+          const csvIn = document.getElementById('csvFileInput') || document.getElementById('csvFileInputTab');
+          if (csvIn) csvIn.click();
+          return;
+        }
         if (e.key.toLowerCase() === 'o') {
           e.preventDefault();
           const fileIn = document.getElementById('jsonInput');
@@ -3970,6 +4275,9 @@
       } else if (e.key === '4') {
         switchTab('tabPresets');
         showToast('Tab: [4] Presets');
+      } else if (e.key === '5') {
+        switchTab('tabDataset');
+        showToast('Tab: [5] Dataset');
       } else if (e.key.toLowerCase() === 'c') {
         setPlotMode('cartesian');
       } else if (e.key.toLowerCase() === 'p') {
@@ -3978,6 +4286,9 @@
         setPlotMode('parametric');
       } else if (e.key.toLowerCase() === 'e') {
         exportCSV();
+      } else if (e.key.toLowerCase() === 'i') {
+        const csvIn = document.getElementById('csvFileInput') || document.getElementById('csvFileInputTab');
+        if (csvIn) csvIn.click();
       } else if (e.key.toLowerCase() === 'o') {
         const fileIn = document.getElementById('jsonInput');
         if (fileIn) fileIn.click();

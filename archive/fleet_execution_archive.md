@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T19:21:01-07:00 — kilo-expander: KGo (Phase VI KiloOS VFS/IPC Mesh & Win32 C SGF Import)**
+  - Status: PASS ✅ (0 errors, web 177.0 KB, native 194.0 KB < 999 KB; startup, Vite & security_lint PASS).
+  - Wired KiloVFS and IPC mesh into kgo.html with origin checks, 60s timeouts, standalone fallbacks, FILE_OPEN/VFS_OPEN auto-load, and Open SGF in KPad.
+  - Implemented SGF match file import parity with full coordinate, handicap, and capture parsing in KGo/main.c.
+  - Handoff: Advanced `kilo-expander` to `KAnomaly`; rotated active agent to `kilo-review`.
+
 - **2026-10-29T18:34:42-07:00 — kilo-qa: KRead (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 162.2 KB, native 31.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kread_tutorialSeen flag, and Escape modal/dialog dismissals.
