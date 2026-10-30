@@ -4116,6 +4116,8 @@
 
                 logMsg(`Combat telemetry resumed: ${getPilotRank(playerLevel)} (Battle #${battleCount})`);
 
+                updateGarage();
+
                 updateBattle();
 
                 showScreen('battle');
@@ -6558,6 +6560,8 @@
 
             } else if (id === 'garage') {
 
+                updateGarage();
+
                 setBgmMode('hangar');
 
                 if (soundEnabled && !bgmRunning) startBgm('hangar');
@@ -7758,7 +7762,7 @@
 
         const seenTutorial = safeGetStorage('kmech_tutorialSeen');
 
-        const hasSavedGame = safeGetStorage('kmech_save');
+        const hasSavedGame = safeGetStorage('kmech_save') || safeGetStorage('kmech_vfs_/home/saves/kmech_telemetry.json');
 
         let restoredOnBoot = false;
 
@@ -7786,9 +7790,9 @@
 
 
 
-        if (!restoredOnBoot) {
+        updateGarage();
 
-            updateGarage();
+        if (!restoredOnBoot) {
 
             if (!seenTutorial) {
 
@@ -7812,7 +7816,8 @@
 
             if (e.ctrlKey || e.altKey || e.metaKey) return;
 
-            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+            const isInputActive = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT');
+            if (isInputActive || (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT'))) {
 
                 if (e.key === 'Escape') {
 

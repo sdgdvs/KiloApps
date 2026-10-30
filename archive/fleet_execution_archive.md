@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T00:40:16-07:00 — kilo-usability: KSteno (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KSteno across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KAnomaly`; rotated active agent to `kilo-qa`.
+
 - **2026-10-30T00:21:55-07:00 — kilo-tester: KSteno (Interactive UI & Steganography Engine Audit)**
   - Status: PASS ✅ (0 errors, web 167.9 KB, native 19.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.77%, HEAD Δ 0.62%, 0 fail, 0 warn, 7.7s)).
   - UI & Modal Audit: Splash, tutorial, field manual, and settings modals dismiss cleanly via click, Escape, and backdrop with focus trap.

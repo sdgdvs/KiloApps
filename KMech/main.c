@@ -304,6 +304,15 @@ char battleLogs[15][128];
 int logCount = 0;
 char garageInfo[128] = "Welcome, Pilot. Customize and deploy.";
 
+const char* GetPilotRank(int lvl) {
+    if (lvl >= 6) return "Mech Commander";
+    if (lvl == 5) return "Strike Commander";
+    if (lvl == 4) return "Ace Vanguard";
+    if (lvl == 3) return "Veteran Lancer";
+    if (lvl == 2) return "Scout Pilot";
+    return "Cadet";
+}
+
 void addLog(const char* msg) {
     if (logCount < 10) {
         lstrcpyA(battleLogs[logCount], msg);
@@ -569,8 +578,8 @@ void QuickLoadNative() {
                     gameState = STATE_GARAGE;
                     playerStats.heat = 0;
                     isDefending = false;
-                    lstrcpyA(garageInfo, "Pilot telemetry state restored (F9).");
-                    addLog("Pilot telemetry state restored (F9).");
+                    wsprintfA(garageInfo, "Pilot telemetry restored: %s (F9).", GetPilotRank(playerLevel));
+                    addLog(garageInfo);
                 }
             }
         }
@@ -599,6 +608,7 @@ void EnemyTurn() {
         enemyIsDefending = true;
         addLog("Enemy vents heat! (Defending)");
         AddShockwave(440.0f, 145.0f, 40.0f, RGB(255, 160, 0), 3.0f);
+        ApplyCooling();
         return;
     }
 
@@ -808,7 +818,7 @@ void ActionAttack() {
         if (playerXp >= playerLevel * 100) {
             playerXp -= playerLevel * 100;
             playerLevel++;
-            wsprintfA(buf, "LEVEL UP! Pilot is now Level %d.", playerLevel);
+            wsprintfA(buf, "LEVEL UP! Pilot promoted to Level %d (%s).", playerLevel, GetPilotRank(playerLevel));
             addLog(buf);
             Beep(500, 100); Beep(600, 100); Beep(700, 100); Beep(800, 300);
         }
@@ -1673,8 +1683,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawTextA(memDC, camBuf, -1, &camRect, DT_LEFT | DT_SINGLELINE);
 
                 char lvlBuf[128];
-                wsprintfA(lvlBuf, "PILOT LVL: %d | XP: %d/%d", playerLevel, playerXp, playerLevel * 100);
-                RECT lvlRect = {20, 58, 320, 78};
+                wsprintfA(lvlBuf, "PILOT LVL: %d (%s) | XP: %d/%d", playerLevel, GetPilotRank(playerLevel), playerXp, playerLevel * 100);
+                RECT lvlRect = {20, 58, 355, 78};
                 DrawTextA(memDC, lvlBuf, -1, &lvlRect, DT_LEFT | DT_SINGLELINE);
 
                 char buf[128];
