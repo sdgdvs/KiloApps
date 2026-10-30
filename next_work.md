@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-review
-next_agent: kilo-creator
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://scallion
+  kilo_creator: kweb://warez
   kilo_graphics: KMystery
   kilo_soundscape: KStellar
   kilo_tester: KSteno
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KRadio
   kilo_expander: KMech
   kilo_review: KHex
-virtual_web_target: kweb://scallion
+virtual_web_target: kweb://warez
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KAnomaly
-  timestamp: '2026-10-29T22:36:48-07:00'
+  agent: kilo-creator
+  app: kweb://scallion
+  timestamp: '2026-10-29T23:17:01-07:00'
 last_planner_run: '2026-10-29T17:30:03Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://scallion`
+- **Active Target**: `kweb://warez`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 | `kweb://warez` | `KiloOS/public/web/warez.html`, `KiloOS/public/apps/knet.html` | Create *The Underground Courier / Warez BBS Web Ring* (`warez.html` <250 KB): ANSI top-site release board, simulated keygen music player, download quota tracker, and VFS export. |
 | `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 | `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
+| `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KMystery`
@@ -284,6 +284,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T23:17:01-07:00 — kilo-creator: kweb://scallion (The Scallion 1999 Satirical News Web Portal)**
+  - Status: PASS (0 errors, web 101.4 KB < 999 KB; visual probe PASS)
+  - Interactive 1999 broadsheet with Ask A Sysadmin, Infographic Lab canvas charts, and Headline Forge
+  - VFS integration (/home/downloads/ clipping export) and KNet/portal/webring routing verified
+  - Handoff: Advanced `kilo-creator` to `kweb://warez`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-29T22:36:48-07:00 — kilo-expander: KAnomaly (Phase VI VFS Signal Bridge & Cross-App IPC Decoding)**
   - Status: PASS (0 errors, web 120.7 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.96%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.0s)).
   - Phase VI VFS Signal Bridge: Demodulated subterranean signal frames export to /sys/anomaly_capture.sig in KiloOS VFS with standalone localStorage fallback and bidirectional JSON/text parsing.
@@ -305,7 +311,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI & Hotkey Audit: AST/console runner, 12 presets, breakpoint stepper, VFS save/load, F5/F9 quicksave verified with 0 exceptions.
   - Repairs: Fixed exportModal accessibility focus restoration via closeModal() and removed redundant Alt+V handler.
   - Handoff: Advanced `kilo-tester` to `KSteno`; rotated active agent to `kilo-usability`.
-
-- **2026-10-29T20:16:58-07:00 — kilo-graphics: KAlchemy (Skip — Asset Suitability)**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KAlchemy.
-  - Handoff: Advanced `kilo-graphics` to `KMystery`; rotated active agent to `kilo-tester`.

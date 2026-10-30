@@ -1694,32 +1694,50 @@ const ARTICLES = {
 
 let activeModalId = 'win2000';
 
+/**
+ * Opens article modal by ID with fallback and defensive element guards
+ * @param {string} articleId - Identifier of article in ARTICLES dictionary
+ */
 function openArticleModal(articleId) {
   playRetroSound(650, 0.05);
   const data = ARTICLES[articleId] || ARTICLES.win2000;
   activeModalId = articleId;
 
-  document.getElementById('modalKicker').textContent = data.kicker;
-  document.getElementById('modalTitle').textContent = data.title;
-  document.getElementById('modalMeta').textContent = data.meta;
-  document.getElementById('modalBody').innerHTML = data.body;
+  const kickerEl = document.getElementById('modalKicker');
+  const titleEl = document.getElementById('modalTitle');
+  const metaEl = document.getElementById('modalMeta');
+  const bodyEl = document.getElementById('modalBody');
+
+  if (kickerEl) kickerEl.textContent = data.kicker;
+  if (titleEl) titleEl.textContent = data.title;
+  if (metaEl) metaEl.textContent = data.meta;
+  if (bodyEl) bodyEl.innerHTML = data.body;
 
   const m = document.getElementById('articleModal');
   if (m) m.classList.add('active');
 }
 
+/** Closes the active article modal */
 function closeArticleModalDirect() {
   const m = document.getElementById('articleModal');
   if (m) m.classList.remove('active');
   playRetroSound(420, 0.04);
 }
 
+/**
+ * Backdrop click handler for article modal
+ * @param {MouseEvent} e
+ */
 function closeArticleModal(e) {
-  if (e.target.id === 'articleModal') {
+  if (e && e.target && e.target.id === 'articleModal') {
     closeArticleModalDirect();
   }
 }
 
+/**
+ * Clips article to KiloOS VFS text file
+ * @param {string} id
+ */
 function saveArticleVfs(id) {
   const data = ARTICLES[id];
   if (!data) return;
@@ -1727,10 +1745,15 @@ function saveArticleVfs(id) {
   saveToKiloVfs(`/home/downloads/scallion_${id}.txt`, rawText);
 }
 
+/** Saves the currently open modal article to VFS */
 function saveCurrentModalVfs() {
   saveArticleVfs(activeModalId);
 }
 
+/**
+ * Launches an article in KPad
+ * @param {string} id
+ */
 function launchInKPad(id) {
   const data = ARTICLES[id];
   if (!data) return;
@@ -1738,18 +1761,22 @@ function launchInKPad(id) {
   launchKiloApp('kpad.html', { initialContent: rawText, title: data.title });
 }
 
+/** Launches currently viewed modal article into KPad */
 function launchModalInKPad() {
   launchInKPad(activeModalId);
 }
 
+/** Triggers system print dialog for active modal article */
 function printModalArticle() {
   window.print();
 }
 
+/** Triggers system print dialog for front page */
 function printFrontPage() {
   window.print();
 }
 
+/** Exports full front page text summary to KiloOS VFS */
 function exportFrontPageVfs() {
   const text = `THE SCALLION - AMERICA'S FINEST VIRTUAL NEWS SOURCE\nWEDNESDAY, DECEMBER 29, 1999\n\nLEAD STORY: Microsoft Announces Windows 2000 Will Be Shipped On 48,000 Floppy Disks\n\n${ARTICLES.win2000.body.replace(/<[^>]+>/g, '')}\n\n---\n(c) 1999 The Scallion Editorial Syndicate\nkweb://scallion`;
   saveToKiloVfs('/home/downloads/scallion_frontpage.txt', text);
@@ -1802,29 +1829,34 @@ let pollVotes = safeGet('scallion_poll_votes', { opt1: 642, opt2: 310, opt3: 720
 let userVoted = safeGet('scallion_user_voted', false);
 
 function renderPoll() {
+  const optContainer = document.getElementById('pollOptionsContainer');
+  const resContainer = document.getElementById('pollResultsContainer');
+  if (!optContainer || !resContainer) return;
+
   if (userVoted) {
-    document.getElementById('pollOptionsContainer').style.display = 'none';
-    document.getElementById('pollResultsContainer').style.display = 'block';
+    optContainer.style.display = 'none';
+    resContainer.style.display = 'block';
 
     const total = pollVotes.opt1 + pollVotes.opt2 + pollVotes.opt3 + pollVotes.opt4;
-    document.getElementById('pollVoteCount').textContent = total.toLocaleString();
+    const voteCountEl = document.getElementById('pollVoteCount');
+    if (voteCountEl) voteCountEl.textContent = total.toLocaleString();
 
     const p1 = Math.round((pollVotes.opt1 / total) * 100);
     const p2 = Math.round((pollVotes.opt2 / total) * 100);
     const p3 = Math.round((pollVotes.opt3 / total) * 100);
     const p4 = Math.round((pollVotes.opt4 / total) * 100);
 
-    document.getElementById('bar1').style.width = p1 + '%';
-    document.getElementById('pct1').textContent = p1 + '%';
-    document.getElementById('bar2').style.width = p2 + '%';
-    document.getElementById('pct2').textContent = p2 + '%';
-    document.getElementById('bar3').style.width = p3 + '%';
-    document.getElementById('pct3').textContent = p3 + '%';
-    document.getElementById('bar4').style.width = p4 + '%';
-    document.getElementById('pct4').textContent = p4 + '%';
+    const b1 = document.getElementById('bar1'); if (b1) b1.style.width = p1 + '%';
+    const c1 = document.getElementById('pct1'); if (c1) c1.textContent = p1 + '%';
+    const b2 = document.getElementById('bar2'); if (b2) b2.style.width = p2 + '%';
+    const c2 = document.getElementById('pct2'); if (c2) c2.textContent = p2 + '%';
+    const b3 = document.getElementById('bar3'); if (b3) b3.style.width = p3 + '%';
+    const c3 = document.getElementById('pct3'); if (c3) c3.textContent = p3 + '%';
+    const b4 = document.getElementById('bar4'); if (b4) b4.style.width = p4 + '%';
+    const c4 = document.getElementById('pct4'); if (c4) c4.textContent = p4 + '%';
   } else {
-    document.getElementById('pollOptionsContainer').style.display = 'flex';
-    document.getElementById('pollResultsContainer').style.display = 'none';
+    optContainer.style.display = 'flex';
+    resContainer.style.display = 'none';
   }
 }
 
@@ -2119,15 +2151,25 @@ function openBunkerInKPad() {
 }
 
 function updateBunkerSim() {
-  const corn = parseInt(document.getElementById('cornSlider').value);
-  const bolts = parseInt(document.getElementById('boltSlider').value);
-  const jolt = parseInt(document.getElementById('joltSlider').value);
-  const batt = parseInt(document.getElementById('battSlider').value);
+  const cornInput = document.getElementById('cornSlider');
+  const boltInput = document.getElementById('boltSlider');
+  const joltInput = document.getElementById('joltSlider');
+  const battInput = document.getElementById('battSlider');
+  if (!cornInput || !boltInput || !joltInput || !battInput) return;
 
-  document.getElementById('cornVal').textContent = corn;
-  document.getElementById('boltVal').textContent = bolts;
-  document.getElementById('joltVal').textContent = jolt;
-  document.getElementById('battVal').textContent = batt;
+  const corn = parseInt(cornInput.value, 10);
+  const bolts = parseInt(boltInput.value, 10);
+  const jolt = parseInt(joltInput.value, 10);
+  const batt = parseInt(battInput.value, 10);
+
+  const cornValEl = document.getElementById('cornVal');
+  const boltValEl = document.getElementById('boltVal');
+  const joltValEl = document.getElementById('joltVal');
+  const battValEl = document.getElementById('battVal');
+  if (cornValEl) cornValEl.textContent = corn;
+  if (boltValEl) boltValEl.textContent = bolts;
+  if (joltValEl) joltValEl.textContent = jolt;
+  if (battValEl) battValEl.textContent = batt;
 
   const canvas = document.getElementById('bunkerCanvas');
   if (!canvas) return;
@@ -2213,15 +2255,21 @@ const FORGE_DATA = {
 };
 
 function buildCustomHeadline() {
-  const subj = document.getElementById('forgeSubject').value;
-  const act = document.getElementById('forgeAction').value;
-  const target = document.getElementById('forgeTarget').value;
+  const subjEl = document.getElementById('forgeSubject');
+  const actEl = document.getElementById('forgeAction');
+  const targetEl = document.getElementById('forgeTarget');
+  if (!subjEl || !actEl || !targetEl) return;
+  const subj = subjEl.value;
+  const act = actEl.value;
+  const target = targetEl.value;
 
   const headline = `${subj} ${act} ${target}`;
-  document.getElementById('forgePreviewHeadline').textContent = headline;
+  const prevHeadline = document.getElementById('forgePreviewHeadline');
+  if (prevHeadline) prevHeadline.textContent = headline;
 
   const body = `${subj} generated widespread bewilderment today after taking sudden executive action to ${act.toLowerCase()} ${target}. Observers in the vicinity described the scene as 'classic late-nineties hypermedia behavior.'`;
-  document.getElementById('forgePreviewBody').textContent = body;
+  const prevBody = document.getElementById('forgePreviewBody');
+  if (prevBody) prevBody.textContent = body;
   playRetroSound(700, 0.04);
 }
 
@@ -2333,6 +2381,8 @@ window.addEventListener('DOMContentLoaded', () => {
   renderUserLetters();
   updatePanicDisplay();
   buildCustomHeadline();
+  renderModemChart();
+  updateBunkerSim();
   const btn = document.getElementById('btnAudioToggle');
   if (btn) btn.textContent = soundEnabled ? '🔊 SFX [M]' : '🔇 SFX [M]';
 });
