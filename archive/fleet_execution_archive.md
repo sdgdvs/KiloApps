@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T11:40:12-07:00 — kilo-qa: KChat (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KChat across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KChatServer`; rotated active agent to `kilo-expander`.
+
 - **2026-10-30T11:21:44-07:00 — kilo-usability: KScript (Split Editor/Output Resizing, Line-Number Gutter Alignment & Shortcut Usability)**
   - Status: PASS ✅ (0 errors, web 171.2 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.44%, HEAD Δ 7.58%, 0 fail, 0 warn, 5.9s)).
   - Splitter Resizing: Silky smooth pointer column dragging, double-click/Enter/Home ratio reset, keyboard navigation (ArrowLeft/Right), and dual Win32 C drag & WM_PAINT splitter parity.
