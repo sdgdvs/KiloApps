@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://cabled
-  kilo_graphics: KStarship
+  kilo_graphics: KAlchemy
   kilo_soundscape: KStellar
   kilo_tester: KGo
   kilo_usability: KGo
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://trapster
-  timestamp: '2026-10-29T16:34:35-07:00'
+  agent: kilo-graphics
+  app: KStarship
+  timestamp: '2026-10-29T17:22:19-07:00'
 last_planner_run: '2026-10-29T17:30:03Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KStarship`
+- **Active Target**: `KAlchemy`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
@@ -115,6 +114,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Replace code-generated 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with Imagen 3 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies. |
+| `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -284,6 +284,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T17:22:19-07:00 — kilo-graphics: KStarship (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-graphics updates for KStarship across web and native targets.
+  - Handoff: Advanced `kilo-graphics` to `KAlchemy`; rotated active agent to `kilo-tester`.
+
 - **2026-10-29T16:34:35-07:00 — kilo-creator: kweb://trapster (Trapster P2P Chiptune & Tracker Exchange v1.0b Deep Expansion)**
   - Status: PASS ✅ (0 errors, web 124.8 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Enhanced live YM2612/SPC700 chiptune previewer with user-initiated playback activation and pattern resume.
@@ -307,9 +312,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Display: Added Display Modes (Standard, CRT Scanlines, Amber CRT, Green Phosphor, High Contrast) with F5/F9 persistence & VFS sync.
   - Dual Parity: Created KSettings Win32 C native app (main.c, build.bat, icon, app.rc) matching Web control panel with zero errors (17.0 KB).
   - Mature Quarantine & Handoff: Promoted `KSettings` to Mature archive; advanced `kilo-qa` to `KRead`; next agent `kilo-expander`.
-
-- **2026-10-29T14:37:27-07:00 — kilo-usability: KColosseum (UI/UX, Responsive Layout, HiDPI Canvas & Keyboard Usability Polish)**
-  - Status: PASS ✅ (0 errors, web 309.8 KB, native 39.5 KB < 999 KB; visual PASS 0 fail, 0 warn).
-  - Layout & Scoping: Scoped card styling to #marketList > li and #ownedList > li, 0px vertical overflow at 800x563, and independent scrolling.
-  - HiDPI & Modals: devicePixelRatio buffer scaling on arena & portrait canvases, in-DOM dossier modal (0 prompt() calls), and dual C/Web Sort Prowess/HP.
-  - Mature Quarantine & Handoff: Promoted `KColosseum` to Mature archive; advanced `kilo-usability` to `KCosmic`; next agent `kilo-qa`.

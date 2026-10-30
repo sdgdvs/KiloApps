@@ -1553,13 +1553,16 @@
       hCtx.ellipse(0, 0, 46, 27, 0, 0, Math.PI * 2);
       hCtx.stroke();
 
-      // Shield Harmonic Phase Emitter Nodes
+      // Shield Harmonic Phase Emitter Nodes (Static cardinal node brackets, zero rotating glint dots)
+      const emitterAngles = [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
       for (let i = 0; i < 4; i++) {
-        const ea = (i * Math.PI / 2) + (time * 0.0008);
+        const ea = emitterAngles[i];
         const ex = Math.cos(ea) * 46;
         const ey = Math.sin(ea) * 27;
         hCtx.fillStyle = hp > 30 ? '#00e5ff' : '#ff4444';
         hCtx.fillRect(ex - 1.5, ey - 1.5, 3, 3);
+        hCtx.strokeStyle = hp > 30 ? 'rgba(0, 229, 255, 0.45)' : 'rgba(255, 68, 68, 0.45)';
+        hCtx.strokeRect(ex - 2.5, ey - 2.5, 5, 5);
       }
 
       // 2. Main Titanium Composite Hull Plates & Interior Bulkheads
@@ -1634,15 +1637,33 @@
       hCtx.lineWidth = 1.1;
       hCtx.stroke();
 
-      // Flowing Power Conduit Packets (Reactor to Engines & Weapons)
-      const busPhase = (time * 0.03) % 24;
-      hCtx.fillStyle = '#ffffff';
-      // Toward engines
-      hCtx.fillRect(-4 - (busPhase * 0.9), -6, 1.8, 1.8);
-      hCtx.fillRect(-4 - (busPhase * 0.9), 5, 1.8, 1.8);
-      // Toward weapons
-      hCtx.fillRect(-4 + (busPhase * 0.4), -12, 1.8, 1.8);
-      hCtx.fillRect(-4 + (busPhase * 0.4), 11, 1.8, 1.8);
+      // Static Illuminated High-Density Power Conduits (Zero moving glint packets)
+      hCtx.strokeStyle = fuelP > 0.25 ? 'rgba(0, 255, 255, 0.75)' : 'rgba(255, 140, 0, 0.75)';
+      hCtx.lineWidth = 1;
+      hCtx.beginPath();
+      // Toward impulse engines
+      hCtx.moveTo(-4, -4); hCtx.lineTo(-24, -12);
+      hCtx.moveTo(-4, 4); hCtx.lineTo(-24, 12);
+      // Toward weapons hardpoints
+      hCtx.moveTo(0, -4); hCtx.lineTo(6, -14);
+      hCtx.moveTo(0, 4); hCtx.lineTo(6, 14);
+      // Toward bow deflector
+      hCtx.moveTo(2, 0); hCtx.lineTo(28, 0);
+      hCtx.stroke();
+
+      // Navigational Deflector Array at Prow
+      hCtx.strokeStyle = hp > 30 ? '#00f0ff' : '#ff6644';
+      hCtx.lineWidth = 1.2;
+      hCtx.beginPath();
+      hCtx.arc(38, 0, 4, -Math.PI / 3, Math.PI / 3);
+      hCtx.stroke();
+
+      // Sublight Impulse Drive Manifold
+      hCtx.fillStyle = '#0284c7';
+      hCtx.fillRect(-27, -4, 5, 8);
+      hCtx.strokeStyle = '#38bdf8';
+      hCtx.lineWidth = 0.8;
+      hCtx.strokeRect(-27, -4, 5, 8);
 
       // 6. Port & Starboard Weapons Hardpoints
       const wLevel = (state.upgrades && state.upgrades.weapons) || 1;
@@ -1727,6 +1748,13 @@
       hCtx.strokeRect(hbx, ty + 2, 38, 5);
       hCtx.fillStyle = hullColor;
       hCtx.fillRect(hbx, ty + 2, Math.round(38 * (hp / 100)), 5);
+      ty += 12;
+
+      // Life Support Environmental Telemetry
+      const lifeCol = hp > 30 ? '#34d399' : (hp > 15 ? '#ffaa00' : '#ff3344');
+      const lifeTxt = hp > 30 ? 'NOMINAL' : (hp > 15 ? 'DEGRADED' : 'CRITICAL');
+      hCtx.fillStyle = lifeCol;
+      hCtx.fillText(`LIFE [${lifeTxt}]`, tx, ty);
     }
 
     function drawTacticalEnemyCruiser(c, x, y, angle, type) {
@@ -1995,8 +2023,8 @@
         c.lineWidth = 1.5;
         c.beginPath();
         for (let i = 0; i < 6; i++) {
-          let sa = (i / 6) * Math.PI * 2 + Date.now() * 0.001;
-          let sr = 24 + Math.sin(Date.now() * 0.005 + i) * 2;
+          let sa = (i / 6) * Math.PI * 2;
+          let sr = 24;
           let px = Math.cos(sa) * sr;
           let py = Math.sin(sa) * sr;
           if (i === 0) c.moveTo(px, py);

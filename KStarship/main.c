@@ -721,8 +721,9 @@ void DrawPlayerShipSprite(HDC memDC, int cx, int cy, float angle, int moving, in
         HPEN oPen = SelectObject(memDC, sPen);
         SelectObject(memDC, GetStockObject(NULL_BRUSH));
         POINT sPts[6];
+        // Static Shield Aura Perimeter (Zero rotating glint dots)
         for (int i = 0; i < 6; i++) {
-            float a = (i / 6.0f) * (float)M_PI * 2.0f + (GetTickCount() * 0.002f);
+            float a = (i / 6.0f) * (float)M_PI * 2.0f;
             sPts[i].x = cx + (int)(cos(a) * 22.0f);
             sPts[i].y = cy + (int)(sin(a) * 22.0f);
         }
@@ -1416,17 +1417,28 @@ void Draw(HDC hdc, RECT* rect) {
     Ellipse(memDC, (int)(mapWidth*0.8) - 220, (int)(height*0.2) - 220, (int)(mapWidth*0.8) + 220, (int)(height*0.2) + 220);
     DeleteObject(sunBrush);
 
-    // Deep Space Nebulae
+    // Deep Space Volumetric Multi-Tier Parallax Nebulae
     SelectObject(memDC, GetStockObject(NULL_PEN));
     for (int i = 0; i < NUM_NEBULAS; i++) {
-        int screenX = centerX + (int)((nebulas[i].x - ship_x) * 0.2f);
-        int screenY = centerY + (int)((nebulas[i].y - ship_y) * 0.2f);
+        float pFactor = (i % 2 == 0) ? 0.06f : 0.16f;
+        int screenX = centerX + (int)((nebulas[i].x - ship_x) * pFactor);
+        int screenY = centerY + (int)((nebulas[i].y - ship_y) * pFactor);
         int r = nebulas[i].radius;
         if (screenX >= -r && screenX <= mapWidth + r && screenY >= -r && screenY <= height + r) {
+            // Outer diffuse gas envelope
             HBRUSH nBrush = CreateSolidBrush(nebulas[i].color);
             SelectObject(memDC, nBrush);
             Ellipse(memDC, screenX - r, screenY - r, screenX + r, screenY + r);
             DeleteObject(nBrush);
+
+            // Inner dense ionization core
+            int cr = (int)(r * 0.55f);
+            COLORREF c = nebulas[i].color;
+            COLORREF coreCol = RGB(min(255, GetRValue(c) + 26), min(255, GetGValue(c) + 26), min(255, GetBValue(c) + 36));
+            HBRUSH cBrush = CreateSolidBrush(coreCol);
+            SelectObject(memDC, cBrush);
+            Ellipse(memDC, screenX - cr, screenY - cr, screenX + cr, screenY + cr);
+            DeleteObject(cBrush);
         }
     }
 
@@ -1750,6 +1762,63 @@ void Draw(HDC hdc, RECT* rect) {
         DrawTextA(memDC, buf, -1, &textRect, DT_WORDBREAK);
     }
     
+    // Starship Hull Subsystem Blueprint Display (Sidebar Schematic)
+    wsprintfA(buf, "SUBSYSTEM SCHEMATIC");
+    SetTextColor(memDC, RGB(0, 255, 255));
+    TextOutA(memDC, mapWidth + 12, height - 195, buf, lstrlenA(buf));
+    HPEN subLinePen = CreatePen(PS_SOLID, 1, RGB(0, 85, 85));
+    SelectObject(memDC, subLinePen);
+    MoveToEx(memDC, mapWidth + 12, height - 180, NULL);
+    LineTo(memDC, width - 12, height - 180);
+    DeleteObject(subLinePen);
+
+    // Mini Hull Blueprint Drawing
+    int scx = mapWidth + 48;
+    int scy = height - 125;
+    COLORREF hullColor = res_hull > 65 ? RGB(0, 255, 204) : (res_hull > 30 ? RGB(255, 170, 0) : RGB(255, 50, 60));
+    HPEN bPen = CreatePen(PS_SOLID, 1, hullColor);
+    HBRUSH bBrush = CreateSolidBrush(RGB(10, 26, 48));
+    SelectObject(memDC, bPen);
+    SelectObject(memDC, bBrush);
+    POINT bpPts[8] = {
+        {scx, scy - 20}, {scx + 12, scy - 4}, {scx + 22, scy + 12}, {scx + 16, scy + 18},
+        {scx, scy + 14}, {scx - 16, scy + 18}, {scx - 22, scy + 12}, {scx - 12, scy - 4}
+    };
+    Polygon(memDC, bpPts, 8);
+    DeleteObject(bPen);
+    DeleteObject(bBrush);
+
+    // Keel and Bulkheads
+    HPEN kPen = CreatePen(PS_SOLID, 1, RGB(0, 200, 255));
+    SelectObject(memDC, kPen);
+    MoveToEx(memDC, scx, scy - 18, NULL); LineTo(memDC, scx, scy + 12);
+    MoveToEx(memDC, scx - 12, scy + 2, NULL); LineTo(memDC, scx + 12, scy + 2);
+    DeleteObject(kPen);
+
+    // Core Reactor Node
+    HBRUSH rBrush = CreateSolidBrush(RGB(0, 255, 255));
+    SelectObject(memDC, rBrush);
+    SelectObject(memDC, GetStockObject(NULL_PEN));
+    Ellipse(memDC, scx - 3, scy - 4, scx + 3, scy + 2);
+    DeleteObject(rBrush);
+
+    // Subsystem Status Telemetry Labels
+    SetTextColor(memDC, res_hull > 30 ? RGB(0, 229, 255) : RGB(255, 68, 68));
+    wsprintfA(buf, "SHLD: %s", upg_shields >= 3 ? "HEAVY" : "TACTICAL");
+    TextOutA(memDC, mapWidth + 82, height - 150, buf, lstrlenA(buf));
+
+    SetTextColor(memDC, RGB(255, 170, 50));
+    wsprintfA(buf, "WEAP: TIER %d", upg_weapons);
+    TextOutA(memDC, mapWidth + 82, height - 134, buf, lstrlenA(buf));
+
+    SetTextColor(memDC, RGB(52, 211, 153));
+    wsprintfA(buf, "ENGN: TIER %d", upg_engines);
+    TextOutA(memDC, mapWidth + 82, height - 118, buf, lstrlenA(buf));
+
+    SetTextColor(memDC, res_hull > 30 ? RGB(52, 211, 153) : RGB(255, 50, 60));
+    wsprintfA(buf, "LIFE: %s", res_hull > 30 ? "NOMINAL" : "CRITICAL");
+    TextOutA(memDC, mapWidth + 82, height - 102, buf, lstrlenA(buf));
+
     wsprintfA(buf, "[C] Crew  [H] Help");
     SetTextColor(memDC, RGB(255, 255, 0));
     TextOutA(memDC, mapWidth + 12, height - 52, buf, lstrlenA(buf));

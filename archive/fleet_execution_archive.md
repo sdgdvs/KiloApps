@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T14:37:27-07:00 — kilo-usability: KColosseum (UI/UX, Responsive Layout, HiDPI Canvas & Keyboard Usability Polish)**
+  - Status: PASS ✅ (0 errors, web 309.8 KB, native 39.5 KB < 999 KB; visual PASS 0 fail, 0 warn).
+  - Layout & Scoping: Scoped card styling to #marketList > li and #ownedList > li, 0px vertical overflow at 800x563, and independent scrolling.
+  - HiDPI & Modals: devicePixelRatio buffer scaling on arena & portrait canvases, in-DOM dossier modal (0 prompt() calls), and dual C/Web Sort Prowess/HP.
+  - Mature Quarantine & Handoff: Promoted `KColosseum` to Mature archive; advanced `kilo-usability` to `KCosmic`; next agent `kilo-qa`.
+
 - **2026-10-29T14:21:13-07:00 — kilo-usability: KColosseum (UI/UX, Responsive Layout & HiDPI Usability Polish)**
   - Status: PASS (0 errors, web 307.7 KB, native 39.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.1%, HEAD delta 65.91%, 0 fail, 0 warn, 5.3s)).
   - Layout & HiDPI: Scoped li card styles to #marketList/#ownedList (fixing tutorial clipping); locked body to 100vh flex column at 800x563 with compact header & removed duplicate banner; added devicePixelRatio HiDPI scaling to #arenaCanvas and .portrait-canvas.
