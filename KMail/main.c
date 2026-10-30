@@ -30,18 +30,19 @@
 #define ID_BTN_EXPORT_MD 118
 #define ID_BTN_QUICKSAVE 119
 #define ID_BTN_QUICKLOAD 120
+#define ID_BTN_OUTBOX 121
 
 #define KMAIL_QUICKSAVE_MAGIC 0x4B4D4149 // 'KMAI'
-#define KMAIL_QUICKSAVE_VERSION 1
+#define KMAIL_QUICKSAVE_VERSION 2
 
 HWND hFolders, hEmails, hTitle, hBody, hBtnCompose, hBtnDelete, hBtnEmptyTrash, hSearchBox;
-HWND hTagFilter, hBtnImport, hBtnExport, hTab, hBtnTag, hBtnDecrypt, hBtnStar, hBtnExportEml, hBtnExportMd, hBtnReply, hBtnSaveDraft, hBtnHelp, hBtnQuickSave, hBtnQuickLoad, hHelpLabel;
+HWND hTagFilter, hBtnImport, hBtnExport, hTab, hBtnTag, hBtnDecrypt, hBtnStar, hBtnExportEml, hBtnExportMd, hBtnReply, hBtnSaveDraft, hBtnHelp, hBtnQuickSave, hBtnQuickLoad, hHelpLabel, hBtnOutbox;
 
 WNDPROC oldSearchEditProc = NULL;
 
 typedef struct {
     int id;
-    int folder; // 0=inbox, 1=starred (view), 2=sent, 3=drafts, 4=trash, 99=deleted
+    int folder; // 0=inbox, 1=starred (view), 2=sent, 3=drafts, 4=outbox, 5=trash, 99=deleted
     char subject[128];
     char sender[128];
     char body[2048];
@@ -76,7 +77,7 @@ TabData tabs[20];
 int num_tabs = 0;
 int currentTabIdx = -1;
 
-int currentFolder = 0; // 0=inbox, 1=starred, 2=sent, 3=drafts, 4=trash
+int currentFolder = 0; // 0=inbox, 1=starred, 2=sent, 3=drafts, 4=outbox, 5=trash
 char searchQuery[128] = "";
 char tagQuery[64] = "";
 
@@ -129,16 +130,19 @@ void ExportMbox();
 void ImportJson(HWND hwnd);
 void QuickSaveNative(HWND hwnd);
 void QuickLoadNative(HWND hwnd);
+void QueueCurrentOutbox(HWND hwnd);
+void DispatchCurrentEmail(HWND hwnd);
 
 void RefreshEmailList() {
     SendMessage(hEmails, LB_RESETCONTENT, 0, 0);
     for(int i = 0; i < num_emails; i++) {
         int matchesFolder = 0;
         if (currentFolder == 0 && emails[i].folder == 0) matchesFolder = 1; // Inbox
-        else if (currentFolder == 1 && emails[i].starred && emails[i].folder != 4 && emails[i].folder != 99) matchesFolder = 1; // Starred
+        else if (currentFolder == 1 && emails[i].starred && emails[i].folder != 5 && emails[i].folder != 99) matchesFolder = 1; // Starred
         else if (currentFolder == 2 && emails[i].folder == 2) matchesFolder = 1; // Sent
         else if (currentFolder == 3 && emails[i].folder == 3) matchesFolder = 1; // Drafts
-        else if (currentFolder == 4 && emails[i].folder == 4) matchesFolder = 1; // Trash
+        else if (currentFolder == 4 && emails[i].folder == 4) matchesFolder = 1; // Outbox
+        else if (currentFolder == 5 && emails[i].folder == 5) matchesFolder = 1; // Trash
 
         if(matchesFolder) {
             if (searchQuery[0] == '\0' || 
@@ -277,7 +281,7 @@ void CloseCurrentTab() {
 }
 
 void SelectFolder(int fIdx) {
-    if (fIdx >= 0 && fIdx <= 4) {
+    if (fIdx >= 0 && fIdx <= 5) {
         currentFolder = fIdx;
         SendMessage(hFolders, LB_SETCURSEL, fIdx, 0);
         RefreshEmailList();
@@ -288,7 +292,7 @@ void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
         "=== KMail Help & Keyboard Shortcuts ===\n\n"
         "KEYBOARD SHORTCUTS:\n"
-        " [1] - [5]     : Switch Folders (1:Inbox, 2:Starred, 3:Sent, 4:Drafts, 5:Trash)\n"
+        " [1] - [6]     : Switch Folders (1:Inbox, 2:Starred, 3:Sent, 4:Drafts, 5:Outbox, 6:Trash)\n"
         " [C]           : Compose New Message\n"
         " [R]           : Reply to Active Email (in Read mode)\n"
         " [S]           : Star / Unstar Selected Email\n"
@@ -368,7 +372,7 @@ void QuickLoadNative(HWND hwnd) {
         MessageBoxA(hwnd, "Invalid or corrupt kmail_quicksave.dat header.", "Quickload Error", MB_OK | MB_ICONERROR);
         return;
     }
-    if (!ReadFile(hFile, &version, sizeof(unsigned int), &readBytes, NULL) || version != KMAIL_QUICKSAVE_VERSION) {
+    if (!ReadFile(hFile, &version, sizeof(unsigned int), &readBytes, NULL) || (version != 1 && version != KMAIL_QUICKSAVE_VERSION)) {
         CloseHandle(hFile);
         MessageBoxA(hwnd, "Incompatible quicksave version.", "Quickload Error", MB_OK | MB_ICONERROR);
         return;
@@ -399,7 +403,7 @@ void QuickLoadNative(HWND hwnd) {
     // Rebuild UI state
     SetWindowTextA(hSearchBox, searchQuery);
     SetWindowTextA(hTagFilter, tagQuery);
-    if (currentFolder >= 0 && currentFolder <= 4) {
+    if (currentFolder >= 0 && currentFolder <= 5) {
         SendMessage(hFolders, LB_SETCURSEL, currentFolder, 0);
     }
     RefreshEmailList();
@@ -478,9 +482,17 @@ void RenderPane() {
             SetWindowTextA(hBtnDecrypt, "Decrypt [D]");
             EnableWindow(hBtnDecrypt, TRUE);
             MoveWindow(hBtnDecrypt, 740, 122, 90, 26, TRUE);
+            ShowWindow(hBtnOutbox, SW_HIDE);
+        } else if (em->folder == 4) { // Outbox
+            SetWindowTextA(hBody, em->body);
+            ShowWindow(hBtnDecrypt, SW_HIDE);
+            ShowWindow(hBtnOutbox, SW_SHOW);
+            SetWindowTextA(hBtnOutbox, "Dispatch [D]");
+            MoveWindow(hBtnOutbox, 740, 122, 90, 26, TRUE);
         } else {
             SetWindowTextA(hBody, em->body);
             ShowWindow(hBtnDecrypt, SW_HIDE);
+            ShowWindow(hBtnOutbox, SW_HIDE);
         }
         
     } else {
@@ -501,11 +513,15 @@ void RenderPane() {
         ShowWindow(hBtnExportEml, SW_HIDE);
         ShowWindow(hBtnExportMd, SW_HIDE);
         ShowWindow(hBtnSaveDraft, SW_SHOW);
-        MoveWindow(hBtnSaveDraft, 340, 122, 135, 26, TRUE);
+        MoveWindow(hBtnSaveDraft, 340, 122, 125, 26, TRUE);
+
+        ShowWindow(hBtnOutbox, SW_SHOW);
+        SetWindowTextA(hBtnOutbox, "Queue Outbox");
+        MoveWindow(hBtnOutbox, 470, 122, 115, 26, TRUE);
 
         ShowWindow(hBtnDecrypt, SW_SHOW); // Reuse as 'Send'
         SetWindowTextA(hBtnDecrypt, "Send [Ctrl+↵]");
-        MoveWindow(hBtnDecrypt, 485, 122, 135, 26, TRUE);
+        MoveWindow(hBtnDecrypt, 590, 122, 115, 26, TRUE);
         EnableWindow(hBtnDecrypt, TRUE);
     }
 }
@@ -614,6 +630,7 @@ void ExportCsv() {
         else if (emails[i].folder == 1) lstrcpyA(folderName, "Starred");
         else if (emails[i].folder == 2) lstrcpyA(folderName, "Sent");
         else if (emails[i].folder == 3) lstrcpyA(folderName, "Drafts");
+        else if (emails[i].folder == 4) lstrcpyA(folderName, "Outbox");
         else lstrcpyA(folderName, "Trash");
         char row[512];
         wsprintfA(row, "%d,\"%s\",\"%s\",\"%s\",%s,%s,%s,\"%s\",%d\r\n",
@@ -638,7 +655,7 @@ void ExportMbox() {
         char header[1024];
         wsprintfA(header, "From %s Sat Sep 26 12:00:00 1999\r\nFrom: %s\r\nTo: me@kilo.os\r\nSubject: %s\r\nX-Folder: %s\r\nX-Tags: %s\r\nX-Starred: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n",
             emails[i].sender, emails[i].sender, emails[i].subject,
-            emails[i].folder == 0 ? "Inbox" : (emails[i].folder == 2 ? "Sent" : (emails[i].folder == 3 ? "Drafts" : "Trash")),
+            emails[i].folder == 0 ? "Inbox" : (emails[i].folder == 2 ? "Sent" : (emails[i].folder == 3 ? "Drafts" : (emails[i].folder == 4 ? "Outbox" : "Trash"))),
             emails[i].tags, emails[i].starred ? "yes" : "no");
         WriteFile(hFile, header, lstrlenA(header), &written, NULL);
         WriteFile(hFile, emails[i].body, lstrlenA(emails[i].body), &written, NULL);
@@ -775,7 +792,8 @@ void ImportJson(HWND hwnd) {
             while (*fF == ' ' || *fF == '"') fF++;
             if (*fF == '2' || my_strnicmp(fF, "sent", 4) == 0) em.folder = 2;
             else if (*fF == '3' || my_strnicmp(fF, "draft", 5) == 0) em.folder = 3;
-            else if (*fF == '4' || my_strnicmp(fF, "trash", 5) == 0) em.folder = 4;
+            else if (*fF == '4' || my_strnicmp(fF, "outbox", 6) == 0) em.folder = 4;
+            else if (*fF == '5' || my_strnicmp(fF, "trash", 5) == 0) em.folder = 5;
             else em.folder = 0;
         }
 
@@ -846,6 +864,62 @@ void ImportJson(HWND hwnd) {
         MessageBoxA(hwnd, msg, "KMail Import", MB_OK);
     } else {
         MessageBoxA(hwnd, "No valid email objects found in file.", "Import Warning", MB_OK | MB_ICONWARNING);
+    }
+}
+
+
+void QueueCurrentOutbox(HWND hwnd) {
+    if(currentTabIdx != -1 && tabs[currentTabIdx].id == 0) {
+        char rawText[2048] = {0};
+        GetWindowTextA(hBody, rawText, sizeof(rawText));
+        char to[128] = {0}, sub[128] = {0}, body[2048] = {0};
+        ParseComposeFields(rawText, to, sub, body);
+        if (sub[0] == 0) lstrcpyA(sub, "New Message");
+        if (to[0] == 0) lstrcpyA(to, "recipient@kilo.os");
+
+        int did = tabs[currentTabIdx].emailId;
+        if (did > 0) {
+            for(int i=0; i<num_emails; i++) {
+                if (emails[i].id == did) {
+                    emails[i].folder = 4; // Outbox
+                    lstrcpynA(emails[i].sender, to, 128);
+                    lstrcpynA(emails[i].subject, sub, 128);
+                    lstrcpynA(emails[i].body, body, 2048);
+                    break;
+                }
+            }
+        } else {
+            if(num_emails < 200) {
+                emails[num_emails].id = nextId++;
+                emails[num_emails].folder = 4; // Outbox
+                lstrcpynA(emails[num_emails].subject, sub, 128);
+                lstrcpynA(emails[num_emails].sender, to, 128);
+                lstrcpynA(emails[num_emails].body, body, 2048);
+                emails[num_emails].unread = 0;
+                emails[num_emails].encrypted = 0;
+                emails[num_emails].starred = 0;
+                emails[num_emails].tags[0] = 0;
+                num_emails++;
+            }
+        }
+        CloseCurrentTab();
+        SelectFolder(4); // View Outbox folder
+        MessageBoxA(hwnd, "Message queued in Outbox.", "KMail Outbox", MB_OK);
+    }
+}
+
+void DispatchCurrentEmail(HWND hwnd) {
+    if (currentTabIdx != -1 && tabs[currentTabIdx].id == 1) {
+        int eid = tabs[currentTabIdx].emailId;
+        for (int i = 0; i < num_emails; i++) {
+            if (emails[i].id == eid && emails[i].folder == 4) {
+                emails[i].folder = 2; // Sent
+                MessageBoxA(hwnd, "Message dispatched from Outbox to Sent folder!", "KMail Dispatch", MB_OK);
+                RenderPane();
+                RefreshEmailList();
+                return;
+            }
+        }
     }
 }
 
@@ -942,7 +1016,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"2. Starred");
             SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"3. Sent");
             SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"4. Drafts");
-            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"5. Trash");
+            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"5. Outbox");
+            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"6. Trash");
             SendMessage(hFolders, LB_SETCURSEL, 0, 0);
 
             hBtnEmptyTrash = CreateWindowEx(0, "BUTTON", "Empty Trash", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, H - 40, 110, 30, hwnd, (HMENU)ID_BTN_EMPTY_TRASH, NULL, NULL);
@@ -979,7 +1054,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnExportEml = CreateWindowEx(0, "BUTTON", "Export .EML [E]", WS_CHILD | WS_TABSTOP, 575, 122, 80, 26, hwnd, (HMENU)ID_BTN_EXPORT_EML, NULL, NULL);
             hBtnExportMd = CreateWindowEx(0, "BUTTON", "Export .MD [M]", WS_CHILD | WS_TABSTOP, 660, 122, 75, 26, hwnd, (HMENU)ID_BTN_EXPORT_MD, NULL, NULL);
             hBtnDecrypt = CreateWindowEx(0, "BUTTON", "Decrypt [D]", WS_CHILD | WS_TABSTOP, 740, 122, 90, 26, hwnd, (HMENU)ID_BTN_DECRYPT, NULL, NULL);
-            hBtnSaveDraft = CreateWindowEx(0, "BUTTON", "Save Draft [Ctrl+S]", WS_CHILD | WS_TABSTOP, 340, 122, 135, 26, hwnd, (HMENU)ID_BTN_SAVE_DRAFT, NULL, NULL);
+            hBtnSaveDraft = CreateWindowEx(0, "BUTTON", "Save Draft [Ctrl+S]", WS_CHILD | WS_TABSTOP, 340, 122, 125, 26, hwnd, (HMENU)ID_BTN_SAVE_DRAFT, NULL, NULL);
+            hBtnOutbox = CreateWindowEx(0, "BUTTON", "Queue Outbox", WS_CHILD | WS_TABSTOP, 470, 122, 115, 26, hwnd, (HMENU)ID_BTN_OUTBOX, NULL, NULL);
+            SendMessage(hBtnOutbox, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnReply, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnStar, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnTag, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -1075,14 +1152,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (LOWORD(wParam) == ID_BTN_SAVE_DRAFT) {
                 SaveCurrentDraft(hwnd);
             }
+            else if (LOWORD(wParam) == ID_BTN_OUTBOX) {
+                if (currentTabIdx != -1) {
+                    if (tabs[currentTabIdx].id == 0) {
+                        QueueCurrentOutbox(hwnd);
+                    } else if (tabs[currentTabIdx].id == 1) {
+                        DispatchCurrentEmail(hwnd);
+                    }
+                }
+            }
             else if (LOWORD(wParam) == ID_BTN_DELETE) {
                 if(currentTabIdx != -1) {
                     if(tabs[currentTabIdx].id == 1) { // read tab
                         int eid = tabs[currentTabIdx].emailId;
                         for(int i = 0; i < num_emails; i++) {
                             if(emails[i].id == eid) {
-                                if(emails[i].folder == 4) emails[i].folder = 99; // permanent delete
-                                else emails[i].folder = 4; // to trash
+                                if(emails[i].folder == 5) emails[i].folder = 99; // permanent delete
+                                else emails[i].folder = 5; // to trash
                                 break;
                             }
                         }
@@ -1093,8 +1179,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             else if (LOWORD(wParam) == ID_BTN_EMPTY_TRASH) {
                 if (MessageBoxA(hwnd, "Are you sure you want to empty the Trash folder?", "Confirm Empty Trash", MB_YESNO | MB_ICONQUESTION) == IDYES) {
-                    for(int i = 0; i < num_emails; i++) if(emails[i].folder == 4) emails[i].folder = 99;
-                    if(currentFolder == 4) RefreshEmailList();
+                    for(int i = 0; i < num_emails; i++) if(emails[i].folder == 5) emails[i].folder = 99;
+                    if(currentFolder == 5) RefreshEmailList();
                     MessageBoxA(hwnd, "Trash folder emptied.", "KMail", MB_OK);
                 }
             }
@@ -1281,7 +1367,7 @@ void MainEntry() {
                 "Welcome to KMail - Lightweight Win32 Email Client!\n\n"
                 "Quick Guide & Shortcuts:\n"
                 "  - Press [C] to compose a new message in a tab\n"
-                "  - Press [1] - [5] to switch folders (Inbox, Starred, Sent, Drafts, Trash)\n"
+                "  - Press [1] - [6] to switch folders (Inbox, Starred, Sent, Drafts, Trash)\n"
                 "  - Press [S] to Star / Unstar priority emails\n"
                 "  - Press [R] to Reply with quote\n"
                 "  - Press [Ctrl+S] to save drafts\n"
@@ -1351,13 +1437,25 @@ void MainEntry() {
                 if (msg.wParam == '3') { SelectFolder(2); continue; }
                 if (msg.wParam == '4') { SelectFolder(3); continue; }
                 if (msg.wParam == '5') { SelectFolder(4); continue; }
+                if (msg.wParam == '6') { SelectFolder(5); continue; }
                 if (msg.wParam == 'C' || msg.wParam == 'c') { NewComposeTab(); continue; }
                 if (msg.wParam == 'R' || msg.wParam == 'r') { ReplyToCurrentEmail(); continue; }
                 if (msg.wParam == 'S' || msg.wParam == 's') { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_STAR, 0), 0); continue; }
                 if (msg.wParam == 'T' || msg.wParam == 't') { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_TAG, 0), 0); continue; }
                 if (msg.wParam == 'E' || msg.wParam == 'e') { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_EXPORT_EML, 0), 0); continue; }
                 if (msg.wParam == 'M' || msg.wParam == 'm') { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_EXPORT_MD, 0), 0); continue; }
-                if (msg.wParam == 'D' || msg.wParam == 'd') { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DECRYPT, 0), 0); continue; }
+                if (msg.wParam == 'D' || msg.wParam == 'd') {
+                    if (currentTabIdx != -1 && tabs[currentTabIdx].id == 1) {
+                        Email* em = NULL;
+                        for(int i=0; i<num_emails; i++) if(emails[i].id == tabs[currentTabIdx].emailId) em = &emails[i];
+                        if (em && em->folder == 4) {
+                            DispatchCurrentEmail(hwnd);
+                            continue;
+                        }
+                    }
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DECRYPT, 0), 0);
+                    continue;
+                }
                 if (msg.wParam == 'I' || msg.wParam == 'i') { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_IMPORT, 0), 0); continue; }
                 if (msg.wParam == 'O' || msg.wParam == 'o') { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_EXPORT, 0), 0); continue; }
                 if (msg.wParam == 'V' || msg.wParam == 'v') { ExportCsv(); continue; }

@@ -1291,10 +1291,29 @@
 </div>
 
 <script>
+  // Storage safety wrappers (safeGet / safeSet per quality-standards.md)
+  function safeGet(key, fallback = null) {
+    try {
+      const val = localStorage.getItem(key);
+      return val !== null ? val : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function safeSet(key, value) {
+    try {
+      localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+      return true;
+    } catch (e) {
+      console.warn('Storage quota exceeded or denied for key:', key, e);
+      return false;
+    }
+  }
   // Procedural Web Audio Engine (Genesis YM2612 2-op FM & SNES SPC700 Delay)
   const AudioEngine = {
     ctx: null,
-    enabled: localStorage.getItem('kmail_sfx_enabled') !== '0',
+    enabled: safeGet('kmail_sfx_enabled') !== '0',
     init() {
       if (!this.ctx) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1306,7 +1325,7 @@
     },
     toggle() {
       this.enabled = !this.enabled;
-      localStorage.setItem('kmail_sfx_enabled', this.enabled ? '1' : '0');
+      safeSet('kmail_sfx_enabled', this.enabled ? '1' : '0');
       return this.enabled;
     },
     playSend() {
@@ -1441,8 +1460,8 @@
     if (m) m.classList.remove('active');
     if (modalId === 'tutorial-modal') {
       try {
-        localStorage.setItem('kmail_tutorialSeen', '1');
-        localStorage.setItem('kmail_onboarded_v1', 'true');
+        safeSet('kmail_tutorialSeen', '1');
+        safeSet('kmail_onboarded_v1', 'true');
       } catch(e) {}
     }
   }
@@ -1578,7 +1597,7 @@
 
   function safeSaveEmails() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(emails));
+      safeSet(STORAGE_KEY, emails);
     } catch (e) {
       console.warn("Storage quota exceeded", e);
     }
@@ -1586,7 +1605,7 @@
 
   function safeLoadEmails() {
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
+      const data = safeGet(STORAGE_KEY);
       if (data) {
         const parsed = JSON.parse(data);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -1626,7 +1645,7 @@
 
   function safeLoadRules() {
     try {
-      const data = localStorage.getItem(RULES_KEY);
+      const data = safeGet(RULES_KEY);
       if (data) {
         const parsed = JSON.parse(data);
         if (Array.isArray(parsed) && parsed.length > 0) rules = parsed;
@@ -1637,7 +1656,7 @@
 
   function safeSaveRules() {
     try {
-      localStorage.setItem(RULES_KEY, JSON.stringify(rules));
+      safeSet(RULES_KEY, rules);
     } catch(e) {}
   }
 
@@ -1765,8 +1784,8 @@
   };
 
   // KiloNet Global Mail Delivery via Firebase RTDB
-  let netEnabled = localStorage.getItem('kmail_net_enabled') !== '0';
-  let userAddress = localStorage.getItem('kmail_net_address') || 'user@kilo.os';
+  let netEnabled = safeGet('kmail_net_enabled') !== '0';
+  let userAddress = safeGet('kmail_net_address') || 'user@kilo.os';
   let processedNetworkMsgIds = new Set();
   const sessionStartTime = Date.now() - 7200000;
 
@@ -1774,7 +1793,7 @@
     const val = (document.getElementById('net-address-input').value || '').trim();
     if (val && val.includes('@')) {
       userAddress = val;
-      localStorage.setItem('kmail_net_address', userAddress);
+      safeSet('kmail_net_address', userAddress);
       updateNetworkUI();
       updateStatusBar();
       showToast(`Address updated to ${userAddress}`, 'success');
@@ -1785,7 +1804,7 @@
 
   window.toggleNetworkMail = function() {
     netEnabled = !netEnabled;
-    localStorage.setItem('kmail_net_enabled', netEnabled ? '1' : '0');
+    safeSet('kmail_net_enabled', netEnabled ? '1' : '0');
     updateNetworkUI();
     updateStatusBar();
     showToast(netEnabled ? 'KiloNet Realtime Mail Delivery Enabled.' : 'KiloNet Realtime Mail Delivery Disabled (Offline Mode).', 'info');
@@ -2762,10 +2781,10 @@
         activeTabId,
         timestamp: Date.now()
       };
-      localStorage.setItem(QUICKSAVE_KEY, JSON.stringify(snapshot));
+      safeSet(QUICKSAVE_KEY, snapshot);
       try {
-        localStorage.setItem('kmail_tutorialSeen', '1');
-        localStorage.setItem('kmail_onboarded_v1', 'true');
+        safeSet('kmail_tutorialSeen', '1');
+        safeSet('kmail_onboarded_v1', 'true');
       } catch(e) {}
       AudioEngine.playClick();
       showToast(`Quicksave complete [F5] (${emails.length} emails, ${rules.length} rules).`, 'success');
@@ -2777,7 +2796,7 @@
 
   window.quickLoad = function() {
     try {
-      const data = localStorage.getItem(QUICKSAVE_KEY);
+      const data = safeGet(QUICKSAVE_KEY);
       if (!data) {
         showToast('No quicksave snapshot found. Press F5 to save one.', 'warning');
         return;
@@ -2805,15 +2824,15 @@
       }
       if (snapshot.userAddress && typeof snapshot.userAddress === 'string') {
         userAddress = snapshot.userAddress;
-        try { localStorage.setItem('kmail_net_address', userAddress); } catch(e) {}
+        try { safeSet('kmail_net_address', userAddress); } catch(e) {}
       }
       if (typeof snapshot.netEnabled === 'boolean') {
         netEnabled = snapshot.netEnabled;
-        try { localStorage.setItem('kmail_net_enabled', netEnabled ? '1' : '0'); } catch(e) {}
+        try { safeSet('kmail_net_enabled', netEnabled ? '1' : '0'); } catch(e) {}
       }
       if (typeof snapshot.soundEnabled === 'boolean') {
         AudioEngine.enabled = snapshot.soundEnabled;
-        try { localStorage.setItem('kmail_sfx_enabled', AudioEngine.enabled ? '1' : '0'); } catch(e) {}
+        try { safeSet('kmail_sfx_enabled', AudioEngine.enabled ? '1' : '0'); } catch(e) {}
         const sfxBtn = document.getElementById('sfx-toggle');
         if (sfxBtn) sfxBtn.textContent = AudioEngine.enabled ? '🔊 SFX: On' : '🔇 SFX: Off';
       }
@@ -2838,13 +2857,18 @@
         if (b) b.classList.add('active');
       }
       if (Array.isArray(snapshot.tabs)) {
-        tabs = snapshot.tabs;
+        tabs = snapshot.tabs.map(t => {
+          if (t && t.type === 'compose' && !t.data) {
+            t.data = { to: '', sub: '', body: '', encrypted: false, password: '' };
+          }
+          return t;
+        }).filter(Boolean);
         activeTabId = snapshot.activeTabId || (tabs.length > 0 ? tabs[0].id : null);
       }
       // Ensure first-run tutorial never interrupts restored save state
       try {
-        localStorage.setItem('kmail_tutorialSeen', '1');
-        localStorage.setItem('kmail_onboarded_v1', 'true');
+        safeSet('kmail_tutorialSeen', '1');
+        safeSet('kmail_onboarded_v1', 'true');
       } catch(e) {}
       closeModal('tutorial-modal');
 
@@ -2907,8 +2931,8 @@
           m.classList.remove('active');
           if (m.id === 'tutorial-modal') {
             try {
-              localStorage.setItem('kmail_tutorialSeen', '1');
-              localStorage.setItem('kmail_onboarded_v1', 'true');
+              safeSet('kmail_tutorialSeen', '1');
+              safeSet('kmail_onboarded_v1', 'true');
             } catch(err) {}
           }
         });
@@ -3137,6 +3161,9 @@
   // ARCH-05: Tab Visibility State Management & Auto-Save
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
+      if (AudioEngine.ctx && AudioEngine.ctx.state === 'running') {
+        AudioEngine.ctx.suspend();
+      }
       // Auto-save active draft if in compose mode to prevent loss on background tab discard
       if (activeTabId) {
         const tab = tabs.find(t => t.id === activeTabId);
@@ -3145,6 +3172,9 @@
         }
       }
     } else {
+      if (AudioEngine.ctx && AudioEngine.ctx.state === 'suspended' && AudioEngine.enabled) {
+        AudioEngine.ctx.resume();
+      }
       updateFolderBadges();
     }
   });
@@ -3152,13 +3182,13 @@
   // Initial render & first-run tutorial check (Pass 5 Tutorial Integrity)
   renderList();
   const ONBOARD_KEY = 'kmail_onboarded_v1';
-  const tutorialSeen = (localStorage.getItem('kmail_tutorialSeen') === '1') || (localStorage.getItem(ONBOARD_KEY) === 'true');
-  const hasSavedSnapshot = localStorage.getItem(QUICKSAVE_KEY) !== null;
+  const tutorialSeen = (safeGet('kmail_tutorialSeen') === '1') || (safeGet(ONBOARD_KEY) === 'true');
+  const hasSavedSnapshot = safeGet(QUICKSAVE_KEY) !== null;
   if (!tutorialSeen && !hasSavedSnapshot) {
     showModal('tutorial-modal');
     try {
-      localStorage.setItem('kmail_tutorialSeen', '1');
-      localStorage.setItem(ONBOARD_KEY, 'true');
+      safeSet('kmail_tutorialSeen', '1');
+      safeSet(ONBOARD_KEY, 'true');
     } catch(e) {}
   } else {
     setTimeout(() => {
