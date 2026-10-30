@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KAlchemy
   kilo_soundscape: KStellar
   kilo_tester: KScript
-  kilo_usability: KGo
+  kilo_usability: KCosmic
   kilo_qa: KRead
   kilo_expander: KGo
   kilo_review: KHex
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KGo
-  timestamp: '2026-10-29T17:40:15-07:00'
+  timestamp: '2026-10-29T18:22:16-07:00'
 last_planner_run: '2026-10-29T17:30:03Z'
 ---
 
@@ -149,11 +149,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Add isAIMove flag to placeStone(x, y, isAIMove) in kgo.html and PlaceStone(hwnd, x, y, isAIMove) in KGo/main.c so the VS-AI turn guard stops blocking makeAIMove()/MakeAIMove() (and clear pending AI timeouts on reset/undo/replay/load); stop calculateScore()/CalculateScore() from wiping board and moveRecord via initBoard() so finished games can be replayed or exported to SGF, and add interactive dead-stone click-to-mark scoring review plus live Black/White capture and territory counts in HUD; fix Tsumego puzzles in kgo.html and KGo/main.c (Stage 7 Crane's Nest enclosure and occupied (4,2) check, Stage 11 straight-three vital point (1,0) only, Stage 14 center net, Goban A9/G13 coord labels, native PlaceStone Tsumego win check, and standalone Tsumego progression + Retry); fix Replay off-by-one (#btn-replay-first -> -1, #replay-slider -> value - 1); guard all single-key hotkeys when typing in INPUT/TEXTAREA/SELECT; and use BS_PUSHBUTTON + SetFocus(hwnd)/GetMessage key routing in KGo/main.c. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KGo`
+- **Active Target**: `KCosmic`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Eliminate 216px vertical overflow at 700x723 in kgo.html by locking body to 100vh flex column with overflow hidden, merging h1 and .status-container into a compact top bar, collapsing the redundant 3-row #hotkey-bar (and removing misleading /WASD label since S toggles Analyzer), tightening .board/.board-container/.controls padding, and making getCellSize() viewport-responsive so 9x9, 13x13, and 19x19 boards plus all controls fit 100% visible with 0px scroll; raise kbd, badge, .stone-num-label, .liberty-badge, and .ko-overlay font sizes to >= 10px (0 tiny-text warnings); remove random rotate() on .stone so 3D lighting stays top-left and move numbers (M) never render upside-down, and append .last-move-aura/.ripple/.ripple-outer to .cell instead of overflow-hidden .stone; replace blocking alert() dialogs for Stats/Campaign/Score with Esc-dismissible in-DOM modals, pause idle updateScreenShake rAF loop, and change KGo/main.c Goban coordinates from invisible mahogany RGB(75,48,24) to gold RGB(255,220,110). |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Orbit & navigation viewport ergonomics, touch/keyboard flight controls, HiDPI radar canvas scaling, and compact HUD. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
@@ -165,6 +164,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
 | `KChess` | Shift chessboard left (TS=64, OX=64, OY=124, Eval Bar at x=18..34, left rank labels at x=48, right rank labels at x=590) to fix drawEvalBar() colliding with rank 8..1 labels, fix KChess/main.c capRc ({20,46,W-20,94}) painting over top file labels and Rank 8, and render a live interactive Move History & Clocks panel (x=606..744, y=118..642) in both kchess.html and KChess/main.c with White/Black clocks, scrollable 2-column SAN move list, active-ply highlight, wheel scroll, and click-to-jump; add warm champagne/ivory outer rim stroke on Black pieces (!isWhite) in drawChessPieceSprite() and DrawChessPiece() for dark-square contrast; compact #help-modal .modal-card (2-col shortcuts) so #help-close-btn fits 800x903 without clipping, add white-space | **[ARGON REVIEW]:** nowrap to .menu-bar/#menu-status-badge/.menu-btn-quickhelp (removing duplicate canvas Help badge), and move #toast-container to top:48px right:16px while skipping redundant boot welcome toast; add pointer drag-and-drop piece movement in kchess.html and KChess/main.c (WM_MOUSEMOVE/WM_LBUTTONUP), wire ArrowLeft/Right in #replay-modal to replayStepPrev()/replayStepNext(), let focused modal buttons handle Enter/Space without primaryBtn hijacking, and replace prompt() in editorExportFEN() with #fen-modal. |
+| `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Eliminate 216px vertical overflow at 700x723 in kgo.html by locking body to 100vh flex column with overflow hidden, merging h1 and .status-container into a compact top bar, collapsing the redundant 3-row #hotkey-bar (and removing misleading /WASD label since S toggles Analyzer), tightening .board/.board-container/.controls padding, and making getCellSize() viewport-responsive so 9x9, 13x13, and 19x19 boards plus all controls fit 100% visible with 0px scroll; raise kbd, badge, .stone-num-label, .liberty-badge, and .ko-overlay font sizes to >= 10px (0 tiny-text warnings); remove random rotate() on .stone so 3D lighting stays top-left and move numbers (M) never render upside-down, and append .last-move-aura/.ripple/.ripple-outer to .cell instead of overflow-hidden .stone; replace blocking alert() dialogs for Stats/Campaign/Score with Esc-dismissible in-DOM modals, pause idle updateScreenShake rAF loop, and change KGo/main.c Goban coordinates from invisible mahogany RGB(75,48,24) to gold RGB(255,220,110). |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KRead`
@@ -284,6 +284,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T18:22:16-07:00 — kilo-usability: KGo (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KGo across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KCosmic`; rotated active agent to `kilo-qa`.
+
 - **2026-10-29T17:40:15-07:00 — kilo-tester: KGo (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KGo across web and native targets.
@@ -305,9 +310,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Gameplay/Feature Findings: VS-AI turn guard in placeStone()/PlaceStone() blocks makeAIMove()/MakeAIMove() freezing White AI after move 1 in both Web & C; calculateScore() wipes moveRecord via initBoard() preventing post-game Replay/SGF & lacks dead-stone marking; Tsumego has broken Stage 7/11/14 checks & zero C solver check; Replay slider/first off-by-one & unguarded chat hotkeys; missing Phase VI VFS/IPC mesh.
   - Visual/UX Findings: 216px vertical overflow at 700x723 clips entire .controls dock off-screen; 15 <9px kbd tiny-text nodes; random .stone rotate() turns move numbers upside-down while .stone overflow-hidden clips ripples/auras; KGo/main.c draws RGB(75,48,24) coords invisibly on RGB(74,46,20) frame.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KGo`, `kilo-usability`->`KGo`, `kilo-expander`->`KGo`] (un-quarantined `KGo` from Mature); advanced `kilo-review` to `KHex`; next agent `kilo-creator`.
-
-- **2026-10-29T15:36:48-07:00 — kilo-expander: KChess (Phase VI KiloOS VFS & IPC Mesh Integration)**
-  - Status: PASS ✅ (0 errors, web 243.9 KB, native 54.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 37.96%, HEAD Δ 0.92%, 0 fail, 0 warn, 9.1s)).
-  - Wired KiloVFS VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ with origin checks and 60s timeout for JSON game saves (/home/saves/kchess_save.json), PGN match records (/home/docs/kchess_match.pgn), and FEN positions (/home/docs/kchess_position.fen) with standalone Blob/file-input fallbacks.
-  - Added incoming FILE_OPEN/VFS_OPEN auto-loading and Open PGN in KPad IPC launcher (VFS_WRITE + OS_LAUNCH_APP appId kpad) in PGN modal.
-  - Handoff: Advanced `kilo-expander` to `KAnomaly`; rotated active agent to `kilo-review`.

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T15:36:48-07:00 — kilo-expander: KChess (Phase VI KiloOS VFS & IPC Mesh Integration)**
+  - Status: PASS ✅ (0 errors, web 243.9 KB, native 54.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 37.96%, HEAD Δ 0.92%, 0 fail, 0 warn, 9.1s)).
+  - Wired KiloVFS VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ with origin checks and 60s timeout for JSON game saves (/home/saves/kchess_save.json), PGN match records (/home/docs/kchess_match.pgn), and FEN positions (/home/docs/kchess_position.fen) with standalone Blob/file-input fallbacks.
+  - Added incoming FILE_OPEN/VFS_OPEN auto-loading and Open PGN in KPad IPC launcher (VFS_WRITE + OS_LAUNCH_APP appId kpad) in PGN modal.
+  - Handoff: Advanced `kilo-expander` to `KAnomaly`; rotated active agent to `kilo-review`.
+
 - **2026-10-29T15:20:00-07:00 — kilo-qa: KSettings (Pass 5 QA, Dual Parity & Mature Graduation)**
   - Status: PASS ✅ (0 errors, web 80.1 KB, native 17.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 10.27%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.0s)).
   - State & Display: Added Display Modes (Standard, CRT Scanlines, Amber CRT, Green Phosphor, High Contrast) with F5/F9 persistence & VFS sync.

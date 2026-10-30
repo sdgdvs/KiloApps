@@ -1698,7 +1698,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                              DEFAULT_PITCH | FF_SWISS, "Segoe UI");
                 HFONT oldCoordFont = (HFONT)SelectObject(memDC, coordFont);
                 SetBkMode(memDC, TRANSPARENT);
-                SetTextColor(memDC, RGB(75, 48, 24));
+                SetTextColor(memDC, RGB(255, 220, 110));
                 static const char* colLetters = "ABCDEFGHJKLMNOPQRST";
                 for (int i = 0; i < boardSize; i++) {
                     char colBuf[2] = { colLetters[i], 0 };
