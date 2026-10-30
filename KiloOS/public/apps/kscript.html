@@ -2371,11 +2371,6 @@ endif
             openAstModal();
             return;
         }
-        if (e.altKey && !e.ctrlKey && (e.key === 'v' || e.key === 'V')) {
-            e.preventDefault();
-            if (btnVfsManager) btnVfsManager.click();
-            return;
-        }
     });
 
     // ==========================================
@@ -3881,7 +3876,7 @@ endif
         const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
         downloadBlob(blob, 'kscript_state.json');
         showToast("Exported kscript_state.json", "success");
-        exportModal.classList.remove('active');
+        closeModal(exportModal);
     };
 
     window.exportCsv = () => {
@@ -3896,7 +3891,7 @@ endif
         const blob = new Blob([csv], { type: 'text/csv' });
         downloadBlob(blob, 'kscript_variables.csv');
         showToast("Exported kscript_variables.csv", "success");
-        exportModal.classList.remove('active');
+        closeModal(exportModal);
     };
 
     window.exportLog = () => {
@@ -3904,14 +3899,14 @@ endif
         const blob = new Blob([text], { type: 'text/plain' });
         downloadBlob(blob, 'kscript_console.log');
         showToast("Exported kscript_console.log", "success");
-        exportModal.classList.remove('active');
+        closeModal(exportModal);
     };
 
     window.copyJsonClipboard = () => {
         const state = lastExecutionState || { vars: {} };
         navigator.clipboard.writeText(JSON.stringify(state.vars, null, 2));
         showToast("Variables JSON copied to clipboard!", "success");
-        exportModal.classList.remove('active');
+        closeModal(exportModal);
     };
 
     btnCopyOutput.onclick = () => {
