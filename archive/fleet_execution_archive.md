@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T04:36:32-07:00 — kilo-qa: KMail (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS (0 errors, web 122.1 KB, native 508.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, safeGet/safeSet storage safety, kmail_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified 6-folder navigation (Inbox, Starred, Sent, Drafts, Outbox, Trash), draft composition, outbox queue/dispatch, and AudioContext visibilitychange suspend/resume.
+  - Mature Quarantine & Handoff: Promoted `KMail` to Mature archive; advanced `kilo-qa` to `KMedia`; next agent `kilo-expander`.
+
 - **2026-10-30T04:22:20-07:00 — kilo-usability: KAnomaly (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KAnomaly across web and native targets.

@@ -533,15 +533,15 @@ void UpdateUI(HWND hwnd) {
     int engineCost = 1000 * (state.engineLevel + 1);
     int weaponCost = 1500 * (state.weaponLevel + 1);
 
-    wsprintf(buf, "Cargo +20 (%d cr)", cargoCost);
+    wsprintf(buf, "Cargo (+20C/+10S) (%d)", cargoCost);
     SetWindowText(hBtnUpgCargo, buf);
     EnableWindow(hBtnUpgCargo, !state.inCombat && state.credits >= cargoCost);
 
-    wsprintf(buf, "Eng -2F/+50T (%d cr)", engineCost);
+    wsprintf(buf, "Eng (-2F/+50T) (%d)", engineCost);
     SetWindowText(hBtnUpgEngine, buf);
     EnableWindow(hBtnUpgEngine, !state.inCombat && state.credits >= engineCost);
 
-    wsprintf(buf, "Weap +15D (%d cr)", weaponCost);
+    wsprintf(buf, "Weap (+15 Dmg) (%d)", weaponCost);
     SetWindowText(hBtnUpgWeapon, buf);
     EnableWindow(hBtnUpgWeapon, !state.inCombat && state.credits >= weaponCost);
 

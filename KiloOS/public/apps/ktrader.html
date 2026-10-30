@@ -15,7 +15,9 @@
 
       margin: 0;
 
-      padding: 8px 12px;
+      padding: 5px 8px;
+
+      overflow-y: auto;
 
       background-color: #000;
 
@@ -58,19 +60,20 @@
     }
 
     .panel {
-
       border: 1px solid #0ff;
-
-      box-shadow: 0 0 15px rgba(0, 255, 255, 0.2), inset 0 0 15px rgba(0, 255, 255, 0.1);
-
-      padding: 8px 12px;
-
-      margin-top: 8px;
-
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.15), inset 0 0 10px rgba(0, 255, 255, 0.08);
+      padding: 5px 8px;
+      margin-top: 4px;
       background-color: rgba(0, 15, 20, 0.85);
-
       border-radius: 4px;
+    }
 
+    .panel h2 {
+      font-size: 0.95em;
+      margin: 0 0 3px 0;
+      padding-bottom: 2px;
+      border-bottom: 1px dashed rgba(0, 255, 255, 0.3);
+      color: #0ff;
     }
 
     .dashboard-stats {
@@ -95,9 +98,9 @@
 
       box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
 
-      padding: 5px 10px;
+      padding: 3px 7px;
 
-      margin: 2px;
+      margin: 1px;
 
       cursor: pointer;
 
@@ -150,19 +153,51 @@
     }
 
     .log-panel {
-
-      height: 60px;
-
+      height: 38px;
       overflow-y: auto;
-
-      font-size: 0.85em;
-
+      font-size: 0.78em;
       border-top: 1px dashed #0ff;
+      padding: 2px 6px;
+      margin-top: 3px;
+    }
 
-      padding: 4px 8px;
+    #top-toolbar {
+      display: flex;
+      gap: 2px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+    }
 
-      margin-top: 8px;
+    #top-toolbar button {
+      font-size: 0.74em;
+      padding: 2px 5px;
+      margin: 1px;
+    }
 
+    #ui-shipyard {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    #ui-shipyard button {
+      font-size: 0.76em;
+      padding: 2px 6px;
+      margin: 1px;
+    }
+
+    #ui-missions button {
+      font-size: 0.76em;
+      padding: 2px 6px;
+      margin: 1px;
+    }
+
+    #destinations button {
+      font-size: 0.8em;
+      padding: 2px 6px;
+      margin: 1px 0;
+      text-align: left;
     }
 
     .log-entry { margin: 2px 0; }
@@ -186,24 +221,16 @@
     }
 
     #market-table th {
-
       border-bottom: 1px solid #0ff;
-
-      padding: 6px 8px;
-
+      padding: 3px 5px;
       color: #8ee;
-
-      font-size: 0.82em;
-
+      font-size: 0.76em;
       text-transform: uppercase;
-
       letter-spacing: 0.5px;
-
     }
 
     #market-table td {
-
-      padding: 5px 8px;
+      padding: 2px 5px;
 
       border-bottom: 1px solid rgba(0, 255, 255, 0.12);
 
@@ -244,13 +271,9 @@
     }
 
     .market-actions button {
-
-      padding: 2px 6px;
-
+      padding: 1px 4px;
       margin: 1px;
-
-      font-size: 0.82em;
-
+      font-size: 0.74em;
     }
 
     .price-cheap {
@@ -282,23 +305,14 @@
 
 
     #gfx-canvas {
-
       display: block;
-
-      margin: 10px auto;
-
+      margin: 3px auto;
       background: rgba(0, 20, 30, 0.5);
-
       border: 1px solid #0ff;
-
-      box-shadow: 0 0 10px #0ff;
-
+      box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
       max-width: 100%;
-
-      height: 100px;
-
+      height: 80px;
       touch-action: none;
-
     }
 
 
@@ -658,12 +672,12 @@
 
 
 
-  <header style="display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid #0ff; padding-bottom: 6px; margin-bottom: 8px; box-shadow: 0 6px 8px -6px #0ff; flex-wrap: wrap;">
-    <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
-      <h1 style="border-bottom: none; padding-bottom: 0; margin: 0; box-shadow: none; font-size: 1.35em;">KTrader Space Trading Sim</h1>
-      <span style="font-size: 11px; color: #8ee; font-weight: normal;">[Press <kbd style="background: rgba(0,255,255,0.15); border: 1px solid rgba(0,255,255,0.3); border-radius: 3px; padding: 1px 4px; font-family: monospace; color: #0ff; font-weight: bold;">F1</kbd> for Help]</span>
+  <header style="display: flex; justify-content: space-between; align-items: center; gap: 6px; border-bottom: 1px solid #0ff; padding-bottom: 3px; margin-bottom: 3px; box-shadow: 0 4px 6px -4px #0ff; flex-wrap: wrap;">
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <h1 style="border-bottom: none; padding-bottom: 0; margin: 0; box-shadow: none; font-size: 1.15em; white-space: nowrap;">KTrader Space Trading Sim</h1>
+      <span style="font-size: 10px; color: #8ee; font-weight: normal;">[<kbd style="background: rgba(0,255,255,0.15); border: 1px solid rgba(0,255,255,0.3); border-radius: 3px; padding: 1px 4px; font-family: monospace; color: #0ff; font-weight: bold;">F1</kbd> Help]</span>
     </div>
-    <div id="top-toolbar" style="display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; align-items: center;">
+    <div id="top-toolbar">
       <button onclick="resetGame()" title="Start New Voyage" style="font-size: 0.82em; padding: 3px 6px; margin: 1px;">New Game</button>
 
     <button onclick="quickSave()" title="Quicksave voyage state [F5]" style="font-size: 0.82em; padding: 3px 6px; margin: 1px;">Save [F5]</button>
@@ -692,13 +706,13 @@
   <div id="syndicate-duel-hud" style="display:none; margin: 8px auto; max-width: 900px; padding: 6px 14px; background: rgba(30,10,0,0.92); border: 2px solid #f80; border-radius: 4px; box-shadow: 0 0 15px rgba(255,128,0,0.4); justify-content: space-between; align-items: center; font-size: 0.9em; box-sizing: border-box; flex-wrap: wrap; gap: 6px;"></div>
 
   <!-- Galactic Syndicate Live Ticker Tape -->
-  <div id="syndicate-ticker" style="margin: 6px auto; max-width: 900px; padding: 4px 10px; background: rgba(10,0,25,0.88); border: 1px solid #f0f; color: #f8f; font-size: 0.85em; display: flex; justify-content: space-between; align-items: center; border-radius: 3px; box-shadow: 0 0 10px rgba(255,0,255,0.25); box-sizing: border-box;">
+  <div id="syndicate-ticker" style="margin: 2px auto 3px auto; max-width: 900px; padding: 2px 8px; background: rgba(10,0,25,0.88); border: 1px solid #f0f; color: #f8f; font-size: 0.76em; display: flex; justify-content: space-between; align-items: center; border-radius: 3px; box-shadow: 0 0 10px rgba(255,0,255,0.25); box-sizing: border-box;">
     <span style="color: #ff0; font-weight: bold; margin-right: 8px; white-space: nowrap;">📡 SYNDICATE TICKER:</span>
     <marquee id="syndicate-ticker-text" behavior="scroll" direction="left" scrollamount="4" style="flex: 1; color: #0ff; font-family: 'Courier New', monospace;">Galactic Commerce Net Online • Sector commodity futures open • Standby for syndicate trade broadcasts...</marquee>
     <span id="syndicate-status-pill" style="margin-left: 10px; padding: 1px 6px; font-size: 0.78em; border: 1px solid #888; color: #aaa; border-radius: 2px; white-space: nowrap;">LOCAL MESH</span>
   </div>
 
-  <canvas id="gfx-canvas" width="600" height="100" style="display:block; margin: 6px auto; background: rgba(0,20,30,0.5); border: 1px solid #0ff; box-shadow: 0 0 10px #0ff;"></canvas>
+  <canvas id="gfx-canvas" width="600" height="80" style="display:block; margin: 3px auto; background: rgba(0,20,30,0.5); border: 1px solid #0ff; box-shadow: 0 0 8px rgba(0,255,255,0.5);"></canvas>
 
   
 
@@ -782,55 +796,43 @@
 
 
 
-  <div class="panel">
-
-    <div class="dashboard-stats">
-
-      <span id="ui-credits">Credits: 1000</span>
-
+  <div class="panel" style="padding: 3px 8px; margin-top: 3px;">
+    <div class="dashboard-stats" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 0.88em; margin-bottom: 0;">
+      <span id="ui-credits" style="color: #0fa; font-weight: bold;">Credits: 1000</span>
       <span id="ui-fuel">Fuel: 100 / 100</span>
-
       <span id="ui-cargo">Cargo: 0 / 20</span>
-
       <span id="ui-weapons">Weapons: Lv 0</span>
-
+      <span style="color: rgba(0,255,255,0.3);">|</span>
+      <span id="ui-rep-traders" style="color: #8ee;">Traders Rep: 0</span>
+      <span id="ui-rep-pirates" style="color: #8ee;">Pirates Rep: 0</span>
+      <span id="ui-rep-navy" style="color: #8ee;">Navy Rep: 0</span>
     </div>
-
-    <div class="dashboard-stats" style="color: #aaa; font-size: 1em; margin-bottom: 0;">
-
-      <span id="ui-rep-traders">Traders Rep: 0</span>
-
-      <span id="ui-rep-pirates">Pirates Rep: 0</span>
-
-      <span id="ui-rep-navy">Navy Rep: 0</span>
-
-    </div>
-
   </div>
 
 
 
-  <div class="panel" id="ui-main-panel" style="display: flex; gap: 20px;">
+  <div class="panel" id="ui-main-panel" style="display: flex; gap: 8px; margin-top: 3px; padding: 4px 8px;">
 
-    <div style="flex: 1;">
+    <div style="flex: 1; min-width: 200px;">
 
-      <h2 style="margin-top: 0;">Navigation</h2>
+      <h2 style="margin: 0 0 2px 0; font-size: 0.92em; border-bottom: 1px dashed rgba(0,255,255,0.3); padding-bottom: 2px;">Navigation</h2>
 
-      <p>Current Location: <strong id="ui-location">Earth</strong></p>
+      <div style="margin: 2px 0 2px 0; font-size: 0.84em;">Location: <strong id="ui-location" style="color: #ff0;">Earth</strong></div>
 
-      <div id="destinations"></div>
+      <div id="destinations" style="display: flex; flex-direction: column; gap: 2px;"></div>
 
-      <button onclick="showDocking()" style="font-size: 0.88em; padding: 4px 10px; margin-top: 10px; border-color: #0ff; width: 100%; text-align: left;" title="Inspect Planetary Orbital Spaceport Services [D]">🛰️ Starport Mooring Berth &amp; Clearance [D]</button>
+      <button onclick="showDocking()" style="font-size: 0.78em; padding: 2px 6px; margin-top: 3px; border-color: #0ff; width: 100%; text-align: left;" title="Inspect Planetary Orbital Spaceport Services [D]">🛰️ Starport Mooring Berth &amp; Clearance [D]</button>
 
     </div>
 
     
 
-    <div style="flex: 1;">
+    <div style="flex: 1.4; min-width: 300px;">
 
-      <h2 style="margin-top: 0;">Market</h2>
-
-      <div style="font-size: 11px; color: #8ee; margin-bottom: 6px;">[Click row or <strong>↑/↓</strong> | <strong>[B]</strong> Buy 1 | <strong>[Shift+B]</strong> Buy Max | <strong>[S]</strong> Sell 1 | <strong>[Shift+S]</strong> Sell All]</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+        <h2 style="margin: 0; font-size: 0.92em; border-bottom: 1px dashed rgba(0,255,255,0.3); padding-bottom: 2px;">Market</h2>
+        <span style="font-size: 10px; color: #8ee;">[Click/↑↓ | [B]/[Shift+B] Buy | [S]/[Shift+S] Sell]</span>
+      </div>
 
       <table style="width:100%; text-align:left; border-collapse:collapse;" id="market-table">
 
@@ -862,15 +864,15 @@
 
 
 
-  <div id="ui-secondary-row" style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-    <div class="panel" id="ui-shipyard-panel" style="flex: 1; min-width: 280px; margin-top: 0;">
-      <h2 style="margin-top: 0; font-size: 1.05em;">Shipyard</h2>
-      <div id="ui-shipyard" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+  <div id="ui-secondary-row" style="display: flex; gap: 6px; margin-top: 3px; flex-wrap: wrap;">
+    <div class="panel" id="ui-shipyard-panel" style="flex: 1; min-width: 280px; margin-top: 0; padding: 4px 8px;">
+      <h2 style="margin: 0 0 2px 0; font-size: 0.92em; border-bottom: 1px dashed rgba(0,255,255,0.3); padding-bottom: 2px;">Shipyard</h2>
+      <div id="ui-shipyard" style="display: flex; flex-wrap: wrap; gap: 3px;"></div>
     </div>
-    <div class="panel" id="ui-mission-panel" style="flex: 1; min-width: 280px; margin-top: 0;">
-      <h2 style="margin-top: 0; font-size: 1.05em;">Mission Board</h2>
-      <div id="ui-active-mission" style="margin-bottom: 4px; color: #ff0; font-size: 0.9em;"></div>
-      <div id="ui-missions" style="display: flex; flex-direction: column; gap: 4px;"></div>
+    <div class="panel" id="ui-mission-panel" style="flex: 1; min-width: 280px; margin-top: 0; padding: 4px 8px;">
+      <h2 style="margin: 0 0 2px 0; font-size: 0.92em; border-bottom: 1px dashed rgba(0,255,255,0.3); padding-bottom: 2px;">Mission Board</h2>
+      <div id="ui-active-mission" style="margin-bottom: 2px; color: #ff0; font-size: 0.84em;"></div>
+      <div id="ui-missions" style="display: flex; flex-direction: column; gap: 2px;"></div>
     </div>
   </div>
 
@@ -926,17 +928,12 @@
 
 
 
-  <div class="panel log-panel" id="ui-log">
-
+  <div class="panel log-panel" id="ui-log" style="height: 36px; margin-top: 3px; padding: 2px 6px; font-size: 0.78em;">
     <div class="log-entry">Welcome to KTrader, Captain.</div>
-
   </div>
 
-
-
   <!-- Usability Status & Quick Shortcuts Bar -->
-
-  <footer class="app-status-bar" id="appStatusBar" style="display:flex; justify-content:space-between; align-items:center; padding:7px 12px; background:rgba(0,15,20,0.85); border-radius:4px; border:1px solid #0ff; font-size:11px; color:#8ee; gap:8px; flex-wrap:wrap; user-select:none; margin-top:12px; box-shadow:0 0 10px rgba(0,255,255,0.2);">
+  <footer class="app-status-bar" id="appStatusBar" style="display:flex; justify-content:space-between; align-items:center; padding:2px 8px; background:rgba(0,15,20,0.85); border-radius:4px; border:1px solid #0ff; font-size:10px; color:#8ee; gap:6px; flex-wrap:wrap; user-select:none; margin-top:3px; box-shadow:0 0 8px rgba(0,255,255,0.2);">
 
     <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
 
@@ -4348,7 +4345,7 @@
 
         x: Math.random() * 600,
 
-        y: Math.random() * 150,
+        y: Math.random() * 80,
 
         speed: 0.2 + Math.random() * 0.8,
 
@@ -4681,39 +4678,22 @@
 
 
     function setupHiDPICanvas() {
-
       const canvas = document.getElementById('gfx-canvas');
-
-      if (!canvas) return { W: 600, H: 150, dpr: 1 };
-
+      if (!canvas) return { W: 600, H: 80, dpr: 1 };
       const dpr = window.devicePixelRatio || 1;
-
       const parentW = canvas.parentElement ? canvas.parentElement.clientWidth : 600;
-
-      const logicalW = Math.min(Math.max(340, parentW), 780);
-
-      const logicalH = 100;
-
+      const logicalW = Math.min(Math.max(340, parentW - 16), 850);
+      const logicalH = 80;
       const targetW = Math.round(logicalW * dpr);
-
       const targetH = Math.round(logicalH * dpr);
-
       if (canvas.width !== targetW || canvas.height !== targetH) {
-
         canvas.width = targetW;
-
         canvas.height = targetH;
-
         canvas.style.width = '100%';
-
         canvas.style.maxWidth = logicalW + 'px';
-
         canvas.style.height = logicalH + 'px';
-
       }
-
       return { W: logicalW, H: logicalH, dpr };
-
     }
 
 
@@ -4866,7 +4846,7 @@
 
           const dx = (animTime * 0.02 * (i + 1) * 0.3 + i * 110) % W;
 
-          const dy = 20 + (i * 24) + Math.sin(animTime * 0.001 + i) * 8;
+          const dy = 8 + (i * 11) + Math.sin(animTime * 0.001 + i) * 5;
 
           ctx.fillStyle = `rgba(0, 255, 255, ${0.15 + Math.sin(animTime * 0.002 + i) * 0.1})`;
 
