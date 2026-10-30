@@ -12,6 +12,14 @@
 #define WM_SOCKET (WM_USER + 1)
 #define MAX_MSGS 250
 #define MAX_ROOMS 16
+#define MAX_SPOOL 64
+
+typedef struct {
+    char user[32];
+    char text[384];
+    char room[32];
+    DWORD timestamp;
+} SpoolMessage;
 
 typedef struct {
     char user[32];
@@ -39,7 +47,10 @@ static int g_dpi = 96;
 SOCKET s = INVALID_SOCKET;
 HWND hLog, hIp, hPort, hBtn, hInput, hSend, hClear, hSave, hCopyBtn;
 HWND hRoomCombo, hSearchInput, hPinBtn, hReactBtn, hExportJson, hImportBtn;
-HWND hTopicLabel, hPollBtn, hVoteBtn, hStatsBtn, hHelpBtn;
+HWND hTopicLabel, hPollBtn, hVoteBtn, hStatsBtn, hHelpBtn, hSwitcherBtn, hSpoolBtn;
+
+SpoolMessage g_spool[MAX_SPOOL];
+int g_spoolCount = 0;
 
 char logBuf[65536] = "";
 char currentRoom[32] = "#general";
@@ -366,8 +377,8 @@ void CopyLogToClipboard(HWND hwnd) {
 #define ID_QUICKLOAD   118
 
 typedef struct {
-    char magic[8]; // "KCHATQS1"
-    int version;   // 1
+    char magic[8]; // "KCHATQS2"
+    int version;   // 2
     char currentUsername[32];
     char currentRoom[32];
     int filterPinnedOnly;
@@ -375,9 +386,12 @@ typedef struct {
     RoomTopic roomTopics[MAX_ROOMS];
     int msgCount;
     Message messages[MAX_MSGS];
+    int spoolCount;
+    SpoolMessage spool[MAX_SPOOL];
 } KChatSaveData;
 
 void SwitchToRoom(HWND hwnd, const char* room);
+void UpdateSpoolStatus(void);
 
 void SaveQuickSave(HWND hwnd) {
     HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -390,8 +404,8 @@ void SaveQuickSave(HWND hwnd) {
         CloseHandle(hFile);
         return;
     }
-    my_strcpy(data->magic, "KCHATQS1");
-    data->version = 1;
+    my_strcpy(data->magic, "KCHATQS2");
+    data->version = 2;
     my_strncpy(data->currentUsername, currentUsername, sizeof(data->currentUsername));
     my_strncpy(data->currentRoom, currentRoom, sizeof(data->currentRoom));
     data->filterPinnedOnly = filterPinnedOnly;
@@ -402,6 +416,10 @@ void SaveQuickSave(HWND hwnd) {
     data->msgCount = g_msgCount;
     for (int i = 0; i < g_msgCount && i < MAX_MSGS; i++) {
         data->messages[i] = g_messages[i];
+    }
+    data->spoolCount = g_spoolCount;
+    for (int i = 0; i < g_spoolCount && i < MAX_SPOOL; i++) {
+        data->spool[i] = g_spool[i];
     }
     DWORD bytesWritten = 0;
     WriteFile(hFile, data, sizeof(KChatSaveData), &bytesWritten, NULL);
@@ -430,7 +448,7 @@ void LoadQuickSave(HWND hwnd) {
     BOOL bSuccess = ReadFile(hFile, data, sizeof(KChatSaveData), &bytesRead, NULL);
     CloseHandle(hFile);
 
-    if (bSuccess && bytesRead >= sizeof(KChatSaveData) && my_strcmp(data->magic, "KCHATQS1") == 0) {
+    if (bSuccess && bytesRead >= 16 && (my_strcmp(data->magic, "KCHATQS2") == 0 || my_strcmp(data->magic, "KCHATQS1") == 0)) {
         my_strncpy(currentUsername, data->currentUsername, sizeof(currentUsername));
         my_strncpy(currentRoom, data->currentRoom, sizeof(currentRoom));
         filterPinnedOnly = data->filterPinnedOnly;
@@ -444,6 +462,16 @@ void LoadQuickSave(HWND hwnd) {
         for (int i = 0; i < g_msgCount; i++) {
             g_messages[i] = data->messages[i];
         }
+        if (my_strcmp(data->magic, "KCHATQS2") == 0) {
+            g_spoolCount = data->spoolCount;
+            if (g_spoolCount > MAX_SPOOL) g_spoolCount = MAX_SPOOL;
+            for (int i = 0; i < g_spoolCount; i++) {
+                g_spool[i] = data->spool[i];
+            }
+        } else {
+            g_spoolCount = 0;
+        }
+        UpdateSpoolStatus();
 
         // Mark tutorial as seen so save state restoration never pops up tutorial
         HANDLE hTut = CreateFileA(TUTORIAL_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -455,6 +483,98 @@ void LoadQuickSave(HWND hwnd) {
         AddMessage("System", "[Quicksave data corrupted or invalid]", currentRoom, 0);
     }
     GlobalFree(data);
+}
+
+void UpdateSpoolStatus(void) {
+    if (hSpoolBtn) {
+        char title[32];
+        wsprintfA(title, "Spool: %d", g_spoolCount);
+        SetWindowTextA(hSpoolBtn, title);
+    }
+}
+
+void AddSpoolMessage(const char* user, const char* text, const char* room) {
+    if (g_spoolCount < MAX_SPOOL) {
+        my_strncpy(g_spool[g_spoolCount].user, user, sizeof(g_spool[0].user));
+        my_strncpy(g_spool[g_spoolCount].text, text, sizeof(g_spool[0].text));
+        my_strncpy(g_spool[g_spoolCount].room, room, sizeof(g_spool[0].room));
+        g_spool[g_spoolCount].timestamp = GetTickCount();
+        g_spoolCount++;
+    }
+    UpdateSpoolStatus();
+}
+
+void FlushSpool(HWND hwnd) {
+    if (s == INVALID_SOCKET || g_spoolCount == 0) return;
+    int sentCount = 0;
+    for (int i = 0; i < g_spoolCount; i++) {
+        send(s, g_spool[i].text, my_strlen(g_spool[i].text), 0);
+        send(s, "\n", 1, 0);
+        sentCount++;
+    }
+    char flushMsg[128];
+    wsprintfA(flushMsg, "[Offline Spool: %d message(s) transmitted to server!]", sentCount);
+    AddMessage("System", flushMsg, currentRoom, 0);
+    g_spoolCount = 0;
+    UpdateSpoolStatus();
+}
+
+void ShowSpoolDialog(HWND hwnd) {
+    if (g_spoolCount == 0) {
+        MessageBoxA(hwnd, "Offline Message Spool is empty.\r\nMessages sent while disconnected will automatically queue here and transmit upon server connection.", "KChat - Offline Spool", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    if (s != INVALID_SOCKET) {
+        FlushSpool(hwnd);
+        return;
+    }
+    char buf[1024];
+    wsprintfA(buf, "Offline Message Spool has %d pending message(s) queued.\r\n\r\nThey will automatically transmit when you connect to a server.\r\nUse /spool clear in chat to discard pending messages.", g_spoolCount);
+    MessageBoxA(hwnd, buf, "KChat - Offline Spool Pending", MB_OK | MB_ICONINFORMATION);
+}
+
+void ShowChannelSwitcherDialog(HWND hwnd) {
+    char buf[2048];
+    my_strcpy(buf, "=== KChat Channel Switcher ===\r\n\r\nActive Channels:\r\n");
+    if (hRoomCombo) {
+        int count = (int)SendMessageA(hRoomCombo, CB_GETCOUNT, 0, 0);
+        for (int i = 0; i < count; i++) {
+            char roomName[32];
+            SendMessageA(hRoomCombo, CB_GETLBTEXT, i, (LPARAM)roomName);
+            const char* top = GetRoomTopic(roomName);
+            int roomMsgs = 0;
+            for (int m = 0; m < g_msgCount; m++) {
+                if (my_strcmp(g_messages[m].room, roomName) == 0) roomMsgs++;
+            }
+            char line[256];
+            wsprintfA(line, " [%d] %s  (%d msgs)%s\r\n     Topic: %s\r\n", i + 1, roomName, roomMsgs, (my_strcmp(roomName, currentRoom) == 0 ? " <-- [ACTIVE]" : ""), top);
+            my_strcat(buf, line);
+        }
+    }
+    my_strcat(buf, "\r\n[NAVIGATION]\r\n"
+                   "  Ctrl+1 .. Ctrl+4 : Jump directly to channels\r\n"
+                   "  Ctrl+K / Alt+Right: Cycle forward through channels\r\n"
+                   "  Alt+Left         : Cycle backward through channels\r\n"
+                   "  /switch <#room>  : Switch or join room via chat\r\n");
+    MessageBoxA(hwnd, buf, "KChat Pro - Channel Switcher", MB_OK | MB_ICONINFORMATION);
+}
+
+void SwitchNextRoom(HWND hwnd, int direction) {
+    if (!hRoomCombo) return;
+    int count = (int)SendMessageA(hRoomCombo, CB_GETCOUNT, 0, 0);
+    if (count <= 0) return;
+    int cur = (int)SendMessageA(hRoomCombo, CB_GETCURSEL, 0, 0);
+    if (cur == CB_ERR) cur = 0;
+    int next = (cur + direction + count) % count;
+    SendMessageA(hRoomCombo, CB_SETCURSEL, next, 0);
+    char roomName[32];
+    SendMessageA(hRoomCombo, CB_GETLBTEXT, next, (LPARAM)roomName);
+    my_strncpy(currentRoom, roomName, sizeof(currentRoom));
+    UpdateTopicDisplay();
+    RebuildLogView();
+    char switchNotice[128];
+    wsprintfA(switchNotice, "[Channel Switcher: Switched to %s]", currentRoom);
+    AddMessage("System", switchNotice, currentRoom, 0);
 }
 
 void ShowHelpDialog(HWND hwnd) {
@@ -478,13 +598,15 @@ void ShowHelpDialog(HWND hwnd) {
         "  F1, H            : Open this comprehensive Help & Tutorial guide\r\n"
         "  F5               : Quicksave complete chat state snapshot to local disk\r\n"
         "  F9               : Quickload chat state snapshot from local disk\r\n"
+        "  Ctrl+K, K        : Open Channel Switcher dialogue\r\n"
+        "  Alt+Right / Left : Cycle forward / backward through channels\r\n"
         "  Ctrl+1 .. Ctrl+4 : Quick switch channel (#general, #dev, #random, #lounge)\r\n"
         "  Ctrl+C           : Copy channel chat log to clipboard\r\n"
         "  Ctrl+F           : Focus and select Search filter box\r\n"
         "  Ctrl+P           : Pin / Unpin latest message in channel\r\n"
         "  Ctrl+S           : Save chat log to chat_log.txt\r\n"
         "  Ctrl+J           : Export structured JSON chat history\r\n"
-        "  P, V, S, R, C    : Direct hotkeys for Poll, Vote, Stats, React, Connect (outside inputs)\r\n"
+        "  P, V, S, R, C, O : Direct hotkeys for Poll, Vote, Stats, React, Connect, Spool\r\n"
         "  Enter            : Send message (when focused in input box)\r\n"
         "  Esc              : Clear input field or reset search filter\r\n\r\n"
         "[SLASH COMMANDS]\r\n"
@@ -493,6 +615,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  /topic <new topic text>             : Set channel topic\r\n"
         "  /nick <username>                    : Change your display nickname\r\n"
         "  /join <#room>                       : Switch or join a custom channel\r\n"
+        "  /switch [<#room>]                   : Channel Switcher dialog or switch room\r\n"
+        "  /spool [flush|clear]                : Offline message spool controls\r\n"
         "  /roll [d6|d20|d100]                 : Roll dice with custom sides\r\n"
         "  /stats                              : Display channel analytics\r\n"
         "  /me <action>                        : Send 3rd-person action notice\r\n"
@@ -509,13 +633,21 @@ void ShowHelpDialog(HWND hwnd) {
 void SwitchToRoom(HWND hwnd, const char* room) {
     my_strncpy(currentRoom, room, sizeof(currentRoom));
     if (hRoomCombo) {
-        for (int i = 0; i < 4; i++) {
+        int count = (int)SendMessageA(hRoomCombo, CB_GETCOUNT, 0, 0);
+        int found = -1;
+        for (int i = 0; i < count; i++) {
             char itemText[32];
             SendMessageA(hRoomCombo, CB_GETLBTEXT, i, (LPARAM)itemText);
             if (my_strcmp(itemText, room) == 0) {
-                SendMessageA(hRoomCombo, CB_SETCURSEL, i, 0);
+                found = i;
                 break;
             }
+        }
+        if (found >= 0) {
+            SendMessageA(hRoomCombo, CB_SETCURSEL, found, 0);
+        } else {
+            int newIdx = (int)SendMessageA(hRoomCombo, CB_ADDSTRING, 0, (LPARAM)room);
+            SendMessageA(hRoomCombo, CB_SETCURSEL, newIdx, 0);
         }
     }
     UpdateTopicDisplay();
@@ -605,6 +737,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hRoomCombo, CB_ADDSTRING, 0, (LPARAM)"#lounge");
             SendMessageA(hRoomCombo, CB_SETCURSEL, 0, 0);
 
+            hSwitcherBtn = CreateWindowA("BUTTON", "Switch [K]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(410), SCALE(8), SCALE(66), SCALE(24), hwnd, (HMENU)119, 0, 0);
+            hSpoolBtn = CreateWindowA("BUTTON", "Spool: 0", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(480), SCALE(8), SCALE(64), SCALE(24), hwnd, (HMENU)120, 0, 0);
+
             hPollBtn = CreateWindowA("BUTTON", "+ Poll [P]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(547), SCALE(8), SCALE(65), SCALE(24), hwnd, (HMENU)113, 0, 0);
             hVoteBtn = CreateWindowA("BUTTON", "Vote [V]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(616), SCALE(8), SCALE(58), SCALE(24), hwnd, (HMENU)114, 0, 0);
             hStatsBtn = CreateWindowA("BUTTON", "Stats [S]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(678), SCALE(8), SCALE(58), SCALE(24), hwnd, (HMENU)115, 0, 0);
@@ -641,6 +776,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hPort, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hRoomCombo, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hSwitcherBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hSpoolBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hPollBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hVoteBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hStatsBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);

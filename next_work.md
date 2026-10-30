@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KDragon
   kilo_usability: KDragon
-  kilo_qa: KChat
+  kilo_qa: KChatServer
   kilo_expander: KNet
   kilo_review: KHex
 virtual_web_target: kweb://rfc-archive
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KScript
-  timestamp: '2026-10-30T11:21:44-07:00'
+  agent: kilo-qa
+  app: KChat
+  timestamp: '2026-10-30T11:40:12-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -165,11 +165,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KChat`
+- **Active Target**: `KChatServer`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, channel switcher, offline message spool, dual Win32 C parity, and promote to Mature table. |
 | `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, client connection telemetry, broadcast console, dual Win32 C parity, and promote to Mature table. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, waveform audio editor, spectrum visualizer, filter pipeline, dual Win32 C parity, and promote to Mature table. |
@@ -180,6 +179,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, retro palette & tool drawer, canvas resize/export, dual Win32 C parity, and promote to Mature table. |
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, agent fleet telemetry, queue visualizer, process monitor, dual Win32 C parity, and promote to Mature table. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
+| `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, channel switcher, offline message spool, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KNet`
@@ -288,6 +288,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T11:40:12-07:00 — kilo-qa: KChat (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KChat across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KChatServer`; rotated active agent to `kilo-expander`.
+
 - **2026-10-30T11:21:44-07:00 — kilo-usability: KScript (Split Editor/Output Resizing, Line-Number Gutter Alignment & Shortcut Usability)**
   - Status: PASS ✅ (0 errors, web 171.2 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.44%, HEAD Δ 7.58%, 0 fail, 0 warn, 5.9s)).
   - Splitter Resizing: Silky smooth pointer column dragging, double-click/Enter/Home ratio reset, keyboard navigation (ArrowLeft/Right), and dual Win32 C drag & WM_PAINT splitter parity.
@@ -310,9 +315,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented real-time 64K intro Canvas effect switcher (plasma, rotozoom, 3D starfield, copper bars, metaballs) with parameter sliders and CRT toggle.
   - Equipped ANSI .NFO studio, compo voting board with score persistence, VFS vault spooling (/home/downloads/), and KNet URL resolver routing.
   - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-30T08:41:02-07:00 — kilo-expander: KSynth (Phase VI VFS Patch Bank & Cross-App Bridge for KSynth)**
-  - Status: PASS ✅ (0 errors, web 183.2 KB, native 28.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.12%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.1s)).
-  - Phase VI VFS Patch Bank: Auto-seeded and wired 2-Op FM patch presets (.fm) to /home/music/, added Trapster P2P patch conversion, and registered .fm file associations in kexplorer.
-  - Cross-App & Win32 C Parity: Exported track audio to KRadio (/home/music/ksynth_track.wav) and Trapster catalog, fully mirrored in KSynth/main.c with Win32 C build, Shift+S/O/R/T hotkeys, and zero layout clipping.
-  - Handoff: Advanced `kilo-expander` to `KNet`; rotated active agent to `kilo-review`.

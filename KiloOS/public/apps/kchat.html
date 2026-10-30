@@ -689,10 +689,12 @@
                 <div class="channel-pill" onclick="window.switchRoom('#random')"><span class="key-badge">3</span> #random</div>
                 <div class="channel-pill" onclick="window.switchRoom('#lounge')"><span class="key-badge">4</span> #lounge</div>
                 <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="window.openRoomModal()" title="Create/Join a channel">+ Room</button>
+                <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="window.openSwitcherModal()" title="Quick Channel Switcher [Ctrl+K]">🔀 Switcher <span class="key-badge">K</span></button>
                 <span class="help-tip-badge" onclick="window.showHelp()" title="Click for Quick-Start Tutorial & Shortcuts" style="cursor: pointer; font-size: 11px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 2px 8px; color: #93c5fd; margin-left: 4px;">💡 Press [F1] for Tutorial</span>
             </div>
 
             <div class="row">
+                <span id="spoolBadge" onclick="window.openSpoolModal()" style="display:none; cursor:pointer; font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; background:rgba(245,158,11,0.2); border:1px solid rgba(245,158,11,0.4); color:#fbbf24;" title="Offline Message Spool — click to inspect">📦 Spool: 0</span>
                 <button class="btn-secondary" onclick="window.openPollModal()" title="Create an interactive poll [P]">📊 Poll <span class="key-badge">P</span></button>
                 <button class="btn-secondary" onclick="window.openStatsModal()" title="View Chat Analytics [S]">📈 Stats <span class="key-badge">S</span></button>
                 <div style="position: relative; display: inline-flex; align-items: center;">
@@ -749,7 +751,7 @@
                 <div class="help-section">
                     <div class="help-section-title">🚀 Quick-Start Tutorial</div>
                     <div style="font-size: 12px; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 6px;">
-                        <div><strong>1. Switch Channels:</strong> Click channel tabs (<code style="color:#60a5fa">#general</code>, <code style="color:#60a5fa">#dev</code>, <code style="color:#60a5fa">#random</code>, <code style="color:#60a5fa">#lounge</code>) or press keys <span class="key-badge">1</span>–<span class="key-badge">4</span>. Click <code style="color:#60a5fa">+ Room</code> or type <code>/join #room</code> to jump into any custom channel.</div>
+                        <div><strong>1. Switch Channels:</strong> Click channel tabs (<code style="color:#60a5fa">#general</code>, <code style="color:#60a5fa">#dev</code>, <code style="color:#60a5fa">#random</code>, <code style="color:#60a5fa">#lounge</code>) or press keys <span class="key-badge">1</span>–<span class="key-badge">9</span>. Press <span class="key-badge">Ctrl+K</span> for the quick Channel Switcher, or <span class="key-badge">Alt+←/→</span> to cycle. Click <code style="color:#60a5fa">+ Room</code> or type <code>/join #room</code> to jump into any custom channel.</div>
                         <div><strong>2. Chat & Messaging:</strong> Type a message and hit <span class="key-badge">Enter</span>. Use rich formatting, slash commands like <code>/me &lt;action&gt;</code>, or quick emotes like <code>/shrug</code>.</div>
                         <div><strong>3. Interactive Polls:</strong> Click <strong>📊 Poll</strong> (or press <span class="key-badge">P</span>) to launch an instant room vote. Click any option bar or use <code>/vote 1</code> to cast a vote.</div>
                         <div><strong>4. Copy & Pin Messages:</strong> Click <strong>📋 Copy</strong> on any message to copy its text to the clipboard with instant confirmation, or <strong>📌 Pin</strong> to pin important notes to the room banner.</div>
@@ -765,6 +767,8 @@
                         <tr><td>[F5]</td><td>Quicksave chat state snapshot to local storage</td></tr>
                         <tr><td>[F9]</td><td>Quickload chat state snapshot from local storage</td></tr>
                         <tr><td>[1] - [4]</td><td>Quick switch channel (#general, #dev, #random, #lounge)</td></tr>
+                        <tr><td>[Ctrl + K] or [K]</td><td>Open Channel Switcher palette to search & jump channels</td></tr>
+                        <tr><td>[Alt + ← / →]</td><td>Cycle backward/forward through active channels</td></tr>
                         <tr><td>[P]</td><td>Open Create Interactive Poll modal</td></tr>
                         <tr><td>[S]</td><td>Open Chat Room Analytics & Insights modal</td></tr>
                         <tr><td>[Ctrl + C]</td><td>Copy channel chat transcript to clipboard</td></tr>
@@ -782,6 +786,8 @@
                         <tr><td>/topic &lt;text&gt;</td><td>Set or update the current channel topic</td></tr>
                         <tr><td>/nick &lt;name&gt;</td><td>Change your display username</td></tr>
                         <tr><td>/join &lt;#room&gt;</td><td>Switch to or create a custom chat room</td></tr>
+                        <tr><td>/switch [&lt;#room&gt;]</td><td>Open Channel Switcher or switch to specified room</td></tr>
+                        <tr><td>/spool [flush|clear]</td><td>Inspect or manage offline spooled message queue</td></tr>
                         <tr><td>/roll [d20]</td><td>Roll a dice (e.g., /roll d6, /roll d100)</td></tr>
                         <tr><td>/stats</td><td>Display channel & message analytics</td></tr>
                         <tr><td>/me &lt;action&gt;</td><td>Send a 3rd-person action notice</td></tr>
@@ -920,6 +926,52 @@
         </div>
     </div>
 
+    <!-- Channel Switcher Modal Overlay -->
+    <div class="modal-overlay" id="switcherModal" role="dialog" aria-modal="true" aria-label="Channel Switcher" onclick="if(event.target===this) window.closeSwitcherModal()">
+        <div class="modal-box" style="width: 520px;">
+            <div class="modal-header">
+                <span>🔀 Channel Switcher [Ctrl+K]</span>
+                <button class="action-icon-btn" onclick="window.closeSwitcherModal()" style="font-size: 14px;">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-field">
+                    <label for="switcherSearchInput">Quick Find Channel:</label>
+                    <input type="text" id="switcherSearchInput" placeholder="Type channel name or number..." oninput="window.renderSwitcherList()" onkeydown="window.handleSwitcherKey(event)">
+                </div>
+                <div id="switcherList" style="display:flex; flex-direction:column; gap:6px; max-height:260px; overflow-y:auto; margin-top:8px;">
+                </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:10px;">
+                <span style="font-size:11px; color:var(--text-muted);">Use <span class="key-badge">Alt+←/→</span> or <span class="key-badge">1-9</span> to cycle</span>
+                <button class="btn-secondary" onclick="window.closeSwitcherModal()">Close [Esc]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offline Message Spool Modal Overlay -->
+    <div class="modal-overlay" id="spoolModal" role="dialog" aria-modal="true" aria-label="Offline Message Spool" onclick="if(event.target===this) window.closeSpoolModal()">
+        <div class="modal-box" style="width: 540px;">
+            <div class="modal-header">
+                <span>📦 Offline Message Spool</span>
+                <button class="action-icon-btn" onclick="window.closeSpoolModal()" style="font-size: 14px;">✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+                    Messages queued while disconnected. When you connect to a server or Global Room, spooled messages auto-transmit in order.
+                </div>
+                <div id="spoolList" style="display:flex; flex-direction:column; gap:6px; max-height:240px; overflow-y:auto; margin-bottom:10px;">
+                </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:10px;">
+                <button class="btn-secondary" onclick="window.clearOfflineSpool()" style="color:#ef4444; border-color:rgba(239,68,68,0.3);">🗑️ Clear Spool</button>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-secondary" onclick="window.closeSpoolModal()">Close [Esc]</button>
+                    <button class="btn-green" onclick="window.flushOfflineSpool()">🚀 Flush Spool Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast"></div>
 
     <script type="module">
@@ -949,6 +1001,7 @@
         let currentUsername = "Guest" + Math.floor(Math.random() * 10000);
         let currentRoom = "#general";
         let showOnlyPinned = false;
+        let offlineSpool = [];
 
         let rooms = ["#general", "#dev", "#random", "#lounge"];
         let roomTopics = {
@@ -1024,7 +1077,9 @@
                 if (parsed.currentUsername) currentUsername = parsed.currentUsername;
                 if (parsed.currentRoom) currentRoom = parsed.currentRoom;
                 if (parsed.showOnlyPinned !== undefined) showOnlyPinned = !!parsed.showOnlyPinned;
+                if (parsed.offlineSpool && Array.isArray(parsed.offlineSpool)) offlineSpool = parsed.offlineSpool;
             }
+            updateSpoolUI();
         }
 
         function safeSaveState() {
@@ -1034,7 +1089,8 @@
                 roomTopics: roomTopics,
                 currentUsername: currentUsername,
                 currentRoom: currentRoom,
-                showOnlyPinned: showOnlyPinned
+                showOnlyPinned: showOnlyPinned,
+                offlineSpool: offlineSpool.slice(-50)
             };
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -1047,7 +1103,8 @@
                         roomTopics: roomTopics,
                         currentUsername: currentUsername,
                         currentRoom: currentRoom,
-                        showOnlyPinned: showOnlyPinned
+                        showOnlyPinned: showOnlyPinned,
+                        offlineSpool: offlineSpool.slice(-20)
                     };
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(fallbackState));
                 } catch(err2) {
@@ -1067,7 +1124,8 @@
                     rooms: rooms,
                     roomTopics: roomTopics,
                     messages: messages.slice(-200),
-                    showOnlyPinned: showOnlyPinned
+                    showOnlyPinned: showOnlyPinned,
+                    offlineSpool: offlineSpool.slice(-50)
                 };
                 safeSet(QUICKSAVE_KEY, snapshot);
                 safeSet('kchat_tutorialSeen', '1');
@@ -1109,6 +1167,10 @@
                         else btn.classList.remove('btn-active');
                     }
                 }
+                if (parsed.offlineSpool && Array.isArray(parsed.offlineSpool)) {
+                    offlineSpool = parsed.offlineSpool;
+                }
+                updateSpoolUI();
                 safeSet('kchat_tutorialSeen', '1');
                 safeSaveState();
                 if (window.renderChannelBar) window.renderChannelBar();
@@ -1203,6 +1265,19 @@
         const pollModalEl = document.getElementById('pollModal');
         const roomModalEl = document.getElementById('roomModal');
         const topicModalEl = document.getElementById('topicModal');
+        const switcherModalEl = document.getElementById('switcherModal');
+        const spoolModalEl = document.getElementById('spoolModal');
+
+        function updateSpoolUI() {
+            const badge = document.getElementById('spoolBadge');
+            if (!badge) return;
+            if (offlineSpool.length > 0) {
+                badge.style.display = 'inline-flex';
+                badge.textContent = `📦 Spool: ${offlineSpool.length}`;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
 
         function closeAllModals() {
             try { localStorage.setItem('kchat_tutorialSeen', '1'); } catch(e) {}
@@ -1211,7 +1286,179 @@
             if (roomModalEl) roomModalEl.classList.remove('active');
             if (topicModalEl) topicModalEl.classList.remove('active');
             if (statsModalEl) statsModalEl.classList.remove('active');
+            if (switcherModalEl) switcherModalEl.classList.remove('active');
+            if (spoolModalEl) spoolModalEl.classList.remove('active');
         }
+
+        // Offline Message Spool Operations
+        window.openSpoolModal = function() {
+            closeAllModals();
+            renderSpoolList();
+            if (spoolModalEl) spoolModalEl.classList.add('active');
+        };
+
+        window.closeSpoolModal = function() {
+            if (spoolModalEl) spoolModalEl.classList.remove('active');
+        };
+
+        function renderSpoolList() {
+            const listEl = document.getElementById('spoolList');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+            if (offlineSpool.length === 0) {
+                listEl.innerHTML = '<div style="color:var(--text-muted); font-size:12px; text-align:center; padding:18px;">Offline message spool is empty.</div>';
+                return;
+            }
+            offlineSpool.forEach((item, idx) => {
+                const row = document.createElement('div');
+                row.style.cssText = 'background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:6px 10px; display:flex; justify-content:space-between; align-items:center; font-size:12px;';
+                const d = new Date(item.timestamp || Date.now());
+                const timeStr = d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+                row.innerHTML = `
+                    <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:400px;">
+                        <span style="color:#60a5fa; font-weight:600;">[${escapeHtml(item.room || '#general')}]</span>
+                        <span style="color:#f1f5f9;">${escapeHtml(item.text)}</span>
+                    </div>
+                    <span style="color:var(--text-muted); font-size:11px; margin-left:8px;">${timeStr}</span>
+                `;
+                listEl.appendChild(row);
+            });
+        }
+
+        window.clearOfflineSpool = function() {
+            offlineSpool = [];
+            safeSaveState();
+            updateSpoolUI();
+            renderSpoolList();
+            showToast("Offline message spool cleared.");
+        };
+
+        window.flushOfflineSpool = function() {
+            if (offlineSpool.length === 0) {
+                showToast("Offline message spool is empty.");
+                return;
+            }
+            const canSendFirebase = isFirebase;
+            const canSendWs = (ws && (ws.readyState === 1 || isVirtual));
+            if (!canSendFirebase && !canSendWs) {
+                showToast("⚠️ Cannot flush: Connect to a server or Global Room first.");
+                return;
+            }
+            const count = offlineSpool.length;
+            offlineSpool.forEach(item => {
+                if (canSendFirebase) {
+                    try {
+                        push(ref(db, 'global_chat/messages'), {
+                            user: item.user || currentUsername,
+                            text: item.text,
+                            timestamp: serverTimestamp()
+                        });
+                    } catch(e) {}
+                } else if (canSendWs) {
+                    try {
+                        ws.send(item.text);
+                    } catch(e) {}
+                }
+            });
+            offlineSpool = [];
+            safeSaveState();
+            updateSpoolUI();
+            renderSpoolList();
+            window.closeSpoolModal();
+            showToast(`🚀 Flushed ${count} spooled message(s) to server!`);
+            addMessage("System", `[Offline Spool: Flushed ${count} message(s) to server]`, currentRoom);
+        };
+
+        function queueToSpool(msg, room) {
+            offlineSpool.push({
+                id: 'spool_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+                user: currentUsername,
+                text: msg,
+                room: room,
+                timestamp: Date.now()
+            });
+            safeSaveState();
+            updateSpoolUI();
+            showToast(`📦 Message queued in offline spool (${offlineSpool.length} pending).`);
+        }
+
+        // Channel Switcher Operations
+        window.openSwitcherModal = function() {
+            closeAllModals();
+            const input = document.getElementById('switcherSearchInput');
+            if (input) input.value = '';
+            window.renderSwitcherList();
+            if (switcherModalEl) {
+                switcherModalEl.classList.add('active');
+                setTimeout(() => { if (input) input.focus(); }, 50);
+            }
+        };
+
+        window.closeSwitcherModal = function() {
+            if (switcherModalEl) switcherModalEl.classList.remove('active');
+        };
+
+        window.renderSwitcherList = function() {
+            const listEl = document.getElementById('switcherList');
+            const searchInput = document.getElementById('switcherSearchInput');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+            const q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            const matching = rooms.filter(r => {
+                if (!q) return true;
+                const topic = (roomTopics[r] || '').toLowerCase();
+                return r.toLowerCase().includes(q) || topic.includes(q);
+            });
+
+            if (matching.length === 0) {
+                listEl.innerHTML = '<div style="color:var(--text-muted); font-size:12px; text-align:center; padding:18px;">No matching channels found. Type /join &lt;#room&gt; to create one.</div>';
+                return;
+            }
+
+            matching.forEach((r, idx) => {
+                const isActive = (r === currentRoom);
+                const count = messages.filter(m => (m.room || '#general') === r).length;
+                const topic = roomTopics[r] || "No topic set";
+                const row = document.createElement('div');
+                row.className = `channel-pill ${isActive ? 'active' : ''}`;
+                row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:8px 12px; cursor:pointer; width:100%; border-radius:var(--radius-sm); border:1px solid ' + (isActive ? 'var(--accent)' : 'var(--border)') + '; background:' + (isActive ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.03)') + ';';
+                row.onclick = () => {
+                    window.switchRoom(r);
+                    window.closeSwitcherModal();
+                };
+                row.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="key-badge">${idx + 1}</span>
+                        <div style="text-align:left;">
+                            <div style="font-weight:600; color:${isActive ? '#60a5fa' : '#f1f5f9'};">${escapeHtml(r)} ${isActive ? '<span style="font-size:10px; color:#10b981; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); border-radius:4px; padding:1px 4px; margin-left:4px;">ACTIVE</span>' : ''}</div>
+                            <div style="font-size:11px; color:var(--text-muted); max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(topic)}</div>
+                        </div>
+                    </div>
+                    <span style="font-size:11px; color:var(--text-muted);">${count} msg${count === 1 ? '' : 's'}</span>
+                `;
+                listEl.appendChild(row);
+            });
+        };
+
+        window.handleSwitcherKey = function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const listEl = document.getElementById('switcherList');
+                if (listEl && listEl.firstElementChild) {
+                    listEl.firstElementChild.click();
+                }
+            } else if (e.key === 'Escape') {
+                window.closeSwitcherModal();
+            }
+        };
+
+        window.switchNextRoom = function(direction = 1) {
+            if (!rooms || rooms.length === 0) return;
+            const curIdx = rooms.indexOf(currentRoom);
+            const nextIdx = (curIdx + direction + rooms.length) % rooms.length;
+            window.switchRoom(rooms[nextIdx]);
+            showToast(`Switched channel to ${rooms[nextIdx]}`);
+        };
 
         window.openHelpModal = function() {
             closeAllModals();
@@ -1431,6 +1678,7 @@
                         <span>${avatarIcon}</span>
                         <span class="${authorTagClass}">${escapeHtml(author)}</span>
                         <span class="msg-room-badge">${escapeHtml(m.room || '#general')}</span>
+                        ${m.spooled ? '<span style="font-size:10px; color:#f59e0b; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); border-radius:4px; padding:1px 5px;">⏳ Spooled</span>' : ''}
                     </div>
                     <div class="msg-time">${timeStr}</div>
                 `;
@@ -1566,7 +1814,7 @@
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
-        function addMessage(user, text, room = currentRoom, isAI = false) {
+        function addMessage(user, text, room = currentRoom, isAI = false, isSpooled = false) {
             const newMsg = {
                 id: 'msg_' + Date.now() + '_' + Math.floor(Math.random()*10000),
                 user: user,
@@ -1576,7 +1824,8 @@
                 pinned: false,
                 reactions: { '👍': 0, '❤️': 0, '🚀': 0, '💡': 0, '🔥': 0 },
                 userReacted: {},
-                isAI: isAI
+                isAI: isAI,
+                spooled: isSpooled
             };
             messages.push(newMsg);
             if (messages.length > 300) messages.shift();
@@ -1719,7 +1968,7 @@
 
         document.addEventListener('keydown', function(e) {
             const isTyping = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT');
-            const anyModalOpen = [helpModalEl, pollModalEl, roomModalEl, topicModalEl, statsModalEl].some(m => m && m.classList.contains('active'));
+            const anyModalOpen = [helpModalEl, pollModalEl, roomModalEl, topicModalEl, statsModalEl, switcherModalEl, spoolModalEl].some(m => m && m.classList.contains('active'));
 
             if (e.key === 'Escape') {
                 if (anyModalOpen) {
@@ -1745,9 +1994,24 @@
             } else if (e.key === 'F9') {
                 e.preventDefault();
                 window.quickLoad();
+            } else if (e.ctrlKey && (e.key === 'k' || e.key === 'K')) {
+                e.preventDefault();
+                window.openSwitcherModal();
+            } else if (e.altKey && (e.key === 'ArrowRight' || e.key === 'ArrowDown')) {
+                e.preventDefault();
+                window.switchNextRoom(1);
+            } else if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowUp')) {
+                e.preventDefault();
+                window.switchNextRoom(-1);
             } else if (!isTyping && !anyModalOpen && (e.key === 'h' || e.key === 'H')) {
                 e.preventDefault();
                 window.showHelp();
+            } else if (!isTyping && !anyModalOpen && (e.key === 'k' || e.key === 'K') && !e.ctrlKey && !e.altKey) {
+                e.preventDefault();
+                window.openSwitcherModal();
+            } else if (!isTyping && !anyModalOpen && (e.key === 'o' || e.key === 'O') && !e.ctrlKey && !e.altKey) {
+                e.preventDefault();
+                window.openSpoolModal();
             } else if (!isTyping && !anyModalOpen && (e.key === 'p' || e.key === 'P') && !e.ctrlKey && !e.altKey) {
                 e.preventDefault();
                 window.openPollModal();
@@ -1959,6 +2223,9 @@
                 }
                 addMessage(data.user || 'Anonymous', data.text || '', currentRoom);
             });
+            if (offlineSpool.length > 0) {
+                setTimeout(() => window.flushOfflineSpool(), 400);
+            }
         };
 
         window.connect = function() {
@@ -1995,6 +2262,7 @@
                 setTimeout(() => {
                     addMessage("System", `Connected to Virtual Node [Port ${port}]`, currentRoom);
                     btnConnect.textContent = 'Disconnect';
+                    if (offlineSpool.length > 0) setTimeout(() => window.flushOfflineSpool(), 400);
                 }, 500);
                 return;
             }
@@ -2005,6 +2273,7 @@
                 socket.onopen = () => {
                     addMessage("System", 'Connected!', currentRoom);
                     btnConnect.textContent = 'Disconnect';
+                    if (offlineSpool.length > 0) setTimeout(() => window.flushOfflineSpool(), 400);
                 };
                 socket.onmessage = (e) => {
                     addMessage('Server', e.data, currentRoom);
@@ -2190,16 +2459,62 @@
                 }
             }
 
-            addMessage(currentUsername, msg, currentRoom);
+            if (msg === '/switch' || msg === '/channels') {
+                window.openSwitcherModal();
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg.startsWith('/switch ')) {
+                const targetRoom = msg.substring(8).trim();
+                if (targetRoom) {
+                    const formatted = targetRoom.startsWith('#') ? targetRoom : '#' + targetRoom;
+                    if (!rooms.includes(formatted)) {
+                        rooms.push(formatted);
+                        roomTopics[formatted] = "Channel for " + formatted;
+                        window.renderChannelBar();
+                    }
+                    window.switchRoom(formatted);
+                    showToast(`Switched channel to ${formatted}`);
+                }
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg === '/spool') {
+                window.openSpoolModal();
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg === '/spool flush') {
+                window.flushOfflineSpool();
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg === '/spool clear') {
+                window.clearOfflineSpool();
+                inputEl.value = '';
+                return;
+            }
+
+            const isOnline = isFirebase || (ws && (ws.readyState === 1 || isVirtual));
+            addMessage(currentUsername, msg, currentRoom, false, !isOnline);
 
             if (isFirebase) {
                 push(ref(db, 'global_chat/messages'), {
                     user: currentUsername,
                     text: msg,
                     timestamp: serverTimestamp()
-                }).catch(err => addMessage("System", "Error sending: " + err.message, currentRoom));
+                }).catch(err => {
+                    addMessage("System", "Error sending: " + err.message, currentRoom);
+                    queueToSpool(msg, currentRoom);
+                });
             } else if (ws && typeof ws.send === 'function') {
                 ws.send(msg); 
+            } else {
+                queueToSpool(msg, currentRoom);
             }
             inputEl.value = '';
         };
@@ -2232,6 +2547,7 @@
         // Initial setup
         window.renderChannelBar();
         window.renderMessages();
+        updateSpoolUI();
 
         // Sync filter button visual state
         const btnFilterPinned = document.getElementById('btnFilterPinned');
