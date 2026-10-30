@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KStellar
   kilo_soundscape: KStellar
   kilo_tester: KTrader
-  kilo_usability: KAnomaly
+  kilo_usability: KTrader
   kilo_qa: KMail
   kilo_expander: KTrader
   kilo_review: KHex
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
-  app: KMech
-  timestamp: '2026-10-30T03:35:59-07:00'
+  agent: kilo-usability
+  app: KAnomaly
+  timestamp: '2026-10-30T04:22:20-07:00'
 last_planner_run: '2026-10-29T17:30:03Z'
 ---
 
@@ -148,11 +148,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KAnomaly`
+- **Active Target**: `KTrader`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Compact #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 without vertical scroll, add preventDefault() for Arrow/Space keys so gameplay never scrolls the page, and prevent #toast-container from covering #controls and #message-log. |
@@ -163,6 +162,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Eliminate 216px vertical overflow at 700x723 in kgo.html by locking body to 100vh flex column with overflow hidden, merging h1 and .status-container into a compact top bar, collapsing the redundant 3-row #hotkey-bar (and removing misleading /WASD label since S toggles Analyzer), tightening .board/.board-container/.controls padding, and making getCellSize() viewport-responsive so 9x9, 13x13, and 19x19 boards plus all controls fit 100% visible with 0px scroll; raise kbd, badge, .stone-num-label, .liberty-badge, and .ko-overlay font sizes to >= 10px (0 tiny-text warnings); remove random rotate() on .stone so 3D lighting stays top-left and move numbers (M) never render upside-down, and append .last-move-aura/.ripple/.ripple-outer to .cell instead of overflow-hidden .stone; replace blocking alert() dialogs for Stats/Campaign/Score with Esc-dismissible in-DOM modals, pause idle updateScreenShake rAF loop, and change KGo/main.c Goban coordinates from invisible mahogany RGB(75,48,24) to gold RGB(255,220,110). |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Orbit & navigation viewport ergonomics, touch/keyboard flight controls, HiDPI radar canvas scaling, and compact HUD. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Drag-and-drop / VFS carrier image picker UX, clear capacity progress bar, HiDPI bitplane canvas scaling, and accessible modal focus traps. |
+| `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KMail`
@@ -282,6 +282,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T04:22:20-07:00 — kilo-usability: KAnomaly (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KAnomaly across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KTrader`; rotated active agent to `kilo-qa`.
+
 - **2026-10-30T03:35:59-07:00 — kilo-tester: KMech (Interactive UI Audit & Combat Telemetry Fixes)**
   - Status: PASS ✅ (0 errors, web 180.5 KB, native 38.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - UI & Combat Repairs: Fixed #garage-rank update on level-up, verified enemyStunned headshot mechanics in enemyTurn(), auto-restored telemetry on boot, and aligned EMP overheat burnout damage in both Web and Win32 C.
@@ -303,9 +308,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Gated Firebase RTDB sync behind explicit user action [CONNECT LIVE RTDB] to enforce zero-autostart rule and eliminate boot networking.
   - Synchronized kweb://warez routing, option labeling, and manual documentation across KNet, portal, and webring.
   - Handoff: Advanced `kilo-creator` to `kweb://geocities`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-30T01:36:58-07:00 — kilo-expander: KMech (Phase VI VFS Mesh & RFMS Multiplayer Arena Expansion)**
-  - Status: PASS ✅ (0 errors, web 188.0 KB, native 38.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.13%, input 16.15%, HEAD Δ 0.08%, 0 fail, 0 warn, 4.8s)).
-  - Phase VI VFS Telemetry: Wired VFS Open/Save to /home/saves/kmech_telemetry.json via postMessage with safe local fallback, removed openPicker premature timeout, and upgraded F9 quickLoad to read VFS saves.
-  - RFMS Multiplayer & Win32 C Parity: Fortified RFMS Arena duel modal with 25s solo fallback, Escape handler on inputs, and added full Win32 native Arena Duel [P] and Telem [F2] button suite with synthetic combat chassis rival.
-  - Handoff: Advanced `kilo-expander` to `KTrader`; rotated active agent to `kilo-review`.

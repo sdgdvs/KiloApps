@@ -115,6 +115,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap;
   }
 
   button.kbtn {
@@ -238,7 +239,12 @@
   button.kbtn:focus-visible,
   select.kselect:focus-visible,
   .tab-btn:focus-visible,
-  
+  .tuner-step-badge:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 1px;
+    box-shadow: 0 0 8px rgba(51, 204, 255, 0.6);
+  }
+
   .tuner-step-badge {
     font-size: 10px;
     font-weight: bold;
@@ -586,10 +592,14 @@
     border: 1px solid var(--border);
     padding: 3px 8px;
     font-size: 11px;
+    flex-wrap: wrap;
+    gap: 4px;
   }
   .status-left, .status-right {
     display: flex;
     gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
   }
 
   /* Modals and Overlays */
@@ -910,12 +920,12 @@
 
   <!-- TAB 2: DSP FORENSIC DECODER -->
   <div class="tab-content" id="tab-decoder">
-    <div class="panel" style="flex: 1;">
+    <div class="panel" style="flex: 1; overflow: hidden;">
       <div class="panel-header">
         <span>INTERCEPTED SIGNAL METRICS</span>
         <span id="decoderLockLabel" style="color: var(--alert); font-weight: bold;">CARRIER LOCKED</span>
       </div>
-      <div style="padding: 10px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1;">
         <!-- Decoder Hero Readout -->
         <div class="decoder-hero-banner" id="decoderHeroBanner">
           <div class="hero-metric">
@@ -1768,22 +1778,22 @@
     var centerX = WF_COLS / 2;
     var curStation = STATIONS[state.stationIdx];
     var baseNoise = 25 + Math.random() * 15;
+    var colScale = WF_COLS / 420;
+    var bwHalf = Math.round((state.bandwidth === 50 ? 6 : (state.bandwidth === 250 ? 18 : 45)) * colScale);
+    var peakW = Math.round(12 * colScale);
 
     for (var x = 0; x < WF_COLS; x++) {
       var val = baseNoise + (Math.random() * 20);
 
       // Passband filter highlight in center
       var distCenter = Math.abs(x - centerX);
-      var bwHalf = state.bandwidth === 50 ? 6 : (state.bandwidth === 250 ? 18 : 45);
       if (distCenter <= bwHalf) {
         val += 25;
       }
 
       // Signal peak when carrier locked
-      if (state.carrierLocked) {
-        if (distCenter < 12) {
-          val += (12 - distCenter) * 16;
-        }
+      if (state.carrierLocked && distCenter < peakW) {
+        val += (1 - distCenter / peakW) * 192;
       }
 
       // Seismic transient spikes
@@ -1931,12 +1941,12 @@
     scopeCtx.beginPath();
 
     for (var x = 0; x < scopeCanvas.width; x++) {
-      var phase = (x + frameCount * 2) * 0.15;
-      var wave = Math.sin(phase) * 12;
+      var phase = (x + frameCount * 2) * (0.15 / dpr);
+      var wave = Math.sin(phase) * 12 * dpr;
       if (state.carrierLocked) {
-        wave += Math.sin(phase * 2.8) * 16;
+        wave += Math.sin(phase * 2.8) * 16 * dpr;
       }
-      var noise = (Math.random() * 8) - 4;
+      var noise = ((Math.random() * 8) - 4) * dpr;
       var y = midY + wave + noise;
       if (x === 0) scopeCtx.moveTo(x, y);
       else scopeCtx.lineTo(x, y);
@@ -1953,15 +1963,15 @@
 
     for (var b = 0; b < numBars; b++) {
       var dist = Math.abs(b - centerBar);
-      var barH = 8 + Math.random() * 14;
+      var barH = (8 + Math.random() * 14) * dpr;
 
       if (state.carrierLocked && dist < 5) {
-        barH += (5 - dist) * 14;
+        barH += (5 - dist) * 14 * dpr;
       }
-      barH = Math.min(fftCanvas.height - 4, barH);
+      barH = Math.min(fftCanvas.height - 4 * dpr, barH);
 
       fftCtx.fillStyle = (dist < 2 && state.carrierLocked) ? "var(--alert)" : "var(--border-bright)";
-      fftCtx.fillRect(b * barWidth, fftCanvas.height - barH, barWidth - 1, barH);
+      fftCtx.fillRect(b * barWidth, fftCanvas.height - barH, Math.max(1, barWidth - 1), barH);
     }
   }
 
@@ -2010,19 +2020,21 @@
 
   // --- Triangulation Vector Renderer ---
   function renderTriangulationMap() {
+    var dpr = window.devicePixelRatio || 1;
     triCtx.fillStyle = "#020704";
     triCtx.fillRect(0, 0, triCanvas.width, triCanvas.height);
 
     // Draw vector wireframe latitude / longitude grid
     triCtx.strokeStyle = "rgba(32, 96, 56, 0.4)";
-    triCtx.lineWidth = 1;
-    for (var gx = 0; gx < triCanvas.width; gx += 40) {
+    triCtx.lineWidth = Math.max(1, Math.round(dpr));
+    var gridStep = Math.round(40 * dpr);
+    for (var gx = 0; gx < triCanvas.width; gx += gridStep) {
       triCtx.beginPath();
       triCtx.moveTo(gx, 0);
       triCtx.lineTo(gx, triCanvas.height);
       triCtx.stroke();
     }
-    for (var gy = 0; gy < triCanvas.height; gy += 40) {
+    for (var gy = 0; gy < triCanvas.height; gy += gridStep) {
       triCtx.beginPath();
       triCtx.moveTo(0, gy);
       triCtx.lineTo(triCanvas.width, gy);
@@ -2030,7 +2042,7 @@
     }
 
     // Map stations to canvas coordinates
-    var pad = 40;
+    var pad = Math.round(40 * dpr);
     var w = triCanvas.width - pad * 2;
     var h = triCanvas.height - pad * 2;
 
@@ -2043,18 +2055,19 @@
       var isCur = (idx === state.stationIdx);
       triCtx.fillStyle = isCur ? "var(--alert)" : "var(--cyan)";
       triCtx.beginPath();
-      triCtx.arc(sx, sy, isCur ? 6 : 4, 0, Math.PI * 2);
+      triCtx.arc(sx, sy, isCur ? 6 * dpr : 4 * dpr, 0, Math.PI * 2);
       triCtx.fill();
 
       // Label
       triCtx.fillStyle = "var(--phosphor)";
-      triCtx.font = "10px Consolas, monospace";
-      triCtx.fillText(stn.id + " (" + stn.name + ")", sx + 8, sy + 3);
+      triCtx.font = Math.round(10 * dpr) + "px Consolas, monospace";
+      triCtx.fillText(stn.id + " (" + stn.name + ")", sx + 8 * dpr, sy + 3 * dpr);
 
       // If triangulation solved, draw hyperbolic arrival circles
       if (state.triangulationSolved) {
-        var radius = (idx * 25 + 50 + (frameCount % 60)) % 140;
+        var radius = ((idx * 25 + 50 + (frameCount % 60)) % 140) * dpr;
         triCtx.strokeStyle = "rgba(51, 204, 255, 0.35)";
+        triCtx.lineWidth = Math.max(1, Math.round(dpr));
         triCtx.beginPath();
         triCtx.arc(sx, sy, radius, 0, Math.PI * 2);
         triCtx.stroke();
@@ -2069,21 +2082,21 @@
       var ey = pad + ((90 - targetStn.lat) / 180) * h;
 
       // Pulse ring
-      var pulseR = 8 + (frameCount % 30);
+      var pulseR = (8 + (frameCount % 30)) * dpr;
       triCtx.strokeStyle = "var(--alert)";
-      triCtx.lineWidth = 2;
+      triCtx.lineWidth = Math.max(1, Math.round(2 * dpr));
       triCtx.beginPath();
       triCtx.arc(ex, ey, pulseR, 0, Math.PI * 2);
       triCtx.stroke();
 
       triCtx.fillStyle = "var(--alert)";
       triCtx.beginPath();
-      triCtx.arc(ex, ey, 5, 0, Math.PI * 2);
+      triCtx.arc(ex, ey, 5 * dpr, 0, Math.PI * 2);
       triCtx.fill();
 
       triCtx.fillStyle = "#fff";
-      triCtx.font = "bold 11px Consolas, monospace";
-      triCtx.fillText("TARGET FIX: Sub-Bunker 0x7F (10.19.99.4)", ex + 12, ey - 6);
+      triCtx.font = "bold " + Math.round(11 * dpr) + "px Consolas, monospace";
+      triCtx.fillText("TARGET FIX: Sub-Bunker 0x7F (10.19.99.4)", ex + 12 * dpr, ey - 6 * dpr);
     }
   }
 
@@ -2593,13 +2606,13 @@
       if (tabButtons[tabIdx]) tabButtons[tabIdx].click();
       return;
     }
-    if (e.key === "ArrowLeft") {
+    if (e.key === "ArrowLeft" || e.key === "[" || e.key === "-") {
       e.preventDefault();
       var stepValL = getActiveStep(e);
       stepFrequency(-stepValL);
       return;
     }
-    if (e.key === "ArrowRight") {
+    if (e.key === "ArrowRight" || e.key === "]" || e.key === "=" || e.key === "+") {
       e.preventDefault();
       var stepValR = getActiveStep(e);
       stepFrequency(stepValR);
@@ -2925,6 +2938,7 @@
   function attachWheelTuner(el) {
     if (!el) return;
     el.addEventListener("wheel", function(e) {
+      if (e.target && e.target.tagName === "SELECT") return;
       e.preventDefault();
       var delta = e.deltaY < 0 ? 1 : -1;
       var step = getActiveStep(e);
@@ -2934,6 +2948,18 @@
   attachWheelTuner(document.getElementById("freqDisplay"));
   attachWheelTuner(document.querySelector(".tuner-bar"));
   attachWheelTuner(document.getElementById("waterfallCanvas"));
+  attachWheelTuner(document.getElementById("scopeCanvas"));
+  attachWheelTuner(document.getElementById("fftCanvas"));
+
+  // Modal Backdrop Click Dismissal
+  document.querySelectorAll(".modal-overlay").forEach(function(overlay) {
+    overlay.addEventListener("click", function(e) {
+      if (e.target === overlay) {
+        overlay.classList.remove("active");
+        playUiClick(400);
+      }
+    });
+  });
 
   // Interactive Waterfall Tuning & Scrubbing
   var wfPill = document.getElementById("waterfallHoverPill");

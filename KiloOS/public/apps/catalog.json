@@ -435,9 +435,9 @@
     "id": "kmech",
     "title": "KMech",
     "folder": "Games",
-    "webBytes": 192215,
-    "exeBytes": 38400,
-    "budgetPercent": 19.2
+    "webBytes": 192916,
+    "exeBytes": 39424,
+    "budgetPercent": 19.3
   },
   {
     "id": "kmedia",
@@ -467,7 +467,7 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 211781,
+    "webBytes": 211847,
     "exeBytes": 57856,
     "budgetPercent": 21.2
   },

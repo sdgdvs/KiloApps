@@ -331,26 +331,75 @@ static void DrawWaterfall(HDC hdc, int x, int y, int w, int h) {
         SRCCOPY
     );
 
-    // Draw reticle and tuning brackets
-    HPEN hPenReticle = CreatePen(PS_SOLID, 1, COLOR_ALERT);
-    HPEN hOldPen = (HPEN)SelectObject(hdc, hPenReticle);
-
     int cx = x + w / 2;
-    MoveToEx(hdc, cx, y, NULL);
+
+    // 1. Frequency Ruler Graticule Bar across Top (16px high)
+    RECT rcRuler = {x, y, x + w, y + 16};
+    HBRUSH hBrushRuler = CreateSolidBrush(RGB(6, 14, 10));
+    FillRect(hdc, &rcRuler, hBrushRuler);
+    DeleteObject(hBrushRuler);
+
+    HPEN hPenRulerLine = CreatePen(PS_SOLID, 1, RGB(32, 96, 56));
+    HPEN hOldPen = (HPEN)SelectObject(hdc, hPenRulerLine);
+    MoveToEx(hdc, x, y + 16, NULL);
+    LineTo(hdc, x + w, y + 16);
+
+    // Minor / major ticks across +/- 3.0 kHz span
+    int span_px = w / 2;
+    for (int i = -2; i <= 2; i++) {
+        if (i == 0) continue;
+        int tx = cx + (i * span_px) / 3;
+        MoveToEx(hdc, tx, y + 8, NULL);
+        LineTo(hdc, tx, y + 16);
+    }
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hPenRulerLine);
+
+    // Frequency ruler text
+    HFONT hOldFont = (HFONT)SelectObject(hdc, g_hFontSmall);
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, RGB(51, 255, 102));
+    TextOutA(hdc, cx - span_px * 2 / 3 - 14, y + 1, "-2.0k", 5);
+    TextOutA(hdc, cx - span_px / 3 - 14, y + 1, "-1.0k", 5);
+    TextOutA(hdc, cx + span_px / 3 - 10, y + 1, "+1.0k", 5);
+    TextOutA(hdc, cx + span_px * 2 / 3 - 10, y + 1, "+2.0k", 5);
+
+    // Center tuned frequency readout in ruler
+    char f_center[32];
+    k_strcpy(f_center, "f0 ");
+    char f_val[16];
+    FormatFreq(g_freq_centikhz, f_val);
+    k_strcat(f_center, f_val);
+    SetTextColor(hdc, g_carrier_locked ? COLOR_ALERT : COLOR_AMBER);
+    TextOutA(hdc, cx - 35, y + 1, f_center, k_strlen(f_center));
+
+    // 2. Draw reticle and tuning brackets
+    HPEN hPenReticle = CreatePen(PS_SOLID, 1, g_carrier_locked ? COLOR_ALERT : RGB(255, 80, 80));
+    hOldPen = (HPEN)SelectObject(hdc, hPenReticle);
+    MoveToEx(hdc, cx, y + 17, NULL);
     LineTo(hdc, cx, y + h);
 
-    // Bandwidth brackets
-    int bw_px = (g_bandwidth_idx == 0) ? 12 : (g_bandwidth_idx == 1 ? 36 : 90);
+    // Bandwidth brackets (Dotted)
+    int bw_px = (g_bandwidth_idx == 0) ? 14 : (g_bandwidth_idx == 1 ? 40 : 100);
     HPEN hPenBw = CreatePen(PS_DOT, 1, COLOR_CYAN);
     SelectObject(hdc, hPenBw);
-    MoveToEx(hdc, cx - bw_px / 2, y, NULL);
+    MoveToEx(hdc, cx - bw_px / 2, y + 17, NULL);
     LineTo(hdc, cx - bw_px / 2, y + h);
-    MoveToEx(hdc, cx + bw_px / 2, y, NULL);
+    MoveToEx(hdc, cx + bw_px / 2, y + 17, NULL);
     LineTo(hdc, cx + bw_px / 2, y + h);
 
     SelectObject(hdc, hOldPen);
     DeleteObject(hPenReticle);
     DeleteObject(hPenBw);
+
+    // 3. Strata depth / time ticks along right edge
+    SetTextColor(hdc, RGB(51, 204, 255));
+    TextOutA(hdc, x + w - 105, y + 35,  "T-2s // Upper", 13);
+    TextOutA(hdc, x + w - 115, y + 75,  "T-6s // Salt (3.4k)", 19);
+    TextOutA(hdc, x + w - 120, y + 120, "T-10s // Fault (6.2k)", 21);
+    TextOutA(hdc, x + w - 120, y + 165, "T-14s // Deep (8.0k)", 20);
+
+    SelectObject(hdc, hOldFont);
 }
 
 static void DrawOscilloscope(HDC hdc, int x, int y, int w, int h) {
@@ -412,11 +461,11 @@ static void DrawTelemetryCards(HDC hdc, int x, int y, int w, int h) {
     SelectObject(hdc, g_hFontBold);
     SetTextColor(hdc, COLOR_PHOSPHOR);
 
-    TextOutA(hdc, x + 10, y + 8, "LITHOSPHERE SENSOR ARRAY", 24);
+    TextOutA(hdc, x + 10, y + 8, "LITHOSPHERE FORENSIC DECODER // TELEMETRY", 41);
 
     SelectObject(hdc, g_hFontMono);
-    char buf[128];
-    int line_y = y + 32;
+    char buf[160];
+    int line_y = y + 28;
 
     // Station
     k_strcpy(buf, "Station: ");
@@ -425,7 +474,7 @@ static void DrawTelemetryCards(HDC hdc, int x, int y, int w, int h) {
     k_strcat(buf, g_stations[g_curr_station].name);
     SetTextColor(hdc, COLOR_CYAN);
     TextOutA(hdc, x + 10, line_y, buf, k_strlen(buf));
-    line_y += 18;
+    line_y += 17;
 
     // Depth & Stratum
     k_strcpy(buf, "Depth: ");
@@ -436,7 +485,7 @@ static void DrawTelemetryCards(HDC hdc, int x, int y, int w, int h) {
     k_strcat(buf, g_stations[g_curr_station].strata);
     SetTextColor(hdc, COLOR_PHOSPHOR);
     TextOutA(hdc, x + 10, line_y, buf, k_strlen(buf));
-    line_y += 18;
+    line_y += 17;
 
     // Tuner
     k_strcpy(buf, "Tuned Freq: ");
@@ -449,12 +498,14 @@ static void DrawTelemetryCards(HDC hdc, int x, int y, int w, int h) {
     k_strcat(buf, g_bandwidth_names[g_bandwidth_idx]);
     SetTextColor(hdc, COLOR_AMBER);
     TextOutA(hdc, x + 10, line_y, buf, k_strlen(buf));
-    line_y += 18;
-    SetTextColor(hdc, COLOR_CYAN);
-    TextOutA(hdc, x + 10, line_y, "Tuner: Shift=0.01k | L/R=0.10k | Ctrl=1.00k", 43);
-    line_y += 20;
+    line_y += 17;
 
-    // Signal Carrier Lock
+    // Precision Vernier Guide
+    SetTextColor(hdc, RGB(51, 204, 255));
+    TextOutA(hdc, x + 10, line_y, "Tuner: Shift=0.01k | Left/Right=0.10k | Ctrl=1.00k | Alt=0.50k", 62);
+    line_y += 19;
+
+    // Signal Carrier Lock & Detailed Telemetry Metrics
     if (g_carrier_locked) {
         SetTextColor(hdc, COLOR_ALERT);
         k_strcpy(buf, "[!] CARRIER LOCK: ");
@@ -463,34 +514,106 @@ static void DrawTelemetryCards(HDC hdc, int x, int y, int w, int h) {
         char snr_s[16];
         k_itoa(g_snr_db, snr_s);
         k_strcat(buf, snr_s);
-        k_strcat(buf, " dB)");
+        k_strcat(buf, " dB) - SYNCHRONIZED");
         TextOutA(hdc, x + 10, line_y, buf, k_strlen(buf));
-        line_y += 18;
+        line_y += 17;
 
         SetTextColor(hdc, COLOR_PHOSPHOR);
-        k_strcpy(buf, ">> Decoded: ");
+        k_strcpy(buf, ">> Decoded Frame: ");
         k_strcat(buf, g_anomalies[g_locked_anom_idx].decoded_sig);
         TextOutA(hdc, x + 10, line_y, buf, k_strlen(buf));
+        line_y += 17;
+
+        k_strcpy(buf, ">> Target: ");
+        k_strcat(buf, g_anomalies[g_locked_anom_idx].name);
+        k_strcat(buf, " [");
+        k_strcat(buf, g_anomalies[g_locked_anom_idx].mode);
+        k_strcat(buf, "]");
+        SetTextColor(hdc, COLOR_AMBER);
+        TextOutA(hdc, x + 10, line_y, buf, k_strlen(buf));
+        line_y += 17;
+
+        // Doppler frequency offset
+        int diff = g_freq_centikhz - g_anomalies[g_locked_anom_idx].freq_centikhz;
+        k_strcpy(buf, ">> Doppler Offset: df ");
+        if (diff >= 0) k_strcat(buf, "+");
+        char diff_s[16];
+        k_itoa(diff / 100, diff_s);
+        k_strcat(buf, diff_s);
+        k_strcat(buf, ".");
+        int diff_frac = diff % 100;
+        if (diff_frac < 0) diff_frac = -diff_frac;
+        if (diff_frac < 10) k_strcat(buf, "0");
+        k_itoa(diff_frac, diff_s);
+        k_strcat(buf, diff_s);
+        k_strcat(buf, " kHz (CRC32: PASS)");
+        SetTextColor(hdc, COLOR_CYAN);
+        TextOutA(hdc, x + 10, line_y, buf, k_strlen(buf));
+        line_y += 17;
+
+        k_strcpy(buf, ">> Lore: ");
+        k_strcat(buf, g_anomalies[g_locked_anom_idx].lore);
+        if (k_strlen(buf) > 52) { buf[50] = '.'; buf[51] = '.'; buf[52] = '\0'; }
+        SetTextColor(hdc, COLOR_DIM);
+        TextOutA(hdc, x + 10, line_y, buf, k_strlen(buf));
+        line_y += 19;
+
+        // Carrier Confidence Gauge Bar
+        SetTextColor(hdc, COLOR_PHOSPHOR);
+        TextOutA(hdc, x + 10, line_y, "Confidence Index: 99.4% [LOCK SOLID]", 36);
+        line_y += 16;
+        RECT rcGaugeBg = {x + 10, line_y, x + w - 10, line_y + 8};
+        FillRect(hdc, &rcGaugeBg, g_hBrushBg);
+        FrameRect(hdc, &rcGaugeBg, g_hBrushBorder);
+        int bar_w = (w - 24) * 994 / 1000;
+        RECT rcGaugeFill = {x + 12, line_y + 2, x + 12 + bar_w, line_y + 6};
+        HBRUSH hAlertBrush = CreateSolidBrush(COLOR_ALERT);
+        FillRect(hdc, &rcGaugeFill, hAlertBrush);
+        DeleteObject(hAlertBrush);
+        line_y += 14;
     } else {
         SetTextColor(hdc, COLOR_DIM);
         TextOutA(hdc, x + 10, line_y, "[ SEARCHING NOISE FLOOR... ]", 28);
-        line_y += 18;
+        line_y += 17;
         k_strcpy(buf, "Ambient Noise: ");
         k_itoa(g_stations[g_curr_station].noise_floor, num_buf);
         k_strcat(buf, num_buf);
         k_strcat(buf, " dBm | Sweep: ");
         k_strcat(buf, g_is_sweeping ? "ACTIVE" : "STANDBY");
         TextOutA(hdc, x + 10, line_y, buf, k_strlen(buf));
-    }
-    line_y += 24;
+        line_y += 17;
 
-    // Anomalies Discovered
+        TextOutA(hdc, x + 10, line_y, "Target: NONE / Awaiting Lithospheric Carrier", 44);
+        line_y += 17;
+
+        TextOutA(hdc, x + 10, line_y, "Doppler Drift: 0.00 Hz/s (STATIC NOISE)", 39);
+        line_y += 19;
+
+        // Carrier Confidence Gauge Bar (low)
+        TextOutA(hdc, x + 10, line_y, "Confidence Index: 3.2% [SEARCHING]", 34);
+        line_y += 16;
+        RECT rcGaugeBg = {x + 10, line_y, x + w - 10, line_y + 8};
+        FillRect(hdc, &rcGaugeBg, g_hBrushBg);
+        FrameRect(hdc, &rcGaugeBg, g_hBrushBorder);
+        int bar_w = (w - 24) * 32 / 1000;
+        RECT rcGaugeFill = {x + 12, line_y + 2, x + 12 + (bar_w > 2 ? bar_w : 2), line_y + 6};
+        FillRect(hdc, &rcGaugeFill, g_hBrushBorder);
+        line_y += 14;
+    }
+
+    // Anomalies Cataloged
     SetTextColor(hdc, COLOR_CYAN);
     k_strcpy(buf, "Anomalies Cataloged: ");
     k_itoa(g_discovered_count, num_buf);
     k_strcat(buf, num_buf);
     k_strcat(buf, " / 12 Discovered");
     TextOutA(hdc, x + 10, line_y, buf, k_strlen(buf));
+    line_y += 18;
+
+    // Shortcuts banner at bottom
+    SelectObject(hdc, g_hFontSmall);
+    SetTextColor(hdc, RGB(32, 128, 64));
+    TextOutA(hdc, x + 10, line_y, "[F1] Help | [F2] KHex | [F3] KMatrix | [F5/F9] Save/Load | [Space] Sweep", 72);
 }
 
 static void StepFrequency(int delta) {
@@ -938,12 +1061,34 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 return 0;
             }
             if (wParam == VK_UP) {
-                StepFrequency(100);
+                StepFrequency((GetKeyState(VK_CONTROL) & 0x8000 || GetKeyState(VK_SHIFT) & 0x8000) ? 500 : 100);
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
             if (wParam == VK_DOWN) {
-                StepFrequency(-100);
+                StepFrequency((GetKeyState(VK_CONTROL) & 0x8000 || GetKeyState(VK_SHIFT) & 0x8000) ? -500 : -100);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_PRIOR) {
+                StepFrequency(500);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_NEXT) {
+                StepFrequency(-500);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_HOME) {
+                g_freq_centikhz = 100;
+                CheckSignalLock();
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_END) {
+                g_freq_centikhz = 12000;
+                CheckSignalLock();
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
@@ -1009,10 +1154,15 @@ void __cdecl MainEntry(void) {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SWEEP, 0), 0);
                 continue;
             }
-            if (msg.wParam == VK_LEFT || msg.wParam == VK_RIGHT || msg.wParam == VK_UP || msg.wParam == VK_DOWN) {
+            if (msg.wParam == VK_LEFT || msg.wParam == VK_RIGHT || msg.wParam == VK_UP || msg.wParam == VK_DOWN ||
+                msg.wParam == VK_PRIOR || msg.wParam == VK_NEXT || msg.wParam == VK_HOME || msg.wParam == VK_END) {
                 SendMessageA(hwnd, WM_KEYDOWN, msg.wParam, msg.lParam);
                 continue;
             }
+        }
+        if (msg.message == WM_MOUSEWHEEL) {
+            SendMessageA(hwnd, WM_MOUSEWHEEL, msg.wParam, msg.lParam);
+            continue;
         }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
