@@ -588,40 +588,53 @@ static void ExportSignalFrame(void) {
         return;
     }
 
-    char buf[1024];
-    char fstr[32];
-    FormatFreq(g_freq_centikhz, fstr);
-
-    k_strcpy(buf, "--- KANOMALY SUBTERRANEAN SIGNAL FRAME ---\r\n");
-    k_strcat(buf, "STATION: ");
+    char buf[2048];
+    k_strcpy(buf, "{\r\n  \"format\": \"KANOMALY_SIGNAL_V1\",\r\n");
+    k_strcat(buf, "  \"station\": {\r\n    \"id\": \"");
+    k_strcat(buf, g_stations[g_curr_station].id);
+    k_strcat(buf, "\",\r\n    \"name\": \"");
     k_strcat(buf, g_stations[g_curr_station].name);
-    k_strcat(buf, "\r\nSTRATA: ");
+    k_strcat(buf, "\",\r\n    \"strata\": \"");
     k_strcat(buf, g_stations[g_curr_station].strata);
-    k_strcat(buf, "\r\nFREQUENCY: ");
-    k_strcat(buf, fstr);
-    k_strcat(buf, "\r\nMODE: ");
+    k_strcat(buf, "\"\r\n  },\r\n");
+
+    k_strcat(buf, "  \"receiver\": {\r\n    \"tunedFreqKhz\": ");
+    char numBuf[16];
+    k_itoa(g_freq_centikhz / 100, numBuf);
+    k_strcat(buf, numBuf);
+    k_strcat(buf, ".");
+    int frac = g_freq_centikhz % 100;
+    if (frac < 10) k_strcat(buf, "0");
+    k_itoa(frac, numBuf);
+    k_strcat(buf, numBuf);
+    k_strcat(buf, ",\r\n    \"demodMode\": \"");
     k_strcat(buf, g_mode_names[g_mode_idx]);
-    k_strcat(buf, "\r\nBANDWIDTH: ");
+    k_strcat(buf, "\",\r\n    \"bandwidth\": \"");
     k_strcat(buf, g_bandwidth_names[g_bandwidth_idx]);
-    k_strcat(buf, "\r\nCARRIER LOCK: ");
+    k_strcat(buf, "\",\r\n    \"carrierLocked\": ");
+    k_strcat(buf, (g_carrier_locked && g_locked_anom_idx >= 0) ? "true" : "false");
+    k_strcat(buf, "\r\n  },\r\n");
+
     if (g_carrier_locked && g_locked_anom_idx >= 0) {
-        k_strcat(buf, "YES (");
+        k_strcat(buf, "  \"lockedAnomaly\": {\r\n    \"id\": \"");
         k_strcat(buf, g_anomalies[g_locked_anom_idx].id);
-        k_strcat(buf, " - ");
+        k_strcat(buf, "\",\r\n    \"name\": \"");
         k_strcat(buf, g_anomalies[g_locked_anom_idx].name);
-        k_strcat(buf, ")\r\nPAYLOAD: ");
+        k_strcat(buf, "\",\r\n    \"mode\": \"");
+        k_strcat(buf, g_anomalies[g_locked_anom_idx].mode);
+        k_strcat(buf, "\",\r\n    \"sig\": \"");
         k_strcat(buf, g_anomalies[g_locked_anom_idx].decoded_sig);
-        k_strcat(buf, "\r\nLORE: ");
+        k_strcat(buf, "\",\r\n    \"lore\": \"");
         k_strcat(buf, g_anomalies[g_locked_anom_idx].lore);
-        k_strcat(buf, "\r\n");
+        k_strcat(buf, "\"\r\n  }\r\n}\r\n");
     } else {
-        k_strcat(buf, "NO (STANDBY // AMBIENT NOISE FLOOR)\r\n");
+        k_strcat(buf, "  \"lockedAnomaly\": null\r\n}\r\n");
     }
 
     DWORD written;
     WriteFile(hFile, buf, (DWORD)k_strlen(buf), &written, NULL);
     CloseHandle(hFile);
-    AppendLog("[SIGNAL EXPORT] Intercepted signal written to anomaly_capture.sig");
+    AppendLog("[SIGNAL EXPORT] Intercepted signal written to anomaly_capture.sig (KANOMALY_SIGNAL_V1)");
 }
 
 static void LoadSignalFrame(const char* filename) {
@@ -635,9 +648,15 @@ static void LoadSignalFrame(const char* filename) {
     if (ReadFile(hFile, buf, sizeof(buf) - 1, &bytesRead, NULL) && bytesRead > 0) {
         buf[bytesRead] = '\0';
         const char* pFreq = NULL;
-        for (int i = 0; i < (int)bytesRead - 11; i++) {
+        for (int i = 0; i < (int)bytesRead - 13; i++) {
+            if (buf[i] == 't' && buf[i+1] == 'u' && buf[i+2] == 'n' && buf[i+3] == 'e' && buf[i+4] == 'd' && buf[i+5] == 'F' && buf[i+6] == 'r' && buf[i+7] == 'e' && buf[i+8] == 'q') {
+                pFreq = &buf[i + 12];
+                while (*pFreq == ' ' || *pFreq == ':' || *pFreq == '\"' || *pFreq == 'K' || *pFreq == 'h' || *pFreq == 'z') pFreq++;
+                break;
+            }
             if (buf[i] == 'F' && buf[i+1] == 'R' && buf[i+2] == 'E' && buf[i+3] == 'Q') {
-                pFreq = &buf[i + 11];
+                pFreq = &buf[i + 4];
+                while (*pFreq == ' ' || *pFreq == ':' || *pFreq == 'U' || *pFreq == 'E' || *pFreq == 'N' || *pFreq == 'C' || *pFreq == 'Y') pFreq++;
                 break;
             }
         }

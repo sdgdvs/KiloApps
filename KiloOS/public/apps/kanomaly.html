@@ -968,8 +968,8 @@
           <button class="kbtn alert" id="btnVfsSaveSig" title="Save Demodulated Signal Frame to KiloOS VFS (/sys/anomaly_capture.sig)">💾 SAVE TO VFS</button>
           <button class="kbtn" id="btnVfsLoadSig" title="Load Demodulated Signal Frame from KiloOS VFS (/sys/anomaly_capture.sig)">📂 LOAD FROM VFS</button>
           <button class="kbtn" id="btnVfsOpenPicker" title="Open Signal Frame (.sig) from VFS File Picker">📁 VFS BROWSE...</button>
-          <button class="kbtn" id="btnIpcKHex" title="Open Signal Stream in KHex Byte Editor">📡 SEND TO KHEX</button>
-          <button class="kbtn" id="btnIpcKMatrix" title="Open Signal Stream in KMatrix Disassembler">🌐 SEND TO KMATRIX</button>
+          <button class="kbtn" id="btnIpcKHex" title="Open Signal Stream in KHex Byte Editor [F2]">📡 SEND TO KHEX [F2]</button>
+          <button class="kbtn" id="btnIpcKMatrix" title="Open Signal Stream in KMatrix Disassembler [F3]">🌐 SEND TO KMATRIX [F3]</button>
           <button class="kbtn" id="btnCopyAscii" title="Copy ASCII Stream to Clipboard">📋 COPY ASCII</button>
           <button class="kbtn warn" id="btnCopyTelemetryReport" title="Copy Full Diagnostic Telemetry Report to Clipboard">📊 COPY REPORT</button>
         </div>
@@ -1151,6 +1151,8 @@
         <code>[↑] / [↓]</code> — Fast Band Step (&plusmn;1.00 kHz)<br>
         <code>[Mouse Wheel]</code> — Continuous Precision Dial Tuning<br>
         <code>[F1]</code> or <code>[H]</code> — Open/Close Operator Manual<br>
+        <code>[F2]</code> — Export Frame & Open in KHex Byte Editor<br>
+        <code>[F3]</code> — Export Frame & Open in KMatrix Disassembler<br>
         <code>[F5]</code> — Quicksave State to Local Storage<br>
         <code>[F9]</code> — Quickload State from Local Storage<br>
         <code>[Space]</code> — Toggle Auto-Sweep Frequency Sweep<br>
@@ -2303,6 +2305,10 @@
     {
       title: "Step 4: Cross-Correlation Triangulation",
       text: "Open the <strong>[3] SENSOR TRIANGULATION</strong> tab and click <strong>SOLVE EPICENTER FIX</strong> to cross-correlate probe arrival times and pinpoint subterranean bunkers and darknet relays in the lithosphere!"
+    },
+    {
+      title: "Step 5: Phase VI VFS & Cross-App IPC Bridge",
+      text: "Export demodulated signal frames directly to <code>/sys/anomaly_capture.sig</code> in KiloOS VFS with <strong>SAVE TO VFS</strong>. Press <strong>[F2]</strong> to inspect raw frames in <strong>KHex</strong> or <strong>[F3]</strong> to breach sector firewalls in <strong>KMatrix</strong>!"
     }
   ];
   var currentTutStep = 0;
@@ -2545,6 +2551,18 @@
       document.getElementById("helpModal").classList.toggle("active");
       return;
     }
+    if (e.key === "F2") {
+      e.preventDefault();
+      var btnHex = document.getElementById("btnIpcKHex");
+      if (btnHex) btnHex.click();
+      return;
+    }
+    if (e.key === "F3") {
+      e.preventDefault();
+      var btnMat = document.getElementById("btnIpcKMatrix");
+      if (btnMat) btnMat.click();
+      return;
+    }
     if (e.key === "Escape") {
       document.querySelectorAll(".modal-overlay").forEach(function(m) {
         m.classList.remove("active");
@@ -2659,6 +2677,9 @@
     };
     var path = "/sys/anomaly_capture.sig";
     KiloVFS.write(path, payload);
+    try {
+      localStorage.setItem("kanomaly_vfs_sig", JSON.stringify(payload));
+    } catch (e) {}
     logTerminal("[VFS EXPORT] Intercepted signal written to " + path, "alert");
     return path;
   }
@@ -2673,6 +2694,11 @@
     var p = targetPath || "/sys/anomaly_capture.sig";
     logTerminal("[VFS] Requesting signal file " + p + "...", "cyan");
     KiloVFS.read(p, function(data, readPath) {
+      if (!data && window.parent === window) {
+        try {
+          data = localStorage.getItem("kanomaly_vfs_sig");
+        } catch (e) {}
+      }
       if (!data) {
         logTerminal("[VFS ERROR] File not found or empty: " + (readPath || p), "alert");
         return;
@@ -2721,6 +2747,24 @@
         }
         playUiClick(880);
       } catch (err) {
+        if (typeof data === "string" && (data.indexOf("KANOMALY") !== -1 || data.indexOf("FREQUENCY:") !== -1)) {
+          var freqMatch = data.match(/FREQUENCY:\s*([0-9.]+)/i);
+          if (freqMatch) {
+            state.freq = parseFloat(freqMatch[1]);
+            updateFreqDisplay();
+          }
+          var modeMatch = data.match(/MODE:\s*([A-Z]+)/i);
+          if (modeMatch) {
+            state.demodMode = modeMatch[1].trim();
+            document.querySelectorAll(".mode-btn").forEach(function(b) {
+              b.classList.toggle("active", b.dataset.mode === state.demodMode);
+            });
+          }
+          checkSignalLock();
+          logTerminal("[VFS INGRESS] Text signal frame parsed from " + (readPath || p), "alert");
+          playUiClick(880);
+          return;
+        }
         logTerminal("[VFS ERROR] Corrupted signal frame: " + err.message, "alert");
       }
     });
