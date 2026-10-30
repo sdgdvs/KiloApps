@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://cabled
   kilo_graphics: KAlchemy
   kilo_soundscape: KStellar
-  kilo_tester: KGo
+  kilo_tester: KScript
   kilo_usability: KGo
   kilo_qa: KRead
   kilo_expander: KGo
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KStarship
-  timestamp: '2026-10-29T17:22:19-07:00'
+  agent: kilo-tester
+  app: KGo
+  timestamp: '2026-10-29T17:40:15-07:00'
 last_planner_run: '2026-10-29T17:30:03Z'
 ---
 
@@ -132,11 +132,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KGo`
+- **Active Target**: `KScript`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Add isAIMove flag to placeStone(x, y, isAIMove) in kgo.html and PlaceStone(hwnd, x, y, isAIMove) in KGo/main.c so the VS-AI turn guard stops blocking makeAIMove()/MakeAIMove() (and clear pending AI timeouts on reset/undo/replay/load); stop calculateScore()/CalculateScore() from wiping board and moveRecord via initBoard() so finished games can be replayed or exported to SGF, and add interactive dead-stone click-to-mark scoring review plus live Black/White capture and territory counts in HUD; fix Tsumego puzzles in kgo.html and KGo/main.c (Stage 7 Crane's Nest enclosure and occupied (4,2) check, Stage 11 straight-three vital point (1,0) only, Stage 14 center net, Goban A9/G13 coord labels, native PlaceStone Tsumego win check, and standalone Tsumego progression + Retry); fix Replay off-by-one (#btn-replay-first -> -1, #replay-slider -> value - 1); guard all single-key hotkeys when typing in INPUT/TEXTAREA/SELECT; and use BS_PUSHBUTTON + SetFocus(hwnd)/GetMessage key routing in KGo/main.c. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Audit script IDE, AST/console runner, sample templates, breakpoint stepper, and VFS script save/load. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Audit LSB image/audio steganography encoder/decoder, bitplane visualizer, passkey encryption, and modal dismissals. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Fix #garage-rank not updating in updateGarage() (call getPilotRank(playerLevel)); implement actual enemyStunned=true stun effect on Head/Cockpit hit (currentTargetLimb===0) so enemyTurn() skips attack and vents heat per Manual; auto-restore kmech_save on boot; and trigger enemy overheat burnout damage when EMP pushes enemy heat over maxHeat. |
@@ -147,6 +146,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Change default speed keybind from s/S to b/B (and migrate saved kmaze_keybinds) so walking backward with S stops firing useSpeedShoes(); stop tryMove()/TryMove() from auto-consuming hasPickaxe when brushing normal walls (1,20,21,22,27) and require [P] for cracked walls (7); render computed isPathTile[cellX][cellY] as a glowing golden trail in floor casting when pathfinderTimer > 0; grant Save Shrine (tile 28) +1 charges/+300 score BEFORE saveCheckpointGame(); remove permanent speedBoost=1 on tile 9 pickup; use drawPX/drawPY/drawMap in wall/light raycasting so Replay Mode renders accurately; handle waitingForKey before global hotkeys in keydown; and decay/clear shockwaves[] in both kmaze.html and KMaze/main.c. |
+| `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Add isAIMove flag to placeStone(x, y, isAIMove) in kgo.html and PlaceStone(hwnd, x, y, isAIMove) in KGo/main.c so the VS-AI turn guard stops blocking makeAIMove()/MakeAIMove() (and clear pending AI timeouts on reset/undo/replay/load); stop calculateScore()/CalculateScore() from wiping board and moveRecord via initBoard() so finished games can be replayed or exported to SGF, and add interactive dead-stone click-to-mark scoring review plus live Black/White capture and territory counts in HUD; fix Tsumego puzzles in kgo.html and KGo/main.c (Stage 7 Crane's Nest enclosure and occupied (4,2) check, Stage 11 straight-three vital point (1,0) only, Stage 14 center net, Goban A9/G13 coord labels, native PlaceStone Tsumego win check, and standalone Tsumego progression + Retry); fix Replay off-by-one (#btn-replay-first -> -1, #replay-slider -> value - 1); guard all single-key hotkeys when typing in INPUT/TEXTAREA/SELECT; and use BS_PUSHBUTTON + SetFocus(hwnd)/GetMessage key routing in KGo/main.c. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KGo`
@@ -284,6 +284,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-29T17:40:15-07:00 — kilo-tester: KGo (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-tester updates for KGo across web and native targets.
+  - Handoff: Advanced `kilo-tester` to `KScript`; rotated active agent to `kilo-usability`.
+
 - **2026-10-29T17:22:19-07:00 — kilo-graphics: KStarship (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-graphics updates for KStarship across web and native targets.
@@ -306,9 +311,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Wired KiloVFS VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ with origin checks and 60s timeout for JSON game saves (/home/saves/kchess_save.json), PGN match records (/home/docs/kchess_match.pgn), and FEN positions (/home/docs/kchess_position.fen) with standalone Blob/file-input fallbacks.
   - Added incoming FILE_OPEN/VFS_OPEN auto-loading and Open PGN in KPad IPC launcher (VFS_WRITE + OS_LAUNCH_APP appId kpad) in PGN modal.
   - Handoff: Advanced `kilo-expander` to `KAnomaly`; rotated active agent to `kilo-review`.
-
-- **2026-10-29T15:20:00-07:00 — kilo-qa: KSettings (Pass 5 QA, Dual Parity & Mature Graduation)**
-  - Status: PASS ✅ (0 errors, web 80.1 KB, native 17.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 10.27%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.0s)).
-  - State & Display: Added Display Modes (Standard, CRT Scanlines, Amber CRT, Green Phosphor, High Contrast) with F5/F9 persistence & VFS sync.
-  - Dual Parity: Created KSettings Win32 C native app (main.c, build.bat, icon, app.rc) matching Web control panel with zero errors (17.0 KB).
-  - Mature Quarantine & Handoff: Promoted `KSettings` to Mature archive; advanced `kilo-qa` to `KRead`; next agent `kilo-expander`.

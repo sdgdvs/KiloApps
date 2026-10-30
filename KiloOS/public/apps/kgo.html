@@ -387,6 +387,23 @@
   .stone.captured {
     animation: captureAnim 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
   }
+  .stone.dead {
+    opacity: 0.4;
+    filter: grayscale(85%);
+  }
+  .dead-mark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #ff2222;
+    font-size: calc(var(--cell-size, 34px) * 0.6);
+    font-weight: 900;
+    line-height: 1;
+    z-index: 10;
+    pointer-events: none;
+    text-shadow: 0 0 3px #000, 0 0 6px #000;
+  }
   .last-move-aura {
     position: absolute;
     top: 50%;
@@ -1494,8 +1511,8 @@
     {size: 9, handicap: 0, komi: 6.5, aiPersonality: 'grandmaster', name: "Stage 5: 9x9 Master Duel", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 13, handicap: 7, komi: 0.5, aiPersonality: 'territorial', name: "Stage 6: Medium Horizon", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 13, handicap: 0, komi: 0.5, aiPersonality: 'influence', name: "Stage 7: Tsumego - Side Crane's Nest", isTsumego: true, 
-     initialStones: [{x:3,y:2,color:'W'}, {x:4,y:2,color:'W'}, {x:5,y:2,color:'W'}, {x:3,y:3,color:'B'}, {x:6,y:2,color:'B'}, {x:4,y:1,color:'B'}, {x:5,y:1,color:'B'}, {x:4,y:3,color:'W'}], 
-     targetDesc: "Expose White's weakness on the side!"},
+     initialStones: [{x:3,y:2,color:'W'}, {x:5,y:2,color:'W'}, {x:4,y:3,color:'W'}, {x:2,y:2,color:'B'}, {x:6,y:2,color:'B'}, {x:3,y:3,color:'B'}, {x:5,y:3,color:'B'}, {x:3,y:1,color:'B'}, {x:4,y:1,color:'B'}, {x:5,y:1,color:'B'}], 
+     targetDesc: "Expose White's weakness on the side with the Crane's Nest tesuji!"},
     {size: 13, handicap: 4, komi: 0.5, aiPersonality: 'balanced', name: "Stage 8: Pincer Conflict", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 13, handicap: 2, komi: 6.5, aiPersonality: 'influence', name: "Stage 9: Influence Battle", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 13, handicap: 0, komi: 6.5, aiPersonality: 'grandmaster', name: "Stage 10: 13x13 Grandmaster", isTsumego: false, initialStones: [], targetDesc: ""},
@@ -1505,8 +1522,8 @@
     {size: 19, handicap: 8, komi: 0.5, aiPersonality: 'influence', name: "Stage 12: Great Wall Siege", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 19, handicap: 5, komi: 0.5, aiPersonality: 'balanced', name: "Stage 13: Dragon Slayer", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 19, handicap: 0, komi: 0.5, aiPersonality: 'grandmaster', name: "Stage 14: Tsumego - Surround the Center", isTsumego: true, 
-     initialStones: [{x:9,y:9,color:'W'}, {x:10,y:9,color:'W'}, {x:9,y:10,color:'W'}, {x:10,y:10,color:'W'}, {x:8,y:9,color:'B'}, {x:11,y:9,color:'B'}, {x:8,y:10,color:'B'}, {x:11,y:10,color:'B'}, {x:9,y:11,color:'B'}], 
-     targetDesc: "Surround and capture White's central shape!"},
+     initialStones: [{x:9,y:9,color:'W'}, {x:10,y:9,color:'W'}, {x:9,y:10,color:'W'}, {x:10,y:10,color:'W'}, {x:8,y:9,color:'B'}, {x:11,y:9,color:'B'}, {x:8,y:10,color:'B'}, {x:11,y:10,color:'B'}, {x:9,y:11,color:'B'}, {x:9,y:8,color:'B'}, {x:10,y:8,color:'B'}], 
+     targetDesc: "Surround and capture White's central shape with a center net!"},
     {size: 19, handicap: 3, komi: 0.5, aiPersonality: 'grandmaster', name: "Stage 15: Dragon Slayer Elite", isTsumego: false, initialStones: [], targetDesc: ""},
     {size: 19, handicap: 0, komi: 0.5, aiPersonality: 'balanced', name: "Stage 16: Tsumego - Belly Attachment", isTsumego: true,
      initialStones: [{x:5,y:5,color:'W'}, {x:5,y:6,color:'W'}, {x:6,y:5,color:'W'}, {x:4,y:5,color:'B'}, {x:4,y:6,color:'B'}, {x:5,y:4,color:'B'}, {x:6,y:4,color:'B'}, {x:7,y:5,color:'B'}, {x:6,y:7,color:'B'}, {x:5,y:7,color:'B'}],
@@ -1518,6 +1535,16 @@
   ];
   let currentCampaignStage = -1;
   let currentTsumegoIdx = -1;
+  let isStandaloneTsumego = false;
+  let isScoringMode = false;
+  let deadStones = Array(19).fill(null).map(() => Array(19).fill(false));
+  let aiMoveTimeout = null;
+  function clearAITimeout() {
+    if (aiMoveTimeout) {
+      clearTimeout(aiMoveTimeout);
+      aiMoveTimeout = null;
+    }
+  }
 
   function placeHandicapStones(boardSize, count) {
     if (count <= 0) return;
@@ -1562,7 +1589,8 @@
     alert(info);
     
     if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
-      setTimeout(makeAIMove, 500);
+      clearAITimeout();
+      aiMoveTimeout = setTimeout(makeAIMove, 500);
     }
   }
 
@@ -1570,6 +1598,7 @@
     const tsumegoStages = [2, 6, 10, 13, 15]; // Stage 3, 7, 11, 14, 16
     currentTsumegoIdx = index % tsumegoStages.length;
     currentCampaignStage = tsumegoStages[currentTsumegoIdx];
+    isStandaloneTsumego = true;
     startCampaignStage();
   }
 
@@ -2977,12 +3006,16 @@
     initClock(true);
     updateStatus();
     drawBoard();
+    clearAITimeout();
     if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
-      setTimeout(makeAIMove, 500);
+      aiMoveTimeout = setTimeout(makeAIMove, 500);
     }
   }
 
   function initBoard() {
+    clearAITimeout();
+    isScoringMode = false;
+    deadStones = Array(19).fill(null).map(() => Array(19).fill(false));
     board = Array(size).fill(null).map(() => Array(size).fill(null));
     stoneMoveNumbers = Array(size).fill(null).map(() => Array(size).fill(0));
     moveRecord = [];
@@ -3008,6 +3041,59 @@
     initClock();
     updateStatus();
     drawBoard();
+  }
+
+  function computeLiveTerritory() {
+    let terrB = 0;
+    let terrW = 0;
+    let visited = Array(size).fill(null).map(() => Array(size).fill(false));
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        let isDead = isScoringMode && deadStones[y][x];
+        let isEmpty = (board[y][x] === null) || isDead;
+        if (isEmpty && !visited[y][x]) {
+          let emptyGroup = [];
+          let touchesB = false;
+          let touchesW = false;
+          let queue = [{x, y}];
+          visited[y][x] = true;
+          while (queue.length > 0) {
+            let p = queue.shift();
+            emptyGroup.push(p);
+            const dirs = [[0,1], [1,0], [0,-1], [-1,0]];
+            for (let d of dirs) {
+              let nx = p.x + d[0];
+              let ny = p.y + d[1];
+              if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+                let cellColor = board[ny][nx];
+                if (isScoringMode && deadStones[ny][nx]) cellColor = null;
+                if (cellColor === 'B') touchesB = true;
+                else if (cellColor === 'W') touchesW = true;
+                else if (cellColor === null && !visited[ny][nx]) {
+                  visited[ny][nx] = true;
+                  queue.push({x: nx, y: ny});
+                }
+              }
+            }
+          }
+          if (touchesB && !touchesW) terrB += emptyGroup.length;
+          if (touchesW && !touchesB) terrW += emptyGroup.length;
+        }
+      }
+    }
+    return { terrB, terrW };
+  }
+
+  function toggleDeadStoneGroup(startX, startY) {
+    if (board[startY][startX] === null) return;
+    const color = board[startY][startX];
+    const visited = Array(size).fill(null).map(() => Array(size).fill(false));
+    const group = [];
+    getGroup(startX, startY, color, visited, group);
+    const newDeadState = !deadStones[startY][startX];
+    group.forEach(pt => {
+      deadStones[pt.y][pt.x] = newDeadState;
+    });
   }
 
   function computeTerritoryAndAtari() {
@@ -3357,6 +3443,14 @@
             stone.appendChild(numBadge);
           }
 
+          if (isScoringMode && deadStones[y][x]) {
+            stone.classList.add('dead');
+            const dm = document.createElement('div');
+            dm.className = 'dead-mark';
+            dm.innerText = '✕';
+            cell.appendChild(dm);
+          }
+
           cell.appendChild(stone);
         } else {
           const capturedAnim = capturedStonesForAnim.find(s => s.x === x && s.y === y);
@@ -3390,15 +3484,37 @@
           cell.appendChild(hr);
         }
         
+        const colLetter = COORD_LETTERS[x] || String.fromCharCode(65 + x);
+        const rowNum = size - y;
+        cell.title = `${colLetter}${rowNum}`;
+
         cell.addEventListener('mouseenter', () => {
           hoverPos = {x, y};
+          const badge = document.getElementById('cursor-coord-badge');
+          if (badge) {
+            badge.textContent = `🎯 Cursor: ${colLetter}${rowNum}`;
+            badge.style.display = 'inline-block';
+          }
           if (showAnalyzer) drawBoard();
         });
         cell.addEventListener('mouseleave', () => {
           hoverPos = {x: -1, y: -1};
+          if (!keyboardCursor.active) {
+            const badge = document.getElementById('cursor-coord-badge');
+            if (badge) badge.style.display = 'none';
+          }
           if (showAnalyzer) drawBoard();
         });
         cell.addEventListener('click', () => {
+          if (isScoringMode) {
+            if (board[y][x] !== null) {
+              toggleDeadStoneGroup(x, y);
+              calculateScore(true);
+              drawBoard();
+              updateStatus();
+            }
+            return;
+          }
           keyboardCursor.x = x;
           keyboardCursor.y = y;
           updateCursorBadge();
@@ -3475,58 +3591,37 @@
     spawnCaptureSparks(celebrationStones);
   }
 
-  function calculateScore() {
-    let terrB = 0;
-    let terrW = 0;
-    let visited = Array(size).fill(null).map(() => Array(size).fill(false));
-    
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        if (board[y][x] === null && !visited[y][x]) {
-          let emptyGroup = [];
-          let touchesB = false;
-          let touchesW = false;
-          
-          let queue = [{x, y}];
-          visited[y][x] = true;
-          
-          while (queue.length > 0) {
-            let p = queue.shift();
-            emptyGroup.push(p);
-            
-            const dirs = [[0,1], [1,0], [0,-1], [-1,0]];
-            for (let d of dirs) {
-              let nx = p.x + d[0];
-              let ny = p.y + d[1];
-              if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
-                if (board[ny][nx] === 'B') touchesB = true;
-                else if (board[ny][nx] === 'W') touchesW = true;
-                else if (!visited[ny][nx]) {
-                  visited[ny][nx] = true;
-                  queue.push({x: nx, y: ny});
-                }
-              }
-            }
+  function calculateScore(isSilentReview = false) {
+    let { terrB, terrW } = computeLiveTerritory();
+    let deadB = 0, deadW = 0;
+    if (isScoringMode) {
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          if (deadStones[y][x]) {
+            if (board[y][x] === 'B') deadB++;
+            else if (board[y][x] === 'W') deadW++;
           }
-          
-          if (touchesB && !touchesW) terrB += emptyGroup.length;
-          if (touchesW && !touchesB) terrW += emptyGroup.length;
         }
       }
     }
     
-    let totalB = captures.B + terrB;
-    let totalW = captures.W + terrW + currentKomi;
+    let totalB = captures.B + deadW + terrB;
+    let totalW = captures.W + deadB + terrW + currentKomi;
     
-    let msg = `Black: ${terrB} territory + ${captures.B} captures = ${totalB}\n`;
-    msg += `White: ${terrW} territory + ${captures.W} captures + ${currentKomi} komi = ${totalW}\n\n`;
+    let msg = `Black: ${terrB} territory + ${captures.B} captures${deadW > 0 ? ` + ${deadW} dead stones` : ''} = ${totalB.toFixed(1)}\n`;
+    msg += `White: ${terrW} territory + ${captures.W} captures${deadB > 0 ? ` + ${deadB} dead stones` : ''} + ${currentKomi} komi = ${totalW.toFixed(1)}\n\n`;
     let winner = (totalB > totalW) ? 'B' : 'W';
     if (totalB > totalW) {
-      msg += `Black wins by ${totalB - totalW}!`;
-      recordGameEnd('B');
+      msg += `Black wins by ${(totalB - totalW).toFixed(1)}!`;
+      if (!isSilentReview) recordGameEnd('B');
     } else {
-      msg += `White wins by ${totalW - totalB}!`;
-      recordGameEnd('W');
+      msg += `White wins by ${(totalW - totalB).toFixed(1)}!`;
+      if (!isSilentReview) recordGameEnd('W');
+    }
+
+    if (isSilentReview) {
+      updateStatus();
+      return;
     }
     
     if (isOnlineGame && currentRoomId) {
@@ -3554,7 +3649,7 @@
       }
       playSound('over');
       spawnVictoryCelebration(winner);
-      showToast(`🏆 Game scored! Black: ${totalB} | White: ${totalW}. ${winner === 'B' ? 'Black' : 'White'} wins by ${Math.abs(totalB - totalW).toFixed(1)}!`, 'success');
+      showToast(`🏆 Game scored! Black: ${totalB.toFixed(1)} | White: ${totalW.toFixed(1)}. ${winner === 'B' ? 'Black' : 'White'} wins by ${Math.abs(totalB - totalW).toFixed(1)}!`, 'success');
       return;
     }
 
@@ -3577,8 +3672,10 @@
           startCampaignStage();
         }
       } else {
-        alert(msg);
-        initBoard();
+        isScoringMode = true;
+        showToast(`🏆 Game scored! Black: ${totalB.toFixed(1)} | White: ${totalW.toFixed(1)}. [Scoring Review Active: click dead stone groups to toggle; Replay or SGF export available]`, 'success');
+        updateStatus();
+        drawBoard();
       }
     }, 50);
   }
@@ -3587,9 +3684,12 @@
     return board.map(row => row.map(c => c || '.').join('')).join('');
   }
 
-  function placeStone(x, y) {
+  function placeStone(x, y, isAIMove = false) {
     if (replayMode) {
       exitReplayMode();
+    }
+    if (isScoringMode) {
+      isScoringMode = false;
     }
     if (isOnlineGame) {
       if (!isLocalPlayerTurn()) {
@@ -3597,7 +3697,7 @@
         return;
       }
     } else {
-      if (document.getElementById('ai-toggle').checked && currentPlayer === 'W') return;
+      if (!isAIMove && document.getElementById('ai-toggle').checked && currentPlayer === 'W') return;
     }
     if (board[y][x] !== null) return;
     
@@ -3719,9 +3819,9 @@
       let solved = false;
       let stage = campaign[currentCampaignStage];
       if (stage.name.includes("Corner Capture") && caps > 0) solved = true;
-      else if (stage.name.includes("Side Crane") && (caps > 0 || (x === 4 && y === 2))) solved = true;
-      else if (stage.name.includes("Two Eyes") && ((x === 1 && y === 0) || (x === 2 && y === 0))) solved = true;
-      else if (stage.name.includes("Center") && caps > 0) solved = true;
+      else if (stage.name.includes("Side Crane") && ((x === 4 && y === 2) || caps > 0)) solved = true;
+      else if (stage.name.includes("Two Eyes") && (x === 1 && y === 0)) solved = true;
+      else if (stage.name.includes("Center") && ((x === 10 && y === 11) || caps > 0)) solved = true;
       else if (stage.name.includes("Belly Attachment") && ((x === 6 && y === 6) || caps > 0)) solved = true;
 
       if (solved) {
@@ -3730,13 +3830,18 @@
         recordGameEnd('B');
         setTimeout(() => {
           alert(`🎉 TSUMEGO SOLVED!\n\n${stage.name}\n${stage.targetDesc}\n\nExcellent move! Stage cleared!`);
-          currentCampaignStage++;
-          if (currentCampaignStage >= 20) {
-            alert("CONGRATULATIONS! You completed all 20 Campaign Stages!");
-            currentCampaignStage = -1;
-            initBoard();
+          if (isStandaloneTsumego) {
+            currentTsumegoIdx = (currentTsumegoIdx + 1) % 5;
+            loadTsumegoPuzzle(currentTsumegoIdx);
           } else {
-            startCampaignStage();
+            currentCampaignStage++;
+            if (currentCampaignStage >= 20) {
+              alert("CONGRATULATIONS! You completed all 20 Campaign Stages!");
+              currentCampaignStage = -1;
+              initBoard();
+            } else {
+              startCampaignStage();
+            }
           }
         }, 350);
         return;
@@ -3744,7 +3849,8 @@
     }
 
     if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
-      setTimeout(makeAIMove, 500);
+      clearAITimeout();
+      aiMoveTimeout = setTimeout(makeAIMove, 500);
     }
   }
 
@@ -3993,7 +4099,7 @@
     }
     
     if (move) {
-      placeStone(move.x, move.y);
+      placeStone(move.x, move.y, true);
     } else {
       document.getElementById('btn-pass').click();
     }

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T15:20:00-07:00 — kilo-qa: KSettings (Pass 5 QA, Dual Parity & Mature Graduation)**
+  - Status: PASS ✅ (0 errors, web 80.1 KB, native 17.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 10.27%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.0s)).
+  - State & Display: Added Display Modes (Standard, CRT Scanlines, Amber CRT, Green Phosphor, High Contrast) with F5/F9 persistence & VFS sync.
+  - Dual Parity: Created KSettings Win32 C native app (main.c, build.bat, icon, app.rc) matching Web control panel with zero errors (17.0 KB).
+  - Mature Quarantine & Handoff: Promoted `KSettings` to Mature archive; advanced `kilo-qa` to `KRead`; next agent `kilo-expander`.
+
 - **2026-10-29T14:37:27-07:00 — kilo-usability: KColosseum (UI/UX, Responsive Layout, HiDPI Canvas & Keyboard Usability Polish)**
   - Status: PASS ✅ (0 errors, web 309.8 KB, native 39.5 KB < 999 KB; visual PASS 0 fail, 0 warn).
   - Layout & Scoping: Scoped card styling to #marketList > li and #ownedList > li, 0px vertical overflow at 800x563, and independent scrolling.
