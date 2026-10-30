@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T08:21:21-07:00 — kilo-qa: KMedia (Pass 5 QA, Dual Parity & Mature Graduation)**
+  - Status: PASS ✅ (0 errors, web 144.2 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.16%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.1s)).
+  - State & Persistence: Verified F5/F9 quicksave/quickload preserving playlist, DSP EQ/delay, video controls, subtitle offset/data, active tab index, and sidebar collapsed status.
+  - Tutorial & Lifecycle: Fixed tutorialSeen flag persistence, universal Escape dialog dismissal, and visAnimId pause/resume on document.hidden (visibilitychange).
+  - Dual Parity: Verified native C compilation with retro chiptune Demo audio generator, full MCI playback/shortcuts, and <999 KB budget (22 KB).
+  - Mature Quarantine & Handoff: Promoted `KMedia` to Mature archive; advanced `kilo-qa` to `KChat`; next agent `kilo-expander`.
+
 - **2026-10-30T07:40:14-07:00 — kilo-usability: KTrader (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KTrader across web and native targets.

@@ -1476,6 +1476,62 @@ LRESULT CALLBACK RepEditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 HBRUSH hbrBg;
 HFONT hFont;
 
+
+void RelayoutPanels(HWND hwnd) {
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+    int nw = rc.right - rc.left;
+    int nh = rc.bottom - rc.top;
+    int topY = S(40);
+    int bottomH = nh - topY - S(10);
+    if (bottomH < S(50)) bottomH = S(50);
+    int panelGap = S(8);
+    int totalAvail = nw - S(16) - panelGap * 2;
+    int minW = S(80);
+    if (totalAvail < minW * 3) {
+        g_splitX1 = totalAvail / 3;
+        g_splitX2 = totalAvail / 3;
+    } else {
+        if (g_splitX1 <= 0 || g_splitX2 <= 0) {
+            g_splitX1 = totalAvail / 3;
+            g_splitX2 = totalAvail / 3;
+        }
+        if (g_splitX1 < minW) g_splitX1 = minW;
+        if (g_splitX2 < minW) g_splitX2 = minW;
+        if (g_splitX1 + g_splitX2 > totalAvail - minW) {
+            int over = (g_splitX1 + g_splitX2) - (totalAvail - minW);
+            g_splitX2 -= over;
+            if (g_splitX2 < minW) {
+                g_splitX1 -= (minW - g_splitX2);
+                g_splitX2 = minW;
+            }
+        }
+    }
+    int x1 = S(8);
+    int w1 = g_splitX1;
+    int x2 = x1 + w1 + panelGap;
+    int w2 = g_splitX2;
+    int x3 = x2 + w2 + panelGap;
+    int w3 = nw - S(8) - x3;
+    if (w3 < minW) w3 = minW;
+
+    if (hInput)  MoveWindow(hInput, x1, topY, w1, bottomH, TRUE);
+    if (hOutput) MoveWindow(hOutput, x2, topY, w2, bottomH, TRUE);
+    if (hMemory) MoveWindow(hMemory, x3, topY, w3, bottomH, TRUE);
+
+    int repW = S(50);
+    int repInputW = S(58);
+    int rx3 = nw - S(8) - repW;
+    int rx2 = rx3 - S(6) - repInputW;
+    int rx1 = rx2 - S(6) - repInputW;
+    if (rx1 > S(790)) {
+        if (hRegexFind) MoveWindow(hRegexFind, rx1, S(9), repInputW, S(24), TRUE);
+        if (hRegexRep)  MoveWindow(hRegexRep, rx2, S(9), repInputW, S(24), TRUE);
+        if (hBtnRep)    MoveWindow(hBtnRep, rx3, S(8), repW, S(26), TRUE);
+    }
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_GETMINMAXINFO: {
@@ -1491,22 +1547,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
 
             // Toolbar Buttons (S-scaled, non-overlapping)
-            hBtnRec   = CreateWindowEx(0, "BUTTON", "Rec", WS_CHILD | WS_VISIBLE, S(6), S(8), S(46), S(26), hwnd, (HMENU)4, NULL, NULL);
-            hBtnPlay  = CreateWindowEx(0, "BUTTON", "Play", WS_CHILD | WS_VISIBLE, S(56), S(8), S(46), S(26), hwnd, (HMENU)5, NULL, NULL);
-            hBtnStep  = CreateWindowEx(0, "BUTTON", "Step [F10]", WS_CHILD | WS_VISIBLE, S(106), S(8), S(72), S(26), hwnd, (HMENU)6, NULL, NULL);
-            hBtnRun   = CreateWindowEx(0, "BUTTON", "Run [^Ent]", WS_CHILD | WS_VISIBLE, S(182), S(8), S(78), S(26), hwnd, (HMENU)1, NULL, NULL);
-            hBtnQS    = CreateWindowEx(0, "BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE, S(264), S(8), S(66), S(26), hwnd, (HMENU)11, NULL, NULL);
-            hBtnQL    = CreateWindowEx(0, "BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE, S(334), S(8), S(66), S(26), hwnd, (HMENU)12, NULL, NULL);
-            hBtnBench = CreateWindowEx(0, "BUTTON", "Bench [F6]", WS_CHILD | WS_VISIBLE, S(404), S(8), S(70), S(26), hwnd, (HMENU)10, NULL, NULL);
-            hBtnLoad  = CreateWindowEx(0, "BUTTON", "Imp [^O]", WS_CHILD | WS_VISIBLE, S(478), S(8), S(58), S(26), hwnd, (HMENU)2, NULL, NULL);
-            hBtnSave  = CreateWindowEx(0, "BUTTON", "Exp [^S]", WS_CHILD | WS_VISIBLE, S(540), S(8), S(58), S(26), hwnd, (HMENU)3, NULL, NULL);
-            hBtnVfs   = CreateWindowEx(0, "BUTTON", "VFS [Alt+V]", WS_CHILD | WS_VISIBLE, S(602), S(8), S(76), S(26), hwnd, (HMENU)13, NULL, NULL);
-            hBtnClear = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE, S(682), S(8), S(46), S(26), hwnd, (HMENU)9, NULL, NULL);
-            hBtnHelp  = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, S(732), S(8), S(58), S(26), hwnd, (HMENU)8, NULL, NULL);
+            hBtnRec   = CreateWindowEx(0, "BUTTON", "Rec", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(6), S(8), S(46), S(26), hwnd, (HMENU)4, NULL, NULL);
+            hBtnPlay  = CreateWindowEx(0, "BUTTON", "Play", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(56), S(8), S(46), S(26), hwnd, (HMENU)5, NULL, NULL);
+            hBtnStep  = CreateWindowEx(0, "BUTTON", "Step [F10]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(106), S(8), S(72), S(26), hwnd, (HMENU)6, NULL, NULL);
+            hBtnRun   = CreateWindowEx(0, "BUTTON", "Run [^Ent]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(182), S(8), S(78), S(26), hwnd, (HMENU)1, NULL, NULL);
+            hBtnQS    = CreateWindowEx(0, "BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(264), S(8), S(66), S(26), hwnd, (HMENU)11, NULL, NULL);
+            hBtnQL    = CreateWindowEx(0, "BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(334), S(8), S(66), S(26), hwnd, (HMENU)12, NULL, NULL);
+            hBtnBench = CreateWindowEx(0, "BUTTON", "Bench [F6]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(404), S(8), S(70), S(26), hwnd, (HMENU)10, NULL, NULL);
+            hBtnLoad  = CreateWindowEx(0, "BUTTON", "Imp [^O]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(478), S(8), S(58), S(26), hwnd, (HMENU)2, NULL, NULL);
+            hBtnSave  = CreateWindowEx(0, "BUTTON", "Exp [^S]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(540), S(8), S(58), S(26), hwnd, (HMENU)3, NULL, NULL);
+            hBtnVfs   = CreateWindowEx(0, "BUTTON", "VFS [Alt+V]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(602), S(8), S(76), S(26), hwnd, (HMENU)13, NULL, NULL);
+            hBtnClear = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(682), S(8), S(46), S(26), hwnd, (HMENU)9, NULL, NULL);
+            hBtnHelp  = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(732), S(8), S(58), S(26), hwnd, (HMENU)8, NULL, NULL);
 
-            hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(796), S(9), S(56), S(24), hwnd, NULL, NULL, NULL);
-            hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(856), S(9), S(56), S(24), hwnd, NULL, NULL, NULL);
-            hBtnRep    = CreateWindowEx(0, "BUTTON", "Rep", WS_CHILD | WS_VISIBLE, S(916), S(8), S(46), S(26), hwnd, (HMENU)7, NULL, NULL);
+            hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, S(796), S(9), S(56), S(24), hwnd, NULL, NULL, NULL);
+            hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, S(856), S(9), S(56), S(24), hwnd, NULL, NULL, NULL);
+            hBtnRep    = CreateWindowEx(0, "BUTTON", "Rep", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(916), S(8), S(46), S(26), hwnd, (HMENU)7, NULL, NULL);
 
             HWND hwnds[] = {hBtnRec, hBtnPlay, hBtnStep, hBtnRun, hBtnQS, hBtnQL, hBtnBench, hBtnLoad, hBtnSave, hBtnVfs, hBtnClear, hRegexFind, hRegexRep, hBtnRep, hBtnHelp};
             for (int i = 0; i < 15; i++) SendMessage(hwnds[i], WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -1530,22 +1586,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 "print \"Condition check:\", is_active";
 
             hInput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", defaultCode,
-                WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
+                WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
                 S(8), S(42), S(310), S(H) - S(90), hwnd, NULL, NULL, NULL);
             SendMessage(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
             oldEditProc = (WNDPROC)SetWindowLongPtr(hInput, GWLP_WNDPROC, (LONG_PTR)InputEditProc);
 
             hOutput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
-                WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
+                WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
                 S(326), S(42), S(290), S(H) - S(90), hwnd, NULL, NULL, NULL);
             SendMessage(hOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hMemory = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Memory Inspector",
-                WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
+                WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
                 S(624), S(42), S(340), S(H) - S(90), hwnd, NULL, NULL, NULL);
             SendMessage(hMemory, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             VfsInitDefaults();
+            RelayoutPanels(hwnd);
             RunScript();
 
             if (!HasSeenTutorial() && !HasQuicksave()) {
@@ -1796,30 +1853,122 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 1;
         }
         case WM_SIZE: {
-            int nw = LOWORD(lParam);
-            int nh = HIWORD(lParam);
+            RelayoutPanels(hwnd);
+            break;
+        }
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            RECT rc;
+            GetClientRect(hwnd, &rc);
             int topY = S(40);
-            int bottomH = nh - topY - S(10);
-            if (bottomH < S(50)) bottomH = S(50);
+            int bottomH = (rc.bottom - rc.top) - topY - S(10);
             int panelGap = S(8);
-            int panelW = (nw - S(16) - panelGap * 2) / 3;
-            if (panelW < S(100)) panelW = S(100);
-
-            MoveWindow(hInput, S(8), topY, panelW, bottomH, TRUE);
-            MoveWindow(hOutput, S(8) + panelW + panelGap, topY, panelW, bottomH, TRUE);
-            MoveWindow(hMemory, S(8) + (panelW + panelGap) * 2, topY, nw - S(8) - (S(8) + (panelW + panelGap) * 2), bottomH, TRUE);
-
-            int repW = S(50);
-            int repInputW = S(58);
-            int rx3 = nw - S(8) - repW;
-            int rx2 = rx3 - S(6) - repInputW;
-            int rx1 = rx2 - S(6) - repInputW;
-            if (rx1 > S(790)) {
-                MoveWindow(hRegexFind, rx1, S(9), repInputW, S(24), TRUE);
-                MoveWindow(hRegexRep, rx2, S(9), repInputW, S(24), TRUE);
-                MoveWindow(hBtnRep, rx3, S(8), repW, S(26), TRUE);
+            int x1End = S(8) + g_splitX1;
+            int x2End = x1End + panelGap + g_splitX2;
+            HPEN hPenSplit = CreatePen(PS_SOLID, 1, RGB(55, 65, 81));
+            HPEN hOldPen = (HPEN)SelectObject(hdc, hPenSplit);
+            int mx1 = x1End + panelGap / 2;
+            MoveToEx(hdc, mx1, topY + S(12), NULL);
+            LineTo(hdc, mx1, topY + bottomH - S(12));
+            int mx2 = x2End + panelGap / 2;
+            MoveToEx(hdc, mx2, topY + S(12), NULL);
+            LineTo(hdc, mx2, topY + bottomH - S(12));
+            SelectObject(hdc, hOldPen);
+            DeleteObject(hPenSplit);
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
+        case WM_SETCURSOR: {
+            HWND hTarget = (HWND)wParam;
+            if (hTarget == hwnd) {
+                POINT pt;
+                GetCursorPos(&pt);
+                ScreenToClient(hwnd, &pt);
+                RECT rc;
+                GetClientRect(hwnd, &rc);
+                int topY = S(40);
+                int bottomH = (rc.bottom - rc.top) - topY - S(10);
+                int panelGap = S(8);
+                int x1End = S(8) + g_splitX1;
+                int x2End = x1End + panelGap + g_splitX2;
+                if (pt.y >= topY && pt.y <= topY + bottomH) {
+                    if ((pt.x >= x1End && pt.x <= x1End + panelGap) ||
+                        (pt.x >= x2End && pt.x <= x2End + panelGap)) {
+                        SetCursor(LoadCursor(NULL, IDC_SIZEWE));
+                        return TRUE;
+                    }
+                }
             }
             break;
+        }
+        case WM_LBUTTONDOWN: {
+            short x = (short)LOWORD(lParam);
+            short y = (short)HIWORD(lParam);
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+            int topY = S(40);
+            int bottomH = (rc.bottom - rc.top) - topY - S(10);
+            int panelGap = S(8);
+            int x1End = S(8) + g_splitX1;
+            int x2End = x1End + panelGap + g_splitX2;
+            if (y >= topY && y <= topY + bottomH) {
+                if (x >= x1End - 2 && x <= x1End + panelGap + 2) {
+                    g_isDraggingSplit = 1;
+                    SetCapture(hwnd);
+                    return 0;
+                } else if (x >= x2End - 2 && x <= x2End + panelGap + 2) {
+                    g_isDraggingSplit = 2;
+                    SetCapture(hwnd);
+                    return 0;
+                }
+            }
+            break;
+        }
+        case WM_MOUSEMOVE: {
+            if (g_isDraggingSplit) {
+                short x = (short)LOWORD(lParam);
+                RECT rc;
+                GetClientRect(hwnd, &rc);
+                int nw = rc.right - rc.left;
+                int panelGap = S(8);
+                int totalAvail = nw - S(16) - panelGap * 2;
+                int minW = S(80);
+                if (g_isDraggingSplit == 1) {
+                    int newW1 = x - S(8);
+                    if (newW1 < minW) newW1 = minW;
+                    if (newW1 > totalAvail - g_splitX2 - minW) newW1 = totalAvail - g_splitX2 - minW;
+                    g_splitX1 = newW1;
+                    RelayoutPanels(hwnd);
+                } else if (g_isDraggingSplit == 2) {
+                    int newW2 = x - (S(8) + g_splitX1 + panelGap);
+                    if (newW2 < minW) newW2 = minW;
+                    if (newW2 > totalAvail - g_splitX1 - minW) newW2 = totalAvail - g_splitX1 - minW;
+                    g_splitX2 = newW2;
+                    RelayoutPanels(hwnd);
+                }
+                return 0;
+            }
+            break;
+        }
+        case WM_LBUTTONUP: {
+            if (g_isDraggingSplit) {
+                ReleaseCapture();
+                g_isDraggingSplit = 0;
+                return 0;
+            }
+            break;
+        }
+        case WM_LBUTTONDBLCLK: {
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+            int nw = rc.right - rc.left;
+            int panelGap = S(8);
+            int totalAvail = nw - S(16) - panelGap * 2;
+            g_splitX1 = totalAvail / 3;
+            g_splitX2 = totalAvail / 3;
+            RelayoutPanels(hwnd);
+            return 0;
         }
         case WM_DESTROY:
             DeleteObject(hFont);
@@ -1855,6 +2004,7 @@ void MainEntry() {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
+    wc.style = CS_DBLCLKS;
     wc.hInstance = hInstance;
     wc.lpszClassName = "KScriptApp";
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
