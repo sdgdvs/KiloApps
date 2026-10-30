@@ -27,9 +27,9 @@
     "id": "kanomaly",
     "title": "KAnomaly",
     "folder": "System",
-    "webBytes": 121594,
-    "exeBytes": 22016,
-    "budgetPercent": 12.2
+    "webBytes": 123572,
+    "exeBytes": 22528,
+    "budgetPercent": 12.4
   },
   {
     "id": "kasteroids",
@@ -339,9 +339,9 @@
     "id": "kgraph",
     "title": "KGraph",
     "folder": "System",
-    "webBytes": 149342,
-    "exeBytes": 37376,
-    "budgetPercent": 14.9
+    "webBytes": 158662,
+    "exeBytes": 39424,
+    "budgetPercent": 15.9
   },
   {
     "id": "khabit",
@@ -459,9 +459,9 @@
     "id": "kmystery",
     "title": "KMystery",
     "folder": "Games",
-    "webBytes": 184326,
+    "webBytes": 192912,
     "exeBytes": 40960,
-    "budgetPercent": 18.5
+    "budgetPercent": 19.3
   },
   {
     "id": "knet",

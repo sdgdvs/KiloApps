@@ -2210,6 +2210,87 @@ function quickSave() {
             document.getElementById('dossier-modal').classList.add('hidden');
         }
 
+        // ==========================================
+        // IMAGEN 3 NOIR ASSETS & SPRITE PIPELINE
+        // ==========================================
+        const KMYSTERY_ASSETS = {
+            locations: {
+                'Office': { img: null, loaded: false, src: '../assets/backgrounds/kmystery/bg_noir_office.png', fallback: 'assets/backgrounds/kmystery/bg_noir_office.png' },
+                'The Manor': { img: null, loaded: false, src: '../assets/backgrounds/kmystery/bg_noir_manor.png', fallback: 'assets/backgrounds/kmystery/bg_noir_manor.png' },
+                'The Docks': { img: null, loaded: false, src: '../assets/backgrounds/kmystery/bg_noir_docks.png', fallback: 'assets/backgrounds/kmystery/bg_noir_docks.png' },
+                'The Casino': { img: null, loaded: false, src: '../assets/backgrounds/kmystery/bg_noir_casino.png', fallback: 'assets/backgrounds/kmystery/bg_noir_casino.png' },
+                'Train Station': { img: null, loaded: false, src: '../assets/backgrounds/kmystery/bg_noir_station.png', fallback: 'assets/backgrounds/kmystery/bg_noir_station.png' }
+            },
+            suspects: {
+                'Mr. Black': { img: null, loaded: false, src: '../assets/sprites/kmystery/suspect_mr_black.png', fallback: 'assets/sprites/kmystery/suspect_mr_black.png' },
+                'Miss Scarlet': { img: null, loaded: false, src: '../assets/sprites/kmystery/suspect_miss_scarlet.png', fallback: 'assets/sprites/kmystery/suspect_miss_scarlet.png' },
+                'Colonel Mustard': { img: null, loaded: false, src: '../assets/sprites/kmystery/suspect_colonel_mustard.png', fallback: 'assets/sprites/kmystery/suspect_colonel_mustard.png' },
+                'Mrs. White': { img: null, loaded: false, src: '../assets/sprites/kmystery/suspect_mrs_white.png', fallback: 'assets/sprites/kmystery/suspect_mrs_white.png' },
+                'Professor Plum': { img: null, loaded: false, src: '../assets/sprites/kmystery/suspect_professor_plum.png', fallback: 'assets/sprites/kmystery/suspect_professor_plum.png' }
+            },
+            clues: {
+                cufflink: { img: null, loaded: false, src: '../assets/sprites/kmystery/clue_cufflink.png', fallback: 'assets/sprites/kmystery/clue_cufflink.png' },
+                perfume: { img: null, loaded: false, src: '../assets/sprites/kmystery/clue_perfume.png', fallback: 'assets/sprites/kmystery/clue_perfume.png' },
+                button: { img: null, loaded: false, src: '../assets/sprites/kmystery/clue_button.png', fallback: 'assets/sprites/kmystery/clue_button.png' },
+                glove: { img: null, loaded: false, src: '../assets/sprites/kmystery/clue_glove.png', fallback: 'assets/sprites/kmystery/clue_glove.png' },
+                spectacles: { img: null, loaded: false, src: '../assets/sprites/kmystery/clue_spectacles.png', fallback: 'assets/sprites/kmystery/clue_spectacles.png' },
+                shell: { img: null, loaded: false, src: '../assets/sprites/kmystery/clue_shell.png', fallback: 'assets/sprites/kmystery/clue_shell.png' },
+                vial: { img: null, loaded: false, src: '../assets/sprites/kmystery/clue_vial.png', fallback: 'assets/sprites/kmystery/clue_vial.png' },
+                pipe: { img: null, loaded: false, src: '../assets/sprites/kmystery/clue_pipe.png', fallback: 'assets/sprites/kmystery/clue_pipe.png' },
+                letter: { img: null, loaded: false, src: '../assets/sprites/kmystery/clue_letter.png', fallback: 'assets/sprites/kmystery/clue_letter.png' },
+                will: { img: null, loaded: false, src: '../assets/sprites/kmystery/clue_will.png', fallback: 'assets/sprites/kmystery/clue_will.png' },
+                photo: { img: null, loaded: false, src: '../assets/sprites/kmystery/clue_photo.png', fallback: 'assets/sprites/kmystery/clue_photo.png' }
+            }
+        };
+
+        function getClueAssetKey(clueStr) {
+            const s = (clueStr || '').toLowerCase();
+            if (s.includes('cufflink')) return 'cufflink';
+            if (s.includes('perfume') || s.includes('rose')) return 'perfume';
+            if (s.includes('button')) return 'button';
+            if (s.includes('glove')) return 'glove';
+            if (s.includes('spectacles')) return 'spectacles';
+            if (s.includes('shell') || s.includes('revolver') || s.includes('.38')) return 'shell';
+            if (s.includes('vial') || s.includes('poison') || s.includes('almond')) return 'vial';
+            if (s.includes('pipe')) return 'pipe';
+            if (s.includes('letter') || s.includes('revenge') || s.includes('vengeance')) return 'letter';
+            if (s.includes('will') || s.includes('greed')) return 'will';
+            if (s.includes('photograph') || s.includes('photo') || s.includes('jealousy')) return 'photo';
+            return null;
+        }
+
+        function initKMysteryAssets() {
+            function loadEntry(entry) {
+                const img = new Image();
+                img.onload = () => {
+                    entry.img = img;
+                    entry.loaded = true;
+                    const dModal = document.getElementById('dossier-modal');
+                    if (dModal && !dModal.classList.contains('hidden') && state.foundClues && state.foundClues[currentDossierIdx]) {
+                        drawDossierSketch(state.foundClues[currentDossierIdx]);
+                    }
+                };
+                img.onerror = () => {
+                    const fb = new Image();
+                    fb.onload = () => {
+                        entry.img = fb;
+                        entry.loaded = true;
+                        const dModal = document.getElementById('dossier-modal');
+                        if (dModal && !dModal.classList.contains('hidden') && state.foundClues && state.foundClues[currentDossierIdx]) {
+                            drawDossierSketch(state.foundClues[currentDossierIdx]);
+                        }
+                    };
+                    fb.src = entry.fallback;
+                };
+                img.src = entry.src;
+            }
+            Object.values(KMYSTERY_ASSETS.locations).forEach(loadEntry);
+            Object.values(KMYSTERY_ASSETS.suspects).forEach(loadEntry);
+            Object.values(KMYSTERY_ASSETS.clues).forEach(loadEntry);
+        }
+        initKMysteryAssets();
+
+
         function drawDossierSketch(clue) {
             const dCanvas = document.getElementById('dossier-canvas');
             if (!dCanvas) return;
@@ -2242,11 +2323,21 @@ function quickSave() {
                 dCtx.beginPath(); dCtx.moveTo(0, y); dCtx.lineTo(dw, y); dCtx.stroke();
             }
 
-            dCtx.save();
-            dCtx.translate(dw / 2, dh / 2);
-            dCtx.strokeStyle = '#d4af37';
-            dCtx.fillStyle = '#dfd8c8';
-            dCtx.lineWidth = 2;
+            const cKey = getClueAssetKey(clue);
+            const cAsset = cKey ? KMYSTERY_ASSETS.clues[cKey] : null;
+
+            if (cAsset && cAsset.loaded && cAsset.img) {
+                // Centered 116x116 Imagen 3 chroma-keyed clue sprite
+                const sSize = 116;
+                const sx = (dw - sSize) / 2;
+                const sy = (dh - sSize) / 2;
+                dCtx.drawImage(cAsset.img, sx, sy, sSize, sSize);
+            } else {
+                dCtx.save();
+                dCtx.translate(dw / 2, dh / 2);
+                dCtx.strokeStyle = '#d4af37';
+                dCtx.fillStyle = '#dfd8c8';
+                dCtx.lineWidth = 2;
 
             if (clue.includes('cufflink')) {
                 // Onyx Cufflink
@@ -2395,7 +2486,21 @@ function quickSave() {
                 dCtx.fillText('?', 0, 6);
             }
 
-            dCtx.restore();
+                dCtx.restore();
+            }
+
+            // Art Deco gold corner photo brackets
+            dCtx.strokeStyle = '#d4af37';
+            dCtx.lineWidth = 1.5;
+            const b = 10;
+            // Top-left
+            dCtx.beginPath(); dCtx.moveTo(6, 6 + b); dCtx.lineTo(6, 6); dCtx.lineTo(6 + b, 6); dCtx.stroke();
+            // Top-right
+            dCtx.beginPath(); dCtx.moveTo(dw - 6, 6 + b); dCtx.lineTo(dw - 6, 6); dCtx.lineTo(dw - 6 - b, 6); dCtx.stroke();
+            // Bottom-left
+            dCtx.beginPath(); dCtx.moveTo(6, dh - 6 - b); dCtx.lineTo(6, dh - 6); dCtx.lineTo(6 + b, dh - 6); dCtx.stroke();
+            // Bottom-right
+            dCtx.beginPath(); dCtx.moveTo(dw - 6, dh - 6 - b); dCtx.lineTo(dw - 6, dh - 6); dCtx.lineTo(dw - 6 - b, dh - 6); dCtx.stroke();
 
             dCtx.fillStyle = 'rgba(212, 175, 55, 0.85)';
             dCtx.font = '9px Courier New';
@@ -2861,7 +2966,17 @@ function quickSave() {
 
         function drawNoirLocationScene(locName, w, h) {
             ctx.save();
-            if (locName === 'Office') {
+            const locAsset = KMYSTERY_ASSETS.locations[locName];
+            if (locAsset && locAsset.loaded && locAsset.img) {
+                // 2-stage Imagen 3 atmospheric noir backdrop
+                ctx.drawImage(locAsset.img, 0, 0, w, h);
+                // Subtle filmic noir vignette
+                const vig = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.max(w, h) * 0.75);
+                vig.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                vig.addColorStop(1, 'rgba(0, 0, 0, 0.45)');
+                ctx.fillStyle = vig;
+                ctx.fillRect(0, 0, w, h);
+            } else if (locName === 'Office') {
                 const bgGrad = ctx.createLinearGradient(0, 0, w, h);
                 bgGrad.addColorStop(0, '#100e0a');
                 bgGrad.addColorStop(1, '#050403');
@@ -3363,7 +3478,11 @@ function quickSave() {
             const cx = size / 2;
             const cy = size * 0.52;
 
-            if (suspectName === 'Mr. Black') {
+            const sAsset = KMYSTERY_ASSETS.suspects[suspectName];
+            if (sAsset && sAsset.loaded && sAsset.img) {
+                // 2-stage chroma-keyed Imagen 3 character portrait sprite
+                ctx.drawImage(sAsset.img, px, py, pw, ph);
+            } else if (suspectName === 'Mr. Black') {
                 ctx.fillStyle = '#141416';
                 ctx.beginPath();
                 ctx.ellipse(cx, cy + 32, 38, 22, 0, 0, Math.PI * 2);
