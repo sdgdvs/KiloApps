@@ -409,6 +409,18 @@ HWND hBtnQuickLoad;
 #define ID_BTN_MISSION3 503
 #define ID_BTN_ABANDON 504
 
+#define ID_CHART_JUMP 701
+#define ID_CHART_CLOSE 702
+
+HWND hMainWnd = NULL;
+HWND hChartWnd = NULL;
+int selectedChartPlanet = 0;
+HWND hBtnChartJump = NULL;
+HWND hBtnChartClose = NULL;
+
+void TravelToTarget(int target, int cost, HWND hwnd);
+void ShowStarChart(HWND hParent);
+LRESULT CALLBACK StarChartWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 int destTarget[3];
 int destCost[3];
 
@@ -614,9 +626,7 @@ void PlaySoundEffect(int type) {
     }
 }
 
-void Travel(int btnIdx, HWND hwnd) {
-    int cost = destCost[btnIdx];
-    int target = destTarget[btnIdx];
+void TravelToTarget(int target, int cost, HWND hwnd) {
     state.bountyTarget = 0;
     
     if (state.fuel >= cost) {
@@ -744,6 +754,10 @@ void Travel(int btnIdx, HWND hwnd) {
     }
 }
 
+void Travel(int btnIdx, HWND hwnd) {
+    TravelToTarget(destTarget[btnIdx], destCost[btnIdx], hwnd);
+}
+
 void EnemyTurn(HWND hwnd) {
     PlaySoundEffect(2); // laser
     SpawnLaser(0);
@@ -766,6 +780,378 @@ void EnemyTurn(HWND hwnd) {
         state.bountyTarget = 0;
         state.playerShields = 50 + state.cargoLevel * 10;
         SaveGame();
+    }
+}
+
+int GetDirectJumpCost(int fromP, int toP) {
+    if (fromP == toP) return 0;
+    for (int k = 0; k < 3; k++) {
+        if (planetLinks[fromP][k] == toP) {
+            int c = planetDistances[fromP][k] - state.engineLevel * 2;
+            return (c < 1) ? 1 : c;
+        }
+    }
+    return -1;
+}
+
+void UpdateStarChartButtons() {
+    if (!hBtnChartJump) return;
+    int cost = GetDirectJumpCost(state.location, selectedChartPlanet);
+    if (cost > 0) {
+        char jBuf[64];
+        wsprintf(jBuf, "Engage Jump Gate [%d Fuel]", cost);
+        SetWindowText(hBtnChartJump, jBuf);
+        EnableWindow(hBtnChartJump, (state.fuel >= cost && !state.inCombat));
+    } else if (selectedChartPlanet == state.location) {
+        SetWindowText(hBtnChartJump, "Currently Docked System");
+        EnableWindow(hBtnChartJump, FALSE);
+    } else {
+        SetWindowText(hBtnChartJump, "No Direct Jump Gate");
+        EnableWindow(hBtnChartJump, FALSE);
+    }
+}
+
+LRESULT CALLBACK StarChartWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+        case WM_CREATE: {
+            hMainWnd = hwnd;
+            HFONT hFont = CreateFont(15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+            hBtnChartJump = CreateWindow("BUTTON", "Engage Jump Gate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                20, 480, 260, 32, hwnd, (HMENU)ID_CHART_JUMP, NULL, NULL);
+            hBtnChartClose = CreateWindow("BUTTON", "Close [Esc / C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                450, 480, 150, 32, hwnd, (HMENU)ID_CHART_CLOSE, NULL, NULL);
+            SendMessage(hBtnChartJump, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnChartClose, WM_SETFONT, (WPARAM)hFont, TRUE);
+            UpdateStarChartButtons();
+            return 0;
+        }
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            RECT clientRc;
+            GetClientRect(hwnd, &clientRc);
+            int cw = clientRc.right;
+            int ch = clientRc.bottom;
+
+            HDC memDC = CreateCompatibleDC(hdc);
+            HBITMAP memBmp = CreateCompatibleBitmap(hdc, cw, ch);
+            HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
+
+            HBRUSH hBg = CreateSolidBrush(RGB(2, 6, 13));
+            FillRect(memDC, &clientRc, hBg);
+            DeleteObject(hBg);
+
+            HPEN hGridPen = CreatePen(PS_SOLID, 1, RGB(7, 24, 36));
+            HPEN oldPen = (HPEN)SelectObject(memDC, hGridPen);
+            for (int x = 40; x < cw; x += 40) {
+                MoveToEx(memDC, x, 0, NULL);
+                LineTo(memDC, x, 360);
+            }
+            for (int y = 40; y <= 360; y += 40) {
+                MoveToEx(memDC, 0, y, NULL);
+                LineTo(memDC, cw, y);
+            }
+
+            for (int s = 0; s < 45; s++) {
+                int sx = ((s * 137) % (cw - 20)) + 10;
+                int sy = ((s * 223) % 340) + 10;
+                int col = 80 + (s * 33) % 120;
+                SetPixel(memDC, sx, sy, RGB(col, col + 30, col + 60));
+            }
+
+            HPEN hRoutePen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
+            HPEN hMissionPen = CreatePen(PS_SOLID, 2, RGB(255, 153, 0));
+            HPEN hDefaultPen = CreatePen(PS_SOLID, 1, RGB(15, 56, 74));
+
+            for (int i = 0; i < NUM_PLANETS; i++) {
+                int x1 = 40 + (planets[i].x * (cw - 80)) / 100;
+                int y1 = 30 + (planets[i].y * 300) / 100;
+
+                for (int k = 0; k < 3; k++) {
+                    int target = planetLinks[i][k];
+                    if (i < target) {
+                        int x2 = 40 + (planets[target].x * (cw - 80)) / 100;
+                        int y2 = 30 + (planets[target].y * 300) / 100;
+
+                        int isCurrentRoute = (i == state.location || target == state.location);
+                        int isMissionRoute = (state.activeMissionType != 0 && (i == state.activeMissionTarget || target == state.activeMissionTarget));
+
+                        if (isCurrentRoute) {
+                            SelectObject(memDC, hRoutePen);
+                        } else if (isMissionRoute) {
+                            SelectObject(memDC, hMissionPen);
+                        } else {
+                            SelectObject(memDC, hDefaultPen);
+                        }
+
+                        MoveToEx(memDC, x1, y1, NULL);
+                        LineTo(memDC, x2, y2);
+
+                        if (isCurrentRoute) {
+                            int cost = planetDistances[i][k] - state.engineLevel * 2;
+                            if (cost < 1) cost = 1;
+                            int mx = (x1 + x2) / 2;
+                            int my = (y1 + y2) / 2;
+                            RECT tagRc = { mx - 12, my - 7, mx + 12, my + 7 };
+                            HBRUSH hTagBg = CreateSolidBrush(RGB(0, 20, 30));
+                            FillRect(memDC, &tagRc, hTagBg);
+                            DeleteObject(hTagBg);
+                            FrameRect(memDC, &tagRc, (HBRUSH)GetStockObject(WHITE_BRUSH));
+                            SetBkMode(memDC, TRANSPARENT);
+                            SetTextColor(memDC, RGB(0, 255, 255));
+                            char tag[16];
+                            wsprintf(tag, "%dF", cost);
+                            DrawText(memDC, tag, -1, &tagRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                        }
+                    }
+                }
+            }
+            SelectObject(memDC, oldPen);
+            DeleteObject(hRoutePen);
+            DeleteObject(hMissionPen);
+            DeleteObject(hDefaultPen);
+
+            COLORREF ecoColors[5] = {
+                RGB(0, 255, 136),  // Agri
+                RGB(255, 170, 51), // Mining
+                RGB(0, 221, 255),  // Tech
+                RGB(255, 102, 68), // Industrial
+                RGB(255, 238, 85)  // Balanced
+            };
+            const char* ecoNames[5] = { "Agri", "Mining", "Tech", "Industrial", "Balanced" };
+            const char* ecoAbbr[5] = { "Agr", "Min", "Tech", "Ind", "Bal" };
+
+            for (int i = 0; i < NUM_PLANETS; i++) {
+                int px = 40 + (planets[i].x * (cw - 80)) / 100;
+                int py = 30 + (planets[i].y * 300) / 100;
+                int isCurrent = (i == state.location);
+                int isMission = (state.activeMissionType != 0 && i == state.activeMissionTarget);
+                int isSelected = (i == selectedChartPlanet);
+                int eco = planets[i].ecoType;
+                if (eco < 0 || eco > 4) eco = 4;
+                COLORREF pCol = ecoColors[eco];
+
+                HBRUSH hHalo = CreateSolidBrush(isCurrent ? RGB(0, 60, 80) : (isMission ? RGB(80, 20, 20) : RGB(10, 30, 45)));
+                SelectObject(memDC, hHalo);
+                SelectObject(memDC, GetStockObject(NULL_PEN));
+                Ellipse(memDC, px - 13, py - 13, px + 13, py + 13);
+                DeleteObject(hHalo);
+
+                HBRUSH hBody = CreateSolidBrush(pCol);
+                HPEN hWhitePen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                SelectObject(memDC, hBody);
+                SelectObject(memDC, hWhitePen);
+                Ellipse(memDC, px - 7, py - 7, px + 7, py + 7);
+                DeleteObject(hBody);
+                DeleteObject(hWhitePen);
+
+                if (isCurrent) {
+                    HPEN hCyanGlow = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
+                    SelectObject(memDC, hCyanGlow);
+                    SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                    Ellipse(memDC, px - 16, py - 16, px + 16, py + 16);
+                    DeleteObject(hCyanGlow);
+
+                    SetBkMode(memDC, TRANSPARENT);
+                    SetTextColor(memDC, RGB(0, 255, 255));
+                    RECT youRc = { px - 30, py - 27, px + 30, py - 15 };
+                    DrawText(memDC, "YOU", -1, &youRc, DT_CENTER | DT_SINGLELINE);
+                }
+
+                if (isMission) {
+                    HPEN hTargetPen = CreatePen(PS_SOLID, 2, RGB(255, 68, 68));
+                    SelectObject(memDC, hTargetPen);
+                    SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                    Ellipse(memDC, px - 15, py - 15, px + 15, py + 15);
+                    MoveToEx(memDC, px - 18, py, NULL); LineTo(memDC, px - 9, py);
+                    MoveToEx(memDC, px + 9, py, NULL); LineTo(memDC, px + 18, py);
+                    MoveToEx(memDC, px, py - 18, NULL); LineTo(memDC, px, py - 9);
+                    MoveToEx(memDC, px, py + 9, NULL); LineTo(memDC, px, py + 18);
+                    DeleteObject(hTargetPen);
+
+                    SetBkMode(memDC, TRANSPARENT);
+                    SetTextColor(memDC, RGB(255, 68, 68));
+                    RECT tgtRc = { px - 30, py + 20, px + 30, py + 32 };
+                    DrawText(memDC, "TARGET", -1, &tgtRc, DT_CENTER | DT_SINGLELINE);
+                }
+
+                if (isSelected) {
+                    HPEN hSelPen = CreatePen(PS_SOLID, 2, RGB(255, 234, 0));
+                    SelectObject(memDC, hSelPen);
+                    SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                    Rectangle(memDC, px - 13, py - 13, px + 14, py + 14);
+                    DeleteObject(hSelPen);
+                }
+
+                SetBkMode(memDC, TRANSPARENT);
+                SetTextColor(memDC, isCurrent ? RGB(0, 255, 255) : (isSelected ? RGB(255, 234, 0) : RGB(255, 255, 255)));
+                RECT nameRc = { px - 40, py - (isCurrent ? 14 : 17), px + 40, py - 5 };
+                DrawText(memDC, planets[i].name, -1, &nameRc, DT_CENTER | DT_SINGLELINE);
+
+                SetTextColor(memDC, pCol);
+                char badge[32];
+                wsprintf(badge, "[%s TL%d]", ecoAbbr[eco], planets[i].techLevel);
+                RECT badgeRc = { px - 40, py + 9, px + 40, py + 21 };
+                DrawText(memDC, badge, -1, &badgeRc, DT_CENTER | DT_SINGLELINE);
+            }
+
+            RECT panelRc = { 10, 365, cw - 10, 470 };
+            HBRUSH hPanelBg = CreateSolidBrush(RGB(4, 14, 24));
+            FillRect(memDC, &panelRc, hPanelBg);
+            DeleteObject(hPanelBg);
+            HPEN hBorderPen = CreatePen(PS_SOLID, 1, RGB(0, 85, 119));
+            SelectObject(memDC, hBorderPen);
+            SelectObject(memDC, GetStockObject(NULL_BRUSH));
+            Rectangle(memDC, panelRc.left, panelRc.top, panelRc.right, panelRc.bottom);
+            DeleteObject(hBorderPen);
+
+            Planet sp = planets[selectedChartPlanet];
+            int sEco = sp.ecoType; if (sEco < 0 || sEco > 4) sEco = 4;
+            char titleBuf[128];
+            wsprintf(titleBuf, "%s  [X:%d, Y:%d]  Economy: %s  Tech Lv %d", sp.name, sp.x, sp.y, ecoNames[sEco], sp.techLevel);
+            SetBkMode(memDC, TRANSPARENT);
+            SetTextColor(memDC, RGB(0, 255, 255));
+            TextOut(memDC, 20, 372, titleBuf, lstrlen(titleBuf));
+
+            const char* ecoDescs[5] = {
+                "Abundant Food & Water; high demand for Tech & Meds.",
+                "Rich Raw Ores; seeks Industrial tools & Food.",
+                "Advanced Tech & Meds manufacturing; needs Ore.",
+                "Heavy manufacturing; high demand for Ore & Fuel.",
+                "Diversified trade hub; stable commodity pricing."
+            };
+            SetTextColor(memDC, RGB(160, 200, 216));
+            TextOut(memDC, 20, 390, ecoDescs[sEco], lstrlen(ecoDescs[sEco]));
+
+            char routeBuf[160];
+            int directCost = GetDirectJumpCost(state.location, selectedChartPlanet);
+            if (selectedChartPlanet == state.location) {
+                SetTextColor(memDC, RGB(0, 255, 136));
+                TextOut(memDC, 20, 410, "🚀 CURRENT DOCKED SYSTEM", 24);
+            } else if (directCost > 0) {
+                wsprintf(routeBuf, "⚡ DIRECT JUMP GATE OPEN | Fuel Cost: %d fuel (Available: %d)", directCost, state.fuel);
+                SetTextColor(memDC, (state.fuel >= directCost) ? RGB(0, 255, 255) : RGB(255, 68, 68));
+                TextOut(memDC, 20, 410, routeBuf, lstrlen(routeBuf));
+            } else {
+                wsprintf(routeBuf, "⚠️ Indirect Sector: No direct jump-gate connection from %s.", planets[state.location].name);
+                SetTextColor(memDC, RGB(255, 170, 51));
+                TextOut(memDC, 20, 410, routeBuf, lstrlen(routeBuf));
+            }
+
+            if (state.activeMissionType != 0 && selectedChartPlanet == state.activeMissionTarget) {
+                char mBuf[128];
+                const char* mName = (state.activeMissionType == 1) ? "DELIVERY" : ((state.activeMissionType == 2) ? "BOUNTY" : "SMUGGLING");
+                wsprintf(mBuf, "🎯 ACTIVE MISSION DESTINATION: %s (%d cr bounty)", mName, state.activeMissionReward);
+                SetTextColor(memDC, RGB(255, 68, 68));
+                TextOut(memDC, 20, 428, mBuf, lstrlen(mBuf));
+            } else {
+                char connBuf[160];
+                int d0 = planetDistances[selectedChartPlanet][0] - state.engineLevel * 2; if (d0 < 1) d0 = 1;
+                int d1 = planetDistances[selectedChartPlanet][1] - state.engineLevel * 2; if (d1 < 1) d1 = 1;
+                int d2 = planetDistances[selectedChartPlanet][2] - state.engineLevel * 2; if (d2 < 1) d2 = 1;
+                wsprintf(connBuf, "Jump Gates: %s (%dF) | %s (%dF) | %s (%dF)",
+                    planets[planetLinks[selectedChartPlanet][0]].name, d0,
+                    planets[planetLinks[selectedChartPlanet][1]].name, d1,
+                    planets[planetLinks[selectedChartPlanet][2]].name, d2);
+                SetTextColor(memDC, RGB(120, 170, 190));
+                TextOut(memDC, 20, 428, connBuf, lstrlen(connBuf));
+            }
+
+            BitBlt(hdc, 0, 0, cw, ch, memDC, 0, 0, SRCCOPY);
+            SelectObject(memDC, oldBmp);
+            DeleteObject(memBmp);
+            DeleteDC(memDC);
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
+        case WM_LBUTTONDOWN: {
+            int mx = LOWORD(lParam);
+            int my = HIWORD(lParam);
+            RECT clientRc;
+            GetClientRect(hwnd, &clientRc);
+            int cw = clientRc.right;
+            int closest = -1;
+            int minDistSq = 22 * 22;
+            for (int i = 0; i < NUM_PLANETS; i++) {
+                int px = 40 + (planets[i].x * (cw - 80)) / 100;
+                int py = 30 + (planets[i].y * 300) / 100;
+                int dx = mx - px;
+                int dy = my - py;
+                int dSq = dx * dx + dy * dy;
+                if (dSq < minDistSq) {
+                    minDistSq = dSq;
+                    closest = i;
+                }
+            }
+            if (closest >= 0) {
+                selectedChartPlanet = closest;
+                UpdateStarChartButtons();
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            return 0;
+        }
+        case WM_COMMAND: {
+            if (LOWORD(wParam) == ID_CHART_JUMP) {
+                int cost = GetDirectJumpCost(state.location, selectedChartPlanet);
+                if (cost > 0 && state.fuel >= cost && !state.inCombat) {
+                    HWND hMain = hMainWnd;
+                    int target = selectedChartPlanet;
+                    DestroyWindow(hwnd);
+                    TravelToTarget(target, cost, hMain);
+                }
+            } else if (LOWORD(wParam) == ID_CHART_CLOSE) {
+                DestroyWindow(hwnd);
+            }
+            return 0;
+        }
+        case WM_KEYDOWN: {
+            if (wParam == VK_ESCAPE || wParam == 'C' || wParam == 'c') {
+                DestroyWindow(hwnd);
+            } else if (wParam == VK_RETURN) {
+                SendMessage(hwnd, WM_COMMAND, ID_CHART_JUMP, 0);
+            } else if (wParam >= '1' && wParam <= '3') {
+                int idx = wParam - '1';
+                selectedChartPlanet = planetLinks[state.location][idx];
+                UpdateStarChartButtons();
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            return 0;
+        }
+        case WM_DESTROY: {
+            hChartWnd = NULL;
+            hBtnChartJump = NULL;
+            hBtnChartClose = NULL;
+            return 0;
+        }
+    }
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+void ShowStarChart(HWND hParent) {
+    if (hChartWnd != NULL) {
+        SetForegroundWindow(hChartWnd);
+        return;
+    }
+    selectedChartPlanet = state.location;
+    RECT rc;
+    GetWindowRect(hParent, &rc);
+    int cx = rc.left + ((rc.right - rc.left) - 640) / 2;
+    int cy = rc.top + ((rc.bottom - rc.top) - 560) / 2;
+    if (cx < 10) cx = 10;
+    if (cy < 10) cy = 10;
+
+    hChartWnd = CreateWindowExA(
+        WS_EX_DLGMODALFRAME,
+        "KTraderStarChartClass",
+        "Galactic Star Chart - 12-System Jump Topology [1999 NAVCOM]",
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+        cx, cy, 640, 560,
+        hParent, NULL, GetModuleHandle(NULL), NULL
+    );
+    if (hChartWnd) {
+        UpdateStarChartButtons();
+        UpdateWindow(hChartWnd);
     }
 }
 
@@ -1008,29 +1394,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     "- Combat: [F / Space] Fire | [E] Flee | [B] Bribe", 
                     "Help", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_BTN_CHART) {
-                char chartBuf[2048];
-                int pos = wsprintf(chartBuf, "GALACTIC STAR CHART - 12 PLANETARY SYSTEMS\n===========================================\n");
-                const char* ecoNames[] = {"Agri", "Mining", "Tech", "Industrial", "Balanced"};
-                for (int i = 0; i < NUM_PLANETS; i++) {
-                    char flags[48] = "";
-                    if (i == state.location) {
-                        lstrcat(flags, " [YOU ARE HERE]");
-                    }
-                    if (state.activeMissionType != 0 && i == state.activeMissionTarget) {
-                        lstrcat(flags, " [MISSION TARGET]");
-                    }
-                    int d0 = planetDistances[i][0] - state.engineLevel * 2; if (d0 < 1) d0 = 1;
-                    int d1 = planetDistances[i][1] - state.engineLevel * 2; if (d1 < 1) d1 = 1;
-                    int d2 = planetDistances[i][2] - state.engineLevel * 2; if (d2 < 1) d2 = 1;
-
-                    pos += wsprintf(chartBuf + pos, "%-10s (X:%2d, Y:%2d) [%s TL%d]%s\n  Jump Gates: %s(%dF), %s(%dF), %s(%dF)\n",
-                        planets[i].name, planets[i].x, planets[i].y,
-                        ecoNames[planets[i].ecoType], planets[i].techLevel, flags,
-                        planets[planetLinks[i][0]].name, d0,
-                        planets[planetLinks[i][1]].name, d1,
-                        planets[planetLinks[i][2]].name, d2);
-                }
-                MessageBoxA(hwnd, chartBuf, "Galactic Star Chart (NAVCOM 1999)", MB_OK | MB_ICONINFORMATION);
+                ShowStarChart(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_QUICKSAVE) {
                 SaveQuickSave();
                 LogMessage("> Quicksave created in ktrader_quicksave.dat! [F5]");
@@ -1468,6 +1832,55 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SelectObject(memDC, origPen);
                     DeleteObject(hEShieldPen);
                 }
+
+                // Cur/Max Shield Gauge Bars
+                int maxPShields = (state.hasDreadnought ? 250 : 50) + state.cargoLevel * 10;
+                if (maxPShields < 1) maxPShields = 1;
+                int curPShields = state.playerShields;
+                if (curPShields < 0) curPShields = 0;
+                if (curPShields > maxPShields) curPShields = maxPShields;
+
+                RECT pBarBg = { 20, 8, 160, 20 };
+                HBRUSH hDarkG = CreateSolidBrush(RGB(10, 30, 20));
+                FillRect(memDC, &pBarBg, hDarkG);
+                DeleteObject(hDarkG);
+                HPEN hGreenBorder = CreatePen(PS_SOLID, 1, RGB(0, 200, 100));
+                SelectObject(memDC, hGreenBorder);
+                SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                Rectangle(memDC, 20, 8, 160, 20);
+                DeleteObject(hGreenBorder);
+
+                int pFillW = (curPShields * 138) / maxPShields;
+                if (pFillW > 0) {
+                    RECT pBarFill = { 21, 9, 21 + pFillW, 19 };
+                    HBRUSH hGreenFill = CreateSolidBrush(RGB(0, 255, 136));
+                    FillRect(memDC, &pBarFill, hGreenFill);
+                    DeleteObject(hGreenFill);
+                }
+
+                int maxEShields = state.enemyMaxShields;
+                if (maxEShields < 1) maxEShields = 30;
+                int curEShields = state.enemyShields;
+                if (curEShields < 0) curEShields = 0;
+                if (curEShields > maxEShields) curEShields = maxEShields;
+
+                RECT eBarBg = { 440, 8, 580, 20 };
+                HBRUSH hDarkR = CreateSolidBrush(RGB(40, 10, 10));
+                FillRect(memDC, &eBarBg, hDarkR);
+                DeleteObject(hDarkR);
+                HPEN hRedBorder = CreatePen(PS_SOLID, 1, RGB(200, 40, 40));
+                SelectObject(memDC, hRedBorder);
+                SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                Rectangle(memDC, 440, 8, 580, 20);
+                DeleteObject(hRedBorder);
+
+                int eFillW = (curEShields * 138) / maxEShields;
+                if (eFillW > 0) {
+                    RECT eBarFill = { 441, 9, 441 + eFillW, 19 };
+                    HBRUSH hRedFill = CreateSolidBrush(RGB(255, 50, 50));
+                    FillRect(memDC, &eBarFill, hRedFill);
+                    DeleteObject(hRedFill);
+                }
             } else {
                 // Celestial Planet
                 int eco = planets[state.location].ecoType;
@@ -1670,6 +2083,14 @@ void __stdcall MainEntry() {
     wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 
     RegisterClass(&wc);
+    WNDCLASS wcChart = {0};
+    wcChart.lpfnWndProc = StarChartWndProc;
+    wcChart.hInstance = hInstance;
+    wcChart.lpszClassName = "KTraderStarChartClass";
+    wcChart.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wcChart.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    RegisterClass(&wcChart);
+
 
     HWND hwnd = CreateWindowEx(
         0,
@@ -1715,7 +2136,11 @@ void __stdcall MainEntry() {
                         } else if (msg.wParam == 'R') {
                             SendMessage(hwnd, WM_COMMAND, ID_BTN_REFUEL, 0);
                         } else if (msg.wParam == 'C' || msg.wParam == 'c') {
-                            SendMessage(hwnd, WM_COMMAND, ID_BTN_CHART, 0);
+                            if (hChartWnd != NULL) {
+                                DestroyWindow(hChartWnd);
+                            } else {
+                                SendMessage(hwnd, WM_COMMAND, ID_BTN_CHART, 0);
+                            }
                         } else if (msg.wParam == 'B') {
                             for (int i = 0; i < 8; i++) {
                                 if (state.credits >= currentPrices[i] && state.cargo < state.maxCargo) {
