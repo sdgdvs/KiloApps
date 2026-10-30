@@ -1305,6 +1305,40 @@ class PigeonPacket {
         this.state = 'delivered';
         avianRx++;
         updateAvianStats();
+
+// URL deep-linking support (kweb://rfc-archive#htcpcp, ?tab=tcp, ?rfc=rfc2324)
+function applyUrlNavigation() {
+  const hash = (window.location.hash || '').toLowerCase();
+  const search = window.location.search || '';
+  const params = new URLSearchParams(search);
+  const tabParam = params.get('tab') ? ('tab-' + params.get('tab').replace(/^tab-/, '')) : null;
+  const rfcParam = params.get('rfc');
+
+  let targetTab = null;
+  if (hash.includes('avian') || hash.includes('1149') || tabParam === 'tab-avian') {
+    targetTab = 'tab-avian';
+  } else if (hash.includes('htcpcp') || hash.includes('coffee') || hash.includes('2324') || hash.includes('teapot') || tabParam === 'tab-htcpcp') {
+    targetTab = 'tab-htcpcp';
+  } else if (hash.includes('tcp') || hash.includes('793') || tabParam === 'tab-tcp') {
+    targetTab = 'tab-tcp';
+  } else if (hash.includes('vault') || hash.includes('rfc') || tabParam === 'tab-vault' || rfcParam) {
+    targetTab = 'tab-vault';
+  }
+
+  if (targetTab) {
+    const btn = document.querySelector(`.tab-btn[data-tab="${targetTab}"]`);
+    if (btn) btn.click();
+  }
+
+  const rfcTarget = rfcParam || (hash.startsWith('#rfc') ? hash.slice(1) : null);
+  if (rfcTarget && RFC_DOCS[rfcTarget]) {
+    selRfcDoc.value = rfcTarget;
+    loadRfcDoc();
+  }
+}
+
+window.addEventListener('hashchange', applyUrlNavigation);
+applyUrlNavigation();
         const rtt = (2800 + Math.random() * 1200 * (this.qos === 'low_latency' ? 0.6 : 1.0)).toFixed(1);
         const qosTag = this.qos === 'low_latency' ? ' [Duck Low-Lat]' : (this.qos === 'high_reliability' ? ' [Armored]' : (this.qos === 'dual_stream' ? ' [Dual-Redundant]' : ''));
         logAvian(`${this.mtu} bytes from 192.168.2.1: icmp_seq=${this.seq} ttl=255 time=${rtt} ms (pigeon #${this.seq}${qosTag})`);
@@ -2392,7 +2426,7 @@ referred to as "HTTP/1.1", and includes keep-alive connections, chunked
 transfer coding, byte ranges, and aggressive cache validation.`,
 
   rfc1999: `Network Working Group                                     ECHO-SUBSYSTEM
-Request for Comments: 1999                                    CLASSIFIED
+Request for Comments: 1999                                    CLASSIFIED // ARG: intentional
 Category: Informational                                   23 October 1999
 
       ARPANET IMP #04 Telemetry & Subterranean Protocol Discrepancies

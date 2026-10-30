@@ -2491,8 +2491,17 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
       if (hIdx !== -1) sub = url.substring(hIdx);
       else if (qIdx !== -1) sub = url.substring(qIdx);
       url = '/web/demoscene.html' + sub;
-    } else if (url.toLowerCase() === 'kweb://rfc-archive' || url.toLowerCase() === 'rfc-archive' || url.toLowerCase() === 'kweb://rfc_archive' || url.toLowerCase() === 'rfc_archive' || url.toLowerCase() === 'kweb://rfc' || url.toLowerCase() === 'rfc' || url.toLowerCase() === 'kweb://rfc-archive.html' || url.toLowerCase() === 'kweb://ietf' || url.toLowerCase() === 'ietf') {
-      url = '/web/rfc_archive.html';
+    } else if (url.toLowerCase() === 'kweb://rfc-archive' || url.toLowerCase().startsWith('kweb://rfc-archive/') || url.toLowerCase().startsWith('kweb://rfc-archive#') || url.toLowerCase().startsWith('kweb://rfc-archive?') || url.toLowerCase() === 'rfc-archive' || url.toLowerCase().startsWith('rfc-archive/') || url.toLowerCase().startsWith('rfc-archive#') || url.toLowerCase() === 'kweb://rfc_archive' || url.toLowerCase().startsWith('kweb://rfc_archive/') || url.toLowerCase().startsWith('kweb://rfc_archive#') || url.toLowerCase() === 'rfc_archive' || url.toLowerCase() === 'kweb://rfc' || url.toLowerCase() === 'rfc' || url.toLowerCase() === 'kweb://rfc-archive.html' || url.toLowerCase() === 'kweb://ietf' || url.toLowerCase().startsWith('kweb://ietf/') || url.toLowerCase().startsWith('kweb://ietf#') || url.toLowerCase() === 'ietf') {
+      let sub = '';
+      const hIdx = url.indexOf('#');
+      const qIdx = url.indexOf('?');
+      if (hIdx !== -1) sub = url.substring(hIdx);
+      else if (qIdx !== -1) sub = url.substring(qIdx);
+      else if (url.toLowerCase().includes('/avian') || url.toLowerCase().includes('/1149')) sub = '#tab-avian';
+      else if (url.toLowerCase().includes('/coffee') || url.toLowerCase().includes('/htcpcp') || url.toLowerCase().includes('/2324') || url.toLowerCase().includes('/teapot')) sub = '#tab-htcpcp';
+      else if (url.toLowerCase().includes('/tcp') || url.toLowerCase().includes('/793')) sub = '#tab-tcp';
+      else if (url.toLowerCase().includes('/vault') || url.toLowerCase().includes('/docs')) sub = '#tab-vault';
+      url = '/web/rfc_archive.html' + sub;
     } else if (url.toLowerCase().startsWith('kweb://webring') || url.toLowerCase().startsWith('webring?') || url.toLowerCase() === 'webring') {
       const qIdx = url.indexOf('?');
       const qs = qIdx !== -1 ? url.substring(qIdx) : '';
