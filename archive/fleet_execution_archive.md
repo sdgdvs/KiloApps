@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-29T21:22:25-07:00 — kilo-usability: KCosmic (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KCosmic across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KSteno`; rotated active agent to `kilo-qa`.
+
 - **2026-10-29T20:38:07-07:00 — kilo-tester: KScript (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 164.1 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.45%, HEAD Δ 0.01%, 0 fail, 0 warn, 5.1s)).
   - UI & Hotkey Audit: AST/console runner, 12 presets, breakpoint stepper, VFS save/load, F5/F9 quicksave verified with 0 exceptions.

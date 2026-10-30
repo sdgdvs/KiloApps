@@ -112,6 +112,20 @@ static void RC4Crypt(const char* key, const unsigned char* in, unsigned char* ou
     }
 }
 
+static unsigned int CalcCRC32(const unsigned char* data, int len) {
+    unsigned int crc = 0xFFFFFFFF;
+    for (int i = 0; i < len; i++) {
+        unsigned int byte = data[i];
+        crc ^= byte;
+        for (int j = 0; j < 8; j++) {
+            unsigned int mask = -(int)(crc & 1);
+            crc = (crc >> 1) ^ (0xEDB88320 & mask);
+        }
+    }
+    return ~crc;
+}
+
+
 // 1. Text Whitespace Steganography (SNOW Standard: Space=0, Tab=1)
 static void EncodeTextWhitespace(const char* cover, const char* secret, const char* key, char* out, int outMax) {
     int secLen = k_strlen(secret);
@@ -325,13 +339,22 @@ static int EncodeBmpCarrier(const char* inBmpPath, const char* outBmpPath, const
         bytesRead = bfh->bfSize;
     }
 
-    // Packet: Magic "KS01" (4 bytes) + Length (2 bytes) + Encrypted Payload
-    unsigned char packet[2060];
+    // Canonical 16-byte KSteno Header Packet (Magic, Flags, 4-byte Len, 4-byte CRC32)
+    unsigned int crc = CalcCRC32((const unsigned char*)secret, secLen);
+    unsigned char packet[2080];
     packet[0] = 'K'; packet[1] = 'S'; packet[2] = '0'; packet[3] = '1';
-    packet[4] = (unsigned char)(secLen & 0xFF);
-    packet[5] = (unsigned char)((secLen >> 8) & 0xFF);
-    memcpy(packet + 6, encSecret, secLen);
-    int totalPacketBytes = 6 + secLen;
+    packet[4] = (key && key[0]) ? 0x10 : 0x00;
+    packet[5] = (unsigned char)(secLen & 0xFF);
+    packet[6] = (unsigned char)((secLen >> 8) & 0xFF);
+    packet[7] = (unsigned char)((secLen >> 16) & 0xFF);
+    packet[8] = (unsigned char)((secLen >> 24) & 0xFF);
+    packet[9] = (unsigned char)(crc & 0xFF);
+    packet[10] = (unsigned char)((crc >> 8) & 0xFF);
+    packet[11] = (unsigned char)((crc >> 16) & 0xFF);
+    packet[12] = (unsigned char)((crc >> 24) & 0xFF);
+    packet[13] = 0; packet[14] = 0; packet[15] = 0;
+    memcpy(packet + 16, encSecret, secLen);
+    int totalPacketBytes = 16 + secLen;
 
     if (totalPacketBytes * 8 > pixelDataSize) {
         k_strcpy(errBuf, "Error: Carrier BMP capacity exceeded.");
@@ -387,10 +410,11 @@ static int DecodeBmpCarrier(const char* inBmpPath, const char* key, char* outSec
         return 0;
     }
 
-    // Read 6 header bytes (48 bits)
-    unsigned char hdr[6];
+    // Read header bytes (supports canonical 16-byte header and legacy 6-byte header)
+    unsigned char hdr[16];
     int bitIndex = 0;
-    for (int i = 0; i < 6; i++) {
+    int hdrBytesToRead = (pixelDataSize >= 128) ? 16 : 6;
+    for (int i = 0; i < hdrBytesToRead; i++) {
         unsigned char b = 0;
         for (int k = 0; k < 8; k++) {
             b = (b << 1) | (px[bitIndex++] & 1);
@@ -403,8 +427,18 @@ static int DecodeBmpCarrier(const char* inBmpPath, const char* key, char* outSec
         return 0;
     }
 
-    int secLen = hdr[4] | (hdr[5] << 8);
-    if (secLen <= 0 || (6 + secLen) * 8 > pixelDataSize || secLen > 2000) {
+    int secLen = 0;
+    int headerOffset = 16;
+    if (hdrBytesToRead >= 16) {
+        secLen = hdr[5] | (hdr[6] << 8) | (hdr[7] << 16) | (hdr[8] << 24);
+    }
+    if (secLen <= 0 || secLen > 2000) {
+        secLen = hdr[4] | (hdr[5] << 8);
+        headerOffset = 6;
+        bitIndex = 48;
+    }
+
+    if (secLen <= 0 || (headerOffset + secLen) * 8 > pixelDataSize || secLen > 2000) {
         k_strcpy(outSecret, "[ERROR: Invalid payload length in BMP header]");
         return 0;
     }
@@ -482,13 +516,22 @@ static int EncodeWavCarrier(const char* inWavPath, const char* outWavPath, const
         bytesRead = sizeof(K_WAV_HEADER) + sampleCount * 2;
     }
 
-    // Packet: Magic "KSA1" (4 bytes) + Length (2 bytes) + Encrypted Payload
-    unsigned char packet[2060];
+    // Canonical 16-byte KSteno Audio Header Packet
+    unsigned int crc = CalcCRC32((const unsigned char*)secret, secLen);
+    unsigned char packet[2080];
     packet[0] = 'K'; packet[1] = 'S'; packet[2] = 'A'; packet[3] = '1';
-    packet[4] = (unsigned char)(secLen & 0xFF);
-    packet[5] = (unsigned char)((secLen >> 8) & 0xFF);
-    memcpy(packet + 6, encSecret, secLen);
-    int totalPacketBytes = 6 + secLen;
+    packet[4] = (key && key[0]) ? 0x01 : 0x00;
+    packet[5] = (unsigned char)(secLen & 0xFF);
+    packet[6] = (unsigned char)((secLen >> 8) & 0xFF);
+    packet[7] = (unsigned char)((secLen >> 16) & 0xFF);
+    packet[8] = (unsigned char)((secLen >> 24) & 0xFF);
+    packet[9] = (unsigned char)(crc & 0xFF);
+    packet[10] = (unsigned char)((crc >> 8) & 0xFF);
+    packet[11] = (unsigned char)((crc >> 16) & 0xFF);
+    packet[12] = (unsigned char)((crc >> 24) & 0xFF);
+    packet[13] = 0; packet[14] = 0; packet[15] = 0;
+    memcpy(packet + 16, encSecret, secLen);
+    int totalPacketBytes = 16 + secLen;
 
     if (totalPacketBytes * 8 > sampleCount) {
         k_strcpy(errBuf, "Error: Carrier WAV duration too short for payload.");
@@ -543,10 +586,11 @@ static int DecodeWavCarrier(const char* inWavPath, const char* key, char* outSec
         return 0;
     }
 
-    // Read 6 header bytes
-    unsigned char headerBytes[6];
+    // Read header bytes (supports canonical 16-byte header and legacy 6-byte header)
+    unsigned char headerBytes[16];
     int bitIndex = 0;
-    for (int i = 0; i < 6; i++) {
+    int hdrBytesToRead = (sampleCount >= 128) ? 16 : 6;
+    for (int i = 0; i < hdrBytesToRead; i++) {
         unsigned char b = 0;
         for (int k = 0; k < 8; k++) {
             b = (b << 1) | (pcm[bitIndex++] & 1);
@@ -559,8 +603,18 @@ static int DecodeWavCarrier(const char* inWavPath, const char* key, char* outSec
         return 0;
     }
 
-    int secLen = headerBytes[4] | (headerBytes[5] << 8);
-    if (secLen <= 0 || (6 + secLen) * 8 > sampleCount || secLen > 2000) {
+    int secLen = 0;
+    int headerOffset = 16;
+    if (hdrBytesToRead >= 16) {
+        secLen = headerBytes[5] | (headerBytes[6] << 8) | (headerBytes[7] << 16) | (headerBytes[8] << 24);
+    }
+    if (secLen <= 0 || secLen > 2000) {
+        secLen = headerBytes[4] | (headerBytes[5] << 8);
+        headerOffset = 6;
+        bitIndex = 48;
+    }
+
+    if (secLen <= 0 || (headerOffset + secLen) * 8 > sampleCount || secLen > 2000) {
         k_strcpy(outSecret, "[ERROR: Invalid payload length in WAV header]");
         return 0;
     }

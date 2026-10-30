@@ -3451,6 +3451,8 @@
       }
 
       imgCtx.putImageData(imgData, 0, 0);
+      renderBitplaneSlice();
+      runChiSquareSteganalysis();
 
       backupCleanCanvas();
 
@@ -3947,6 +3949,8 @@
 
 
       imgCtx.putImageData(imgData, 0, 0);
+      renderBitplaneSlice();
+      runChiSquareSteganalysis();
 
       sound.playEmbedChirp();
 
@@ -4149,9 +4153,17 @@
 
 
       // Decrypt if encrypted
-
-      const decrypted = passphrase ? rc4Crypt(passphrase, rawPayload) : rawPayload;
-
+      const isEncrypted = (header[4] & 0x10) !== 0;
+      let decrypted = rawPayload;
+      if (isEncrypted) {
+        if (passphrase) {
+          decrypted = rc4Crypt(passphrase, rawPayload);
+        } else {
+          showToast("Carrier payload is passkey protected! Enter passphrase.", "warning");
+        }
+      } else {
+        decrypted = rawPayload;
+      }
       const computedCRC = calculateCRC32(decrypted);
 
 
@@ -4650,10 +4662,18 @@
 
 
 
-      const decrypted = passphrase ? rc4Crypt(passphrase, rawPayload) : rawPayload;
-
+      const isEncrypted = (header[4] & 0x01) !== 0;
+      let decrypted = rawPayload;
+      if (isEncrypted) {
+        if (passphrase) {
+          decrypted = rc4Crypt(passphrase, rawPayload);
+        } else {
+          showToast("Audio payload is passkey protected! Enter passphrase.", "warning");
+        }
+      } else {
+        decrypted = rawPayload;
+      }
       const computedCRC = calculateCRC32(decrypted);
-
       const text = new TextDecoder().decode(decrypted);
 
 
@@ -5367,35 +5387,19 @@
         let bitVal = 0;
 
         if (channel === 'r') {
-
-          bitVal = (src[i] >> bit) & 1;
-
+          const lum = ((src[i] >> bit) & 1) ? 255 : 0;
+          out[i] = lum; out[i + 1] = lum; out[i + 2] = lum;
         } else if (channel === 'g') {
-
-          bitVal = (src[i + 1] >> bit) & 1;
-
+          const lum = ((src[i + 1] >> bit) & 1) ? 255 : 0;
+          out[i] = lum; out[i + 1] = lum; out[i + 2] = lum;
         } else if (channel === 'b') {
-
-          bitVal = (src[i + 2] >> bit) & 1;
-
+          const lum = ((src[i + 2] >> bit) & 1) ? 255 : 0;
+          out[i] = lum; out[i + 1] = lum; out[i + 2] = lum;
         } else {
-
-          // Average bits
-
-          bitVal = (((src[i] >> bit) & 1) + ((src[i + 1] >> bit) & 1) + ((src[i + 2] >> bit) & 1)) >= 2 ? 1 : 0;
-
+          out[i]     = ((src[i]     >> bit) & 1) ? 255 : 0;
+          out[i + 1] = ((src[i + 1] >> bit) & 1) ? 255 : 0;
+          out[i + 2] = ((src[i + 2] >> bit) & 1) ? 255 : 0;
         }
-
-
-
-        const lum = bitVal ? 255 : 0;
-
-        out[i] = lum;
-
-        out[i + 1] = lum;
-
-        out[i + 2] = lum;
-
         out[i + 3] = 255;
 
       }
@@ -6588,9 +6592,7 @@
       }
 
       const defaultPath = `/home/work/${defaultFileName}`;
-
-      const path = prompt("Enter KiloOS VFS path to save payload:", defaultPath) || defaultPath;
-
+      const path = defaultPath;
       KiloVFS.write(path, text);
 
       showToast(`Payload saved to VFS: ${path}`, 'success');
@@ -7595,7 +7597,7 @@
 
       document.getElementById('bitplane-channel').addEventListener('change', renderBitplaneSlice);
 
-      document.getElementById('btn-run-steganalysis').addEventListener('click', runChiSquareSteganalysis);
+      document.getElementById('btn-run-steganalysis').addEventListener('click', () => { renderBitplaneSlice(); runChiSquareSteganalysis(); });
 
 
 
@@ -7662,9 +7664,8 @@
       });
 
       document.getElementById('btn-splash-manual').addEventListener('click', () => {
-
+        closeModal('modal-splash');
         openModal('modal-manual');
-
       });
 
 
