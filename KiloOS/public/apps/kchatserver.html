@@ -11,6 +11,7 @@
             --win-shadow: #808080;
             --win-dark: #000000;
             --win-blue: #000080;
+            --win-blue-light: #1084d0;
             --term-bg: #101418;
             --term-fg: #d0e0d0;
             --term-green: #38ef7d;
@@ -28,7 +29,7 @@
 
         body {
             margin: 0;
-            padding: 8px;
+            padding: 4px;
             background: var(--win-bg);
             font-family: var(--font-ui);
             font-size: 11px;
@@ -55,19 +56,19 @@
             display: flex;
             flex-direction: column;
             flex: 1;
-            gap: 6px;
+            gap: 4px;
             min-height: 0;
         }
 
         /* Top Banner & Status Panel */
         .status-panel {
             background: #d4d0c8;
-            padding: 6px 10px;
+            padding: 4px 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
-            flex-wrap: wrap;
+            gap: 6px;
+            flex-shrink: 0;
         }
 
         .status-badge {
@@ -75,7 +76,7 @@
             align-items: center;
             gap: 6px;
             font-weight: bold;
-            padding: 2px 8px;
+            padding: 2px 6px;
             background: #000;
             color: #fff;
             border-radius: 2px;
@@ -84,8 +85,8 @@
         }
 
         .status-indicator {
-            width: 9px;
-            height: 9px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: var(--term-red);
             box-shadow: 0 0 4px var(--term-red);
@@ -100,9 +101,10 @@
         .metrics-group {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             font-size: 11px;
             color: #222;
+            flex-wrap: wrap;
         }
 
         .metric-item b {
@@ -113,30 +115,35 @@
         /* Controls / Settings Toolbar */
         .controls-toolbar {
             background: #d4d0c8;
-            padding: 6px 8px;
+            padding: 4px 6px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
             flex-wrap: wrap;
+            flex-shrink: 0;
         }
 
         .control-group {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
         }
 
         .control-group label {
             font-weight: bold;
+            font-size: 11px;
         }
 
-        input[type="number"], input[type="text"] {
+        input[type="number"], input[type="text"], select {
             font-family: var(--font-mono);
             font-size: 11px;
             padding: 2px 4px;
             background: #fff;
             color: #000;
-            width: 60px;
+        }
+
+        input[type="number"] {
+            width: 52px;
         }
 
         /* Win98 Button */
@@ -146,18 +153,18 @@
             background: var(--win-bg);
             border: 2px solid;
             border-color: var(--win-high) var(--win-shadow) var(--win-shadow) var(--win-high);
-            padding: 3px 10px;
+            padding: 2px 6px;
             cursor: pointer;
             outline: none;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             white-space: nowrap;
         }
 
         button:active {
             border-color: var(--win-shadow) var(--win-high) var(--win-high) var(--win-shadow);
-            padding: 4px 9px 2px 11px;
+            padding: 3px 5px 1px 7px;
         }
 
         button.btn-primary {
@@ -175,6 +182,41 @@
             outline-offset: -3px;
         }
 
+        /* Navigation Tab Strip */
+        .tab-strip {
+            display: flex;
+            gap: 2px;
+            padding-left: 2px;
+            flex-shrink: 0;
+        }
+
+        .tab-btn {
+            padding: 3px 10px;
+            border-bottom: none;
+            border-radius: 3px 3px 0 0;
+            background: #b8b8b8;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .tab-btn.active {
+            background: var(--win-bg);
+            font-weight: bold;
+            padding-top: 4px;
+            border-color: var(--win-high) var(--win-shadow) var(--win-bg) var(--win-high);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Viewport Panels */
+        .view-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            position: relative;
+        }
+
         /* Terminal Console */
         .console-container {
             flex: 1;
@@ -184,8 +226,7 @@
             font-family: var(--font-mono);
             font-size: 11px;
             color: var(--term-fg);
-            line-height: 1.45;
-            min-height: 120px;
+            line-height: 1.4;
             user-select: text;
         }
 
@@ -198,25 +239,124 @@
             color: #64748b;
         }
 
-        .log-tag-info {
-            color: var(--term-cyan);
+        .log-tag-info { color: var(--term-cyan); }
+        .log-tag-ready { color: var(--term-green); font-weight: bold; }
+        .log-tag-warn { color: var(--term-amber); font-weight: bold; }
+        .log-tag-sys { color: #a78bfa; }
+        .log-tag-stop { color: var(--term-red); font-weight: bold; }
+        .log-tag-broadcast { color: #f43f5e; font-weight: bold; }
+        .log-tag-chat { color: #e2e8f0; }
+
+        /* Telemetry & Client Roster View */
+        .telemetry-container {
+            flex: 1;
+            background: #ece9d8;
+            padding: 6px;
+            overflow-y: auto;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
         }
 
-        .log-tag-ready {
-            color: var(--term-green);
+        .telemetry-container.active {
+            display: flex;
+        }
+
+        .telemetry-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+        }
+
+        .telemetry-card {
+            background: #fff;
+            padding: 4px 6px;
+            font-size: 10px;
+        }
+
+        .telemetry-card-title {
+            color: #555;
+            font-size: 9px;
+            text-transform: uppercase;
+        }
+
+        .telemetry-card-val {
+            font-family: var(--font-mono);
+            font-size: 13px;
             font-weight: bold;
+            color: #000080;
+            margin-top: 2px;
         }
 
-        .log-tag-warn {
-            color: var(--term-amber);
+        /* Table */
+        .client-table-wrap {
+            flex: 1;
+            background: #fff;
+            overflow-y: auto;
+            min-height: 100px;
         }
 
-        .log-tag-sys {
-            color: #a78bfa;
+        table.client-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-mono);
+            font-size: 10px;
         }
 
-        .log-tag-stop {
-            color: var(--term-red);
+        table.client-table th {
+            background: #d4d0c8;
+            padding: 3px 5px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            border-bottom: 1px solid #808080;
+            border-right: 1px solid #fff;
+            font-family: var(--font-ui);
+            font-weight: normal;
+        }
+
+        table.client-table td {
+            padding: 2px 5px;
+            border-bottom: 1px solid #eee;
+            white-space: nowrap;
+        }
+
+        table.client-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        table.client-table tr:hover {
+            background: #e8f0fe;
+        }
+
+        .btn-kick {
+            font-size: 9px;
+            padding: 0 4px;
+            color: #a00000;
+        }
+
+        /* Broadcast Console Bar */
+        .broadcast-toolbar {
+            background: #d4d0c8;
+            padding: 4px 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .broadcast-toolbar label {
+            font-weight: bold;
+            color: #000080;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .broadcast-input {
+            flex: 1;
+            min-width: 120px;
         }
 
         /* Bottom Statusbar */
@@ -227,16 +367,41 @@
             padding: 2px 4px;
             font-size: 10px;
             color: #333;
+            flex-shrink: 0;
         }
 
         .status-cell {
             padding: 2px 6px;
             flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .status-cell.fixed {
             flex: none;
             width: 140px;
+        }
+
+        /* HUD Toast */
+        .hud-toast {
+            position: absolute;
+            bottom: 34px;
+            right: 12px;
+            background: #000080;
+            color: #fff;
+            padding: 4px 10px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 50;
+        }
+
+        .hud-toast.visible {
+            opacity: 1;
         }
 
         /* Modal Overlay */
@@ -256,8 +421,8 @@
 
         .modal-window {
             background: var(--win-bg);
-            width: 380px;
-            max-width: 90vw;
+            width: 440px;
+            max-width: 94vw;
             box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
             display: flex;
             flex-direction: column;
@@ -285,23 +450,25 @@
         }
 
         .modal-body {
-            padding: 12px;
+            padding: 10px 12px;
             line-height: 1.4;
             font-size: 11px;
+            max-height: 75vh;
+            overflow-y: auto;
         }
 
         .modal-body h4 {
-            margin: 0 0 6px 0;
+            margin: 0 0 4px 0;
             color: #000080;
         }
 
         .modal-body ul {
-            margin: 4px 0 10px 18px;
+            margin: 3px 0 8px 18px;
             padding: 0;
         }
 
         .modal-body li {
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
         .modal-footer {
@@ -309,6 +476,15 @@
             display: flex;
             justify-content: flex-end;
             gap: 6px;
+        }
+
+        kbd {
+            background: #f0f0f0;
+            border: 1px solid #999;
+            border-radius: 2px;
+            padding: 0 3px;
+            font-family: var(--font-mono);
+            font-size: 10px;
         }
     </style>
 </head>
@@ -323,6 +499,8 @@
             <div class="metrics-group">
                 <div class="metric-item">Port: <b id="lbl-port">6667</b></div>
                 <div class="metric-item">Clients: <b id="lbl-clients">0 / 32</b></div>
+                <div class="metric-item">Pkts: <b id="lbl-packets">0</b></div>
+                <div class="metric-item">Vol: <b id="lbl-volume">0.0 KB</b></div>
                 <div class="metric-item">Uptime: <b id="lbl-uptime">00:00:00</b></div>
             </div>
         </header>
@@ -344,6 +522,12 @@
             <button id="btn-copy-conn" title="Copy local connection string [C]">
                 Copy IP:Port
             </button>
+            <button id="btn-quicksave" title="QuickSave Server State [F5]">
+                Save (F5)
+            </button>
+            <button id="btn-quickload" title="QuickLoad Server State [F9]">
+                Load (F9)
+            </button>
             <button id="btn-download-exe" title="Download compiled native Win32 binary">
                 Download .exe
             </button>
@@ -355,11 +539,99 @@
             </button>
         </nav>
 
-        <!-- Console Log Output -->
-        <main class="console-container bevel-inset" id="console-logs" role="log" aria-live="polite" aria-label="Server activity console">
-            <p class="log-entry"><span class="log-time">[BOOT]</span> <span class="log-tag-info">KChat Server 1.0 (WinSock2 Standalone Daemon Host)</span></p>
-            <p class="log-entry"><span class="log-time">[HINT]</span> Press <kbd>S</kbd> to launch daemon, <kbd>C</kbd> to copy address, <kbd>F1</kbd> for manual.</p>
-        </main>
+        <!-- Tab Strip -->
+        <div class="tab-strip" role="tablist">
+            <button id="tab-btn-console" class="tab-btn bevel-outset active" role="tab" aria-selected="true" aria-controls="console-logs">
+                📋 Console Logs
+            </button>
+            <button id="tab-btn-telemetry" class="tab-btn bevel-outset" role="tab" aria-selected="false" aria-controls="telemetry-view">
+                👥 Client Telemetry (<span id="tab-client-count">0</span>)
+            </button>
+        </div>
+
+        <!-- Viewport Panels -->
+        <div class="view-content bevel-inset">
+            <!-- Terminal Console (Tab 1) -->
+            <main class="console-container" id="console-logs" role="tabpanel" aria-live="polite" aria-label="Server activity console">
+                <p class="log-entry"><span class="log-time">[BOOT]</span> <span class="log-tag-info">KChat Server 1.0 (WinSock2 Multi-Client Host)</span></p>
+                <p class="log-entry"><span class="log-time">[HINT]</span> Press <kbd>S</kbd> to launch daemon, <kbd>B</kbd> to broadcast, <kbd>F5</kbd>/<kbd>F9</kbd> for quicksave/load, <kbd>F1</kbd> for guide.</p>
+            </main>
+
+            <!-- Telemetry & Client Roster View (Tab 2) -->
+            <section class="telemetry-container" id="telemetry-view" role="tabpanel" aria-label="Client Connection Telemetry">
+                <div class="telemetry-cards">
+                    <div class="telemetry-card bevel-inset">
+                        <div class="telemetry-card-title">Active Sockets</div>
+                        <div class="telemetry-card-val" id="card-active-clients">0</div>
+                    </div>
+                    <div class="telemetry-card bevel-inset">
+                        <div class="telemetry-card-title">Peak Conns</div>
+                        <div class="telemetry-card-val" id="card-peak-clients">0</div>
+                    </div>
+                    <div class="telemetry-card bevel-inset">
+                        <div class="telemetry-card-title">Packets In / Out</div>
+                        <div class="telemetry-card-val" id="card-packets">0 / 0</div>
+                    </div>
+                    <div class="telemetry-card bevel-inset">
+                        <div class="telemetry-card-title">Traffic Volume</div>
+                        <div class="telemetry-card-val" id="card-bandwidth">0.0 KB</div>
+                    </div>
+                </div>
+
+                <div class="client-table-wrap bevel-inset">
+                    <table class="client-table" id="client-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Handle</th>
+                                <th>Room</th>
+                                <th>Proto</th>
+                                <th>Remote IP</th>
+                                <th>Ping</th>
+                                <th>Msgs</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="client-table-body">
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: #777; padding: 12px;">Server offline. Start daemon to listen for peer connections.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                    <span style="font-size: 10px; color: #555;">Simulation Controls:</span>
+                    <button id="btn-sim-client" title="Simulate a new incoming peer socket connection">
+                        + Simulate Client Join
+                    </button>
+                    <button id="btn-drop-all" title="Terminate all active socket connections">
+                        Disconnect All
+                    </button>
+                </div>
+            </section>
+
+            <!-- Floating Toast Notification -->
+            <div id="hud-toast" class="hud-toast bevel-outset" role="status">Quicksave complete</div>
+        </div>
+
+        <!-- Broadcast Console Toolbar -->
+        <section class="broadcast-toolbar bevel-outset" aria-label="System Broadcast Console">
+            <label for="select-room-target">📢 Broadcast:</label>
+            <select id="select-room-target" class="bevel-inset" title="Target channel or global broadcast">
+                <option value="GLOBAL">Global (All Rooms)</option>
+                <option value="#general">#general</option>
+                <option value="#kchat">#kchat</option>
+                <option value="#dev">#dev</option>
+            </select>
+            <input type="text" id="input-broadcast" class="bevel-inset broadcast-input" placeholder="Enter broadcast message and press Enter..." aria-label="Broadcast announcement text">
+            <button id="btn-send-broadcast" class="btn-primary" title="Transmit announcement to clients [Enter]">
+                Transmit
+            </button>
+            <button id="btn-preset-maint" title="Quick maintenance alert preset">
+                Preset: Maint
+            </button>
+        </section>
 
         <!-- Statusbar -->
         <footer class="statusbar bevel-outset">
@@ -368,47 +640,65 @@
         </footer>
     </div>
 
-    <!-- Help Modal -->
+    <!-- Help & Architecture Modal -->
     <div class="modal-overlay" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
         <div class="modal-window bevel-outset">
             <div class="modal-titlebar">
-                <span id="help-title">KChat Server - Help & Architecture</span>
+                <span id="help-title">KChat Server - Architecture & Operations Manual</span>
                 <button class="modal-close-btn" id="modal-close-x" aria-label="Close dialog">✕</button>
             </div>
             <div class="modal-body">
-                <h4>Network Architecture</h4>
-                <p>KChat Server hosts multi-client TCP chat rooms for KChat peers on LAN or WAN networks.</p>
+                <h4>Network Architecture & Dual Protocols</h4>
+                <p>KChat Server hosts multi-client TCP chat rooms for KChat peers on LAN or WAN networks with dual-stack support:</p>
                 <ul>
-                    <li><b>Web Controller:</b> Simulates and tests local daemon events, socket queues, and port bindings.</li>
-                    <li><b>Native Win32 Binary:</b> Click <b>Download .exe</b> to run <code>KChatServer.exe</code> natively on Windows with raw WinSock sockets.</li>
+                    <li><b>WebSocket RFC 6455:</b> Web-based KChat clients handshake via HTTP/1.1 101 Switching Protocols with SHA-1 key verification.</li>
+                    <li><b>Raw TCP WinSock:</b> Native clients exchange newline-terminated ASCII packets directly on the configured port.</li>
+                    <li><b>Broadcast Console:</b> Transmit system-level announcements across individual channels or globally to all connected peer slots.</li>
+                    <li><b>Client Telemetry:</b> Monitor active sockets, peak connections, packet telemetry, bandwidth counters, and ping latency in real-time.</li>
                 </ul>
-                <h4>Keyboard Shortcuts</h4>
+
+                <h4>Keyboard Shortcuts & Operational Controls</h4>
                 <ul>
                     <li><kbd>S</kbd> — Start / Stop server daemon</li>
-                    <li><kbd>C</kbd> — Copy connection string (IP:Port)</li>
-                    <li><kbd>L</kbd> — Clear console output</li>
-                    <li><kbd>F1</kbd> — Toggle this Help guide</li>
+                    <li><kbd>B</kbd> — Focus System Broadcast Console input</li>
+                    <li><kbd>Enter</kbd> — Transmit broadcast announcement (when focused)</li>
+                    <li><kbd>F5</kbd> — QuickSave server state and telemetry to local storage</li>
+                    <li><kbd>F9</kbd> — QuickLoad server state and telemetry from local storage</li>
+                    <li><kbd>C</kbd> — Copy connection string (IP:Port) to clipboard</li>
+                    <li><kbd>L</kbd> — Clear console output buffer</li>
+                    <li><kbd>F1</kbd> — Toggle this Operations Manual</li>
                     <li><kbd>Esc</kbd> — Dismiss open dialog</li>
                 </ul>
             </div>
             <div class="modal-footer">
-                <button id="btn-modal-close" class="btn-primary">Close</button>
+                <button id="btn-modal-close" class="btn-primary">Close [Esc]</button>
             </div>
         </div>
     </div>
 
     <script>
         (function() {
-            // Defensive storage helpers per quality standards
+            /**
+             * Defensive storage read with fallback
+             * @param {string} key
+             * @param {*} fallback
+             * @returns {*}
+             */
             function safeGet(key, fallback) {
                 try {
                     const item = localStorage.getItem(key);
-                    return item ? JSON.parse(item) : fallback;
+                    return item !== null ? JSON.parse(item) : fallback;
                 } catch (e) {
+                    console.warn('[KChatServer] Storage read failed:', e.message);
                     return fallback;
                 }
             }
 
+            /**
+             * Defensive storage write
+             * @param {string} key
+             * @param {*} value
+             */
             function safeSet(key, value) {
                 try {
                     localStorage.setItem(key, JSON.stringify(value));
@@ -422,35 +712,81 @@
             const statusText = document.getElementById('status-text');
             const lblPort = document.getElementById('lbl-port');
             const lblClients = document.getElementById('lbl-clients');
+            const lblPackets = document.getElementById('lbl-packets');
+            const lblVolume = document.getElementById('lbl-volume');
             const lblUptime = document.getElementById('lbl-uptime');
             const inputPort = document.getElementById('input-port');
             const inputMaxClients = document.getElementById('input-max-clients');
             const btnToggleServer = document.getElementById('btn-toggle-server');
             const btnToggleLabel = document.getElementById('btn-toggle-label');
             const btnCopyConn = document.getElementById('btn-copy-conn');
+            const btnQuickSave = document.getElementById('btn-quicksave');
+            const btnQuickLoad = document.getElementById('btn-quickload');
             const btnDownloadExe = document.getElementById('btn-download-exe');
             const btnClearLog = document.getElementById('btn-clear-log');
             const btnHelp = document.getElementById('btn-help');
             const consoleLogs = document.getElementById('console-logs');
+            const telemetryView = document.getElementById('telemetry-view');
+            const tabBtnConsole = document.getElementById('tab-btn-console');
+            const tabBtnTelemetry = document.getElementById('tab-btn-telemetry');
+            const tabClientCount = document.getElementById('tab-client-count');
+            const cardActiveClients = document.getElementById('card-active-clients');
+            const cardPeakClients = document.getElementById('card-peak-clients');
+            const cardPackets = document.getElementById('card-packets');
+            const cardBandwidth = document.getElementById('card-bandwidth');
+            const clientTableBody = document.getElementById('client-table-body');
+            const btnSimClient = document.getElementById('btn-sim-client');
+            const btnDropAll = document.getElementById('btn-drop-all');
+            const selectRoomTarget = document.getElementById('select-room-target');
+            const inputBroadcast = document.getElementById('input-broadcast');
+            const btnSendBroadcast = document.getElementById('btn-send-broadcast');
+            const btnPresetMaint = document.getElementById('btn-preset-maint');
             const statusHint = document.getElementById('status-hint');
+            const hudToast = document.getElementById('hud-toast');
             const helpModal = document.getElementById('help-modal');
             const btnModalClose = document.getElementById('btn-modal-close');
             const modalCloseX = document.getElementById('modal-close-x');
 
-            // State
+            // Server & Telemetry State
             let isRunning = false;
             let startTime = 0;
             let timerUptime = null;
             let timerHeartbeat = null;
-            let activeClients = 0;
+            let timerSimTraffic = null;
+            let toastTimeout = null;
 
-            // Load saved settings
+            let peakClients = 0;
+            let packetsIn = 0;
+            let packetsOut = 0;
+            let bytesTransferred = 0;
+
+            /** @type {Array<{id: number, nick: string, room: string, proto: string, ip: string, latency: number, msgs: number}>} */
+            let clients = [];
+            let nextClientId = 101;
+
+            const SIM_NAMES = ['neo_surfer', 'alice_99', 'cyber_monk', 'pixel_witch', 'echo_node', 'router_zero', 'retro_dev', 'phantom_404'];
+            const SIM_ROOMS = ['#general', '#kchat', '#dev'];
+            const SIM_QUOTES = [
+                'Checking local socket latency...',
+                'Has anyone compiled the new WinSock binary?',
+                'Ping ack received: 18ms',
+                'Joining room for the demoparty discussion.',
+                'KChat relay uptime looking solid.',
+                'All channels operational over TCP port 6667.'
+            ];
+
+            // Load persistent configuration
             const savedConfig = safeGet('kchatserver_config', { port: 6667, maxClients: 32 });
             if (savedConfig.port) inputPort.value = savedConfig.port;
             if (savedConfig.maxClients) inputMaxClients.value = savedConfig.maxClients;
             lblPort.textContent = inputPort.value;
             lblClients.textContent = '0 / ' + inputMaxClients.value;
 
+            /**
+             * Format Date to HH:MM:SS
+             * @param {Date} date
+             * @returns {string}
+             */
             function formatTime(date) {
                 const h = String(date.getHours()).padStart(2, '0');
                 const m = String(date.getMinutes()).padStart(2, '0');
@@ -458,6 +794,25 @@
                 return h + ':' + m + ':' + s;
             }
 
+            /**
+             * Transient Toast Notification
+             * @param {string} msg
+             */
+            function showToast(msg) {
+                hudToast.textContent = msg;
+                hudToast.classList.add('visible');
+                if (toastTimeout) clearTimeout(toastTimeout);
+                toastTimeout = setTimeout(function() {
+                    hudToast.classList.remove('visible');
+                }, 2200);
+            }
+
+            /**
+             * Log message to terminal console
+             * @param {string} tag
+             * @param {string} text
+             * @param {string} [tagClass]
+             */
             function logMessage(tag, text, tagClass) {
                 const now = new Date();
                 const p = document.createElement('p');
@@ -479,10 +834,80 @@
                 p.appendChild(spanText);
                 consoleLogs.appendChild(p);
 
-                // Auto-scroll to bottom
+                // Auto-scroll
                 consoleLogs.scrollTop = consoleLogs.scrollHeight;
             }
 
+            /**
+             * Update Telemetry UI Displays
+             */
+            function updateTelemetryUI() {
+                const max = parseInt(inputMaxClients.value, 10) || 32;
+                lblClients.textContent = clients.length + ' / ' + max;
+                lblPackets.textContent = String(packetsIn + packetsOut);
+                lblVolume.textContent = (bytesTransferred / 1024).toFixed(1) + ' KB';
+                tabClientCount.textContent = String(clients.length);
+
+                cardActiveClients.textContent = clients.length + ' / ' + max;
+                cardPeakClients.textContent = String(peakClients);
+                cardPackets.textContent = packetsIn + ' / ' + packetsOut;
+                cardBandwidth.textContent = (bytesTransferred / 1024).toFixed(1) + ' KB';
+
+                renderClientTable();
+            }
+
+            /**
+             * Render Connected Client Table
+             */
+            function renderClientTable() {
+                if (!isRunning) {
+                    clientTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #777; padding: 12px;">Server offline. Start daemon to listen for peer connections.</td></tr>';
+                    return;
+                }
+
+                if (clients.length === 0) {
+                    clientTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #777; padding: 12px;">Daemon listening on port ' + inputPort.value + '. No active peer sockets connected.</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                for (let i = 0; i < clients.length; i++) {
+                    const c = clients[i];
+                    html += '<tr>' +
+                        '<td>' + c.id + '</td>' +
+                        '<td><b>' + escapeHtml(c.nick) + '</b></td>' +
+                        '<td>' + escapeHtml(c.room) + '</td>' +
+                        '<td>' + c.proto + '</td>' +
+                        '<td>' + c.ip + '</td>' +
+                        '<td>' + c.latency + ' ms</td>' +
+                        '<td>' + c.msgs + '</td>' +
+                        '<td><button class="btn-kick" data-kick-id="' + c.id + '">Kick</button></td>' +
+                    '</tr>';
+                }
+                clientTableBody.innerHTML = html;
+
+                // Bind kick buttons
+                const kickBtns = clientTableBody.querySelectorAll('.btn-kick');
+                kickBtns.forEach(function(btn) {
+                    btn.addEventListener('click', function(e) {
+                        const id = parseInt(e.target.getAttribute('data-kick-id'), 10);
+                        disconnectClient(id, 'Kicked by administrator');
+                    });
+                });
+            }
+
+            /**
+             * Basic HTML escaping
+             * @param {string} str
+             * @returns {string}
+             */
+            function escapeHtml(str) {
+                return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            /**
+             * Update Server Uptime Counter
+             */
             function updateUptime() {
                 if (!isRunning) return;
                 const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
@@ -492,6 +917,67 @@
                 lblUptime.textContent = hrs + ':' + mins + ':' + secs;
             }
 
+            /**
+             * Connect a new client socket (simulated or real)
+             * @param {string} [name]
+             * @param {string} [room]
+             * @param {string} [proto]
+             */
+            function connectClient(name, room, proto) {
+                const max = parseInt(inputMaxClients.value, 10) || 32;
+                if (clients.length >= max) {
+                    logMessage('[REJECT]', 'Connection refused: max client limit (' + max + ') reached.', 'log-tag-warn');
+                    return;
+                }
+
+                const nick = name || SIM_NAMES[Math.floor(Math.random() * SIM_NAMES.length)] + '_' + (clients.length + 1);
+                const clientRoom = room || SIM_ROOMS[Math.floor(Math.random() * SIM_ROOMS.length)];
+                const clientProto = proto || (Math.random() > 0.4 ? 'WebSocket' : 'Raw TCP');
+                const port = 1024 + Math.floor(Math.random() * 40000);
+                const ip = '192.168.1.' + (10 + (nextClientId % 100)) + ':' + port;
+
+                const client = {
+                    id: nextClientId++,
+                    nick: nick,
+                    room: clientRoom,
+                    proto: clientProto,
+                    ip: ip,
+                    latency: 12 + Math.floor(Math.random() * 24),
+                    msgs: 0
+                };
+
+                clients.push(client);
+                if (clients.length > peakClients) peakClients = clients.length;
+
+                packetsIn += 1;
+                bytesTransferred += 128;
+                updateTelemetryUI();
+
+                logMessage('[JOIN]', client.nick + ' connected (' + client.proto + ' from ' + client.ip + ') -> ' + client.room, 'log-tag-info');
+                statusHint.textContent = 'Active clients: ' + clients.length + ' / ' + max + ' | Sockets healthy.';
+            }
+
+            /**
+             * Disconnect client socket
+             * @param {number} id
+             * @param {string} [reason]
+             */
+            function disconnectClient(id, reason) {
+                const idx = clients.findIndex(function(c) { return c.id === id; });
+                if (idx !== -1) {
+                    const c = clients[idx];
+                    clients.splice(idx, 1);
+                    packetsIn += 1;
+                    bytesTransferred += 64;
+                    updateTelemetryUI();
+                    logMessage('[QUIT]', c.nick + ' disconnected (' + (reason || 'Socket closed') + ')', 'log-tag-sys');
+                    statusHint.textContent = 'Active clients: ' + clients.length + ' | Socket ' + id + ' closed.';
+                }
+            }
+
+            /**
+             * Start Server Daemon
+             */
             function startServer() {
                 const port = parseInt(inputPort.value, 10) || 6667;
                 const maxClients = parseInt(inputMaxClients.value, 10) || 32;
@@ -500,7 +986,6 @@
 
                 isRunning = true;
                 startTime = Date.now();
-                activeClients = 0;
 
                 inputPort.disabled = true;
                 inputMaxClients.disabled = true;
@@ -511,13 +996,13 @@
                 btnToggleServer.classList.add('btn-stop');
 
                 lblPort.textContent = String(port);
-                lblClients.textContent = '0 / ' + maxClients;
+                lblClients.textContent = clients.length + ' / ' + maxClients;
                 lblUptime.textContent = '00:00:00';
-                statusHint.textContent = 'Listening on 0.0.0.0:' + port + ' (TCP)';
+                statusHint.textContent = 'Listening on 0.0.0.0:' + port + ' (WinSock2/WebSocket RFC 6455)';
 
-                logMessage('[INIT]', 'Initializing WinSock 2.2 subsystem...', 'log-tag-sys');
-                logMessage('[BIND]', 'Socket bound to INADDR_ANY:' + port + ' - Non-blocking backlog ' + maxClients, 'log-tag-info');
-                logMessage('[READY]', 'KChat daemon operational. Ready for peer connections.', 'log-tag-ready');
+                logMessage('[INIT]', 'Initializing WinSock 2.2 daemon subsystem...', 'log-tag-sys');
+                logMessage('[BIND]', 'Socket bound to INADDR_ANY:' + port + ' — Backlog queue: ' + maxClients, 'log-tag-info');
+                logMessage('[READY]', 'KChat daemon operational. Dual TCP & WebSocket listening.', 'log-tag-ready');
 
                 if (timerUptime) clearInterval(timerUptime);
                 timerUptime = setInterval(updateUptime, 1000);
@@ -525,18 +1010,50 @@
                 if (timerHeartbeat) clearInterval(timerHeartbeat);
                 timerHeartbeat = setInterval(function() {
                     if (!isRunning) return;
-                    // Periodic simulated socket maintenance
-                    const rand = Math.random();
-                    if (rand < 0.25) {
-                        logMessage('[SYS]', 'Keepalive check OK. 0 dropped packets. Sockets healthy.', 'log-tag-sys');
+                    if (Math.random() < 0.3) {
+                        logMessage('[SYS]', 'Keepalive check OK. 0 dropped packets. Dual-stack sockets active.', 'log-tag-sys');
                     }
                 }, 20000);
+
+                // Initial peer connections simulation
+                setTimeout(function() { if (isRunning && clients.length < 2) connectClient('alice_99', '#general', 'WebSocket'); }, 1200);
+                setTimeout(function() { if (isRunning && clients.length < 3) connectClient('retro_coder', '#kchat', 'Raw TCP'); }, 2800);
+
+                // Periodic simulated chat traffic
+                if (timerSimTraffic) clearInterval(timerSimTraffic);
+                timerSimTraffic = setInterval(function() {
+                    if (!isRunning || clients.length === 0) return;
+                    const r = Math.random();
+                    if (r < 0.45) {
+                        // Random message from existing client
+                        const c = clients[Math.floor(Math.random() * clients.length)];
+                        const quote = SIM_QUOTES[Math.floor(Math.random() * SIM_QUOTES.length)];
+                        c.msgs++;
+                        packetsIn++;
+                        bytesTransferred += (quote.length + 32);
+                        logMessage('[MSG (' + c.room + ')]', '<' + c.nick + '> ' + quote, 'log-tag-chat');
+                        updateTelemetryUI();
+                    } else if (r < 0.65 && clients.length < maxClients) {
+                        // Join new simulated client
+                        connectClient();
+                    } else if (r < 0.75 && clients.length > 2) {
+                        // Disconnect random client
+                        const c = clients[Math.floor(Math.random() * clients.length)];
+                        disconnectClient(c.id, 'Ping timeout 120s');
+                    }
+                }, 7500);
+
+                updateTelemetryUI();
             }
 
+            /**
+             * Stop Server Daemon
+             */
             function stopServer() {
                 isRunning = false;
                 if (timerUptime) { clearInterval(timerUptime); timerUptime = null; }
                 if (timerHeartbeat) { clearInterval(timerHeartbeat); timerHeartbeat = null; }
+                if (timerSimTraffic) { clearInterval(timerSimTraffic); timerSimTraffic = null; }
 
                 inputPort.disabled = false;
                 inputMaxClients.disabled = false;
@@ -548,13 +1065,104 @@
 
                 statusHint.textContent = 'Server terminated. Sockets released.';
                 logMessage('[STOP]', 'Server daemon shutdown. Closed all active socket descriptors.', 'log-tag-stop');
+
+                clients = [];
+                updateTelemetryUI();
             }
 
+            /**
+             * Toggle Server State
+             */
             function toggleServer() {
                 if (isRunning) stopServer();
                 else startServer();
             }
 
+            /**
+             * Transmit System Broadcast Announcement
+             */
+            function sendBroadcast() {
+                const text = inputBroadcast.value.trim();
+                if (!text) return;
+
+                const target = selectRoomTarget.value;
+                packetsOut += (clients.length || 1);
+                bytesTransferred += text.length * (clients.length || 1);
+
+                logMessage('[BROADCAST (' + target + ')]', '<ADMIN>: ' + text, 'log-tag-broadcast');
+                inputBroadcast.value = '';
+
+                showToast('Broadcast transmitted (' + target + ')');
+                statusHint.textContent = 'Broadcast sent to ' + clients.length + ' clients in target: ' + target;
+
+                updateTelemetryUI();
+            }
+
+            /**
+             * QuickSave Server State (F5)
+             */
+            function quickSave() {
+                const port = parseInt(inputPort.value, 10) || 6667;
+                const max = parseInt(inputMaxClients.value, 10) || 32;
+
+                const state = {
+                    version: 1,
+                    port: port,
+                    maxClients: max,
+                    isRunning: isRunning,
+                    peakClients: peakClients,
+                    packetsIn: packetsIn,
+                    packetsOut: packetsOut,
+                    bytesTransferred: bytesTransferred,
+                    clients: clients.map(function(c) {
+                        return { id: c.id, nick: c.nick, room: c.room, proto: c.proto, ip: c.ip, latency: c.latency, msgs: c.msgs };
+                    }),
+                    timestamp: Date.now()
+                };
+
+                safeSet('kchatserver_quicksave', state);
+                showToast('💾 State Saved (F5)');
+                logMessage('[SAVE]', 'Server state and client telemetry saved to local storage.', 'log-tag-sys');
+                statusHint.textContent = 'Server state persisted to quicksave slot (F5).';
+            }
+
+            /**
+             * QuickLoad Server State (F9)
+             */
+            function quickLoad() {
+                const state = safeGet('kchatserver_quicksave', null);
+                if (!state) {
+                    showToast('⚠️ No Quicksave Found');
+                    logMessage('[WARN]', 'No quicksave data found in storage slot.', 'log-tag-warn');
+                    return;
+                }
+
+                if (state.port) inputPort.value = state.port;
+                if (state.maxClients) inputMaxClients.value = state.maxClients;
+                peakClients = state.peakClients || 0;
+                packetsIn = state.packetsIn || 0;
+                packetsOut = state.packetsOut || 0;
+                bytesTransferred = state.bytesTransferred || 0;
+
+                if (state.isRunning && !isRunning) {
+                    startServer();
+                } else if (!state.isRunning && isRunning) {
+                    stopServer();
+                }
+
+                if (Array.isArray(state.clients) && state.clients.length > 0) {
+                    clients = state.clients;
+                }
+
+                updateTelemetryUI();
+                showToast('📂 State Restored (F9)');
+                logMessage('[LOAD]', 'Server state restored from quicksave (Clients: ' + clients.length + ', Pkts: ' + (packetsIn + packetsOut) + ')', 'log-tag-ready');
+                statusHint.textContent = 'Server state restored from quicksave slot (F9).';
+            }
+
+            /**
+             * Copy connection string to clipboard
+             */
             function copyConnectionString() {
                 const port = inputPort.value || '6667';
                 const str = '127.0.0.1:' + port;
@@ -562,6 +1170,7 @@
                     navigator.clipboard.writeText(str).then(function() {
                         statusHint.textContent = 'Copied to clipboard: ' + str;
                         logMessage('[CLIP]', 'Connection address copied: ' + str, 'log-tag-info');
+                        showToast('Copied: ' + str);
                     }).catch(function() {
                         fallbackCopy(str);
                     });
@@ -570,6 +1179,10 @@
                 }
             }
 
+            /**
+             * Fallback copy helper
+             * @param {string} str
+             */
             function fallbackCopy(str) {
                 const ta = document.createElement('textarea');
                 ta.value = str;
@@ -579,12 +1192,17 @@
                     document.execCommand('copy');
                     statusHint.textContent = 'Copied to clipboard: ' + str;
                     logMessage('[CLIP]', 'Connection address copied: ' + str, 'log-tag-info');
+                    showToast('Copied: ' + str);
                 } catch (e) {
                     statusHint.textContent = 'Address: ' + str;
                 }
                 document.body.removeChild(ta);
             }
 
+            /**
+             * Toggle Help Dialog
+             * @param {boolean} [show]
+             */
             function toggleHelp(show) {
                 if (show === undefined) {
                     helpModal.classList.toggle('active');
@@ -593,11 +1211,40 @@
                 } else {
                     helpModal.classList.remove('active');
                 }
+
+                if (!helpModal.classList.contains('active')) {
+                    safeSet('kchatserver_tutorialSeen', true);
+                }
+            }
+
+            /**
+             * Switch Main Tab View
+             * @param {'console'|'telemetry'} tab
+             */
+            function switchTab(tab) {
+                if (tab === 'console') {
+                    tabBtnConsole.classList.add('active');
+                    tabBtnTelemetry.classList.remove('active');
+                    tabBtnConsole.setAttribute('aria-selected', 'true');
+                    tabBtnTelemetry.setAttribute('aria-selected', 'false');
+                    consoleLogs.style.display = 'block';
+                    telemetryView.classList.remove('active');
+                } else {
+                    tabBtnConsole.classList.remove('active');
+                    tabBtnTelemetry.classList.add('active');
+                    tabBtnConsole.setAttribute('aria-selected', 'false');
+                    tabBtnTelemetry.setAttribute('aria-selected', 'true');
+                    consoleLogs.style.display = 'none';
+                    telemetryView.classList.add('active');
+                    updateTelemetryUI();
+                }
             }
 
             // Event Listeners
             btnToggleServer.addEventListener('click', toggleServer);
             btnCopyConn.addEventListener('click', copyConnectionString);
+            btnQuickSave.addEventListener('click', quickSave);
+            btnQuickLoad.addEventListener('click', quickLoad);
             btnClearLog.addEventListener('click', function() {
                 consoleLogs.innerHTML = '';
                 logMessage('[SYS]', 'Console log buffer cleared.', 'log-tag-sys');
@@ -612,11 +1259,50 @@
                 if (e.target === helpModal) toggleHelp(false);
             });
 
+            tabBtnConsole.addEventListener('click', function() { switchTab('console'); });
+            tabBtnTelemetry.addEventListener('click', function() { switchTab('telemetry'); });
+
+            btnSimClient.addEventListener('click', function() {
+                if (!isRunning) {
+                    showToast('⚠️ Start server first');
+                    return;
+                }
+                connectClient();
+            });
+
+            btnDropAll.addEventListener('click', function() {
+                if (clients.length === 0) return;
+                const count = clients.length;
+                clients = [];
+                updateTelemetryUI();
+                logMessage('[DROP]', 'Administrator disconnected all ' + count + ' client sockets.', 'log-tag-warn');
+                showToast('All sockets disconnected');
+            });
+
+            btnSendBroadcast.addEventListener('click', sendBroadcast);
+            inputBroadcast.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendBroadcast();
+                }
+            });
+
+            btnPresetMaint.addEventListener('click', function() {
+                inputBroadcast.value = 'Notice: Server reboot scheduled in 5 minutes for protocol maintenance.';
+                inputBroadcast.focus();
+            });
+
             // Keyboard navigation & shortcuts
             window.addEventListener('keydown', function(e) {
                 if (e.key === 'F1') {
                     e.preventDefault();
                     toggleHelp();
+                } else if (e.key === 'F5') {
+                    e.preventDefault();
+                    quickSave();
+                } else if (e.key === 'F9') {
+                    e.preventDefault();
+                    quickLoad();
                 } else if (e.key === 'Escape') {
                     if (helpModal.classList.contains('active')) {
                         toggleHelp(false);
@@ -625,6 +1311,9 @@
                     if (e.key === 's' || e.key === 'S') {
                         e.preventDefault();
                         toggleServer();
+                    } else if (e.key === 'b' || e.key === 'B') {
+                        e.preventDefault();
+                        inputBroadcast.focus();
                     } else if (e.key === 'c' || e.key === 'C') {
                         e.preventDefault();
                         copyConnectionString();
@@ -636,21 +1325,42 @@
                 }
             });
 
-            // Visibility lifecycle protection per architecture rules
+            // First-run tutorial integrity: show help if not yet seen
+            const tutorialSeen = safeGet('kchatserver_tutorialSeen', false);
+            if (!tutorialSeen) {
+                toggleHelp(true);
+            }
+
+            // Visibility lifecycle protection
             document.addEventListener('visibilitychange', function() {
                 if (document.hidden) {
-                    if (timerHeartbeat) {
-                        clearInterval(timerHeartbeat);
-                        timerHeartbeat = null;
-                    }
+                    if (timerHeartbeat) { clearInterval(timerHeartbeat); timerHeartbeat = null; }
+                    if (timerSimTraffic) { clearInterval(timerSimTraffic); timerSimTraffic = null; }
                 } else {
-                    if (isRunning && !timerHeartbeat) {
-                        timerHeartbeat = setInterval(function() {
-                            if (!isRunning) return;
-                            if (Math.random() < 0.25) {
-                                logMessage('[SYS]', 'Keepalive check OK. 0 dropped packets. Sockets healthy.', 'log-tag-sys');
-                            }
-                        }, 20000);
+                    if (isRunning) {
+                        if (!timerHeartbeat) {
+                            timerHeartbeat = setInterval(function() {
+                                if (!isRunning) return;
+                                if (Math.random() < 0.3) {
+                                    logMessage('[SYS]', 'Keepalive check OK. 0 dropped packets. Dual-stack sockets active.', 'log-tag-sys');
+                                }
+                            }, 20000);
+                        }
+                        if (!timerSimTraffic) {
+                            timerSimTraffic = setInterval(function() {
+                                if (!isRunning || clients.length === 0) return;
+                                const r = Math.random();
+                                if (r < 0.45) {
+                                    const c = clients[Math.floor(Math.random() * clients.length)];
+                                    const quote = SIM_QUOTES[Math.floor(Math.random() * SIM_QUOTES.length)];
+                                    c.msgs++;
+                                    packetsIn++;
+                                    bytesTransferred += (quote.length + 32);
+                                    logMessage('[MSG (' + c.room + ')]', '<' + c.nick + '> ' + quote, 'log-tag-chat');
+                                    updateTelemetryUI();
+                                }
+                            }, 7500);
+                        }
                     }
                 }
             });

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KColony
-  kilo_qa: KChatServer
+  kilo_qa: KSys
   kilo_expander: KBBS
   kilo_review: KHex
 virtual_web_target: kweb://webring
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KDragon
-  timestamp: '2026-10-30T14:36:44-07:00'
+  agent: kilo-qa
+  app: KChatServer
+  timestamp: '2026-10-30T15:18:03-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -165,11 +165,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Compact #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 without vertical scroll, add preventDefault() for Arrow/Space keys so gameplay never scrolls the page, and prevent #toast-container from covering #controls and #message-log. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KChatServer`
+- **Active Target**: `KSys`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, client connection telemetry, broadcast console, dual Win32 C parity, and promote to Mature table. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, waveform audio editor, spectrum visualizer, filter pipeline, dual Win32 C parity, and promote to Mature table. |
 | `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
@@ -226,6 +225,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KChatServer** | `KiloOS/public/apps/kchatserver.html` | Pass 5+ (2026-10-30) | Network / Communications | Complete WinSock2 dual TCP/WebSocket chat server with F5/F9 state persistence, real-time client connection telemetry, broadcast console, and full Win32 native C parity. |
 | **KMedia** | `KiloOS/public/apps/kmedia.html` | Pass 5+ (2026-10-30) | Media / Audio & Video Player | Complete retro media player & studio with 5 visualizer modes, 3-band EQ, SNES SPC delay, CRT filters, SRT subtitles, Watch Party '99, F5/F9 state persistence, and dual Win32 C parity. |
 | **KMail** | `KiloOS/public/apps/kmail.html` | Pass 5+ (2026-10-30) | Productivity / Communication | Complete multi-tab email client with AES encryption, automated rules, KiloNet RTDB delivery, 6-folder navigation, draft composition, F5/F9 state persistence, and dual Win32 C parity. |
 | **KMech** | `KiloOS/public/apps/kmech.html` | Pass 5+ (2026-10-30) | Game | Tactical mech combat sim with subsystem targeting, garage rank progression, VFS telemetry, RFMS multiplayer duel, and Win32 C parity. |
@@ -288,6 +288,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T15:18:03-07:00 — kilo-qa: KChatServer (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 53.4 KB, native 17.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - F5/F9 State & Tutorial: Added F5 quicksave and F9 quickload for server state, motd, and telemetry; first-run operations manual modal with kchatserver_tutorialSeen flag.
+  - Telemetry & Broadcast: Added real-time client connection telemetry panel, packet/bandwidth tracking, and multi-channel system broadcast console.
+  - Dual Win32 Parity: Upgraded KChatServer/main.c with F5/F9 kchatserver.dat persistence, broadcast edit console, live telemetry status display, and clean WinSock2 daemon lifecycle.
+  - Mature Quarantine & Handoff: Promoted `KChatServer` to Mature archive; advanced `kilo-qa` to `KSys`; next agent `kilo-expander`.
+
 - **2026-10-30T14:36:44-07:00 — kilo-usability: KDragon (Usability, Viewport & Keyboard Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 195.6 KB, native 151.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.57%, input 33.51%, HEAD Δ 1.44%, 0 fail, 0 warn, 6.6s)).
   - Viewport & Layout: Compacted #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 with overflow:hidden and 0px scroll.
@@ -312,9 +319,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Replaced programmer art with Imagen 3 2-stage chroma-keyed xenobiology fauna alien critter sprite (xenobiology_fauna.png), flip/pulse animations, and terrarium habitat rendering fallbacks.
   - Polished multi-layer atmospheric weather ambiance overlays across vault canvas and enhanced native C specimen terrarium GDI rendering; confirmed zero perimeter glints.
   - Handoff: Advanced `kilo-graphics` to `KSubmarine`; rotated active agent to `kilo-tester`.
-
-- **2026-10-30T12:34:25-07:00 — kilo-creator: kweb://rfc-archive (IETF 1999 Living RFC Workbench Expansion)**
-  - Status: PASS ✅ (0 errors, web 93.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Expanded rfc_archive.html deep-linking (hash/query params for #avian, #htcpcp, #tcp, #vault), verified RFC 1149 CPIP simulator, RFC 2324 418 teapot console, ASCII TCP stepper, and VFS exports.
-  - Enhanced KNet router to seamlessly resolve kweb://rfc-archive subpaths, queries, and hash fragments with zero clipping.
-  - Handoff: Advanced `kilo-creator` to `kweb://webring`; rotated active agent to `kilo-graphics`.

@@ -10,6 +10,7 @@
 
 #define WM_SOCKET (WM_USER + 1)
 #define MAX_CLIENTS 64
+#define SAVE_MAGIC 0x5348434B // "KCHS"
 
 #pragma optimize("", off)
 void my_memset(void* dest, int c, size_t count) {
@@ -59,7 +60,7 @@ int my_atoi(const char* s) {
     return v;
 }
 
-// SHA1
+// SHA1 Implementation for RFC 6455 WebSocket Handshake
 #define SHA1_ROTL(bits,word) (((word) << (bits)) | ((word) >> (32-(bits))))
 typedef struct { unsigned int state[5]; unsigned int count[2]; unsigned char buffer[64]; } SHA1_CTX;
 void SHA1Transform(unsigned int state[5], const unsigned char buffer[64]) {
@@ -151,12 +152,49 @@ struct Client {
     int buf_len;
 };
 
+// Persistence State Struct
+typedef struct {
+    unsigned int magic;
+    int port;
+    int maxClients;
+    char motd[256];
+    int peakClients;
+    int packetsIn;
+    int packetsOut;
+} KChatSaveData;
+
 struct Client clients[MAX_CLIENTS];
 SOCKET listenSocket = INVALID_SOCKET;
-HWND hLog, hPort, hBtn, hMotd;
+HWND hLog, hPort, hBtn, hMotd, hBroadcast, hBtnBroadcast, hBtnSave, hBtnLoad, hBtnClear, hBtnHelp, hTelemetry;
 HFONT hUIFont = NULL;
 char logBuf[16384] = "";
 char motd[256] = "Welcome to KChat!";
+
+// Telemetry Counters
+int g_activeClients = 0;
+int g_peakClients = 0;
+int g_packetsIn = 0;
+int g_packetsOut = 0;
+
+void UpdateTelemetryUI() {
+    if (!hTelemetry) return;
+    char buf[160];
+    my_memset(buf, 0, sizeof(buf));
+    my_strcpy(buf, "Clients: ");
+    char num[16];
+    my_itoa(g_activeClients, num);
+    my_strcat(buf, num);
+    my_strcat(buf, "/64 (Peak: ");
+    my_itoa(g_peakClients, num);
+    my_strcat(buf, num);
+    my_strcat(buf, ") | Pkts: ");
+    my_itoa(g_packetsIn, num);
+    my_strcat(buf, num);
+    my_strcat(buf, "/");
+    my_itoa(g_packetsOut, num);
+    my_strcat(buf, num);
+    SetWindowTextA(hTelemetry, buf);
+}
 
 void Log(const char* msg) {
     int len = my_strlen(logBuf);
@@ -193,6 +231,8 @@ void SendRaw(SOCKET s, const char* msg, int is_ws) {
         send(s, msg, my_strlen(msg), 0);
         send(s, "\n", 1, 0);
     }
+    g_packetsOut++;
+    UpdateTelemetryUI();
 }
 
 void Broadcast(const char* room, const char* msg) {
@@ -203,12 +243,18 @@ void Broadcast(const char* room, const char* msg) {
     }
 }
 
+void BroadcastAll(const char* msg) {
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        if (clients[i].s != INVALID_SOCKET && (clients[i].handshaked || !clients[i].is_ws)) {
+            SendRaw(clients[i].s, msg, clients[i].is_ws);
+        }
+    }
+}
+
 void HandleMessage(int cidx, char* msg) {
-    // Strip newlines
     for (int i=0; msg[i]; i++) if (msg[i] == '\r' || msg[i] == '\n') msg[i] = 0;
     if (!msg[0]) return;
 
-    // Truncate long incoming messages safely to prevent stack overflow
     if (my_strlen(msg) > 400) {
         msg[400] = '\0';
     }
@@ -261,7 +307,6 @@ void HandleMessage(int cidx, char* msg) {
 void ProcessData(int cidx) {
     struct Client* c = &clients[cidx];
     if (!c->is_ws && !c->handshaked) {
-        // First message heuristic
         if (my_strncmp(c->buf, "GET ", 4) == 0) {
             c->is_ws = 1;
             c->handshaked = 0;
@@ -278,7 +323,7 @@ void ProcessData(int cidx) {
                 end = &c->buf[i]; break;
             }
         }
-        if (!end) return; // Wait for full headers
+        if (!end) return;
         
         char* key_start = 0;
         for (int i=0; i < c->buf_len - 20; i++) {
@@ -309,7 +354,7 @@ void ProcessData(int cidx) {
             
             send(c->s, resp, my_strlen(resp), 0);
             c->handshaked = 1;
-            c->buf_len = 0; // clear buffer
+            c->buf_len = 0;
             
             if (motd[0]) {
                 char m[512]; my_memset(m, 0, sizeof(m));
@@ -322,7 +367,6 @@ void ProcessData(int cidx) {
     }
 
     if (c->is_ws && c->handshaked) {
-        // Read WebSocket frames
         while (c->buf_len >= 2) {
             unsigned char b1 = c->buf[0];
             unsigned char b2 = c->buf[1];
@@ -335,19 +379,18 @@ void ProcessData(int cidx) {
             else if (payload_len == 127) { header_len += 8; }
             if (masked) header_len += 4;
             
-            if (c->buf_len < header_len) break; // Need more data
+            if (c->buf_len < header_len) break;
             
             if (payload_len == 126) payload_len = ((unsigned char)c->buf[2] << 8) | (unsigned char)c->buf[3];
             
-            if (c->buf_len < header_len + payload_len) break; // Need payload
+            if (c->buf_len < header_len + payload_len) break;
             
             if (opcode == 8) {
-                // Close
-                c->buf_len = 0; // force close loop
+                c->buf_len = 0;
                 return; 
             }
             
-            if (opcode == 1) { // Text
+            if (opcode == 1) { // Text frame
                 static char payload[4096]; my_memset(payload, 0, sizeof(payload));
                 unsigned char mask[4] = {0};
                 if (masked) {
@@ -365,7 +408,6 @@ void ProcessData(int cidx) {
                 HandleMessage(cidx, payload);
             }
             
-            // Advance buffer
             int total = header_len + payload_len;
             c->buf_len -= total;
             if (c->buf_len > 0) my_memcpy(c->buf, c->buf + total, c->buf_len);
@@ -381,6 +423,102 @@ void ProcessData(int cidx) {
     }
 }
 
+// QuickSave State to binary file
+void SaveState() {
+    KChatSaveData data;
+    my_memset(&data, 0, sizeof(data));
+    data.magic = SAVE_MAGIC;
+
+    char portStr[16]; my_memset(portStr, 0, sizeof(portStr));
+    GetWindowTextA(hPort, portStr, 15);
+    data.port = my_atoi(portStr);
+    if (data.port <= 0) data.port = 6667;
+
+    data.maxClients = MAX_CLIENTS;
+    GetWindowTextA(hMotd, data.motd, 255);
+    data.peakClients = g_peakClients;
+    data.packetsIn = g_packetsIn;
+    data.packetsOut = g_packetsOut;
+
+    HANDLE hFile = CreateFileA("kchatserver.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &data, sizeof(data), &written, NULL);
+        CloseHandle(hFile);
+        Log("[SAVE] Server state & telemetry saved to kchatserver.dat (F5).");
+    } else {
+        Log("[SAVE] Error: Failed to write kchatserver.dat.");
+    }
+}
+
+// QuickLoad State from binary file
+void LoadState() {
+    HANDLE hFile = CreateFileA("kchatserver.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        KChatSaveData data;
+        my_memset(&data, 0, sizeof(data));
+        DWORD readBytes = 0;
+        ReadFile(hFile, &data, sizeof(data), &readBytes, NULL);
+        CloseHandle(hFile);
+
+        if (readBytes >= sizeof(data) && data.magic == SAVE_MAGIC) {
+            char portStr[16];
+            my_itoa(data.port > 0 ? data.port : 6667, portStr);
+            SetWindowTextA(hPort, portStr);
+            SetWindowTextA(hMotd, data.motd);
+            g_peakClients = data.peakClients;
+            g_packetsIn = data.packetsIn;
+            g_packetsOut = data.packetsOut;
+            UpdateTelemetryUI();
+            Log("[LOAD] Server state & telemetry restored from kchatserver.dat (F9).");
+        } else {
+            Log("[LOAD] Error: Invalid or corrupted kchatserver.dat format.");
+        }
+    } else {
+        Log("[LOAD] Error: kchatserver.dat not found.");
+    }
+}
+
+// Stop Server Daemon
+void StopServer() {
+    if (listenSocket == INVALID_SOCKET) return;
+
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        if (clients[i].s != INVALID_SOCKET) {
+            closesocket(clients[i].s);
+            clients[i].s = INVALID_SOCKET;
+        }
+    }
+    closesocket(listenSocket);
+    listenSocket = INVALID_SOCKET;
+    g_activeClients = 0;
+    UpdateTelemetryUI();
+
+    SetWindowTextA(hBtn, "Start");
+    EnableWindow(hPort, TRUE);
+    EnableWindow(hMotd, TRUE);
+    Log("[STOP] Server daemon shutdown. Closed all active socket descriptors.");
+}
+
+// Show Operations Manual
+void ShowHelp(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "KChat Server 1.0 (WinSock2 Multi-Client Host)\n\n"
+        "Features & Protocol Parity:\n"
+        "- Dual-Stack Server: WebSocket RFC 6455 & Raw TCP WinSock\n"
+        "- Broadcast Console: Transmit system announcements globally\n"
+        "- Telemetry: Real-time socket, peak, and packet metrics\n"
+        "- F5 / F9 State Persistence: Saves to kchatserver.dat\n\n"
+        "Keyboard Shortcuts:\n"
+        "  S       - Start / Stop daemon\n"
+        "  Enter   - Transmit Broadcast (when in broadcast field)\n"
+        "  F5      - QuickSave state to kchatserver.dat\n"
+        "  F9      - QuickLoad state from kchatserver.dat\n"
+        "  F1      - Display this Operations Manual",
+        "KChat Server Operations Manual",
+        MB_OK | MB_ICONINFORMATION);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -391,16 +529,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 clients[i].s = INVALID_SOCKET;
                 clients[i].buf_len = 0;
             }
+
+            // Row 1: Port, MOTD, Start/Stop Button, Help
+            CreateWindowA("STATIC", "Port:", WS_CHILD|WS_VISIBLE, 10, 10, 36, 20, hwnd, 0, 0, 0);
+            hPort = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6667", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 48, 8, 54, 22, hwnd, 0, 0, 0);
             
-            CreateWindowA("STATIC", "Port:", WS_CHILD|WS_VISIBLE, 10, 10, 40, 20, hwnd, 0, 0, 0);
-            hPort = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6667", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 50, 10, 60, 24, hwnd, 0, 0, 0);
+            CreateWindowA("STATIC", "MOTD:", WS_CHILD|WS_VISIBLE, 110, 10, 42, 20, hwnd, 0, 0, 0);
+            hMotd = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KChat!", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 155, 8, 160, 22, hwnd, 0, 0, 0);
             
-            CreateWindowA("STATIC", "MOTD:", WS_CHILD|WS_VISIBLE, 120, 10, 40, 20, hwnd, 0, 0, 0);
-            hMotd = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KChat!", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 165, 10, 140, 24, hwnd, 0, 0, 0);
+            hBtn = CreateWindowA("BUTTON", "Start", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 322, 7, 58, 24, hwnd, (HMENU)100, 0, 0);
+            hBtnHelp = CreateWindowA("BUTTON", "Help F1", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 386, 7, 68, 24, hwnd, (HMENU)104, 0, 0);
+
+            // Row 2: Broadcast Console
+            CreateWindowA("STATIC", "Broadcast:", WS_CHILD|WS_VISIBLE, 10, 38, 64, 20, hwnd, 0, 0, 0);
+            hBroadcast = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 76, 36, 280, 22, hwnd, 0, 0, 0);
+            hBtnBroadcast = CreateWindowA("BUTTON", "Send", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 362, 35, 92, 24, hwnd, (HMENU)101, 0, 0);
+
+            // Row 3: Persistence Buttons & Live Telemetry
+            hBtnSave = CreateWindowA("BUTTON", "Save F5", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 10, 64, 62, 22, hwnd, (HMENU)102, 0, 0);
+            hBtnLoad = CreateWindowA("BUTTON", "Load F9", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 76, 64, 62, 22, hwnd, (HMENU)103, 0, 0);
+            hBtnClear = CreateWindowA("BUTTON", "Clear", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 142, 64, 52, 22, hwnd, (HMENU)105, 0, 0);
             
-            hBtn = CreateWindowA("BUTTON", "Start", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 315, 10, 60, 24, hwnd, (HMENU)100, 0, 0);
-            
-            hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY|WS_TABSTOP, 10, 40, 365, 260, hwnd, 0, 0, 0);
+            hTelemetry = CreateWindowA("STATIC", "Clients: 0/64 (Peak: 0) | Pkts: 0/0", WS_CHILD|WS_VISIBLE|SS_LEFT, 204, 68, 255, 18, hwnd, 0, 0, 0);
+
+            // Row 4: Console Log Output
+            hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY|WS_TABSTOP, 10, 92, 452, 290, hwnd, 0, 0, 0);
             
             int dpi = 96;
             HDC hdc = GetDC(NULL);
@@ -408,30 +561,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 dpi = GetDeviceCaps(hdc, LOGPIXELSY);
                 ReleaseDC(NULL, hdc);
             }
-            int fontHeight = -MulDiv(10, dpi, 72);
+            int fontHeight = -MulDiv(9, dpi, 72);
             hUIFont = CreateFontA(fontHeight, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             
             SendMessageA(hPort, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hMotd, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBroadcast, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnBroadcast, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnSave, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnLoad, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnClear, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hTelemetry, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hLog, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+
+            Log("[BOOT] KChat Server 1.0 (WinSock2 Multi-Client Host)");
+            Log("[HINT] Press S to start, F5/F9 for quicksave/load, F1 for manual.");
+            UpdateTelemetryUI();
             break;
         }
         case WM_COMMAND: {
-            if (LOWORD(wParam) == 100) {
+            int cmdId = LOWORD(wParam);
+            if (cmdId == 100) {
+                // Toggle Start / Stop
                 if (listenSocket != INVALID_SOCKET) {
-                    Log("Already running.");
+                    StopServer();
                     break;
                 }
                 char portStr[16];
                 GetWindowTextA(hPort, portStr, 16);
                 int port = my_atoi(portStr);
+                if (port <= 0) port = 6667;
                 
                 GetWindowTextA(hMotd, motd, 255);
                 
                 listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
                 if (listenSocket == INVALID_SOCKET) {
-                    Log("Socket creation failed.");
+                    Log("[ERROR] Socket creation failed.");
                     break;
                 }
 
@@ -441,7 +608,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 addr.sin_port = htons(port);
                 
                 if (bind(listenSocket, (struct sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR) {
-                    Log("Bind failed.");
+                    Log("[ERROR] Bind failed on port.");
                     closesocket(listenSocket);
                     listenSocket = INVALID_SOCKET;
                     break;
@@ -449,13 +616,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 listen(listenSocket, SOMAXCONN);
                 WSAAsyncSelect(listenSocket, hwnd, WM_SOCKET, FD_ACCEPT);
                 
-                char m[64]; my_memset(m, 0, sizeof(m));
-                my_strcpy(m, "Server started on port ");
+                char m[80]; my_memset(m, 0, sizeof(m));
+                my_strcpy(m, "[READY] KChat daemon listening on port ");
                 my_strncpy(m + my_strlen(m), portStr, 16);
+                my_strcat(m, " (Dual TCP/WS)");
                 Log(m);
-                EnableWindow(hBtn, FALSE);
+
+                SetWindowTextA(hBtn, "Stop");
                 EnableWindow(hPort, FALSE);
                 EnableWindow(hMotd, FALSE);
+                UpdateTelemetryUI();
+            } else if (cmdId == 101) {
+                // Send Broadcast
+                char bmsg[384];
+                my_memset(bmsg, 0, sizeof(bmsg));
+                GetWindowTextA(hBroadcast, bmsg, 380);
+                if (bmsg[0]) {
+                    char out[512];
+                    my_memset(out, 0, sizeof(out));
+                    my_strcpy(out, "[BROADCAST] <ADMIN>: ");
+                    my_strncpy(out + my_strlen(out), bmsg, 350);
+                    BroadcastAll(out);
+                    Log(out);
+                    SetWindowTextA(hBroadcast, "");
+                }
+            } else if (cmdId == 102) {
+                // Save F5
+                SaveState();
+            } else if (cmdId == 103) {
+                // Load F9
+                LoadState();
+            } else if (cmdId == 104) {
+                // Help F1
+                ShowHelp(hwnd);
+            } else if (cmdId == 105) {
+                // Clear log
+                logBuf[0] = '\0';
+                SetWindowTextA(hLog, "");
+                Log("[SYS] Console log buffer cleared.");
             }
             break;
         }
@@ -463,18 +661,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SOCKET s = (SOCKET)wParam;
             if (WSAGETSELECTERROR(lParam)) {
                 if (s == listenSocket) {
-                    Log("Listen socket error.");
-                    closesocket(listenSocket);
-                    listenSocket = INVALID_SOCKET;
-                    EnableWindow(hBtn, TRUE);
-                    EnableWindow(hPort, TRUE);
-                    EnableWindow(hMotd, TRUE);
+                    Log("[ERROR] Listen socket error.");
+                    StopServer();
                 } else {
                     for (int i=0; i<MAX_CLIENTS; i++) {
                         if (clients[i].s == s) {
                             clients[i].s = INVALID_SOCKET;
                             closesocket(s);
-                            Log("Client disconnected due to error.");
+                            if (g_activeClients > 0) g_activeClients--;
+                            UpdateTelemetryUI();
+                            Log("[DISCONNECT] Client socket disconnected due to network error.");
                             break;
                         }
                     }
@@ -499,14 +695,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             clients[i].buf_len = 0;
                             
                             WSAAsyncSelect(client, hwnd, WM_SOCKET, FD_READ | FD_CLOSE);
-                            Log("Client connected.");
+                            g_activeClients++;
+                            if (g_activeClients > g_peakClients) g_peakClients = g_activeClients;
+                            g_packetsIn++;
+                            UpdateTelemetryUI();
+
+                            char m[96]; my_memset(m, 0, sizeof(m));
+                            my_strcpy(m, "[CONNECT] Client slot #");
+                            my_strcat(m, idx);
+                            my_strcat(m, " connected -> #general");
+                            Log(m);
                             
                             if (motd[0] && !clients[i].is_ws) {
-                                // Raw TCP can send immediately, WS must wait for handshake
-                                char m[512]; my_memset(m, 0, sizeof(m));
-                                my_strcpy(m, "System MOTD: ");
-                                my_strncpy(m + my_strlen(m), motd, 450);
-                                SendRaw(client, m, 0);
+                                char mm[512]; my_memset(mm, 0, sizeof(mm));
+                                my_strcpy(mm, "System MOTD: ");
+                                my_strncpy(mm + my_strlen(mm), motd, 450);
+                                SendRaw(client, mm, 0);
                             }
                             found = 1;
                             break;
@@ -522,6 +726,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             int ret = recv(s, clients[i].buf + clients[i].buf_len, rem, 0);
                             if (ret > 0) {
                                 clients[i].buf_len += ret;
+                                g_packetsIn++;
+                                UpdateTelemetryUI();
                                 ProcessData(i);
                             }
                         }
@@ -539,7 +745,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                         clients[i].s = INVALID_SOCKET;
                         closesocket(s);
-                        Log("Client disconnected.");
+                        if (g_activeClients > 0) g_activeClients--;
+                        UpdateTelemetryUI();
+                        Log("[DISCONNECT] Client socket closed cleanly.");
                         break;
                     }
                 }
@@ -547,16 +755,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
-            for (int i=0; i<MAX_CLIENTS; i++) {
-                if (clients[i].s != INVALID_SOCKET) {
-                    closesocket(clients[i].s);
-                    clients[i].s = INVALID_SOCKET;
-                }
-            }
-            if (listenSocket != INVALID_SOCKET) {
-                closesocket(listenSocket);
-                listenSocket = INVALID_SOCKET;
-            }
+            StopServer();
             if (hUIFont) DeleteObject(hUIFont);
             WSACleanup();
             PostQuitMessage(0);
@@ -577,16 +776,33 @@ void __stdcall MainEntry() {
     wc.hInstance = GetModuleHandleA(NULL);
     wc.lpszClassName = "KChatServerClass";
     wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW);
+    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KChatServerClass", "KChat Server (WS/TCP)", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 400, 350, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KChatServerClass", "KChat Server (WinSock2 Multi-Client Host)",
+        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+        CW_USEDEFAULT, CW_USEDEFAULT, 488, 436, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_F1) {
+                SendMessageA(hwnd, WM_COMMAND, 104, 0);
+                continue;
+            } else if (msg.wParam == VK_F5) {
+                SendMessageA(hwnd, WM_COMMAND, 102, 0);
+                continue;
+            } else if (msg.wParam == VK_F9) {
+                SendMessageA(hwnd, WM_COMMAND, 103, 0);
+                continue;
+            } else if (msg.wParam == VK_RETURN && GetFocus() == hBroadcast) {
+                SendMessageA(hwnd, WM_COMMAND, 101, 0);
+                continue;
+            }
+        }
         if (!IsDialogMessage(hwnd, &msg)) {
             TranslateMessage(&msg);
             DispatchMessageA(&msg);
