@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T17:38:42-07:00 — kilo-tester: KHex (UI & Runtime Bug Fixes)**
+  - Status: PASS ✅ (0 errors, web 273.2 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 13.83%, HEAD Δ 0.0%, 0 fail, 1 warn, 5.3s)).
+  - Defined loadBufferData(u8) in khex.html to resolve ReferenceError on all 7 Disassembler and Struct sample buttons.
+  - Fixed executeStructUnpack() undefined isLittle crash, PE32 Characteristics offsets (0x19C/0x1C4/0x1EC), bufferCursor, and deduplicated #exportPreset.
+  - Enforced switchTab('editor') prior to gotoOffset() and fixed KHex/main.c 0xB8 disasm format args and top-right button/hexagon logo overlap.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-10-30T16:38:38-07:00 — kilo-creator: kweb://webring (Canonical 1999 Web Nodes RingMaster Integration & Traversal)**
   - Status: PASS ✅ (0 errors, web 457.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 2.58%, input 19.73%, HEAD Δ 2.36%, 0 fail, 0 warn, 4.9s)).
   - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) into RingMaster topology map, badge generator, and bidirectional ring traversal.

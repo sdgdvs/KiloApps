@@ -5320,7 +5320,9 @@ revealing the blueprint for the App #100 KMatrix singularity.
               '/home/crypto/carlsbad_vault_unseal.dat',
               '/home/crypto/ring0_master_clearance.sig',
               '/home/crypto/alpha_fragment.sys',
-              '/home/crypto/kmatrix_verification_guide.txt'
+              '/home/crypto/kmatrix_verification_guide.txt',
+              '/home/crypto/sector_04_fragment.txt',
+              '/home/crypto/kmatrix_passkey_fragment.txt'
             ];
             const all = Array.from(new Set([...cachedKeys, ...vfs2Keys, ...defaultKeys]));
             callback(all, all.map(f => ({ name: f, isDirectory: false })));
@@ -5336,7 +5338,9 @@ revealing the blueprint for the App #100 KMatrix singularity.
         const msg = {
           type: 'OS_LAUNCH_APP',
           appId: appId,
+          targetApp: appId,
           file: file,
+          path: file,
           args: args
         };
         if (window.parent && window.parent !== window) window.parent.postMessage(msg, '*');
@@ -5357,7 +5361,17 @@ revealing the blueprint for the App #100 KMatrix singularity.
   }
 
   function buildAlphaSysPayload() {
-    let existing = KiloVfs.vfsCache['/sys/alpha.sys'] || 'S0VZX1BBUlRfMTogMHhERUFE';
+    let existing = KiloVfs.vfsCache['/sys/alpha.sys'];
+    if (!existing) {
+      try { existing = localStorage.getItem('kilo_vfs_/sys/alpha.sys'); } catch (e) {}
+    }
+    if (!existing) {
+      try {
+        const raw = localStorage.getItem('kiloos_vfs_state_v2');
+        if (raw) existing = JSON.parse(raw)['/sys/alpha.sys'];
+      } catch (e) {}
+    }
+    if (!existing) existing = 'S0VZX1BBUlRfMTogMHhERUFE';
     if (!existing.includes('1999-ARCH')) {
       existing += '\nKEY_PART_2: 1999-ARCH';
     }
@@ -5422,6 +5436,12 @@ revealing the blueprint for the App #100 KMatrix singularity.
     const guideTxt = `=== KMATRIX VERIFICATION GUIDE & CRYPTOGRAPHIC ASSEMBLY ===\nSECTOR 04 [STORAGE_VFS] TOKEN: RECOVERY_1999\nSECTOR 04 INODE: 0x1999 (/system/recovery/1999.log)\nPENULTIMATE KEY FRAGMENT: 1999-ARCH\nMASTER DIRECTOR TARGET HASH: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946\n\nVERIFICATION WORKFLOW:\n1. Ensure /sys/alpha.sys is written via Deep Core Ghost Node terminal ('vfs sync' or 'Commit to VFS').\n2. Launch KMatrix (App #100) or enter 'kmatrix' in Ghost Node terminal.\n3. KMatrix automatically reads /sys/alpha.sys and verifies Sector 04 [STORAGE_VFS].\n4. Combine remaining sector fragments to breach the Singularity and ascend to KDirector.`;
     KiloVfs.write('/home/crypto/kmatrix_verification_guide.txt', guideTxt, null);
 
+    const sector4Txt = `SECTOR: 04 [STORAGE_VFS]\nINODE: 0x1999\nTOKEN: RECOVERY_1999\nFRAGMENT: 1999-ARCH\nSTATUS: VERIFIED\nVERIFICATION_APP: KMatrix (App #100)\nVFS_KERNEL_TARGET: /sys/alpha.sys`;
+    KiloVfs.write('/home/crypto/sector_04_fragment.txt', sector4Txt, null);
+
+    const keyFragmentTxt = `KMATRIX PASSKEY FRAGMENT (TIER 3 GHOST NODE 0x1999)\nTOKEN: 1999-ARCH\nSECTOR: STORAGE_VFS (Sector 04)\nTARGET HASH: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946\nVERIFIED BY: DEEP_CORE_SUBTERRANEAN_TERMINAL`;
+    KiloVfs.write('/home/crypto/kmatrix_passkey_fragment.txt', keyFragmentTxt, null);
+
     if (!silent) {
       printLine('[VFS SYNC] Decoded fragments successfully committed to KiloOS VFS:', 'text-highlight');
       printLine('  -> /sys/alpha.sys [KEY_PART_2: 1999-ARCH & RECOVERY_1999]', 'text-cyan');
@@ -5434,7 +5454,9 @@ revealing the blueprint for the App #100 KMatrix singularity.
       printLine('  -> /home/crypto/ring0_master_clearance.sig', 'text-cyan');
       printLine('  -> /home/crypto/alpha_fragment.sys', 'text-cyan');
       printLine('  -> /home/crypto/kmatrix_verification_guide.txt', 'text-cyan');
-      printLine('Verification available in KMatrix (App #100) & KCipher (/home/crypto/)', 'text-bright');
+      printLine('  -> /home/crypto/sector_04_fragment.txt', 'text-cyan');
+      printLine('  -> /home/crypto/kmatrix_passkey_fragment.txt', 'text-cyan');
+      printLine('Verification ready in KMatrix (App #100) & KCipher (/home/crypto/)', 'text-bright');
       SFX.success();
     }
   }
@@ -5448,8 +5470,14 @@ revealing the blueprint for the App #100 KMatrix singularity.
     if (e.data.type === 'VFS_CHANGED') {
       if (e.data.path) {
         KiloVfs.vfsCache[e.data.path] = e.data.data;
-        if (e.data.path === '/sys/alpha.sys' || (typeof e.data.path === 'string' && e.data.path.startsWith('/home/crypto/'))) {
+        if (e.data.path === '/sys/alpha.sys') {
           logMeshEvent(`[VFS SYNC] Kernel updated: ${e.data.path}`);
+          const str = String(e.data.data || '');
+          if ((str.includes('RECOVERY_1999') || str.includes('1999-ARCH')) && !state.verifiedSectors.STORAGE_VFS) {
+            defuseSector('STORAGE_VFS', 'Inode 0x1999 synchronized from external VFS update.');
+          }
+        } else if (typeof e.data.path === 'string' && e.data.path.startsWith('/home/crypto/')) {
+          logMeshEvent(`[VFS SYNC] Crypto artifact updated: ${e.data.path}`);
         }
       }
     }
@@ -6527,6 +6555,19 @@ Timestamp: ${new Date().toISOString()}
     KiloVfs.read('/sys/alpha.sys', (data) => {
       if (data) {
         logMeshEvent('[VFS] Connected to /sys/alpha.sys in KiloOS kernel.');
+        const str = String(data);
+        if (str.includes('RECOVERY_1999') || str.includes('1999-ARCH')) {
+          if (!state.verifiedSectors.STORAGE_VFS) {
+            state.verifiedSectors.STORAGE_VFS = true;
+            updateSectorsUI();
+            updateWorkbenchUI();
+          }
+          printLine('[VFS KERNEL BRIDGE] Synchronized with /sys/alpha.sys (Sector 04 fragment verified).', 'text-highlight');
+        } else {
+          printLine('[VFS KERNEL BRIDGE] Connected to /sys/alpha.sys. Decoded fragments ready for sync.', 'text-dim');
+        }
+      } else {
+        printLine('[VFS KERNEL BRIDGE] KiloOS kernel bridge ready. Type "vfs sync" to commit fragments.', 'text-dim');
       }
     });
     printLine('  Host: 10.19.99.127:1999 | Subcarrier Lock: 1999.00 Hz | Protocol: Ring 0', 'text-cyan');
@@ -6867,20 +6908,31 @@ Timestamp: ${new Date().toISOString()}
 
       case 'ls':
       case 'dir':
-        printLine('--- GHOST SPOOL VAULT (/core/spool/) ---', 'text-cyan');
-        printLine('PERMS       SIZE  INODE  FILENAME');
-        printLine('-rw-r--r--   780  0x1990 incident_1999_dec31.log');
-        printLine('-rw-r--r--   592  0x1991 airgap_firewall.rules');
-        printLine('-rw-r--r--  1048  0x1992 sector_manifest.json');
-        printLine('-rw-r--r--   520  0x1993 subcarrier_1999hz.sig');
-        printLine('-rw-r--r--   890  0x1994 warez_corrupted_link.nfo');
-        printLine('-rw-r--r--   620  0x1995 carlsbad_geological_strata.dat');
-        printLine('-rw-r--r--  1150  0x1996 precursor_lattice_protocol.asm');
-        printLine('-rw-r--r--   840  0x1997 singularity_containment.nfo');
-        printLine('-rw-r--r--   460  0x1998 litho_resonance_telemetry.csv');
-        printLine('');
-        printLine("Type 'cat <file>' to display, or 'download <file>' to save to disk.", 'text-dim');
-        SFX.beep();
+        if (arg && (arg.toLowerCase().includes('vfs') || arg.toLowerCase().includes('sys') || arg.toLowerCase().includes('crypto') || arg.startsWith('/'))) {
+          printLine(`--- KILOOS VFS DIRECTORY TREE (${arg}) ---`, 'text-cyan');
+          KiloVfs.list((files) => {
+            const filter = arg.replace(/vfs/i, '').trim();
+            const matching = filter ? files.filter(f => f.toLowerCase().includes(filter.toLowerCase())) : files;
+            printLine(`Found ${matching.length} VFS file(s):`);
+            matching.sort().forEach(f => printLine(`  ${f}`, 'text-highlight'));
+            SFX.beep();
+          });
+        } else {
+          printLine('--- GHOST SPOOL VAULT (/core/spool/) ---', 'text-cyan');
+          printLine('PERMS       SIZE  INODE  FILENAME');
+          printLine('-rw-r--r--   780  0x1990 incident_1999_dec31.log');
+          printLine('-rw-r--r--   592  0x1991 airgap_firewall.rules');
+          printLine('-rw-r--r--  1048  0x1992 sector_manifest.json');
+          printLine('-rw-r--r--   520  0x1993 subcarrier_1999hz.sig');
+          printLine('-rw-r--r--   890  0x1994 warez_corrupted_link.nfo');
+          printLine('-rw-r--r--   620  0x1995 carlsbad_geological_strata.dat');
+          printLine('-rw-r--r--  1150  0x1996 precursor_lattice_protocol.asm');
+          printLine('-rw-r--r--   840  0x1997 singularity_containment.nfo');
+          printLine('-rw-r--r--   460  0x1998 litho_resonance_telemetry.csv');
+          printLine('');
+          printLine("Directives: 'cat <file>' to display | 'ls vfs' or 'vfs ls' for KiloOS VFS | 'download <file>'", 'text-dim');
+          SFX.beep();
+        }
         break;
 
       case 'cat':
@@ -6893,8 +6945,24 @@ Timestamp: ${new Date().toISOString()}
             printLine(SPOOL_FILES[fn]);
             printLine(`--- END /core/spool/${fn} ---`, 'text-cyan');
             SFX.beep();
+          } else if (fn.startsWith('/') || fn.includes('alpha') || fn.includes('crypto') || fn.includes('.sys') || fn.includes('.key') || fn.includes('.log') || fn.includes('.dat')) {
+            const vfsPath = fn.startsWith('/') ? fn : (fn.includes('alpha') ? `/sys/${fn}` : `/home/crypto/${fn}`);
+            printLine(`Reading VFS path '${vfsPath}'...`, 'text-dim');
+            KiloVfs.read(vfsPath, (data) => {
+              if (data === null || data === undefined) {
+                printLine(`[VFS READ] File '${vfsPath}' empty or not found in VFS.`, 'text-alert');
+                SFX.warn();
+              } else {
+                printLine(`--- BEGIN ${vfsPath} ---`, 'text-cyan');
+                const lines = String(data).split('\n');
+                lines.slice(0, 30).forEach(l => printLine(l));
+                if (lines.length > 30) printLine(`... (${lines.length - 30} lines truncated) ...`, 'text-dim');
+                printLine(`--- END ${vfsPath} ---`, 'text-cyan');
+                SFX.beep();
+              }
+            });
           } else {
-            printLine(`File not found: '/core/spool/${fn}'. Type 'ls' for file list.`, 'text-alert');
+            printLine(`File not found: '/core/spool/${fn}'. Type 'ls' or 'vfs ls' for file list.`, 'text-alert');
             SFX.warn();
           }
         }
@@ -7138,11 +7206,15 @@ Timestamp: ${new Date().toISOString()}
       printLine('Morse pulse train spells: . -.-. .... --- (E-C-H-O).');
       printLine("[TELEMETRY] Sector 02 harmonic resonance locked at token '1999HZ'.");
       SFX.beep();
-    } else if (target.includes('vfs') || target.includes('storage') || target.includes('log')) {
-      printLine('--- PROBING SECTOR 04: STORAGE_VFS ---', 'text-cyan');
+    } else if (target.includes('vfs') || target.includes('storage') || target.includes('log') || target.includes('alpha') || target.includes('crypto')) {
+      printLine('--- PROBING SECTOR 04 & KILOOS VFS: /sys/alpha.sys & /home/crypto/ ---', 'text-cyan');
       printLine('Virtual filesystem archive unsealed: /system/recovery/1999.log');
       printLine("Archival recovery file recorded under token 'RECOVERY_1999'.");
-      printLine('[TELEMETRY] Preserved in KNote / KPad archival storage.');
+      printLine('Target VFS Kernel Path: /sys/alpha.sys (Ring-0 Passkey Assembly)');
+      printLine('Target VFS Crypto Dir : /home/crypto/ (Decoded Forensics & Manifests)');
+      printLine(`VFS Bridge State      : ${KiloVfs.connected ? 'ONLINE (KiloOS Bridge Active)' : 'STANDALONE AIRGAP'}`);
+      printLine(`Sector 04 State       : ${state.verifiedSectors.STORAGE_VFS ? 'DEFUSED & COMMITTED' : 'AWAITING DEFUSAL'}`);
+      printLine('[TELEMETRY] Decoded fragments write directly to VFS for KMatrix verification ("vfs sync" or "kmatrix").');
       SFX.beep();
     } else if (target.includes('core') || target.includes('ai') || target.includes('nexus')) {
       printLine('--- PROBING SECTOR 05: CORE_AI (PRECURSOR NEXUS) ---', 'text-cyan');
