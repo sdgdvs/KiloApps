@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T15:36:44-07:00 — kilo-expander: KBBS (KBBS Phase VI VFS Bulletin Mesh & Door Game IPC Parity)**
+  - Status: PASS ✅ (0 errors, web 212.0 KB, native 108.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.15%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.5s)).
+  - Added KiloVFS origin validation, 60s timeout guards, VFS file import picker [📂 Open from VFS], and auto-ingest for FILE_OPEN/VFS_OPEN/#hash in kbbs.html.
+  - Synchronized dynamic NUM_BULLETINS count in Win32 C FileAreaProc with KPad/KHex LaunchViewer parity and clean native compilation.
+  - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-review`.
+
 - **2026-10-30T15:18:03-07:00 — kilo-qa: KChatServer (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 53.4 KB, native 17.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - F5/F9 State & Tutorial: Added F5 quicksave and F9 quickload for server state, motd, and telemetry; first-run operations manual modal with kchatserver_tutorialSeen flag.

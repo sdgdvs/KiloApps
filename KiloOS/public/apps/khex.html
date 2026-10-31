@@ -25,19 +25,25 @@
 
   * { box-sizing: border-box; }
 
-  body {
+  html, body {
+    height: 100%;
     margin: 0;
-    padding: 16px;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  body {
+    padding: 10px 14px;
     font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     background: linear-gradient(135deg, #090d16 0%, #111827 50%, #1e1b4b 100%);
     color: var(--text-primary);
-    min-height: 100vh;
+    height: 100vh;
+    box-sizing: border-box;
     min-width: 320px;
     max-width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    overflow-x: hidden;
+    gap: 8px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -45,15 +51,16 @@
 
   /* Header Bar */
   .header {
+    flex-shrink: 0;
     background: var(--panel-bg);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 12px 20px;
+    border-radius: 10px;
+    padding: 8px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     box-shadow: var(--shadow-main);
   }
 
@@ -110,12 +117,13 @@
 
   /* Navigation Tabs */
   .tab-nav {
+    flex-shrink: 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 4px;
     background: var(--panel-bg);
-    padding: 6px;
-    border-radius: 10px;
+    padding: 4px 6px;
+    border-radius: 8px;
     border: 1px solid var(--border-color);
   }
 
@@ -125,18 +133,18 @@
   }
 
   .tab-btn {
-    padding: 7px 12px;
+    padding: 5px 10px;
     border: none;
     background: transparent;
     color: var(--text-secondary);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 600;
-    border-radius: 7px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     white-space: nowrap;
     flex-shrink: 0;
   }
@@ -156,11 +164,47 @@
   .tab-content {
     display: none;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
   }
 
   .tab-content.active {
     display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+  }
+
+  .tab-content::-webkit-scrollbar {
+    width: 6px;
+  }
+  .tab-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .tab-content::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 4px;
+  }
+  .tab-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.6);
+  }
+
+  .converter-inputs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 12px;
+  }
+
+  .converter-inputs-grid .form-group input {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+
+  @media (max-width: 600px) {
+    .converter-inputs-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   /* Grid Layouts */
@@ -400,8 +444,10 @@
   }
 
   .bit-num {
-    font-size: 0.55rem;
-    color: var(--text-dim);
+    font-size: 11px;
+    font-weight: 600;
+    color: #cbd5e1;
+    line-height: 1.1;
   }
 
   .bit-val {
@@ -547,8 +593,10 @@
 
   /* Status Bar */
   .status-bar {
+    flex-shrink: 0;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-size: 0.75rem;
     color: var(--text-secondary);
     background: var(--panel-bg);
@@ -556,6 +604,7 @@
     border-radius: 8px;
     padding: 6px 12px;
     font-family: monospace;
+    z-index: 10;
   }
 
   /* Utility output boxes */
@@ -572,20 +621,19 @@
     max-height: 250px;
     overflow-y: auto;
   }
-  /* Toast Notification Container (Positioned Safely at Top-Center to prevent occluding Status Bar & controls per Directive 189) */
+  /* Toast Notification Container (Positioned Safely at Bottom-Right so toasts never block .tab-nav clicks) */
   #toastContainer {
     position: fixed;
-    top: 52px;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 38px;
+    right: 20px;
     z-index: 10000;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-end;
     gap: 8px;
     pointer-events: none;
-    max-width: 420px;
-    width: 90%;
+    max-width: 380px;
+    width: auto;
   }
 
   .khex-toast {
@@ -820,29 +868,31 @@
             <button class="btn btn-sm" onclick="resetConverter()">Reset</button>
           </div>
         </div>
-        <div class="form-group">
-          <label>Hexadecimal (0x)</label>
-          <input type="text" id="hexInput" value="0x12345678" spellcheck="false" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label>Decimal (Unsigned 32-bit)</label>
-          <input type="text" id="decInput" value="305419896" spellcheck="false" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label>Decimal (Signed 32-bit)</label>
-          <input type="text" id="decSignedInput" value="305419896" spellcheck="false" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label>Binary</label>
-          <input type="text" id="binInput" value="00010010001101000101011001111000" spellcheck="false" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label>Octal</label>
-          <input type="text" id="octInput" value="2215053170" spellcheck="false" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label>ASCII Representation</label>
-          <input type="text" id="ascInput" value="4Vx" spellcheck="false" autocomplete="off">
+        <div class="converter-inputs-grid">
+          <div class="form-group">
+            <label>Hexadecimal (0x)</label>
+            <input type="text" id="hexInput" value="0x12345678" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Decimal (Unsigned 32-bit)</label>
+            <input type="text" id="decInput" value="305419896" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Decimal (Signed 32-bit)</label>
+            <input type="text" id="decSignedInput" value="305419896" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Binary</label>
+            <input type="text" id="binInput" value="00010010001101000101011001111000" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Octal</label>
+            <input type="text" id="octInput" value="2215053170" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>ASCII Representation</label>
+            <input type="text" id="ascInput" value="4Vx" spellcheck="false" autocomplete="off">
+          </div>
         </div>
       </div>
 
@@ -1377,7 +1427,7 @@
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[T]</b></td><td>Toggle ASCII Column Visibility</td></tr>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[Enter]</b></td><td>Focus Selected Byte for Rapid In-Place Edit</td></tr>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>Double-Click</b></td><td>Focus Hex Byte for Rapid In-Place Edit</td></tr>
-            <tr><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[1] - [9]</b></td><td>Quickly switch between Suite Tabs (Tabs 1 to 9)</td></tr>
+            <tr><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[1-9], [0]</b></td><td>Quickly switch between Suite Tabs (Tabs 1 to 9, [0] for Struct)</td></tr>
           </table>
         </div>
 
@@ -1426,7 +1476,7 @@
           </ul>
         </div>
         <div style="font-size:0.8rem; color:var(--text-secondary);">
-          Hotkeys: <b>[F1] / [H]</b> Help &bull; <b>[1-9]</b> Switch Tabs &bull; <b>[E]</b> Swap Endian &bull; <b>[F5] / [F9]</b> Quicksave/Load &bull; <b>[P]</b> Cycle Presets
+          Hotkeys: <b>[F1] / [H]</b> Help &bull; <b>[0-9]</b> Switch Tabs &bull; <b>[E]</b> Swap Endian &bull; <b>[F5] / [F9]</b> Quicksave/Load &bull; <b>[P]</b> Cycle Presets
         </div>
       </div>
       <div style="margin-top:16px; display:flex; justify-content:flex-end; gap:8px;">
@@ -2039,6 +2089,7 @@
       else if (e.key === '7') { switchTab('export'); e.preventDefault(); }
       else if (e.key === '8') { switchTab('strings'); e.preventDefault(); }
       else if (e.key === '9') { switchTab('disasm'); e.preventDefault(); }
+      else if (e.key === '0') { switchTab('struct'); e.preventDefault(); }
       else if (e.key === 'e' || e.key === 'E') {
         isLittleEndian = !isLittleEndian;
         try { localStorage.setItem('khex_endian', isLittleEndian.toString()); } catch (err) {}
@@ -3974,7 +4025,7 @@
       btn.setAttribute('aria-selected', 'false');
       btn.setAttribute('aria-controls', 'tab-struct');
       btn.onclick = () => switchTab('struct');
-      btn.innerHTML = '<span class="badge" style="padding:2px 6px; font-size:0.7rem;">9</span> 🔬 Struct & Signatures';
+      btn.innerHTML = '<span class="badge" style="padding:2px 6px; font-size:0.7rem;">0</span> 🔬 Struct & Signatures';
       tabNav.appendChild(btn);
     }
 

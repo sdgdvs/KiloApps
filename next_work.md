@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KWizard
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KHex
+  kilo_usability: KColony
   kilo_qa: KSys
   kilo_expander: KHex
   kilo_review: KFont
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KHex
-  timestamp: '2026-10-30T17:38:42-07:00'
+  timestamp: '2026-10-30T18:18:33-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -149,11 +149,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Define loadBufferData(u8) in khex.html so all 7 Disassembler and Struct sample buttons work without ReferenceError; fix executeStructUnpack() undefined isLittle crash; fix loadSamplePE32() section Characteristics offsets (0x19C/0x1C4/0x1EC instead of +40) and bufferCursor; deduplicate #exportPreset options; call switchTab('editor') before gotoOffset() on cross-tab jumps; and fix KHex/main.c DisasmMultiArch 0xB8 format args and top-right buttons overlapping the hexagon logo. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KHex`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Eliminate 127px vertical overflow at 980x783 in khex.html via 100vh flex shell with scrollable .tab-content.active, pinned .status-bar, and 2-col Base Converter inputs; raise .bit-num font-size from 0.55rem (8.8px) to >=10.5px with higher contrast; move #toastContainer to bottom-right so toasts never block .tab-nav clicks; and change #tabbtn-struct badge from duplicate 9 to 0 with key 0 shortcut. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Arrange #start-screen buttons in a 2-column grid so all 11 fit within 870x623 without bottom clipping; lock body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto) and e.preventDefault() on Arrow/Space keys; resize #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; raise small font-size from 8px to 9.5px. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -165,6 +164,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Compact #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 without vertical scroll, add preventDefault() for Arrow/Space keys so gameplay never scrolls the page, and prevent #toast-container from covering #controls and #message-log. |
+| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Eliminate 127px vertical overflow at 980x783 in khex.html via 100vh flex shell with scrollable .tab-content.active, pinned .status-bar, and 2-col Base Converter inputs; raise .bit-num font-size from 0.55rem (8.8px) to >=10.5px with higher contrast; move #toastContainer to bottom-right so toasts never block .tab-nav clicks; and change #tabbtn-struct badge from duplicate 9 to 0 with key 0 shortcut. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KSys`
@@ -290,6 +290,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T18:18:33-07:00 — kilo-usability: KHex (KHex Usability & Responsive Layout Polish)**
+  - Status: PASS (0 errors, web 274.3 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.09%, HEAD Δ 12.79%, 0 fail, 0 warn, 5.9s)).
+  - Eliminated 127px vertical overflow at 980x783 via 100vh flex shell with scrollable active tab content, pinned status bar, and 2-column Base Converter inputs.
+  - Raised .bit-num font size to 11px with high-contrast #cbd5e1 styling and moved #toastContainer to bottom-right to prevent tab occlusion.
+  - Changed #tabbtn-struct badge from duplicate 9 to 0 and added [0] hotkey navigation to Struct & Signatures tab.
+  - Handoff: Advanced `kilo-usability` to `KColony`; rotated active agent to `kilo-qa`.
+
 - **2026-10-30T17:38:42-07:00 — kilo-tester: KHex (UI & Runtime Bug Fixes)**
   - Status: PASS ✅ (0 errors, web 273.2 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 13.83%, HEAD Δ 0.0%, 0 fail, 1 warn, 5.3s)).
   - Defined loadBufferData(u8) in khex.html to resolve ReferenceError on all 7 Disassembler and Struct sample buttons.
@@ -314,9 +321,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: 127px vertical overflow clips 32-bit bitfield and status bar at 980x783; 32 .bit-num nodes at 8.8px (<9px); centered #toastContainer occludes .tab-nav clicks; duplicate tab badge 9 on Struct tab.
   - Runtime & Feature Findings: Undefined loadBufferData() crashes all 7 Disassembler/Struct sample buttons; undefined isLittle crashes Tab 10 executeStructUnpack(); x86 disassembler lacks 0x80/0x81/0x83 Group-1 opcodes (desyncs Sample x86); VFS Save overwrites stale currentVfsPath and khex_text_buf UTF-8 decode corrupts binary bytes.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KHex`, `kilo-usability`->`KHex`, `kilo-expander`->`KHex`] (un-quarantined `KHex` from Mature); advanced `kilo-review` to `KFont`; next agent `kilo-creator`.
-
-- **2026-10-30T15:36:44-07:00 — kilo-expander: KBBS (KBBS Phase VI VFS Bulletin Mesh & Door Game IPC Parity)**
-  - Status: PASS ✅ (0 errors, web 212.0 KB, native 108.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.15%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.5s)).
-  - Added KiloVFS origin validation, 60s timeout guards, VFS file import picker [📂 Open from VFS], and auto-ingest for FILE_OPEN/VFS_OPEN/#hash in kbbs.html.
-  - Synchronized dynamic NUM_BULLETINS count in Win32 C FileAreaProc with KPad/KHex LaunchViewer parity and clean native compilation.
-  - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-review`.
