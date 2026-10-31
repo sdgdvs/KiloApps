@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T05:39:46-07:00 — kilo-usability: KPing (KPing Usability & Layout Optimization)**
+  - Status: PASS ✅ (0 errors, web 183.3 KB, native 46.5 KB < 999 KB; 0 cut-off controls, 0 overflow).
+  - Layout & Toast: Repositioned #toastContainer to bottom-right (bottom 118px, right 24px) above analytics panel; removed spin buttons and adjusted field padding to display full TTL 115 and DSCP options.
+  - Help & Shortcuts: Compacted #helpModal shortcut table into 2-column grid, closed missing tbody, added Subnet Topo [X], Jitter Hist [J], and Interval [ / ] with parity in KPing/main.c.
+  - Telemetry & Win32: Added jitter to [L] cycle (line -> hist -> jitter -> strip), fixed pointer X-mapping for strip/hist/jitter tooltips; widened Win32 app to 1040x680 with 9.5pt Segoe UI, non-overlapping Row 1/2 buttons, and min track width 980.
+  - Handoff: Advanced `kilo-usability` to `KColony`; rotated active agent to `kilo-qa`.
+
 - **2026-10-31T05:22:14-07:00 — kilo-tester: KPing (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KPing across web and native targets.
