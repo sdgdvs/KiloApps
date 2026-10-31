@@ -83,9 +83,9 @@
     "id": "kbudget",
     "title": "KBudget",
     "folder": "Office",
-    "webBytes": 136419,
+    "webBytes": 159652,
     "exeBytes": 172544,
-    "budgetPercent": 13.7
+    "budgetPercent": 16.0
   },
   {
     "id": "kcalc",
@@ -107,9 +107,9 @@
     "id": "kchart",
     "title": "KChart",
     "folder": "Media",
-    "webBytes": 145201,
+    "webBytes": 148099,
     "exeBytes": 40448,
-    "budgetPercent": 14.5
+    "budgetPercent": 14.8
   },
   {
     "id": "kchat",
@@ -339,9 +339,9 @@
     "id": "kgraph",
     "title": "KGraph",
     "folder": "System",
-    "webBytes": 162967,
+    "webBytes": 164115,
     "exeBytes": 39424,
-    "budgetPercent": 16.3
+    "budgetPercent": 16.4
   },
   {
     "id": "khabit",
@@ -499,9 +499,9 @@
     "id": "kpad",
     "title": "KPad",
     "folder": "Office",
-    "webBytes": 341419,
+    "webBytes": 346209,
     "exeBytes": 38912,
-    "budgetPercent": 34.2
+    "budgetPercent": 34.7
   },
   {
     "id": "kpaint",
@@ -523,9 +523,9 @@
     "id": "kping",
     "title": "KPing",
     "folder": "System",
-    "webBytes": 179903,
-    "exeBytes": 47616,
-    "budgetPercent": 18.0
+    "webBytes": 187685,
+    "exeBytes": 48640,
+    "budgetPercent": 18.8
   },
   {
     "id": "kpomodoro",
@@ -611,9 +611,9 @@
     "id": "kscript",
     "title": "KScript",
     "folder": "Dev",
-    "webBytes": 175294,
-    "exeBytes": 33280,
-    "budgetPercent": 17.5
+    "webBytes": 174093,
+    "exeBytes": 34816,
+    "budgetPercent": 17.4
   },
   {
     "id": "ksettings",
@@ -747,9 +747,9 @@
     "id": "kterm",
     "title": "KTerm",
     "folder": "System",
-    "webBytes": 117209,
+    "webBytes": 129521,
     "exeBytes": 46080,
-    "budgetPercent": 11.7
+    "budgetPercent": 13.0
   },
   {
     "id": "ktetris",
