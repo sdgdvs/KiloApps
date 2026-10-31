@@ -371,9 +371,9 @@
     "id": "khex",
     "title": "KHex",
     "folder": "System",
-    "webBytes": 279494,
+    "webBytes": 293503,
     "exeBytes": 38400,
-    "budgetPercent": 28.0
+    "budgetPercent": 29.4
   },
   {
     "id": "kimage",
@@ -723,9 +723,9 @@
     "id": "ksys",
     "title": "KSys",
     "folder": "System",
-    "webBytes": 210213,
-    "exeBytes": 38912,
-    "budgetPercent": 21.0
+    "webBytes": 216553,
+    "exeBytes": 40960,
+    "budgetPercent": 21.7
   },
   {
     "id": "ktask",

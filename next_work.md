@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KColony
   kilo_qa: KAudio
-  kilo_expander: KHex
+  kilo_expander: KScript
   kilo_review: KFont
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KSys
-  timestamp: '2026-10-30T18:40:15-07:00'
+  agent: kilo-expander
+  app: KHex
+  timestamp: '2026-10-30T19:21:29-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -183,11 +183,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KHex`
+- **Active Target**: `KScript`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Switch to editor tab and refresh active analyses on loadVFSFile(), reset currentVfsPath on non-VFS loads plus add VFS Save As, and persist binary buffers as hex/base64 instead of UTF-8 TextDecoder in khex_text_buf; add x86 Group-1 immediate opcodes (0x80/0x81/0x83) in decodeX86Instruction() so Sample x86 decodes SUB ESP,0x10 and XOR DL,0x5A without stream desync; and parse edited IPS/DEBUG records from #patchOutputEditor in applyBinaryPatchToBuffer(). |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmystery_case.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback), add Export Forensic Dossier Report (/home/docs/kmystery_dossier.txt via VFS_WRITE + OS_NOTIFY on case solved) and a Present Clue shortcut inside #dossier-modal, and add Clue Dossier Viewer [C] / double-click inspection parity to KMystery/main.c. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
@@ -200,6 +199,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
+| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Switch to editor tab and refresh active analyses on loadVFSFile(), reset currentVfsPath on non-VFS loads plus add VFS Save As, and persist binary buffers as hex/base64 instead of UTF-8 TextDecoder in khex_text_buf; add x86 Group-1 immediate opcodes (0x80/0x81/0x83) in decodeX86Instruction() so Sample x86 decodes SUB ESP,0x10 and XOR DL,0x5A without stream desync; and parse edited IPS/DEBUG records from #patchOutputEditor in applyBinaryPatchToBuffer(). |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KFont`
@@ -290,6 +290,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T19:21:29-07:00 — kilo-expander: KHex (KHex Phase VI VFS Save As, Group-1 x86 Opcode & Patch Applier Expansion)**
+  - Status: PASS ✅ (0 errors, web 286.6 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.09%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.5s)).
+  - loadVFSFile switches to editor tab and refreshes active analyses; non-VFS loads reset currentVfsPath; added VFS Save As.
+  - Persisted binary buffers as base64 in khex_text_buf preventing TextDecoder UTF-8 data corruption.
+  - Added x86 Group-1 immediate opcodes (0x80/0x81/0x83) to decodeX86Instruction with 100% Sample x86 stream sync, plus KHex/main.c parity.
+  - Enhanced applyBinaryPatchToBuffer to parse edited IPS records (magic, offsets, payloads, RLE, EOF) and DOS DEBUG scripts (e offset bytes).
+  - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-review`.
+
 - **2026-10-30T18:40:15-07:00 — kilo-qa: KSys (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KSys across web and native targets.
@@ -314,9 +322,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added bioluminescent leviathan silhouettes, hydrothermal vent plumes, and phosphor decay sonar HUD.
   - Glint sweep clean: zero perimeter dots or rotating specular glints across HTML and Win32 C.
   - Handoff: Advanced `kilo-graphics` to `KWizard`; rotated active agent to `kilo-tester`.
-
-- **2026-10-30T16:38:38-07:00 — kilo-creator: kweb://webring (Canonical 1999 Web Nodes RingMaster Integration & Traversal)**
-  - Status: PASS ✅ (0 errors, web 457.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 2.58%, input 19.73%, HEAD Δ 2.36%, 0 fail, 0 warn, 4.9s)).
-  - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) into RingMaster topology map, badge generator, and bidirectional ring traversal.
-  - Added 1-click canonical widget presets in Tab 11, Netscape Surfer fast-hops in Tab 8, AS-1999 BGP canonical prefix routes in Tab 10, and updated directory & audit count metrics.
-  - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.

@@ -938,6 +938,7 @@
           <button class="btn btn-cyan btn-sm" onclick="document.getElementById('fileInput').click()">Open File</button>
           <button class="btn btn-primary btn-sm" onclick="openVFS()" title="Open File from KiloOS VFS">VFS Open</button>
           <button class="btn btn-sm" onclick="saveVFS()" title="Save Current Buffer to KiloOS VFS">VFS Save</button>
+          <button class="btn btn-sm" onclick="saveAsVFS()" title="Save Current Buffer to New VFS Path">VFS Save As</button>
           <button class="btn btn-sm" onclick="loadSampleBuffer()">Load Sample Data</button>
           <button class="btn btn-purple btn-sm" onclick="loadHexBuffer()">Load Hex Bytes</button>
           <button class="btn btn-sm" id="btnEchoRom" style="background:rgba(139,92,246,0.25); border:1px solid rgba(139,92,246,0.5); color:#c084fc;" onclick="loadEchoRomBuffer()" title="Load Project Echo ROM Sector (Offset 0x0024)">Echo ROM [0x0024]</button>
@@ -1552,6 +1553,40 @@
 
   // --- KiloOS Inter-App IPC & VFS Integration (Phase VI Pillar 1) ---
   let currentVfsPath = null;
+
+  function setVfsPath(path) {
+    currentVfsPath = path || null;
+    const ind = document.getElementById('vfsPathIndicator');
+    if (ind) {
+      ind.innerText = currentVfsPath ? `[VFS: ${currentVfsPath}]` : '';
+    }
+  }
+
+  function persistBinaryBuffer() {
+    try {
+      if (!binaryBuffer) return;
+      if (binaryBuffer.length < 32768) {
+        localStorage.setItem('khex_text_buf', 'b64:' + uint8ToBase64(binaryBuffer));
+      }
+    } catch (e) {}
+  }
+
+  function refreshActiveAnalyses() {
+    if (typeof updateInspector === 'function') updateInspector();
+    if (typeof computeEntropyAndDistribution === 'function') computeEntropyAndDistribution();
+    if (typeof computeChunkEntropy === 'function') computeChunkEntropy();
+    if (typeof computeHashes === 'function') computeHashes();
+    if (typeof dissectHeader === 'function') dissectHeader();
+    if (typeof dissectPE32 === 'function') dissectPE32();
+    if (activeTab === 'strings' && typeof runStringCarver === 'function') runStringCarver();
+    if (activeTab === 'disasm' && typeof runDisassembly === 'function') runDisassembly();
+    if (activeTab === 'struct' && typeof executeStructUnpack === 'function') {
+      if (typeof runMagicSignatureScan === 'function') runMagicSignatureScan();
+      executeStructUnpack();
+    }
+    if (activeTab === 'export' && typeof generateExport === 'function') generateExport();
+    if (activeTab === 'diff' && typeof runBinaryDiff === 'function') runBinaryDiff();
+  }
   let currentReqId = 0;
   const vfsCallbacks = {};
 
@@ -1628,15 +1663,16 @@
         bytes = new TextEncoder().encode(String(raw));
       }
       binaryBuffer = bytes;
-      currentVfsPath = path;
+      setVfsPath(path);
       const filename = path.split('/').pop() || 'file.bin';
       const tb = document.getElementById('rawTextBuffer');
       if (tb) tb.value = `[VFS Loaded: ${path} (${binaryBuffer.length} bytes)]`;
-      const indicator = document.getElementById('vfsPathIndicator');
-      if (indicator) indicator.innerText = `[VFS: ${path}]`;
+      persistBinaryBuffer();
       selectedOffset = 0;
+      switchTab('editor');
       renderHexView();
       if (binaryBuffer.length > 0) selectByte(0);
+      refreshActiveAnalyses();
       showToast('VFS File Loaded', `Successfully loaded "${filename}" (${binaryBuffer.length.toLocaleString()} bytes).`, 'success');
     } catch (err) {
       showToast('VFS Error', 'Error loading VFS file: ' + err.message, 'error');
@@ -1657,6 +1693,30 @@
     }
   }
 
+  async function saveAsVFS() {
+    if (!binaryBuffer || binaryBuffer.length === 0) {
+      showToast('Buffer Empty', 'No binary buffer to save.', 'warning');
+      return;
+    }
+    try {
+      const res = await sendToOS({ type: 'VFS_SHOW_SAVE' });
+      if (!res || !res.path) {
+        if (!res && window.parent === window) {
+          showToast('VFS Standalone', 'Downloading binary RAW file...', 'info');
+          downloadRawFile();
+        }
+        return;
+      }
+      const path = res.path;
+      const b64Data = 'data:application/octet-stream;base64,' + uint8ToBase64(binaryBuffer);
+      await sendToOS({ type: 'VFS_WRITE', path, data: b64Data });
+      setVfsPath(path);
+      showToast('VFS Saved As', `Buffer (${binaryBuffer.length} B) saved to ${path}`, 'success');
+    } catch (e) {
+      showToast('VFS Save As Error', e.message, 'error');
+    }
+  }
+
   async function saveVFS() {
     if (!binaryBuffer || binaryBuffer.length === 0) {
       showToast('Buffer Empty', 'No binary buffer to save.', 'warning');
@@ -1665,21 +1725,11 @@
     try {
       let path = currentVfsPath;
       if (!path) {
-        const res = await sendToOS({ type: 'VFS_SHOW_SAVE' });
-        if (!res || !res.path) {
-          if (!res && window.parent === window) {
-            showToast('VFS Standalone', 'Downloading binary RAW file...', 'info');
-            downloadRawFile();
-          }
-          return;
-        }
-        path = res.path;
+        return saveAsVFS();
       }
       const b64Data = 'data:application/octet-stream;base64,' + uint8ToBase64(binaryBuffer);
       await sendToOS({ type: 'VFS_WRITE', path, data: b64Data });
-      currentVfsPath = path;
-      const indicator = document.getElementById('vfsPathIndicator');
-      if (indicator) indicator.innerText = `[VFS: ${path}]`;
+      setVfsPath(path);
       showToast('VFS Saved', `Buffer (${binaryBuffer.length} B) saved to ${path}`, 'success');
     } catch (e) {
       showToast('VFS Save Error', e.message, 'error');
@@ -1758,9 +1808,9 @@
         if (eb) eb.innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
       }
       if (state.currentVfsPath) {
-        currentVfsPath = state.currentVfsPath;
-        const ind = document.getElementById('vfsPathIndicator');
-        if (ind) ind.innerText = `[VFS: ${currentVfsPath}]`;
+        setVfsPath(state.currentVfsPath);
+      } else {
+        setVfsPath(null);
       }
       if (state.disasmArch && document.getElementById('disasmArch')) {
         document.getElementById('disasmArch').value = state.disasmArch;
@@ -1814,11 +1864,31 @@
         if (badge) badge.innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
       }
       const savedText = localStorage.getItem('khex_text_buf');
-      if (savedText && savedText.length > 0 && savedText.length < 32768) {
-        initialText = savedText;
-        binaryBuffer = new TextEncoder().encode(initialText);
-        const tb = document.getElementById('rawTextBuffer');
-        if (tb) tb.value = initialText;
+      if (savedText && savedText.length > 0) {
+        if (savedText.startsWith('b64:')) {
+          binaryBuffer = base64ToUint8(savedText.substring(4));
+          const tb = document.getElementById('rawTextBuffer');
+          if (tb) {
+            let isAscii = true;
+            for (let i = 0; i < binaryBuffer.length; i++) {
+              if (binaryBuffer[i] < 32 && binaryBuffer[i] !== 9 && binaryBuffer[i] !== 10 && binaryBuffer[i] !== 13) { isAscii = false; break; }
+              if (binaryBuffer[i] > 126) { isAscii = false; break; }
+            }
+            tb.value = isAscii ? new TextDecoder().decode(binaryBuffer) : `[Binary Buffer: ${binaryBuffer.length} bytes]`;
+          }
+        } else if (savedText.startsWith('hex:')) {
+          const hex = savedText.substring(4);
+          const bytes = new Uint8Array(hex.length / 2);
+          for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(hex.substr(i * 2, 2), 16) || 0;
+          binaryBuffer = bytes;
+          const tb = document.getElementById('rawTextBuffer');
+          if (tb) tb.value = `[Binary Buffer: ${binaryBuffer.length} bytes]`;
+        } else if (savedText.length < 32768) {
+          initialText = savedText;
+          binaryBuffer = new TextEncoder().encode(initialText);
+          const tb = document.getElementById('rawTextBuffer');
+          if (tb) tb.value = initialText;
+        }
       }
       const savedTab = localStorage.getItem('khex_active_tab');
       if (savedTab && document.getElementById('tab-' + savedTab)) {
@@ -1881,10 +1951,7 @@
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         try {
-          if (binaryBuffer && binaryBuffer.length > 0 && binaryBuffer.length < 32768) {
-            const tb = document.getElementById('rawTextBuffer');
-            if (tb && tb.value) localStorage.setItem('khex_text_buf', tb.value);
-          }
+          persistBinaryBuffer();
         } catch (e) {}
       }
     });
@@ -2635,11 +2702,8 @@
   textBuf.addEventListener('input', () => {
     let encoder = new TextEncoder();
     binaryBuffer = encoder.encode(textBuf.value);
-    try {
-      if (textBuf.value.length < 32768) {
-        localStorage.setItem('khex_text_buf', textBuf.value);
-      }
-    } catch (e) {}
+    setVfsPath(null);
+    persistBinaryBuffer();
     renderHexView();
   });
 
@@ -2647,7 +2711,8 @@
     let sample = "KHex - High-Performance Binary Inspector & Hex Manipulator. 0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     textBuf.value = sample;
     binaryBuffer = new TextEncoder().encode(sample);
-    try { localStorage.setItem('khex_text_buf', sample); } catch (e) {}
+    setVfsPath(null);
+    persistBinaryBuffer();
     selectedOffset = 0;
     renderHexView();
     selectByte(0);
@@ -2656,11 +2721,17 @@
 
   function loadBufferData(u8) {
     binaryBuffer = (u8 instanceof Uint8Array) ? u8 : new Uint8Array(u8);
+    setVfsPath(null);
     selectedOffset = 0;
     if (typeof textBuf !== 'undefined' && textBuf) {
-      textBuf.value = "[Buffer: " + binaryBuffer.length + " bytes]";
-      try { localStorage.setItem('khex_text_buf', textBuf.value); } catch(e) {}
+      let isAscii = true;
+      for (let i = 0; i < binaryBuffer.length; i++) {
+        if (binaryBuffer[i] < 32 && binaryBuffer[i] !== 9 && binaryBuffer[i] !== 10 && binaryBuffer[i] !== 13) { isAscii = false; break; }
+        if (binaryBuffer[i] > 126) { isAscii = false; break; }
+      }
+      textBuf.value = isAscii ? new TextDecoder().decode(binaryBuffer) : "[Buffer: " + binaryBuffer.length + " bytes]";
     }
+    persistBinaryBuffer();
     renderHexView();
     if (binaryBuffer.length > 0) selectByte(0);
     if (typeof updateInspector === 'function') updateInspector();
@@ -2681,8 +2752,9 @@
       rom[i] = (seed >> 16) & 0xFF;
     }
     binaryBuffer = rom;
+    setVfsPath(null);
     textBuf.value = new TextDecoder().decode(rom.subarray(0, 40 + url.length)) + " [Encrypted Payload ...]";
-    try { localStorage.setItem('khex_text_buf', textBuf.value); } catch(e) {}
+    persistBinaryBuffer();
     selectedOffset = 0;
     renderHexView();
     selectByte(36);
@@ -2789,6 +2861,8 @@
     let reader = new FileReader();
     reader.onload = function(evt) {
       binaryBuffer = new Uint8Array(evt.target.result);
+      setVfsPath(null);
+      persistBinaryBuffer();
       let safeName = file.name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
       textBuf.value = "[Loaded binary file: " + safeName + " (" + binaryBuffer.length + " bytes)]";
       selectedOffset = 0;
@@ -3086,11 +3160,14 @@
     binaryBuffer[selectedOffset] = newByte;
     try {
       if (textBuf) {
-        textBuf.value = new TextDecoder().decode(binaryBuffer);
-        if (textBuf.value.length < 32768) {
-          localStorage.setItem('khex_text_buf', textBuf.value);
+        let isAscii = true;
+        for (let i = 0; i < binaryBuffer.length; i++) {
+          if (binaryBuffer[i] < 32 && binaryBuffer[i] !== 9 && binaryBuffer[i] !== 10 && binaryBuffer[i] !== 13) { isAscii = false; break; }
+          if (binaryBuffer[i] > 126) { isAscii = false; break; }
         }
+        textBuf.value = isAscii ? new TextDecoder().decode(binaryBuffer) : `[Binary Buffer: ${binaryBuffer.length} bytes]`;
       }
+      persistBinaryBuffer();
     } catch (e) {}
     renderHexView();
     selectByte(selectedOffset);
@@ -3115,6 +3192,8 @@
       bytes[i] = parseInt(clean.substr(i * 2, 2), 16);
     }
     binaryBuffer = bytes;
+    setVfsPath(null);
+    persistBinaryBuffer();
     selectedOffset = 0;
     renderHexView();
     if (binaryBuffer.length > 0) selectByte(0);
@@ -3244,12 +3323,15 @@
     }
 
     binaryBuffer = new Uint8Array(newBuf);
-    textBuf.value = new TextDecoder().decode(binaryBuffer);
-    try {
-      if (textBuf.value.length < 32768) {
-        localStorage.setItem('khex_text_buf', textBuf.value);
+    if (textBuf) {
+      let isAscii = true;
+      for (let i = 0; i < binaryBuffer.length; i++) {
+        if (binaryBuffer[i] < 32 && binaryBuffer[i] !== 9 && binaryBuffer[i] !== 10 && binaryBuffer[i] !== 13) { isAscii = false; break; }
+        if (binaryBuffer[i] > 126) { isAscii = false; break; }
       }
-    } catch (e) {}
+      textBuf.value = isAscii ? new TextDecoder().decode(binaryBuffer) : `[Binary Buffer: ${binaryBuffer.length} bytes]`;
+    }
+    persistBinaryBuffer();
     resultsBox.innerText = 'Replaced ' + count + ' occurrence(s).';
     showToast('Replace All Done', `Replaced ${count} occurrence(s) in buffer.`, 'success');
     renderHexView();
@@ -3568,12 +3650,15 @@
     }
 
     binaryBuffer = newBuf;
-    textBuf.value = new TextDecoder().decode(binaryBuffer);
-    try {
-      if (textBuf.value.length < 32768) {
-        localStorage.setItem('khex_text_buf', textBuf.value);
+    if (textBuf) {
+      let isAscii = true;
+      for (let i = 0; i < binaryBuffer.length; i++) {
+        if (binaryBuffer[i] < 32 && binaryBuffer[i] !== 9 && binaryBuffer[i] !== 10 && binaryBuffer[i] !== 13) { isAscii = false; break; }
+        if (binaryBuffer[i] > 126) { isAscii = false; break; }
       }
-    } catch (e) {}
+      textBuf.value = isAscii ? new TextDecoder().decode(binaryBuffer) : `[Binary Buffer: ${binaryBuffer.length} bytes]`;
+    }
+    persistBinaryBuffer();
     previewBox.innerText = 'Operation "' + type + '" applied successfully to ' + binaryBuffer.length + ' bytes.';
     showToast('Operation Applied', `Operation "${type}" successfully applied to ${binaryBuffer.length.toLocaleString()} bytes.`, 'success');
     renderHexView();
@@ -4801,6 +4886,72 @@ checksum: uint16 // CRC16 / Checksum value`
         category = 'Control Flow';
       }
     }
+    // Group-1 Immediate Arithmetic/Logic: ADD, OR, ADC, SBB, AND, SUB, XOR, CMP (0x80, 0x81, 0x82, 0x83)
+    else if ([0x80, 0x81, 0x82, 0x83].includes(b0) && ptr < buf.length) {
+      const modrm = buf[ptr++];
+      const mod = (modrm >> 6) & 3;
+      const opIdx = (modrm >> 3) & 7;
+      const rm = modrm & 7;
+
+      const group1Ops = ['ADD', 'OR', 'ADC', 'SBB', 'AND', 'SUB', 'XOR', 'CMP'];
+      const opName = group1Ops[opIdx];
+      mnemonic = opName;
+      category = (opName === 'CMP') ? 'Logic' : (opName === 'XOR' || opName === 'AND' || opName === 'OR') ? 'Logic' : 'Arithmetic';
+
+      const isByte = (b0 === 0x80 || b0 === 0x82);
+      let targetStr = '';
+
+      if (mod === 3) {
+        targetStr = isByte ? r8[rm] : (is32 ? r32[rm] : r16[rm]);
+      } else {
+        let memStr = '';
+        if (is32 && rm === 4 && ptr < buf.length) {
+          const sib = buf[ptr++];
+          const sibBase = sib & 7;
+          const sibIdx = (sib >> 3) & 7;
+          const sibScale = 1 << ((sib >> 6) & 3);
+          let baseStr = r32[sibBase];
+          let idxStr = (sibIdx !== 4) ? ` + ${r32[sibIdx]}*${sibScale}` : '';
+          memStr = `[${baseStr}${idxStr}]`;
+        } else if (mod === 0 && rm === 5 && is32 && ptr + 3 < buf.length) {
+          const disp = (buf[ptr] | (buf[ptr+1] << 8) | (buf[ptr+2] << 16) | (buf[ptr+3] << 24)) >>> 0;
+          ptr += 4;
+          memStr = `[0x${disp.toString(16).padStart(8, '0').toUpperCase()}]`;
+        } else if (mod === 1 && ptr < buf.length) {
+          const disp = (buf[ptr++] << 24) >> 24;
+          memStr = `[${(is32 ? r32 : r16)[rm]} ${disp >= 0 ? '+' : '-'} 0x${Math.abs(disp).toString(16).toUpperCase()}]`;
+        } else if (mod === 2 && ptr + (is32 ? 3 : 1) < buf.length) {
+          const disp = is32 ? ((buf[ptr] | (buf[ptr+1] << 8) | (buf[ptr+2] << 16) | (buf[ptr+3] << 24)) >>> 0) : ((buf[ptr] | (buf[ptr+1] << 8)) & 0xFFFF);
+          ptr += is32 ? 4 : 2;
+          memStr = `[${(is32 ? r32 : r16)[rm]} + 0x${disp.toString(16).toUpperCase()}]`;
+        } else {
+          memStr = `[${(is32 ? r32 : r16)[rm]}]`;
+        }
+        targetStr = isByte ? `byte ptr ${memStr}` : (is32 ? `dword ptr ${memStr}` : `word ptr ${memStr}`);
+      }
+
+      let immStr = '0x00';
+      if (b0 === 0x80 || b0 === 0x82 || b0 === 0x83) {
+        if (ptr < buf.length) {
+          const imm = buf[ptr++];
+          immStr = '0x' + imm.toString(16).padStart(2, '0').toUpperCase();
+        }
+      } else if (b0 === 0x81) {
+        if (is32 && ptr + 3 < buf.length) {
+          const imm = (buf[ptr] | (buf[ptr+1] << 8) | (buf[ptr+2] << 16) | (buf[ptr+3] << 24)) >>> 0;
+          ptr += 4;
+          immStr = '0x' + imm.toString(16).padStart(8, '0').toUpperCase();
+        } else if (!is32 && ptr + 1 < buf.length) {
+          const imm = (buf[ptr] | (buf[ptr+1] << 8)) & 0xFFFF;
+          ptr += 2;
+          immStr = '0x' + imm.toString(16).padStart(4, '0').toUpperCase();
+        }
+      }
+
+      operands = `${targetStr}, ${immStr}`;
+      if (opName === 'SUB' && targetStr === 'ESP') comment = 'Stack frame allocation';
+      else if (opName === 'XOR' && targetStr.endsWith('L')) comment = 'Byte decrypt / key unmask';
+    }
     // Common ModR/M Instructions: MOV, ADD, SUB, CMP, XOR, AND, OR, TEST
     else if ([0x88, 0x89, 0x8A, 0x8B, 0x01, 0x03, 0x29, 0x2B, 0x31, 0x33, 0x39, 0x3B, 0x85, 0x8D].includes(b0) && ptr < buf.length) {
       const modrm = buf[ptr++];
@@ -5655,6 +5806,8 @@ checksum: uint16 // CRC16 / Checksum value`
 
     // Apply to binaryBuffer
     binaryBuffer = buf;
+    setVfsPath(null);
+    persistBinaryBuffer();
     selectedOffset = 0;
     renderHexView();
     updateInspector();
@@ -6016,15 +6169,16 @@ checksum: uint16 // CRC16 / Checksum value`
 
     const text = editor.value.trim();
     let appliedCount = 0;
+    let patchType = 'none';
 
-    // Check if JSON delta
+    // 1. JSON Delta format
     if (text.startsWith('{') && text.endsWith('}')) {
       try {
         const data = JSON.parse(text);
         if (data.hunks && Array.isArray(data.hunks)) {
           let newBuf = new Uint8Array(binaryBuffer);
           data.hunks.forEach(h => {
-            const bytes = h.patchHex.split(/\s+/).filter(Boolean).map(h => parseInt(h, 16));
+            const bytes = h.patchHex.split(/\s+/).filter(Boolean).map(x => parseInt(x, 16)).filter(n => !isNaN(n));
             if (h.offset + bytes.length > newBuf.length) {
               const expanded = new Uint8Array(h.offset + bytes.length);
               expanded.set(newBuf);
@@ -6036,15 +6190,143 @@ checksum: uint16 // CRC16 / Checksum value`
             }
           });
           binaryBuffer = newBuf;
+          patchType = 'JSON Delta';
         }
       } catch (err) {}
-    } else {
-      // Apply directly from lastDiffSegments or Buffer B
+    }
+
+    // 2. DOS DEBUG Script (.SCR) format (e.g. lines like "e 0100 41 42 43" or "E 0000 90")
+    if (appliedCount === 0) {
+      const lines = text.split(/\r?\n/);
+      const debugRecords = [];
+      let isDebugScript = false;
+
+      for (const line of lines) {
+        const clean = line.replace(/;.*$/, '').trim();
+        const m = clean.match(/^[eE]\s+([0-9a-fA-F]+)\s+(.+)$/);
+        if (m) {
+          isDebugScript = true;
+          const off = parseInt(m[1], 16);
+          const bytes = m[2].trim().split(/\s+/).map(x => parseInt(x, 16)).filter(n => !isNaN(n));
+          if (bytes.length > 0) {
+            debugRecords.push({ off, bytes });
+          }
+        }
+      }
+
+      if (isDebugScript && debugRecords.length > 0) {
+        // In DOS DEBUG COM scripts, offsets have origin 0x0100.
+        // If the script contains "DEBUG" header or all offsets >= 0x100 and buffer is smaller or COM standard:
+        const hasDebugHeader = text.toUpperCase().includes('DEBUG');
+        const allGte100 = debugRecords.every(r => r.off >= 0x0100);
+        const baseOffset = (hasDebugHeader || allGte100) ? 0x0100 : 0;
+
+        let newBuf = new Uint8Array(binaryBuffer);
+        debugRecords.forEach(rec => {
+          const targetOffset = (rec.off >= baseOffset && baseOffset === 0x0100) ? (rec.off - baseOffset) : rec.off;
+          if (targetOffset + rec.bytes.length > newBuf.length) {
+            const expanded = new Uint8Array(targetOffset + rec.bytes.length);
+            expanded.set(newBuf);
+            newBuf = expanded;
+          }
+          for (let i = 0; i < rec.bytes.length; i++) {
+            newBuf[targetOffset + i] = rec.bytes[i];
+            appliedCount++;
+          }
+        });
+        binaryBuffer = newBuf;
+        patchType = 'DOS DEBUG Script';
+      }
+    }
+
+    // 3. IPS Format (hex tokens starting with 50 41 54 43 48 / PATCH and ending with 45 4F 46 / EOF)
+    if (appliedCount === 0) {
+      // Strip comments (// ... , # ... , ; ...)
+      const cleanText = text.replace(/\/\/.*$/gm, '').replace(/#.*$/gm, '').replace(/;.*$/gm, '');
+      const hexTokens = cleanText.match(/[0-9a-fA-F]{2}/g);
+
+      if (hexTokens && hexTokens.length >= 8) {
+        // Check for 'PATCH' header: 0x50, 0x41, 0x54, 0x43, 0x48
+        const headerHex = hexTokens.slice(0, 5).map(t => t.toUpperCase()).join(' ');
+        if (headerHex === '50 41 54 43 48') {
+          let p = 5;
+          let newBuf = new Uint8Array(binaryBuffer);
+
+          while (p < hexTokens.length) {
+            // Check for EOF marker: 0x45, 0x4F, 0x46 ('EOF')
+            if (p + 3 <= hexTokens.length) {
+              const marker = hexTokens.slice(p, p + 3).map(t => t.toUpperCase()).join(' ');
+              if (marker === '45 4F 46') {
+                p += 3;
+                break;
+              }
+            }
+            if (p + 5 > hexTokens.length) break;
+
+            const off = (parseInt(hexTokens[p], 16) << 16) | (parseInt(hexTokens[p+1], 16) << 8) | parseInt(hexTokens[p+2], 16);
+            p += 3;
+            const len = (parseInt(hexTokens[p], 16) << 8) | parseInt(hexTokens[p+1], 16);
+            p += 2;
+
+            if (len === 0) {
+              // RLE Record: 2-byte rle length + 1-byte value
+              if (p + 3 > hexTokens.length) break;
+              const rleLen = (parseInt(hexTokens[p], 16) << 8) | parseInt(hexTokens[p+1], 16);
+              p += 2;
+              const rleVal = parseInt(hexTokens[p++], 16);
+              if (off + rleLen > newBuf.length) {
+                const expanded = new Uint8Array(off + rleLen);
+                expanded.set(newBuf);
+                newBuf = expanded;
+              }
+              for (let j = 0; j < rleLen; j++) {
+                newBuf[off + j] = rleVal;
+                appliedCount++;
+              }
+            } else {
+              // Normal Record: len payload bytes
+              if (p + len > hexTokens.length) break;
+              if (off + len > newBuf.length) {
+                const expanded = new Uint8Array(off + len);
+                expanded.set(newBuf);
+                newBuf = expanded;
+              }
+              for (let j = 0; j < len; j++) {
+                newBuf[off + j] = parseInt(hexTokens[p++], 16);
+                appliedCount++;
+              }
+            }
+          }
+          binaryBuffer = newBuf;
+          patchType = 'IPS Binary Patch';
+        }
+      }
+    }
+
+    // 4. Fallback to Buffer B if no formatted patch recognized
+    if (appliedCount === 0) {
       const bufB = parseInputBufferB();
       if (bufB.length > 0) {
         binaryBuffer = new Uint8Array(bufB);
         appliedCount = bufB.length;
+        patchType = 'Raw Buffer B';
       }
+    }
+
+    if (appliedCount === 0) {
+      showToast('Patch Error', 'Could not parse patch records. Ensure valid IPS, DOS DEBUG, or JSON format.', 'error');
+      return;
+    }
+
+    persistBinaryBuffer();
+    const tb = document.getElementById('rawTextBuffer');
+    if (tb) {
+      let isAscii = true;
+      for (let i = 0; i < binaryBuffer.length; i++) {
+        if (binaryBuffer[i] < 32 && binaryBuffer[i] !== 9 && binaryBuffer[i] !== 10 && binaryBuffer[i] !== 13) { isAscii = false; break; }
+        if (binaryBuffer[i] > 126) { isAscii = false; break; }
+      }
+      tb.value = isAscii ? new TextDecoder().decode(binaryBuffer) : `[Binary Buffer: ${binaryBuffer.length} bytes]`;
     }
 
     renderHexView();
@@ -6052,7 +6334,7 @@ checksum: uint16 // CRC16 / Checksum value`
     computeEntropyAndDistribution();
     computeHashes();
     runBinaryDiff();
-    showToast('Patch Applied', `Successfully applied binary mutations (${appliedCount} bytes updated).`, 'success');
+    showToast('Patch Applied', `Successfully applied ${patchType} (${appliedCount} bytes modified).`, 'success');
   }
 
   function copyBinaryPatch() {

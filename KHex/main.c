@@ -793,6 +793,9 @@ void DisasmMultiArch(HWND hwnd) {
         case 0x58: p += wsprintfA(p, "58             POP EAX\r\n"); break;
         case 0x31: p += wsprintfA(p, "31 %02X          XOR r/m32, reg (modrm=0x%02X)\r\n", b[1], b[1]); break;
         case 0x33: p += wsprintfA(p, "33 %02X          XOR reg, r/m32 (modrm=0x%02X)\r\n", b[1], b[1]); break;
+        case 0x80: p += wsprintfA(p, "80 %02X %02X       XOR/SUB/ADD r/m8, imm8 (0x%02X)\r\n", b[1], b[2], b[2]); break;
+        case 0x81: p += wsprintfA(p, "81 %02X %02X %02X    SUB/ADD/XOR r/m32, imm32\r\n", b[1], b[2], b[3]); break;
+        case 0x83: p += wsprintfA(p, "83 %02X %02X       SUB/ADD/XOR r/m32, imm8 (0x%02X)\r\n", b[1], b[2], b[2]); break;
         case 0x89: p += wsprintfA(p, "89 %02X          MOV r/m32, reg (modrm=0x%02X)\r\n", b[1], b[1]); break;
         case 0x8B: p += wsprintfA(p, "8B %02X          MOV reg, r/m32 (modrm=0x%02X)\r\n", b[1], b[1]); break;
         case 0xB8: p += wsprintfA(p, "B8 %02X %02X %02X    MOV EAX, 0x%08X\r\n", b[1], b[2], b[3], val); break;
