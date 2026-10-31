@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KAlchemy
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KTerm
+  kilo_usability: KColony
   kilo_qa: KBudget
   kilo_expander: KTerm
   kilo_review: KCalc
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KTerm
-  timestamp: '2026-10-31T08:40:14-07:00'
+  timestamp: '2026-10-31T09:21:51-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -152,11 +152,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTerm` | `KiloOS/public/apps/kterm.html`, `KTerm/main.c` | **[ARGON REVIEW]:** Fix duplicate 'Tab 1' naming and broken cd folder auto-title on boot (seen in sheet.png toast 'Opened session Tab 1' at Tab 2/2) by calling createNewTab() with no arguments on line 2900 so nextSessionNum increments to 2 and customNamed stays false; remove duplicate F1, Ctrl+T, Ctrl+L, and Ctrl+Alt+E handlers from input keydown so they stop double-firing with window keydown (fixing F1 open-then-close no-op and Ctrl+T opening 2 tabs), add !tutorialModal.classList.contains('open') to the window printable-key focus guard (line 2884), and add a silent flag to setFontSize(size, silent) on boot/deserialize; restore saved kterm_autosave on boot instead of only using hasAutosave to skip #tutorialModal, and update 'h' shortcut labels to 'F1 / help'; fix touch appending trailing newlines to non-empty files, block del/rm on directories, fix rmdir prefix check (s.currentPath === target or startsWith target + '/') and require empty dir, ignore '>' inside quotes, short-circuit '&&' on command failure in Web and C, stop print() heuristic coloring on raw file content in type/cat/head/tail/grep, and in KTerm/main.c initialize caseInsensitive = FALSE in grep (line 1535), implement rmdir/rd, add save/load/tutorial/rmdir/rd/exit/closetab to PerformTabCompletion(), and replace 'ARG telemetry' in help (line 966) with 'security traces'. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KTerm`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KTerm` | `KiloOS/public/apps/kterm.html`, `KTerm/main.c` | **[ARGON REVIEW]:** Fix #header tab crushing at 960x563 (seen in sheet.png where Tab 2 clips to '>_ Ta' and '+ New' disappears) by pinning #btnNewTab outside the scrollable tab list, setting #tabStrip min-width 340px, and compacting .btn-action labels with white-space nowrap and flex-shrink 0 so .toolbar-actions stays <= 460px; deduplicate #quickBar chips already in #header (save, load, export-log, clear, theme) and compact #statusbar shortcuts so 100% of chips and hints fit inside 960px without right-edge clipping; add missing .toast-close CSS (fixing white native button boxes inside dark toasts in sheet.png) and replace hardcoded green/navy colors in #quickBar, .quick-chip, .shortcut-tag, .cmd-table code, #output scrollbar, .tab.active, and #tutorialModal with per-theme CSS variables across all 6 CRT themes; replace blocking window.prompt() in tab.ondblclick with an inline input rename editor, and fix KTerm/main.c WM_SIZE / WM_GETMINMAXINFO button clipping below 760px by setting ptMinTrackSize.x = 760. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Arrange #start-screen buttons in a 2-column grid so all 11 fit within 870x623 without bottom clipping; lock body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto) and e.preventDefault() on Arrow/Space keys; resize #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; raise small font-size from 8px to 9.5px. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -171,6 +170,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Eliminate 127px vertical overflow at 980x783 in khex.html via 100vh flex shell with scrollable .tab-content.active, pinned .status-bar, and 2-col Base Converter inputs; raise .bit-num font-size from 0.55rem (8.8px) to >=10.5px with higher contrast; move #toastContainer to bottom-right so toasts never block .tab-nav clicks; and change #tabbtn-struct badge from duplicate 9 to 0 with key 0 shortcut. |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | **[ARGON REVIEW]:** Prevent .header 2-row wrap and 34px vertical layout jump at 1024x731 when toggling #soundToggleBtn by tightening .header padding/gaps with flex-wrap nowrap above 920px and giving #soundToggleBtn a fixed min-width and consistent [M] hint; update #tab-opentype and #tab-compare .tab-badge labels from misleading 10/11 to 0/- and move canvas zoom shortcuts to [ and ] so - switches to Tab 11 from every tab including Tabs 4 and 9; call renderBitmapBankCanvas() inside renderBitmapAll() and the window resize listener so #bitmapBankCanvas sizes crisply on tab switch instead of squishing from 800px; and upgrade #panel-contrast (updateContrast() and updateCustomContrast()) with tabindex=0, role=button, and Enter/Space activation on .contrast-card, both Normal Text (AA 4.5, AAA 7.0) and Large Text (AA 3.0, AAA 4.5) WCAG 2.1 badges at active #sizeList size, editable hex text inputs, and a Swap FG/BG button. |
 | `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | **[ARGON REVIEW]:** Move #toastContainer in kping.html from top 14px center (covering .controls-row inputs on boot/actions in sheet.png) to bottom-right above .analytics-panel (bottom 118px, right 24px); fix truncated #ttl (115 clipped to 11) and #dscpSelect values at 1040x683 by hiding number spin buttons, tightening input padding, balancing field widths, and raising .kbd-badge and .g-pill font-size to >= 10px; compact #helpModal .shortcut-table into a 2-column grid (closing missing /tbody) so it fits 1040x683 without heavy scroll and add missing Subnet Topo [X], Jitter Hist [J], and Interval [ / ] entries (plus ShowHelpDialog parity in KPing/main.c); include jitter in [L] graph cycle (line -> hist -> jitter -> strip) and fix handleGraphPointer() X-mapping for strip last-60 blocks and hist/jitter bucket tooltips; fix KPing/main.c WM_CREATE and WM_SIZE where hBtnExport (x=880 w=56) overlaps hBtnClear (x=874 w=44) and right2X=660 clips hBtnClear past W=940 by widening W to 1040 with 9.5pt Segoe UI, non-overlapping Row-1/Row-2 button widths, and ptMinTrackSize.x = 980. |
+| `KTerm` | `KiloOS/public/apps/kterm.html`, `KTerm/main.c` | **[ARGON REVIEW]:** Fix #header tab crushing at 960x563 (seen in sheet.png where Tab 2 clips to '>_ Ta' and '+ New' disappears) by pinning #btnNewTab outside the scrollable tab list, setting #tabStrip min-width 340px, and compacting .btn-action labels with white-space nowrap and flex-shrink 0 so .toolbar-actions stays <= 460px; deduplicate #quickBar chips already in #header (save, load, export-log, clear, theme) and compact #statusbar shortcuts so 100% of chips and hints fit inside 960px without right-edge clipping; add missing .toast-close CSS (fixing white native button boxes inside dark toasts in sheet.png) and replace hardcoded green/navy colors in #quickBar, .quick-chip, .shortcut-tag, .cmd-table code, #output scrollbar, .tab.active, and #tutorialModal with per-theme CSS variables across all 6 CRT themes; replace blocking window.prompt() in tab.ondblclick with an inline input rename editor, and fix KTerm/main.c WM_SIZE / WM_GETMINMAXINFO button clipping below 760px by setting ptMinTrackSize.x = 760. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KBudget`
@@ -296,6 +296,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T09:21:51-07:00 — kilo-usability: KTerm (KTerm Usability, Header Responsive Layout & CRT Polish)**
+  - Status: PASS (0 errors, web 114.6 KB, native 45.0 KB < 999 KB; 0 cut-off controls, 0 overflow).
+  - Responsive Layout: Pinned #btnNewTab outside tabStrip, set min-width 340px, compacted .btn-action to keep toolbar <= 460px with zero tab crushing.
+  - QuickBar & Statusbar: Deduplicated header chips (save, load, export-log, clear, theme) and compacted statusbar hints for 100% fit at 960px.
+  - CRT Themes & Ergonomics: Replaced hardcoded green/navy colors with per-theme CSS variables, added .toast-close CSS, replaced prompt() with inline rename input, and set Win32 minTrackSize.x = 760.
+  - Handoff: Advanced `kilo-usability` to `KColony`; rotated active agent to `kilo-qa`.
+
 - **2026-10-31T08:40:14-07:00 — kilo-tester: KTerm (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KTerm across web and native targets.
@@ -317,8 +324,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Shell & Parity Findings: Boot createNewTab('Tab 1') leaves nextSessionNum=1 (2nd tab also named 'Tab 1') and breaks cd auto-title; F1/Ctrl+T/Ctrl+L/Ctrl+Alt+E double-fire across input+window keydown; kterm_autosave never restores; C grep -i is a no-op and help leaks 'ARG telemetry'.
   - Phase VI VFS/IPC Findings: getVFS() checks non-existent window.parent.vfs leaving KTerm isolated in fallbackVFS; queued full VFS_LIST/READ/WRITE/DELETE sync, VFS backup/log dialogs, OS_LIST_TASKS/OS_KILL_TASK/OS_LAUNCH_APP commands, and true stdout piping.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KTerm`, `kilo-tester`->`KTerm`, `kilo-expander`->`KTerm`] (un-quarantined `KTerm` from Mature); advanced `kilo-review` to `KCalc`; next agent `kilo-creator`.
-
-- **2026-10-31T06:41:15-07:00 — kilo-expander: KPing (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KPing across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KMystery`; rotated active agent to `kilo-review`.

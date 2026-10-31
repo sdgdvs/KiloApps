@@ -2563,7 +2563,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int outH = h - tabH - inH - statusH;
             if (outH < 0) outH = 0;
 
-            int btnBarW = 490;
+            int btnBarW = 452;
             int tabW = (w > btnBarW + 60) ? (w - btnBarW) : (w / 2);
             if (tabW < 40) tabW = 40;
             int btnX = tabW + 2;
@@ -2586,7 +2586,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_GETMINMAXINFO: {
             LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
-            lpMMI->ptMinTrackSize.x = 560;
+            lpMMI->ptMinTrackSize.x = 760;
             lpMMI->ptMinTrackSize.y = 360;
             return 0;
         }

@@ -17,6 +17,9 @@
     --term-op: #d946ef;
     --term-warn: #ffaa00;
     --term-border: rgba(0, 255, 102, 0.15);
+    --term-glow: rgba(0, 255, 102, 0.25);
+    --term-chip-bg: rgba(0, 255, 102, 0.08);
+    --term-chip-hover: rgba(0, 255, 102, 0.2);
     --term-font: 'Consolas', 'Monaco', 'Courier New', monospace;
   }
 
@@ -32,6 +35,9 @@
     --term-op: #ff7700;
     --term-warn: #ffcc00;
     --term-border: rgba(255, 176, 0, 0.2);
+    --term-glow: rgba(255, 176, 0, 0.25);
+    --term-chip-bg: rgba(255, 176, 0, 0.08);
+    --term-chip-hover: rgba(255, 176, 0, 0.2);
     --term-font: 'Consolas', 'Monaco', 'Courier New', monospace;
   }
 
@@ -47,6 +53,9 @@
     --term-op: #bd93f9;
     --term-warn: #ffb86c;
     --term-border: rgba(0, 229, 255, 0.2);
+    --term-glow: rgba(0, 229, 255, 0.25);
+    --term-chip-bg: rgba(0, 229, 255, 0.08);
+    --term-chip-hover: rgba(0, 229, 255, 0.2);
     --term-font: 'Consolas', 'Monaco', 'Courier New', monospace;
   }
 
@@ -62,6 +71,9 @@
     --term-op: #d4a5ff;
     --term-warn: #f1fa8c;
     --term-border: rgba(224, 224, 232, 0.2);
+    --term-glow: rgba(224, 224, 232, 0.25);
+    --term-chip-bg: rgba(224, 224, 232, 0.08);
+    --term-chip-hover: rgba(224, 224, 232, 0.2);
     --term-font: 'Consolas', 'Monaco', 'Courier New', monospace;
   }
 
@@ -77,6 +89,9 @@
     --term-op: #ff55a3;
     --term-warn: #ffaa33;
     --term-border: rgba(255, 68, 85, 0.25);
+    --term-glow: rgba(255, 68, 85, 0.25);
+    --term-chip-bg: rgba(255, 68, 85, 0.08);
+    --term-chip-hover: rgba(255, 68, 85, 0.2);
     --term-font: 'Consolas', 'Monaco', 'Courier New', monospace;
   }
 
@@ -92,6 +107,9 @@
     --term-op: #bd93f9;
     --term-warn: #ffd166;
     --term-border: rgba(224, 112, 255, 0.25);
+    --term-glow: rgba(224, 112, 255, 0.25);
+    --term-chip-bg: rgba(224, 112, 255, 0.08);
+    --term-chip-hover: rgba(224, 112, 255, 0.2);
     --term-font: 'Consolas', 'Monaco', 'Courier New', monospace;
   }
   
@@ -121,6 +139,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 6px;
     padding: 0 8px;
     user-select: none;
     height: 38px;
@@ -133,7 +152,8 @@
     gap: 4px;
     overflow-x: auto;
     scrollbar-width: none;
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 340px;
   }
   #tabStrip::-webkit-scrollbar { display: none; }
 
@@ -170,7 +190,7 @@
     color: var(--term-fg);
     border-color: var(--term-border);
     font-weight: bold;
-    box-shadow: 0 -2px 8px rgba(0,255,102,0.1);
+    box-shadow: 0 -2px 8px var(--term-glow);
   }
 
   .tab-close {
@@ -195,25 +215,28 @@
     background: transparent;
     border: 1px dashed var(--term-border);
     color: var(--term-fg);
-    padding: 4px 10px;
+    padding: 4px 8px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
     transition: all 0.15s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .tab-add:hover {
-    background: rgba(0, 255, 102, 0.1);
+    background: var(--term-chip-bg);
   }
 
   .toolbar-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     margin-left: auto;
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    flex-shrink: 1;
+    flex-shrink: 0;
+    max-width: 460px;
   }
   .toolbar-actions::-webkit-scrollbar { display: none; }
 
@@ -221,15 +244,17 @@
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: #94a3b8;
-    padding: 4px 8px;
+    padding: 3px 6px;
     border-radius: 4px;
     font-size: 11px;
     cursor: pointer;
     font-family: var(--term-font);
     transition: all 0.15s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .btn-action:hover {
-    background: rgba(0, 255, 102, 0.15);
+    background: var(--term-chip-bg);
     color: var(--term-fg);
     border-color: var(--term-border);
   }
@@ -240,7 +265,7 @@
     align-items: center;
     gap: 6px;
     padding: 5px 10px;
-    background: rgba(18, 22, 32, 0.85);
+    background: var(--term-header-bg);
     border-bottom: 1px solid var(--term-border);
     overflow-x: auto;
     scrollbar-width: none;
@@ -258,10 +283,10 @@
     user-select: none;
   }
   .quick-chip {
-    background: rgba(0, 255, 102, 0.06);
-    border: 1px solid rgba(0, 255, 102, 0.25);
-    color: #a7f3d0;
-    padding: 3px 9px;
+    background: var(--term-chip-bg);
+    border: 1px solid var(--term-border);
+    color: var(--term-fg);
+    padding: 3px 8px;
     border-radius: 4px;
     font-size: 11px;
     font-family: var(--term-font);
@@ -270,10 +295,10 @@
     transition: all 0.15s ease;
   }
   .quick-chip:hover {
-    background: rgba(0, 255, 102, 0.2);
+    background: var(--term-chip-hover);
     color: #ffffff;
     border-color: var(--term-fg);
-    box-shadow: 0 0 8px rgba(0, 255, 102, 0.3);
+    box-shadow: 0 0 8px var(--term-glow);
     transform: translateY(-1px);
   }
   .quick-chip:active {
@@ -292,8 +317,8 @@
   }
   
   #output::-webkit-scrollbar { width: 8px; }
-  #output::-webkit-scrollbar-thumb { background: rgba(0,255,102,0.2); border-radius: 4px; }
-  #output::-webkit-scrollbar-thumb:hover { background: rgba(0,255,102,0.4); }
+  #output::-webkit-scrollbar-thumb { background: var(--term-border); border-radius: 4px; }
+  #output::-webkit-scrollbar-thumb:hover { background: var(--term-fg-dim); }
   
   .log-line { margin-bottom: 2px; }
   .log-plain { color: var(--term-fg); }
@@ -309,7 +334,7 @@
     display: flex; 
     padding: 10px 12px; 
     align-items: center;
-    background: rgba(0,255,102,0.03);
+    background: rgba(0, 0, 0, 0.2);
     border-top: 1px solid var(--term-border);
     flex-shrink: 0;
   }
@@ -408,6 +433,9 @@
       padding: 4px 6px;
       min-height: 36px;
     }
+    #tabStrip {
+      min-width: 140px;
+    }
     .tab {
       padding: 4px 8px;
       font-size: 11px;
@@ -439,7 +467,8 @@
 
   .shortcut-tag {
     color: var(--term-fg);
-    background: rgba(0, 255, 102, 0.08);
+    background: var(--term-chip-bg);
+    border: 1px solid var(--term-border);
     padding: 1px 4px;
     border-radius: 3px;
     font-weight: bold;
@@ -467,7 +496,7 @@
     background: var(--term-header-bg);
     border: 1px solid var(--term-border);
     border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 255, 102, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px var(--term-glow);
     width: 92%;
     max-width: 720px;
     max-height: 85vh;
@@ -555,10 +584,10 @@
     white-space: nowrap;
   }
   .cmd-table td.code-cell code {
-    background: rgba(0, 255, 102, 0.08);
+    background: var(--term-chip-bg);
     padding: 2px 6px;
     border-radius: 3px;
-    border: 1px solid rgba(0, 255, 102, 0.15);
+    border: 1px solid var(--term-border);
   }
   .cmd-table td.cmd-desc {
     color: #94a3b8;
@@ -582,6 +611,24 @@
     z-index: 900;
     pointer-events: none;
   }
+  .toast-close {
+    background: transparent;
+    border: none;
+    color: inherit;
+    opacity: 0.6;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+    border-radius: 3px;
+    font-family: inherit;
+    transition: opacity 0.15s, color 0.15s, background-color 0.15s;
+  }
+  .toast-close:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.15);
+  }
+
   .toast {
     pointer-events: auto;
     background: var(--term-header-bg);
@@ -625,20 +672,20 @@
 <header id="header">
   <div id="tabStrip" role="tablist" aria-label="Terminal Session Tabs">
     <!-- Dynamic Tabs -->
-    <button class="tab-add" id="btnNewTab" title="New Session Tab (Ctrl+T)">+ New</button>
   </div>
+  <button class="tab-add" id="btnNewTab" title="New Session Tab (Ctrl+T)">+ New</button>
   <div class="toolbar-actions" role="toolbar" aria-label="Terminal Actions">
     <button class="btn-action" id="btnTheme" title="Cycle CRT Color Themes">🎨 Theme</button>
-    <button class="btn-action" id="btnSaveState" title="Quicksave Session State (F5)">💾 Save (F5)</button>
-    <button class="btn-action" id="btnLoadState" title="Quickload Session State (F9)">⚡ Load (F9)</button>
+    <button class="btn-action" id="btnSaveState" title="Quicksave Session State (F5)">💾 Save</button>
+    <button class="btn-action" id="btnLoadState" title="Quickload Session State (F9)">⚡ Load</button>
     <button class="btn-action" id="btnExportState" title="Export JSON State Backup">📦 Backup</button>
     <button class="btn-action" id="btnImportState" title="Import JSON State Backup (Ctrl+O)">📂 Restore</button>
     <input type="file" id="fileImportState" accept=".json" style="display: none;">
-    <button class="btn-action" id="btnExportLog" title="Download Session Log (Ctrl+S)">💾 Export Log</button>
+    <button class="btn-action" id="btnExportLog" title="Download Session Log (Ctrl+S)">💾 Log</button>
     <button class="btn-action" id="btnClear" title="Clear Screen (Ctrl+L)">🧹 Clear</button>
     <button class="btn-action" id="btnZoomOut" title="Decrease Font Size (Ctrl+-)">A−</button>
     <button class="btn-action" id="btnZoomIn" title="Increase Font Size (Ctrl++)">A+</button>
-    <button class="btn-action" id="btnHelp" title="Show Help Reference (F1 / help)">❓ Help (F1)</button>
+    <button class="btn-action" id="btnHelp" title="Show Help Reference (F1 / help)">❓ Help</button>
   </div>
 </header>
 
@@ -650,13 +697,8 @@
   <button class="quick-chip" data-cmd="ps" title="Show running processes">⚙️ ps</button>
   <button class="quick-chip" data-cmd="uptime" title="System uptime & telemetry">⏱️ uptime</button>
   <button class="quick-chip" data-cmd="dmesg" title="Kernel diagnostic boot log">📋 dmesg</button>
-  <button class="quick-chip" data-cmd="theme" title="Cycle CRT color themes">🎨 theme</button>
   <button class="quick-chip" data-cmd="sysinfo" title="System and terminal version">ℹ️ sysinfo</button>
-  <button class="quick-chip" data-cmd="save" title="Quicksave terminal state [F5]">💾 save</button>
-  <button class="quick-chip" data-cmd="load" title="Quickload terminal state [F9]">⚡ load</button>
   <button class="quick-chip" data-cmd="tutorial" title="Replay terminal tutorial briefing">🎓 tutorial</button>
-  <button class="quick-chip" data-cmd="export-log" title="Export session log to file">💾 export-log</button>
-  <button class="quick-chip" data-cmd="clear" title="Clear terminal screen">🧹 clear</button>
 </div>
 
 <main id="output" role="log" aria-live="polite" aria-atomic="false" aria-label="Terminal Output"></main>
@@ -673,17 +715,16 @@
 
 <div id="statusbar" role="status" aria-label="Terminal Status">
   <div>
-    <span><span class="shortcut-tag">F1 / help</span>Help</span> &nbsp;|&nbsp; 
-    <span><span class="shortcut-tag">F5</span>Save</span> &nbsp;|&nbsp; 
-    <span><span class="shortcut-tag">F9</span>Load</span> &nbsp;|&nbsp; 
-    <span><span class="shortcut-tag">Ctrl+T</span>New Tab</span> &nbsp;|&nbsp; 
-    <span><span class="shortcut-tag">Ctrl+W</span>Close Tab</span> &nbsp;|&nbsp; 
-    <span><span class="shortcut-tag">Ctrl+Tab</span>Next Tab</span> &nbsp;|&nbsp; 
-    <span><span class="shortcut-tag">Ctrl+1..8</span>Switch Tab</span> &nbsp;|&nbsp; 
-    <span><span class="shortcut-tag">Ctrl+S</span>Export Log</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">F1</span>Help</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">F5/F9</span>Save/Load</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+T</span>New</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+W</span>Close</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+Tab</span>Next</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+1-8</span>Tabs</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+S</span>Log</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+O</span>Restore</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+R</span>Search</span> &nbsp;|&nbsp; 
-    <span><span class="shortcut-tag">Tab</span>Complete</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Tab</span>Auto</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+L</span>Clear</span>
   </div>
   <div id="tabStatusInfo">Tab 1/1</div>
@@ -801,7 +842,7 @@
       <button class="modal-close-btn" id="btnTutorialClose" title="Close (Escape)">&times;</button>
     </div>
     <div class="modal-body">
-      <div style="margin-bottom: 14px; padding: 10px 14px; background: rgba(0, 255, 102, 0.08); border-left: 3px solid var(--term-fg); border-radius: 4px; font-size: 12px; color: #a7f3d0;">
+      <div style="margin-bottom: 14px; padding: 10px 14px; background: var(--term-chip-bg); border: 1px solid var(--term-border); border-left: 3px solid var(--term-fg); border-radius: 4px; font-size: 12px; color: var(--term-fg);">
         🖥️ <b>Welcome to KTerm:</b> Advanced retro shell emulator for KiloOS featuring multi-tab sessions, pipeline redirection, VFS virtual file manipulation, safe math evaluation, and persistence state management under strict &lt;999 KB constraints.
       </div>
 
@@ -831,7 +872,7 @@
       <label style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 6px; cursor: pointer;">
         <input type="checkbox" id="chkDontShowTutorial" style="accent-color: var(--term-fg); cursor: pointer;"> Don't show briefing automatically
       </label>
-      <button class="btn-action" id="btnTutorialStart" style="background: rgba(0, 255, 102, 0.15); color: var(--term-fg); border-color: var(--term-border); font-weight: bold;">Start Working (Esc / Enter)</button>
+      <button class="btn-action" id="btnTutorialStart" style="background: var(--term-chip-hover); color: var(--term-fg); border-color: var(--term-border); font-weight: bold;">Start Working (Esc / Enter)</button>
     </div>
   </div>
 </div>
@@ -1421,16 +1462,48 @@
       };
       tab.ondblclick = (e) => {
         e.stopPropagation();
-        const newName = window.prompt("Rename terminal session tab:", s.name);
-        if (newName && newName.trim()) {
-          s.name = newName.trim();
-          s.customNamed = true;
+        if (tab.querySelector('input.tab-rename-input')) return;
+        
+        const renameInput = document.createElement('input');
+        renameInput.type = 'text';
+        renameInput.className = 'tab-rename-input';
+        renameInput.value = s.name;
+        renameInput.style.cssText = 'background: var(--term-bg); color: var(--term-fg); border: 1px solid var(--term-fg); border-radius: 2px; font-family: var(--term-font); font-size: 11px; padding: 1px 4px; width: 90px; outline: none;';
+        
+        titleSpan.style.display = 'none';
+        tab.insertBefore(renameInput, titleSpan);
+        renameInput.focus();
+        renameInput.select();
+
+        let finished = false;
+        const commit = (save) => {
+          if (finished) return;
+          finished = true;
+          const val = renameInput.value.trim();
+          if (save && val && val !== s.name) {
+            s.name = val;
+            s.customNamed = true;
+            showToast(`Renamed tab to "${escapeHtml(s.name)}"`, "sys");
+          }
           renderTabs();
-          showToast(`Renamed tab to "${escapeHtml(s.name)}"`, "sys");
-        }
+        };
+
+        renameInput.onkeydown = (ke) => {
+          ke.stopPropagation();
+          if (ke.key === 'Enter') {
+            ke.preventDefault();
+            commit(true);
+          } else if (ke.key === 'Escape') {
+            ke.preventDefault();
+            commit(false);
+          }
+        };
+        renameInput.onblur = () => commit(true);
+        renameInput.onclick = (ce) => ce.stopPropagation();
+        renameInput.ondblclick = (de) => de.stopPropagation();
       };
 
-      tabStrip.insertBefore(tab, btnNewTab);
+      tabStrip.appendChild(tab);
     });
 
     const activeIdx = sessions.findIndex(s => s.id === activeSessionId) + 1;
