@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 557,
+  "turns_executed": 558,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-30T22:37:03.492229+00:00",
-  "current_target": "KBBS",
+  "last_heartbeat": "2026-10-30T23:39:12.816110+00:00",
+  "current_target": "kweb://webring",
   "remote_command": "none"
 }

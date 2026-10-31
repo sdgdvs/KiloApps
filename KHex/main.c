@@ -795,7 +795,7 @@ void DisasmMultiArch(HWND hwnd) {
         case 0x33: p += wsprintfA(p, "33 %02X          XOR reg, r/m32 (modrm=0x%02X)\r\n", b[1], b[1]); break;
         case 0x89: p += wsprintfA(p, "89 %02X          MOV r/m32, reg (modrm=0x%02X)\r\n", b[1], b[1]); break;
         case 0x8B: p += wsprintfA(p, "8B %02X          MOV reg, r/m32 (modrm=0x%02X)\r\n", b[1], b[1]); break;
-        case 0xB8: p += wsprintfA(p, "B8 %02X %02X %02X %02X MOV EAX, 0x%08X\r\n", b[0], b[1], b[2], b[3], val); break;
+        case 0xB8: p += wsprintfA(p, "B8 %02X %02X %02X    MOV EAX, 0x%08X\r\n", b[1], b[2], b[3], val); break;
         case 0xC3: p += wsprintfA(p, "C3             RET\r\n"); break;
         case 0xCC: p += wsprintfA(p, "CC             INT 3 (Breakpoint Trap)\r\n"); break;
         case 0xEB: p += wsprintfA(p, "EB %02X          JMP SHORT +%d (0x%08X)\r\n", b[1], (signed char)b[1], 0x00401002 + (signed char)b[1]); break;
@@ -1138,9 +1138,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Section 1: Base Converter
             CreateWindowEx(0, "STATIC", "--- BASE CONVERTER ---", WS_CHILD | WS_VISIBLE, 10, 8, 200, 16, hwnd, NULL, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Preset [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 560, 8, 85, 24, hwnd, (HMENU)ID_BTN_PRESET, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 650, 8, 85, 24, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 740, 8, 80, 24, hwnd, (HMENU)100, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Preset [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 550, 8, 70, 24, hwnd, (HMENU)ID_BTN_PRESET, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 625, 8, 60, 24, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 690, 8, 68, 24, hwnd, (HMENU)100, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Hex:", WS_CHILD | WS_VISIBLE, 10, 28, 35, 20, hwnd, NULL, NULL, NULL);
             hHex = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x12345678", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 50, 28, 160, 22, hwnd, (HMENU)ID_HEX, NULL, NULL);
@@ -1482,25 +1482,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH hOldBrush = (HBRUSH)SelectObject(memDC, hBrush);
 
             POINT hexPts[6] = {
-                { 710, 15 - offset },
-                { 728 + offset, 25 - offset / 2 },
-                { 728 + offset, 45 + offset / 2 },
-                { 710, 55 + offset },
-                { 692 - offset, 45 + offset / 2 },
-                { 692 - offset, 25 - offset / 2 }
+                { 790, 22 - offset },
+                { 808 + offset, 32 - offset / 2 },
+                { 808 + offset, 52 + offset / 2 },
+                { 790, 62 + offset },
+                { 772 - offset, 52 + offset / 2 },
+                { 772 - offset, 32 - offset / 2 }
             };
             Polygon(memDC, hexPts, 6);
 
             // Specular sheen sweep line on hexagon
             HPEN hSheen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
             HPEN oldSheen = (HPEN)SelectObject(memDC, hSheen);
-            MoveToEx(memDC, 698 - offset, 28, NULL);
-            LineTo(memDC, 722 + offset, 38);
+            MoveToEx(memDC, 778 - offset, 35, NULL);
+            LineTo(memDC, 802 + offset, 45);
             SelectObject(memDC, oldSheen);
             DeleteObject(hSheen);
 
             SetTextColor(memDC, RGB(255, 255, 255));
-            TextOutA(memDC, 703, 27, "0x", 2);
+            TextOutA(memDC, 783, 34, "0x", 2);
 
             SelectObject(memDC, hOldPen);
             SelectObject(memDC, hOldBrush);

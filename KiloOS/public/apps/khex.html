@@ -1172,16 +1172,14 @@
           <option value="carray">C / C++ Byte Array (const unsigned char data[])</option>
           <option value="intelhex">Intel HEX (.hex) Format</option>
           <option value="srec">Motorola S-Record (.s19) Format</option>
-          <option value="python">Python Bytes Literal (b'\x..')</option>
+          <option value="python">Python Bytes Definition (b'\x..')</option>
+          <option value="pybytes">Python Single-Line Literal (b'\x...')</option>
           <option value="base64">Base64 Encoded (RFC 4648)</option>
           <option value="rust">Rust Byte Slice (&[u8])</option>
           <option value="go">Go Byte Slice ([]byte)</option>
           <option value="asmdb">Assembly DB Directives (db 0x..)</option>
           <option value="json">JSON Byte Array [0x..]</option>
-          <option value="rust">Rust Byte Slice (&[u8])</option>
           <option value="csharp">C# Byte Array (new byte[] { ... })</option>
-          <option value="pybytes">Python bytes literal (b'\x...')</option>
-          <option value="base64">Base64 Encoded Stream</option>
           <option value="hexstr">Continuous Raw Hex String</option>
         </select>
       </div>
@@ -2605,6 +2603,20 @@
     showToast('Sample Data Loaded', 'Hex viewer buffer loaded with 98 sample bytes.', 'success');
   }
 
+  function loadBufferData(u8) {
+    binaryBuffer = (u8 instanceof Uint8Array) ? u8 : new Uint8Array(u8);
+    selectedOffset = 0;
+    if (typeof textBuf !== 'undefined' && textBuf) {
+      textBuf.value = "[Buffer: " + binaryBuffer.length + " bytes]";
+      try { localStorage.setItem('khex_text_buf', textBuf.value); } catch(e) {}
+    }
+    renderHexView();
+    if (binaryBuffer.length > 0) selectByte(0);
+    if (typeof updateInspector === 'function') updateInspector();
+    if (typeof computeEntropyAndDistribution === 'function') computeEntropyAndDistribution();
+    if (typeof computeHashes === 'function') computeHashes();
+  }
+
   function loadEchoRomBuffer() {
     const rom = new Uint8Array(128);
     const header = "ECHO_ROM_1999::CLASSIFIED_SECTOR_04";
@@ -2628,6 +2640,12 @@
   }
 
   function gotoOffset(targetOffset = null) {
+    if (typeof switchTab === 'function') {
+      const activeTab = document.querySelector('.tab-btn.active');
+      if (activeTab && activeTab.getAttribute('data-tab') !== 'editor') {
+        switchTab('editor');
+      }
+    }
     if (targetOffset === null) {
       const input = document.getElementById('gotoOffsetInput');
       if (!input || !input.value.trim()) {
@@ -3660,15 +3678,7 @@
         out += '  ' + slice.join(', ') + (r < rows - 1 ? ',\n' : '\n');
       }
       out += ']';
-    } else if (preset === 'rust') {
-      out = '// Rust byte slice (&[u8]) - ' + binaryBuffer.length + ' bytes\n';
-      out += 'pub const DATA: &[u8] = &[\n  ';
-      for (let i = 0; i < binaryBuffer.length; i++) {
-        out += '0x' + binaryBuffer[i].toString(16).padStart(2, '0').toUpperCase();
-        if (i < binaryBuffer.length - 1) out += ', ';
-        if ((i + 1) % 12 === 0 && i < binaryBuffer.length - 1) out += '\n  ';
-      }
-      out += '\n];';
+
     } else if (preset === 'csharp') {
       out = '// C# byte array (byte[]) - ' + binaryBuffer.length + ' bytes\n';
       out += 'public static readonly byte[] Data = new byte[] {\n  ';
@@ -3828,7 +3838,7 @@
       const hexOff = '0x' + item.offset.toString(16).padStart(6, '0').toUpperCase();
       const escText = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       html += `<div style="display:flex; gap:12px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05); align-items:center;">` +
-        `<span style="color:var(--accent-purple); width:80px; flex-shrink:0; cursor:pointer; font-weight:600;" onclick="gotoOffset(${item.offset}); switchTab('editor');" title="Click to jump to offset">${hexOff}</span>` +
+        `<span style="color:var(--accent-purple); width:80px; flex-shrink:0; cursor:pointer; font-weight:600;" onclick="switchTab('editor'); gotoOffset(${item.offset});" title="Click to jump to offset">${hexOff}</span>` +
         `<span style="color:var(--accent-cyan); width:65px; flex-shrink:0; font-size:0.75rem;">[${item.type}]</span>` +
         `<span style="color:var(--text-secondary); width:45px; flex-shrink:0; font-size:0.75rem;">${item.len}B</span>` +
         `<span style="color:var(--text-primary); word-break:break-all;">${escText}</span>` +
@@ -3929,7 +3939,7 @@
     diffs.forEach(d => {
       const hexOff = '0x' + d.offset.toString(16).padStart(6, '0').toUpperCase();
       html += `<div style="display:flex; gap:10px; padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.03);">` +
-        `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="gotoOffset(${d.offset}); switchTab('editor');" title="Click to jump to offset">${hexOff}</span>` +
+        `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="switchTab('editor'); gotoOffset(${d.offset});" title="Click to jump to offset">${hexOff}</span>` +
         `<span style="color:#ef4444; width:95px;">${d.valA} ('${d.charA}')</span>` +
         `<span style="color:var(--accent-cyan); width:95px;">${d.valB} ('${d.charB}')</span>` +
         `<span style="color:var(--accent-amber);">${d.xor}</span>` +
@@ -4186,7 +4196,7 @@
       const hexOff = '0x' + m.offset.toString(16).padStart(6, '0').toUpperCase();
       const hexMagic = m.bytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
       html += `<div style="display:flex; gap:8px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.03); align-items:center;">` +
-        `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="gotoOffset(${m.offset}); switchTab('editor');" title="Click to view in Hex Editor">${hexOff}</span>` +
+        `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="switchTab('editor'); gotoOffset(${m.offset});" title="Click to view in Hex Editor">${hexOff}</span>` +
         `<span style="color:var(--accent-cyan); width:140px; font-weight:bold;">${m.name}</span>` +
         `<span style="color:var(--accent-amber); width:70px; font-family:monospace;">.${m.ext}</span>` +
         `<span style="color:var(--text-primary); width:130px; font-family:monospace; font-size:0.75rem;">${hexMagic}</span>` +
@@ -4309,9 +4319,9 @@ checksum: uint16 // CRC16 / Checksum value`
       startOffset = parseInt(rawOff, 10) || 0;
     }
 
-    let isLittleEndian = isLittle;
-    if (endianSelect && endianSelect.value === 'le') isLittleEndian = true;
-    if (endianSelect && endianSelect.value === 'be') isLittleEndian = false;
+    let isLE = (typeof isLittleEndian !== "undefined") ? isLittleEndian : true;
+    if (endianSelect && endianSelect.value === 'le') isLE = true;
+    if (endianSelect && endianSelect.value === 'be') isLE = false;
 
     const buf = binaryBuffer;
     if (!buf || buf.length === 0) {
@@ -4372,49 +4382,49 @@ checksum: uint16 // CRC16 / Checksum value`
         } else if (fieldType === 'uint16' || fieldType === 'word') {
           byteLen = 2;
           if (currOffset + 2 <= buf.length) {
-            const v = view.getUint16(currOffset, isLittleEndian);
+            const v = view.getUint16(currOffset, isLE);
             parsedValue = `${v} (0x${v.toString(16).padStart(4, '0').toUpperCase()})`;
           }
         } else if (fieldType === 'int16') {
           byteLen = 2;
           if (currOffset + 2 <= buf.length) {
-            const v = view.getInt16(currOffset, isLittleEndian);
+            const v = view.getInt16(currOffset, isLE);
             parsedValue = `${v}`;
           }
         } else if (fieldType === 'uint32' || fieldType === 'dword') {
           byteLen = 4;
           if (currOffset + 4 <= buf.length) {
-            const v = view.getUint32(currOffset, isLittleEndian);
+            const v = view.getUint32(currOffset, isLE);
             parsedValue = `${v} (0x${v.toString(16).padStart(8, '0').toUpperCase()})`;
           }
         } else if (fieldType === 'int32') {
           byteLen = 4;
           if (currOffset + 4 <= buf.length) {
-            const v = view.getInt32(currOffset, isLittleEndian);
+            const v = view.getInt32(currOffset, isLE);
             parsedValue = `${v}`;
           }
         } else if (fieldType === 'uint64' || fieldType === 'qword') {
           byteLen = 8;
           if (currOffset + 8 <= buf.length) {
-            const v = view.getBigUint64(currOffset, isLittleEndian);
+            const v = view.getBigUint64(currOffset, isLE);
             parsedValue = `${v.toString(10)} (0x${v.toString(16).toUpperCase()})`;
           }
         } else if (fieldType === 'int64') {
           byteLen = 8;
           if (currOffset + 8 <= buf.length) {
-            const v = view.getBigInt64(currOffset, isLittleEndian);
+            const v = view.getBigInt64(currOffset, isLE);
             parsedValue = `${v.toString(10)}`;
           }
         } else if (fieldType === 'float32' || fieldType === 'float') {
           byteLen = 4;
           if (currOffset + 4 <= buf.length) {
-            const v = view.getFloat32(currOffset, isLittleEndian);
+            const v = view.getFloat32(currOffset, isLE);
             parsedValue = `${v.toPrecision(7)}`;
           }
         } else if (fieldType === 'float64' || fieldType === 'double') {
           byteLen = 8;
           if (currOffset + 8 <= buf.length) {
-            const v = view.getFloat64(currOffset, isLittleEndian);
+            const v = view.getFloat64(currOffset, isLE);
             parsedValue = `${v.toPrecision(12)}`;
           }
         } else if (fieldType.startsWith('char[')) {
@@ -4486,7 +4496,7 @@ checksum: uint16 // CRC16 / Checksum value`
     fields.forEach(f => {
       const hexOff = '0x' + f.offset.toString(16).padStart(6, '0').toUpperCase();
       html += `<div style="display:flex; gap:8px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.03); align-items:center;">` +
-        `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="gotoOffset(${f.offset}); switchTab('editor');" title="Jump to field offset">${hexOff}</span>` +
+        `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="switchTab('editor'); gotoOffset(${f.offset});" title="Jump to field offset">${hexOff}</span>` +
         `<span style="color:var(--text-primary); width:130px; font-weight:600;">${f.name}</span>` +
         `<span style="color:var(--accent-cyan); width:85px; font-family:monospace; font-size:0.75rem;">${f.type}</span>` +
         `<span style="color:var(--accent-amber); width:130px; font-family:monospace; font-size:0.75rem; overflow:hidden; text-overflow:ellipsis;">${f.rawHex}</span>` +
@@ -5125,7 +5135,7 @@ checksum: uint16 // CRC16 / Checksum value`
                        inst.category === 'Stack' ? 'var(--accent-purple)' : 'var(--text-dim)';
 
       html += `<div style="display:flex; gap:8px; align-items:center; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.03); transition:background 0.15s;" onmouseover="this.style.background='rgba(59,130,246,0.1)'" onmouseout="this.style.background='transparent'">` +
-        `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="gotoOffset(${inst.bufferOffset}); switchTab('editor');" title="Jump to byte in Hex Editor">${hexAddr}</span>` +
+        `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="switchTab('editor'); gotoOffset(${inst.bufferOffset});" title="Jump to byte in Hex Editor">${hexAddr}</span>` +
         `<span style="color:var(--accent-amber); width:110px; font-size:0.75rem; overflow:hidden; text-overflow:ellipsis;">${rawHex}</span>` +
         `<span style="color:var(--accent-cyan); width:120px; font-weight:bold;">${inst.mnemonic}</span>` +
         `<span style="color:var(--text-primary); flex:1; font-weight:500;">${inst.operands}</span>` +
@@ -5475,7 +5485,7 @@ checksum: uint16 // CRC16 / Checksum value`
           <td style="padding:4px 6px;">0x${rawSize.toString(16).toUpperCase()} (${rawSize}B)</td>
           <td style="padding:4px 6px; color:var(--accent-amber);">0x${rawOffset.toString(16).toUpperCase()}</td>
           <td style="padding:4px 6px; color:var(--text-secondary);">${escapeHtml(flagsStr.trim())}</td>
-          <td style="padding:4px 6px;"><button class="btn btn-sm" style="padding:1px 6px; font-size:0.7rem;" onclick="gotoOffset(${rawOffset}); switchTab('editor');">Go to Raw</button></td>
+          <td style="padding:4px 6px;"><button class="btn btn-sm" style="padding:1px 6px; font-size:0.7rem;" onclick="switchTab('editor'); gotoOffset(${rawOffset});">Go to Raw</button></td>
         `;
         sectionsTbody.appendChild(tr);
       }
@@ -5562,7 +5572,7 @@ checksum: uint16 // CRC16 / Checksum value`
     view.setUint32(0x184, 0x1000, true); // VirtualAddress: 0x1000
     view.setUint32(0x188, 0x0100, true); // SizeOfRawData: 256
     view.setUint32(0x18C, 0x0100, true); // PointerToRawData: 0x0100
-    view.setUint32(0x1A0, 0x60000020, true); // Characteristics: CODE | EXECUTE | READ
+    view.setUint32(0x19C, 0x60000020, true); // Characteristics: CODE | EXECUTE | READ
 
     // Section 2: .rdata at 0x1A0 (40 bytes)
     const sec2Name = ".rdata\0\0";
@@ -5571,7 +5581,7 @@ checksum: uint16 // CRC16 / Checksum value`
     view.setUint32(0x1AC, 0x2000, true); // VirtualAddress: 0x2000
     view.setUint32(0x1B0, 0x0080, true); // SizeOfRawData: 128
     view.setUint32(0x1B4, 0x0180, true); // PointerToRawData: 0x0180
-    view.setUint32(0x1C8, 0x40000040, true); // Characteristics: INITIALIZED_DATA | READ
+    view.setUint32(0x1C4, 0x40000040, true); // Characteristics: INITIALIZED_DATA | READ
 
     // Section 3: .data at 0x1C8 (40 bytes)
     const sec3Name = ".data\0\0\0";
@@ -5580,7 +5590,7 @@ checksum: uint16 // CRC16 / Checksum value`
     view.setUint32(0x1D4, 0x3000, true); // VirtualAddress: 0x3000
     view.setUint32(0x1D8, 0x0080, true); // SizeOfRawData: 128
     view.setUint32(0x1DC, 0x01E0, true); // PointerToRawData: 0x01E0
-    view.setUint32(0x1F0, 0xC0000040, true); // Characteristics: INITIALIZED_DATA | READ | WRITE
+    view.setUint32(0x1EC, 0xC0000040, true); // Characteristics: INITIALIZED_DATA | READ | WRITE
 
     // Put sample x86 machine instructions at 0x0100 (.text entry)
     // 31 C0 (xor eax, eax), 40 (inc eax), C3 (ret)
@@ -5594,7 +5604,7 @@ checksum: uint16 // CRC16 / Checksum value`
 
     // Apply to binaryBuffer
     binaryBuffer = buf;
-    bufferCursor = 0;
+    selectedOffset = 0;
     renderHexView();
     updateInspector();
     computeEntropyAndDistribution();
@@ -5636,8 +5646,8 @@ checksum: uint16 // CRC16 / Checksum value`
       }
     }
 
-    gotoOffset(targetRawOffset);
     switchTab('editor');
+    gotoOffset(targetRawOffset);
     showToast('Entry Point Jump', `Jumped to Entry Point RVA 0x${entryRVA.toString(16).toUpperCase()} (File Offset 0x${targetRawOffset.toString(16).toUpperCase()})`, 'info');
   }
 
@@ -5765,7 +5775,7 @@ checksum: uint16 // CRC16 / Checksum value`
                 <span>Hunk #${idx + 1}: ${hexStart} - ${hexEnd}</span>
                 <span class="badge" style="padding:1px 6px; font-size:0.7rem; color:${typeBadgeColor}; border-color:${typeBadgeColor};">${seg.type} (${seg.length}B)</span>
               </div>
-              <button class="btn btn-sm" style="padding:2px 8px; font-size:0.7rem;" onclick="gotoOffset(${seg.startOffset}); switchTab('editor');">Jump to Offset</button>
+              <button class="btn btn-sm" style="padding:2px 8px; font-size:0.7rem;" onclick="switchTab('editor'); gotoOffset(${seg.startOffset});">Jump to Offset</button>
             </div>
             <div style="font-size:0.75rem; font-family:'JetBrains Mono', monospace; display:flex; flex-direction:column; gap:2px;">
               <div style="color:#ef4444;"><span style="color:var(--text-dim); display:inline-block; width:45px;">Buf A:</span> ${hexStrA} | ${escapeHtml(ascStrA)}</div>
@@ -5799,7 +5809,7 @@ checksum: uint16 // CRC16 / Checksum value`
           const xorStr = (a !== null && b !== null) ? '0x' + (a ^ b).toString(16).padStart(2, '0').toUpperCase() : '--';
 
           html += `<div style="display:flex; gap:10px; padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.03);">` +
-            `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="gotoOffset(${off}); switchTab('editor');" title="Click to jump to offset">${hexOff}</span>` +
+            `<span style="color:var(--accent-purple); width:75px; cursor:pointer; font-weight:600;" onclick="switchTab('editor'); gotoOffset(${off});" title="Click to jump to offset">${hexOff}</span>` +
             `<span style="color:#ef4444; width:95px;">${valA} ('${charA}')</span>` +
             `<span style="color:var(--accent-cyan); width:95px;">${valB} ('${charB}')</span>` +
             `<span style="color:var(--accent-amber);">${xorStr}</span>` +

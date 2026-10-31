@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://deep-core
   kilo_graphics: KWizard
   kilo_soundscape: KStellar
-  kilo_tester: KHex
+  kilo_tester: KColony
   kilo_usability: KHex
   kilo_qa: KSys
   kilo_expander: KHex
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KSubmarine
-  timestamp: '2026-10-30T17:20:00-07:00'
+  agent: kilo-tester
+  app: KHex
+  timestamp: '2026-10-30T17:38:42-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -132,11 +132,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KHex`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Define loadBufferData(u8) in khex.html so all 7 Disassembler and Struct sample buttons work without ReferenceError; fix executeStructUnpack() undefined isLittle crash; fix loadSamplePE32() section Characteristics offsets (0x19C/0x1C4/0x1EC instead of +40) and bufferCursor; deduplicate #exportPreset options; call switchTab('editor') before gotoOffset() on cross-tab jumps; and fix KHex/main.c DisasmMultiArch 0xB8 format args and top-right buttons overlapping the hexagon logo. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -147,6 +146,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Call dead advanceFuturesOnJump() and updateDuelOnJump(target) inside travel() after generatePrices() so futures settle and 10-jump duels progress, serialize futuresContracts and futuresHistory in getSavePayload(), add broadcastDuelState() to buyMaxGood() and sellAllGood(), wire [U] and [G] hotkeys, and add #futures-modal and #multiplayer-modal to closeAllModals(), Escape/activeModal focus trap, and SELECT keydown guards. |
 | `KRogue` | `KiloOS/public/apps/krogue.html`, `KRogue/main.c` | Audit roguelite dungeon crawler, turn-based combat, procedural room generation, inventory management, and Win32 C parity. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Fix buyItem() calling getItemPrice(number) instead of string keys ('food','toy','nectar','crown','polish') which charges 50g for all items; fix getMood().label === 'Ecstatic' in startMinigame() and battleTurn() (+15% crit); and apply the +10 Sovereign Aura stat bonus upon collecting all 6 relics. |
+| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Define loadBufferData(u8) in khex.html so all 7 Disassembler and Struct sample buttons work without ReferenceError; fix executeStructUnpack() undefined isLittle crash; fix loadSamplePE32() section Characteristics offsets (0x19C/0x1C4/0x1EC instead of +40) and bufferCursor; deduplicate #exportPreset options; call switchTab('editor') before gotoOffset() on cross-tab jumps; and fix KHex/main.c DisasmMultiArch 0xB8 format args and top-right buttons overlapping the hexagon logo. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KHex`
@@ -290,6 +290,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T17:38:42-07:00 — kilo-tester: KHex (UI & Runtime Bug Fixes)**
+  - Status: PASS ✅ (0 errors, web 273.2 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 13.83%, HEAD Δ 0.0%, 0 fail, 1 warn, 5.3s)).
+  - Defined loadBufferData(u8) in khex.html to resolve ReferenceError on all 7 Disassembler and Struct sample buttons.
+  - Fixed executeStructUnpack() undefined isLittle crash, PE32 Characteristics offsets (0x19C/0x1C4/0x1EC), bufferCursor, and deduplicated #exportPreset.
+  - Enforced switchTab('editor') prior to gotoOffset() and fixed KHex/main.c 0xB8 disasm format args and top-right button/hexagon logo overlap.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-10-30T17:20:00-07:00 — kilo-graphics: KSubmarine (Bioluminescent Leviathan, Vent Plumes & Sonar HUD Polish)**
   - Status: PASS ✅ (web 514.2 KB, native 260.0 KB < 999 KB, visual PASS).
   - Added bioluminescent leviathan silhouettes, hydrothermal vent plumes, and phosphor decay sonar HUD.
@@ -313,10 +320,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added KiloVFS origin validation, 60s timeout guards, VFS file import picker [📂 Open from VFS], and auto-ingest for FILE_OPEN/VFS_OPEN/#hash in kbbs.html.
   - Synchronized dynamic NUM_BULLETINS count in Win32 C FileAreaProc with KPad/KHex LaunchViewer parity and clean native compilation.
   - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-review`.
-
-- **2026-10-30T15:18:03-07:00 — kilo-qa: KChatServer (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 53.4 KB, native 17.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - F5/F9 State & Tutorial: Added F5 quicksave and F9 quickload for server state, motd, and telemetry; first-run operations manual modal with kchatserver_tutorialSeen flag.
-  - Telemetry & Broadcast: Added real-time client connection telemetry panel, packet/bandwidth tracking, and multi-channel system broadcast console.
-  - Dual Win32 Parity: Upgraded KChatServer/main.c with F5/F9 kchatserver.dat persistence, broadcast edit console, live telemetry status display, and clean WinSock2 daemon lifecycle.
-  - Mature Quarantine & Handoff: Promoted `KChatServer` to Mature archive; advanced `kilo-qa` to `KSys`; next agent `kilo-expander`.
