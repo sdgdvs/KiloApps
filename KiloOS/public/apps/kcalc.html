@@ -1817,7 +1817,7 @@
                 <div style="font-size:12px; color:var(--text-muted);" id="markup-pct">Markup: 0%</div>
                 <div style="display:flex; gap:6px; margin-top:4px; justify-content:flex-end;">
                   <button class="mini-btn" onclick="sendToCalc(document.getElementById('margin-profit').dataset.rawVal)">Use Profit</button>
-                  <button class="mini-btn" onclick="sendToCalc(document.getElementById('margin-pct').textContent)">Use Margin %</button>
+                  <button class="mini-btn" onclick="sendToCalc(document.getElementById('margin-pct').dataset.rawVal)">Use Margin %</button>
                 </div>
               </div>
             </div>
@@ -2557,9 +2557,17 @@
   let historyNavIndex = -1;
 
   // Clipboard copy utilities
+  function normalizeMathSymbols(str) {
+    if (!str || typeof str !== 'string') return '';
+    return str
+      .replace(/[−–—]/g, '-')
+      .replace(/[×✕✖·]/g, '*')
+      .replace(/[÷∕]/g, '/');
+  }
+
   function copyMainDisplay() {
     const mainDisp = document.getElementById('mainDisp');
-    const val = mainDisp ? mainDisp.textContent.trim() : '';
+    let val = mainDisp ? normalizeMathSymbols(mainDisp.textContent.trim()) : '';
     if (!val || val === 'Error' || val.startsWith('ERR')) return;
 
     if (mainDisp) {
@@ -2747,6 +2755,12 @@
     calcCAGR(true);
     calc1VarStats(true);
     calc2VarRegression(true);
+    calcIntegral(true);
+    calcDerivative(true);
+    calcEquationRoot(true);
+    calcQuadratic(true);
+    calcCubic(true);
+    calcVectorOps(true);
 
     const hasSeenTutorial = localStorage.getItem('kcalc_tutorialSeen') === 'true';
     if (!hasSeenTutorial) {
@@ -3377,6 +3391,11 @@
           if (document.getElementById('poly-c-b') && s.calcInputs.polyCB !== undefined) document.getElementById('poly-c-b').value = s.calcInputs.polyCB;
           if (document.getElementById('poly-c-c') && s.calcInputs.polyCC !== undefined) document.getElementById('poly-c-c').value = s.calcInputs.polyCC;
           if (document.getElementById('poly-c-d') && s.calcInputs.polyCD !== undefined) document.getElementById('poly-c-d').value = s.calcInputs.polyCD;
+          calcIntegral(true);
+          calcDerivative(true);
+          calcEquationRoot(true);
+          calcQuadratic(true);
+          calcCubic(true);
         }
         if (s.matrixInputs && typeof s.matrixInputs === 'object') {
           if (Array.isArray(s.matrixInputs.matA)) {
@@ -3406,6 +3425,7 @@
           if (document.getElementById('vec-vx') && s.matrixInputs.vecVx !== undefined) document.getElementById('vec-vx').value = s.matrixInputs.vecVx;
           if (document.getElementById('vec-vy') && s.matrixInputs.vecVy !== undefined) document.getElementById('vec-vy').value = s.matrixInputs.vecVy;
           if (document.getElementById('vec-vz') && s.matrixInputs.vecVz !== undefined) document.getElementById('vec-vz').value = s.matrixInputs.vecVz;
+          calcVectorOps(true);
         }
         if (Array.isArray(s.expansionRegisters) && typeof window.setExpansionRegisters === 'function') {
           window.setExpansionRegisters(s.expansionRegisters);
@@ -3574,7 +3594,9 @@
       if (document.getElementById('poly-c-d') && snap.calcInputs.polyCD !== undefined) document.getElementById('poly-c-d').value = snap.calcInputs.polyCD;
       calcIntegral(true);
       calcDerivative(true);
+      calcEquationRoot(true);
       calcQuadratic(true);
+      calcCubic(true);
     }
     if (snap.matrixInputs && typeof snap.matrixInputs === 'object') {
       if (Array.isArray(snap.matrixInputs.matA)) {
@@ -3760,7 +3782,7 @@
   function evalExpression(inputStr) {
     if (!inputStr) return 0;
     
-    let sanitized = inputStr.trim();
+    let sanitized = normalizeMathSymbols(String(inputStr)).trim();
 
     // Replace e^(...) with exp(...)
     sanitized = sanitized.replace(/e\^\(/g, 'exp(');
@@ -3890,7 +3912,7 @@
 
   function evalExpressionWithX(inputStr, xVal, forceRad = true) {
     if (!inputStr) return 0;
-    let sanitized = inputStr.trim();
+    let sanitized = normalizeMathSymbols(String(inputStr)).trim();
     sanitized = sanitized.replace(/e\^\(/g, 'exp(');
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?|\([^\)]+\))!/g, 'fact($1)');
     sanitized = sanitized.replace(/\bmod\b/gi, '%');
@@ -4165,7 +4187,9 @@
     const profitElem = document.getElementById('margin-profit');
     profitElem.textContent = '$' + profit.toFixed(2);
     profitElem.dataset.rawVal = profit.toFixed(2);
-    document.getElementById('margin-pct').textContent = `Margin: ${marginPct.toFixed(2)}%`;
+    const marginElem = document.getElementById('margin-pct');
+    marginElem.textContent = `Margin: ${marginPct.toFixed(2)}%`;
+    marginElem.dataset.rawVal = marginPct.toFixed(4);
     document.getElementById('markup-pct').textContent = `Markup: ${markupPct.toFixed(2)}%`;
     if (!silent) showToast(`Gross Profit: $${profit.toFixed(2)} (${marginPct.toFixed(1)}% margin)`, 'success');
     autoSaveSession();
@@ -5039,7 +5063,7 @@
 
   function sendToCalc(val) {
     if (val !== undefined && val !== null && val !== '' && val !== '-') {
-      const cleanVal = String(val).replace(/[$,%]/g, '').trim();
+      const cleanVal = normalizeMathSymbols(String(val)).replace(/[$,%]/g, '').trim();
       if (!isNaN(parseFloat(cleanVal))) {
         switchView('scientific');
         expr = cleanVal;

@@ -71,7 +71,7 @@ rand_t m_rand;
 int isDeg = 1;
 HWND hDisplay, hSubDisplay, hStatusText;
 HFONT hFontMain, hFontSub, hFontSmall;
-HBRUSH hDisplayBgBrush, hEditBgBrush;
+HBRUSH hDisplayBgBrush, hEditBgBrush, hWindowBgBrush;
 int dpiX = 96;
 #define S(x) MulDiv((x), dpiX, 96)
 
@@ -487,6 +487,7 @@ typedef struct {
     int isNewOperand;
     int currentMode;
     int isDeg;
+    int lcdTheme;
     double statLastMean;
     double statLastSlope;
     char displayBuffer[64];
@@ -507,13 +508,14 @@ void QuicksaveState(HWND hwnd) {
     KCalcSaveState s;
     memset(&s, 0, sizeof(s));
     s.magic = 0x4B43414C;
-    s.version = 1;
+    s.version = 2;
     s.operand1 = operand1;
     s.operator = operator;
     s.memoryStore = memoryStore;
     s.isNewOperand = isNewOperand;
     s.currentMode = currentMode;
     s.isDeg = isDeg;
+    s.lcdTheme = lcdTheme;
     s.statLastMean = statLastMean;
     s.statLastSlope = statLastSlope;
     my_strcpy(s.displayBuffer, displayBuffer);
@@ -556,7 +558,7 @@ void QuickloadState(HWND hwnd) {
     BOOL ok = ReadFile(hFile, &s, sizeof(s), &readBytes, NULL);
     CloseHandle(hFile);
 
-    if (!ok || readBytes < sizeof(s) || s.magic != 0x4B43414C) {
+    if (!ok || readBytes < 64 || s.magic != 0x4B43414C) {
         SetWindowTextA(hStatusText, "[F9] Error: Corrupted quicksave file");
         return;
     }
@@ -566,6 +568,15 @@ void QuickloadState(HWND hwnd) {
     memoryStore = s.memoryStore;
     isNewOperand = s.isNewOperand;
     isDeg = s.isDeg;
+    if (s.version >= 2) {
+        lcdTheme = (s.lcdTheme >= 0 && s.lcdTheme < 4) ? s.lcdTheme : 0;
+        if (hDisplayBgBrush) DeleteObject(hDisplayBgBrush);
+        if (lcdTheme == 1) hDisplayBgBrush = CreateSolidBrush(RGB(154, 179, 141));
+        else if (lcdTheme == 2) hDisplayBgBrush = CreateSolidBrush(RGB(20, 11, 4));
+        else if (lcdTheme == 3) hDisplayBgBrush = CreateSolidBrush(RGB(2, 18, 21));
+        else hDisplayBgBrush = CreateSolidBrush(RGB(15, 23, 42));
+        InvalidateRect(hwnd, NULL, TRUE);
+    }
     statLastMean = s.statLastMean;
     statLastSlope = s.statLastSlope;
     my_strcpy(displayBuffer, s.displayBuffer);
@@ -659,6 +670,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hDisplayBgBrush = CreateSolidBrush(RGB(15, 23, 42));
             hEditBgBrush = CreateSolidBrush(RGB(30, 41, 59));
+            hWindowBgBrush = CreateSolidBrush(RGB(15, 23, 42));
 
             // Mode Selector Bar, Copy, and Help Button
             hModeBtns[0] = CreateWindowA("BUTTON", "[1] Sci",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(10),  S(8), S(46), S(26), hwnd, (HMENU)ID_MODE_SCI, NULL, NULL);
@@ -715,13 +727,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Mode 1: Financial Controls
             hFinControls[0] = CreateWindowA("STATIC", "Loan Amount ($):", WS_CHILD | SS_LEFT, S(15), S(115), S(120), S(20), hwnd, NULL, NULL, NULL);
-            hFinControls[1] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "250000", WS_CHILD | ES_NUMBER, S(140), S(112), S(180), S(24), hwnd, NULL, NULL, NULL);
+            hFinControls[1] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "250000", WS_CHILD, S(140), S(112), S(180), S(24), hwnd, NULL, NULL, NULL);
             
             hFinControls[2] = CreateWindowA("STATIC", "Interest Rate (%):", WS_CHILD | SS_LEFT, S(15), S(145), S(120), S(20), hwnd, NULL, NULL, NULL);
             hFinControls[3] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6.5", WS_CHILD, S(140), S(142), S(180), S(24), hwnd, NULL, NULL, NULL);
 
             hFinControls[4] = CreateWindowA("STATIC", "Term (Years):", WS_CHILD | SS_LEFT, S(15), S(175), S(120), S(20), hwnd, NULL, NULL, NULL);
-            hFinControls[5] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "30", WS_CHILD | ES_NUMBER, S(140), S(172), S(180), S(24), hwnd, NULL, NULL, NULL);
+            hFinControls[5] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "30", WS_CHILD, S(140), S(172), S(180), S(24), hwnd, NULL, NULL, NULL);
 
             hFinControls[6] = CreateWindowA("BUTTON", "Calculate PMT", WS_CHILD | BS_PUSHBUTTON, S(140), S(205), S(180), S(30), hwnd, (HMENU)ID_FIN_CALC_PMT, NULL, NULL);
             hFinControls[7] = CreateWindowExA(0, "STATIC", "Monthly PMT: $0.00", WS_CHILD | SS_LEFT, S(15), S(245), S(300), S(24), hwnd, NULL, NULL, NULL);
@@ -772,6 +784,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CTLCOLORSTATIC: {
             HDC hdcStatic = (HDC)wParam;
             HWND hCtrl = (HWND)lParam;
+            if (hCtrl == hDisplay || hCtrl == hSubDisplay) {
             COLORREF textColor, subColor, bkColor;
             if (lcdTheme == 1) { // Retro Olive LCD
                 textColor = RGB(18, 28, 14);
@@ -797,6 +810,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             SetBkColor(hdcStatic, bkColor);
             return (INT_PTR)hDisplayBgBrush;
+            }
+            SetTextColor(hdcStatic, RGB(203, 213, 225));
+            SetBkColor(hdcStatic, RGB(15, 23, 42));
+            return (INT_PTR)hWindowBgBrush;
         }
         case WM_CTLCOLOREDIT: {
             HDC hdcEdit = (HDC)wParam;
@@ -1035,6 +1052,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hFontSmall) DeleteObject(hFontSmall);
             if (hDisplayBgBrush) DeleteObject(hDisplayBgBrush);
             if (hEditBgBrush) DeleteObject(hEditBgBrush);
+            if (hWindowBgBrush) DeleteObject(hWindowBgBrush);
             PostQuitMessage(0);
             return 0;
     }

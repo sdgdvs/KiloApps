@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T09:40:15-07:00 — kilo-qa: KBudget (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KBudget across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KCipher`; rotated active agent to `kilo-expander`.
+
 - **2026-10-31T09:21:51-07:00 — kilo-usability: KTerm (KTerm Usability, Header Responsive Layout & CRT Polish)**
   - Status: PASS (0 errors, web 114.6 KB, native 45.0 KB < 999 KB; 0 cut-off controls, 0 overflow).
   - Responsive Layout: Pinned #btnNewTab outside tabStrip, set min-width 340px, compacted .btn-action to keep toolbar <= 460px with zero tab crushing.
