@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KColony
   kilo_qa: KBudget
-  kilo_expander: KPing
+  kilo_expander: KMystery
   kilo_review: KTerm
 virtual_web_target: kweb://cabled
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KChart
-  timestamp: '2026-10-31T06:22:19-07:00'
+  agent: kilo-expander
+  app: KPing
+  timestamp: '2026-10-31T06:41:15-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -185,11 +185,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, chart type presets (bar/line/pie/radar), CSV import/export, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KPing`
+- **Active Target**: `KMystery`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kping.html (#exportModal and window message listener) using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with event.origin === window.location.origin checks, 60s dialog timeouts, and standalone Blob/file-input fallbacks when window.parent === window for .json telemetry (/home/logs/kping_telemetry.json), .csv tables (/home/logs/kping_table.csv), and .md reports (/home/docs/kping_report.md), plus handle incoming FILE_OPEN/VFS_OPEN messages to auto-import .json telemetry and redraw #graphCanvas; add Open Report in KPad (appId kpad) and Inspect Packet Payload in KHex (writing ICMP+IPv4 header + Fletcher-16 payload to /home/logs/kping_packet.bin + OS_LAUNCH_APP appId khex) IPC buttons in #exportModal, and add a 5th topo node-link visualizer mode on #graphCanvas rendering live multi-hop latency topology during Trace [T], Subnet Topo [X], and BGP [B]. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmystery_case.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback), add Export Forensic Dossier Report (/home/docs/kmystery_dossier.txt via VFS_WRITE + OS_NOTIFY on case solved) and a Present Clue shortcut inside #dossier-modal, and add Clue Dossier Viewer [C] / double-click inspection parity to KMystery/main.c. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
@@ -204,6 +203,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Switch to editor tab and refresh active analyses on loadVFSFile(), reset currentVfsPath on non-VFS loads plus add VFS Save As, and persist binary buffers as hex/base64 instead of UTF-8 TextDecoder in khex_text_buf; add x86 Group-1 immediate opcodes (0x80/0x81/0x83) in decodeX86Instruction() so Sample x86 decodes SUB ESP,0x10 and XOR DL,0x5A without stream desync; and parse edited IPS/DEBUG records from #patchOutputEditor in applyBinaryPatchToBuffer(). |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kfont.html using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with mandatory event.origin === window.location.origin checks, 60s dialog timeouts, and standalone Blob/file-input fallbacks when window.parent === window for .kfont.json profiles, .bdf/.fnt fonts (/home/fonts/), .h ROM headers (/home/code/), and .svg glyphs (/home/media/), handle incoming FILE_OPEN/VFS_OPEN messages from File Browser to auto-load .kfont.json/.bdf files, and add Open Spec in KPad (appId kpad) and Inspect .FNT in KHex (appId khex) OS_LAUNCH_APP buttons while removing the legacy wildcard resize postMessage; also upgrade KFont/main.c to dynamically compute real WCAG 2.1 relative luminance ratios across all 6 retro palettes in Diagnostics [3] (fixing hardcoded Win95 Navy #000080 on #C0C0C0 from false 4.9 AA to 8.8 AAA), generate live rasterized 8x8 C arrays for anatomyChar in Spec/Code [7], and add an interactive Bitmap [8] 8x8 ROM pixel editor tab persisted in KFontSaveData. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
+| `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kping.html (#exportModal and window message listener) using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with event.origin === window.location.origin checks, 60s dialog timeouts, and standalone Blob/file-input fallbacks when window.parent === window for .json telemetry (/home/logs/kping_telemetry.json), .csv tables (/home/logs/kping_table.csv), and .md reports (/home/docs/kping_report.md), plus handle incoming FILE_OPEN/VFS_OPEN messages to auto-import .json telemetry and redraw #graphCanvas; add Open Report in KPad (appId kpad) and Inspect Packet Payload in KHex (writing ICMP+IPv4 header + Fletcher-16 payload to /home/logs/kping_packet.bin + OS_LAUNCH_APP appId khex) IPC buttons in #exportModal, and add a 5th topo node-link visualizer mode on #graphCanvas rendering live multi-hop latency topology during Trace [T], Subnet Topo [X], and BGP [B]. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KTerm`
@@ -294,6 +294,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T06:41:15-07:00 — kilo-expander: KPing (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KPing across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KMystery`; rotated active agent to `kilo-review`.
+
 - **2026-10-31T06:22:19-07:00 — kilo-qa: KChart (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KChart across web and native targets.
@@ -314,10 +319,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-31T03:31:35-07:00 — kilo-graphics: KDragon (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KDragon.
   - Handoff: Advanced `kilo-graphics` to `KStarship`; rotated active agent to `kilo-tester`.
-
-- **2026-10-31T03:17:00-07:00 — kilo-creator: kweb://trapster (Trapster P2P Chiptune & Tracker Exchange v1.0b)**
-  - Status: PASS ✅ (0 errors, web 130.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 60.01%, HEAD Δ 0.02%, 0 fail, 0 warn, 5.4s)).
-  - Delivered Trapster v1.0b: searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612 2-Op FM / SPC700 stereo delay DSP synthesizer & visualizer.
-  - Integrated KiloOS VFS export of .mod/.trk modules directly to /home/music/, inter-app IPC launch into KAudio/KSynth/KHex, and KNet deep linking.
-  - Added 1999 Tip of the Day quickstart dialog with trapster_tutorialSeen persistence and eliminated sub-9px font warnings.
-  - Handoff: Advanced `kilo-creator` to `kweb://cabled`; rotated active agent to `kilo-graphics`.

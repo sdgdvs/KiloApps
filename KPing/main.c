@@ -334,13 +334,34 @@ void LoadState(HWND hwnd) {
     }
 }
 
+static unsigned short ComputeInternetChecksum(const unsigned char* data, int len) {
+    unsigned int sum = 0;
+    for (int i = 0; i < len; i += 2) {
+        unsigned short w = (data[i] << 8) | ((i + 1 < len) ? data[i + 1] : 0);
+        sum += w;
+    }
+    while (sum >> 16) {
+        sum = (sum & 0xffff) + (sum >> 16);
+    }
+    return (unsigned short)(~sum);
+}
+
+static unsigned short ComputeFletcher16Checksum(const unsigned char* data, int len) {
+    unsigned int sum1 = 0, sum2 = 0;
+    for (int i = 0; i < len; i++) {
+        sum1 = (sum1 + data[i]) % 255;
+        sum2 = (sum2 + sum1) % 255;
+    }
+    return (unsigned short)((sum2 << 8) | sum1);
+}
+
 void ExportLog(HWND hwnd) {
     OPENFILENAMEA ofn;
     char szFileName[MAX_PATH] = "kping_report.txt";
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
-    ofn.lpstrFilter = "Text Log Files (*.txt)\0*.txt\0CSV Spreadsheets (*.csv)\0*.csv\0Markdown Reports (*.md)\0*.md\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFilter = "Text Log Files (*.txt)\0*.txt\0CSV Spreadsheets (*.csv)\0*.csv\0Markdown Reports (*.md)\0*.md\0JSON Telemetry (*.json)\0*.json\0Packet Binary (*.bin)\0*.bin\0All Files (*.*)\0*.*\0";
     ofn.lpstrFile = szFileName;
     ofn.nMaxFile = MAX_PATH;
     ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
@@ -357,8 +378,40 @@ void ExportLog(HWND hwnd) {
                     DWORD written;
 
                     // Determine format from filename
+                    BOOL isBin = StrContains(szFileName, ".bin");
+                    BOOL isJson = StrContains(szFileName, ".json");
                     BOOL isCsv = StrContains(szFileName, ".csv");
                     BOOL isMd = StrContains(szFileName, ".md");
+
+                    if (isBin) {
+                        unsigned char packet[60];
+                        ZeroMemory(packet, sizeof(packet));
+                        packet[0] = 0x45; packet[1] = 0x00; packet[2] = 0x00; packet[3] = 60;
+                        packet[4] = 0x19; packet[5] = 0x99; packet[6] = 0x40; packet[7] = 0x00;
+                        packet[8] = 64; packet[9] = 1;
+                        packet[12] = 192; packet[13] = 168; packet[14] = 1; packet[15] = 42;
+                        packet[16] = 127; packet[17] = 0; packet[18] = 0; packet[19] = 1;
+                        unsigned short ipCsum = ComputeInternetChecksum(packet, 20);
+                        packet[10] = (unsigned char)(ipCsum >> 8);
+                        packet[11] = (unsigned char)(ipCsum & 0xff);
+                        packet[20] = 8; packet[21] = 0;
+                        packet[24] = 0x04; packet[25] = 0x20; packet[26] = 0x00; packet[27] = 0x01;
+                        const char* pat = "KPING-1999 ECHO DIAGNOSTIC FRM";
+                        for (int pi = 0; pi < 30; pi++) packet[28 + pi] = (unsigned char)(pat[pi] ? pat[pi] : ' ');
+                        unsigned short fletch = ComputeFletcher16Checksum(&packet[28], 30);
+                        packet[58] = (unsigned char)(fletch >> 8); packet[59] = (unsigned char)(fletch & 0xff);
+                        unsigned short icmpCsum = ComputeInternetChecksum(&packet[20], 40);
+                        packet[22] = (unsigned char)(icmpCsum >> 8); packet[23] = (unsigned char)(icmpCsum & 0xff);
+                        WriteFile(hFile, packet, sizeof(packet), &written, NULL);
+                        AppendText("[+] Synthesized ICMP+IPv4 Echo packet with Fletcher-16 payload exported to .bin\r\n");
+                    } else if (isJson) {
+                        char curHost[128] = "127.0.0.1";
+                        GetWindowTextA(hInput, curHost, sizeof(curHost) - 1);
+                        char jsonBuf[512];
+                        wsprintfA(jsonBuf, "{\r\n  \"app\": \"KPing\",\r\n  \"version\": \"2.6\",\r\n  \"host\": \"%s\",\r\n  \"platform\": \"Win32 C Native\"\r\n}\r\n", curHost);
+                        WriteFile(hFile, jsonBuf, lstrlenA(jsonBuf), &written, NULL);
+                        AppendText("[+] JSON telemetry metadata exported to file.\r\n");
+                    } else
 
                     if (isCsv) {
                         const char* csvHeader = "Timestamp,Target,Line_Type,Raw_Telemetry\r\n";
