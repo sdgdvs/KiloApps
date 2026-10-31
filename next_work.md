@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://slashnet
-  kilo_graphics: KWizard
+  kilo_graphics: KBreakout
   kilo_soundscape: KStellar
   kilo_tester: KFont
   kilo_usability: KFont
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://deep-core
-  timestamp: '2026-10-30T20:19:41-07:00'
+  agent: kilo-graphics
+  app: KStarDredge
+  timestamp: '2026-10-30T20:32:16-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -99,12 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KWizard`
+- **Active Target**: `KBreakout`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
-| `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Replace code-generated 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with Imagen 3 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
@@ -115,6 +113,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
+| `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
+| `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -292,6 +292,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T20:32:16-07:00 — kilo-graphics: KStarDredge (Skip — Asset Suitability)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate (pure vector CRT phosphor simulation); glint sweep clean.
+  - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-tester`.
+
 - **2026-10-30T20:19:41-07:00 — kilo-creator: kweb://deep-core (Tier 3 Ghost Node Terminal KiloOS VFS Bridge & KMatrix Verification)**
   - Status: PASS ✅ (0 errors, web 312.4 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.88%, HEAD Δ 0.17%, 0 fail, 0 warn, 5.3s)).
   - Connected Tier 3 Ghost Node terminal directly to KiloOS VFS (/sys/alpha.sys & /home/crypto/) with real-time bridge and bidirectional postMessage.
@@ -317,10 +321,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KSys across web and native targets.
   - Handoff: Advanced `kilo-qa` to `KAudio`; rotated active agent to `kilo-expander`.
-
-- **2026-10-30T18:18:33-07:00 — kilo-usability: KHex (KHex Usability & Responsive Layout Polish)**
-  - Status: PASS (0 errors, web 274.3 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.09%, HEAD Δ 12.79%, 0 fail, 0 warn, 5.9s)).
-  - Eliminated 127px vertical overflow at 980x783 via 100vh flex shell with scrollable active tab content, pinned status bar, and 2-column Base Converter inputs.
-  - Raised .bit-num font size to 11px with high-contrast #cbd5e1 styling and moved #toastContainer to bottom-right to prevent tab occlusion.
-  - Changed #tabbtn-struct badge from duplicate 9 to 0 and added [0] hotkey navigation to Struct & Signatures tab.
-  - Handoff: Advanced `kilo-usability` to `KColony`; rotated active agent to `kilo-qa`.

@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T18:18:33-07:00 — kilo-usability: KHex (KHex Usability & Responsive Layout Polish)**
+  - Status: PASS (0 errors, web 274.3 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.09%, HEAD Δ 12.79%, 0 fail, 0 warn, 5.9s)).
+  - Eliminated 127px vertical overflow at 980x783 via 100vh flex shell with scrollable active tab content, pinned status bar, and 2-column Base Converter inputs.
+  - Raised .bit-num font size to 11px with high-contrast #cbd5e1 styling and moved #toastContainer to bottom-right to prevent tab occlusion.
+  - Changed #tabbtn-struct badge from duplicate 9 to 0 and added [0] hotkey navigation to Struct & Signatures tab.
+  - Handoff: Advanced `kilo-usability` to `KColony`; rotated active agent to `kilo-qa`.
+
 - **2026-10-30T17:38:42-07:00 — kilo-tester: KHex (UI & Runtime Bug Fixes)**
   - Status: PASS ✅ (0 errors, web 273.2 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 13.83%, HEAD Δ 0.0%, 0 fail, 1 warn, 5.3s)).
   - Defined loadBufferData(u8) in khex.html to resolve ReferenceError on all 7 Disassembler and Struct sample buttons.
