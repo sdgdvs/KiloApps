@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T01:34:51-07:00 — kilo-qa: KGraph (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 156.0 KB, native 38.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, active tab & sidebar collapse persistence, kgraph_tutorialSeen flag, and Escape dismissals.
+  - Dual Parity & Lifecycle: Hardened Win32 C dataset export parity, non-blocking startup tutorial, and visibilitychange audio suspension.
+  - Mature Quarantine & Handoff: Promoted `KGraph` to Mature archive; advanced `kilo-qa` to `KChart`; next agent `kilo-expander`.
+
 - **2026-10-31T01:20:13-07:00 — kilo-usability: KPad (KPad Usability, Responsive Layout & Gutter Polish)**
   - Status: PASS (0 errors, web 338.1 KB, native 38.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 9.58%, HEAD delta 13.18%, 0 fail, 0 warn, 6.0s)).
   - Layout & Chrome: Compacted multi-row toolbar and status-bar wrapping at 1020x653 into single-row scrollable strips, removing 3 redundant Help buttons and boosting editor height.

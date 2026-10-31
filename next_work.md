@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://cabled
   kilo_graphics: KStarship
   kilo_soundscape: KStellar
-  kilo_tester: KPing
+  kilo_tester: KColony
   kilo_usability: KPing
   kilo_qa: KChart
   kilo_expander: KPing
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KDragon
-  timestamp: '2026-10-31T03:31:35-07:00'
+  agent: kilo-tester
+  app: KPing
+  timestamp: '2026-10-31T05:22:14-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -132,11 +132,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KPing`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | **[ARGON REVIEW]:** Gate Firebase RTDB connection in kping.html behind an explicit #btnConnectMesh button in #meshModal (with Disconnect toggle and OFFLINE initial #meshStatusIndicator) so boot makes zero wss requests per Multiplayer Connect Gate Protocol, and remove the wildcard OS_SET_WINDOW_SIZE postMessage; reset and update stats (sent, recv, lost, min, max, sum) in pingMeshStation(), btnBroadcastEcho, and startBufferbloat() before updateAnalytics(), turn #btnMesh into a clickable Stop [G] button during isMeshPinging (clearing the 4.5s timeout and detaching myInboxRef listener), and reset all 5 metric cards on non-ping starts; include subnet_node and dns_record in Probes/Loss console filters, export/import historyData and dscp with drawGraph() and tagMOS sync, and replace post-1999/trademark strings (Pi-hole, IoT, Pandas, Wireshark, dns.google, Google Public DNS) with 1999 parodies across Web and C; in KPing/main.c wire missing WM_COMMAND id 14 (TriggerMesh), keep hBtnTopo enabled in mode 7 while disabling hBtnMesh/hBtnBGP/hBtnBloat across busy modes, call ClearOutput() in TriggerTopo/TriggerMesh, compute jitter buckets j1..j5 BEFORE sorting rttHistory, pace PingThread by hInputInterval, and use snprintf + GetLocalTime() instead of 1024-char-truncated wsprintfA and hardcoded 2026-09-19. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -149,6 +148,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Fix buyItem() calling getItemPrice(number) instead of string keys ('food','toy','nectar','crown','polish') which charges 50g for all items; fix getMood().label === 'Ecstatic' in startMinigame() and battleTurn() (+15% crit); and apply the +10 Sovereign Aura stat bonus upon collecting all 6 relics. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Define loadBufferData(u8) in khex.html so all 7 Disassembler and Struct sample buttons work without ReferenceError; fix executeStructUnpack() undefined isLittle crash; fix loadSamplePE32() section Characteristics offsets (0x19C/0x1C4/0x1EC instead of +40) and bufferCursor; deduplicate #exportPreset options; call switchTab('editor') before gotoOffset() on cross-tab jumps; and fix KHex/main.c DisasmMultiArch 0xB8 format args and top-right buttons overlapping the hexagon logo. |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | **[ARGON REVIEW]:** Implement the promised keyboard pixel editing on #bitmapEditorCanvas (bmpCursorX/bmpCursorY highlight in renderBitmapEditor(), Arrow keys to move cursor without stepping activeBankChar when focused, Space to toggle, Enter to set, Delete/Backspace to clear, plus ArrowUp/ArrowDown +/-32 row navigation on #bitmapBankCanvas) and wheel-to-zoom on #bmpEditorContainer; call dead persistBitmapStorage() after all bitmap/bank/size/import mutations, stop initBitmapStudio() fresh boot from overwriting ASCII A in fontBank with cp437_smiley (rasterize activeBankChar silently on first boot), and fix executeImport() in bank mode to sync bmpW/bmpH/#bitmapGridSize from BDF BBX and reload bmpGrid from fontBank[activeBankChar]; add SELECT to isInput in global keydown, fix #btnTogglePulse typo to #btnToggleOscillation in visibilitychange, call updateSampleStats() in sampleOutput.oninput and all 5 #sample*Btn presets, resolve anatomyInput via getCharInfo() across Spec/Bitmap/SVG actions, and replace the hardcoded Potemkin TTGlyph polygon and text SVG in updateSpecAndCode() with real raster-traced SVG path d contours and measured TTGlyph/hmtx bounds. |
+| `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | **[ARGON REVIEW]:** Gate Firebase RTDB connection in kping.html behind an explicit #btnConnectMesh button in #meshModal (with Disconnect toggle and OFFLINE initial #meshStatusIndicator) so boot makes zero wss requests per Multiplayer Connect Gate Protocol, and remove the wildcard OS_SET_WINDOW_SIZE postMessage; reset and update stats (sent, recv, lost, min, max, sum) in pingMeshStation(), btnBroadcastEcho, and startBufferbloat() before updateAnalytics(), turn #btnMesh into a clickable Stop [G] button during isMeshPinging (clearing the 4.5s timeout and detaching myInboxRef listener), and reset all 5 metric cards on non-ping starts; include subnet_node and dns_record in Probes/Loss console filters, export/import historyData and dscp with drawGraph() and tagMOS sync, and replace post-1999/trademark strings (Pi-hole, IoT, Pandas, Wireshark, dns.google, Google Public DNS) with 1999 parodies across Web and C; in KPing/main.c wire missing WM_COMMAND id 14 (TriggerMesh), keep hBtnTopo enabled in mode 7 while disabling hBtnMesh/hBtnBGP/hBtnBloat across busy modes, call ClearOutput() in TriggerTopo/TriggerMesh, compute jitter buckets j1..j5 BEFORE sorting rttHistory, pace PingThread by hInputInterval, and use snprintf + GetLocalTime() instead of 1024-char-truncated wsprintfA and hardcoded 2026-09-19. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KPing`
@@ -294,6 +294,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T05:22:14-07:00 — kilo-tester: KPing (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-tester updates for KPing across web and native targets.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-10-31T03:31:35-07:00 — kilo-graphics: KDragon (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KDragon.
   - Handoff: Advanced `kilo-graphics` to `KStarship`; rotated active agent to `kilo-tester`.
@@ -317,9 +322,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Phase VI VFS Scripting: wired vfs.read, vfs.write, and vfs.list in KScript with location.hash & FILE_OPEN IPC handlers.
   - Win32 C parity: synced VfsSyncFromDisk directory scan with home/scripts/, variable string parameter resolution, and command line loading.
   - Handoff: Advanced `kilo-expander` to `KMystery`; rotated active agent to `kilo-review`.
-
-- **2026-10-31T01:34:51-07:00 — kilo-qa: KGraph (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 156.0 KB, native 38.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, active tab & sidebar collapse persistence, kgraph_tutorialSeen flag, and Escape dismissals.
-  - Dual Parity & Lifecycle: Hardened Win32 C dataset export parity, non-blocking startup tutorial, and visibilitychange audio suspension.
-  - Mature Quarantine & Handoff: Promoted `KGraph` to Mature archive; advanced `kilo-qa` to `KChart`; next agent `kilo-expander`.
