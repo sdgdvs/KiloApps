@@ -1133,8 +1133,8 @@
     </div>
   </div>
   <div class="ticker-audio">
-    <button class="btn-cyber-cyan" id="audioToggleBtn" onclick="toggleAudio()" style="padding:2px 8px; font-size:10px;">
-      <span id="audioStatusIcon">🔇</span> <span id="audioStatusText">SYNTH: OFF</span>
+    <button class="btn-cyber-cyan" id="audioToggleBtn" onclick="toggleAudio()" style="padding:2px 8px; font-size:10px;" title="Toggle Discrete Audio Earcons [M]">
+      <span id="audioStatusIcon">🔊</span> <span id="audioStatusText">SFX: ON</span>
     </button>
   </div>
 </div>
@@ -1948,12 +1948,15 @@ function updateActiveNavChip(id) {
   });
 }
 
-// --- Procedural Web Audio Synth Engine (YM2612 / Ambient Synth) ---
+// --- Web Audio Discrete UI/Gameplay Earcons Engine (Anti-BGM standard) ---
+/** @type {AudioContext|null} */
 let audioCtx = null;
-let isAudioPlaying = false;
-let synthTimer = null;
-let synthStep = 0;
+/** @type {boolean} */
+let isAudioEnabled = safeGet('cabled_sfx_enabled', true);
 
+/**
+ * Initializes the Web Audio context upon user interaction.
+ */
 function initAudio() {
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -1966,26 +1969,38 @@ function initAudio() {
   }
 }
 
-function toggleAudio() {
-  initAudio();
-  if (!audioCtx) return;
-
-  isAudioPlaying = !isAudioPlaying;
+/**
+ * Updates UI badge for audio earcon state.
+ */
+function updateAudioUI() {
   const iconEl = document.getElementById('audioStatusIcon');
   const textEl = document.getElementById('audioStatusText');
+  if (iconEl) iconEl.textContent = isAudioEnabled ? '🔊' : '🔇';
+  if (textEl) textEl.textContent = isAudioEnabled ? 'SFX: ON' : 'SFX: MUTED';
+}
 
-  if (isAudioPlaying) {
-    if (iconEl) iconEl.textContent = '🔊';
-    if (textEl) textEl.textContent = 'SYNTH: ON';
-    startSynthLoop();
+/**
+ * Toggles discrete sound effects on/off.
+ */
+function toggleAudio() {
+  initAudio();
+  isAudioEnabled = !isAudioEnabled;
+  safeSet('cabled_sfx_enabled', isAudioEnabled);
+  updateAudioUI();
+  if (isAudioEnabled) {
+    playRetroSound('beep');
+    showToast('🔊 Audio earcons enabled [M]');
   } else {
-    if (iconEl) iconEl.textContent = '🔇';
-    if (textEl) textEl.textContent = 'SYNTH: OFF';
-    stopSynthLoop();
+    showToast('🔇 Audio earcons muted [M]');
   }
 }
 
+/**
+ * Plays discrete, non-looping retro synthesizer earcons.
+ * @param {'click'|'trade'|'beep'|'alarm'} type
+ */
 function playRetroSound(type) {
+  if (!isAudioEnabled) return;
   initAudio();
   if (!audioCtx) return;
 
@@ -2029,54 +2044,6 @@ function playRetroSound(type) {
       osc.stop(now + 0.25);
     }
   } catch (e) {}
-}
-
-const SYNTH_SCALE = [130.81, 146.83, 164.81, 196.00, 220.00, 261.63, 293.66, 329.63, 392.00]; // Pentatonic
-function startSynthLoop() {
-  if (!window.__KILO_BGM_ENABLED) return;
-  if (synthTimer) clearInterval(synthTimer);
-  synthStep = 0;
-  synthTimer = setInterval(() => {
-    if (!audioCtx || !isAudioPlaying) return;
-    try {
-      const now = audioCtx.currentTime;
-      // Bass note every 4 steps
-      if (synthStep % 4 === 0) {
-        const bassOsc = audioCtx.createOscillator();
-        const bassGain = audioCtx.createGain();
-        bassOsc.type = 'sawtooth';
-        bassOsc.frequency.setValueAtTime(synthStep % 8 === 0 ? 65.41 : 73.42, now); // C2 / D2
-        bassGain.gain.setValueAtTime(0.06, now);
-        bassGain.gain.linearRampToValueAtTime(0.001, now + 0.35);
-        bassOsc.connect(bassGain);
-        bassGain.connect(audioCtx.destination);
-        bassOsc.start(now);
-        bassOsc.stop(now + 0.35);
-      }
-      // Arp blip
-      if (Math.random() > 0.3) {
-        const note = SYNTH_SCALE[Math.floor(Math.random() * SYNTH_SCALE.length)];
-        const arpOsc = audioCtx.createOscillator();
-        const arpGain = audioCtx.createGain();
-        arpOsc.type = 'sine';
-        arpOsc.frequency.setValueAtTime(note * 2, now);
-        arpGain.gain.setValueAtTime(0.03, now);
-        arpGain.gain.linearRampToValueAtTime(0.001, now + 0.12);
-        arpOsc.connect(arpGain);
-        arpGain.connect(audioCtx.destination);
-        arpOsc.start(now);
-        arpOsc.stop(now + 0.12);
-      }
-      synthStep = (synthStep + 1) % 16;
-    } catch (e) {}
-  }, 160);
-}
-
-function stopSynthLoop() {
-  if (synthTimer) {
-    clearInterval(synthTimer);
-    synthTimer = null;
-  }
 }
 
 // --- FEATURE 1: Y2K Readiness Audit & Scanner Logic ---
@@ -2854,6 +2821,7 @@ function updateTickerClock() {
 
 // --- Initialization ---
 window.addEventListener('DOMContentLoaded', () => {
+  updateAudioUI();
   initStockMarket();
   renderLexicon(activeLexicon);
   initHypeMatrix();
@@ -2881,7 +2849,7 @@ window.addEventListener('DOMContentLoaded', () => {
     } else if (k === '6') {
       scrollToSection('sec-fetish');
     } else if (k === 'h' || k === '?') {
-      showToast('⌨️ Hotkeys: [M] Audio Synth | [1-6] Jump Sections | [F5] Y2K Export');
+      showToast('⌨️ Hotkeys: [M] Toggle Audio SFX | [1-6] Jump Sections | [F5] Y2K Export');
     } else if (e.key === 'F5') {
       e.preventDefault();
       exportY2kCertificateVFS();

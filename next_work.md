@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://cabled
+  kilo_creator: kweb://scallion
   kilo_graphics: KStarship
   kilo_soundscape: KStellar
   kilo_tester: KTerm
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KBudget
   kilo_expander: KTerm
   kilo_review: KCalc
-virtual_web_target: kweb://cabled
+virtual_web_target: kweb://scallion
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KTerm
-  timestamp: '2026-10-31T07:16:43-07:00'
+  agent: kilo-creator
+  app: kweb://cabled
+  timestamp: '2026-10-31T07:34:29-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://cabled`
+- **Active Target**: `kweb://scallion`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
 | `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 | `kweb://warez` | `KiloOS/public/web/warez.html`, `KiloOS/public/apps/knet.html` | Create *The Underground Courier / Warez BBS Web Ring* (`warez.html` <250 KB): ANSI top-site release board, simulated keygen music player, download quota tracker, and VFS export. |
 | `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
+| `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KStarship`
@@ -296,6 +296,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T07:34:29-07:00 — kilo-creator: kweb://cabled (Cabled Magazine 1999 Neon Edition & Cyberculture Destination)**
+  - Status: PASS ✅ (0 errors, web 99.9 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Interactive Features: Y2K Readiness Audit, Dot-Com IPO Stock Simulator, Jargon Watch generator, and Hype-vs-Reality Matrix.
+  - Integration: Discrete Web Audio UI earcons with [M] toggle, KiloOS VFS export bridge, and routed in KNet.
+  - Handoff: Advanced `kilo-creator` to `kweb://scallion`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-31T07:16:43-07:00 — kilo-review: KTerm (Argon Visual, Feature & Usability Review (Un-Quarantined -> Fixes Queued))**
   - Status: AUDIT COMPLETE - un-quarantined KTerm from Mature and injected surgical specs at Row 1 of kilo-usability, kilo-tester, and kilo-expander.
   - Visual & UX Findings (sheet.png @ 960x563): #header crushes Tab 2 to '>_ Ta' and hides '+ New'; #quickBar & #statusbar clip right-edge items; .toast-close lacks CSS (white native boxes); green hex colors leak into Amber/other themes; KTerm/main.c clips buttons <760px.
@@ -319,8 +325,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Help & Shortcuts: Compacted #helpModal shortcut table into 2-column grid, closed missing tbody, added Subnet Topo [X], Jitter Hist [J], and Interval [ / ] with parity in KPing/main.c.
   - Telemetry & Win32: Added jitter to [L] cycle (line -> hist -> jitter -> strip), fixed pointer X-mapping for strip/hist/jitter tooltips; widened Win32 app to 1040x680 with 9.5pt Segoe UI, non-overlapping Row 1/2 buttons, and min track width 980.
   - Handoff: Advanced `kilo-usability` to `KColony`; rotated active agent to `kilo-qa`.
-
-- **2026-10-31T05:22:14-07:00 — kilo-tester: KPing (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-tester updates for KPing across web and native targets.
-  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
