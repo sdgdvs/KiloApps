@@ -1164,7 +1164,7 @@ Configure options selected above, then click 'make dep &amp;&amp; make bzImage'.
       <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">L</kbd></td><td>Linux 2.2 Kernel Compile Sim</td></tr>
       <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">P</kbd></td><td>Daily Poll</td></tr>
       <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">V</kbd></td><td>KiloOS VFS Hub</td></tr>
-      <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">0-5</kbd></td><td>Quick Threshold Filter for Active Story</td></tr>
+      <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">-</kbd> / <kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">0-5</kbd></td><td>Quick Threshold Filter (-1 Troll to +5 Insightful)</td></tr>
       <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">M</kbd></td><td>Toggle Audio SFX (Mute)</td></tr>
       <tr><td style="padding:4px 0;"><kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">?</kbd> / <kbd style="background:#f1f5f9; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px; font-family:var(--font-mono); font-weight:bold;">H</kbd></td><td>Toggle Hotkey Reference</td></tr>
     </table>
@@ -1318,6 +1318,11 @@ function saveToKiloVfs(vfsPath, contentStr) {
 function launchKiloApp(appFile, args) {
   try {
     window.parent.postMessage({
+      type: 'OS_LAUNCH_APP',
+      app: appFile,
+      args: args || {}
+    }, '*');
+    window.parent.postMessage({
       type: 'LAUNCH_APP',
       app: appFile,
       args: args || {}
@@ -1463,7 +1468,7 @@ const INITIAL_COMMENTS = {
       time: '1999-10-22 20:00',
       score: 4,
       tag: 'Funny',
-      body: 'If we networked 64 CowboyNeals together over 100Base-TX, could we answer all Slashdot submission emails in real time? Or would the cluster just eat all the tacos?',
+      body: 'If we networked 64 CowboyNeals together over 100Base-TX, could we answer all SlashNet submission emails in real time? Or would the cluster just eat all the tacos?',
       children: []
     }
   ],
@@ -2542,7 +2547,7 @@ function setQuickThreshold(thresh) {
   if (sel) {
     sel.value = thresh;
     updateCommentThreshold(storyId);
-    showToast(`Threshold for ${storyId} set to +${thresh}`);
+    showToast(`Threshold for ${storyId} set to ${thresh >= 0 ? '+' + thresh : thresh}`);
     playRetroSound(620, 0.04);
   }
 }
@@ -2584,6 +2589,8 @@ window.addEventListener('keydown', (e) => {
   } else if (k === '?' || k === 'h') {
     e.preventDefault();
     toggleShortcutHelp();
+  } else if (e.key === '-' || e.key === '_') {
+    setQuickThreshold(-1);
   } else if (e.key >= '0' && e.key <= '5') {
     setQuickThreshold(parseInt(e.key, 10));
   }
