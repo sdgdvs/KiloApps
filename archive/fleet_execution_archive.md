@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T12:40:13-07:00 — kilo-tester: KCalc (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-tester updates for KCalc across web and native targets.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-10-31T12:19:21-07:00 — kilo-graphics: KAlchemy (Alchemical Laboratory & Crucible Visual Overhaul & Glint Sweep)**
   - Status: PASS ✅ (0 errors, web 271.3 KB, native 69.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.48%, HEAD Δ 0.06%, 0 fail, 0 warn, 9.4s)).
   - Overhauled crucible panel with celestial constellation grid, ornate alembic distillation glassware, and refined reaction glow.
