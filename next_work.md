@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KColony
-  kilo_qa: KBudget
+  kilo_qa: KCipher
   kilo_expander: KTerm
   kilo_review: KCalc
 virtual_web_target: kweb://scallion
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KTerm
-  timestamp: '2026-10-31T09:21:51-07:00'
+  agent: kilo-qa
+  app: KBudget
+  timestamp: '2026-10-31T09:40:15-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -173,11 +173,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTerm` | `KiloOS/public/apps/kterm.html`, `KTerm/main.c` | **[ARGON REVIEW]:** Fix #header tab crushing at 960x563 (seen in sheet.png where Tab 2 clips to '>_ Ta' and '+ New' disappears) by pinning #btnNewTab outside the scrollable tab list, setting #tabStrip min-width 340px, and compacting .btn-action labels with white-space nowrap and flex-shrink 0 so .toolbar-actions stays <= 460px; deduplicate #quickBar chips already in #header (save, load, export-log, clear, theme) and compact #statusbar shortcuts so 100% of chips and hints fit inside 960px without right-edge clipping; add missing .toast-close CSS (fixing white native button boxes inside dark toasts in sheet.png) and replace hardcoded green/navy colors in #quickBar, .quick-chip, .shortcut-tag, .cmd-table code, #output scrollbar, .tab.active, and #tutorialModal with per-theme CSS variables across all 6 CRT themes; replace blocking window.prompt() in tab.ondblclick with an inline input rename editor, and fix KTerm/main.c WM_SIZE / WM_GETMINMAXINFO button clipping below 760px by setting ptMinTrackSize.x = 760. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KBudget`
+- **Active Target**: `KCipher`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, expense categories, balance projection graphs, dual Win32 C parity, and promote to Mature table. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, multi-cipher algorithms (Caesar/Vigenere/AES/RSA demo), key management, dual Win32 C parity, and promote to Mature table. |
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, retro palette & tool drawer, canvas resize/export, dual Win32 C parity, and promote to Mature table. |
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, agent fleet telemetry, queue visualizer, process monitor, dual Win32 C parity, and promote to Mature table. |
@@ -185,6 +184,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, channel switcher, offline message spool, dual Win32 C parity, and promote to Mature table. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, chart type presets (bar/line/pie/radar), CSV import/export, dual Win32 C parity, and promote to Mature table. |
+| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, expense categories, balance projection graphs, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KTerm`
@@ -296,6 +296,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T09:40:15-07:00 — kilo-qa: KBudget (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KBudget across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KCipher`; rotated active agent to `kilo-expander`.
+
 - **2026-10-31T09:21:51-07:00 — kilo-usability: KTerm (KTerm Usability, Header Responsive Layout & CRT Polish)**
   - Status: PASS (0 errors, web 114.6 KB, native 45.0 KB < 999 KB; 0 cut-off controls, 0 overflow).
   - Responsive Layout: Pinned #btnNewTab outside tabStrip, set min-width 340px, compacted .btn-action to keep toolbar <= 460px with zero tab crushing.
@@ -317,10 +322,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive Features: Y2K Readiness Audit, Dot-Com IPO Stock Simulator, Jargon Watch generator, and Hype-vs-Reality Matrix.
   - Integration: Discrete Web Audio UI earcons with [M] toggle, KiloOS VFS export bridge, and routed in KNet.
   - Handoff: Advanced `kilo-creator` to `kweb://scallion`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-31T07:16:43-07:00 — kilo-review: KTerm (Argon Visual, Feature & Usability Review (Un-Quarantined -> Fixes Queued))**
-  - Status: AUDIT COMPLETE - un-quarantined KTerm from Mature and injected surgical specs at Row 1 of kilo-usability, kilo-tester, and kilo-expander.
-  - Visual & UX Findings (sheet.png @ 960x563): #header crushes Tab 2 to '>_ Ta' and hides '+ New'; #quickBar & #statusbar clip right-edge items; .toast-close lacks CSS (white native boxes); green hex colors leak into Amber/other themes; KTerm/main.c clips buttons <760px.
-  - Shell & Parity Findings: Boot createNewTab('Tab 1') leaves nextSessionNum=1 (2nd tab also named 'Tab 1') and breaks cd auto-title; F1/Ctrl+T/Ctrl+L/Ctrl+Alt+E double-fire across input+window keydown; kterm_autosave never restores; C grep -i is a no-op and help leaks 'ARG telemetry'.
-  - Phase VI VFS/IPC Findings: getVFS() checks non-existent window.parent.vfs leaving KTerm isolated in fallbackVFS; queued full VFS_LIST/READ/WRITE/DELETE sync, VFS backup/log dialogs, OS_LIST_TASKS/OS_KILL_TASK/OS_LAUNCH_APP commands, and true stdout piping.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KTerm`, `kilo-tester`->`KTerm`, `kilo-expander`->`KTerm`] (un-quarantined `KTerm` from Mature); advanced `kilo-review` to `KCalc`; next agent `kilo-creator`.

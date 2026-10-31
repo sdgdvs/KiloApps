@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T07:16:43-07:00 — kilo-review: KTerm (Argon Visual, Feature & Usability Review (Un-Quarantined -> Fixes Queued))**
+  - Status: AUDIT COMPLETE - un-quarantined KTerm from Mature and injected surgical specs at Row 1 of kilo-usability, kilo-tester, and kilo-expander.
+  - Visual & UX Findings (sheet.png @ 960x563): #header crushes Tab 2 to '>_ Ta' and hides '+ New'; #quickBar & #statusbar clip right-edge items; .toast-close lacks CSS (white native boxes); green hex colors leak into Amber/other themes; KTerm/main.c clips buttons <760px.
+  - Shell & Parity Findings: Boot createNewTab('Tab 1') leaves nextSessionNum=1 (2nd tab also named 'Tab 1') and breaks cd auto-title; F1/Ctrl+T/Ctrl+L/Ctrl+Alt+E double-fire across input+window keydown; kterm_autosave never restores; C grep -i is a no-op and help leaks 'ARG telemetry'.
+  - Phase VI VFS/IPC Findings: getVFS() checks non-existent window.parent.vfs leaving KTerm isolated in fallbackVFS; queued full VFS_LIST/READ/WRITE/DELETE sync, VFS backup/log dialogs, OS_LIST_TASKS/OS_KILL_TASK/OS_LAUNCH_APP commands, and true stdout piping.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KTerm`, `kilo-tester`->`KTerm`, `kilo-expander`->`KTerm`] (un-quarantined `KTerm` from Mature); advanced `kilo-review` to `KCalc`; next agent `kilo-creator`.
+
 - **2026-10-31T06:41:15-07:00 — kilo-expander: KPing (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KPing across web and native targets.
