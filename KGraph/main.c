@@ -329,6 +329,17 @@ static void SaveCSVData(HWND hwnd) {
         ShowNativeStatus("Failed to create KGraph_points.csv");
         return;
     }
+    if (g_datasetCount > 0 && g_showDataset) {
+        fprintf(f, "x,y\n");
+        for (int i = 0; i < g_datasetCount; i++) {
+            fprintf(f, "%.5f,%.5f\n", g_dataset[i].x, g_dataset[i].y);
+        }
+        fclose(f);
+        char msg[128];
+        snprintf(msg, sizeof(msg), "Exported %d dataset points to KGraph_points.csv [E]!", g_datasetCount);
+        ShowNativeStatus(msg);
+        return;
+    }
     if (g_mode == MODE_CARTESIAN) {
         fprintf(f, "x,y1,y2,y3\n");
         double minX = view_cx - view_scale;
@@ -1575,7 +1586,6 @@ void __stdcall MainEntry(void) {
         ShowNativeStatus("Restored saved session [F9] | Press F1 for Help");
         MarkTutorialSeen();
     } else if (!HasSeenTutorial()) {
-        ShowHelpDialog(hwnd);
         MarkTutorialSeen();
         ShowNativeStatus("Welcome to KGraph Studio! Press F1 for Help | F5 Save | F9 Load");
     }

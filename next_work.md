@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KColony
-  kilo_qa: KGraph
+  kilo_qa: KChart
   kilo_expander: KScript
   kilo_review: KPing
 virtual_web_target: kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KPad
-  timestamp: '2026-10-31T01:20:13-07:00'
+  agent: kilo-qa
+  app: KGraph
+  timestamp: '2026-10-31T01:34:51-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -169,11 +169,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | **[ARGON REVIEW]:** Prevent .header 2-row wrap and 34px vertical layout jump at 1024x731 when toggling #soundToggleBtn by tightening .header padding/gaps with flex-wrap nowrap above 920px and giving #soundToggleBtn a fixed min-width and consistent [M] hint; update #tab-opentype and #tab-compare .tab-badge labels from misleading 10/11 to 0/- and move canvas zoom shortcuts to [ and ] so - switches to Tab 11 from every tab including Tabs 4 and 9; call renderBitmapBankCanvas() inside renderBitmapAll() and the window resize listener so #bitmapBankCanvas sizes crisply on tab switch instead of squishing from 800px; and upgrade #panel-contrast (updateContrast() and updateCustomContrast()) with tabindex=0, role=button, and Enter/Space activation on .contrast-card, both Normal Text (AA 4.5, AAA 7.0) and Large Text (AA 3.0, AAA 4.5) WCAG 2.1 badges at active #sizeList size, editable hex text inputs, and a Swap FG/BG button. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KGraph`
+- **Active Target**: `KChart`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, chart type presets (bar/line/pie/radar), CSV import/export, dual Win32 C parity, and promote to Mature table. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, expense categories, balance projection graphs, dual Win32 C parity, and promote to Mature table. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, multi-cipher algorithms (Caesar/Vigenere/AES/RSA demo), key management, dual Win32 C parity, and promote to Mature table. |
@@ -230,6 +229,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KGraph** | `KiloOS/public/apps/kgraph.html` | Pass 5+ (2026-10-31) | System | Scientific function graphing studio with Cartesian, Polar, Parametric plotting, numerical calculus, root finding, CSV dataset import/export, and dual Win32 C parity. |
 | **KPad** | `KiloOS/public/apps/kpad.html` | Pass 5+ (2026-10-31) | Office / Productivity | Complete multi-tab text and code workstation with single-row responsive toolbars, dynamic gutter height synchronization under word wrap, regex workbench, Myers diff viewer, AES-256 encryption, live Markdown preview, F5/F9 state persistence, and dual Win32 C parity. |
 | **KAudio** | `KiloOS/public/apps/kaudio.html` | Pass 5+ (2026-10-30) | Media / Audio & Synthesizer Studio | Complete audio workstation & DSP synthesis studio: 13-note chromatic keyboard, 16-step sequencer, dual-mode oscilloscope/FFT spectrum visualizer, 2-Op FM / subtractive engines, lowpass filter pipeline, full F5/F9 state persistence, and native Win32 C parity. |
 | **KChatServer** | `KiloOS/public/apps/kchatserver.html` | Pass 5+ (2026-10-30) | Network / Communications | Complete WinSock2 dual TCP/WebSocket chat server with F5/F9 state persistence, real-time client connection telemetry, broadcast console, and full Win32 native C parity. |
@@ -292,6 +292,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T01:34:51-07:00 — kilo-qa: KGraph (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 156.0 KB, native 38.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, active tab & sidebar collapse persistence, kgraph_tutorialSeen flag, and Escape dismissals.
+  - Dual Parity & Lifecycle: Hardened Win32 C dataset export parity, non-blocking startup tutorial, and visibilitychange audio suspension.
+  - Mature Quarantine & Handoff: Promoted `KGraph` to Mature archive; advanced `kilo-qa` to `KChart`; next agent `kilo-expander`.
+
 - **2026-10-31T01:20:13-07:00 — kilo-usability: KPad (KPad Usability, Responsive Layout & Gutter Polish)**
   - Status: PASS (0 errors, web 338.1 KB, native 38.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 9.58%, HEAD delta 13.18%, 0 fail, 0 warn, 6.0s)).
   - Layout & Chrome: Compacted multi-row toolbar and status-bar wrapping at 1020x653 into single-row scrollable strips, removing 3 redundant Help buttons and boosting editor height.
@@ -317,9 +323,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified full 1999 anti-potemkin spec: Karma moderation (-1 Troll to +5 Insightful), threshold filtering (-1 to +5), Beowulf cluster calculator & LINPACK benchmark, and Linux 2.2 kernel compile sim.
   - Added quick -1 keyboard threshold hotkey, dual OS_LAUNCH_APP IPC, sanitized in-universe parody trademark, and verified cross-linking in KNet/portal/webring.
   - Handoff: Advanced `kilo-creator` to `kweb://trapster`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-30T23:16:14-07:00 — kilo-review: KPad (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 1020x653 sheet.png, kpad.html, and KPad/main.c; un-quarantined from Mature with surgical fixes).
-  - Feature Bugs: createTab() mutates activeTabIndex before switchTab() wiping Welcome.md/VFS/template/Quickload buffers; colorize() multi-pass regex corrupts span class attributes in JS/C/Python; parseMarkdown() leaves raw HTML unescaped; KPad/main.c CloseTab() ignores IDYES.
-  - Visual/UX Findings: 9-bar top/bottom chrome wraps to 4 toolbar rows + 2 status rows eating 41% of 653px height with 4 duplicate Help buttons; wordWrap desyncs .gutter line numbers; goToLineDirect() lacks scroll sync and Escape ignores preview.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KPad`, `kilo-usability`->`KPad`] (un-quarantined `KPad` from Mature); advanced `kilo-review` to `KPing`; next agent `kilo-creator`.

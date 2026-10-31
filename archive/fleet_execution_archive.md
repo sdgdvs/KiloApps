@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T23:16:14-07:00 — kilo-review: KPad (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 1020x653 sheet.png, kpad.html, and KPad/main.c; un-quarantined from Mature with surgical fixes).
+  - Feature Bugs: createTab() mutates activeTabIndex before switchTab() wiping Welcome.md/VFS/template/Quickload buffers; colorize() multi-pass regex corrupts span class attributes in JS/C/Python; parseMarkdown() leaves raw HTML unescaped; KPad/main.c CloseTab() ignores IDYES.
+  - Visual/UX Findings: 9-bar top/bottom chrome wraps to 4 toolbar rows + 2 status rows eating 41% of 653px height with 4 duplicate Help buttons; wordWrap desyncs .gutter line numbers; goToLineDirect() lacks scroll sync and Escape ignores preview.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KPad`, `kilo-usability`->`KPad`] (un-quarantined `KPad` from Mature); advanced `kilo-review` to `KPing`; next agent `kilo-creator`.
+
 - **2026-10-30T22:41:12-07:00 — kilo-expander: KFont (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KFont across web and native targets.
