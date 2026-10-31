@@ -62,6 +62,13 @@ typedef struct {
 Mission missions[3];
 int active_mission_node = 0;
 char active_mission_file[32] = "";
+int active_mission_reward = 0;
+int ice_slowed = 0;
+
+#define MAX_CMD_HISTORY 32
+static char g_cmdHistory[MAX_CMD_HISTORY][MAX_LINE_LENGTH];
+static int g_cmdHistoryCount = 0;
+static int g_cmdHistoryIdx = -1;
 
 static unsigned long int my_next = 1;
 int my_rand(void) {
@@ -239,6 +246,8 @@ typedef struct {
     Mission missions[3];
     int active_mission_node;
     char active_mission_file[32];
+    int active_mission_reward;
+    int ice_slowed;
 } KCyberSaveData;
 
 int SaveGameState(HWND hwnd) {
@@ -274,6 +283,8 @@ int SaveGameState(HWND hwnd) {
     }
     save.active_mission_node = active_mission_node;
     lstrcpyA(save.active_mission_file, active_mission_file);
+    save.active_mission_reward = active_mission_reward;
+    save.ice_slowed = ice_slowed;
 
     HANDLE hFile = CreateFileA("kcyber_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
@@ -343,11 +354,14 @@ int LoadGameState(HWND hwnd) {
     }
     active_mission_node = save.active_mission_node;
     lstrcpyA(active_mission_file, save.active_mission_file);
+    active_mission_reward = save.active_mission_reward;
+    ice_slowed = save.ice_slowed;
 
     KillTimer(hwnd, 2);
     if (hacking_node) {
         int current_interval = 3000 - (player_heat * 15);
         if (current_interval < 500) current_interval = 500;
+        if (ice_slowed) current_interval *= 2;
         SetTimer(hwnd, 2, current_interval, NULL);
     }
 
@@ -400,6 +414,43 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
     // Trim leading spaces
     while(*cmd == ' ') cmd++;
     if (*cmd == '\0') return;
+
+    // Check reboot globally before in_shop, hacking_node, connected_node branches
+    char firstWord[MAX_LINE_LENGTH];
+    int fw = 0;
+    while (cmd[fw] != ' ' && cmd[fw] != '\0' && fw < MAX_LINE_LENGTH - 1) {
+        firstWord[fw] = cmd[fw];
+        fw++;
+    }
+    firstWord[fw] = '\0';
+
+    if (lstrcmpiA(firstWord, "reboot") == 0) {
+        KillTimer(hwnd, 2);
+        in_shop = 0;
+        hacking_node = 0;
+        connected_node = 0;
+        ice_slowed = 0;
+        player_mem = player_max_mem;
+        tool_cloak = player_max_cloak;
+        tool_slow = player_max_slow;
+        tool_patch = player_max_patch;
+        tool_probe = player_max_probe;
+        player_heat = 0;
+        active_mission_node = 0;
+        active_mission_file[0] = '\0';
+        active_mission_reward = 0;
+        GenerateMissions();
+        lstrcpyA(node_files[2].name, "sys_logs.dat"); node_files[2].size = 12; node_files[2].value = 100;
+        lstrcpyA(node_files[3].name, "customer_db.sql"); node_files[3].size = 45; node_files[3].value = 250;
+        lstrcpyA(node_files[4].name, "r_and_d_schematics.zip"); node_files[4].size = 105; node_files[4].value = 600;
+        lstrcpyA(node_files[5].name, "zero_day_exploit.exe"); node_files[5].size = 15; node_files[5].value = 1500;
+        lstrcpyA(node_files[6].name, "ai_core_firmware.bin"); node_files[6].size = 180; node_files[6].value = 2800;
+        PrintLine(hwnd, "System rebooting...");
+        PrintLine(hwnd, "Memory and software restored to 100%. Nodes and contracts reset.");
+        PlayAccessGranted();
+        InvalidateRect(hwnd, NULL, TRUE);
+        return;
+    }
 
     if (in_shop) {
         wsprintfA(buffer, "shop> %s", cmd);
@@ -596,6 +647,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         if (lstrcmpiA(guess, "slow") == 0) {
             if (tool_slow > 0) {
                 tool_slow--;
+                ice_slowed = 1;
                 PlaySlowSound();
                 wsprintfA(buffer, "[SLOW] Activated. %d remaining. Trace speed halved.", tool_slow);
                 PrintLine(hwnd, buffer);
@@ -691,6 +743,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
             PrintLine(hwnd, "Type 'ls' to list files, 'download <file>' to extract, 'disconnect' to exit.");
             connected_node = hacking_node;
             hacking_node = 0;
+            KillTimer(hwnd, 2);
         } else {
             hacking_attempts--;
             PlayFailTone();
@@ -714,6 +767,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 wsprintfA(buffer, "[WARNING] Global heat increased to %d%%", player_heat);
                 PrintLine(hwnd, buffer);
                 hacking_node = 0;
+                KillTimer(hwnd, 2);
             }
         }
         return;
@@ -764,22 +818,53 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         }
         
         if (lstrcmpiA(command, "ls") == 0) {
-            if (lstrcmpiA(node_files[connected_node].name, "empty") == 0) {
+            int hasNative = (lstrcmpiA(node_files[connected_node].name, "empty") != 0 && node_files[connected_node].name[0] != '\0');
+            int hasContract = (active_mission_node == connected_node && active_mission_file[0] != '\0');
+            if (!hasNative && !hasContract) {
                 PrintLine(hwnd, "No files found. Directory is empty.");
             } else {
                 PrintLine(hwnd, "Files:");
                 char buf[128];
-                wsprintfA(buf, "  %s (%dMB)", node_files[connected_node].name, node_files[connected_node].size);
-                PrintLine(hwnd, buf);
+                if (hasNative) {
+                    wsprintfA(buf, "  %s (%dMB, %d cr)", node_files[connected_node].name, node_files[connected_node].size, node_files[connected_node].value);
+                    PrintLine(hwnd, buf);
+                }
+                if (hasContract) {
+                    wsprintfA(buf, "  %s (%d cr) [CONTRACT TARGET]", active_mission_file, active_mission_reward);
+                    PrintLine(hwnd, buf);
+                }
             }
             return;
         }
         
         if (lstrcmpiA(command, "download") == 0) {
+            int hasNative = (lstrcmpiA(node_files[connected_node].name, "empty") != 0 && node_files[connected_node].name[0] != '\0');
+            int hasContract = (active_mission_node == connected_node && active_mission_file[0] != '\0');
             if (args[0] == '\0') {
-                PrintLine(hwnd, "Usage: download <filename>");
+                const char* sampleName = hasContract ? active_mission_file : (hasNative ? node_files[connected_node].name : "file.dat");
+                char buf[128];
+                wsprintfA(buf, "Usage: download <filename> (e.g. 'download %s')", sampleName);
+                PrintLine(hwnd, buf);
             } else {
-                if (lstrcmpiA(node_files[connected_node].name, "empty") != 0 && lstrcmpiA(args, node_files[connected_node].name) == 0) {
+                int handled = 0;
+                if (hasContract && lstrcmpiA(args, active_mission_file) == 0) {
+                    char buf[128];
+                    wsprintfA(buf, "Downloading contract target %s...", active_mission_file);
+                    PrintLine(hwnd, buf);
+                    player_credits += active_mission_reward;
+                    PlayCreditChime();
+                    wsprintfA(buf, "Download complete. Data value: %d credits.", active_mission_reward);
+                    PrintLine(hwnd, buf);
+                    RECT cr; GetClientRect(hwnd, &cr);
+                    SpawnParticles(cr.right - 90, 85, 25, RGB(0, 255, 255), 1);
+                    SpawnParticles(cr.right - 90, 85, 15, RGB(255, 255, 255), 3);
+                    PrintLine(hwnd, "CONTRACT COMPLETE! Reward transferred.");
+                    PlayAccessGranted();
+                    active_mission_node = 0;
+                    active_mission_file[0] = '\0';
+                    active_mission_reward = 0;
+                    handled = 1;
+                } else if (hasNative && lstrcmpiA(args, node_files[connected_node].name) == 0) {
                     char buf[128];
                     wsprintfA(buf, "Downloading %s...", args);
                     PrintLine(hwnd, buf);
@@ -790,21 +875,16 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                     RECT cr; GetClientRect(hwnd, &cr);
                     SpawnParticles(cr.right - 90, 85, 25, RGB(0, 255, 255), 1);
                     SpawnParticles(cr.right - 90, 85, 15, RGB(255, 255, 255), 3);
-                    
-                    if (active_mission_node == connected_node && lstrcmpiA(active_mission_file, args) == 0) {
-                        PrintLine(hwnd, "CONTRACT COMPLETE! Reward transferred.");
-                        active_mission_node = 0;
-                        active_mission_file[0] = '\0';
-                    }
-                    
                     lstrcpyA(node_files[connected_node].name, "empty");
-                } else {
+                    handled = 1;
+                }
+                if (!handled) {
                     PrintLine(hwnd, "File not found.");
+                    PlayAccessDenied();
                 }
             }
             return;
         }
-        
         PrintLine(hwnd, "Command not found. Available: ls, download, disconnect");
         return;
     }
@@ -1001,10 +1081,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 if (missions[k].id == id) {
                     active_mission_node = missions[k].node;
                     lstrcpyA(active_mission_file, missions[k].file);
-                    
-                    lstrcpyA(node_files[missions[k].node].name, missions[k].file);
-                    node_files[missions[k].node].size = 10 + (my_rand() % 90);
-                    node_files[missions[k].node].value = missions[k].reward;
+                    active_mission_reward = missions[k].reward;
                     
                     char b[128];
                     wsprintfA(b, "Contract [%d] accepted.", missions[k].id);
@@ -1051,15 +1128,16 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
             PrintLine(hwnd, "Error: No target node specified. Usage: connect <node_id>");
         } else {
             int node = 0;
-            if (lstrcmpiA(args, "02") == 0) node = 2;
-            else if (lstrcmpiA(args, "03") == 0) node = 3;
-            else if (lstrcmpiA(args, "04") == 0) node = 4;
-            else if (lstrcmpiA(args, "05") == 0) node = 5;
-            else if (lstrcmpiA(args, "06") == 0) node = 6;
+            if (lstrcmpiA(args, "02") == 0 || lstrcmpiA(args, "2") == 0) node = 2;
+            else if (lstrcmpiA(args, "03") == 0 || lstrcmpiA(args, "3") == 0) node = 3;
+            else if (lstrcmpiA(args, "04") == 0 || lstrcmpiA(args, "4") == 0) node = 4;
+            else if (lstrcmpiA(args, "05") == 0 || lstrcmpiA(args, "5") == 0) node = 5;
+            else if (lstrcmpiA(args, "06") == 0 || lstrcmpiA(args, "6") == 0) node = 6;
             
             if (node > 0) {
                 hacking_node = node;
                 hacking_attempts = player_max_cpu;
+                ice_slowed = 0;
                 ice_frozen_ticks = 0;
                 int current_interval = 3000 - (player_heat * 15);
                 if (current_interval < 500) current_interval = 500;
@@ -1139,7 +1217,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 cursor_visible = !cursor_visible;
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 2) {
-                if ((hacking_node || connected_node) && ice_damage > 0) {
+                if (hacking_node && ice_damage > 0) {
                     if (ice_frozen_ticks > 0) {
                         ice_frozen_ticks--;
                         char buf[128];
@@ -1166,6 +1244,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             PlayAccessDenied();
                             hacking_node = 0;
                             connected_node = 0;
+                            KillTimer(hwnd, 2);
                         } else {
                             g_shake = 12;
                             g_shockwaveR = 6;
@@ -2107,6 +2186,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (wParam == VK_F1) {
                 ProcessCommand(hwnd, "guide");
                 return 0;
+            } else if (wParam == VK_UP) {
+                if (g_cmdHistoryCount > 0) {
+                    if (g_cmdHistoryIdx == -1) g_cmdHistoryIdx = g_cmdHistoryCount - 1;
+                    else if (g_cmdHistoryIdx > 0) g_cmdHistoryIdx--;
+                    lstrcpyA(current_input, g_cmdHistory[g_cmdHistoryIdx]);
+                    current_input_len = lstrlenA(current_input);
+                    cursor_visible = 1;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+                return 0;
+            } else if (wParam == VK_DOWN) {
+                if (g_cmdHistoryCount > 0 && g_cmdHistoryIdx != -1) {
+                    if (g_cmdHistoryIdx < g_cmdHistoryCount - 1) {
+                        g_cmdHistoryIdx++;
+                        lstrcpyA(current_input, g_cmdHistory[g_cmdHistoryIdx]);
+                        current_input_len = lstrlenA(current_input);
+                    } else {
+                        g_cmdHistoryIdx = -1;
+                        current_input[0] = '\0';
+                        current_input_len = 0;
+                    }
+                    cursor_visible = 1;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+                return 0;
             } else if (wParam == VK_ESCAPE) {
                 if (in_shop) {
                     ProcessCommand(hwnd, "exit");
@@ -2138,6 +2242,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (wParam == '\r') {
                 RECT cr; GetClientRect(hwnd, &cr);
                 SpawnParticles(cr.right - 90, 85, 6, RGB(0, 255, 80), 0);
+                if (current_input_len > 0) {
+                    if (g_cmdHistoryCount < MAX_CMD_HISTORY) {
+                        lstrcpyA(g_cmdHistory[g_cmdHistoryCount++], current_input);
+                    } else {
+                        for (int h = 0; h < MAX_CMD_HISTORY - 1; h++) {
+                            lstrcpyA(g_cmdHistory[h], g_cmdHistory[h + 1]);
+                        }
+                        lstrcpyA(g_cmdHistory[MAX_CMD_HISTORY - 1], current_input);
+                    }
+                }
+                g_cmdHistoryIdx = -1;
                 ProcessCommand(hwnd, current_input);
                 current_input[0] = '\0';
                 current_input_len = 0;

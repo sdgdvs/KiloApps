@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 580,
+  "turns_executed": 582,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-31T21:41:04.448406+00:00",
-  "current_target": "KMystery",
+  "last_heartbeat": "2026-10-31T23:40:04.535496+00:00",
+  "current_target": "KCyber",
   "remote_command": "none"
 }

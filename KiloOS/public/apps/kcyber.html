@@ -919,9 +919,23 @@
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         stopBGM();
-      } else if (bgmEnabled) {
-        ensureAudio();
-        startBGM();
+        stopRenderLoop();
+        if (ice_interval) {
+          clearInterval(ice_interval);
+          ice_interval = null;
+        }
+      } else {
+        startRenderLoop();
+        if (bgmEnabled) {
+          ensureAudio();
+          startBGM();
+        }
+        if (hacking_node && !ice_interval) {
+          let current_interval = 3000 - (player_heat * 15);
+          if (current_interval < 500) current_interval = 500;
+          if (ice_slowed) current_interval *= 2;
+          ice_interval = setInterval(iceAttack, current_interval);
+        }
       }
     });
 
@@ -953,6 +967,7 @@
     let tool_probe = player_max_probe;
     let in_shop = false;
     let ice_interval = null;
+    let ice_slowed = false;
     let ice_name = "";
     let ice_damage = 0;
     let ice_frozen_ticks = 0;
@@ -1073,6 +1088,7 @@
         ice_name,
         ice_damage,
         ice_frozen_ticks,
+        ice_slowed,
         in_shop,
         node_files: JSON.parse(JSON.stringify(node_files)),
         missions: JSON.parse(JSON.stringify(missions)),
@@ -1102,6 +1118,7 @@
       ice_name = data.ice_name ?? "";
       ice_damage = data.ice_damage ?? 0;
       ice_frozen_ticks = data.ice_frozen_ticks ?? 0;
+      ice_slowed = Boolean(data.ice_slowed);
       in_shop = !!data.in_shop;
       if (data.node_files) node_files = data.node_files;
       if (data.missions) missions = data.missions;
@@ -1114,6 +1131,7 @@
       if (hacking_node) {
         let current_interval = 3000 - (player_heat * 15);
         if (current_interval < 500) current_interval = 500;
+        if (ice_slowed) current_interval *= 2;
         ice_interval = setInterval(iceAttack, current_interval);
       }
       updatePrompt();
@@ -2411,7 +2429,24 @@
       }
     }
 
+    let renderLoopId = null;
+    function startRenderLoop() {
+      if (!renderLoopId && !document.hidden) {
+        renderLoop();
+      }
+    }
+    function stopRenderLoop() {
+      if (renderLoopId) {
+        cancelAnimationFrame(renderLoopId);
+        renderLoopId = null;
+      }
+    }
+
     function renderLoop() {
+      if (document.hidden) {
+        renderLoopId = null;
+        return;
+      }
       animTick++;
       spawnAmbient();
 
@@ -2426,7 +2461,7 @@
       }
 
       drawVisuals();
-      requestAnimationFrame(renderLoop);
+      renderLoopId = requestAnimationFrame(renderLoop);
     }
 
     function updatePrompt() {
@@ -2454,6 +2489,38 @@
       const trimmed = cmd.trim();
       if (!trimmed) return;
       
+      const firstToken = trimmed.split(' ')[0].toLowerCase();
+      if (firstToken === 'reboot') {
+        if (ice_interval) {
+          clearInterval(ice_interval);
+          ice_interval = null;
+        }
+        in_shop = false;
+        hacking_node = null;
+        connected_node = null;
+        ice_slowed = false;
+        player_mem = player_max_mem;
+        tool_cloak = player_max_cloak;
+        tool_slow = player_max_slow;
+        tool_patch = player_max_patch;
+        tool_probe = player_max_probe;
+        player_heat = 0;
+        active_mission = null;
+        generateMissions();
+        node_files = {
+          '02': { name: 'sys_logs.dat', size: 12, value: 100 },
+          '03': { name: 'customer_db.sql', size: 45, value: 250 },
+          '04': { name: 'r_and_d_schematics.zip', size: 105, value: 600 },
+          '05': { name: 'zero_day_exploit.exe', size: 15, value: 1500 },
+          '06': { name: 'ai_core_firmware.bin', size: 180, value: 2800 }
+        };
+        printLine("System rebooting...");
+        printLine("Memory and software restored to 100%. Nodes and contracts reset.");
+        playAccessGranted();
+        updatePrompt();
+        return;
+      }
+
       if (in_shop) {
         printLine(`shop> ${trimmed}`);
         const args = trimmed.split(' ').filter(Boolean);
@@ -2690,6 +2757,7 @@
         if (guess === 'slow') {
           if (tool_slow > 0) {
             tool_slow--;
+            ice_slowed = true;
             playSlowStinger();
             spawnBurst(90, 80, 25, 'spark', '#ffff00');
             printLine(`[SLOW] Activated. ${tool_slow} remaining. Trace speed halved.`);
@@ -2885,11 +2953,18 @@
         
         if (cmd === 'ls') {
            const file = node_files[connected_node];
-           if (!file || file.name === "empty") {
+           const hasContractFile = active_mission && active_mission.node === connected_node && active_mission.file;
+           const hasNativeFile = file && file.name !== "empty";
+           if (!hasNativeFile && !hasContractFile) {
              printLine("No files found. Directory is empty.");
            } else {
              printLine("Files:");
-             printLine(`  ${file.name} (${file.size}MB, ${file.value} cr)`);
+             if (hasNativeFile) {
+               printLine(`  ${file.name} (${file.size}MB, ${file.value} cr)`);
+             }
+             if (hasContractFile) {
+               printLine(`  ${active_mission.file} (${active_mission.reward} cr) [CONTRACT TARGET]`);
+             }
            }
            updatePrompt();
            return;
@@ -2897,29 +2972,43 @@
         
         if (cmd === 'download') {
            const file = node_files[connected_node];
-           if (!file || file.name === "empty") {
+           const hasContractFile = active_mission && active_mission.node === connected_node && active_mission.file;
+           const hasNativeFile = file && file.name !== "empty";
+
+           if (!hasNativeFile && !hasContractFile) {
              printLine("No downloadable files currently found on node.");
              playAccessDenied();
            } else if (args.length < 2) {
-             printLine(`Usage: download <filename> (e.g. 'download ${file.name}')`);
+             const sampleName = hasContractFile ? active_mission.file : (hasNativeFile ? file.name : "file.dat");
+             printLine(`Usage: download <filename> (e.g. 'download ${sampleName}')`);
              playAccessDenied();
            } else {
              const fname = args[1].toLowerCase();
-             if (fname === file.name.toLowerCase()) {
+             let handled = false;
+
+             if (hasContractFile && fname === active_mission.file.toLowerCase()) {
+               printLine(`Downloading contract target ${active_mission.file}...`);
+               player_credits += active_mission.reward;
+               spawnBurst(90, 80, 35, 'bit', '#00ffff');
+               spawnBurst(90, 80, 20, 'star', '#ffffff');
+               printLine(`Download complete. Data value: ${active_mission.reward} credits.`);
+               playCreditChime();
+               printLine(`CONTRACT COMPLETE! Reward transferred (+${active_mission.reward} cr).`);
+               active_mission = null;
+               playAccessGranted();
+               handled = true;
+             } else if (hasNativeFile && fname === file.name.toLowerCase()) {
                printLine(`Downloading ${file.name}...`);
                player_credits += file.value;
                spawnBurst(90, 80, 35, 'bit', '#00ffff');
                spawnBurst(90, 80, 20, 'star', '#ffffff');
                printLine(`Download complete. Data value: ${file.value} credits.`);
                playCreditChime();
-               if (active_mission && active_mission.file.toLowerCase() === file.name.toLowerCase() && active_mission.node === connected_node) {
-                 player_credits += active_mission.reward;
-                 printLine(`CONTRACT COMPLETE! Reward transferred (+${active_mission.reward} cr).`);
-                 active_mission = null;
-                 playAccessGranted();
-               }
                file.name = "empty";
-             } else {
+               handled = true;
+             }
+
+             if (!handled) {
                printLine("File not found.");
                playAccessDenied();
              }
@@ -3139,8 +3228,7 @@
                 printLine(`[NOTICE] Abandoned previous contract [${active_mission.id}] for contract [${m.id}].`);
               }
               active_mission = m;
-              node_files[m.node] = { name: m.file, size: Math.floor(Math.random()*100)+10, value: m.reward };
-              printLine(`Contract [${m.id}] accepted.`);
+                            printLine(`Contract [${m.id}] accepted.`);
               printLine(`Objective: Download ${m.file} from NODE ${m.node}.`);
               playAccessGranted();
               missions = missions.filter(x => x.id !== id);
@@ -3184,6 +3272,7 @@
             const validNodes = ['02', '03', '04', '05', '06'];
             if (validNodes.includes(target)) {
               hacking_node = target;
+              ice_slowed = false;
               hacking_target = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
               hacking_attempts = player_max_cpu;
               if (target === '02') { ice_name = "Basic ICE"; ice_damage = 5; }
@@ -3229,10 +3318,11 @@
     let historyIdx = -1;
 
     cmdInput.addEventListener('keydown', (e) => {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
       if (isModalOpen()) {
         if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
           e.preventDefault();
+          e.stopPropagation();
           hideModals();
         }
         return;
@@ -3340,7 +3430,7 @@
     printLine("Type 'help' for a list of commands.");
     const audioBtn = document.getElementById('audio-toggle-btn');
     if (audioBtn) audioBtn.textContent = bgmEnabled ? 'BGM: ON' : 'BGM: OFF';
-    requestAnimationFrame(renderLoop);
+    startRenderLoop();
 
     const hasSave = !!safeGetStorage('kcyber_save');
     const tutorialSeen = safeGetStorage('kcyber_tutorialSeen') === '1';

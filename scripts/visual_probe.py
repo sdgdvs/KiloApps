@@ -266,6 +266,7 @@ def start_static_server() -> tuple[Any, int]:
 
     pub_dir = ROOT / "KiloOS" / "public"
     handler = functools.partial(QuietHandler, directory=str(pub_dir))
+    http.server.ThreadingHTTPServer.request_queue_size = 64
     srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
     port = srv.server_address[1]
     threading.Thread(target=srv.serve_forever, daemon=True).start()
