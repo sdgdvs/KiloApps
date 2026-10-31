@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://cabled
-  kilo_graphics: KDragon
+  kilo_graphics: KStarship
   kilo_soundscape: KStellar
   kilo_tester: KPing
   kilo_usability: KPing
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://trapster
-  timestamp: '2026-10-31T03:17:00-07:00'
+  agent: kilo-graphics
+  app: KDragon
+  timestamp: '2026-10-31T03:31:35-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KDragon`
+- **Active Target**: `KStarship`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Replace code-generated 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with Imagen 3 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
@@ -115,6 +114,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
 | `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
+| `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Replace code-generated 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with Imagen 3 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -294,6 +294,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T03:31:35-07:00 — kilo-graphics: KDragon (Skip — Asset Suitability)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KDragon.
+  - Handoff: Advanced `kilo-graphics` to `KStarship`; rotated active agent to `kilo-tester`.
+
 - **2026-10-31T03:17:00-07:00 — kilo-creator: kweb://trapster (Trapster P2P Chiptune & Tracker Exchange v1.0b)**
   - Status: PASS ✅ (0 errors, web 130.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 60.01%, HEAD Δ 0.02%, 0 fail, 0 warn, 5.4s)).
   - Delivered Trapster v1.0b: searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612 2-Op FM / SPC700 stereo delay DSP synthesizer & visualizer.
@@ -319,9 +323,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, active tab & sidebar collapse persistence, kgraph_tutorialSeen flag, and Escape dismissals.
   - Dual Parity & Lifecycle: Hardened Win32 C dataset export parity, non-blocking startup tutorial, and visibilitychange audio suspension.
   - Mature Quarantine & Handoff: Promoted `KGraph` to Mature archive; advanced `kilo-qa` to `KChart`; next agent `kilo-expander`.
-
-- **2026-10-31T01:20:13-07:00 — kilo-usability: KPad (KPad Usability, Responsive Layout & Gutter Polish)**
-  - Status: PASS (0 errors, web 338.1 KB, native 38.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 9.58%, HEAD delta 13.18%, 0 fail, 0 warn, 6.0s)).
-  - Layout & Chrome: Compacted multi-row toolbar and status-bar wrapping at 1020x653 into single-row scrollable strips, removing 3 redundant Help buttons and boosting editor height.
-  - Editor & Gutter: Synchronized gutter line heights with wrapped lines when wordWrap is enabled; smooth scroll in goToLineDirect(); exact line number matching in jumpToOutlineLine(); and Escape key preview closure.
-  - Mature Quarantine & Handoff: Promoted `KPad` to Mature archive; advanced `kilo-usability` to `KColony`; next agent `kilo-qa`.

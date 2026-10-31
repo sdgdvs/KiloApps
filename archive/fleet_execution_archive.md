@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T01:20:13-07:00 — kilo-usability: KPad (KPad Usability, Responsive Layout & Gutter Polish)**
+  - Status: PASS (0 errors, web 338.1 KB, native 38.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 9.58%, HEAD delta 13.18%, 0 fail, 0 warn, 6.0s)).
+  - Layout & Chrome: Compacted multi-row toolbar and status-bar wrapping at 1020x653 into single-row scrollable strips, removing 3 redundant Help buttons and boosting editor height.
+  - Editor & Gutter: Synchronized gutter line heights with wrapped lines when wordWrap is enabled; smooth scroll in goToLineDirect(); exact line number matching in jumpToOutlineLine(); and Escape key preview closure.
+  - Mature Quarantine & Handoff: Promoted `KPad` to Mature archive; advanced `kilo-usability` to `KColony`; next agent `kilo-qa`.
+
 - **2026-10-31T00:36:46-07:00 — kilo-tester: KPad (UI Audit, VFS Tab Sync & C Parity)**
   - Status: PASS ✅ (0 errors, web 333.4 KB, native 38.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 10.86%, HEAD Δ 4.66%, 0 fail, 0 warn, 5.1s)).
   - Fixed createTab() mutating activeTabIndex before switchTab() preventing content overwrite of Welcome.md, templates & VFS files; reset activeTabIndex = -1 on tab clears in loadSession, quickloadSnapshot, and importWorkspaceSnapshot.

@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 566,
+  "turns_executed": 568,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-31T07:37:07.486746+00:00",
-  "current_target": "KPad",
+  "last_heartbeat": "2026-10-31T09:36:11.993095+00:00",
+  "current_target": "KPing",
   "remote_command": "none"
 }
