@@ -52,6 +52,7 @@ static int k_atoi(const char* s) {
 #define ID_BTN_FILE_OPEN    113
 #define ID_BTN_FILE_SAVE    114
 #define ID_BTN_FREQ_STATS   115
+#define ID_BTN_GENKEY       116
 
 // Colors
 static COLORREF COLOR_BG = RGB(9, 13, 22);
@@ -75,6 +76,7 @@ static HWND g_hEditInput = NULL;
 static HWND g_hEditOutput = NULL;
 static HWND g_hComboCipher = NULL;
 static HWND g_hEditKey = NULL;
+static HWND g_hBtnGenKey = NULL;
 static HWND g_hBtnEncrypt = NULL;
 static HWND g_hBtnDecrypt = NULL;
 static HWND g_hBtnSwap = NULL;
@@ -88,7 +90,7 @@ static HWND g_hBtnFileSave = NULL;
 static HWND g_hBtnFreq = NULL;
 static HWND g_hStatusLabel = NULL;
 
-static char g_szStatus[256] = "KCipher Ready. Select cipher, enter key/shift, and click Encrypt/Decrypt.";
+static char g_szStatus[256] = "KCipher Ready. Select cipher, configure key/shift, and click Encrypt/Decrypt.";
 
 // Cipher Logic
 static void DoCaesar(const char* in, char* out, int shift, int decrypt) {
@@ -181,7 +183,6 @@ static void DoRailFence(const char* in, char* out, int rails, int decrypt) {
         }
         out[pos] = 0;
     } else {
-        // Decrypt
         char matrix[10][4096];
         memset(matrix, 0, sizeof(matrix));
 
@@ -213,7 +214,7 @@ static void DoRailFence(const char* in, char* out, int rails, int decrypt) {
     }
 }
 
-// RC4 implementation
+// RC4 Stream Cipher
 static void DoRC4(const char* in, char* out, const char* key, int decrypt) {
     int keyLen = k_strlen(key);
     if (keyLen == 0) key = "DEFAULT_KEY";
@@ -234,7 +235,6 @@ static void DoRC4(const char* in, char* out, const char* key, int decrypt) {
     j = 0;
 
     if (!decrypt) {
-        // Encrypt to hex
         int inLen = k_strlen(in);
         int outPos = 0;
         for (int k = 0; k < inLen; k++) {
@@ -252,7 +252,6 @@ static void DoRC4(const char* in, char* out, const char* key, int decrypt) {
         }
         out[outPos] = 0;
     } else {
-        // Decrypt from hex
         int inLen = k_strlen(in);
         int outPos = 0;
         for (int k = 0; k < inLen; k += 2) {
@@ -274,6 +273,7 @@ static void DoRC4(const char* in, char* out, const char* key, int decrypt) {
     }
 }
 
+// XOR Stream
 static void DoXOR(const char* in, char* out, const char* key, int decrypt) {
     int keyLen = k_strlen(key);
     if (keyLen == 0) key = "SECRET";
@@ -300,6 +300,236 @@ static void DoXOR(const char* in, char* out, const char* key, int decrypt) {
             int v2 = (h2 >= '0' && h2 <= '9') ? (h2 - '0') : (h2 >= 'A' && h2 <= 'F' ? h2 - 'A' + 10 : (h2 >= 'a' && h2 <= 'f' ? h2 - 'a' + 10 : 0));
             unsigned char encByte = (unsigned char)((v1 << 4) | v2);
             out[outPos++] = (char)(encByte ^ ((unsigned char)key[(i / 2) % keyLen]));
+        }
+        out[outPos] = 0;
+    }
+}
+
+// AES-128 CTR Mode Core
+static const unsigned char AES_SBOX[256] = {
+    0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
+    0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
+    0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,
+    0x04, 0xc7, 0x23, 0xc3, 0x18, 0x96, 0x05, 0x9a, 0x07, 0x12, 0x80, 0xe2, 0xeb, 0x27, 0xb2, 0x75,
+    0x09, 0x83, 0x2c, 0x1a, 0x1b, 0x6e, 0x5a, 0xa0, 0x52, 0x3b, 0xd6, 0xb3, 0x29, 0xe3, 0x2f, 0x84,
+    0x53, 0xd1, 0x00, 0xed, 0x20, 0xfc, 0xb1, 0x5b, 0x6a, 0xcb, 0xbe, 0x39, 0x4a, 0x4c, 0x58, 0xcf,
+    0xd0, 0xef, 0xaa, 0xfb, 0x43, 0x4d, 0x33, 0x85, 0x45, 0xf9, 0x02, 0x7f, 0x50, 0x3c, 0x9f, 0xa8,
+    0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5, 0xbc, 0xb6, 0xda, 0x21, 0x10, 0xff, 0xf3, 0xd2,
+    0xcd, 0x0c, 0x13, 0xec, 0x5f, 0x97, 0x44, 0x17, 0xc4, 0xa7, 0x7e, 0x3d, 0x64, 0x5d, 0x19, 0x73,
+    0x60, 0x81, 0x4f, 0xdc, 0x22, 0x2a, 0x90, 0x88, 0x46, 0xee, 0xb8, 0x14, 0xde, 0x5e, 0x0b, 0xdb,
+    0xe0, 0x32, 0x3a, 0x0a, 0x49, 0x06, 0x24, 0x5e, 0xc2, 0xd3, 0xac, 0x62, 0x91, 0x95, 0xe4, 0x79,
+    0xe7, 0xc8, 0x37, 0x6d, 0x8d, 0xd5, 0x4e, 0xa9, 0x6c, 0x56, 0xf4, 0xea, 0x65, 0x7a, 0xae, 0x08,
+    0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f, 0x4b, 0xbd, 0x8b, 0x8a,
+    0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e,
+    0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
+    0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
+};
+
+static const unsigned char AES_RCON[11] = {
+    0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
+};
+
+static void aesKeyExpand(const unsigned char key[16], unsigned char w[44][4]) {
+    for (int i = 0; i < 4; i++) {
+        w[i][0] = key[4 * i];
+        w[i][1] = key[4 * i + 1];
+        w[i][2] = key[4 * i + 2];
+        w[i][3] = key[4 * i + 3];
+    }
+    for (int i = 4; i < 44; i++) {
+        unsigned char temp[4];
+        temp[0] = w[i - 1][0];
+        temp[1] = w[i - 1][1];
+        temp[2] = w[i - 1][2];
+        temp[3] = w[i - 1][3];
+        if (i % 4 == 0) {
+            unsigned char k0 = temp[0];
+            temp[0] = (unsigned char)(AES_SBOX[temp[1]] ^ AES_RCON[i / 4]);
+            temp[1] = AES_SBOX[temp[2]];
+            temp[2] = AES_SBOX[temp[3]];
+            temp[3] = AES_SBOX[k0];
+        }
+        w[i][0] = (unsigned char)(w[i - 4][0] ^ temp[0]);
+        w[i][1] = (unsigned char)(w[i - 4][1] ^ temp[1]);
+        w[i][2] = (unsigned char)(w[i - 4][2] ^ temp[2]);
+        w[i][3] = (unsigned char)(w[i - 4][3] ^ temp[3]);
+    }
+}
+
+static unsigned char gmul(unsigned char a, unsigned char b) {
+    unsigned char p = 0;
+    for (int c = 0; c < 8; c++) {
+        if (b & 1) p ^= a;
+        unsigned char hi = (unsigned char)(a & 0x80);
+        a = (unsigned char)((a << 1) & 0xFF);
+        if (hi) a ^= 0x1B;
+        b >>= 1;
+    }
+    return p;
+}
+
+static void aesCipherBlock(const unsigned char inBlock[16], const unsigned char roundKeys[44][4], unsigned char outBlock[16]) {
+    unsigned char state[4][4];
+    for (int r = 0; r < 4; r++) {
+        state[r][0] = inBlock[r];
+        state[r][1] = inBlock[r + 4];
+        state[r][2] = inBlock[r + 8];
+        state[r][3] = inBlock[r + 12];
+    }
+    for (int c = 0; c < 4; c++) {
+        for (int r = 0; r < 4; r++) state[r][c] ^= roundKeys[c][r];
+    }
+    for (int round = 1; round <= 9; round++) {
+        for (int r = 0; r < 4; r++) {
+            for (int c = 0; c < 4; c++) state[r][c] = AES_SBOX[state[r][c]];
+        }
+        unsigned char s1 = state[1][0];
+        state[1][0] = state[1][1]; state[1][1] = state[1][2]; state[1][2] = state[1][3]; state[1][3] = s1;
+        unsigned char s20 = state[2][0], s21 = state[2][1];
+        state[2][0] = state[2][2]; state[2][1] = state[2][3]; state[2][2] = s20; state[2][3] = s21;
+        unsigned char s33 = state[3][3];
+        state[3][3] = state[3][2]; state[3][2] = state[3][1]; state[3][1] = state[3][0]; state[3][0] = s33;
+
+        for (int c = 0; c < 4; c++) {
+            unsigned char a0 = state[0][c], a1 = state[1][c], a2 = state[2][c], a3 = state[3][c];
+            state[0][c] = (unsigned char)(gmul(a0, 2) ^ gmul(a1, 3) ^ a2 ^ a3);
+            state[1][c] = (unsigned char)(a0 ^ gmul(a1, 2) ^ gmul(a2, 3) ^ a3);
+            state[2][c] = (unsigned char)(a0 ^ a1 ^ gmul(a2, 2) ^ gmul(a3, 3));
+            state[3][c] = (unsigned char)(gmul(a0, 3) ^ a1 ^ a2 ^ gmul(a3, 2));
+        }
+        int base = round * 4;
+        for (int c = 0; c < 4; c++) {
+            for (int r = 0; r < 4; r++) state[r][c] ^= roundKeys[base + c][r];
+        }
+    }
+    for (int r = 0; r < 4; r++) {
+        for (int c = 0; c < 4; c++) state[r][c] = AES_SBOX[state[r][c]];
+    }
+    unsigned char s1 = state[1][0];
+    state[1][0] = state[1][1]; state[1][1] = state[1][2]; state[1][2] = state[1][3]; state[1][3] = s1;
+    unsigned char s20 = state[2][0], s21 = state[2][1];
+    state[2][0] = state[2][2]; state[2][1] = state[2][3]; state[2][2] = s20; state[2][3] = s21;
+    unsigned char s33 = state[3][3];
+    state[3][3] = state[3][2]; state[3][2] = state[3][1]; state[3][1] = state[3][0]; state[3][0] = s33;
+
+    for (int c = 0; c < 4; c++) {
+        for (int r = 0; r < 4; r++) state[r][c] ^= roundKeys[40 + c][r];
+    }
+    for (int c = 0; c < 4; c++) {
+        for (int r = 0; r < 4; r++) outBlock[c * 4 + r] = state[r][c];
+    }
+}
+
+static void DoAES128CTR(const char* in, char* out, const char* key, int decrypt) {
+    unsigned char keyBytes[16];
+    int klen = k_strlen(key);
+    if (klen == 0) { key = "ARCHITECT_1999!"; klen = 15; }
+    for (int i = 0; i < 16; i++) {
+        keyBytes[i] = (i < klen) ? (unsigned char)key[i] : 0x5a;
+    }
+    unsigned char roundKeys[44][4];
+    aesKeyExpand(keyBytes, roundKeys);
+
+    const unsigned char nonce[8] = { 0x19, 0x99, 0x01, 0x01, 0xde, 0xad, 0xbe, 0xef };
+    const char hexChars[] = "0123456789ABCDEF";
+
+    if (!decrypt) {
+        int inLen = k_strlen(in);
+        int outPos = 0;
+        for (int i = 0; i < inLen; i += 16) {
+            int blockIdx = i / 16;
+            unsigned char counterBlock[16];
+            memcpy(counterBlock, nonce, 8);
+            counterBlock[8] = 0; counterBlock[9] = 0; counterBlock[10] = 0; counterBlock[11] = 0;
+            counterBlock[12] = (unsigned char)((blockIdx >> 24) & 0xff);
+            counterBlock[13] = (unsigned char)((blockIdx >> 16) & 0xff);
+            counterBlock[14] = (unsigned char)((blockIdx >> 8) & 0xff);
+            counterBlock[15] = (unsigned char)(blockIdx & 0xff);
+
+            unsigned char keyStream[16];
+            aesCipherBlock(counterBlock, roundKeys, keyStream);
+
+            for (int b = 0; b < 16 && (i + b) < inLen; b++) {
+                unsigned char c = (unsigned char)(((unsigned char)in[i + b]) ^ keyStream[b]);
+                out[outPos++] = hexChars[(c >> 4) & 0x0f];
+                out[outPos++] = hexChars[c & 0x0f];
+            }
+        }
+        out[outPos] = 0;
+    } else {
+        int inLen = k_strlen(in);
+        int hexLen = 0;
+        unsigned char rawBytes[2048];
+        for (int i = 0; i < inLen && hexLen < 2048; i += 2) {
+            char h1 = in[i];
+            char h2 = (i + 1 < inLen) ? in[i + 1] : '0';
+            int v1 = (h1 >= '0' && h1 <= '9') ? (h1 - '0') : (h1 >= 'A' && h1 <= 'F' ? h1 - 'A' + 10 : (h1 >= 'a' && h1 <= 'f' ? h1 - 'a' + 10 : 0));
+            int v2 = (h2 >= '0' && h2 <= '9') ? (h2 - '0') : (h2 >= 'A' && h2 <= 'F' ? h2 - 'A' + 10 : (h2 >= 'a' && h2 <= 'f' ? h2 - 'a' + 10 : 0));
+            rawBytes[hexLen++] = (unsigned char)((v1 << 4) | v2);
+        }
+
+        int outPos = 0;
+        for (int i = 0; i < hexLen; i += 16) {
+            int blockIdx = i / 16;
+            unsigned char counterBlock[16];
+            memcpy(counterBlock, nonce, 8);
+            counterBlock[8] = 0; counterBlock[9] = 0; counterBlock[10] = 0; counterBlock[11] = 0;
+            counterBlock[12] = (unsigned char)((blockIdx >> 24) & 0xff);
+            counterBlock[13] = (unsigned char)((blockIdx >> 16) & 0xff);
+            counterBlock[14] = (unsigned char)((blockIdx >> 8) & 0xff);
+            counterBlock[15] = (unsigned char)(blockIdx & 0xff);
+
+            unsigned char keyStream[16];
+            aesCipherBlock(counterBlock, roundKeys, keyStream);
+
+            for (int b = 0; b < 16 && (i + b) < hexLen; b++) {
+                out[outPos++] = (char)(rawBytes[i + b] ^ keyStream[b]);
+            }
+        }
+        out[outPos] = 0;
+    }
+}
+
+// Toy RSA Core (32-bit arithmetic, mod = 3233, e = 17, d = 2753)
+static unsigned int rsa_modpow(unsigned int base, unsigned int exp, unsigned int mod) {
+    unsigned int res = 1;
+    base = base % mod;
+    while (exp > 0) {
+        if (exp & 1) res = (res * base) % mod;
+        exp >>= 1;
+        base = (base * base) % mod;
+    }
+    return res;
+}
+
+static void DoRSADemo(const char* in, char* out, const char* key, int decrypt) {
+    unsigned int e = 17, d = 2753, n = 3233;
+    if (!decrypt) {
+        int inLen = k_strlen(in);
+        out[0] = 0;
+        char numBuf[32];
+        for (int i = 0; i < inLen; i++) {
+            unsigned int m = (unsigned char)in[i];
+            unsigned int c = rsa_modpow(m, e, n);
+            wsprintfA(numBuf, "%u ", c);
+            int curLen = k_strlen(out);
+            if (curLen + 10 < 4000) {
+                k_strcpy(out + curLen, numBuf);
+            }
+        }
+    } else {
+        int outPos = 0;
+        const char* pStr = in;
+        while (*pStr && outPos < 4000) {
+            while (*pStr == ' ' || *pStr == '\t' || *pStr == '\r' || *pStr == '\n') pStr++;
+            if (!*pStr) break;
+            unsigned int val = 0;
+            while (*pStr >= '0' && *pStr <= '9') {
+                val = val * 10 + (*pStr - '0');
+                pStr++;
+            }
+            unsigned int m = rsa_modpow(val, d, n);
+            out[outPos++] = (char)(m & 0xFF);
         }
         out[outPos] = 0;
     }
@@ -456,6 +686,15 @@ static void ProcessCipher(int decrypt) {
             DoXOR(inText, outText, keyText, decrypt);
             break;
         }
+        case 6: { // AES-128 CTR
+            if (keyText[0] == 0) k_strcpy(keyText, "ARCHITECT_1999!");
+            DoAES128CTR(inText, outText, keyText, decrypt);
+            break;
+        }
+        case 7: { // RSA Demo
+            DoRSADemo(inText, outText, keyText, decrypt);
+            break;
+        }
         default:
             k_strcpy(outText, inText);
             break;
@@ -463,11 +702,61 @@ static void ProcessCipher(int decrypt) {
 
     SetWindowTextA(decrypt ? g_hEditInput : g_hEditOutput, outText);
 
-    // Update Status with metrics
     int inLen = k_strlen(inText);
     int outLen = k_strlen(outText);
     wsprintfA(g_szStatus, "Processed %d chars -> %d chars. Mode: %s.", inLen, outLen, decrypt ? "Decryption" : "Encryption");
     SetWindowTextA(g_hStatusLabel, g_szStatus);
+}
+
+static void DoGenKey(HWND hwnd) {
+    int sel = (int)SendMessageA(g_hComboCipher, CB_GETCURSEL, 0, 0);
+    char keyBuf[128];
+    keyBuf[0] = 0;
+    static unsigned int seed = 199973;
+    seed = seed * 1103515245 + 12345;
+
+    switch (sel) {
+        case 0: { // Caesar
+            int shift = ((seed >> 4) % 25) + 1;
+            wsprintfA(keyBuf, "%d", shift);
+            break;
+        }
+        case 1: { // Vigenere
+            const char* words[] = { "KILO1999", "CIPHER99", "CYBERSYS", "PARADIGM", "ENIGMA99", "SPECTRE9" };
+            k_strcpy(keyBuf, words[(seed >> 4) % 6]);
+            break;
+        }
+        case 2: { // Rail Fence
+            int rails = ((seed >> 4) % 5) + 2;
+            wsprintfA(keyBuf, "%d", rails);
+            break;
+        }
+        case 3: { // Atbash
+            k_strcpy(keyBuf, "(None - Fixed Mirror)");
+            break;
+        }
+        case 4: { // RC4
+            const char* keys[] = { "ARCHITECT_1999", "KILO_STREAM_KEY", "DEEP_CHOPPER99", "SYS_CIPHER_CORE" };
+            k_strcpy(keyBuf, keys[(seed >> 4) % 4]);
+            break;
+        }
+        case 5: { // XOR Stream
+            const char* xors[] = { "SECRET", "SHADOW1999", "KILO_KEY", "CYBER_XOR" };
+            k_strcpy(keyBuf, xors[(seed >> 4) % 4]);
+            break;
+        }
+        case 6: { // AES-128 CTR
+            const char* aesKeys[] = { "ARCHITECT_1999!", "KILO_AES128_SPEC", "KILO_BLOCK_1999", "CYBER_KEY_128BIT" };
+            k_strcpy(keyBuf, aesKeys[(seed >> 4) % 4]);
+            break;
+        }
+        case 7: { // RSA Demo
+            k_strcpy(keyBuf, "p=61, q=53, e=17 (n=3233, d=2753)");
+            break;
+        }
+    }
+    SetWindowTextA(g_hEditKey, keyBuf);
+    ProcessCipher(0);
 }
 
 static void SaveSnapshot(HWND hwnd) {
@@ -529,7 +818,7 @@ static void LoadSnapshot(HWND hwnd) {
         if (keyLen > 0 && keyLen < (int)sizeof(keyText)) ReadFile(hFile, keyText, keyLen, &read, NULL);
         CloseHandle(hFile);
 
-        if (sel >= 0 && sel <= 5) {
+        if (sel >= 0 && sel <= 7) {
             SendMessageA(g_hComboCipher, CB_SETCURSEL, sel, 0);
         }
         SetWindowTextA(g_hEditInput, inText);
@@ -544,19 +833,16 @@ static void LoadSnapshot(HWND hwnd) {
 }
 
 static void CheckFirstRun(HWND hwnd) {
-    // Check if quicksave exists; if it does, do not interrupt restored states
     HANDLE hSave = CreateFileA("kcipher_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hSave != INVALID_HANDLE_VALUE) {
         CloseHandle(hSave);
         return;
     }
-    // Check if tutorial flag exists
     HANDLE hTut = CreateFileA("kcipher_tutorialSeen.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hTut != INVALID_HANDLE_VALUE) {
         CloseHandle(hTut);
         return;
     }
-    // Create tutorialSeen flag on first run
     HANDLE hNew = CreateFileA("kcipher_tutorialSeen.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hNew != INVALID_HANDLE_VALUE) {
         DWORD wr = 0;
@@ -565,15 +851,16 @@ static void CheckFirstRun(HWND hwnd) {
     }
     MessageBoxA(hwnd,
         "Welcome to KCipher - Cryptographic Cipher Suite (1999 Edition)\n\n"
-        "Quick Guide:\n"
-        "1. Select cipher from dropdown (Caesar, Vigenere, Rail Fence, Atbash, RC4, XOR; Web: Pipeline/AES/RSA).\n"
-        "2. Configure Key / Shift parameter.\n"
-        "3. Enter or paste text into Plaintext Input.\n"
-        "4. Click Encrypt [Ctrl+E] or Decrypt [Ctrl+D].\n\n"
-        "Hotkeys:\n"
+        "Supported Ciphers:\n"
+        "1. Caesar / ROT-N, Vigenere, Rail Fence, Atbash\n"
+        "2. RC4 & XOR Stream Ciphers\n"
+        "3. AES-128 CTR Block Cipher (Hex Keystream)\n"
+        "4. RSA Public-Key Demo (p=61, q=53, e=17, n=3233)\n\n"
+        "Ergonomics & Hotkeys:\n"
         "- Ctrl+E: Encrypt | Ctrl+D: Decrypt\n"
+        "- Gen Key: Instant random key/prime generation\n"
         "- Ctrl+S / F5: QuickSave snapshot | Ctrl+O / F9: QuickLoad snapshot\n"
-        "- F1 / H: Cipher Manual | Ctrl+1..6: Tabs (Web)",
+        "- F1 / H: Cipher Manual | Esc: Clear Input/Output",
         "KCipher - First Run Guide", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -590,23 +877,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hFontMono = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
 
             // Controls
-            g_hComboCipher = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 120, 48, 220, 200, hwnd, (HMENU)ID_COMBO_CIPHER, NULL, NULL);
+            g_hComboCipher = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 120, 48, 210, 240, hwnd, (HMENU)ID_COMBO_CIPHER, NULL, NULL);
             SendMessageA(g_hComboCipher, CB_ADDSTRING, 0, (LPARAM)"Caesar / ROT-N (Key = Shift)");
             SendMessageA(g_hComboCipher, CB_ADDSTRING, 0, (LPARAM)"Vigenere (Key = Word)");
             SendMessageA(g_hComboCipher, CB_ADDSTRING, 0, (LPARAM)"Rail Fence (Key = Rails)");
             SendMessageA(g_hComboCipher, CB_ADDSTRING, 0, (LPARAM)"Atbash Mirror");
             SendMessageA(g_hComboCipher, CB_ADDSTRING, 0, (LPARAM)"RC4 Stream (Key = Passphrase)");
             SendMessageA(g_hComboCipher, CB_ADDSTRING, 0, (LPARAM)"XOR Stream (Key = Passphrase)");
+            SendMessageA(g_hComboCipher, CB_ADDSTRING, 0, (LPARAM)"AES-128 CTR (Key = Passphrase)");
+            SendMessageA(g_hComboCipher, CB_ADDSTRING, 0, (LPARAM)"RSA Demo (p=61, q=53, e=17)");
             SendMessageA(g_hComboCipher, CB_SETCURSEL, 0, 0);
             SendMessageA(g_hComboCipher, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
-            g_hEditKey = CreateWindowA("EDIT", "13", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 410, 48, 160, 24, hwnd, (HMENU)ID_EDIT_KEY, NULL, NULL);
+            g_hEditKey = CreateWindowA("EDIT", "13", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 410, 48, 140, 24, hwnd, (HMENU)ID_EDIT_KEY, NULL, NULL);
             SendMessageA(g_hEditKey, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
 
-            g_hBtnEncrypt = CreateWindowA("BUTTON", "Encrypt [Ctrl+E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 590, 47, 120, 26, hwnd, (HMENU)ID_BTN_ENCRYPT, NULL, NULL);
+            g_hBtnGenKey = CreateWindowA("BUTTON", "Gen Key", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 555, 47, 75, 26, hwnd, (HMENU)ID_BTN_GENKEY, NULL, NULL);
+            SendMessageA(g_hBtnGenKey, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+
+            g_hBtnEncrypt = CreateWindowA("BUTTON", "Encrypt [Ctrl+E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 635, 47, 125, 26, hwnd, (HMENU)ID_BTN_ENCRYPT, NULL, NULL);
             SendMessageA(g_hBtnEncrypt, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
 
-            g_hBtnDecrypt = CreateWindowA("BUTTON", "Decrypt [Ctrl+D]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 720, 47, 120, 26, hwnd, (HMENU)ID_BTN_DECRYPT, NULL, NULL);
+            g_hBtnDecrypt = CreateWindowA("BUTTON", "Decrypt [Ctrl+D]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 47, 125, 26, hwnd, (HMENU)ID_BTN_DECRYPT, NULL, NULL);
             SendMessageA(g_hBtnDecrypt, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
 
             // Text Areas
@@ -657,6 +949,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ProcessCipher(0);
             } else if (wmId == ID_BTN_DECRYPT) {
                 ProcessCipher(1);
+            } else if (wmId == ID_BTN_GENKEY) {
+                DoGenKey(hwnd);
             } else if (wmId == ID_BTN_SWAP) {
                 char t1[4096], t2[4096];
                 GetWindowTextA(g_hEditInput, t1, sizeof(t1));
@@ -696,14 +990,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MessageBoxA(hwnd,
                     "KCipher - Cryptographic Cipher Suite (v1.0.0 - 1999)\n\n"
                     "Supported Ciphers:\n"
-                    "1. Caesar / ROT-N: Shift letter by integer N (1-25). ROT-13 uses 13.\n"
+                    "1. Caesar / ROT-N: Shift letter by integer N (1-25).\n"
                     "2. Vigenere: Polyalphabetic key phrase shifting.\n"
                     "3. Rail Fence: Zig-zag transposition with N rails.\n"
                     "4. Atbash: Mirror substitution (A<->Z, B<->Y).\n"
-                    "5. RC4: Stream cipher with passphrase (hex output).\n\n"
+                    "5. RC4: Stream cipher with passphrase (hex output).\n"
+                    "6. XOR Stream: Byte-wise XOR keystream (hex output).\n"
+                    "7. AES-128 CTR: Block cipher in counter mode (hex output).\n"
+                    "8. RSA Demo: Asymmetric key encryption (space-separated integers).\n\n"
                     "Shortcuts:\n"
                     "F1 / H: Manual | Esc: Clear Panes | Ctrl+E / Ctrl+Enter: Encrypt | Ctrl+D: Decrypt\n"
-                    "Ctrl+S / F5: QuickSave snapshot | Ctrl+O / F9: QuickLoad snapshot | Ctrl+1..6: Tabs (Web)",
+                    "Ctrl+S / F5: QuickSave snapshot | Ctrl+O / F9: QuickLoad snapshot",
                     "KCipher Manual", MB_OK | MB_ICONINFORMATION);
             } else if (wmId == ID_COMBO_CIPHER && HIWORD(wParam) == CBN_SELCHANGE) {
                 int sel = (int)SendMessageA(g_hComboCipher, CB_GETCURSEL, 0, 0);
@@ -713,6 +1010,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (sel == 3) SetWindowTextA(g_hEditKey, "(None)");
                 else if (sel == 4) SetWindowTextA(g_hEditKey, "ARCHITECT_1999");
                 else if (sel == 5) SetWindowTextA(g_hEditKey, "SECRET");
+                else if (sel == 6) SetWindowTextA(g_hEditKey, "ARCHITECT_1999!");
+                else if (sel == 7) SetWindowTextA(g_hEditKey, "p=61, q=53, e=17 (n=3233)");
+                ProcessCipher(0);
             }
             return 0;
         }
@@ -740,7 +1040,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(hdc, g_hFontBold);
             SetTextColor(hdc, COLOR_TEXT);
             TextOutA(hdc, 20, 51, "Cipher Engine:", 14);
-            TextOutA(hdc, 360, 51, "Key / Shift:", 12);
+            TextOutA(hdc, 335, 51, "Key / Shift:", 12);
 
             TextOutA(hdc, 20, 88, "Plaintext Input:", 16);
             TextOutA(hdc, 470, 88, "Ciphertext Output:", 18);

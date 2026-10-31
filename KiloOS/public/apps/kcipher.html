@@ -1293,7 +1293,7 @@
   </footer>
 
   <!-- Splash Screen Overlay -->
-  <div id="splashOverlay" class="splash-overlay">
+  <div id="splashOverlay" class="splash-overlay" style="display: none;">
     <div class="splash-card">
       <button class="btn-close close modal-close modal-close-icon" id="btnSplashClose" title="Enter Workbench [Esc]">✕</button>
       <div class="splash-title">KCipher 1999</div>
@@ -3093,6 +3093,7 @@
         rsaE: elements.rsaE ? parseInt(elements.rsaE.value, 10) : 17,
         pipelineStages: pipelineState.stages,
         stegoText: document.getElementById('stegoText') ? document.getElementById('stegoText').value : '',
+        liveTransform: state.liveTransform,
         theme: document.body.dataset.theme,
         timestamp: Date.now()
       };
@@ -3165,7 +3166,15 @@
           switchTab(data.activeTab);
         }
 
+        if (data.liveTransform !== undefined) {
+          state.liveTransform = !!data.liveTransform;
+          const chk = document.getElementById('chkLiveTransform');
+          if (chk) chk.checked = state.liveTransform;
+        }
+
         updateCipherControls();
+        updateKeyGuards();
+        updateStegoCapacity();
         updateStats();
         showToast('QuickSave Loaded! (F9)');
         audio.playDecrypt();
@@ -3264,12 +3273,24 @@
       stegoEngine = new SteganographyEngine('stegoCanvas');
       stegoEngine.drawPreset('plasma');
 
-      // Check if quicksave exists for splash button
+      // Check if tutorial seen or quicksave exists (Pass 5 First-Run Integrity)
+      let tutorialSeen = false;
+      let hasQuicksave = false;
       try {
-        if (localStorage.getItem('kcipher_quicksave')) {
-          document.getElementById('btnSplashContinue').disabled = false;
-        }
+        tutorialSeen = localStorage.getItem('kcipher_tutorialSeen') === '1';
+        hasQuicksave = !!localStorage.getItem('kcipher_quicksave');
       } catch (e) {}
+
+      if (hasQuicksave) {
+        const btnCont = document.getElementById('btnSplashContinue');
+        if (btnCont) btnCont.disabled = false;
+      }
+
+      if (tutorialSeen || hasQuicksave) {
+        elements.splashOverlay.style.display = 'none';
+      } else {
+        elements.splashOverlay.style.display = 'flex';
+      }
 
       // Splash Buttons
       document.getElementById('btnSplashClose')?.addEventListener('click', () => {
@@ -4120,6 +4141,19 @@
           elements.splashOverlay.style.display = 'none';
           try { localStorage.setItem('kcipher_tutorialSeen', '1'); } catch (err) {}
           audio.playClick();
+        }
+      });
+
+      // Lifecycle & Resource Hygiene (Pass 5)
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          if (audio && audio.ctx && audio.ctx.state === 'running') {
+            audio.ctx.suspend().catch(() => {});
+          }
+        } else {
+          if (audio && audio.ctx && audio.ctx.state === 'suspended' && !audio.muted) {
+            audio.ctx.resume().catch(() => {});
+          }
         }
       });
 

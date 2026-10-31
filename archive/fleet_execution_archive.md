@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T10:32:47-07:00 — kilo-review: KCalc (Argon Visual, Feature & Usability Review (Defects Found -> Un-Quarantined))**
+  - Status: DEFECTS FOUND (inspected 4-panel sheet.png at 860x653 and audited kcalc.html + KCalc/main.c; un-quarantined from Mature for Flash repair).
+  - Visual/UX Findings: Stacked 4-row top toolbars (#kcalcExpBar + wrapped .header) squish the 8-row keypad at 860x653, duplicate HEX/BIN radix readouts and Constants/Memory modals (M1-M3 vs M0-M7 split-brain), and #regressionCanvas renders at 460px fallback width when hidden on boot.
+  - Feature/Bug Findings: Bitwise Inspector corrupts 32-bit unsigned/hex values on MSB or NOT (~x) (0x000000-1), Unicode minus breaks getCurrentDisplayValue() and paste, Use Margin % fails parseFloat, Tape Export/Import lacks any import button, and KCalc/main.c paints LCD theme backgrounds onto all form labels and omits lcdTheme in F5/F9.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KCalc`, `kilo-usability`->`KCalc`, `kilo-expander`->`KCalc`] (un-quarantined `KCalc` from Mature); advanced `kilo-review` to `KCyber`; next agent `kilo-creator`.
+
 - **2026-10-31T10:23:18-07:00 — kilo-expander: KTerm (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KTerm across web and native targets.

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KCalc
-  kilo_qa: KCipher
+  kilo_qa: KPaint
   kilo_expander: KMystery
   kilo_review: KCyber
 virtual_web_target: kweb://warez
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KColony
-  timestamp: '2026-10-31T13:22:17-07:00'
+  agent: kilo-qa
+  app: KCipher
+  timestamp: '2026-10-31T13:37:10-07:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -168,11 +168,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Arrange #start-screen buttons in a 2-column grid so all 11 fit within 870x623 without bottom clipping; lock body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto) and e.preventDefault() on Arrow/Space keys; resize #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; raise small font-size from 8px to 9.5px. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KCipher`
+- **Active Target**: `KPaint`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, multi-cipher algorithms (Caesar/Vigenere/AES/RSA demo), key management, dual Win32 C parity, and promote to Mature table. |
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, retro palette & tool drawer, canvas resize/export, dual Win32 C parity, and promote to Mature table. |
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, agent fleet telemetry, queue visualizer, process monitor, dual Win32 C parity, and promote to Mature table. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
@@ -228,6 +227,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KCipher** | `KiloOS/public/apps/kcipher.html` | Pass 5+ (2026-10-31) | System / Security | Complete cryptographic suite with classical ciphers, RC4/XOR streams, AES-128 CTR, RSA demo, pipeline chaining, frequency cryptanalysis, steganography, F5/F9 persistence, and dual Win32 C parity. |
 | **KGraph** | `KiloOS/public/apps/kgraph.html` | Pass 5+ (2026-10-31) | System | Scientific function graphing studio with Cartesian, Polar, Parametric plotting, numerical calculus, root finding, CSV dataset import/export, and dual Win32 C parity. |
 | **KPad** | `KiloOS/public/apps/kpad.html` | Pass 5+ (2026-10-31) | Office / Productivity | Complete multi-tab text and code workstation with single-row responsive toolbars, dynamic gutter height synchronization under word wrap, regex workbench, Myers diff viewer, AES-256 encryption, live Markdown preview, F5/F9 state persistence, and dual Win32 C parity. |
 | **KAudio** | `KiloOS/public/apps/kaudio.html` | Pass 5+ (2026-10-30) | Media / Audio & Synthesizer Studio | Complete audio workstation & DSP synthesis studio: 13-note chromatic keyboard, 16-step sequencer, dual-mode oscilloscope/FFT spectrum visualizer, 2-Op FM / subtractive engines, lowpass filter pipeline, full F5/F9 state persistence, and native Win32 C parity. |
@@ -288,6 +288,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T13:37:10-07:00 — kilo-qa: KCipher (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS (0 errors, web 165.0 KB, native 21.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kcipher_tutorialSeen flag, liveTransform persistence, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Added AES-128 CTR & RSA public-key demo to Win32 C, Gen Key button, F5/F9 .dat snapshot persistence, and visibilitychange audio hygiene.
+  - Mature Quarantine & Handoff: Promoted `KCipher` to Mature archive; advanced `kilo-qa` to `KPaint`; next agent `kilo-expander`.
+
 - **2026-10-31T13:22:17-07:00 — kilo-usability: KColony (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KColony across web and native targets.
@@ -309,9 +315,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented The Scallion 1999 broadsheet with Ask A Sysadmin terminal, Infographic Lab, and Headline Forge.
   - Added KNet URL resolver routing with section hash/subpath dispatch and KiloOS VFS clipping exports.
   - Handoff: Advanced `kilo-creator` to `kweb://warez`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-31T10:32:47-07:00 — kilo-review: KCalc (Argon Visual, Feature & Usability Review (Defects Found -> Un-Quarantined))**
-  - Status: DEFECTS FOUND (inspected 4-panel sheet.png at 860x653 and audited kcalc.html + KCalc/main.c; un-quarantined from Mature for Flash repair).
-  - Visual/UX Findings: Stacked 4-row top toolbars (#kcalcExpBar + wrapped .header) squish the 8-row keypad at 860x653, duplicate HEX/BIN radix readouts and Constants/Memory modals (M1-M3 vs M0-M7 split-brain), and #regressionCanvas renders at 460px fallback width when hidden on boot.
-  - Feature/Bug Findings: Bitwise Inspector corrupts 32-bit unsigned/hex values on MSB or NOT (~x) (0x000000-1), Unicode minus breaks getCurrentDisplayValue() and paste, Use Margin % fails parseFloat, Tape Export/Import lacks any import button, and KCalc/main.c paints LCD theme backgrounds onto all form labels and omits lcdTheme in F5/F9.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KCalc`, `kilo-usability`->`KCalc`, `kilo-expander`->`KCalc`] (un-quarantined `KCalc` from Mature); advanced `kilo-review` to `KCyber`; next agent `kilo-creator`.
