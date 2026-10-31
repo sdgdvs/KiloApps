@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KColony
-  kilo_qa: KSys
+  kilo_qa: KAudio
   kilo_expander: KHex
   kilo_review: KFont
 virtual_web_target: kweb://deep-core
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KHex
-  timestamp: '2026-10-30T18:18:33-07:00'
+  agent: kilo-qa
+  app: KSys
+  timestamp: '2026-10-30T18:40:15-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -167,11 +167,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Eliminate 127px vertical overflow at 980x783 in khex.html via 100vh flex shell with scrollable .tab-content.active, pinned .status-bar, and 2-col Base Converter inputs; raise .bit-num font-size from 0.55rem (8.8px) to >=10.5px with higher contrast; move #toastContainer to bottom-right so toasts never block .tab-nav clicks; and change #tabbtn-struct badge from duplicate 9 to 0 with key 0 shortcut. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KSys`
+- **Active Target**: `KAudio`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, waveform audio editor, spectrum visualizer, filter pipeline, dual Win32 C parity, and promote to Mature table. |
 | `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, chart type presets (bar/line/pie/radar), CSV import/export, dual Win32 C parity, and promote to Mature table. |
@@ -181,6 +180,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, agent fleet telemetry, queue visualizer, process monitor, dual Win32 C parity, and promote to Mature table. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, channel switcher, offline message spool, dual Win32 C parity, and promote to Mature table. |
+| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KHex`
@@ -290,6 +290,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T18:40:15-07:00 — kilo-qa: KSys (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KSys across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KAudio`; rotated active agent to `kilo-expander`.
+
 - **2026-10-30T18:18:33-07:00 — kilo-usability: KHex (KHex Usability & Responsive Layout Polish)**
   - Status: PASS (0 errors, web 274.3 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.09%, HEAD Δ 12.79%, 0 fail, 0 warn, 5.9s)).
   - Eliminated 127px vertical overflow at 980x783 via 100vh flex shell with scrollable active tab content, pinned status bar, and 2-column Base Converter inputs.
@@ -315,9 +320,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) into RingMaster topology map, badge generator, and bidirectional ring traversal.
   - Added 1-click canonical widget presets in Tab 11, Netscape Surfer fast-hops in Tab 8, AS-1999 BGP canonical prefix routes in Tab 10, and updated directory & audit count metrics.
   - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-30T16:15:42-07:00 — kilo-review: KHex (Argon Visual, Feature & Usability Review)**
-  - Status: DEFECTS FOUND (inspected 980x783 sheet.png, khex.html, and KHex/main.c; un-quarantined KHex from Mature and queued surgical fixes).
-  - Visual/UX Findings: 127px vertical overflow clips 32-bit bitfield and status bar at 980x783; 32 .bit-num nodes at 8.8px (<9px); centered #toastContainer occludes .tab-nav clicks; duplicate tab badge 9 on Struct tab.
-  - Runtime & Feature Findings: Undefined loadBufferData() crashes all 7 Disassembler/Struct sample buttons; undefined isLittle crashes Tab 10 executeStructUnpack(); x86 disassembler lacks 0x80/0x81/0x83 Group-1 opcodes (desyncs Sample x86); VFS Save overwrites stale currentVfsPath and khex_text_buf UTF-8 decode corrupts binary bytes.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KHex`, `kilo-usability`->`KHex`, `kilo-expander`->`KHex`] (un-quarantined `KHex` from Mature); advanced `kilo-review` to `KFont`; next agent `kilo-creator`.

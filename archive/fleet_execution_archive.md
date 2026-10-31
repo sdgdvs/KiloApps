@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T16:15:42-07:00 — kilo-review: KHex (Argon Visual, Feature & Usability Review)**
+  - Status: DEFECTS FOUND (inspected 980x783 sheet.png, khex.html, and KHex/main.c; un-quarantined KHex from Mature and queued surgical fixes).
+  - Visual/UX Findings: 127px vertical overflow clips 32-bit bitfield and status bar at 980x783; 32 .bit-num nodes at 8.8px (<9px); centered #toastContainer occludes .tab-nav clicks; duplicate tab badge 9 on Struct tab.
+  - Runtime & Feature Findings: Undefined loadBufferData() crashes all 7 Disassembler/Struct sample buttons; undefined isLittle crashes Tab 10 executeStructUnpack(); x86 disassembler lacks 0x80/0x81/0x83 Group-1 opcodes (desyncs Sample x86); VFS Save overwrites stale currentVfsPath and khex_text_buf UTF-8 decode corrupts binary bytes.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KHex`, `kilo-usability`->`KHex`, `kilo-expander`->`KHex`] (un-quarantined `KHex` from Mature); advanced `kilo-review` to `KFont`; next agent `kilo-creator`.
+
 - **2026-10-30T15:36:44-07:00 — kilo-expander: KBBS (KBBS Phase VI VFS Bulletin Mesh & Door Game IPC Parity)**
   - Status: PASS ✅ (0 errors, web 212.0 KB, native 108.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.15%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.5s)).
   - Added KiloVFS origin validation, 60s timeout guards, VFS file import picker [📂 Open from VFS], and auto-ingest for FILE_OPEN/VFS_OPEN/#hash in kbbs.html.

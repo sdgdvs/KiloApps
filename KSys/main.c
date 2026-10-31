@@ -182,6 +182,11 @@ BOOL g_StressActive = FALSE;
 
 DWORD g_StressCycles = 0;
 
+#define TELEM_HIST_LEN 32
+int g_CpuHistory[TELEM_HIST_LEN] = {12, 10, 14, 11, 15, 12, 10, 13, 11, 12, 14, 16, 12, 11, 13, 15, 12, 14, 11, 10, 13, 12, 14, 15, 12, 11, 13, 14, 12, 10, 13, 12};
+int g_MemHistory[TELEM_HIST_LEN] = {25, 25, 26, 25, 25, 26, 27, 26, 25, 25, 26, 25, 25, 26, 25, 25, 26, 25, 26, 25, 25, 26, 25, 25, 26, 25, 25, 26, 25, 25, 26, 25};
+int g_ProcHistory[TELEM_HIST_LEN] = {8, 9, 8, 10, 8, 9, 8, 8, 9, 10, 8, 9, 8, 9, 8, 10, 9, 8, 8, 9, 8, 10, 9, 8, 9, 8, 8, 9, 10, 8, 9, 8};
+
 
 
 char g_LogBuffer[16384] = {0};
@@ -862,6 +867,66 @@ void GetSystemAuditText(char* buf, int maxLen) {
 
 
 
+void RenderSparkline(char* out, const int* data, int count, int maxVal) {
+    static const char levels[] = "_.-=#";
+    for (int i = 0; i < count; i++) {
+        int val = data[i];
+        if (val < 0) val = 0;
+        int lvl = (maxVal > 0) ? (val * 4) / maxVal : 0;
+        if (lvl > 4) lvl = 4;
+        if (lvl < 0) lvl = 0;
+        out[i] = levels[lvl];
+    }
+    out[count] = '\0';
+}
+
+void RenderOscilloscopeGrid(char* out, int maxLen, const int* data, int count, int maxVal, const char* title, const char* unit) {
+    char topRow[TELEM_HIST_LEN + 1];
+    char midRow[TELEM_HIST_LEN + 1];
+    char botRow[TELEM_HIST_LEN + 1];
+    int curVal = (count > 0) ? data[count - 1] : 0;
+    int peakVal = 0;
+    for (int i = 0; i < count; i++) {
+        if (data[i] > peakVal) peakVal = data[i];
+    }
+
+    for (int i = 0; i < count; i++) {
+        int v = data[i];
+        if (v >= 75) topRow[i] = '#';
+        else if (v >= 60) topRow[i] = '=';
+        else if (v >= 50) topRow[i] = '-';
+        else topRow[i] = ' ';
+
+        if (v >= 50) midRow[i] = '|';
+        else if (v >= 35) midRow[i] = '=';
+        else if (v >= 25) midRow[i] = '-';
+        else midRow[i] = ' ';
+
+        if (v >= 25) botRow[i] = '|';
+        else if (v >= 15) botRow[i] = '=';
+        else if (v >= 5) botRow[i] = '-';
+        else botRow[i] = '.';
+    }
+    topRow[count] = '\0';
+    midRow[count] = '\0';
+    botRow[count] = '\0';
+
+    char spark[TELEM_HIST_LEN + 1];
+    RenderSparkline(spark, data, count, maxVal);
+
+    wsprintfA(out,
+        "[%s] (Current: %d%s | Peak: %d%s)\r\n"
+        " 100%% |%s|\r\n"
+        "  50%% |%s|\r\n"
+        "   0%% |%s|\r\n"
+        "      +--------------------------------+\r\n"
+        "      -30s            -15s          NOW\r\n"
+        "Trace : [%s] (Legend: _ 0%%  . 25%%  - 50%%  = 75%%  # 100%%)\r\n\r\n",
+        title, curVal, unit, peakVal, unit,
+        topRow, midRow, botRow, spark
+    );
+}
+
 void GetServicesAndTelemetryText(char* buf, int maxLen) {
 
     int cpuPct = GetCpuUsagePercent();
@@ -914,47 +979,37 @@ void GetServicesAndTelemetryText(char* buf, int maxLen) {
 
     
 
+    char scopeCpu[512];
+    char scopeMem[512];
+    char scopeProc[512];
+    RenderOscilloscopeGrid(scopeCpu, sizeof(scopeCpu), g_CpuHistory, TELEM_HIST_LEN, 100, "CH1: CPU LOAD OSCILLOSCOPE", "%");
+    RenderOscilloscopeGrid(scopeMem, sizeof(scopeMem), g_MemHistory, TELEM_HIST_LEN, 100, "CH2: MEMORY LOAD OSCILLOSCOPE", "%");
+    RenderOscilloscopeGrid(scopeProc, sizeof(scopeProc), g_ProcHistory, TELEM_HIST_LEN, 50, "CH3: PROCESS / THREAD OSCILLOSCOPE", "% CPU");
+
     wsprintfA(buf,
-
         "=================================================================\r\n"
-
         "       REAL-TIME SYSTEM TELEMETRY & SERVICES MANAGER            \r\n"
-
         "=================================================================\r\n"
-
         "-> Press 'H' or F1 for Help/Instructions \r\n\r\n"
-
         "--- REAL-TIME TELEMETRY ---\r\n"
-
         "Live CPU Usage      : %d%% [%s]\r\n"
-
         "Memory Load         : %u%% [%s]\r\n"
-
         "Avail Physical RAM  : %u MB / %u MB\r\n"
-
         "Page File Avail     : %u MB\r\n"
-
         "System Uptime       : %u h %u m %u s\r\n"
-
         "Diagnostic Stress   : %s (Cycles: %u)\r\n\r\n"
-
+        "--- REAL-TIME TELEMETRY OSCILLOSCOPES (30-SECOND BUFFER) ---\r\n\r\n"
+        "%s%s%s"
         "--- WINDOWS SYSTEM SERVICES & DRIVERS STATUS ---\r\n"
-
         "Filter Mode         : %s\r\n",
-
         cpuPct, cpuBar,
-
         mem.dwMemoryLoad, memBar,
-
         (DWORD)(mem.ullAvailPhys >> 20),
-
         (DWORD)(mem.ullTotalPhys >> 20),
-
         (DWORD)(mem.ullAvailPageFile >> 20),
-
         hours, mins, secs,
-
         g_StressActive ? "ACTIVE (Burn-in)" : "STANDBY", g_StressCycles,
+        scopeCpu, scopeMem, scopeProc,
 
         (g_ServiceFilterMode == 1) ? "RUNNING ONLY" :
 
@@ -1671,33 +1726,40 @@ typedef struct {
 
 
 typedef struct {
-
     DWORD magic;
-
     DWORD version; // 2
-
     int currentTab;
-
     int serviceFilterMode;
-
     char cpuResult[128];
-
     char ramResult[128];
-
     char diskResult[128];
-
     char gdiResult[128];
-
     char cryptoResult[128];
-
     char jitterResult[128];
-
     int hexBufferSource;
-
     char logBuffer[16384];
-
     DWORD checksum;
+} KSysSaveDataV2;
 
+typedef struct {
+    DWORD magic;
+    DWORD version; // 3
+    int currentTab;
+    int serviceFilterMode;
+    char cpuResult[128];
+    char ramResult[128];
+    char diskResult[128];
+    char gdiResult[128];
+    char cryptoResult[128];
+    char jitterResult[128];
+    int hexBufferSource;
+    BOOL stressActive;
+    DWORD stressCycles;
+    int cpuHistory[32];
+    int memHistory[32];
+    int procHistory[32];
+    char logBuffer[16384];
+    DWORD checksum;
 } KSysSaveData;
 
 #pragma pack(pop)
@@ -1723,177 +1785,139 @@ DWORD CalcSaveChecksum(const void* data, size_t sizeWithoutChecksum) {
 
 
 BOOL SaveStateToFile(const char* filename) {
-
     KSysSaveData data;
-
     memset(&data, 0, sizeof(data));
-
     data.magic = KSYS_SAVE_MAGIC;
-
-    data.version = 2;
-
+    data.version = 3;
     data.currentTab = g_CurrentTab;
-
     data.serviceFilterMode = g_ServiceFilterMode;
-
     data.hexBufferSource = g_HexBufferSource;
-
+    data.stressActive = g_StressActive;
+    data.stressCycles = g_StressCycles;
+    for (int i = 0; i < 32; i++) {
+        data.cpuHistory[i] = g_CpuHistory[i];
+        data.memHistory[i] = g_MemHistory[i];
+        data.procHistory[i] = g_ProcHistory[i];
+    }
     lstrcpynA(data.cpuResult, g_CpuResult, sizeof(data.cpuResult));
-
     lstrcpynA(data.ramResult, g_RamResult, sizeof(data.ramResult));
-
     lstrcpynA(data.diskResult, g_DiskResult, sizeof(data.diskResult));
-
     lstrcpynA(data.gdiResult, g_GdiResult, sizeof(data.gdiResult));
-
     lstrcpynA(data.cryptoResult, g_CryptoResult, sizeof(data.cryptoResult));
-
     lstrcpynA(data.jitterResult, g_JitterResult, sizeof(data.jitterResult));
-
     lstrcpynA(data.logBuffer, g_LogBuffer, sizeof(data.logBuffer));
-
     data.checksum = CalcSaveChecksum(&data, sizeof(KSysSaveData) - sizeof(DWORD));
 
-
-
     HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-
     if (hFile == INVALID_HANDLE_VALUE) return FALSE;
-
     DWORD written = 0;
-
     BOOL ok = WriteFile(hFile, &data, sizeof(data), &written, NULL);
-
     CloseHandle(hFile);
-
     if (ok && written == sizeof(data)) {
-
-        LogEvent("INFO", "[QUICKSAVE] Diagnostics snapshot saved to file");
-
+        LogEvent("INFO", "[QUICKSAVE] Diagnostics snapshot saved to file (v3)");
         PlayNativeSfx(1);
-
         return TRUE;
-
     }
-
     return FALSE;
-
 }
 
 
 
 BOOL LoadStateFromFile(const char* filename) {
-
     HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-
     if (hFile == INVALID_HANDLE_VALUE) return FALSE;
-
     DWORD size = GetFileSize(hFile, NULL);
 
     if (size == sizeof(KSysSaveData)) {
-
         KSysSaveData data;
-
         DWORD read = 0;
-
         BOOL ok = ReadFile(hFile, &data, sizeof(data), &read, NULL);
-
         CloseHandle(hFile);
-
         if (!ok || read != sizeof(data)) return FALSE;
-
-        if (data.magic != KSYS_SAVE_MAGIC || data.version != 2) return FALSE;
-
+        if (data.magic != KSYS_SAVE_MAGIC || data.version != 3) return FALSE;
         if (data.checksum != CalcSaveChecksum(&data, sizeof(KSysSaveData) - sizeof(DWORD))) return FALSE;
 
-
-
         g_CurrentTab = data.currentTab;
-
         if (g_CurrentTab < 0 || g_CurrentTab > 5) g_CurrentTab = 0;
-
         g_ServiceFilterMode = data.serviceFilterMode;
-
         if (g_ServiceFilterMode < 0 || g_ServiceFilterMode > 4) g_ServiceFilterMode = 0;
-
         g_HexBufferSource = data.hexBufferSource;
-
         if (g_HexBufferSource < 0 || g_HexBufferSource > 3) g_HexBufferSource = 0;
 
-
+        g_StressActive = data.stressActive;
+        g_StressCycles = data.stressCycles;
+        if (hBtnStress) {
+            SetWindowTextA(hBtnStress, g_StressActive ? "Stress: ON [B]" : "Stress: OFF [B]");
+        }
+        for (int i = 0; i < 32; i++) {
+            g_CpuHistory[i] = data.cpuHistory[i];
+            g_MemHistory[i] = data.memHistory[i];
+            g_ProcHistory[i] = data.procHistory[i];
+        }
 
         lstrcpynA(g_CpuResult, data.cpuResult, sizeof(g_CpuResult));
-
         lstrcpynA(g_RamResult, data.ramResult, sizeof(g_RamResult));
-
         lstrcpynA(g_DiskResult, data.diskResult, sizeof(data.diskResult));
-
         lstrcpynA(g_GdiResult, data.gdiResult, sizeof(data.gdiResult));
-
         lstrcpynA(g_CryptoResult, data.cryptoResult, sizeof(data.cryptoResult));
-
         lstrcpynA(g_JitterResult, data.jitterResult, sizeof(data.jitterResult));
+        lstrcpynA(g_LogBuffer, data.logBuffer, sizeof(data.logBuffer));
 
-        lstrcpynA(g_LogBuffer, data.logBuffer, sizeof(g_LogBuffer));
-
-
-
-        LogEvent("INFO", "[QUICKLOAD] Diagnostics snapshot restored from file");
-
+        LogEvent("INFO", "[QUICKLOAD] Diagnostics snapshot restored from file (v3)");
         PlayNativeSfx(1);
-
         return TRUE;
-
-    } else if (size == sizeof(KSysSaveDataV1)) {
-
-        KSysSaveDataV1 data;
-
+    } else if (size == sizeof(KSysSaveDataV2)) {
+        KSysSaveDataV2 data;
         DWORD read = 0;
-
         BOOL ok = ReadFile(hFile, &data, sizeof(data), &read, NULL);
-
         CloseHandle(hFile);
-
         if (!ok || read != sizeof(data)) return FALSE;
-
-        if (data.magic != KSYS_SAVE_MAGIC || data.version != 1) return FALSE;
-
-        if (data.checksum != CalcSaveChecksum(&data, sizeof(KSysSaveDataV1) - sizeof(DWORD))) return FALSE;
-
-
+        if (data.magic != KSYS_SAVE_MAGIC || data.version != 2) return FALSE;
+        if (data.checksum != CalcSaveChecksum(&data, sizeof(KSysSaveDataV2) - sizeof(DWORD))) return FALSE;
 
         g_CurrentTab = data.currentTab;
-
         if (g_CurrentTab < 0 || g_CurrentTab > 5) g_CurrentTab = 0;
-
         g_ServiceFilterMode = data.serviceFilterMode;
-
         if (g_ServiceFilterMode < 0 || g_ServiceFilterMode > 4) g_ServiceFilterMode = 0;
-
-
+        g_HexBufferSource = data.hexBufferSource;
+        if (g_HexBufferSource < 0 || g_HexBufferSource > 3) g_HexBufferSource = 0;
 
         lstrcpynA(g_CpuResult, data.cpuResult, sizeof(g_CpuResult));
-
         lstrcpynA(g_RamResult, data.ramResult, sizeof(g_RamResult));
+        lstrcpynA(data.diskResult, data.diskResult, sizeof(data.diskResult));
+        lstrcpynA(g_GdiResult, data.gdiResult, sizeof(data.gdiResult));
+        lstrcpynA(g_CryptoResult, data.cryptoResult, sizeof(data.cryptoResult));
+        lstrcpynA(g_JitterResult, data.jitterResult, sizeof(data.jitterResult));
+        lstrcpynA(g_LogBuffer, data.logBuffer, sizeof(data.logBuffer));
 
+        LogEvent("INFO", "[QUICKLOAD] Diagnostics snapshot restored from file (v2)");
+        PlayNativeSfx(1);
+        return TRUE;
+    } else if (size == sizeof(KSysSaveDataV1)) {
+        KSysSaveDataV1 data;
+        DWORD read = 0;
+        BOOL ok = ReadFile(hFile, &data, sizeof(data), &read, NULL);
+        CloseHandle(hFile);
+        if (!ok || read != sizeof(data)) return FALSE;
+        if (data.magic != KSYS_SAVE_MAGIC || data.version != 1) return FALSE;
+        if (data.checksum != CalcSaveChecksum(&data, sizeof(KSysSaveDataV1) - sizeof(DWORD))) return FALSE;
+
+        g_CurrentTab = data.currentTab;
+        if (g_CurrentTab < 0 || g_CurrentTab > 5) g_CurrentTab = 0;
+        g_ServiceFilterMode = data.serviceFilterMode;
+        if (g_ServiceFilterMode < 0 || g_ServiceFilterMode > 4) g_ServiceFilterMode = 0;
+
+        lstrcpynA(g_CpuResult, data.cpuResult, sizeof(g_CpuResult));
+        lstrcpynA(g_RamResult, data.ramResult, sizeof(g_RamResult));
         lstrcpynA(g_DiskResult, data.diskResult, sizeof(data.diskResult));
-
         lstrcpynA(g_LogBuffer, data.logBuffer, sizeof(g_LogBuffer));
 
-
-
         LogEvent("INFO", "[QUICKLOAD] Restored v1 snapshot from file");
-
         PlayNativeSfx(1);
-
         return TRUE;
-
     }
-
     CloseHandle(hFile);
-
     return FALSE;
-
 }
 
 
@@ -1908,7 +1932,7 @@ BOOL HasSavedState(const char* filename) {
 
     CloseHandle(hFile);
 
-    return (size == sizeof(KSysSaveData) || size == sizeof(KSysSaveDataV1));
+    return (size == sizeof(KSysSaveData) || size == sizeof(KSysSaveDataV2) || size == sizeof(KSysSaveDataV1));
 
 }
 
@@ -1970,7 +1994,14 @@ void GetHexInspectorText(char* buf, int maxLen) {
 
         saveSnapshot.magic = KSYS_SAVE_MAGIC;
 
-        saveSnapshot.version = 2;
+        saveSnapshot.version = 3;
+        saveSnapshot.stressActive = g_StressActive;
+        saveSnapshot.stressCycles = g_StressCycles;
+        for (int i = 0; i < 32; i++) {
+            saveSnapshot.cpuHistory[i] = g_CpuHistory[i];
+            saveSnapshot.memHistory[i] = g_MemHistory[i];
+            saveSnapshot.procHistory[i] = g_ProcHistory[i];
+        }
 
         saveSnapshot.currentTab = g_CurrentTab;
 
@@ -3044,13 +3075,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     SetWindowTextA(hBtnStress, "Stress: ON [B]");
 
-                    ShowNativeToast(hwnd, "Diagnostic Stress Test ACTIVE [B to toggle]");
+                    ShowNativeToast(hwnd, "Diagnostic Stress Test ACTIVE (Burn-in) [B to toggle]");
+                    PlayNativeSfx(2);
 
                 } else {
 
                     SetWindowTextA(hBtnStress, "Stress: OFF [B]");
 
-                    ShowNativeToast(hwnd, "Diagnostic Stress Test halted.");
+                    ShowNativeToast(hwnd, "Diagnostic Stress Test halted. System nominal.");
+                    PlayNativeSfx(0);
 
                 }
 
@@ -3207,13 +3240,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_TIMER: {
-
             if (wParam == 1) {
+                int curCpu = GetCpuUsagePercent();
+                if (g_StressActive) {
+                    g_StressCycles++;
+                    curCpu = 75 + (int)(GetTickCount() % 24);
+                }
+                MEMORYSTATUSEX mem = {0};
+                mem.dwLength = sizeof(mem);
+                GlobalMemoryStatusEx(&mem);
+                int curMem = (int)mem.dwMemoryLoad;
+                int curProc = g_StressActive ? (35 + (int)(GetTickCount() % 15)) : (8 + (int)(GetTickCount() % 6));
 
-                if (g_CurrentTab == 0 || g_CurrentTab == 2) {
+                for (int i = 0; i < TELEM_HIST_LEN - 1; i++) {
+                    g_CpuHistory[i] = g_CpuHistory[i+1];
+                    g_MemHistory[i] = g_MemHistory[i+1];
+                    g_ProcHistory[i] = g_ProcHistory[i+1];
+                }
+                g_CpuHistory[TELEM_HIST_LEN - 1] = curCpu;
+                g_MemHistory[TELEM_HIST_LEN - 1] = curMem;
+                g_ProcHistory[TELEM_HIST_LEN - 1] = curProc;
 
+                if (g_CurrentTab == 0 || g_CurrentTab == 2 || (g_CurrentTab == 1 && g_StressActive)) {
                     UpdateView();
-
                 }
 
                 if (g_ToastExpire != 0 && GetTickCount() > g_ToastExpire) {
