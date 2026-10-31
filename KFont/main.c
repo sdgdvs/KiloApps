@@ -279,7 +279,7 @@ LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     {"Standard B&W", RGB(0,0,0), RGB(255,255,255), "21.0:1", "AAA PASS"},
                     {"Charcoal Dark", RGB(230,230,230), RGB(24,24,24), "15.3:1", "AAA PASS"},
                     {"Amber CRT Phosphor", RGB(255,176,0), RGB(26,17,0), "11.2:1", "AAA PASS"},
-                    {"Win95 Retro 3D Face", RGB(0,0,128), RGB(192,192,192), "4.9:1", "AA PASS"}
+                    {"Win95 Retro 3D Face", RGB(0,0,128), RGB(192,192,192), "8.8:1", "AAA PASS"}
                 };
 
                 HFONT hSampleFont = CreateFontA(-18, 0, 0, 0, isBold ? FW_BOLD : FW_NORMAL, isItalic, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, currentFontName);

@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T19:21:29-07:00 — kilo-expander: KHex (KHex Phase VI VFS Save As, Group-1 x86 Opcode & Patch Applier Expansion)**
+  - Status: PASS ✅ (0 errors, web 286.6 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.09%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.5s)).
+  - loadVFSFile switches to editor tab and refreshes active analyses; non-VFS loads reset currentVfsPath; added VFS Save As.
+  - Persisted binary buffers as base64 in khex_text_buf preventing TextDecoder UTF-8 data corruption.
+  - Added x86 Group-1 immediate opcodes (0x80/0x81/0x83) to decodeX86Instruction with 100% Sample x86 stream sync, plus KHex/main.c parity.
+  - Enhanced applyBinaryPatchToBuffer to parse edited IPS records (magic, offsets, payloads, RLE, EOF) and DOS DEBUG scripts (e offset bytes).
+  - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-review`.
+
 - **2026-10-30T18:40:15-07:00 — kilo-qa: KSys (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KSys across web and native targets.

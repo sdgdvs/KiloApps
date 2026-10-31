@@ -7,8 +7,12 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; }
   body { margin: 0; font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Tahoma, sans-serif; background-color: #f4f5f7; display: flex; flex-direction: column; height: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; color: #222; }
-  .header { background: #1e2227; color: white; padding: 8px 14px; display: flex; gap: 8px; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 10; flex-wrap: wrap; }
-  .header-brand { font-weight: 700; font-size: 16px; letter-spacing: 0.5px; color: #4da3ff; display: flex; align-items: center; gap: 6px; }
+  .header { background: #1e2227; color: white; padding: 6px 12px; display: flex; gap: 6px; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 10; flex-wrap: nowrap; }
+  .header-brand { font-weight: 700; font-size: 16px; letter-spacing: 0.5px; color: #4da3ff; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  #soundToggleBtn { min-width: 122px; justify-content: center; text-align: center; white-space: nowrap; }
+  @media (max-width: 920px) {
+    .header { flex-wrap: wrap; }
+  }
   .header-hint { font-size: 11px; color: #8fa0b3; font-weight: normal; }
   .header select, .header input[type="text"] { padding: 5px 8px; font-family: inherit; border-radius: 4px; border: 1px solid #444c56; background: #2d333b; color: #e6edf3; outline: none; font-size: 12px; transition: border-color 0.15s; }
   .header select:focus, .header input[type="text"]:focus { border-color: #4da3ff; }
@@ -223,7 +227,7 @@
     </select>
     <label class="checkbox-label"><input type="checkbox" id="boldCheck"> Bold <span class="kbd-hint">B</span></label>
     <label class="checkbox-label"><input type="checkbox" id="italicCheck"> Italic <span class="kbd-hint">I</span></label>
-    <div style="display:flex; gap:6px; align-items:center; margin-left:auto; flex-wrap:wrap;">
+    <div class="header-actions" style="display:flex; gap:5px; align-items:center; margin-left:auto; flex-shrink:0;">
       <button id="quicksaveBtn" class="action-btn" title="Quicksave Workspace Snapshot [F5]">Save [F5]</button>
       <button id="quickloadBtn" class="action-btn" title="Quickload Workspace Snapshot [F9]">Load [F9]</button>
       <button id="exportModalBtn" class="action-btn" title="Export / Import Workspace Profile [JSON/E]">Profile [E]</button>
@@ -272,11 +276,11 @@
       </button>
       <button class="tab-btn" id="tab-opentype" role="tab" aria-selected="false" data-target="panel-opentype">
         <span>OpenType &amp; Variables</span>
-        <span class="tab-badge">10</span>
+        <span class="tab-badge">0</span>
       </button>
       <button class="tab-btn" id="tab-compare" role="tab" aria-selected="false" data-target="panel-compare">
         <span>Compare &amp; Typo Lint</span>
-        <span class="tab-badge">11</span>
+        <span class="tab-badge">-</span>
       </button>
     </div>
     
@@ -367,9 +371,9 @@
             <div style="display:flex; align-items:center; gap:6px;">
               <label style="font-size:11px; color:#64748b; font-weight:600;">Canvas Zoom:</label>
               <div class="zoom-controls">
-                <button class="chip-btn" id="btnAnatomyZoomOut" title="Zoom Out Anatomy Canvas [−]">−</button>
+                <button class="chip-btn" id="btnAnatomyZoomOut" title="Zoom Out Anatomy Canvas [[]">−</button>
                 <span id="anatomyZoomLabel" style="font-size:11px; font-family:monospace; font-weight:600; min-width:38px; text-align:center;">100%</span>
-                <button class="chip-btn" id="btnAnatomyZoomIn" title="Zoom In Anatomy Canvas [＋]">+</button>
+                <button class="chip-btn" id="btnAnatomyZoomIn" title="Zoom In Anatomy Canvas []]">+</button>
                 <button class="chip-btn" id="btnAnatomyZoomReset" title="Reset Zoom (100%)">100%</button>
               </div>
             </div>
@@ -425,13 +429,22 @@
         <div style="display:flex; gap:16px; align-items:center; margin-top:10px; background:#f8fafc; padding:14px 18px; border-radius:6px; border:1px solid #e2e8f0; flex-wrap:wrap;">
           <div>
             <label for="customFg" style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">Text Color (FG):</label>
-            <input type="color" id="customFg" value="#111111" style="cursor:pointer; width:45px; height:32px; border:1px solid #cbd5e1; border-radius:4px; padding:2px;">
+            <div style="display:flex; gap:6px; align-items:center;">
+              <input type="color" id="customFg" value="#111111" style="cursor:pointer; width:36px; height:32px; border:1px solid #cbd5e1; border-radius:4px; padding:2px;">
+              <input type="text" id="customFgHex" value="#111111" maxlength="7" style="width:78px; padding:5px 8px; font-family:Consolas, monospace; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;" title="Hex text color e.g. #111111">
+            </div>
+          </div>
+          <div>
+            <button id="swapColorsBtn" class="chip-btn" type="button" title="Swap Foreground and Background Colors" style="margin-top:16px; padding:6px 12px; display:inline-flex; align-items:center; gap:5px; font-weight:600;">⇄ Swap FG/BG</button>
           </div>
           <div>
             <label for="customBg" style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">Background (BG):</label>
-            <input type="color" id="customBg" value="#ffffff" style="cursor:pointer; width:45px; height:32px; border:1px solid #cbd5e1; border-radius:4px; padding:2px;">
+            <div style="display:flex; gap:6px; align-items:center;">
+              <input type="color" id="customBg" value="#ffffff" style="cursor:pointer; width:36px; height:32px; border:1px solid #cbd5e1; border-radius:4px; padding:2px;">
+              <input type="text" id="customBgHex" value="#ffffff" maxlength="7" style="width:78px; padding:5px 8px; font-family:Consolas, monospace; font-size:12px; border:1px solid #cbd5e1; border-radius:4px;" title="Hex background color e.g. #ffffff">
+            </div>
           </div>
-          <div id="customContrastFeedback" style="flex:1; min-width:240px; font-size:13px; color:#1e293b;"></div>
+          <div id="customContrastFeedback" style="flex:1; min-width:280px; font-size:13px; color:#1e293b;"></div>
         </div>
       </div>
 
@@ -568,9 +581,9 @@
               <div style="display:flex; align-items:center; gap:6px;">
                 <span id="bitmapCoordInfo" style="font-size:11px; font-family:monospace; color:#64748b; margin-right:4px;">X: - , Y: -</span>
                 <div class="zoom-controls">
-                  <button class="chip-btn" id="btnBmpZoomOut" title="Zoom Out Matrix [−]">− [−]</button>
+                  <button class="chip-btn" id="btnBmpZoomOut" title="Zoom Out Matrix [[]">− [[]</button>
                   <span id="bmpZoomLabel" style="font-size:11px; font-family:monospace; font-weight:600; min-width:38px; text-align:center;">100%</span>
-                  <button class="chip-btn" id="btnBmpZoomIn" title="Zoom In Matrix [＋]">+ [＋]</button>
+                  <button class="chip-btn" id="btnBmpZoomIn" title="Zoom In Matrix []]">+ []]</button>
                   <button class="chip-btn" id="btnBmpZoomFit" title="Fit to Container">Fit</button>
                 </div>
               </div>
@@ -994,7 +1007,7 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">Enter</kbd> / <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">Space</kbd> : Dissect focused glyph in Anatomy (<kbd style="background:#eee; padding:1px 5px; border-radius:3px;">Shift</kbd> for Bitmap)</li>
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">W</kbd> : Toggle Live Sample text wrapping (Wrap ON / Single-line scroll)</li>
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">E</kbd> : Open Workspace Profile &amp; Export dialog</li>
-        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">+</kbd> / <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">-</kbd> : Zoom in / out in Bitmap Matrix Editor and Anatomy Canvas</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">[</kbd> / <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">]</kbd> : Zoom out / in in Bitmap Matrix Editor and Anatomy Canvas</li>
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">◀</kbd> / <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">▶</kbd> : Step previous / next glyph in Bitmap Studio</li>
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">X</kbd> : Invert active pixel matrix in Bitmap Studio</li>
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">F5</kbd> : Quicksave complete workspace snapshot</li>
@@ -1031,6 +1044,9 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     const scaleRatio = document.getElementById('scaleRatio');
     const customFg = document.getElementById('customFg');
     const customBg = document.getElementById('customBg');
+    const customFgHex = document.getElementById('customFgHex');
+    const customBgHex = document.getElementById('customBgHex');
+    const swapColorsBtn = document.getElementById('swapColorsBtn');
     const customKernInput = document.getElementById('customKernInput');
     const exportModal = document.getElementById('exportModal');
     const soundToggleBtn = document.getElementById('soundToggleBtn');
@@ -1215,7 +1231,7 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
 
     function updateSoundBtn() {
       if (soundToggleBtn) {
-        soundToggleBtn.textContent = soundEnabled ? '🔊 Sound: ON' : '🔈 Sound: OFF';
+        soundToggleBtn.textContent = soundEnabled ? '🔊 Sound: ON [M]' : '🔈 Sound: OFF [M]';
         soundToggleBtn.title = soundEnabled ? 'Audio feedback enabled [M to mute]' : 'Audio feedback muted [M to unmute]';
       }
     }
@@ -2039,26 +2055,42 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       const safeFont = fontList.value.replace(/["\\]/g, '');
       const weight = boldCheck.checked ? 'bold' : 'normal';
       const style = italicCheck.checked ? 'italic' : 'normal';
+      const activeSizePx = parseInt(sizeList.value, 10) || 48;
+      // WCAG 2.1: Large text is at least 18pt (24px) or 14pt (approx 18.66px) bold
+      const isLargeText = activeSizePx >= 24 || (weight === 'bold' && activeSizePx >= 18.66);
 
       let html = '';
       palettes.forEach(p => {
         const ratio = getContrastRatio(p.fg, p.bg);
-        const passAA = ratio >= 4.5;
-        const passAAA = ratio >= 7.0;
+        const normalAA = ratio >= 4.5;
+        const normalAAA = ratio >= 7.0;
+        const largeAA = ratio >= 3.0;
+        const largeAAA = ratio >= 4.5;
         html += `
-          <div class="contrast-card" data-fg="${escapeAttr(p.fg)}" data-bg="${escapeAttr(p.bg)}" data-name="${escapeAttr(p.name)}" title="Click to test ${escapeAttr(p.name)} in custom calculator" style="background:${p.bg}; color:${p.fg}; border-color:${p.bg === '#ffffff' ? '#cbd5e1' : '#334155'}; cursor:pointer;">
+          <div class="contrast-card" tabindex="0" role="button" aria-label="Load ${escapeAttr(p.name)} into custom contrast calculator" data-fg="${escapeAttr(p.fg)}" data-bg="${escapeAttr(p.bg)}" data-name="${escapeAttr(p.name)}" title="Click or press Enter/Space to test ${escapeAttr(p.name)} in custom calculator" style="background:${p.bg}; color:${p.fg}; border-color:${p.bg === '#ffffff' ? '#cbd5e1' : '#334155'}; cursor:pointer;">
             <div>
               <div style="font-size:11px; opacity:0.75; font-weight:600; text-transform:uppercase; margin-bottom:4px; display:flex; justify-content:space-between;">
                 <span>${escapeHtml(p.name)}</span>
-                <span style="font-size:10px; opacity:0.7;">Click to test</span>
+                <span style="font-size:10px; opacity:0.7;">Click / Enter to test</span>
               </div>
-              <div class="contrast-sample-text" style="font-family:'${safeFont}', sans-serif; font-weight:${weight}; font-style:${style};">KFont Retro 1999</div>
+              <div class="contrast-sample-text" style="font-family:'${safeFont}', sans-serif; font-weight:${weight}; font-style:${style}; font-size:22px;">KFont Retro 1999</div>
             </div>
-            <div class="contrast-meta">
-              <span>Ratio: <strong>${ratio.toFixed(2)}:1</strong></span>
-              <div style="display:flex; gap:4px;">
-                <span class="${passAA ? 'badge-pass' : 'badge-fail'}">AA</span>
-                <span class="${passAAA ? 'badge-pass' : 'badge-fail'}">AAA</span>
+            <div class="contrast-meta" style="flex-direction:column; gap:6px; align-items:flex-start;">
+              <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                <span>Ratio: <strong>${ratio.toFixed(2)}:1</strong></span>
+                <span style="font-size:10px; opacity:0.85; font-weight:600;">Active: ${activeSizePx}px (${isLargeText ? 'Large' : 'Normal'})</span>
+              </div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap; font-size:10px;">
+                <span style="display:inline-flex; align-items:center; gap:3px;">
+                  <span style="opacity:0.8;">Normal:</span>
+                  <span class="${normalAA ? 'badge-pass' : 'badge-fail'}" title="Normal Text Level AA (≥4.5:1)">AA 4.5</span>
+                  <span class="${normalAAA ? 'badge-pass' : 'badge-fail'}" title="Normal Text Level AAA (≥7.0:1)">AAA 7.0</span>
+                </span>
+                <span style="display:inline-flex; align-items:center; gap:3px;">
+                  <span style="opacity:0.8;">Large:</span>
+                  <span class="${largeAA ? 'badge-pass' : 'badge-fail'}" title="Large Text Level AA (≥3.0:1)">AA 3.0</span>
+                  <span class="${largeAAA ? 'badge-pass' : 'badge-fail'}" title="Large Text Level AAA (≥4.5:1)">AAA 4.5</span>
+                </span>
               </div>
             </div>
           </div>
@@ -2069,9 +2101,17 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         card.onclick = () => {
           customFg.value = card.getAttribute('data-fg');
           customBg.value = card.getAttribute('data-bg');
+          if (customFgHex) customFgHex.value = customFg.value;
+          if (customBgHex) customBgHex.value = customBg.value;
           playSound('click');
           updateCustomContrast();
           showToast(`Loaded "${card.getAttribute('data-name')}" into Custom Calculator`);
+        };
+        card.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
+          }
         };
       });
 
@@ -2082,25 +2122,44 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     function updateCustomContrast() {
       const fg = customFg.value;
       const bg = customBg.value;
+      if (customFgHex && document.activeElement !== customFgHex) customFgHex.value = fg;
+      if (customBgHex && document.activeElement !== customBgHex) customBgHex.value = bg;
       safeSetStorage('kfont_custom_fg', fg);
       safeSetStorage('kfont_custom_bg', bg);
       const ratio = getContrastRatio(fg, bg);
-      const passAA = ratio >= 4.5;
-      const passAAA = ratio >= 7.0;
+      const normalAA = ratio >= 4.5;
+      const normalAAA = ratio >= 7.0;
+      const largeAA = ratio >= 3.0;
+      const largeAAA = ratio >= 4.5;
       const safeFont = fontList.value.replace(/["\\]/g, '');
       const weight = boldCheck.checked ? 'bold' : 'normal';
       const style = italicCheck.checked ? 'italic' : 'normal';
+      const activeSizePx = parseInt(sizeList.value, 10) || 48;
+      const isLargeText = activeSizePx >= 24 || (weight === 'bold' && activeSizePx >= 18.66);
 
       const fb = document.getElementById('customContrastFeedback');
       fb.innerHTML = `
         <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-          <div style="background:${bg}; color:${fg}; padding:8px 14px; border-radius:4px; font-family:'${safeFont}', sans-serif; font-size:18px; font-weight:${weight}; font-style:${style}; border:1px solid #cbd5e1;">
-            Live Preview: The quick brown fox
+          <div style="background:${bg}; color:${fg}; padding:8px 14px; border-radius:4px; font-family:'${safeFont}', sans-serif; font-size:${Math.min(activeSizePx, 28)}px; font-weight:${weight}; font-style:${style}; border:1px solid #cbd5e1; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            Live Preview: The quick brown fox (${activeSizePx}px)
           </div>
-          <div>
-            Contrast Ratio: <strong>${ratio.toFixed(2)}:1</strong> —
-            <span class="${passAA ? 'badge-pass' : 'badge-fail'}" style="margin-left:4px;">AA ${passAA ? 'PASS' : 'FAIL'}</span>
-            <span class="${passAAA ? 'badge-pass' : 'badge-fail'}" style="margin-left:4px;">AAA ${passAAA ? 'PASS' : 'FAIL'}</span>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <div>
+              Contrast Ratio: <strong>${ratio.toFixed(2)}:1</strong>
+              <span style="font-size:11px; color:#64748b; margin-left:6px;">(Active size: ${activeSizePx}px ${weight === 'bold' ? 'Bold ' : ''}➔ ${isLargeText ? 'Large Text' : 'Normal Text'})</span>
+            </div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; font-size:11px; align-items:center;">
+              <div style="display:flex; gap:4px; align-items:center;">
+                <strong>Normal Text:</strong>
+                <span class="${normalAA ? 'badge-pass' : 'badge-fail'}" title="Requires ≥ 4.5:1">AA ${normalAA ? 'PASS (≥4.5)' : 'FAIL'}</span>
+                <span class="${normalAAA ? 'badge-pass' : 'badge-fail'}" title="Requires ≥ 7.0:1">AAA ${normalAAA ? 'PASS (≥7.0)' : 'FAIL'}</span>
+              </div>
+              <div style="display:flex; gap:4px; align-items:center;">
+                <strong>Large Text:</strong>
+                <span class="${largeAA ? 'badge-pass' : 'badge-fail'}" title="Requires ≥ 3.0:1">AA ${largeAA ? 'PASS (≥3.0)' : 'FAIL'}</span>
+                <span class="${largeAAA ? 'badge-pass' : 'badge-fail'}" title="Requires ≥ 4.5:1">AAA ${largeAAA ? 'PASS (≥4.5)' : 'FAIL'}</span>
+              </div>
+            </div>
           </div>
         </div>
       `;
@@ -2457,7 +2516,8 @@ body {
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
-      const cssW = Math.round(rect.width) || 800;
+      const parentW = (canvas.parentElement && canvas.parentElement.getBoundingClientRect) ? Math.round(canvas.parentElement.getBoundingClientRect().width) : 0;
+      const cssW = Math.round(rect.width) || parentW || 800;
       const cssH = 120;
 
       const targetW = Math.round(cssW * dpr);
@@ -3313,6 +3373,7 @@ typedef struct {
       renderBitmapPreviews();
       renderBitmapDiff();
       updateBitmapExport();
+      renderBitmapBankCanvas();
     }
 
     function downloadBitmapHeader() {
@@ -4033,12 +4094,12 @@ typedef struct {
         'panel-metrics': 'Active: 1. Metrics & OS/2 • Keys: [1-9,0,-] Tabs • [B/I] Bold/Italic • [F1/H] Help • [F5/F9] Save/Load',
         'panel-glyphs': 'Active: 2. Unicode Ranges • Filter Jump • [Arrows/Home/End] Select • [Enter] Dissect • [Shift+Enter] Bitmap',
         'panel-diagnostics': 'Active: 3. Kerning & Hinting • Test Custom Pairs • Subpixel Hinting Ladder • [F1/H] Help',
-        'panel-anatomy': 'Active: 4. Glyph Anatomy • [+/-] Zoom Canvas • [C] Copy JSON Report • [9] Edit Bitmap • [F1/H] Help',
+        'panel-anatomy': 'Active: 4. Glyph Anatomy • [[/]] Zoom Canvas • [C] Copy JSON Report • [9] Edit Bitmap • [F1/H] Help',
         'panel-waterfall': 'Active: 5. Type Waterfall • Modular Scale Ratio Ladder • [B/I] Bold/Italic • [F1/H] Help',
         'panel-contrast': 'Active: 6. Contrast & WCAG • 6 OS Palettes • Interactive Color Picker • [F1/H] Help',
         'panel-spec': 'Active: 7. Spec & Code Export • [C] Copy Win32 C Code • Copy CSS / SVG / JSON / TTX Specs',
         'panel-sample': 'Active: 8. Live Sample & Run • [W] Toggle Wrap • Left/Center/Right Align • Advance Dissector Table',
-        'panel-bitmap': 'Active: 9. Bitmap & ROM Studio • [Left/Right] Step Glyph • [X] Invert • [+/-] Zoom Matrix • [F1/H] Help',
+        'panel-bitmap': 'Active: 9. Bitmap & ROM Studio • [Left/Right] Step Glyph • [X] Invert • [[/]] Zoom Matrix • [F1/H] Help',
         'panel-opentype': 'Active: 10. OpenType & Variables • Layout Feature Tags (liga, smcp, zero) • Variable Axis Oscillation',
         'panel-compare': 'Active: 11. Compare & Typo Lint • Dual Font Diff Overlay • Typographic Rules Linter • [F1/H] Help'
       };
@@ -4143,10 +4204,68 @@ typedef struct {
       updateWaterfall();
       updateSpecAndCode();
     };
-    customFg.oninput = updateCustomContrast;
-    customFg.onchange = updateCustomContrast;
-    customBg.oninput = updateCustomContrast;
-    customBg.onchange = updateCustomContrast;
+    customFg.oninput = () => {
+      if (customFgHex) customFgHex.value = customFg.value;
+      updateCustomContrast();
+    };
+    customFg.onchange = () => {
+      if (customFgHex) customFgHex.value = customFg.value;
+      updateCustomContrast();
+    };
+    customBg.oninput = () => {
+      if (customBgHex) customBgHex.value = customBg.value;
+      updateCustomContrast();
+    };
+    customBg.onchange = () => {
+      if (customBgHex) customBgHex.value = customBg.value;
+      updateCustomContrast();
+    };
+    if (customFgHex) {
+      customFgHex.oninput = () => {
+        let val = customFgHex.value.trim();
+        if (!val.startsWith('#')) val = '#' + val;
+        if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+          customFg.value = val;
+          updateCustomContrast();
+        } else if (/^#[0-9a-fA-F]{3}$/.test(val)) {
+          const full = '#' + val[1] + val[1] + val[2] + val[2] + val[3] + val[3];
+          customFg.value = full;
+          updateCustomContrast();
+        }
+      };
+      customFgHex.onblur = () => {
+        customFgHex.value = customFg.value;
+      };
+    }
+    if (customBgHex) {
+      customBgHex.oninput = () => {
+        let val = customBgHex.value.trim();
+        if (!val.startsWith('#')) val = '#' + val;
+        if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+          customBg.value = val;
+          updateCustomContrast();
+        } else if (/^#[0-9a-fA-F]{3}$/.test(val)) {
+          const full = '#' + val[1] + val[1] + val[2] + val[2] + val[3] + val[3];
+          customBg.value = full;
+          updateCustomContrast();
+        }
+      };
+      customBgHex.onblur = () => {
+        customBgHex.value = customBg.value;
+      };
+    }
+    if (swapColorsBtn) {
+      swapColorsBtn.onclick = () => {
+        const tmp = customFg.value;
+        customFg.value = customBg.value;
+        customBg.value = tmp;
+        if (customFgHex) customFgHex.value = customFg.value;
+        if (customBgHex) customBgHex.value = customBg.value;
+        playSound('click');
+        updateCustomContrast();
+        showToast('Swapped Foreground and Background colors');
+      };
+    }
     customKernInput.oninput = updateCustomPair;
 
     anatomyInput.oninput = () => {
@@ -4456,10 +4575,16 @@ typedef struct {
     }
 
     const savedFg = safeGetStorage('kfont_custom_fg', null);
-    if (savedFg) customFg.value = savedFg;
+    if (savedFg) {
+      customFg.value = savedFg;
+      if (customFgHex) customFgHex.value = savedFg;
+    }
 
     const savedBg = safeGetStorage('kfont_custom_bg', null);
-    if (savedBg) customBg.value = savedBg;
+    if (savedBg) {
+      customBg.value = savedBg;
+      if (customBgHex) customBgHex.value = savedBg;
+    }
 
     const savedKern = safeGetStorage('kfont_custom_kern', null);
     if (savedKern) customKernInput.value = savedKern;
@@ -4491,6 +4616,7 @@ typedef struct {
       updateAnatomy();
       updateDiagnostics();
       renderBitmapEditor();
+      renderBitmapBankCanvas();
     });
 
     function trapFocus(modalEl, e) {
@@ -4639,7 +4765,19 @@ typedef struct {
           setSampleWrap(!sampleIsWrapped);
           playSound('click');
           showToast(`Text Wrap: ${sampleIsWrapped ? 'ON' : 'OFF'}`);
-        } else if (e.key === '+' || e.key === '=') {
+        } else if (e.key === '-' || e.key === '_') {
+          playSound('tab');
+          switchToTab('panel-compare');
+        } else if (e.key === '[' || e.key === '{') {
+          const activePanel = document.querySelector('.panel.active');
+          if (activePanel && activePanel.id === 'panel-anatomy') {
+            setAnatomyZoom(anatomyZoomFactor - 0.1);
+            playSound('click');
+          } else if (activePanel && activePanel.id === 'panel-bitmap') {
+            setBmpZoom(bmpZoomFactor - 0.15);
+            playSound('click');
+          }
+        } else if (e.key === ']' || e.key === '}') {
           const activePanel = document.querySelector('.panel.active');
           if (activePanel && activePanel.id === 'panel-anatomy') {
             setAnatomyZoom(anatomyZoomFactor + 0.1);
@@ -4648,17 +4786,14 @@ typedef struct {
             setBmpZoom(bmpZoomFactor + 0.15);
             playSound('click');
           }
-        } else if (e.key === '-' || e.key === '_') {
+        } else if (e.key === '+' || e.key === '=') {
           const activePanel = document.querySelector('.panel.active');
           if (activePanel && activePanel.id === 'panel-anatomy') {
-            setAnatomyZoom(anatomyZoomFactor - 0.1);
+            setAnatomyZoom(anatomyZoomFactor + 0.1);
             playSound('click');
           } else if (activePanel && activePanel.id === 'panel-bitmap') {
-            setBmpZoom(bmpZoomFactor - 0.15);
+            setBmpZoom(bmpZoomFactor + 0.15);
             playSound('click');
-          } else {
-            playSound('tab');
-            switchToTab('panel-compare');
           }
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
           const activePanel = document.querySelector('.panel.active');

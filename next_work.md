@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KBreakout
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KFont
+  kilo_usability: KColony
   kilo_qa: KAudio
   kilo_expander: KFont
   kilo_review: KPad
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KFont
-  timestamp: '2026-10-30T21:22:20-07:00'
+  timestamp: '2026-10-30T21:36:30-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -150,11 +150,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | **[ARGON REVIEW]:** Implement the promised keyboard pixel editing on #bitmapEditorCanvas (bmpCursorX/bmpCursorY highlight in renderBitmapEditor(), Arrow keys to move cursor without stepping activeBankChar when focused, Space to toggle, Enter to set, Delete/Backspace to clear, plus ArrowUp/ArrowDown +/-32 row navigation on #bitmapBankCanvas) and wheel-to-zoom on #bmpEditorContainer; call dead persistBitmapStorage() after all bitmap/bank/size/import mutations, stop initBitmapStudio() fresh boot from overwriting ASCII A in fontBank with cp437_smiley (rasterize activeBankChar silently on first boot), and fix executeImport() in bank mode to sync bmpW/bmpH/#bitmapGridSize from BDF BBX and reload bmpGrid from fontBank[activeBankChar]; add SELECT to isInput in global keydown, fix #btnTogglePulse typo to #btnToggleOscillation in visibilitychange, call updateSampleStats() in sampleOutput.oninput and all 5 #sample*Btn presets, resolve anatomyInput via getCharInfo() across Spec/Bitmap/SVG actions, and replace the hardcoded Potemkin TTGlyph polygon and text SVG in updateSpecAndCode() with real raster-traced SVG path d contours and measured TTGlyph/hmtx bounds. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KFont`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | **[ARGON REVIEW]:** Prevent .header 2-row wrap and 34px vertical layout jump at 1024x731 when toggling #soundToggleBtn by tightening .header padding/gaps with flex-wrap nowrap above 920px and giving #soundToggleBtn a fixed min-width and consistent [M] hint; update #tab-opentype and #tab-compare .tab-badge labels from misleading 10/11 to 0/- and move canvas zoom shortcuts to [ and ] so - switches to Tab 11 from every tab including Tabs 4 and 9; call renderBitmapBankCanvas() inside renderBitmapAll() and the window resize listener so #bitmapBankCanvas sizes crisply on tab switch instead of squishing from 800px; and upgrade #panel-contrast (updateContrast() and updateCustomContrast()) with tabindex=0, role=button, and Enter/Space activation on .contrast-card, both Normal Text (AA 4.5, AAA 7.0) and Large Text (AA 3.0, AAA 4.5) WCAG 2.1 badges at active #sizeList size, editable hex text inputs, and a Swap FG/BG button. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Arrange #start-screen buttons in a 2-column grid so all 11 fit within 870x623 without bottom clipping; lock body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto) and e.preventDefault() on Arrow/Space keys; resize #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; raise small font-size from 8px to 9.5px. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -167,6 +166,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Compact #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 without vertical scroll, add preventDefault() for Arrow/Space keys so gameplay never scrolls the page, and prevent #toast-container from covering #controls and #message-log. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Eliminate 127px vertical overflow at 980x783 in khex.html via 100vh flex shell with scrollable .tab-content.active, pinned .status-bar, and 2-col Base Converter inputs; raise .bit-num font-size from 0.55rem (8.8px) to >=10.5px with higher contrast; move #toastContainer to bottom-right so toasts never block .tab-nav clicks; and change #tabbtn-struct badge from duplicate 9 to 0 with key 0 shortcut. |
+| `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | **[ARGON REVIEW]:** Prevent .header 2-row wrap and 34px vertical layout jump at 1024x731 when toggling #soundToggleBtn by tightening .header padding/gaps with flex-wrap nowrap above 920px and giving #soundToggleBtn a fixed min-width and consistent [M] hint; update #tab-opentype and #tab-compare .tab-badge labels from misleading 10/11 to 0/- and move canvas zoom shortcuts to [ and ] so - switches to Tab 11 from every tab including Tabs 4 and 9; call renderBitmapBankCanvas() inside renderBitmapAll() and the window resize listener so #bitmapBankCanvas sizes crisply on tab switch instead of squishing from 800px; and upgrade #panel-contrast (updateContrast() and updateCustomContrast()) with tabindex=0, role=button, and Enter/Space activation on .contrast-card, both Normal Text (AA 4.5, AAA 7.0) and Large Text (AA 3.0, AAA 4.5) WCAG 2.1 badges at active #sizeList size, editable hex text inputs, and a Swap FG/BG button. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KAudio`
@@ -292,6 +292,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T21:36:30-07:00 — kilo-usability: KFont (Header Layout, Tab Shortcuts, Crispy Bank Canvas & WCAG 2.1 Polish)**
+  - Status: PASS (0 errors, web 233.6 KB, native 32.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 8.38%, HEAD Δ 12.58%, 0 fail, 0 warn, 4.3s)).
+  - Layout: Prevented .header 2-row wrap and 34px vertical layout jump at 1024x731 with flex-wrap nowrap above 920px and min-width: 122px on #soundToggleBtn.
+  - Shortcuts: Updated OpenType/Compare tab badges to [0]/[-] and moved canvas zoom to [[/]] so [-] switches to Tab 11 from all tabs.
+  - Canvas & WCAG: Rendered #bitmapBankCanvas crisply on resize/tab switch; upgraded #panel-contrast with tabindex=0, Enter/Space activation, Normal/Large WCAG 2.1 badges, editable hex inputs, and Swap FG/BG button.
+  - Handoff: Advanced `kilo-usability` to `KColony`; rotated active agent to `kilo-qa`.
+
 - **2026-10-30T21:22:20-07:00 — kilo-tester: KFont (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KFont across web and native targets.
@@ -313,11 +320,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Bitmap & Feature Findings: #bitmapEditorCanvas promises keyboard pixel editing and wheel zoom in UI/ARIA labels with zero implementation; persistBitmapStorage() is dead code; fresh boot overwrites ASCII A with cp437_smiley; bank BDF import drops BBX dimensions; visibilitychange targets non-existent #btnTogglePulse; TTX/SVG export uses a static Potemkin polygon.
   - Phase VI Mesh & Native Parity: Queued KiloOS VFS Open/Save (.kfont.json, .bdf, .fnt, .h, .svg), KPad/KHex OS_LAUNCH_APP bridges, and KFont/main.c dynamic WCAG + interactive Bitmap [8] ROM editor.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KFont`, `kilo-tester`->`KFont`, `kilo-expander`->`KFont`] (un-quarantined `KFont` from Mature); advanced `kilo-review` to `KPad`; next agent `kilo-creator`.
-
-- **2026-10-30T19:21:29-07:00 — kilo-expander: KHex (KHex Phase VI VFS Save As, Group-1 x86 Opcode & Patch Applier Expansion)**
-  - Status: PASS ✅ (0 errors, web 286.6 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.09%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.5s)).
-  - loadVFSFile switches to editor tab and refreshes active analyses; non-VFS loads reset currentVfsPath; added VFS Save As.
-  - Persisted binary buffers as base64 in khex_text_buf preventing TextDecoder UTF-8 data corruption.
-  - Added x86 Group-1 immediate opcodes (0x80/0x81/0x83) to decodeX86Instruction with 100% Sample x86 stream sync, plus KHex/main.c parity.
-  - Enhanced applyBinaryPatchToBuffer to parse edited IPS records (magic, offsets, payloads, RLE, EOF) and DOS DEBUG scripts (e offset bytes).
-  - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-review`.
