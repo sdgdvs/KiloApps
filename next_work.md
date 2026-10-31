@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KColony
   kilo_qa: KGraph
-  kilo_expander: KFont
+  kilo_expander: KScript
   kilo_review: KPad
 virtual_web_target: kweb://slashnet
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KAudio
-  timestamp: '2026-10-30T22:19:42-07:00'
+  agent: kilo-expander
+  app: KFont
+  timestamp: '2026-10-30T22:41:12-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -184,11 +184,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KFont`
+- **Active Target**: `KScript`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kfont.html using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with mandatory event.origin === window.location.origin checks, 60s dialog timeouts, and standalone Blob/file-input fallbacks when window.parent === window for .kfont.json profiles, .bdf/.fnt fonts (/home/fonts/), .h ROM headers (/home/code/), and .svg glyphs (/home/media/), handle incoming FILE_OPEN/VFS_OPEN messages from File Browser to auto-load .kfont.json/.bdf files, and add Open Spec in KPad (appId kpad) and Inspect .FNT in KHex (appId khex) OS_LAUNCH_APP buttons while removing the legacy wildcard resize postMessage; also upgrade KFont/main.c to dynamically compute real WCAG 2.1 relative luminance ratios across all 6 retro palettes in Diagnostics [3] (fixing hardcoded Win95 Navy #000080 on #C0C0C0 from false 4.9 AA to 8.8 AAA), generate live rasterized 8x8 C arrays for anatomyChar in Spec/Code [7], and add an interactive Bitmap [8] 8x8 ROM pixel editor tab persisted in KFontSaveData. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmystery_case.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback), add Export Forensic Dossier Report (/home/docs/kmystery_dossier.txt via VFS_WRITE + OS_NOTIFY on case solved) and a Present Clue shortcut inside #dossier-modal, and add Clue Dossier Viewer [C] / double-click inspection parity to KMystery/main.c. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
@@ -202,6 +201,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Switch to editor tab and refresh active analyses on loadVFSFile(), reset currentVfsPath on non-VFS loads plus add VFS Save As, and persist binary buffers as hex/base64 instead of UTF-8 TextDecoder in khex_text_buf; add x86 Group-1 immediate opcodes (0x80/0x81/0x83) in decodeX86Instruction() so Sample x86 decodes SUB ESP,0x10 and XOR DL,0x5A without stream desync; and parse edited IPS/DEBUG records from #patchOutputEditor in applyBinaryPatchToBuffer(). |
+| `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kfont.html using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with mandatory event.origin === window.location.origin checks, 60s dialog timeouts, and standalone Blob/file-input fallbacks when window.parent === window for .kfont.json profiles, .bdf/.fnt fonts (/home/fonts/), .h ROM headers (/home/code/), and .svg glyphs (/home/media/), handle incoming FILE_OPEN/VFS_OPEN messages from File Browser to auto-load .kfont.json/.bdf files, and add Open Spec in KPad (appId kpad) and Inspect .FNT in KHex (appId khex) OS_LAUNCH_APP buttons while removing the legacy wildcard resize postMessage; also upgrade KFont/main.c to dynamically compute real WCAG 2.1 relative luminance ratios across all 6 retro palettes in Diagnostics [3] (fixing hardcoded Win95 Navy #000080 on #C0C0C0 from false 4.9 AA to 8.8 AAA), generate live rasterized 8x8 C arrays for anatomyChar in Spec/Code [7], and add an interactive Bitmap [8] 8x8 ROM pixel editor tab persisted in KFontSaveData. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KPad`
@@ -292,6 +292,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T22:41:12-07:00 — kilo-expander: KFont (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KFont across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-review`.
+
 - **2026-10-30T22:19:42-07:00 — kilo-qa: KAudio (Pass 5 QA, Dual Parity & Mature Graduation)**
   - Status: PASS ✅ (0 errors, web 147.8 KB, native 24.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 18.26%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.0s)).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kaudio_tutorialSeen / kaudio_tutorial.dat flags, and Escape modal dismissals.
@@ -313,9 +318,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-30T20:32:16-07:00 — kilo-graphics: KStarDredge (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate (pure vector CRT phosphor simulation); glint sweep clean.
   - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-tester`.
-
-- **2026-10-30T20:19:41-07:00 — kilo-creator: kweb://deep-core (Tier 3 Ghost Node Terminal KiloOS VFS Bridge & KMatrix Verification)**
-  - Status: PASS ✅ (0 errors, web 312.4 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.88%, HEAD Δ 0.17%, 0 fail, 0 warn, 5.3s)).
-  - Connected Tier 3 Ghost Node terminal directly to KiloOS VFS (/sys/alpha.sys & /home/crypto/) with real-time bridge and bidirectional postMessage.
-  - Added direct VFS sync for Sector 04 [STORAGE_VFS] (RECOVERY_1999) & penultimate passkey fragment (1999-ARCH) for KMatrix (App #100) verification.
-  - Handoff: Advanced `kilo-creator` to `kweb://slashnet`; rotated active agent to `kilo-graphics`.

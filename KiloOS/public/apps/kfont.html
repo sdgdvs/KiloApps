@@ -452,6 +452,7 @@
       <div id="panel-spec" class="panel" role="tabpanel">
         <h2>Typographic Specification &amp; Code Generator</h2>
         <p>Instant boilerplate and stylesheet generator ready to paste directly into Win32 C desktop applications, CSS stylesheets, or typography design systems.</p>
+        <div style="margin:8px 0 12px 0;"><button class="action-btn" id="btnOpenSpecInKPad" style="background:#0284c7; color:#fff; font-size:12px; padding:6px 12px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" title="Open complete typographic specification in KPad editor via KiloOS IPC">📝 Open Spec in KPad</button></div>
         
         <div class="code-block-container">
           <div class="code-block-header">
@@ -674,6 +675,7 @@
                   <button class="action-btn" id="btnDownloadBitmapHeader" style="font-size:11px; padding:4px 8px; background:#10b981;">Download .h</button>
                   <button class="action-btn" id="btnDownloadBdf" style="font-size:11px; padding:4px 8px; background:#0284c7;">Download .bdf</button>
                   <button class="action-btn" id="btnDownloadFnt" style="font-size:11px; padding:4px 8px; background:#6366f1;">Download .fnt</button>
+                  <button class="action-btn" id="btnInspectFntInKHex" style="font-size:11px; padding:4px 8px; background:#475569; color:#fff;" title="Inspect compiled .FNT binary in KHex editor via KiloOS IPC">🔍 Inspect .FNT in KHex</button>
                 </div>
               </div>
               <pre id="bitmapExportCode" class="code-block" style="border-radius:4px; max-height:220px;"></pre>
@@ -937,7 +939,8 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       </h2>
       <p>Export or import your complete typography workspace, active font selections, sample strings, and custom analysis profiles.</p>
       <div style="margin-bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
-        <button class="action-btn" id="downloadProfileJsonBtn">💾 Download .kfont.json</button>
+        <button class="action-btn" id="downloadProfileJsonBtn" title="Save profile to VFS or download (.kfont.json)">💾 Save Profile (.kfont.json)</button>
+        <button class="action-btn" id="openProfileVfsBtn" style="background:#0284c7; color:#fff;" title="Open profile from KiloOS VFS">📂 Open from VFS</button>
         <button class="action-btn" id="copyProfileJsonBtn">📋 Copy Profile JSON</button>
         <label class="action-btn" style="cursor: pointer; margin-bottom: 0;">
           📁 Open File...
@@ -975,6 +978,7 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
 
       <div style="margin-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
         <button class="action-btn" id="btnExecuteImport" style="background:#10b981;">Parse &amp; Load Glyph(s)</button>
+        <button class="action-btn" id="btnOpenBdfFromVfs" style="background:#0284c7; color:#fff;" title="Open Adobe BDF font file from KiloOS VFS">📂 Open .bdf from VFS</button>
         <button class="action-btn" id="importModalCloseBtn" style="background:#64748b;">Close [Esc]</button>
       </div>
     </div>
@@ -1028,9 +1032,222 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
   <script>
     if (window.top === window.self) {
         window.resizeTo(1024, 768);
-    } else {
-        window.parent.postMessage({ type: 'resize', width: 1024, height: 768 }, '*');
     }
+
+    // =========================================================================
+    // KILOOS PHASE VI VFS & INTER-APP IPC MESH
+    // =========================================================================
+    function uint8ToBase64(bytes) {
+      let binary = '';
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    }
+
+    function base64ToUint8(base64) {
+      const binaryStr = atob(base64);
+      const len = binaryStr.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+      }
+      return bytes;
+    }
+
+    const KiloVFS = {
+      isSupported() {
+        return typeof window !== 'undefined' && window.parent && window.parent !== window;
+      },
+      write(path, data, cb) {
+        if (!KiloVFS.isSupported()) {
+          if (cb) cb(false);
+          return;
+        }
+        const reqId = 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const handler = (e) => {
+          if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
+          if (e.data && e.data.type === 'VFS_WRITE_DONE' && e.data.requestId === reqId) {
+            window.removeEventListener('message', handler);
+            if (cb) cb(true);
+          }
+        };
+        window.addEventListener('message', handler);
+        try {
+          window.parent.postMessage({
+            type: 'VFS_WRITE',
+            path,
+            data: typeof data === 'string' ? data : JSON.stringify(data, null, 2),
+            requestId: reqId
+          }, '*');
+          window.parent.postMessage({
+            type: 'OS_NOTIFY',
+            title: document.title || 'KFont',
+            message: `Saved to VFS: ${path}`
+          }, '*');
+        } catch (err) {
+          window.removeEventListener('message', handler);
+          if (cb) cb(false);
+        }
+      },
+      read(path, cb) {
+        if (!KiloVFS.isSupported()) {
+          if (cb) cb(null, path);
+          return;
+        }
+        const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const handler = (e) => {
+          if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
+          if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+            window.removeEventListener('message', handler);
+            if (cb) cb(e.data.data, e.data.path || path);
+          }
+        };
+        window.addEventListener('message', handler);
+        try {
+          window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
+        } catch (err) {
+          window.removeEventListener('message', handler);
+          if (cb) cb(null, path);
+        }
+      },
+      showSave(defaultPath, data, cb) {
+        if (!KiloVFS.isSupported()) {
+          if (cb) cb(null);
+          return;
+        }
+        const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        let cleanupTimer = null;
+        const handler = (e) => {
+          if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
+          if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+            if (cleanupTimer) clearTimeout(cleanupTimer);
+            window.removeEventListener('message', handler);
+            if (e.data.path) {
+              KiloVFS.write(e.data.path, data, (ok) => {
+                if (cb) cb(e.data.path);
+              });
+            } else if (cb) {
+              cb(null);
+            }
+          }
+        };
+        cleanupTimer = setTimeout(() => {
+          window.removeEventListener('message', handler);
+          if (cb) cb(null);
+        }, 60000); // 60s dialog cleanup timeout
+        window.addEventListener('message', handler);
+        try {
+          window.parent.postMessage({
+            type: 'VFS_SHOW_SAVE',
+            requestId: reqId,
+            defaultPath: defaultPath,
+            path: defaultPath
+          }, '*');
+        } catch (err) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (cb) cb(null);
+        }
+      },
+      openPicker(cb) {
+        if (!KiloVFS.isSupported()) {
+          if (cb) cb(null, null);
+          return;
+        }
+        const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        let cleanupTimer = null;
+        const handler = (e) => {
+          if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
+          if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+            if (cleanupTimer) clearTimeout(cleanupTimer);
+            window.removeEventListener('message', handler);
+            if (e.data.path) {
+              KiloVFS.read(e.data.path, cb);
+            } else if (cb) {
+              cb(null, null);
+            }
+          }
+        };
+        cleanupTimer = setTimeout(() => {
+          window.removeEventListener('message', handler);
+          if (cb) cb(null, null);
+        }, 60000); // 60s dialog cleanup timeout
+        window.addEventListener('message', handler);
+        try {
+          window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
+        } catch (err) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (cb) cb(null, null);
+        }
+      },
+      launchApp(targetApp, path = '') {
+        try {
+          window.parent.postMessage({
+            type: 'OS_LAUNCH_APP',
+            targetApp,
+            appId: targetApp,
+            path
+          }, '*');
+        } catch (err) {}
+      }
+    };
+
+    function handleIncomingFileData(content, path = '') {
+      if (!content) return;
+      const p = (path || '').toLowerCase();
+      // Case 1: JSON workspace profile (.kfont.json or .json)
+      if (p.endsWith('.kfont.json') || p.endsWith('.json') || (typeof content === 'string' && content.trim().startsWith('{'))) {
+        try {
+          const parsed = typeof content === 'string' ? JSON.parse(content) : content;
+          if (applyWorkspaceState(parsed)) {
+            playSound('load');
+            showToast(`Loaded profile: ${path ? path.split('/').pop() : 'profile.json'}`);
+            return;
+          }
+        } catch (e) {
+          console.warn('VFS JSON parse error:', e);
+        }
+      }
+
+      // Case 2: Adobe BDF Font (.bdf) or ASCII BDF text
+      if (typeof content === 'string' && (p.endsWith('.bdf') || content.includes('STARTFONT') || content.includes('STARTCHAR') || content.includes('BITMAP'))) {
+        const importCodeArea = document.getElementById('importCodeTextarea');
+        if (importCodeArea) importCodeArea.value = content;
+        executeImport();
+        switchToTab('panel-bitmap');
+        showToast(`Loaded BDF font: ${path ? path.split('/').pop() : 'font.bdf'}`);
+        return;
+      }
+
+      showToast(`Received file from VFS: ${path || 'file'}`);
+    }
+
+    // Mandatory incoming message listener with event.origin validation
+    window.addEventListener('message', (e) => {
+      if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+        return;
+      }
+      const msg = e.data;
+      if (!msg || typeof msg !== 'object') return;
+      if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+        const filePath = msg.path || '';
+        const fileContent = msg.data !== undefined ? msg.data : msg.content;
+        if (fileContent !== undefined && fileContent !== null) {
+          handleIncomingFileData(fileContent, filePath);
+        } else if (filePath) {
+          KiloVFS.read(filePath, (data, path) => {
+            if (data !== undefined && data !== null) {
+              handleIncomingFileData(data, path || filePath);
+            } else {
+              showToast(`Could not read file from VFS: ${filePath}`);
+            }
+          });
+        }
+      }
+    });
 
     const fontList = document.getElementById('fontList');
     const sizeList = document.getElementById('sizeList');
@@ -2849,6 +3066,23 @@ body {
       document.getElementById('btnDownloadBitmapHeader').onclick = downloadBitmapHeader;
       document.getElementById('btnDownloadBdf').onclick = downloadBdf;
       document.getElementById('btnDownloadFnt').onclick = downloadFnt;
+      const btnInspectFnt = document.getElementById('btnInspectFntInKHex');
+      if (btnInspectFnt) btnInspectFnt.onclick = inspectFntInKHex;
+      const btnOpenBdfVfs = document.getElementById('btnOpenBdfFromVfs');
+      if (btnOpenBdfVfs) {
+        btnOpenBdfVfs.onclick = () => {
+          if (KiloVFS.isSupported()) {
+            KiloVFS.openPicker((data, path) => {
+              if (data) {
+                handleIncomingFileData(data, path);
+                closeImportModal();
+              }
+            });
+          } else {
+            showToast("VFS requires KiloOS environment");
+          }
+        };
+      }
 
       document.getElementById('btnBankPrev').onclick = () => stepBankChar(-1);
       document.getElementById('btnBankNext').onclick = () => stepBankChar(1);
@@ -3376,38 +3610,7 @@ typedef struct {
       renderBitmapBankCanvas();
     }
 
-    function downloadBitmapHeader() {
-      const code = document.getElementById('bitmapExportCode').textContent;
-      const blob = new Blob([code], { type: 'text/x-c' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `kfont_glyph_${bmpW}x${bmpH}.h`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      playSound('copy');
-      showToast(`Downloaded kfont_glyph_${bmpW}x${bmpH}.h`);
-    }
-
-    function downloadBdf() {
-      const bdfText = generateFullBdf();
-      const safeFont = (fontList.value || 'KFont').replace(/[^a-zA-Z0-9]/g, '_');
-      const blob = new Blob([bdfText], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `kfont_${safeFont}_${bmpW}x${bmpH}.bdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      playSound('copy');
-      showToast(`Downloaded Adobe BDF Font: kfont_${safeFont}_${bmpW}x${bmpH}.bdf`);
-    }
-
-    function downloadFnt() {
+    function generateFntBinaryBuffer() {
       const bytesPerRow = Math.ceil(bmpW / 8);
       const glyphBytes = bmpH * bytesPerRow;
       const totalGlyphBytes = 95 * glyphBytes;
@@ -3468,8 +3671,71 @@ typedef struct {
           }
         }
       }
+      return buffer;
+    }
 
+    function fallbackDownloadBitmapHeader(code) {
+      const blob = new Blob([code], { type: 'text/x-c' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kfont_glyph_${bmpW}x${bmpH}.h`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      playSound('copy');
+      showToast(`Downloaded kfont_glyph_${bmpW}x${bmpH}.h`);
+    }
+
+    function downloadBitmapHeader() {
+      const code = document.getElementById('bitmapExportCode').textContent;
+      const defaultPath = `/home/code/kfont_glyph_${bmpW}x${bmpH}.h`;
+      if (KiloVFS.isSupported()) {
+        KiloVFS.showSave(defaultPath, code, (savedPath) => {
+          if (savedPath) {
+            showToast(`C ROM header saved to VFS: ${savedPath}`);
+          } else {
+            fallbackDownloadBitmapHeader(code);
+          }
+        });
+      } else {
+        fallbackDownloadBitmapHeader(code);
+      }
+    }
+
+    function fallbackDownloadBdf(bdfText, safeFont) {
+      const blob = new Blob([bdfText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kfont_${safeFont}_${bmpW}x${bmpH}.bdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      playSound('copy');
+      showToast(`Downloaded Adobe BDF Font: kfont_${safeFont}_${bmpW}x${bmpH}.bdf`);
+    }
+
+    function downloadBdf() {
+      const bdfText = generateFullBdf();
       const safeFont = (fontList.value || 'KFont').replace(/[^a-zA-Z0-9]/g, '_');
+      const defaultPath = `/home/fonts/kfont_${safeFont}_${bmpW}x${bmpH}.bdf`;
+      if (KiloVFS.isSupported()) {
+        KiloVFS.showSave(defaultPath, bdfText, (savedPath) => {
+          if (savedPath) {
+            showToast(`Adobe BDF saved to VFS: ${savedPath}`);
+          } else {
+            fallbackDownloadBdf(bdfText, safeFont);
+          }
+        });
+      } else {
+        fallbackDownloadBdf(bdfText, safeFont);
+      }
+    }
+
+    function fallbackDownloadFnt(buffer, safeFont) {
       const blob = new Blob([buffer], { type: 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -3481,6 +3747,39 @@ typedef struct {
       URL.revokeObjectURL(url);
       playSound('copy');
       showToast(`Downloaded Windows .FNT: kfont_${safeFont}_${bmpW}x${bmpH}.fnt`);
+    }
+
+    function downloadFnt() {
+      const buffer = generateFntBinaryBuffer();
+      const safeFont = (fontList.value || 'KFont').replace(/[^a-zA-Z0-9]/g, '_');
+      const defaultPath = `/home/fonts/kfont_${safeFont}_${bmpW}x${bmpH}.fnt`;
+      const b64Data = 'data:application/octet-stream;base64,' + uint8ToBase64(new Uint8Array(buffer));
+      if (KiloVFS.isSupported()) {
+        KiloVFS.showSave(defaultPath, b64Data, (savedPath) => {
+          if (savedPath) {
+            showToast(`Windows .FNT saved to VFS: ${savedPath}`);
+          } else {
+            fallbackDownloadFnt(buffer, safeFont);
+          }
+        });
+      } else {
+        fallbackDownloadFnt(buffer, safeFont);
+      }
+    }
+
+    function inspectFntInKHex() {
+      const buffer = generateFntBinaryBuffer();
+      const safeFont = (fontList.value || 'KFont').replace(/[^a-zA-Z0-9]/g, '_');
+      const vfsPath = `/home/fonts/kfont_${safeFont}_${bmpW}x${bmpH}.fnt`;
+      const b64Data = 'data:application/octet-stream;base64,' + uint8ToBase64(new Uint8Array(buffer));
+      if (KiloVFS.isSupported()) {
+        KiloVFS.write(vfsPath, b64Data, () => {
+          KiloVFS.launchApp('khex', vfsPath);
+          showToast(`Opened ${vfsPath} in KHex`);
+        });
+      } else {
+        downloadFnt();
+      }
     }
 
     function openImportModal() {
@@ -4353,21 +4652,65 @@ typedef struct {
         copyToClipboard(document.getElementById('svgCodeBlock').textContent, "Copied SVG Vector Path spec!");
       };
     }
+    function fallbackDownloadSvg(content, char, fontVal) {
+      const blob = new Blob([content], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `glyph_${char}_${fontVal}.svg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      playSound('save');
+      showToast(`Downloaded glyph_${char}_${fontVal}.svg!`);
+    }
+
+    function saveSvgGlyph() {
+      const content = document.getElementById('svgCodeBlock').textContent;
+      const char = (anatomyInput && anatomyInput.value) ? anatomyInput.value.charAt(0) || 'A' : 'A';
+      const safeFont = (fontList.value || 'KFont').replace(/[^a-zA-Z0-9]/g, '_');
+      const defaultPath = `/home/media/glyph_${char}_${safeFont}.svg`;
+      if (KiloVFS.isSupported()) {
+        KiloVFS.showSave(defaultPath, content, (savedPath) => {
+          if (savedPath) {
+            showToast(`SVG saved to VFS: ${savedPath}`);
+          } else {
+            fallbackDownloadSvg(content, char, fontList.value);
+          }
+        });
+      } else {
+        fallbackDownloadSvg(content, char, fontList.value);
+      }
+    }
+
     const downloadSvgBtn = document.getElementById('downloadSvgCodeBtn');
     if (downloadSvgBtn) {
-      downloadSvgBtn.onclick = () => {
-        const content = document.getElementById('svgCodeBlock').textContent;
-        const char = (anatomyInput && anatomyInput.value) ? anatomyInput.value.charAt(0) || 'A' : 'A';
-        const blob = new Blob([content], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `glyph_${char}_${fontList.value}.svg`;
-        a.click();
-        URL.revokeObjectURL(url);
-        playSound('save');
-        showToast(`Downloaded glyph_${char}_${fontList.value}.svg!`);
-      };
+      downloadSvgBtn.onclick = saveSvgGlyph;
+    }
+
+    function openSpecInKPad() {
+      const win32 = document.getElementById('win32CodeBlock')?.textContent || '';
+      const css = document.getElementById('cssCodeBlock')?.textContent || '';
+      const json = document.getElementById('jsonCodeBlock')?.textContent || '';
+      const svg = document.getElementById('svgCodeBlock')?.textContent || '';
+      const ttx = document.getElementById('ttxCodeBlock')?.textContent || '';
+      const safeFont = (fontList.value || 'KFont').replace(/[^a-zA-Z0-9]/g, '_');
+      const specText = `/* =========================================================================\n   TYPOGRAPHIC SPECIFICATION: ${fontList.value}\n   Generated by KFont 1999 Typography Workstation\n   ========================================================================= */\n\n[WIN32 GDI C CODE]\n${win32}\n\n[CSS STYLESHEET]\n${css}\n\n[FONT MANIFEST JSON]\n${json}\n\n[SVG 1.1 VECTOR GLYPH PATH SPEC]\n${svg}\n\n[OPENTYPE TTX GLYF EXTRACT]\n${ttx}\n`;
+      const vfsPath = `/home/docs/kfont_spec_${safeFont}.txt`;
+      if (KiloVFS.isSupported()) {
+        KiloVFS.write(vfsPath, specText, () => {
+          KiloVFS.launchApp('kpad', vfsPath);
+          showToast(`Spec opened in KPad (${vfsPath})`);
+        });
+      } else {
+        copyToClipboard(specText, "Typographic spec copied to clipboard (Standalone mode)");
+      }
+    }
+
+    const btnOpenSpecKPad = document.getElementById('btnOpenSpecInKPad');
+    if (btnOpenSpecKPad) {
+      btnOpenSpecKPad.onclick = openSpecInKPad;
     }
     const copyTtxBtn = document.getElementById('copyTtxCodeBtn');
     if (copyTtxBtn) {
@@ -4464,22 +4807,56 @@ typedef struct {
     const exportModalCloseBtn = document.getElementById('exportModalCloseBtn');
     if (exportModalCloseBtn) exportModalCloseBtn.onclick = closeExportModal;
 
+    function fallbackDownloadProfile(jsonStr, safeFont) {
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kfont_${safeFont}_profile.kfont.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      playSound('copy');
+      showToast("Downloaded .kfont.json profile!");
+    }
+
+    function saveProfileJson() {
+      const state = getWorkspaceState();
+      const jsonStr = JSON.stringify(state, null, 2);
+      const safeFont = state.fontFamily.toLowerCase().replace(/\s+/g, '_');
+      const defaultPath = `/home/fonts/kfont_${safeFont}_profile.kfont.json`;
+      if (KiloVFS.isSupported()) {
+        KiloVFS.showSave(defaultPath, jsonStr, (savedPath) => {
+          if (savedPath) {
+            showToast(`Profile saved to VFS: ${savedPath}`);
+          } else {
+            fallbackDownloadProfile(jsonStr, safeFont);
+          }
+        });
+      } else {
+        fallbackDownloadProfile(jsonStr, safeFont);
+      }
+    }
+
     const downloadProfileJsonBtn = document.getElementById('downloadProfileJsonBtn');
     if (downloadProfileJsonBtn) {
-      downloadProfileJsonBtn.onclick = () => {
-        const state = getWorkspaceState();
-        const jsonStr = JSON.stringify(state, null, 2);
-        const blob = new Blob([jsonStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `kfont_${state.fontFamily.toLowerCase().replace(/\s+/g, '_')}_profile.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        playSound('copy');
-        showToast("Downloaded .kfont.json profile!");
+      downloadProfileJsonBtn.onclick = saveProfileJson;
+    }
+
+    const openProfileVfsBtn = document.getElementById('openProfileVfsBtn');
+    if (openProfileVfsBtn) {
+      openProfileVfsBtn.onclick = () => {
+        if (KiloVFS.isSupported()) {
+          KiloVFS.openPicker((data, path) => {
+            if (data) {
+              handleIncomingFileData(data, path);
+              closeExportModal();
+            }
+          });
+        } else {
+          document.getElementById('importFileInput')?.click();
+        }
       };
     }
 
