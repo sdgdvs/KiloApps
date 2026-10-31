@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KColony
   kilo_qa: KCipher
-  kilo_expander: KTerm
+  kilo_expander: KMystery
   kilo_review: KCalc
 virtual_web_target: kweb://scallion
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KBudget
-  timestamp: '2026-10-31T09:40:15-07:00'
+  agent: kilo-expander
+  app: KTerm
+  timestamp: '2026-10-31T10:23:18-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -187,11 +187,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, expense categories, balance projection graphs, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KTerm`
+- **Active Target**: `KMystery`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KTerm` | `KiloOS/public/apps/kterm.html`, `KTerm/main.c` | **[ARGON REVIEW]:** Replace dead window.parent.vfs lookup in getVFS() (which never exists in KiloOS App.jsx and traps KTerm in isolated fallbackVFS) with a live Phase VI KiloOS VFS mirror when window.parent !== window (validating event.origin === window.location.origin) that hydrates files/folders from VFS_LIST + VFS_READ on boot and VFS_CHANGED broadcasts, mirrors writeVFSFile, touch, copy, move, redirection, del/rm, and rmdir back via VFS_WRITE and VFS_DELETE (keeping fallbackVFS standalone fallback), and handles incoming FILE_OPEN / VFS_OPEN messages to inspect .txt/.log, execute .bat/.sh, or restore .json state; wire #btnExportState (backup), #btnImportState (restore / Ctrl+O), and #btnExportLog (export-log / Ctrl+S) through VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY (/home/saves/kterm_backup.json, /home/logs/kterm_session.log) and VFS_SHOW_OPEN -> VFS_READ with 60s dialog timeouts and standalone Blob/file-input fallbacks; query OS_LIST_TASKS in ps/tasks to list live open KiloOS windows/PIDs/memory, add kill <pid> (OS_KILL_TASK), open <appId> (OS_LAUNCH_APP), edit <file> (appId kpad), and hex <file> (appId khex) IPC commands, and implement true stdout command piping across ps/dir/dmesg/type/history/env into grep/wc/head/tail in both kterm.html and KTerm/main.c. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmystery_case.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback), add Export Forensic Dossier Report (/home/docs/kmystery_dossier.txt via VFS_WRITE + OS_NOTIFY on case solved) and a Present Clue shortcut inside #dossier-modal, and add Clue Dossier Viewer [C] / double-click inspection parity to KMystery/main.c. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
@@ -207,6 +206,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kfont.html using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with mandatory event.origin === window.location.origin checks, 60s dialog timeouts, and standalone Blob/file-input fallbacks when window.parent === window for .kfont.json profiles, .bdf/.fnt fonts (/home/fonts/), .h ROM headers (/home/code/), and .svg glyphs (/home/media/), handle incoming FILE_OPEN/VFS_OPEN messages from File Browser to auto-load .kfont.json/.bdf files, and add Open Spec in KPad (appId kpad) and Inspect .FNT in KHex (appId khex) OS_LAUNCH_APP buttons while removing the legacy wildcard resize postMessage; also upgrade KFont/main.c to dynamically compute real WCAG 2.1 relative luminance ratios across all 6 retro palettes in Diagnostics [3] (fixing hardcoded Win95 Navy #000080 on #C0C0C0 from false 4.9 AA to 8.8 AAA), generate live rasterized 8x8 C arrays for anatomyChar in Spec/Code [7], and add an interactive Bitmap [8] 8x8 ROM pixel editor tab persisted in KFontSaveData. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Phase VI VFS Scripting API: allow scripts in `KScript` to read/write virtual files in KiloOS VFS (`vfs.read()`, `vfs.write()`, `vfs.list()`), save `.ks` scripts to `/home/scripts/`, and sync with Win32 C interpreter. |
 | `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kping.html (#exportModal and window message listener) using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with event.origin === window.location.origin checks, 60s dialog timeouts, and standalone Blob/file-input fallbacks when window.parent === window for .json telemetry (/home/logs/kping_telemetry.json), .csv tables (/home/logs/kping_table.csv), and .md reports (/home/docs/kping_report.md), plus handle incoming FILE_OPEN/VFS_OPEN messages to auto-import .json telemetry and redraw #graphCanvas; add Open Report in KPad (appId kpad) and Inspect Packet Payload in KHex (writing ICMP+IPv4 header + Fletcher-16 payload to /home/logs/kping_packet.bin + OS_LAUNCH_APP appId khex) IPC buttons in #exportModal, and add a 5th topo node-link visualizer mode on #graphCanvas rendering live multi-hop latency topology during Trace [T], Subnet Topo [X], and BGP [B]. |
+| `KTerm` | `KiloOS/public/apps/kterm.html`, `KTerm/main.c` | **[ARGON REVIEW]:** Replace dead window.parent.vfs lookup in getVFS() (which never exists in KiloOS App.jsx and traps KTerm in isolated fallbackVFS) with a live Phase VI KiloOS VFS mirror when window.parent !== window (validating event.origin === window.location.origin) that hydrates files/folders from VFS_LIST + VFS_READ on boot and VFS_CHANGED broadcasts, mirrors writeVFSFile, touch, copy, move, redirection, del/rm, and rmdir back via VFS_WRITE and VFS_DELETE (keeping fallbackVFS standalone fallback), and handles incoming FILE_OPEN / VFS_OPEN messages to inspect .txt/.log, execute .bat/.sh, or restore .json state; wire #btnExportState (backup), #btnImportState (restore / Ctrl+O), and #btnExportLog (export-log / Ctrl+S) through VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY (/home/saves/kterm_backup.json, /home/logs/kterm_session.log) and VFS_SHOW_OPEN -> VFS_READ with 60s dialog timeouts and standalone Blob/file-input fallbacks; query OS_LIST_TASKS in ps/tasks to list live open KiloOS windows/PIDs/memory, add kill <pid> (OS_KILL_TASK), open <appId> (OS_LAUNCH_APP), edit <file> (appId kpad), and hex <file> (appId khex) IPC commands, and implement true stdout command piping across ps/dir/dmesg/type/history/env into grep/wc/head/tail in both kterm.html and KTerm/main.c. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KCalc`
@@ -296,6 +296,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T10:23:18-07:00 — kilo-expander: KTerm (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KTerm across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KMystery`; rotated active agent to `kilo-review`.
+
 - **2026-10-31T09:40:15-07:00 — kilo-qa: KBudget (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KBudget across web and native targets.
@@ -316,9 +321,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-31T08:15:28-07:00 — kilo-graphics: KStarship (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KStarship.
   - Handoff: Advanced `kilo-graphics` to `KAlchemy`; rotated active agent to `kilo-tester`.
-
-- **2026-10-31T07:34:29-07:00 — kilo-creator: kweb://cabled (Cabled Magazine 1999 Neon Edition & Cyberculture Destination)**
-  - Status: PASS ✅ (0 errors, web 99.9 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Interactive Features: Y2K Readiness Audit, Dot-Com IPO Stock Simulator, Jargon Watch generator, and Hype-vs-Reality Matrix.
-  - Integration: Discrete Web Audio UI earcons with [M] toggle, KiloOS VFS export bridge, and routed in KNet.
-  - Handoff: Advanced `kilo-creator` to `kweb://scallion`; rotated active agent to `kilo-graphics`.

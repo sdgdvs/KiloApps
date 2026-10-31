@@ -1105,9 +1105,9 @@
     }
   }
 
-  function exportStateJSON() {
+  function exportStateJSONBlob(stateData = null) {
     try {
-      const state = serializeState();
+      const state = stateData || serializeState();
       const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1123,6 +1123,10 @@
       print(`[BACKUP ERROR] ${err.message}`, "log-error");
       showToast("❌ Backup export failed", "err");
     }
+  }
+
+  function exportStateJSON() {
+    exportStateBackupAction();
   }
 
   function importStateJSON(file) {
@@ -1141,6 +1145,267 @@
     };
     reader.readAsText(file);
   }
+
+  // Phase VI KiloOS VFS and IPC Integration Bridge
+  function isKiloOSEmbedded() {
+    try {
+      return window.parent && window.parent !== window;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function normalizeVFSPath(rawPath) {
+    if (!rawPath) return '/';
+    let p = String(rawPath).replace(/\\/g, '/');
+    if (!p.startsWith('/')) p = '/' + p;
+    p = p.replace(/\/+/g, '/');
+    if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
+    return p;
+  }
+
+  let currentReqId = 0;
+  const vfsCallbacks = {};
+
+  function sendToOS(msg) {
+    return new Promise((resolve) => {
+      if (!isKiloOSEmbedded()) {
+        resolve(null);
+        return;
+      }
+      const id = 'kterm_' + Date.now() + '_' + (++currentReqId);
+      vfsCallbacks[id] = resolve;
+      try {
+        window.parent.postMessage({ ...msg, requestId: id }, '*');
+      } catch (e) {
+        delete vfsCallbacks[id];
+        resolve(null);
+        return;
+      }
+      setTimeout(() => {
+        if (vfsCallbacks[id]) {
+          delete vfsCallbacks[id];
+          resolve(null);
+        }
+      }, 60000); // 60s dialog/request timeout
+    });
+  }
+
+  const KiloVFS = {
+    isSupported() {
+      return isKiloOSEmbedded();
+    },
+    async write(path, data) {
+      if (!isKiloOSEmbedded()) return null;
+      return sendToOS({ type: 'VFS_WRITE', path, data: typeof data === 'string' ? data : JSON.stringify(data, null, 2) });
+    },
+    async delete(path) {
+      if (!isKiloOSEmbedded()) return null;
+      return sendToOS({ type: 'VFS_DELETE', path });
+    },
+    async read(path, cb) {
+      if (!isKiloOSEmbedded()) {
+        if (cb) cb(null, path);
+        return null;
+      }
+      const res = await sendToOS({ type: 'VFS_READ', path });
+      const fileData = res ? res.data : null;
+      if (cb) cb(fileData, path);
+      return fileData;
+    },
+    async showSave(defaultPath, data, cb) {
+      if (!isKiloOSEmbedded()) {
+        if (cb) cb(null);
+        return null;
+      }
+      const res = await sendToOS({ type: 'VFS_SHOW_SAVE', defaultPath, path: defaultPath });
+      if (res && res.path) {
+        await KiloVFS.write(res.path, data);
+        sendToOS({ type: 'OS_NOTIFY', title: 'KTerm', message: `Saved to VFS: ${res.path}` });
+        if (cb) cb(res.path);
+        return res.path;
+      } else if (cb) {
+        cb(null);
+      }
+      return null;
+    },
+    async openPicker(cb) {
+      if (!isKiloOSEmbedded()) {
+        if (cb) cb(null, null);
+        return null;
+      }
+      const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
+      if (res && res.path) {
+        const fileData = await KiloVFS.read(res.path);
+        if (cb) cb(fileData, res.path);
+        return { path: res.path, data: fileData };
+      } else if (cb) {
+        cb(null, null);
+      }
+      return null;
+    },
+    launchApp(targetApp, path = '') {
+      try {
+        window.parent.postMessage({
+          type: 'OS_LAUNCH_APP',
+          targetApp,
+          appId: targetApp,
+          path
+        }, '*');
+      } catch (e) {}
+    },
+    killTask(taskId) {
+      try {
+        window.parent.postMessage({
+          type: 'OS_KILL_TASK',
+          taskId
+        }, '*');
+      } catch (e) {}
+    }
+  };
+
+  async function exportStateBackupAction() {
+    const state = serializeState();
+    const jsonStr = JSON.stringify(state, null, 2);
+    if (isKiloOSEmbedded()) {
+      const defaultPath = '/home/saves/kterm_backup.json';
+      const savedPath = await KiloVFS.showSave(defaultPath, jsonStr);
+      if (savedPath) {
+        print(`[BACKUP] Session state backup saved to VFS: ${savedPath}`, "log-system");
+        showToast(`📦 Backup saved to ${savedPath}`, "sys");
+        return;
+      }
+    }
+    exportStateJSONBlob(state);
+  }
+
+  async function importStateRestoreAction() {
+    if (isKiloOSEmbedded()) {
+      const res = await KiloVFS.openPicker();
+      if (res && res.data) {
+        try {
+          const parsed = JSON.parse(res.data);
+          deserializeState(parsed);
+          print(`[RESTORE] Successfully imported session backup "${res.path}".`, "log-system");
+          showToast(`📂 State restored from ${res.path}`, "sys");
+          return;
+        } catch (err) {
+          print(`[RESTORE ERROR] Invalid JSON state file: ${err.message}`, "log-error");
+          showToast("❌ Failed to restore state backup", "err");
+          return;
+        }
+      }
+    }
+    if (fileImportState) fileImportState.click();
+  }
+
+  function exportSessionLogBlob() {
+    const s = getActiveSession();
+    const plainText = output.innerText || output.textContent;
+    const blob = new Blob([plainText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const safeName = (s ? s.name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() : 'kterm');
+    a.download = safeName + '_log.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    print(`Session log exported successfully.`, "log-system");
+    showToast("💾 Session log exported successfully", "sys");
+  }
+
+  async function exportSessionLogAction() {
+    const plainText = output.innerText || output.textContent;
+    if (isKiloOSEmbedded()) {
+      const defaultPath = '/home/logs/kterm_session.log';
+      const savedPath = await KiloVFS.showSave(defaultPath, plainText);
+      if (savedPath) {
+        print(`[LOG] Session log exported to VFS: ${savedPath}`, "log-system");
+        showToast(`💾 Log exported to ${savedPath}`, "sys");
+        return;
+      }
+    }
+    exportSessionLogBlob();
+  }
+
+  async function handleIncomingFileOpen(msg) {
+    const filePath = msg.path || '';
+    let fileContent = msg.data !== undefined ? msg.data : msg.content;
+    if (fileContent === undefined && filePath) {
+      fileContent = await KiloVFS.read(filePath);
+    }
+    if (fileContent === undefined || fileContent === null) {
+      print(`[FILE_OPEN ERROR] Unable to read content from: ${filePath || 'unknown'}`, "log-error");
+      showToast(`❌ Could not open file: ${filePath}`, "err");
+      return;
+    }
+
+    const lowerPath = filePath.toLowerCase();
+    if (lowerPath.endsWith('.json')) {
+      try {
+        const parsed = JSON.parse(fileContent);
+        if (parsed.sessions && Array.isArray(parsed.sessions)) {
+          deserializeState(parsed);
+          print(`[FILE_OPEN] Successfully restored state session from: ${filePath}`, "log-system");
+          showToast(`📂 Session state restored from ${filePath}`, "sys");
+          return;
+        }
+      } catch (e) {}
+    }
+
+    if (lowerPath.endsWith('.bat') || lowerPath.endsWith('.sh') || lowerPath.endsWith('.cmd')) {
+      print(`[SCRIPT EXEC] Running script from ${filePath}...`, "log-system");
+      showToast(`⚡ Running script ${filePath}`, "sys");
+      const lines = fileContent.split('\n');
+      for (const rawLine of lines) {
+        const clean = rawLine.trim();
+        if (clean && !clean.startsWith('#') && !clean.toLowerCase().startsWith('rem') && !clean.toLowerCase().startsWith('::')) {
+          await processCommandLine(clean);
+        }
+      }
+      return;
+    }
+
+    print(`=================================================================`, "log-dim");
+    print(`[FILE_OPEN] ${filePath} (${fileContent.length} bytes)`, "log-system");
+    print(`-----------------------------------------------------------------`, "log-dim");
+    const lines = fileContent.split('\n');
+    lines.forEach(line => print(line));
+    print(`=================================================================`, "log-dim");
+    showToast(`📄 Inspected ${filePath}`, "sys");
+  }
+
+  // Incoming message dispatcher
+  window.addEventListener('message', (e) => {
+    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+      return;
+    }
+    const msg = e.data;
+    if (!msg || typeof msg !== 'object') return;
+
+    if (msg.requestId && vfsCallbacks[msg.requestId]) {
+      vfsCallbacks[msg.requestId](msg);
+      delete vfsCallbacks[msg.requestId];
+    }
+
+    if (msg.type === 'VFS_CHANGED') {
+      if (msg.deleted) {
+        mirrorVFS.deletePath(msg.path);
+      } else if (msg.data !== undefined) {
+        mirrorVFS.insertFile(msg.path, msg.data);
+      } else if (msg.path) {
+        sendToOS({ type: 'VFS_READ', path: msg.path }).then(res => {
+          if (res && res.data !== undefined && res.data !== null) {
+            mirrorVFS.insertFile(msg.path, res.data);
+          }
+        });
+      }
+    } else if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+      handleIncomingFileOpen(msg);
+    }
+  });
 
   // Safe Math Evaluator using recursive descent (NO eval / new Function)
   function safeEvaluateMath(expr) {
@@ -1252,8 +1517,90 @@
     }
   };
 
+  // Phase VI KiloOS VFS Live Mirror
+  const mirrorVFS = {
+    tree: {
+      type: 'dir',
+      name: '',
+      children: {
+        'Documents': {
+          type: 'dir',
+          name: 'Documents',
+          children: {
+            'readme.txt': { type: 'file', name: 'readme.txt', content: 'Welcome to KTerm Terminal.\nDeep utilities and multi-tab system active.\nCheck dmesg for kernel diagnostic logs.' },
+            'notes.log': { type: 'file', name: 'notes.log', content: 'System checks passed cleanly.\nNo buffer overflows detected.' }
+          }
+        },
+        'System': {
+          type: 'dir',
+          name: 'System',
+          children: {
+            'config.sys': { type: 'file', name: 'config.sys', content: 'FILES=40\nBUFFERS=20\nCEILING=999KB' },
+            'autoexec.bat': { type: 'file', name: 'autoexec.bat', content: '@ECHO OFF\nPROMPT $P$G\nver\nuptime' }
+          }
+        }
+      }
+    },
+    getNode(path) {
+      if (!path || path === '/') return this.tree;
+      const target = resolvePath(path);
+      const parts = target.split('/').filter(Boolean);
+      let curr = this.tree;
+      for (const p of parts) {
+        if (!curr || curr.type !== 'dir' || !curr.children || !curr.children[p]) return null;
+        curr = curr.children[p];
+      }
+      return curr;
+    },
+    insertFile(rawPath, content) {
+      const norm = normalizeVFSPath(rawPath);
+      const parts = norm.split('/').filter(Boolean);
+      if (parts.length === 0) return;
+      const fileName = parts.pop();
+      let curr = this.tree;
+      for (const p of parts) {
+        if (!curr.children) curr.children = {};
+        if (!curr.children[p] || curr.children[p].type !== 'dir') {
+          curr.children[p] = { type: 'dir', name: p, children: {} };
+        }
+        curr = curr.children[p];
+      }
+      if (!curr.children) curr.children = {};
+      curr.children[fileName] = { type: 'file', name: fileName, content: content ?? '' };
+    },
+    deletePath(rawPath) {
+      const norm = normalizeVFSPath(rawPath);
+      const parts = norm.split('/').filter(Boolean);
+      if (parts.length === 0) return;
+      const leaf = parts.pop();
+      let curr = this.tree;
+      for (const p of parts) {
+        if (!curr || !curr.children || !curr.children[p]) return;
+        curr = curr.children[p];
+      }
+      if (curr && curr.children && curr.children[leaf]) {
+        delete curr.children[leaf];
+      }
+    }
+  };
+
+  function bootVFSMirror() {
+    if (!isKiloOSEmbedded()) return;
+    sendToOS({ type: 'VFS_LIST' }).then(res => {
+      if (res && Array.isArray(res.files)) {
+        res.files.forEach(path => {
+          sendToOS({ type: 'VFS_READ', path }).then(readRes => {
+            if (readRes && readRes.data !== undefined && readRes.data !== null) {
+              mirrorVFS.insertFile(path, readRes.data);
+            }
+          });
+        });
+      }
+    });
+  }
+
   function getVFS() {
-    if (window.parent && window.parent.vfs) return window.parent.vfs;
+    if (isKiloOSEmbedded()) return mirrorVFS;
     return fallbackVFS;
   }
 
@@ -1278,6 +1625,7 @@
     }
 
     if (!curr.children) curr.children = {};
+    let finalContent = content;
     if (curr.children[fileName] && curr.children[fileName].type === 'file') {
       if (append) {
         if (content !== '') {
@@ -1286,8 +1634,13 @@
       } else {
         curr.children[fileName].content = content;
       }
+      finalContent = curr.children[fileName].content;
     } else {
       curr.children[fileName] = { type: 'file', name: fileName, content: content };
+    }
+
+    if (isKiloOSEmbedded()) {
+      sendToOS({ type: 'VFS_WRITE', path: normalizeVFSPath(target), data: finalContent });
     }
     return true;
   }
@@ -1638,23 +1991,10 @@
   }
 
   function exportSessionLog(filename = 'kterm_log.txt') {
-    const s = getActiveSession();
-    const plainText = output.innerText || output.textContent;
-    const blob = new Blob([plainText], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const safeName = (s ? s.name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() : 'kterm');
-    a.download = safeName + '_log.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
-    print(`Session log exported successfully.`, "log-system");
-    showToast("💾 Session log exported successfully", "sys");
+    exportSessionLogAction();
   }
 
-  function execute(cmdStr) {
+  async function execute(cmdStr, pipedInput = null) {
       lastCmdSuccess = true;
       totalCommandCount++;
       print(prompt.textContent + ' ' + cmdStr, "log-cmd");
@@ -1702,7 +2042,11 @@
           print("  head / tail   - View first or last N lines (head [-n N] <file>)");
           print("  history       - Command history list (!n to recall, !! for last)");
           print("  calc          - Arithmetic math calculator (calc <expression>)");
-          print("  ps / tasks    - Show virtual system processes and memory");
+          print("  ps / tasks    - Show live KiloOS or virtual system processes and memory");
+          print("  kill <pid>    - Terminate KiloOS task or process (kill <pid>)");
+          print("  open <appId>  - Launch KiloOS application by ID (open <appId>)");
+          print("  edit <file>   - Open file in KPad editor (edit <file>)");
+          print("  hex <file>    - Inspect file in KHex inspector (hex <file>)");
           print("  uptime        - Display system uptime and command telemetry");
           print("  ping          - ICMP echo diagnostic simulation (ping <host>)");
           print("  netstat       - Active virtual network sockets");
@@ -1715,9 +2059,12 @@
           print("  alias         - Manage command aliases (alias [name=cmd], unalias)");
           print("  env / export  - Environment variables (export VAR=VAL, unset VAR)");
           print("  macro         - Macro scripting (record, stop, play, list)");
-          print("  export-log    - Download terminal session log");
+          print("  export-log    - Export session log to VFS or download (Ctrl+S)");
+          print("  export-state  - Export JSON state backup to VFS or download (backup)");
+          print("  import-state  - Restore JSON state backup from VFS or upload (Ctrl+O)");
           print("  newtab        - Open a new terminal tab session");
           print("  exit          - Close active terminal tab");
+          print("  Piping        - Command stdout piping across ps/dir/dmesg/type/history/env into grep/wc/head/tail (cmd1 | cmd2)");
       } else if (cmd === 'ver' || cmd === 'sysinfo') {
           print("KiloOS Web Terminal v1.2 (Multi-Tab, Deep Utilities & Piping)");
           print("Kernel Constraints: <999KB Strict Size Policy Active.");
@@ -1737,9 +2084,9 @@
       } else if (cmd === 'quickload' || cmd === 'load') {
           quickLoadState();
       } else if (cmd === 'export-state' || cmd === 'backup') {
-          exportStateJSON();
+          await exportStateBackupAction();
       } else if (cmd === 'import-state' || cmd === 'restore') {
-          if (fileImportState) fileImportState.click();
+          await importStateRestoreAction();
       } else if (cmd === 'tutorial') {
           openTutorialModal();
       } else if (cmd === 'rmdir' || cmd === 'rd') {
@@ -1764,6 +2111,9 @@
                           print("ERROR: Directory not empty.", "log-error");
                       } else {
                           delete parent.children[name];
+                          if (isKiloOSEmbedded()) {
+                              sendToOS({ type: 'VFS_DELETE', path: normalizeVFSPath(target) });
+                          }
                           print(`Directory removed: ${dirArg}`, "log-system");
                       }
                   } else {
@@ -1772,7 +2122,7 @@
               }
           }
       } else if (cmd === 'export-log') {
-          exportSessionLog(args[1] || 'kterm_log.txt');
+          await exportSessionLogAction();
       } else if (cmd === 'newtab') {
           createNewTab(args.slice(1).join(' ') || null);
       } else if (cmd === 'exit' || cmd === 'closetab') {
