@@ -3399,6 +3399,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     POINT alembicHead[3] = {{cx, cy - 28}, {cx + 20, cy}, {cx - 20, cy}};
                     Polygon(hdc, alembicHead, 3);
 
+                    HPEN hBrassRing = CreatePen(PS_SOLID, 2, RGB(241, 196, 15));
+                    HGDIOBJ pOldRing = SelectObject(hdc, hBrassRing);
+                    MoveToEx(hdc, cx - 12, cy - 1, NULL); LineTo(hdc, cx + 12, cy - 1);
+                    SelectObject(hdc, pOldRing);
+                    DeleteObject(hBrassRing);
+
                     HPEN hGlassTube = CreatePen(PS_SOLID, 3, RGB(112, 214, 255));
                     HGDIOBJ pOldTube = SelectObject(hdc, hGlassTube);
                     MoveToEx(hdc, cx + 4, cy - 24, NULL);
@@ -3546,7 +3552,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HGDIOBJ oldSigil = SelectObject(hdc, sigilPen);
                     HBRUSH oldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
                     
-                    int radius = 90 + (tick % 15);
+                    int radius = 92 + (int)(FastSin((float)tick * 0.15f) * 6.0f);
                     Ellipse(hdc, scx - radius, scy - radius, scx + radius, scy + radius);
                     POINT star[6] = {
                         {scx, scy - radius}, {scx + radius*86/100, scy + radius/2}, 

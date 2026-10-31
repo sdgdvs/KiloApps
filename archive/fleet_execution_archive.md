@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T09:21:51-07:00 — kilo-usability: KTerm (KTerm Usability, Header Responsive Layout & CRT Polish)**
+  - Status: PASS (0 errors, web 114.6 KB, native 45.0 KB < 999 KB; 0 cut-off controls, 0 overflow).
+  - Responsive Layout: Pinned #btnNewTab outside tabStrip, set min-width 340px, compacted .btn-action to keep toolbar <= 460px with zero tab crushing.
+  - QuickBar & Statusbar: Deduplicated header chips (save, load, export-log, clear, theme) and compacted statusbar hints for 100% fit at 960px.
+  - CRT Themes & Ergonomics: Replaced hardcoded green/navy colors with per-theme CSS variables, added .toast-close CSS, replaced prompt() with inline rename input, and set Win32 minTrackSize.x = 760.
+  - Handoff: Advanced `kilo-usability` to `KColony`; rotated active agent to `kilo-qa`.
+
 - **2026-10-31T08:40:14-07:00 — kilo-tester: KTerm (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KTerm across web and native targets.

@@ -479,10 +479,12 @@
       padding: 10px 16px;
       position: relative;
       background-image: 
-        radial-gradient(circle at center, rgba(155, 89, 182, 0.15) 0%, transparent 70%),
-        radial-gradient(circle at center, rgba(243, 156, 18, 0.05) 0%, transparent 50%);
+        radial-gradient(circle at center, rgba(155, 89, 182, 0.22) 0%, transparent 70%),
+        radial-gradient(circle at 50% 20%, rgba(243, 156, 18, 0.12) 0%, transparent 60%),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 32px),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 32px);
       border: 1px solid var(--accent-purple);
-      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8), 0 0 20px var(--glow-purple);
+      box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.85), 0 0 24px var(--glow-purple);
     }
 
 
@@ -521,7 +523,7 @@
       width: 154px;
       height: 154px;
       border-radius: 50%;
-      background: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 22%), url('../assets/sprites/kalchemy/vessel_crucible.png'), radial-gradient(circle, rgba(155, 89, 182, 0.35) 0%, rgba(15, 14, 30, 0.95) 80%);
+      background: url('../assets/sprites/kalchemy/vessel_crucible.png'), radial-gradient(circle, rgba(155, 89, 182, 0.35) 0%, rgba(15, 14, 30, 0.95) 80%);
       background-repeat: no-repeat;
       background-position: center;
       background-size: 130px 130px;
@@ -538,7 +540,7 @@
     }
 
     .crucible-vessel.vessel-crucible {
-      background-image: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 22%), url('../assets/sprites/kalchemy/vessel_crucible.png'), radial-gradient(circle, rgba(243, 156, 18, 0.3) 0%, rgba(15, 14, 30, 0.95) 80%);
+      background-image: url('../assets/sprites/kalchemy/vessel_crucible.png'), radial-gradient(circle, rgba(243, 156, 18, 0.3) 0%, rgba(15, 14, 30, 0.95) 80%);
       background-repeat: no-repeat;
       background-position: center;
       background-size: 130px 130px;
@@ -547,7 +549,7 @@
     .crucible-vessel.vessel-alembic {
       border-color: #2ecc71;
       box-shadow: 15px 25px 35px rgba(0, 0, 0, 0.85), 0 0 40px rgba(46, 204, 113, 0.5), inset 0 0 25px rgba(46, 204, 113, 0.35);
-      background-image: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 25%), url('../assets/sprites/kalchemy/vessel_alembic.png'), radial-gradient(circle, rgba(46, 204, 113, 0.3) 0%, rgba(10, 25, 20, 0.95) 80%);
+      background-image: url('../assets/sprites/kalchemy/vessel_alembic.png'), radial-gradient(circle, rgba(46, 204, 113, 0.3) 0%, rgba(10, 25, 20, 0.95) 80%);
       background-repeat: no-repeat;
       background-position: center;
       background-size: 130px 130px;
@@ -555,19 +557,19 @@
     .crucible-vessel.vessel-retort {
       border-color: #3498db;
       box-shadow: 15px 25px 35px rgba(0, 0, 0, 0.85), 0 0 40px rgba(52, 152, 219, 0.5), inset 0 0 25px rgba(52, 152, 219, 0.35);
-      background-image: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 25%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><radialGradient id="retortLiquid" cx="40%25" cy="60%25" r="50%25"><stop offset="0%25" stop-color="%233498db" stop-opacity="0.95"/><stop offset="50%25" stop-color="%232980b9" stop-opacity="0.8"/><stop offset="85%25" stop-color="%231a3d54" stop-opacity="0.95"/><stop offset="100%25" stop-color="%230b1a24" stop-opacity="1"/></radialGradient><linearGradient id="brassRetort" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23d4ac0d"/><stop offset="50%25" stop-color="%23f39c12"/><stop offset="100%25" stop-color="%239a7d0a"/></linearGradient></defs><path d="M38,82 C22,82 18,65 24,50 C29,38 42,36 52,38 C64,40 76,55 86,68 L88,72 L83,74 C73,60 62,48 50,47 C44,46 32,50 30,62 C28,73 34,77 44,77 C54,77 60,70 60,65 L66,65 C66,74 54,82 38,82 Z" fill="url(%23retortLiquid)" stroke="%2370d6ff" stroke-width="1.6"/><path d="M23,54 C21,64 25,74 34,77" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-opacity="0.8"/><path d="M52,42 C64,44 74,56 82,67" fill="none" stroke="%23ffffff" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7"/><ellipse cx="38" cy="85" rx="18" ry="4" fill="none" stroke="url(%23brassRetort)" stroke-width="2"/><path d="M24,86 L18,94 M52,86 L58,94" stroke="url(%23brassRetort)" stroke-width="2" stroke-linecap="round"/><line x1="33" y1="62" x2="38" y2="62" stroke="%23f1c40f" stroke-width="1" stroke-opacity="0.75"/><line x1="32" y1="68" x2="39" y2="68" stroke="%23f1c40f" stroke-width="1" stroke-opacity="0.75"/><circle cx="86" cy="76" r="2" fill="%233498db" stroke="%23ffffff" stroke-width="0.7"/></svg>'), radial-gradient(circle, rgba(52, 152, 219, 0.3) 0%, rgba(10, 20, 30, 0.95) 80%);
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><radialGradient id="retortLiquid" cx="40%25" cy="60%25" r="50%25"><stop offset="0%25" stop-color="%233498db" stop-opacity="0.95"/><stop offset="50%25" stop-color="%232980b9" stop-opacity="0.8"/><stop offset="85%25" stop-color="%231a3d54" stop-opacity="0.95"/><stop offset="100%25" stop-color="%230b1a24" stop-opacity="1"/></radialGradient><linearGradient id="brassRetort" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23d4ac0d"/><stop offset="50%25" stop-color="%23f39c12"/><stop offset="100%25" stop-color="%239a7d0a"/></linearGradient></defs><path d="M38,82 C22,82 18,65 24,50 C29,38 42,36 52,38 C64,40 76,55 86,68 L88,72 L83,74 C73,60 62,48 50,47 C44,46 32,50 30,62 C28,73 34,77 44,77 C54,77 60,70 60,65 L66,65 C66,74 54,82 38,82 Z" fill="url(%23retortLiquid)" stroke="%2370d6ff" stroke-width="1.6"/><path d="M23,54 C21,64 25,74 34,77" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-opacity="0.8"/><path d="M52,42 C64,44 74,56 82,67" fill="none" stroke="%23ffffff" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7"/><ellipse cx="38" cy="85" rx="18" ry="4" fill="none" stroke="url(%23brassRetort)" stroke-width="2"/><path d="M24,86 L18,94 M52,86 L58,94" stroke="url(%23brassRetort)" stroke-width="2" stroke-linecap="round"/><line x1="33" y1="62" x2="38" y2="62" stroke="%23f1c40f" stroke-width="1" stroke-opacity="0.75"/><line x1="32" y1="68" x2="39" y2="68" stroke="%23f1c40f" stroke-width="1" stroke-opacity="0.75"/><circle cx="86" cy="76" r="2" fill="%233498db" stroke="%23ffffff" stroke-width="0.7"/></svg>'), radial-gradient(circle, rgba(52, 152, 219, 0.3) 0%, rgba(10, 20, 30, 0.95) 80%);
     }
 
     .crucible-vessel.vessel-brewing {
       border-color: #55efc4;
       box-shadow: 15px 25px 35px rgba(0, 0, 0, 0.85), 0 0 40px rgba(85, 239, 196, 0.5), inset 0 0 25px rgba(0, 184, 148, 0.35);
-      background-image: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 25%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><radialGradient id="brewGlow" cx="50%25" cy="40%25" r="50%25"><stop offset="0%25" stop-color="%2355efc4" stop-opacity="0.95"/><stop offset="45%25" stop-color="%2300b894" stop-opacity="0.8"/><stop offset="85%25" stop-color="%23006266" stop-opacity="0.95"/><stop offset="100%25" stop-color="%23051923" stop-opacity="1"/></radialGradient><linearGradient id="cauldronBrass" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23a07830"/><stop offset="50%25" stop-color="%23e5b85c"/><stop offset="100%25" stop-color="%2372541e"/></linearGradient></defs><path d="M28,82 L20,93 M72,82 L80,93 M50,85 L50,95" stroke="url(%23cauldronBrass)" stroke-width="3" stroke-linecap="round"/><path d="M22,42 C16,65 24,84 50,84 C76,84 84,65 78,42 Z" fill="%2319152b" stroke="url(%23cauldronBrass)" stroke-width="2"/><ellipse cx="50" cy="50" rx="26" ry="12" fill="url(%23brewGlow)"/><circle cx="42" cy="48" r="3.5" fill="%2355efc4" stroke="%23ffffff" stroke-width="0.6"/><circle cx="56" cy="52" r="4.5" fill="%2300cec9" stroke="%23ffffff" stroke-width="0.8"/><circle cx="49" cy="45" r="2" fill="%23ffffff"/><ellipse cx="50" cy="40" rx="30" ry="7" fill="url(%23cauldronBrass)" stroke="%23f9e79f" stroke-width="1.2"/><ellipse cx="50" cy="40" rx="26" ry="5" fill="%23051923"/></svg>'), radial-gradient(circle, rgba(85, 239, 196, 0.3) 0%, rgba(10, 25, 25, 0.95) 80%);
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><radialGradient id="brewGlow" cx="50%25" cy="40%25" r="50%25"><stop offset="0%25" stop-color="%2355efc4" stop-opacity="0.95"/><stop offset="45%25" stop-color="%2300b894" stop-opacity="0.8"/><stop offset="85%25" stop-color="%23006266" stop-opacity="0.95"/><stop offset="100%25" stop-color="%23051923" stop-opacity="1"/></radialGradient><linearGradient id="cauldronBrass" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23a07830"/><stop offset="50%25" stop-color="%23e5b85c"/><stop offset="100%25" stop-color="%2372541e"/></linearGradient></defs><path d="M28,82 L20,93 M72,82 L80,93 M50,85 L50,95" stroke="url(%23cauldronBrass)" stroke-width="3" stroke-linecap="round"/><path d="M22,42 C16,65 24,84 50,84 C76,84 84,65 78,42 Z" fill="%2319152b" stroke="url(%23cauldronBrass)" stroke-width="2"/><ellipse cx="50" cy="50" rx="26" ry="12" fill="url(%23brewGlow)"/><circle cx="42" cy="48" r="3.5" fill="%2355efc4" stroke="%23ffffff" stroke-width="0.6"/><circle cx="56" cy="52" r="4.5" fill="%2300cec9" stroke="%23ffffff" stroke-width="0.8"/><circle cx="49" cy="45" r="2" fill="%23ffffff"/><ellipse cx="50" cy="40" rx="30" ry="7" fill="url(%23cauldronBrass)" stroke="%23f9e79f" stroke-width="1.2"/><ellipse cx="50" cy="40" rx="26" ry="5" fill="%23051923"/></svg>'), radial-gradient(circle, rgba(85, 239, 196, 0.3) 0%, rgba(10, 25, 25, 0.95) 80%);
     }
 
     .crucible-vessel.vessel-anvil {
       border-color: var(--accent-gold);
       box-shadow: 15px 25px 35px rgba(0, 0, 0, 0.85), 0 0 40px rgba(243, 156, 18, 0.5), inset 0 0 25px rgba(243, 156, 18, 0.3);
-      background-image: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 22%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><linearGradient id="anvilSteel" x1="0" y1="0" x2="0" y2="1"><stop offset="0%25" stop-color="%234a4563"/><stop offset="50%25" stop-color="%232b2742"/><stop offset="100%25" stop-color="%23131120"/></linearGradient><linearGradient id="anvilGold" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23d4ac0d"/><stop offset="50%25" stop-color="%23f1c40f"/><stop offset="100%25" stop-color="%23b7950b"/></linearGradient></defs><path d="M22,86 L78,86 L74,74 L26,74 Z" fill="url(%23anvilSteel)" stroke="%23d4ac0d" stroke-width="1.5"/><path d="M34,74 C34,60 38,56 36,46 L64,46 C62,56 66,60 66,74 Z" fill="url(%23anvilSteel)" stroke="%23d4ac0d" stroke-width="1.2"/><path d="M12,46 C22,46 30,48 36,46 L82,46 L86,52 L76,52 L66,54 C54,54 44,52 34,54 L20,52 Z" fill="url(%23anvilGold)" stroke="%23f9e79f" stroke-width="1"/><rect x="36" y="42" width="46" height="5" rx="1" fill="%23f1c40f" stroke="%23ffffff" stroke-width="0.8"/><path d="M44,62 L50,68 L56,62 M50,60 L50,72" fill="none" stroke="%2300ffff" stroke-width="1.5" stroke-linecap="round"/></svg>'), radial-gradient(circle, rgba(243, 156, 18, 0.25) 0%, rgba(20, 18, 35, 0.95) 80%);
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 100 100"><defs><linearGradient id="anvilSteel" x1="0" y1="0" x2="0" y2="1"><stop offset="0%25" stop-color="%234a4563"/><stop offset="50%25" stop-color="%232b2742"/><stop offset="100%25" stop-color="%23131120"/></linearGradient><linearGradient id="anvilGold" x1="0" y1="0" x2="1" y2="0"><stop offset="0%25" stop-color="%23d4ac0d"/><stop offset="50%25" stop-color="%23f1c40f"/><stop offset="100%25" stop-color="%23b7950b"/></linearGradient></defs><path d="M22,86 L78,86 L74,74 L26,74 Z" fill="url(%23anvilSteel)" stroke="%23d4ac0d" stroke-width="1.5"/><path d="M34,74 C34,60 38,56 36,46 L64,46 C62,56 66,60 66,74 Z" fill="url(%23anvilSteel)" stroke="%23d4ac0d" stroke-width="1.2"/><path d="M12,46 C22,46 30,48 36,46 L82,46 L86,52 L76,52 L66,54 C54,54 44,52 34,54 L20,52 Z" fill="url(%23anvilGold)" stroke="%23f9e79f" stroke-width="1"/><rect x="36" y="42" width="46" height="5" rx="1" fill="%23f1c40f" stroke="%23ffffff" stroke-width="0.8"/><path d="M44,62 L50,68 L56,62 M50,60 L50,72" fill="none" stroke="%2300ffff" stroke-width="1.5" stroke-linecap="round"/></svg>'), radial-gradient(circle, rgba(243, 156, 18, 0.25) 0%, rgba(20, 18, 35, 0.95) 80%);
     }
 
     .crucible-vessel.reacting {
@@ -584,27 +586,29 @@
 
     @keyframes runeTransmuteGlow {
       0% {
-        opacity: 0.75;
+        opacity: 0.8;
         transform: scale(1);
-        filter: drop-shadow(0 0 12px var(--accent-gold));
+        filter: drop-shadow(0 0 14px var(--accent-gold));
+        box-shadow: 0 0 25px var(--glow-gold), inset 0 0 25px var(--glow-purple);
       }
       100% {
         opacity: 1;
         transform: scale(1.04);
-        filter: drop-shadow(0 0 32px var(--accent-gold-light)) drop-shadow(0 0 20px #e056fd);
+        filter: drop-shadow(0 0 35px var(--accent-gold-light)) drop-shadow(0 0 24px #e056fd);
+        box-shadow: 0 0 55px var(--accent-gold), inset 0 0 40px var(--glow-purple);
       }
     }
 
     @keyframes transmutationGlow {
       0% {
-        transform: scale(1) rotate(-1.5deg);
+        transform: scale(1);
         filter: brightness(1.25) drop-shadow(0 0 25px rgba(243, 156, 18, 0.85));
         box-shadow: 0 0 40px rgba(243, 156, 18, 0.8), 0 0 80px rgba(155, 89, 182, 0.7), inset 0 0 30px rgba(241, 196, 15, 0.6);
       }
       100% {
-        transform: scale(1.12) rotate(1.5deg);
-        filter: brightness(1.7) drop-shadow(0 0 45px rgba(255, 230, 0, 1));
-        box-shadow: 0 0 70px rgba(255, 230, 0, 0.95), 0 0 120px rgba(224, 86, 253, 0.85), inset 0 0 50px rgba(255, 255, 255, 0.8);
+        transform: scale(1.08);
+        filter: brightness(1.75) drop-shadow(0 0 45px rgba(255, 230, 0, 1)) drop-shadow(0 0 22px #00ffff);
+        box-shadow: 0 0 75px rgba(255, 230, 0, 0.95), 0 0 130px rgba(224, 86, 253, 0.85), inset 0 0 50px rgba(255, 255, 255, 0.85);
       }
     }
 
@@ -2079,9 +2083,9 @@
       mix-blend-mode: screen;
     }
     @keyframes burnSigil {
-      0% { transform: scale(0.5) rotate(0deg); opacity: 0; filter: brightness(1) blur(10px); }
-      20% { opacity: 1; filter: brightness(2) blur(0px); }
-      100% { transform: scale(1.5) rotate(90deg); opacity: 0; filter: brightness(1) blur(5px); }
+      0% { transform: scale(0.6); opacity: 0; filter: brightness(1.2) blur(8px); }
+      25% { opacity: 1; filter: brightness(2.2) blur(0px) drop-shadow(0 0 28px #f1c40f); }
+      100% { transform: scale(1.4); opacity: 0; filter: brightness(1.4) blur(4px); }
     }
 
     /* Tier 6 & Mythic styles */
