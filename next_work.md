@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KColony
-  kilo_qa: KChart
+  kilo_qa: KBudget
   kilo_expander: KPing
   kilo_review: KTerm
 virtual_web_target: kweb://cabled
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KPing
-  timestamp: '2026-10-31T05:39:46-07:00'
+  agent: kilo-qa
+  app: KChart
+  timestamp: '2026-10-31T06:22:19-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -171,11 +171,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | **[ARGON REVIEW]:** Move #toastContainer in kping.html from top 14px center (covering .controls-row inputs on boot/actions in sheet.png) to bottom-right above .analytics-panel (bottom 118px, right 24px); fix truncated #ttl (115 clipped to 11) and #dscpSelect values at 1040x683 by hiding number spin buttons, tightening input padding, balancing field widths, and raising .kbd-badge and .g-pill font-size to >= 10px; compact #helpModal .shortcut-table into a 2-column grid (closing missing /tbody) so it fits 1040x683 without heavy scroll and add missing Subnet Topo [X], Jitter Hist [J], and Interval [ / ] entries (plus ShowHelpDialog parity in KPing/main.c); include jitter in [L] graph cycle (line -> hist -> jitter -> strip) and fix handleGraphPointer() X-mapping for strip last-60 blocks and hist/jitter bucket tooltips; fix KPing/main.c WM_CREATE and WM_SIZE where hBtnExport (x=880 w=56) overlaps hBtnClear (x=874 w=44) and right2X=660 clips hBtnClear past W=940 by widening W to 1040 with 9.5pt Segoe UI, non-overlapping Row-1/Row-2 button widths, and ptMinTrackSize.x = 980. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KChart`
+- **Active Target**: `KBudget`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, chart type presets (bar/line/pie/radar), CSV import/export, dual Win32 C parity, and promote to Mature table. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, expense categories, balance projection graphs, dual Win32 C parity, and promote to Mature table. |
 | `KCipher` | `KiloOS/public/apps/kcipher.html`, `KCipher/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, multi-cipher algorithms (Caesar/Vigenere/AES/RSA demo), key management, dual Win32 C parity, and promote to Mature table. |
 | `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, retro palette & tool drawer, canvas resize/export, dual Win32 C parity, and promote to Mature table. |
@@ -183,6 +182,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, channel switcher, offline message spool, dual Win32 C parity, and promote to Mature table. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
+| `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, chart type presets (bar/line/pie/radar), CSV import/export, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KPing`
@@ -294,6 +294,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T06:22:19-07:00 — kilo-qa: KChart (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KChart across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KBudget`; rotated active agent to `kilo-expander`.
+
 - **2026-10-31T05:39:46-07:00 — kilo-usability: KPing (KPing Usability & Layout Optimization)**
   - Status: PASS ✅ (0 errors, web 183.3 KB, native 46.5 KB < 999 KB; 0 cut-off controls, 0 overflow).
   - Layout & Toast: Repositioned #toastContainer to bottom-right (bottom 118px, right 24px) above analytics panel; removed spin buttons and adjusted field padding to display full TTL 115 and DSCP options.
@@ -316,10 +321,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated KiloOS VFS export of .mod/.trk modules directly to /home/music/, inter-app IPC launch into KAudio/KSynth/KHex, and KNet deep linking.
   - Added 1999 Tip of the Day quickstart dialog with trapster_tutorialSeen persistence and eliminated sub-9px font warnings.
   - Handoff: Advanced `kilo-creator` to `kweb://cabled`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-31T02:34:40-07:00 — kilo-review: KPing (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1040x683 and audited kping.html + KPing/main.c; un-quarantined KPing from Mature).
-  - Visual & Layout Findings: Top-center #toastContainer covers .controls-row inputs; #ttl (115 -> 11) & #dscpSelect clip at 1040x683; #helpModal omits [X]/[J]/[[/]] & overflows; [L] skips jitter & canvas tooltip misaligns in strip/hist/jitter; KPing/main.c overlaps hBtnExport/hBtnClear and clips Clear [C] past W=940.
-  - Feature, Protocol & Win32 Findings: Unsolicited Firebase RTDB WebSocket autostart on boot violates Connect Gate Protocol; Mesh/Bufferbloat fail to update stats/analytics and JSON import drops historyData graph; KPing/main.c lacks WM_COMMAND id 14 (Mesh [G] dead), disables Stop [X] in mode 7, sorts rttHistory before jitter calc, ignores Int(ms), and truncates >1024B reports via wsprintfA.
-  - Phase VI Mesh Findings: Zero KiloOS VFS Open/Save or KPad/KHex IPC integration and no visual topology canvas mode for Trace/Topo/BGP.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KPing`, `kilo-usability`->`KPing`, `kilo-expander`->`KPing`] (un-quarantined `KPing` from Mature); advanced `kilo-review` to `KTerm`; next agent `kilo-creator`.

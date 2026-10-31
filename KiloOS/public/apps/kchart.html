@@ -802,15 +802,23 @@
   <div class="header-actions">
     <select id="presetSelect" aria-label="Load Sample Presets">
       <option value="">-- Presets & 1999 Logs --</option>
-      <option value="sales">Quarterly Revenue</option>
-      <option value="tech">Tech Stack Share</option>
-      <option value="weather">Monthly Temperature</option>
-      <option value="grades">Exam Score Dist</option>
-      <option value="fitness">Weekly Activity (Hrs)</option>
-      <option value="telemetry99">Subnet 10.19.99.x Packet Activity</option>
-      <option value="y2k">Y2K System Readiness %</option>
-      <option value="soundcard">1999 Sound Card Market Share</option>
-      <option value="ping99">Surreal vs Tremor LAN Ping (ms)</option>
+      <optgroup label="Chart Type Presets">
+        <option value="bar_preset">📊 Bar Preset (Revenue)</option>
+        <option value="line_preset">📈 Line Preset (Temperature)</option>
+        <option value="pie_preset">🥧 Pie Preset (Sound Cards)</option>
+        <option value="radar_preset">🕸️ Radar Preset (Subnet '99)</option>
+      </optgroup>
+      <optgroup label="1999 Datasets & Logs">
+        <option value="sales">Quarterly Revenue</option>
+        <option value="tech">Tech Stack Share</option>
+        <option value="weather">Monthly Temperature</option>
+        <option value="grades">Exam Score Dist</option>
+        <option value="fitness">Weekly Activity (Hrs)</option>
+        <option value="telemetry99">Subnet 10.19.99.x Packet Activity</option>
+        <option value="y2k">Y2K System Readiness %</option>
+        <option value="soundcard">1999 Sound Card Market Share</option>
+        <option value="ping99">Surreal vs Tremor LAN Ping (ms)</option>
+      </optgroup>
     </select>
 
     <select id="themeSelect" aria-label="Select Color Theme">
@@ -833,9 +841,9 @@
     <button id="btnExportMd" title="Export GitHub Markdown Table">📝 MD</button>
     <button id="btnExportC" title="Export C Array Header for Win32">💻 C</button>
     <button id="btnExportHtml" title="Export Standalone Interactive HTML">🌐 HTML</button>
-    <button id="btnExportCsv" title="Export CSV Table">📄 CSV</button>
+    <button id="btnExportCsv" title="Export CSV Table (E)"><span class="kbd-badge">E</span> 📄 CSV</button>
     <button id="btnExportJson" title="Export JSON Structure">📦 JSON</button>
-    <button id="btnImportTrigger" title="Import CSV or JSON dataset">📥 Import</button>
+    <button id="btnImportTrigger" title="Import CSV or JSON dataset (I)"><span class="kbd-badge">I</span> 📥 Import</button>
     <input type="file" id="fileInput" class="file-input-hidden" accept=".csv,.json">
   </div>
 </header>
@@ -1011,7 +1019,9 @@
             <tr><td>F5</td><td>QuickSave snapshot to local browser storage</td></tr>
             <tr><td>F9</td><td>QuickLoad snapshot from local browser storage</td></tr>
             <tr><td>1 – 9, 0</td><td>Select Chart Mode (Bar, Line, Area, Pie, Donut, Radar, HBar, Step, Scatter, Polar)</td></tr>
-            <tr><td>P</td><td>Cycle through Sample Presets &amp; 1999 Logs</td></tr>
+            <tr><td>P</td><td>Cycle Presets (Bar, Line, Pie, Radar presets &amp; 1999 Logs)</td></tr>
+            <tr><td>I / Ctrl+O</td><td>Import CSV or JSON dataset from file</td></tr>
+            <tr><td>E</td><td>Export CSV dataset table</td></tr>
             <tr><td>M</td><td>Toggle Sega Genesis FM Audio Synthesizer</td></tr>
             <tr><td>U / J</td><td>Sonify Dataset (Playhead audio sweep)</td></tr>
             <tr><td>T</td><td>Cycle Trendline &amp; Regression Overlays</td></tr>
@@ -1052,6 +1062,34 @@
   };
 
   const PRESETS = {
+    bar_preset: [
+      { label: "Q1 Rev", value: 450 },
+      { label: "Q2 Rev", value: 680 },
+      { label: "Q3 Rev", value: 520 },
+      { label: "Q4 Rev", value: 890 }
+    ],
+    line_preset: [
+      { label: "Jan", value: 12 }, { label: "Feb", value: 14 },
+      { label: "Mar", value: 18 }, { label: "Apr", value: 22 },
+      { label: "May", value: 27 }, { label: "Jun", value: 31 },
+      { label: "Jul", value: 35 }, { label: "Aug", value: 34 }
+    ],
+    pie_preset: [
+      { label: "BlastSound Live!", value: 52 },
+      { label: "AWE64 Gold", value: 22 },
+      { label: "Gravis UltraSound", value: 11 },
+      { label: "ESS Solo-1", value: 7 },
+      { label: "Yamaha YMF724", value: 5 },
+      { label: "Ensoniq PCI", value: 3 }
+    ],
+    radar_preset: [
+      { label: "10.19.99.1 Router", value: 320 },
+      { label: "10.19.99.4 Gateway", value: 840 },
+      { label: "10.19.99.12 Proxy", value: 460 },
+      { label: "10.19.99.7F Darknet Hub", value: 1250 },
+      { label: "10.19.99.128 Carrier", value: 620 },
+      { label: "10.19.99.254 Broadcast", value: 180 }
+    ],
     sales: [
       { label: "Q1 Rev", value: 450 },
       { label: "Q2 Rev", value: 680 },
@@ -3256,6 +3294,10 @@
       lastLoadedPreset = val;
       const presetName = e.target.selectedOptions[0].text;
       data = JSON.parse(JSON.stringify(PRESETS[val]));
+      if (val === 'bar_preset' || val === 'sales') setChartType('bar', true);
+      else if (val === 'line_preset' || val === 'weather') setChartType('line', true);
+      else if (val === 'pie_preset' || val === 'soundcard') setChartType('pie', true);
+      else if (val === 'radar_preset' || val === 'telemetry99') setChartType('radar', true);
       updateAll();
       playSfx('mode');
       showToast(`Loaded Preset: ${presetName}`, 'success', '📊');
@@ -3273,6 +3315,10 @@
     pushUndo();
     lastLoadedPreset = nextKey;
     data = JSON.parse(JSON.stringify(PRESETS[nextKey]));
+    if (nextKey === 'bar_preset' || nextKey === 'sales') setChartType('bar', true);
+    else if (nextKey === 'line_preset' || nextKey === 'weather') setChartType('line', true);
+    else if (nextKey === 'pie_preset' || nextKey === 'soundcard') setChartType('pie', true);
+    else if (nextKey === 'radar_preset' || nextKey === 'telemetry99') setChartType('radar', true);
     const selectElem = document.getElementById('presetSelect');
     let presetTitle = nextKey;
     if (selectElem) {
@@ -3945,6 +3991,12 @@ ${'</scr' + 'ipt>'}
       setChartType('polar');
     } else if (e.key === 'p' || e.key === 'P') {
       cyclePreset();
+    } else if (e.key === 'i' || e.key === 'I' || ((e.ctrlKey || e.metaKey) && (e.key === 'o' || e.key === 'O'))) {
+      e.preventDefault();
+      document.getElementById('fileInput').click();
+    } else if ((e.key === 'e' || e.key === 'E') && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      document.getElementById('btnExportCsv').click();
     } else if (e.key === 'u' || e.key === 'U' || e.key === 'j' || e.key === 'J') {
       sonifyDataset();
     } else if (e.key === 'm' || e.key === 'M') {

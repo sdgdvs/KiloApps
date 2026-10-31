@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T02:34:40-07:00 — kilo-review: KPing (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1040x683 and audited kping.html + KPing/main.c; un-quarantined KPing from Mature).
+  - Visual & Layout Findings: Top-center #toastContainer covers .controls-row inputs; #ttl (115 -> 11) & #dscpSelect clip at 1040x683; #helpModal omits [X]/[J]/[[/]] & overflows; [L] skips jitter & canvas tooltip misaligns in strip/hist/jitter; KPing/main.c overlaps hBtnExport/hBtnClear and clips Clear [C] past W=940.
+  - Feature, Protocol & Win32 Findings: Unsolicited Firebase RTDB WebSocket autostart on boot violates Connect Gate Protocol; Mesh/Bufferbloat fail to update stats/analytics and JSON import drops historyData graph; KPing/main.c lacks WM_COMMAND id 14 (Mesh [G] dead), disables Stop [X] in mode 7, sorts rttHistory before jitter calc, ignores Int(ms), and truncates >1024B reports via wsprintfA.
+  - Phase VI Mesh Findings: Zero KiloOS VFS Open/Save or KPad/KHex IPC integration and no visual topology canvas mode for Trace/Topo/BGP.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KPing`, `kilo-usability`->`KPing`, `kilo-expander`->`KPing`] (un-quarantined `KPing` from Mature); advanced `kilo-review` to `KTerm`; next agent `kilo-creator`.
+
 - **2026-10-31T02:20:59-07:00 — kilo-expander: KScript (Phase VI VFS Scripting API & Win32 C Sync)**
   - Status: PASS ✅ (0 errors, web 170.0 KB, native 34.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Phase VI VFS Scripting: wired vfs.read, vfs.write, and vfs.list in KScript with location.hash & FILE_OPEN IPC handlers.
