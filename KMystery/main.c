@@ -41,6 +41,21 @@ float my_cos(float x) {
     return my_sin(x + 1.5707963f);
 }
 
+char* my_strstr(const char* haystack, const char* needle) {
+    if (!haystack || !needle) return NULL;
+    if (!*needle) return (char*)haystack;
+    for (; *haystack; haystack++) {
+        const char* h = haystack;
+        const char* n = needle;
+        while (*h && *n && (*h == *n)) {
+            h++;
+            n++;
+        }
+        if (!*n) return (char*)haystack;
+    }
+    return NULL;
+}
+
 #define ID_BTN_SEARCH 1001
 #define ID_BTN_TRAVEL_OFFICE 1002
 #define ID_BTN_TRAVEL_MANOR 1003
@@ -75,6 +90,11 @@ float my_cos(float x) {
 #define ID_BTN_CLOSE_HELP 1030
 #define ID_BTN_QSAVE 1031
 #define ID_BTN_QLOAD 1032
+#define ID_BTN_DOSSIER 1034
+#define ID_BTN_DOSSIER_PREV 1035
+#define ID_BTN_DOSSIER_NEXT 1036
+#define ID_BTN_DOSSIER_PRESENT 1037
+#define ID_BTN_DOSSIER_CLOSE 1038
 
 HWND hMainWnd, hSceneWnd;
 HWND hTitle, hLocName, hLocDesc, hBtnSearch, hBtnTravelOffice, hBtnTravelManor, hBtnTravelDocks, hBtnTravelCasino, hBtnTravelStation;
@@ -83,6 +103,9 @@ HWND hStartPanel, hBtnStart, hBtnStartMed, hBtnStartHard, hStartDesc, hStatsDesc
 HWND hBtnHelp, hHelpTitle, hHelpDesc, hBtnCloseHelp, hBtnSave, hBtnLoad;
 HWND hBtnInterrogate, hIntDesc, hBtnAskAlibi, hBtnPresentClue, hBtnEndInt;
 HWND hBtnLab, hLabTitle, hBtnAnalyze, hBtnLeaveLab;
+HWND hDossierTitle, hDossierSpecimen, hDossierLocation, hDossierAnalysis, hDossierDeduction, hDossierCounter;
+HWND hBtnDossierPrev, hBtnDossierNext, hBtnDossierPresent, hBtnDossierClose, hBtnDossier;
+int currentDossierIdx = 0;
 HWND hScanDesc, hBtnScan11, hBtnScan7, hBtnScanM3, hBtnScanReset;
 HWND hBtnAccuse, hAccuseTitle, hAccuseDesc, hBtnSubmitAccuse, hBtnCancelAccuse, hCmbSuspect, hCmbMotive, hCmbWeapon;
 HWND hTimeLeft;
@@ -127,6 +150,232 @@ typedef struct {
 } Solution;
 
 Solution currentSolution;
+
+extern int initialTime;
+void UpdateUI(void);
+
+typedef struct {
+    const char* clueText;
+    const char* name;
+    const char* analysis;
+    const char* deduction;
+} ClueDossierEntry;
+
+static const ClueDossierEntry g_clueDossierData[11] = {
+    {
+        "A cufflink with an onyx stone.",
+        "Onyx Stone Cufflink",
+        "Hallmark stamped '925 Sterling'. Fine hairline scratches on the reverse suggest frequent wear with a bespoke tailored evening tuxedo.",
+        "Points toward a suspect with high-society affiliations and meticulous formal attire (e.g. Mr. Black)."
+    },
+    {
+        "A faint scent of expensive rose perfume.",
+        "Rose Perfume Residue",
+        "Gas chromatography identifies Bulgarian Damask rose absolute, bergamot, and ambergris base. Extremely rare and imported from Paris.",
+        "Matches the signature fragrance worn by Miss Scarlet. Present during interrogation to provoke an alibi slip."
+    },
+    {
+        "A polished brass military button.",
+        "Brass Military Button",
+        "Stamped with regimental crossed sabers and imperial crown. Thread fibers match heavy khaki wool military dress fabric.",
+        "Directly linked to Colonel Mustard's military uniform. Check if a button is missing from his jacket."
+    },
+    {
+        "A pristine white glove.",
+        "Lace Evening Glove",
+        "Hand-stitched Belgian lace with small mother-of-pearl button closure. Smudges on finger tips match archival document dust.",
+        "Belongs to Mrs. White. Suggests delicate handling or recent tampering with private household estate documents."
+    },
+    {
+        "A broken pair of spectacles.",
+        "Tortoiseshell Spectacles",
+        "High diopter concavo-convex prescription glass. Right hinge shattered by sudden blunt compression force.",
+        "Belongs to Professor Plum. The broken lens suggests a violent struggle took place at the crime scene."
+    },
+    {
+        "A spent .38 caliber shell casing.",
+        "Spent .38 Shell Casing",
+        "Rimmed brass casing marked 'W.R.A. Co. .38 S&W Spl'. Deep hemispherical firing pin indentation with fresh nitrocellulose sulfur residue.",
+        "Confirms the murder weapon was a revolver fired within the past 24 hours."
+    },
+    {
+        "A discarded vial smelling of bitter almonds.",
+        "Cyanide Apothecary Vial",
+        "Dark cobalt blue glass bottle with ground glass stopper. Trace aqueous residue tests positive for potassium cyanide salts.",
+        "Confirms poison was deployed. Rapidly lethal; victim showed no physical trauma prior to collapse."
+    },
+    {
+        "A heavy, blood-stained lead pipe hidden in the corner.",
+        "Bloodstained Lead Pipe",
+        "Standard 1.25\" plumbing pipe elbow. Blunt trauma ridge matches the cranial fractures documented in the coroner's post-mortem.",
+        "Confirms the murder weapon was a blunt instrument swung with forceful malice."
+    },
+    {
+        "A crumpled letter swearing vengeance.",
+        "Threatening Letter",
+        "Written with iron gall ink on linen ledger paper. Aggressive forward slant with heavy downstrokes indicating profound fury.",
+        "Establishes Revenge as the primary motive for the homicide."
+    },
+    {
+        "An altered will leaving everything to the killer.",
+        "Falsified Last Will & Testament",
+        "Codicil page typed on an Underwood typewriter with mismatched ribbon density. Signature forged with tracing guide lines.",
+        "Establishes Greed as the primary motive for the homicide."
+    },
+    {
+        "A torn photograph of a happy couple, with one face scratched out.",
+        "Defaced Portrait Photograph",
+        "Silver gelatin cabinet card print. Aggressive razor scratching completely obliterates the victim's likeness beside an estranged partner.",
+        "Establishes Jealousy as the primary motive for the homicide."
+    }
+};
+
+const ClueDossierEntry* FindClueDossierEntry(const char* fullText) {
+    if (!fullText) return NULL;
+    const char* actual = fullText;
+    while (*actual && *actual != ']') actual++;
+    if (*actual == ']') actual += 2;
+    for (int i = 0; i < 11; i++) {
+        if (my_strstr(fullText, g_clueDossierData[i].clueText) || my_strcmp(actual, g_clueDossierData[i].clueText) == 0) {
+            return &g_clueDossierData[i];
+        }
+    }
+    return NULL;
+}
+
+static void HideDossierControls(void) {
+    ShowWindow(hDossierTitle, SW_HIDE);
+    ShowWindow(hDossierSpecimen, SW_HIDE);
+    ShowWindow(hDossierLocation, SW_HIDE);
+    ShowWindow(hDossierAnalysis, SW_HIDE);
+    ShowWindow(hDossierDeduction, SW_HIDE);
+    ShowWindow(hDossierCounter, SW_HIDE);
+    ShowWindow(hBtnDossierPrev, SW_HIDE);
+    ShowWindow(hBtnDossierNext, SW_HIDE);
+    ShowWindow(hBtnDossierPresent, SW_HIDE);
+    ShowWindow(hBtnDossierClose, SW_HIDE);
+}
+
+void UpdateDossierUI(void) {
+    int totalClues = SendMessageA(hListClues, LB_GETCOUNT, 0, 0);
+    if (totalClues <= 0) {
+        SetWindowTextA(hDossierSpecimen, "SPECIMEN: No verified clues in case notebook.");
+        SetWindowTextA(hDossierLocation, "RECOVERED FROM: Unknown");
+        SetWindowTextA(hDossierAnalysis, "FORENSIC & BALLISTICS ANALYSIS:\r\nNo physical specimens analyzed yet.");
+        SetWindowTextA(hDossierDeduction, "DETECTIVE'S DEDUCTION:\r\nSearch crime scenes [S] and process items in the Lab [L].");
+        SetWindowTextA(hDossierCounter, "Evidence 0 of 0");
+        EnableWindow(hBtnDossierPrev, FALSE);
+        EnableWindow(hBtnDossierNext, FALSE);
+        EnableWindow(hBtnDossierPresent, FALSE);
+        return;
+    }
+    if (currentDossierIdx < 0) currentDossierIdx = 0;
+    if (currentDossierIdx >= totalClues) currentDossierIdx = totalClues - 1;
+
+    char rawClue[256];
+    rawClue[0] = '\0';
+    SendMessageA(hListClues, LB_GETTEXT, currentDossierIdx, (LPARAM)rawClue);
+
+    char locBuf[64];
+    locBuf[0] = '\0';
+    if (rawClue[0] == '[') {
+        int k = 1;
+        while (rawClue[k] && rawClue[k] != ']' && k < 60) {
+            locBuf[k - 1] = rawClue[k];
+            k++;
+        }
+        locBuf[k - 1] = '\0';
+    } else {
+        my_strcpy(locBuf, "Crime Scene");
+    }
+
+    const ClueDossierEntry* entry = FindClueDossierEntry(rawClue);
+    char specBuf[128];
+    char locDisplayBuf[128];
+    char analysisBuf[512];
+    char deductionBuf[512];
+    char counterBuf[64];
+
+    if (entry) {
+        wsprintfA(specBuf, "SPECIMEN: %s", entry->name);
+        wsprintfA(locDisplayBuf, "RECOVERED FROM: %s", locBuf);
+        wsprintfA(analysisBuf, "FORENSIC & BALLISTICS ANALYSIS:\r\n%s", entry->analysis);
+        wsprintfA(deductionBuf, "DETECTIVE'S DEDUCTION:\r\n%s", entry->deduction);
+    } else {
+        wsprintfA(specBuf, "SPECIMEN: %s", rawClue);
+        wsprintfA(locDisplayBuf, "RECOVERED FROM: %s", locBuf);
+        wsprintfA(analysisBuf, "FORENSIC & BALLISTICS ANALYSIS:\r\nVerified physical evidence analyzed in laboratory.");
+        wsprintfA(deductionBuf, "DETECTIVE'S DEDUCTION:\r\nPresent this specimen during interrogation to provoke suspect reactions.");
+    }
+    wsprintfA(counterBuf, "Evidence %d of %d", currentDossierIdx + 1, totalClues);
+
+    SetWindowTextA(hDossierSpecimen, specBuf);
+    SetWindowTextA(hDossierLocation, locDisplayBuf);
+    SetWindowTextA(hDossierAnalysis, analysisBuf);
+    SetWindowTextA(hDossierDeduction, deductionBuf);
+    SetWindowTextA(hDossierCounter, counterBuf);
+
+    EnableWindow(hBtnDossierPrev, currentDossierIdx > 0);
+    EnableWindow(hBtnDossierNext, currentDossierIdx < totalClues - 1);
+    int hasSuspect = (locations[currentLocation].suspectIdx >= 0);
+    EnableWindow(hBtnDossierPresent, hasSuspect);
+}
+
+void OpenDossierViewer(HWND hwnd) {
+    int totalClues = SendMessageA(hListClues, LB_GETCOUNT, 0, 0);
+    if (totalClues <= 0) {
+        MessageBoxA(hwnd, "No verified clues yet in notebook.\n\nSearch crime scenes [S] and analyze evidence in the Lab [L].", "Clue Dossier", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    if (currentDossierIdx < 0 || currentDossierIdx >= totalClues) currentDossierIdx = 0;
+    prevState = currentState;
+    currentState = 7;
+    UpdateUI();
+    RECT r; GetClientRect(hwnd, &r);
+    SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
+}
+
+void ExportForensicDossierReport(const char* suspect, const char* motive, const char* weapon, int hoursTaken, int penaltyFree) {
+    HANDLE hFile = CreateFileA("kmystery_dossier.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char buf[2048];
+        int len = 0;
+        const char* div = "================================================================================\r\n";
+        
+        len += wsprintfA(buf + len, "%s", div);
+        len += wsprintfA(buf + len, "         KILO CITY POLICE DEPARTMENT - HOMICIDE SQUAD\r\n");
+        len += wsprintfA(buf + len, "              OFFICIAL FORENSIC DOSSIER & CASE REPORT\r\n");
+        len += wsprintfA(buf + len, "%s", div);
+        len += wsprintfA(buf + len, "STATUS: CASE CLOSED / CONVICTION SECURED\r\n");
+        len += wsprintfA(buf + len, "PERPETRATOR: %s\r\n", suspect);
+        len += wsprintfA(buf + len, "MOTIVE: %s\r\n", motive);
+        len += wsprintfA(buf + len, "MURDER WEAPON: %s\r\n", weapon);
+        len += wsprintfA(buf + len, "TIME ELAPSED: %d hours (Initial Budget: %dh)\r\n", hoursTaken, initialTime);
+        len += wsprintfA(buf + len, "RATING: %s\r\n", penaltyFree ? "PERFECT INVESTIGATION (0 lab errors, 0 suspect violations)" : "STANDARD PROSECUTORIAL CONVICTION");
+        len += wsprintfA(buf + len, "%s", div);
+        len += wsprintfA(buf + len, "VERIFIED PHYSICAL CLUES:\r\n");
+        
+        int totalClues = SendMessageA(hListClues, LB_GETCOUNT, 0, 0);
+        for (int i = 0; i < totalClues; i++) {
+            char clueText[256];
+            SendMessageA(hListClues, LB_GETTEXT, i, (LPARAM)clueText);
+            const ClueDossierEntry* e = FindClueDossierEntry(clueText);
+            if (e) {
+                len += wsprintfA(buf + len, "  %d. %s - %s\r\n", i + 1, e->name, e->analysis);
+            } else {
+                len += wsprintfA(buf + len, "  %d. %s\r\n", i + 1, clueText);
+            }
+        }
+        len += wsprintfA(buf + len, "%s", div);
+        len += wsprintfA(buf + len, "ARCHIVE LOCATION: /home/docs/kmystery_dossier.txt (Native: kmystery_dossier.txt)\r\n");
+        len += wsprintfA(buf + len, "%s", div);
+
+        DWORD written = 0;
+        WriteFile(hFile, buf, len, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
 
 int suspectPatience[5];
 char suspectAlibis[5][128];
@@ -394,6 +643,12 @@ void UpdateSuspectList() {
 }
 
 void UpdateUI() {
+    HideDossierControls();
+    if (currentState == 1 || currentState == 2) {
+        ShowWindow(hBtnDossier, SW_SHOW);
+    } else {
+        ShowWindow(hBtnDossier, SW_HIDE);
+    }
     if (currentState == 0) {
         ShowWindow(hStartPanel, SW_SHOW);
         ShowWindow(hStartDesc, SW_SHOW);
@@ -723,6 +978,72 @@ void UpdateUI() {
         ShowWindow(hHelpTitle, SW_SHOW);
         ShowWindow(hHelpDesc, SW_SHOW);
         ShowWindow(hBtnCloseHelp, SW_SHOW);
+    } else if (currentState == 7) {
+        ShowWindow(hSceneWnd, SW_HIDE);
+        ShowWindow(hStartPanel, SW_HIDE);
+        ShowWindow(hStartDesc, SW_HIDE);
+        ShowWindow(hBtnStart, SW_HIDE);
+        ShowWindow(hBtnStartMed, SW_HIDE);
+        ShowWindow(hBtnStartHard, SW_HIDE);
+        ShowWindow(hStatsDesc, SW_HIDE);
+        ShowWindow(hTimeLeft, SW_HIDE);
+        ShowWindow(hTitle, SW_HIDE);
+        ShowWindow(hLocName, SW_HIDE);
+        ShowWindow(hLocDesc, SW_HIDE);
+        ShowWindow(hBtnSearch, SW_HIDE);
+        ShowWindow(hBtnInterrogate, SW_HIDE);
+        ShowWindow(hBtnTravelOffice, SW_HIDE);
+        ShowWindow(hBtnTravelManor, SW_HIDE);
+        ShowWindow(hBtnTravelDocks, SW_HIDE);
+        ShowWindow(hBtnTravelCasino, SW_HIDE);
+        ShowWindow(hBtnTravelStation, SW_HIDE);
+        ShowWindow(hSuspectTitle, SW_HIDE);
+        ShowWindow(hListSuspects, SW_HIDE);
+        ShowWindow(hClueTitle, SW_HIDE);
+        ShowWindow(hListClues, SW_HIDE);
+        ShowWindow(hUnanalyzedTitle, SW_HIDE);
+        ShowWindow(hListUnanalyzed, SW_HIDE);
+        ShowWindow(hBtnDossier, SW_HIDE);
+        ShowWindow(hIntDesc, SW_HIDE);
+        ShowWindow(hBtnAskAlibi, SW_HIDE);
+        ShowWindow(hBtnPresentClue, SW_HIDE);
+        ShowWindow(hBtnEndInt, SW_HIDE);
+        ShowWindow(hBtnLab, SW_HIDE);
+        ShowWindow(hLabTitle, SW_HIDE);
+        ShowWindow(hBtnAnalyze, SW_HIDE);
+        ShowWindow(hBtnLeaveLab, SW_HIDE);
+        ShowWindow(hScanDesc, SW_HIDE);
+        ShowWindow(hBtnScan11, SW_HIDE);
+        ShowWindow(hBtnScan7, SW_HIDE);
+        ShowWindow(hBtnScanM3, SW_HIDE);
+        ShowWindow(hBtnScanReset, SW_HIDE);
+        ShowWindow(hBtnAccuse, SW_HIDE);
+        ShowWindow(hAccuseTitle, SW_HIDE);
+        ShowWindow(hAccuseDesc, SW_HIDE);
+        ShowWindow(hBtnSubmitAccuse, SW_HIDE);
+        ShowWindow(hBtnCancelAccuse, SW_HIDE);
+        ShowWindow(hCmbSuspect, SW_HIDE);
+        ShowWindow(hCmbMotive, SW_HIDE);
+        ShowWindow(hCmbWeapon, SW_HIDE);
+        ShowWindow(hBtnHelp, SW_HIDE);
+        ShowWindow(hBtnSave, SW_HIDE);
+        ShowWindow(hBtnLoad, SW_HIDE);
+        ShowWindow(hHelpTitle, SW_HIDE);
+        ShowWindow(hHelpDesc, SW_HIDE);
+        ShowWindow(hBtnCloseHelp, SW_HIDE);
+
+        ShowWindow(hDossierTitle, SW_SHOW);
+        ShowWindow(hDossierSpecimen, SW_SHOW);
+        ShowWindow(hDossierLocation, SW_SHOW);
+        ShowWindow(hDossierAnalysis, SW_SHOW);
+        ShowWindow(hDossierDeduction, SW_SHOW);
+        ShowWindow(hDossierCounter, SW_SHOW);
+        ShowWindow(hBtnDossierPrev, SW_SHOW);
+        ShowWindow(hBtnDossierNext, SW_SHOW);
+        ShowWindow(hBtnDossierPresent, SW_SHOW);
+        ShowWindow(hBtnDossierClose, SW_SHOW);
+
+        UpdateDossierUI();
     }
 }
 
@@ -823,6 +1144,7 @@ void QuickLoadGame(HWND hwnd) {
         return;
     }
     currentState = data.currentState;
+    if (currentState == 7) currentState = 1;
     currentLocation = data.currentLocation;
     timeLeft = data.timeLeft;
     initialTime = data.initialTime;
@@ -1667,7 +1989,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hUnanalyzedTitle = CreateWindowA("STATIC", "Unanalyzed Evidence", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             hListUnanalyzed = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | LBS_NOTIFY | WS_VSCROLL, 0, 0, 0, 0, hwnd, (HMENU)ID_LIST_UNANALYZED, NULL, NULL);
             
-            hClueTitle = CreateWindowA("STATIC", "Verified Clues", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hClueTitle = CreateWindowA("STATIC", "Verified Clues [C]", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hBtnDossier = CreateWindowA("BUTTON", "Inspect Dossier [C]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DOSSIER, NULL, NULL);
+            SendMessageA(hBtnDossier, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+
+            hDossierTitle = CreateWindowA("STATIC", "EVIDENCE FORENSIC DOSSIER", WS_CHILD | SS_CENTER, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hDossierSpecimen = CreateWindowA("STATIC", "SPECIMEN: ", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hDossierLocation = CreateWindowA("STATIC", "RECOVERED FROM: ", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hDossierAnalysis = CreateWindowA("STATIC", "FORENSIC ANALYSIS: ", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hDossierDeduction = CreateWindowA("STATIC", "DETECTIVE DEDUCTION: ", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hDossierCounter = CreateWindowA("STATIC", "Evidence 0 of 0", WS_CHILD | SS_RIGHT, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+
+            hBtnDossierPrev = CreateWindowA("BUTTON", "◀ Prev [←]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DOSSIER_PREV, NULL, NULL);
+            hBtnDossierNext = CreateWindowA("BUTTON", "Next [→] ▶", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DOSSIER_NEXT, NULL, NULL);
+            hBtnDossierPresent = CreateWindowA("BUTTON", "Present Clue [P]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DOSSIER_PRESENT, NULL, NULL);
+            hBtnDossierClose = CreateWindowA("BUTTON", "Close Dossier [Esc]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DOSSIER_CLOSE, NULL, NULL);
+
+            SendMessageA(hDossierTitle, WM_SETFONT, (WPARAM)hFontTitle, TRUE);
+            SendMessageA(hDossierSpecimen, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hDossierLocation, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hDossierAnalysis, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hDossierDeduction, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hDossierCounter, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            SendMessageA(hBtnDossierPrev, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hBtnDossierNext, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hBtnDossierPresent, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hBtnDossierClose, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             hListClues = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | LBS_NOTIFY | WS_VSCROLL, 0, 0, 0, 0, hwnd, (HMENU)ID_LIST_CLUES, NULL, NULL);
 
             hIntDesc = CreateWindowA("STATIC", "", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
@@ -1858,7 +2206,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 int clueY = unY + 24 + listH + 8;
                 MoveWindow(hClueTitle, rightX, clueY, rightW, 20, TRUE);
-                MoveWindow(hListClues, rightX, clueY + 24, rightW, cy - (clueY + 24) - pad, TRUE);
+                int clueListH = cy - (clueY + 24) - pad - 34;
+                if (clueListH < 50) clueListH = 50;
+                MoveWindow(hListClues, rightX, clueY + 24, rightW, clueListH, TRUE);
+                MoveWindow(hBtnDossier, rightX, clueY + 24 + clueListH + 6, rightW, 26, TRUE);
                 
                 MoveWindow(hBtnHelp, cx - 90, 8, 75, 24, TRUE);
             }
@@ -1867,6 +2218,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MoveWindow(hHelpDesc, cx/2 - 280, 70, 560, 240, TRUE);
                 MoveWindow(hBtnCloseHelp, cx/2 - 90, 320, 180, 36, TRUE);
             }
+            if (currentState == 7) {
+                int cardW = 580;
+                if (cardW > cx - 40) cardW = cx - 40;
+                int cardX = (cx - cardW) / 2;
+                int y = 25;
+
+                MoveWindow(hDossierTitle, 0, y, cx, 32, TRUE);
+                y += 42;
+
+                MoveWindow(hDossierSpecimen, cardX, y, cardW, 24, TRUE);
+                y += 28;
+
+                MoveWindow(hDossierLocation, cardX, y, cardW, 22, TRUE);
+                y += 28;
+
+                MoveWindow(hDossierAnalysis, cardX, y, cardW, 110, TRUE);
+                y += 120;
+
+                MoveWindow(hDossierDeduction, cardX, y, cardW, 90, TRUE);
+                y += 100;
+
+                MoveWindow(hDossierCounter, cardX, y, cardW, 22, TRUE);
+                y += 30;
+
+                int btnW = 110;
+                int gap = 10;
+                int totalBtnsW = (btnW * 4) + (gap * 3);
+                int startBtnX = (cx - totalBtnsW) / 2;
+
+                MoveWindow(hBtnDossierPrev, startBtnX, y, btnW, 30, TRUE);
+                MoveWindow(hBtnDossierNext, startBtnX + btnW + gap, y, btnW, 30, TRUE);
+                MoveWindow(hBtnDossierPresent, startBtnX + (btnW + gap) * 2, y, btnW, 30, TRUE);
+                MoveWindow(hBtnDossierClose, startBtnX + (btnW + gap) * 3, y, btnW, 30, TRUE);
+            }
             break;
         }
 
@@ -1874,6 +2259,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             WORD id = LOWORD(wParam);
             WORD code = HIWORD(wParam);
             if (code == 0) PlayTypewriter();
+
+            if (id == ID_LIST_CLUES && code == LBN_DBLCLK) {
+                int sel = SendMessageA(hListClues, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR) currentDossierIdx = sel;
+                OpenDossierViewer(hwnd);
+                break;
+            }
 
             if (id == ID_BTN_START) {
                 StartGame(3, 18);
@@ -2115,6 +2507,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     
                     PlaySuccessJingle();
                     SpawnBurst(200, 90, 80, RGB(212, 175, 55));
+                    ExportForensicDossierReport(suspects[sIdx], motiveClues[mIdx], weaponClues[wIdx], hoursTaken, penaltyFree);
                     
                     char msgBuf[512];
                     if (penaltyFree) {
@@ -2146,11 +2539,59 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 QuickSaveGame(hwnd);
             } else if (id == ID_BTN_QLOAD) {
                 QuickLoadGame(hwnd);
+            } else if (id == ID_BTN_DOSSIER) {
+                int sel = SendMessageA(hListClues, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR) currentDossierIdx = sel;
+                OpenDossierViewer(hwnd);
+            } else if (id == ID_BTN_DOSSIER_PREV) {
+                if (currentDossierIdx > 0) {
+                    currentDossierIdx--;
+                    UpdateDossierUI();
+                }
+            } else if (id == ID_BTN_DOSSIER_NEXT) {
+                int total = SendMessageA(hListClues, LB_GETCOUNT, 0, 0);
+                if (currentDossierIdx < total - 1) {
+                    currentDossierIdx++;
+                    UpdateDossierUI();
+                }
+            } else if (id == ID_BTN_DOSSIER_PRESENT) {
+                int totalClues = SendMessageA(hListClues, LB_GETCOUNT, 0, 0);
+                if (totalClues > 0 && currentDossierIdx >= 0 && currentDossierIdx < totalClues) {
+                    int sIdx = locations[currentLocation].suspectIdx;
+                    if (sIdx < 0) {
+                        MessageBoxA(hwnd, "No suspect present at this location to interrogate.", "Interrogation", MB_OK | MB_ICONINFORMATION);
+                    } else {
+                        SendMessageA(hListClues, LB_SETCURSEL, currentDossierIdx, 0);
+                        currentState = 2;
+                        UpdateUI();
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_PRESENT_CLUE, 0), 0);
+                    }
+                }
+            } else if (id == ID_BTN_DOSSIER_CLOSE) {
+                currentState = prevState;
+                UpdateUI();
+                RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
             }
             break;
         }
 
         case WM_KEYDOWN: {
+            if (currentState == 7) {
+                if (wParam == VK_LEFT) {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DOSSIER_PREV, 0), 0);
+                    return 0;
+                } else if (wParam == VK_RIGHT) {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DOSSIER_NEXT, 0), 0);
+                    return 0;
+                } else if (wParam == 'P' || wParam == 'p') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DOSSIER_PRESENT, 0), 0);
+                    return 0;
+                } else if (wParam == VK_ESCAPE || wParam == 'C' || wParam == 'c' || wParam == VK_RETURN || wParam == VK_SPACE) {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DOSSIER_CLOSE, 0), 0);
+                    return 0;
+                }
+                return 0;
+            }
             if (wParam == VK_F5) {
                 QuickSaveGame(hwnd);
                 return 0;
@@ -2212,6 +2653,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (wParam == 'A' || wParam == 'a') {
                     SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_ACCUSE, 0), 0);
                     return 0;
+                } else if (wParam == 'C' || wParam == 'c') {
+                    int sel = SendMessageA(hListClues, LB_GETCURSEL, 0, 0);
+                    if (sel != LB_ERR) currentDossierIdx = sel;
+                    OpenDossierViewer(hwnd);
+                    return 0;
                 } else if (wParam >= '1' && wParam <= '5') {
                     int targetLoc = (int)(wParam - '1');
                     if (targetLoc < activeItems && targetLoc != currentLocation) {
@@ -2221,7 +2667,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     return 0;
                 }
             } else if (currentState == 2) {
-                if (wParam == '1') {
+                if (wParam == 'C' || wParam == 'c') {
+                    int sel = SendMessageA(hListClues, LB_GETCURSEL, 0, 0);
+                    if (sel != LB_ERR) currentDossierIdx = sel;
+                    OpenDossierViewer(hwnd);
+                    return 0;
+                } else if (wParam == '1') {
                     SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_ASK_ALIBI, 0), 0);
                     return 0;
                 } else if (wParam == '2') {
@@ -2264,8 +2715,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
+            HWND hCtrl = (HWND)lParam;
             SetBkColor(hdc, RGB(7, 7, 9));
-            SetTextColor(hdc, RGB(216, 216, 216));
+            if (hCtrl == hDossierTitle || hCtrl == hDossierSpecimen) {
+                SetTextColor(hdc, RGB(212, 175, 55));
+            } else if (hCtrl == hDossierLocation || hCtrl == hDossierCounter) {
+                SetTextColor(hdc, RGB(180, 170, 150));
+            } else {
+                SetTextColor(hdc, RGB(216, 216, 216));
+            }
             return (LRESULT)GetStockObject(BLACK_BRUSH);
         }
         

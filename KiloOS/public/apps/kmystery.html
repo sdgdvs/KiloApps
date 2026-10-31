@@ -578,6 +578,7 @@
                 <div style="margin-top:10px; display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
                     <button onclick="returnToTitle()" class="btn-gold" style="font-size:14px; padding:8px 22px;">Start New Case</button>
                     <button id="btn-export-dossier" onclick="exportDossierReport(true)" class="btn-gold hidden" style="font-size:14px; padding:8px 22px;" title="Export forensic dossier to /home/docs/kmystery_dossier.txt">📄 Export Forensic Dossier (/home/docs/kmystery_dossier.txt)</button>
+                    <button id="btn-kpad-dossier" onclick="openDossierInKPad()" class="btn-gold hidden" style="font-size:14px; padding:8px 22px;" title="Open forensic dossier report in KPad editor">📝 Open in KPad</button>
                 </div>
             </div>
             
@@ -1077,14 +1078,25 @@
             },
             read(path, cb) {
                 const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let cleanupTimer = null;
                 const handler = (e) => {
+                    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
                     if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
                         window.removeEventListener('message', handler);
                         cb(e.data.data, e.data.path);
                     }
                 };
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, null);
+                }, 60000);
                 window.addEventListener('message', handler);
-                try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+                try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, null);
+                }
             },
             savePicker(defaultPath, data, cb) {
                 if (window.parent === window) {
@@ -1092,15 +1104,24 @@
                     return;
                 }
                 const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let cleanupTimer = null;
                 const handler = (e) => {
+                    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
                     if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
                         window.removeEventListener('message', handler);
                         if (e.data.path) {
                             KiloVFS.write(e.data.path, data);
                             if (cb) cb(e.data.path);
+                        } else if (cb) {
+                            cb(null);
                         }
                     }
                 };
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null);
+                }, 60000);
                 window.addEventListener('message', handler);
                 try {
                     window.parent.postMessage({
@@ -1109,7 +1130,11 @@
                         defaultPath: defaultPath,
                         path: defaultPath
                     }, '*');
-                } catch (e) {}
+                } catch (e) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null);
+                }
             },
             openPicker(cb) {
                 if (window.parent === window) {
@@ -1117,14 +1142,23 @@
                     return;
                 }
                 const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let cleanupTimer = null;
                 const handler = (e) => {
+                    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
                     if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
                         window.removeEventListener('message', handler);
                         if (e.data.path) {
                             KiloVFS.read(e.data.path, cb);
+                        } else if (cb) {
+                            cb(null, null);
                         }
                     }
                 };
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, null);
+                }, 60000);
                 window.addEventListener('message', handler);
                 try {
                     window.parent.postMessage({
@@ -1132,12 +1166,55 @@
                         requestId: reqId,
                         defaultPath: '/home/saves/'
                     }, '*');
-                } catch (e) {}
+                } catch (e) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, null);
+                }
             },
             launchApp(targetApp, path = '') {
-                try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+                try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, appId: targetApp, path }, '*'); } catch (e) {}
             }
         };
+
+        function handleIncomingCaseFile(data, path) {
+            try {
+                const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+                if (!parsed || !parsed.state || !parsed.state.solution || !parsed.state.locations) {
+                    showToast("⚠️ Invalid case file format.");
+                    return;
+                }
+                safeSetStorage('kmystery_quicksave', JSON.stringify(parsed));
+                loadCaseData(parsed);
+                showToast(`📂 Case loaded from VFS: ${path || 'case file'}`);
+                noirAudio.playTypewriter();
+                updateStatsUI();
+            } catch (e) {
+                showToast("⚠️ Failed to parse case file: " + e.message);
+            }
+        }
+
+        // Incoming KiloOS Shell Message Dispatcher
+        window.addEventListener('message', (e) => {
+            if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
+            const msg = e.data;
+            if (!msg || typeof msg !== 'object') return;
+            if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+                const filePath = msg.path || '';
+                const fileContent = msg.data !== undefined ? msg.data : msg.content;
+                if (fileContent !== undefined && fileContent !== null) {
+                    handleIncomingCaseFile(fileContent, filePath);
+                } else if (filePath) {
+                    KiloVFS.read(filePath, (data, path) => {
+                        if (data) {
+                            handleIncomingCaseFile(data, path || filePath);
+                        } else {
+                            showToast(`⚠️ Could not read case from VFS: ${filePath}`);
+                        }
+                    });
+                }
+            }
+        });
 
         function getExportPayload() {
             let exportData = null;
@@ -1312,6 +1389,12 @@
             text += `CONFIDENTIAL LAW ENFORCEMENT RECORD - NOT FOR PUBLIC DISCLOSURE\n`;
             text += `${divider}\n`;
             return text;
+        }
+
+        function openDossierInKPad() {
+            exportDossierReport(false);
+            KiloVFS.launchApp('kpad', '/home/docs/kmystery_dossier.txt');
+            showToast("Opening Case Dossier in KPad...");
         }
 
         function exportDossierReport(userTriggered = false) {
@@ -2642,12 +2725,22 @@ function quickSave() {
                     btnDossier.classList.add('hidden');
                 }
             }
+            const btnKPad = document.getElementById('btn-kpad-dossier');
+            if (btnKPad) {
+                if (isSolved) {
+                    btnKPad.classList.remove('hidden');
+                } else {
+                    btnKPad.classList.add('hidden');
+                }
+            }
             goArea.classList.remove('hidden');
         }
 
         function returnToTitle() {
             const btnDossier = document.getElementById('btn-export-dossier');
             if (btnDossier) btnDossier.classList.add('hidden');
+            const btnKPad = document.getElementById('btn-kpad-dossier');
+            if (btnKPad) btnKPad.classList.add('hidden');
             document.getElementById('game-over-area').classList.add('hidden');
             document.getElementById('game-screen').classList.add('hidden');
             document.getElementById('start-screen').classList.remove('hidden');

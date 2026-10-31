@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T11:37:14-07:00 — kilo-creator: kweb://scallion (The Scallion: 1999 Satirical News Portal & KNet Integration)**
+  - Status: PASS ✅ (0 errors, web 107.4 KB < 999 KB, visual PASS input response 43.3%, security lint clean).
+  - Implemented The Scallion 1999 broadsheet with Ask A Sysadmin terminal, Infographic Lab, and Headline Forge.
+  - Added KNet URL resolver routing with section hash/subpath dispatch and KiloOS VFS clipping exports.
+  - Handoff: Advanced `kilo-creator` to `kweb://warez`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-31T10:32:47-07:00 — kilo-review: KCalc (Argon Visual, Feature & Usability Review (Defects Found -> Un-Quarantined))**
   - Status: DEFECTS FOUND (inspected 4-panel sheet.png at 860x653 and audited kcalc.html + KCalc/main.c; un-quarantined from Mature for Flash repair).
   - Visual/UX Findings: Stacked 4-row top toolbars (#kcalcExpBar + wrapped .header) squish the 8-row keypad at 860x653, duplicate HEX/BIN radix readouts and Constants/Memory modals (M1-M3 vs M0-M7 split-brain), and #regressionCanvas renders at 460px fallback width when hidden on boot.
