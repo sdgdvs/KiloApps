@@ -156,6 +156,16 @@ int LoadAudioState() {
     return 1;
 }
 
+void MarkTutorialSeen() {
+    HANDLE hFile = CreateFileA("kaudio_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char val = '1';
+        DWORD written = 0;
+        WriteFile(hFile, &val, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
 void QuickSaveState(HWND hwnd) {
     AudioSaveState st;
     st.magic = 0x4B415544;
@@ -175,6 +185,8 @@ void QuickSaveState(HWND hwnd) {
         DWORD written = 0;
         WriteFile(hFile, &st, sizeof(AudioSaveState), &written, NULL);
         CloseHandle(hFile);
+        MarkTutorialSeen();
+        if (showHelp) showHelp = 0;
         SetStatus(hwnd, "⚡ Quicksave Saved to kaudio_quicksave.dat! [F5]", 2500);
     }
 }
@@ -209,6 +221,8 @@ int QuickLoadState(HWND hwnd) {
         filterEnabled = 1;
     }
 
+    MarkTutorialSeen();
+    if (showHelp) showHelp = 0;
     SetStatus(hwnd, "🔄 Quickload Restored from kaudio_quicksave.dat! [F9]", 2500);
     InvalidateRect(hwnd, NULL, FALSE);
     return 1;
@@ -655,9 +669,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Check Help Dismiss Click (dismiss on click without control bleed-through)
             if (showHelp) {
                 showHelp = 0;
+                MarkTutorialSeen();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
+            // Top Save [F5] Button (x: W - 350 to W - 255, y: 4 to 28)
+            if (x >= W - 350 && x <= W - 255 && y >= 4 && y <= 28) {
+                QuickSaveState(hwnd);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+            // Check Load [F9] Button (x: W - 245 to W - 145, y: 4 to 28)
+            if (x >= W - 245 && x <= W - 145 && y >= 4 && y <= 28) {
+                QuickLoadState(hwnd);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+
             // Top Help Button [F1] (x: W-130 to W-10, y: 4 to 28)
             if (x >= W - 130 && x <= W - 10 && y >= 4 && y <= 28) {
                 showHelp = !showHelp;
@@ -789,9 +817,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == VK_ESCAPE && !isRepeat) {
                 if (showHelp) {
                     showHelp = 0;
+                    MarkTutorialSeen();
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 }
+            }
+            if ((wParam == VK_RETURN || wParam == VK_SPACE) && showHelp && !isRepeat) {
+                showHelp = 0;
+                MarkTutorialSeen();
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
             }
             // Sound FX Presets 1-5
             if (wParam >= '1' && wParam <= '5' && !isRepeat) {
@@ -1001,11 +1036,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(56, 189, 248));
             char title[180];
-            wsprintfA(title, "KAudio Pro Workstation | Inst: %d | Oct: %+d | Dly: %s | Drv: %s | Filt: %s | Vis: %s | Seq: %s",
+            wsprintfA(title, "KAudio Pro | Inst: %d | Oct: %+d | Dly: %s | Drv: %s | Filt: %s | Vis: %s | Seq: %s",
                       instrument, octaveShift, delayEnabled ? "ON" : "OFF", driveEnabled ? "ON" : "OFF",
                       filterEnabled ? "ON" : "OFF", visMode ? "FFT Spectrum" : "Oscilloscope",
                       seqPlaying ? "PLAY" : "STOP");
             TextOutA(memDC, 10, 8, title, lstrlenA(title));
+
+            // Top Save [F5] Button
+            HBRUSH saveBtnBrush = CreateSolidBrush(RGB(14, 165, 233));
+            RECT saveBtnRc = {W - 350, 4, W - 255, 28};
+            FillRect(memDC, &saveBtnRc, saveBtnBrush);
+            DeleteObject(saveBtnBrush);
+            SetTextColor(memDC, RGB(255, 255, 255));
+            TextOutA(memDC, W - 338, 7, "Save [F5]", 9);
+
+            // Top Load [F9] Button
+            HBRUSH loadBtnBrush = CreateSolidBrush(RGB(51, 65, 85));
+            RECT loadBtnRc = {W - 245, 4, W - 145, 28};
+            FillRect(memDC, &loadBtnRc, loadBtnBrush);
+            DeleteObject(loadBtnBrush);
+            SetTextColor(memDC, RGB(56, 189, 248));
+            TextOutA(memDC, W - 233, 7, "Load [F9]", 9);
 
             // Top Help Button [F1]
             HBRUSH helpBtnBrush = CreateSolidBrush(RGB(30, 41, 59));

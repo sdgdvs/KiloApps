@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KColony
-  kilo_qa: KAudio
+  kilo_qa: KGraph
   kilo_expander: KFont
   kilo_review: KPad
 virtual_web_target: kweb://slashnet
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KFont
-  timestamp: '2026-10-30T21:36:30-07:00'
+  agent: kilo-qa
+  app: KAudio
+  timestamp: '2026-10-30T22:19:42-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -169,11 +169,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | **[ARGON REVIEW]:** Prevent .header 2-row wrap and 34px vertical layout jump at 1024x731 when toggling #soundToggleBtn by tightening .header padding/gaps with flex-wrap nowrap above 920px and giving #soundToggleBtn a fixed min-width and consistent [M] hint; update #tab-opentype and #tab-compare .tab-badge labels from misleading 10/11 to 0/- and move canvas zoom shortcuts to [ and ] so - switches to Tab 11 from every tab including Tabs 4 and 9; call renderBitmapBankCanvas() inside renderBitmapAll() and the window resize listener so #bitmapBankCanvas sizes crisply on tab switch instead of squishing from 800px; and upgrade #panel-contrast (updateContrast() and updateCustomContrast()) with tabindex=0, role=button, and Enter/Space activation on .contrast-card, both Normal Text (AA 4.5, AAA 7.0) and Large Text (AA 3.0, AAA 4.5) WCAG 2.1 badges at active #sizeList size, editable hex text inputs, and a Swap FG/BG button. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KAudio`
+- **Active Target**: `KGraph`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, waveform audio editor, spectrum visualizer, filter pipeline, dual Win32 C parity, and promote to Mature table. |
 | `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, formula plotting, dataset import/export, dual Win32 C parity, and promote to Mature table. |
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, chart type presets (bar/line/pie/radar), CSV import/export, dual Win32 C parity, and promote to Mature table. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, expense categories, balance projection graphs, dual Win32 C parity, and promote to Mature table. |
@@ -231,6 +230,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KAudio** | `KiloOS/public/apps/kaudio.html` | Pass 5+ (2026-10-30) | Media / Audio & Synthesizer Studio | Complete audio workstation & DSP synthesis studio: 13-note chromatic keyboard, 16-step sequencer, dual-mode oscilloscope/FFT spectrum visualizer, 2-Op FM / subtractive engines, lowpass filter pipeline, full F5/F9 state persistence, and native Win32 C parity. |
 | **KChatServer** | `KiloOS/public/apps/kchatserver.html` | Pass 5+ (2026-10-30) | Network / Communications | Complete WinSock2 dual TCP/WebSocket chat server with F5/F9 state persistence, real-time client connection telemetry, broadcast console, and full Win32 native C parity. |
 | **KMedia** | `KiloOS/public/apps/kmedia.html` | Pass 5+ (2026-10-30) | Media / Audio & Video Player | Complete retro media player & studio with 5 visualizer modes, 3-band EQ, SNES SPC delay, CRT filters, SRT subtitles, Watch Party '99, F5/F9 state persistence, and dual Win32 C parity. |
 | **KMail** | `KiloOS/public/apps/kmail.html` | Pass 5+ (2026-10-30) | Productivity / Communication | Complete multi-tab email client with AES encryption, automated rules, KiloNet RTDB delivery, 6-folder navigation, draft composition, F5/F9 state persistence, and dual Win32 C parity. |
@@ -292,6 +292,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-30T22:19:42-07:00 — kilo-qa: KAudio (Pass 5 QA, Dual Parity & Mature Graduation)**
+  - Status: PASS ✅ (0 errors, web 147.8 KB, native 24.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 18.26%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.0s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kaudio_tutorialSeen / kaudio_tutorial.dat flags, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity (F5/F9 buttons, 3.2kHz LP filter, DSP FX, visualizer scope/FFT spectrum) and visibilitychange voice cleanup.
+  - Mature Quarantine & Handoff: Promoted `KAudio` to Mature archive; advanced `kilo-qa` to `KGraph`; next agent `kilo-expander`.
+
 - **2026-10-30T21:36:30-07:00 — kilo-usability: KFont (Header Layout, Tab Shortcuts, Crispy Bank Canvas & WCAG 2.1 Polish)**
   - Status: PASS (0 errors, web 233.6 KB, native 32.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 8.38%, HEAD Δ 12.58%, 0 fail, 0 warn, 4.3s)).
   - Layout: Prevented .header 2-row wrap and 34px vertical layout jump at 1024x731 with flex-wrap nowrap above 920px and min-width: 122px on #soundToggleBtn.
@@ -313,10 +319,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Connected Tier 3 Ghost Node terminal directly to KiloOS VFS (/sys/alpha.sys & /home/crypto/) with real-time bridge and bidirectional postMessage.
   - Added direct VFS sync for Sector 04 [STORAGE_VFS] (RECOVERY_1999) & penultimate passkey fragment (1999-ARCH) for KMatrix (App #100) verification.
   - Handoff: Advanced `kilo-creator` to `kweb://slashnet`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-30T19:34:10-07:00 — kilo-review: KFont (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 1024x731 sheet.png contact sheet and audited kfont.html + KFont/main.c; un-quarantined KFont from Mature with surgical fixes queued).
-  - Visual & WCAG Findings: .header wraps to 2 rows on boot at 1024x731 and jumps 34px vertically when toggling Sound ON/OFF; Tab 10/11 badges mismatch [0]/[-] keys and [-] collides with zoom; hidden-init #bitmapBankCanvas squishes from 800px; .contrast-card lacks keyboard focus/Large-Text WCAG tiers, and KFont/main.c hardcodes false 4.9:1 AA (actual 8.8:1 AAA) for Win95 Navy.
-  - Bitmap & Feature Findings: #bitmapEditorCanvas promises keyboard pixel editing and wheel zoom in UI/ARIA labels with zero implementation; persistBitmapStorage() is dead code; fresh boot overwrites ASCII A with cp437_smiley; bank BDF import drops BBX dimensions; visibilitychange targets non-existent #btnTogglePulse; TTX/SVG export uses a static Potemkin polygon.
-  - Phase VI Mesh & Native Parity: Queued KiloOS VFS Open/Save (.kfont.json, .bdf, .fnt, .h, .svg), KPad/KHex OS_LAUNCH_APP bridges, and KFont/main.c dynamic WCAG + interactive Bitmap [8] ROM editor.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KFont`, `kilo-tester`->`KFont`, `kilo-expander`->`KFont`] (un-quarantined `KFont` from Mature); advanced `kilo-review` to `KPad`; next agent `kilo-creator`.
