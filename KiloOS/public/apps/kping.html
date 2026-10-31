@@ -58,12 +58,14 @@
   .actions-divider {
     flex: 1; min-width: 8px;
   }
-  .host-group { flex: 1; min-width: 140px; }
+  .host-group { flex: 1; min-width: 130px; }
   .preset-group { width: 136px; }
-  .count-group { width: 50px; }
-  .size-group { width: 60px; }
-  .ttl-group { width: 50px; }
-  .timeout-group { width: 66px; }
+  .count-group { width: 48px; }
+  .size-group { width: 56px; }
+  .ttl-group { width: 54px; }
+  .timeout-group { width: 64px; }
+  .pattern-group { width: 102px; }
+  .dscp-group { width: 114px; }
   .options-group {
     display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-bottom: 5px;
   }
@@ -100,8 +102,17 @@
   }
   input[type="text"], input[type="number"], select {
     background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border);
-    color: var(--text); padding: 6px 9px; border-radius: 6px; outline: none;
-    font-family: "Consolas", monospace; font-size: 12.5px; transition: border-color 0.2s, box-shadow 0.2s;
+    color: var(--text); padding: 5px 6px; border-radius: 6px; outline: none;
+    font-family: "Consolas", monospace; font-size: 12px; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
   }
   input[type="text"]:focus, input[type="number"]:focus, select:focus {
     border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
@@ -122,7 +133,7 @@
     font-family: inherit; user-select: none;
   }
   .kbd-badge {
-    display: inline-block; font-size: 9px; font-family: "Consolas", monospace;
+    display: inline-block; font-size: 10px; font-family: "Consolas", monospace;
     background: rgba(0, 0, 0, 0.35); padding: 1px 3px; border-radius: 3px;
     border: 1px solid rgba(255, 255, 255, 0.2); opacity: 0.85; font-weight: normal;
   }
@@ -228,7 +239,7 @@
     position: absolute; top: 2px; right: 8px; display: flex; gap: 4px; z-index: 5;
   }
   .g-pill {
-    padding: 1px 6px; font-size: 9.5px; font-family: "Consolas", monospace; border-radius: 3px;
+    padding: 1px 6px; font-size: 10px; font-family: "Consolas", monospace; border-radius: 3px;
     background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12);
     color: var(--text-muted); cursor: pointer; transition: all 0.15s ease;
   }
@@ -249,11 +260,11 @@
 
   canvas { flex: 1; width: 100%; height: 100%; border-radius: 6px; background: rgba(0,0,0,0.25); }
 
-  /* Toast Notification System (Top-Center Safe Placement per Directive 189) */
+  /* Toast Notification System (Bottom-Right Placement above analytics-panel) */
   .toast-container {
-    position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 3000;
-    display: flex; flex-direction: column; gap: 8px; pointer-events: none; align-items: center;
-    max-width: 520px; width: auto;
+    position: fixed; bottom: 118px; right: 24px; z-index: 3000;
+    display: flex; flex-direction: column-reverse; gap: 8px; pointer-events: none; align-items: flex-end;
+    max-width: 460px; width: auto;
   }
   .toast {
     pointer-events: auto; padding: 8px 14px; border-radius: 8px; font-size: 11.5px; font-weight: 500;
@@ -277,7 +288,7 @@
   .toast-warning { background: rgba(120, 53, 15, 0.95); border-left: 4px solid var(--warning); color: #fef3c7; }
   .toast-error { background: rgba(127, 29, 29, 0.95); border-left: 4px solid var(--danger); color: #fee2e2; }
   @keyframes toastIn {
-    from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+    from { opacity: 0; transform: translateY(10px) scale(0.95); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
@@ -304,11 +315,32 @@
     cursor: pointer; padding: 2px 6px; border-radius: 4px; line-height: 1;
   }
   .modal-close:hover { color: white; background: rgba(255, 255, 255, 0.1); }
-  .shortcut-table { width: 100%; border-collapse: collapse; margin: 8px 0 14px; }
-  .shortcut-table th, .shortcut-table td {
-    padding: 7px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  #helpModal .modal-dialog { width: 780px; max-width: 94vw; max-height: 88vh; }
+  .shortcut-table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; }
+  .shortcut-table thead { display: none; }
+  .shortcut-table tbody {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 12px;
   }
-  .shortcut-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 10.5px; }
+  .shortcut-table tr {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .shortcut-table td {
+    padding: 0;
+    border-bottom: none;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .shortcut-table td:nth-child(1) { min-width: 76px; flex-shrink: 0; }
+  .shortcut-table td:nth-child(2) { min-width: 78px; flex-shrink: 0; color: #e2e8f0; }
+  .shortcut-table td:nth-child(3) { color: var(--text-muted); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
   .shortcut-key {
     background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 2px 5px; border-radius: 4px; font-family: "Consolas", monospace; font-size: 11px; color: #93c5fd;
@@ -358,6 +390,9 @@
     #filterInput {
       flex: 1;
       min-width: 90px;
+    }
+    .shortcut-table tbody {
+      grid-template-columns: 1fr;
     }
     .analytics-panel {
       height: auto;
@@ -445,7 +480,7 @@
           <option value="entropy">High Entropy</option>
         </select>
       </div>
-      <div class="input-group dscp-group" style="width: 104px;">
+      <div class="input-group dscp-group" style="width: 114px;">
         <label for="dscpSelect">QoS / DSCP</label>
         <select id="dscpSelect" title="IP Differentiated Services Code Point (DSCP) traffic classification">
           <option value="0">CS0 (Best Effort)</option>
@@ -716,21 +751,6 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
             <td>Send ICMP echo requests to measure latency & jitter</td>
           </tr>
           <tr>
-            <td><span class="shortcut-key">G</span></td>
-            <td><strong>Global Mesh</strong></td>
-            <td>Toggle Firebase cross-computer peer echo & fleet stations</td>
-          </tr>
-          <tr>
-            <td><span class="shortcut-key">B</span></td>
-            <td><strong>BGP Route</strong></td>
-            <td>Inspect Autonomous System transit path & peering points</td>
-          </tr>
-          <tr>
-            <td><span class="shortcut-key">Q</span></td>
-            <td><strong>Bufferbloat</strong></td>
-            <td>Evaluate queue latency under saturation & TCP BDP tuning</td>
-          </tr>
-          <tr>
             <td><span class="shortcut-key">T</span></td>
             <td><strong>Trace</strong></td>
             <td>Trace router hops along the destination path</td>
@@ -746,14 +766,54 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
             <td>Scan local subnet for active nodes and devices</td>
           </tr>
           <tr>
+            <td><span class="shortcut-key">X</span></td>
+            <td><strong>Subnet Topo</strong></td>
+            <td>Multi-hop ICMP topology discovery & gateway map</td>
+          </tr>
+          <tr>
             <td><span class="shortcut-key">D</span></td>
             <td><strong>DNS Inspector</strong></td>
             <td>Resolve records and analyze RFC IP classification</td>
           </tr>
           <tr>
+            <td><span class="shortcut-key">B</span></td>
+            <td><strong>BGP Route</strong></td>
+            <td>Inspect Autonomous System transit path & peering points</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">Q</span></td>
+            <td><strong>Bufferbloat</strong></td>
+            <td>Evaluate queue latency under saturation & TCP BDP tuning</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">G</span></td>
+            <td><strong>Global Mesh</strong></td>
+            <td>Toggle Firebase cross-computer peer echo & fleet stations</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">J</span></td>
+            <td><strong>Jitter Hist</strong></td>
+            <td>RFC 3550 inter-packet delay variation histogram</td>
+          </tr>
+          <tr>
             <td><span class="shortcut-key">L</span></td>
             <td><strong>Cycle Graph</strong></td>
-            <td>Cycle telemetry display mode: Line, Histogram, Strip</td>
+            <td>Cycle telemetry display mode: Line -> Hist -> Jitter -> Strip</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">[</span> / <span class="shortcut-key">]</span></td>
+            <td><strong>Interval</strong></td>
+            <td>Adjust packet pacing interval (-/+ 50ms)</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">U</span></td>
+            <td><strong>Toggle Audio</strong></td>
+            <td>Enable or mute Sega Genesis YM2612 FM audio feedback</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">1</span> - <span class="shortcut-key">9</span></td>
+            <td><strong>Presets</strong></td>
+            <td>Quickly select Localhost, Core Gateway, Classified, etc.</td>
           </tr>
           <tr>
             <td><span class="shortcut-key">E</span> / <span class="shortcut-key">Ctrl+S</span></td>
@@ -781,23 +841,8 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
             <td>Restore previously quicksaved target & config</td>
           </tr>
           <tr>
-            <td><span class="shortcut-key">U</span></td>
-            <td><strong>Toggle Audio</strong></td>
-            <td>Enable or mute Sega Genesis YM2612 FM audio feedback</td>
-          </tr>
-          <tr>
-            <td><span class="shortcut-key">1</span> - <span class="shortcut-key">9</span></td>
-            <td><strong>Presets</strong></td>
-            <td>Quickly select Localhost, Core Gateway, Classified, etc.</td>
-          </tr>
-          <tr>
-            <td><span class="shortcut-key">1-4</span> / <span class="shortcut-key">I</span></td>
-            <td><strong>Export & Import</strong></td>
-            <td>In dialog: JSON (1), CSV (2), MD (3), or Import JSON (4 / I)</td>
-          </tr>
-          <tr>
             <td><span class="shortcut-key">Esc</span> / <span class="shortcut-key">Enter</span></td>
-            <td><strong>Cancel / Dismiss</strong></td>
+            <td><strong>Dismiss</strong></td>
             <td>Stop active operation, dismiss active modal or notification</td>
           </tr>
           <tr>
@@ -805,6 +850,7 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
             <td><strong>Help</strong></td>
             <td>Open this interactive diagnostics manual</td>
           </tr>
+        </tbody>
       </table>
 
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
@@ -1266,14 +1312,14 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
     toast.innerHTML = `<span style="flex:1;">${messageHtml}</span><span class="toast-dismiss" aria-hidden="true">&times;</span>`;
     toast.onclick = () => {
       toast.style.opacity = '0';
-      toast.style.transform = 'translateY(-10px)';
+      toast.style.transform = 'translateY(10px)';
       setTimeout(() => toast.remove(), 180);
     };
     toastContainer.appendChild(toast);
     setTimeout(() => {
       if (toast.parentElement) {
         toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-10px)';
+        toast.style.transform = 'translateY(10px)';
         setTimeout(() => toast.remove(), 180);
       }
     }, duration);
@@ -1409,6 +1455,7 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
 
   btnModeLine.onclick = () => setGraphMode('line');
   btnModeHist.onclick = () => setGraphMode('hist');
+  if (btnModeJitter) btnModeJitter.onclick = () => setGraphMode('jitter');
   btnModeStrip.onclick = () => setGraphMode('strip');
 
   function setGraphMode(mode) {
@@ -1896,9 +1943,9 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
       ctx.clearRect(0, 0, w, h);
 
       if (graphMode === 'hist') {
-        drawHistogram(w, h);
+        drawHistogram(w, h, hoverIdx);
       } else if (graphMode === 'jitter') {
-        drawJitterHistogram(w, h);
+        drawJitterHistogram(w, h, hoverIdx);
       } else if (graphMode === 'strip') {
         drawPacketStrip(w, h, hoverIdx);
       } else {
@@ -2027,7 +2074,7 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
       }
   }
 
-  function drawJitterHistogram(w, h) {
+  function drawJitterHistogram(w, h, hoverIdx = -1) {
       const paddingLeft = 32;
       const paddingRight = 14;
       const paddingTop = 20;
@@ -2075,6 +2122,7 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
         const x = paddingLeft + idx * stepX + (stepX - barW) / 2;
         const barH = (b.count / maxCount) * (plotH - 12);
         const y = paddingTop + plotH - barH;
+        const isHovered = (idx === hoverIdx);
 
         ctx.fillStyle = b.color;
         ctx.beginPath();
@@ -2084,6 +2132,12 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
           ctx.fillRect(x, y, barW, barH);
         }
         ctx.fill();
+
+        if (isHovered) {
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
 
         ctx.fillStyle = '#ffffff';
         ctx.font = '10px Consolas, monospace';
@@ -2098,7 +2152,7 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
       });
   }
 
-  function drawHistogram(w, h) {
+  function drawHistogram(w, h, hoverIdx = -1) {
       const paddingLeft = 32;
       const paddingRight = 14;
       const paddingTop = 20;
@@ -2140,12 +2194,23 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
         const x = paddingLeft + idx * stepX + (stepX - barW) / 2;
         const barH = (b.count / maxCount) * (plotH - 10);
         const y = paddingTop + plotH - barH;
+        const isHovered = (idx === hoverIdx);
 
         // Bar
         ctx.fillStyle = b.color;
         ctx.beginPath();
-        ctx.roundRect(x, y, barW, barH, [4, 4, 0, 0]);
+        if (typeof ctx.roundRect === 'function') {
+          ctx.roundRect(x, y, barW, barH, [4, 4, 0, 0]);
+        } else {
+          ctx.fillRect(x, y, barW, barH);
+        }
         ctx.fill();
+
+        if (isHovered) {
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
 
         // Count label on top of bar
         ctx.fillStyle = '#ffffff';
@@ -2181,12 +2246,13 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
 
       const count = Math.min(60, historyData.length);
       const slice = historyData.slice(-count);
-      const blockW = Math.max(4, (plotW / count) - 2);
+      const stepX = plotW / count;
+      const blockW = Math.max(2, stepX - 2);
       const blockH = Math.min(32, plotH - 10);
       const y = paddingTop + (plotH - blockH) / 2;
 
       slice.forEach((val, idx) => {
-        const x = paddingLeft + idx * (blockW + 2);
+        const x = paddingLeft + idx * stepX;
         const isHovered = (idx === hoverIdx);
 
         if (val === null) {
@@ -2225,39 +2291,143 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
 
       const paddingLeft = 32;
       const paddingRight = 14;
+      const paddingTop = (graphMode === 'strip' ? 22 : (graphMode === 'line' ? 18 : 20));
+      const paddingBottom = (graphMode === 'strip' ? 16 : (graphMode === 'line' ? 16 : 22));
       const plotW = rect.width - paddingLeft - paddingRight;
-      const pts = historyData.length;
-      const stepX = plotW / Math.max(10, pts - 1);
+      const plotH = rect.height - paddingTop - paddingBottom;
+      if (plotW <= 0 || plotH <= 0) return;
 
-      let closestIdx = -1;
-      let closestDist = Infinity;
-      for (let i = 0; i < pts; i++) {
-          const x = paddingLeft + i * stepX;
-          const dist = Math.abs(mouseX - x);
-          if (dist < closestDist && dist < 20) {
-              closestDist = dist;
-              closestIdx = i;
-          }
-      }
+      if (graphMode === 'strip') {
+          const count = Math.min(60, historyData.length);
+          const slice = historyData.slice(-count);
+          const stepX = plotW / count;
+          const blockW = Math.max(2, stepX - 2);
 
-      if (closestIdx !== -1) {
-          const val = historyData[closestIdx];
-          const packetNum = closestIdx + 1;
-          const x = paddingLeft + closestIdx * stepX;
-          graphTooltip.style.display = 'block';
-          graphTooltip.style.left = `${Math.min(rect.width - 120, Math.max(10, x - 45))}px`;
-          graphTooltip.style.top = `${Math.max(5, mouseY - 28)}px`;
-          const prefix = (isTracing || isBgpInspecting) ? `Hop #${packetNum}` : ((isMtuSweeping || isBloatTesting) ? `Probe #${packetNum}` : (isSubnetSweeping ? `Node #${packetNum}` : `#${packetNum}`));
-          if (val === null) {
-              const reason = isMtuSweeping ? 'Exceeds MTU' : (isSubnetSweeping ? 'Offline' : 'Timeout');
-              graphTooltip.innerHTML = `<span style="color:#f87171;">${prefix}: ${reason}</span>`;
+          if (mouseX >= paddingLeft && mouseX <= paddingLeft + plotW) {
+              const idx = Math.min(count - 1, Math.max(0, Math.floor((mouseX - paddingLeft) / stepX)));
+              const val = slice[idx];
+              const realIdx = historyData.length - count + idx;
+              const packetNum = realIdx + 1;
+              const x = paddingLeft + idx * stepX + blockW / 2;
+
+              graphTooltip.style.display = 'block';
+              graphTooltip.style.left = `${Math.min(rect.width - 130, Math.max(10, x - 55))}px`;
+              graphTooltip.style.top = `${Math.max(5, mouseY - 28)}px`;
+
+              const prefix = (isTracing || isBgpInspecting) ? `Hop #${packetNum}` : ((isMtuSweeping || isBloatTesting) ? `Probe #${packetNum}` : (isSubnetSweeping ? `Node #${packetNum}` : `#${packetNum}`));
+              if (val === null) {
+                  const reason = isMtuSweeping ? 'Exceeds MTU' : (isSubnetSweeping ? 'Offline' : 'Timeout');
+                  graphTooltip.innerHTML = `<span style="color:#f87171;">${prefix}: ${reason}</span>`;
+              } else {
+                  graphTooltip.innerHTML = `<span>${prefix}: <strong>${val}ms</strong></span>`;
+              }
+              drawGraph(idx);
           } else {
-              graphTooltip.innerHTML = `<span>${prefix}: <strong>${val}ms</strong></span>`;
+              graphTooltip.style.display = 'none';
+              drawGraph(-1);
           }
-          drawGraph(closestIdx);
+      } else if (graphMode === 'hist') {
+          const valid = historyData.filter(d => d !== null);
+          const buckets = [
+              { label: "<10ms", count: 0, color: "#34d399" },
+              { label: "10-25ms", count: 0, color: "#60a5fa" },
+              { label: "25-50ms", count: 0, color: "#38bdf8" },
+              { label: "50-100ms", count: 0, color: "#fbbf24" },
+              { label: ">100ms", count: 0, color: "#f87171" }
+          ];
+          valid.forEach(v => {
+              if (v < 10) buckets[0].count++;
+              else if (v <= 25) buckets[1].count++;
+              else if (v <= 50) buckets[2].count++;
+              else if (v <= 100) buckets[3].count++;
+              else buckets[4].count++;
+          });
+
+          const stepX = plotW / buckets.length;
+          if (mouseX >= paddingLeft && mouseX <= paddingLeft + plotW) {
+              const bIdx = Math.min(buckets.length - 1, Math.max(0, Math.floor((mouseX - paddingLeft) / stepX)));
+              const b = buckets[bIdx];
+              const pct = valid.length > 0 ? ((b.count / valid.length) * 100).toFixed(1) : '0.0';
+              const x = paddingLeft + bIdx * stepX + stepX / 2;
+
+              graphTooltip.style.display = 'block';
+              graphTooltip.style.left = `${Math.min(rect.width - 150, Math.max(10, x - 65))}px`;
+              graphTooltip.style.top = `${Math.max(5, mouseY - 28)}px`;
+              graphTooltip.innerHTML = `<span>RTT ${b.label}: <strong>${b.count}</strong> pkts (${pct}%)</span>`;
+              drawGraph(bIdx);
+          } else {
+              graphTooltip.style.display = 'none';
+              drawGraph(-1);
+          }
+      } else if (graphMode === 'jitter') {
+          const valid = historyData.filter(d => d !== null);
+          const buckets = [
+              { label: "<2ms", count: 0, color: "#10b981", desc: "Ultra-Stable" },
+              { label: "2-4ms", count: 0, color: "#3b82f6", desc: "Optimal" },
+              { label: "5-9ms", count: 0, color: "#06b6d4", desc: "Moderate" },
+              { label: "10-19ms", count: 0, color: "#f59e0b", desc: "Noticeable" },
+              { label: ">=20ms", count: 0, color: "#ef4444", desc: "High Jitter" }
+          ];
+          for (let i = 1; i < valid.length; i++) {
+              const d = Math.abs(valid[i] - valid[i-1]);
+              if (d < 2) buckets[0].count++;
+              else if (d < 5) buckets[1].count++;
+              else if (d < 10) buckets[2].count++;
+              else if (d < 20) buckets[3].count++;
+              else buckets[4].count++;
+          }
+          const totalDeltas = Math.max(0, valid.length - 1);
+          const stepX = plotW / buckets.length;
+          if (mouseX >= paddingLeft && mouseX <= paddingLeft + plotW) {
+              const bIdx = Math.min(buckets.length - 1, Math.max(0, Math.floor((mouseX - paddingLeft) / stepX)));
+              const b = buckets[bIdx];
+              const pct = totalDeltas > 0 ? ((b.count / totalDeltas) * 100).toFixed(1) : '0.0';
+              const x = paddingLeft + bIdx * stepX + stepX / 2;
+
+              graphTooltip.style.display = 'block';
+              graphTooltip.style.left = `${Math.min(rect.width - 160, Math.max(10, x - 75))}px`;
+              graphTooltip.style.top = `${Math.max(5, mouseY - 28)}px`;
+              graphTooltip.innerHTML = `<span>Jitter ${b.label}: <strong>${b.count}</strong> (${pct}%) - ${b.desc}</span>`;
+              drawGraph(bIdx);
+          } else {
+              graphTooltip.style.display = 'none';
+              drawGraph(-1);
+          }
       } else {
-          graphTooltip.style.display = 'none';
-          drawGraph(-1);
+          // Line mode
+          const pts = historyData.length;
+          const stepX = plotW / Math.max(10, pts - 1);
+
+          let closestIdx = -1;
+          let closestDist = Infinity;
+          for (let i = 0; i < pts; i++) {
+              const x = paddingLeft + i * stepX;
+              const dist = Math.abs(mouseX - x);
+              if (dist < closestDist && dist < 20) {
+                  closestDist = dist;
+                  closestIdx = i;
+              }
+          }
+
+          if (closestIdx !== -1) {
+              const val = historyData[closestIdx];
+              const packetNum = closestIdx + 1;
+              const x = paddingLeft + closestIdx * stepX;
+              graphTooltip.style.display = 'block';
+              graphTooltip.style.left = `${Math.min(rect.width - 120, Math.max(10, x - 45))}px`;
+              graphTooltip.style.top = `${Math.max(5, mouseY - 28)}px`;
+              const prefix = (isTracing || isBgpInspecting) ? `Hop #${packetNum}` : ((isMtuSweeping || isBloatTesting) ? `Probe #${packetNum}` : (isSubnetSweeping ? `Node #${packetNum}` : `#${packetNum}`));
+              if (val === null) {
+                  const reason = isMtuSweeping ? 'Exceeds MTU' : (isSubnetSweeping ? 'Offline' : 'Timeout');
+                  graphTooltip.innerHTML = `<span style="color:#f87171;">${prefix}: ${reason}</span>`;
+              } else {
+                  graphTooltip.innerHTML = `<span>${prefix}: <strong>${val}ms</strong></span>`;
+              }
+              drawGraph(closestIdx);
+          } else {
+              graphTooltip.style.display = 'none';
+              drawGraph(-1);
+          }
       }
   }
 
@@ -3938,7 +4108,7 @@ Press Enter or 'P' to Ping, 'X' for Subnet Topo, 'J' for Jitter Hist, 'B' for BG
               if (btnBloat) btnBloat.click();
           } else if (e.key === 'l' || e.key === 'L') {
               e.preventDefault();
-              const nextMode = graphMode === 'line' ? 'hist' : (graphMode === 'hist' ? 'strip' : 'line');
+              const nextMode = graphMode === 'line' ? 'hist' : (graphMode === 'hist' ? 'jitter' : (graphMode === 'jitter' ? 'strip' : 'line'));
               setGraphMode(nextMode);
               showToast(`Graph Mode: <strong>${nextMode.toUpperCase()}</strong>`, 'info', 1500);
           } else if (e.key === 't' || e.key === 'T') {
