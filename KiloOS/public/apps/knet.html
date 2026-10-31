@@ -2482,8 +2482,25 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
         sub = '#sec-vfs';
       }
       url = '/web/cabled.html' + sub;
-    } else if (url.toLowerCase() === 'kweb://scallion' || url.toLowerCase() === 'scallion' || url.toLowerCase() === 'kweb://thescallion' || url.toLowerCase() === 'thescallion' || url.toLowerCase() === 'kweb://scallion.html' || url.toLowerCase() === 'kweb://onion' || url.toLowerCase() === 'onion') {
-      url = '/web/scallion.html';
+    } else if (url.toLowerCase() === 'kweb://scallion' || url.toLowerCase().startsWith('kweb://scallion/') || url.toLowerCase().startsWith('kweb://scallion#') || url.toLowerCase().startsWith('kweb://scallion?') || url.toLowerCase() === 'scallion' || url.toLowerCase().startsWith('scallion/') || url.toLowerCase() === 'kweb://thescallion' || url.toLowerCase().startsWith('kweb://thescallion/') || url.toLowerCase().startsWith('kweb://thescallion#') || url.toLowerCase() === 'thescallion' || url.toLowerCase().startsWith('thescallion/') || url.toLowerCase() === 'kweb://scallion.html' || url.toLowerCase() === 'kweb://onion' || url.toLowerCase() === 'onion' || url.toLowerCase() === 'www.thescallion.org' || url.toLowerCase() === 'thescallion.org' || url.toLowerCase() === 'www.thescallion.com' || url.toLowerCase() === 'thescallion.com') {
+      let sub = '';
+      const lower = url.toLowerCase();
+      if (lower.includes('#')) {
+        sub = url.substring(url.indexOf('#'));
+      } else if (lower.includes('?')) {
+        sub = url.substring(url.indexOf('?'));
+      } else if (lower.includes('/sysadmin') || lower.includes('/ask')) {
+        sub = '#sysadmin';
+      } else if (lower.includes('/forge') || lower.includes('/headline')) {
+        sub = '#forge';
+      } else if (lower.includes('/infographic') || lower.includes('/chart') || lower.includes('/modem') || lower.includes('/bunker')) {
+        sub = '#infographics';
+      } else if (lower.includes('/opinion') || lower.includes('/editorial') || lower.includes('/poll')) {
+        sub = '#opinion';
+      } else if (lower.includes('/classified') || lower.includes('/ads')) {
+        sub = '#classifieds';
+      }
+      url = '/web/scallion.html' + sub;
     } else if (url.toLowerCase() === 'kweb://demoscene' || url.toLowerCase().startsWith('kweb://demoscene/') || url.toLowerCase().startsWith('kweb://demoscene#') || url.toLowerCase().startsWith('kweb://demoscene?') || url.toLowerCase() === 'demoscene' || url.toLowerCase().startsWith('demoscene/') || url.toLowerCase() === 'kweb://assembly99' || url.toLowerCase().startsWith('kweb://assembly99/') || url.toLowerCase().startsWith('kweb://assembly99#') || url.toLowerCase() === 'assembly99' || url.toLowerCase() === 'kweb://demoscene.html' || url.toLowerCase() === 'kweb://scene99' || url.toLowerCase() === 'scene99') {
       let sub = '';
       const hIdx = url.indexOf('#');

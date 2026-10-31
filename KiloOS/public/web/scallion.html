@@ -1415,6 +1415,12 @@
  */
 
 // --- Safe Storage Helpers (per quality-standards.md) ---
+/**
+ * Safe localStorage getter with try/catch fallback per quality-standards.md
+ * @param {string} key - Storage key
+ * @param {*} def - Fallback default value
+ * @returns {*} Retrieved value or default
+ */
 function safeGet(key, def) {
   try {
     const val = localStorage.getItem(key);
@@ -1424,6 +1430,11 @@ function safeGet(key, def) {
   }
 }
 
+/**
+ * Safe localStorage setter with try/catch error handling per quality-standards.md
+ * @param {string} key - Storage key
+ * @param {*} val - Value to serialize and store
+ */
 function safeSet(key, val) {
   try {
     localStorage.setItem(key, JSON.stringify(val));
@@ -1573,6 +1584,10 @@ function playNewsBulletinJingle() {
 }
 
 // --- Notification Toast ---
+/**
+ * Displays a temporary 1999 broadsheet notification toast
+ * @param {string} msg - Message text
+ */
 function showToast(msg) {
   const t = document.getElementById('scallionToast');
   if (!t) return;
@@ -1582,6 +1597,11 @@ function showToast(msg) {
 }
 
 // --- VFS & KiloOS PostMessage Integration ---
+/**
+ * Saves a text payload to the KiloOS VFS and sends OS notification
+ * @param {string} vfsPath - Target file path in VFS
+ * @param {string} contentStr - File contents
+ */
 function saveToKiloVfs(vfsPath, contentStr) {
   try {
     window.parent.postMessage({
@@ -1602,6 +1622,11 @@ function saveToKiloVfs(vfsPath, contentStr) {
   }
 }
 
+/**
+ * Sends IPC postMessage to launch an external companion KiloOS application
+ * @param {string} appFile - Target application file or identifier
+ * @param {Object} [args] - Launch parameters including path or content
+ */
 function launchKiloApp(appFile, args) {
   try {
     const targetApp = (appFile || '').replace('.html', '').toLowerCase();
@@ -1629,7 +1654,12 @@ function launchKiloApp(appFile, args) {
   } catch (e) {}
 }
 
-// --- Section Navigation ---
+// --- Section Navigation & Deep Routing ---
+/**
+ * Switches active broadsheet section view and synchronizes navigation bar and URL hash
+ * @param {string} secId - Target section ID ('frontpage', 'sysadmin', 'infographics', 'forge', 'opinion', 'classifieds')
+ * @param {HTMLElement} [btnEl] - Optional navigation button element
+ */
 function switchSection(secId, btnEl) {
   playRetroSound(520, 0.04);
   document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
@@ -1637,13 +1667,33 @@ function switchSection(secId, btnEl) {
 
   const target = document.getElementById('section-' + secId);
   if (target) target.classList.add('active');
+  if (!btnEl) {
+    btnEl = document.querySelector(`.scallion-nav .nav-btn[onclick*="'${secId}'"]`);
+  }
   if (btnEl) btnEl.classList.add('active');
+
+  try {
+    if (window.location.hash !== '#' + secId) {
+      history.replaceState(null, '', '#' + secId);
+    }
+  } catch (e) {}
 
   if (secId === 'infographics') {
     setTimeout(() => {
       renderModemChart();
       updateBunkerSim();
     }, 50);
+  }
+}
+
+/**
+ * Parses URL hash on load or hashchange to activate requested broadsheet section
+ */
+function checkHashRoute() {
+  const hash = (window.location.hash || '').replace('#', '').toLowerCase();
+  const validSections = ['frontpage', 'sysadmin', 'infographics', 'forge', 'opinion', 'classifieds'];
+  if (hash && validSections.includes(hash)) {
+    switchSection(hash);
   }
 }
 
@@ -1791,6 +1841,7 @@ const PANIC_DATA = [
   { label: "DEFCON 1: APOCALYPTIC PANIC", desc: "Action: Barricading porch; wrapping foil around microwave oven.", deg: 165 }
 ];
 
+/** Updates Y2K panic telemetry readout and needle angle */
 function updatePanicDisplay() {
   const d = PANIC_DATA[panicLevel];
   const label = document.getElementById('panicLevelLabel');
@@ -1807,6 +1858,7 @@ function updatePanicDisplay() {
   }
 }
 
+/** Advances Y2K panic level incrementally */
 function escalatePanic() {
   panicLevel = (panicLevel + 1) % 4;
   updatePanicDisplay();
@@ -1814,6 +1866,7 @@ function escalatePanic() {
   showToast('Y2K Threat Meter Updated: ' + PANIC_DATA[panicLevel].label);
 }
 
+/** Simulates midnight rollover visual glitch and audio blast */
 function simulateMidnightGlitch() {
   playRetroSound(150, 0.4, 'sawtooth');
   const body = document.body;
@@ -1828,6 +1881,7 @@ function simulateMidnightGlitch() {
 let pollVotes = safeGet('scallion_poll_votes', { opt1: 642, opt2: 310, opt3: 720, opt4: 170 });
 let userVoted = safeGet('scallion_user_voted', false);
 
+/** Renders current opinion poll options or voting results */
 function renderPoll() {
   const optContainer = document.getElementById('pollOptionsContainer');
   const resContainer = document.getElementById('pollResultsContainer');
@@ -1860,6 +1914,9 @@ function renderPoll() {
   }
 }
 
+/** Casts user vote for active poll option
+ * @param {string} optKey
+ */
 function castVote(optKey) {
   if (pollVotes[optKey] !== undefined) {
     pollVotes[optKey]++;
@@ -1872,6 +1929,7 @@ function castVote(optKey) {
   }
 }
 
+/** Resets poll voting state for testing */
 function resetPoll() {
   userVoted = false;
   safeSet('scallion_user_voted', false);
@@ -1894,6 +1952,9 @@ const HOROSCOPES = {
   pisces: "Pisces: You swim in an ocean of unrouted packets. Beware of ungrounded coaxial ethernet terminators."
 };
 
+/** Displays satirical late-90s horoscope for zodiac sign
+ * @param {string} sign
+ */
 function updateHoroscope(sign) {
   const text = HOROSCOPES[sign] || HOROSCOPES.virgo;
   const el = document.getElementById('horoscopeText');
@@ -1909,6 +1970,9 @@ const SYSADMIN_PRESETS = {
   2: { user: "Walter from Compliance", q: "Can the Y2K millennial bug travel across the infrared port on my Casio digital watch and reset my microwave oven?", mood: "apocalyptic" }
 };
 
+/** Loads preset query into sysadmin form
+ * @param {number} num
+ */
 function presetSysadminQuestion(num) {
   const p = SYSADMIN_PRESETS[num];
   if (!p) return;
@@ -1918,6 +1982,7 @@ function presetSysadminQuestion(num) {
   playRetroSound(600, 0.04);
 }
 
+/** Dispatches query to simulated BOFH sysadmin with teletype output */
 function generateSysadminAdvice() {
   const user = document.getElementById('sysUser').value.trim() || "Anonymous User";
   const question = document.getElementById('sysQuestion').value.trim();
@@ -1997,6 +2062,7 @@ RECOMMENDATION: Disregard your computer. Go to the supply room, requisition all 
   }, 10);
 }
 
+/** Saves latest sysadmin advice to KiloOS VFS text file */
 function saveSysadminVfs() {
   if (!lastSysadminResponse) {
     showToast('No sysadmin response generated yet!');
@@ -2008,6 +2074,7 @@ function saveSysadminVfs() {
 
 let sysadminTypewriterTimer = null;
 
+/** Clears the sysadmin dispatch terminal */
 function clearSysadminTerminal() {
   if (sysadminTypewriterTimer) {
     clearInterval(sysadminTypewriterTimer);
@@ -2020,6 +2087,7 @@ function clearSysadminTerminal() {
 }
 
 // --- Canvas Infographics ---
+/** Draws 56k bandwidth allocation pie/donut chart on Canvas */
 function renderModemChart() {
   const canvas = document.getElementById('modemCanvas');
   if (!canvas) return;
@@ -2100,6 +2168,7 @@ function renderModemChart() {
   });
 }
 
+/** Saves sysadmin response to VFS and opens in KPad */
 function openSysadminInKPad() {
   if (!lastSysadminResponse) {
     showToast('No sysadmin response generated yet!');
@@ -2115,12 +2184,14 @@ function openSysadminInKPad() {
   });
 }
 
+/** Exports modem bandwidth allocation summary to VFS */
 function exportModemChartVfs() {
   const speed = document.getElementById('modemSpeedSelect').value;
   const txt = `=== THE SCALLION INFOGRAPHIC: 56K BANDWIDTH ALLOCATION ===\nProfile: ${speed} kbps\n\n- Looping Animated GIFs: 45%\n- Corrupted Packets (Someone Picked Up Kitchen Phone): 25%\n- Punch-The-Monkey Banner Ads: 18%\n- Actual Usable HTML Data: 8%\n- Static & Acoustic Line Hiss: 4%\n\nConclusion: 92% of telephone infrastructure is dedicated to neon hamster animations.\n(c) 1999 The Scallion Infographic Lab`;
   saveToKiloVfs('/home/downloads/scallion_modem_chart.txt', txt);
 }
 
+/** Exports modem chart summary to VFS and launches in KPad */
 function openModemChartInKPad() {
   exportModemChartVfs();
   const vfsPath = '/home/downloads/scallion_modem_chart.txt';
@@ -2130,6 +2201,7 @@ function openModemChartInKPad() {
   });
 }
 
+/** Exports bunker survivability matrix to VFS */
 function exportBunkerVfs() {
   const corn = document.getElementById('cornSlider') ? document.getElementById('cornSlider').value : 12;
   const bolts = document.getElementById('boltSlider') ? document.getElementById('boltSlider').value : 250;
@@ -2141,6 +2213,7 @@ function exportBunkerVfs() {
   saveToKiloVfs('/home/downloads/scallion_bunker_matrix.txt', txt);
 }
 
+/** Exports bunker matrix to VFS and launches in KPad */
 function openBunkerInKPad() {
   exportBunkerVfs();
   const vfsPath = '/home/downloads/scallion_bunker_matrix.txt';
@@ -2150,6 +2223,7 @@ function openBunkerInKPad() {
   });
 }
 
+/** Recomputes bunker survival score and redraws canvas bar chart */
 function updateBunkerSim() {
   const cornInput = document.getElementById('cornSlider');
   const boltInput = document.getElementById('boltSlider');
@@ -2254,6 +2328,7 @@ const FORGE_DATA = {
   ]
 };
 
+/** Synthesizes custom headline from subject, action, and target controls */
 function buildCustomHeadline() {
   const subjEl = document.getElementById('forgeSubject');
   const actEl = document.getElementById('forgeAction');
@@ -2273,6 +2348,7 @@ function buildCustomHeadline() {
   playRetroSound(700, 0.04);
 }
 
+/** Randomizes all headline forge selectors */
 function randomizeForge() {
   const sList = document.getElementById('forgeSubject').options;
   const aList = document.getElementById('forgeAction').options;
@@ -2286,6 +2362,7 @@ function randomizeForge() {
   showToast('Synthesized random front-page headline.');
 }
 
+/** Saves customized headline and story to KiloOS VFS text file */
 function exportCustomHeadlineVfs() {
   const headline = document.getElementById('forgePreviewHeadline').textContent;
   const body = document.getElementById('forgePreviewBody').textContent;
@@ -2293,11 +2370,15 @@ function exportCustomHeadlineVfs() {
   saveToKiloVfs('/home/downloads/scallion_custom_scoop.txt', txt);
 }
 
+/** Saves custom synthesized headline story to VFS and launches into KPad */
 function sendCustomStoryToKPad() {
   const headline = document.getElementById('forgePreviewHeadline').textContent;
   const body = document.getElementById('forgePreviewBody').textContent;
+  exportCustomHeadlineVfs();
+  const vfsPath = '/home/downloads/scallion_custom_scoop.txt';
   launchKiloApp('kpad.html', {
     title: headline,
+    path: vfsPath,
     initialContent: `${headline}\n${'='.repeat(headline.length)}\n\n${body}\n\n[Reported by The Scallion 1999 Wire Service]`
   });
 }
@@ -2305,6 +2386,7 @@ function sendCustomStoryToKPad() {
 // --- Letters to Editor Engine ---
 let userLetters = safeGet('scallion_user_letters', []);
 
+/** Renders stored letters to the editor */
 function renderUserLetters() {
   const container = document.getElementById('userLettersContainer');
   if (!container) return;
@@ -2323,6 +2405,7 @@ function renderUserLetters() {
   });
 }
 
+/** Submits new reader letter to the editor */
 function submitUserLetter() {
   const author = document.getElementById('letterAuthor').value.trim() || "Anonymous Reader";
   const subject = document.getElementById('letterSubject').value.trim() || "Concerning Your Latest Issue";
@@ -2346,6 +2429,10 @@ function submitUserLetter() {
   showToast('Letter accepted by Scallion Editorial Syndicate.');
 }
 
+/** Escapes raw strings for safe HTML rendering
+ * @param {string} str
+ * @returns {string}
+ */
 function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -2383,9 +2470,13 @@ window.addEventListener('DOMContentLoaded', () => {
   buildCustomHeadline();
   renderModemChart();
   updateBunkerSim();
+  checkHashRoute();
   const btn = document.getElementById('btnAudioToggle');
   if (btn) btn.textContent = soundEnabled ? '🔊 SFX [M]' : '🔇 SFX [M]';
 });
+
+window.addEventListener('hashchange', checkHashRoute);
+window.addEventListener('popstate', checkHashRoute);
 
 window.addEventListener('keydown', (e) => {
   const targetTag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
