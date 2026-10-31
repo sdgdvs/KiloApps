@@ -5906,6 +5906,49 @@
             btnUseRepairKit.addEventListener('click', useRepairKit);
     
             // --- FAUNA CODEX SYSTEM (PHASE 7) ---
+            function getFaunaVisualSvg(type, discovered) {
+                const opacity = discovered ? '1' : '0.25';
+                const filterStyle = discovered ? '' : 'filter: grayscale(1);';
+                if (type === 'leviathan') {
+                    return `<svg viewBox="0 0 100 24" style="width: 100%; height: 26px; border-radius: 2px; background: rgba(2, 11, 18, 0.7); margin-top: 2px; opacity: ${opacity}; ${filterStyle}">
+                        <path d="M 85 12 Q 75 6 65 13 T 45 13 T 25 13 T 10 12 L 4 5 L 8 12 L 4 19 Z" fill="none" stroke="#f43f5e" stroke-width="2.5" />
+                        <path d="M 85 12 L 95 10 L 98 12 L 94 15 Z" fill="#f43f5e" />
+                        <circle cx="94" cy="11" r="1.3" fill="#fef08a" />
+                        <circle cx="91" cy="10" r="1" fill="#00f0ff" />
+                        <circle cx="70" cy="8" r="1.3" fill="#00f0ff" />
+                        <circle cx="50" cy="16" r="1.3" fill="#c084fc" />
+                        <circle cx="30" cy="8" r="1.3" fill="#00f0ff" />
+                    </svg>`;
+                } else if (type === 'squid') {
+                    return `<svg viewBox="0 0 100 24" style="width: 100%; height: 26px; border-radius: 2px; background: rgba(2, 11, 18, 0.7); margin-top: 2px; opacity: ${opacity}; ${filterStyle}">
+                        <path d="M 25 12 Q 40 6 65 8 L 75 12 L 65 16 Q 40 18 25 12 Z" fill="#f472b6" opacity="0.85" />
+                        <circle cx="68" cy="12" r="1.5" fill="#ffffff" /><circle cx="68" cy="12" r="0.8" fill="#0284c7" />
+                        <path d="M 25 10 Q 15 5 5 7 M 25 11 Q 12 11 3 12 M 25 13 Q 14 14 4 16 M 25 14 Q 15 18 6 18" stroke="#f472b6" stroke-width="1.2" fill="none" />
+                    </svg>`;
+                } else if (type === 'flora') {
+                    return `<svg viewBox="0 0 100 24" style="width: 100%; height: 26px; border-radius: 2px; background: rgba(2, 11, 18, 0.7); margin-top: 2px; opacity: ${opacity}; ${filterStyle}">
+                        <ellipse cx="50" cy="8" rx="14" ry="5" fill="#34d399" opacity="0.8" />
+                        <circle cx="50" cy="8" r="2.5" fill="#a7f3d0" />
+                        <path d="M 40 12 Q 38 18 36 22 M 45 13 Q 46 19 44 23 M 50 13 Q 52 18 50 24 M 55 13 Q 56 19 57 23 M 60 12 Q 63 18 64 22" stroke="#34d399" stroke-width="1.2" fill="none" />
+                    </svg>`;
+                } else if (type === 'trench') {
+                    return `<svg viewBox="0 0 100 24" style="width: 100%; height: 26px; border-radius: 2px; background: rgba(2, 11, 18, 0.7); margin-top: 2px; opacity: ${opacity}; ${filterStyle}">
+                        <polygon points="42,22 46,12 48,6 52,6 54,12 58,22" fill="#1e293b" stroke="#475569" stroke-width="1" />
+                        <circle cx="50" cy="6" r="2" fill="#fef08a" />
+                        <circle cx="50" cy="3" r="2" fill="rgba(245, 158, 11, 0.7)" />
+                        <circle cx="52" cy="1" r="2.5" fill="rgba(239, 68, 68, 0.5)" />
+                    </svg>`;
+                } else {
+                    return `<svg viewBox="0 0 100 24" style="width: 100%; height: 26px; border-radius: 2px; background: rgba(2, 11, 18, 0.7); margin-top: 2px; opacity: ${opacity}; ${filterStyle}">
+                        <ellipse cx="50" cy="13" rx="12" ry="7" fill="#38bdf8" opacity="0.8" />
+                        <polygon points="38,13 30,7 34,13 30,19" fill="#38bdf8" />
+                        <circle cx="57" cy="11" r="1.5" fill="#ffffff" /><circle cx="57.5" cy="11" r="0.8" fill="#0f172a" />
+                        <path d="M 55 7 Q 60 1 64 4" stroke="#38bdf8" stroke-width="1.2" fill="none" />
+                        <circle cx="64" cy="4" r="2" fill="#fef08a" />
+                    </svg>`;
+                }
+            }
+
             function renderCodexUI() {
                 const discoveredCount = FAUNA_CATALOG.filter(f => f.discovered).length;
                 const total = FAUNA_CATALOG.length;
@@ -5919,6 +5962,7 @@
                     
                     const secName = SECTORS[f.sectorIdx].name;
                     const typeClass = `type-${f.type}`;
+                    const visualSvg = getFaunaVisualSvg(f.type, f.discovered);
                     
                     if (f.discovered) {
                         card.innerHTML = `
@@ -5927,6 +5971,7 @@
                                 <span class="codex-type-badge ${typeClass}">${f.type}</span>
                             </div>
                             <div style="font-size: 9px; color: var(--text-dim);">${secName} (${f.depth}m)</div>
+                            ${visualSvg}
                             <div style="font-size: 9px; color: var(--text-primary); line-height: 1.3;">${f.desc}</div>
                             <div class="eng-stat-row">
                                 <span>LUMINESCENCE:</span>
@@ -5948,6 +5993,7 @@
                                 <span class="codex-type-badge ${typeClass}">${f.type}</span>
                             </div>
                             <div style="font-size: 9px; color: var(--text-dim);">${secName} (~${f.depth}m)</div>
+                            ${visualSvg}
                             <div style="font-size: 9px; color: var(--text-dim); font-style: italic;">Acoustic return detected on active sonar. Steer to depth and initiate bio-scan.</div>
                             <div class="eng-stat-row">
                                 <span>ACOUSTIC FREQ:</span>
@@ -9523,14 +9569,40 @@
                 ctx.stroke();
                 ctx.setLineDash([]);
 
-                // Vent Crag Chimney Marker
-                ctx.fillStyle = '#ef4444';
+                // Vent Crag Basalt Chimney & Convective Smoke Marker
+                ctx.save();
+                ctx.fillStyle = '#0f172a';
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 1 * dpr;
                 ctx.beginPath();
-                ctx.moveTo(ventX - 5 * dpr, ventY + 6 * dpr);
-                ctx.lineTo(ventX, ventY - 5 * dpr);
-                ctx.lineTo(ventX + 5 * dpr, ventY + 6 * dpr);
+                ctx.moveTo(ventX - 6 * dpr, ventY + 8 * dpr);
+                ctx.lineTo(ventX - 3 * dpr, ventY + 2 * dpr);
+                ctx.lineTo(ventX - 2 * dpr, ventY - 4 * dpr);
+                ctx.lineTo(ventX + 2 * dpr, ventY - 4 * dpr);
+                ctx.lineTo(ventX + 3 * dpr, ventY + 3 * dpr);
+                ctx.lineTo(ventX + 6 * dpr, ventY + 8 * dpr);
                 ctx.closePath();
                 ctx.fill();
+                ctx.stroke();
+
+                // Core vent mouth glow
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(ventX, ventY - 4 * dpr, 2.5 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Rising sulfur mineral convective puffs
+                for (let p = 0; p < 4; p++) {
+                    const pPhase = ((globalAnimTime * 0.9 + p * 0.25) % 1.0);
+                    const puffDist = pPhase * 16 * dpr;
+                    const pX = ventX + Math.sin(globalAnimTime * 2 + p) * 3 * dpr;
+                    const pY = ventY - 5 * dpr - puffDist;
+                    ctx.fillStyle = pPhase < 0.4 ? `rgba(245, 158, 11, ${(1 - pPhase) * 0.8})` : `rgba(239, 68, 68, ${(1 - pPhase) * 0.6})`;
+                    ctx.beginPath();
+                    ctx.arc(pX, pY, (2 + pPhase * 4) * dpr, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
 
                 ctx.fillStyle = '#f87171';
                 ctx.font = `bold ${8 * dpr}px monospace`;
@@ -9606,11 +9678,32 @@
                     const tx = cx + (thr.x - state.posX) * scale;
                     const ty = cy + (thr.y - state.posY) * scale;
                     if (tx >= -25 && tx <= w + 25 && ty >= -25 && ty <= h + 25) {
-                        ctx.fillStyle = thr.type === 'leviathan' ? '#f87171' : '#fbbf24';
-                        ctx.beginPath();
-                        const tRad = 5 * dpr;
-                        ctx.moveTo(tx, ty - tRad); ctx.lineTo(tx + tRad, ty); ctx.lineTo(tx, ty + tRad); ctx.lineTo(tx - tRad, ty); ctx.closePath();
-                        ctx.fill();
+                        if (thr.type === 'leviathan') {
+                            ctx.save();
+                            ctx.fillStyle = '#f43f5e';
+                            ctx.strokeStyle = '#ff2e5b';
+                            ctx.lineWidth = 1 * dpr;
+                            ctx.beginPath();
+                            ctx.moveTo(tx + 6 * dpr, ty);
+                            ctx.lineTo(tx + 2 * dpr, ty - 3 * dpr);
+                            ctx.lineTo(tx - 2 * dpr, ty - 2 * dpr);
+                            ctx.lineTo(tx - 6 * dpr, ty + 2 * dpr);
+                            ctx.lineTo(tx - 2 * dpr, ty + 3 * dpr);
+                            ctx.lineTo(tx + 4 * dpr, ty + 2 * dpr);
+                            ctx.closePath();
+                            ctx.fill(); ctx.stroke();
+                            ctx.fillStyle = '#fef08a';
+                            ctx.fillRect(tx + 2 * dpr, ty - 2 * dpr, 1.5 * dpr, 1.5 * dpr);
+                            ctx.fillStyle = '#00f0ff';
+                            ctx.fillRect(tx - 4 * dpr, ty - 1 * dpr, 1.5 * dpr, 1.5 * dpr);
+                            ctx.restore();
+                        } else {
+                            ctx.fillStyle = '#fbbf24';
+                            ctx.beginPath();
+                            const tRad = 5 * dpr;
+                            ctx.moveTo(tx, ty - tRad); ctx.lineTo(tx + tRad, ty); ctx.lineTo(tx, ty + tRad); ctx.lineTo(tx - tRad, ty); ctx.closePath();
+                            ctx.fill();
+                        }
 
                         ctx.fillStyle = thr.type === 'leviathan' ? '#f87171' : '#fef3c7';
                         ctx.font = `bold ${7.5 * dpr}px monospace`;

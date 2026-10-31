@@ -2607,7 +2607,7 @@ static void DrawSubmarineVesselSprite(HDC hdc, int cx, int cy, float headingDeg,
     DeleteObject(hPenBorder);
 }
 
-// 2. Leviathan Abyssal Serpent Sprite
+// 2. Leviathan Abyssal Serpent Sprite (Bioluminescent Trench Megafauna)
 static void DrawLeviathanSprite(HDC hdc, int x, int y, COLORREF clr, BOOL isSwept) {
     DWORD tick = GetTickCount();
     float wavePhase = tick * 0.005f;
@@ -2617,40 +2617,89 @@ static void DrawLeviathanSprite(HDC hdc, int x, int y, COLORREF clr, BOOL isSwep
     HPEN hPenOld = (HPEN)SelectObject(hdc, hPen);
     HBRUSH hBrOld = (HBRUSH)SelectObject(hdc, hBr);
 
-    // Head
-    POINT headPts[5] = {
-        { x + 7, y },
-        { x + 2, y - 4 },
-        { x - 2, y - 3 },
-        { x - 2, y + 3 },
-        { x + 2, y + 4 }
+    // Bioluminescent Chin Barbel with glowing lure bulb
+    HPEN hPenCyan = CreatePen(PS_SOLID, 1, RGB(0, 240, 255));
+    SelectObject(hdc, hPenCyan);
+    int barbEndX = x + 7 + (int)(sinf(wavePhase * 1.5f) * 2.0f);
+    int barbEndY = y + 7;
+    MoveToEx(hdc, x + 3, y + 3, NULL);
+    LineTo(hdc, barbEndX, barbEndY);
+    SetPixel(hdc, barbEndX, barbEndY, RGB(56, 189, 248));
+    SetPixel(hdc, barbEndX + 1, barbEndY, RGB(255, 255, 255));
+    SelectObject(hdc, hPen);
+    DeleteObject(hPenCyan);
+
+    // Armored Cranium Head & Jaws
+    POINT headPts[7] = {
+        { x + 11, y },       // Spined snout tip
+        { x + 6, y - 5 },    // Upper cranial crest
+        { x, y - 5 },        // Rear horn ridge
+        { x - 2, y - 3 },    // Neck transition
+        { x - 3, y + 3 },    // Jaw hinge
+        { x + 4, y + 4 },    // Mandible
+        { x + 8, y + 2 }     // Underbite cusp
     };
-    Polygon(hdc, headPts, 5);
+    Polygon(hdc, headPts, 7);
 
-    // Eye
-    SetPixel(hdc, x + 3, y - 2, RGB(254, 240, 138));
+    // Mouth cavity & translucent needle fangs
+    SetPixel(hdc, x + 7, y + 1, RGB(255, 255, 255));
+    SetPixel(hdc, x + 5, y + 1, RGB(255, 255, 255));
 
-    // Body segments (sine wave)
-    for (int s = 1; s <= 5; s++) {
+    // Abyssal Predatory Multi-Eyes (Primary Gold Ocellus + Secondary Cyan Eye)
+    SetPixel(hdc, x + 5, y - 2, RGB(254, 240, 138));
+    SetPixel(hdc, x + 4, y - 2, RGB(254, 240, 138));
+    SetPixel(hdc, x + 2, y - 3, RGB(0, 240, 255));
+
+    // Undulating Sinusoidal Body Segments (8 segments with branching dorsal spines)
+    HPEN hPenSpine = CreatePen(PS_SOLID, 1, isSwept ? RGB(0, 240, 255) : clr);
+    for (int s = 1; s <= 8; s++) {
+        float segPhase = wavePhase - s * 0.55f;
         int sx = x - s * 4;
-        int sy = y + (int)(sinf(wavePhase - s * 0.7f) * 3.5f);
-        int rad = (6 - s) / 2 + 1;
+        int sy = y + (int)(sinf(segPhase) * 3.5f);
+        int rad = (9 - s) / 2 + 1;
         Ellipse(hdc, sx - rad, sy - rad, sx + rad + 1, sy + rad + 1);
 
-        if (s % 2 == 1 && isSwept) {
-            SetPixel(hdc, sx, sy - rad - 1, RGB(56, 189, 248));
-        }
-    }
+        // Branching dorsal spine
+        int spineH = rad + 3;
+        SelectObject(hdc, hPenSpine);
+        MoveToEx(hdc, sx, sy - rad, NULL);
+        LineTo(hdc, sx - 1, sy - spineH);
 
-    // Tail fluke
-    int tx = x - 24;
-    int ty = y + (int)(sinf(wavePhase - 4.2f) * 3.5f);
-    POINT tailPts[3] = {
-        { tx, ty },
-        { tx - 5, ty - 4 },
-        { tx - 5, ty + 4 }
+        // Photophore bulb at spine tip & lateral line pearls
+        if (isSwept) {
+            COLORREF bulbClr = (s % 2 == 0) ? RGB(0, 240, 255) : RGB(192, 132, 252);
+            SetPixel(hdc, sx - 1, sy - spineH, bulbClr);
+            SetPixel(hdc, sx, sy, (s % 2 == 1) ? RGB(0, 240, 255) : RGB(56, 189, 248));
+        }
+        SelectObject(hdc, hPen);
+    }
+    DeleteObject(hPenSpine);
+
+    // Wide Bifurcated Caudal Fluke
+    int tx = x - 35;
+    int ty = y + (int)(sinf(wavePhase - 4.8f) * 3.5f);
+    POINT tailPts[7] = {
+        { tx + 3, ty },
+        { tx - 2, ty - 6 },
+        { tx - 7, ty - 8 },
+        { tx - 4, ty - 2 },
+        { tx - 4, ty + 2 },
+        { tx - 7, ty + 8 },
+        { tx - 2, ty + 6 }
     };
-    Polygon(hdc, tailPts, 3);
+    Polygon(hdc, tailPts, 7);
+
+    // Luminous fin rays
+    if (isSwept) {
+        HPEN hPenRay = CreatePen(PS_SOLID, 1, RGB(0, 240, 255));
+        SelectObject(hdc, hPenRay);
+        MoveToEx(hdc, tx + 2, ty, NULL);
+        LineTo(hdc, tx - 6, ty - 7);
+        MoveToEx(hdc, tx + 2, ty, NULL);
+        LineTo(hdc, tx - 6, ty + 7);
+        SelectObject(hdc, hPen);
+        DeleteObject(hPenRay);
+    }
 
     SelectObject(hdc, hPenOld);
     SelectObject(hdc, hBrOld);
@@ -2926,6 +2975,84 @@ static void DrawDecoySprite(HDC hdc, int dX, int dY, float life, DWORD tick) {
     DeleteObject(hPenPulse);
 }
 
+// Hydrothermal Smoker Vent & Turbulent Mineral Plume (Bathysphere Exploration)
+static void DrawHydrothermalVent(HDC hdc, int vx, int vy, DWORD tick, const SubmarineTheme* th) {
+    float time = tick * 0.001f;
+
+    // 1. Thermal Anomaly Acoustic Thermocline Ring (expanding pulsing circle)
+    float thermoPhase = fmodf(time * 0.7f, 1.0f);
+    int thermRad = (int)(14.0f + thermoPhase * 18.0f);
+    HPEN hPenTherm = CreatePen(PS_DOT, 1, RGB(239, 68, 68));
+    HPEN hOldP = (HPEN)SelectObject(hdc, hPenTherm);
+    HBRUSH hOldB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Ellipse(hdc, vx - thermRad, vy - thermRad, vx + thermRad, vy + thermRad);
+    SelectObject(hdc, hOldP);
+    DeleteObject(hPenTherm);
+
+    // 2. Basalt Chimney Spire Silhouette (Seabed Black Smoker Tower)
+    POINT spirePts[6] = {
+        { vx - 6, vy + 12 },
+        { vx - 3, vy + 3 },
+        { vx - 2, vy - 2 },
+        { vx + 2, vy - 2 },
+        { vx + 3, vy + 4 },
+        { vx + 7, vy + 12 }
+    };
+    HBRUSH hBrSpire = CreateSolidBrush(RGB(15, 23, 42));
+    HPEN hPenSpire = CreatePen(PS_SOLID, 1, RGB(51, 65, 85));
+    SelectObject(hdc, hPenSpire);
+    SelectObject(hdc, hBrSpire);
+    Polygon(hdc, spirePts, 6);
+    SelectObject(hdc, hOldP);
+    SelectObject(hdc, hOldB);
+    DeleteObject(hBrSpire);
+    DeleteObject(hPenSpire);
+
+    // 3. Incandescent Geothermal Vent Mouth Core
+    HBRUSH hBrCore = CreateSolidBrush(RGB(254, 240, 138));
+    HPEN hPenCore = CreatePen(PS_SOLID, 1, RGB(245, 158, 11));
+    SelectObject(hdc, hPenCore);
+    SelectObject(hdc, hBrCore);
+    Ellipse(hdc, vx - 3, vy - 4, vx + 4, vy + 2);
+    SelectObject(hdc, hOldP);
+    SelectObject(hdc, hOldB);
+    DeleteObject(hBrCore);
+    DeleteObject(hPenCore);
+
+    // 4. Multi-Stage Billowing Convective Mineral Plume Puffs
+    for (int p = 0; p < 7; p++) {
+        float pPhase = fmodf(time * 0.85f + p * (1.0f / 7.0f), 1.0f);
+        int riseDist = (int)(pPhase * 26.0f);
+        int driftX = (int)(sinf(time * 2.2f + p * 1.3f) * (4.0f + pPhase * 5.0f));
+        int puffX = vx + driftX;
+        int puffY = vy - 4 - riseDist;
+        int puffR = (int)(3.0f + pPhase * 7.0f);
+
+        COLORREF puffClr;
+        if (pPhase < 0.25f) puffClr = RGB(245, 158, 11);
+        else if (pPhase < 0.55f) puffClr = RGB(220, 38, 38);
+        else if (pPhase < 0.80f) puffClr = RGB(71, 85, 105);
+        else puffClr = RGB(30, 41, 59);
+
+        HBRUSH hBrPuff = CreateSolidBrush(puffClr);
+        HPEN hPenPuff = CreatePen(PS_SOLID, 1, puffClr);
+        SelectObject(hdc, hPenPuff);
+        SelectObject(hdc, hBrPuff);
+        Ellipse(hdc, puffX - puffR, puffY - puffR, puffX + puffR, puffY + puffR);
+        SelectObject(hdc, hOldP);
+        SelectObject(hdc, hOldB);
+        DeleteObject(hBrPuff);
+        DeleteObject(hPenPuff);
+    }
+
+    // 5. Telemetry text
+    SelectObject(hdc, g_hFontSmall);
+    SetTextColor(hdc, RGB(248, 113, 113));
+    TextOutA(hdc, vx + 10, vy - 8, "♨ HYDROTHERMAL VENT [382 deg C]", 31);
+    SetTextColor(hdc, RGB(251, 191, 36));
+    TextOutA(hdc, vx + 10, vy + 3, "SUPERHEATED MINERAL SPOUT", 25);
+}
+
 void DrawNavMapChart(HDC hdc, int cx, int cy, int mapW, int mapH, const SubmarineTheme* th) {
     RECT rcMap = { cx - mapW / 2, cy - mapH / 2, cx + mapW / 2, cy + mapH / 2 };
     HBRUSH hBrMap = CreateSolidBrush(RGB(1, 8, 14));
@@ -3065,11 +3192,15 @@ void DrawNavMapChart(HDC hdc, int cx, int cy, int mapW, int mapH, const Submarin
         if (tx >= rcMap.left + 5 && tx <= rcMap.right - 5 && ty >= rcMap.top + 5 && ty <= rcMap.bottom - 5) {
             COLORREF thrClr = (thr->type == 1 ? RGB(244, 63, 94) : RGB(251, 191, 36));
             if (thr->state == 2) thrClr = RGB(239, 68, 68);
-            HBRUSH hBrThr = CreateSolidBrush(thrClr);
-            SelectObject(hdc, hBrThr);
-            POINT tPts[4] = { { tx, ty - 5 }, { tx + 5, ty }, { tx, ty + 5 }, { tx - 5, ty } };
-            Polygon(hdc, tPts, 4);
-            DeleteObject(hBrThr);
+            if (thr->type == 1) {
+                DrawLeviathanSprite(hdc, tx, ty, thrClr, TRUE);
+            } else {
+                HBRUSH hBrThr = CreateSolidBrush(thrClr);
+                SelectObject(hdc, hBrThr);
+                POINT tPts[4] = { { tx, ty - 5 }, { tx + 5, ty }, { tx, ty + 5 }, { tx - 5, ty } };
+                Polygon(hdc, tPts, 4);
+                DeleteObject(hBrThr);
+            }
 
             SetTextColor(hdc, thrClr);
             char tBuf[64];
@@ -3185,6 +3316,24 @@ void DrawFaunaCodex(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* t
             char dBuf[64];
             snprintf(dBuf, sizeof(dBuf), "Depth: %.0fm  %s", f->depth, f->lumens);
             TextOutA(hdc, cx + 6, cy + 18, dBuf, (int)strlen(dBuf));
+
+            // Miniature Creature Silhouette / Sprite preview
+            if (f->type == 4) {
+                DrawLeviathanSprite(hdc, cx + cardW - 20, cy + 22, RGB(244, 63, 94), TRUE);
+            } else if (f->type == 1) {
+                DrawSquidSprite(hdc, cx + cardW - 22, cy + 22, RGB(244, 114, 182), TRUE);
+            } else if (f->type == 2) {
+                DrawSiphonophoreSprite(hdc, cx + cardW - 22, cy + 22, th->accentEmerald, TRUE);
+            } else if (f->type == 3) {
+                POINT mPts[3] = { { cx + cardW - 26, cy + 30 }, { cx + cardW - 21, cy + 15 }, { cx + cardW - 16, cy + 30 } };
+                HBRUSH hBrM = CreateSolidBrush(RGB(51, 65, 85));
+                HBRUSH hOldM = (HBRUSH)SelectObject(hdc, hBrM);
+                Polygon(hdc, mPts, 3);
+                SelectObject(hdc, hOldM);
+                DeleteObject(hBrM);
+            } else {
+                DrawAnglerFishSprite(hdc, cx + cardW - 22, cy + 22, th->accentSonar, TRUE);
+            }
 
             SetTextColor(hdc, th->accentEmerald);
             snprintf(dBuf, sizeof(dBuf), "SCANNED (+%d PTS)", (int)(f->pts * g_sub.surveyMultiplier));
@@ -4914,6 +5063,57 @@ void DrawUI(HDC hdc, RECT* rcClient) {
         MoveToEx(hdc, scx, scy - sRadius, NULL);
         LineTo(hdc, scx, scy + sRadius);
 
+        // Fine graticule notches along crosshairs
+        for (int step = 1; step <= 8; step++) {
+            int dStep = (sRadius * step) / 8;
+            MoveToEx(hdc, scx + dStep, scy - 2, NULL); LineTo(hdc, scx + dStep, scy + 3);
+            MoveToEx(hdc, scx - dStep, scy - 2, NULL); LineTo(hdc, scx - dStep, scy + 3);
+            MoveToEx(hdc, scx - 2, scy + dStep, NULL); LineTo(hdc, scx + 3, scy + dStep);
+            MoveToEx(hdc, scx - 2, scy - dStep, NULL); LineTo(hdc, scx + 3, scy - dStep);
+        }
+
+        // Outer Compass Azimuth Graticule
+        for (int deg = 0; deg < 360; deg += 30) {
+            float rad = (float)deg * 0.0174532925f;
+            int isCardinal = (deg % 90 == 0);
+            int tickLen = isCardinal ? 6 : 3;
+            float cosA = cosf(rad);
+            float sinA = sinf(rad);
+            int x1 = scx + (int)(cosA * (float)(sRadius - tickLen));
+            int y1 = scy + (int)(sinA * (float)(sRadius - tickLen));
+            int x2 = scx + (int)(cosA * (float)sRadius);
+            int y2 = scy + (int)(sinA * (float)sRadius);
+            MoveToEx(hdc, x1, y1, NULL);
+            LineTo(hdc, x2, y2);
+        }
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, scx + (sRadius * 1) / 4 - 24, scy - 12, "500m", 4);
+        TextOutA(hdc, scx + (sRadius * 2) / 4 - 26, scy - 12, "1000m", 5);
+        TextOutA(hdc, scx + (sRadius * 3) / 4 - 26, scy - 12, "1500m", 5);
+        TextOutA(hdc, scx + sRadius - 28, scy - 12, "2000m", 5);
+
+        // Cardinal Bearings
+        TextOutA(hdc, scx + sRadius - 24, scy + 4, "090°", 4);
+        TextOutA(hdc, scx - 12, scy + sRadius - 16, "180°", 4);
+        TextOutA(hdc, scx - sRadius + 6, scy + 4, "270°", 4);
+        TextOutA(hdc, scx - 12, scy - sRadius + 4, "000°", 4);
+
+        // Phosphor decay sweep fan trail (4 fading trailing rays)
+        for (int f = 4; f >= 1; f--) {
+            float trailAngle = g_sub.sweepAngle - (float)f * 0.07f;
+            int tx = scx + (int)(cosf(trailAngle) * (float)sRadius);
+            int ty = scy + (int)(sinf(trailAngle) * (float)sRadius);
+            COLORREF trailClr = (f == 1) ? RGB(0, 140, 180) : ((f == 2) ? RGB(0, 95, 125) : RGB(0, 50, 70));
+            HPEN hPenTrail = CreatePen(PS_SOLID, 1, trailClr);
+            HPEN hOldPTrail = (HPEN)SelectObject(hdc, hPenTrail);
+            MoveToEx(hdc, scx, scy, NULL);
+            LineTo(hdc, tx, ty);
+            SelectObject(hdc, hOldPTrail);
+            DeleteObject(hPenTrail);
+        }
+
         HPEN hPenSweep = CreatePen(PS_SOLID, 2, th->accentSonar);
         SelectObject(hdc, hPenSweep);
         int sx = scx + (int)(cosf(g_sub.sweepAngle) * sRadius);
@@ -4930,25 +5130,14 @@ void DrawUI(HDC hdc, RECT* rcClient) {
             DeleteObject(hPenPing);
         }
 
-        // Hydrothermal Smoker Vent on Sonar Radar if within range
+        // Hydrothermal Smoker Vent & Plume on Sonar Radar if within range
         float vRelX = (-5.5f - g_sub.posX) / 2.0f;
         float vRelY = (-6.0f - g_sub.posY) / 2.0f;
         float vDist = sqrtf(vRelX * vRelX + vRelY * vRelY);
         if (vDist <= 1.05f) {
             int vx = scx + (int)(vRelX * (float)sRadius);
             int vy = scy + (int)(vRelY * (float)sRadius);
-            HPEN hPenVent = CreatePen(PS_DOT, 1, RGB(239, 68, 68));
-            HPEN hOldP = (HPEN)SelectObject(hdc, hPenVent);
-            HBRUSH hBrVent = CreateSolidBrush(RGB(45, 12, 16));
-            HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hBrVent);
-            Ellipse(hdc, vx - 12, vy - 12, vx + 13, vy + 13);
-            SelectObject(hdc, hOldP);
-            SelectObject(hdc, hOldB);
-            DeleteObject(hBrVent);
-            DeleteObject(hPenVent);
-
-            SetTextColor(hdc, RGB(248, 113, 113));
-            TextOutA(hdc, vx + 8, vy - 6, "♨ HYDROTHERMAL VENT", 19);
+            DrawHydrothermalVent(hdc, vx, vy, GetTickCount(), th);
         }
 
         // Submarine Bathyscaphe Vessel Sprite
