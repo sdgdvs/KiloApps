@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://trapster
-  kilo_graphics: KBreakout
+  kilo_graphics: KDragon
   kilo_soundscape: KStellar
   kilo_tester: KPad
   kilo_usability: KPad
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://slashnet
-  timestamp: '2026-10-30T23:33:44-07:00'
+  agent: kilo-graphics
+  app: KBreakout
+  timestamp: '2026-10-31T00:16:35-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KBreakout`
+- **Active Target**: `KDragon`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Replace code-generated 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with Imagen 3 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
@@ -115,6 +114,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
 | `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
+| `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -293,6 +293,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T00:16:35-07:00 — kilo-graphics: KBreakout (Arcade Visuals, Textured Bricks & Dual C Parity)**
+  - Status: PASS ✅ (0 errors, web 186.9 KB, native 55.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 17.13%, 0 fail, 0 warn, 6.7s)).
+  - Textured metallic/crystalline bricks, plasma paddle slipstream & ball trails, boss hazard visuals, and zero perimeter border dots verified in Web and Win32 C.
+  - Glint sweep verified: zero specular glints or traveling perimeter border dots across Web and C.
+  - Handoff: Advanced `kilo-graphics` to `KDragon`; rotated active agent to `kilo-tester`.
+
 - **2026-10-30T23:33:44-07:00 — kilo-creator: kweb://slashnet (SlashNet 1999 Web Hub & Interactive Tools Polish)**
   - Status: PASS ✅ (0 errors, web 110.2 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Verified full 1999 anti-potemkin spec: Karma moderation (-1 Troll to +5 Insightful), threshold filtering (-1 to +5), Beowulf cluster calculator & LINPACK benchmark, and Linux 2.2 kernel compile sim.
@@ -315,10 +321,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kaudio_tutorialSeen / kaudio_tutorial.dat flags, and Escape modal dismissals.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity (F5/F9 buttons, 3.2kHz LP filter, DSP FX, visualizer scope/FFT spectrum) and visibilitychange voice cleanup.
   - Mature Quarantine & Handoff: Promoted `KAudio` to Mature archive; advanced `kilo-qa` to `KGraph`; next agent `kilo-expander`.
-
-- **2026-10-30T21:36:30-07:00 — kilo-usability: KFont (Header Layout, Tab Shortcuts, Crispy Bank Canvas & WCAG 2.1 Polish)**
-  - Status: PASS (0 errors, web 233.6 KB, native 32.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 8.38%, HEAD Δ 12.58%, 0 fail, 0 warn, 4.3s)).
-  - Layout: Prevented .header 2-row wrap and 34px vertical layout jump at 1024x731 with flex-wrap nowrap above 920px and min-width: 122px on #soundToggleBtn.
-  - Shortcuts: Updated OpenType/Compare tab badges to [0]/[-] and moved canvas zoom to [[/]] so [-] switches to Tab 11 from all tabs.
-  - Canvas & WCAG: Rendered #bitmapBankCanvas crisply on resize/tab switch; upgraded #panel-contrast with tabindex=0, Enter/Space activation, Normal/Large WCAG 2.1 badges, editable hex inputs, and Swap FG/BG button.
-  - Handoff: Advanced `kilo-usability` to `KColony`; rotated active agent to `kilo-qa`.

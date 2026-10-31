@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T21:36:30-07:00 — kilo-usability: KFont (Header Layout, Tab Shortcuts, Crispy Bank Canvas & WCAG 2.1 Polish)**
+  - Status: PASS (0 errors, web 233.6 KB, native 32.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 8.38%, HEAD Δ 12.58%, 0 fail, 0 warn, 4.3s)).
+  - Layout: Prevented .header 2-row wrap and 34px vertical layout jump at 1024x731 with flex-wrap nowrap above 920px and min-width: 122px on #soundToggleBtn.
+  - Shortcuts: Updated OpenType/Compare tab badges to [0]/[-] and moved canvas zoom to [[/]] so [-] switches to Tab 11 from all tabs.
+  - Canvas & WCAG: Rendered #bitmapBankCanvas crisply on resize/tab switch; upgraded #panel-contrast with tabindex=0, Enter/Space activation, Normal/Large WCAG 2.1 badges, editable hex inputs, and Swap FG/BG button.
+  - Handoff: Advanced `kilo-usability` to `KColony`; rotated active agent to `kilo-qa`.
+
 - **2026-10-30T21:22:20-07:00 — kilo-tester: KFont (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KFont across web and native targets.
