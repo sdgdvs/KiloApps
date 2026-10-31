@@ -217,12 +217,25 @@ int VfsAppend(const char* path, const char* data) {
 
 int VfsDelete(const char* path) {
     int idx = VfsFind(path);
-    if (idx == -1) return 0;
-    for (int i = idx; i < g_vfsCount - 1; i++) {
-        g_vfsFiles[i] = g_vfsFiles[i + 1];
+    if (idx != -1) {
+        for (int i = idx; i < g_vfsCount - 1; i++) {
+            g_vfsFiles[i] = g_vfsFiles[i + 1];
+        }
+        g_vfsCount--;
     }
-    g_vfsCount--;
-    return 1;
+    // Delete from disk under home/scripts/
+    if (StrStartsWith(path, "/home/scripts/") || StrStartsWith(path, "home/scripts/")) {
+        const char* diskRel = (path[0] == '/') ? path + 1 : path;
+        char diskPath[MAX_PATH];
+        int dIdx = 0;
+        while (diskRel[dIdx] && dIdx < MAX_PATH - 1) {
+            diskPath[dIdx] = (diskRel[dIdx] == '/') ? '\\' : diskRel[dIdx];
+            dIdx++;
+        }
+        diskPath[dIdx] = '\0';
+        DeleteFileA(diskPath);
+    }
+    return idx != -1 ? 1 : 0;
 }
 
 int VfsCopy(const char* src, const char* dst) {
@@ -275,7 +288,56 @@ int VfsSize(const char* path) {
     return 0;
 }
 
+void VfsSyncFromDisk(void) {
+    CreateDirectoryA("home", NULL);
+    CreateDirectoryA("home\\scripts", NULL);
+    WIN32_FIND_DATAA ffd;
+    HANDLE hFind = FindFirstFileA("home\\scripts\\*.*", &ffd);
+    if (hFind != INVALID_HANDLE_VALUE) {
+        do {
+            if (!(ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                if (ffd.cFileName[0] != '.') {
+                    char vpath[MAX_VFS_PATH];
+                    wsprintfA(vpath, "/home/scripts/%s", ffd.cFileName);
+                    if (VfsFind(vpath) == -1 && g_vfsCount < MAX_VFS_FILES) {
+                        char dpath[MAX_PATH];
+                        wsprintfA(dpath, "home\\scripts\\%s", ffd.cFileName);
+                        HANDLE hFile = CreateFileA(dpath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                        if (hFile != INVALID_HANDLE_VALUE) {
+                            DWORD dwSize = GetFileSize(hFile, NULL);
+                            if (dwSize > 0 && dwSize < MAX_VFS_DATA) {
+                                char buf[MAX_VFS_DATA];
+                                DWORD dwRead = 0;
+                                if (ReadFile(hFile, buf, dwSize, &dwRead, NULL)) {
+                                    buf[dwRead] = '\0';
+                                    int nIdx = g_vfsCount++;
+                                    int p = 0;
+                                    while (vpath[p] && p < MAX_VFS_PATH - 1) {
+                                        g_vfsFiles[nIdx].path[p] = vpath[p];
+                                        p++;
+                                    }
+                                    g_vfsFiles[nIdx].path[p] = '\0';
+                                    int d = 0;
+                                    while (buf[d] && d < MAX_VFS_DATA - 1) {
+                                        g_vfsFiles[nIdx].data[d] = buf[d];
+                                        d++;
+                                    }
+                                    g_vfsFiles[nIdx].data[d] = '\0';
+                                    g_vfsFiles[nIdx].size = d;
+                                }
+                            }
+                            CloseHandle(hFile);
+                        }
+                    }
+                }
+            }
+        } while (FindNextFileA(hFind, &ffd));
+        FindClose(hFind);
+    }
+}
+
 void VfsInitDefaults(void) {
+    VfsSyncFromDisk();
     if (g_vfsCount == 0) {
         VfsWrite("/home/scripts/welcome.ks", "// KScript Virtual Filesystem\r\nval = 42\r\nprint \"VFS active:\", val\r\n");
         VfsWrite("/home/scripts/calc_log.txt", "KScript Execution Session Initialized\r\n");
@@ -377,6 +439,29 @@ void ParseStringOrExpr(const char** p, char* outStr, int maxLen, int* outInt) {
         if (**p == '\"') (*p)++;
         outStr[len] = '\0';
         if (outInt) *outInt = len;
+    } else if (IsAlpha(**p)) {
+        const char* scan = *p;
+        char vName[MAX_VAR_NAME];
+        int vLen = 0;
+        while ((IsAlnum(*scan) || *scan == '_') && vLen < MAX_VAR_NAME - 1) {
+            vName[vLen++] = *scan++;
+        }
+        vName[vLen] = '\0';
+        int vIdx = FindVariable(vName);
+        if (vIdx != -1 && g_vars[vIdx].isStr && (*scan == ',' || *scan == ')' || *scan == ' ' || *scan == '\t' || *scan == '\0' || *scan == '\r' || *scan == '\n')) {
+            *p = scan;
+            int sl = 0;
+            while (g_vars[vIdx].strVal[sl] && sl < maxLen - 1) {
+                outStr[sl] = g_vars[vIdx].strVal[sl];
+                sl++;
+            }
+            outStr[sl] = '\0';
+            if (outInt) *outInt = g_vars[vIdx].val;
+            return;
+        }
+        int val = ParseExpr(p);
+        if (outInt) *outInt = val;
+        wsprintfA(outStr, "%d", val);
     } else {
         int val = ParseExpr(p);
         if (outInt) *outInt = val;
@@ -496,7 +581,10 @@ int ParsePrimary(const char** p) {
                 if (sArg1[0]) return VfsSize(sArg1);
                 return (arg1 >= 0 && arg1 < g_vfsCount) ? g_vfsFiles[arg1].size : 0;
             }
-            if (StrEqualCase(ident, "vfs_count") || StrEqualCase(ident, "vfs.count")) return g_vfsCount;
+            if (StrEqualCase(ident, "vfs_count") || StrEqualCase(ident, "vfs.count")) {
+                VfsSyncFromDisk();
+                return g_vfsCount;
+            }
             if (StrEqualCase(ident, "vfs_write") || StrEqualCase(ident, "vfs.write")) {
                 return VfsWrite(sArg1, sArg2);
             }
@@ -508,6 +596,7 @@ int ParsePrimary(const char** p) {
                 return StrLen(data);
             }
             if (StrEqualCase(ident, "vfs_list") || StrEqualCase(ident, "vfs.list")) {
+                VfsSyncFromDisk();
                 int matchCount = 0;
                 for (int i = 0; i < g_vfsCount; i++) {
                     if (!sArg1[0] || StrStartsWith(g_vfsFiles[i].path, sArg1)) {
@@ -900,6 +989,7 @@ int StepScript(int* lastVal) {
                     }
                     SkipWhitespace(&debugPtr);
                     if (*debugPtr == ')') debugPtr++;
+                    VfsSyncFromDisk();
                     char listJson[MAX_VFS_DATA] = "[";
                     int matchCount = 0;
                     for (int i = 0; i < g_vfsCount; i++) {
@@ -1048,6 +1138,7 @@ int StepScript(int* lastVal) {
             }
             SkipWhitespace(&debugPtr);
             if (*debugPtr == ')') debugPtr++;
+            VfsSyncFromDisk();
             char listJson[MAX_VFS_DATA] = "[";
             int matchCount = 0;
             for (int i = 0; i < g_vfsCount; i++) {
@@ -1693,7 +1784,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ofn.hwndOwner = hwnd;
                 ofn.lpstrFile = szFile;
                 ofn.nMaxFile = sizeof(szFile);
-                ofn.lpstrFilter = "KScript Files (*.ksc)\0*.ksc\0Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
+                ofn.lpstrFilter = "KScript Files (*.ks;*.ksc)\0*.ks;*.ksc\0Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
                 ofn.nFilterIndex = 1;
                 ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
                 if (GetOpenFileNameA(&ofn)) {
@@ -1717,15 +1808,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             else if (wmId == 3) {
-                char szFile[MAX_PATH] = "script.ksc";
+                char szFile[MAX_PATH] = "active_script.ks";
                 OPENFILENAMEA ofn = {0};
                 ofn.lStructSize = sizeof(ofn);
                 ofn.hwndOwner = hwnd;
                 ofn.lpstrFile = szFile;
                 ofn.nMaxFile = sizeof(szFile);
-                ofn.lpstrFilter = "KScript Files (*.ksc)\0*.ksc\0JSON State Dump (*.json)\0*.json\0Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
+                ofn.lpstrFilter = "KScript Files (*.ks;*.ksc)\0*.ks;*.ksc\0JSON State Dump (*.json)\0*.json\0Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
                 ofn.nFilterIndex = 1;
-                ofn.lpstrDefExt = "ksc";
+                ofn.lpstrDefExt = "ks";
                 ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
                 if (GetSaveFileNameA(&ofn)) {
                     int flen = StrLen(szFile);
@@ -1741,6 +1832,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     GetWindowTextA(hInput, buf, len + 1);
                                     DWORD dwWritten;
                                     WriteFile(hFile, buf, len, &dwWritten, NULL);
+                                    VfsWrite("/home/scripts/active_script.ks", buf);
                                     VirtualFree(buf, 0, MEM_RELEASE);
                                 }
                             }
@@ -1762,9 +1854,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             else if (wmId == 13) {
+                VfsSyncFromDisk();
                 char vfsInfo[2048];
                 wsprintfA(vfsInfo, "KScript Virtual Filesystem (VFS) Explorer\r\nTotal Virtual Files in Mesh: %d\r\n\r\n", g_vfsCount);
-                for (int i = 0; i < g_vfsCount; i++) {
+                for (int i = 0; i < g_vfsCount && i < 18; i++) {
                     char entry[160];
                     wsprintfA(entry, "%d) %s (%d B)\r\n", i + 1, g_vfsFiles[i].path, g_vfsFiles[i].size);
                     lstrcatA(vfsInfo, entry);
@@ -1773,9 +1866,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                   " - vfs.read(path) / vfs_read(path)\r\n"
                                   " - vfs.write(path, data) / vfs_write(path, data)\r\n"
                                   " - vfs.list(prefix) / vfs_list(prefix)\r\n"
-                                  " - vfs.exists(path), vfs.size(path), vfs.delete(path)\r\n"
-                                  "Scripts saved to /home/scripts/ sync with Win32 interpreter.");
-                MessageBoxA(hwnd, vfsInfo, "KScript VFS Explorer [Alt+V]", MB_OK | MB_ICONINFORMATION);
+                                  " - vfs.exists(path), vfs.size(path), vfs.delete(path)\r\n\r\n"
+                                  "Click [Yes] to save active editor script to /home/scripts/active_script.ks\r\n"
+                                  "Click [No] to load /home/scripts/vfs_demo.ks\r\n"
+                                  "Click [Cancel] to close.");
+                int res = MessageBoxA(hwnd, vfsInfo, "KScript VFS Explorer [Alt+V]", MB_YESNOCANCEL | MB_ICONINFORMATION);
+                if (res == IDYES) {
+                    int len = GetWindowTextLengthA(hInput);
+                    if (len > 0) {
+                        char* buf = (char*)VirtualAlloc(NULL, len + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+                        if (buf) {
+                            GetWindowTextA(hInput, buf, len + 1);
+                            VfsWrite("/home/scripts/active_script.ks", buf);
+                            VirtualFree(buf, 0, MEM_RELEASE);
+                            MessageBoxA(hwnd, "Saved active script to /home/scripts/active_script.ks (synced to disk).", "VFS Saved", MB_OK | MB_ICONINFORMATION);
+                        }
+                    }
+                } else if (res == IDNO) {
+                    const char* demo = VfsRead("/home/scripts/vfs_demo.ks");
+                    if (demo && demo[0]) {
+                        SetWindowTextA(hInput, demo);
+                        RunScript();
+                    }
+                }
             }
             break;
         }
@@ -2019,6 +2132,60 @@ void MainEntry() {
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+
+    // Command-line script auto-loading (VFS or disk)
+    LPSTR cmdLine = GetCommandLineA();
+    if (cmdLine) {
+        while (*cmdLine == ' ' || *cmdLine == '\t') cmdLine++;
+        if (*cmdLine == '\"') {
+            cmdLine++;
+            while (*cmdLine && *cmdLine != '\"') cmdLine++;
+            if (*cmdLine == '\"') cmdLine++;
+        } else {
+            while (*cmdLine && *cmdLine != ' ' && *cmdLine != '\t') cmdLine++;
+        }
+        while (*cmdLine == ' ' || *cmdLine == '\t') cmdLine++;
+        if (*cmdLine) {
+            char targetFile[MAX_PATH];
+            int tIdx = 0;
+            if (*cmdLine == '\"') {
+                cmdLine++;
+                while (*cmdLine && *cmdLine != '\"' && tIdx < MAX_PATH - 1) {
+                    targetFile[tIdx++] = *cmdLine++;
+                }
+            } else {
+                while (*cmdLine && *cmdLine != ' ' && *cmdLine != '\t' && tIdx < MAX_PATH - 1) {
+                    targetFile[tIdx++] = *cmdLine++;
+                }
+            }
+            targetFile[tIdx] = '\0';
+            if (targetFile[0]) {
+                const char* data = VfsRead(targetFile);
+                if (data && data[0]) {
+                    SetWindowTextA(hInput, data);
+                    RunScript();
+                } else {
+                    HANDLE hFile = CreateFileA(targetFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                    if (hFile != INVALID_HANDLE_VALUE) {
+                        DWORD dwSize = GetFileSize(hFile, NULL);
+                        if (dwSize > 0 && dwSize < sizeof(debugInput)) {
+                            char* buf = (char*)VirtualAlloc(NULL, dwSize + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+                            if (buf) {
+                                DWORD dwRead;
+                                if (ReadFile(hFile, buf, dwSize, &dwRead, NULL)) {
+                                    buf[dwRead] = '\0';
+                                    SetWindowTextA(hInput, buf);
+                                    RunScript();
+                                }
+                                VirtualFree(buf, 0, MEM_RELEASE);
+                            }
+                        }
+                        CloseHandle(hFile);
+                    }
+                }
+            }
+        }
+    }
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {

@@ -1841,6 +1841,8 @@ print "Final total:", total`;
     const vfsFileList = document.getElementById('vfsFileList');
     const vfsFileCount = document.getElementById('vfsFileCount');
 
+    let activeVfsPath = '/home/scripts/active_script.ks';
+
     function renderVfsFileList() {
         if (!vfsFileList) return;
         vfsFileList.innerHTML = '';
@@ -1877,11 +1879,13 @@ print "Final total:", total`;
             row.querySelector('[data-action="load"]').onclick = () => {
                 KiloVFS.read(filePath, (data) => {
                     exprInput.value = data;
+                    activeVfsPath = filePath;
+                    if (vfsSaveFilename) vfsSaveFilename.value = filePath;
                     renderGutter();
                     showToast(`Loaded "${filePath}" from VFS`, "success");
                     closeModal(vfsModal);
                     pulseRunPill();
-            btnRun.click();
+                    btnRun.click();
                 });
             };
 
@@ -1920,6 +1924,9 @@ print "Final total:", total`;
             let path = (vfsSaveFilename.value || '').trim();
             if (!path) path = '/home/scripts/script_' + Date.now() + '.ks';
             if (!path.startsWith('/')) path = '/home/scripts/' + path;
+            if (!path.endsWith('.ks') && !path.endsWith('.txt') && !path.endsWith('.log')) path += '.ks';
+            activeVfsPath = path;
+            vfsSaveFilename.value = path;
             KiloVFS.write(path, exprInput.value, true);
             showToast(`Saved to VFS: ${path}`, "success");
             renderVfsFileList();
@@ -1929,8 +1936,9 @@ print "Final total:", total`;
     if (btnVfsHexLaunch) {
         btnVfsHexLaunch.onclick = () => {
             let path = (vfsSaveFilename.value || '').trim();
-            if (!path) path = '/home/scripts/active_script.ks';
+            if (!path) path = activeVfsPath || '/home/scripts/active_script.ks';
             if (!path.startsWith('/')) path = '/home/scripts/' + path;
+            if (!path.endsWith('.ks') && !path.endsWith('.txt') && !path.endsWith('.log')) path += '.ks';
             KiloVFS.write(path, exprInput.value, false);
             KiloVFS.launchApp('khex', path);
             showToast(`Saved and launched in KHex: ${path}`, "info");
@@ -1939,15 +1947,18 @@ print "Final total:", total`;
 
     if (btnVfsSaveQuick) {
         btnVfsSaveQuick.onclick = () => {
-            const path = '/home/scripts/active_script.ks';
+            let path = activeVfsPath || '/home/scripts/active_script.ks';
+            if (!path.startsWith('/')) path = '/home/scripts/' + path;
+            if (!path.endsWith('.ks')) path += '.ks';
             KiloVFS.write(path, exprInput.value, true);
             showToast(`Saved active script to VFS: ${path}`, "success");
+            renderVfsFileList();
         };
     }
 
     if (btnLaunchKHex) {
         btnLaunchKHex.onclick = () => {
-            const path = '/home/scripts/active_script.ks';
+            const path = activeVfsPath || '/home/scripts/active_script.ks';
             KiloVFS.write(path, exprInput.value, false);
             KiloVFS.launchApp('khex', path);
             showToast("Saved & opened in KHex", "info");
@@ -1959,10 +1970,14 @@ print "Final total:", total`;
             KiloVFS.openPicker((data, path) => {
                 if (data !== undefined && data !== null) {
                     exprInput.value = data;
+                    if (path) {
+                        activeVfsPath = path;
+                        if (vfsSaveFilename) vfsSaveFilename.value = path;
+                    }
                     renderGutter();
                     showToast(`Loaded "${path}" from VFS`, "success");
                     pulseRunPill();
-            btnRun.click();
+                    btnRun.click();
                 }
             });
         };
@@ -1973,15 +1988,69 @@ print "Final total:", total`;
             KiloVFS.openPicker((data, path) => {
                 if (data !== undefined && data !== null) {
                     exprInput.value = data;
+                    if (path) {
+                        activeVfsPath = path;
+                        if (vfsSaveFilename) vfsSaveFilename.value = path;
+                    }
                     renderGutter();
                     showToast(`Loaded "${path}" from VFS`, "success");
                     closeModal(vfsModal);
                     pulseRunPill();
-            btnRun.click();
+                    btnRun.click();
                 }
             });
         };
     }
+
+    function handleInitialVfsPath() {
+        const hash = window.location.hash ? decodeURIComponent(window.location.hash.substring(1)) : '';
+        if (hash) {
+            let targetPath = hash;
+            if (!targetPath.startsWith('/')) targetPath = '/home/scripts/' + targetPath;
+            KiloVFS.read(targetPath, (data) => {
+                if (data) {
+                    exprInput.value = data;
+                    activeVfsPath = targetPath;
+                    if (vfsSaveFilename) vfsSaveFilename.value = targetPath;
+                    renderGutter();
+                    showToast(`Opened "${targetPath}" from VFS`, "success");
+                    pulseRunPill();
+                    btnRun.click();
+                }
+            });
+        }
+    }
+
+    // Inter-App IPC Mesh: receive files to open from KiloOS / File Browser
+    window.addEventListener('message', (e) => {
+        if (!e.data) return;
+        if (e.data.type === 'FILE_OPEN' || e.data.type === 'VFS_OPEN') {
+            const filePath = e.data.path;
+            if (filePath) {
+                if (e.data.data !== undefined) {
+                    exprInput.value = e.data.data;
+                    activeVfsPath = filePath;
+                    if (vfsSaveFilename) vfsSaveFilename.value = filePath;
+                    renderGutter();
+                    showToast(`Opened "${filePath}" from VFS`, "success");
+                    pulseRunPill();
+                    btnRun.click();
+                } else {
+                    KiloVFS.read(filePath, (data) => {
+                        if (data !== undefined && data !== null) {
+                            exprInput.value = data;
+                            activeVfsPath = filePath;
+                            if (vfsSaveFilename) vfsSaveFilename.value = filePath;
+                            renderGutter();
+                            showToast(`Opened "${filePath}" from VFS`, "success");
+                            pulseRunPill();
+                            btnRun.click();
+                        }
+                    });
+                }
+            }
+        }
+    });
 
     // Initialize KiloVFS on boot
     KiloVFS.init();
@@ -1993,6 +2062,7 @@ print "Final total:", total`;
     } catch(e) {
         exprInput.value = DEFAULT_SCRIPT;
     }
+    handleInitialVfsPath();
 
     // Presets Library
     const PRESETS = {
