@@ -1323,12 +1323,30 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         gridColor = RGB(120, 20, 150);
                         skylineColor = RGB(80, 12, 100);
                         hudTitle = "[ICE://PHANTOM]";
+                    } else if (hacking_node == 2) {
+                        hudColor = RGB(0, 255, 120);
+                        bgFillColor = RGB(0, 22, 10);
+                        gridColor = RGB(0, 80, 40);
+                        skylineColor = RGB(0, 50, 25);
+                        hudTitle = "[ICE://BASIC]";
+                    } else if (hacking_node == 3) {
+                        hudColor = RGB(255, 180, 0);
+                        bgFillColor = RGB(24, 16, 0);
+                        gridColor = RGB(100, 70, 0);
+                        skylineColor = RGB(70, 48, 0);
+                        hudTitle = "[ICE://TRACER]";
+                    } else if (hacking_node == 4) {
+                        hudColor = RGB(255, 50, 60);
+                        bgFillColor = RGB(26, 4, 8);
+                        gridColor = RGB(100, 20, 25);
+                        skylineColor = RGB(70, 12, 18);
+                        hudTitle = "[ICE://HUNTER]";
                     } else {
-                        hudColor = RGB(255, 50, 50);
+                        hudColor = RGB(255, 30, 30);
                         bgFillColor = RGB(24, 4, 4);
                         gridColor = RGB(90, 20, 20);
                         skylineColor = RGB(65, 12, 12);
-                        hudTitle = "[ICE://TARGET]";
+                        hudTitle = "[ICE://BLACK]";
                     }
                 } else if (connected_node) {
                     hudColor = RGB(0, 255, 255);
@@ -1590,9 +1608,130 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         Ellipse(memDC, eyeX - 2, cy - 3, eyeX + 3, cy + 3);
                         DeleteObject(eyeBrush);
 
+                    } else if (hacking_node == 2) {
+                        // BASIC ICE CONSTRUCT (Node 02: Crystalline Emerald Firewall)
+                        HPEN hexPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 120));
+                        HBRUSH hexBrush = CreateSolidBrush(RGB(0, 40, 20));
+                        SelectObject(memDC, hexPen);
+                        SelectObject(memDC, hexBrush);
+
+                        POINT hPts[6];
+                        for (int i = 0; i < 6; i++) {
+                            int ang = i * 5;
+                            int r = 26 + pulse;
+                            hPts[i].x = cx + glitch + (FastCos(ang) * r) / 128;
+                            hPts[i].y = cy + (FastSin(ang) * r) / 128;
+                        }
+                        Polygon(memDC, hPts, 6);
+                        DeleteObject(hexPen);
+                        DeleteObject(hexBrush);
+
+                        // Central router chip
+                        HPEN chipPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 180));
+                        HBRUSH chipBrush = CreateSolidBrush(RGB(0, 24, 12));
+                        SelectObject(memDC, chipPen);
+                        SelectObject(memDC, chipBrush);
+                        Rectangle(memDC, cx + glitch - 9, cy - 9, cx + glitch + 10, cy + 10);
+                        MoveToEx(memDC, cx + glitch - 6, cy, NULL); LineTo(memDC, cx + glitch + 7, cy);
+                        MoveToEx(memDC, cx + glitch, cy - 6, NULL); LineTo(memDC, cx + glitch, cy + 7);
+                        DeleteObject(chipPen);
+                        DeleteObject(chipBrush);
+
+                    } else if (hacking_node == 3) {
+                        // TRACER ICE CONSTRUCT (Node 03: Corporate Tracking Radar Drone)
+                        HPEN ringPen = CreatePen(PS_SOLID, 1, RGB(255, 180, 0));
+                        SelectObject(memDC, ringPen);
+                        int rDist = 34 + pulse;
+                        Arc(memDC, cx + glitch - rDist, cy - rDist, cx + glitch + rDist, cy + rDist, 0, 0, 0, 0);
+                        DeleteObject(ringPen);
+
+                        // Tri-Rotor Scanning Probes
+                        HPEN probePen = CreatePen(PS_SOLID, 1, RGB(255, 140, 0));
+                        HBRUSH probeBrush = CreateSolidBrush(RGB(60, 32, 0));
+                        SelectObject(memDC, probePen);
+                        SelectObject(memDC, probeBrush);
+                        for (int i = 0; i < 3; i++) {
+                            int ang = i * 11 + 2;
+                            int px = cx + glitch + (FastCos(ang) * 30) / 128;
+                            int py = cy + (FastSin(ang) * 30) / 128;
+                            MoveToEx(memDC, cx + glitch, cy, NULL);
+                            LineTo(memDC, px, py);
+                            Ellipse(memDC, px - 4, py - 4, px + 5, py + 5);
+                        }
+                        DeleteObject(probePen);
+                        DeleteObject(probeBrush);
+
+                        // Triangle Core Chassis
+                        HPEN triPen = CreatePen(PS_SOLID, 2, RGB(255, 200, 0));
+                        HBRUSH triBrush = CreateSolidBrush(RGB(40, 18, 0));
+                        SelectObject(memDC, triPen);
+                        SelectObject(memDC, triBrush);
+                        POINT tPts[3] = {
+                            { cx + glitch, cy - 16 },
+                            { cx + glitch + 15, cy + 12 },
+                            { cx + glitch - 15, cy + 12 }
+                        };
+                        Polygon(memDC, tPts, 3);
+                        DeleteObject(triPen);
+                        DeleteObject(triBrush);
+
+                        // Amber sweeping eye
+                        int eyeX = cx + glitch + (FastSin(g_animTick * 3) * 6) / 128;
+                        HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 220, 0));
+                        SelectObject(memDC, eyeBrush);
+                        Ellipse(memDC, eyeX - 2, cy - 1, eyeX + 3, cy + 5);
+                        DeleteObject(eyeBrush);
+
+                    } else if (hacking_node == 4) {
+                        // HUNTER ICE CONSTRUCT (Node 04: Aggressive Crimson Raptor)
+                        HPEN bladePen = CreatePen(PS_SOLID, 1, RGB(255, 50, 60));
+                        HBRUSH bladeBrush = CreateSolidBrush(RGB(110, 8, 16));
+                        SelectObject(memDC, bladePen);
+                        SelectObject(memDC, bladeBrush);
+                        POINT leftBlade[3] = {
+                            { cx + glitch - 22, cy - 16 },
+                            { cx + glitch - 34, cy + 2 },
+                            { cx + glitch - 18, cy + 14 }
+                        };
+                        Polygon(memDC, leftBlade, 3);
+                        POINT rightBlade[3] = {
+                            { cx + glitch + 22, cy - 16 },
+                            { cx + glitch + 34, cy + 2 },
+                            { cx + glitch + 18, cy + 14 }
+                        };
+                        Polygon(memDC, rightBlade, 3);
+                        DeleteObject(bladePen);
+                        DeleteObject(bladeBrush);
+
+                        // Diamond Core
+                        HPEN dPen = CreatePen(PS_SOLID, 2, RGB(255, 40, 50));
+                        HBRUSH dBrush = CreateSolidBrush(RGB(50, 4, 8));
+                        SelectObject(memDC, dPen);
+                        SelectObject(memDC, dBrush);
+                        POINT dCore[4] = {
+                            { cx + glitch, cy - 24 },
+                            { cx + glitch + 18, cy },
+                            { cx + glitch, cy + 24 },
+                            { cx + glitch - 18, cy }
+                        };
+                        Polygon(memDC, dCore, 4);
+                        DeleteObject(dPen);
+                        DeleteObject(dBrush);
+
+                        // Visor Slit
+                        HBRUSH eyeBg = CreateSolidBrush(RGB(15, 0, 2));
+                        RECT visor = { cx + glitch - 12, cy - 3, cx + glitch + 12, cy + 3 };
+                        FillRect(memDC, &visor, eyeBg);
+                        DeleteObject(eyeBg);
+
+                        int eyeX = cx + glitch + (FastSin(g_animTick * 3) * 7) / 128;
+                        HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 30, 40));
+                        SelectObject(memDC, eyeBrush);
+                        Ellipse(memDC, eyeX - 2, cy - 3, eyeX + 3, cy + 3);
+                        DeleteObject(eyeBrush);
+
                     } else {
-                        // MILITARY SENTINEL IC GUARDIAN CONSTRUCT (Active Threat Entity)
-                        // 4 Tactical Escort Sentinel Interceptors (Formation Guard)
+                        // BLACK ICE CONSTRUCT (Node 05: Military Demonic Sentinel 8-Point Hazard Star)
                         HPEN shardPen = CreatePen(PS_SOLID, 1, RGB(255, 180, 180));
                         HBRUSH shardBrush = CreateSolidBrush(RGB(200, 10, 20));
                         HPEN linkPen = CreatePen(PS_SOLID, 1, RGB(160, 20, 20));
@@ -1603,12 +1742,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             int sx = cx + glitch + incX[s];
                             int sy = cy + incY[s];
 
-                            // Tactical Tether Link
                             SelectObject(memDC, linkPen);
                             MoveToEx(memDC, cx + glitch, cy, NULL);
                             LineTo(memDC, sx, sy);
 
-                            // Sentinel Interceptor Barb
                             SelectObject(memDC, shardPen);
                             SelectObject(memDC, shardBrush);
                             POINT sPts[4] = {

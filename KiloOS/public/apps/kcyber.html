@@ -1333,6 +1333,41 @@
     const canvas = document.getElementById('gfxCanvas');
     const ctx = canvas.getContext('2d');
 
+        // ==========================================
+    // IMAGEN 3 CYBERPUNK SPRITES & 2-STAGE PIPELINE
+    // ==========================================
+    const KCYBER_ASSETS = {
+      cyberdeck: { img: null, loaded: false, src: '../assets/sprites/kcyber/cyberdeck_console.png', fallback: 'assets/sprites/kcyber/cyberdeck_console.png' },
+      ice_02: { img: null, loaded: false, src: '../assets/sprites/kcyber/ice_basic_02.png', fallback: 'assets/sprites/kcyber/ice_basic_02.png' },
+      ice_03: { img: null, loaded: false, src: '../assets/sprites/kcyber/ice_tracer_03.png', fallback: 'assets/sprites/kcyber/ice_tracer_03.png' },
+      ice_04: { img: null, loaded: false, src: '../assets/sprites/kcyber/ice_hunter_04.png', fallback: 'assets/sprites/kcyber/ice_hunter_04.png' },
+      ice_05: { img: null, loaded: false, src: '../assets/sprites/kcyber/ice_black_05.png', fallback: 'assets/sprites/kcyber/ice_black_05.png' },
+      ice_06: { img: null, loaded: false, src: '../assets/sprites/kcyber/ice_phantom_06.png', fallback: 'assets/sprites/kcyber/ice_phantom_06.png' },
+      stasis: { img: null, loaded: false, src: '../assets/sprites/kcyber/cryo_stasis_lattice.png', fallback: 'assets/sprites/kcyber/cryo_stasis_lattice.png' },
+      data_core: { img: null, loaded: false, src: '../assets/sprites/kcyber/data_core_cartridge.png', fallback: 'assets/sprites/kcyber/data_core_cartridge.png' },
+      vault: { img: null, loaded: false, src: '../assets/sprites/kcyber/contraband_vault.png', fallback: 'assets/sprites/kcyber/contraband_vault.png' }
+    };
+
+    function initKCyberAssets() {
+      Object.values(KCYBER_ASSETS).forEach(entry => {
+        const img = new Image();
+        img.onload = () => {
+          entry.img = img;
+          entry.loaded = true;
+        };
+        img.onerror = () => {
+          const fb = new Image();
+          fb.onload = () => {
+            entry.img = fb;
+            entry.loaded = true;
+          };
+          fb.src = entry.fallback;
+        };
+        img.src = entry.src;
+      });
+    }
+    initKCyberAssets();
+
     function drawVisuals() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const cx = 90;
@@ -1588,74 +1623,83 @@
 
         if (ice_frozen_ticks > 0) {
           // CRYOGENIC STASIS LATTICE (Frozen ICE Construct)
-          ctx.save();
-          ctx.translate(cx + glitchX, cy);
+          const stasisAsset = KCYBER_ASSETS.stasis;
+          if (stasisAsset && stasisAsset.loaded && stasisAsset.img) {
+            ctx.save();
+            ctx.translate(cx + glitchX, cy);
+            ctx.scale(pulse, pulse);
+            const sSize = 88;
+            ctx.drawImage(stasisAsset.img, -sSize / 2, -sSize / 2, sSize, sSize);
+            ctx.restore();
+          } else {
+            ctx.save();
+            ctx.translate(cx + glitchX, cy);
 
-          // Cryogenic Stasis Containment Hexagon
-          ctx.strokeStyle = 'rgba(0, 229, 255, 0.4)';
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          for (let i = 0; i < 6; i++) {
-            const rad = i * (Math.PI / 3);
-            const px = Math.cos(rad) * 48;
-            const py = Math.sin(rad) * 48;
-            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-          }
-          ctx.closePath();
-          ctx.stroke();
-
-          // Outer Cryo-Prisms at Vertices
-          for (let a = 0; a < 6; a++) {
-            const rad = a * (Math.PI / 3);
-            const fx = Math.cos(rad) * 44;
-            const fy = Math.sin(rad) * 44;
-
-            ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
-            ctx.lineWidth = 1;
+            // Cryogenic Stasis Containment Hexagon
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.4)';
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(fx, fy);
+            for (let i = 0; i < 6; i++) {
+              const rad = i * (Math.PI / 3);
+              const px = Math.cos(rad) * 48;
+              const py = Math.sin(rad) * 48;
+              if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
             ctx.stroke();
 
-            // Diamond Frost Spike
-            ctx.fillStyle = 'rgba(0, 229, 255, 0.8)';
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1;
+            // Outer Cryo-Prisms at Vertices
+            for (let a = 0; a < 6; a++) {
+              const rad = a * (Math.PI / 3);
+              const fx = Math.cos(rad) * 44;
+              const fy = Math.sin(rad) * 44;
+              ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(0, 0);
+              ctx.lineTo(fx, fy);
+              ctx.stroke();
+
+              // Diamond Frost Spike
+              ctx.fillStyle = 'rgba(0, 229, 255, 0.8)';
+              ctx.strokeStyle = '#ffffff';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(fx, fy - 6);
+              ctx.lineTo(fx + 4, fy);
+              ctx.lineTo(fx, fy + 6);
+              ctx.lineTo(fx - 4, fy);
+              ctx.closePath();
+              ctx.fill();
+              ctx.stroke();
+            }
+
+            // Frozen Inner Core Facets
+            ctx.fillStyle = 'rgba(0, 35, 60, 0.9)';
+            ctx.strokeStyle = '#00e5ff';
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(fx, fy - 6);
-            ctx.lineTo(fx + 4, fy);
-            ctx.lineTo(fx, fy + 6);
-            ctx.lineTo(fx - 4, fy);
+            for (let i = 0; i < 6; i++) {
+              const ang = i * (Math.PI / 3) + (Math.PI / 6);
+              const r = 26;
+              const px = Math.cos(ang) * r;
+              const py = Math.sin(ang) * r;
+              if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
+
+            // Internal Frost Fracture Lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(-16, -10); ctx.lineTo(0, 4); ctx.lineTo(14, -8);
+            ctx.moveTo(0, 4); ctx.lineTo(-4, 18);
+            ctx.stroke();
+
+            ctx.restore();
           }
-
-          // Frozen Inner Core Facets
-          ctx.fillStyle = 'rgba(0, 35, 60, 0.9)';
-          ctx.strokeStyle = '#00e5ff';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          for (let i = 0; i < 6; i++) {
-            const ang = i * (Math.PI / 3) + (Math.PI / 6);
-            const r = 26;
-            const px = Math.cos(ang) * r;
-            const py = Math.sin(ang) * r;
-            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-          }
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-
-          // Internal Frost Fracture Lines
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(-16, -10); ctx.lineTo(0, 4); ctx.lineTo(14, -8);
-          ctx.moveTo(0, 4); ctx.lineTo(-4, 18);
-          ctx.stroke();
-
-          ctx.restore();
 
           // Frozen Stasis Telemetry Badge
           ctx.fillStyle = '#00e5ff';
@@ -1663,187 +1707,319 @@
           ctx.textAlign = 'center';
           ctx.fillText('[STASIS // BLINDED]', cx, cy + 48);
 
-        } else if (hacking_node === '06') {
-          // PHANTOM IC GUARDIAN CONSTRUCT (Void-Phase Stealth Sentinel)
-          ctx.save();
-          ctx.translate(cx + glitchX, cy);
-          ctx.scale(pulse, pulse);
-
-          // Tactical Phasing Escort Drones (Fixed Flank Formation)
-          const droneOffsets = [
-            { x: -44, y: -14 },
-            { x: 44, y: -14 },
-            { x: -36, y: 22 },
-            { x: 36, y: 22 }
-          ];
-          for (let d = 0; d < droneOffsets.length; d++) {
-            const dPos = droneOffsets[d];
-            // High-voltage phase tether filament
-            ctx.strokeStyle = 'rgba(208, 0, 255, 0.35)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(dPos.x, dPos.y);
-            ctx.stroke();
-
-            // Stealth Prism Drone
-            ctx.save();
-            ctx.translate(dPos.x, dPos.y);
-            ctx.fillStyle = '#9900dd';
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.moveTo(0, -7);
-            ctx.lineTo(5, 0);
-            ctx.lineTo(0, 7);
-            ctx.lineTo(-5, 0);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
-          }
-
-          // Central Obsidian Polyhedral Armor Shell
-          ctx.strokeStyle = '#d000ff';
-          const phantomGrad = ctx.createLinearGradient(0, -32, 0, 32);
-          phantomGrad.addColorStop(0, 'rgba(45, 0, 60, 0.95)');
-          phantomGrad.addColorStop(1, 'rgba(15, 0, 22, 0.98)');
-          ctx.fillStyle = phantomGrad;
-          ctx.lineWidth = 2.5;
-
-          ctx.beginPath();
-          ctx.moveTo(0, -32);
-          ctx.lineTo(26, -12);
-          ctx.lineTo(26, 16);
-          ctx.lineTo(0, 32);
-          ctx.lineTo(-26, 16);
-          ctx.lineTo(-26, -12);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-
-          // Lateral Armored Vanes
-          ctx.fillStyle = 'rgba(180, 0, 240, 0.3)';
-          ctx.strokeStyle = '#b000ff';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(-26, -12); ctx.lineTo(-34, -4); ctx.lineTo(-26, 8); ctx.closePath();
-          ctx.fill(); ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(26, -12); ctx.lineTo(34, -4); ctx.lineTo(26, 8); ctx.closePath();
-          ctx.fill(); ctx.stroke();
-
-          // Violet Aperture Visor Slit
-          ctx.fillStyle = '#080010';
-          ctx.fillRect(-18, -4, 36, 8);
-          ctx.strokeStyle = '#e066ff';
-          ctx.lineWidth = 1.2;
-          ctx.strokeRect(-18, -4, 36, 8);
-
-          // Sweeping Quantum Optic Scanner
-          const eyeX = Math.sin(animTick * 0.08) * 12;
-          ctx.fillStyle = '#ff00ee';
-          ctx.beginPath();
-          ctx.arc(eyeX, 0, 3.5, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.restore();
-
         } else {
-          // MILITARY SENTINEL IC GUARDIAN CONSTRUCT (Active Threat Entity)
-          ctx.save();
-          ctx.translate(cx + glitchX, cy);
-          ctx.scale(pulse, pulse);
+          // ACTIVE ICE CONSTRUCT (5 DISTINCT ICE ENTITIES)
+          const iceKey = (hacking_node === '06' ? 'ice_06' :
+                          hacking_node === '05' ? 'ice_05' :
+                          hacking_node === '04' ? 'ice_04' :
+                          hacking_node === '03' ? 'ice_03' : 'ice_02');
+          const iceAsset = KCYBER_ASSETS[iceKey];
 
-          // Flanking Tactical Sentinel Interceptors (Tactical Escort Formation)
-          const interceptors = [
-            { x: -46, y: -16 },
-            { x: 46, y: -16 },
-            { x: -40, y: 20 },
-            { x: 40, y: 20 }
-          ];
-          for (let s = 0; s < interceptors.length; s++) {
-            const inc = interceptors[s];
-
-            // Tactical Laser Tether Conduit
-            ctx.strokeStyle = 'rgba(255, 40, 40, 0.4)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(inc.x, inc.y);
-            ctx.stroke();
-
-            // Interceptor Barb Construct
+          if (iceAsset && iceAsset.loaded && iceAsset.img) {
+            // High-fidelity 2-stage Imagen 3 ICE Sprite
             ctx.save();
-            ctx.translate(inc.x, inc.y);
-            ctx.fillStyle = '#cc0015';
-            ctx.strokeStyle = '#ff9999';
-            ctx.lineWidth = 1.2;
+            ctx.translate(cx + glitchX, cy);
+            ctx.scale(pulse, pulse);
+            const sSize = 92;
+            ctx.drawImage(iceAsset.img, -sSize / 2, -sSize / 2, sSize, sSize);
+            ctx.restore();
+          } else if (hacking_node === '06') {
+            // PHANTOM IC GUARDIAN CONSTRUCT (Void-Phase Stealth Sentinel)
+            ctx.save();
+            ctx.translate(cx + glitchX, cy);
+            ctx.scale(pulse, pulse);
+
+            // Tactical Phasing Escort Drones (Fixed Flank Formation)
+            const droneOffsets = [
+              { x: -44, y: -14 },
+              { x: 44, y: -14 },
+              { x: -36, y: 22 },
+              { x: 36, y: 22 }
+            ];
+            for (let d = 0; d < droneOffsets.length; d++) {
+              const dPos = droneOffsets[d];
+              ctx.strokeStyle = 'rgba(208, 0, 255, 0.35)';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(0, 0);
+              ctx.lineTo(dPos.x, dPos.y);
+              ctx.stroke();
+
+              ctx.save();
+              ctx.translate(dPos.x, dPos.y);
+              ctx.fillStyle = '#9900dd';
+              ctx.strokeStyle = '#ffffff';
+              ctx.lineWidth = 1.2;
+              ctx.beginPath();
+              ctx.moveTo(0, -7);
+              ctx.lineTo(5, 0);
+              ctx.lineTo(0, 7);
+              ctx.lineTo(-5, 0);
+              ctx.closePath();
+              ctx.fill();
+              ctx.stroke();
+              ctx.restore();
+            }
+
+            // Central Obsidian Polyhedral Armor Shell
+            ctx.strokeStyle = '#d000ff';
+            const phantomGrad = ctx.createLinearGradient(0, -32, 0, 32);
+            phantomGrad.addColorStop(0, 'rgba(45, 0, 60, 0.95)');
+            phantomGrad.addColorStop(1, 'rgba(15, 0, 22, 0.98)');
+            ctx.fillStyle = phantomGrad;
+            ctx.lineWidth = 2.5;
+
             ctx.beginPath();
-            ctx.moveTo(0, -8);
-            ctx.lineTo(6, 4);
-            ctx.lineTo(0, 1);
-            ctx.lineTo(-6, 4);
+            ctx.moveTo(0, -32);
+            ctx.lineTo(26, -12);
+            ctx.lineTo(26, 16);
+            ctx.lineTo(0, 32);
+            ctx.lineTo(-26, 16);
+            ctx.lineTo(-26, -12);
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
+
+            // Lateral Armored Vanes
+            ctx.fillStyle = 'rgba(180, 0, 240, 0.3)';
+            ctx.strokeStyle = '#b000ff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(-26, -12); ctx.lineTo(-34, -4); ctx.lineTo(-26, 8); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(26, -12); ctx.lineTo(34, -4); ctx.lineTo(26, 8); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            // Violet Aperture Visor Slit
+            ctx.fillStyle = '#080010';
+            ctx.fillRect(-18, -4, 36, 8);
+            ctx.strokeStyle = '#e066ff';
+            ctx.lineWidth = 1.2;
+            ctx.strokeRect(-18, -4, 36, 8);
+
+            const eyeX = Math.sin(animTick * 0.08) * 12;
+            ctx.fillStyle = '#ff00ee';
+            ctx.beginPath();
+            ctx.arc(eyeX, 0, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+
+          } else if (hacking_node === '02') {
+            // BASIC ICE CONSTRUCT (Node 02: Crystalline Emerald Firewall)
+            ctx.save();
+            ctx.translate(cx + glitchX, cy);
+            ctx.scale(pulse, pulse);
+
+            // Emerald perimeter hex lattice
+            ctx.strokeStyle = '#00ff88';
+            ctx.fillStyle = 'rgba(0, 40, 20, 0.9)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+              const rad = i * (Math.PI / 3);
+              const px = Math.cos(rad) * 28;
+              const py = Math.sin(rad) * 28;
+              if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Core chip & cross lines
+            ctx.fillStyle = '#002010';
+            ctx.strokeStyle = '#00ffaa';
+            ctx.lineWidth = 1.5;
+            ctx.fillRect(-10, -10, 20, 20);
+            ctx.strokeRect(-10, -10, 20, 20);
+            ctx.beginPath();
+            ctx.moveTo(-7, 0); ctx.lineTo(7, 0);
+            ctx.moveTo(0, -7); ctx.lineTo(0, 7);
+            ctx.stroke();
+
+            ctx.restore();
+
+          } else if (hacking_node === '03') {
+            // TRACER ICE CONSTRUCT (Node 03: Corporate Tracking Radar Drone)
+            ctx.save();
+            ctx.translate(cx + glitchX, cy);
+            ctx.scale(pulse, pulse);
+
+            // Radar field ring
+            ctx.strokeStyle = 'rgba(255, 180, 0, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(0, 0, 36, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Tri-rotor sensor pods
+            for (let i = 0; i < 3; i++) {
+              const rad = i * (Math.PI * 2 / 3) - Math.PI / 2;
+              const px = Math.cos(rad) * 32;
+              const py = Math.sin(rad) * 32;
+              ctx.strokeStyle = '#ffaa00';
+              ctx.lineWidth = 1.5;
+              ctx.beginPath();
+              ctx.moveTo(0, 0); ctx.lineTo(px, py);
+              ctx.stroke();
+              ctx.fillStyle = '#442000';
+              ctx.beginPath();
+              ctx.arc(px, py, 6, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+            }
+
+            // Central amber sensor chassis
+            ctx.fillStyle = '#221200';
+            ctx.strokeStyle = '#ffb700';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, -16); ctx.lineTo(15, 12); ctx.lineTo(-15, 12);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Amber scanning eye
+            const eyeX = Math.sin(animTick * 0.08) * 6;
+            ctx.fillStyle = '#ffcc00';
+            ctx.beginPath();
+            ctx.arc(eyeX, 2, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+
+          } else if (hacking_node === '04') {
+            // HUNTER ICE CONSTRUCT (Node 04: Aggressive Crimson Raptor)
+            ctx.save();
+            ctx.translate(cx + glitchX, cy);
+            ctx.scale(pulse, pulse);
+
+            // Flanking razor blades
+            ctx.strokeStyle = 'rgba(255, 40, 40, 0.4)';
+            ctx.fillStyle = '#800010';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-28, -20); ctx.lineTo(-38, 4); ctx.lineTo(-24, 16); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(28, -20); ctx.lineTo(38, 4); ctx.lineTo(24, 16); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            // Raptor diamond core
+            ctx.fillStyle = '#280006';
+            ctx.strokeStyle = '#ff2233';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, -30); ctx.lineTo(22, 0); ctx.lineTo(0, 28); ctx.lineTo(-22, 0);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            // Crimson optic visor
+            ctx.fillStyle = '#100002';
+            ctx.fillRect(-14, -4, 28, 8);
+            ctx.strokeStyle = '#ff4455';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(-14, -4, 28, 8);
+            ctx.fillStyle = '#ff1122';
+            ctx.beginPath();
+            ctx.arc(0, 0, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+
+          } else {
+            // BLACK ICE CONSTRUCT (Node 05: Military Sentinel 8-Point Hazard Star)
+            ctx.save();
+            ctx.translate(cx + glitchX, cy);
+            ctx.scale(pulse, pulse);
+
+            // Flanking Tactical Sentinel Interceptors
+            const interceptors = [
+              { x: -46, y: -16 },
+              { x: 46, y: -16 },
+              { x: -40, y: 20 },
+              { x: 40, y: 20 }
+            ];
+            for (let s = 0; s < interceptors.length; s++) {
+              const inc = interceptors[s];
+              ctx.strokeStyle = 'rgba(255, 40, 40, 0.4)';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(0, 0);
+              ctx.lineTo(inc.x, inc.y);
+              ctx.stroke();
+
+              ctx.save();
+              ctx.translate(inc.x, inc.y);
+              ctx.fillStyle = '#cc0015';
+              ctx.strokeStyle = '#ff9999';
+              ctx.lineWidth = 1.2;
+              ctx.beginPath();
+              ctx.moveTo(0, -8);
+              ctx.lineTo(6, 4);
+              ctx.lineTo(0, 1);
+              ctx.lineTo(-6, 4);
+              ctx.closePath();
+              ctx.fill();
+              ctx.stroke();
+              ctx.restore();
+            }
+
+            // Holographic Tactical Target Reticle
+            ctx.strokeStyle = 'rgba(255, 50, 50, 0.35)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(0, 0, 40, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Main Guardian Armored Sentinel Chassis (8-point hazard star)
+            const demonGrad = ctx.createLinearGradient(0, -30, 0, 30);
+            demonGrad.addColorStop(0, 'rgba(160, 15, 20, 0.95)');
+            demonGrad.addColorStop(1, 'rgba(40, 0, 5, 0.98)');
+            ctx.fillStyle = demonGrad;
+            ctx.strokeStyle = '#ff2222';
+            ctx.lineWidth = 2.5;
+
+            ctx.beginPath();
+            const octVerts = 8;
+            for (let i = 0; i < octVerts; i++) {
+              const rad = i * ((Math.PI * 2) / octVerts);
+              const r = (i % 2 === 0) ? 29 : 20;
+              const px = Math.cos(rad) * r;
+              const py = Math.sin(rad) * r;
+              if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Lateral Armor Flange Plates
+            ctx.fillStyle = 'rgba(80, 0, 10, 0.9)';
+            ctx.strokeStyle = '#ff5555';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(-20, -18); ctx.lineTo(-30, 0); ctx.lineTo(-20, 18); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(20, -18); ctx.lineTo(30, 0); ctx.lineTo(20, 18); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            // Inner Optic Visor Slot
+            ctx.fillStyle = '#0a0002';
+            ctx.fillRect(-18, -5, 36, 10);
+            ctx.strokeStyle = '#ff6666';
+            ctx.lineWidth = 1.2;
+            ctx.strokeRect(-18, -5, 36, 10);
+
+            const eyeX = Math.sin(animTick * 0.08) * 12;
+            ctx.fillStyle = '#ff1100';
+            ctx.beginPath();
+            ctx.arc(eyeX, 0, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
             ctx.restore();
           }
-
-          // Holographic Tactical Target Reticle (Subtle Threat Matrix)
-          ctx.strokeStyle = 'rgba(255, 50, 50, 0.35)';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(0, 0, 40, 0, Math.PI * 2);
-          ctx.stroke();
-
-          // Main Guardian Armored Sentinel Chassis
-          const demonGrad = ctx.createLinearGradient(0, -30, 0, 30);
-          demonGrad.addColorStop(0, 'rgba(160, 15, 20, 0.95)');
-          demonGrad.addColorStop(1, 'rgba(40, 0, 5, 0.98)');
-          ctx.fillStyle = demonGrad;
-          ctx.strokeStyle = '#ff2222';
-          ctx.lineWidth = 2.5;
-
-          ctx.beginPath();
-          const octVerts = 8;
-          for (let i = 0; i < octVerts; i++) {
-            const rad = i * ((Math.PI * 2) / octVerts);
-            const r = (i % 2 === 0) ? 29 : 20;
-            const px = Math.cos(rad) * r;
-            const py = Math.sin(rad) * r;
-            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-          }
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-
-          // Lateral Armor Flange Plates
-          ctx.fillStyle = 'rgba(80, 0, 10, 0.9)';
-          ctx.strokeStyle = '#ff5555';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(-20, -18); ctx.lineTo(-30, 0); ctx.lineTo(-20, 18); ctx.closePath();
-          ctx.fill(); ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(20, -18); ctx.lineTo(30, 0); ctx.lineTo(20, 18); ctx.closePath();
-          ctx.fill(); ctx.stroke();
-
-          // Inner Optic Visor Slot
-          ctx.fillStyle = '#0a0002';
-          ctx.fillRect(-18, -5, 36, 10);
-          ctx.strokeStyle = '#ff6666';
-          ctx.lineWidth = 1.2;
-          ctx.strokeRect(-18, -5, 36, 10);
-
-          // Sweeping Laser Optical Eye
-          const eyeX = Math.sin(animTick * 0.08) * 12;
-          ctx.fillStyle = '#ff1100';
-          ctx.beginPath();
-          ctx.arc(eyeX, 0, 3.5, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.restore();
         }
       } else if (connected_node) {
         // --- KEY ITEM: CLASSIFIED DATA CORE / PAYLOAD ---
@@ -1884,47 +2060,60 @@
         ctx.stroke();
         ctx.restore();
 
-        // High-Tech Data Cartridge
-        const cartW = 44;
-        const cartH = 58;
-        const cartX = cx - cartW / 2;
-        const cartY = cy + bobY - cartH / 2;
+        const dataAsset = KCYBER_ASSETS.data_core;
+        if (dataAsset && dataAsset.loaded && dataAsset.img) {
+          ctx.save();
+          ctx.translate(cx, cy + bobY);
+          const sSize = 68;
+          ctx.drawImage(dataAsset.img, -sSize / 2, -sSize / 2, sSize, sSize);
+          ctx.restore();
+          ctx.fillStyle = '#00ffff';
+          ctx.font = 'bold 8px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(`SEC-DAT`, cx, cy + bobY + 34);
+        } else {
+          // High-Tech Data Cartridge Procedural Fallback
+          const cartW = 44;
+          const cartH = 58;
+          const cartX = cx - cartW / 2;
+          const cartY = cy + bobY - cartH / 2;
 
-        ctx.fillStyle = '#011c22';
-        ctx.fillRect(cartX, cartY, cartW, cartH);
-        ctx.strokeStyle = '#00ffff';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(cartX, cartY, cartW, cartH);
+          ctx.fillStyle = '#011c22';
+          ctx.fillRect(cartX, cartY, cartW, cartH);
+          ctx.strokeStyle = '#00ffff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(cartX, cartY, cartW, cartH);
 
-        // Gold connector pins
-        ctx.fillStyle = '#ffd700';
-        for (let p = 0; p < 5; p++) {
-          ctx.fillRect(cartX + 6 + p * 7, cartY + cartH - 4, 4, 4);
+          // Gold connector pins
+          ctx.fillStyle = '#ffd700';
+          for (let p = 0; p < 5; p++) {
+            ctx.fillRect(cartX + 6 + p * 7, cartY + cartH - 4, 4, 4);
+          }
+
+          // Circuit tracks on cartridge
+          ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(cartX + 8, cartY + 12); ctx.lineTo(cartX + 22, cartY + 12); ctx.lineTo(cartX + 22, cartY + 24);
+          ctx.moveTo(cartX + cartW - 8, cartY + 18); ctx.lineTo(cartX + 28, cartY + 18); ctx.lineTo(cartX + 28, cartY + 28);
+          ctx.stroke();
+
+          // Central Microchip
+          ctx.fillStyle = '#004455';
+          ctx.fillRect(cx - 10, cy + bobY - 8, 20, 16);
+          ctx.strokeStyle = '#00ffcc';
+          ctx.strokeRect(cx - 10, cy + bobY - 8, 20, 16);
+
+          // Static Beveled Top-Edge Circuit Highlight
+          ctx.fillStyle = 'rgba(0, 255, 255, 0.45)';
+          ctx.fillRect(cartX + 2, cartY + 2, cartW - 4, 2);
+
+          // Label
+          ctx.fillStyle = '#00ffff';
+          ctx.font = 'bold 8px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(`SEC-DAT`, cx, cartY + cartH - 8);
         }
-
-        // Circuit tracks on cartridge
-        ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(cartX + 8, cartY + 12); ctx.lineTo(cartX + 22, cartY + 12); ctx.lineTo(cartX + 22, cartY + 24);
-        ctx.moveTo(cartX + cartW - 8, cartY + 18); ctx.lineTo(cartX + 28, cartY + 18); ctx.lineTo(cartX + 28, cartY + 28);
-        ctx.stroke();
-
-        // Central Microchip
-        ctx.fillStyle = '#004455';
-        ctx.fillRect(cx - 10, cy + bobY - 8, 20, 16);
-        ctx.strokeStyle = '#00ffcc';
-        ctx.strokeRect(cx - 10, cy + bobY - 8, 20, 16);
-
-        // Static Beveled Top-Edge Circuit Highlight
-        ctx.fillStyle = 'rgba(0, 255, 255, 0.45)';
-        ctx.fillRect(cartX + 2, cartY + 2, cartW - 4, 2);
-
-        // Label
-        ctx.fillStyle = '#00ffff';
-        ctx.font = 'bold 8px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(`SEC-DAT`, cx, cartY + cartH - 8);
 
       } else if (in_shop) {
         // --- BLACK MARKET / DARKNET CONTRABAND VAULT ---
@@ -1971,46 +2160,55 @@
           ctx.fill();
         }
 
-        // Central Contraband Vault (Octagonal Amber Chassis)
-        ctx.save();
-        ctx.translate(cx, cy + bobY);
-        const vaultR = 26;
-        ctx.fillStyle = '#1c1300';
-        ctx.strokeStyle = '#ffb700';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        for (let i = 0; i < 8; i++) {
-          const a = i * (Math.PI / 4) + Math.PI / 8;
-          const px = Math.cos(a) * vaultR;
-          const py = Math.sin(a) * vaultR;
-          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        const vaultAsset = KCYBER_ASSETS.vault;
+        if (vaultAsset && vaultAsset.loaded && vaultAsset.img) {
+          ctx.save();
+          ctx.translate(cx, cy + bobY);
+          const sSize = 78;
+          ctx.drawImage(vaultAsset.img, -sSize / 2, -sSize / 2, sSize, sSize);
+          ctx.restore();
+        } else {
+          // Central Contraband Vault (Octagonal Amber Chassis Procedural Fallback)
+          ctx.save();
+          ctx.translate(cx, cy + bobY);
+          const vaultR = 26;
+          ctx.fillStyle = '#1c1300';
+          ctx.strokeStyle = '#ffb700';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i < 8; i++) {
+            const a = i * (Math.PI / 4) + Math.PI / 8;
+            const px = Math.cos(a) * vaultR;
+            const py = Math.sin(a) * vaultR;
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Inner Contraband Chip Slot
+          ctx.fillStyle = '#3a2700';
+          ctx.fillRect(-10, -8, 20, 16);
+          ctx.strokeStyle = '#ffe066';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(-10, -8, 20, 16);
+
+          // Gold connector teeth
+          ctx.fillStyle = '#ffd700';
+          for (let p = -8; p <= 6; p += 4) {
+            ctx.fillRect(p, 8, 2, 3);
+          }
+
+          // Pulsing illicit lock emblem
+          const lockPulse = 0.5 + Math.sin(animTick * 0.1) * 0.5;
+          ctx.fillStyle = `rgba(255, 215, 0, ${lockPulse})`;
+          ctx.beginPath();
+          ctx.arc(0, -2, 4, Math.PI, 0);
+          ctx.rect(-4, -2, 8, 6);
+          ctx.fill();
+
+          ctx.restore();
         }
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // Inner Contraband Chip Slot
-        ctx.fillStyle = '#3a2700';
-        ctx.fillRect(-10, -8, 20, 16);
-        ctx.strokeStyle = '#ffe066';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(-10, -8, 20, 16);
-
-        // Gold connector teeth
-        ctx.fillStyle = '#ffd700';
-        for (let p = -8; p <= 6; p += 4) {
-          ctx.fillRect(p, 8, 2, 3);
-        }
-
-        // Pulsing illicit lock emblem
-        const lockPulse = 0.5 + Math.sin(animTick * 0.1) * 0.5;
-        ctx.fillStyle = `rgba(255, 215, 0, ${lockPulse})`;
-        ctx.beginPath();
-        ctx.arc(0, -2, 4, Math.PI, 0);
-        ctx.rect(-4, -2, 8, 6);
-        ctx.fill();
-
-        ctx.restore();
 
         // Label
         ctx.fillStyle = '#ffb700';
@@ -2044,107 +2242,115 @@
         ctx.stroke();
         ctx.restore();
 
-        // Cyberdeck Keyboard Base (Wedge / Trapezoid)
-        const baseY = cy + 12 + bobY;
-        ctx.fillStyle = '#02240b';
-        ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(cx - 40, baseY);
-        ctx.lineTo(cx + 40, baseY);
-        ctx.lineTo(cx + 50, baseY + 26);
-        ctx.lineTo(-50 + cx, baseY + 26);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // Keyboard Key Grid Lines
-        ctx.strokeStyle = 'rgba(0, 255, 100, 0.4)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(cx - 36, baseY + 8); ctx.lineTo(cx + 36, baseY + 8);
-        ctx.moveTo(cx - 42, baseY + 16); ctx.lineTo(cx + 42, baseY + 16);
-        ctx.stroke();
-
-        // 4 Diagnostic Front Edge Status LEDs
-        const ledColors = ['#00ff66', '#ffff00', '#00ffff', '#ff00ff'];
-        for (let l = 0; l < 4; l++) {
-          const lOn = ((Math.floor(animTick / 8) + l) % 4) === 0;
-          ctx.fillStyle = lOn ? ledColors[l] : 'rgba(0, 50, 20, 0.6)';
+        const deckAsset = KCYBER_ASSETS.cyberdeck;
+        if (deckAsset && deckAsset.loaded && deckAsset.img) {
+          ctx.save();
+          ctx.translate(cx, cy + bobY + 4);
+          const sSize = 92;
+          ctx.drawImage(deckAsset.img, -sSize / 2, -sSize / 2, sSize, sSize);
+          ctx.restore();
+        } else {
+          // Cyberdeck Keyboard Base (Wedge / Trapezoid Procedural Fallback)
+          const baseY = cy + 12 + bobY;
+          ctx.fillStyle = '#02240b';
+          ctx.strokeStyle = '#00ff66';
+          ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.arc(cx - 30 + l * 20, baseY + 22, 2.5, 0, Math.PI * 2);
+          ctx.moveTo(cx - 40, baseY);
+          ctx.lineTo(cx + 40, baseY);
+          ctx.lineTo(cx + 50, baseY + 26);
+          ctx.lineTo(-50 + cx, baseY + 26);
+          ctx.closePath();
           ctx.fill();
+          ctx.stroke();
+
+          // Keyboard Key Grid Lines
+          ctx.strokeStyle = 'rgba(0, 255, 100, 0.4)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(cx - 36, baseY + 8); ctx.lineTo(cx + 36, baseY + 8);
+          ctx.moveTo(cx - 42, baseY + 16); ctx.lineTo(cx + 42, baseY + 16);
+          ctx.stroke();
+
+          // 4 Diagnostic Front Edge Status LEDs
+          const ledColors = ['#00ff66', '#ffff00', '#00ffff', '#ff00ff'];
+          for (let l = 0; l < 4; l++) {
+            const lOn = ((Math.floor(animTick / 8) + l) % 4) === 0;
+            ctx.fillStyle = lOn ? ledColors[l] : 'rgba(0, 50, 20, 0.6)';
+            ctx.beginPath();
+            ctx.arc(cx - 30 + l * 20, baseY + 22, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Angled Cyberdeck Screen Display
+          const scrW = 68;
+          const scrH = 38;
+          const scrX = cx - scrW / 2;
+          const scrY = baseY - scrH + 2;
+
+          ctx.fillStyle = '#001405';
+          ctx.fillRect(scrX, scrY, scrW, scrH);
+          ctx.strokeStyle = '#00ff66';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(scrX, scrY, scrW, scrH);
+
+          // Animated Oscilloscope & Spectrum Analyzer on Screen
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(scrX + 2, scrY + 2, scrW - 4, scrH - 4);
+          ctx.clip();
+
+          // Subtle screen grid
+          ctx.strokeStyle = 'rgba(0, 255, 100, 0.15)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(scrX, scrY + scrH / 2); ctx.lineTo(scrX + scrW, scrY + scrH / 2);
+          ctx.moveTo(cx, scrY); ctx.lineTo(cx, scrY + scrH);
+          ctx.stroke();
+
+          // Mini Audio / CPU Signal Spectrum Bars
+          for (let b = 0; b < 6; b++) {
+            const barH = 2 + Math.abs(Math.sin((animTick * 0.12) + b * 0.9)) * 7;
+            ctx.fillStyle = b < 4 ? 'rgba(0, 255, 120, 0.55)' : 'rgba(255, 200, 0, 0.55)';
+            ctx.fillRect(scrX + 6 + b * 9, scrY + scrH - 3 - barH, 5, barH);
+          }
+
+          // Green Oscilloscope Sine Wave
+          ctx.strokeStyle = '#00ff88';
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          for (let sx = 0; sx < scrW - 4; sx += 2) {
+            const waveY = (scrY + scrH / 2 - 3) + Math.sin((sx + animTick * 4) * 0.2) * 6;
+            if (sx === 0) ctx.moveTo(scrX + 2 + sx, waveY);
+            else ctx.lineTo(scrX + 2 + sx, waveY);
+          }
+          ctx.stroke();
+          ctx.restore();
+
+          // Cyber Antenna / Neural Interface Jack
+          const antX = cx - 36;
+          const antY = scrY + 6;
+          ctx.strokeStyle = '#00ff66';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(antX, antY + 8);
+          ctx.lineTo(antX - 8, antY - 8);
+          ctx.stroke();
+          ctx.fillStyle = '#00ffaa';
+          ctx.beginPath();
+          ctx.arc(antX - 8, antY - 8, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Radiating Concentric Transmission Signal Arcs
+          const sigR = (animTick * 1.5) % 24;
+          const sigAlpha = 1.0 - (sigR / 24);
+          ctx.strokeStyle = `rgba(0, 255, 170, ${sigAlpha})`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(antX - 8, antY - 8, sigR, -Math.PI * 0.75, 0.25);
+          ctx.stroke();
         }
-
-        // Angled Cyberdeck Screen Display
-        const scrW = 68;
-        const scrH = 38;
-        const scrX = cx - scrW / 2;
-        const scrY = baseY - scrH + 2;
-
-        ctx.fillStyle = '#001405';
-        ctx.fillRect(scrX, scrY, scrW, scrH);
-        ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(scrX, scrY, scrW, scrH);
-
-        // Animated Oscilloscope & Spectrum Analyzer on Screen
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(scrX + 2, scrY + 2, scrW - 4, scrH - 4);
-        ctx.clip();
-
-        // Subtle screen grid
-        ctx.strokeStyle = 'rgba(0, 255, 100, 0.15)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(scrX, scrY + scrH / 2); ctx.lineTo(scrX + scrW, scrY + scrH / 2);
-        ctx.moveTo(cx, scrY); ctx.lineTo(cx, scrY + scrH);
-        ctx.stroke();
-
-        // Mini Audio / CPU Signal Spectrum Bars
-        for (let b = 0; b < 6; b++) {
-          const barH = 2 + Math.abs(Math.sin((animTick * 0.12) + b * 0.9)) * 7;
-          ctx.fillStyle = b < 4 ? 'rgba(0, 255, 120, 0.55)' : 'rgba(255, 200, 0, 0.55)';
-          ctx.fillRect(scrX + 6 + b * 9, scrY + scrH - 3 - barH, 5, barH);
-        }
-
-        // Green Oscilloscope Sine Wave
-        ctx.strokeStyle = '#00ff88';
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        for (let sx = 0; sx < scrW - 4; sx += 2) {
-          const waveY = (scrY + scrH / 2 - 3) + Math.sin((sx + animTick * 4) * 0.2) * 6;
-          if (sx === 0) ctx.moveTo(scrX + 2 + sx, waveY);
-          else ctx.lineTo(scrX + 2 + sx, waveY);
-        }
-        ctx.stroke();
-        ctx.restore();
-
-        // Cyber Antenna / Neural Interface Jack
-        const antX = cx - 36;
-        const antY = scrY + 6;
-        ctx.strokeStyle = '#00ff66';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(antX, antY + 8);
-        ctx.lineTo(antX - 8, antY - 8);
-        ctx.stroke();
-        ctx.fillStyle = '#00ffaa';
-        ctx.beginPath();
-        ctx.arc(antX - 8, antY - 8, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Radiating Concentric Transmission Signal Arcs
-        const sigR = (animTick * 1.5) % 24;
-        const sigAlpha = 1.0 - (sigR / 24);
-        ctx.strokeStyle = `rgba(0, 255, 170, ${sigAlpha})`;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(antX - 8, antY - 8, sigR, -Math.PI * 0.75, 0.25);
-        ctx.stroke();
       }
-
       // 3. Multi-Layered Particle System
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
