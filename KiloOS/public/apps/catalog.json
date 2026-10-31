@@ -43,9 +43,9 @@
     "id": "kaudio",
     "title": "KAudio",
     "folder": "Media",
-    "webBytes": 150205,
-    "exeBytes": 23552,
-    "budgetPercent": 15.0
+    "webBytes": 151364,
+    "exeBytes": 24576,
+    "budgetPercent": 15.2
   },
   {
     "id": "kbase",
@@ -307,9 +307,9 @@
     "id": "kfont",
     "title": "KFont",
     "folder": "System",
-    "webBytes": 231614,
+    "webBytes": 254943,
     "exeBytes": 32768,
-    "budgetPercent": 23.2
+    "budgetPercent": 25.5
   },
   {
     "id": "kfortress",
@@ -499,9 +499,9 @@
     "id": "kpad",
     "title": "KPad",
     "folder": "Office",
-    "webBytes": 338953,
+    "webBytes": 341419,
     "exeBytes": 38912,
-    "budgetPercent": 33.9
+    "budgetPercent": 34.2
   },
   {
     "id": "kpaint",

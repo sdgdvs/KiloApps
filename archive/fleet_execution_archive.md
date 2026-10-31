@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-30T22:41:12-07:00 — kilo-expander: KFont (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KFont across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-review`.
+
 - **2026-10-30T22:19:42-07:00 — kilo-qa: KAudio (Pass 5 QA, Dual Parity & Mature Graduation)**
   - Status: PASS ✅ (0 errors, web 147.8 KB, native 24.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 18.26%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.0s)).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kaudio_tutorialSeen / kaudio_tutorial.dat flags, and Escape modal dismissals.

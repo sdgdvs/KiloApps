@@ -82,7 +82,13 @@
     gap: 4px;
     z-index: 100;
     user-select: none;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    white-space: nowrap;
   }
+  .header-menu::-webkit-scrollbar { display: none; }
 
   .menu-btn { 
     padding: 6px 12px; 
@@ -94,6 +100,8 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
   .menu-btn:hover { 
     background: var(--accent); 
@@ -152,6 +160,8 @@
   /* App Brand Title */
   .brand-badge {
     margin-left: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
     font-weight: 700;
     font-size: 12px;
     letter-spacing: 0.5px;
@@ -249,21 +259,27 @@
   .tag-bar {
     background: rgba(11, 15, 25, 0.9);
     border-bottom: 1px solid var(--border-glass);
-    padding: 3px 10px;
+    padding: 2px 10px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     gap: 6px;
     font-size: 11px;
     z-index: 85;
     user-select: none;
+    white-space: nowrap;
   }
+  .tag-bar::-webkit-scrollbar { display: none; }
   .tag-group {
     display: flex;
     align-items: center;
-    gap: 5px;
-    flex-wrap: wrap;
+    gap: 4px;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
   }
   .tag-label {
     color: var(--text-muted);
@@ -322,27 +338,33 @@
     background: rgba(15, 23, 42, 0.75);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-glass);
-    padding: 4px 10px;
+    padding: 3px 8px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     gap: 6px;
     font-size: 11px;
     z-index: 90;
     user-select: none;
+    white-space: nowrap;
   }
+  .quick-toolbar::-webkit-scrollbar { display: none; }
   .quick-group {
     display: flex;
     align-items: center;
-    gap: 5px;
-    flex-wrap: wrap;
+    gap: 4px;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
   }
   .quick-btn {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-glass);
     color: var(--text-primary);
-    padding: 3px 8px;
+    padding: 2px 7px;
     border-radius: 4px;
     font-size: 11px;
     cursor: pointer;
@@ -350,6 +372,8 @@
     align-items: center;
     gap: 4px;
     transition: all 0.15s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
   .quick-btn:hover {
     background: var(--accent);
@@ -367,6 +391,8 @@
     font-weight: 600;
     font-size: 11px;
     margin-right: 2px;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
   .quick-chip {
     background: rgba(59, 130, 246, 0.12);
@@ -377,6 +403,8 @@
     font-size: 11px;
     cursor: pointer;
     transition: all 0.15s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
   .quick-chip:hover {
     background: var(--accent);
@@ -1340,22 +1368,30 @@
     display: flex; 
     align-items: center;
     justify-content: space-between; 
-    padding: 4px 12px; 
+    padding: 3px 10px; 
     font-size: 11px; 
     color: var(--text-secondary); 
     z-index: 10;
     user-select: none;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    gap: 8px;
+    white-space: nowrap;
   }
+  .status-bar::-webkit-scrollbar { display: none; }
   .status-left, .status-right {
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: 10px;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
   }
   .status-item {
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; gap: 5px;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
   .status-clickable {
     cursor: pointer;
@@ -1851,10 +1887,7 @@
       </div>
     </div>
 
-    <!-- Direct Help Header Button -->
-    <div class="menu-btn help-top-btn" onclick="showHelp()" title="Help & Shortcuts (F1)">
-      <span>📖 Help [F1]</span>
-    </div>
+
 
     <div class="brand-badge" onclick="showAbout()" style="cursor:pointer;" title="KPad Pro • Click for Info">KPad Pro</div>
   </div>
@@ -1919,9 +1952,7 @@
       <button class="quick-btn" onclick="clearCurrentDocument()" title="Clear document (Alt+X)">
         ✕ Clear <span class="kbd-hint">Alt+X</span>
       </button>
-      <button class="quick-btn" onclick="showHelp()" title="Help & Keyboard Shortcuts (F1 / Alt+H)">
-        ❓ Help <span class="kbd-hint">F1</span>
-      </button>
+
     </div>
     <div class="quick-group">
       <span class="quick-label">🚀 Templates:</span>
@@ -2041,9 +2072,7 @@
       </div>
     </div>
     <div class="status-right">
-      <div class="status-item status-clickable" style="font-weight:bold; color:var(--accent-hover);" onclick="showHelp()" title="Help & Shortcuts Guide (F1 / Alt+H)">
-        [?] Help [F1]
-      </div>
+
       <div class="status-item">
         <label for="theme-selector" style="display:none;">Theme</label>
         <select class="theme-select" id="theme-selector" onchange="setTheme(this.value)" aria-label="Select Theme">
@@ -2759,6 +2788,56 @@
       return escapeHtml(code);
     }
 
+    // --- Gutter Line Height Synchronization for Word Wrap ---
+    function syncGutterHeights() {
+      if (!gutter) return;
+      const gutterLines = gutter.children;
+      if (!gutterLines || gutterLines.length === 0) return;
+
+      if (!wordWrap) {
+        for (let i = 0; i < gutterLines.length; i++) {
+          if (gutterLines[i].style.height) {
+            gutterLines[i].style.height = '';
+          }
+        }
+        return;
+      }
+
+      let measureBox = document.getElementById('line-measure-box');
+      if (!measureBox) {
+        measureBox = document.createElement('div');
+        measureBox.id = 'line-measure-box';
+        measureBox.style.cssText = 'position:absolute; visibility:hidden; pointer-events:none; top:0; left:-9999px; margin:0; padding:0; border:none; box-sizing:border-box; white-space:pre-wrap; word-wrap:break-word; overflow-wrap:break-word;';
+        document.body.appendChild(measureBox);
+      }
+
+      const cs = window.getComputedStyle(editor);
+      measureBox.style.fontFamily = cs.fontFamily;
+      measureBox.style.fontSize = cs.fontSize;
+      measureBox.style.lineHeight = cs.lineHeight;
+      measureBox.style.letterSpacing = cs.letterSpacing;
+      measureBox.style.tabSize = cs.tabSize;
+      const padLeft = parseFloat(cs.paddingLeft) || 16;
+      const padRight = parseFloat(cs.paddingRight) || 16;
+      const contentWidth = Math.max(10, editor.clientWidth - padLeft - padRight);
+      measureBox.style.width = contentWidth + 'px';
+
+      const lines = editor.value.split('\n');
+      let html = '';
+      for (let i = 0; i < lines.length; i++) {
+        const l = lines[i];
+        html += `<div style="margin:0; padding:0; border:none; box-sizing:border-box; white-space:pre-wrap; word-wrap:break-word; overflow-wrap:break-word;">${l ? escapeHtml(l) : '&nbsp;'}</div>`;
+      }
+      measureBox.innerHTML = html;
+
+      const measuredDivs = measureBox.children;
+      const count = Math.min(gutterLines.length, measuredDivs.length);
+      for (let i = 0; i < count; i++) {
+        const h = measuredDivs[i].getBoundingClientRect().height;
+        gutterLines[i].style.height = h + 'px';
+      }
+    }
+
     // --- Update Editor, Gutter & Highlight Overlay ---
     function updateEditor() {
       const text = editor.value;
@@ -2781,6 +2860,7 @@
         gutterHtml += `<div class="gutter-line ${i - 1 === currentLineIdx ? 'active' : ''}" onclick="goToLineDirect(${i})" style="cursor:pointer;" title="Line ${i}">${i}</div>`;
       }
       gutter.innerHTML = gutterHtml;
+      syncGutterHeights();
 
       // Update Status Bar
       const colIdx = linesBefore[linesBefore.length - 1].length + 1;
@@ -2847,6 +2927,23 @@
       editor.focus();
       editor.setSelectionRange(charOffset, charOffset);
       updateEditor();
+
+      // Scroll editor, highlightPre, and gutter to target line
+      const targetGutterLine = gutter && gutter.children && gutter.children[lineNum - 1];
+      let targetTop = 0;
+      if (targetGutterLine) {
+        targetTop = Math.max(0, targetGutterLine.offsetTop - Math.floor(editor.clientHeight / 3));
+      } else {
+        const cs = window.getComputedStyle(editor);
+        const lh = parseFloat(cs.lineHeight) || 22.4;
+        targetTop = Math.max(0, (lineNum - 1) * lh - Math.floor(editor.clientHeight / 3));
+      }
+      editor.scrollTop = targetTop;
+      highlightPre.scrollTop = targetTop;
+      gutter.scrollTop = targetTop;
+      if (typeof minimapVisible !== 'undefined' && minimapVisible) {
+        renderMinimap();
+      }
     }
 
     // Synchronize Scroll
@@ -3532,6 +3629,7 @@
         pane.style.flex = `0 0 ${(ratio * 100).toFixed(1)}%`;
       }
       safeSetStorage('kpad_preview_ratio', ratio.toFixed(2));
+      if (wordWrap) syncGutterHeights();
       ['30', '50', '70'].forEach(r => {
         const b = document.getElementById(`btn-ratio-${r}`);
         if (b) b.classList.toggle('active', Math.abs(ratio - (parseInt(r, 10)/100)) < 0.08);
@@ -3895,7 +3993,7 @@
       filtered.forEach(item => {
         const indent = Math.max(0, (item.level - 1) * 8);
         html += `
-          <div class="outline-item" style="padding-left: ${4 + indent}px;" onclick="jumpToOutlineLine(${item.line})" title="Jump to line ${item.line}: ${escapeHtml(item.title)}">
+          <div class="outline-item" data-line="${item.line}" style="padding-left: ${4 + indent}px;" onclick="jumpToOutlineLine(${item.line})" title="Jump to line ${item.line}: ${escapeHtml(item.title)}">
             <span class="outline-tag ${item.tagClass}">${item.tag}</span>
             <span class="outline-text">${escapeHtml(item.title)}</span>
             <span class="outline-line">L${item.line}</span>
@@ -3909,9 +4007,13 @@
       goToLineDirect(lineNum);
       const items = document.querySelectorAll('.outline-item');
       items.forEach(el => {
-        if (el.textContent.includes('L' + lineNum)) {
+        const lineAttr = el.getAttribute('data-line');
+        const itemLine = lineAttr ? parseInt(lineAttr, 10) : parseInt((el.querySelector('.outline-line')?.textContent || '').replace(/^L/, ''), 10);
+        if (itemLine === lineNum) {
           el.classList.add('active');
           setTimeout(() => el.classList.remove('active'), 1200);
+        } else {
+          el.classList.remove('active');
         }
       });
     }
@@ -3999,6 +4101,7 @@
 
       window.addEventListener('resize', () => {
         if (minimapVisible) renderMinimap();
+        if (wordWrap) syncGutterHeights();
       });
     }
 
@@ -4214,6 +4317,7 @@
       safeSetStorage('kpad_wordwrap', wordWrap ? '1' : '0');
       showToast(`Word wrap ${wordWrap ? 'enabled' : 'disabled'}`, 'info', 1800);
       updateEditor();
+      syncGutterHeights();
     }
 
     let currentIndentSize = 4;
@@ -7849,10 +7953,37 @@ Strings, block comments, and line comments were safely bypassed during scanning.
     // Global Key Shortcuts
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        closeModal();
-        closeFind();
+        const modal = document.getElementById('app-modal');
+        const isModalOpen = modal && modal.classList.contains('active');
+        const findPanel = document.getElementById('find-panel');
+        const isFindOpen = findPanel && findPanel.style.display !== 'none';
         const ctxMenu = document.getElementById('tab-context-menu');
-        if (ctxMenu) ctxMenu.style.display = 'none';
+        const isCtxMenuOpen = ctxMenu && ctxMenu.style.display !== 'none';
+
+        if (isCtxMenuOpen) {
+          ctxMenu.style.display = 'none';
+          e.preventDefault();
+          return;
+        }
+        if (isModalOpen) {
+          closeModal();
+          e.preventDefault();
+          return;
+        }
+        if (isFindOpen) {
+          closeFind();
+          e.preventDefault();
+          return;
+        }
+        if (typeof previewActive !== 'undefined' && previewActive) {
+          if (typeof previewMaximized !== 'undefined' && previewMaximized) {
+            togglePreviewMaximize();
+          }
+          togglePreview();
+          editor.focus();
+          e.preventDefault();
+          return;
+        }
       }
       if (e.key === 'Enter') {
         const modal = document.getElementById('app-modal');
