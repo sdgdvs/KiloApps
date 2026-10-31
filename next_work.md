@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://trapster
   kilo_graphics: KDragon
   kilo_soundscape: KStellar
-  kilo_tester: KPad
+  kilo_tester: KColony
   kilo_usability: KPad
   kilo_qa: KGraph
   kilo_expander: KScript
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KBreakout
-  timestamp: '2026-10-31T00:16:35-07:00'
+  agent: kilo-tester
+  app: KPad
+  timestamp: '2026-10-31T00:36:46-07:00'
 last_planner_run: '2026-10-30T17:32:26Z'
 ---
 
@@ -132,11 +132,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KPad`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPad` | `KiloOS/public/apps/kpad.html`, `KPad/main.c` | **[ARGON REVIEW]:** Fix createTab() mutating activeTabIndex before switchTab() (which overwrites Welcome.md, VFS files, templates, and Quickload tabs with old editor.value; also reset activeTabIndex = -1 when clearing tabs in loadSession/quickloadSnapshot/importWorkspaceSnapshot); replace multi-pass regex chaining in colorize() with a single-pass tokenizer per language so class inside injected span tags is not re-matched into broken HTML; escape raw HTML in parseMarkdown() outside code blocks and wrap li items in ul; fix undefined .btn/.btn-primary classes in initCollabSystem() invite modal; and in KPad/main.c CloseTab() call SaveFileNative(FALSE) when res == IDYES (leave un-quarantined for pending kilo-usability pass). |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -149,6 +148,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Fix buyItem() calling getItemPrice(number) instead of string keys ('food','toy','nectar','crown','polish') which charges 50g for all items; fix getMood().label === 'Ecstatic' in startMinigame() and battleTurn() (+15% crit); and apply the +10 Sovereign Aura stat bonus upon collecting all 6 relics. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Define loadBufferData(u8) in khex.html so all 7 Disassembler and Struct sample buttons work without ReferenceError; fix executeStructUnpack() undefined isLittle crash; fix loadSamplePE32() section Characteristics offsets (0x19C/0x1C4/0x1EC instead of +40) and bufferCursor; deduplicate #exportPreset options; call switchTab('editor') before gotoOffset() on cross-tab jumps; and fix KHex/main.c DisasmMultiArch 0xB8 format args and top-right buttons overlapping the hexagon logo. |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | **[ARGON REVIEW]:** Implement the promised keyboard pixel editing on #bitmapEditorCanvas (bmpCursorX/bmpCursorY highlight in renderBitmapEditor(), Arrow keys to move cursor without stepping activeBankChar when focused, Space to toggle, Enter to set, Delete/Backspace to clear, plus ArrowUp/ArrowDown +/-32 row navigation on #bitmapBankCanvas) and wheel-to-zoom on #bmpEditorContainer; call dead persistBitmapStorage() after all bitmap/bank/size/import mutations, stop initBitmapStudio() fresh boot from overwriting ASCII A in fontBank with cp437_smiley (rasterize activeBankChar silently on first boot), and fix executeImport() in bank mode to sync bmpW/bmpH/#bitmapGridSize from BDF BBX and reload bmpGrid from fontBank[activeBankChar]; add SELECT to isInput in global keydown, fix #btnTogglePulse typo to #btnToggleOscillation in visibilitychange, call updateSampleStats() in sampleOutput.oninput and all 5 #sample*Btn presets, resolve anatomyInput via getCharInfo() across Spec/Bitmap/SVG actions, and replace the hardcoded Potemkin TTGlyph polygon and text SVG in updateSpecAndCode() with real raster-traced SVG path d contours and measured TTGlyph/hmtx bounds. |
+| `KPad` | `KiloOS/public/apps/kpad.html`, `KPad/main.c` | **[ARGON REVIEW]:** Fix createTab() mutating activeTabIndex before switchTab() (which overwrites Welcome.md, VFS files, templates, and Quickload tabs with old editor.value; also reset activeTabIndex = -1 when clearing tabs in loadSession/quickloadSnapshot/importWorkspaceSnapshot); replace multi-pass regex chaining in colorize() with a single-pass tokenizer per language so class inside injected span tags is not re-matched into broken HTML; escape raw HTML in parseMarkdown() outside code blocks and wrap li items in ul; fix undefined .btn/.btn-primary classes in initCollabSystem() invite modal; and in KPad/main.c CloseTab() call SaveFileNative(FALSE) when res == IDYES (leave un-quarantined for pending kilo-usability pass). |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KPad`
@@ -293,6 +293,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T00:36:46-07:00 — kilo-tester: KPad (UI Audit, VFS Tab Sync & C Parity)**
+  - Status: PASS ✅ (0 errors, web 333.4 KB, native 38.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 10.86%, HEAD Δ 4.66%, 0 fail, 0 warn, 5.1s)).
+  - Fixed createTab() mutating activeTabIndex before switchTab() preventing content overwrite of Welcome.md, templates & VFS files; reset activeTabIndex = -1 on tab clears in loadSession, quickloadSnapshot, and importWorkspaceSnapshot.
+  - Replaced multi-pass regex chaining in colorize() with a single-pass tokenizer per language eliminating broken HTML from re-matching span tag attributes.
+  - Escaped raw HTML outside code blocks in parseMarkdown() and wrapped li items in ul; fixed .btn/.btn-primary modal button classes in initCollabSystem().
+  - Updated Win32 C CloseTab() in KPad/main.c to call SaveFileNative(FALSE) on IDYES confirmation.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-10-31T00:16:35-07:00 — kilo-graphics: KBreakout (Arcade Visuals, Textured Bricks & Dual C Parity)**
   - Status: PASS ✅ (0 errors, web 186.9 KB, native 55.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 17.13%, 0 fail, 0 warn, 6.7s)).
   - Textured metallic/crystalline bricks, plasma paddle slipstream & ball trails, boss hazard visuals, and zero perimeter border dots verified in Web and Win32 C.
@@ -315,9 +323,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KFont across web and native targets.
   - Handoff: Advanced `kilo-expander` to `KScript`; rotated active agent to `kilo-review`.
-
-- **2026-10-30T22:19:42-07:00 — kilo-qa: KAudio (Pass 5 QA, Dual Parity & Mature Graduation)**
-  - Status: PASS ✅ (0 errors, web 147.8 KB, native 24.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 18.26%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.0s)).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, kaudio_tutorialSeen / kaudio_tutorial.dat flags, and Escape modal dismissals.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity (F5/F9 buttons, 3.2kHz LP filter, DSP FX, visualizer scope/FFT spectrum) and visibilitychange voice cleanup.
-  - Mature Quarantine & Handoff: Promoted `KAudio` to Mature archive; advanced `kilo-qa` to `KGraph`; next agent `kilo-expander`.

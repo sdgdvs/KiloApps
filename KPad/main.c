@@ -361,6 +361,18 @@ void AddTab(const char* name, const char* path) {
 }
 
 void CloseTab(int index) {
+    if (g_Tabs[index].isModified) {
+        char msg[128];
+        wsprintfA(msg, "Save changes to %s?", g_Tabs[index].szTitle);
+        int res = MessageBoxA(g_hMainWnd, msg, "KPad Pro", MB_YESNOCANCEL | MB_ICONQUESTION);
+        if (res == IDCANCEL) return;
+        if (res == IDYES) {
+            if (g_ActiveTab != index) SwitchTab(index);
+            SaveFileNative(FALSE);
+            if (g_Tabs[index].isModified) return;
+        }
+    }
+
     if (g_NumTabs <= 1) {
         // Clear remaining tab content
         SetWindowTextA(g_Tabs[0].hEdit, "");
@@ -370,13 +382,6 @@ void CloseTab(int index) {
         UpdateTabTitle(0);
         UpdateStatusBar();
         return;
-    }
-
-    if (g_Tabs[index].isModified) {
-        char msg[128];
-        wsprintfA(msg, "Save changes to %s?", g_Tabs[index].szTitle);
-        int res = MessageBoxA(g_hMainWnd, msg, "KPad Pro", MB_YESNOCANCEL | MB_ICONQUESTION);
-        if (res == IDCANCEL) return;
     }
 
     DestroyWindow(g_Tabs[index].hEdit);

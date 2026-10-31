@@ -1477,6 +1477,17 @@
     display: flex;
     justify-content: flex-end;
   }
+  .modal-btn, .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-ui);
+    font-size: 12px;
+  }
+  .btn-primary {
+    background: var(--accent) !important;
+    color: #fff !important;
+  }
   .modal-btn {
     background: var(--accent);
     color: white;
@@ -2208,6 +2219,7 @@
         cursorPos: 0
       };
 
+      let newIndex = -1;
       if (tab.isPinned) {
         // Place after last pinned tab or at beginning
         let lastPinned = -1;
@@ -2216,18 +2228,21 @@
         }
         if (lastPinned >= 0) {
           tabs.splice(lastPinned + 1, 0, tab);
-          activeTabIndex = lastPinned + 1;
+          newIndex = lastPinned + 1;
         } else {
           tabs.unshift(tab);
-          activeTabIndex = 0;
+          newIndex = 0;
+        }
+        if (activeTabIndex >= newIndex) {
+          activeTabIndex++;
         }
       } else {
         tabs.push(tab);
-        activeTabIndex = tabs.length - 1;
+        newIndex = tabs.length - 1;
       }
 
       renderTabs();
-      switchTab(activeTabIndex);
+      switchTab(newIndex);
       saveSession();
     }
 
@@ -2645,65 +2660,103 @@
 
     function colorize(code, lang) {
       if (lang === 'plaintext' || !code) return escapeHtml(code);
-      let html = escapeHtml(code);
+
+      function tokenize(regex, handler) {
+        let lastIndex = 0;
+        let out = '';
+        let m;
+        while ((m = regex.exec(code)) !== null) {
+          if (m.index > lastIndex) {
+            out += escapeHtml(code.slice(lastIndex, m.index));
+          }
+          out += handler(m);
+          lastIndex = regex.lastIndex;
+        }
+        if (lastIndex < code.length) {
+          out += escapeHtml(code.slice(lastIndex));
+        }
+        return out;
+      }
 
       if (lang === 'json') {
-        html = html.replace(/&quot;(.*?)&quot;(\s*:)/g, '<span class="tok-key">&quot;$1&quot;</span>$2');
-        html = html.replace(/&quot;(.*?)&quot;/g, '<span class="tok-str">&quot;$1&quot;</span>');
-        html = html.replace(/\b(true|false|null)\b/g, '<span class="tok-bool">$1</span>');
-        html = html.replace(/\b(-?\d+(?:\.\d+)?)\b/g, '<span class="tok-num">$1</span>');
-        return html;
+        const re = /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g;
+        return tokenize(re, m => {
+          if (m[1]) {
+            if (m[2]) {
+              return `<span class="tok-key">${escapeHtml(m[1])}</span>${escapeHtml(m[2])}`;
+            }
+            return `<span class="tok-str">${escapeHtml(m[1])}</span>`;
+          }
+          if (m[3]) return `<span class="tok-bool">${escapeHtml(m[3])}</span>`;
+          if (m[4]) return `<span class="tok-num">${escapeHtml(m[4])}</span>`;
+          return escapeHtml(m[0]);
+        });
       }
 
       if (lang === 'javascript' || lang === 'c') {
-        html = html.replace(/(\/\/[^\n]*)/g, '<span class="tok-comment">$1</span>');
-        html = html.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="tok-comment">$1</span>');
-        html = html.replace(/(&quot;[\s\S]*?&quot;|&#039;[\s\S]*?&#039;|`[\s\S]*?`)/g, '<span class="tok-str">$1</span>');
-        const kw = /\b(const|let|var|function|return|if|else|for|while|switch|case|default|try|catch|throw|new|this|async|await|import|export|class|extends|typedef|struct|int|char|void|float|double|static|extern|auto)\b/g;
-        html = html.replace(kw, '<span class="tok-kw">$1</span>');
-        html = html.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="tok-num">$1</span>');
-        return html;
+        const re = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(\b(?:const|let|var|function|return|if|else|for|while|switch|case|default|try|catch|throw|new|this|async|await|import|export|class|extends|typedef|struct|int|char|void|float|double|static|extern|auto|sizeof|bool|true|false|null|undefined)\b)|(\b\d+(?:\.\d+)?\b)/g;
+        return tokenize(re, m => {
+          if (m[1]) return `<span class="tok-comment">${escapeHtml(m[1])}</span>`;
+          if (m[2]) return `<span class="tok-str">${escapeHtml(m[2])}</span>`;
+          if (m[3]) return `<span class="tok-kw">${escapeHtml(m[3])}</span>`;
+          if (m[4]) return `<span class="tok-num">${escapeHtml(m[4])}</span>`;
+          return escapeHtml(m[0]);
+        });
       }
 
       if (lang === 'html') {
-        html = html.replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="tok-comment">$1</span>');
-        html = html.replace(/(&lt;\/?[a-zA-Z0-9-]+)/g, '<span class="tok-tag">$1</span>');
-        html = html.replace(/(&quot;[\s\S]*?&quot;|&#039;[\s\S]*?&#039;)/g, '<span class="tok-str">$1</span>');
-        return html;
+        const re = /(<!--[\s\S]*?-->)|(<\/?[a-zA-Z0-9:-]+)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/g;
+        return tokenize(re, m => {
+          if (m[1]) return `<span class="tok-comment">${escapeHtml(m[1])}</span>`;
+          if (m[2]) return `<span class="tok-tag">${escapeHtml(m[2])}</span>`;
+          if (m[3]) return `<span class="tok-str">${escapeHtml(m[3])}</span>`;
+          return escapeHtml(m[0]);
+        });
       }
 
       if (lang === 'css') {
-        html = html.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="tok-comment">$1</span>');
-        html = html.replace(/([a-zA-Z0-9-]+)(?=\s*:)/g, '<span class="tok-key">$1</span>');
-        html = html.replace(/(&quot;[\s\S]*?&quot;|&#039;[\s\S]*?&#039;)/g, '<span class="tok-str">$1</span>');
-        return html;
+        const re = /(\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|([a-zA-Z0-9-]+(?=\s*:))/g;
+        return tokenize(re, m => {
+          if (m[1]) return `<span class="tok-comment">${escapeHtml(m[1])}</span>`;
+          if (m[2]) return `<span class="tok-str">${escapeHtml(m[2])}</span>`;
+          if (m[3]) return `<span class="tok-key">${escapeHtml(m[3])}</span>`;
+          return escapeHtml(m[0]);
+        });
       }
 
       if (lang === 'python') {
-        html = html.replace(/(#[^\n]*)/g, '<span class="tok-comment">$1</span>');
-        html = html.replace(/(&quot;[\s\S]*?&quot;|&#039;[\s\S]*?&#039;)/g, '<span class="tok-str">$1</span>');
-        const pykw = /\b(def|return|if|elif|else|for|while|in|import|from|as|try|except|class|with|lambda|is|not|and|or|None|True|False)\b/g;
-        html = html.replace(pykw, '<span class="tok-kw">$1</span>');
-        html = html.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="tok-num">$1</span>');
-        return html;
+        const re = /(#[^\n]*)|("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|(\b(?:def|return|if|elif|else|for|while|in|import|from|as|try|except|class|with|lambda|is|not|and|or|None|True|False|yield|break|continue|pass|raise|finally)\b)|(\b\d+(?:\.\d+)?\b)/g;
+        return tokenize(re, m => {
+          if (m[1]) return `<span class="tok-comment">${escapeHtml(m[1])}</span>`;
+          if (m[2]) return `<span class="tok-str">${escapeHtml(m[2])}</span>`;
+          if (m[3]) return `<span class="tok-kw">${escapeHtml(m[3])}</span>`;
+          if (m[4]) return `<span class="tok-num">${escapeHtml(m[4])}</span>`;
+          return escapeHtml(m[0]);
+        });
       }
 
       if (lang === 'markdown') {
-        html = html.replace(/^(#+\s+[^\n]+)/gm, '<span class="tok-kw">$1</span>');
-        html = html.replace(/(\*\*[^\*]+\*\*)/g, '<span class="tok-key">$1</span>');
-        html = html.replace(/(`[^`]+`)/g, '<span class="tok-str">$1</span>');
-        return html;
+        const re = /(^#{1,6}\s+[^\n]+)|(\**[^*]+\*\*)|(`[^`]+`)/gm;
+        return tokenize(re, m => {
+          if (m[1]) return `<span class="tok-kw">${escapeHtml(m[1])}</span>`;
+          if (m[2]) return `<span class="tok-key">${escapeHtml(m[2])}</span>`;
+          if (m[3]) return `<span class="tok-str">${escapeHtml(m[3])}</span>`;
+          return escapeHtml(m[0]);
+        });
       }
 
       if (lang === 'sql') {
-        html = html.replace(/(--[^\n]*)/g, '<span class="tok-comment">$1</span>');
-        html = html.replace(/(&quot;[\s\S]*?&quot;|&#039;[\s\S]*?&#039;)/g, '<span class="tok-str">$1</span>');
-        const sqlkw = /\b(SELECT|FROM|WHERE|INSERT|INTO|UPDATE|DELETE|JOIN|LEFT|RIGHT|INNER|ON|GROUP|BY|ORDER|HAVING|LIMIT|CREATE|TABLE|DROP|ALTER|AND|OR|NOT|AS|SET)\b/gi;
-        html = html.replace(sqlkw, '<span class="tok-kw">$1</span>');
-        return html;
+        const re = /(--[^\n]*|\/\*[\s\S]*?\*\/)|('(?:''|\\.|[^'\\])*'|"(?:\\.|[^"\\])*")|(\b(?:SELECT|FROM|WHERE|INSERT|INTO|UPDATE|DELETE|JOIN|LEFT|RIGHT|INNER|ON|GROUP|BY|ORDER|HAVING|LIMIT|CREATE|TABLE|DROP|ALTER|AND|OR|NOT|AS|SET|UNION|ALL|DISTINCT|VALUES|IN|IS|NULL|PRIMARY|KEY)\b)|(\b\d+(?:\.\d+)?\b)/gi;
+        return tokenize(re, m => {
+          if (m[1]) return `<span class="tok-comment">${escapeHtml(m[1])}</span>`;
+          if (m[2]) return `<span class="tok-str">${escapeHtml(m[2])}</span>`;
+          if (m[3]) return `<span class="tok-kw">${escapeHtml(m[3])}</span>`;
+          if (m[4]) return `<span class="tok-num">${escapeHtml(m[4])}</span>`;
+          return escapeHtml(m[0]);
+        });
       }
 
-      return html;
+      return escapeHtml(code);
     }
 
     // --- Update Editor, Gutter & Highlight Overlay ---
@@ -4041,17 +4094,23 @@
         return id;
       });
 
+      // Escape raw HTML outside code blocks
+      text = escapeHtml(text);
+
       text = text.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
       text = text.replace(/^### (.*$)/gim, '<h3>$1</h3>');
       text = text.replace(/^## (.*$)/gim, '<h2>$1</h2>');
       text = text.replace(/^# (.*$)/gim, '<h1>$1</h1>');
       text = text.replace(/^(?:---|\*\*\*|___)\s*$/gim, '<hr>');
-      text = text.replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>');
+      text = text.replace(/^(?:>|&gt;)\s?(.*$)/gim, '<blockquote>$1</blockquote>');
       text = text.replace(/^- \[ \] (.*$)/gim, '<li class="preview-task"><input type="checkbox" disabled> <span>$1</span></li>');
       text = text.replace(/^- \[x\] (.*$)/gim, '<li class="preview-task"><input type="checkbox" checked disabled> <span style="text-decoration:line-through; opacity:0.7;">$1</span></li>');
       text = text.replace(/^\* (.*$)/gim, '<li>$1</li>');
       text = text.replace(/^- (.*$)/gim, '<li>$1</li>');
       text = text.replace(/^\d+\. (.*$)/gim, '<li>$1</li>');
+
+      // Wrap consecutive <li> items in <ul>
+      text = text.replace(/((?:<li[\s\S]*?<\/li>\s*)+)/g, '<ul>$1</ul>');
 
       const tableRegex = /((?:\|[^\n]+\|\r?\n)+)/g;
       text = text.replace(tableRegex, (tbl) => {
@@ -4081,7 +4140,7 @@
 
       text = text.split('\n\n').map(p => {
         const tr = p.trim();
-        if (tr.startsWith('<h') || tr.startsWith('<pre') || tr.startsWith('<table') || tr.startsWith('<blockquote') || tr.startsWith('<hr') || tr.startsWith('<li') || tr.startsWith('__CODE_BLOCK_')) {
+        if (tr.startsWith('<h') || tr.startsWith('<pre') || tr.startsWith('<table') || tr.startsWith('<blockquote') || tr.startsWith('<hr') || tr.startsWith('<ul') || tr.startsWith('<ol') || tr.startsWith('<li') || tr.startsWith('__CODE_BLOCK_')) {
           return tr;
         }
         return `<p>${tr.replace(/\n/g, '<br>')}</p>`;
@@ -4742,6 +4801,9 @@
               return;
             }
             tabs = [];
+            activeTabIndex = -1;
+            const tabsBar = document.getElementById('tabs-bar');
+            if (tabsBar) tabsBar.innerHTML = '';
             importedTabs.forEach(t => {
               createTab(t.name || 'Untitled', t.content || '', t.path || null, t.language || 'plaintext', t.tags || [], Boolean(t.isPinned));
             });
@@ -6731,8 +6793,8 @@ Strings, block comments, and line comments were safely bypassed during scanning.
               Would you like to connect and sync your editor with peers in this room?
             </p>
             <div style="display:flex; gap:10px; justify-content:center;">
-              <button class="btn btn-primary" onclick="closeModal(); joinCollabRoom('${escapeHtml(cleanCode)}')">👥 Join Session</button>
-              <button class="btn" onclick="closeModal(); showToast('Continuing in solo local editing mode.', 'info', 2500)">Decline (Solo Mode)</button>
+              <button class="modal-btn" onclick="closeModal(); joinCollabRoom('${escapeHtml(cleanCode)}')">👥 Join Session</button>
+              <button class="modal-btn-cancel" onclick="closeModal(); showToast('Continuing in solo local editing mode.', 'info', 2500)">Decline (Solo Mode)</button>
             </div>
           </div>`,
           false
@@ -7328,6 +7390,10 @@ Strings, block comments, and line comments were safely bypassed during scanning.
         if (raw) {
           const savedTabs = JSON.parse(raw);
           if (Array.isArray(savedTabs) && savedTabs.length > 0) {
+            tabs = [];
+            activeTabIndex = -1;
+            const tabsBar = document.getElementById('tabs-bar');
+            if (tabsBar) tabsBar.innerHTML = '';
             savedTabs.forEach(t => createTab(t.name, t.content, t.path, t.language, t.tags || [], Boolean(t.isPinned)));
             switchTab(active < savedTabs.length ? active : 0);
             return true;
@@ -7387,6 +7453,7 @@ Strings, block comments, and line comments were safely bypassed during scanning.
 
         // Close all existing tabs
         tabs = [];
+        activeTabIndex = -1;
         const tabsBar = document.getElementById('tabs-bar');
         if (tabsBar) tabsBar.innerHTML = '';
 
