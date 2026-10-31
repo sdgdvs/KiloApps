@@ -565,7 +565,7 @@
     background: rgba(0, 30, 40, 0.7);
     color: var(--trap-cyan);
     border: 1px solid var(--trap-cyan);
-    font-size: 8px;
+    font-size: 9px;
     font-family: var(--font-mono);
     padding: 1px 4px;
     cursor: pointer;
@@ -655,7 +655,7 @@
     transition: height 0.08s ease-out;
   }
   .btn-mute {
-    font-size: 8px;
+    font-size: 9px;
     padding: 1px 3px;
     cursor: pointer;
     margin-top: 2px;
@@ -884,6 +884,7 @@
     <div class="menu-item" onclick="switchTab('tab-topo')"><span>N</span>etwork</div>
     <div class="menu-item" onclick="openOptionsModal()"><span>O</span>ptions</div>
     <div class="menu-item" onclick="openHelpModal()"><span>H</span>elp</div>
+    <div class="menu-item" onclick="openTipModal()"><span>T</span>ips</div>
     <div style="margin-left: auto; display:flex; gap:8px;">
       <a href="/web/portal.html" onclick="navigateTo('/web/portal.html', event)" style="color:#000080; text-decoration:underline;">🏠 Portal</a>
       <a href="/web/webring.html" onclick="navigateTo('/web/webring.html', event)" style="color:#000080; text-decoration:underline;">🌐 Webring</a>
@@ -1150,36 +1151,36 @@
           <div class="mixer-box bevel-outset">
             <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; font-weight:bold;">
               <span>YM2612 / SPC700 6-CHANNEL MIXER</span>
-              <button class="btn-win" style="font-size:8px; padding:1px 4px;" onclick="unmuteAllChannels()">Unmute All</button>
+              <button class="btn-win" style="font-size:9px; padding:1px 4px;" onclick="unmuteAllChannels()">Unmute All</button>
             </div>
             <div class="channels-grid">
               <div class="chan-strip" id="strip-0">
-                <div class="chan-label">CH 1<br><span style="font-size:7px; color:#666;">MELODY</span></div>
+                <div class="chan-label">CH 1<br><span style="font-size:9px; color:#666;">MELODY</span></div>
                 <div class="chan-meter"><div class="chan-meter-level" id="meter-0"></div></div>
                 <button class="btn-win btn-mute" id="mute-0" onclick="toggleChannelMute(0)">MUTE</button>
               </div>
               <div class="chan-strip" id="strip-1">
-                <div class="chan-label">CH 2<br><span style="font-size:7px; color:#666;">FM LEAD</span></div>
+                <div class="chan-label">CH 2<br><span style="font-size:9px; color:#666;">FM LEAD</span></div>
                 <div class="chan-meter"><div class="chan-meter-level" id="meter-1"></div></div>
                 <button class="btn-win btn-mute" id="mute-1" onclick="toggleChannelMute(1)">MUTE</button>
               </div>
               <div class="chan-strip" id="strip-2">
-                <div class="chan-label">CH 3<br><span style="font-size:7px; color:#666;">BASS</span></div>
+                <div class="chan-label">CH 3<br><span style="font-size:9px; color:#666;">BASS</span></div>
                 <div class="chan-meter"><div class="chan-meter-level" id="meter-2"></div></div>
                 <button class="btn-win btn-mute" id="mute-2" onclick="toggleChannelMute(2)">MUTE</button>
               </div>
               <div class="chan-strip" id="strip-3">
-                <div class="chan-label">CH 4<br><span style="font-size:7px; color:#666;">ARP 50Hz</span></div>
+                <div class="chan-label">CH 4<br><span style="font-size:9px; color:#666;">ARP 50Hz</span></div>
                 <div class="chan-meter"><div class="chan-meter-level" id="meter-3"></div></div>
                 <button class="btn-win btn-mute" id="mute-3" onclick="toggleChannelMute(3)">MUTE</button>
               </div>
               <div class="chan-strip" id="strip-4">
-                <div class="chan-label">CH 5<br><span style="font-size:7px; color:#666;">DRUMS</span></div>
+                <div class="chan-label">CH 5<br><span style="font-size:9px; color:#666;">DRUMS</span></div>
                 <div class="chan-meter"><div class="chan-meter-level" id="meter-4"></div></div>
                 <button class="btn-win btn-mute" id="mute-4" onclick="toggleChannelMute(4)">MUTE</button>
               </div>
               <div class="chan-strip" id="strip-5">
-                <div class="chan-label">CH 6<br><span style="font-size:7px; color:#666;">SPC ECHO</span></div>
+                <div class="chan-label">CH 6<br><span style="font-size:9px; color:#666;">SPC ECHO</span></div>
                 <div class="chan-meter"><div class="chan-meter-level" id="meter-5"></div></div>
                 <button class="btn-win btn-mute" id="mute-5" onclick="toggleChannelMute(5)">MUTE</button>
               </div>
@@ -1429,6 +1430,41 @@
         <button class="btn-win" id="btnModalFiles" onclick="browseActiveModalFiles()">📂 Browse Hosted Modules</button>
       </div>
       <button class="btn-win" onclick="closeNodeDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Tip of the Day / Welcome Tutorial Modal -->
+<div class="modal-overlay" id="tipModal" style="display:none;">
+  <div class="modal-dialog bevel-outset" style="padding:10px; width:480px; box-shadow:0 10px 25px rgba(0,0,0,0.7);">
+    <div class="title-bar" style="margin:-10px -10px 10px -10px;">
+      <div class="title-bar-text">
+        <span>💡</span>
+        <span>Tip of the Day — Welcome to Trapster v1.0b</span>
+      </div>
+      <button class="win-btn" onclick="closeTipModal()" title="Close">×</button>
+    </div>
+    <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;">
+      <div style="font-size:36px; line-height:1; user-select:none;">💡</div>
+      <div style="flex:1;">
+        <div style="font-weight:bold; font-size:12px; margin-bottom:6px; color:#000080;" id="tipHeader">Did you know...</div>
+        <div style="background:#fff; border:2px inset #808080; padding:10px; min-height:110px; font-size:11px; line-height:1.45; color:#000;" id="tipText">
+          Welcome to <strong>Trapster v1.0b</strong> — the 1999 peer-to-peer chiptune and tracker exchange!<br><br>
+          • <strong>Live Chiptune Synthesizer</strong>: Preview tracks in real time using our custom dual-operator YM2612 FM lead &amp; SPC700 stereo delay DSP engine.<br>
+          • <strong>VFS Export</strong>: Save any module (.MOD/.TRK) directly to your KiloOS <code>/home/music/</code> storage for playback in KAudio or editing in KSynth.<br>
+          • <strong>56k Dial-Up Simulation</strong>: Experience authentic 1999 download queues, bandwidth throttling, and swarm transfers.
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #808080; padding-top:8px;">
+      <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;">
+        <input type="checkbox" id="chkShowTips" checked onchange="toggleShowTips(this.checked)"> Show Tips on Startup
+      </label>
+      <div style="display:flex; gap:6px;">
+        <button class="btn-win" onclick="cycleNextTip()">Next Tip</button>
+        <button class="btn-win btn-primary" id="btnTipClose" onclick="closeTipModal()">Close</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2466,6 +2502,7 @@ ${trk.nfo.replace(/\\n/g, '\n')}
 
 function closeNfoModal() {
   document.getElementById('nfoModal').style.display = 'none';
+    closeTipModal();
 }
 
 // Transfers Simulation Loop
@@ -3190,6 +3227,63 @@ FEATURES:
   document.getElementById('nfoModal').style.display = 'flex';
 }
 
+
+// --- 1999 Tip of the Day & First-Run Quickstart ---
+const TRAPSTER_TIPS = [
+  {
+    header: "Welcome to Trapster P2P v1.0b",
+    text: "Welcome to <strong>Trapster v1.0b</strong> — the 1999 peer-to-peer chiptune and tracker exchange!<br><br>• <strong>Live Chiptune Synthesizer</strong>: Preview tracks in real time using our custom dual-operator YM2612 FM lead &amp; SPC700 stereo delay DSP engine.<br>• <strong>VFS Export</strong>: Save any module (.MOD/.TRK) directly to your KiloOS <code>/home/music/</code> storage for playback in KAudio or editing in KSynth.<br>• <strong>56k Dial-Up Simulation</strong>: Experience authentic 1999 download queues, bandwidth throttling, and swarm transfers."
+  },
+  {
+    header: "Did you know... YM2612 2-Op FM Synthesis",
+    text: "Trapster's audio previewer emulates authentic Mega Drive / Genesis sound hardware! Channel 2 features a 2-Operator FM engine (Modulator &amp; Carrier with 2:1 harmonic ratio) routed through a Super NES SPC700 stereo delay line (180ms delay with 2200Hz low-pass filter)."
+  },
+  {
+    header: "Did you know... KiloOS Inter-App IPC",
+    text: "You can send any loaded tracker module straight into other KiloOS apps! Click <strong>'Launch in KAudio'</strong> or <strong>'Export Patch to KSynth'</strong> from the Live Chiptune Player tab to bridge tracker music across the desktop."
+  },
+  {
+    header: "Did you know... Swarm Supernodes",
+    text: "Visit the <strong>'Node Directory &amp; Topology'</strong> tab to inspect 12 global supernodes across dial-up (28.8k/56k), ISDN, DSL, and T1/T3 backbones. You can ping nodes, query remote file indices, or connect as a primary swarm hub."
+  },
+  {
+    header: "Did you know... Keyboard Shortcuts",
+    text: "Navigate Trapster at the speed of light:<br>• <strong>[Space]</strong>: Play / pause the active tracker preview.<br>• <strong>[M]</strong>: Mute or unmute all audio channels.<br>• <strong>[F1]</strong> or <strong>[H]</strong>: Open full help and documentation.<br>• <strong>[Esc]</strong>: Dismiss any open dialog window."
+  }
+];
+
+let currentTipIndex = 0;
+function showTip(idx) {
+  currentTipIndex = (idx + TRAPSTER_TIPS.length) % TRAPSTER_TIPS.length;
+  const tip = TRAPSTER_TIPS[currentTipIndex];
+  const hEl = document.getElementById('tipHeader');
+  const tEl = document.getElementById('tipText');
+  if (hEl) hEl.textContent = tip.header;
+  if (tEl) tEl.innerHTML = tip.text;
+}
+function cycleNextTip() {
+  showTip(currentTipIndex + 1);
+}
+function openTipModal() {
+  showTip(0);
+  const seen = safeGet('trapster_tutorialSeen', false);
+  const chk = document.getElementById('chkShowTips');
+  if (chk) chk.checked = !seen;
+  const m = document.getElementById('tipModal');
+  if (m) m.style.display = 'flex';
+}
+function closeTipModal() {
+  const m = document.getElementById('tipModal');
+  if (m) m.style.display = 'none';
+  const chk = document.getElementById('chkShowTips');
+  if (chk && !chk.checked) {
+    safeSet('trapster_tutorialSeen', true);
+  }
+}
+function toggleShowTips(show) {
+  safeSet('trapster_tutorialSeen', !show);
+}
+
 function openOptionsModal() {
   showToast('Options: Port 6667 / 6699 (TCP), VFS Destination: /home/music/');
 }
@@ -3445,7 +3539,7 @@ function filterNodeDirectory() {
       <td>${n.line}</td>
       <td>
         <span class="ping-tag ${pingClass}" id="ping-badge-${n.id}">${n.ping}ms</span>
-        <button class="btn-win" style="font-size:8px; padding:0 3px;" onclick="pingNode('${n.id}')">📡</button>
+        <button class="btn-win" style="font-size:9px; padding:0 3px;" onclick="pingNode('${n.id}')">📡</button>
       </td>
       <td>${n.peers}</td>
       <td>${n.modules.toLocaleString()}</td>
@@ -3607,6 +3701,9 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   handleHashRoute();
   window.addEventListener('hashchange', handleHashRoute);
+  if (!safeGet('trapster_tutorialSeen', false)) {
+    setTimeout(openTipModal, 400);
+  }
 });
 </script>
 
