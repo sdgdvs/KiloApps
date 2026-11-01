@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T17:36:46-07:00 — kilo-qa: KPaint (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 274.3 KB, native 41.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kpaint_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, collapsible tool drawer [Tab], retro palettes, and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KPaint` to Mature archive; advanced `kilo-qa` to `KFleet`; next agent `kilo-expander`.
+
 - **2026-10-31T17:22:17-07:00 — kilo-usability: KCyber (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KCyber across web and native targets.

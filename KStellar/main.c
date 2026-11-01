@@ -856,6 +856,21 @@ void HideManualButtons() {
     ShowWindow(hBtnManBack, SW_HIDE);
 }
 
+void EmergencyDistressBeacon(HWND hwnd) {
+    PlaySfx(SFX_WARP);
+    fuel += 30;
+    if (fuel > 100) fuel = 100;
+    AdjustRep(-3, 0, 0);
+    MessageBox(hwnd,
+        "[EMERGENCY DISTRESS BEACON ACTIVATED]\n\n"
+        "A Federation naval auxiliary answered your emergency transponder.\n"
+        "They transferred +30% reactor fuel to prevent system stranding.\n"
+        "Federation authorities charged an emergency fee (-3 Federation Standing).",
+        "Distress Beacon", MB_OK | MB_ICONINFORMATION);
+    UpdateDashboard();
+    ShowStationView(hwnd);
+}
+
 void ShowManualView(HWND hwnd, int tab) {
     inManualView = 1;
     inMissionsView = 0;
@@ -872,6 +887,10 @@ void ShowManualView(HWND hwnd, int tab) {
     ShowWindow(hBtnSellMinerals, SW_HIDE);
     ShowWindow(hBtnBuyTech, SW_HIDE);
     ShowWindow(hBtnSellTech, SW_HIDE);
+    ShowWindow(hBtnBuyMed, SW_HIDE);
+    ShowWindow(hBtnSellMed, SW_HIDE);
+    ShowWindow(hBtnRepair, SW_HIDE);
+    ShowWindow(hBtnRefuel, SW_HIDE);
     ShowWindow(hBtnUpgEngine, SW_HIDE);
     ShowWindow(hBtnUpgCargo, SW_HIDE);
     ShowWindow(hBtnUpgWeapon, SW_HIDE);
@@ -1149,7 +1168,8 @@ void ShowFactionsView(HWND hwnd) {
 
 void UpdateCombatUI(HWND hwnd) {
     char infoText[2048];
-    sprintf(infoText, "--- COMBAT ---\nYOU Hull: %d\nPIRATE Hull: %d\n\n%s", hull, enemyHull, combatLog);
+    const char *eTitle = (enemyClass == 0) ? "INTERCEPTOR" : (enemyClass == 2 ? "DREADNOUGHT" : (enemyClass == 3 ? "STEALTH INFILTRATOR" : "MARAUDER"));
+    sprintf(infoText, "--- COMBAT ---\nYOU Hull: %d/%d\n%s Hull: %d/%d\n\n%s", hull, maxHull, eTitle, enemyHull, enemyMaxHull, combatLog);
     SetWindowText(hInfoArea, infoText);
     UpdateDashboard();
 }
@@ -1332,11 +1352,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int state = pdis->itemState;
                 
                 if (state & ODS_SELECTED) {
-                    FillRect(hdc, &rect, CreateSolidBrush(RGB(0, 255, 204)));
+                    HBRUSH hSel = CreateSolidBrush(RGB(0, 255, 204));
+                    FillRect(hdc, &rect, hSel);
+                    DeleteObject(hSel);
                     SetTextColor(hdc, RGB(0, 0, 0));
                     SetBkColor(hdc, RGB(0, 255, 204));
                 } else {
-                    FillRect(hdc, &rect, CreateSolidBrush(RGB(0, 0, 0)));
+                    HBRUSH hBg = CreateSolidBrush(RGB(0, 0, 0));
+                    FillRect(hdc, &rect, hBg);
+                    DeleteObject(hBg);
                     HBRUSH hBorder = CreateSolidBrush(RGB(0, 255, 204));
                     FrameRect(hdc, &rect, hBorder);
                     DeleteObject(hBorder);
@@ -1550,6 +1574,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 HPEN hBlackHolePen = CreatePen(PS_SOLID, 1, RGB(255, 0, 255));
                 HPEN hSolarPen = CreatePen(PS_SOLID, 1, RGB(255, 180, 0));
                 HPEN hDerelictPen = CreatePen(PS_SOLID, 1, RGB(160, 210, 255));
+                HPEN hMonolithPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 136));
+                HPEN hIonPen = CreatePen(PS_SOLID, 1, RGB(51, 170, 255));
                 HBRUSH hNullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
 
                 for (int i = 0; i < MAX_SYSTEMS; i++) {
@@ -1562,6 +1588,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         if (systems[i].phenomenon == 1) SelectObject(memDC, hBlackHolePen);
                         else if (systems[i].phenomenon == 2) SelectObject(memDC, hSolarPen);
                         else if (systems[i].phenomenon == 3) SelectObject(memDC, hDerelictPen);
+                        else if (systems[i].phenomenon == 4) SelectObject(memDC, hMonolithPen);
+                        else if (systems[i].phenomenon == 5) SelectObject(memDC, hIonPen);
                         int pulse = (animTick % 8);
                         int pr = 10 + pulse;
                         Ellipse(memDC, px - pr, py - pr, px + pr, py + pr);
@@ -1637,6 +1665,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         if (systems[i].phenomenon == 1) strcat(nameBuf, " [BH]");
                         else if (systems[i].phenomenon == 2) strcat(nameBuf, " [FLARE]");
                         else if (systems[i].phenomenon == 3) strcat(nameBuf, " [HULK]");
+                        else if (systems[i].phenomenon == 4) strcat(nameBuf, " [MONO]");
+                        else if (systems[i].phenomenon == 5) strcat(nameBuf, " [ION]");
                         TextOut(memDC, px + 12, py - 8, nameBuf, strlen(nameBuf));
                     }
                 }
@@ -1644,6 +1674,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 DeleteObject(hBlackHolePen);
                 DeleteObject(hSolarPen);
                 DeleteObject(hDerelictPen);
+                DeleteObject(hMonolithPen);
+                DeleteObject(hIonPen);
             }
 
             // Blit memory buffer to window viewport (20, 70, 400, 400)
@@ -1685,6 +1717,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (systems[i].phenomenon == 1) strcpy(phenomStr, "\n[★ PHENOMENON: Black Hole]");
                     else if (systems[i].phenomenon == 2) strcpy(phenomStr, "\n[★ PHENOMENON: Solar Flare]");
                     else if (systems[i].phenomenon == 3) strcpy(phenomStr, "\n[★ PHENOMENON: Derelict Ship]");
+                    else if (systems[i].phenomenon == 4) strcpy(phenomStr, "\n[★ PHENOMENON: Alien Monolith]");
+                    else if (systems[i].phenomenon == 5) strcpy(phenomStr, "\n[★ PHENOMENON: Ion Storm]");
 
                     char infoText[512];
                     if (selectedSystem == currentSystemId) {
@@ -1714,6 +1748,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         ShowWindow(hBtnSellMinerals, SW_HIDE);
                         ShowWindow(hBtnBuyTech, SW_HIDE);
                         ShowWindow(hBtnSellTech, SW_HIDE);
+                        ShowWindow(hBtnBuyMed, SW_HIDE);
+                        ShowWindow(hBtnSellMed, SW_HIDE);
+                        ShowWindow(hBtnRepair, SW_HIDE);
+                        ShowWindow(hBtnRefuel, SW_HIDE);
                         ShowWindow(hBtnUpgEngine, SW_HIDE);
                         ShowWindow(hBtnUpgCargo, SW_HIDE);
                         ShowWindow(hBtnUpgWeapon, SW_HIDE);
@@ -1766,9 +1804,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 
                 if (fuel < fuelCost) {
                     PlaySfx(SFX_BLIP);
-                    char msg[128];
-                    sprintf(msg, "Not enough fuel! You need %d%% fuel.", fuelCost);
-                    MessageBox(hwnd, msg, "Warning", MB_OK | MB_ICONWARNING);
+                    char msg[256];
+                    sprintf(msg, "Not enough fuel! You need %d%% fuel (Current: %d%%).\n\nDeploy an Emergency Distress Beacon for auxiliary refueling?", fuelCost, fuel);
+                    if (MessageBox(hwnd, msg, "Hyperspace Warning - Stranded", MB_YESNO | MB_ICONWARNING) == IDYES) {
+                        EmergencyDistressBeacon(hwnd);
+                    }
+                    return 0;
                 } else {
                     PlaySfx(SFX_WARP);
                     fuel -= fuelCost;
@@ -1809,14 +1850,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         PlaySfx(SFX_ENEMY_LASER);
                         inCombat = 1;
                         int roll = rand() % 100;
-                        if (currentSystemId <= 8 && roll < 65) {
+                        if (currentSystemId <= 8 && roll < 50) {
                             enemyClass = 0; // Interceptor
-                            enemyMaxHull = (int)((30 + currentSystemId * 18) * 0.7f);
+                            enemyMaxHull = (int)((30 + currentSystemId * 18) * 0.65f);
                             strcpy(combatLog, "Corsair Interceptor drops from hyperspace!\nHigh-speed raider detected.\n");
-                        } else if (currentSystemId > 16 || roll < 35) {
+                        } else if (currentSystemId > 16 && roll < 35) {
                             enemyClass = 2; // Dreadnought
                             enemyMaxHull = (int)((30 + currentSystemId * 18) * 1.5f);
                             strcpy(combatLog, "Syndicate Dreadnought flagship intercepts!\nHeavy capital armor detected.\n");
+                        } else if (roll < 30) {
+                            enemyClass = 3; // Stealth Infiltrator
+                            enemyMaxHull = (int)((30 + currentSystemId * 18) * 0.85f);
+                            strcpy(combatLog, "Syndicate Stealth Infiltrator de-cloaks!\nHigh-speed stealth raider detected.\n");
                         } else {
                             enemyClass = 1; // Marauder
                             enemyMaxHull = 30 + currentSystemId * 18;
@@ -1836,6 +1881,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         ShowWindow(hBtnSellMinerals, SW_HIDE);
                         ShowWindow(hBtnBuyTech, SW_HIDE);
                         ShowWindow(hBtnSellTech, SW_HIDE);
+                        ShowWindow(hBtnBuyMed, SW_HIDE);
+                        ShowWindow(hBtnSellMed, SW_HIDE);
+                        ShowWindow(hBtnRepair, SW_HIDE);
+                        ShowWindow(hBtnRefuel, SW_HIDE);
                         ShowWindow(hBtnUpgEngine, SW_HIDE);
                         ShowWindow(hBtnUpgCargo, SW_HIDE);
                         ShowWindow(hBtnUpgWeapon, SW_HIDE);
@@ -1858,7 +1907,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         credits += salvageCreds;
                         hull += 20;
                         if (hull > maxHull) hull = maxHull;
-                        int used = cargoFood + cargoMinerals + cargoTech;
+                        int used = cargoFood + cargoMinerals + cargoTech + cargoMedicine;
                         char extra[64] = "";
                         if (used < cargoMax) {
                             cargoTech++;
@@ -1951,7 +2000,9 @@ encounter_processed:
                         sprintf(turnMsg, "No Tech cargo available to use!\n");
                     }
                 } else if (cmd == ID_BTN_COMBAT_FLEE) {
-                    if (rand() % 100 < 50) {
+                    int fleeChance = 50 + engineLevel * 10;
+                    if (fleeChance > 90) fleeChance = 90;
+                    if (rand() % 100 < fleeChance) {
                         PlaySfx(SFX_WARP);
                         SpawnExplosion(100.0f, 270.0f, RGB(0, 255, 204), 20);
                         MessageBox(hwnd, "Successfully escaped!", "Flee", MB_OK);
@@ -1969,10 +2020,11 @@ encounter_processed:
                     int bounty = 100 + currentSystemId * 50;
                     if (enemyClass == 0) bounty = bounty * 8 / 10;
                     else if (enemyClass == 2) bounty = bounty * 15 / 10;
+                    else if (enemyClass == 3) bounty = bounty * 11 / 10;
                     credits += bounty;
                     AdjustRep(6, 3, -8);
                     char winMsg[512];
-                    const char *eTitle = (enemyClass == 0) ? "Interceptor" : (enemyClass == 2 ? "Dreadnought" : "Marauder");
+                    const char *eTitle = (enemyClass == 0) ? "Interceptor" : (enemyClass == 2 ? "Dreadnought" : (enemyClass == 3 ? "Stealth Infiltrator" : "Marauder"));
                     sprintf(winMsg, "%s destroyed! Claimed ₭%d standard bounty.\nReputation: +6 Fed, +3 Traders, -8 Pirates.", eTitle, bounty);
                     if (activeMission.type == 2 && activeMission.targetId == currentSystemId) {
                         int fedBonus = (repFed >= 15) ? (activeMission.reward * 15 / 100) : 0;
@@ -1995,17 +2047,29 @@ encounter_processed:
                     SpawnLaser(310.0f, 270.0f, 100.0f, 270.0f, RGB(255, 60, 60));
                     int baseDmg = (5 + currentSystemId * 5);
                     if (enemyClass == 0) baseDmg = baseDmg * 8 / 10;
-                    else if (enemyClass == 2) baseDmg = baseDmg * 13 / 10;
-                    int eDmg = baseDmg * (80 + rand() % 40) / 100;
+                    else if (enemyClass == 2) baseDmg = baseDmg * 135 / 100;
+                    else if (enemyClass == 3) baseDmg = baseDmg * 115 / 100;
+                    int rawDmg = baseDmg * (80 + rand() % 40) / 100;
+                    int absorbed = 0;
+                    if (shieldLevel > 1) {
+                        absorbed = (rawDmg - 1 < shieldLevel * 3) ? (rawDmg - 1) : (shieldLevel * 3);
+                        if (absorbed < 0) absorbed = 0;
+                    }
+                    int eDmg = rawDmg - absorbed;
+                    if (eDmg < 1) eDmg = 1;
                     hull -= eDmg;
                     combatShakeTimer = 6;
                     SpawnExplosion(100.0f, 270.0f, RGB(255, 100, 50), 16);
-                    char hitMsg[64];
-                    const char *eName = (enemyClass == 0) ? "Interceptor" : (enemyClass == 2 ? "Dreadnought" : "Marauder");
-                    sprintf(hitMsg, "%s hits you for %d damage!\n", eName, eDmg);
+                    char hitMsg[128];
+                    const char *eName = (enemyClass == 0) ? "Interceptor" : (enemyClass == 2 ? "Dreadnought" : (enemyClass == 3 ? "Stealth Infiltrator" : "Marauder"));
+                    if (absorbed > 0) {
+                        sprintf(hitMsg, "%s hits for %d damage! (Shields absorbed %d)\n", eName, eDmg, absorbed);
+                    } else {
+                        sprintf(hitMsg, "%s hits you for %d damage!\n", eName, eDmg);
+                    }
                     strcat(turnMsg, hitMsg);
                 } else {
-                    const char *eName = (enemyClass == 0) ? "Interceptor" : (enemyClass == 2 ? "Dreadnought" : "Marauder");
+                    const char *eName = (enemyClass == 0) ? "Interceptor" : (enemyClass == 2 ? "Dreadnought" : (enemyClass == 3 ? "Stealth Infiltrator" : "Marauder"));
                     char missMsg[64];
                     sprintf(missMsg, "%s's attack misses!\n", eName);
                     strcat(turnMsg, missMsg);
@@ -2024,8 +2088,8 @@ encounter_processed:
                     EndCombat(hwnd);
                 }
                 return 0;
-            } else if (LOWORD(wParam) >= ID_BTN_BUY_FOOD && LOWORD(wParam) <= ID_BTN_SELL_TECH && selectedSystem == currentSystemId) {
-                int used = cargoFood + cargoMinerals + cargoTech;
+            } else if (LOWORD(wParam) >= ID_BTN_BUY_FOOD && LOWORD(wParam) <= ID_BTN_REFUEL && selectedSystem == currentSystemId) {
+                int used = cargoFood + cargoMinerals + cargoTech + cargoMedicine;
                 int cmd = LOWORD(wParam);
                 System *sys = &systems[currentSystemId];
                 int bPrice, sPrice;
@@ -2048,6 +2112,57 @@ encounter_processed:
                 } else if (cmd == ID_BTN_SELL_TECH) {
                     sPrice = GetSellPrice(sys->tech_price);
                     if (cargoTech > 0) { credits += sPrice; cargoTech--; AdjustRep(0, 1, 0); }
+                } else if (cmd == ID_BTN_BUY_MED) {
+                    bPrice = GetBuyPrice(sys->medicine_price);
+                    if (credits >= bPrice && used < cargoMax) { credits -= bPrice; cargoMedicine++; AdjustRep(0, 1, 0); }
+                } else if (cmd == ID_BTN_SELL_MED) {
+                    sPrice = GetSellPrice(sys->medicine_price);
+                    if (cargoMedicine > 0) { credits += sPrice; cargoMedicine--; AdjustRep(0, 1, 0); }
+                } else if (cmd == ID_BTN_REPAIR) {
+                    if (hull < maxHull) {
+                        int needed = maxHull - hull;
+                        int costPerHp = 4;
+                        int totalCost = needed * costPerHp;
+                        if (credits >= totalCost) {
+                            credits -= totalCost;
+                            hull = maxHull;
+                            PlaySfx(SFX_UPGRADE);
+                        } else {
+                            int canAffordHp = credits / costPerHp;
+                            if (canAffordHp > 0) {
+                                credits -= canAffordHp * costPerHp;
+                                hull += canAffordHp;
+                                PlaySfx(SFX_UPGRADE);
+                            } else {
+                                PlaySfx(SFX_BLIP);
+                                MessageBox(hwnd, "Not enough credits to repair hull!", "Shipyard Alert", MB_OK | MB_ICONWARNING);
+                            }
+                        }
+                    }
+                } else if (cmd == ID_BTN_REFUEL) {
+                    if (fuel < 100) {
+                        int needed = 100 - fuel;
+                        int totalCost = (int)ceil(needed * 1.5);
+                        if (credits >= totalCost) {
+                            credits -= totalCost;
+                            fuel = 100;
+                            PlaySfx(SFX_BLIP);
+                        } else {
+                            int canAfford = (int)(credits / 1.5);
+                            if (canAfford > 0) {
+                                int actualCost = (int)ceil(canAfford * 1.5);
+                                credits -= actualCost;
+                                fuel += canAfford;
+                                if (fuel > 100) fuel = 100;
+                                PlaySfx(SFX_BLIP);
+                            } else {
+                                PlaySfx(SFX_BLIP);
+                                if (MessageBox(hwnd, "Not enough credits to refuel reactor!\n\nDeploy Emergency Distress Beacon for auxiliary refueling?", "Fuel Depleted", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                                    EmergencyDistressBeacon(hwnd);
+                                }
+                            }
+                        }
+                    }
                 }
                 PlaySfx(SFX_BLIP);
                 UpdateDashboard();
@@ -2172,7 +2287,7 @@ encounter_processed:
                     credits += reward;
                     hull += 30;
                     if (hull > maxHull) hull = maxHull;
-                    int used = cargoFood + cargoMinerals + cargoTech;
+                    int used = cargoFood + cargoMinerals + cargoTech + cargoMedicine;
                     char cargoInfo[128] = "Cargo hold full - components stripped to scrap.";
                     if (used + 2 <= cargoMax) {
                         cargoTech++;
@@ -2181,6 +2296,28 @@ encounter_processed:
                     }
                     AdjustRep(-2, 1, 5);
                     sprintf(phenomMsg, "DERELICT SALVAGE OPERATION\n\nBoarding party scavenged the abandoned vessel.\nRecovered ₭%d in scrap credits.\nRepaired +30 Hull using intact hull plating.\n%s\nReputation: +5 Pirates, +1 Traders, -2 Federation.", reward, cargoInfo);
+                } else if (sys->phenomenon == 4) { // Alien Monolith
+                    int reward = (rand() % 250) + 700;
+                    credits += reward;
+                    int used = cargoFood + cargoMinerals + cargoTech + cargoMedicine;
+                    char cargoInfo[128] = "";
+                    if (used < cargoMax) {
+                        cargoTech++;
+                        strcpy(cargoInfo, "\nEncrypted alien datacubes synthesized 1 ton of Tech cargo!");
+                    }
+                    AdjustRep(6, 4, 2);
+                    sprintf(phenomMsg, "ALIEN MONOLITH DECRYPTION\n\nSensors synchronized with the obsidian obelisk.\nCryptographic pulses uploaded precursor starcharts into memory core.\nScience institutions awarded ₭%d for telemetry data.%s\nDiplomatic standing improved with all civilized factions (+6 Fed, +4 Traders, +2 Pirates).", reward, cargoInfo);
+                } else if (sys->phenomenon == 5) { // Ion Storm
+                    int fuelDrain = 15;
+                    fuel -= fuelDrain;
+                    if (fuel < 5) fuel = 5;
+                    int shieldCharge = 40;
+                    hull += shieldCharge;
+                    if (hull > maxHull) hull = maxHull;
+                    int reward = (rand() % 120) + 380;
+                    credits += reward;
+                    AdjustRep(0, 3, 0);
+                    sprintf(phenomMsg, "ION STORM HARVEST OPERATION\n\nYour ship navigated through hyper-charged atmospheric plasma.\nStatic drain consumed %d%% reactor fuel.\nIonic absorption supercharged deflector shields (+%d Hull) and synthesized rare ion gas worth ₭%d!\nTraders Guild standing increased (+3 Traders).", fuelDrain, shieldCharge, reward);
                 }
                 
                 sys->phenomenon = 0; // Cleared
@@ -2301,7 +2438,7 @@ encounter_processed:
                     ShowManualView(hwnd, (int)(wParam - '1'));
                     return 0;
                 }
-                if (wParam == VK_ESCAPE || wParam == VK_SPACE || wParam == VK_RETURN || wParam == 'M' || wParam == 'm' || wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
+                if (wParam == VK_ESCAPE || wParam == VK_SPACE || wParam == VK_RETURN || wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                     PlaySfx(SFX_BLIP);
                     ShowStationView(hwnd);
                     return 0;
@@ -2345,9 +2482,14 @@ encounter_processed:
                     return 0;
                 }
             }
-            if (wParam == 'M' || wParam == 'm' || wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
+            if (wParam == 'M' || wParam == 'm') {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SOUND_TOGGLE, 0), (LPARAM)hBtnSoundToggle);
+                return 0;
+            }
+            if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                 PlaySfx(SFX_BLIP);
-                ShowManualView(hwnd, 0);
+                if (inManualView) ShowStationView(hwnd);
+                else ShowManualView(hwnd, 0);
                 return 0;
             }
             if (wParam == VK_ESCAPE) {
@@ -2402,6 +2544,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     MSG msg = {0};
     while (GetMessage(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN && msg.hwnd != hwnd) {
+            if (msg.wParam != VK_SPACE && msg.wParam != VK_RETURN) {
+                SendMessage(hwnd, WM_KEYDOWN, msg.wParam, msg.lParam);
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }

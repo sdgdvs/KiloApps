@@ -1174,18 +1174,18 @@
 
         // --- Spacefaring Sprite Assets (Chroma-keyed 2-stage Imagen 3 pipeline) ---
         const KSTELLAR_ASSETS = {
-            playerCruiser: { img: null, loaded: false, src: '../assets/sprites/kstellar/ship_player_cruiser.png', fallback: 'assets/sprites/kstellar/ship_player_cruiser.png' },
-            interceptor: { img: null, loaded: false, src: '../assets/sprites/kstellar/ship_corsair_interceptor.png', fallback: 'assets/sprites/kstellar/ship_corsair_interceptor.png' },
-            marauder: { img: null, loaded: false, src: '../assets/sprites/kstellar/ship_corsair_marauder.png', fallback: 'assets/sprites/kstellar/ship_corsair_marauder.png' },
-            dreadnought: { img: null, loaded: false, src: '../assets/sprites/kstellar/ship_syndicate_dreadnought.png', fallback: 'assets/sprites/kstellar/ship_syndicate_dreadnought.png' },
-            infiltrator: { img: null, loaded: false, src: '../assets/sprites/kstellar/ship_stealth_infiltrator.png', fallback: 'assets/sprites/kstellar/ship_stealth_infiltrator.png' },
-            fleetFed: { img: null, loaded: false, src: '../assets/sprites/kstellar/fleet_federation_icon.png', fallback: 'assets/sprites/kstellar/fleet_federation_icon.png' },
-            fleetTraders: { img: null, loaded: false, src: '../assets/sprites/kstellar/fleet_traders_icon.png', fallback: 'assets/sprites/kstellar/fleet_traders_icon.png' },
-            fleetPirates: { img: null, loaded: false, src: '../assets/sprites/kstellar/fleet_pirates_icon.png', fallback: 'assets/sprites/kstellar/fleet_pirates_icon.png' },
-            station: { img: null, loaded: false, src: '../assets/sprites/kstellar/orbital_station_facility.png', fallback: 'assets/sprites/kstellar/orbital_station_facility.png' },
-            monolith: { img: null, loaded: false, src: '../assets/sprites/kstellar/anomaly_monolith.png', fallback: 'assets/sprites/kstellar/anomaly_monolith.png' },
-            blackhole: { img: null, loaded: false, src: '../assets/sprites/kstellar/anomaly_blackhole.png', fallback: 'assets/sprites/kstellar/anomaly_blackhole.png' },
-            ionstorm: { img: null, loaded: false, src: '../assets/sprites/kstellar/anomaly_ionstorm.png', fallback: 'assets/sprites/kstellar/anomaly_ionstorm.png' }
+            playerCruiser: { img: null, loaded: false, src: '../assets/sprites/kspace/kspace_ship_alpha.png', fallback: 'assets/sprites/kspace/kspace_ship_alpha.png' },
+            interceptor: { img: null, loaded: false, src: '../assets/sprites/kspace/kspace_enemy_interceptor.png', fallback: 'assets/sprites/kspace/kspace_enemy_interceptor.png' },
+            marauder: { img: null, loaded: false, src: '../assets/sprites/kspace/kspace_ship_crimson.png', fallback: 'assets/sprites/kspace/kspace_ship_crimson.png' },
+            dreadnought: { img: null, loaded: false, src: '../assets/sprites/kspace/kspace_boss_flagship.png', fallback: 'assets/sprites/kspace/kspace_boss_flagship.png' },
+            infiltrator: { img: null, loaded: false, src: '../assets/sprites/kspace/kspace_ship_phantom.png', fallback: 'assets/sprites/kspace/kspace_ship_phantom.png' },
+            fleetFed: { img: null, loaded: false, src: '../assets/sprites/kspace/kspace_ship_alpha.png', fallback: 'assets/sprites/kspace/kspace_ship_alpha.png' },
+            fleetTraders: { img: null, loaded: false, src: '../assets/sprites/kspace/kspace_enemy_chaser.png', fallback: 'assets/sprites/kspace/kspace_enemy_chaser.png' },
+            fleetPirates: { img: null, loaded: false, src: '../assets/sprites/kspace/kspace_enemy_zigzag.png', fallback: 'assets/sprites/kspace/kspace_enemy_zigzag.png' },
+            station: { img: null, loaded: false, src: '../assets/sprites/kspace/kspace_enemy_saucer.png', fallback: 'assets/sprites/kspace/kspace_enemy_saucer.png' },
+            monolith: { img: null, loaded: false, src: '../assets/sprites/kspace/kspace_asteroid.png', fallback: 'assets/sprites/kspace/kspace_asteroid.png' },
+            blackhole: { img: null, loaded: false, src: '../assets/sprites/kspace/kspace_planet_ringed.png', fallback: 'assets/sprites/kspace/kspace_planet_ringed.png' },
+            ionstorm: { img: null, loaded: false, src: '../assets/sprites/kspace/kspace_strike_flare.png', fallback: 'assets/sprites/kspace/kspace_strike_flare.png' }
         };
 
         function initKStellarAssets() {
@@ -1430,9 +1430,12 @@
                     const lightData = { ...saveData };
                     lightData.systems = systems.map(s => ({
                         id: s.id,
-                        food_price: s.food_price,
-                        minerals_price: s.minerals_price,
-                        tech_price: s.tech_price,
+                        market: s.market ? {
+                            food: s.market.food,
+                            minerals: s.market.minerals,
+                            tech: s.market.tech,
+                            medicine: s.market.medicine
+                        } : undefined,
                         phenomenon: s.phenomenon
                     }));
                     ok = safeSetStorage('kstellar_save', lightData);
@@ -1500,9 +1503,13 @@
                         data.systems.forEach(ls => {
                             const sys = systems.find(s => s.id === ls.id);
                             if (sys) {
-                                if (ls.food_price !== undefined) sys.food_price = ls.food_price;
-                                if (ls.minerals_price !== undefined) sys.minerals_price = ls.minerals_price;
-                                if (ls.tech_price !== undefined) sys.tech_price = ls.tech_price;
+                                if (ls.market) {
+                                    sys.market = { ...sys.market, ...ls.market };
+                                } else {
+                                    if (ls.food_price !== undefined) sys.market.food = ls.food_price;
+                                    if (ls.minerals_price !== undefined) sys.market.minerals = ls.minerals_price;
+                                    if (ls.tech_price !== undefined) sys.market.tech = ls.tech_price;
+                                }
                                 if (ls.phenomenon !== undefined) sys.phenomenon = ls.phenomenon;
                             }
                         });
@@ -1689,11 +1696,10 @@
 
         window.emergencyBeacon = function() {
             playWarp();
-            const rescueFuel = 30;
-            fuel = Math.max(fuel, rescueFuel);
+            fuel = Math.min(100, fuel + 30);
             adjustRep(-3, 0, 0);
-            showToast("★ DISTRESS BEACON: Auxiliary fuel delivered (-3 Fed Rep)");
-            alert("[EMERGENCY DISTRESS BEACON ACTIVATED]\n\nA Federation naval auxiliary answered your emergency transponder.\nThey transferred 30% reactor fuel to prevent system stranding.\nFederation authorities recorded an emergency dispatch fee (-3 Federation Standing).");
+            showToast("★ DISTRESS BEACON: Auxiliary fuel (+30%) delivered (-3 Fed Rep)");
+            alert("[EMERGENCY DISTRESS BEACON ACTIVATED]\n\nA Federation naval auxiliary answered your emergency transponder.\nThey transferred +30% reactor fuel to prevent system stranding.\nFederation authorities recorded an emergency dispatch fee (-3 Federation Standing).");
             updateDashboard();
             showSystemInfo(systems.find(s => s.id === currentSystemId));
         };
@@ -2250,9 +2256,9 @@
             if (sys.phenomenon && sys.phenomenon !== "None") {
                 let pColor = sys.phenomenon === "Black Hole" ? "#ff00ff" : (sys.phenomenon === "Solar Flare" ? "#ffaa00" : (sys.phenomenon === "Alien Monolith" ? "#00ff88" : (sys.phenomenon === "Ion Storm" ? "#33aaff" : "#aaccff")));
                 let anomImg = "";
-                if (sys.phenomenon === "Alien Monolith") anomImg = `<img src="../assets/sprites/kstellar/anomaly_monolith.png" width="34" height="34" style="vertical-align:middle; margin-right:8px; border:1px solid ${pColor};" onerror="this.style.display='none'">`;
-                else if (sys.phenomenon === "Black Hole") anomImg = `<img src="../assets/sprites/kstellar/anomaly_blackhole.png" width="34" height="34" style="vertical-align:middle; margin-right:8px; border:1px solid ${pColor};" onerror="this.style.display='none'">`;
-                else if (sys.phenomenon === "Ion Storm") anomImg = `<img src="../assets/sprites/kstellar/anomaly_ionstorm.png" width="34" height="34" style="vertical-align:middle; margin-right:8px; border:1px solid ${pColor};" onerror="this.style.display='none'">`;
+                if (sys.phenomenon === "Alien Monolith") anomImg = `<img src="../assets/sprites/kspace/kspace_asteroid.png" width="34" height="34" style="vertical-align:middle; margin-right:8px; border:1px solid ${pColor};" onerror="this.style.display='none'">`;
+                else if (sys.phenomenon === "Black Hole") anomImg = `<img src="../assets/sprites/kspace/kspace_planet_ringed.png" width="34" height="34" style="vertical-align:middle; margin-right:8px; border:1px solid ${pColor};" onerror="this.style.display='none'">`;
+                else if (sys.phenomenon === "Ion Storm") anomImg = `<img src="../assets/sprites/kspace/kspace_strike_flare.png" width="34" height="34" style="vertical-align:middle; margin-right:8px; border:1px solid ${pColor};" onerror="this.style.display='none'">`;
                 phenomBadge = `<div style="display:flex; align-items:center; margin: 8px 0; padding: 6px; border: 1px dashed ${pColor}; color: ${pColor}; background: rgba(0,0,0,0.5); font-size: 13px;">
                     ${anomImg}<div><strong>[★ PHENOMENON DETECTED]</strong><br>${sys.phenomenon.toUpperCase()}</div>
                 </div>`;
@@ -2625,7 +2631,12 @@
         }
 
         // --- Continuous Map & Combat Render Loop ---
+        let renderLoopActive = true;
         function renderCanvasLoop(timestamp) {
+            if (document.hidden) {
+                renderLoopActive = false;
+                return;
+            }
             animFrameTime = timestamp * 0.001;
 
             // 1. Draw Map Background Canvas
@@ -3840,6 +3851,10 @@
                 if (soundEnabled) {
                     if (droneEnabled && !droneOsc1) startAmbientDrone();
                     if (fmMusicEnabled && !fmMusicTimer) startFmMusic();
+                }
+                if (!renderLoopActive) {
+                    renderLoopActive = true;
+                    requestAnimationFrame(renderCanvasLoop);
                 }
             }
         });
