@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://webring
   kilo_graphics: KCosmic
   kilo_soundscape: KStellar
-  kilo_tester: KQuest
+  kilo_tester: KColony
   kilo_usability: KQuest
   kilo_qa: KChat
   kilo_expander: KQuest
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KMystery
-  timestamp: '2026-11-01T03:14:44-08:00'
+  agent: kilo-tester
+  app: KQuest
+  timestamp: '2026-11-01T03:40:16-08:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -133,11 +133,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KQuest`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Fix NaN damage in sendMpAction(SPELL) and sendDuelAction(SKILL) by reading player.int instead of undefined player.mag, apply 50% damage reduction for GUARD and PARRY, and call a shared while-loop checkLevelUp() (+2 SP and companion scaling) across Raid, Duel, Bounty, and Combat victories; tick and decrement currentEnemy burningTurns/poisonedTurns/frozenTurns in enemyTurn() and KQuest/main.c EnemyTurn(); log all 18 biome hazards + Phoenix auto-revive in triggerHazard(); wire claimQuests() button, unlock unreachable achievements 0/1/2/5/6/7, apply Utility T1/T2 and Cleric +10 MaxHP passives, preserve gear prefixes + consumable metadata + phoenixElixirs sync, and fix KQuest/main.c Ranger companion turn, upkeep departure reset, Game Over Load button, and g_KeyBinds/[M] hotkeys. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -153,6 +152,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html`, `KCyber/main.c` | **[ARGON REVIEW]:** Stop accept from overwriting native node_files and stop download in kcyber.html from double-paying 2x contract reward (keep contract file separate alongside node paydata in ls/download and persist/award active_mission_reward once in both kcyber.html and KCyber/main.c); fix KCyber/main.c WM_TIMER (id 2) attacking while connected_node is active after PIN crack and call KillTimer(hwnd, 2) on breach/abort/fail/reboot; handle reboot globally before in_shop/hacking_node/connected_node branches (resetting all 3 modes + updatePrompt) so the toolbar Reboot button never fails; persist ice_slowed in F5/F9 saves, null-guard audioCtx.state + add e.stopPropagation() on modal Esc in cmdInput keydown so closing F1 Help never aborts an active hack, pause renderLoop and ice_interval when document.hidden, and add connect 2-6 shorthand + VK_UP/VK_DOWN history to KCyber/main.c. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | **[ARGON REVIEW]:** Fix KStellar/main.c dead station buttons in WM_COMMAND by implementing missing handlers for ID_BTN_BUY_MED (108), ID_BTN_SELL_MED (109), ID_BTN_REPAIR (110), and ID_BTN_REFUEL (111), include cargoMedicine in all cargoMax checks, hide hBtnBuyMed/hBtnSellMed/hBtnRepair/hBtnRefuel in ShowManualView, non-docked WM_LBUTTONDOWN, and combat start so they stop overlapping Manual/Combat controls, add Emergency Distress Beacon fallback when stranded without fuel, implement missing phenomenon 4 (Alien Monolith) and 5 (Ion Storm) rewards in ID_BTN_INVESTIGATE + WM_PAINT rings, spawn/label enemyClass 3 (Stealth Infiltrator) properly while fixing engineLevel flee scaling and shieldLevel damage absorption in combat, fix GDI HBRUSH leaks in WM_DRAWITEM, route WM_KEYDOWN in GetMessage loop so button clicks stop breaking hotkeys (mapping M to sound mute and H/F1 to Manual); in kstellar.html fix saveGameState/loadGameState quota fallback to persist s.market (food, minerals, tech, medicine) instead of undefined s.food_price, make emergencyBeacon() add +30% fuel (clamped to 100) to prevent >30%-jump soft-locks, and pause renderCanvasLoop rAF when document.hidden. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Wire starforgeExpansion and starforgeVFS (generateBlueprintCode, loadBlueprintCode, loadPreset, saveActiveBlueprint) to state.grid with numeric MODULE_DEFS IDs (1..24) + state.calculateTelemetry()/updateUI() instead of undefined window.shipGrid/window.calcShipStats(); apply overclock biases and wire flightTelemetry debrief to flightSim on #btn-flight-dock and Esc; fix skirmish NaN damage (pr.dmg vs pr.damage), state.resources.credits/reputation victory payout, missing audio.playLaser(), tacticalRoute DPS multipliers, >=100% heat scram, boss pursuit AI, starter Vanguard power/heat deficit, exportBomCsv() NaN shields, #spec-crew/costDe sync, and #btn-rush-fab free-build exploit; in KStarForge/main.c add Splash Enter/C/F/E/L keys, GetAsyncKeyState 2D heading flight/mining, drydock cost deduction, and contract save persistence. |
+| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Fix NaN damage in sendMpAction(SPELL) and sendDuelAction(SKILL) by reading player.int instead of undefined player.mag, apply 50% damage reduction for GUARD and PARRY, and call a shared while-loop checkLevelUp() (+2 SP and companion scaling) across Raid, Duel, Bounty, and Combat victories; tick and decrement currentEnemy burningTurns/poisonedTurns/frozenTurns in enemyTurn() and KQuest/main.c EnemyTurn(); log all 18 biome hazards + Phoenix auto-revive in triggerHazard(); wire claimQuests() button, unlock unreachable achievements 0/1/2/5/6/7, apply Utility T1/T2 and Cleric +10 MaxHP passives, preserve gear prefixes + consumable metadata + phoenixElixirs sync, and fix KQuest/main.c Ranger companion turn, upkeep departure reset, Game Over Load button, and g_KeyBinds/[M] hotkeys. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KQuest`
@@ -300,6 +300,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T03:40:16-08:00 — kilo-tester: KQuest (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-tester updates for KQuest across web and native targets.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-11-01T03:14:44-08:00 — kilo-graphics: KMystery (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 assets already integrated and zero perimeter glints.
   - Handoff: Advanced `kilo-graphics` to `KCosmic`; rotated active agent to `kilo-tester`.
@@ -323,8 +328,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Fixed HiDPI skirmish spawn, wired throttled SKIRMISH_STATE and SKIRMISH_FIRE moves, and rendered peerBlueprint modular hulls in flightSim.
   - Native Win32 C parity: added SaveDebriefFile [D] export and status bar integration.
   - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
-
-- **2026-11-01T01:22:18-08:00 — kilo-qa: KNetMap (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-qa updates for KNetMap across web and native targets.
-  - Handoff: Advanced `kilo-qa` to `KChat`; rotated active agent to `kilo-expander`.

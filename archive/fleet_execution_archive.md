@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T01:22:18-08:00 — kilo-qa: KNetMap (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KNetMap across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KChat`; rotated active agent to `kilo-expander`.
+
 - **2026-11-01T01:36:42-07:00 — kilo-usability: KStarForge (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 331.4 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.08%, HEAD Δ 8.14%, 0 fail, 0 warn, 8.4s)).
   - Layout: Compacted 44px header (white-space nowrap), sized #blueprint-canvas to min(470px, calc(100vh - 215px)) for 0px scroll, moved #toast-container to top-right, and compacted sidebar telemetry.
