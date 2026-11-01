@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T18:33:16-07:00 — kilo-review: KStellar (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 800x563 and audited kstellar.html + KStellar/main.c).
+  - Visual/UX Findings: 3-row dashboard (with dead BGM/Drone toggles) + padding squeezes #map-canvas to 35% (468x334) and clips 100% of docked station controls below #info-panel fold; #manual-modal clips mid-sentence; blocking alert() spam interrupts warp turns; missing HiDPI scaling, keyboard map nav, and star spacing.
+  - Feature/Parity Findings: KStellar/main.c Buy/Sell Medicine, Repair, and Refuel buttons have zero WM_COMMAND handlers (dead no-ops) and leak across Manual/Combat views; Alien Monolith/Ion Storm anomalies yield empty popups in C; kstellar.html quota-save fallback reads undefined s.food_price and renderCanvasLoop runs when hidden.
+  - Dispatched surgical Row-1 fix specs to kilo-usability, kilo-tester, kilo-graphics, and kilo-expander.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KStellar`, `kilo-tester`->`KStellar`, `kilo-graphics`->`KStellar`, `kilo-expander`->`KStellar`]; advanced `kilo-review` to `KStarForge`; next agent `kilo-creator`.
+
 - **2026-10-31T18:23:17-07:00 — kilo-expander: KCyber (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KCyber across web and native targets.

@@ -1653,6 +1653,7 @@
   // --- CANVAS: TACTICAL RADAR TOPOLOGY ---
   let radarAngle = 0;
   function drawRadar() {
+    if (document.hidden) return;
     const canvas = document.getElementById('radarCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -1803,6 +1804,7 @@
 
   // --- CANVAS: MULTI-CHANNEL OSCILLOSCOPE ---
   function drawScope() {
+    if (document.hidden) return;
     const canvas = document.getElementById('scopeCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -1956,6 +1958,9 @@
         theme: state.theme,
         scanlines: state.scanlines,
         tickRate: state.tickRate,
+        channels: state.channels,
+        streamPaused: state.streamPaused,
+        logs: state.logs.slice(0, 100),
         timestamp: Date.now()
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -1976,16 +1981,45 @@
         return;
       }
       const data = JSON.parse(raw);
-      state.nodes = data.nodes || state.nodes;
-      state.selectedId = data.selectedId || state.selectedId;
-      state.beaconActive = !!data.beaconActive;
-      state.theme = data.theme || 'phosphor';
-      state.scanlines = data.scanlines !== undefined ? data.scanlines : true;
-      state.tickRate = data.tickRate || 500;
+      if (data.nodes) state.nodes = data.nodes;
+      if (data.selectedId) state.selectedId = data.selectedId;
+      if (data.beaconActive !== undefined) state.beaconActive = !!data.beaconActive;
+      if (data.theme) state.theme = data.theme;
+      if (data.scanlines !== undefined) state.scanlines = data.scanlines;
+      if (data.tickRate) state.tickRate = data.tickRate;
+      if (data.channels) state.channels = Object.assign(state.channels, data.channels);
+      if (data.streamPaused !== undefined) state.streamPaused = !!data.streamPaused;
+      if (data.logs && Array.isArray(data.logs)) state.logs = data.logs;
+
+      // Prevent tutorial trigger on restored session
+      try {
+        localStorage.setItem(TUT_KEY, '1');
+      } catch (e) {}
 
       applyTheme();
+
+      const tickSelect = document.getElementById('tickRateSelector');
+      if (tickSelect) tickSelect.value = String(state.tickRate);
+
+      const btnPause = document.getElementById('btnPauseStream');
+      if (btnPause) {
+        btnPause.textContent = state.streamPaused ? 'RESUME [SPACE]' : 'PAUSE [SPACE]';
+        btnPause.classList.toggle('active', state.streamPaused);
+      }
+
+      const chA = document.getElementById('chA');
+      if (chA) chA.classList.toggle('active-a', !!state.channels.a);
+      const chB = document.getElementById('chB');
+      if (chB) chB.classList.toggle('active-b', !!state.channels.b);
+      const chC = document.getElementById('chC');
+      if (chC) chC.classList.toggle('active-c', !!state.channels.c);
+      const chD = document.getElementById('chD');
+      if (chD) chD.classList.toggle('active-d', !!state.channels.d);
+
+      startTickLoop();
       renderRoster();
       renderDetail();
+      renderLogs();
       appendLog('INFO', 'Session quickloaded successfully [F9]');
       playPingAck();
       alertUserToast('QUICKLOAD SUCCESSFUL [F9]');
@@ -2105,7 +2139,9 @@
 
   function closeTutorial() {
     document.getElementById('tutorialModal').style.display = 'none';
-    localStorage.setItem(TUT_KEY, '1');
+    try {
+      localStorage.setItem(TUT_KEY, '1');
+    } catch (e) {}
     appendLog('INFO', 'Onboarding tutorial completed');
   }
 
@@ -2357,14 +2393,58 @@
     });
     document.getElementById('btnSkipTutorial').addEventListener('click', closeTutorial);
 
+    // Lifecycle & Resource Hygiene: Pause loops when document is hidden
+    let wasPausedBeforeHidden = false;
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        wasPausedBeforeHidden = state.streamPaused;
+        state.streamPaused = true;
+        if (tickTimer) {
+          clearInterval(tickTimer);
+          tickTimer = null;
+        }
+      } else {
+        if (!wasPausedBeforeHidden) {
+          state.streamPaused = false;
+        }
+        startTickLoop();
+        requestAnimationFrame(drawRadar);
+        requestAnimationFrame(drawScope);
+      }
+    });
+
     // Global Hotkeys
     window.addEventListener('keydown', e => {
-      // Escape closes open modals
+      // Escape closes open modals & marks tutorial seen
       if (e.key === 'Escape') {
-        document.getElementById('helpModal').style.display = 'none';
-        document.getElementById('settingsModal').style.display = 'none';
-        document.getElementById('tutorialModal').style.display = 'none';
+        const tut = document.getElementById('tutorialModal');
+        if (tut && tut.style.display !== 'none') {
+          closeTutorial();
+        }
+        const help = document.getElementById('helpModal');
+        if (help) help.style.display = 'none';
+        const settings = document.getElementById('settingsModal');
+        if (settings) settings.style.display = 'none';
+        const splash = document.getElementById('splashScreen');
+        if (splash && splash.style.display !== 'none') {
+          initAudio();
+          splash.style.display = 'none';
+          playPingAck();
+          if (!localStorage.getItem(TUT_KEY)) {
+            openTutorial();
+          }
+        }
         return;
+      }
+
+      // If splash screen is active, Space or Enter begins operations
+      const splash = document.getElementById('splashScreen');
+      if (splash && splash.style.display !== 'none') {
+        if (e.key === 'Enter' || e.code === 'Space') {
+          e.preventDefault();
+          document.getElementById('btnSplashStart').click();
+          return;
+        }
       }
 
       // If typing in input, don't trigger hotkeys

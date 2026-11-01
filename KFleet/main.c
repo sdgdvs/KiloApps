@@ -287,6 +287,8 @@ static void QuickLoadState(void) {
 
     CloseHandle(hFile);
     InvalidateRect(g_hwnd, NULL, FALSE);
+    HANDLE hTut = CreateFileA("kfleet_tut.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) CloseHandle(hTut);
     AppendLog("[STATE] Session state restored from kfleet.dat [F9]");
 }
 
@@ -479,6 +481,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
         case WM_KEYDOWN: {
             switch (wParam) {
+                case VK_ESCAPE:
+                    if (g_telemetry_paused) {
+                        g_telemetry_paused = 0;
+                        AppendLog("[CONSOLE] Telemetry stream resumed.");
+                    }
+                    break;
                 case VK_F1:
                     ShowHelp(hwnd);
                     break;

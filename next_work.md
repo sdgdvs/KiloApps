@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KCalc
-  kilo_qa: KFleet
+  kilo_qa: KNetMap
   kilo_expander: KStellar
   kilo_review: KStarForge
 virtual_web_target: kweb://demoscene
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KStellar
-  timestamp: '2026-10-31T22:22:21-07:00'
+  agent: kilo-qa
+  app: KFleet
+  timestamp: '2026-10-31T22:34:34-07:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -172,11 +172,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | **[ARGON REVIEW]:** Compact 800x563 layout in kstellar.html (reduce body padding to 10px 12px, tighten #dashboard to 1 row by hiding dead #drone-toggle-btn and #music-toggle-btn when !window.__KILO_BGM_ENABLED and labeling #audio-toggle-btn SFX ON/OFF [M], collapse empty #mission-status when !activeMission, and add [TRADE] [SHIPYARD] [MISSIONS] [DIPLOMACY] sub-tabs in #info-panel) so #map-canvas expands above 65% height and station action buttons are visible above the fold on boot without scrolling; compact #manual-modal spacing so Section 1-5 text never clips at 800x563; replace all blocking alert()/confirm() popups in travelTo/buy/sell/upgrade/diplomacy/investigatePhenomenon with an Esc/Space-dismissible in-DOM event modal and inline Emergency Beacon button plus Buy Max/Sell All buttons; add devicePixelRatio HiDPI scaling to #map-canvas and #combat-canvas, boost sector watermark contrast to 0.28 alpha, enforce minimum star spacing (dist >= 11) and quadrant-matched sector assignment in generateGalaxy()/GenerateGalaxy(), and wire Tab/Arrow system cycling + Enter/Space warp/dock keyboard navigation in kstellar.html and KStellar/main.c. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KFleet`
+- **Active Target**: `KNetMap`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, agent fleet telemetry, queue visualizer, process monitor, dual Win32 C parity, and promote to Mature table. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, channel switcher, offline message spool, dual Win32 C parity, and promote to Mature table. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
@@ -232,6 +231,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KFleet** | `KiloOS/public/apps/kfleet.html` | Pass 5+ (2026-10-31) | System / Telemetry | Complete fleet operations console: live agent telemetry, vector radar, 4-ch strip chart, CLI, F5/F9 state persistence, dual Win32 C parity <999KB. |
 | **KPaint** | `KiloOS/public/apps/kpaint.html` | Pass 5+ (2026-10-31) | Media / Imaging & Graphics Studio | Complete retro paint studio with multi-layer canvas, F5/F9 snapshot persistence, retro palettes (C64/GameBoy/CGA/Amiga), tool drawer, flipbook animation, and Win32 C parity. |
 | **KCipher** | `KiloOS/public/apps/kcipher.html` | Pass 5+ (2026-10-31) | System / Security | Complete cryptographic suite with classical ciphers, RC4/XOR streams, AES-128 CTR, RSA demo, pipeline chaining, frequency cryptanalysis, steganography, F5/F9 persistence, and dual Win32 C parity. |
 | **KGraph** | `KiloOS/public/apps/kgraph.html` | Pass 5+ (2026-10-31) | System | Scientific function graphing studio with Cartesian, Polar, Parametric plotting, numerical calculus, root finding, CSV dataset import/export, and dual Win32 C parity. |
@@ -294,6 +294,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T22:34:34-07:00 — kilo-qa: KFleet (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 82.2 KB, native 18.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kfleet_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KFleet` to Mature archive; advanced `kilo-qa` to `KNetMap`; next agent `kilo-expander`.
+
 - **2026-10-31T22:22:21-07:00 — kilo-usability: KStellar (Stall Circuit Breaker (Auto-Rotated After Consecutive Timeouts))**
   - Status: ROTATED ⚠️ (circuit breaker triggered after 2 consecutive stalled turns on KStellar).
   - Reverted unverified working tree edits and rotated KStellar to queue bottom so fleet execution continues.
@@ -318,10 +324,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction animated hazard stripes, and guestbook signing.
   - Configured KNet URL parameter preservation and verified VFS standalone HTML export.
   - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-31T18:33:16-07:00 — kilo-review: KStellar (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 800x563 and audited kstellar.html + KStellar/main.c).
-  - Visual/UX Findings: 3-row dashboard (with dead BGM/Drone toggles) + padding squeezes #map-canvas to 35% (468x334) and clips 100% of docked station controls below #info-panel fold; #manual-modal clips mid-sentence; blocking alert() spam interrupts warp turns; missing HiDPI scaling, keyboard map nav, and star spacing.
-  - Feature/Parity Findings: KStellar/main.c Buy/Sell Medicine, Repair, and Refuel buttons have zero WM_COMMAND handlers (dead no-ops) and leak across Manual/Combat views; Alien Monolith/Ion Storm anomalies yield empty popups in C; kstellar.html quota-save fallback reads undefined s.food_price and renderCanvasLoop runs when hidden.
-  - Dispatched surgical Row-1 fix specs to kilo-usability, kilo-tester, kilo-graphics, and kilo-expander.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KStellar`, `kilo-tester`->`KStellar`, `kilo-graphics`->`KStellar`, `kilo-expander`->`KStellar`]; advanced `kilo-review` to `KStarForge`; next agent `kilo-creator`.
