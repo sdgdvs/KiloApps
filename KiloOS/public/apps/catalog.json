@@ -299,9 +299,9 @@
     "id": "kfleet",
     "title": "KFleet",
     "folder": "System",
-    "webBytes": 81022,
+    "webBytes": 84124,
     "exeBytes": 18432,
-    "budgetPercent": 8.1
+    "budgetPercent": 8.4
   },
   {
     "id": "kfont",
@@ -683,9 +683,9 @@
     "id": "kstellar",
     "title": "KStellar",
     "folder": "Games",
-    "webBytes": 214874,
-    "exeBytes": 166400,
-    "budgetPercent": 21.5
+    "webBytes": 215452,
+    "exeBytes": 168960,
+    "budgetPercent": 21.6
   },
   {
     "id": "ksteno",

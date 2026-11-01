@@ -242,6 +242,8 @@ void ShowStationView(HWND hwnd);
 void UpdateDashboard();
 int SaveGame();
 int LoadGame();
+int ExportLedger();
+void DriftMarketPrices();
 int HasSavedGame();
 int HasSeenTutorial();
 void MarkTutorialSeen();
@@ -444,6 +446,66 @@ int LoadGame() {
     memcpy(systems, d.systems, sizeof(System) * MAX_SYSTEMS);
     MarkTutorialSeen();
     return 1;
+}
+
+int ExportLedger() {
+    FILE* f = fopen("kstellar_ledger.txt", "w");
+    if (!f) return 0;
+    fprintf(f, "================================================================================\n");
+    fprintf(f, "                    KSTELLAR STARFLEET TRADE & FLEET LEDGER\n");
+    fprintf(f, "                    GALACTIC COMMERCE & COMMAND REGISTRY (1999)\n");
+    fprintf(f, "================================================================================\n");
+    fprintf(f, "Flagship Vessel:     ISS CELESTIAL NAVIGATOR\n");
+    fprintf(f, "Current System:      %s (ID: %d)\n", systems[currentSystemId].name, currentSystemId);
+    fprintf(f, "Structural Armor:    %d / %d HP\n", hull, maxHull);
+    fprintf(f, "Reactor Fuel Tank:   %d%%\n", fuel);
+    fprintf(f, "Liquid Treasury:     K%d Credits\n", credits);
+    int usedCargo = cargoFood + cargoMinerals + cargoTech + cargoMedicine;
+    fprintf(f, "Cargo Hold Usage:    %d / %d Tons\n\n", usedCargo, cargoMax);
+    fprintf(f, "[1] SHIP SUBSYSTEM SPECIFICATIONS\n");
+    fprintf(f, "- Engine Tier: %d | Cargo Tier: %d | Weapons Tier: %d | Shields Tier: %d\n\n",
+            engineLevel, cargoLevel, weaponLevel, shieldLevel);
+    fprintf(f, "[2] CARGO MANIFEST\n");
+    fprintf(f, "- Food: %d Tons | Minerals: %d Tons | Tech: %d Tons | Medicine: %d Tons\n\n",
+            cargoFood, cargoMinerals, cargoTech, cargoMedicine);
+    fprintf(f, "[3] FACTION STANDINGS\n");
+    fprintf(f, "- Federation: %+d | Traders: %+d | Pirates: %+d\n\n", repFed, repTraders, repPirates);
+    fprintf(f, "[4] GALACTIC COMMODITY QUOTATIONS (KNOWN SECTORS)\n");
+    fprintf(f, "SysID | System Name         | Food   | Minerals | Tech   | Medicine\n");
+    fprintf(f, "------+---------------------+--------+----------+--------+----------\n");
+    for (int i = 0; i < 15 && i < MAX_SYSTEMS; i++) {
+        fprintf(f, "%5d | %-19s | K%-5d | K%-7d | K%-5d | K%-7d\n",
+                i, systems[i].name, systems[i].food_price, systems[i].minerals_price,
+                systems[i].tech_price, systems[i].medicine_price);
+    }
+    fprintf(f, "================================================================================\n");
+    fprintf(f, "[END OF STARFLEET TELEMETRY - CONFIDENTIAL COMMAND ARCHIVE]\n");
+    fclose(f);
+    return 1;
+}
+
+void DriftMarketPrices() {
+    for (int i = 0; i < MAX_SYSTEMS; i++) {
+        int df = (rand() % 21) - 10;
+        systems[i].food_price += (systems[i].food_price * df) / 100;
+        if (systems[i].food_price < 12) systems[i].food_price = 12;
+        if (systems[i].food_price > 65) systems[i].food_price = 65;
+
+        int dm = (rand() % 21) - 10;
+        systems[i].minerals_price += (systems[i].minerals_price * dm) / 100;
+        if (systems[i].minerals_price < 25) systems[i].minerals_price = 25;
+        if (systems[i].minerals_price > 130) systems[i].minerals_price = 130;
+
+        int dt = (rand() % 21) - 10;
+        systems[i].tech_price += (systems[i].tech_price * dt) / 100;
+        if (systems[i].tech_price < 80) systems[i].tech_price = 80;
+        if (systems[i].tech_price > 320) systems[i].tech_price = 320;
+
+        int dmed = (rand() % 21) - 10;
+        systems[i].medicine_price += (systems[i].medicine_price * dmed) / 100;
+        if (systems[i].medicine_price < 40) systems[i].medicine_price = 40;
+        if (systems[i].medicine_price > 190) systems[i].medicine_price = 190;
+    }
 }
 
 static HFONT hFont = NULL;
@@ -1814,6 +1876,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     PlaySfx(SFX_WARP);
                     fuel -= fuelCost;
                     currentSystemId = selectedSystem;
+                    DriftMarketPrices();
                     GenerateStationMissions();
                     
                     int forcedCombat = 0;
@@ -2481,6 +2544,13 @@ encounter_processed:
                     ShowStationView(hwnd);
                     return 0;
                 }
+            }
+            if (wParam == 'L' || wParam == 'l') {
+                if (ExportLedger()) {
+                    PlaySfx(SFX_UPGRADE);
+                    SetWindowText(hMissionText, "★ LEDGER EXPORTED (kstellar_ledger.txt)");
+                }
+                return 0;
             }
             if (wParam == 'M' || wParam == 'm') {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SOUND_TOGGLE, 0), (LPARAM)hBtnSoundToggle);

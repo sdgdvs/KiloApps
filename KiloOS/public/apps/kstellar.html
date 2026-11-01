@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KStellar</title>
+    <script src="../assets/js/retro_multiplayer.js"></script>
     <style>
         body {
             background-color: #050508;
@@ -198,9 +199,11 @@
             <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
                 <button id="save-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#00ffcc; color:#00ffcc;" onclick="quickSave()" title="Quicksave (F5)">💾 SAVE (F5)</button>
                 <button id="load-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#00ffcc; color:#00ffcc;" onclick="quickLoad()" title="Quickload (F9)">📂 LOAD (F9)</button>
-                <button id="export-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#88ccff; color:#88ccff;" onclick="exportSaveFile()" title="Export JSON Save">⏏ EXPORT</button>
-                <button id="import-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#88ccff; color:#88ccff;" onclick="document.getElementById('import-file-input').click()" title="Import JSON Save">📥 IMPORT</button>
+                <button id="export-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#88ccff; color:#88ccff;" onclick="exportSaveFile()" title="Export JSON Save to VFS / File">⏏ EXPORT</button>
+                <button id="import-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#88ccff; color:#88ccff;" onclick="importSaveAction()" title="Import JSON Save from VFS / File">📥 IMPORT</button>
                 <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importSaveFile(event)">
+                <button id="ledger-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#00e5ff; color:#00e5ff;" onclick="exportCaptainLedger()" title="Export Captain Trade & Fleet Ledger to VFS (/home/docs/kstellar_ledger.txt)">📜 LEDGER</button>
+                <button id="multiplayer-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#00ff88; color:#00ff88;" onclick="openMultiplayerModal()" title="Galactic Sector Trade & Bounty Race">🌐 MULTIPLAYER</button>
                 <button id="manual-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#ffff00; color:#ffff00;" onclick="openManual()">📖 MANUAL (H)</button>
                 <button id="audio-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="toggleAudio()" title="Toggle Master Audio [M]">🔊 AUDIO: ON [M]</button>
                 <button id="drone-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="toggleDrone()">🌌 DRONE: ON</button>
@@ -208,10 +211,15 @@
             </div>
         </div>
         <div id="toast" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(0,30,45,0.95); border:1px solid #00ffcc; color:#00ffcc; padding:10px 18px; border-radius:4px; font-size:13px; font-weight:bold; z-index:9999; box-shadow:0 0 15px rgba(0,255,204,0.5); pointer-events:none; text-align:center; transition:opacity 0.3s;"></div>
-        <div id="faction-bar" style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:10px; padding:6px 10px; border:1px solid #00ffcc; background:rgba(0,25,35,0.7); box-shadow: 0 0 10px rgba(0,255,204,0.2);">
-            <span>FEDERATION: <span id="rep-fed" style="color:#00ffff; font-weight:bold;">+10 (Neutral)</span></span>
-            <span>TRADERS GUILD: <span id="rep-trd" style="color:#00ff00; font-weight:bold;">+15 (Friendly)</span></span>
-            <span>PIRATE SYNDICATE: <span id="rep-pir" style="color:#ff6666; font-weight:bold;">-15 (Unfriendly)</span></span>
+        <div id="faction-bar" style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:10px; padding:6px 10px; border:1px solid #00ffcc; background:rgba(0,25,35,0.7); box-shadow: 0 0 10px rgba(0,255,204,0.2); flex-wrap:wrap; gap:4px;">
+            <span>FEDERATION: <span id="rep-fed" style="color:#00ffff; font-weight:bold;">+10 (Neutral)</span> <span id="badge-fed-treaty" style="font-size:11px; color:#00ff88;"></span></span>
+            <span>TRADERS GUILD: <span id="rep-trd" style="color:#00ff00; font-weight:bold;">+15 (Friendly)</span> <span id="badge-trd-treaty" style="font-size:11px; color:#00ff88;"></span></span>
+            <span>PIRATE SYNDICATE: <span id="rep-pir" style="color:#ff6666; font-weight:bold;">-15 (Unfriendly)</span> <span id="badge-pir-treaty" style="font-size:11px; color:#00ff88;"></span></span>
+        </div>
+        <div id="race-hud" style="display:none; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:10px; padding:6px 12px; border:1px solid #00ff88; background:rgba(0,30,20,0.9); box-shadow:0 0 12px rgba(0,255,136,0.3); color:#00ff88; flex-wrap:wrap; gap:6px;">
+            <div><strong>🏁 SECTOR TRADE &amp; BOUNTY RACE:</strong> Turn <span id="race-turn-val">1</span>/15 | Target: ₭5,000 or 2 Bounties</div>
+            <div><strong>YOU:</strong> ₭<span id="race-player-cr">1,000</span> (<span id="race-player-bounties">0</span> 🎯) vs <span id="race-rival-name" style="color:#ffcc00; font-weight:bold;">Commander Vance</span>: ₭<span id="race-rival-cr">1,000</span> (<span id="race-rival-bounties">0</span> 🎯)</div>
+            <button class="action-btn" style="margin:0; padding:2px 8px; font-size:11px; border-color:#00ff88; color:#00ff88;" onclick="openMultiplayerModal()">RACE STATUS</button>
         </div>
         <div id="mission-status" style="color: #ff00ff; font-weight: bold; margin-bottom: 10px; min-height: 1.2em; text-shadow: 0 0 5px #ff00ff;"></div>
         <div id="main-view">
@@ -250,6 +258,118 @@
                 </div>
             </div>
         </div>
+        <!-- Captain Trade & Fleet Ledger Modal -->
+        <div id="ledger-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(3,8,16,0.96); z-index:160; flex-direction:column; padding:20px; box-sizing:border-box;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #00e5ff; padding-bottom:8px; margin-bottom:10px;">
+                <div>
+                    <h2 style="margin:0; color:#00e5ff; font-size:18px; letter-spacing:1px; text-shadow:0 0 10px #00e5ff;">★ CAPTAIN TRADE &amp; FLEET LEDGER</h2>
+                    <span style="font-size:11px; color:#88e5ff;">KiloOS VFS: /home/docs/kstellar_ledger.txt</span>
+                </div>
+                <button class="action-btn" style="margin:0; padding:4px 12px; font-size:12px; border-color:#ffff00; color:#ffff00;" onclick="closeLedgerModal()">[X] CLOSE (ESC)</button>
+            </div>
+            <div id="ledger-content" style="flex:1; border:1px solid #00e5ff; padding:15px; overflow-y:auto; background:rgba(0,18,28,0.85); font-family:'Courier New', monospace; font-size:12px; line-height:1.4; color:#aaffee; white-space:pre; box-shadow:inset 0 0 15px rgba(0,229,255,0.2);"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; gap:8px; flex-wrap:wrap;">
+                <span style="font-size:12px; color:#88e5ff;">Cross-App KiloOS IPC Integration</span>
+                <div style="display:flex; gap:8px;">
+                    <button id="btn-ledger-open-kpad" class="action-btn" style="margin:0; padding:6px 14px; font-size:12px; border-color:#00e5ff; color:#00e5ff;" onclick="openLedgerInKPad()">📖 OPEN IN KPAD (OS_LAUNCH_APP)</button>
+                    <button class="action-btn" style="margin:0; padding:6px 14px; font-size:12px; border-color:#00ff88; color:#00ff88;" onclick="saveLedgerToVfsPicker()">💾 SAVE TO VFS...</button>
+                    <button class="action-btn" style="margin:0; padding:6px 14px; font-size:12px; border-color:#ffff00; color:#ffff00;" onclick="closeLedgerModal()">CLOSE</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Subspace Comms / Orbital Traffic Hail Modal -->
+        <div id="hail-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(3,8,16,0.96); z-index:170; flex-direction:column; padding:20px; box-sizing:border-box;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #00ffff; padding-bottom:8px; margin-bottom:12px;">
+                <div>
+                    <h2 id="hail-fleet-title" style="margin:0; color:#00ffff; font-size:18px; letter-spacing:1px; text-shadow:0 0 10px #00ffff;">★ SUBSPACE COMMS: ORBITAL TRAFFIC</h2>
+                    <span id="hail-fleet-subtitle" style="font-size:11px; color:#88ffff;">Local Flotilla Transponder Hail</span>
+                </div>
+                <button class="action-btn" style="margin:0; padding:4px 12px; font-size:12px; border-color:#ffff00; color:#ffff00;" onclick="closeHailModal()">[X] CLOSE COMMS (ESC)</button>
+            </div>
+            <div style="display:flex; gap:16px; flex:1; min-height:0;">
+                <div id="hail-visual" style="width:200px; border:1px solid #00ffff; background:rgba(0,15,30,0.8); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px; text-align:center;">
+                    <div id="hail-avatar" style="width:72px; height:72px; border-radius:50%; border:2px solid #00ffff; display:flex; align-items:center; justify-content:center; font-size:32px; margin-bottom:10px; background:rgba(0,30,50,0.6); box-shadow:0 0 12px rgba(0,255,255,0.4);">🚀</div>
+                    <strong id="hail-flt-name" style="font-size:13px; color:#00ffff;">7th Strike Flotilla</strong>
+                    <span id="hail-flt-faction" style="font-size:11px; color:#aaa; margin-top:4px;">Galactic Federation</span>
+                    <span id="hail-flt-status" style="font-size:10px; color:#00ff88; margin-top:8px;">SIGNAL: STRONG</span>
+                </div>
+                <div style="flex:1; display:flex; flex-direction:column; border:1px solid #00ffff; background:rgba(0,18,28,0.85); padding:15px; box-sizing:border-box;">
+                    <div id="hail-dialog-log" style="flex:1; overflow-y:auto; font-size:13px; line-height:1.5; color:#cceeff; border-bottom:1px solid rgba(0,255,255,0.3); padding-bottom:10px; margin-bottom:12px;"></div>
+                    <div id="hail-actions" style="display:flex; flex-direction:column; gap:6px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RFMS Multiplayer Sector Trade & Bounty Race Modal -->
+        <div id="multiplayer-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(3,8,16,0.97); z-index:180; flex-direction:column; padding:20px; box-sizing:border-box;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #00ff88; padding-bottom:8px; margin-bottom:12px;">
+                <div>
+                    <h2 style="margin:0; color:#00ff88; font-size:18px; letter-spacing:1px; text-shadow:0 0 10px #00ff88;">★ GALACTIC SECTOR TRADE &amp; BOUNTY RACE ★</h2>
+                    <span style="font-size:11px; color:#88ffbb;">Retro Firebase Multiplayer Service (RFMS v2.0) • 15 Warp Jumps Race</span>
+                </div>
+                <button class="action-btn" style="margin:0; padding:4px 12px; font-size:12px; border-color:#ffff00; color:#ffff00;" onclick="closeMultiplayerModal()">[X] CLOSE (ESC)</button>
+            </div>
+            <div style="display:flex; gap:16px; flex:1; min-height:0;">
+                <div style="flex:1; display:flex; flex-direction:column; border:1px solid #00ff88; background:rgba(0,25,20,0.85); padding:15px; box-sizing:border-box;">
+                    <h3 style="margin-top:0; color:#00ff88; font-size:14px;">COMMANDER LOBBY &amp; SETTINGS</h3>
+                    <div style="margin-bottom:12px;">
+                        <label style="font-size:11px; color:#aaa; display:block; margin-bottom:4px;">CAPTAIN CALL-SIGN:</label>
+                        <input type="text" id="mp-pilot-name" style="width:100%; box-sizing:border-box; background:#001510; border:1px solid #00ff88; color:#00ff88; padding:6px 10px; font-family:'Courier New', monospace; font-size:13px; font-weight:bold;" maxlength="24" value="Commander Shepard">
+                    </div>
+                    <div id="mp-conn-badge" style="font-size:11px; padding:4px 8px; border:1px solid #00ff88; background:rgba(0,40,30,0.6); color:#88ffbb; margin-bottom:12px;">
+                        SUBNET: INITIALIZING RFMS TRANSPORT...
+                    </div>
+                    <div style="font-size:12px; line-height:1.4; color:#aaffdd; margin-bottom:14px; background:rgba(0,15,10,0.6); padding:10px; border:1px solid rgba(0,255,136,0.3);">
+                        <strong>RACE DIRECTIVE:</strong><br>
+                        Compete over <strong>15 Warp Jumps</strong> across the galaxy!<br>
+                        • First to amass <strong>₭5,000 Credits</strong> or claim <strong>2 Sector Pirate Bounties</strong> wins the Galactic Sector Trophy (+₭1,000 bonus &amp; +15 all rep).<br>
+                        • 25-Second Mandate 12 solo timeout automatically falls back to simulated AI Star Captain.
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <button id="btn-mp-quickmatch" class="action-btn" style="margin:0; padding:8px; font-size:12px; border-color:#00ff88; color:#00ff88;" onclick="startMultiplayerQuickMatch()">⚡ QUICK MATCH / AUTO-LOBBY</button>
+                        <div style="display:flex; gap:6px;">
+                            <button id="btn-mp-createroom" class="action-btn" style="flex:1; margin:0; padding:8px; font-size:11px;" onclick="createMultiplayerLobby()">➕ CREATE ROOM</button>
+                            <button id="btn-mp-joinroom" class="action-btn" style="flex:1; margin:0; padding:8px; font-size:11px;" onclick="joinMultiplayerByCode()">🚪 JOIN BY CODE</button>
+                        </div>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input type="text" id="mp-room-code-input" placeholder="ENTER ROOM CODE" style="flex:1; background:#001510; border:1px solid #00ff88; color:#00ff88; padding:6px; font-family:'Courier New', monospace; font-size:11px; text-transform:uppercase;">
+                            <button class="action-btn" style="margin:0; padding:6px 10px; font-size:11px; border-color:#00ff88; color:#00ff88;" onclick="joinMultiplayerByCode()">CONNECT</button>
+                        </div>
+                    </div>
+                </div>
+                <div style="flex:1; display:flex; flex-direction:column; border:1px solid #00ff88; background:rgba(0,25,20,0.85); padding:15px; box-sizing:border-box;">
+                    <h3 style="margin-top:0; color:#00ff88; font-size:14px;">SECTOR RACE TELEMETRY &amp; STANDINGS</h3>
+                    <div id="mp-lobby-status" style="font-size:12px; color:#88ffcc; margin-bottom:10px; min-height:36px;">
+                        Status: Ready to deploy. Choose a matchmaking option.
+                    </div>
+                    <div id="mp-code-display" style="display:none; margin-bottom:12px; background:rgba(0,40,25,0.7); border:1px solid #00ff88; padding:8px 12px; font-size:12px;">
+                        <span>INVITE CODE: <strong id="mp-code-val" style="color:#ffff00; font-size:14px; letter-spacing:2px;">----</strong></span>
+                        <button class="action-btn" style="margin-left:10px; padding:2px 6px; font-size:10px;" onclick="copyMultiplayerCode()">📋 COPY</button>
+                    </div>
+                    <div id="mp-countdown-box" style="display:none; font-size:12px; color:#ffcc00; margin-bottom:10px; background:rgba(40,30,0,0.6); padding:6px 10px; border:1px solid #ffaa00;">
+                        ⏳ Solo AI Star Captain fallback in: <strong id="mp-countdown-val">25</strong>s
+                    </div>
+                    <div id="mp-scoreboard" style="flex:1; border:1px solid rgba(0,255,136,0.3); background:rgba(0,15,10,0.6); padding:10px; font-size:12px; line-height:1.5; color:#cceeff; overflow-y:auto;">
+                        <div style="border-bottom:1px solid rgba(0,255,136,0.2); padding-bottom:6px; margin-bottom:6px;">
+                            <strong style="color:#00ff88;">[RACE STANDINGS - 15 JUMPS]</strong>
+                        </div>
+                        <div>You: <span id="sb-player-name">Player</span></div>
+                        <div>Credits: ₭<span id="sb-player-cr">1,000</span> | Bounties Hunted: <span id="sb-player-bounties">0</span></div>
+                        <div>Jumps Taken: <span id="sb-player-jumps">0</span>/15</div>
+                        <hr style="border:0; border-top:1px dashed rgba(0,255,136,0.3); margin:8px 0;">
+                        <div>Rival: <span id="sb-rival-name" style="color:#ffcc00;">Awaiting Match...</span></div>
+                        <div>Rival Credits: ₭<span id="sb-rival-cr">---</span> | Rival Bounties: <span id="sb-rival-bounties">---</span></div>
+                        <div>Rival Status: <span id="sb-rival-status">Offline</span></div>
+                    </div>
+                    <div style="margin-top:10px; display:flex; gap:8px;">
+                        <button id="btn-mp-cancel" class="action-btn" style="flex:1; margin:0; padding:6px; font-size:11px; border-color:#ff4444; color:#ff4444; display:none;" onclick="cancelMultiplayerMatch()">ABORT / LEAVE RACE</button>
+                        <button class="action-btn" style="flex:1; margin:0; padding:6px; font-size:11px; border-color:#ffff00; color:#ffff00;" onclick="closeMultiplayerModal()">CLOSE WINDOW</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="manual-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(3,8,16,0.96); z-index:150; flex-direction:column; padding:20px; box-sizing:border-box;" onclick="if (event.target === this) closeManual()">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #00ffcc; padding-bottom:8px; margin-bottom:10px;">
                 <h2 style="margin:0; color:#00ffcc; font-size:18px; letter-spacing:1px; text-shadow:0 0 10px #00ffcc;">★ STAR CAPTAIN'S MANUAL &amp; CODEX</h2>
@@ -1399,81 +1519,217 @@
             return !!(d && typeof d === 'object' && typeof d.hull === 'number' && d.hull > 0);
         }
 
-        function saveGameState(isQuick = false) {
-            const saveData = {
-                version: 1,
-                timestamp: Date.now(),
-                hull,
-                maxHull,
-                fuel,
-                credits,
-                cargo: { ...cargo },
-                cargoMax,
-                engineLevel,
-                cargoLevel,
-                weaponLevel,
-                shieldLevel,
-                currentSystemId,
-                selectedSystem,
-                repFed,
-                repTraders,
-                repPirates,
-                activeMission,
-                currentStationMissions,
-                systems,
-                soundEnabled,
-                droneEnabled
-            };
-            try {
-                let ok = safeSetStorage('kstellar_save', saveData);
-                if (!ok) {
-                    const lightData = { ...saveData };
-                    lightData.systems = systems.map(s => ({
-                        id: s.id,
-                        market: s.market ? {
-                            food: s.market.food,
-                            minerals: s.market.minerals,
-                            tech: s.market.tech,
-                            medicine: s.market.medicine
-                        } : undefined,
-                        phenomenon: s.phenomenon
-                    }));
-                    ok = safeSetStorage('kstellar_save', lightData);
-                }
-                if (isQuick) {
-                    safeSetStorage('kstellar_quicksave', saveData);
-                }
-                safeSetStorage('kstellar_tutorialSeen', 'true');
-                if (ok) {
-                    if (isQuick) {
-                        showToast("★ QUICK-SAVE RECORDED (F5)");
-                    } else {
-                        showToast("★ GAME SAVED (LOCAL STORAGE)");
+        // --- 4X Active Treaties State ---
+        let activeTreaties = {
+            fedWingman: false,   // Allied Federation fighter strafing run in combat + 20% incoming dmg reduction
+            traderConvoy: false, // -25% jump fuel cost, +15% trade selling markup, +100 Cr trading hub bonus
+            pirateMarque: false  // Safe passage from pirate interdictions, +25% salvage from derelicts
+        };
+
+        // --- Phase VI KiloOS Virtual File System & IPC Mesh ---
+        const KiloVFS = {
+            isSupported() {
+                return typeof window !== 'undefined' && window.parent && window.parent !== window;
+            },
+            write(path, data, notify = true) {
+                if (!KiloVFS.isSupported()) return;
+                try {
+                    const reqId = 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                    window.parent.postMessage({
+                        type: 'VFS_WRITE',
+                        path: path,
+                        data: typeof data === 'string' ? data : JSON.stringify(data, null, 2),
+                        requestId: reqId
+                    }, '*');
+                    if (notify) {
+                        window.parent.postMessage({
+                            type: 'OS_NOTIFY',
+                            title: document.title || 'KStellar',
+                            message: `Saved to VFS: ${path}`
+                        }, '*');
                     }
-                    playBlip();
-                    return true;
-                } else {
-                    showToast("⚠ SAVE FAILED: Storage quota exceeded");
-                    return false;
+                } catch (e) {
+                    console.warn('[KiloVFS] write failed:', e);
                 }
-            } catch (e) {
-                showToast("⚠ SAVE FAILED: Storage quota exceeded");
-                return false;
+            },
+            read(path, cb) {
+                if (!KiloVFS.isSupported()) {
+                    if (cb) cb(null, path);
+                    return;
+                }
+                const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let cleanupTimer = null;
+                const handler = (e) => {
+                    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                        return;
+                    }
+                    if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(e.data.data, e.data.path || path);
+                    }
+                };
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, path);
+                }, 60000); // 60s dialog cleanup timeout
+                window.addEventListener('message', handler);
+                try {
+                    window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
+                } catch (e) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, path);
+                }
+            },
+            showSave(defaultPath, data, cb) {
+                if (!KiloVFS.isSupported()) {
+                    if (cb) cb(null);
+                    return;
+                }
+                const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let cleanupTimer = null;
+                const handler = (e) => {
+                    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                        return;
+                    }
+                    if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (e.data.path) {
+                            KiloVFS.write(e.data.path, data, true);
+                            if (cb) cb(e.data.path);
+                        } else if (cb) {
+                            cb(null);
+                        }
+                    }
+                };
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null);
+                }, 60000); // 60s dialog cleanup timeout
+                window.addEventListener('message', handler);
+                try {
+                    window.parent.postMessage({
+                        type: 'VFS_SHOW_SAVE',
+                        requestId: reqId,
+                        defaultPath: defaultPath,
+                        path: defaultPath
+                    }, '*');
+                } catch (e) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null);
+                }
+            },
+            showOpen(cb) {
+                if (!KiloVFS.isSupported()) {
+                    if (cb) cb(null, null);
+                    return;
+                }
+                const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let cleanupTimer = null;
+                const handler = (e) => {
+                    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                        return;
+                    }
+                    if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (e.data.path) {
+                            KiloVFS.read(e.data.path, cb);
+                        } else if (cb) {
+                            cb(null, null);
+                        }
+                    }
+                };
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, null);
+                }, 60000); // 60s dialog cleanup timeout
+                window.addEventListener('message', handler);
+                try {
+                    window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
+                } catch (e) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, null);
+                }
+            },
+            launchApp(targetApp, path = '') {
+                try {
+                    window.parent.postMessage({
+                        type: 'OS_LAUNCH_APP',
+                        targetApp,
+                        appId: targetApp,
+                        path
+                    }, '*');
+                    window.parent.postMessage({
+                        type: 'OS_NOTIFY',
+                        title: 'KStellar Workstation IPC',
+                        message: `Inspecting in ${targetApp.toUpperCase()}: ${path}`
+                    }, '*');
+                } catch (e) {
+                    console.warn('[KiloVFS] launchApp failed:', e);
+                }
+            }
+        };
+
+        // Incoming KiloOS Shell / File Browser IPC Message Dispatcher
+        window.addEventListener('message', (e) => {
+            if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                return;
+            }
+            const msg = e.data;
+            if (!msg || typeof msg !== 'object') return;
+            if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+                const filePath = msg.path || '';
+                const fileContent = msg.data !== undefined ? msg.data : msg.content;
+                if (fileContent !== undefined && fileContent !== null) {
+                    handleIncomingFileContent(fileContent, filePath);
+                } else if (filePath) {
+                    KiloVFS.read(filePath, (data, path) => {
+                        if (data) {
+                            handleIncomingFileContent(data, path || filePath);
+                        } else {
+                            showToast(`⚠ Could not read VFS file: ${filePath}`);
+                        }
+                    });
+                }
+            }
+        });
+
+        function handleIncomingFileContent(raw, path) {
+            try {
+                const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                if (applyGameState(data)) {
+                    showToast(`★ RESTORED FROM VFS: ${path || 'save'}`);
+                    playUpgrade();
+                } else {
+                    showToast('⚠ File content not recognized as KStellar save');
+                }
+            } catch (err) {
+                showToast('⚠ Failed to parse VFS file content');
             }
         }
 
-        function loadGameState(isQuick = false) {
-            try {
-                let data = isQuick ? safeGetJSON('kstellar_quicksave') : safeGetJSON('kstellar_save');
-                if (!data && isQuick) data = safeGetJSON('kstellar_save');
-                if (!data && !isQuick) data = safeGetJSON('kstellar_quicksave');
-                if (!data) {
-                    showToast("⚠ NO SAVE DATA FOUND (F5 to save)");
-                    playBlip();
-                    return false;
-                }
-                if (typeof data !== 'object') throw new Error("Invalid save structure");
+        function getSavePayload() {
+            return {
+                version: 1,
+                timestamp: Date.now(),
+                hull, maxHull, fuel, credits, cargo: { ...cargo }, cargoMax,
+                engineLevel, cargoLevel, weaponLevel, shieldLevel,
+                currentSystemId, selectedSystem,
+                repFed, repTraders, repPirates,
+                activeTreaties: { ...activeTreaties },
+                activeMission, currentStationMissions,
+                systems, soundEnabled, droneEnabled
+            };
+        }
 
+        function applyGameState(data, isQuick = false) {
+            if (!data || typeof data !== 'object') return false;
+            try {
                 hull = typeof data.hull === 'number' ? data.hull : 100;
                 maxHull = typeof data.maxHull === 'number' ? data.maxHull : 100;
                 fuel = typeof data.fuel === 'number' ? data.fuel : 100;
@@ -1494,6 +1750,13 @@
                 repFed = typeof data.repFed === 'number' ? data.repFed : 10;
                 repTraders = typeof data.repTraders === 'number' ? data.repTraders : 15;
                 repPirates = typeof data.repPirates === 'number' ? data.repPirates : -15;
+                if (data.activeTreaties && typeof data.activeTreaties === 'object') {
+                    activeTreaties = {
+                        fedWingman: Boolean(data.activeTreaties.fedWingman),
+                        traderConvoy: Boolean(data.activeTreaties.traderConvoy),
+                        pirateMarque: Boolean(data.activeTreaties.pirateMarque)
+                    };
+                }
                 activeMission = data.activeMission || null;
                 currentStationMissions = Array.isArray(data.currentStationMissions) ? data.currentStationMissions : [];
                 if (Array.isArray(data.systems) && data.systems.length > 0) {
@@ -1519,7 +1782,7 @@
                     soundEnabled = data.soundEnabled;
                     safeSetStorage('kstellar_soundEnabled', soundEnabled);
                     const btn = document.getElementById('audio-toggle-btn');
-                    if (btn) btn.innerText = soundEnabled ? "🔊 AUDIO: ON" : "🔇 AUDIO: OFF";
+                    if (btn) btn.innerText = soundEnabled ? "🔊 AUDIO: ON [M]" : "🔇 AUDIO: OFF [M]";
                 }
                 if (typeof data.droneEnabled === 'boolean') {
                     droneEnabled = data.droneEnabled;
@@ -1545,17 +1808,77 @@
             }
         }
 
+        function saveGameState(isQuick = false) {
+            const saveData = getSavePayload();
+            try {
+                let ok = safeSetStorage('kstellar_save', saveData);
+                if (!ok) {
+                    const lightData = { ...saveData };
+                    lightData.systems = systems.map(s => ({
+                        id: s.id,
+                        market: s.market ? {
+                            food: s.market.food,
+                            minerals: s.market.minerals,
+                            tech: s.market.tech,
+                            medicine: s.market.medicine
+                        } : undefined,
+                        phenomenon: s.phenomenon
+                    }));
+                    ok = safeSetStorage('kstellar_save', lightData);
+                }
+                if (isQuick) {
+                    safeSetStorage('kstellar_quicksave', saveData);
+                }
+                safeSetStorage('kstellar_tutorialSeen', 'true');
+                if (ok) {
+                    showToast(isQuick ? "★ QUICK-SAVE RECORDED (F5)" : "★ GAME SAVED (LOCAL STORAGE)");
+                    playBlip();
+                    return true;
+                } else {
+                    showToast("⚠ SAVE FAILED: Storage quota exceeded");
+                    return false;
+                }
+            } catch (e) {
+                showToast("⚠ SAVE FAILED: Storage quota exceeded");
+                return false;
+            }
+        }
+
+        function loadGameState(isQuick = false) {
+            try {
+                let data = isQuick ? safeGetJSON('kstellar_quicksave') : safeGetJSON('kstellar_save');
+                if (!data && isQuick) data = safeGetJSON('kstellar_save');
+                if (!data && !isQuick) data = safeGetJSON('kstellar_quicksave');
+                if (!data) {
+                    showToast("⚠ NO SAVE DATA FOUND (F5 to save)");
+                    playBlip();
+                    return false;
+                }
+                return applyGameState(data, isQuick);
+            } catch (e) {
+                showToast("⚠ CORRUPTED SAVE FILE");
+                playBlip();
+                return false;
+            }
+        }
+
         window.exportSaveFile = function() {
-            const saveData = {
-                version: 1,
-                timestamp: Date.now(),
-                hull, maxHull, fuel, credits, cargo: { ...cargo }, cargoMax,
-                engineLevel, cargoLevel, weaponLevel, shieldLevel,
-                currentSystemId, selectedSystem,
-                repFed, repTraders, repPirates,
-                activeMission, currentStationMissions,
-                systems, soundEnabled, droneEnabled
-            };
+            const saveData = getSavePayload();
+            if (KiloVFS.isSupported()) {
+                KiloVFS.showSave('/home/saves/kstellar_save.json', saveData, (path) => {
+                    if (path) {
+                        showToast(`★ SAVE SAVED TO VFS: ${path}`);
+                        playUpgrade();
+                    } else {
+                        exportSaveFallback(saveData);
+                    }
+                });
+            } else {
+                exportSaveFallback(saveData);
+            }
+        };
+
+        function exportSaveFallback(saveData) {
             const blob = new Blob([JSON.stringify(saveData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1567,6 +1890,22 @@
             setTimeout(() => URL.revokeObjectURL(url), 1000);
             showToast("★ SAVE EXPORTED TO FILE");
             playBlip();
+        }
+
+        window.importSaveAction = function() {
+            if (KiloVFS.isSupported()) {
+                KiloVFS.showOpen((content, path) => {
+                    if (content) {
+                        handleIncomingFileContent(content, path);
+                    } else {
+                        const fileInp = document.getElementById('import-file-input');
+                        if (fileInp) fileInp.click();
+                    }
+                });
+            } else {
+                const fileInp = document.getElementById('import-file-input');
+                if (fileInp) fileInp.click();
+            }
         };
 
         window.importSaveFile = function(event) {
@@ -1580,7 +1919,7 @@
                         throw new Error("Invalid save file structure");
                     }
                     safeSetStorage('kstellar_save', data);
-                    loadGameState(false);
+                    applyGameState(data, false);
                     showToast("★ SAVE IMPORTED SUCCESSFULLY");
                 } catch (err) {
                     alert("Failed to import save: invalid JSON structure.");
@@ -1592,6 +1931,146 @@
                 event.target.value = '';
             };
             reader.readAsText(file);
+        };
+
+
+        // --- Captain Trade & Fleet Ledger Functions ---
+        function generateCaptainLedgerText() {
+            const curSys = systems.find(s => s.id === currentSystemId) || systems[0];
+            const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 19);
+            let lines = [
+                "================================================================================",
+                "                    KSTELLAR STARFLEET TRADE & FLEET LEDGER",
+                "                    GALACTIC COMMERCE & COMMAND REGISTRY (1999)",
+                "================================================================================",
+                `Date / Telemetry:    ${nowStr} (Stardate 1999.${Math.floor((Date.now() / 86400000) % 1000)})`,
+                `Flagship Vessel:     ISS CELESTIAL NAVIGATOR`,
+                `Current Position:    Sector ${curSys.sector} - ${curSys.name} (Coord X:${curSys.x}, Y:${curSys.y})`,
+                `Structural Armor:    ${hull} / ${maxHull} HP`,
+                `Reactor Fuel Tank:   ${fuel}% Capacity`,
+                `Liquid Treasury:     ₭${credits.toLocaleString()} Credits`,
+                `Cargo Hold Usage:    ${getCargoUsed()} / ${cargoMax} Tons (${cargoMax - getCargoUsed()} Tons Free)`,
+                "",
+                "--------------------------------------------------------------------------------",
+                " [1] SHIP SUBSYSTEM SPECIFICATIONS",
+                "--------------------------------------------------------------------------------",
+                `- Warp Drive Engine:       Tier ${engineLevel} (${engineLevel > 1 ? `-${Math.round((1 - 1/engineLevel)*100)}% Jump Fuel` : 'Standard Hyper-coil'})`,
+                `- Cargo Bay Expansion:     Tier ${cargoLevel} (Max Hold: ${cargoMax} Tons)`,
+                `- Pulse Laser Battery:     Tier ${weaponLevel} (+${weaponLevel * 10} Combat Dmg)`,
+                `- Deflector Shield Matrix: Tier ${shieldLevel} (Max Integrity: ${maxHull} HP)`,
+                "",
+                "--------------------------------------------------------------------------------",
+                " [2] CURRENT CARGO MANIFEST",
+                "--------------------------------------------------------------------------------",
+                `- Food Rations:            ${cargo.food || 0} Tons`,
+                `- Heavy Industrial Ore:    ${cargo.minerals || 0} Tons`,
+                `- High-Tech Components:    ${cargo.tech || 0} Tons`,
+                `- Pharmaceuticals/Med:     ${cargo.medicine || 0} Tons`,
+                "",
+                "--------------------------------------------------------------------------------",
+                " [3] FACTION STANDING & ACTIVE CHARTER TREATIES",
+                "--------------------------------------------------------------------------------",
+                `- Galactic Federation:     ${repFed > 0 ? '+' : ''}${repFed} (${getFactionTier(repFed)})`,
+                `  * Naval Escort Charter:   [${activeTreaties.fedWingman ? 'ACTIVE - Allied Interceptor Escort' : 'NONE'}]`,
+                `- Traders Guild:           ${repTraders > 0 ? '+' : ''}${repTraders} (${getFactionTier(repTraders)})`,
+                `  * Guild Convoy Charter:   [${activeTreaties.traderConvoy ? 'ACTIVE - -25% Fuel, +15% Trade Margin, +₭100 Hub Bonus' : 'NONE'}]`,
+                `- Pirate Syndicate:        ${repPirates > 0 ? '+' : ''}${repPirates} (${getFactionTier(repPirates)})`,
+                `  * Syndicate Marque:       [${activeTreaties.pirateMarque ? 'ACTIVE - Zero Ambushes, +25% Salvage' : 'NONE'}]`,
+                "",
+                "--------------------------------------------------------------------------------",
+                " [4] GALACTIC COMMODITY QUOTATIONS (KNOWN SECTORS)",
+                "--------------------------------------------------------------------------------",
+                "SysID | System Name         | Food   | Minerals | Tech   | Medicine | Economy",
+                "------+---------------------+--------+----------+--------+----------+------------------"
+            ];
+
+            systems.slice(0, 15).forEach(s => {
+                const idPad = String(s.id).padStart(5, ' ');
+                const namePad = s.name.padEnd(19, ' ');
+                const fPad = (`₭${s.market.food}`).padEnd(6, ' ');
+                const mPad = (`₭${s.market.minerals}`).padEnd(8, ' ');
+                const tPad = (`₭${s.market.tech}`).padEnd(6, ' ');
+                const medPad = (`₭${s.market.medicine || 60}`).padEnd(8, ' ');
+                const ecoPad = (s.economy || 'Trading Hub').padEnd(18, ' ');
+                lines.push(`${idPad} | ${namePad} | ${fPad} | ${mPad} | ${tPad} | ${medPad} | ${ecoPad}`);
+            });
+
+            lines.push("");
+            lines.push("--------------------------------------------------------------------------------");
+            lines.push(" [5] LOCAL ORBITAL TRAFFIC REPORT");
+            lines.push("--------------------------------------------------------------------------------");
+            const localFleets = galaxyFleets.filter(f => f.targetId === currentSystemId || f.originId === currentSystemId);
+            if (localFleets.length > 0) {
+                localFleets.forEach(flt => {
+                    lines.push(`• ${flt.name} [${flt.faction}] - Bound for System #${flt.targetId} (Speed: ${Math.round(flt.speed * 10000)})`);
+                });
+            } else {
+                lines.push("• No orbital flotillas in immediate proximity.");
+            }
+            lines.push("================================================================================");
+            lines.push("[END OF STARFLEET TELEMETRY - CONFIDENTIAL COMMAND ARCHIVE]");
+
+            return lines.join("\n");
+        }
+
+        window.exportCaptainLedger = function() {
+            playBlip();
+            const text = generateCaptainLedgerText();
+            const ledgerPath = '/home/docs/kstellar_ledger.txt';
+            if (KiloVFS.isSupported()) {
+                KiloVFS.write(ledgerPath, text, true);
+            }
+            showLedgerModal(text, ledgerPath);
+        };
+
+        function showLedgerModal(text, path) {
+            const m = document.getElementById('ledger-modal');
+            const c = document.getElementById('ledger-content');
+            if (c) c.textContent = text;
+            if (m) m.style.display = 'flex';
+        }
+
+        window.closeLedgerModal = function() {
+            playBlip();
+            const m = document.getElementById('ledger-modal');
+            if (m) m.style.display = 'none';
+        };
+
+        window.openLedgerInKPad = function() {
+            playUpgrade();
+            const text = generateCaptainLedgerText();
+            const ledgerPath = '/home/docs/kstellar_ledger.txt';
+            if (KiloVFS.isSupported()) {
+                KiloVFS.write(ledgerPath, text, false);
+                KiloVFS.launchApp('kpad', ledgerPath);
+                showToast("★ LAUNCHED KPAD WITH LEDGER");
+            } else {
+                showToast("⚠ KiloOS IPC requires parent shell; standalone mode active");
+            }
+        };
+
+        window.saveLedgerToVfsPicker = function() {
+            const text = generateCaptainLedgerText();
+            const ledgerPath = '/home/docs/kstellar_ledger.txt';
+            if (KiloVFS.isSupported()) {
+                KiloVFS.showSave(ledgerPath, text, (savedPath) => {
+                    if (savedPath) {
+                        showToast(`★ LEDGER SAVED TO VFS: ${savedPath}`);
+                        playUpgrade();
+                    }
+                });
+            } else {
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'kstellar_ledger.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                showToast("★ LEDGER DOWNLOADED (.TXT)");
+            }
         };
 
         function getCargoUsed() {
@@ -1628,6 +2107,24 @@
             } else {
                 mStatus.innerText = '';
             }
+        }
+
+
+        // --- 4X Dynamic Market Price Drift per Warp Turn ---
+        function driftMarketPrices() {
+            systems.forEach(s => {
+                if (!s.market) return;
+                ['food', 'minerals', 'tech', 'medicine'].forEach(item => {
+                    const current = s.market[item] || (item === 'food' ? 20 : item === 'minerals' ? 40 : item === 'tech' ? 120 : 60);
+                    const deltaPct = (Math.random() * 0.20 - 0.10); // -10% to +10%
+                    let drifted = Math.round(current * (1 + deltaPct));
+                    if (item === 'food') drifted = Math.max(12, Math.min(65, drifted));
+                    if (item === 'minerals') drifted = Math.max(25, Math.min(130, drifted));
+                    if (item === 'tech') drifted = Math.max(80, Math.min(320, drifted));
+                    if (item === 'medicine') drifted = Math.max(40, Math.min(190, drifted));
+                    s.market[item] = drifted;
+                });
+            });
         }
 
         window.repairShip = function() {

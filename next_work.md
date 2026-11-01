@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KCalc
   kilo_qa: KNetMap
-  kilo_expander: KStellar
+  kilo_expander: KCalc
   kilo_review: KStarForge
 virtual_web_target: kweb://demoscene
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KFleet
-  timestamp: '2026-10-31T22:34:34-07:00'
+  agent: kilo-expander
+  app: KStellar
+  timestamp: '2026-10-31T23:23:20-07:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -185,11 +185,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Klondike deal engine, undo history, win fireworks, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KStellar`
+- **Active Target**: `KCalc`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kstellar.html (strict event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) connecting EXPORT/IMPORT to VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ (/home/saves/kstellar_save.json), handling incoming FILE_OPEN/VFS_OPEN messages, and exporting a Captain Trade & Fleet Ledger (/home/docs/kstellar_ledger.txt) with an Open in KPad OS_LAUNCH_APP button; deepen 4X fleet/diplomacy & turn UX with dynamic market price drift per warp turn, interactive hailing of local ORBITAL TRAFFIC fleets, and Friendly (>= +15) Wingman Escort / Convoy Charter treaties; and integrate ../assets/js/retro_multiplayer.js Galactic Sector Trade & Bounty Race mode strictly behind an explicit MULTIPLAYER button (zero autostart, 25000ms AI Star Captain fallback). |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY with standalone blob fallback) for saving/loading calculation tapes and workspace JSON snapshots to /home/docs/, and add live HEX/DEC/OCT/BIN radix readout plus FV/CAGR financial tools to KCalc/main.c (<999 KB). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
@@ -203,6 +202,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmystery_case.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback), add Export Forensic Dossier Report (/home/docs/kmystery_dossier.txt via VFS_WRITE + OS_NOTIFY on case solved) and a Present Clue shortcut inside #dossier-modal, and add Clue Dossier Viewer [C] / double-click inspection parity to KMystery/main.c. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html`, `KCyber/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kcyber.html (event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) connecting Export/Import to VFS_SHOW_SAVE/VFS_WRITE and VFS_SHOW_OPEN/VFS_READ (/home/saves/kcyber_deck.json), handling incoming FILE_OPEN/VFS_OPEN messages, exporting stolen node/contract paydata payloads to /home/crypto/ on download with an Inspect in KHex/KPad OS_LAUNCH_APP button, and adding ../assets/js/retro_multiplayer.js NetLink Intrusion Race duel mode strictly behind an explicit toolbar button (zero autostart, soloTimeoutMs: 25000 rival AI runner fallback). |
+| `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kstellar.html (strict event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) connecting EXPORT/IMPORT to VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ (/home/saves/kstellar_save.json), handling incoming FILE_OPEN/VFS_OPEN messages, and exporting a Captain Trade & Fleet Ledger (/home/docs/kstellar_ledger.txt) with an Open in KPad OS_LAUNCH_APP button; deepen 4X fleet/diplomacy & turn UX with dynamic market price drift per warp turn, interactive hailing of local ORBITAL TRAFFIC fleets, and Friendly (>= +15) Wingman Escort / Convoy Charter treaties; and integrate ../assets/js/retro_multiplayer.js Galactic Sector Trade & Bounty Race mode strictly behind an explicit MULTIPLAYER button (zero autostart, 25000ms AI Star Captain fallback). |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KStarForge`
@@ -294,6 +294,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T23:23:20-07:00 — kilo-expander: KStellar (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KStellar across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
+
 - **2026-10-31T22:34:34-07:00 — kilo-qa: KFleet (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 82.2 KB, native 18.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kfleet_tutorialSeen flag, and Escape modal dismissals.
@@ -318,9 +323,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Upgraded getPlanetSvg() and getCommodityIcon() with multi-layer planetary atmospheres, biomes, and rich SVG items.
   - Glint sweep: eliminated rotating ringworld habitat segments and animated line dash offsets across canvases.
   - Handoff: Advanced `kilo-graphics` to `KMystery`; rotated active agent to `kilo-tester`.
-
-- **2026-10-31T19:35:48-07:00 — kilo-creator: kweb://geocities (GeoCities Neighborhood Portal ('99 Retro Neighborhoods))**
-  - Status: PASS ✅ (0 errors, web 681.8 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Verified SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction animated hazard stripes, and guestbook signing.
-  - Configured KNet URL parameter preservation and verified VFS standalone HTML export.
-  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
