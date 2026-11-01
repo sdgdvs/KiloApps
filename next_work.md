@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://deep-core
   kilo_graphics: KCosmic
   kilo_soundscape: KStellar
-  kilo_tester: KSubmarine
+  kilo_tester: KColony
   kilo_usability: KSubmarine
   kilo_qa: KSys
   kilo_expander: KSubmarine
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
+  agent: kilo-tester
   app: KSubmarine
-  timestamp: '2026-11-01T06:37:54-08:00'
+  timestamp: '2026-11-01T07:22:29-08:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -133,11 +133,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KSubmarine`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | **[ARGON REVIEW]:** Guard keydown in ksubmarine.html when typing in INPUT/TEXTAREA/SELECT (fixing #manualSearchInput triggering hotkeys), wire Space sonar ping + WASD/Arrow rudder/ballast/pitch/throttle + E scan/dredge in ksubmarine.html and KSubmarine/main.c WM_KEYDOWN, make Tab call cycleTarget() outside combat view (and M mute SFX when BGM disabled), apply dead maxHull + polymer bonusHull (scaling hullBar and repairs above 100%) and biolum sonarRangeBonus (+300..1000m scan/survey/ping range), wire #btnBilgePump (ID_BTN_BILGE_PUMP) to bilgePumpMode instead of overwritten bilgePumpActive, include cargoWeight + bilgeWater in buoyancyForce and scale #depthBar to 11000m, add 0%-Hull/O2 Emergency Rescue modal + 12/12 Fauna and 6/6 Threat Victory modal, and pause gameLoop rAF on document.hidden. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -154,6 +153,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | **[ARGON REVIEW]:** Fix KStellar/main.c dead station buttons in WM_COMMAND by implementing missing handlers for ID_BTN_BUY_MED (108), ID_BTN_SELL_MED (109), ID_BTN_REPAIR (110), and ID_BTN_REFUEL (111), include cargoMedicine in all cargoMax checks, hide hBtnBuyMed/hBtnSellMed/hBtnRepair/hBtnRefuel in ShowManualView, non-docked WM_LBUTTONDOWN, and combat start so they stop overlapping Manual/Combat controls, add Emergency Distress Beacon fallback when stranded without fuel, implement missing phenomenon 4 (Alien Monolith) and 5 (Ion Storm) rewards in ID_BTN_INVESTIGATE + WM_PAINT rings, spawn/label enemyClass 3 (Stealth Infiltrator) properly while fixing engineLevel flee scaling and shieldLevel damage absorption in combat, fix GDI HBRUSH leaks in WM_DRAWITEM, route WM_KEYDOWN in GetMessage loop so button clicks stop breaking hotkeys (mapping M to sound mute and H/F1 to Manual); in kstellar.html fix saveGameState/loadGameState quota fallback to persist s.market (food, minerals, tech, medicine) instead of undefined s.food_price, make emergencyBeacon() add +30% fuel (clamped to 100) to prevent >30%-jump soft-locks, and pause renderCanvasLoop rAF when document.hidden. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Wire starforgeExpansion and starforgeVFS (generateBlueprintCode, loadBlueprintCode, loadPreset, saveActiveBlueprint) to state.grid with numeric MODULE_DEFS IDs (1..24) + state.calculateTelemetry()/updateUI() instead of undefined window.shipGrid/window.calcShipStats(); apply overclock biases and wire flightTelemetry debrief to flightSim on #btn-flight-dock and Esc; fix skirmish NaN damage (pr.dmg vs pr.damage), state.resources.credits/reputation victory payout, missing audio.playLaser(), tacticalRoute DPS multipliers, >=100% heat scram, boss pursuit AI, starter Vanguard power/heat deficit, exportBomCsv() NaN shields, #spec-crew/costDe sync, and #btn-rush-fab free-build exploit; in KStarForge/main.c add Splash Enter/C/F/E/L keys, GetAsyncKeyState 2D heading flight/mining, drydock cost deduction, and contract save persistence. |
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Fix NaN damage in sendMpAction(SPELL) and sendDuelAction(SKILL) by reading player.int instead of undefined player.mag, apply 50% damage reduction for GUARD and PARRY, and call a shared while-loop checkLevelUp() (+2 SP and companion scaling) across Raid, Duel, Bounty, and Combat victories; tick and decrement currentEnemy burningTurns/poisonedTurns/frozenTurns in enemyTurn() and KQuest/main.c EnemyTurn(); log all 18 biome hazards + Phoenix auto-revive in triggerHazard(); wire claimQuests() button, unlock unreachable achievements 0/1/2/5/6/7, apply Utility T1/T2 and Cleric +10 MaxHP passives, preserve gear prefixes + consumable metadata + phoenixElixirs sync, and fix KQuest/main.c Ranger companion turn, upkeep departure reset, Game Over Load button, and g_KeyBinds/[M] hotkeys. |
+| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | **[ARGON REVIEW]:** Guard keydown in ksubmarine.html when typing in INPUT/TEXTAREA/SELECT (fixing #manualSearchInput triggering hotkeys), wire Space sonar ping + WASD/Arrow rudder/ballast/pitch/throttle + E scan/dredge in ksubmarine.html and KSubmarine/main.c WM_KEYDOWN, make Tab call cycleTarget() outside combat view (and M mute SFX when BGM disabled), apply dead maxHull + polymer bonusHull (scaling hullBar and repairs above 100%) and biolum sonarRangeBonus (+300..1000m scan/survey/ping range), wire #btnBilgePump (ID_BTN_BILGE_PUMP) to bilgePumpMode instead of overwritten bilgePumpActive, include cargoWeight + bilgeWater in buoyancyForce and scale #depthBar to 11000m, add 0%-Hull/O2 Emergency Rescue modal + 12/12 Fauna and 6/6 Threat Victory modal, and pause gameLoop rAF on document.hidden. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KSubmarine`
@@ -303,6 +303,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T07:22:29-08:00 — kilo-tester: KSubmarine (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-tester updates for KSubmarine across web and native targets.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-11-01T06:37:54-08:00 — kilo-graphics: KSubmarine (Imagen 3 Visual Assets & Glint Sweep)**
   - Status: PASS ✅ (0 errors, web 519.6 KB, native 260.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.56%, HEAD Δ 0.26%, 0 fail, 0 warn, 7.3s)).
   - Integrated 2-stage chroma-keyed Imagen 3 sprites for bathysphere submarine, colossal trench leviathan, and abyssal squid, plus 5 adapted deep-sea sprites (benthic flora, anglerfish fauna, salvage pod, combat drone, and hydrothermal smoker) with graceful procedural fallbacks and upgraded Codex UI visual rendering.
@@ -327,9 +332,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Hardened KiloVFS with origin checks, 60s timeouts, pickers, standalone fallbacks, and incoming FILE_OPEN auto-import.
   - Dual-target Win32 C parity updated in KQuest/main.c for ExportHeroSheetToFile companion formatting.
   - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
-
-- **2026-11-01T04:36:32-08:00 — kilo-qa: KChat (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 113.7 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, kchat_tutorialSeen flag, and Escape modal dismissals.
-  - Dual Parity & Spool: Verified Web HTML + Win32 C parity, offline message spool, and channel switcher.
-  - Mature Quarantine & Handoff: Promoted `KChat` to Mature archive; advanced `kilo-qa` to `KSys`; next agent `kilo-expander`.

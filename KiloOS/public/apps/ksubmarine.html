@@ -1646,6 +1646,60 @@
         </div>
     </div>
 
+    <!-- EMERGENCY RESCUE MODAL -->
+    <div id="rescueModal" class="tutorial-modal-backdrop" style="display: none; z-index: 10000;">
+        <div class="tutorial-modal-card" style="border-color: var(--accent-red); box-shadow: 0 0 24px rgba(239, 68, 68, 0.4);">
+            <div class="tutorial-modal-header" style="background: rgba(239, 68, 68, 0.15); border-bottom-color: var(--accent-red);">
+                <div class="tutorial-modal-title" style="color: var(--accent-red);">
+                    🚨 CATASTROPHIC HULL/O2 FAILURE // EMERGENCY RESCUE
+                </div>
+                <button class="tutorial-modal-close" id="btnCloseRescue">&times;</button>
+            </div>
+            <div class="tutorial-modal-body">
+                <div class="tutorial-alert-box" style="border-color: var(--accent-red); background: rgba(239, 68, 68, 0.1); color: var(--text-bright);">
+                    <strong id="rescueReasonText">CATASTROPHIC DECOMPRESSION:</strong> Bathyscaphe DSV-09 sustained terminal structural breach or life-support failure. Emergency acoustic distress transponder beacon triggered. Surface recovery vessel <em>RV NEREID</em> has winched the bathyscaphe to surface drydock for urgent refit.
+                </div>
+                <div style="font-size: 11px; line-height: 1.6; color: var(--text-bright); margin-top: 10px;">
+                    <div>• <strong>Structural Envelope:</strong> Micro-fractures sealed with molecular fullerene biopolymer.</div>
+                    <div>• <strong>Life Support Scrubbers:</strong> High-pressure O2 purged to 100.0%, CO2 scrubbed to 0.04%.</div>
+                    <div>• <strong>Ballast & Bilge:</strong> Compartment floodwaters evacuated; kingston valves recalibrated.</div>
+                </div>
+            </div>
+            <div class="tutorial-modal-footer">
+                <button id="btnRefitAndRelaunch" class="tutorial-btn-primary" style="background: var(--accent-red); border-color: var(--accent-red); width: 100%;">
+                    🛠️ REFIT DSV-09 & RESUME DIVE EXPEDITION [ENTER / SPACE]
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VICTORY MODAL (12/12 FAUNA + 6/6 THREATS) -->
+    <div id="victoryModal" class="tutorial-modal-backdrop" style="display: none; z-index: 10000;">
+        <div class="tutorial-modal-card" style="border-color: var(--accent-emerald); box-shadow: 0 0 24px rgba(16, 185, 129, 0.4);">
+            <div class="tutorial-modal-header" style="background: rgba(16, 185, 129, 0.15); border-bottom-color: var(--accent-emerald);">
+                <div class="tutorial-modal-title" style="color: var(--accent-emerald);">
+                    🏆 MARIANA TRENCH EXPLORATION SUPREME VICTORY
+                </div>
+                <button class="tutorial-modal-close" id="btnCloseVictory">&times;</button>
+            </div>
+            <div class="tutorial-modal-body">
+                <div class="tutorial-alert-box" style="border-color: var(--accent-emerald); background: rgba(16, 185, 129, 0.1); color: var(--text-bright);">
+                    <strong>CHALLENGER DEEP TRIUMPH:</strong> All 12/12 abyssal fauna documented and all 6/6 apex hostile leviathans pacified! DSV-09 has completed full bathymetric mastery of the Mariana Trench.
+                </div>
+                <div style="font-size: 11px; line-height: 1.6; color: var(--text-bright); margin-top: 10px;">
+                    <div>• <strong>Biodiversity Catalog:</strong> 12 / 12 Distinct Abyssal Species Documented (100% Codex Completion)</div>
+                    <div>• <strong>Subsurface Defense:</strong> 6 / 6 Apex Leviathans & Phantoms Neutralized (Sector Cleared)</div>
+                    <div>• <strong>Research Yield:</strong> Challenger Deep bathymetry and piezophile archives secured.</div>
+                </div>
+            </div>
+            <div class="tutorial-modal-footer" style="display: flex; gap: 8px;">
+                <button id="btnContinuePatrol" class="tutorial-btn-primary" style="background: var(--accent-emerald); border-color: var(--accent-emerald); width: 100%;">
+                    🌊 CONTINUE DEEP PATROL [ESC / SPACE]
+                </button>
+            </div>
+        </div>
+    </div>
+
     <header>
         <div class="header-title">
             <span class="status-badge" id="masterStatusBadge"></span>
@@ -4332,6 +4386,8 @@
                     cabinPressure: 1.0,         // atm (1.00 nominal)
                     bleedValveOpen: false,      // venting cabin pressure
                     bilgePumpMode: 1,           // 0: OFF, 1: AUTO-BALANCE, 2: BOW, 3: CMD, 4: ENG, 5: AFT, 6: OVERDRIVE
+                    rescueModalShown: false,
+                    victoryModalShown: false,
                     compartments: [
                         { id: 'bow', name: 'Forward Sonar & Torpedo Bay', shortCode: 'BOW', integrity: 100.0, water: 0.0, maxWater: 250.0, breachTier: 0, leakRate: 0.0, doorSealed: false, airDam: false, repairProgress: 0.0, isRepairing: false },
                         { id: 'cmd', name: 'Command Sphere & Piloting Deck', shortCode: 'CMD', integrity: 100.0, water: 0.0, maxWater: 250.0, breachTier: 0, leakRate: 0.0, doorSealed: false, airDam: false, repairProgress: 0.0, isRepairing: false },
@@ -5335,9 +5391,79 @@
             });
 
             // --- ENGINEERING UPGRADES & RESEARCH ---
+            // --- EFFECTIVE MAX HULL & BIOLUM SONAR RANGE HELPERS ---
+            function getMaxHullEffective() {
+                const hUpg = (UPGRADES.hull && UPGRADES.hull[state.upgrades.hull - 1]) || { maxHull: 100 };
+                const pUpg = (RESEARCH_PROJECTS.polymers && RESEARCH_PROJECTS.polymers[state.research.polymers - 1]) || { bonusHull: 0 };
+                return (hUpg.maxHull || 100) + (pUpg.bonusHull || 0);
+            }
+
+            function getBiolumSonarBonus() {
+                const bDef = (RESEARCH_PROJECTS.biolum && RESEARCH_PROJECTS.biolum[state.research.biolum - 1]) || { sonarRangeBonus: 0 };
+                return (bDef && bDef.sonarRangeBonus) ? bDef.sonarRangeBonus : 0;
+            }
+
+            const rescueModal = document.getElementById('rescueModal');
+            const victoryModal = document.getElementById('victoryModal');
+            const btnCloseRescue = document.getElementById('btnCloseRescue');
+            const btnCloseVictory = document.getElementById('btnCloseVictory');
+            const btnRefitAndRelaunch = document.getElementById('btnRefitAndRelaunch');
+            const btnContinuePatrol = document.getElementById('btnContinuePatrol');
+            const rescueReasonText = document.getElementById('rescueReasonText');
+
+            function showEmergencyRescueModal(reason) {
+                if (rescueModal) {
+                    if (rescueReasonText) rescueReasonText.textContent = `${reason}:`;
+                    rescueModal.style.display = 'flex';
+                    playBeep(200, 'sawtooth', 0.6, 0.3);
+                }
+            }
+
+            function refitAndRelaunch() {
+                if (rescueModal) rescueModal.style.display = 'none';
+                state.hull = getMaxHullEffective();
+                state.o2 = 100.0;
+                state.co2 = 0.04;
+                state.battery = 100.0;
+                state.depth = 0.0;
+                state.vertRate = 0.0;
+                state.targetVertRate = 0.0;
+                state.ballast = 0.0;
+                state.pitch = 0.0;
+                state.airReservoir = state.maxAirReservoir;
+                state.bilgeWater = 0.0;
+                if (state.damageControl && state.damageControl.compartments) {
+                    state.damageControl.compartments.forEach(c => {
+                        c.integrity = 100.0;
+                        c.water = 0.0;
+                        c.breachTier = 0;
+                        c.leakRate = 0.0;
+                        c.isRepairing = false;
+                        c.repairProgress = 0.0;
+                    });
+                }
+                state.rescueModalShown = false;
+                logMessage('DSV-09 emergency refit complete! Hull and O2 restored. Expedition resumed at surface.', 'discovery');
+                renderDamageControlUI();
+                renderEngineeringUI();
+            }
+
+            function showVictoryModal() {
+                if (victoryModal) {
+                    victoryModal.style.display = 'flex';
+                    playBeep(1200, 'triangle', 0.5, 0.3);
+                }
+            }
+
+            if (btnCloseRescue) btnCloseRescue.addEventListener('click', refitAndRelaunch);
+            if (btnRefitAndRelaunch) btnRefitAndRelaunch.addEventListener('click', refitAndRelaunch);
+            if (btnCloseVictory) btnCloseVictory.addEventListener('click', () => { if (victoryModal) victoryModal.style.display = 'none'; });
+            if (btnContinuePatrol) btnContinuePatrol.addEventListener('click', () => { if (victoryModal) victoryModal.style.display = 'none'; });
+
             function applyUpgradeStats() {
                 const hDef = UPGRADES.hull[state.upgrades.hull - 1];
                 state.crushDepth = hDef.crushDepth;
+                state.maxHull = getMaxHullEffective();
                 
                 const bDef = UPGRADES.ballast[state.upgrades.ballast - 1];
                 state.maxAirReservoir = bDef.maxAir;
@@ -5365,7 +5491,7 @@
                 hullTierBadge.className = `eng-tier-badge ${hTier === 4 ? 'max' : ''}`;
                 hullDesc.textContent = hDef.desc;
                 hullCrushStat.textContent = `${hDef.crushDepth.toLocaleString()} m`;
-                hullIntegrityStat.textContent = `${hDef.maxHull}% (MAX)`;
+                hullIntegrityStat.textContent = `${getMaxHullEffective()}% (MAX)`;
                 if (hTier < 4) {
                     const nextH = UPGRADES.hull[hTier];
                     btnUpgradeHull.textContent = `UPGRADE -> ${nextH.name} (${nextH.cost} PTS)`;
@@ -5891,7 +6017,7 @@
                     return;
                 }
                 state.repairKits--;
-                state.hull = Math.min(100.0, state.hull + 30.0);
+                state.hull = Math.min(getMaxHullEffective(), state.hull + 30.0);
                 state.damageControl.compartments.forEach(c => {
                     c.integrity = Math.min(100.0, c.integrity + 35.0);
                     if (c.breachTier > 0) c.breachTier--;
@@ -6477,7 +6603,7 @@
                 const distKm = Math.sqrt(dx * dx + dy * dy);
                 const distM = Math.round(distKm * 1000);
                 const depthDiff = Math.abs(Math.round(state.depth - target.depth));
-                const scanRange = Math.max(900, state.opticalRange * 1.8);
+                const scanRange = Math.max(900, state.opticalRange * 1.8) + getBiolumSonarBonus();
 
                 if (distM > scanRange || depthDiff > 450) {
                     playBeep(220, 'square', 0.2);
@@ -6934,8 +7060,34 @@
 
             btnQuickLaunchDecoy.addEventListener('click', launchAcousticDecoy);
 
-            // Keyboard Shortcuts for Undersea Combat & State Control
+            // Keyboard Shortcuts for Undersea Combat, Navigation & State Control
             window.addEventListener('keydown', (e) => {
+                const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable)) {
+                    if (e.key === 'Escape') {
+                        e.target.blur();
+                    }
+                    return;
+                }
+
+                const rModal = document.getElementById('rescueModal');
+                if (rModal && rModal.style.display === 'flex') {
+                    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        refitAndRelaunch();
+                        return;
+                    }
+                }
+
+                const vModal = document.getElementById('victoryModal');
+                if (vModal && vModal.style.display === 'flex') {
+                    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        vModal.style.display = 'none';
+                        return;
+                    }
+                }
+
                 const tutModal = document.getElementById('tutorialModal');
                 if (tutModal && tutModal.style.display === 'flex') {
                     if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
@@ -6978,12 +7130,62 @@
                     toggleSilentRunning();
                 } else if (e.key === 'm' || e.key === 'M') {
                     e.preventDefault();
-                    SubAudio.toggleMusic();
+                    if (window.__KILO_BGM_ENABLED === false) {
+                        soundToggleBtn.click();
+                    } else {
+                        SubAudio.toggleMusic();
+                    }
                 } else if (e.key === 'Tab') {
                     e.preventDefault();
-                    state.selectedThreatIdx = (state.selectedThreatIdx + 1) % THREATS.length;
-                    SubAudio.playFmEarcon('click');
-                    renderCombatUI();
+                    if (state.viewMode === 'combat') {
+                        state.selectedThreatIdx = (state.selectedThreatIdx + 1) % THREATS.length;
+                        SubAudio.playFmEarcon('click');
+                        renderCombatUI();
+                    } else {
+                        cycleTarget();
+                    }
+                } else if (e.key === ' ' || e.code === 'Space') {
+                    e.preventDefault();
+                    btnSonarPing.click();
+                } else if (e.key === 'e' || e.key === 'E') {
+                    e.preventDefault();
+                    handleTargetAction();
+                } else if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    btnRudderPort.click();
+                } else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    btnRudderStbd.click();
+                } else if (e.key === 'w' || e.key === 'W') {
+                    e.preventDefault();
+                    if (state.throttleMode === 'REV') setThrottle('STOP', 0.0, btnThrottleStop);
+                    else if (state.throttleMode === 'STOP') setThrottle('HALF', 5.0, btnThrottleHalf);
+                    else if (state.throttleMode === 'HALF') setThrottle('FLANK', 11.5, btnThrottleFlank);
+                } else if (e.key === 's' || e.key === 'S') {
+                    e.preventDefault();
+                    if (state.throttleMode === 'FLANK') setThrottle('HALF', 5.0, btnThrottleHalf);
+                    else if (state.throttleMode === 'HALF') setThrottle('STOP', 0.0, btnThrottleStop);
+                    else if (state.throttleMode === 'STOP') setThrottle('REV', -2.5, btnThrottleRev);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        btnTrimBow.click();
+                    } else {
+                        btnPumpBallast.click();
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        btnTrimStern.click();
+                    } else {
+                        btnFloodBallast.click();
+                    }
+                } else if (e.key === 'q' || e.key === 'Q') {
+                    e.preventDefault();
+                    btnTrimBow.click();
+                } else if (e.key === 'z' || e.key === 'Z') {
+                    e.preventDefault();
+                    btnTrimStern.click();
                 } else if (e.key === 'h' || e.key === 'H' || e.key === '?') {
                     setViewMode(state.viewMode === 'manual' ? 'sonar' : 'manual');
                 }
@@ -7026,7 +7228,7 @@
                     const dy = lm.y - state.posY;
                     const distKm = Math.sqrt(dx * dx + dy * dy);
                     const depthDiff = Math.abs(state.depth - lm.depth);
-                    const rangeKm = Math.max(1.5, (state.opticalRange / 1000.0) * 1.6);
+                    const rangeKm = Math.max(1.5, (state.opticalRange / 1000.0) * 1.6) + (getBiolumSonarBonus() / 1000.0);
 
                     if (distKm <= rangeKm && depthDiff <= 350) {
                         if (!lm.discovered) {
@@ -7097,7 +7299,8 @@
                         const dx = f.x - state.posX;
                         const dy = f.y - state.posY;
                         const distKm = Math.sqrt(dx * dx + dy * dy);
-                        if (distKm <= 2.0) {
+                        const pingRangeKm = 2.0 + (getBiolumSonarBonus() / 1000.0);
+                        if (distKm <= pingRangeKm) {
                             playEchoReturnSound(distKm / 2.0);
                             if (f.type === 'leviathan' && Math.random() < 0.5) {
                                 setTimeout(playLeviathanSong, 900);
@@ -7163,10 +7366,14 @@
             });
 
             btnBilgePump.addEventListener('click', () => {
-                state.bilgePumpActive = !state.bilgePumpActive;
-                btnBilgePump.textContent = state.bilgePumpActive ? '💧 BILGE PUMPS: RUNNING [MAX]' : '💧 BILGE PUMPS: AUTO (STANDBY)';
-                btnBilgePump.classList.toggle('active-toggle', state.bilgePumpActive);
+                const dc = state.damageControl;
+                dc.bilgePumpMode = (dc.bilgePumpMode === 0) ? 1 : 0;
+                state.bilgePumpActive = (dc.bilgePumpMode > 0 && state.battery > 0);
+                btnBilgePump.textContent = dc.bilgePumpMode > 0 ? (dc.bilgePumpMode === 6 ? '💧 BILGE PUMPS: OVERDRIVE [MAX]' : '💧 BILGE PUMPS: AUTO (ONLINE)') : '💧 BILGE PUMPS: OFF (STANDBY)';
+                btnBilgePump.classList.toggle('active-toggle', dc.bilgePumpMode > 0);
                 playBeep(360, 'sine', 0.1);
+                logMessage(`Bilge pumping system set to ${dc.bilgePumpMode > 0 ? 'ACTIVE [AUTO-BALANCE]' : 'OFF [STANDBY]'}.`, 'info');
+                renderDamageControlUI();
             });
 
             btnLowPowerMode.addEventListener('click', () => {
@@ -7707,7 +7914,9 @@
             function updateSimulation(dt) {
                 // 1. Buoyancy & Depth Physics
                 const neutralBallast = 45.0;
-                const buoyancyForce = (neutralBallast - state.ballast) * 0.4;
+                const cargoPenalty = (state.cargo.totalWeight || 0) * 0.01;
+                const bilgePenalty = (state.bilgeWater || 0) * 0.008;
+                const buoyancyForce = (neutralBallast - state.ballast) * 0.4 - cargoPenalty - bilgePenalty;
                 const pitchDescent = (state.pitch / 15.0) * (Math.abs(state.speed) * 0.3);
                 
                 state.targetVertRate = -buoyancyForce - pitchDescent;
@@ -7726,6 +7935,18 @@
 
                 if (state.depth > 11000) state.depth = 11000;
                 updateSectorFromDepth();
+
+                // Emergency Rescue (0% Hull or O2) & Supreme Victory (12/12 Fauna & 6/6 Threats)
+                if ((state.hull <= 0 || state.o2 <= 0) && !state.rescueModalShown) {
+                    state.rescueModalShown = true;
+                    showEmergencyRescueModal(state.hull <= 0 ? 'CATASTROPHIC HULL IMPLOSION' : 'HYPOXIC LIFE-SUPPORT EXHAUSTION');
+                }
+                const allFaunaCataloged = Array.isArray(FAUNA_CATALOG) && FAUNA_CATALOG.every(f => f.discovered);
+                const allThreatsDefeated = Array.isArray(THREATS) && THREATS.every(t => t.defeated);
+                if (allFaunaCataloged && allThreatsDefeated && !state.victoryModalShown) {
+                    state.victoryModalShown = true;
+                    showVictoryModal();
+                }
 
                 // Depth Record Milestone Checks
                 [200, 1000, 4000, 6000, 10000].forEach(mDepth => {
@@ -7946,7 +8167,7 @@
                 let avgIntegrity = 0;
                 dc.compartments.forEach(c => avgIntegrity += c.integrity);
                 avgIntegrity /= 4.0;
-                state.hull = Math.min(state.hull, avgIntegrity);
+                state.hull = Math.min(state.hull, avgIntegrity * (getMaxHullEffective() / 100.0));
 
                 if (state.viewMode === 'damage') {
                     renderDamageControlUI();
@@ -8247,14 +8468,15 @@
 
             function renderTelemetryUI() {
                 depthVal.textContent = `${state.depth.toFixed(1)} m`;
-                depthBar.style.width = `${Math.min(100, (state.depth / 5000) * 100)}%`;
+                depthBar.style.width = `${Math.min(100, (state.depth / 11000) * 100)}%`;
                 
                 const ratePrefix = state.vertRate >= 0 ? '+' : '';
                 vertRateVal.textContent = `${ratePrefix}${state.vertRate.toFixed(2)} m/s`;
                 vertRateVal.style.color = state.vertRate > 0 ? 'var(--accent-amber)' : (state.vertRate < 0 ? 'var(--accent-emerald)' : 'var(--text-dim)');
 
+                const curMaxHull = getMaxHullEffective();
                 hullVal.textContent = `${state.hull.toFixed(1)}%`;
-                hullBar.style.width = `${state.hull}%`;
+                hullBar.style.width = `${Math.min(100, (state.hull / curMaxHull) * 100)}%`;
                 if (state.hull < 35) {
                     hullBar.className = 'gauge-bar-fill critical';
                     masterStatusBadge.className = 'status-badge alert';
@@ -8289,7 +8511,9 @@
                 ballastBar.style.width = `${state.ballast}%`;
                 airResVal.textContent = `${Math.round(state.airReservoir)} BAR`;
 
-                const netBuoyancy = Math.round((45 - state.ballast) * 25);
+                const cargoWeightKg = state.cargo.totalWeight || 0;
+                const bilgeWaterKg = Math.round((state.bilgeWater || 0) * 3.785);
+                const netBuoyancy = Math.round((45 - state.ballast) * 25 - cargoWeightKg - bilgeWaterKg);
                 buoyancyVal.textContent = `${netBuoyancy >= 0 ? '+' : ''}${netBuoyancy} KG`;
 
                 bilgeVal.textContent = `${state.bilgeWater.toFixed(1)} GAL`;

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T04:36:32-08:00 — kilo-qa: KChat (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 113.7 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kchat_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Spool: Verified Web HTML + Win32 C parity, offline message spool, and channel switcher.
+  - Mature Quarantine & Handoff: Promoted `KChat` to Mature archive; advanced `kilo-qa` to `KSys`; next agent `kilo-expander`.
+
 - **2026-11-01T04:22:19-08:00 — kilo-usability: KQuest (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KQuest across web and native targets.
