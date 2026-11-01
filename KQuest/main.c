@@ -416,6 +416,8 @@ typedef struct {
     int upkeep;
     int cost;
     int isDown;
+    int type;
+    int atk;
 } Companion;
 
 typedef struct {

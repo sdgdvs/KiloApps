@@ -27,61 +27,78 @@
     /* Header */
     header {
       background: linear-gradient(135deg, #1e1e2e 0%, #181825 100%);
-      padding: 10px 16px;
+      padding: 6px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid #313244;
+      white-space: nowrap;
+      gap: 8px;
+      flex-shrink: 0;
     }
     header h1 {
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 700;
       color: #cba6f7;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      margin: 0;
+      white-space: nowrap;
     }
     header .badge {
       background: #313244;
       color: #a6e3a1;
       padding: 2px 8px;
       border-radius: 12px;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 600;
     }
     header .subtitle {
-      font-size: 0.85rem;
-      color: #a6adc8;
+      display: none;
+    }
+    .header-actions {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .header-actions .btn {
+      padding: 4px 8px;
+      font-size: 0.75rem;
     }
 
     /* Top Stats Bar */
     .stats-bar {
       background: linear-gradient(180deg, #2b2b36 0%, #1e1e2e 50%, #11111b 100%);
-      border: 2px solid #585b70;
-      border-radius: 8px;
-      margin: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.1);
-      padding: 10px 18px;
+      border: 1px solid #585b70;
+      border-radius: 6px;
+      margin: 4px 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      padding: 4px 12px;
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
-      gap: 16px;
-      border-bottom: 2px solid #313244;
-      font-size: 0.9rem;
+      gap: 12px;
+      border-bottom: 1px solid #313244;
+      font-size: 0.82rem;
       position: relative;
+      flex-shrink: 0;
+      overflow-x: auto;
     }
     .stats-bar::before, .stats-bar::after {
       content: '';
       position: absolute;
-      top: -4px;
-      width: 12px;
-      height: 12px;
+      top: -3px;
+      width: 8px;
+      height: 8px;
       background: #f9e2af;
       border-radius: 50%;
-      box-shadow: 0 0 8px #f9e2af, inset 0 -2px 4px rgba(0,0,0,0.5);
+      box-shadow: 0 0 6px #f9e2af;
     }
-    .stats-bar::before { left: -4px; }
-    .stats-bar::after { right: -4px; }
+    .stats-bar::before { left: -3px; }
+    .stats-bar::after { right: -3px; }
     
     .stat-group {
       display: flex;
@@ -151,6 +168,7 @@
     .main-container {
       display: flex;
       flex: 1;
+      min-height: 0;
       overflow: hidden;
     }
 
@@ -159,10 +177,12 @@
       flex: 2;
       display: flex;
       flex-direction: column;
-      padding: 12px;
-      gap: 12px;
+      padding: 8px 10px;
+      gap: 6px;
       border-right: 1px solid #313244;
-      overflow-y: auto;
+      overflow: hidden;
+      min-height: 0;
+      height: 100%;
     }
 
     /* Screen Panels */
@@ -170,23 +190,37 @@
       background: #1e1e2e;
       border: 1px solid #313244;
       border-radius: 8px;
-      padding: 16px;
+      padding: 8px 12px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
     }
     .screen-title {
-      font-size: 1.2rem;
+      font-size: 1.05rem;
       font-weight: 700;
       color: #89b4fa;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      flex-shrink: 0;
     }
     .screen-desc {
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       color: #bac2de;
-      line-height: 1.4;
+      line-height: 1.25;
+      flex-shrink: 0;
+    }
+    #dynamic-content {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
 
     /* Crafting & Character Grids */
@@ -257,19 +291,21 @@
 
     /* Log Box */
     .log-panel {
-      flex: 1;
-      min-height: 160px;
+      height: 72px;
+      min-height: 60px;
+      max-height: 80px;
+      flex-shrink: 0;
       background: #11111b;
       border: 1px solid #313244;
-      border-radius: 8px;
-      padding: 10px;
+      border-radius: 6px;
+      padding: 6px 10px;
       overflow-y: auto;
       font-family: 'Consolas', 'Courier New', monospace;
-      font-size: 0.85rem;
-      line-height: 1.5;
+      font-size: 0.78rem;
+      line-height: 1.35;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
     .log-entry { color: #cdd6f4; }
     .log-entry.system { color: #89b4fa; }
@@ -282,9 +318,16 @@
 
     /* Action Button Controls */
     .controls-panel {
+      flex-shrink: 0;
       display: flex;
-      gap: 8px;
+      gap: 5px;
       flex-wrap: wrap;
+      align-items: center;
+      padding: 2px 0 0 0;
+    }
+    .controls-panel .btn {
+      padding: 4px 8px;
+      font-size: 0.78rem;
     }
     .btn {
       background: #313244;
@@ -347,12 +390,47 @@
     .sidebar {
       flex: 1;
       background: #181825;
-      padding: 12px;
+      padding: 8px 10px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 6px;
       overflow-y: auto;
-      min-width: 260px;
+      min-width: 270px;
+      max-width: 340px;
+    }
+    .sidebar-tabs {
+      display: flex;
+      gap: 4px;
+      background: #11111b;
+      border: 1px solid #313244;
+      border-radius: 6px;
+      padding: 3px;
+      flex-shrink: 0;
+    }
+    .sidebar-tab-btn {
+      flex: 1;
+      padding: 5px 6px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: transparent;
+      color: #a6adc8;
+      transition: all 0.2s;
+    }
+    .sidebar-tab-btn:hover {
+      color: #cdd6f4;
+      background: rgba(255,255,255,0.05);
+    }
+    .sidebar-tab-btn.active {
+      background: #313244;
+      color: #cba6f7;
+    }
+    .sidebar-tab-pane {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
     .card {
       background: #1e1e2e;
@@ -565,9 +643,9 @@
     /* Toast Notification */
     #toast {
       position: fixed;
-      bottom: 18px;
+      top: 14px;
       right: 18px;
-      transform: translateY(20px);
+      transform: translateY(-20px);
       background: rgba(24, 24, 37, 0.95);
       color: #f9e2af;
       border: 1px solid #89b4fa;
@@ -595,16 +673,16 @@
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span style="font-size:0.75rem; color:#a6adc8; margin-left:8px; font-weight:normal;">(Press H / F1 for Help)</span> <span class="badge">RPG</span></h1>
-    <div class="subtitle">Fantasy Text RPG & Dungeon Crawler (Web Audio API, Save Slots, Comprehensive Help & Lore Codex)</div>
-    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-      <button class="btn" style="background:#a6e3a1; color:#11111b; font-size:0.75rem; padding:4px 8px; font-weight:700;" onclick="saveSlot(0)" title="Quick Save (F5)">💾 Save (F5)</button>
-      <button class="btn" style="background:#89b4fa; color:#11111b; font-size:0.75rem; padding:4px 8px; font-weight:700;" onclick="loadSlot(0)" title="Quick Load (F9)">📂 Load (F9)</button>
-      <button class="btn" style="background:#cba6f7; color:#11111b; font-size:0.75rem; padding:4px 8px; font-weight:700;" onclick="exportHeroToVFS()" title="Export Character Dossier & JSON to VFS">📜 Export VFS</button>
-      <button class="btn" style="background:#f38ba8; color:#11111b; font-size:0.75rem; padding:4px 8px; font-weight:700;" onclick="openMultiplayerModal()" title="Co-Op Tavern Raid & Guild Arena">⚔️ Arena Hub</button>
-      <button class="btn" style="background:#313244; color:#cdd6f4; font-size:0.75rem; padding:4px 8px;" onclick="setGameState(STATE.CONFIG)" title="Game Settings & Key Binds">⚙️ Settings</button>
-      <button class="btn btn-accent" id="audio-toggle-btn" onclick="toggleAudio()" title="Toggle Sound & Music [M]" style="font-size:0.75rem; padding:4px 8px;">🔊 Audio: ON</button>
-      <button class="btn btn-primary" onclick="openHelpModal()" style="font-size:0.75rem; padding:4px 8px;">❓ Help & Codex (H/F1)</button>
+    <h1>🗡️ KQuest <span class="badge">RPG</span></h1>
+    <div class="subtitle" style="display:none;">Fantasy Text RPG & Dungeon Crawler</div>
+    <div class="header-actions">
+      <button class="btn" style="background:#a6e3a1; color:#11111b; font-weight:700;" onclick="saveSlot(0)" title="Quick Save (F5)">💾 Save (F5)</button>
+      <button class="btn" style="background:#89b4fa; color:#11111b; font-weight:700;" onclick="loadSlot(0)" title="Quick Load (F9)">📂 Load (F9)</button>
+      <button class="btn" style="background:#cba6f7; color:#11111b; font-weight:700;" onclick="exportHeroToVFS()" title="Export Character Dossier & JSON to VFS">📜 Export</button>
+      <button class="btn" style="background:#f38ba8; color:#11111b; font-weight:700;" onclick="openMultiplayerModal()" title="Co-Op Tavern Raid & Guild Arena">⚔️ Arena</button>
+      <button class="btn" style="background:#313244; color:#cdd6f4;" onclick="setGameState(STATE.CONFIG)" title="Game Settings & Key Binds">⚙️ Settings</button>
+      <button class="btn btn-accent" id="audio-toggle-btn" onclick="toggleAudio()" title="Toggle Sound [M]">🔊 SFX: ON</button>
+      <button class="btn btn-primary" onclick="openHelpModal()" title="Help & Lore Codex (H/F1)">❓ Help (H/F1)</button>
     </div>
   </header>
 
@@ -655,7 +733,7 @@
         <div class="screen-desc" id="location-desc">Welcome to Oakhaven. Create your hero or venture forth into the Obsidian Spire!</div>
         
         <!-- Graphical Viewport Canvas -->
-        <canvas id="kquest-gfx-canvas" width="680" height="220" style="width:100%; max-width:680px; aspect-ratio:680/220; height:auto; align-self:center; border-radius:8px; border:1px solid #313244; background:#0f0f17; display:block; margin-top:8px; box-shadow:0 4px 12px rgba(0,0,0,0.5);"></canvas>
+        <canvas id="kquest-gfx-canvas" width="680" height="220" style="width:100%; max-width:680px; max-height:145px; aspect-ratio:680/220; height:auto; align-self:center; border-radius:6px; border:1px solid #313244; background:#0f0f17; display:block; margin-top:4px; box-shadow:0 4px 12px rgba(0,0,0,0.5); flex-shrink:0;"></canvas>
         
         <!-- Dynamic Interactive Area -->
         <div id="dynamic-content"></div>
@@ -679,84 +757,100 @@
     <!-- Sidebar Info Panel -->
     <div class="sidebar">
       
-      <!-- Character Stats Card -->
-      <div class="card">
-        <div class="card-header">📊 Hero Attributes</div>
-        <div class="card-body">
-          <div>STR (Strength): <strong style="color:#f9e2af;" id="stat-str">14</strong></div>
-          <div>INT (Magic Power): <strong style="color:#89b4fa;" id="stat-int">8</strong></div>
-          <div>DEF (Defense): <strong style="color:#a6e3a1;" id="stat-def">12</strong></div>
-          <div>AGI (Speed/Crit): <strong style="color:#cba6f7;" id="stat-agi">10</strong></div>
-          <div>XP Progress: <strong style="color:#f9e2af;" id="xp-text">0 / 100</strong></div>
-          <div>Skill Points: <strong style="color:#cba6f7;" id="sp-text">0 SP</strong></div>
-          <div>Arena Record: <strong style="color:#f38ba8;" id="arena-record">Wave 0 (🏆 0 Trophies)</strong></div>
+      <!-- Sub-tabs: Hero / Bag / Quests -->
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab-btn active" id="tab-btn-hero" onclick="switchSidebarTab('hero')">📊 Hero</button>
+        <button class="sidebar-tab-btn" id="tab-btn-bag" onclick="switchSidebarTab('bag')">🎒 Bag [I]</button>
+        <button class="sidebar-tab-btn" id="tab-btn-quests" onclick="switchSidebarTab('quests')">📜 Quests</button>
+      </div>
+
+      <!-- Hero Sub-tab Pane -->
+      <div id="sidebar-tab-hero" class="sidebar-tab-pane">
+        <!-- Character Stats Card -->
+        <div class="card">
+          <div class="card-header">📊 Hero Attributes</div>
+          <div class="card-body">
+            <div>STR (Strength): <strong style="color:#f9e2af;" id="stat-str">14</strong></div>
+            <div>INT (Magic Power): <strong style="color:#89b4fa;" id="stat-int">8</strong></div>
+            <div>DEF (Defense): <strong style="color:#a6e3a1;" id="stat-def">12</strong></div>
+            <div>AGI (Speed/Crit): <strong style="color:#cba6f7;" id="stat-agi">10</strong></div>
+            <div>XP Progress: <strong style="color:#f9e2af;" id="xp-text">0 / 100</strong></div>
+            <div>Skill Points: <strong style="color:#cba6f7;" id="sp-text">0 SP</strong></div>
+            <div>Arena Record: <strong style="color:#f38ba8;" id="arena-record">Wave 0 (🏆 0 Trophies)</strong></div>
+          </div>
+        </div>
+
+        <!-- Party Companion Card -->
+        <div class="card">
+          <div class="card-header">🛡️ Party Companion</div>
+          <div class="card-body" id="companion-info">
+            <div>Companion: <strong style="color:#f9e2af;" id="comp-name">None</strong></div>
+            <div>Role: <span id="comp-role" style="color:#bac2de;">-</span></div>
+            <div>HP: <span id="comp-hp" style="color:#f38ba8;">-</span></div>
+            <div>Buff: <span style="color:#a6e3a1;" id="comp-buff">-</span></div>
+            <div>Upkeep: <span style="color:#fab387;" id="comp-upkeep">-</span></div>
+          </div>
+        </div>
+
+        <!-- Equipment Card -->
+        <div class="card">
+          <div class="card-header">🛡️ Equipment</div>
+          <div class="card-body">
+            <div>Weapon: <strong id="eq-weapon">Iron Sword (+4 STR)</strong></div>
+            <div>Armor: <strong id="eq-armor">Leather Armor (+3 DEF)</strong></div>
+          </div>
         </div>
       </div>
 
-      <!-- Party Companion Card -->
-      <div class="card">
-        <div class="card-header">🛡️ Party Companion</div>
-        <div class="card-body" id="companion-info">
-          <div>Companion: <strong style="color:#f9e2af;" id="comp-name">None</strong></div>
-          <div>Role: <span id="comp-role" style="color:#bac2de;">-</span></div>
-          <div>HP: <span id="comp-hp" style="color:#f38ba8;">-</span></div>
-          <div>Buff: <span style="color:#a6e3a1;" id="comp-buff">-</span></div>
-          <div>Upkeep: <span style="color:#fab387;" id="comp-upkeep">-</span></div>
+      <!-- Bag Sub-tab Pane -->
+      <div id="sidebar-tab-bag" class="sidebar-tab-pane" style="display:none;">
+        <!-- Inventory Card -->
+        <div class="card">
+          <div class="card-header" style="flex-wrap:wrap; gap:4px;">
+            <span>🎒 Inventory (<span id="inv-capacity">0/10</span>)</span>
+            <button class="btn btn-accent" style="font-size:0.7rem; padding:2px 6px;" onclick="expandBackpack()" title="Expand backpack capacity by +5 slots">➕ Slot (<span id="expand-cost">50</span>G)</button>
+          </div>
+          <div style="display:flex; gap:4px; margin-bottom:6px; flex-wrap:wrap; align-items:center;">
+            <select id="inv-filter" onchange="changeInvFilter(this.value)" style="background:#11111b; color:#cdd6f4; border:1px solid #45475a; border-radius:4px; font-size:0.75rem; padding:2px 4px; flex:1;">
+              <option value="all">Filter: All</option>
+              <option value="consumable">Consumables</option>
+              <option value="equipment">Equipment</option>
+              <option value="material">Materials</option>
+            </select>
+            <select id="inv-sort" onchange="changeInvSort(this.value)" style="background:#11111b; color:#cdd6f4; border:1px solid #45475a; border-radius:4px; font-size:0.75rem; padding:2px 4px; flex:1;">
+              <option value="rarity">Sort: Rarity</option>
+              <option value="name">Sort: Name</option>
+              <option value="value">Sort: Value</option>
+            </select>
+            <button class="btn btn-danger" style="font-size:0.7rem; padding:2px 6px;" onclick="quickSellCommons()" title="Quick-sell all Common items for Gold">💰 Sell Common</button>
+          </div>
+          <div class="card-body" id="inventory-list">
+            <!-- Dynamic inventory list -->
+          </div>
+        </div>
+
+        <!-- Crafting Materials Card -->
+        <div class="card">
+          <div class="card-header">🧪 Materials</div>
+          <div class="card-body" id="materials-list">
+            <div>⚙️ Iron Scrap: <strong style="color:#f9e2af;" id="mat-iron">2</strong></div>
+            <div>✨ Arcane Dust: <strong style="color:#89b4fa;" id="mat-dust">2</strong></div>
+            <div>🔥 Elemental Core: <strong style="color:#f38ba8;" id="mat-core">1</strong></div>
+          </div>
         </div>
       </div>
 
-      <!-- Equipment Card -->
-      <div class="card">
-        <div class="card-header">🛡️ Equipment</div>
-        <div class="card-body">
-          <div>Weapon: <strong id="eq-weapon">Iron Sword (+4 STR)</strong></div>
-          <div>Armor: <strong id="eq-armor">Leather Armor (+3 DEF)</strong></div>
-        </div>
-      </div>
-
-      <!-- Crafting Materials Card -->
-      <div class="card">
-        <div class="card-header">🧪 Materials</div>
-        <div class="card-body" id="materials-list">
-          <div>⚙️ Iron Scrap: <strong style="color:#f9e2af;" id="mat-iron">2</strong></div>
-          <div>✨ Arcane Dust: <strong style="color:#89b4fa;" id="mat-dust">2</strong></div>
-          <div>🔥 Elemental Core: <strong style="color:#f38ba8;" id="mat-core">1</strong></div>
-        </div>
-      </div>
-
-      <!-- Inventory Card -->
-      <div class="card">
-        <div class="card-header" style="flex-wrap:wrap; gap:4px;">
-          <span>🎒 Inventory (<span id="inv-capacity">0/10</span>)</span>
-          <button class="btn btn-accent" style="font-size:0.7rem; padding:2px 6px;" onclick="expandBackpack()" title="Expand backpack capacity by +5 slots">➕ Slot (<span id="expand-cost">50</span>G)</button>
-        </div>
-        <div style="display:flex; gap:4px; margin-bottom:6px; flex-wrap:wrap; align-items:center;">
-          <select id="inv-filter" onchange="changeInvFilter(this.value)" style="background:#11111b; color:#cdd6f4; border:1px solid #45475a; border-radius:4px; font-size:0.75rem; padding:2px 4px; flex:1;">
-            <option value="all">Filter: All</option>
-            <option value="consumable">Consumables</option>
-            <option value="equipment">Equipment</option>
-            <option value="material">Materials</option>
-          </select>
-          <select id="inv-sort" onchange="changeInvSort(this.value)" style="background:#11111b; color:#cdd6f4; border:1px solid #45475a; border-radius:4px; font-size:0.75rem; padding:2px 4px; flex:1;">
-            <option value="rarity">Sort: Rarity</option>
-            <option value="name">Sort: Name</option>
-            <option value="value">Sort: Value</option>
-          </select>
-          <button class="btn btn-danger" style="font-size:0.7rem; padding:2px 6px;" onclick="quickSellCommons()" title="Quick-sell all Common items for Gold">💰 Sell Common</button>
-        </div>
-        <div class="card-body" id="inventory-list">
-          <!-- Dynamic inventory list -->
-        </div>
-      </div>
-
-      <!-- Active Quests Card -->
-      <div class="card">
-        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-          <span>📜 Quest Log</span>
-          <button id="btn-claim-quests-header" class="btn btn-sm" onclick="claimQuests()" style="font-size:0.7rem; padding:2px 8px; background:#a6e3a1; color:#11111b; font-weight:700;">Claim</button>
-        </div>
-        <div class="card-body" id="quest-list">
-          <!-- Dynamic quests -->
+      <!-- Quests Sub-tab Pane -->
+      <div id="sidebar-tab-quests" class="sidebar-tab-pane" style="display:none;">
+        <!-- Active Quests Card -->
+        <div class="card">
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>📜 Quest Log</span>
+            <button id="btn-claim-quests-header" class="btn btn-sm" onclick="claimQuests()" style="font-size:0.7rem; padding:2px 8px; background:#a6e3a1; color:#11111b; font-weight:700;">Claim</button>
+          </div>
+          <div class="card-body" id="quest-list">
+            <!-- Dynamic quests -->
+          </div>
         </div>
       </div>
 
@@ -1218,13 +1312,26 @@
       }
     }
 
+    let gfxLoopRunning = false;
     function gfxLoop() {
+      if (document.hidden) {
+        gfxLoopRunning = false;
+        return;
+      }
+      gfxLoopRunning = true;
       GFX.frame++;
       if (GFX.ctx && GFX.canvas) {
         renderGFXScene(GFX.ctx);
       }
       requestAnimationFrame(gfxLoop);
     }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && !gfxLoopRunning) {
+        gfxLoopRunning = true;
+        requestAnimationFrame(gfxLoop);
+      }
+    });
 
     function renderGFXScene(ctx) {
       const w = 680;
@@ -1327,7 +1434,11 @@
       // 4. Draw Monster Sprite if in Combat or Boss Rush
       if ((currentState === STATE.COMBAT || currentState === STATE.BOSS_RUSH) && currentEnemy) {
         drawMonsterSprite(ctx, monsterX, monsterY, currentEnemy.name, GFX.frame, GFX.monsterAction, currentEnemy.poisonedTurns, currentEnemy.burningTurns, currentEnemy.frozenTurns);
-      } else if (currentState === STATE.TOWN || currentState === STATE.SHOP || currentState === STATE.CRAFTING || currentState === STATE.MERCENARY || currentState === STATE.QUEST_BOARD || currentState === STATE.TRAINING_HALL || currentState === STATE.FACTIONS || currentState === STATE.MOUNTS) {
+      } else if (currentState === STATE.ARMY_BATTLE && typeof currentWarArmy !== 'undefined' && currentWarArmy) {
+        drawWarArmySprite(ctx, monsterX, monsterY, currentWarArmy, GFX.frame);
+      } else if (currentState === STATE.CASTLE_DEFENSE && typeof currentSiegeWave !== 'undefined' && currentSiegeWave) {
+        drawSiegeWaveSprite(ctx, monsterX, monsterY, currentSiegeWave, GFX.frame);
+      } else if (currentState === STATE.TOWN || currentState === STATE.SHOP || currentState === STATE.CRAFTING || currentState === STATE.MERCENARY || currentState === STATE.QUEST_BOARD || currentState === STATE.TRAINING_HALL || currentState === STATE.FACTIONS || currentState === STATE.MOUNTS || currentState === STATE.TAVERN) {
         drawNPCSprite(ctx, 520, 120, GFX.frame, currentState);
       }
 
@@ -1727,9 +1838,11 @@
       const w = 680;
       const h = 220;
       const b = BIOMES[biomeIdx] || BIOMES[0];
-      const isTown = (state === STATE.TOWN || state === STATE.SHOP || state === STATE.CRAFTING || state === STATE.CHAR_CREATE);
+      const isTown = (state === STATE.TOWN || state === STATE.SHOP || state === STATE.CRAFTING || state === STATE.CHAR_CREATE || state === STATE.TAVERN || state === STATE.MERCENARY || state === STATE.QUEST_BOARD || state === STATE.TRAINING_HALL || state === STATE.FACTIONS || state === STATE.MOUNTS);
+      const isWar = (state === STATE.ARMY_BATTLE || state === STATE.CASTLE_DEFENSE);
+      const bgKey = isTown ? 'town' : (isWar ? 'fortress' : (BIOME_BG_MAP[b.id] || 'outpost'));
 
-      const bgKey = isTown ? 'town' : (BIOME_BG_MAP[b.id] || 'outpost');
+
       const bgData = BG_PLATES[bgKey];
 
       if (bgData && bgData.loaded && bgData.img) {
@@ -2500,6 +2613,110 @@
       ctx.restore();
     }
 
+    function drawWarArmySprite(ctx, x, y, army, frame) {
+      if (!army) return;
+      ctx.save();
+      const bob = Math.sin(frame * 0.12) * 3;
+      const my = y + bob;
+
+      // Floor shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 45, 45, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Atmospheric crimson battle aura
+      const glowGrad = ctx.createRadialGradient(x, my, 10, x, my, 70);
+      glowGrad.addColorStop(0, 'rgba(243, 139, 168, 0.25)');
+      glowGrad.addColorStop(1, 'rgba(243, 139, 168, 0)');
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(x, my, 70, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sprite blitting
+      const archKey = (typeof getMonsterArchetype === 'function') ? getMonsterArchetype(army.name || '') : 'orc';
+      const spriteData = (typeof MONSTER_SPRITES !== 'undefined') ? (MONSTER_SPRITES[archKey] || MONSTER_SPRITES['orc']) : null;
+      if (spriteData && spriteData.loaded && spriteData.img) {
+        const fw = spriteData.frameW || 128;
+        const fh = spriteData.frameH || 128;
+        ctx.save();
+        ctx.globalAlpha = 0.65;
+        ctx.drawImage(spriteData.img, 0, 0, fw, fh, x - 85, my - 45, 65, 65);
+        ctx.drawImage(spriteData.img, 0, 0, fw, fh, x + 20, my - 45, 65, 65);
+        ctx.restore();
+        ctx.drawImage(spriteData.img, 0, 0, fw, fh, x - 54, my - 65, 108, 108);
+      } else {
+        ctx.fillStyle = '#f38ba8';
+        ctx.fillRect(x - 24, my - 20, 48, 40);
+        ctx.fillStyle = '#fab387';
+        ctx.beginPath(); ctx.arc(x, my - 30, 14, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // Overhead War Banner
+      const title = `${army.icon || '⚔️'} ${army.name || 'Enemy Legion'}`;
+      ctx.font = 'bold 11px monospace';
+      ctx.textAlign = 'center';
+      const tw = Math.max(140, ctx.measureText(title).width + 20);
+      ctx.fillStyle = 'rgba(17, 17, 27, 0.85)';
+      ctx.fillRect(x - tw / 2, my - 76, tw, 18);
+      ctx.strokeStyle = '#f38ba8';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x - tw / 2, my - 76, tw, 18);
+      ctx.fillStyle = '#f38ba8';
+      ctx.fillText(title, x, my - 63);
+      ctx.restore();
+    }
+
+    function drawSiegeWaveSprite(ctx, x, y, siege, frame) {
+      if (!siege) return;
+      ctx.save();
+      const bob = Math.sin(frame * 0.1) * 2;
+      const my = y + bob;
+
+      // Floor shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 45, 50, 14, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Molten orange siege aura
+      const glowGrad = ctx.createRadialGradient(x, my, 15, x, my, 75);
+      glowGrad.addColorStop(0, 'rgba(250, 179, 135, 0.3)');
+      glowGrad.addColorStop(1, 'rgba(250, 179, 135, 0)');
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(x, my, 75, 0, Math.PI * 2);
+      ctx.fill();
+
+      const archKey = (typeof getMonsterArchetype === 'function') ? getMonsterArchetype(siege.name || 'golem') : 'golem';
+      const spriteData = (typeof MONSTER_SPRITES !== 'undefined') ? (MONSTER_SPRITES[archKey] || MONSTER_SPRITES['golem']) : null;
+      if (spriteData && spriteData.loaded && spriteData.img) {
+        const fw = spriteData.frameW || 128;
+        const fh = spriteData.frameH || 128;
+        ctx.drawImage(spriteData.img, 0, 0, fw, fh, x - 55, my - 65, 110, 110);
+      } else {
+        ctx.fillStyle = '#fab387';
+        ctx.fillRect(x - 28, my - 22, 56, 42);
+        ctx.fillStyle = '#f38ba8';
+        ctx.beginPath(); ctx.arc(x, my - 32, 14, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // Overhead Siege Banner
+      const title = `🚨 Wave ${siege.waveNumber || 1}: ${siege.icon || '💥'} ${siege.name || 'Siege Ram'}`;
+      ctx.font = 'bold 11px monospace';
+      ctx.textAlign = 'center';
+      const tw = Math.max(160, ctx.measureText(title).width + 20);
+      ctx.fillStyle = 'rgba(17, 17, 27, 0.85)';
+      ctx.fillRect(x - tw / 2, my - 76, tw, 18);
+      ctx.strokeStyle = '#fab387';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x - tw / 2, my - 76, tw, 18);
+      ctx.fillStyle = '#fab387';
+      ctx.fillText(title, x, my - 63);
+      ctx.restore();
+    }
+
     function drawNPCSprite(ctx, x, y, frame, state) {
       ctx.save();
       const key = getNPCSpriteKey(state);
@@ -2541,7 +2758,7 @@
       // Overhead NPC Title Badge
       let npcTitle = 'Merchant Alistair';
       if (key === 'blacksmith') npcTitle = 'Blacksmith Torvald';
-      else if (key === 'guildmaster') npcTitle = 'Guildmaster Vance';
+      else if (key === 'guildmaster') npcTitle = (state === STATE.TAVERN) ? 'Barkeep Donald' : 'Guildmaster Vance';
       else if (key === 'factions') npcTitle = 'Envoy Lucian';
       else if (key === 'stablemaster') npcTitle = 'Stablemaster Barnaby';
 
@@ -2726,7 +2943,8 @@
       syncMuteUI() {
         const btn = document.getElementById('audio-toggle-btn');
         if (btn) {
-          btn.textContent = this.muted ? '🔇 Audio: OFF' : '🔊 Audio: ON';
+          const prefix = window.__KILO_BGM_ENABLED ? 'Audio' : 'SFX';
+          btn.textContent = this.muted ? `🔇 ${prefix}: OFF` : `🔊 ${prefix}: ON`;
         }
         soundEnabled = !this.muted;
       },
@@ -3439,6 +3657,36 @@
 
     // Game State Engine
     
+    // --- USABILITY SUB-TABS & BIOME GRID HELPERS ---
+    let currentSidebarTab = 'hero';
+    function switchSidebarTab(tabName) {
+      currentSidebarTab = tabName;
+      ['hero', 'bag', 'quests'].forEach(t => {
+        const pane = document.getElementById(`sidebar-tab-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (pane) pane.style.display = (t === tabName) ? 'flex' : 'none';
+        if (btn) {
+          if (t === tabName) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+      });
+      if (tabName === 'bag') {
+        const invFilter = document.getElementById('inv-filter');
+        if (invFilter) invFilter.focus();
+      }
+    }
+    window.switchSidebarTab = switchSidebarTab;
+
+    window.biomeGridOpen = false;
+    function toggleBiomeGrid() {
+      window.biomeGridOpen = !window.biomeGridOpen;
+      const grid = document.getElementById('biome-collapsible-grid');
+      const btn = document.getElementById('btn-toggle-biome-grid');
+      if (grid) grid.style.display = window.biomeGridOpen ? 'grid' : 'none';
+      if (btn) btn.textContent = window.biomeGridOpen ? '▲ Hide Grid' : '▼ Biome Grid';
+    }
+    window.toggleBiomeGrid = toggleBiomeGrid;
+
     // --- UTILITY FEATURES ---
     let KEY_BINDS = ['1', '2', '3', '4', '5', '6'];
     let g_MatchReplays = [];
@@ -4694,35 +4942,35 @@
 
       const dyn = document.getElementById('dynamic-content');
       dyn.innerHTML = `
-        <div style="margin-top:8px;">
-          <label style="font-size:0.85rem; color:#a6adc8;">Hero Name:</label>
-          <input type="text" id="name-input" value="Valerius" placeholder="Enter hero name..." />
+        <div style="margin-top:2px; display:flex; align-items:center; gap:8px;">
+          <label style="font-size:0.82rem; color:#a6adc8; white-space:nowrap;">Hero Name:</label>
+          <input type="text" id="name-input" value="Valerius" placeholder="Enter hero name..." style="margin-top:0; padding:4px 8px; font-size:0.85rem;" />
         </div>
-        <div class="class-grid">
-          <div class="class-card selected" id="card-Warrior" onclick="selectClass('Warrior')">
-            <h3>🗡️ Warrior</h3>
-            <p>High HP & Defense. Specializes in heavy melee strikes and armor.</p>
-            <div style="font-size:0.75rem; color:#f9e2af;">HP: 60 | MP: 15 | STR: 15 | DEF: 12</div>
+        <div class="class-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:6px; margin-top:4px;">
+          <div class="class-card selected" id="card-Warrior" onclick="selectClass('Warrior')" style="padding:6px 8px;">
+            <h3 style="font-size:0.88rem; margin-bottom:2px;">🗡️ Warrior</h3>
+            <p style="font-size:0.72rem; margin-bottom:2px;">High HP & Defense. Heavy melee.</p>
+            <div style="font-size:0.7rem; color:#f9e2af;">HP: 60 | MP: 15 | STR: 15 | DEF: 12</div>
           </div>
-          <div class="class-card" id="card-Mage" onclick="selectClass('Mage')">
-            <h3>🔮 Mage</h3>
-            <p>High Mana & Spell Power. Casts destructive Fireballs and healing spells.</p>
-            <div style="font-size:0.75rem; color:#89b4fa;">HP: 40 | MP: 45 | STR: 7 | DEF: 6</div>
+          <div class="class-card" id="card-Mage" onclick="selectClass('Mage')" style="padding:6px 8px;">
+            <h3 style="font-size:0.88rem; margin-bottom:2px;">🔮 Mage</h3>
+            <p style="font-size:0.72rem; margin-bottom:2px;">High Mana & Spells. Fire attacks.</p>
+            <div style="font-size:0.7rem; color:#89b4fa;">HP: 40 | MP: 45 | STR: 7 | DEF: 6</div>
           </div>
-          <div class="class-card" id="card-Rogue" onclick="selectClass('Rogue')">
-            <h3>🗡️ Rogue</h3>
-            <p>High Agility & Critical Chance. Strikes rapidly with high mobility.</p>
-            <div style="font-size:0.75rem; color:#a6e3a1;">HP: 45 | MP: 25 | STR: 11 | DEF: 8</div>
+          <div class="class-card" id="card-Rogue" onclick="selectClass('Rogue')" style="padding:6px 8px;">
+            <h3 style="font-size:0.88rem; margin-bottom:2px;">🗡️ Rogue</h3>
+            <p style="font-size:0.72rem; margin-bottom:2px;">High Agility & Critical Strikes.</p>
+            <div style="font-size:0.7rem; color:#a6e3a1;">HP: 45 | MP: 25 | STR: 11 | DEF: 8</div>
           </div>
-          <div class="class-card" id="card-Paladin" onclick="selectClass('Paladin')">
-            <h3>🛡️ Paladin</h3>
-            <p>High Defense & Holy Magic. Smites foes and commands defensive auras.</p>
-            <div style="font-size:0.75rem; color:#f9e2af;">HP: 75 | MP: 20 | STR: 14 | DEF: 16</div>
+          <div class="class-card" id="card-Paladin" onclick="selectClass('Paladin')" style="padding:6px 8px;">
+            <h3 style="font-size:0.88rem; margin-bottom:2px;">🛡️ Paladin</h3>
+            <p style="font-size:0.72rem; margin-bottom:2px;">High Defense & Holy Auras.</p>
+            <div style="font-size:0.7rem; color:#f9e2af;">HP: 75 | MP: 20 | STR: 14 | DEF: 16</div>
           </div>
-          <div class="class-card" id="card-Ranger" onclick="selectClass('Ranger')">
-            <h3>🏹 Ranger</h3>
-            <p>High Agility & Precision. Attacks from afar with lethal accuracy.</p>
-            <div style="font-size:0.75rem; color:#a6e3a1;">HP: 50 | MP: 25 | STR: 13 | AGI: 18</div>
+          <div class="class-card" id="card-Ranger" onclick="selectClass('Ranger')" style="padding:6px 8px;">
+            <h3 style="font-size:0.88rem; margin-bottom:2px;">🏹 Ranger</h3>
+            <p style="font-size:0.72rem; margin-bottom:2px;">High Precision & Lethal Bows.</p>
+            <div style="font-size:0.7rem; color:#a6e3a1;">HP: 50 | MP: 25 | STR: 13 | AGI: 18</div>
           </div>
         </div>
       `;
@@ -4805,14 +5053,25 @@
 
       const dyn = document.getElementById('dynamic-content');
       dyn.innerHTML = `
-        <div style="margin-top:6px; background:#181825; padding:12px; border-radius:8px; border:1px solid #313244;">
-          <h3 style="color:#cba6f7; font-size:0.95rem; margin-bottom:8px;">🗺️ Select Dungeon Biome:</h3>
-          <div class="class-grid">
+        <div class="biome-selector-card" style="background:#181825; padding:6px 10px; border-radius:6px; border:1px solid #313244; flex-shrink:0;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
+            <div>
+              <span style="font-size:0.78rem; color:#a6adc8;">Current Biome:</span>
+              <strong style="color:#cba6f7; font-size:0.85rem; margin-left:4px;">${b.icon} ${b.name}</strong>
+              <span style="font-size:0.72rem; color:#fab387; margin-left:6px;">(${b.hazardIcon} ${b.hazard})</span>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <select id="biome-quick-select" onchange="selectBiome(parseInt(this.value))" style="background:#11111b; color:#f9e2af; border:1px solid #45475a; border-radius:4px; font-size:0.75rem; padding:2px 6px;">
+                ${BIOMES.map((biomeObj, idx) => `<option value="${idx}" ${player.biome === idx ? 'selected' : ''}>${biomeObj.icon} ${biomeObj.name}</option>`).join('')}
+              </select>
+              <button id="btn-toggle-biome-grid" class="btn btn-sm" onclick="toggleBiomeGrid()" style="font-size:0.72rem; padding:2px 8px; background:#313244; color:#cdd6f4;">${window.biomeGridOpen ? '▲ Hide Grid' : '▼ Biome Grid'}</button>
+            </div>
+          </div>
+          <div id="biome-collapsible-grid" style="display:${window.biomeGridOpen ? 'grid' : 'none'}; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:6px; margin-top:8px; max-height:160px; overflow-y:auto;">
             ${BIOMES.map((biomeObj, idx) => `
-              <div class="class-card ${player.biome === idx ? 'selected' : ''}" onclick="selectBiome(${idx})">
-                <h3>${biomeObj.icon} ${biomeObj.name}</h3>
-                <p style="font-size:0.75rem;">${biomeObj.desc}</p>
-                <div style="font-size:0.75rem; color:#fab387; font-weight:600; margin-top:4px;">Hazard: ${biomeObj.hazardIcon} ${biomeObj.hazard}</div>
+              <div class="class-card ${player.biome === idx ? 'selected' : ''}" style="padding:6px; font-size:0.75rem;" onclick="selectBiome(${idx})">
+                <strong style="color:#cba6f7;">${biomeObj.icon} ${biomeObj.name}</strong>
+                <div style="font-size:0.7rem; color:#fab387; margin-top:2px;">${biomeObj.hazardIcon} ${biomeObj.hazard}</div>
               </div>
             `).join('')}
           </div>
@@ -4822,24 +5081,30 @@
       const ctrl = document.getElementById('controls-panel');
       const unlockedAchCount = (player.achievements || []).filter(a => a === 1).length;
       ctrl.innerHTML = `
-        <button class="btn btn-primary" onclick="setGameState(STATE.DUNGEON)">⚔️ Enter ${b.name}</button>
-        <button class="btn btn-danger" onclick="setGameState(STATE.BOSS_RUSH)">🏟️ Boss Rush Arena</button>
-        <button class="btn" style="background:#cba6f7; color:#11111b;" onclick="setGameState(STATE.TRAINING_HALL)">🏋️ Training Hall (${player.skillPoints} SP)</button>
-        <button class="btn" style="background:#89b4fa; color:#11111b;" onclick="setGameState(STATE.QUEST_BOARD)">📜 Bounty Board</button>
-        <button class="btn" style="background:#fab387; color:#11111b;" onclick="setGameState(STATE.TAVERN)">🍻 Rusty Dragon Tavern</button>
-        <button class="btn" style="background:#f38ba8; color:#11111b; font-weight:700;" onclick="openMultiplayerModal()">⚔️ Guild Arena & Co-Op</button>
-        <button class="btn" onclick="restAtInn()">🍺 Rest at Inn (10 Gold)</button>
-        <button class="btn" onclick="setGameState(STATE.SHOP)">🛒 Visit Merchant</button>
-        <button class="btn btn-craft" onclick="setGameState(STATE.CRAFTING)">⚒️ Alchemy & Forge</button>
-        <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MERCENARY)">🛡️ Mercenary Guild</button>
-        <button class="btn" style="background:#a6e3a1; color:#11111b;" onclick="setGameState(STATE.SAVE_LOAD)">💾 Save / Load</button>
-        <button class="btn" style="background:#ffd700; color:#11111b;" onclick="setGameState(STATE.ACHIEVEMENTS)">🏆 Milestones (${unlockedAchCount}/10)</button>
-        <button class="btn" style="background:#89b4fa; color:#11111b;" onclick="setGameState(STATE.REPLAYS)">📜 Combat Log</button>
-        <button class="btn" style="background:#45475a; color:#cdd6f4;" onclick="setGameState(STATE.CONFIG)">⚙️ Settings & Keys</button>
-        <button class="btn" style="background:#f38ba8; color:#11111b;" onclick="setGameState(STATE.FACTIONS)">🚩 Factions</button>
-        <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MOUNTS)">🐎 Mounts</button>
-        <button class="btn" style="background:linear-gradient(135deg, #ffd700, #fab387); color:#11111b; font-weight:700;" onclick="setGameState(STATE.KINGDOM)">👑 Kingdom & War</button>
-        ${(player.ngLevel || 0) > 0 ? `<button class="btn" style="background:linear-gradient(135deg, #f5c2e7, #cba6f7); color:#11111b; font-weight:700;" onclick="enterNewGamePlus()">✨ New Game+ (NG+ ${(player.ngLevel || 0) + 1})</button>` : ''}
+        <div style="display:flex; flex-direction:column; gap:4px; width:100%;">
+          <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+            <button class="btn btn-primary" onclick="setGameState(STATE.DUNGEON)">⚔️ Enter ${b.name}</button>
+            <button class="btn btn-danger" onclick="setGameState(STATE.BOSS_RUSH)">🏟️ Boss Rush</button>
+            <button class="btn" style="background:#f38ba8; color:#11111b; font-weight:700;" onclick="openMultiplayerModal()">⚔️ Arena Hub</button>
+            <button class="btn" style="background:linear-gradient(135deg, #ffd700, #fab387); color:#11111b; font-weight:700;" onclick="setGameState(STATE.KINGDOM)">👑 Kingdom War</button>
+            <button class="btn" style="background:#a6e3a1; color:#11111b;" onclick="restAtInn()">🍺 Inn (10G)</button>
+            <button class="btn" onclick="setGameState(STATE.SHOP)">🛒 Merchant</button>
+            <button class="btn btn-craft" onclick="setGameState(STATE.CRAFTING)">⚒️ Forge</button>
+            <button class="btn" style="background:#fab387; color:#11111b;" onclick="setGameState(STATE.TAVERN)">🍻 Tavern</button>
+          </div>
+          <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+            <button class="btn" style="background:#cba6f7; color:#11111b;" onclick="setGameState(STATE.TRAINING_HALL)">🏋️ Training (${player.skillPoints} SP)</button>
+            <button class="btn" style="background:#89b4fa; color:#11111b;" onclick="setGameState(STATE.QUEST_BOARD)">📜 Bounties</button>
+            <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MERCENARY)">🛡️ Mercenary</button>
+            <button class="btn" style="background:#f38ba8; color:#11111b;" onclick="setGameState(STATE.FACTIONS)">🚩 Factions</button>
+            <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MOUNTS)">🐎 Mounts</button>
+            <button class="btn" style="background:#a6e3a1; color:#11111b;" onclick="setGameState(STATE.SAVE_LOAD)">💾 Save/Load</button>
+            <button class="btn" style="background:#ffd700; color:#11111b;" onclick="setGameState(STATE.ACHIEVEMENTS)">🏆 Milestones (${unlockedAchCount}/10)</button>
+            <button class="btn" style="background:#89b4fa; color:#11111b;" onclick="setGameState(STATE.REPLAYS)">📜 Replays</button>
+            <button class="btn" style="background:#45475a; color:#cdd6f4;" onclick="setGameState(STATE.CONFIG)">⚙️ Settings</button>
+            ${(player.ngLevel || 0) > 0 ? `<button class="btn" style="background:linear-gradient(135deg, #f5c2e7, #cba6f7); color:#11111b; font-weight:700;" onclick="enterNewGamePlus()">✨ NG+ ${(player.ngLevel || 0) + 1}</button>` : ''}
+          </div>
+        </div>
       `;
     }
 
@@ -7647,18 +7912,51 @@
     window.addEventListener('keydown', (e) => {
       const helpModal = document.getElementById('help-modal-overlay');
       const isHelpOpen = helpModal && helpModal.style.display === 'flex';
+      const mpModal = document.getElementById('mp-modal-overlay');
+      const isMpOpen = mpModal && mpModal.style.display === 'flex';
 
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-        if (e.key === 'Escape' && isHelpOpen) {
+      // Guard INPUT, TEXTAREA, and SELECT elements from game hotkeys
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        if (e.key === 'Escape') {
           e.preventDefault();
           e.target.blur();
-          closeHelpModal();
-          return;
+          if (isMpOpen) {
+            closeMultiplayerModal();
+            return;
+          }
+          if (isHelpOpen) {
+            closeHelpModal();
+            return;
+          }
         }
         if (e.key === 'Enter' && e.target.id === 'name-input') {
           e.preventDefault();
           e.target.blur();
           confirmCharacter();
+        }
+        return;
+      }
+
+      // Trap Escape and block ALL game hotkeys when Multiplayer modal is open
+      if (isMpOpen) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeMultiplayerModal();
+          return;
+        }
+        if (e.key === 'Tab') {
+          const focusables = mpModal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled])');
+          if (focusables.length > 0) {
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
         }
         return;
       }
@@ -7754,7 +8052,9 @@
           usePhoenixElixir();
         }
       } else if (e.key === 'i' || e.key === 'I') {
-        showToast(`🎒 Inventory Capacity: ${player.inventory ? player.inventory.length : 0}/${player.maxInvSlots || 10} Slots`, 2000);
+        e.preventDefault();
+        switchSidebarTab('bag');
+        showToast('🎒 Opened Inventory & Bag [I]', 1500);
       }
 
       // Check key binds
@@ -7796,9 +8096,12 @@
       controlsObserver.observe(panelElem, { childList: true });
     }
 
-    if (!soundEnabled) {
+    {
       const audioBtn = document.getElementById('audio-toggle-btn');
-      if (audioBtn) audioBtn.textContent = '🔇 SFX: OFF';
+      if (audioBtn) {
+        const prefix = window.__KILO_BGM_ENABLED ? 'Audio' : 'SFX';
+        audioBtn.textContent = soundEnabled ? `🔊 ${prefix}: ON` : `🔇 ${prefix}: OFF`;
+      }
     }
 
     // Start in Character Creation Mode

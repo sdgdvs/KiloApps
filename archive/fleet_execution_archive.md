@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T01:38:41-08:00 — kilo-expander: KStarForge (Phase VI VFS Hardening & RFMS Skirmish Sync)**
+  - Status: PASS ✅ (0 errors, web 350.3 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.08%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.4s)).
+  - Hardened KiloVFS and starforgeVFS with event.origin checks, 60s listener timeouts, standalone Blob/file-input fallbacks, and incoming FILE_OPEN/VFS_OPEN IPC support.
+  - Added Save Debrief to VFS (/home/docs/kstarforge_debrief.txt) and Open in KPad buttons to #flight-debrief-modal.
+  - Fixed HiDPI skirmish spawn, wired throttled SKIRMISH_STATE and SKIRMISH_FIRE moves, and rendered peerBlueprint modular hulls in flightSim.
+  - Native Win32 C parity: added SaveDebriefFile [D] export and status bar integration.
+  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
+
 - **2026-11-01T01:22:18-08:00 — kilo-qa: KNetMap (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KNetMap across web and native targets.

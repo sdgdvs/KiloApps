@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KCosmic
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KQuest
+  kilo_usability: KCalc
   kilo_qa: KChat
   kilo_expander: KQuest
   kilo_review: KSubmarine
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KQuest
-  timestamp: '2026-11-01T03:40:16-08:00'
+  timestamp: '2026-11-01T04:22:19-08:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -155,11 +155,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Fix NaN damage in sendMpAction(SPELL) and sendDuelAction(SKILL) by reading player.int instead of undefined player.mag, apply 50% damage reduction for GUARD and PARRY, and call a shared while-loop checkLevelUp() (+2 SP and companion scaling) across Raid, Duel, Bounty, and Combat victories; tick and decrement currentEnemy burningTurns/poisonedTurns/frozenTurns in enemyTurn() and KQuest/main.c EnemyTurn(); log all 18 biome hazards + Phoenix auto-revive in triggerHazard(); wire claimQuests() button, unlock unreachable achievements 0/1/2/5/6/7, apply Utility T1/T2 and Cleric +10 MaxHP passives, preserve gear prefixes + consumable metadata + phoenixElixirs sync, and fix KQuest/main.c Ranger companion turn, upkeep departure reset, Game Over Load button, and g_KeyBinds/[M] hotkeys. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KQuest`
+- **Active Target**: `KCalc`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Compact header to 1 nowrap row (show SFX ON/OFF when BGM disabled), lock .game-view to 100vh flex column with scrollable #dynamic-content (compact/collapsible biome grid + grouped Town actions) and pinned compact #log-panel + #controls-panel so Hero Creation and Town buttons fit 1000x723 above the fold; add .sidebar sub-tabs (Hero / Bag / Quests) with [I] focus and top-right #toast; trap Esc and hotkeys inside #mp-modal-overlay + guard SELECTs; pause gfxLoop on document.hidden; and render Tavern NPC + Army/Siege sprites on #kquest-gfx-canvas. |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Compact 4-row top chrome at 860x653 by removing redundant #quickBitSummary from #kcalcExpBar, merging searchable 20-item CONSTANTS_DB into #view-constants (removing duplicate Constants modal button), unifying #memBadge/#memModal with M0-M7 Memory Bank (M0 = active memory), adding a RAD evaluation notice badge in #view-calculus, and redrawing HiDPI #regressionCanvas via requestAnimationFrame on switchView(statistics) and switchStatsTool(2var). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -175,6 +174,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | Compact #tutorial-modal and #help-modal (.modal-box padding and 2-column command grid) so JACK IN and CLOSE buttons fit 800x563 without clipping (sheet.png Panel 1); replace overlapping absolute #visuals (and KCyber/main.c full-width TextOutA colliding with hudBox) with a non-overlapping 2-column Cyberdeck Cockpit layout (#terminal + 240px right deck panel) featuring devicePixelRatio HiDPI #gfxCanvas, live MEM and HEAT bars, Credits/Attempts/Tool-Charges/Active-Contract HUD, contextual quick-command buttons, Tab autocomplete on #cmd-input, and SFX | **[ARGON REVIEW]:** ON/OFF label on #audio-toggle-btn when BGM is disabled. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | **[ARGON REVIEW]:** Compact 800x563 layout in kstellar.html (reduce body padding to 10px 12px, tighten #dashboard to 1 row by hiding dead #drone-toggle-btn and #music-toggle-btn when !window.__KILO_BGM_ENABLED and labeling #audio-toggle-btn SFX ON/OFF [M], collapse empty #mission-status when !activeMission, and add [TRADE] [SHIPYARD] [MISSIONS] [DIPLOMACY] sub-tabs in #info-panel) so #map-canvas expands above 65% height and station action buttons are visible above the fold on boot without scrolling; compact #manual-modal spacing so Section 1-5 text never clips at 800x563; replace all blocking alert()/confirm() popups in travelTo/buy/sell/upgrade/diplomacy/investigatePhenomenon with an Esc/Space-dismissible in-DOM event modal and inline Emergency Beacon button plus Buy Max/Sell All buttons; add devicePixelRatio HiDPI scaling to #map-canvas and #combat-canvas, boost sector watermark contrast to 0.28 alpha, enforce minimum star spacing (dist >= 11) and quadrant-matched sector assignment in generateGalaxy()/GenerateGalaxy(), and wire Tab/Arrow system cycling + Enter/Space warp/dock keyboard navigation in kstellar.html and KStellar/main.c. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Fix 1160x683 header button wrapping/clipping in kstarforge.html with white-space nowrap and compact spacing so all 5 resource pills and 7 action buttons fit 44px; size #blueprint-canvas to min(470px, calc(100vh - 215px)) so grid + 2-row .blueprint-toolbar fit with 0px scroll, move #toast-container to top-right so toasts never cover .blueprint-toolbar, and compact .blueprint-sidebar-right so #spec-crew and #cost-card fit above the fold; add vfs-blueprint-modal, rfms-fleet-modal, blueprint-code-modal, overclock-modal, and flight-debrief-modal to ALL_MODAL_IDS/Esc/backdrop dismissal, guard [S] and [1-5] in INPUT/TEXTAREA, bind [Z] to #btn-stress-overlay, replace confirm() in #btn-reset-save, and compact KStarForge/main.c STATE_CONTRACTS so Contract 6 fits 920x620. |
+| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Compact header to 1 nowrap row (show SFX ON/OFF when BGM disabled), lock .game-view to 100vh flex column with scrollable #dynamic-content (compact/collapsible biome grid + grouped Town actions) and pinned compact #log-panel + #controls-panel so Hero Creation and Town buttons fit 1000x723 above the fold; add .sidebar sub-tabs (Hero / Bag / Quests) with [I] focus and top-right #toast; trap Esc and hotkeys inside #mp-modal-overlay + guard SELECTs; pause gfxLoop on document.hidden; and render Tavern NPC + Army/Siege sprites on #kquest-gfx-canvas. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KChat`
@@ -300,6 +300,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T04:22:19-08:00 — kilo-usability: KQuest (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KQuest across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KCalc`; rotated active agent to `kilo-qa`.
+
 - **2026-11-01T03:40:16-08:00 — kilo-tester: KQuest (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KQuest across web and native targets.
@@ -320,11 +325,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual & UX Findings: Header wraps H1 into 4 narrow lines and 2 button rows; .game-view scroll clips Hero Creation and Town controls below 1000x723 fold; .sidebar hides Inventory/Quests; #mp-modal-overlay leaks Esc/hotkeys and gfxLoop runs when hidden.
   - Gameplay & VFS Findings: Multiplayer SPELL/SKILL read undefined player.mag (NaN HP) and GUARD/PARRY are no-ops; Rune burn/poison/freeze never tick in HTML or C; triggerHazard silently drops HP in 17/18 biomes; 6 achievements + claimQuests() are unreachable; generateHeroSheetText() crashes on companion object and KiloVFS lacks origin checks/fallbacks.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KQuest`, `kilo-tester`->`KQuest`, `kilo-expander`->`KQuest`]; advanced `kilo-review` to `KSubmarine`; next agent `kilo-creator`.
-
-- **2026-11-01T01:38:41-08:00 — kilo-expander: KStarForge (Phase VI VFS Hardening & RFMS Skirmish Sync)**
-  - Status: PASS ✅ (0 errors, web 350.3 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.08%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.4s)).
-  - Hardened KiloVFS and starforgeVFS with event.origin checks, 60s listener timeouts, standalone Blob/file-input fallbacks, and incoming FILE_OPEN/VFS_OPEN IPC support.
-  - Added Save Debrief to VFS (/home/docs/kstarforge_debrief.txt) and Open in KPad buttons to #flight-debrief-modal.
-  - Fixed HiDPI skirmish spawn, wired throttled SKIRMISH_STATE and SKIRMISH_FIRE moves, and rendered peerBlueprint modular hulls in flightSim.
-  - Native Win32 C parity: added SaveDebriefFile [D] export and status bar integration.
-  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
