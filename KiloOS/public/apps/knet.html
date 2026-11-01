@@ -2520,6 +2520,11 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
       const qIdx = url.indexOf('?');
       if (hIdx !== -1) sub = url.substring(hIdx);
       else if (qIdx !== -1) sub = url.substring(qIdx);
+      else if (url.toLowerCase().includes('/nfo') || url.toLowerCase().includes('/ansi')) sub = '#tab-nfo';
+      else if (url.toLowerCase().includes('/voting') || url.toLowerCase().includes('/compo') || url.toLowerCase().includes('/ballot')) sub = '#tab-voting';
+      else if (url.toLowerCase().includes('/jukebox') || url.toLowerCase().includes('/music') || url.toLowerCase().includes('/tracker') || url.toLowerCase().includes('/audio')) sub = '#tab-jukebox';
+      else if (url.toLowerCase().includes('/effects') || url.toLowerCase().includes('/intro') || url.toLowerCase().includes('/plasma') || url.toLowerCase().includes('/canvas')) sub = '#tab-effects';
+      else if (url.toLowerCase().includes('/webring') || url.toLowerCase().includes('/ring')) sub = '#tab-webring';
       url = '/web/demoscene.html' + sub;
     } else if (url.toLowerCase() === 'kweb://rfc-archive' || url.toLowerCase().startsWith('kweb://rfc-archive/') || url.toLowerCase().startsWith('kweb://rfc-archive#') || url.toLowerCase().startsWith('kweb://rfc-archive?') || url.toLowerCase() === 'rfc-archive' || url.toLowerCase().startsWith('rfc-archive/') || url.toLowerCase().startsWith('rfc-archive#') || url.toLowerCase() === 'kweb://rfc_archive' || url.toLowerCase().startsWith('kweb://rfc_archive/') || url.toLowerCase().startsWith('kweb://rfc_archive#') || url.toLowerCase() === 'rfc_archive' || url.toLowerCase() === 'kweb://rfc' || url.toLowerCase() === 'rfc' || url.toLowerCase() === 'kweb://rfc-archive.html' || url.toLowerCase() === 'kweb://ietf' || url.toLowerCase().startsWith('kweb://ietf/') || url.toLowerCase().startsWith('kweb://ietf#') || url.toLowerCase() === 'ietf') {
       let sub = '';

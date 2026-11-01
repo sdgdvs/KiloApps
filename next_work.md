@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://demoscene
+  kilo_creator: kweb://rfc-archive
   kilo_graphics: KStarForge
   kilo_soundscape: KStellar
   kilo_tester: KStarForge
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KNetMap
   kilo_expander: KStarForge
   kilo_review: KQuest
-virtual_web_target: kweb://demoscene
+virtual_web_target: kweb://rfc-archive
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KStarForge
-  timestamp: '2026-10-31T23:33:48-07:00'
+  agent: kilo-creator
+  app: kweb://demoscene
+  timestamp: '2026-11-01T00:15:29-07:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://demoscene`
+- **Active Target**: `kweb://rfc-archive`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 | `kweb://warez` | `KiloOS/public/web/warez.html`, `KiloOS/public/apps/knet.html` | Create *The Underground Courier / Warez BBS Web Ring* (`warez.html` <250 KB): ANSI top-site release board, simulated keygen music player, download quota tracker, and VFS export. |
 | `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
+| `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KStarForge`
@@ -297,6 +297,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T00:15:29-07:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Party Vault Verification & Routing)**
+  - Status: PASS (0 errors, web 93.6 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Verified real-time 64K intro Canvas effect switcher (plasma, rotozoomer, starfield, copper bars, metaballs).
+  - Confirmed ANSI .NFO viewer with phosphor CRT themes, ASCII box studio, and VFS save to /home/demoscene/.
+  - Updated KNet address bar subpath routing (/nfo, /voting, /jukebox, /effects, /webring) and KiloOS IPC.
+  - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-31T23:33:48-07:00 — kilo-review: KStarForge (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1160x683 and audited kstarforge.html + KStarForge/main.c; dispatched surgical fixes to kilo-tester, kilo-usability, kilo-expander, and kilo-graphics).
   - Visual/UX Findings: 44px header wraps all 7 action buttons onto 2-3 lines and clips Help [F1] at 1160x683; #blueprint-center overflows vertically with toasts covering .blueprint-toolbar; right telemetry clips Crew/Cost cards; 5 modals ignore Esc; main.c clips Contract 6.
@@ -319,10 +326,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ROTATED ⚠️ (circuit breaker triggered after 2 consecutive stalled turns on KStellar).
   - Reverted unverified working tree edits and rotated KStellar to queue bottom so fleet execution continues.
   - Handoff: Advanced `kilo-usability` to `KCalc`; rotated active agent to `kilo-qa`.
-
-- **2026-10-31T20:38:39-07:00 — kilo-tester: KStellar (Win32 C & Web Station Buttons, Combat Balance, Distress Beacon & Persistence Repairs)**
-  - Status: PASS ✅ (0 errors, web 210.4 KB, native 165.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Win32 C Parity: Implemented handlers for ID_BTN_BUY_MED, ID_BTN_SELL_MED, ID_BTN_REPAIR, and ID_BTN_REFUEL; hid overlapping station buttons in ShowManualView, non-docked click, and combat.
-  - Combat & Phenomena: Spawned/labeled Stealth Infiltrator (enemyClass 3), scaled flee chance by engineLevel, added shieldLevel absorption, fixed DRAWITEM HBRUSH leaks, and added Monolith/Ion Storm rewards & map rings.
-  - Web & Controls: Fixed quota save/load fallback for s.market commodities, prevented emergencyBeacon soft-locks with +30% fuel, paused render loop when document.hidden, and routed WM_KEYDOWN in message loop.
-  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.

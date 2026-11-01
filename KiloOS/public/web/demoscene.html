@@ -1242,8 +1242,18 @@ function saveToKiloVfs(vfsPath, contentStr) {
 
 function launchKiloApp(appFile, args) {
   try {
+    const appId = appFile.replace('.html', '').toLowerCase();
+    window.parent.postMessage({
+      type: 'OS_LAUNCH_APP',
+      targetApp: appId,
+      appId: appId,
+      app: appFile,
+      args: args || {}
+    }, '*');
     window.parent.postMessage({
       type: 'LAUNCH_APP',
+      targetApp: appId,
+      appId: appId,
       app: appFile,
       args: args || {}
     }, '*');

@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T20:38:39-07:00 — kilo-tester: KStellar (Win32 C & Web Station Buttons, Combat Balance, Distress Beacon & Persistence Repairs)**
+  - Status: PASS ✅ (0 errors, web 210.4 KB, native 165.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Win32 C Parity: Implemented handlers for ID_BTN_BUY_MED, ID_BTN_SELL_MED, ID_BTN_REPAIR, and ID_BTN_REFUEL; hid overlapping station buttons in ShowManualView, non-docked click, and combat.
+  - Combat & Phenomena: Spawned/labeled Stealth Infiltrator (enemyClass 3), scaled flee chance by engineLevel, added shieldLevel absorption, fixed DRAWITEM HBRUSH leaks, and added Monolith/Ion Storm rewards & map rings.
+  - Web & Controls: Fixed quota save/load fallback for s.market commodities, prevented emergencyBeacon soft-locks with +30% fuel, paused render loop when document.hidden, and routed WM_KEYDOWN in message loop.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-10-31T20:22:01-07:00 — kilo-graphics: KStellar (Imagen 3 Visual Assets & Glint Sweep)**
   - Status: PASS ✅ (0 errors, web 209.8 KB, native 162.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.47%, HEAD Δ 4.08%, 0 fail, 0 warn, 7.6s)).
   - Generated and integrated 12 spacefaring sprites (Player Cruiser, Interceptor, Marauder, Dreadnought, Infiltrator, Roaming Fleets, Orbital Starbase, Anomalies) with procedural fallbacks.
