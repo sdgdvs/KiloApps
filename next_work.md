@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KCalc
   kilo_qa: KChart
-  kilo_expander: KSubmarine
+  kilo_expander: KCalc
   kilo_review: KHex
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KSys
-  timestamp: '2026-11-01T08:17:23-08:00'
+  agent: kilo-expander
+  app: KSubmarine
+  timestamp: '2026-11-01T08:40:46-08:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -190,11 +190,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KSubmarine`
+- **Active Target**: `KCalc`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into ksubmarine.html (event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) connecting EXPORT/IMPORT to VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ (/home/saves/ksubmarine_dive.json), handling incoming FILE_OPEN/VFS_OPEN messages, and exporting an Expedition Bathymetry Log (/home/docs/ksubmarine_log.txt) with an Open in KPad OS_LAUNCH_APP button, plus integrate ../assets/js/retro_multiplayer.js Abyssal Fleet Co-Op & Salvage Race mode strictly behind an explicit MULTIPLAYER button (zero autostart, soloTimeoutMs 25000 AI rival DSV NEREID-IV fallback, <999 KB). |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY with standalone blob fallback) for saving/loading calculation tapes and workspace JSON snapshots to /home/docs/, and add live HEX/DEC/OCT/BIN radix readout plus FV/CAGR financial tools to KCalc/main.c (<999 KB). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
@@ -210,6 +209,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kstellar.html (strict event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) connecting EXPORT/IMPORT to VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ (/home/saves/kstellar_save.json), handling incoming FILE_OPEN/VFS_OPEN messages, and exporting a Captain Trade & Fleet Ledger (/home/docs/kstellar_ledger.txt) with an Open in KPad OS_LAUNCH_APP button; deepen 4X fleet/diplomacy & turn UX with dynamic market price drift per warp turn, interactive hailing of local ORBITAL TRAFFIC fleets, and Friendly (>= +15) Wingman Escort / Convoy Charter treaties; and integrate ../assets/js/retro_multiplayer.js Galactic Sector Trade & Bounty Race mode strictly behind an explicit MULTIPLAYER button (zero autostart, 25000ms AI Star Captain fallback). |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Harden KiloVFS and starforgeVFS per architecture.md with event.origin === window.location.origin checks, 60s listener timeouts, VFS_SHOW_SAVE + VFS_WRITE + OS_NOTIFY with standalone Blob/file-input fallbacks when window.parent === window, incoming FILE_OPEN/VFS_OPEN postMessage support, and a Save Debrief to VFS (/home/docs/kstarforge_debrief.txt) + Open in KPad button in #flight-debrief-modal; complete live RFMS peer skirmish sync by fixing launchTacticalSkirmish() HiDPI spawn ((flightSim.simW // 800)/2), sending throttled SKIRMISH_STATE and SKIRMISH_FIRE moves when connected, and rendering peerBlueprint modular hulls. — Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Fix generateHeroSheetText() TypeError crash on player.companion.toUpperCase() (format companion.name and role) plus undefined player.spd/mag/potions (read player.agi, player.int, and inventory counts); harden KiloVFS in kquest.html per architecture.md with event.origin === window.location.origin checks, 60s listener timeouts, VFS_SHOW_SAVE and VFS_SHOW_OPEN pickers, standalone Blob and file-input fallbacks when window.parent === window, appId + filePath in OS_LAUNCH_APP, and incoming FILE_OPEN/VFS_OPEN auto-import. |
+| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into ksubmarine.html (event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) connecting EXPORT/IMPORT to VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ (/home/saves/ksubmarine_dive.json), handling incoming FILE_OPEN/VFS_OPEN messages, and exporting an Expedition Bathymetry Log (/home/docs/ksubmarine_log.txt) with an Open in KPad OS_LAUNCH_APP button, plus integrate ../assets/js/retro_multiplayer.js Abyssal Fleet Co-Op & Salvage Race mode strictly behind an explicit MULTIPLAYER button (zero autostart, soloTimeoutMs 25000 AI rival DSV NEREID-IV fallback, <999 KB). |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KHex`
@@ -303,6 +303,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T08:40:46-08:00 — kilo-expander: KSubmarine (KSubmarine (Phase VI VFS/IPC Mesh & RFMS Multiplayer Salvage Race))**
+  - Status: PASS ✅ (0 errors, web 592.0 KB, native 266.0 KB < 999 KB; startup, Vite & security_lint PASS; visual WARN (anim 0.0%, input 2.47%, HEAD Δ 0.74%, 0 fail, 1 warn, 8.0s)).
+  - VFS & IPC: Integrated KiloVFS export/import to /home/saves/ksubmarine_dive.json (VFS_SHOW_SAVE/VFS_SHOW_OPEN/VFS_WRITE/VFS_READ + OS_NOTIFY) with 60s dialog timeouts, origin validation, standalone Blob/file-input fallbacks, incoming FILE_OPEN auto-restore, and Expedition Bathymetry Log (/home/docs/ksubmarine_log.txt) with Open in KPad (OS_LAUNCH_APP).
+  - RFMS Multiplayer & Dual Parity: Added Abyssal Fleet Co-Op & Salvage Race mode via retro_multiplayer.js behind explicit MULTIPLAYER button with 25s solo timeout AI rival DSV NEREID-IV fallback, telemetry sync, rival dredge alerts, plus Win32 C ksubmarine_log.txt export parity.
+  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
+
 - **2026-11-01T08:17:23-08:00 — kilo-qa: KSys (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 211.3 KB, native 40.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, ksys_tutorialSeen flag, and Escape modal dismissals.
@@ -325,9 +331,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated 2-stage chroma-keyed Imagen 3 sprites for bathysphere submarine, colossal trench leviathan, and abyssal squid, plus 5 adapted deep-sea sprites (benthic flora, anglerfish fauna, salvage pod, combat drone, and hydrothermal smoker) with graceful procedural fallbacks and upgraded Codex UI visual rendering.
   - Zero perimeter border glints or specular rotations; fleet icon uniqueness confirmed.
   - Handoff: Advanced `kilo-graphics` to `KCosmic`; rotated active agent to `kilo-tester`.
-
-- **2026-11-01T06:22:21-08:00 — kilo-creator: kweb://webring (RingMaster Canonical Nodes & Traversal Integration)**
-  - Status: PASS (0 errors, web 460.8 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) into RingMaster topology map with latency-radar scaling & golden star spokes.
-  - Added Canonical Tour sequential traversal and scope=canonical CGI redirect simulation.
-  - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.

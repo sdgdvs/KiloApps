@@ -1763,6 +1763,70 @@
         </div>
     </div>
 
+    <!-- Abyssal Fleet Co-Op & Salvage Race Multiplayer Modal -->
+    <div id="multiplayerModal" class="tutorial-modal-backdrop" style="display: none;">
+        <div class="tutorial-modal-card" style="width: 620px;">
+            <div class="tutorial-modal-header" style="justify-content: space-between;">
+                <div class="tutorial-modal-title" style="color: var(--accent-violet);">
+                    <span style="font-size: 16px;">🌐</span>
+                    <span>ABYSSAL FLEET CO-OP & SALVAGE RACE // RFMS NETLINK</span>
+                </div>
+                <button id="btnCloseMultiplayer" style="background: rgba(239, 68, 68, 0.2); border: 1px solid var(--accent-red); color: #fca5a5; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">✕ [ESC]</button>
+            </div>
+            <div style="padding: 14px 18px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto;">
+                <div style="font-size: 10px; color: var(--text-bright); line-height: 1.45; background: rgba(168, 85, 247, 0.1); border-left: 3px solid var(--accent-violet); padding: 8px 10px; border-radius: 0 3px 3px 0;">
+                    Connect to the Abyssal Fleet NetLink to conduct synchronized deep-sea hydrographic surveys and compete in the Benthic Salvage Race! Real-time sonar position sync, salvage node claims, and hydrophone telemetry.
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div style="background: rgba(2, 11, 18, 0.7); border: 1px solid var(--border-panel); border-radius: 4px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                        <div style="font-size: 10.5px; font-weight: bold; color: var(--accent-sonar);">SUBMERSIBLE IDENT</div>
+                        <label style="font-size: 9px; color: var(--text-dim);">CALLSIGN / REGISTRY:
+                            <input type="text" id="mpCallsignInput" maxlength="16" value="DSV-VOYAGER" style="width: 100%; box-sizing: border-box; background: var(--bg-deep); border: 1px solid var(--accent-sonar); color: var(--text-bright); font-family: var(--font-mono); font-size: 11px; padding: 4px 6px; margin-top: 4px; border-radius: 3px;">
+                        </label>
+                        <div style="font-size: 8.5px; color: var(--text-dim);">Broadcasted over hydrophone channels.</div>
+                    </div>
+
+                    <div style="background: rgba(2, 11, 18, 0.7); border: 1px solid var(--border-panel); border-radius: 4px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                        <div style="font-size: 10.5px; font-weight: bold; color: var(--accent-emerald);">NETWORK LOBBY & EXPEDITION ROOM</div>
+                        <div style="display: flex; gap: 6px;">
+                            <input type="text" id="mpRoomCodeInput" placeholder="ROOM CODE" maxlength="6" style="flex: 1; text-transform: uppercase; background: var(--bg-deep); border: 1px solid var(--border-panel); color: var(--text-bright); font-family: var(--font-mono); font-size: 11px; padding: 4px 6px; border-radius: 3px;">
+                            <button id="btnMpJoinRoom" style="padding: 4px 10px; font-size: 10px; border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;">JOIN</button>
+                        </div>
+                        <div style="display: flex; gap: 6px;">
+                            <button id="btnMpCreateRoom" style="flex: 1; padding: 4px 6px; font-size: 9.5px; border-color: var(--accent-sonar); color: var(--accent-sonar);">CREATE EXPEDITION</button>
+                            <button id="btnMpQuickMatch" style="flex: 1; padding: 4px 6px; font-size: 9.5px; border-color: var(--accent-violet); color: var(--accent-violet); font-weight: bold;">QUICK MATCH</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NETLINK STATUS & RADAR READOUT -->
+                <div style="background: rgba(2, 11, 18, 0.9); border: 1px solid var(--border-panel); border-radius: 4px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 10px; font-weight: bold; color: var(--text-bright);">NETLINK TELEMETRY STATUS</span>
+                        <span id="mpStatusBadge" style="font-size: 9px; padding: 2px 6px; border-radius: 2px; background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid #64748b;">OFFLINE / LOCAL ONLY</span>
+                    </div>
+                    <div id="mpStatusDetail" style="font-size: 9.5px; color: var(--text-dim); min-height: 20px;">
+                        Single-player simulation active. Click QUICK MATCH or JOIN to engage online fleet hydrophones.
+                    </div>
+                    <div id="mpCountdownContainer" style="display: none; font-size: 9px; color: var(--accent-amber);">
+                        ⏱️ Searching for deep-submergence vessels... Solo AI Rival fallback in <b id="mpCountdownSec">25</b>s
+                    </div>
+                </div>
+
+                <!-- SALVAGE RACE RULES -->
+                <div style="background: rgba(3, 16, 28, 0.5); border: 1px solid rgba(19, 60, 90, 0.5); border-radius: 3px; padding: 8px 10px; font-size: 9px; color: var(--text-dim); line-height: 1.4;">
+                    <b style="color: var(--accent-amber);">SALVAGE RACE PROTOCOL:</b> Race against your rival submersible to dredge high-value benthic nodules and transship minerals. If no human pilot joins within 25 seconds, autonomous research drone <b style="color: var(--accent-emerald);">DSV NEREID-IV</b> will auto-deploy to challenge your survey supremacy.
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px;">
+                    <button id="btnMpDisconnect" style="display: none; padding: 4px 12px; font-size: 10px; border-color: var(--accent-red); color: var(--accent-red); font-weight: bold;">DISCONNECT NETLINK</button>
+                    <button id="btnMpClose" style="padding: 4px 16px; font-size: 10px; border-color: var(--accent-sonar); color: var(--accent-sonar); font-weight: bold; margin-left: auto;">RETURN TO HELM</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <header>
         <div class="header-title">
             <span class="status-badge" id="masterStatusBadge"></span>
@@ -1783,9 +1847,12 @@
             <button id="btnQuickSave" title="Quicksave dive state (F5)" style="border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;">💾 F5</button>
             <button id="btnQuickLoad" title="Quickload saved dive state (F9)" style="border-color: var(--accent-sonar); color: var(--accent-sonar); font-weight: bold;">📂 F9</button>
             <button id="btnExportState" title="Export dive telemetry to JSON file" style="border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">📤 EXP</button>
-            <button id="btnImportState" title="Import dive telemetry from JSON file" style="border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">📥 IMP</button>
+            <button id="btnImportState" title="Import dive telemetry from VFS / JSON" style="border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">📥 IMP</button>
             <input type="file" id="stateImportInput" accept=".json" style="display: none;">
-            <button id="btnBriefing" title="Captain's Dive Briefing & Tutorial" style="border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">⚓ BRIEF</button>
+            <button id="btnExportLog" title="Export Expedition Bathymetry Log (/home/docs/ksubmarine_log.txt)" style="border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;">📜 LOG</button>
+            <button id="btnOpenKPad" title="Open Bathymetry Log in KPad (OS_LAUNCH_APP)" style="border-color: var(--accent-sonar); color: var(--accent-sonar); font-weight: bold; display: none;">📝 KPAD</button>
+            <button id="btnMultiplayer" title="Abyssal Fleet Co-Op & Salvage Race (RFMS Online)" style="border-color: var(--accent-violet); color: var(--accent-violet); font-weight: bold;">🌐 MULTI</button>
+            <button id="btnBriefing"  title="Captain's Dive Briefing & Tutorial" style="border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">⚓ BRIEF</button>
             <button id="headerHelpBtn" style="border-color: var(--accent-sonar); color: var(--accent-sonar); font-weight: bold;">📖 MANUAL [H]</button>
             <button id="emergencyBlowBtn" style="border-color: var(--accent-red); color: var(--accent-red); font-weight: bold;">🚨 BLOW</button>
         </div>
@@ -1948,6 +2015,10 @@
                 </div>
             </div>
 
+            <div id="mpHudBar" style="display: none; align-items: center; justify-content: space-between; background: rgba(168, 85, 247, 0.15); border: 1px solid var(--accent-violet); border-radius: 3px; padding: 3px 8px; font-size: 9.5px; color: var(--text-bright); flex-shrink: 0;">
+                <span id="mpHudText">🌐 <b>NETLINK:</b> CONNECTED [DSV NEREID-IV] | <b>SALVAGE RACE:</b> YOU 150 vs 150 PTS</span>
+                <button id="btnMpHudAction" style="padding: 1px 6px; font-size: 8.5px; border-color: var(--accent-violet); color: var(--accent-violet);">MANAGE</button>
+            </div>
             <div class="sonar-viewport">
                 <canvas id="sonarCanvas"></canvas>
                 
@@ -2563,6 +2634,7 @@
         <div>GLOBAL LOC: 32°14.8' N, 164°22.1' W | MARIANA TRENCH SECTOR</div>
     </footer>
 
+    <script src="../assets/js/retro_multiplayer.js"></script>
     <script>
         (function() {
             // --- WEB AUDIO ENGINE & PHASE 13 SOUND EFFECTS ---
@@ -6439,6 +6511,17 @@
                 playBeep(980, 'sine', 0.3, 0.2);
                 logMessage(`🚢 CARGO TRANSSHIPMENT COMPLETE: Offloaded ${offloadedWeight} KG of abyssal minerals to surface support ship for +${offloadedVal} Research Credits!`, 'discovery');
 
+                if (mpIsActive && rMultiplayer) {
+                    try {
+                        rMultiplayer.sendMove({
+                            type: 'DREDGE',
+                            playerName: getPlayerCallsign(),
+                            val: offloadedVal,
+                            totalVal: state.surveyPoints
+                        });
+                    } catch (e) {}
+                }
+
                 renderCargoUI();
                 renderEngineeringUI();
             }
@@ -7207,6 +7290,15 @@
                     }
                 }
 
+                const mpModal = document.getElementById('multiplayerModal');
+                if (mpModal && mpModal.style.display === 'flex') {
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        closeMultiplayerModal();
+                        return;
+                    }
+                }
+
                 const tutModal = document.getElementById('tutorialModal');
                 if (tutModal && tutModal.style.display === 'flex') {
                     if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
@@ -7860,25 +7952,242 @@
                 }
             }
 
+            // --- PHASE VI KILOOS VFS & IPC MESH BRIDGE ---
+            const KiloVFS = {
+                isSupported() {
+                    return Boolean(window.parent && window.parent !== window);
+                },
+                write(path, data, notifyTitle) {
+                    try {
+                        const reqId = 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                        const strData = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                        window.parent.postMessage({
+                            type: 'VFS_WRITE',
+                            path,
+                            data: strData,
+                            requestId: reqId
+                        }, '*');
+                        window.parent.postMessage({
+                            type: 'OS_NOTIFY',
+                            title: notifyTitle || document.title,
+                            message: `Saved to VFS: ${path}`
+                        }, '*');
+                    } catch (e) {
+                        console.warn('VFS write error:', e);
+                    }
+                },
+                read(path, cb) {
+                    if (!KiloVFS.isSupported()) {
+                        if (cb) cb(null, path);
+                        return;
+                    }
+                    const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                    let cleanupTimer = null;
+                    const handler = (e) => {
+                        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                            return;
+                        }
+                        if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                            if (cleanupTimer) clearTimeout(cleanupTimer);
+                            window.removeEventListener('message', handler);
+                            if (cb) cb(e.data.data, e.data.path || path);
+                        }
+                    };
+                    cleanupTimer = setTimeout(() => {
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(null, path);
+                    }, 60000);
+                    window.addEventListener('message', handler);
+                    try {
+                        window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
+                    } catch (e) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(null, path);
+                    }
+                },
+                showSave(defaultPath, data, cb) {
+                    if (!KiloVFS.isSupported()) {
+                        // Standalone Blob fallback
+                        try {
+                            const blob = new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], {
+                                type: defaultPath.endsWith('.json') ? 'application/json' : 'text/plain'
+                            });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = defaultPath.split('/').pop() || 'ksubmarine_dive.json';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                            if (cb) cb(defaultPath);
+                        } catch (err) {
+                            if (cb) cb(null);
+                        }
+                        return;
+                    }
+                    const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                    let cleanupTimer = null;
+                    const handler = (e) => {
+                        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                            return;
+                        }
+                        if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+                            if (cleanupTimer) clearTimeout(cleanupTimer);
+                            window.removeEventListener('message', handler);
+                            if (e.data.path) {
+                                KiloVFS.write(e.data.path, data, 'KSubmarine Dive State');
+                                if (cb) cb(e.data.path);
+                            } else if (cb) {
+                                cb(null);
+                            }
+                        }
+                    };
+                    cleanupTimer = setTimeout(() => {
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(null);
+                    }, 60000);
+                    window.addEventListener('message', handler);
+                    try {
+                        window.parent.postMessage({
+                            type: 'VFS_SHOW_SAVE',
+                            requestId: reqId,
+                            defaultPath,
+                            path: defaultPath
+                        }, '*');
+                    } catch (e) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(null);
+                    }
+                },
+                openPicker(cb) {
+                    if (!KiloVFS.isSupported()) {
+                        if (stateImportInput) {
+                            stateImportInput.value = '';
+                            stateImportInput.click();
+                        }
+                        return;
+                    }
+                    const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                    let cleanupTimer = null;
+                    const handler = (e) => {
+                        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                            return;
+                        }
+                        if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                            if (cleanupTimer) clearTimeout(cleanupTimer);
+                            window.removeEventListener('message', handler);
+                            if (e.data.path) {
+                                KiloVFS.read(e.data.path, cb);
+                            } else if (cb) {
+                                cb(null, null);
+                            }
+                        }
+                    };
+                    cleanupTimer = setTimeout(() => {
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(null, null);
+                    }, 60000);
+                    window.addEventListener('message', handler);
+                    try {
+                        window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
+                    } catch (e) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(null, null);
+                    }
+                },
+                launchApp(targetApp, path = '') {
+                    try {
+                        window.parent.postMessage({
+                            type: 'OS_LAUNCH_APP',
+                            targetApp,
+                            appId: targetApp,
+                            path
+                        }, '*');
+                    } catch (e) {}
+                }
+            };
+
+            // Incoming VFS / OS Message Dispatcher
+            window.addEventListener('message', (e) => {
+                if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                    return;
+                }
+                const msg = e.data;
+                if (!msg || typeof msg !== 'object') return;
+                if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+                    const filePath = msg.path || '';
+                    const fileContent = msg.data !== undefined ? msg.data : msg.content;
+                    if (fileContent !== undefined && fileContent !== null) {
+                        handleIncomingFileData(fileContent, filePath);
+                    } else if (filePath) {
+                        KiloVFS.read(filePath, (data, path) => {
+                            if (data) {
+                                handleIncomingFileData(data, path || filePath);
+                            } else {
+                                showToast(`⚠️ Could not read ${filePath} from VFS`, 'warning');
+                            }
+                        });
+                    }
+                }
+            });
+
+            function handleIncomingFileData(content, sourceName = 'file') {
+                try {
+                    const parsed = typeof content === 'string' ? JSON.parse(content) : content;
+                    if (!parsed || !parsed.state) {
+                        throw new Error('Unrecognized save file format');
+                    }
+                    if (applySaveData(parsed)) {
+                        try {
+                            localStorage.setItem('ksubmarine_quicksave', JSON.stringify(parsed));
+                        } catch (err) {}
+                        showToast(`📥 Import restored: Depth ${state.depth.toFixed(1)}m from ${sourceName}`, 'success');
+                        logMessage(`📥 DIVE RESTORED: Successfully imported dive state from ${sourceName}.`, 'discovery');
+                        playBeep(600, 'sine', 0.12);
+                    }
+                } catch (err) {
+                    console.error('Import parse error:', err);
+                    showToast(`⚠️ Import failed: ${err.message || 'Corrupt JSON'}`, 'danger');
+                    logMessage(`IMPORT ERROR: Could not read ${sourceName}.`, 'critical');
+                    playBeep(300, 'square', 0.15);
+                }
+            }
+
             function exportGameState() {
                 try {
                     const saveData = saveGameState(true);
                     if (!saveData) return;
                     const jsonStr = JSON.stringify(saveData, null, 2);
-                    const blob = new Blob([jsonStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    const depthStr = Math.round(state.depth);
-                    const filename = `ksubmarine_dive_${depthStr}m_${Date.now()}.json`;
-                    a.href = url;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    showToast(`📤 Export complete: ${filename}`, 'success');
-                    logMessage(`📤 DIVE EXPORT: Stored dive telemetry to ${filename}.`, 'discovery');
-                    playBeep(750, 'sine', 0.1);
+                    const defaultPath = '/home/saves/ksubmarine_dive.json';
+                    if (KiloVFS.isSupported()) {
+                        KiloVFS.showSave(defaultPath, jsonStr, (savedPath) => {
+                            if (savedPath) {
+                                showToast(`📤 Dive saved to VFS: ${savedPath}`, 'success');
+                                logMessage(`📤 DIVE EXPORT: Stored dive telemetry to ${savedPath}.`, 'discovery');
+                                playBeep(750, 'sine', 0.1);
+                            }
+                        });
+                    } else {
+                        // Standalone Blob fallback
+                        const blob = new Blob([jsonStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        const depthStr = Math.round(state.depth);
+                        const filename = `ksubmarine_dive_${depthStr}m_${Date.now()}.json`;
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        showToast(`📤 Export complete: ${filename}`, 'success');
+                        logMessage(`📤 DIVE EXPORT: Stored dive telemetry to ${filename}.`, 'discovery');
+                        playBeep(750, 'sine', 0.1);
+                    }
                 } catch (e) {
                     console.error('Export error:', e);
                     showToast('⚠️ Export failed: Unable to create download', 'danger');
@@ -7890,31 +8199,540 @@
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    try {
-                        const parsed = JSON.parse(e.target.result);
-                        if (!parsed || !parsed.state) {
-                            throw new Error('Unrecognized save file format');
-                        }
-                        if (applySaveData(parsed)) {
-                            try {
-                                localStorage.setItem('ksubmarine_quicksave', JSON.stringify(parsed));
-                            } catch (err) {}
-                            showToast(`📥 Import restored: Depth ${state.depth.toFixed(1)}m`, 'success');
-                            logMessage(`📥 DIVE RESTORED: Successfully imported dive state from ${file.name}.`, 'discovery');
-                            playBeep(600, 'sine', 0.12);
-                        }
-                    } catch (err) {
-                        console.error('Import parse error:', err);
-                        showToast(`⚠️ Import failed: ${err.message || 'Corrupt JSON'}`, 'danger');
-                        logMessage(`IMPORT ERROR: Could not read ${file.name}.`, 'critical');
-                        playBeep(300, 'square', 0.15);
-                    }
+                    handleIncomingFileData(e.target.result, file.name);
                 };
                 reader.onerror = () => {
                     showToast('⚠️ Import failed: Error reading file', 'danger');
                     logMessage('IMPORT ERROR: Failed to read file.', 'critical');
                 };
                 reader.readAsText(file);
+            }
+
+            function triggerImport() {
+                if (KiloVFS.isSupported()) {
+                    KiloVFS.openPicker((data, path) => {
+                        if (data) {
+                            handleIncomingFileData(data, path || '/home/saves/ksubmarine_dive.json');
+                        }
+                    });
+                } else {
+                    if (stateImportInput) {
+                        stateImportInput.value = '';
+                        stateImportInput.click();
+                    }
+                }
+            }
+
+            // --- EXPEDITION BATHYMETRY LOG GENERATOR & IPC ---
+            function generateBathymetryLog() {
+                const now = new Date();
+                const curSector = SECTORS[state.currentSectorIdx] || SECTORS[0];
+                const callsign = (document.getElementById('mpCallsignInput') && document.getElementById('mpCallsignInput').value.trim()) || 'DSV-VOYAGER';
+                let log = `================================================================================\n`;
+                log += `   DSV ABYSS VOYAGER // EXPEDITION BATHYMETRY & HYDROGRAPHIC SURVEY LOG\n`;
+                log += `================================================================================\n`;
+                log += `Log Generated:          ${now.toISOString()}\n`;
+                log += `Vessel Registry:        DSV-884-ABYSS (Mariana Trench Survey Fleet)\n`;
+                log += `Commander Callsign:     ${callsign}\n`;
+                log += `Sector Classification:  ${curSector.name} [${curSector.depthZone}]\n`;
+                log += `Acoustic Beacon Fix:    X: ${state.posX.toFixed(2)} NM, Y: ${state.posY.toFixed(2)} NM\n`;
+                log += `Current Sounding Depth: ${state.depth.toFixed(1)} meters\n`;
+                log += `Subsurface Velocity:    ${state.speed.toFixed(2)} kts (Heading: ${state.heading.toFixed(1)}°)\n`;
+                log += `Hydrostatic Pressure:   ${((state.depth * 0.1) + 1.0).toFixed(1)} atm\n`;
+                log += `Hull Structural Rating: ${state.hull.toFixed(1)}% (Mk ${state.upgrades.hull || 1} Titanium-Ceramic)\n`;
+                log += `Life Support (O2):      ${state.oxygen.toFixed(1)}%\n`;
+                log += `Power Storage Cell:     ${state.battery.toFixed(1)}%\n`;
+                log += `Research Credits:       ${state.surveyPoints} PTS\n\n`;
+
+                log += `[EXPEDITION CARGO & MINERAL SPECIMEN HOLD]\n`;
+                log += `--------------------------------------------------------------------------------\n`;
+                log += `Manganese Nodules:      ${state.cargo.manganese} units\n`;
+                log += `Sunken Doubloons:       ${state.cargo.sunkenGold} units\n`;
+                log += `Titanium Wreck Scrap:   ${state.cargo.titaniumScrap} units\n`;
+                log += `Smoker Mineral Crystals: ${state.cargo.smokerCrystals} units\n`;
+                log += `Hadal Prisms:           ${state.cargo.hadalPrisms} units\n`;
+                log += `Hold Capacity:          ${state.cargo.totalWeight} / ${state.cargo.maxWeight} kg\n`;
+                log += `Total Cargo Value:      ${state.cargo.totalValue} Research Credits\n\n`;
+
+                log += `[BATHYAL FAUNA & ANOMALIES OBSERVED]\n`;
+                log += `--------------------------------------------------------------------------------\n`;
+                const discoveredFauna = FAUNA_CATALOG.filter(f => f.discovered);
+                if (discoveredFauna.length === 0) {
+                    log += `(No species fully cataloged. Deploy bio-scanner on active sonar contacts.)\n`;
+                } else {
+                    discoveredFauna.forEach(f => {
+                        log += `* [${f.name.padEnd(26)}] ${f.rarity.toUpperCase()} | Zone: ${f.depthRange} | Credits: +${f.points}\n`;
+                    });
+                }
+                log += `\n`;
+
+                log += `[SECTOR BATHYMETRIC LANDMARKS]\n`;
+                log += `--------------------------------------------------------------------------------\n`;
+                SECTORS.forEach(sec => {
+                    const lms = sec.landmarks || [];
+                    const disc = lms.filter(l => l.discovered).length;
+                    log += `Sector ${sec.id}: ${sec.name.padEnd(24)} (${sec.depthZone}) - Landmarks: ${disc}/${lms.length}\n`;
+                });
+                log += `\n`;
+
+                log += `[RECENT HYDROGRAPHIC SOUNDINGS (TRACK POINTS)]\n`;
+                log += `--------------------------------------------------------------------------------\n`;
+                const trail = (state.breadcrumbs || []).slice(-12);
+                if (trail.length === 0) {
+                    log += `Fix 01: X: ${state.posX.toFixed(2)}, Y: ${state.posY.toFixed(2)} @ Depth ${state.depth.toFixed(1)}m\n`;
+                } else {
+                    trail.forEach((pt, i) => {
+                        log += `Fix ${String(i + 1).padStart(2, '0')}: X: ${pt.x.toFixed(2)} NM, Y: ${pt.y.toFixed(2)} NM\n`;
+                    });
+                }
+                log += `\n================================================================================\n`;
+                log += `         END OF EXPEDITION LOG // ARCHIVE: /home/docs/ksubmarine_log.txt\n`;
+                log += `================================================================================\n`;
+                return log;
+            }
+
+            function exportBathymetryLog() {
+                try {
+                    const logContent = generateBathymetryLog();
+                    const targetPath = '/home/docs/ksubmarine_log.txt';
+                    if (KiloVFS.isSupported()) {
+                        KiloVFS.write(targetPath, logContent, 'Expedition Bathymetry Log');
+                        showToast(`📜 Bathymetry Log saved to ${targetPath}`, 'success');
+                        logMessage(`📜 BATHYMETRY LOG: Exported expedition sounding log to ${targetPath}.`, 'discovery');
+                        playBeep(700, 'sine', 0.12);
+                        const btnOpenKPad = document.getElementById('btnOpenKPad');
+                        if (btnOpenKPad) {
+                            btnOpenKPad.style.display = 'inline-block';
+                        }
+                    } else {
+                        // Standalone Blob fallback
+                        const blob = new Blob([logContent], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'ksubmarine_log.txt';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        showToast('📜 Bathymetry Log exported to ksubmarine_log.txt', 'success');
+                        logMessage('📜 BATHYMETRY LOG: Downloaded ksubmarine_log.txt.', 'discovery');
+                        playBeep(700, 'sine', 0.12);
+                    }
+                } catch (e) {
+                    console.error('Bathymetry export error:', e);
+                    showToast('⚠️ Failed to export bathymetry log', 'danger');
+                }
+            }
+
+            function openLogWithKPad() {
+                const targetPath = '/home/docs/ksubmarine_log.txt';
+                if (KiloVFS.isSupported()) {
+                    KiloVFS.launchApp('kpad', targetPath);
+                    showToast(`📝 Opening ${targetPath} in KPad...`, 'info');
+                    logMessage(`📝 IPC LAUNCH: Requested KPad to open ${targetPath}.`, 'info');
+                    playBeep(650, 'sine', 0.1);
+                } else {
+                    showToast('⚠️ KPad IPC requires running inside KiloOS', 'warning');
+                }
+            }
+
+            // --- RETRO MULTIPLAYER ABYSSAL FLEET CO-OP & SALVAGE RACE ---
+            let rMultiplayer = null;
+            let mpPeer = null; // { name, posX, posY, depth, heading, speed, hull, cargoVal, surveyPts, isAi }
+            let mpIsActive = false;
+            let mpCountdownTimer = null;
+            let mpCountdownSeconds = 25;
+            let lastMpSyncTime = 0;
+            let mpAiDredgeTimer = 0;
+
+            function getPlayerCallsign() {
+                const input = document.getElementById('mpCallsignInput');
+                if (input && input.value.trim()) {
+                    return input.value.trim().toUpperCase().slice(0, 16);
+                }
+                return 'DSV-VOYAGER';
+            }
+
+            function openMultiplayerModal() {
+                const modal = document.getElementById('multiplayerModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    playBeep(650, 'sine', 0.08);
+                }
+            }
+
+            function closeMultiplayerModal() {
+                const modal = document.getElementById('multiplayerModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    playBeep(450, 'sine', 0.06);
+                }
+            }
+
+            window.openMultiplayerModal = openMultiplayerModal;
+            window.closeMultiplayerModal = closeMultiplayerModal;
+
+            function updateMpStatusUI(statusText, badgeText, badgeColor = 'rgba(148, 163, 184, 0.2)', textColor = '#94a3b8') {
+                const badge = document.getElementById('mpStatusBadge');
+                const detail = document.getElementById('mpStatusDetail');
+                const btnDisc = document.getElementById('btnMpDisconnect');
+                const hud = document.getElementById('mpHudBar');
+                if (badge) {
+                    badge.textContent = badgeText;
+                    badge.style.background = badgeColor;
+                    badge.style.color = textColor;
+                    badge.style.borderColor = textColor;
+                }
+                if (detail) {
+                    detail.textContent = statusText;
+                }
+                if (btnDisc) {
+                    btnDisc.style.display = mpIsActive ? 'inline-block' : 'none';
+                }
+                if (hud) {
+                    hud.style.display = mpIsActive ? 'flex' : 'none';
+                }
+            }
+
+            function stopMpCountdown() {
+                if (mpCountdownTimer) {
+                    clearInterval(mpCountdownTimer);
+                    mpCountdownTimer = null;
+                }
+                const cnt = document.getElementById('mpCountdownContainer');
+                if (cnt) cnt.style.display = 'none';
+            }
+
+            function startMpCountdown() {
+                stopMpCountdown();
+                mpCountdownSeconds = 25;
+                const cnt = document.getElementById('mpCountdownContainer');
+                const sec = document.getElementById('mpCountdownSec');
+                if (cnt && sec) {
+                    cnt.style.display = 'block';
+                    sec.textContent = mpCountdownSeconds;
+                }
+                mpCountdownTimer = setInterval(() => {
+                    mpCountdownSeconds--;
+                    const s = document.getElementById('mpCountdownSec');
+                    if (s) s.textContent = mpCountdownSeconds;
+                    if (mpCountdownSeconds <= 0) {
+                        stopMpCountdown();
+                        triggerSoloAiFallback();
+                    }
+                }, 1000);
+            }
+
+            function triggerSoloAiFallback() {
+                stopMpCountdown();
+                mpIsActive = true;
+                mpPeer = {
+                    name: 'DSV NEREID-IV',
+                    posX: state.posX + (Math.random() > 0.5 ? 0.8 : -0.8),
+                    posY: state.posY + (Math.random() > 0.5 ? 0.6 : -0.6),
+                    depth: Math.min(10000, Math.max(100, state.depth + (Math.random() * 80 - 40))),
+                    heading: Math.floor(Math.random() * 360),
+                    speed: 2.2,
+                    hull: 100,
+                    cargoVal: 50,
+                    surveyPts: 100,
+                    isAi: true
+                };
+                updateMpStatusUI(
+                    'Engaged in Salvage Race against autonomous research vessel DSV NEREID-IV.',
+                    'CONNECTED: DSV NEREID-IV [AI RIVAL]',
+                    'rgba(16, 185, 129, 0.2)',
+                    'var(--accent-emerald)'
+                );
+                showToast('🤖 AI Rival Deployed: DSV NEREID-IV joined the Salvage Race!', 'info');
+                logMessage('🌐 NETLINK TIMEOUT (25s): Deployed autonomous rival DSV NEREID-IV for Abyssal Salvage Race.', 'discovery');
+                playBeep(580, 'sine', 0.15);
+            }
+
+            function initRetroMultiplayer() {
+                if (typeof RetroMultiplayer === 'undefined') {
+                    console.warn('[KSubmarine] RetroMultiplayer script not loaded.');
+                    return null;
+                }
+                if (rMultiplayer) {
+                    rMultiplayer.playerName = getPlayerCallsign();
+                    return rMultiplayer;
+                }
+                try {
+                    rMultiplayer = new RetroMultiplayer({
+                        gameId: 'ksubmarine',
+                        prefix: 'SUB',
+                        playerName: getPlayerCallsign(),
+                        soloTimeoutMs: 25000,
+                        onOpponentJoin: (peer) => {
+                            stopMpCountdown();
+                            const pName = (peer && peer.name) || 'Rival Submersible';
+                            mpIsActive = true;
+                            mpPeer = {
+                                name: pName,
+                                posX: state.posX + 0.6,
+                                posY: state.posY + 0.4,
+                                depth: state.depth,
+                                heading: (state.heading + 90) % 360,
+                                speed: 1.5,
+                                hull: 100,
+                                cargoVal: 0,
+                                surveyPts: 0,
+                                isAi: false
+                            };
+                            updateMpStatusUI(
+                                `Acoustic telemetry uplink synchronized with ${pName}. Salvage Race active!`,
+                                `CONNECTED: ${pName}`,
+                                'rgba(0, 240, 255, 0.2)',
+                                'var(--accent-sonar)'
+                            );
+                            showToast(`🌐 REMOTE SUBMERSIBLE CONNECTED: ${pName}!`, 'success');
+                            logMessage(`🌐 NETLINK ESTABLISHED: Acoustic uplink verified with ${pName}. Salvage Race initiated!`, 'discovery');
+                            playBeep(800, 'sine', 0.2);
+                        },
+                        onOpponentLeave: () => {
+                            if (mpIsActive && mpPeer && !mpPeer.isAi) {
+                                showToast('⚠️ Remote submersible disconnected! Switching to DSV NEREID-IV AI rival.', 'warning');
+                                logMessage('🌐 NETLINK NOTICE: Peer disconnected. Deploying DSV NEREID-IV AI fallback.', 'warning');
+                                triggerSoloAiFallback();
+                            }
+                        },
+                        onMove: (data) => {
+                            handlePeerNetworkMessage(data);
+                        },
+                        onSoloFallback: () => {
+                            triggerSoloAiFallback();
+                        }
+                    });
+                    return rMultiplayer;
+                } catch (e) {
+                    console.warn('[KSubmarine] RetroMultiplayer init error:', e);
+                    return null;
+                }
+            }
+
+            function handlePeerNetworkMessage(data) {
+                if (!data || typeof data !== 'object') return;
+                if (!mpPeer) {
+                    mpPeer = { name: data.playerName || 'Rival Sub', posX: 0, posY: 0, depth: 0, heading: 0, speed: 0, hull: 100, cargoVal: 0, surveyPts: 0, isAi: false };
+                }
+                if (data.type === 'TELEMETRY') {
+                    if (typeof data.posX === 'number') mpPeer.posX = data.posX;
+                    if (typeof data.posY === 'number') mpPeer.posY = data.posY;
+                    if (typeof data.depth === 'number') mpPeer.depth = data.depth;
+                    if (typeof data.heading === 'number') mpPeer.heading = data.heading;
+                    if (typeof data.speed === 'number') mpPeer.speed = data.speed;
+                    if (typeof data.hull === 'number') mpPeer.hull = data.hull;
+                    if (typeof data.cargoVal === 'number') mpPeer.cargoVal = data.cargoVal;
+                    if (typeof data.surveyPts === 'number') mpPeer.surveyPts = data.surveyPts;
+                    if (data.playerName) mpPeer.name = data.playerName;
+                } else if (data.type === 'DREDGE') {
+                    if (typeof data.totalVal === 'number') mpPeer.surveyPts = data.totalVal;
+                    logMessage(`💎 [${mpPeer.name}] Sonar return: Recovered benthic mineral payload (+${data.val || 30} pts)!`, 'discovery');
+                } else if (data.type === 'PING') {
+                    logMessage(`📡 [${mpPeer.name}] Active hydrophone ping detected on frequency 24.5 kHz.`, 'info');
+                    playBeep(720, 'sine', 0.1, 0.05);
+                }
+            }
+
+            function startQuickMatch() {
+                const rm = initRetroMultiplayer();
+                if (!rm) {
+                    showToast('⚠️ RetroMultiplayer not available - starting local AI rival', 'warning');
+                    triggerSoloAiFallback();
+                    return;
+                }
+                updateMpStatusUI(
+                    'Listening for deep-sea acoustic beacons on RFMS frequency...',
+                    'SEARCHING FOR PEERS...',
+                    'rgba(245, 158, 11, 0.2)',
+                    'var(--accent-amber)'
+                );
+                startMpCountdown();
+                try {
+                    rm.quickMatch({
+                        playerName: getPlayerCallsign()
+                    });
+                } catch (e) {
+                    console.warn('Quick match error:', e);
+                }
+            }
+
+            function createRoom() {
+                const rm = initRetroMultiplayer();
+                if (!rm) {
+                    triggerSoloAiFallback();
+                    return;
+                }
+                const codeInput = document.getElementById('mpRoomCodeInput');
+                const code = (codeInput && codeInput.value.trim().toUpperCase()) || ('ABYS' + Math.floor(10 + Math.random() * 89));
+                if (codeInput) codeInput.value = code;
+                updateMpStatusUI(
+                    `Created Expedition Room [${code}]. Waiting for peer submersible to join...`,
+                    `ROOM: ${code}`,
+                    'rgba(0, 240, 255, 0.2)',
+                    'var(--accent-sonar)'
+                );
+                startMpCountdown();
+                try {
+                    rm.createRoom(code);
+                } catch (e) {
+                    console.warn('Create room error:', e);
+                }
+            }
+
+            function joinRoom() {
+                const codeInput = document.getElementById('mpRoomCodeInput');
+                const code = (codeInput && codeInput.value.trim().toUpperCase());
+                if (!code) {
+                    showToast('⚠️ Enter a Room Code to join', 'warning');
+                    return;
+                }
+                const rm = initRetroMultiplayer();
+                if (!rm) {
+                    triggerSoloAiFallback();
+                    return;
+                }
+                updateMpStatusUI(
+                    `Joining Expedition Room [${code}]... Connecting hydrophones...`,
+                    `CONNECTING: ${code}`,
+                    'rgba(0, 240, 255, 0.2)',
+                    'var(--accent-sonar)'
+                );
+                startMpCountdown();
+                try {
+                    rm.joinRoom(code);
+                } catch (e) {
+                    console.warn('Join room error:', e);
+                }
+            }
+
+            function disconnectMultiplayer() {
+                stopMpCountdown();
+                if (rMultiplayer) {
+                    try { rMultiplayer.leaveRoom(); } catch (e) {}
+                }
+                mpIsActive = false;
+                mpPeer = null;
+                updateMpStatusUI(
+                    'Single-player simulation active. NetLink offline.',
+                    'OFFLINE / LOCAL ONLY',
+                    'rgba(148, 163, 184, 0.2)',
+                    '#94a3b8'
+                );
+                showToast('🌐 Disconnected from Abyssal Fleet NetLink', 'info');
+                logMessage('🌐 NETLINK: Disconnected from acoustic peer network. Switched to local solo helm.', 'info');
+            }
+
+            function updateMultiplayerTick(dt) {
+                if (!mpIsActive || !mpPeer) return;
+
+                if (mpPeer.isAi) {
+                    // Cruise AI Rival smoothly
+                    mpPeer.posX += Math.cos(mpPeer.heading * Math.PI / 180) * (mpPeer.speed * 0.0005 * dt);
+                    mpPeer.posY += Math.sin(mpPeer.heading * Math.PI / 180) * (mpPeer.speed * 0.0005 * dt);
+                    // Match depth neighborhood smoothly
+                    const depthDiff = state.depth - mpPeer.depth;
+                    mpPeer.depth += Math.sign(depthDiff) * Math.min(Math.abs(depthDiff), 15 * dt);
+                    
+                    // Periodic AI Dredging simulation
+                    mpAiDredgeTimer += dt;
+                    if (mpAiDredgeTimer >= 8.0) {
+                        mpAiDredgeTimer = 0;
+                        const harvestVal = Math.floor(25 + Math.random() * 35);
+                        mpPeer.cargoVal += harvestVal;
+                        mpPeer.surveyPts += harvestVal;
+                        logMessage(`💎 [${mpPeer.name}] Autonomous dredging arm recovered seabed minerals (+${harvestVal} Credits)!`, 'discovery');
+                    }
+                }
+
+                // Broadcast local telemetry to peer if connected
+                const nowSec = performance.now();
+                if (rMultiplayer && nowSec - lastMpSyncTime > 500) {
+                    lastMpSyncTime = nowSec;
+                    try {
+                        rMultiplayer.sendMove({
+                            type: 'TELEMETRY',
+                            playerName: getPlayerCallsign(),
+                            posX: state.posX,
+                            posY: state.posY,
+                            depth: state.depth,
+                            heading: state.heading,
+                            speed: state.speed,
+                            hull: state.hull,
+                            cargoVal: state.cargo.totalValue,
+                            surveyPts: state.surveyPoints
+                        });
+                    } catch (err) {}
+                }
+
+                // Update HUD readout
+                const hudText = document.getElementById('mpHudText');
+                if (hudText) {
+                    const peerName = mpPeer.name;
+                    const peerDepth = Math.round(mpPeer.depth);
+                    const peerScore = mpPeer.surveyPts || 0;
+                    const myScore = state.surveyPoints;
+                    const leadStr = myScore >= peerScore ? `YOU LEAD (+${myScore - peerScore})` : `RIVAL LEADS (+${peerScore - myScore})`;
+                    hudText.innerHTML = `🌐 <b>NETLINK:</b> ${peerName} [${peerDepth}m] | <b>SALVAGE RACE:</b> YOU <b>${myScore}</b> vs <b>${peerScore}</b> PTS (${leadStr})`;
+                }
+            }
+
+            function drawMultiplayerSonarPeer(ctx, cx, cy, maxR, dpr, palette) {
+                if (!mpIsActive || !mpPeer) return;
+                const relX = (mpPeer.posX - state.posX) / 2.0;
+                const relY = (mpPeer.posY - state.posY) / 2.0;
+                const pDist = Math.hypot(relX, relY);
+                if (pDist <= 1.05) {
+                    const px = cx + relX * maxR;
+                    const py = cy + relY * maxR;
+                    const pHeadingRad = (mpPeer.heading - 90) * (Math.PI / 180);
+
+                    ctx.save();
+                    ctx.translate(px, py);
+                    ctx.rotate(pHeadingRad);
+
+                    ctx.fillStyle = mpPeer.isAi ? 'rgba(16, 185, 129, 0.85)' : 'rgba(0, 240, 255, 0.9)';
+                    ctx.strokeStyle = mpPeer.isAi ? '#10b981' : '#00f0ff';
+                    ctx.lineWidth = 1.5 * dpr;
+
+                    // Submersible hull outline
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, 14 * dpr, 6 * dpr, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Conning tower
+                    ctx.fillRect(-2 * dpr, -8 * dpr, 5 * dpr, 3 * dpr);
+                    ctx.restore();
+
+                    // Label
+                    ctx.fillStyle = mpPeer.isAi ? '#10b981' : '#00f0ff';
+                    ctx.font = `bold ${8.5 * dpr}px monospace`;
+                    ctx.fillText(`[${mpPeer.name}] ${Math.round(mpPeer.depth)}m`, px + 12 * dpr, py - 6 * dpr);
+                }
+            }
+
+            function drawMultiplayerNavPeer(ctx, cx, cy, dpr, palette) {
+                if (!mpIsActive || !mpPeer) return;
+                const relX = (mpPeer.posX - state.posX) * 18.0 * dpr;
+                const relY = (mpPeer.posY - state.posY) * 18.0 * dpr;
+                const px = cx + relX;
+                const py = cy + relY;
+
+                ctx.save();
+                ctx.translate(px, py);
+                ctx.rotate((mpPeer.heading - 90) * Math.PI / 180);
+                ctx.fillStyle = mpPeer.isAi ? '#10b981' : '#00f0ff';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 12 * dpr, 5 * dpr, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                ctx.fillStyle = mpPeer.isAi ? '#10b981' : '#00f0ff';
+                ctx.font = `bold ${8 * dpr}px monospace`;
+                ctx.fillText(`[${mpPeer.name}]`, px + 14 * dpr, py - 4 * dpr);
             }
 
             // --- TUTORIAL & DIVE BRIEFING MODAL LOGIC ---
@@ -7964,14 +8782,29 @@
             if (btnQuickSave) btnQuickSave.addEventListener('click', () => saveGameState());
             if (btnQuickLoad) btnQuickLoad.addEventListener('click', () => loadGameState());
             if (btnExportState) btnExportState.addEventListener('click', () => exportGameState());
-            if (btnImportState) {
-                btnImportState.addEventListener('click', () => {
-                    if (stateImportInput) {
-                        stateImportInput.value = '';
-                        stateImportInput.click();
-                    }
-                });
-            }
+            if (btnImportState) btnImportState.addEventListener('click', () => triggerImport());
+            
+            const btnExportLog = document.getElementById('btnExportLog');
+            const btnOpenKPad = document.getElementById('btnOpenKPad');
+            const btnMultiplayer = document.getElementById('btnMultiplayer');
+            const btnCloseMultiplayer = document.getElementById('btnCloseMultiplayer');
+            const btnMpClose = document.getElementById('btnMpClose');
+            const btnMpQuickMatch = document.getElementById('btnMpQuickMatch');
+            const btnMpCreateRoom = document.getElementById('btnMpCreateRoom');
+            const btnMpJoinRoom = document.getElementById('btnMpJoinRoom');
+            const btnMpDisconnect = document.getElementById('btnMpDisconnect');
+            const btnMpHudAction = document.getElementById('btnMpHudAction');
+
+            if (btnExportLog) btnExportLog.addEventListener('click', () => exportBathymetryLog());
+            if (btnOpenKPad) btnOpenKPad.addEventListener('click', () => openLogWithKPad());
+            if (btnMultiplayer) btnMultiplayer.addEventListener('click', () => openMultiplayerModal());
+            if (btnCloseMultiplayer) btnCloseMultiplayer.addEventListener('click', () => closeMultiplayerModal());
+            if (btnMpClose) btnMpClose.addEventListener('click', () => closeMultiplayerModal());
+            if (btnMpQuickMatch) btnMpQuickMatch.addEventListener('click', () => startQuickMatch());
+            if (btnMpCreateRoom) btnMpCreateRoom.addEventListener('click', () => createRoom());
+            if (btnMpJoinRoom) btnMpJoinRoom.addEventListener('click', () => joinRoom());
+            if (btnMpDisconnect) btnMpDisconnect.addEventListener('click', () => disconnectMultiplayer());
+            if (btnMpHudAction) btnMpHudAction.addEventListener('click', () => openMultiplayerModal());
             if (stateImportInput) {
                 stateImportInput.addEventListener('change', (e) => {
                     if (e.target.files && e.target.files[0]) {
@@ -8583,6 +9416,9 @@
                 // 10. Update UI Gauges & Target HUD
                 renderTelemetryUI();
                 updateTargetHUD();
+
+                // 11. Update Multiplayer Simulation Tick
+                updateMultiplayerTick(dt);
             }
 
             function renderTelemetryUI() {
@@ -9817,6 +10653,9 @@
                 const headingRad = (state.heading - 90) * (Math.PI / 180);
                 drawSubmarineSprite(ctx, cx, cy, headingRad, dpr, palette, globalAnimTime, state.speed, state.isPinging);
 
+                // Multiplayer Peer Contact on Sonar
+                drawMultiplayerSonarPeer(ctx, cx, cy, maxR, dpr, palette);
+
                 // Unified Sonar Contacts (Fauna + Salvage Nodes)
                 const sContacts = getAllSectorContacts();
                 sContacts.forEach((c, idx) => {
@@ -10303,6 +11142,9 @@
                 ctx.font = `${8 * dpr}px monospace`;
                 ctx.fillStyle = palette.ringText;
                 ctx.fillText(`DEPTH: ${Math.round(state.depth)}m | SPD: ${state.speed.toFixed(1)}kts`, cx + 18 * dpr, cy + 10 * dpr);
+
+                // Multiplayer Peer Contact on Nav Map
+                drawMultiplayerNavPeer(ctx, cx, cy, dpr, palette);
             }
 
             function drawDisplay() {

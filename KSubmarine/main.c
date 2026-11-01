@@ -151,6 +151,7 @@
 #define ID_BTN_MANUAL_NEXT         238
 #define ID_BTN_QUICK_SAVE          240
 #define ID_BTN_QUICK_LOAD          241
+#define ID_BTN_EXPORT_LOG          242
 
 #define KSUB_SAVE_MAGIC            0x4B535542 // 'KSUB'
 #define KSUB_SAVE_VERSION          5
@@ -881,6 +882,7 @@ int GetUnifiedContacts(int sectorIdx, UnifiedContact outContacts[8]);
 void RecalculateCargo(void);
 void QuickSaveGame(void);
 void QuickLoadGame(void);
+void ExportBathymetryLog(void);
 
 typedef struct {
     DWORD magic;
@@ -1315,6 +1317,47 @@ void QuickLoadGame(void) {
     PlaySoundAsync(600, 70);
     if (g_hWnd) InvalidateRect(g_hWnd, NULL, FALSE);
 }
+
+void ExportBathymetryLog(void) {
+    FILE* fp = fopen("ksubmarine_log.txt", "w");
+    if (!fp) {
+        AddLog("LOG EXPORT ERROR: Could not write ksubmarine_log.txt.", g_themes[g_sub.currentTheme].accentRed);
+        PlaySoundAsync(280, 150);
+        return;
+    }
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+    fprintf(fp, "================================================================================\n");
+    fprintf(fp, "   DSV ABYSS VOYAGER // EXPEDITION BATHYMETRY & HYDROGRAPHIC SURVEY LOG\n");
+    fprintf(fp, "================================================================================\n");
+    fprintf(fp, "Timestamp:              %04d-%02d-%02d %02d:%02d:%02d\n", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+    fprintf(fp, "Vessel Registry:        DSV-884-ABYSS (Mariana Trench Hydrographic Survey)\n");
+    fprintf(fp, "Current Sounding Depth: %.1f meters\n", g_sub.depth);
+    fprintf(fp, "Crush Depth Rating:     4500.0 meters (Hull Mk %d)\n", g_sub.upgradeHull);
+    fprintf(fp, "Current Sector:         %s (%s)\n", g_sectors[g_sub.currentSectorIdx].name, g_sectors[g_sub.currentSectorIdx].depthRange);
+    fprintf(fp, "Acoustic Coordinates:   X: %.2f NM, Y: %.2f NM\n", g_sub.posX, g_sub.posY);
+    fprintf(fp, "Distance Cruised:       %.2f NM\n", g_sub.distanceCruised);
+    fprintf(fp, "Research Credits:       %d PTS\n", g_sub.surveyPoints);
+    fprintf(fp, "Hull Structural Rating: %.1f%%\n", g_sub.hull);
+    fprintf(fp, "Oxygen Reserves:        %.1f%%\n", g_sub.o2);
+    fprintf(fp, "Battery Reserves:       %.1f%%\n", g_sub.battery);
+    fprintf(fp, "\n[EXPEDITION CARGO & MINERAL SPECIMEN HOLD]\n");
+    fprintf(fp, "--------------------------------------------------------------------------------\n");
+    fprintf(fp, "Manganese Nodules:      %d units\n", g_sub.cargoManganese);
+    fprintf(fp, "Sunken Doubloons:       %d units\n", g_sub.cargoSunkenGold);
+    fprintf(fp, "Titan Scrap:            %d units\n", g_sub.cargoTitaniumScrap);
+    fprintf(fp, "Smoker Crystals:        %d units\n", g_sub.cargoSmokerCrystals);
+    fprintf(fp, "Hadal Prisms:           %d units\n", g_sub.cargoHadalPrisms);
+    fprintf(fp, "Payload Mass:           %.0f / %.0f kg (Hold Value: %d Credits)\n", g_sub.cargoTotalWeight, g_sub.cargoMaxWeight, g_sub.cargoTotalValue);
+    fprintf(fp, "\n================================================================================\n");
+    fprintf(fp, "         END OF EXPEDITION LOG // ARCHIVE: ksubmarine_log.txt\n");
+    fprintf(fp, "================================================================================\n");
+    fclose(fp);
+
+    AddLog("BATHYMETRY LOG: Exported expedition sounding log to ksubmarine_log.txt [L].", g_themes[g_sub.currentTheme].accentEmerald);
+    PlaySoundAsync(650, 90);
+}
+
 
 void InitSubmarineState(void) {
     memset(&g_sub, 0, sizeof(g_sub));
@@ -4858,6 +4901,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     SetTextColor(hdc, RGB(255, 255, 255));
     DrawTextA(hdc, zoneStr, -1, &rcZone, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
+    DrawCustomButton(hdc, ID_BTN_EXPORT_LOG, clientW - 775, 6, 80, 24, "LOG [L]", 0, th->accentEmerald, th);
     DrawCustomButton(hdc, ID_BTN_QUICK_SAVE, clientW - 690, 6, 80, 24, "SAVE [F5]", 0, th->accentEmerald, th);
     DrawCustomButton(hdc, ID_BTN_QUICK_LOAD, clientW - 605, 6, 80, 24, "LOAD [F9]", 0, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_THEME_TOGGLE, clientW - 520, 6, 110, 24, th->tag, 1, th->accentSonar, th);
@@ -5576,6 +5620,7 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
     int rightX = clientW - rightW - margin;
 
     if (my >= 6 && my <= 30) {
+        if (mx >= clientW - 775 && mx <= clientW - 695) return ID_BTN_EXPORT_LOG;
         if (mx >= clientW - 690 && mx <= clientW - 610) return ID_BTN_QUICK_SAVE;
         if (mx >= clientW - 605 && mx <= clientW - 525) return ID_BTN_QUICK_LOAD;
         if (mx >= clientW - 520 && mx <= clientW - 410) return ID_BTN_THEME_TOGGLE;
@@ -5960,6 +6005,10 @@ void HandleCommand(int cmdId) {
     const SubmarineTheme* th = &g_themes[g_sub.currentTheme];
 
     switch (cmdId) {
+        case ID_BTN_EXPORT_LOG:
+            ExportBathymetryLog();
+            break;
+
         case ID_BTN_QUICK_SAVE:
             QuickSaveGame();
             break;
@@ -7093,6 +7142,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             } else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                 g_sub.viewMode = (g_sub.viewMode == 10 ? 0 : 10);
                 PlaySoundAsync(580, 80);
+                InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == 'L' || wParam == 'l' || wParam == VK_F6) {
+                ExportBathymetryLog();
                 InvalidateRect(hWnd, NULL, FALSE);
             } else if (wParam == VK_F5) {
                 QuickSaveGame();
