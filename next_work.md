@@ -32,10 +32,10 @@ current_targets:
   kilo_graphics: KSanctuary
   kilo_soundscape: KStellar
   kilo_tester: KHex
-  kilo_usability: KHex
+  kilo_usability: KCalc
   kilo_qa: KChart
-  kilo_expander: KHex
-  kilo_review: KFont
+  kilo_expander: KSteno
+  kilo_review: KSys
 virtual_web_target: kweb://slashnet
 virtual_web_rotation:
 - kweb://slashnet
@@ -59,7 +59,7 @@ last_run:
   agent: kilo-graphics
   app: KCosmic
   timestamp: '2026-11-01T10:22:21-08:00'
-last_planner_run: '2026-10-31T18:15:17Z'
+last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
 # KiloApps Master Fleet Work & Queue State (`Phase VI: System Convergence`)
@@ -156,12 +156,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | **[ARGON REVIEW]:** Guard keydown in ksubmarine.html when typing in INPUT/TEXTAREA/SELECT (fixing #manualSearchInput triggering hotkeys), wire Space sonar ping + WASD/Arrow rudder/ballast/pitch/throttle + E scan/dredge in ksubmarine.html and KSubmarine/main.c WM_KEYDOWN, make Tab call cycleTarget() outside combat view (and M mute SFX when BGM disabled), apply dead maxHull + polymer bonusHull (scaling hullBar and repairs above 100%) and biolum sonarRangeBonus (+300..1000m scan/survey/ping range), wire #btnBilgePump (ID_BTN_BILGE_PUMP) to bilgePumpMode instead of overwritten bilgePumpActive, include cargoWeight + bilgeWater in buoyancyForce and scale #depthBar to 11000m, add 0%-Hull/O2 Emergency Rescue modal + 12/12 Fauna and 6/6 Threat Victory modal, and pause gameLoop rAF on document.hidden. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KHex`
+- **Active Target**: `KCalc`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Compact 4-row top chrome at 860x653 by removing redundant #quickBitSummary from #kcalcExpBar, merging searchable 20-item CONSTANTS_DB into #view-constants (removing duplicate Constants modal button), unifying #memBadge/#memModal with M0-M7 Memory Bank (M0 = active memory), adding a RAD evaluation notice badge in #view-calculus, and redrawing HiDPI #regressionCanvas via requestAnimationFrame on switchView(statistics) and switchStatsTool(2var). |
+| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
 | `KChess` | Shift chessboard left (TS=64, OX=64, OY=124, Eval Bar at x=18..34, left rank labels at x=48, right rank labels at x=590) to fix drawEvalBar() colliding with rank 8..1 labels, fix KChess/main.c capRc ({20,46,W-20,94}) painting over top file labels and Rank 8, and render a live interactive Move History & Clocks panel (x=606..744, y=118..642) in both kchess.html and KChess/main.c with White/Black clocks, scrollable 2-column SAN move list, active-ply highlight, wheel scroll, and click-to-jump; add warm champagne/ivory outer rim stroke on Black pieces (!isWhite) in drawChessPieceSprite() and DrawChessPiece() for dark-square contrast; compact #help-modal .modal-card (2-col shortcuts) so #help-close-btn fits 800x903 without clipping, add white-space | **[ARGON REVIEW]:** nowrap to .menu-bar/#menu-status-badge/.menu-btn-quickhelp (removing duplicate canvas Help badge), and move #toast-container to top:48px right:16px while skipping redundant boot welcome toast; add pointer drag-and-drop piece movement in kchess.html and KChess/main.c (WM_MOUSEMOVE/WM_LBUTTONUP), wire ArrowLeft/Right in #replay-modal to replayStepPrev()/replayStepNext(), let focused modal buttons handle Enter/Space without primaryBtn hijacking, and replace prompt() in editorExportFEN() with #fen-modal. |
@@ -189,15 +189,21 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Klondike deal engine, undo history, win fireworks, dual Win32 C parity, and promote to Mature table. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
+| `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
+| `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ICMP network ping graph, host reachability radar, dual Win32 C parity, and promote to Mature table. |
+| `KTerm` | `KiloOS/public/apps/kterm.html`, `KTerm/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, terminal emulator ANSI escape codes, command history, dual Win32 C parity, and promote to Mature table. |
+| `KChrono` | `KiloOS/public/apps/kchrono.html`, `KChrono/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, timeline event organizer, epoch markers, dual Win32 C parity, and promote to Mature table. |
+| `KMine` | `KiloOS/public/apps/kmine.html`, `KMine/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mine excavation crawler, ore inventory telemetry, dual Win32 C parity, and promote to Mature table. |
+| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, AST/console script runner, sample templates, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KHex`
+- **Active Target**: `KSteno`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Harden Phase VI KiloOS VFS and IPC Mesh in khex.html per architecture.md: enforce event.origin === window.location.origin in window.addEventListener('message'), post with window.location.origin instead of wildcard (removing dead OS_SET_WINDOW_SIZE), raise sendToOS() timeout to 60000ms for interactive VFS_SHOW_OPEN and VFS_SHOW_SAVE pickers, emit OS_NOTIFY after VFS_WRITE, handle incoming FILE_OPEN/VFS_OPEN messages to auto-load VFS files, add Save to VFS (/home/docs/ or /home/crypto/) and Open in KPad / Send to KCipher OS_LAUNCH_APP buttons in Tab 7 Export, Tab 8 Patch Builder, and Tab 9 Disassembler, and add native Win32 .bin file open/save parity in KHex/main.c (<999 KB). |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY with standalone blob fallback) for saving/loading calculation tapes and workspace JSON snapshots to /home/docs/, and add live HEX/DEC/OCT/BIN radix readout plus FV/CAGR financial tools to KCalc/main.c (<999 KB). |
-| `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
 | `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kchess.html using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with mandatory event.origin === window.location.origin checks, 60s dialog cleanup timeouts, and standalone Blob download / file-input fallbacks when window.parent === window for .json game saves (/home/saves/kchess_save.json) in Game menu, .pgn match records (/home/docs/kchess_match.pgn) in #pgn-modal, and .fen positions (/home/docs/kchess_position.fen) in #fen-modal and #editor-modal, plus handle incoming FILE_OPEN / VFS_OPEN messages from KiloOS File Browser to auto-load .pgn/.fen/.json files and add an Open PGN in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad) in #pgn-modal. |
 | `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kgo.html (#sgf-modal and boot listener) using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with event.origin === window.location.origin checks, 60s dialog timeouts, and standalone Blob/file-input fallbacks when window.parent === window for .sgf match records (/home/docs/kgo_match.sgf) and .json saves (/home/saves/kgo_save.json), handle incoming FILE_OPEN/VFS_OPEN messages from File Browser to auto-load .sgf/.json files, add an Open SGF in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad), and add SGF file import parity to KGo/main.c. |
@@ -214,21 +220,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into ksubmarine.html (event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) connecting EXPORT/IMPORT to VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ (/home/saves/ksubmarine_dive.json), handling incoming FILE_OPEN/VFS_OPEN messages, and exporting an Expedition Bathymetry Log (/home/docs/ksubmarine_log.txt) with an Open in KPad OS_LAUNCH_APP button, plus integrate ../assets/js/retro_multiplayer.js Abyssal Fleet Co-Op & Salvage Race mode strictly behind an explicit MULTIPLAYER button (zero autostart, soloTimeoutMs 25000 AI rival DSV NEREID-IV fallback, <999 KB). |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
-- **Active Target**: `KFont`
+- **Active Target**: `KSys`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | [Argon Audited 2026-10-30: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
-| `KPad` | `KiloOS/public/apps/kpad.html`, `KPad/main.c` | [Argon Audited 2026-10-30: Fixes queued -> kilo-tester, kilo-usability] Visual, feature & usability review. |
-| `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | [Argon Audited 2026-10-31: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
-| `KTerm` | `KiloOS/public/apps/kterm.html`, `KTerm/main.c` | [Argon Audited 2026-10-31: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
-| `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | [Argon Audited 2026-10-31: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
-| `KCyber` | `KiloOS/public/apps/kcyber.html`, `KCyber/main.c` | [Argon Audited 2026-10-31: Fixes queued -> kilo-expander, kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
-| `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | [Argon Audited 2026-10-31: Fixes queued -> kilo-expander, kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
-| `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | [Argon Audited 2026-10-31: Fixes queued -> kilo-expander, kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
-| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | [Argon Audited 2026-11-01: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
-| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | [Argon Audited 2026-11-01: Fixes queued -> kilo-expander, kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
-| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | [Argon Audited 2026-11-01: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
+| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Visual, feature & usability review of system diagnostics workstation, telemetry oscilloscopes, stress burn-in daemon, and dual Win32 C parity. |
+| `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Visual, feature & usability review of retro multi-channel chat suite, interactive polls, offline message spool, and dual Win32 C parity. |
+| `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | Visual, feature & usability review of fleet operations console, vector radar, 4-ch strip chart, and dual Win32 C parity. |
+| `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Visual, feature & usability review of 13-note chromatic keyboard, 16-step sequencer, dual-mode oscilloscope/FFT, and dual Win32 C parity. |
+| `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | Visual, feature & usability review of WinSock2 dual TCP/WebSocket chat server, connection telemetry, and dual Win32 C parity. |
+| `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | Visual, feature & usability review of retro media player & studio, 5 visualizer modes, 3-band EQ, CRT filters, and dual Win32 C parity. |
+| `KMail` | `KiloOS/public/apps/kmail.html`, `KMail/main.c` | Visual, feature & usability review of multi-tab email client, AES encryption, KiloNet RTDB delivery, and dual Win32 C parity. |
+| `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | Visual, feature & usability review of tactical mech combat sim, subsystem targeting, garage progression, and dual Win32 C parity. |
+| `KRadio` | `KiloOS/public/apps/kradio.html`, `KRadio/main.c` | Visual, feature & usability review of retro internet radio stream player, 6 presets, 3-mode visualizer, and dual Win32 C parity. |
+| `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | Visual, feature & usability review of multi-tab retro document e-reader, pagination/zoom, bookmark state, and dual Win32 C parity. |
+| `KSettings` | `KiloOS/public/apps/ksettings.html`, `KSettings/main.c` | Visual, feature & usability review of system control panel & preferences suite, theme presets, audio diagnostics, and dual Win32 C parity. |
+| `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | Visual, feature & usability review of retro image processing studio, convolution filters, dither palettes, and dual Win32 C parity. |
 
 ---
 
