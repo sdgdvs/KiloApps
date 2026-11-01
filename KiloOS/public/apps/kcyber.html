@@ -115,11 +115,11 @@
       border: 2px solid #00ff66;
       background: #011206;
       color: #00ff66;
-      max-width: 580px;
-      width: 90%;
-      max-height: 85vh;
+      max-width: 640px;
+      width: 92%;
+      max-height: calc(100vh - 36px);
       overflow-y: auto;
-      padding: 18px 24px;
+      padding: 10px 16px;
       box-shadow: 0 0 25px rgba(0, 255, 100, 0.35);
       border-radius: 4px;
       box-sizing: border-box;
@@ -129,12 +129,12 @@
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid #00ff6644;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
     }
     .modal-title {
       font-weight: bold;
-      font-size: 15px;
+      font-size: 13.5px;
       color: #00ffaa;
       text-shadow: 0 0 6px rgba(0,255,150,0.6);
     }
@@ -153,23 +153,25 @@
       color: #fff;
     }
     .modal-body {
-      font-size: 13px;
-      line-height: 1.5;
+      font-size: 12px;
+      line-height: 1.4;
     }
     .tip-box {
       background: rgba(0, 30, 12, 0.5);
       border: 1px dashed #00ff6688;
-      padding: 10px 14px;
-      margin: 10px 0;
-      font-size: 12px;
+      padding: 6px 10px;
+      margin: 6px 0;
+      font-size: 11px;
+      line-height: 1.35;
     }
     .hotkey-box {
       background: rgba(40, 35, 0, 0.4);
       border: 1px dashed #ffcc0088;
       color: #ffea88;
-      padding: 8px 12px;
-      margin: 10px 0;
-      font-size: 12px;
+      padding: 6px 10px;
+      margin: 6px 0;
+      font-size: 11px;
+      line-height: 1.35;
     }
     code {
       background: rgba(0, 255, 100, 0.15);
@@ -177,9 +179,18 @@
       border-radius: 2px;
       color: #aaffcc;
     }
+    #cockpit-container {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
     #terminal {
       flex: 1;
-      padding: 10px;
+      min-width: 0;
+      padding: 8px 12px;
       display: flex;
       flex-direction: column;
       overflow-y: auto;
@@ -189,7 +200,7 @@
       overflow-y: auto;
       white-space: pre-wrap;
       word-wrap: break-word;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .line {
       margin-bottom: 2px;
@@ -200,6 +211,7 @@
     }
     .prompt {
       margin-right: 8px;
+      white-space: nowrap;
     }
     #input-container {
       display: flex;
@@ -209,7 +221,7 @@
       border: none;
       color: #0f0;
       font-family: inherit;
-      font-size: 16px;
+      font-size: 15px;
       flex: 1;
       outline: none;
       text-shadow: inherit;
@@ -218,6 +230,155 @@
     }
     #cmd-input:focus {
       outline: none;
+    }
+    /* 240px Cyberdeck Cockpit Right Deck Panel */
+    #deck-panel {
+      width: 240px;
+      min-width: 240px;
+      flex-shrink: 0;
+      border-left: 1px solid #00ff6644;
+      background: #011106;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      gap: 6px;
+      font-size: 11px;
+    }
+    #visuals {
+      width: 100%;
+      height: 140px;
+      background: rgba(0, 15, 5, 0.9);
+      border: 1px solid #00ff6655;
+      border-radius: 3px;
+      box-shadow: 0 0 10px rgba(0, 255, 100, 0.15);
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-sizing: border-box;
+    }
+    #gfxCanvas {
+      display: block;
+      width: 100%;
+      height: 140px;
+    }
+    .deck-section {
+      background: rgba(0, 25, 10, 0.55);
+      border: 1px solid #00ff6633;
+      border-radius: 3px;
+      padding: 5px 8px;
+      box-sizing: border-box;
+    }
+    .telemetry-row {
+      margin-bottom: 4px;
+    }
+    .telemetry-row:last-child {
+      margin-bottom: 0;
+    }
+    .telemetry-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9.5px;
+      font-weight: bold;
+      color: #00ffaa;
+      margin-bottom: 2px;
+    }
+    .meter-bar {
+      height: 6px;
+      background: #00220a;
+      border: 1px solid #00ff6655;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .meter-fill {
+      height: 100%;
+      transition: width 0.2s ease, background 0.2s ease;
+    }
+    .mem-good { background: #00ff66; box-shadow: 0 0 4px #00ff66; }
+    .mem-warn { background: #ffcc00; box-shadow: 0 0 4px #ffcc00; }
+    .mem-crit { background: #ff3344; box-shadow: 0 0 4px #ff3344; }
+    .hud-stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+    .stat-lbl {
+      font-size: 9px;
+      font-weight: bold;
+      color: #00cc55;
+      letter-spacing: 0.5px;
+    }
+    .stat-val {
+      font-size: 11px;
+      font-weight: bold;
+      color: #aaffcc;
+      text-shadow: 0 0 4px rgba(0,255,100,0.4);
+    }
+    .hud-charges-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px;
+      margin-bottom: 4px;
+    }
+    .charge-pill {
+      background: #001a08;
+      border: 1px solid #00ff6644;
+      padding: 2px 4px;
+      border-radius: 2px;
+      font-size: 9.5px;
+      color: #88ffaa;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .charge-pill:hover {
+      background: #003314;
+      border-color: #00ffaa;
+      color: #fff;
+    }
+    .charge-pill b {
+      color: #00ffcc;
+    }
+    .hud-contract-box {
+      border-top: 1px dashed #00ff6633;
+      padding-top: 4px;
+      font-size: 10px;
+    }
+    .contract-val {
+      color: #ffea88;
+      font-size: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .quick-btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px;
+    }
+    .quick-cmd-btn {
+      background: #001f0a;
+      border: 1px solid #00ff6666;
+      color: #00ff88;
+      font-family: inherit;
+      font-size: 9.5px;
+      padding: 3px 2px;
+      border-radius: 2px;
+      cursor: pointer;
+      text-align: center;
+      text-shadow: 0 0 3px rgba(0,255,100,0.5);
+      transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .quick-cmd-btn:hover {
+      background: #004416;
+      border-color: #00ffaa;
+      color: #fff;
     }
   </style>
 </head>
@@ -236,15 +397,62 @@
       <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="handleImportFile(event)">
     </div>
   </div>
-  <div id="terminal" onclick="document.getElementById('cmd-input').focus()">
-    <div id="output"></div>
-    <div id="input-container">
-      <span class="prompt">root@cyberdeck:~#</span>
-      <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus />
+  <div id="cockpit-container">
+    <div id="terminal" onclick="document.getElementById('cmd-input').focus()">
+      <div id="output"></div>
+      <div id="input-container">
+        <span class="prompt">root@cyberdeck:~#</span>
+        <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus />
+      </div>
     </div>
-  </div>
-  <div id="visuals" style="position: absolute; right: 20px; top: 55px; width: 180px; height: 160px; pointer-events: none; z-index: 50; background: rgba(0, 15, 5, 0.85); border: 1px solid #00ff6644; border-radius: 4px; box-shadow: 0 0 15px rgba(0, 255, 100, 0.15);">
-    <canvas id="gfxCanvas" width="180" height="160"></canvas>
+    <aside id="deck-panel">
+      <!-- 1. Cyber Visual Screen (HiDPI Canvas) -->
+      <div id="visuals">
+        <canvas id="gfxCanvas"></canvas>
+      </div>
+
+      <!-- 2. Live Telemetry Bars -->
+      <div class="deck-section" id="telemetry-section">
+        <div class="telemetry-row">
+          <div class="telemetry-header">
+            <span>MEM INTEGRITY</span>
+            <span id="mem-val">100/100</span>
+          </div>
+          <div class="meter-bar"><div id="mem-fill" class="meter-fill mem-good" style="width: 100%;"></div></div>
+        </div>
+        <div class="telemetry-row">
+          <div class="telemetry-header">
+            <span>TRACE HEAT</span>
+            <span id="heat-val">0%</span>
+          </div>
+          <div class="meter-bar"><div id="heat-fill" class="meter-fill" style="width: 0%; background: #00e5ff;"></div></div>
+        </div>
+      </div>
+
+      <!-- 3. Status & Resources HUD -->
+      <div class="deck-section" id="status-hud">
+        <div class="hud-stat-grid">
+          <div class="hud-stat-item"><div class="stat-lbl">CREDITS</div><div id="hud-credits" class="stat-val">0 cr</div></div>
+          <div class="hud-stat-item"><div class="stat-lbl">DECK STATE</div><div id="hud-state" class="stat-val">READY</div></div>
+        </div>
+        <div class="hud-charges-row">
+          <span class="charge-pill" id="pill-cloak" onclick="execQuickCmd('cloak')" title="Deploy Cloak [cloak]">CLK: <b id="charge-cloak">3/3</b></span>
+          <span class="charge-pill" id="pill-slow" onclick="execQuickCmd('slow')" title="Deploy Slow [slow]">SLW: <b id="charge-slow">3/3</b></span>
+          <span class="charge-pill" id="pill-patch" onclick="execQuickCmd('patch')" title="Apply Nanite Patch [patch]">PCH: <b id="charge-patch">2/2</b></span>
+          <span class="charge-pill" id="pill-probe" onclick="execQuickCmd('probe')" title="Run Heuristic Probe [probe]">PRB: <b id="charge-probe">2/2</b></span>
+        </div>
+        <div class="hud-contract-box">
+          <div class="stat-lbl">ACTIVE BOUNTY</div>
+          <div id="hud-contract-text" class="contract-val">None (type 'contracts')</div>
+        </div>
+      </div>
+
+      <!-- 4. Contextual Quick Commands -->
+      <div class="deck-section" id="quick-commands-section">
+        <div class="stat-lbl" style="margin-bottom: 4px;">QUICK EXEC [TAB AUTO]</div>
+        <div id="quick-btns" class="quick-btn-grid"></div>
+      </div>
+    </aside>
   </div>
   <div id="hud-toast" onclick="hideToast()" title="Click to dismiss"></div>
 
@@ -256,25 +464,29 @@
         <button class="close-btn" onclick="dismissTutorial()">[X]</button>
       </div>
       <div class="modal-body">
-        <p>Welcome to <strong>KCyberdeck OS</strong>, runner. You are plugged directly into the corporate subnet grid. Your target is data extraction and credit accumulation.</p>
-        <div class="tip-box">
-          <div style="color:#00ffcc; font-weight:bold; margin-bottom:6px;">GRID OPERATIONS & MECHANICS:</div>
-          <div>• <strong>Topology</strong>: Type <code>map</code> to view nodes [02] through [06].</div>
-          <div>• <strong>Intrusion</strong>: Type <code>connect &lt;id&gt;</code> (e.g. <code>connect 02</code>) to breach a node's ICE firewall.</div>
-          <div>• <strong>PIN Cracker</strong>: Deduce the 4-digit code. System gives <strong>EXACT</strong> (correct digit & position) and <strong>PARTIAL</strong> (correct digit, wrong spot) telemetry.</div>
-          <div>• <strong>ICE Defense</strong>: Active ICE drains your MEM on a timer! Use <code>cloak</code> to blind, <code>slow</code> to damp, <code>patch</code> to repair MEM, or <code>probe</code> to sniff a digit.</div>
-          <div>• <strong>Data Theft & Economy</strong>: Run <code>ls</code> and <code>download &lt;file&gt;</code> to extract paydata. Accept jobs via <code>contracts</code> and <code>accept &lt;id&gt;</code>. Spend credits in the <code>shop</code>.</div>
-        </div>
-        <div class="hotkey-box">
-          <div style="color:#ffcc00; font-weight:bold; margin-bottom:4px;">KEYBOARD SHORTCUTS:</div>
-          <div>• <strong>[F5]</strong> : Quicksave complete deck state to storage</div>
-          <div>• <strong>[F9]</strong> : Quickload saved deck state</div>
-          <div>• <strong>[F1]</strong> : Toggle Runner's Reference Manual</div>
-          <div>• <strong>[Esc]</strong> : Close overlays or abort active intrusion</div>
+        <p style="margin: 0 0 6px 0; font-size: 11.5px; line-height: 1.35;">Welcome to <strong>KCyberdeck OS</strong>, runner. You are plugged directly into the corporate subnet grid. Target: data extraction and credit accumulation.</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 4px 0;">
+          <div class="tip-box" style="margin: 0;">
+            <div style="color:#00ffcc; font-weight:bold; margin-bottom:4px;">GRID OPERATIONS:</div>
+            <div>• <strong>Topology</strong>: <code>map</code> nodes [02]-[06]</div>
+            <div>• <strong>Intrusion</strong>: <code>connect &lt;id&gt;</code> (breach ICE)</div>
+            <div>• <strong>PIN Cracker</strong>: 4 digits (EXACT / PARTIAL)</div>
+            <div>• <strong>ICE Defense</strong>: <code>cloak</code> / <code>slow</code> / <code>patch</code> / <code>probe</code></div>
+            <div>• <strong>Economy</strong>: <code>ls</code>, <code>download</code>, <code>contracts</code>, <code>shop</code></div>
+          </div>
+          <div class="hotkey-box" style="margin: 0;">
+            <div style="color:#ffcc00; font-weight:bold; margin-bottom:4px;">KEYBOARD SHORTCUTS:</div>
+            <div>• <strong>[F5]</strong> Quicksave deck state</div>
+            <div>• <strong>[F9]</strong> Quickload saved state</div>
+            <div>• <strong>[F1]</strong> Reference manual</div>
+            <div>• <strong>[Tab]</strong> Autocomplete commands</div>
+            <div>• <strong>[M]</strong> Toggle FM soundscape</div>
+            <div>• <strong>[Esc]</strong> Close / abort intrusion</div>
+          </div>
         </div>
       </div>
-      <div style="text-align:right; margin-top:16px;">
-        <button class="deck-btn primary-btn" onclick="dismissTutorial()">JACK IN [ENTER / SPACE]</button>
+      <div style="text-align:right; margin-top:8px;">
+        <button id="tutorial-jackin-btn" class="deck-btn primary-btn" onclick="dismissTutorial()" style="padding: 5px 14px; font-size: 12px;">JACK IN [ENTER / SPACE]</button>
       </div>
     </div>
   </div>
@@ -287,31 +499,35 @@
         <button class="close-btn" onclick="toggleHelp(false)">[X]</button>
       </div>
       <div class="modal-body">
-        <div class="tip-box">
-          <div style="color:#00ffcc; font-weight:bold; margin-bottom:6px;">SYSTEM COMMANDS:</div>
-          <div>• <code>map</code> - Display grid node topology</div>
-          <div>• <code>connect &lt;02-06&gt;</code> - Initiate intrusion against target node</div>
-          <div>• <code>contracts</code> / <code>accept &lt;id&gt;</code> - View and take high-paying data bounties</div>
-          <div>• <code>shop</code> - Enter black market deck upgrade station</div>
-          <div>• <code>patch</code> - Use nanite charges to restore +35 MEM</div>
-          <div>• <code>status</code> - Inspect deck memory, heat level, and tool charges</div>
-          <div>• <code>save</code> [F5] / <code>load</code> [F9] - Quicksave and restore state</div>
-          <div>• <code>reboot</code> - Soft restart deck to restore basic memory</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px;">
+          <div class="tip-box" style="margin: 0;">
+            <div style="color:#00ffcc; font-weight:bold; margin-bottom:4px;">SYSTEM COMMANDS:</div>
+            <div>• <code>map</code> - Node grid topology</div>
+            <div>• <code>connect &lt;id&gt;</code> - Hack node 02-06</div>
+            <div>• <code>contracts</code> - View bounties</div>
+            <div>• <code>accept &lt;id&gt;</code> - Accept contract</div>
+            <div>• <code>shop</code> - Black market upgrades</div>
+            <div>• <code>patch</code> - Nanite heal (+35 MEM)</div>
+            <div>• <code>status</code> - Deck telemetry</div>
+            <div>• <code>reboot</code> - Soft memory reset</div>
+          </div>
+          <div class="tip-box" style="margin: 0;">
+            <div style="color:#ff3344; font-weight:bold; margin-bottom:4px;">ICE DEFENSE & HEAT:</div>
+            <div>• <strong>Basic 02</strong>: 5 DMG | <strong>Tracer 03</strong>: 10 DMG</div>
+            <div>• <strong>Hunter 04</strong>: 15 DMG | <strong>Black 05</strong>: 25 DMG</div>
+            <div>• <strong>Phantom 06</strong>: 35 DMG (AI Core)</div>
+            <div>• <code>probe</code>: Sniff PIN digit</div>
+            <div>• <code>cloak</code>: Blind ICE 2 turns</div>
+            <div>• <code>slow</code>: Damp trace timer</div>
+            <div>• <strong>HEAT</strong> accelerates ICE attack!</div>
+          </div>
         </div>
-        <div class="tip-box" style="margin-top:10px;">
-          <div style="color:#ff3344; font-weight:bold; margin-bottom:6px;">ICE COUNTERMEASURES:</div>
-          <div>• <strong>Basic ICE</strong> (Node 02, 5 DMG) | <strong>Tracer ICE</strong> (Node 03, 10 DMG)</div>
-          <div>• <strong>Hunter ICE</strong> (Node 04, 15 DMG) | <strong>Black ICE</strong> (Node 05, 25 DMG)</div>
-          <div>• <strong>Phantom ICE</strong> (Node 06, 35 DMG - Top secret AI core)</div>
-          <div>Higher HEAT accelerates ICE attack cycles. Buy proxies in shop to dissipate HEAT.</div>
-        </div>
-        <div class="hotkey-box" style="margin-top:10px;">
-          <div style="color:#ffcc00; font-weight:bold; margin-bottom:4px;">SHORTCUTS:</div>
-          <div>• <strong>[F5]</strong> Quicksave | <strong>[F9]</strong> Quickload | <strong>[F1]</strong> Toggle Help | <strong>[Esc]</strong> Close</div>
+        <div class="hotkey-box" style="margin: 0;">
+          <strong>SHORTCUTS:</strong> [F5] Save | [F9] Load | [F1] Help | [Tab] Autocomplete | [M] Audio | [Esc] Close
         </div>
       </div>
-      <div style="text-align:right; margin-top:16px;">
-        <button class="deck-btn primary-btn" onclick="toggleHelp(false)">CLOSE [ESC]</button>
+      <div style="text-align:right; margin-top:8px;">
+        <button id="help-close-btn" class="deck-btn primary-btn" onclick="toggleHelp(false)" style="padding: 5px 14px; font-size: 12px;">CLOSE [ESC]</button>
       </div>
     </div>
   </div>

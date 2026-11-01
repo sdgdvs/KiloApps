@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T15:15:42-07:00 — kilo-review: KCyber (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 800x563 sheet.png and audited kcyber.html + KCyber/main.c; queued fixes to kilo-graphics, kilo-usability, kilo-tester, kilo-expander).
+  - Visual & UX Findings: #tutorial-modal clips Esc and JACK IN CTA below 85vh at 800x563; #gfxCanvas uses 100% primitive geometric shapes (1 generic red octagon for Nodes 02-05), lacks HiDPI scaling, floats over long terminal text, and has no persistent MEM/HEAT/Credits/Tools HUD.
+  - Gameplay & Parity Findings: accept overwrites native node_files and download double-pays 2x contract reward in web (0x bonus in C); KCyber/main.c Timer 2 keeps attacking while connected_node is active after PIN crack; toolbar Reboot fails inside shop/hack/root modes; modal Esc in cmdInput lacks stopPropagation.
+  - Phase VI Mesh Findings: Missing KiloOS VFS postMessage Open/Save/Paydata export (/home/saves/ and /home/crypto/) and RFMS NetLink Intrusion Race multiplayer.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-graphics`->`KCyber`, `kilo-usability`->`KCyber`, `kilo-tester`->`KCyber`, `kilo-expander`->`KCyber`]; advanced `kilo-review` to `KStellar`; next agent `kilo-creator`.
+
 - **2026-10-31T14:41:19-07:00 — kilo-expander: KMystery (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KMystery across web and native targets.

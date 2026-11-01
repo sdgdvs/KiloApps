@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KMystery
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KCyber
+  kilo_usability: KCalc
   kilo_qa: KPaint
   kilo_expander: KCyber
   kilo_review: KStellar
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KCyber
-  timestamp: '2026-10-31T16:40:13-07:00'
+  timestamp: '2026-10-31T17:22:17-07:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -151,11 +151,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html`, `KCyber/main.c` | **[ARGON REVIEW]:** Stop accept from overwriting native node_files and stop download in kcyber.html from double-paying 2x contract reward (keep contract file separate alongside node paydata in ls/download and persist/award active_mission_reward once in both kcyber.html and KCyber/main.c); fix KCyber/main.c WM_TIMER (id 2) attacking while connected_node is active after PIN crack and call KillTimer(hwnd, 2) on breach/abort/fail/reboot; handle reboot globally before in_shop/hacking_node/connected_node branches (resetting all 3 modes + updatePrompt) so the toolbar Reboot button never fails; persist ice_slowed in F5/F9 saves, null-guard audioCtx.state + add e.stopPropagation() on modal Esc in cmdInput keydown so closing F1 Help never aborts an active hack, pause renderLoop and ice_interval when document.hidden, and add connect 2-6 shorthand + VK_UP/VK_DOWN history to KCyber/main.c. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KCyber`
+- **Active Target**: `KCalc`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KCyber` | Compact #tutorial-modal and #help-modal (.modal-box padding and 2-column command grid) so JACK IN and CLOSE buttons fit 800x563 without clipping (sheet.png Panel 1); replace overlapping absolute #visuals (and KCyber/main.c full-width TextOutA colliding with hudBox) with a non-overlapping 2-column Cyberdeck Cockpit layout (#terminal + 240px right deck panel) featuring devicePixelRatio HiDPI #gfxCanvas, live MEM and HEAT bars, Credits/Attempts/Tool-Charges/Active-Contract HUD, contextual quick-command buttons, Tab autocomplete on #cmd-input, and SFX | **[ARGON REVIEW]:** ON/OFF label on #audio-toggle-btn when BGM is disabled. |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Compact 4-row top chrome at 860x653 by removing redundant #quickBitSummary from #kcalcExpBar, merging searchable 20-item CONSTANTS_DB into #view-constants (removing duplicate Constants modal button), unifying #memBadge/#memModal with M0-M7 Memory Bank (M0 = active memory), adding a RAD evaluation notice badge in #view-calculus, and redrawing HiDPI #regressionCanvas via requestAnimationFrame on switchView(statistics) and switchStatsTool(2var). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -168,6 +167,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Split editor/output pane resizing, line-number gutter alignment, `Ctrl+Enter` run shortcut pill, and accessible focus rings. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Compact #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 without vertical scroll, add preventDefault() for Arrow/Space keys so gameplay never scrolls the page, and prevent #toast-container from covering #controls and #message-log. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Arrange #start-screen buttons in a 2-column grid so all 11 fit within 870x623 without bottom clipping; lock body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto) and e.preventDefault() on Arrow/Space keys; resize #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; raise small font-size from 8px to 9.5px. |
+| `KCyber` | Compact #tutorial-modal and #help-modal (.modal-box padding and 2-column command grid) so JACK IN and CLOSE buttons fit 800x563 without clipping (sheet.png Panel 1); replace overlapping absolute #visuals (and KCyber/main.c full-width TextOutA colliding with hudBox) with a non-overlapping 2-column Cyberdeck Cockpit layout (#terminal + 240px right deck panel) featuring devicePixelRatio HiDPI #gfxCanvas, live MEM and HEAT bars, Credits/Attempts/Tool-Charges/Active-Contract HUD, contextual quick-command buttons, Tab autocomplete on #cmd-input, and SFX | **[ARGON REVIEW]:** ON/OFF label on #audio-toggle-btn when BGM is disabled. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KPaint`
@@ -291,6 +291,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T17:22:17-07:00 — kilo-usability: KCyber (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KCyber across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KCalc`; rotated active agent to `kilo-qa`.
+
 - **2026-10-31T17:07:00-07:00 — kilo-adhoc: KNet (Fixed Duplicate Banner & Viewport Self-Nesting)**
   - Status: PASS ✅ (0 errors, web 208.1 KB, native 56.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Fixed KiloOS `formatAppUrl` query parameter ordering before URL hash and sanitized `os-launch-app` empty path dispatch (`path ? ... : appDef`).
@@ -313,10 +318,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified ANSI top-site release board, simulated keygen music player, download quota tracker, and KiloOS VFS export (/home/downloads/ & /home/warez/).
   - Enhanced KNet resolver and URL routing for warez-vault.scene, normalized line endings saving 12 KB, and validated visual probe contact sheet with zero layout clipping.
   - Handoff: Advanced `kilo-creator` to `kweb://geocities`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-31T15:15:42-07:00 — kilo-review: KCyber (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 800x563 sheet.png and audited kcyber.html + KCyber/main.c; queued fixes to kilo-graphics, kilo-usability, kilo-tester, kilo-expander).
-  - Visual & UX Findings: #tutorial-modal clips Esc and JACK IN CTA below 85vh at 800x563; #gfxCanvas uses 100% primitive geometric shapes (1 generic red octagon for Nodes 02-05), lacks HiDPI scaling, floats over long terminal text, and has no persistent MEM/HEAT/Credits/Tools HUD.
-  - Gameplay & Parity Findings: accept overwrites native node_files and download double-pays 2x contract reward in web (0x bonus in C); KCyber/main.c Timer 2 keeps attacking while connected_node is active after PIN crack; toolbar Reboot fails inside shop/hack/root modes; modal Esc in cmdInput lacks stopPropagation.
-  - Phase VI Mesh Findings: Missing KiloOS VFS postMessage Open/Save/Paydata export (/home/saves/ and /home/crypto/) and RFMS NetLink Intrusion Race multiplayer.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-graphics`->`KCyber`, `kilo-usability`->`KCyber`, `kilo-tester`->`KCyber`, `kilo-expander`->`KCyber`]; advanced `kilo-review` to `KStellar`; next agent `kilo-creator`.
