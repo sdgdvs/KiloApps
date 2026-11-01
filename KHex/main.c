@@ -173,13 +173,24 @@ unsigned int swap32(unsigned int v) {
            ((v & 0xFF000000) >> 24);
 }
 
+void getValBytes(unsigned int val, unsigned char bytes[4]) {
+    if (isLittleEndian) {
+        bytes[0] = (unsigned char)(val & 0xFF);
+        bytes[1] = (unsigned char)((val >> 8) & 0xFF);
+        bytes[2] = (unsigned char)((val >> 16) & 0xFF);
+        bytes[3] = (unsigned char)((val >> 24) & 0xFF);
+    } else {
+        bytes[0] = (unsigned char)((val >> 24) & 0xFF);
+        bytes[1] = (unsigned char)((val >> 16) & 0xFF);
+        bytes[2] = (unsigned char)((val >> 8) & 0xFF);
+        bytes[3] = (unsigned char)(val & 0xFF);
+    }
+}
+
 // CRC32 Calculation
 unsigned int calcCRC32(unsigned int val) {
     unsigned char bytes[4];
-    bytes[0] = val & 0xFF;
-    bytes[1] = (val >> 8) & 0xFF;
-    bytes[2] = (val >> 16) & 0xFF;
-    bytes[3] = (val >> 24) & 0xFF;
+    getValBytes(val, bytes);
 
     unsigned int crc = 0xFFFFFFFF;
     int i, j;
@@ -195,10 +206,7 @@ unsigned int calcCRC32(unsigned int val) {
 // Adler-32 Checksum
 unsigned int calcAdler32(unsigned int val) {
     unsigned char bytes[4];
-    bytes[0] = (val >> 24) & 0xFF;
-    bytes[1] = (val >> 16) & 0xFF;
-    bytes[2] = (val >> 8) & 0xFF;
-    bytes[3] = val & 0xFF;
+    getValBytes(val, bytes);
 
     unsigned int s1 = 1, s2 = 0;
     int i;
@@ -212,10 +220,7 @@ unsigned int calcAdler32(unsigned int val) {
 // FNV-1a 32-bit Hash
 unsigned int calcFNV1a(unsigned int val) {
     unsigned char bytes[4];
-    bytes[0] = (val >> 24) & 0xFF;
-    bytes[1] = (val >> 16) & 0xFF;
-    bytes[2] = (val >> 8) & 0xFF;
-    bytes[3] = val & 0xFF;
+    getValBytes(val, bytes);
 
     unsigned int hash = 2166136261u;
     int i;
@@ -229,10 +234,7 @@ unsigned int calcFNV1a(unsigned int val) {
 // CRC-16 (CCITT 0x1021)
 unsigned short calcCRC16(unsigned int val) {
     unsigned char bytes[4];
-    bytes[0] = (val >> 24) & 0xFF;
-    bytes[1] = (val >> 16) & 0xFF;
-    bytes[2] = (val >> 8) & 0xFF;
-    bytes[3] = val & 0xFF;
+    getValBytes(val, bytes);
 
     unsigned short crc = 0xFFFF;
     int i, j;
@@ -259,13 +261,53 @@ unsigned int ror32(unsigned int v, int n) {
     return (v >> n) | (v << (32 - n));
 }
 
-// Simple Float format to string
+// Float format to string guarded against NaN/Inf/overflow and -0.xxx sign loss
 void fmtFloat(float f, char* buf) {
+    union { float f; unsigned int u; } u;
+    u.f = f;
+    unsigned int sign = (u.u >> 31) & 1;
+    unsigned int exp = (u.u >> 23) & 0xFF;
+    unsigned int mant = u.u & 0x7FFFFF;
+
+    if (exp == 0xFF) {
+        if (mant != 0) {
+            lstrcpyA(buf, "NaN");
+        } else {
+            lstrcpyA(buf, sign ? "-Inf" : "+Inf");
+        }
+        return;
+    }
+
+    if (u.u == 0x80000000) {
+        lstrcpyA(buf, "-0.000");
+        return;
+    }
+
+    if (f > 2147483647.0f || f < -2147483648.0f) {
+        float temp = f < 0 ? -f : f;
+        int e10 = 0;
+        while (temp >= 10.0f && e10 < 40) { temp /= 10.0f; e10++; }
+        while (temp < 1.0f && temp > 0.0f && e10 > -40) { temp *= 10.0f; e10--; }
+        int ip = (int)temp;
+        int fp = (int)((temp - (float)ip) * 100.0f);
+        if (fp < 0) fp = -fp;
+        wsprintfA(buf, "%s%d.%02de%+d", sign ? "-" : "", ip, fp, e10);
+        return;
+    }
+
     int intPart = (int)f;
     float diff = f - (float)intPart;
     if (diff < 0) diff = -diff;
-    int fracPart = (int)(diff * 1000.0f);
-    wsprintfA(buf, "%d.%03d", intPart, fracPart);
+    int fracPart = (int)(diff * 1000.0f + 0.5f);
+    if (fracPart >= 1000) {
+        fracPart -= 1000;
+        if (f >= 0) intPart++; else intPart--;
+    }
+    if (sign && intPart == 0) {
+        wsprintfA(buf, "-0.%03d", fracPart);
+    } else {
+        wsprintfA(buf, "%d.%03d", intPart, fracPart);
+    }
 }
 
 // Popcount and Entropy
@@ -798,7 +840,11 @@ void DisasmMultiArch(HWND hwnd) {
         case 0x83: p += wsprintfA(p, "83 %02X %02X       SUB/ADD/XOR r/m32, imm8 (0x%02X)\r\n", b[1], b[2], b[2]); break;
         case 0x89: p += wsprintfA(p, "89 %02X          MOV r/m32, reg (modrm=0x%02X)\r\n", b[1], b[1]); break;
         case 0x8B: p += wsprintfA(p, "8B %02X          MOV reg, r/m32 (modrm=0x%02X)\r\n", b[1], b[1]); break;
-        case 0xB8: p += wsprintfA(p, "B8 %02X %02X %02X    MOV EAX, 0x%08X\r\n", b[1], b[2], b[3], val); break;
+        case 0xB8: {
+            unsigned int imm = (unsigned int)b[1] | ((unsigned int)b[2] << 8) | ((unsigned int)b[3] << 16);
+            p += wsprintfA(p, "B8 %02X %02X %02X    MOV EAX, 0x%08X\r\n", b[1], b[2], b[3], imm);
+            break;
+        }
         case 0xC3: p += wsprintfA(p, "C3             RET\r\n"); break;
         case 0xCC: p += wsprintfA(p, "CC             INT 3 (Breakpoint Trap)\r\n"); break;
         case 0xEB: p += wsprintfA(p, "EB %02X          JMP SHORT +%d (0x%08X)\r\n", b[1], (signed char)b[1], 0x00401002 + (signed char)b[1]); break;
@@ -1141,9 +1187,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Section 1: Base Converter
             CreateWindowEx(0, "STATIC", "--- BASE CONVERTER ---", WS_CHILD | WS_VISIBLE, 10, 8, 200, 16, hwnd, NULL, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Preset [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 550, 8, 70, 24, hwnd, (HMENU)ID_BTN_PRESET, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 625, 8, 60, 24, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 690, 8, 68, 24, hwnd, (HMENU)100, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Preset [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 510, 8, 70, 24, hwnd, (HMENU)ID_BTN_PRESET, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 585, 8, 60, 24, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 650, 8, 68, 24, hwnd, (HMENU)100, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Hex:", WS_CHILD | WS_VISIBLE, 10, 28, 35, 20, hwnd, NULL, NULL, NULL);
             hHex = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x12345678", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 50, 28, 160, 22, hwnd, (HMENU)ID_HEX, NULL, NULL);
@@ -1243,9 +1289,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateWindowEx(0, "BUTTON", "Asm DB [^9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 285, 328, 85, 24, hwnd, (HMENU)ID_BTN_ASMDB, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "Dissect & Entropy [^7]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 375, 328, 140, 24, hwnd, (HMENU)ID_BTN_DISSECT, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "Disasm [^D]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 520, 328, 85, 24, hwnd, (HMENU)ID_BTN_DISASM, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Preset [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 610, 328, 70, 24, hwnd, (HMENU)ID_BTN_PRESET, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 685, 328, 55, 24, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 745, 328, 75, 24, hwnd, (HMENU)100, NULL, NULL);
 
             hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex Suite!\r\nPress F1 or click 'Help' for user guide & shortcuts.\r\n\r\nInitial test value 0x12345678 loaded.\r\nPress F5 to quicksave or F9 to quickload workspace state to disk.\r\nClick 'Preset [P]' to cycle famous signatures, or type in any base field.\r\nClick 'Copy Out' or press Ctrl+C to copy results to clipboard.", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY | WS_TABSTOP, 10, 356, 810, 335, hwnd, NULL, NULL, NULL);
 
