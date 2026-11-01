@@ -2519,6 +2519,7 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
     function loadPresetFromSplash(presetKey) {
       loadPresetTopology(presetKey);
       closeSplash();
+      checkFirstRunTutorial();
     }
 
     function startNewSession() {
@@ -2586,7 +2587,10 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
         TOPOLOGY.links = data.links || [];
         if (data.subnets) TOPOLOGY.subnets = data.subnets;
         TOPOLOGY.packets = [];
+        safeSet('knetmap_tutorialSeen', '1');
+        safeSet('kknetmap_tutorialSeen', '1');
         updateCounts();
+        updateCidrBar();
         soundLinkConnect();
         showToast('Topology Restored [F9]');
         logTerminal('[STATE RESTORED] Loaded topology quicksave from local storage.', 'term-info');
@@ -2624,7 +2628,7 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
     let currentTutStep = 0;
 
     function checkFirstRunTutorial() {
-      if (!safeGet('kknetmap_tutorialSeen', null)) {
+      if (!safeGet('knetmap_tutorialSeen', null) && !safeGet('kknetmap_tutorialSeen', null)) {
         setTimeout(openTutorial, 500);
       }
     }
@@ -2666,6 +2670,7 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
     }
 
     function dismissTutorial() {
+      safeSet('knetmap_tutorialSeen', '1');
       safeSet('kknetmap_tutorialSeen', '1');
       document.getElementById('tutorialModal').classList.remove('active');
       showToast('Tutorial Completed');
@@ -2841,6 +2846,11 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
       document.getElementById('helpModal').classList.remove('active');
     }
     function closeAllModals() {
+      const tutModal = document.getElementById('tutorialModal');
+      if (tutModal && tutModal.classList.contains('active')) {
+        safeSet('knetmap_tutorialSeen', '1');
+        safeSet('kknetmap_tutorialSeen', '1');
+      }
       document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
     }
 

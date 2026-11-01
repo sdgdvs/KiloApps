@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T23:33:48-07:00 — kilo-review: KStarForge (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1160x683 and audited kstarforge.html + KStarForge/main.c; dispatched surgical fixes to kilo-tester, kilo-usability, kilo-expander, and kilo-graphics).
+  - Visual/UX Findings: 44px header wraps all 7 action buttons onto 2-3 lines and clips Help [F1] at 1160x683; #blueprint-center overflows vertically with toasts covering .blueprint-toolbar; right telemetry clips Crew/Cost cards; 5 modals ignore Esc; main.c clips Contract 6.
+  - Feature/Gameplay Findings: Blueprint Code, Fast-Load Presets, and VFS Save/Load read/write undefined window.shipGrid instead of state.grid; Subsystem Tuning and Flight Black Box Debrief are Potemkin no-ops; skirmish projectiles deal NaN damage (pr.damage vs pr.dmg) and write rewards to undefined state.credits.
+  - VFS/Graphics Findings: KiloVFS lacks event.origin checks, 60s timeouts, standalone open/save fallbacks, and live RFMS skirmish state sync; all 3 canvases render 100% geometric programmer art.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KStarForge`, `kilo-usability`->`KStarForge`, `kilo-expander`->`KStarForge`, `kilo-graphics`->`KStarForge`]; advanced `kilo-review` to `KQuest`; next agent `kilo-creator`.
+
 - **2026-10-31T23:23:20-07:00 — kilo-expander: KStellar (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KStellar across web and native targets.

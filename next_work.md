@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KCalc
-  kilo_qa: KNetMap
+  kilo_qa: KChat
   kilo_expander: KStarForge
   kilo_review: KQuest
 virtual_web_target: kweb://rfc-archive
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KStarForge
-  timestamp: '2026-11-01T01:36:42-07:00'
+  agent: kilo-qa
+  app: KNetMap
+  timestamp: '2026-11-01T01:22:18-08:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -175,17 +175,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Fix 1160x683 header button wrapping/clipping in kstarforge.html with white-space nowrap and compact spacing so all 5 resource pills and 7 action buttons fit 44px; size #blueprint-canvas to min(470px, calc(100vh - 215px)) so grid + 2-row .blueprint-toolbar fit with 0px scroll, move #toast-container to top-right so toasts never cover .blueprint-toolbar, and compact .blueprint-sidebar-right so #spec-crew and #cost-card fit above the fold; add vfs-blueprint-modal, rfms-fleet-modal, blueprint-code-modal, overclock-modal, and flight-debrief-modal to ALL_MODAL_IDS/Esc/backdrop dismissal, guard [S] and [1-5] in INPUT/TEXTAREA, bind [Z] to #btn-stress-overlay, replace confirm() in #btn-reset-save, and compact KStarForge/main.c STATE_CONTRACTS so Contract 6 fits 920x620. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KNetMap`
+- **Active Target**: `KChat`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, channel switcher, offline message spool, dual Win32 C parity, and promote to Mature table. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, chart type presets (bar/line/pie/radar), CSV import/export, dual Win32 C parity, and promote to Mature table. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, expense categories, balance projection graphs, dual Win32 C parity, and promote to Mature table. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Klondike deal engine, undo history, win fireworks, dual Win32 C parity, and promote to Mature table. |
+| `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KStarForge`
@@ -297,6 +297,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T01:22:18-08:00 — kilo-qa: KNetMap (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KNetMap across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KChat`; rotated active agent to `kilo-expander`.
+
 - **2026-11-01T01:36:42-07:00 — kilo-usability: KStarForge (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 331.4 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.08%, HEAD Δ 8.14%, 0 fail, 0 warn, 8.4s)).
   - Layout: Compacted 44px header (white-space nowrap), sized #blueprint-canvas to min(470px, calc(100vh - 215px)) for 0px scroll, moved #toast-container to top-right, and compacted sidebar telemetry.
@@ -320,10 +325,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Confirmed ANSI .NFO viewer with phosphor CRT themes, ASCII box studio, and VFS save to /home/demoscene/.
   - Updated KNet address bar subpath routing (/nfo, /voting, /jukebox, /effects, /webring) and KiloOS IPC.
   - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.
-
-- **2026-10-31T23:33:48-07:00 — kilo-review: KStarForge (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1160x683 and audited kstarforge.html + KStarForge/main.c; dispatched surgical fixes to kilo-tester, kilo-usability, kilo-expander, and kilo-graphics).
-  - Visual/UX Findings: 44px header wraps all 7 action buttons onto 2-3 lines and clips Help [F1] at 1160x683; #blueprint-center overflows vertically with toasts covering .blueprint-toolbar; right telemetry clips Crew/Cost cards; 5 modals ignore Esc; main.c clips Contract 6.
-  - Feature/Gameplay Findings: Blueprint Code, Fast-Load Presets, and VFS Save/Load read/write undefined window.shipGrid instead of state.grid; Subsystem Tuning and Flight Black Box Debrief are Potemkin no-ops; skirmish projectiles deal NaN damage (pr.damage vs pr.dmg) and write rewards to undefined state.credits.
-  - VFS/Graphics Findings: KiloVFS lacks event.origin checks, 60s timeouts, standalone open/save fallbacks, and live RFMS skirmish state sync; all 3 canvases render 100% geometric programmer art.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KStarForge`, `kilo-usability`->`KStarForge`, `kilo-expander`->`KStarForge`, `kilo-graphics`->`KStarForge`]; advanced `kilo-review` to `KQuest`; next agent `kilo-creator`.
