@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T00:15:29-07:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Party Vault Verification & Routing)**
+  - Status: PASS (0 errors, web 93.6 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Verified real-time 64K intro Canvas effect switcher (plasma, rotozoomer, starfield, copper bars, metaballs).
+  - Confirmed ANSI .NFO viewer with phosphor CRT themes, ASCII box studio, and VFS save to /home/demoscene/.
+  - Updated KNet address bar subpath routing (/nfo, /voting, /jukebox, /effects, /webring) and KiloOS IPC.
+  - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.
+
 - **2026-10-31T23:33:48-07:00 — kilo-review: KStarForge (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1160x683 and audited kstarforge.html + KStarForge/main.c; dispatched surgical fixes to kilo-tester, kilo-usability, kilo-expander, and kilo-graphics).
   - Visual/UX Findings: 44px header wraps all 7 action buttons onto 2-3 lines and clips Help [F1] at 1160x683; #blueprint-center overflows vertically with toasts covering .blueprint-toolbar; right telemetry clips Crew/Cost cards; 5 modals ignore Esc; main.c clips Contract 6.

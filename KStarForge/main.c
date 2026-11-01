@@ -857,6 +857,31 @@ static void LoadBlueprintFile() {
     }
 }
 
+static void SaveDebriefFile() {
+    HANDLE hFile = CreateFileA("kstarforge_debrief.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char buf[512];
+        DWORD bytesWritten;
+        wsprintfA(buf,
+            "--- STARFORGE IX // FLIGHT BLACK BOX DEBRIEF ---\r\n"
+            "Flight Wave: %d\r\n"
+            "Hull Integrity: %d / %d HP\r\n"
+            "Shield Reserve: %d / %d SP\r\n"
+            "Credits: %d $C | Titanium: %d T | Reputation: %d\r\n"
+            "Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL\r\n",
+            g_game.flightWave,
+            g_game.flight.currentHp, g_game.stats.hull,
+            g_game.flight.currentShield, g_game.stats.shields,
+            g_game.economy.credits, g_game.economy.titanium, g_game.economy.reputation);
+        int len = 0;
+        while (buf[len]) len++;
+        WriteFile(hFile, buf, len, &bytesWritten, NULL);
+        CloseHandle(hFile);
+        SetToast("DEBRIEF SAVED: kstarforge_debrief.txt [D]");
+        PlaySfx(7);
+    }
+}
+
 static void StartTacticalSkirmish() {
     g_game.state = STATE_FLIGHT;
     InitFlightSim();
@@ -1525,7 +1550,7 @@ static void DrawGame(HDC hdc, RECT* rc) {
     FillRect(memDC, &statRc, statBrush);
     DeleteObject(statBrush);
     SetTextColor(memDC, RGB(100, 140, 180));
-    const char* statusBarText = "[F1/H] Manual  [T] Templates  [E/L] BP  [K] Skirmish  [M] Mute  [S] Sym  [F5/F9] Save/Load  [LMB/RMB] Build";
+    const char* statusBarText = "[F1/H] Manual  [T] Templates  [E/L] BP  [D] Debrief  [K] Skirmish  [M] Mute  [S] Sym  [F5/F9] Save/Load";
     TextOutA(memDC, 12, rc->bottom - 18, statusBarText, lstrlenA(statusBarText));
 
     /* Onscreen Toast */
@@ -1613,6 +1638,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 SaveBlueprintFile();
             } else if (wParam == 'L' && g_game.state == STATE_BLUEPRINT) {
                 LoadBlueprintFile();
+            } else if (wParam == 'D') {
+                SaveDebriefFile();
             } else if (wParam == 'K') {
                 StartTacticalSkirmish();
             } else if (wParam == 'R' && g_game.state == STATE_BLUEPRINT) {

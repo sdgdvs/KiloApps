@@ -3740,6 +3740,133 @@
             ctx.restore();
         }
 
+        function drawModularRival(ctx, sk) {
+            const peerGrid = (typeof starforgeMultiplayer !== 'undefined' && starforgeMultiplayer.getPeerGrid) ? starforgeMultiplayer.getPeerGrid() : null;
+            if (peerGrid) {
+                let minX = GRID_SIZE, maxX = -1, minY = GRID_SIZE, maxY = -1, count = 0;
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    for (let x = 0; x < GRID_SIZE; x++) {
+                        if (peerGrid[y][x]) {
+                            minX = Math.min(minX, x);
+                            maxX = Math.max(maxX, x);
+                            minY = Math.min(minY, y);
+                            maxY = Math.max(maxY, y);
+                            count++;
+                        }
+                    }
+                }
+                if (count > 0) {
+                    ctx.save();
+                    ctx.translate(sk.x, sk.y);
+                    ctx.rotate(sk.angle + Math.PI / 2);
+                    const midX = (minX + maxX) / 2;
+                    const midY = (minY + maxY) / 2;
+                    const sz = 5.2;
+
+                    // Rival engine exhaust plumes
+                    for (let y = 0; y < GRID_SIZE; y++) {
+                        for (let x = 0; x < GRID_SIZE; x++) {
+                            const mId = peerGrid[y][x];
+                            if (mId && MODULE_DEFS[mId] && MODULE_DEFS[mId].cat === 'engine') {
+                                const lx = (x - midX) * sz;
+                                const ly = (y - midY) * sz + sz / 2;
+                                const flameLen = 12 + Math.random() * 6;
+                                const flameW = sz * 0.7;
+                                ctx.save();
+                                ctx.fillStyle = '#ef4444';
+                                ctx.beginPath();
+                                ctx.moveTo(lx - flameW / 2, ly);
+                                ctx.lineTo(lx, ly + flameLen);
+                                ctx.lineTo(lx + flameW / 2, ly);
+                                ctx.closePath();
+                                ctx.fill();
+                                ctx.restore();
+                            }
+                        }
+                    }
+
+                    // Draw peer modular hull tiles
+                    for (let y = 0; y < GRID_SIZE; y++) {
+                        for (let x = 0; x < GRID_SIZE; x++) {
+                            const mId = peerGrid[y][x];
+                            if (!mId || !MODULE_DEFS[mId]) continue;
+                            const def = MODULE_DEFS[mId];
+                            const lx = (x - midX) * sz - sz / 2;
+                            const ly = (y - midY) * sz - sz / 2;
+
+                            ctx.fillStyle = def.color;
+                            ctx.fillRect(lx, ly, sz, sz);
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                            ctx.lineWidth = 0.6;
+                            ctx.strokeRect(lx, ly, sz, sz);
+
+                            if (def.cat === 'weapon') {
+                                ctx.fillStyle = '#f87171';
+                                ctx.fillRect(lx + sz * 0.25, ly - 1.5, sz * 0.5, 2);
+                            } else if (def.cat === 'power') {
+                                ctx.fillStyle = '#fef08a';
+                                ctx.fillRect(lx + sz * 0.3, ly + sz * 0.3, sz * 0.4, sz * 0.4);
+                            } else if (def.cat === 'hull' && (mId === 3 || mId === 4)) {
+                                ctx.fillStyle = '#e0f2fe';
+                                ctx.fillRect(lx + 1, ly + 1, sz - 2, sz - 2);
+                            }
+                        }
+                    }
+
+                    // Shield bubble around peer modular hull
+                    if (sk.shield > 0) {
+                        const radius = Math.max((maxX - minX + 1), (maxY - minY + 1)) * sz * 0.75 + 6;
+                        const shieldAlpha = Math.min(0.65, 0.2 + (sk.shield / (sk.maxShield || 300)) * 0.45);
+                        ctx.strokeStyle = `rgba(56, 189, 248, ${shieldAlpha})`;
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.fillStyle = `rgba(6, 182, 212, ${shieldAlpha * 0.12})`;
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                    return;
+                }
+            }
+
+            // Fallback: sprite or tactical vector hull
+            ctx.save();
+            ctx.translate(sk.x, sk.y);
+            ctx.rotate(sk.angle);
+            if (KSTARFORGE_ASSETS.vessel_rival && KSTARFORGE_ASSETS.vessel_rival.loaded) {
+                ctx.drawImage(KSTARFORGE_ASSETS.vessel_rival.img, -24, -24, 48, 48);
+            } else {
+                ctx.fillStyle = '#f97316';
+                ctx.beginPath();
+                ctx.moveTo(-10, 18);
+                ctx.lineTo(0, 28 + Math.random() * 8);
+                ctx.lineTo(10, 18);
+                ctx.fill();
+
+                ctx.fillStyle = '#b91c1c';
+                ctx.strokeStyle = '#f87171';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, -22);
+                ctx.lineTo(18, 14);
+                ctx.lineTo(8, 18);
+                ctx.lineTo(-8, 18);
+                ctx.lineTo(-18, 14);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            }
+            if (sk.shield > 0) {
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(0, 0, 28, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
         function initFlightSim() {
             resizeFlightCanvas();
             flightSim.active = true;
@@ -4045,6 +4172,22 @@
             const p = flightSim.player;
             const s = state.stats;
 
+            // Throttled SKIRMISH_STATE broadcast to peer pilot when connected
+            if (flightSim.skirmish && flightSim.skirmish.active && starforgeMultiplayer.rm && starforgeMultiplayer.status === 'connected') {
+                const now = Date.now();
+                if (now - (flightSim.lastSkirmishStateSync || 0) >= 60) {
+                    flightSim.lastSkirmishStateSync = now;
+                    starforgeMultiplayer.rm.sendMove({
+                        type: 'SKIRMISH_STATE',
+                        x: Math.round(p.x * 10) / 10,
+                        y: Math.round(p.y * 10) / 10,
+                        angle: Math.round(p.angle * 100) / 100,
+                        hp: Math.round(p.hull),
+                        shield: Math.round(p.shield)
+                    });
+                }
+            }
+
             // Tactical Routing Modifiers
             const route = state.tacticalRoute || 'balanced';
             const thrustMult = route === 'engines' ? 1.35 : (route === 'weapons' ? 0.85 : 1.0);
@@ -4176,6 +4319,16 @@
                         life: 65,
                         color: hasRailgun ? '#facc15' : (hasPlasma ? '#f97316' : '#06b6d4')
                     });
+
+                    if (flightSim.skirmish && flightSim.skirmish.active && starforgeMultiplayer.rm && starforgeMultiplayer.status === 'connected') {
+                        starforgeMultiplayer.rm.sendMove({
+                            type: 'SKIRMISH_FIRE',
+                            x: Math.round(p.x + Math.cos(p.angle) * 18),
+                            y: Math.round(p.y + Math.sin(p.angle) * 18),
+                            vx: Math.round((Math.cos(p.angle) * (hasRailgun ? 15 : (hasPlasma ? 11 : 9.5)) + p.vx) * 10) / 10,
+                            vy: Math.round((Math.sin(p.angle) * (hasRailgun ? 15 : (hasPlasma ? 11 : 9.5)) + p.vy) * 10) / 10
+                        });
+                    }
                 }
             }
 
@@ -4703,45 +4856,7 @@
             // Render Tactical Skirmish Rival Vessel & HUD Banner
             if (flightSim.skirmish && flightSim.skirmish.active) {
                 const sk = flightSim.skirmish;
-                fCtx.save();
-                fCtx.translate(sk.x, sk.y);
-                fCtx.rotate(sk.angle);
-
-                if (KSTARFORGE_ASSETS.vessel_rival.loaded) {
-                    fCtx.drawImage(KSTARFORGE_ASSETS.vessel_rival.img, -24, -24, 48, 48);
-                } else {
-                    // Engine flame
-                    fCtx.fillStyle = '#f97316';
-                    fCtx.beginPath();
-                    fCtx.moveTo(-10, 18);
-                    fCtx.lineTo(0, 28 + Math.random() * 8);
-                    fCtx.lineTo(10, 18);
-                    fCtx.fill();
-
-                    // Heavy hull polygon
-                    fCtx.fillStyle = '#b91c1c';
-                    fCtx.strokeStyle = '#f87171';
-                    fCtx.lineWidth = 2;
-                    fCtx.beginPath();
-                    fCtx.moveTo(0, -22);
-                    fCtx.lineTo(18, 14);
-                    fCtx.lineTo(8, 18);
-                    fCtx.lineTo(-8, 18);
-                    fCtx.lineTo(-18, 14);
-                    fCtx.closePath();
-                    fCtx.fill();
-                    fCtx.stroke();
-                }
-
-                // Shield bubble
-                if (sk.shield > 0) {
-                    fCtx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
-                    fCtx.lineWidth = 1.5;
-                    fCtx.beginPath();
-                    fCtx.arc(0, 0, 28, 0, Math.PI * 2);
-                    fCtx.stroke();
-                }
-                fCtx.restore();
+                drawModularRival(fCtx, sk);
 
                 // Callsign label over ship
                 fCtx.fillStyle = '#f59e0b';
@@ -5454,8 +5569,12 @@
                                     <strong id="debrief-hull-dmg" style="float: right; color: #10b981;">0 HP (NOMINAL)</strong>
                                 </div>
                             </div>
-                            <div style="border-top: 1px solid var(--border-dim); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                                <button class="btn" id="btn-copy-debrief-log">📋 Copy Debrief Log</button>
+                            <div style="border-top: 1px solid var(--border-dim); padding-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                    <button class="btn" id="btn-copy-debrief-log">📋 Copy Debrief Log</button>
+                                    <button class="btn" id="btn-debrief-save-vfs" style="border-color: var(--accent-cyan); color: var(--accent-cyan);" title="Save Debrief Log to VFS (/home/docs/kstarforge_debrief.txt)">💾 Save Debrief to VFS</button>
+                                    <button class="btn" id="btn-debrief-open-kpad" style="border-color: #38bdf8; color: #38bdf8;" title="Open debrief log in KPad text editor">📝 Open in KPad</button>
+                                </div>
                                 <button class="btn btn-primary" id="btn-debrief-return-drydock">⮐ Return to Drydock</button>
                             </div>
                         </div>
@@ -5560,6 +5679,24 @@
                 document.getElementById('btn-copy-debrief-log')?.addEventListener('click', () => {
                     const text = this.formatDebriefLog();
                     this.copyText(text, 'DEBRIEF LOG COPIED TO CLIPBOARD');
+                });
+
+                // Save Debrief to VFS & Open in KPad
+                document.getElementById('btn-debrief-save-vfs')?.addEventListener('click', () => {
+                    const text = this.formatDebriefLog();
+                    const path = '/home/docs/kstarforge_debrief.txt';
+                    KiloVFS.write(path, text);
+                    showToast('DEBRIEF SAVED TO VFS: ' + path);
+                    audio?.playSuccess?.();
+                });
+
+                document.getElementById('btn-debrief-open-kpad')?.addEventListener('click', () => {
+                    const text = this.formatDebriefLog();
+                    const path = '/home/docs/kstarforge_debrief.txt';
+                    KiloVFS.write(path, text);
+                    KiloVFS.launchApp('kpad', path);
+                    showToast('LAUNCHING KPAD WITH DEBRIEF...');
+                    audio?.playSuccess?.();
                 });
             },
             openBlueprintCodeModal() {
@@ -6432,45 +6569,137 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                 try {
                     const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
                     try { localStorage.setItem('kstarforge_vfs_' + path, payload); } catch (e) {}
-                    window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
-                    window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: 'Saved to VFS: ' + path }, '*');
+                    if (window.parent !== window) {
+                        window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
+                        window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: 'Saved to VFS: ' + path }, '*');
+                    } else {
+                        // Standalone fallback: download Blob
+                        const filename = path.split('/').pop() || 'blueprint.json';
+                        const blob = new Blob([payload], { type: 'application/json' });
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(a.href);
+                    }
                 } catch (e) {}
             },
-            read(path, cb) {
-                const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-                let completed = false;
-                const handler = (e) => {
-                    if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
-                        window.removeEventListener('message', handler);
-                        completed = true;
-                        cb(e.data.data, e.data.path);
-                    }
-                };
-                window.addEventListener('message', handler);
-                try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
-                setTimeout(() => {
-                    if (!completed) {
-                        const local = localStorage.getItem('kstarforge_vfs_' + path);
-                        if (local) {
+            showSave(defaultPath, data, cb) {
+                const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                if (window.parent !== window) {
+                    const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                    let timer = null;
+                    const handler = (e) => {
+                        if (e.origin !== window.location.origin) return;
+                        if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+                            if (timer) clearTimeout(timer);
                             window.removeEventListener('message', handler);
-                            cb(local, path);
+                            const savePath = e.data.path || defaultPath;
+                            KiloVFS.write(savePath, payload);
+                            if (cb) cb(savePath);
                         }
-                    }
-                }, 350);
+                    };
+                    timer = setTimeout(() => {
+                        window.removeEventListener('message', handler);
+                    }, 60000);
+                    window.addEventListener('message', handler);
+                    try { window.parent.postMessage({ type: 'VFS_SHOW_SAVE', defaultPath, requestId: reqId }, '*'); } catch (e) {}
+                } else {
+                    KiloVFS.write(defaultPath, payload);
+                    if (cb) cb(defaultPath);
+                }
+            },
+            read(path, cb) {
+                if (window.parent !== window) {
+                    const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                    let completed = false;
+                    let timer = null;
+                    const handler = (e) => {
+                        if (e.origin !== window.location.origin) return;
+                        if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                            if (timer) clearTimeout(timer);
+                            window.removeEventListener('message', handler);
+                            completed = true;
+                            cb(e.data.data, e.data.path);
+                        }
+                    };
+                    timer = setTimeout(() => {
+                        window.removeEventListener('message', handler);
+                        if (!completed) {
+                            const local = localStorage.getItem('kstarforge_vfs_' + path);
+                            if (local) cb(local, path);
+                        }
+                    }, 60000);
+                    window.addEventListener('message', handler);
+                    try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+                    setTimeout(() => {
+                        if (!completed) {
+                            const local = localStorage.getItem('kstarforge_vfs_' + path);
+                            if (local) {
+                                if (timer) clearTimeout(timer);
+                                window.removeEventListener('message', handler);
+                                completed = true;
+                                cb(local, path);
+                            }
+                        }
+                    }, 350);
+                } else {
+                    const local = localStorage.getItem('kstarforge_vfs_' + path);
+                    cb(local, path);
+                }
             },
             openPicker(cb) {
-                const reqId = 'open_' + Date.now();
-                const handler = (e) => {
-                    if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                if (window.parent !== window) {
+                    const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                    let timer = null;
+                    const handler = (e) => {
+                        if (e.origin !== window.location.origin) return;
+                        if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                            if (timer) clearTimeout(timer);
+                            window.removeEventListener('message', handler);
+                            if (e.data.path) KiloVFS.read(e.data.path, cb);
+                        }
+                    };
+                    timer = setTimeout(() => {
                         window.removeEventListener('message', handler);
-                        if (e.data.path) KiloVFS.read(e.data.path, cb);
-                    }
-                };
-                window.addEventListener('message', handler);
-                try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
+                    }, 60000);
+                    window.addEventListener('message', handler);
+                    try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
+                } else {
+                    const inp = document.createElement('input');
+                    inp.type = 'file';
+                    inp.accept = '.json,.ksf,.bp,.txt';
+                    inp.style.display = 'none';
+                    inp.onchange = () => {
+                        const file = inp.files && inp.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                                cb(reader.result, file.name);
+                            };
+                            reader.readAsText(file);
+                        }
+                        if (inp.parentNode) inp.parentNode.removeChild(inp);
+                    };
+                    document.body.appendChild(inp);
+                    inp.click();
+                }
             },
             launchApp(targetApp, path = '') {
-                try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+                if (window.parent !== window) {
+                    try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+                } else {
+                    showToast(`LAUNCH APP: ${targetApp} ${path ? '(' + path + ')' : ''}`);
+                }
+            },
+            notify(message, title = document.title) {
+                if (window.parent !== window) {
+                    try { window.parent.postMessage({ type: 'OS_NOTIFY', title, message }, '*'); } catch (e) {}
+                } else {
+                    showToast(message);
+                }
             }
         };
 
@@ -6491,6 +6720,21 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                 showToast('BLUEPRINT SAVED TO VFS: ' + fullPath);
                 audio.playSuccess?.();
             },
+            showSaveActiveBlueprint(defaultName = 'custom_vessel.json') {
+                const defaultPath = defaultName.startsWith('/') ? defaultName : ('/home/blueprints/' + defaultName);
+                const payload = {
+                    format: 'kstarforge-blueprint',
+                    version: '1.0',
+                    blueprintCode: starforgeExpansion.generateBlueprintCode(),
+                    stats: state.stats,
+                    grid: state.grid || [],
+                    timestamp: new Date().toISOString()
+                };
+                KiloVFS.showSave(defaultPath, payload, (savedPath) => {
+                    showToast('BLUEPRINT SAVED: ' + savedPath);
+                    audio.playSuccess?.();
+                });
+            },
             loadBlueprintFromPath(path) {
                 if (!path) path = '/home/blueprints/vanguard_mk2.json';
                 KiloVFS.read(path, (content) => {
@@ -6501,7 +6745,8 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                     if (starforgeExpansion.loadBlueprintCode(content)) {
                         showToast('LOADED FROM VFS: ' + path);
                         audio.playSuccess?.();
-                        document.getElementById('vfs-blueprint-modal').style.display = 'none';
+                        const modal = document.getElementById('vfs-blueprint-modal');
+                        if (modal) modal.style.display = 'none';
                     }
                 });
             },
@@ -6510,9 +6755,18 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                     if (content && starforgeExpansion.loadBlueprintCode(content)) {
                         showToast('VFS BLUEPRINT LOADED: ' + (path || 'Selected file'));
                         audio.playSuccess?.();
-                        document.getElementById('vfs-blueprint-modal').style.display = 'none';
+                        const modal = document.getElementById('vfs-blueprint-modal');
+                        if (modal) modal.style.display = 'none';
                     }
                 });
+            },
+            saveDebrief(cb) {
+                const debriefTxt = starforgeExpansion.formatDebriefLog();
+                const path = '/home/docs/kstarforge_debrief.txt';
+                KiloVFS.write(path, debriefTxt);
+                showToast('DEBRIEF LOG SAVED TO VFS: ' + path);
+                audio.playSuccess?.();
+                if (cb) cb(path);
             },
             launchWorkstation(targetApp) {
                 const fname = 'active_spec.json';
@@ -6898,6 +7152,82 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                 }
             },
 
+            getPeerGrid() {
+                if (!this.peerBlueprint) return null;
+                const bp = this.peerBlueprint;
+                const size = GRID_SIZE;
+                if (typeof bp === 'string' && ['interceptor', 'dreadnought', 'harvester'].includes(bp)) {
+                    const g = Array(size).fill(0).map(() => Array(size).fill(0));
+                    const mid = Math.floor(size / 2);
+                    if (bp === 'interceptor') {
+                        g[3][mid] = 3; g[3][mid-1] = 3;
+                        g[4][mid] = 2; g[4][mid-1] = 2;
+                        g[5][mid] = 6; g[5][mid-1] = 6;
+                        g[5][mid+1] = 16; g[5][mid-2] = 16;
+                        g[6][mid] = 9; g[6][mid-1] = 9;
+                        g[6][mid+1] = 9; g[6][mid-2] = 9;
+                    } else if (bp === 'dreadnought') {
+                        for (let r = 2; r <= 8; r++) {
+                            for (let c = mid - 3; c <= mid + 2; c++) {
+                                if (r === 2) g[r][c] = 2;
+                                else if (r === 3 && (c === mid || c === mid - 1)) g[r][c] = 3;
+                                else if (r >= 4 && r <= 6) {
+                                    if (c === mid - 3 || c === mid + 2) g[r][c] = 17;
+                                    else if (c === mid - 2 || c === mid + 1) g[r][c] = 15;
+                                    else g[r][c] = 6;
+                                } else if (r >= 7) {
+                                    g[r][c] = 11;
+                                }
+                            }
+                        }
+                    } else if (bp === 'harvester') {
+                        g[4][mid] = 3; g[4][mid-1] = 3;
+                        g[3][mid] = 20; g[3][mid-1] = 20;
+                        g[5][mid-2] = 19; g[5][mid-1] = 19; g[5][mid] = 19; g[5][mid+1] = 19;
+                        g[6][mid-1] = 5; g[6][mid] = 5;
+                        g[7][mid-1] = 9; g[7][mid] = 9;
+                    }
+                    return g;
+                }
+                try {
+                    let parsed = bp;
+                    if (typeof bp === 'string') {
+                        const trimmed = bp.trim();
+                        if (trimmed.startsWith('KSF-BP-v1-')) {
+                            parsed = JSON.parse(atob(trimmed.replace('KSF-BP-v1-', '')));
+                        } else {
+                            parsed = JSON.parse(trimmed);
+                        }
+                    }
+                    if (parsed && parsed.blueprintCode && typeof parsed.blueprintCode === 'string' && parsed.blueprintCode.startsWith('KSF-BP-v1-')) {
+                        const inner = JSON.parse(atob(parsed.blueprintCode.replace('KSF-BP-v1-', '')));
+                        parsed = inner;
+                    }
+                    if (!parsed) return null;
+                    const g = Array(size).fill(0).map(() => Array(size).fill(0));
+                    if (Array.isArray(parsed.grid)) {
+                        for (let r = 0; r < size && r < parsed.grid.length; r++) {
+                            for (let c = 0; c < size && c < parsed.grid[r].length; c++) {
+                                const v = parseInt(parsed.grid[r][c], 10);
+                                if (!isNaN(v) && MODULE_DEFS[v]) g[r][c] = v;
+                            }
+                        }
+                        return g;
+                    }
+                    if (Array.isArray(parsed.p)) {
+                        parsed.p.forEach(entry => {
+                            const parts = String(entry).split(':');
+                            const r = parseInt(parts[0], 10), c = parseInt(parts[1], 10), mod = parseInt(parts[2], 10);
+                            if (r >= 0 && r < size && c >= 0 && c < size && MODULE_DEFS[mod]) {
+                                g[r][c] = mod;
+                            }
+                        });
+                        return g;
+                    }
+                } catch (e) {}
+                return null;
+            },
+
             launchTacticalSkirmish() {
                 document.getElementById('rfms-fleet-modal').style.display = 'none';
                 document.querySelector('.nav-btn[data-target="flight-view"]')?.click();
@@ -6908,6 +7238,8 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                     shields: 400
                 };
 
+                const simW = flightSim.simW || (flightCanvas.parentElement ? flightCanvas.parentElement.clientWidth : 800) || 800;
+
                 flightSim.skirmish = {
                     active: true,
                     isAi: this.status !== 'connected',
@@ -6917,7 +7249,7 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                     maxHull: st.hull || 500,
                     shield: st.shields || 300,
                     maxShield: st.shields || 300,
-                    x: flightCanvas.width ? flightCanvas.width / 2 : 400,
+                    x: (simW || 800) / 2,
                     y: 90,
                     vx: 0,
                     vy: 0,
@@ -7055,6 +7387,34 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
             }
         }
         window.addEventListener('hashchange', checkIncomingVFSLaunch);
+
+        // Incoming postMessage handler for cross-app IPC (FILE_OPEN / VFS_OPEN)
+        window.addEventListener('message', (e) => {
+            if (e.origin !== window.location.origin) return;
+            const msg = e.data;
+            if (!msg || typeof msg !== 'object') return;
+            if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+                const filePath = msg.path || '';
+                const fileContent = msg.data !== undefined ? msg.data : msg.content;
+                if (fileContent !== undefined && fileContent !== null) {
+                    if (starforgeExpansion.loadBlueprintCode(fileContent)) {
+                        showToast('LOADED INCOMING BLUEPRINT: ' + (filePath || 'VFS File'));
+                        document.querySelector('.nav-btn[data-target="drydock-view"]')?.click();
+                        audio?.playSuccess?.();
+                    }
+                } else if (filePath) {
+                    KiloVFS.read(filePath, (data, path) => {
+                        if (data && starforgeExpansion.loadBlueprintCode(data)) {
+                            showToast('LOADED BLUEPRINT: ' + (path || filePath));
+                            document.querySelector('.nav-btn[data-target="drydock-view"]')?.click();
+                            audio?.playSuccess?.();
+                        } else {
+                            showToast(`⚠ Could not load blueprint from: ${filePath}`);
+                        }
+                    });
+                }
+            }
+        });
 
         // Initialize state & components
         setupCanvases();
