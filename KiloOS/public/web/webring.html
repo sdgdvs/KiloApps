@@ -1641,6 +1641,9 @@
       <button class="btn-teleport alt" onclick="triggerRingTourNext()">
         <span>⏩</span> Next Ring Node »
       </button>
+      <button class="btn-teleport alt" onclick="triggerCanonicalTourNext()" style="color:#34d399; border-color:rgba(52,211,153,0.6);" title="Sequential hop to next canonical 1999 web destination">
+        <span>★</span> Canonical Tour »
+      </button>
       <button class="btn-teleport alt" onclick="triggerCanonicalRandomWarp()" style="color:var(--amber-bright); border-color:rgba(251,191,36,0.6);" title="Random warp between the 6 canonical 1999 web destinations">
         <span>★</span> Canonical Warp
       </button>
@@ -1761,6 +1764,9 @@
           </button>
           <button class="btn-teleport" id="btnCanonicalWarp" onclick="triggerCanonicalWarp()" style="background:linear-gradient(180deg, #d97706 0%, #b45309 100%); border-color:#fbbf24; color:#fff;">
             <span>★</span> Random Canonical Leap (1 of 6)
+          </button>
+          <button class="btn-teleport" id="btnCanonicalTourNext" onclick="triggerCanonicalTourNext()" style="background:linear-gradient(180deg, #059669 0%, #047857 100%); border-color:#34d399; color:#fff;" title="Sequential ring hop through the 6 canonical destinations">
+            <span>⏩</span> Canonical Tour »
           </button>
           <button class="btn-teleport alt" onclick="triggerInstantWarp()">
             <span>⚡</span> Instant Leap (No Delay)
@@ -3415,6 +3421,8 @@ Monitoring transit sessions...
             <option value="action=next&id=scallion">GET /cgi-bin/ringmaster.pl?action=next&amp;id=scallion (Satire Wire)</option>
             <option value="action=next&id=demoscene">GET /cgi-bin/ringmaster.pl?action=next&amp;id=demoscene (Assembly '99)</option>
             <option value="action=next&id=rfc-archive">GET /cgi-bin/ringmaster.pl?action=next&amp;id=rfc-archive (IETF Bench)</option>
+            <option value="action=next&id=slashnet&scope=canonical">GET /cgi-bin/ringmaster.pl?action=next&amp;id=slashnet&amp;scope=canonical (Next Canonical Site)</option>
+            <option value="action=random&scope=canonical">GET /cgi-bin/ringmaster.pl?action=random&amp;scope=canonical (Random Canonical Hop)</option>
             <option value="action=prev&id=slashnet">GET /cgi-bin/ringmaster.pl?action=prev&amp;id=slashnet</option>
             <option value="action=random">GET /cgi-bin/ringmaster.pl?action=random</option>
             <option value="action=stats&id=cybercafe">GET /cgi-bin/ringmaster.pl?action=stats&amp;id=cybercafe</option>
@@ -6628,6 +6636,20 @@ function triggerCanonicalRandomWarp() {
   triggerStagedWarp();
 }
 
+let currentCanonicalTourIndex = -1;
+function triggerCanonicalTourNext(step = 1) {
+  if (typeof playSfx === 'function') playSfx('hop');
+  const canonNodes = ringNodes.filter(n => CANONICAL_IDS.has(n.id));
+  if (canonNodes.length === 0) return;
+  currentCanonicalTourIndex = (currentCanonicalTourIndex + step + canonNodes.length) % canonNodes.length;
+  const target = canonNodes[currentCanonicalTourIndex];
+  logNodeVisit(target.id);
+  surfToNode(target.id);
+  if (typeof showNoticeToast === 'function') {
+    showNoticeToast(`★ Canonical Ring Tour: Hopped to ${target.name} (${target.id}) [${currentCanonicalTourIndex + 1}/${canonNodes.length}]`);
+  }
+}
+
 function transmitTopologyPing() {
   if (isTopoPingActive) return;
   isTopoPingActive = true;
@@ -6712,11 +6734,15 @@ function initTopologyMap() {
     let found = null;
     for (let i = 0; i < n; i++) {
       const a = (i / n) * Math.PI * 2 - Math.PI / 2;
-      const nx = cx + radius * Math.cos(a);
-      const ny = cy + radius * Math.sin(a);
+      const node = ringNodes[i];
+      const nodeDist = (topoMode === 'radar')
+        ? (node.isDead ? 190 : Math.min(190, Math.max(50, 40 + (node.latency || 25) * 3.6)))
+        : radius;
+      const nx = cx + nodeDist * Math.cos(a);
+      const ny = cy + nodeDist * Math.sin(a);
       const dist = Math.hypot(mx - nx, my - ny);
       if (dist < 18) {
-        found = { node: ringNodes[i], index: i, x: nx, y: ny };
+        found = { node: node, index: i, x: nx, y: ny };
         break;
       }
     }
@@ -6835,14 +6861,18 @@ function drawTopologyMap(canvas, ctx) {
   for (let i = 0; i < n; i++) {
     const a1 = (i / n) * Math.PI * 2 - Math.PI / 2;
     const a2 = (((i + 1) % n) / n) * Math.PI * 2 - Math.PI / 2;
-    const x1 = cx + radius * Math.cos(a1);
-    const y1 = cy + radius * Math.sin(a1);
-    const x2 = cx + radius * Math.cos(a2);
-    const y2 = cy + radius * Math.sin(a2);
+    const node1 = ringNodes[i];
+    const node2 = ringNodes[(i + 1) % n];
+    const r1 = (topoMode === 'radar') ? (node1.isDead ? 190 : Math.min(190, Math.max(50, 40 + (node1.latency || 25) * 3.6))) : radius;
+    const r2 = (topoMode === 'radar') ? (node2.isDead ? 190 : Math.min(190, Math.max(50, 40 + (node2.latency || 25) * 3.6))) : radius;
+    const x1 = cx + r1 * Math.cos(a1);
+    const y1 = cy + r1 * Math.sin(a1);
+    const x2 = cx + r2 * Math.cos(a2);
+    const y2 = cy + r2 * Math.sin(a2);
 
     const isHoverConnected = topoHoverNode && (topoHoverNode.index === i || topoHoverNode.index === (i + 1) % n);
-    const currIsDead = ringNodes[i].isDead;
-    const nextIsDead = ringNodes[(i + 1) % n].isDead;
+    const currIsDead = node1.isDead;
+    const nextIsDead = node2.isDead;
 
     if (currIsDead || nextIsDead) {
       ctx.strokeStyle = isHoverConnected ? "rgba(245, 158, 11, 0.85)" : "rgba(120, 53, 15, 0.5)";
@@ -6859,7 +6889,9 @@ function drawTopologyMap(canvas, ctx) {
     ctx.setLineDash([]);
 
     if (topoMode === 'star') {
-      ctx.strokeStyle = isHoverConnected ? "rgba(236, 72, 153, 0.7)" : "rgba(30, 41, 59, 0.35)";
+      const isCanon = CANONICAL_IDS.has(node1.id);
+      ctx.strokeStyle = isHoverConnected ? "rgba(236, 72, 153, 0.7)" : (isCanon ? "rgba(251, 191, 36, 0.6)" : "rgba(30, 41, 59, 0.35)");
+      ctx.lineWidth = isCanon ? 2 : 1;
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.lineTo(x1, y1);
@@ -6951,9 +6983,12 @@ function drawTopologyMap(canvas, ctx) {
   // Draw Nodes
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2 - Math.PI / 2;
-    const nx = cx + radius * Math.cos(a);
-    const ny = cy + radius * Math.sin(a);
     const node = ringNodes[i];
+    const nodeDist = (topoMode === 'radar')
+      ? (node.isDead ? 190 : Math.min(190, Math.max(50, 40 + (node.latency || 25) * 3.6)))
+      : radius;
+    const nx = cx + nodeDist * Math.cos(a);
+    const ny = cy + nodeDist * Math.sin(a);
 
     const isHovered = topoHoverNode && topoHoverNode.index === i;
     const isCanonical = CANONICAL_IDS.has(node.id);
@@ -6998,7 +7033,7 @@ function drawTopologyMap(canvas, ctx) {
       // Node ID Label
       ctx.fillStyle = isHovered ? "#fbbf24" : "rgba(245, 158, 11, 0.6)";
       ctx.font = isHovered ? "bold 10px monospace" : "9px monospace";
-      const labelDist = radius + (isHovered ? 26 : 20);
+      const labelDist = nodeDist + (isHovered ? 26 : 20);
       const lx = cx + labelDist * Math.cos(a);
       const ly = cy + labelDist * Math.sin(a);
       ctx.fillText("???", lx, ly);
@@ -7053,7 +7088,7 @@ function drawTopologyMap(canvas, ctx) {
     if (isCanonical && (topoFilter === 'canonical' || isHovered)) {
       ctx.fillStyle = isHovered ? "#38bdf8" : "#fbbf24";
       ctx.font = "bold 9px Tahoma, sans-serif";
-      const tagDist = radius + (isHovered ? 38 : 32);
+      const tagDist = nodeDist + (isHovered ? 38 : 32);
       const tx = cx + tagDist * Math.cos(a);
       const ty = cy + tagDist * Math.sin(a);
       const tagText = (node.badgeLabel || node.name).substring(0, 14);
@@ -10964,22 +10999,36 @@ function executeCgiQuery() {
   const targetId = qParams.get('id');
 
   if (act === 'random') {
-    const candidates = visibleNodes.map(n => n.url);
-    location = candidates[Math.floor(Math.random() * candidates.length)];
+    const isCanon = (qParams.get('scope') === 'canonical' || targetId === 'canonical');
+    const candidates = isCanon
+      ? visibleNodes.filter(n => CANONICAL_IDS.has(n.id))
+      : visibleNodes;
+    const candidateUrls = candidates.map(n => n.url);
+    location = candidateUrls[Math.floor(Math.random() * candidateUrls.length)];
     const match = visibleNodes.find(n => n.url === location) || visibleNodes[0];
-    body = `Status: 302 Moved Temporarily\nLocation: ${location}\nX-Ring-Algorithm: PseudoRandom-Mersenne-1999\nX-Ring-Target: ${match.name} (${match.id})\nSet-Cookie: RING_VISITED=${match.id}; path=/\n\nRedirecting client to random consortium destination: ${match.name}...`;
+    body = `Status: 302 Moved Temporarily\nLocation: ${location}\nX-Ring-Algorithm: PseudoRandom-Mersenne-1999\nX-Ring-Target: ${match.name} (${match.id})${isCanon ? '\nX-Ring-Constellation: CANONICAL-1999-FLEET' : ''}\nSet-Cookie: RING_VISITED=${match.id}; path=/\n\nRedirecting client to random consortium destination: ${match.name}...`;
   } else if (act === 'next' || act === 'prev' || act === 'skip') {
+    const isCanon = (qParams.get('scope') === 'canonical' || qParams.get('scope') === 'canon');
+    const traversalPool = isCanon
+      ? visibleNodes.filter(n => CANONICAL_IDS.has(n.id))
+      : visibleNodes;
     let fromIdx = 0;
     if (targetId) {
       const foundIdx = resolveNodeMatch(targetId);
-      if (foundIdx !== -1) fromIdx = foundIdx;
+      if (foundIdx !== -1) {
+        const targetNode = visibleNodes[foundIdx];
+        if (targetNode) {
+          const poolIdx = traversalPool.findIndex(n => n.id === targetNode.id);
+          if (poolIdx !== -1) fromIdx = poolIdx;
+        }
+      }
     }
     const step = act === 'next' ? 1 : act === 'skip' ? 2 : -1;
-    const toIdx = (fromIdx + step + visibleNodes.length) % visibleNodes.length;
-    const fromNode = visibleNodes[fromIdx];
-    const toNode = visibleNodes[toIdx];
+    const toIdx = (fromIdx + step + traversalPool.length) % traversalPool.length;
+    const fromNode = traversalPool[fromIdx] || visibleNodes[0];
+    const toNode = traversalPool[toIdx] || visibleNodes[0];
     location = toNode.url;
-    body = `Status: 302 Moved Temporarily\nLocation: ${location}\nX-Ring-Source: ${fromNode.name} (${fromNode.id})\nX-Ring-Destination: ${toNode.name} (${toNode.id})\nX-Ring-Hop: ${step > 0 ? '+' + step : step}\nSet-Cookie: RING_PREV_NODE=${fromNode.id}; path=/\nSet-Cookie: RING_CURR_NODE=${toNode.id}; path=/\n\nAdvancing ${step > 0 ? 'clockwise' : 'counter-clockwise'} along ring orbit to ${toNode.name}...`;
+    body = `Status: 302 Moved Temporarily\nLocation: ${location}\nX-Ring-Source: ${fromNode.name} (${fromNode.id})\nX-Ring-Destination: ${toNode.name} (${toNode.id})\nX-Ring-Hop: ${step > 0 ? '+' + step : step}${isCanon ? '\nX-Ring-Constellation: CANONICAL-1999-FLEET' : ''}\nSet-Cookie: RING_PREV_NODE=${fromNode.id}; path=/\nSet-Cookie: RING_CURR_NODE=${toNode.id}; path=/\n\nAdvancing ${step > 0 ? 'clockwise' : 'counter-clockwise'} along ring orbit to ${toNode.name}...`;
   } else if (act === 'stats') {
     let node = visibleNodes[0];
     if (targetId) {
