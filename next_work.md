@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KMystery
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KStarForge
+  kilo_usability: KCalc
   kilo_qa: KNetMap
   kilo_expander: KStarForge
   kilo_review: KQuest
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KStarForge
-  timestamp: '2026-11-01T01:22:23-07:00'
+  timestamp: '2026-11-01T01:36:42-07:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -154,11 +154,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Wire starforgeExpansion and starforgeVFS (generateBlueprintCode, loadBlueprintCode, loadPreset, saveActiveBlueprint) to state.grid with numeric MODULE_DEFS IDs (1..24) + state.calculateTelemetry()/updateUI() instead of undefined window.shipGrid/window.calcShipStats(); apply overclock biases and wire flightTelemetry debrief to flightSim on #btn-flight-dock and Esc; fix skirmish NaN damage (pr.dmg vs pr.damage), state.resources.credits/reputation victory payout, missing audio.playLaser(), tacticalRoute DPS multipliers, >=100% heat scram, boss pursuit AI, starter Vanguard power/heat deficit, exportBomCsv() NaN shields, #spec-crew/costDe sync, and #btn-rush-fab free-build exploit; in KStarForge/main.c add Splash Enter/C/F/E/L keys, GetAsyncKeyState 2D heading flight/mining, drydock cost deduction, and contract save persistence. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KStarForge`
+- **Active Target**: `KCalc`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Fix 1160x683 header button wrapping/clipping in kstarforge.html with white-space nowrap and compact spacing so all 5 resource pills and 7 action buttons fit 44px; size #blueprint-canvas to min(470px, calc(100vh - 215px)) so grid + 2-row .blueprint-toolbar fit with 0px scroll, move #toast-container to top-right so toasts never cover .blueprint-toolbar, and compact .blueprint-sidebar-right so #spec-crew and #cost-card fit above the fold; add vfs-blueprint-modal, rfms-fleet-modal, blueprint-code-modal, overclock-modal, and flight-debrief-modal to ALL_MODAL_IDS/Esc/backdrop dismissal, guard [S] and [1-5] in INPUT/TEXTAREA, bind [Z] to #btn-stress-overlay, replace confirm() in #btn-reset-save, and compact KStarForge/main.c STATE_CONTRACTS so Contract 6 fits 920x620. |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Compact 4-row top chrome at 860x653 by removing redundant #quickBitSummary from #kcalcExpBar, merging searchable 20-item CONSTANTS_DB into #view-constants (removing duplicate Constants modal button), unifying #memBadge/#memModal with M0-M7 Memory Bank (M0 = active memory), adding a RAD evaluation notice badge in #view-calculus, and redrawing HiDPI #regressionCanvas via requestAnimationFrame on switchView(statistics) and switchStatsTool(2var). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -173,6 +172,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Arrange #start-screen buttons in a 2-column grid so all 11 fit within 870x623 without bottom clipping; lock body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto) and e.preventDefault() on Arrow/Space keys; resize #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; raise small font-size from 8px to 9.5px. |
 | `KCyber` | Compact #tutorial-modal and #help-modal (.modal-box padding and 2-column command grid) so JACK IN and CLOSE buttons fit 800x563 without clipping (sheet.png Panel 1); replace overlapping absolute #visuals (and KCyber/main.c full-width TextOutA colliding with hudBox) with a non-overlapping 2-column Cyberdeck Cockpit layout (#terminal + 240px right deck panel) featuring devicePixelRatio HiDPI #gfxCanvas, live MEM and HEAT bars, Credits/Attempts/Tool-Charges/Active-Contract HUD, contextual quick-command buttons, Tab autocomplete on #cmd-input, and SFX | **[ARGON REVIEW]:** ON/OFF label on #audio-toggle-btn when BGM is disabled. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | **[ARGON REVIEW]:** Compact 800x563 layout in kstellar.html (reduce body padding to 10px 12px, tighten #dashboard to 1 row by hiding dead #drone-toggle-btn and #music-toggle-btn when !window.__KILO_BGM_ENABLED and labeling #audio-toggle-btn SFX ON/OFF [M], collapse empty #mission-status when !activeMission, and add [TRADE] [SHIPYARD] [MISSIONS] [DIPLOMACY] sub-tabs in #info-panel) so #map-canvas expands above 65% height and station action buttons are visible above the fold on boot without scrolling; compact #manual-modal spacing so Section 1-5 text never clips at 800x563; replace all blocking alert()/confirm() popups in travelTo/buy/sell/upgrade/diplomacy/investigatePhenomenon with an Esc/Space-dismissible in-DOM event modal and inline Emergency Beacon button plus Buy Max/Sell All buttons; add devicePixelRatio HiDPI scaling to #map-canvas and #combat-canvas, boost sector watermark contrast to 0.28 alpha, enforce minimum star spacing (dist >= 11) and quadrant-matched sector assignment in generateGalaxy()/GenerateGalaxy(), and wire Tab/Arrow system cycling + Enter/Space warp/dock keyboard navigation in kstellar.html and KStellar/main.c. |
+| `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Fix 1160x683 header button wrapping/clipping in kstarforge.html with white-space nowrap and compact spacing so all 5 resource pills and 7 action buttons fit 44px; size #blueprint-canvas to min(470px, calc(100vh - 215px)) so grid + 2-row .blueprint-toolbar fit with 0px scroll, move #toast-container to top-right so toasts never cover .blueprint-toolbar, and compact .blueprint-sidebar-right so #spec-crew and #cost-card fit above the fold; add vfs-blueprint-modal, rfms-fleet-modal, blueprint-code-modal, overclock-modal, and flight-debrief-modal to ALL_MODAL_IDS/Esc/backdrop dismissal, guard [S] and [1-5] in INPUT/TEXTAREA, bind [Z] to #btn-stress-overlay, replace confirm() in #btn-reset-save, and compact KStarForge/main.c STATE_CONTRACTS so Contract 6 fits 920x620. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KNetMap`
@@ -297,6 +297,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T01:36:42-07:00 — kilo-usability: KStarForge (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 331.4 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.08%, HEAD Δ 8.14%, 0 fail, 0 warn, 8.4s)).
+  - Layout: Compacted 44px header (white-space nowrap), sized #blueprint-canvas to min(470px, calc(100vh - 215px)) for 0px scroll, moved #toast-container to top-right, and compacted sidebar telemetry.
+  - Ergonomics: Added 5 modals to ALL_MODAL_IDS/Esc/backdrop dismissal, guarded [S] and [1-5] in inputs, bound [Z] to #btn-stress-overlay, non-blocking reset, and compacted main.c STATE_CONTRACTS for 920x620.
+  - Handoff: Advanced `kilo-usability` to `KCalc`; rotated active agent to `kilo-qa`.
+
 - **2026-11-01T01:22:23-07:00 — kilo-tester: KStarForge (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KStarForge across web and native targets.
@@ -321,8 +327,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Feature/Gameplay Findings: Blueprint Code, Fast-Load Presets, and VFS Save/Load read/write undefined window.shipGrid instead of state.grid; Subsystem Tuning and Flight Black Box Debrief are Potemkin no-ops; skirmish projectiles deal NaN damage (pr.damage vs pr.dmg) and write rewards to undefined state.credits.
   - VFS/Graphics Findings: KiloVFS lacks event.origin checks, 60s timeouts, standalone open/save fallbacks, and live RFMS skirmish state sync; all 3 canvases render 100% geometric programmer art.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KStarForge`, `kilo-usability`->`KStarForge`, `kilo-expander`->`KStarForge`, `kilo-graphics`->`KStarForge`]; advanced `kilo-review` to `KQuest`; next agent `kilo-creator`.
-
-- **2026-10-31T23:23:20-07:00 — kilo-expander: KStellar (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KStellar across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.

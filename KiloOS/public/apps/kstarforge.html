@@ -78,44 +78,52 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 6px 14px;
+            padding: 0 8px;
             background: var(--bg-panel-dark);
             border-bottom: 1px solid var(--border-dim);
             height: 44px;
             flex-shrink: 0;
             z-index: 10;
+            white-space: nowrap;
+            overflow: hidden;
+            gap: 6px;
         }
 
         .header-title {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 14px;
+            gap: 6px;
+            font-size: 12px;
             font-weight: bold;
-            letter-spacing: 1.5px;
+            letter-spacing: 0.5px;
             color: var(--text-bright);
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .header-logo {
             color: var(--accent-cyan);
-            font-size: 18px;
+            font-size: 15px;
         }
 
         .header-resources {
             display: flex;
             align-items: center;
-            gap: 16px;
-            font-size: 12px;
+            gap: 5px;
+            font-size: 11px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .res-item {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             background: rgba(14, 24, 46, 0.8);
-            padding: 3px 8px;
+            padding: 2px 5px;
             border-radius: 3px;
             border: 1px solid rgba(56, 189, 248, 0.2);
+            white-space: nowrap;
         }
 
         .res-val {
@@ -126,7 +134,16 @@
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .header-actions button.btn {
+            padding: 3px 6px;
+            font-size: 11px;
+            gap: 3px;
+            white-space: nowrap;
         }
 
         button.btn {
@@ -260,20 +277,42 @@
             position: relative;
             overflow: auto;
             min-width: 320px;
-            padding: 10px;
-            gap: 8px;
+            padding: 6px 8px;
+            gap: 4px;
         }
 
         .blueprint-sidebar-right {
-            width: 300px;
+            width: 290px;
             background: var(--bg-panel-dark);
             border-left: 1px solid var(--border-dim);
             display: flex;
             flex-direction: column;
-            padding: 12px;
-            gap: 12px;
+            padding: 6px 8px;
+            gap: 4px;
             overflow-y: auto;
             flex-shrink: 0;
+        }
+
+        .blueprint-sidebar-right .section-header {
+            font-size: 10.5px;
+            padding-bottom: 2px;
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .blueprint-sidebar-right .telemetry-card {
+            padding: 4px 8px;
+            gap: 3px;
+        }
+
+        .blueprint-sidebar-right .metric-row {
+            font-size: 11px;
+            line-height: 1.15;
+        }
+
+        .blueprint-sidebar-right .meter-bar-container {
+            height: 4px;
+            margin: 1px 0;
         }
 
         @media (max-width: 1180px) {
@@ -421,23 +460,23 @@
         #blueprint-canvas {
             display: block;
             cursor: crosshair;
-            max-width: calc(100vh - 170px);
-            max-height: calc(100vh - 170px);
-            width: min(560px, calc(100vh - 170px));
-            height: min(560px, calc(100vh - 170px));
+            max-width: calc(100vh - 215px);
+            max-height: calc(100vh - 215px);
+            width: min(470px, calc(100vh - 215px));
+            height: min(470px, calc(100vh - 215px));
             aspect-ratio: 1 / 1;
             object-fit: contain;
         }
 
         .blueprint-toolbar {
             position: relative;
-            margin-top: 8px;
+            margin-top: 4px;
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 8px;
+            gap: 4px;
             background: rgba(13, 21, 39, 0.85);
-            padding: 6px 12px;
+            padding: 4px 8px;
             border-radius: 4px;
             border: 1px solid var(--border-dim);
             backdrop-filter: blur(4px);
@@ -890,14 +929,13 @@
         /* Toast notifications */
         #toast-container {
             position: fixed;
-            bottom: 32px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 50px;
+            right: 16px;
             z-index: 10000;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 8px;
+            align-items: flex-end;
+            gap: 6px;
             pointer-events: none;
         }
 
@@ -988,24 +1026,24 @@
         <div class="header-title">
             <span class="header-logo">⚙</span>
             <span>STARFORGE IX</span>
-            <span style="color: var(--text-dim); font-size: 11px;">// ORBITAL YARD</span>
+            <span style="color: var(--text-dim); font-size: 10px;">// YARD</span>
         </div>
 
         <div class="header-resources">
             <div class="res-item" title="Yard Operating Funds">
-                <span style="color: var(--accent-amber);">CREDITS:</span>
+                <span style="color: var(--accent-amber);">CRED:</span>
                 <span class="res-val" id="res-credits">3,500$C</span>
             </div>
             <div class="res-item" title="Titanium Alloy Blocks">
-                <span style="color: #93c5fd;">TITANIUM:</span>
+                <span style="color: #93c5fd;">TI:</span>
                 <span class="res-val" id="res-titanium">240</span>
             </div>
             <div class="res-item" title="Hyper-Ferrite Armor Plating">
-                <span style="color: #cbd5e1;">FERRITE:</span>
+                <span style="color: #cbd5e1;">FE:</span>
                 <span class="res-val" id="res-ferrite">120</span>
             </div>
             <div class="res-item" title="Deuterium Reactor Propellant">
-                <span style="color: #38bdf8;">DEUTERIUM:</span>
+                <span style="color: #38bdf8;">DEUT:</span>
                 <span class="res-val" id="res-deuterium">80</span>
             </div>
             <div class="res-item" title="Yard Fleet Reputation">
@@ -1015,10 +1053,10 @@
         </div>
 
         <div class="header-actions">
-            <button class="btn" id="btn-quicksave" title="Quicksave [F5]">💾 F5 Save</button>
-            <button class="btn" id="btn-quickload" title="Quickload [F9]">📂 F9 Load</button>
+            <button class="btn" id="btn-quicksave" title="Quicksave [F5]">💾 F5</button>
+            <button class="btn" id="btn-quickload" title="Quickload [F9]">📂 F9</button>
             <button class="btn" id="btn-audio-toggle" title="Toggle Sound [M / Shift+M]">🔊 Audio [M]</button>
-            <button class="btn" id="btn-vfs-blueprints" title="KiloOS VFS Blueprint Mesh [/home/blueprints/] [V]">📁 VFS Mesh [V]</button>
+            <button class="btn" id="btn-vfs-blueprints" title="KiloOS VFS Blueprint Mesh [/home/blueprints/] [V]">📁 VFS [V]</button>
             <button class="btn" id="btn-rfms-multiplayer" style="border-color: #38bdf8; color: #38bdf8;" title="RFMS Online Fleet Blueprint Exchange & Skirmish [G]">🌐 Subnet [G]</button>
             <button class="btn" id="btn-settings-open">⚙ Settings</button>
             <button class="btn" id="btn-help-open" title="Yard Operations Manual & Controls [F1 / H]">? Help [F1]</button>
@@ -1069,7 +1107,7 @@
                 <div class="blueprint-toolbar">
                     <button class="btn btn-active" id="btn-tool-mode" title="Toggle Placement or Erase Tool [X]">✏️ Tool: Place [X]</button>
                     <button class="btn" id="btn-symmetry" title="Toggle Bilateral Symmetry Placement [S]">⇋ Symmetry: ON</button>
-                    <button class="btn" id="btn-stress-overlay" title="Toggle Hull Stress & Thermal Analysis [H]">⚡ Stress: OFF</button>
+                    <button class="btn" id="btn-stress-overlay" title="Toggle Hull Stress & Thermal Analysis [Z]">⚡ Stress: OFF</button>
                     <button class="btn" id="btn-export-bom" title="Export Bill of Materials Manifest CSV">📜 BOM (.csv)</button>
                     <button class="btn" id="btn-export-svg" title="Export Architectural CAD Schematic">📐 SVG CAD</button>
                     <button class="btn" id="btn-clear-grid" title="Clear Grid">🗑 Clear</button>
@@ -3793,7 +3831,7 @@
                         drawDrydockScene();
                     }
                 }
-            } else if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && (!document.activeElement || document.activeElement.tagName !== 'INPUT'))) {
+            } else if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && (!document.activeElement || !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)))) {
                 e.preventDefault();
                 const helpModal = document.getElementById('quick-help-modal');
                 if (helpModal) {
@@ -3804,18 +3842,20 @@
                         helpModal.style.display = 'flex';
                     }
                 }
-            } else if ((e.key === 'x' || e.key === 'X') && (!document.activeElement || document.activeElement.tagName !== 'INPUT') && !flightSim.active) {
+            } else if ((e.key === 'x' || e.key === 'X') && (!document.activeElement || !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) && !flightSim.active) {
                 state.activeTool = (state.activeTool === 'place' ? 'erase' : 'place');
                 updateUI();
                 showToast(state.activeTool === 'erase' ? 'TOOL: ERASE MODULES [X]' : 'TOOL: PLACE MODULES [X]');
-            } else if (e.key === 's' || e.key === 'S') {
+            } else if ((e.key === 's' || e.key === 'S') && (!document.activeElement || !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName))) {
                 if (document.getElementById('blueprint-view').classList.contains('active')) {
                     state.symmetryMode = !state.symmetryMode;
                     updateUI();
                     renderBlueprintGrid();
                     showToast(state.symmetryMode ? 'SYMMETRY: ON' : 'SYMMETRY: OFF');
                 }
-            } else if ((e.key === 'm' || e.key === 'M') && (!document.activeElement || document.activeElement.tagName !== 'INPUT')) {
+            } else if ((e.key === 'z' || e.key === 'Z') && (!document.activeElement || !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName))) {
+                document.getElementById('btn-stress-overlay')?.click();
+            } else if ((e.key === 'm' || e.key === 'M') && (!document.activeElement || !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName))) {
                 audio.init();
                 audio.muted = !audio.muted;
                 const btnAudio = document.getElementById('btn-audio-toggle');
@@ -3824,7 +3864,7 @@
                 localStorage.setItem('kstarforge_soundMuted', audio.muted ? '1' : '0');
             } else if (e.key === 'Escape') {
                 let closedModal = false;
-                ['flight-debrief-modal', 'overclock-modal', 'blueprint-code-modal', 'vfs-blueprint-modal', 'quick-help-modal', 'splash-modal', 'tutorial-modal', 'template-modal', 'settings-modal'].forEach(id => {
+                ALL_MODAL_IDS.forEach(id => {
                     const el = document.getElementById(id);
                     if (el && window.getComputedStyle(el).display !== 'none') {
                         if (id === 'splash-modal') {
@@ -3872,7 +3912,7 @@
                 } else if (isModalOpen('settings-modal')) {
                     document.getElementById('btn-settings-done')?.click();
                 }
-            } else if (e.key >= '1' && e.key <= '5' && (!document.activeElement || document.activeElement.tagName !== 'INPUT')) {
+            } else if (e.key >= '1' && e.key <= '5' && (!document.activeElement || !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName))) {
                 if (flightSim.active && e.key >= '1' && e.key <= '4' && typeof window.setTacticalRoute === 'function') {
                     const routes = ['weapons', 'engines', 'shields', 'balanced'];
                     window.setTacticalRoute(routes[parseInt(e.key) - 1]);
@@ -4852,7 +4892,18 @@
             }
         ];
 
-        const ALL_MODAL_IDS = ['splash-modal', 'tutorial-modal', 'template-modal', 'settings-modal', 'quick-help-modal'];
+        const ALL_MODAL_IDS = [
+            'splash-modal',
+            'tutorial-modal',
+            'template-modal',
+            'settings-modal',
+            'quick-help-modal',
+            'vfs-blueprint-modal',
+            'rfms-fleet-modal',
+            'blueprint-code-modal',
+            'overclock-modal',
+            'flight-debrief-modal'
+        ];
         function closeAllModals() {
             ALL_MODAL_IDS.forEach(id => {
                 const el = document.getElementById(id);
@@ -5810,20 +5861,18 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
             localStorage.setItem('kstarforge_soundMuted', audio.muted ? '1' : '0');
         });
 
-        // Settings modal & Backdrop dismissals
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) {
-                    if (overlay.id === 'splash-modal') {
-                        document.getElementById('btn-splash-start')?.click();
-                        return;
-                    }
-                    overlay.style.display = 'none';
-                    if (overlay.id === 'tutorial-modal') {
-                        localStorage.setItem('kstarforge_tutorialSeen', '1');
-                    }
+        // Settings modal & Backdrop dismissals (document-level for dynamic modals)
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')) {
+                if (e.target.id === 'splash-modal') {
+                    document.getElementById('btn-splash-start')?.click();
+                    return;
                 }
-            });
+                e.target.style.display = 'none';
+                if (e.target.id === 'tutorial-modal') {
+                    localStorage.setItem('kstarforge_tutorialSeen', '1');
+                }
+            }
         });
 
         document.getElementById('btn-settings-open').addEventListener('click', () => {
@@ -6187,11 +6236,27 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
         document.getElementById('btn-shunt-shd')?.addEventListener('click', () => setTacticalRoute('shields'));
         document.getElementById('btn-shunt-bal')?.addEventListener('click', () => setTacticalRoute('balanced'));
 
-        document.getElementById('btn-reset-save').addEventListener('click', () => {
-            if (confirm('Reset all shipyard progress?')) {
+        let resetConfirmTimeout = null;
+        const btnResetSave = document.getElementById('btn-reset-save');
+        btnResetSave?.addEventListener('click', () => {
+            if (btnResetSave.dataset.confirming === 'true') {
+                clearTimeout(resetConfirmTimeout);
+                btnResetSave.dataset.confirming = 'false';
+                btnResetSave.textContent = '🗑 Reset All Progress';
                 safeRemove('kstarforge_quicksave');
                 safeRemove('kstarforge_tutorialSeen');
-                location.reload();
+                showToast('ALL PROGRESS RESET // RELOADING...');
+                setTimeout(() => location.reload(), 300);
+            } else {
+                btnResetSave.dataset.confirming = 'true';
+                btnResetSave.textContent = '⚠️ Confirm Reset? (Click again)';
+                btnResetSave.classList.add('btn-active');
+                audio.playAlert();
+                resetConfirmTimeout = setTimeout(() => {
+                    btnResetSave.dataset.confirming = 'false';
+                    btnResetSave.textContent = '🗑 Reset All Progress';
+                    btnResetSave.classList.remove('btn-active');
+                }, 4000);
             }
         });
 

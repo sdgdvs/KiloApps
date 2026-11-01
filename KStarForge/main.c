@@ -1452,23 +1452,23 @@ static void DrawGame(HDC hdc, RECT* rc) {
     else if (g_game.state == STATE_CONTRACTS) {
         /* Faction Contracts */
         SetTextColor(memDC, RGB(0, 240, 255));
-        TextOutA(memDC, 40, 95, "FACTION FLEET COMMISSION BOARD", 30);
+        TextOutA(memDC, 40, 75, "FACTION FLEET COMMISSION BOARD", 30);
 
-        int cy = 130;
+        int cy = 96;
         for (int i = 0; i < (int)CONTRACT_COUNT; i++) {
             Contract* c = &g_contracts[i];
-            RECT cRc = { 40, cy, rc->right - 40, cy + 70 };
+            RECT cRc = { 40, cy, rc->right - 40, cy + 56 };
             HBRUSH cBrush = CreateSolidBrush(c->completed ? RGB(20, 60, 35) : RGB(16, 25, 45));
             FillRect(memDC, &cRc, cBrush);
             DeleteObject(cBrush);
 
             SetTextColor(memDC, RGB(255, 255, 255));
-            TextOutA(memDC, 55, cy + 10, c->title, lstrlenA(c->title));
+            TextOutA(memDC, 55, cy + 6, c->title, lstrlenA(c->title));
 
             char clBuf[128];
             wsprintfA(clBuf, "Client: %s | Reward: %d$C, +%d Rep", c->client, c->rewardCredits, c->rewardRep);
             SetTextColor(memDC, RGB(180, 200, 220));
-            TextOutA(memDC, 55, cy + 30, clBuf, lstrlenA(clBuf));
+            TextOutA(memDC, 55, cy + 22, clBuf, lstrlenA(clBuf));
 
             char reqBuf[128];
             int meets = (g_game.stats.totalHp >= c->reqHp &&
@@ -1478,21 +1478,21 @@ static void DrawGame(HDC hdc, RECT* rc) {
             wsprintfA(reqBuf, "Reqs: HP >= %d, Thrust >= %d, DPS >= %d, Cargo >= %d (%s)",
                 c->reqHp, c->reqThrust, c->reqDps, c->reqCargo, meets ? "COMPLIANT!" : "NON-COMPLIANT");
             SetTextColor(memDC, meets ? RGB(50, 255, 120) : RGB(255, 100, 100));
-            TextOutA(memDC, 55, cy + 48, reqBuf, lstrlenA(reqBuf));
+            TextOutA(memDC, 55, cy + 38, reqBuf, lstrlenA(reqBuf));
 
             if (!c->completed && meets) {
-                RECT bDeliver = { rc->right - 180, cy + 18, rc->right - 60, cy + 52 };
+                RECT bDeliver = { rc->right - 180, cy + 12, rc->right - 60, cy + 44 };
                 HBRUSH dBrush = CreateSolidBrush(RGB(40, 140, 70));
                 FillRect(memDC, &bDeliver, dBrush);
                 DeleteObject(dBrush);
                 SetTextColor(memDC, RGB(255, 255, 255));
-                TextOutA(memDC, rc->right - 165, cy + 26, "[DELIVER SHIP]", 14);
+                TextOutA(memDC, rc->right - 165, cy + 19, "[DELIVER SHIP]", 14);
             } else if (c->completed) {
                 SetTextColor(memDC, RGB(80, 255, 140));
-                TextOutA(memDC, rc->right - 165, cy + 26, "FULFILLED", 9);
+                TextOutA(memDC, rc->right - 165, cy + 19, "FULFILLED", 9);
             }
 
-            cy += 85;
+            cy += 64;
         }
     }
     else if (g_game.state == STATE_HELP) {
@@ -1753,7 +1753,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             else if (g_game.state == STATE_CONTRACTS) {
-                int cy = 130;
+                int cy = 96;
                 RECT rc;
                 GetClientRect(hwnd, &rc);
                 for (int i = 0; i < (int)CONTRACT_COUNT; i++) {
@@ -1765,7 +1765,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                     if (!c->completed && meets) {
                         int bx1 = rc.right - 180;
                         int bx2 = rc.right - 60;
-                        if (mx >= bx1 && mx <= bx2 && my >= cy + 18 && my <= cy + 52) {
+                        if (mx >= bx1 && mx <= bx2 && my >= cy + 12 && my <= cy + 44) {
                             c->completed = 1;
                             g_game.economy.credits += c->rewardCredits;
                             g_game.economy.reputation += c->rewardRep;
@@ -1774,7 +1774,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                             break;
                         }
                     }
-                    cy += 85;
+                    cy += 64;
                 }
             }
 
