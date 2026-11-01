@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T22:34:34-07:00 — kilo-qa: KFleet (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 82.2 KB, native 18.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kfleet_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KFleet` to Mature archive; advanced `kilo-qa` to `KNetMap`; next agent `kilo-expander`.
+
 - **2026-10-31T22:22:21-07:00 — kilo-usability: KStellar (Stall Circuit Breaker (Auto-Rotated After Consecutive Timeouts))**
   - Status: ROTATED ⚠️ (circuit breaker triggered after 2 consecutive stalled turns on KStellar).
   - Reverted unverified working tree edits and rotated KStellar to queue bottom so fleet execution continues.

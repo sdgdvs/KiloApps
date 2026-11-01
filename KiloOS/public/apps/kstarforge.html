@@ -1196,6 +1196,10 @@
                         <span class="metric-label">FERRITE PLATES:</span>
                         <span class="metric-value" id="cost-ferrite">45</span>
                     </div>
+                    <div class="metric-row">
+                        <span class="metric-label">DEUTERIUM CELLS:</span>
+                        <span class="metric-value" id="cost-deuterium">0</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1767,7 +1771,7 @@
 
             13: { id: 13, cat: 'tactical', name: 'Radiator Fin', badge: 'R', color: '#10b981', hp: 60, mass: 10, pGen: 0, pDraw: 0, hGen: 0, hDiss: 35, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 110, costTi: 15, costFe: 0, costDe: 0, desc: 'Graphene thermal radiator shedding waste heat into space.' },
             14: { id: 14, cat: 'tactical', name: 'Cryo-Subcooler', badge: 'S', color: '#14b8a6', hp: 110, mass: 30, pGen: 0, pDraw: 25, hGen: 0, hDiss: 95, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 380, costTi: 30, costFe: 15, costDe: 10, desc: 'Active refrigeration unit dissipating extreme combat thermal spikes.' },
-            15: { id: 15, cat: 'tactical', name: 'Deflector Projector', badge: 'D', color: '#3b82f6', hp: 120, mass: 22, pGen: 0, pDraw: 40, hGen: 12, hDiss: 0, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 450, costTi: 35, costFe: 20, costDe: 25, desc: 'High-frequency deflector emitter granting 250 shield capacity.' },
+            15: { id: 15, cat: 'tactical', name: 'Deflector Projector', badge: 'D', color: '#3b82f6', hp: 120, mass: 22, pGen: 0, pDraw: 40, hGen: 12, hDiss: 0, thrust: 0, dps: 0, shield: 250, cargo: 0, warp: 0, costCr: 450, costTi: 35, costFe: 20, costDe: 25, desc: 'High-frequency deflector emitter granting 250 shield capacity.' },
 
             16: { id: 16, cat: 'weapon', name: 'Twin Autocannon', badge: 'X', color: '#ef4444', hp: 95, mass: 18, pGen: 0, pDraw: 15, hGen: 8, hDiss: 0, thrust: 0, dps: 35, cargo: 0, warp: 0, costCr: 240, costTi: 25, costFe: 15, costDe: 0, desc: 'Rapid-fire tungsten kinetic cannons for close-in interception.' },
             17: { id: 17, cat: 'weapon', name: 'Heavy Plasma Lance', badge: 'L', color: '#f97316', hp: 130, mass: 32, pGen: 0, pDraw: 50, hGen: 22, hDiss: 0, thrust: 0, dps: 85, cargo: 0, warp: 0, costCr: 550, costTi: 40, costFe: 25, costDe: 20, desc: 'Focused thermal plasma beam melting heavy warship plating.' },
@@ -1776,7 +1780,7 @@
             19: { id: 19, cat: 'utility', name: 'Cargo Hold Pod', badge: 'M', color: '#a16207', hp: 100, mass: 14, pGen: 0, pDraw: 4, hGen: 0, hDiss: 0, thrust: 0, dps: 0, cargo: 120, warp: 0, costCr: 120, costTi: 20, costFe: 10, costDe: 0, desc: 'Pressurized freight container expanding mineral cargo volume.' },
             20: { id: 20, cat: 'utility', name: 'Mining Laser Drill', badge: 'U', color: '#06b6d4', hp: 110, mass: 22, pGen: 0, pDraw: 28, hGen: 14, hDiss: 0, thrust: 0, dps: 20, cargo: 0, warp: 0, costCr: 320, costTi: 25, costFe: 15, costDe: 15, desc: 'Industrial mining beam optimized for rapidly shattering asteroids.' },
             21: { id: 21, cat: 'tactical', name: 'Point-Defense Flak', badge: 'K', color: '#fb7185', hp: 110, mass: 20, pGen: 0, pDraw: 20, hGen: 6, hDiss: 0, thrust: 0, dps: 30, cargo: 0, warp: 0, costCr: 380, costTi: 28, costFe: 18, costDe: 10, desc: 'Automated rapid-fire turret intercepting hostile ordnance.' },
-            22: { id: 22, cat: 'tactical', name: 'Subspace Shield Booster', badge: 'E', color: '#60a5fa', hp: 90, mass: 18, pGen: 0, pDraw: 30, hGen: 10, hDiss: 0, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 420, costTi: 24, costFe: 12, costDe: 25, desc: 'Auxiliary phase capacitor cutting shield recharge latency by 50%.' },
+            22: { id: 22, cat: 'tactical', name: 'Subspace Shield Booster', badge: 'E', color: '#60a5fa', hp: 90, mass: 18, pGen: 0, pDraw: 30, hGen: 10, hDiss: 0, thrust: 0, dps: 0, shield: 120, cargo: 0, warp: 0, costCr: 420, costTi: 24, costFe: 12, costDe: 25, desc: 'Auxiliary phase capacitor cutting shield recharge latency by 50%.' },
             23: { id: 23, cat: 'power', name: 'Capacitor Bank', badge: 'V', color: '#facc15', hp: 80, mass: 22, pGen: 10, pDraw: 0, hGen: 4, hDiss: 0, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 260, costTi: 20, costFe: 15, costDe: 15, desc: 'High-density surge storage stabilizing emergency power spikes.' },
             24: { id: 24, cat: 'utility', name: 'Tractor Beam Projector', badge: 'Q', color: '#2dd4bf', hp: 100, mass: 24, pGen: 0, pDraw: 30, hGen: 12, hDiss: 0, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 360, costTi: 30, costFe: 20, costDe: 20, desc: 'Gravimetric field emitter magnetically pulling floating ore & salvage.' }
         };
@@ -1993,7 +1997,11 @@
                 this.playFM(85, 4.0, 1800, 0.35, 'sawtooth', 'sawtooth', 0.45);
             }
 
-            playShieldHit() {
+            playLaser() {
+            this.playFM(580, 3.0, 1100, 0.09, 'sawtooth', 'sine', 0.25);
+        }
+
+        playShieldHit() {
                 this.playFM(720, 3.5, 950, 0.08, 'sine', 'sawtooth', 0.22);
             }
         }
@@ -2036,33 +2044,33 @@
                 this.grid[3][mid - 1] = 3; // Bridge
                 this.grid[3][mid] = 3;
                 
-                // Armor Core
+                // Armor Core & Autocannons
                 this.grid[4][mid - 1] = 2; // Bulkhead
                 this.grid[4][mid] = 2;
                 this.grid[4][mid - 2] = 16; // Autocannon
                 this.grid[4][mid + 1] = 16;
                 
-                // Weapons & Radiators
-                this.grid[5][mid - 2] = 13; // Radiator
-                this.grid[5][mid - 1] = 1;  // Titanium
-                this.grid[5][mid] = 1;
-                this.grid[5][mid + 1] = 13;
+                // Active Thermal Dissipation (Subcoolers + Radiators)
+                this.grid[5][mid - 2] = 14; // Cryo-Subcooler
+                this.grid[5][mid - 1] = 13; // Radiator Fin
+                this.grid[5][mid] = 13;     // Radiator Fin
+                this.grid[5][mid + 1] = 14; // Cryo-Subcooler
                 
-                // Reactor
-                this.grid[6][mid - 1] = 5; // Fission
-                this.grid[6][mid] = 5;
-                this.grid[6][mid - 2] = 15; // Shield
-                this.grid[6][mid + 1] = 15;
+                // Tokamak Fusion Core & Deflector Shielding
+                this.grid[6][mid - 2] = 15; // Deflector Projector
+                this.grid[6][mid - 1] = 6;  // Fusion Tokamak
+                this.grid[6][mid] = 6;      // Fusion Tokamak
+                this.grid[6][mid + 1] = 15; // Deflector Projector
                 
                 // Cargo & Utility
-                this.grid[7][mid - 1] = 19; // Cargo
+                this.grid[7][mid - 1] = 19; // Cargo Hold
                 this.grid[7][mid] = 20;     // Mining Drill
                 
-                // Engines
-                this.grid[8][mid - 2] = 9;  // Chem
-                this.grid[8][mid - 1] = 11; // Plasma
-                this.grid[8][mid] = 11;
-                this.grid[8][mid + 1] = 9;
+                // Engines: Chemical Thrusters + Ion Vector Cruise Engines
+                this.grid[8][mid - 2] = 9;  // Chem Thruster
+                this.grid[8][mid - 1] = 10; // Ion Vector Engine
+                this.grid[8][mid] = 10;     // Ion Vector Engine
+                this.grid[8][mid + 1] = 9;  // Chem Thruster
 
                 this.calculateTelemetry();
             }
@@ -2104,11 +2112,22 @@
                 const netPower = pGen - pDraw;
                 const netHeat = hGen - hDiss;
 
+                // Apply Overclock Subsystem Biases
+                const oc = (typeof starforgeExpansion !== 'undefined') ? starforgeExpansion.overclock : null;
+                const sBias = oc ? (1 + (oc.shieldBias || 0) / 100) : 1;
+                const tBias = oc ? (1 + (oc.thrusterBias || 0) / 100) : 1;
+                const wBias = oc ? (1 + (oc.weaponBias || 0) / 100) : 1;
+
+                shields = Math.round(shields * sBias);
+                thrust = Math.round(thrust * tBias);
+                dps = Math.round(dps * wBias);
+                const adjTwr = mass > 0 ? (thrust / mass).toFixed(2) : 0;
+
                 this.stats = {
                     moduleCount,
                     hp, mass, pGen, pDraw, netPower,
                     hGen, hDiss, netHeat,
-                    thrust, twr, dps, cargo, warp, shields,
+                    thrust, twr: adjTwr, dps, cargo, warp, shields,
                     costCr, costTi, costFe, costDe
                 };
 
@@ -2873,10 +2892,16 @@
             else if (s.mass > 40) shipClass = 'CORVETTE';
             document.getElementById('ship-class-badge').textContent = shipClass;
 
-            // Costs
+            // Crew Complement & Costs
+            const crewEst = Math.max(1, Math.round((s.moduleCount || 0) * 0.4) + (s.cargo > 0 ? 2 : 0));
+            const elCrew = document.getElementById('spec-crew');
+            if (elCrew) elCrew.textContent = `${crewEst} CREW // ${shipClass}`;
+
             document.getElementById('cost-credits').textContent = `${s.costCr.toLocaleString()}$C`;
             document.getElementById('cost-titanium').textContent = s.costTi;
             document.getElementById('cost-ferrite').textContent = s.costFe;
+            const elCostDe = document.getElementById('cost-deuterium');
+            if (elCostDe) elCostDe.textContent = s.costDe || 0;
 
             // Symmetry button state
             const symBtn = document.getElementById('btn-symmetry');
@@ -3114,7 +3139,7 @@
                 return;
             }
             const s = state.stats;
-            if (state.resources.credits < s.costCr || state.resources.titanium < s.costTi || state.resources.ferrite < s.costFe) {
+            if (state.resources.credits < s.costCr || state.resources.titanium < s.costTi || state.resources.ferrite < s.costFe || state.resources.deuterium < (s.costDe || 0)) {
                 showToast('INSUFFICIENT YARD MATERIALS FOR FABRICATION');
                 audio.playAlarm();
                 return;
@@ -3124,6 +3149,7 @@
             state.resources.credits -= s.costCr;
             state.resources.titanium -= s.costTi;
             state.resources.ferrite -= s.costFe;
+            state.resources.deuterium -= (s.costDe || 0);
             updateUI();
 
             state.isFabricating = true;
@@ -3182,7 +3208,7 @@
             }
         });
 
-        const flightSim = {
+        const flightSim = window.flightSim = {
             active: false,
             player: {
                 x: 600, y: 400,
@@ -3798,7 +3824,7 @@
                 localStorage.setItem('kstarforge_soundMuted', audio.muted ? '1' : '0');
             } else if (e.key === 'Escape') {
                 let closedModal = false;
-                ['quick-help-modal', 'splash-modal', 'tutorial-modal', 'template-modal', 'settings-modal'].forEach(id => {
+                ['flight-debrief-modal', 'overclock-modal', 'blueprint-code-modal', 'vfs-blueprint-modal', 'quick-help-modal', 'splash-modal', 'tutorial-modal', 'template-modal', 'settings-modal'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el && window.getComputedStyle(el).display !== 'none') {
                         if (id === 'splash-modal') {
@@ -3808,6 +3834,10 @@
                         }
                         el.style.display = 'none';
                         closedModal = true;
+                        if (id === 'flight-debrief-modal') {
+                            document.querySelector('.nav-btn[data-target="drydock-view"]')?.click();
+                            showToast('DOCKED AT STATION // RETURNED TO DRYDOCK');
+                        }
                         if (id === 'tutorial-modal') {
                             localStorage.setItem('kstarforge_tutorialSeen', '1');
                         }
@@ -3815,8 +3845,12 @@
                 });
                 if (!closedModal) {
                     if (flightSim.active) {
-                        document.querySelector('.nav-btn[data-target="drydock-view"]')?.click();
-                        showToast('DOCKED AT STATION // RETURNED TO DRYDOCK');
+                        if (typeof starforgeExpansion !== 'undefined') {
+                            starforgeExpansion.openDebriefModal();
+                        } else {
+                            document.querySelector('.nav-btn[data-target="drydock-view"]')?.click();
+                            showToast('DOCKED AT STATION // RETURNED TO DRYDOCK');
+                        }
                     } else if (document.getElementById('manual-view').classList.contains('active')) {
                         const prevTarget = state.previousView || 'blueprint-view';
                         document.querySelector(`.nav-btn[data-target="${prevTarget}"]`)?.click();
@@ -3912,6 +3946,7 @@
                             y: sk.y + Math.sin(sk.angle) * 20,
                             vx: Math.cos(sk.angle) * 4.5,
                             vy: Math.sin(sk.angle) * 4.5,
+                            dmg: 22,
                             damage: 22,
                             isEnemy: true,
                             life: 100,
@@ -3929,14 +3964,15 @@
                         const pdy = pr.y - sk.y;
                         if (pdx * pdx + pdy * pdy < 750) {
                             pr.life = 0;
+                            const prEffDmg = (pr.dmg !== undefined ? pr.dmg : pr.damage) || 25;
                             if (sk.shield > 0) {
-                                sk.shield -= pr.damage || 25;
+                                sk.shield -= prEffDmg;
                                 if (sk.shield < 0) {
                                     sk.hull += sk.shield;
                                     sk.shield = 0;
                                 }
                             } else {
-                                sk.hull -= pr.damage || 25;
+                                sk.hull -= prEffDmg;
                             }
                             // Spawn impact spark
                             for (let s = 0; s < 4; s++) {
@@ -3952,8 +3988,8 @@
                             if (sk.hull <= 0) {
                                 sk.hull = 0;
                                 sk.active = false;
-                                state.credits += 1000;
-                                state.reputation += 50;
+                                state.resources.credits += 1000;
+                                state.resources.reputation += 50;
                                 updateUI();
                                 showToast(`🏆 TACTICAL VICTORY! DEFEATED ${sk.pilotName} (+1,000$C, +50 REP)`);
                                 audio.playSuccess?.();
@@ -3973,6 +4009,23 @@
             const route = state.tacticalRoute || 'balanced';
             const thrustMult = route === 'engines' ? 1.35 : (route === 'weapons' ? 0.85 : 1.0);
             const shieldRegenMult = route === 'shields' ? 1.6 : (route === 'engines' ? 0.75 : 1.0);
+            const weaponDpsMult = route === 'weapons' ? 1.4 : (route === 'shields' ? 0.8 : (route === 'engines' ? 0.85 : 1.0));
+
+            // Thermal SCRAM Monitor (>= 100% Heat Overheat)
+            if (p.heat >= 100) {
+                if (!p.scram) {
+                    p.scram = true;
+                    p.heat = 100;
+                    audio.playAlarm?.();
+                    showToast('🚨 REACTOR SCRAM // THERMAL OVERLOAD // WEAPONS & BOOST OFFLINE');
+                }
+            }
+            if (p.scram) {
+                if (p.heat <= 40) {
+                    p.scram = false;
+                    showToast('⚡ REACTOR ONLINE // THERMAL PURGE COMPLETE');
+                }
+            }
 
             // Turning
             const turnSpeed = 0.055;
@@ -4003,7 +4056,7 @@
             }
 
             // Overdrive Boost
-            if (flightSim.keys['shift'] || flightSim.keys['shiftleft']) {
+            if ((flightSim.keys['shift'] || flightSim.keys['shiftleft']) && !p.scram) {
                 if (p.heat < 90) {
                     p.vx += Math.cos(p.angle) * thrustPower * 1.5;
                     p.vy += Math.sin(p.angle) * thrustPower * 1.5;
@@ -4395,7 +4448,16 @@
                 const dy = p.y - en.y;
                 const dist = Math.hypot(dx, dy);
 
-                if (en.type === 'interceptor') {
+                if (en.type === 'boss') {
+                    // Relentless Corsair Dreadnought flagship pursuit
+                    en.vx += (dx / dist) * 0.10;
+                    en.vy += (dy / dist) * 0.10;
+                    const spd = Math.hypot(en.vx, en.vy);
+                    if (spd > 2.8) {
+                        en.vx = (en.vx / spd) * 2.8;
+                        en.vy = (en.vy / spd) * 2.8;
+                    }
+                } else if (en.type === 'interceptor') {
                     // Fast evasive strafing
                     if (dist > 120) {
                         en.vx += (dx / dist) * 0.12;
@@ -4424,16 +4486,18 @@
 
                 en.shootTimer--;
                 if (en.shootTimer <= 0 && dist < 480) {
-                    en.shootTimer = en.type === 'interceptor' ? (50 + Math.random() * 30) : (75 + Math.random() * 50);
-                    const pSpd = en.type === 'interceptor' ? 6.5 : 5.0;
+                    en.shootTimer = (en.type === 'boss') ? (35 + Math.random() * 25) : (en.type === 'interceptor' ? (50 + Math.random() * 30) : (75 + Math.random() * 50));
+                    const pSpd = (en.type === 'boss') ? 5.5 : (en.type === 'interceptor' ? 6.5 : 5.0);
+                    const edmg = en.dmg || (en.type === 'boss' ? 32 : 18);
                     flightSim.projectiles.push({
                         x: en.x, y: en.y,
                         vx: (dx / dist) * pSpd,
                         vy: (dy / dist) * pSpd,
-                        dmg: en.dmg || 18,
+                        dmg: edmg,
+                        damage: edmg,
                         isEnemy: true,
                         life: 80,
-                        color: en.type === 'gunship' ? '#ea580c' : '#ef4444'
+                        color: en.type === 'boss' ? '#f59e0b' : (en.type === 'gunship' ? '#ea580c' : '#ef4444')
                     });
                 }
             });
@@ -4445,7 +4509,7 @@
             if (elHostiles) elHostiles.textContent = flightSim.enemies.length;
             document.getElementById('flight-hud-hull').textContent = `${Math.floor(p.currentHp)} / ${s.hp || 450}`;
             document.getElementById('flight-hud-shield').textContent = `${Math.floor(p.currentShield)} / ${s.shields || 300}`;
-            document.getElementById('flight-hud-heat').textContent = `${Math.floor(p.heat)}%`;
+            document.getElementById('flight-hud-heat').textContent = p.scram ? `SCRAM (${Math.floor(p.heat)}%)` : `${Math.floor(p.heat)}%`;
             document.getElementById('flight-hud-speed').textContent = `${Math.floor(Math.hypot(p.vx, p.vy) * 25)} m/s`;
             document.getElementById('flight-hud-cargo').textContent = `${p.cargoOre} TONS`;
         }
@@ -5105,21 +5169,35 @@
                 showToast('ALREADY FULLY ASSEMBLED (100%)');
                 return;
             }
-            if (state.resources.credits >= 150) {
-                if (fabInterval) {
-                    clearInterval(fabInterval);
-                    fabInterval = null;
+            const s = state.stats;
+            if (!state.isFabricating) {
+                if (state.resources.credits < (s.costCr + 150) || state.resources.titanium < s.costTi || state.resources.ferrite < s.costFe || state.resources.deuterium < (s.costDe || 0)) {
+                    showToast('INSUFFICIENT RESOURCES FOR FABRICATION + RUSH FEE (150$C)');
+                    audio.playAlarm();
+                    return;
                 }
-                state.isFabricating = false;
-                state.resources.credits -= 150;
-                state.drydockProgress = 100;
-                showToast('FABRICATION OVERCLOCKED TO 100%');
-                audio.playSuccess();
-                updateUI();
-                drawDrydockScene();
+                state.resources.credits -= s.costCr;
+                state.resources.titanium -= s.costTi;
+                state.resources.ferrite -= s.costFe;
+                state.resources.deuterium -= (s.costDe || 0);
             } else {
-                showToast('INSUFFICIENT CREDITS');
+                if (state.resources.credits < 150) {
+                    showToast('INSUFFICIENT CREDITS FOR RUSH FEE (150$C)');
+                    audio.playAlarm();
+                    return;
+                }
             }
+            if (fabInterval) {
+                clearInterval(fabInterval);
+                fabInterval = null;
+            }
+            state.isFabricating = false;
+            state.resources.credits -= 150;
+            state.drydockProgress = 100;
+            showToast('FABRICATION OVERCLOCKED TO 100%');
+            audio.playSuccess();
+            updateUI();
+            drawDrydockScene();
         });
 
         document.getElementById('btn-launch-flight').addEventListener('click', () => {
@@ -5365,7 +5443,7 @@
                     const payload = JSON.stringify({
                         format: 'kstarforge-blueprint',
                         version: '1.0',
-                        grid: window.shipGrid || [],
+                        grid: state.grid || [],
                         timestamp: new Date().toISOString()
                     }, null, 2);
                     const txt = document.getElementById('bp-code-io');
@@ -5422,7 +5500,7 @@
                     this.overclock.thrusterBias = Number(sThrust?.value || 0);
                     this.overclock.weaponBias = Number(sWeap?.value || 0);
                     this.saveOverclockSettings();
-                    if (typeof window.calcShipStats === 'function') window.calcShipStats();
+                    state.calculateTelemetry(); updateUI(); renderBlueprintGrid();
                     showToast('SUBSYSTEM OVERCLOCK TUNING SAVED');
                     document.getElementById('overclock-modal').style.display = 'none';
                 });
@@ -5460,17 +5538,17 @@
                 audio?.playClick?.();
             },
             generateBlueprintCode() {
-                const grid = window.shipGrid || [];
+                const grid = state.grid || [];
                 const compact = [];
                 for (let r = 0; r < grid.length; r++) {
                     for (let c = 0; c < (grid[r] || []).length; c++) {
                         const cell = grid[r][c];
-                        if (cell && cell !== 'empty') {
+                        if (cell && cell !== 0 && cell !== 'empty') {
                             compact.push(`${r}:${c}:${cell}`);
                         }
                     }
                 }
-                const raw = JSON.stringify({ v: 1, p: compact });
+                const raw = JSON.stringify({ v: 1, p: compact, grid: state.grid });
                 try {
                     return 'KSF-BP-v1-' + btoa(raw);
                 } catch (e) {
@@ -5497,23 +5575,35 @@
                         return this.loadBlueprintCode(parsed.blueprintCode);
                     }
 
-                    // Initialize empty grid
-                    const size = 14;
-                    const newGrid = Array(size).fill(null).map(() => Array(size).fill(null));
+                    // Initialize empty numeric grid
+                    const size = GRID_SIZE;
+                    const newGrid = Array(size).fill(0).map(() => Array(size).fill(0));
 
                     if (Array.isArray(parsed.grid)) {
-                        // Standard grid array
                         for (let r = 0; r < size && r < parsed.grid.length; r++) {
                             for (let c = 0; c < size && c < parsed.grid[r].length; c++) {
-                                newGrid[r][c] = parsed.grid[r][c];
+                                const rawVal = parsed.grid[r][c];
+                                let val = parseInt(rawVal, 10);
+                                if (!isNaN(val) && MODULE_DEFS[val]) {
+                                    newGrid[r][c] = val;
+                                } else if (typeof rawVal === 'string' && rawVal !== 'empty') {
+                                    const found = Object.values(MODULE_DEFS).find(m => m.name.toLowerCase().includes(rawVal.toLowerCase()) || m.cat === rawVal);
+                                    newGrid[r][c] = found ? found.id : 0;
+                                } else {
+                                    newGrid[r][c] = 0;
+                                }
                             }
                         }
                     } else if (Array.isArray(parsed.p)) {
-                        // Compact format
                         parsed.p.forEach(entry => {
-                            const [rStr, cStr, mod] = entry.split(':');
+                            const [rStr, cStr, modStr] = entry.split(':');
                             const r = parseInt(rStr, 10);
                             const c = parseInt(cStr, 10);
+                            let mod = parseInt(modStr, 10);
+                            if (isNaN(mod) || !MODULE_DEFS[mod]) {
+                                const found = Object.values(MODULE_DEFS).find(m => m.name.toLowerCase().includes(String(modStr).toLowerCase()) || m.cat === modStr);
+                                mod = found ? found.id : 0;
+                            }
                             if (r >= 0 && r < size && c >= 0 && c < size) {
                                 newGrid[r][c] = mod;
                             }
@@ -5523,9 +5613,11 @@
                         return false;
                     }
 
-                    window.shipGrid = newGrid;
-                    if (typeof window.calcShipStats === 'function') window.calcShipStats();
-                    if (typeof window.renderBlueprintGrid === 'function') window.renderBlueprintGrid();
+                    state.grid = newGrid;
+                    state.calculateTelemetry();
+                    updateUI();
+                    renderBlueprintGrid();
+                    showToast('BLUEPRINT LOADED SUCCESSFULLY');
                     return true;
                 } catch (e) {
                     console.error('[KStarForge] Blueprint import error:', e);
@@ -5534,45 +5626,47 @@
                 }
             },
             loadPreset(type) {
-                const size = 14;
-                const g = Array(size).fill(null).map(() => Array(size).fill(null));
-                const mid = 7;
+                const size = GRID_SIZE;
+                const g = Array(size).fill(0).map(() => Array(size).fill(0));
+                const mid = Math.floor(size / 2);
                 if (type === 'interceptor') {
                     // Fast agile fighter
-                    g[3][mid] = 'bridge'; g[3][mid-1] = 'bridge';
-                    g[4][mid] = 'armor'; g[4][mid-1] = 'armor';
-                    g[5][mid] = 'reactor'; g[5][mid-1] = 'reactor';
-                    g[5][mid+1] = 'laser'; g[5][mid-2] = 'laser';
-                    g[6][mid] = 'thruster'; g[6][mid-1] = 'thruster';
-                    g[6][mid+1] = 'thruster'; g[6][mid-2] = 'thruster';
+                    g[3][mid] = 3; g[3][mid-1] = 3; // Bridge
+                    g[4][mid] = 2; g[4][mid-1] = 2; // Bulkhead
+                    g[5][mid] = 6; g[5][mid-1] = 6; // Fusion
+                    g[5][mid+1] = 16; g[5][mid-2] = 16; // Autocannon
+                    g[6][mid] = 9; g[6][mid-1] = 9; // Thruster
+                    g[6][mid+1] = 9; g[6][mid-2] = 9;
                 } else if (type === 'dreadnought') {
                     // Heavy armored fortress
                     for (let r = 2; r <= 8; r++) {
                         for (let c = mid - 3; c <= mid + 2; c++) {
-                            if (r === 2) g[r][c] = 'armor';
-                            else if (r === 3 && (c === mid || c === mid - 1)) g[r][c] = 'bridge';
+                            if (r === 2) g[r][c] = 2;
+                            else if (r === 3 && (c === mid || c === mid - 1)) g[r][c] = 3;
                             else if (r >= 4 && r <= 6) {
-                                if (c === mid - 3 || c === mid + 2) g[r][c] = 'plasma';
-                                else if (c === mid - 2 || c === mid + 1) g[r][c] = 'shield';
-                                else g[r][c] = 'reactor';
+                                if (c === mid - 3 || c === mid + 2) g[r][c] = 17; // Heavy Plasma
+                                else if (c === mid - 2 || c === mid + 1) g[r][c] = 15; // Deflector
+                                else g[r][c] = 6; // Fusion
                             } else if (r >= 7) {
-                                g[r][c] = 'thruster';
+                                g[r][c] = 11; // Plasma Drive
                             }
                         }
                     }
                 } else if (type === 'harvester') {
                     // Industrial ore rig
-                    g[4][mid] = 'bridge'; g[4][mid-1] = 'bridge';
-                    g[3][mid] = 'mining_laser'; g[3][mid-1] = 'mining_laser';
-                    g[5][mid-2] = 'cargo'; g[5][mid-1] = 'cargo'; g[5][mid] = 'cargo'; g[5][mid+1] = 'cargo';
-                    g[6][mid-1] = 'reactor'; g[6][mid] = 'reactor';
-                    g[7][mid-1] = 'thruster'; g[7][mid] = 'thruster';
+                    g[4][mid] = 3; g[4][mid-1] = 3; // Bridge
+                    g[3][mid] = 20; g[3][mid-1] = 20; // Mining Drill
+                    g[5][mid-2] = 19; g[5][mid-1] = 19; g[5][mid] = 19; g[5][mid+1] = 19; // Cargo
+                    g[6][mid-1] = 5; g[6][mid] = 5; // Fission
+                    g[7][mid-1] = 9; g[7][mid] = 9; // Thruster
                 }
-                window.shipGrid = g;
-                if (typeof window.calcShipStats === 'function') window.calcShipStats();
-                if (typeof window.renderBlueprintGrid === 'function') window.renderBlueprintGrid();
+                state.grid = g;
+                state.calculateTelemetry();
+                updateUI();
+                renderBlueprintGrid();
                 showToast(`PRESET LOADED: ${type.toUpperCase()}`);
-                document.getElementById('blueprint-code-modal').style.display = 'none';
+                const bpModal = document.getElementById('blueprint-code-modal');
+                if (bpModal) bpModal.style.display = 'none';
             },
             hookTelemetryEvents() {
                 // Monitor shakedown flight start
@@ -5688,10 +5782,15 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
             starforgeExpansion.init();
         }, 100);
 
-        document.getElementById('btn-flight-dock')?.addEventListener('click', () => {
+        document.getElementById('btn-flight-dock')?.addEventListener('click', (e) => {
+            e.stopImmediatePropagation();
             audio.playClick();
-            document.querySelector('.nav-btn[data-target="drydock-view"]')?.click();
-            showToast('DOCKED AT STATION // RETURNED TO DRYDOCK');
+            if (typeof starforgeExpansion !== 'undefined') {
+                starforgeExpansion.openDebriefModal();
+            } else {
+                document.querySelector('.nav-btn[data-target="drydock-view"]')?.click();
+                showToast('DOCKED AT STATION // RETURNED TO DRYDOCK');
+            }
         });
 
         // Header buttons
@@ -5937,7 +6036,7 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                     const pDraw = def.pDraw * qty;
                     const pGen = def.pGen * qty;
                     const thr = def.thrust * qty;
-                    const shd = def.shield * qty;
+                    const shd = (def.shield || 0) * qty;
                     const dps = def.dps * qty;
                     const cr = def.costCr * qty;
                     const ti = def.costTi * qty;
@@ -6320,7 +6419,7 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                     version: '1.0',
                     blueprintCode: starforgeExpansion.generateBlueprintCode(),
                     stats: state.stats,
-                    grid: window.shipGrid || [],
+                    grid: state.grid || [],
                     timestamp: new Date().toISOString()
                 };
                 KiloVFS.write(fullPath, payload);
@@ -6693,8 +6792,8 @@ Certification: APPROVED BY PROVING GROUNDS RANGE CONTROL`;
                     }
                 } else if (msg.type === 'SKIRMISH_DEFEAT') {
                     showToast('RIVAL VESSEL NEUTRALIZED! TACTICAL VICTORY');
-                    state.credits += 1000;
-                    state.reputation += 50;
+                    state.resources.credits += 1000;
+                    state.resources.reputation += 50;
                     updateUI();
                     audio.playSuccess?.();
                 }
