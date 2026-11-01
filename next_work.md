@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KCalc
-  kilo_qa: KChat
+  kilo_qa: KSys
   kilo_expander: KQuest
   kilo_review: KSubmarine
 virtual_web_target: kweb://webring
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KQuest
-  timestamp: '2026-11-01T04:22:19-08:00'
+  agent: kilo-qa
+  app: KChat
+  timestamp: '2026-11-01T04:36:32-08:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -177,11 +177,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Compact header to 1 nowrap row (show SFX ON/OFF when BGM disabled), lock .game-view to 100vh flex column with scrollable #dynamic-content (compact/collapsible biome grid + grouped Town actions) and pinned compact #log-panel + #controls-panel so Hero Creation and Town buttons fit 1000x723 above the fold; add .sidebar sub-tabs (Hero / Bag / Quests) with [I] focus and top-right #toast; trap Esc and hotkeys inside #mp-modal-overlay + guard SELECTs; pause gfxLoop on document.hidden; and render Tavern NPC + Army/Siege sprites on #kquest-gfx-canvas. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KChat`
+- **Active Target**: `KSys`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, channel switcher, offline message spool, dual Win32 C parity, and promote to Mature table. |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, chart type presets (bar/line/pie/radar), CSV import/export, dual Win32 C parity, and promote to Mature table. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, expense categories, balance projection graphs, dual Win32 C parity, and promote to Mature table. |
@@ -237,6 +236,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KChat** | `KiloOS/public/apps/kchat.html` | Pass 5+ (2026-11-01) | Network / Communications | Complete retro multi-channel chat suite with interactive polls, offline message spool, channel switcher palette, F5/F9 state persistence, and dual Win32 C parity. |
 | **KFleet** | `KiloOS/public/apps/kfleet.html` | Pass 5+ (2026-10-31) | System / Telemetry | Complete fleet operations console: live agent telemetry, vector radar, 4-ch strip chart, CLI, F5/F9 state persistence, dual Win32 C parity <999KB. |
 | **KPaint** | `KiloOS/public/apps/kpaint.html` | Pass 5+ (2026-10-31) | Media / Imaging & Graphics Studio | Complete retro paint studio with multi-layer canvas, F5/F9 snapshot persistence, retro palettes (C64/GameBoy/CGA/Amiga), tool drawer, flipbook animation, and Win32 C parity. |
 | **KCipher** | `KiloOS/public/apps/kcipher.html` | Pass 5+ (2026-10-31) | System / Security | Complete cryptographic suite with classical ciphers, RC4/XOR streams, AES-128 CTR, RSA demo, pipeline chaining, frequency cryptanalysis, steganography, F5/F9 persistence, and dual Win32 C parity. |
@@ -300,6 +300,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T04:36:32-08:00 — kilo-qa: KChat (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 113.7 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kchat_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Spool: Verified Web HTML + Win32 C parity, offline message spool, and channel switcher.
+  - Mature Quarantine & Handoff: Promoted `KChat` to Mature archive; advanced `kilo-qa` to `KSys`; next agent `kilo-expander`.
+
 - **2026-11-01T04:22:19-08:00 — kilo-usability: KQuest (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KQuest across web and native targets.
@@ -319,9 +325,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive RFC 1149 Avian Carrier simulator, RFC 2324 HTCPCP teapot console, ASCII TCP stepper & VFS export.
   - Fixed URL deep-linking router placement and verified KNet/webring routing with zero layout clipping.
   - Handoff: Advanced `kilo-creator` to `kweb://webring`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-01T02:17:29-08:00 — kilo-review: KQuest (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 1000x723 sheet.png and audited kquest.html + KQuest/main.c; dispatched surgical fixes to kilo-usability, kilo-tester, and kilo-expander).
-  - Visual & UX Findings: Header wraps H1 into 4 narrow lines and 2 button rows; .game-view scroll clips Hero Creation and Town controls below 1000x723 fold; .sidebar hides Inventory/Quests; #mp-modal-overlay leaks Esc/hotkeys and gfxLoop runs when hidden.
-  - Gameplay & VFS Findings: Multiplayer SPELL/SKILL read undefined player.mag (NaN HP) and GUARD/PARRY are no-ops; Rune burn/poison/freeze never tick in HTML or C; triggerHazard silently drops HP in 17/18 biomes; 6 achievements + claimQuests() are unreachable; generateHeroSheetText() crashes on companion object and KiloVFS lacks origin checks/fallbacks.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KQuest`, `kilo-tester`->`KQuest`, `kilo-expander`->`KQuest`]; advanced `kilo-review` to `KSubmarine`; next agent `kilo-creator`.

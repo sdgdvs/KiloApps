@@ -677,6 +677,22 @@ LRESULT CALLBACK SearchSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
         SendMessageA(hParent, WM_COMMAND, ID_QUICKLOAD, 0);
         return 0;
     }
+    if (msg == WM_KEYDOWN && (GetKeyState(VK_CONTROL) & 0x8000)) {
+        if (wParam == 'K' || wParam == 'k') {
+            HWND hParent = GetParent(hwnd);
+            SendMessageA(hParent, WM_COMMAND, 119, 0);
+            return 0;
+        }
+    }
+    if (msg == WM_KEYDOWN && (GetKeyState(VK_MENU) & 0x8000)) {
+        if (wParam == VK_RIGHT || wParam == VK_DOWN) {
+            SwitchNextRoom(GetParent(hwnd), 1);
+            return 0;
+        } else if (wParam == VK_LEFT || wParam == VK_UP) {
+            SwitchNextRoom(GetParent(hwnd), -1);
+            return 0;
+        }
+    }
     return CallWindowProcA(oldSearchProc, hwnd, msg, wParam, lParam);
 }
 
@@ -708,6 +724,19 @@ LRESULT CALLBACK InputSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
     if (msg == WM_KEYDOWN && (GetKeyState(VK_CONTROL) & 0x8000)) {
         if (wParam == 'A' || wParam == 'a') {
             SendMessageA(hwnd, EM_SETSEL, 0, -1);
+            return 0;
+        } else if (wParam == 'K' || wParam == 'k') {
+            HWND hParent = GetParent(hwnd);
+            SendMessageA(hParent, WM_COMMAND, 119, 0);
+            return 0;
+        }
+    }
+    if (msg == WM_KEYDOWN && (GetKeyState(VK_MENU) & 0x8000)) {
+        if (wParam == VK_RIGHT || wParam == VK_DOWN) {
+            SwitchNextRoom(GetParent(hwnd), 1);
+            return 0;
+        } else if (wParam == VK_LEFT || wParam == VK_UP) {
+            SwitchNextRoom(GetParent(hwnd), -1);
             return 0;
         }
     }
@@ -843,6 +872,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (wmId == 115) { // Stats Button
                 ShowRoomStats();
+            } else if (wmId == 119) { // Switcher Button [K]
+                ShowChannelSwitcherDialog(hwnd);
+            } else if (wmId == 120) { // Spool Button [O]
+                ShowSpoolDialog(hwnd);
             } else if (wmId == ID_QUICKSAVE) { // Quicksave F5
                 SaveQuickSave(hwnd);
             } else if (wmId == ID_QUICKLOAD) { // Quickload F9
@@ -899,7 +932,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (buf[0]) {
                     // Slash command handling
                     if (my_strcmp(buf, "/help") == 0) {
-                        AddMessage("System", "Help: /poll <q>? <o1>|<o2>, /vote <num>, /topic <text>, /nick <name>, /roll [d20], /stats, /me <act>, /shrug, /quicksave, /quickload, /clear, /unpin", currentRoom, 0);
+                        AddMessage("System", "Help: /poll <q>? <o1>|<o2>, /vote <num>, /topic <text>, /nick <name>, /roll [d20], /stats, /me <act>, /shrug, /switch, /spool, /quicksave, /quickload, /clear, /unpin", currentRoom, 0);
+                        SetWindowTextA(hInput, "");
+                        break;
+                    }
+
+                    if (my_strcmp(buf, "/switch") == 0 || my_strcmp(buf, "/channels") == 0) {
+                        ShowChannelSwitcherDialog(hwnd);
+                        SetWindowTextA(hInput, "");
+                        break;
+                    }
+
+                    if (buf[0] == '/' && buf[1] == 's' && buf[2] == 'w' && buf[3] == 'i' && buf[4] == 't' && buf[5] == 'c' && buf[6] == 'h' && buf[7] == ' ') {
+                        SwitchToRoom(hwnd, buf + 8);
+                        SetWindowTextA(hInput, "");
+                        break;
+                    }
+
+                    if (my_strcmp(buf, "/spool") == 0) {
+                        ShowSpoolDialog(hwnd);
+                        SetWindowTextA(hInput, "");
+                        break;
+                    }
+
+                    if (my_strcmp(buf, "/spool flush") == 0) {
+                        FlushSpool(hwnd);
+                        SetWindowTextA(hInput, "");
+                        break;
+                    }
+
+                    if (my_strcmp(buf, "/spool clear") == 0) {
+                        g_spoolCount = 0;
+                        UpdateSpoolStatus();
+                        AddMessage("System", "[Offline message spool cleared]", currentRoom, 0);
                         SetWindowTextA(hInput, "");
                         break;
                     }
@@ -1082,6 +1147,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (s != INVALID_SOCKET) {
                         send(s, buf, my_strlen(buf), 0);
                         send(s, "\n", 1, 0);
+                    } else {
+                        AddSpoolMessage(currentUsername, buf, currentRoom);
                     }
                     SetWindowTextA(hInput, "");
                 }
@@ -1192,6 +1259,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 AddMessage("System", "Connected!", currentRoom, 0);
                 EnableWindow(hBtn, TRUE);
                 SetWindowTextA(hBtn, "Disconnect");
+                FlushSpool(hwnd);
             } else if (WSAGETSELECTEVENT(lParam) == FD_READ) {
                 char buf[385];
                 int ret = recv(s, buf, 384, 0);
@@ -1308,6 +1376,9 @@ void __stdcall MainEntry() {
                 } else if (msg.wParam == '4') {
                     SwitchToRoom(hwnd, "#lounge");
                     continue;
+                } else if (msg.wParam == 'K' || msg.wParam == 'k') {
+                    ShowChannelSwitcherDialog(hwnd);
+                    continue;
                 } else if (msg.wParam == 'C' || msg.wParam == 'c') {
                     if (focus != hInput && focus != hSearchInput) {
                         SendMessageA(hwnd, WM_COMMAND, 116, 0);
@@ -1327,9 +1398,23 @@ void __stdcall MainEntry() {
                     SendMessageA(hwnd, WM_COMMAND, 109, 0);
                     continue;
                 }
+            } else if (GetKeyState(VK_MENU) & 0x8000) {
+                if (msg.wParam == VK_RIGHT || msg.wParam == VK_DOWN) {
+                    SwitchNextRoom(hwnd, 1);
+                    continue;
+                } else if (msg.wParam == VK_LEFT || msg.wParam == VK_UP) {
+                    SwitchNextRoom(hwnd, -1);
+                    continue;
+                }
             } else if (!isTyping) {
                 if (msg.wParam == 'H' || msg.wParam == 'h') {
                     ShowHelpDialog(hwnd);
+                    continue;
+                } else if (msg.wParam == 'K' || msg.wParam == 'k') {
+                    ShowChannelSwitcherDialog(hwnd);
+                    continue;
+                } else if (msg.wParam == 'O' || msg.wParam == 'o') {
+                    ShowSpoolDialog(hwnd);
                     continue;
                 } else if (msg.wParam == 'P' || msg.wParam == 'p') {
                     SendMessageA(hwnd, WM_COMMAND, 113, 0);

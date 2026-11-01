@@ -1280,7 +1280,7 @@
         }
 
         function closeAllModals() {
-            try { localStorage.setItem('kchat_tutorialSeen', '1'); } catch(e) {}
+            safeSet('kchat_tutorialSeen', '1');
             if (helpModalEl) helpModalEl.classList.remove('active');
             if (pollModalEl) pollModalEl.classList.remove('active');
             if (roomModalEl) roomModalEl.classList.remove('active');
@@ -1462,11 +1462,11 @@
 
         window.openHelpModal = function() {
             closeAllModals();
-            try { localStorage.setItem('kchat_tutorialSeen', '1'); } catch(e) {}
+            safeSet('kchat_tutorialSeen', '1');
             if (helpModalEl) helpModalEl.classList.add('active');
         };
         window.closeHelpModal = function() {
-            try { localStorage.setItem('kchat_tutorialSeen', '1'); } catch(e) {}
+            safeSet('kchat_tutorialSeen', '1');
             if (helpModalEl) helpModalEl.classList.remove('active');
         };
 
@@ -2588,7 +2588,8 @@
         });
 
         // First-run Tutorial Integrity (Pass 5)
-        const tutorialSeen = safeGet('kchat_tutorialSeen', '0') === '1';
+        const rawTut = safeGet('kchat_tutorialSeen', '0');
+        const tutorialSeen = rawTut === '1' || rawTut === 1 || rawTut === true;
 
         if (!tutorialSeen) {
             setTimeout(() => {

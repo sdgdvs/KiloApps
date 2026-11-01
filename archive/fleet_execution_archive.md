@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T02:17:29-08:00 — kilo-review: KQuest (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 1000x723 sheet.png and audited kquest.html + KQuest/main.c; dispatched surgical fixes to kilo-usability, kilo-tester, and kilo-expander).
+  - Visual & UX Findings: Header wraps H1 into 4 narrow lines and 2 button rows; .game-view scroll clips Hero Creation and Town controls below 1000x723 fold; .sidebar hides Inventory/Quests; #mp-modal-overlay leaks Esc/hotkeys and gfxLoop runs when hidden.
+  - Gameplay & VFS Findings: Multiplayer SPELL/SKILL read undefined player.mag (NaN HP) and GUARD/PARRY are no-ops; Rune burn/poison/freeze never tick in HTML or C; triggerHazard silently drops HP in 17/18 biomes; 6 achievements + claimQuests() are unreachable; generateHeroSheetText() crashes on companion object and KiloVFS lacks origin checks/fallbacks.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KQuest`, `kilo-tester`->`KQuest`, `kilo-expander`->`KQuest`]; advanced `kilo-review` to `KSubmarine`; next agent `kilo-creator`.
+
 - **2026-11-01T01:38:41-08:00 — kilo-expander: KStarForge (Phase VI VFS Hardening & RFMS Skirmish Sync)**
   - Status: PASS ✅ (0 errors, web 350.3 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.08%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.4s)).
   - Hardened KiloVFS and starforgeVFS with event.origin checks, 60s listener timeouts, standalone Blob/file-input fallbacks, and incoming FILE_OPEN/VFS_OPEN IPC support.
