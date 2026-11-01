@@ -699,9 +699,9 @@
     "id": "ksubmarine",
     "title": "KSubmarine",
     "folder": "Games",
-    "webBytes": 526515,
-    "exeBytes": 266240,
-    "budgetPercent": 52.7
+    "webBytes": 557930,
+    "exeBytes": 267264,
+    "budgetPercent": 55.8
   },
   {
     "id": "ksudoku",
@@ -723,7 +723,7 @@
     "id": "ksys",
     "title": "KSys",
     "folder": "System",
-    "webBytes": 216553,
+    "webBytes": 216418,
     "exeBytes": 40960,
     "budgetPercent": 21.7
   },

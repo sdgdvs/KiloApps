@@ -2780,6 +2780,9 @@ void ShowHelpDialog(HWND hwnd) {
         "  [4]           - Event History Logs Tab\n"
 
         "  [5]           - Detailed System Report Export Tab\n"
+        "  [6] or [X]    - Hex Explorer Buffer Tab\n"
+        "  [B]           - Toggle Diagnostic Stress Test / Cycle Hex Buffer\n"
+        "  [Shift+M]     - Toggle Procedural Synthesizer Sound Effects\n"
 
         "  [Left/Right]  - Switch between Navigation Tabs\n"
 
@@ -3089,8 +3092,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 UpdateView();
 
-                UpdateView();
-
             } else if (id == ID_BTN_HEX_SRC) {
 
                 g_HexBufferSource = (g_HexBufferSource + 1) % 4;
@@ -3269,7 +3270,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     g_ToastExpire = 0;
 
-                    lstrcpynA(g_ToastMsg, "KSys Workstation Ready | Keys: [1-5] Tabs, [F5] Save, [F9] Load, [R] Refresh, [F1] Help", sizeof(g_ToastMsg));
+                    lstrcpynA(g_ToastMsg, "KSys Workstation Ready | Keys: [1-6] Tabs, [F5] Save, [F9] Load, [R] Refresh, [F1] Help", sizeof(g_ToastMsg));
 
                     if (hStatusBar) SetWindowTextA(hStatusBar, g_ToastMsg);
 
@@ -3709,6 +3710,15 @@ void MainEntry() {
 
                     continue;
 
+                } else if ((msg.wParam == 'M' || msg.wParam == 'm') && (GetKeyState(VK_SHIFT) & 0x8000)) {
+                    g_SoundEnabled = !g_SoundEnabled;
+                    if (g_SoundEnabled) {
+                        ShowNativeToast(hwnd, "Sound audio enabled [Shift+M]");
+                        PlayNativeSfx(1);
+                    } else {
+                        ShowNativeToast(hwnd, "Sound audio muted [Shift+M]");
+                    }
+                    continue;
                 } else if ((msg.wParam == 'M' || msg.wParam == 'm') && g_CurrentTab == 1) {
 
                     RunRamBenchmark();

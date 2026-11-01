@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T05:35:43-08:00 — kilo-review: KSubmarine (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 1040x683 sheet.png and audited ksubmarine.html + KSubmarine/main.c; 0.35% probe input response).
+  - Visual/UX Findings: Header wraps to 4 lines, 11 center tabs wrap to 5 rows crushing #sonarCanvas to 386x242 with triple HUD overlap (#sonarOverlay + #sonarModeTag + #sonarTargetHud), right panel clips subsystems below fold, and all sprites are canvas/SVG programmer art.
+  - Feature/Gameplay Findings: Space sonar ping and WASD/Arrow helm keys unwired, Tab skips cycleTarget(), #manualSearchInput lacks keydown guard, maxHull/bonusHull/sonarRangeBonus/#btnBilgePump are dead or overwritten, depthBar caps at 5000m, zero 0%-Hull/O2 fail or victory modal, and zero VFS/RFMS hooks.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KSubmarine`, `kilo-tester`->`KSubmarine`, `kilo-graphics`->`KSubmarine`, `kilo-expander`->`KSubmarine`]; advanced `kilo-review` to `KHex`; next agent `kilo-creator`.
+
 - **2026-11-01T05:20:35-08:00 — kilo-expander: KQuest (Phase VI VFS Hardening & Hero Sheet Fixes)**
   - Status: PASS ✅ (0 errors, web 426.6 KB, native 101.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - Fixed generateHeroSheetText() companion name/role formatting and player.agi/int/potion inventory counts.

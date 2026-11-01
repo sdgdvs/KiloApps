@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KCalc
-  kilo_qa: KSys
+  kilo_qa: KChart
   kilo_expander: KSubmarine
   kilo_review: KHex
 virtual_web_target: kweb://deep-core
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KSubmarine
-  timestamp: '2026-11-01T07:38:51-08:00'
+  agent: kilo-qa
+  app: KSys
+  timestamp: '2026-11-01T08:17:23-08:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -179,11 +179,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | **[ARGON REVIEW]:** Compact header to 1 nowrap row (hide #musicToggleBtn and #btnMatrixMusicToggle when !window.__KILO_BGM_ENABLED and label #soundToggleBtn SFX ON/OFF [M]), narrow side panels (268px 1fr 278px) with compact 2-row center tabs and 82px #terminalLog so #sonarCanvas expands above 450x360, fix triple HUD collision inside .sonar-viewport by moving #sonarModeTag to bottom-left and narrowing #sonarOverlay/#sonarTargetHud, organize right panel into [HELM] [SYSTEMS] [OPS] sub-tabs and compact left gauges so 0 controls clip at 1040x683, add click-to-lock/steer on #sonarCanvas, and add devicePixelRatio HiDPI scaling to #hydrophoneScopeCanvas. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KSys`
+- **Active Target**: `KChart`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, process/telemetry oscilloscopes, diagnostic stress toggles, dual Win32 C parity, and promote to Mature table. |
 | `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, chart type presets (bar/line/pie/radar), CSV import/export, dual Win32 C parity, and promote to Mature table. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, expense categories, balance projection graphs, dual Win32 C parity, and promote to Mature table. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
@@ -239,6 +238,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KSys** | `KiloOS/public/apps/ksys.html` | Pass 5+ (2026-11-01) | System / Diagnostics | Complete real-time system diagnostic workstation with hardware inspector, telemetry oscilloscopes, stress burn-in daemon, dual Win32 C parity, and robust F5/F9 state persistence. |
 | **KChat** | `KiloOS/public/apps/kchat.html` | Pass 5+ (2026-11-01) | Network / Communications | Complete retro multi-channel chat suite with interactive polls, offline message spool, channel switcher palette, F5/F9 state persistence, and dual Win32 C parity. |
 | **KFleet** | `KiloOS/public/apps/kfleet.html` | Pass 5+ (2026-10-31) | System / Telemetry | Complete fleet operations console: live agent telemetry, vector radar, 4-ch strip chart, CLI, F5/F9 state persistence, dual Win32 C parity <999KB. |
 | **KPaint** | `KiloOS/public/apps/kpaint.html` | Pass 5+ (2026-10-31) | Media / Imaging & Graphics Studio | Complete retro paint studio with multi-layer canvas, F5/F9 snapshot persistence, retro palettes (C64/GameBoy/CGA/Amiga), tool drawer, flipbook animation, and Win32 C parity. |
@@ -303,6 +303,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T08:17:23-08:00 — kilo-qa: KSys (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 211.3 KB, native 40.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, ksys_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, Shift+M audio mute, and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KSys` to Mature archive; advanced `kilo-qa` to `KChart`; next agent `kilo-expander`.
+
 - **2026-11-01T07:38:51-08:00 — kilo-usability: KSubmarine (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS (0 errors, web 544.9 KB, native 261.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (input 2.41%, 0 cut-off)).
   - Layout & Sonar: Compact 1-row header, 2-row center tabs, 82px log, and narrow side panels expanded #sonarCanvas to 468x460 with zero HUD collision.
@@ -325,9 +331,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) into RingMaster topology map with latency-radar scaling & golden star spokes.
   - Added Canonical Tour sequential traversal and scope=canonical CGI redirect simulation.
   - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-01T05:35:43-08:00 — kilo-review: KSubmarine (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 1040x683 sheet.png and audited ksubmarine.html + KSubmarine/main.c; 0.35% probe input response).
-  - Visual/UX Findings: Header wraps to 4 lines, 11 center tabs wrap to 5 rows crushing #sonarCanvas to 386x242 with triple HUD overlap (#sonarOverlay + #sonarModeTag + #sonarTargetHud), right panel clips subsystems below fold, and all sprites are canvas/SVG programmer art.
-  - Feature/Gameplay Findings: Space sonar ping and WASD/Arrow helm keys unwired, Tab skips cycleTarget(), #manualSearchInput lacks keydown guard, maxHull/bonusHull/sonarRangeBonus/#btnBilgePump are dead or overwritten, depthBar caps at 5000m, zero 0%-Hull/O2 fail or victory modal, and zero VFS/RFMS hooks.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KSubmarine`, `kilo-tester`->`KSubmarine`, `kilo-graphics`->`KSubmarine`, `kilo-expander`->`KSubmarine`]; advanced `kilo-review` to `KHex`; next agent `kilo-creator`.
