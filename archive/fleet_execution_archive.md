@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T06:37:54-08:00 — kilo-graphics: KSubmarine (Imagen 3 Visual Assets & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 519.6 KB, native 260.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.56%, HEAD Δ 0.26%, 0 fail, 0 warn, 7.3s)).
+  - Integrated 2-stage chroma-keyed Imagen 3 sprites for bathysphere submarine, colossal trench leviathan, and abyssal squid, plus 5 adapted deep-sea sprites (benthic flora, anglerfish fauna, salvage pod, combat drone, and hydrothermal smoker) with graceful procedural fallbacks and upgraded Codex UI visual rendering.
+  - Zero perimeter border glints or specular rotations; fleet icon uniqueness confirmed.
+  - Handoff: Advanced `kilo-graphics` to `KCosmic`; rotated active agent to `kilo-tester`.
+
 - **2026-11-01T06:22:21-08:00 — kilo-creator: kweb://webring (RingMaster Canonical Nodes & Traversal Integration)**
   - Status: PASS (0 errors, web 460.8 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) into RingMaster topology map with latency-radar scaling & golden star spokes.
