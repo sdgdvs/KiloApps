@@ -2198,6 +2198,78 @@
         let hoverX = -1;
         let hoverY = -1;
 
+        /* ==========================================================================
+           IMAGEN 3 CHROMA-KEYED SPRITE ASSET PIPELINE & ATLAS REGISTRY
+           ========================================================================== */
+        const KSTARFORGE_ASSETS = {
+            // Modules
+            module_hull: { img: null, loaded: false, src: '../assets/sprites/kstarforge/module_hull.png', fallback: 'assets/sprites/kstarforge/module_hull.png' },
+            module_bridge: { img: null, loaded: false, src: '../assets/sprites/kstarforge/module_bridge.png', fallback: 'assets/sprites/kstarforge/module_bridge.png' },
+            module_reactor: { img: null, loaded: false, src: '../assets/sprites/kstarforge/module_reactor.png', fallback: 'assets/sprites/kstarforge/module_reactor.png' },
+            module_engine: { img: null, loaded: false, src: '../assets/sprites/kstarforge/module_engine.png', fallback: 'assets/sprites/kstarforge/module_engine.png' },
+            module_tactical: { img: null, loaded: false, src: '../assets/sprites/kstarforge/module_tactical.png', fallback: 'assets/sprites/kstarforge/module_tactical.png' },
+            module_shield: { img: null, loaded: false, src: '../assets/sprites/kstarforge/module_shield.png', fallback: 'assets/sprites/kstarforge/module_shield.png' },
+            module_weapon: { img: null, loaded: false, src: '../assets/sprites/kstarforge/module_weapon.png', fallback: 'assets/sprites/kstarforge/module_weapon.png' },
+            module_utility: { img: null, loaded: false, src: '../assets/sprites/kstarforge/module_utility.png', fallback: 'assets/sprites/kstarforge/module_utility.png' },
+            module_mining: { img: null, loaded: false, src: '../assets/sprites/kstarforge/module_mining.png', fallback: 'assets/sprites/kstarforge/module_mining.png' },
+            // Station & Drydock Gantry
+            station: { img: null, loaded: false, src: '../assets/sprites/kstarforge/starforge_station.png', fallback: 'assets/sprites/kstarforge/starforge_station.png' },
+            drydock_gantry: { img: null, loaded: false, src: '../assets/sprites/kstarforge/drydock_gantry.png', fallback: 'assets/sprites/kstarforge/drydock_gantry.png' },
+            // Asteroids
+            asteroid_titanium: { img: null, loaded: false, src: '../assets/sprites/kstarforge/asteroid_titanium.png', fallback: 'assets/sprites/kstarforge/asteroid_titanium.png' },
+            asteroid_ferrite: { img: null, loaded: false, src: '../assets/sprites/kstarforge/asteroid_ferrite.png', fallback: 'assets/sprites/kstarforge/asteroid_ferrite.png' },
+            asteroid_deuterium: { img: null, loaded: false, src: '../assets/sprites/kstarforge/asteroid_deuterium.png', fallback: 'assets/sprites/kstarforge/asteroid_deuterium.png' },
+            // Salvage Pod
+            salvage_pod: { img: null, loaded: false, src: '../assets/sprites/kstarforge/salvage_pod.png', fallback: 'assets/sprites/kstarforge/salvage_pod.png' },
+            // Vessels
+            vessel_dreadnought: { img: null, loaded: false, src: '../assets/sprites/kstarforge/vessel_dreadnought.png', fallback: 'assets/sprites/kstarforge/vessel_dreadnought.png' },
+            vessel_interceptor: { img: null, loaded: false, src: '../assets/sprites/kstarforge/vessel_interceptor.png', fallback: 'assets/sprites/kstarforge/vessel_interceptor.png' },
+            vessel_gunship: { img: null, loaded: false, src: '../assets/sprites/kstarforge/vessel_gunship.png', fallback: 'assets/sprites/kstarforge/vessel_gunship.png' },
+            vessel_sentry: { img: null, loaded: false, src: '../assets/sprites/kstarforge/vessel_sentry.png', fallback: 'assets/sprites/kstarforge/vessel_sentry.png' },
+            vessel_rival: { img: null, loaded: false, src: '../assets/sprites/kstarforge/vessel_rival.png', fallback: 'assets/sprites/kstarforge/vessel_rival.png' }
+        };
+
+        function initKStarForgeAssets() {
+            Object.values(KSTARFORGE_ASSETS).forEach(asset => {
+                const img = new Image();
+                img.onload = () => { asset.loaded = true; };
+                img.onerror = () => {
+                    if (asset.fallback && img.src !== asset.fallback) {
+                        img.src = asset.fallback;
+                    }
+                };
+                img.src = asset.src;
+                asset.img = img;
+            });
+        }
+        initKStarForgeAssets();
+
+        function getModuleSprite(def) {
+            if (!def) return null;
+            if (def.cat === 'hull') {
+                if (def.id === 3 || def.id === 4) return KSTARFORGE_ASSETS.module_bridge;
+                return KSTARFORGE_ASSETS.module_hull;
+            }
+            if (def.cat === 'power') {
+                return KSTARFORGE_ASSETS.module_reactor;
+            }
+            if (def.cat === 'engine') {
+                return KSTARFORGE_ASSETS.module_engine;
+            }
+            if (def.cat === 'tactical') {
+                if (def.id === 15 || def.id === 22) return KSTARFORGE_ASSETS.module_shield;
+                return KSTARFORGE_ASSETS.module_tactical;
+            }
+            if (def.cat === 'weapon') {
+                return KSTARFORGE_ASSETS.module_weapon;
+            }
+            if (def.cat === 'utility') {
+                if (def.id === 20) return KSTARFORGE_ASSETS.module_mining;
+                return KSTARFORGE_ASSETS.module_utility;
+            }
+            return null;
+        }
+
         function setupBpCanvas() {
             const dpr = Math.max(1, window.devicePixelRatio || 1);
             bpCanvas.width = Math.round(560 * dpr);
@@ -2221,10 +2293,14 @@
             ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
             ctx.strokeRect(px + 1, py + 1, sz - 2, sz - 2);
 
-            const cx = px + sz / 2;
-            const cy = py + sz / 2;
+            const spr = getModuleSprite(def);
+            if (spr && spr.loaded) {
+                ctx.drawImage(spr.img, px + 2, py + 2, sz - 4, sz - 4);
+            } else {
+                const cx = px + sz / 2;
+                const cy = py + sz / 2;
 
-            ctx.save();
+                ctx.save();
             if (def.cat === 'hull') {
                 if (def.id === 3 || def.id === 4) {
                     // Bridge / Canopy: cockpit canopy arc with crosshairs
@@ -2406,7 +2482,8 @@
                     ctx.fillRect(cx - 2, py + sz - 8, 4, 4);
                 }
             }
-            ctx.restore();
+                ctx.restore();
+            }
 
             // Badge Letter in bottom-right corner
             ctx.fillStyle = '#ffffff';
@@ -2940,17 +3017,21 @@
             }
 
             // Gantry Scaffolding Frame
-            dryCtx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
-            dryCtx.lineWidth = 2;
-            dryCtx.strokeRect(100, 60, 560, 300);
+            if (KSTARFORGE_ASSETS.drydock_gantry.loaded) {
+                dryCtx.drawImage(KSTARFORGE_ASSETS.drydock_gantry.img, 100, 60, 560, 300);
+            } else {
+                dryCtx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+                dryCtx.lineWidth = 2;
+                dryCtx.strokeRect(100, 60, 560, 300);
 
-            // Gantry Girder Cross-Bracing
-            dryCtx.strokeStyle = 'rgba(30, 58, 100, 0.4)';
-            for (let x = 140; x < 660; x += 80) {
-                dryCtx.beginPath();
-                dryCtx.moveTo(x, 60);
-                dryCtx.lineTo(x + 40, 360);
-                dryCtx.stroke();
+                // Gantry Girder Cross-Bracing
+                dryCtx.strokeStyle = 'rgba(30, 58, 100, 0.4)';
+                for (let x = 140; x < 660; x += 80) {
+                    dryCtx.beginPath();
+                    dryCtx.moveTo(x, 60);
+                    dryCtx.lineTo(x + 40, 360);
+                    dryCtx.stroke();
+                }
             }
 
             // Draw current ship under construction in center
@@ -3127,45 +3208,50 @@
             ctx.save();
             ctx.translate(st.x, st.y);
 
-            // Gantry outer docking ring
-            ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(0, 0, st.radius, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // 4 Solar panel arrays with girder struts
-            for (let i = 0; i < 4; i++) {
-                ctx.save();
-                ctx.rotate((i * Math.PI) / 2);
-                ctx.strokeStyle = '#475569';
-                ctx.lineWidth = 3;
+            if (KSTARFORGE_ASSETS.station.loaded) {
+                const sDia = st.radius * 2.3;
+                ctx.drawImage(KSTARFORGE_ASSETS.station.img, -sDia / 2, -sDia / 2, sDia, sDia);
+            } else {
+                // Gantry outer docking ring
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+                ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.moveTo(st.radius * 0.4, 0);
-                ctx.lineTo(st.radius + 18, 0);
+                ctx.arc(0, 0, st.radius, 0, Math.PI * 2);
                 ctx.stroke();
 
-                // Solar panel cells
-                ctx.fillStyle = '#1e3a8a';
-                ctx.strokeStyle = '#38bdf8';
-                ctx.lineWidth = 0.8;
-                ctx.fillRect(st.radius + 6, -8, 20, 16);
-                ctx.strokeRect(st.radius + 6, -8, 20, 16);
-                ctx.restore();
+                // 4 Solar panel arrays with girder struts
+                for (let i = 0; i < 4; i++) {
+                    ctx.save();
+                    ctx.rotate((i * Math.PI) / 2);
+                    ctx.strokeStyle = '#475569';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(st.radius * 0.4, 0);
+                    ctx.lineTo(st.radius + 18, 0);
+                    ctx.stroke();
+
+                    // Solar panel cells
+                    ctx.fillStyle = '#1e3a8a';
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.lineWidth = 0.8;
+                    ctx.fillRect(st.radius + 6, -8, 20, 16);
+                    ctx.strokeRect(st.radius + 6, -8, 20, 16);
+                    ctx.restore();
+                }
+
+                // Central Pressurized Station Hub
+                ctx.fillStyle = '#0f172a';
+                ctx.strokeStyle = '#06b6d4';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, st.radius * 0.45, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Airlock / Docking Bay Aperture
+                ctx.fillStyle = '#0284c7';
+                ctx.fillRect(-st.radius * 0.22, -3, st.radius * 0.44, 6);
             }
-
-            // Central Pressurized Station Hub
-            ctx.fillStyle = '#0f172a';
-            ctx.strokeStyle = '#06b6d4';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(0, 0, st.radius * 0.45, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Airlock / Docking Bay Aperture
-            ctx.fillStyle = '#0284c7';
-            ctx.fillRect(-st.radius * 0.22, -3, st.radius * 0.44, 6);
 
             // Blinking port/starboard navigation beacons
             const blink = (time % 1000) < 500;
@@ -3212,55 +3298,61 @@
             ctx.translate(ast.x, ast.y);
             if (ast.rot !== undefined) ctx.rotate(ast.rot);
 
-            // Craggy polygon rock body
-            ctx.beginPath();
-            if (ast.pts && ast.pts.length > 0) {
-                ctx.moveTo(ast.pts[0].x, ast.pts[0].y);
-                for (let i = 1; i < ast.pts.length; i++) {
-                    ctx.lineTo(ast.pts[i].x, ast.pts[i].y);
+            const spr = ast.type === 0 ? KSTARFORGE_ASSETS.asteroid_titanium : (ast.type === 1 ? KSTARFORGE_ASSETS.asteroid_ferrite : KSTARFORGE_ASSETS.asteroid_deuterium);
+            if (spr && spr.loaded) {
+                const sz = ast.radius * 2.2;
+                ctx.drawImage(spr.img, -sz / 2, -sz / 2, sz, sz);
+            } else {
+                // Craggy polygon rock body
+                ctx.beginPath();
+                if (ast.pts && ast.pts.length > 0) {
+                    ctx.moveTo(ast.pts[0].x, ast.pts[0].y);
+                    for (let i = 1; i < ast.pts.length; i++) {
+                        ctx.lineTo(ast.pts[i].x, ast.pts[i].y);
+                    }
+                } else {
+                    ctx.arc(0, 0, ast.radius, 0, Math.PI * 2);
                 }
-            } else {
-                ctx.arc(0, 0, ast.radius, 0, Math.PI * 2);
-            }
-            ctx.closePath();
+                ctx.closePath();
 
-            const grad = ctx.createRadialGradient(-ast.radius * 0.3, -ast.radius * 0.3, 2, 0, 0, ast.radius);
-            if (ast.type === 0) {
-                grad.addColorStop(0, '#64748b');
-                grad.addColorStop(1, '#1e293b');
-                ctx.strokeStyle = '#475569';
-            } else if (ast.type === 1) {
-                grad.addColorStop(0, '#78350f');
-                grad.addColorStop(1, '#1c1917');
-                ctx.strokeStyle = '#92400e';
-            } else {
-                grad.addColorStop(0, '#4c1d95');
-                grad.addColorStop(1, '#0f172a');
-                ctx.strokeStyle = '#6d28d9';
-            }
-            ctx.fillStyle = grad;
-            ctx.fill();
-            ctx.lineWidth = 1.2;
-            ctx.stroke();
+                const grad = ctx.createRadialGradient(-ast.radius * 0.3, -ast.radius * 0.3, 2, 0, 0, ast.radius);
+                if (ast.type === 0) {
+                    grad.addColorStop(0, '#64748b');
+                    grad.addColorStop(1, '#1e293b');
+                    ctx.strokeStyle = '#475569';
+                } else if (ast.type === 1) {
+                    grad.addColorStop(0, '#78350f');
+                    grad.addColorStop(1, '#1c1917');
+                    ctx.strokeStyle = '#92400e';
+                } else {
+                    grad.addColorStop(0, '#4c1d95');
+                    grad.addColorStop(1, '#0f172a');
+                    ctx.strokeStyle = '#6d28d9';
+                }
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
 
-            // Embedded crystalline mineral veins
-            ctx.lineWidth = 1.2;
-            if (ast.type === 0) {
-                ctx.strokeStyle = '#38bdf8'; // Titanium cyan veins
-            } else if (ast.type === 1) {
-                ctx.strokeStyle = '#fb923c'; // Ferrite copper-orange veins
-            } else {
-                ctx.strokeStyle = '#c084fc'; // Deuterium violet ice
-            }
+                // Embedded crystalline mineral veins
+                ctx.lineWidth = 1.2;
+                if (ast.type === 0) {
+                    ctx.strokeStyle = '#38bdf8'; // Titanium cyan veins
+                } else if (ast.type === 1) {
+                    ctx.strokeStyle = '#fb923c'; // Ferrite copper-orange veins
+                } else {
+                    ctx.strokeStyle = '#c084fc'; // Deuterium violet ice
+                }
 
-            ctx.beginPath();
-            const r = ast.radius * 0.6;
-            ctx.moveTo(-r * 0.5, -r * 0.2);
-            ctx.lineTo(0, r * 0.3);
-            ctx.lineTo(r * 0.6, 0);
-            ctx.moveTo(-r * 0.2, r * 0.2);
-            ctx.lineTo(r * 0.3, r * 0.5);
-            ctx.stroke();
+                ctx.beginPath();
+                const r = ast.radius * 0.6;
+                ctx.moveTo(-r * 0.5, -r * 0.2);
+                ctx.lineTo(0, r * 0.3);
+                ctx.lineTo(r * 0.6, 0);
+                ctx.moveTo(-r * 0.2, r * 0.2);
+                ctx.lineTo(r * 0.3, r * 0.5);
+                ctx.stroke();
+            }
 
             ctx.restore();
         }
@@ -3272,7 +3364,26 @@
             const angle = Math.atan2(en.vy || 0.01, en.vx || 0.01);
             ctx.rotate(angle);
 
+            let spr = null;
+            let sz = 32;
             if (en.type === 'boss') {
+                spr = KSTARFORGE_ASSETS.vessel_dreadnought;
+                sz = 68;
+            } else if (en.type === 'interceptor') {
+                spr = KSTARFORGE_ASSETS.vessel_interceptor;
+                sz = 36;
+            } else if (en.type === 'gunship') {
+                spr = KSTARFORGE_ASSETS.vessel_gunship;
+                sz = 42;
+            } else {
+                spr = KSTARFORGE_ASSETS.vessel_sentry;
+                sz = 32;
+            }
+
+            if (spr && spr.loaded) {
+                ctx.drawImage(spr.img, -sz / 2, -sz / 2, sz, sz);
+            } else {
+                if (en.type === 'boss') {
                 // Corsair Dreadnought Flagship: massive command warship
                 ctx.fillStyle = '#450a0a';
                 ctx.strokeStyle = '#ef4444';
@@ -3376,6 +3487,7 @@
                 ctx.fill();
                 ctx.fillStyle = '#ef4444';
                 ctx.fillRect(1, -1.5, 3, 3);
+                }
             }
 
             ctx.restore();
@@ -3400,22 +3512,26 @@
             const time = Date.now() * 0.003;
             ctx.rotate(time);
 
-            // Rotating cargo pod diamond
-            ctx.fillStyle = '#0284c7';
-            ctx.strokeStyle = '#38bdf8';
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.moveTo(0, -7);
-            ctx.lineTo(7, 0);
-            ctx.lineTo(0, 7);
-            ctx.lineTo(-7, 0);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
+            if (KSTARFORGE_ASSETS.salvage_pod.loaded) {
+                ctx.drawImage(KSTARFORGE_ASSETS.salvage_pod.img, -14, -14, 28, 28);
+            } else {
+                // Rotating cargo pod diamond
+                ctx.fillStyle = '#0284c7';
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.moveTo(0, -7);
+                ctx.lineTo(7, 0);
+                ctx.lineTo(0, 7);
+                ctx.lineTo(-7, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
 
-            // Inner gold core
-            ctx.fillStyle = '#facc15';
-            ctx.fillRect(-2, -2, 4, 4);
+                // Inner gold core
+                ctx.fillStyle = '#facc15';
+                ctx.fillRect(-2, -2, 4, 4);
+            }
 
             ctx.restore();
         }
@@ -4487,27 +4603,31 @@
                 fCtx.translate(sk.x, sk.y);
                 fCtx.rotate(sk.angle);
 
-                // Engine flame
-                fCtx.fillStyle = '#f97316';
-                fCtx.beginPath();
-                fCtx.moveTo(-10, 18);
-                fCtx.lineTo(0, 28 + Math.random() * 8);
-                fCtx.lineTo(10, 18);
-                fCtx.fill();
+                if (KSTARFORGE_ASSETS.vessel_rival.loaded) {
+                    fCtx.drawImage(KSTARFORGE_ASSETS.vessel_rival.img, -24, -24, 48, 48);
+                } else {
+                    // Engine flame
+                    fCtx.fillStyle = '#f97316';
+                    fCtx.beginPath();
+                    fCtx.moveTo(-10, 18);
+                    fCtx.lineTo(0, 28 + Math.random() * 8);
+                    fCtx.lineTo(10, 18);
+                    fCtx.fill();
 
-                // Heavy hull polygon
-                fCtx.fillStyle = '#b91c1c';
-                fCtx.strokeStyle = '#f87171';
-                fCtx.lineWidth = 2;
-                fCtx.beginPath();
-                fCtx.moveTo(0, -22);
-                fCtx.lineTo(18, 14);
-                fCtx.lineTo(8, 18);
-                fCtx.lineTo(-8, 18);
-                fCtx.lineTo(-18, 14);
-                fCtx.closePath();
-                fCtx.fill();
-                fCtx.stroke();
+                    // Heavy hull polygon
+                    fCtx.fillStyle = '#b91c1c';
+                    fCtx.strokeStyle = '#f87171';
+                    fCtx.lineWidth = 2;
+                    fCtx.beginPath();
+                    fCtx.moveTo(0, -22);
+                    fCtx.lineTo(18, 14);
+                    fCtx.lineTo(8, 18);
+                    fCtx.lineTo(-8, 18);
+                    fCtx.lineTo(-18, 14);
+                    fCtx.closePath();
+                    fCtx.fill();
+                    fCtx.stroke();
+                }
 
                 // Shield bubble
                 if (sk.shield > 0) {

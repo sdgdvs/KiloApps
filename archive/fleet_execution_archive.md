@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T22:22:21-07:00 — kilo-usability: KStellar (Stall Circuit Breaker (Auto-Rotated After Consecutive Timeouts))**
+  - Status: ROTATED ⚠️ (circuit breaker triggered after 2 consecutive stalled turns on KStellar).
+  - Reverted unverified working tree edits and rotated KStellar to queue bottom so fleet execution continues.
+  - Handoff: Advanced `kilo-usability` to `KCalc`; rotated active agent to `kilo-qa`.
+
 - **2026-10-31T20:38:39-07:00 — kilo-tester: KStellar (Win32 C & Web Station Buttons, Combat Balance, Distress Beacon & Persistence Repairs)**
   - Status: PASS ✅ (0 errors, web 210.4 KB, native 165.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Win32 C Parity: Implemented handlers for ID_BTN_BUY_MED, ID_BTN_SELL_MED, ID_BTN_REPAIR, and ID_BTN_REFUEL; hid overlapping station buttons in ShowManualView, non-docked click, and combat.
