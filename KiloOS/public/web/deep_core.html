@@ -1523,6 +1523,19 @@
           <span class="prompt-symbol">CORE#</span>
           <input type="text" id="termInput" class="term-input" placeholder="Enter directive ('help', 'status', 'ls', 'cat', 'probe', 'dump', 'sectors', 'defuse', 'verify')..." autocomplete="off" spellcheck="false" autofocus />
         </div>
+        <div class="terminal-quick-bar" style="display:flex; gap:5px; padding:6px 10px; background:rgba(0,10,5,0.95); border-top:1px solid var(--border); overflow-x:auto; flex-wrap:wrap; align-items:center;">
+          <span style="font-size:10px; color:var(--phosphor-dim); text-transform:uppercase; letter-spacing:0.5px;">Directives:</span>
+          <button class="cmd-chip" data-cmd="vfs sync" style="color:var(--phosphor-bright); border-color:var(--border-bright); font-weight:700;">💾 vfs sync</button>
+          <button class="cmd-chip" data-cmd="kmatrix" style="color:var(--cyan); border-color:var(--cyan); font-weight:700;">⚡ kmatrix</button>
+          <button class="cmd-chip" data-cmd="vfs status">🔍 vfs status</button>
+          <button class="cmd-chip" data-cmd="vfs ls">📂 vfs ls</button>
+          <button class="cmd-chip" data-cmd="decode all">🔓 decode all</button>
+          <button class="cmd-chip" data-cmd="sectors">🛡️ sectors</button>
+          <button class="cmd-chip" data-cmd="probe vfs">📡 probe vfs</button>
+          <button class="cmd-chip" data-cmd="kcipher">🔒 kcipher</button>
+          <button class="cmd-chip" data-cmd="khex">🔢 khex</button>
+          <button class="cmd-chip" data-cmd="clear">🧹 clear</button>
+        </div>
       </div>
 
       <!-- TAB 2: SECTOR DEFUSAL WORKBENCH -->
@@ -2376,6 +2389,10 @@
           <span style="font-size:10px;">FAST-QUERY</span>
         </div>
         <div class="chip-grid">
+          <button class="cmd-chip" data-cmd="vfs sync" style="color:var(--phosphor-bright); border-color:var(--border-bright); font-weight:700;">vfs sync</button>
+          <button class="cmd-chip" data-cmd="kmatrix" style="color:var(--cyan); border-color:var(--cyan); font-weight:700;">kmatrix</button>
+          <button class="cmd-chip" data-cmd="vfs status">vfs status</button>
+          <button class="cmd-chip" data-cmd="vfs ls">vfs ls</button>
           <button class="cmd-chip" data-cmd="status">status</button>
           <button class="cmd-chip" data-cmd="ls">ls spool</button>
           <button class="cmd-chip" data-cmd="probe passkey">probe passkey</button>

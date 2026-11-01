@@ -2633,6 +2633,26 @@
     window.parent.postMessage({ type: 'VFS_READ', path: '/sys/anomaly_capture.sig', requestId: 'kmatrix_init_sig_' + Date.now() }, '*');
   } catch(e) {}
 
+  // Standalone VFS bridge fallback: verify /sys/alpha.sys from local storage if running unparented
+  setTimeout(() => {
+    try {
+      let alpha = localStorage.getItem('kilo_vfs_/sys/alpha.sys');
+      if (!alpha) {
+        const raw = localStorage.getItem('kiloos_vfs_state_v2');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed['/sys/alpha.sys']) alpha = parsed['/sys/alpha.sys'];
+        }
+      }
+      if (alpha) {
+        window.dispatchEvent(new MessageEvent('message', {
+          data: { type: 'VFS_READ_DONE', path: '/sys/alpha.sys', data: alpha }
+        }));
+      }
+    } catch(err) {}
+  }, 180);
+  } catch(e) {}
+
   renderHUD();
   initMatrixRain();
   printLine("KMATRIX // RETRO FORENSIC MASTER TERMINAL INITIALIZED", "cyan");

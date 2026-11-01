@@ -4060,7 +4060,7 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
   });
 
   window.addEventListener('message', (event) => {
-    if (event.origin !== window.location.origin) return;
+    if (event.origin && event.origin !== 'null' && event.origin !== window.location.origin) return;
     if (!event.data || typeof event.data !== 'object') return;
     const targetUrl = event.data.url || event.data.path || event.data.target;
     if ((event.data.type === 'NAVIGATE' || event.data.type === 'OPEN_URL' || event.data.type === 'KILO_OPEN_URL' || event.data.type === 'KNET_NAVIGATE') && targetUrl) {
