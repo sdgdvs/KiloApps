@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://deep-core
-  kilo_graphics: KSubmarine
+  kilo_graphics: KCosmic
   kilo_soundscape: KStellar
   kilo_tester: KSubmarine
   kilo_usability: KSubmarine
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://webring
-  timestamp: '2026-11-01T06:22:21-08:00'
+  agent: kilo-graphics
+  app: KSubmarine
+  timestamp: '2026-11-01T06:37:54-08:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KSubmarine`
+- **Active Target**: `KCosmic`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | **[ARGON REVIEW]:** Replace primitive geometric canvas and inline SVG programmer-art across ksubmarine.html (drawSubmarineSprite, drawLeviathanCreature, drawSquidCreature, drawFloraCreature, drawFaunaCreature, drawSalvageSprite, drawCombatDroneSprite, hydrothermal black smoker spire in drawSonarView/drawNavMapChart, and getFaunaVisualSvg) with Imagen 3 2-stage chroma-keyed sprites/atlas (<999 KB, zero perimeter border glints). — Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
@@ -116,6 +115,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | **[ARGON REVIEW]:** Replace primitive canvas polygon/rect programmer-art ships on #combat-canvas and #map-canvas (Player Cruiser, Corsair Interceptor, Corsair Marauder, Syndicate Dreadnought, Stealth Infiltrator, and roaming Federation/Traders/Pirate fleet icons) plus geometric SVG placeholders in getPlanetSvg()/getCommodityIcon() with Imagen 3 2-stage chroma-keyed spacefaring sprites and orbital station/anomaly illustrations (<999 KB, zero perimeter border glints). — 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art across kstarforge.html (drawModuleBlueprintGlyph, drawDrydockScene, drawStarforgeStation, drawAsteroid, drawEnemyVessel, drawSalvagePod, and skirmish rival rendering) with Imagen 3 2-stage chroma-keyed sprites/atlas tiles for modular ship components, StarForge IX station & drydock gantry, 3 mineral asteroid types, salvage pods, and Syndicate/Marauder/Sentry/Corsair Dreadnought vessels (<999 KB, zero perimeter border glints). |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
+| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | **[ARGON REVIEW]:** Replace primitive geometric canvas and inline SVG programmer-art across ksubmarine.html (drawSubmarineSprite, drawLeviathanCreature, drawSquidCreature, drawFloraCreature, drawFaunaCreature, drawSalvageSprite, drawCombatDroneSprite, hydrothermal black smoker spire in drawSonarView/drawNavMapChart, and getFaunaVisualSvg) with Imagen 3 2-stage chroma-keyed sprites/atlas (<999 KB, zero perimeter border glints). — Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -303,6 +303,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T06:37:54-08:00 — kilo-graphics: KSubmarine (Imagen 3 Visual Assets & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 519.6 KB, native 260.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.56%, HEAD Δ 0.26%, 0 fail, 0 warn, 7.3s)).
+  - Integrated 2-stage chroma-keyed Imagen 3 sprites for bathysphere submarine, colossal trench leviathan, and abyssal squid, plus 5 adapted deep-sea sprites (benthic flora, anglerfish fauna, salvage pod, combat drone, and hydrothermal smoker) with graceful procedural fallbacks and upgraded Codex UI visual rendering.
+  - Zero perimeter border glints or specular rotations; fleet icon uniqueness confirmed.
+  - Handoff: Advanced `kilo-graphics` to `KCosmic`; rotated active agent to `kilo-tester`.
+
 - **2026-11-01T06:22:21-08:00 — kilo-creator: kweb://webring (RingMaster Canonical Nodes & Traversal Integration)**
   - Status: PASS (0 errors, web 460.8 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) into RingMaster topology map with latency-radar scaling & golden star spokes.
@@ -327,8 +333,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kchat_tutorialSeen flag, and Escape modal dismissals.
   - Dual Parity & Spool: Verified Web HTML + Win32 C parity, offline message spool, and channel switcher.
   - Mature Quarantine & Handoff: Promoted `KChat` to Mature archive; advanced `kilo-qa` to `KSys`; next agent `kilo-expander`.
-
-- **2026-11-01T04:22:19-08:00 — kilo-usability: KQuest (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-usability updates for KQuest across web and native targets.
-  - Handoff: Advanced `kilo-usability` to `KCalc`; rotated active agent to `kilo-qa`.

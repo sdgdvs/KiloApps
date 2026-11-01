@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T04:22:19-08:00 — kilo-usability: KQuest (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KQuest across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KCalc`; rotated active agent to `kilo-qa`.
+
 - **2026-11-01T03:40:16-08:00 — kilo-tester: KQuest (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KQuest across web and native targets.
