@@ -373,6 +373,34 @@ int LoadGameState(HWND hwnd) {
     return 1;
 }
 
+void ExportPaydataToFile(HWND hwnd, const char* filename, int value, int isContract) {
+    CreateDirectoryA("crypto", NULL);
+    char path[128];
+    wsprintfA(path, "crypto\\%s", filename);
+    HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char data[512];
+        wsprintfA(data,
+            "{\r\n"
+            "  \"header\": \"KCYBER_EXFIL_PAYDATA\",\r\n"
+            "  \"filename\": \"%s\",\r\n"
+            "  \"node\": \"NODE 0%d\",\r\n"
+            "  \"type\": \"%s\",\r\n"
+            "  \"credits\": %d,\r\n"
+            "  \"status\": \"EXFILTRATED\"\r\n"
+            "}\r\n",
+            filename, connected_node, isContract ? "CONTRACT_TARGET" : "CORPORATE_PAYDATA", value
+        );
+        DWORD written = 0;
+        WriteFile(hFile, data, (DWORD)lstrlenA(data), &written, NULL);
+        CloseHandle(hFile);
+        char msg[128];
+        wsprintfA(msg, "[PAYDATA] Stolen payload saved to %s", path);
+        PrintLine(hwnd, msg);
+        PrintLine(hwnd, "[WORKSTATION] Use KHex or KPad to inspect extracted binary.");
+    }
+}
+
 void PrintRunnerBriefing(HWND hwnd) {
     PrintLine(hwnd, "=================================================");
     PrintLine(hwnd, "NEURAL LINK ESTABLISHED // RUNNER ORIENTATION");
@@ -859,6 +887,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                     SpawnParticles(cr.right - 90, 85, 25, RGB(0, 255, 255), 1);
                     SpawnParticles(cr.right - 90, 85, 15, RGB(255, 255, 255), 3);
                     PrintLine(hwnd, "CONTRACT COMPLETE! Reward transferred.");
+                    ExportPaydataToFile(hwnd, active_mission_file, active_mission_reward, 1);
                     PlayAccessGranted();
                     active_mission_node = 0;
                     active_mission_file[0] = '\0';
@@ -875,6 +904,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                     RECT cr; GetClientRect(hwnd, &cr);
                     SpawnParticles(cr.right - 90, 85, 25, RGB(0, 255, 255), 1);
                     SpawnParticles(cr.right - 90, 85, 15, RGB(255, 255, 255), 3);
+                    ExportPaydataToFile(hwnd, args, node_files[connected_node].value, 0);
                     lstrcpyA(node_files[connected_node].name, "empty");
                     handled = 1;
                 }
@@ -931,6 +961,10 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, "  guide     - Open Runner's Guide (e.g. 'guide ice')");
         PrintLine(hwnd, "  save      - Quicksave cyberdeck state to kcyber_save.dat [F5]");
         PrintLine(hwnd, "  load      - Quickload state from kcyber_save.dat [F9]");
+        PrintLine(hwnd, "  export    - Export cyberdeck state to kcyber_save.dat");
+        PrintLine(hwnd, "  import    - Import state from kcyber_save.dat");
+        PrintLine(hwnd, "  inspect   - Inspect exfiltrated paydata via crypto/ directory");
+        PrintLine(hwnd, "  duel      - NetLink Intrusion Race multiplayer duel");
         PrintLine(hwnd, "  audio     - Toggle cyberdeck sound effects [Alt+M]");
         PrintLine(hwnd, "  tutorial  - Display runner orientation briefing");
         PrintLine(hwnd, "During hack:");
@@ -992,6 +1026,22 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         return;
     } else if (lstrcmpiA(command, "load") == 0 || lstrcmpiA(command, "quickload") == 0) {
         LoadGameState(hwnd);
+        return;
+    } else if (lstrcmpiA(command, "export") == 0) {
+        SaveGameState(hwnd);
+        PrintLine(hwnd, "[EXPORT] Cyberdeck state exported to kcyber_save.dat");
+        return;
+    } else if (lstrcmpiA(command, "import") == 0) {
+        LoadGameState(hwnd);
+        PrintLine(hwnd, "[IMPORT] Cyberdeck state imported from kcyber_save.dat");
+        return;
+    } else if (lstrcmpiA(command, "inspect") == 0) {
+        PrintLine(hwnd, "[WORKSTATION] Stolen paydata archived in crypto\\ directory.");
+        PrintLine(hwnd, "[WORKSTATION] Open KHex (khex.exe) or KPad (kpad.exe) to inspect payloads.");
+        return;
+    } else if (lstrcmpiA(command, "duel") == 0 || lstrcmpiA(command, "netlink") == 0) {
+        PrintLine(hwnd, "[NETLINK] NetLink Intrusion Race active in Gibson NetLink protocol.");
+        PrintLine(hwnd, "[NETLINK] Real-time multiplayer race available in KiloOS Web workstation.");
         return;
     } else if (lstrcmpiA(command, "tutorial") == 0 || lstrcmpiA(command, "briefing") == 0) {
         PrintRunnerBriefing(hwnd);

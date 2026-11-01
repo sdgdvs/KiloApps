@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>KCyber</title>
+  <script src="../assets/js/retro_multiplayer.js"></script>
   <style>
     body {
       margin: 0;
@@ -388,14 +389,24 @@
     <div class="deck-toolbar">
       <button class="deck-btn" onclick="quickSave()" title="Quicksave deck state [F5]">Save [F5]</button>
       <button class="deck-btn" onclick="quickLoad()" title="Quickload saved state [F9]">Load [F9]</button>
-      <button class="deck-btn" onclick="exportState()" title="Export state to JSON file">Export</button>
-      <button class="deck-btn" onclick="triggerImport()" title="Import state from JSON file">Import</button>
+      <button class="deck-btn" onclick="exportState()" title="Export state to JSON file or KiloOS VFS">Export</button>
+      <button class="deck-btn" onclick="triggerImport()" title="Import state from JSON file or KiloOS VFS">Import</button>
+      <button class="deck-btn" id="netlink-duel-btn" onclick="openNetLinkDuelModal()" title="NetLink Intrusion Race Duel [Online / AI Fallback]">NetLink Duel</button>
       <button class="deck-btn" onclick="toggleHelp()" title="Runner's Reference Manual [F1]">Help [F1]</button>
       <button class="deck-btn" onclick="showTutorial()" title="Deck Orientation Briefing">Briefing</button>
       <button class="deck-btn" onclick="processCommand('reboot')" title="Reboot Deck">Reboot</button>
       <button class="deck-btn" id="audio-toggle-btn" onclick="toggleAudio()" title="Toggle FM Soundscape [M / Alt+M]">BGM: ON</button>
       <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="handleImportFile(event)">
     </div>
+  </div>
+  <!-- NetLink Intrusion Race Live Duel HUD -->
+  <div id="duel-hud" style="display:none; background: #001406; border-bottom: 1px solid #00ff66; padding: 5px 12px; justify-content: space-between; align-items: center; font-size: 11.5px; z-index: 50; flex-wrap: wrap; gap: 8px;">
+    <span style="color:#00ffaa; font-weight:bold; letter-spacing: 0.5px;">⚔️ NETLINK RACE: <span id="duel-target-label" style="color:#fff;">BLACK-ICE-VAULT-07</span></span>
+    <div style="display:flex; gap:14px; align-items:center; flex-wrap: wrap;">
+      <div>YOU: <span id="duel-player-bar" style="color:#00ffff; font-family:monospace;">[          ]</span> <b id="duel-player-pct" style="color:#00ffff;">0%</b></div>
+      <div>RIVAL (<span id="duel-rival-name" style="color:#ff5577;">CORTEX-9</span>): <span id="duel-rival-bar" style="color:#ff5577; font-family:monospace;">[          ]</span> <b id="duel-rival-pct" style="color:#ff5577;">0%</b></div>
+    </div>
+    <button class="deck-btn" onclick="abortDuel()" style="font-size:10px; padding:2px 8px; border-color:#ff5566; color:#ff5566;">ABORT RACE</button>
   </div>
   <div id="cockpit-container">
     <div id="terminal" onclick="document.getElementById('cmd-input').focus()">
@@ -531,7 +542,238 @@
       </div>
     </div>
   </div>
+
+  <!-- NetLink Intrusion Race Duel Modal -->
+  <div id="netlink-duel-modal" class="modal-backdrop" style="display:none;" onclick="if(event.target===this)closeNetLinkDuelModal()">
+    <div class="modal-box" style="max-width: 580px;">
+      <div class="modal-header">
+        <span class="modal-title">⚔️ NETLINK INTRUSION RACE // DUAL RUNNER PROTOCOL</span>
+        <button class="close-btn" onclick="closeNetLinkDuelModal()">[X]</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 10px; color: #aaffcc;">
+          Jack into the Gibson NetLink matrix! Race against rival runners in a high-speed Black ICE decryption duel. The first runner to crack the node security layers and extract the Black Vault Core claims the 1,000 credit bounty.
+        </div>
+        <div class="tip-box" id="duel-status-box" style="margin-bottom: 12px; border-color: #00ffaa;">
+          <div style="font-weight: bold; color: #00ffaa; margin-bottom: 4px;">NETLINK STATUS:</div>
+          <div id="duel-status-msg" style="color: #fff;">OFFLINE (Jack in below to initiate duel connection)</div>
+          <div id="duel-timer-msg" style="color: #ffaa00; font-size: 11px; margin-top: 4px; display: none;">Solo AI Decker fallback in: <b id="duel-countdown-val">25</b>s</div>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+          <button id="btn-start-matchmaking" class="deck-btn primary-btn" onclick="startNetLinkMatchmaking()" style="flex: 1; padding: 7px 12px;">INITIATE NETLINK DUEL</button>
+          <button id="btn-abort-matchmaking" class="deck-btn" onclick="abortNetLinkMatchmaking()" style="display:none; color: #ff5566; border-color: #ff5566; padding: 7px 12px;">ABORT SEARCH</button>
+        </div>
+        <div style="border-top: 1px dashed #00ff6644; padding-top: 8px; margin-top: 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <span style="font-size: 11px; color: #88ffaa;">CUSTOM ROOM ID:</span>
+          <input type="text" id="netlink-custom-room" placeholder="CYBER_ROOM_CODE" style="background: #001a08; border: 1px solid #00ff66; color: #00ffaa; font-family: inherit; font-size: 11px; padding: 4px 6px; width: 140px; text-transform: uppercase;">
+          <button class="deck-btn" onclick="joinCustomNetLinkRoom()" style="font-size: 11px; padding: 4px 8px;">JOIN ROOM</button>
+        </div>
+        <div class="hotkey-box" style="margin-top: 12px;">
+          • <strong>Intrusion Mechanics</strong>: Guess 4-digit PINs, execute <code>probe</code>, <code>slow</code>, <code>cloak</code>, or <code>hack</code> to breach layers.<br>
+          • <strong>Mandate 12 Solo Fallback</strong>: If no human decker connects in 25s, AI runner 'CORTEX-9' will automatically engage.<br>
+          • <strong>Zero Autostart</strong>: Duel session only connects when authorized above.
+        </div>
+      </div>
+      <div style="margin-top: 12px; text-align: right;">
+        <button class="deck-btn" onclick="closeNetLinkDuelModal()" style="padding: 5px 14px; font-size: 12px;">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // =========================================================================
+    // Phase VI KiloOS Virtual Filesystem (VFS) & Inter-App IPC Mesh
+    // Standalone fallback: graceful Blob download and <input type="file"> picker.
+    // Security: strict event.origin === window.location.origin checks.
+    // Dialog cleanup: 60-second timeouts.
+    // =========================================================================
+    const KiloVFS = {
+      isSupported() {
+        return typeof window !== 'undefined' && window.parent && window.parent !== window;
+      },
+      write(path, data, notify = true) {
+        if (!KiloVFS.isSupported()) return;
+        try {
+          const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+          window.parent.postMessage({
+            type: 'VFS_WRITE',
+            path,
+            data: payload,
+            requestId: 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)
+          }, '*');
+          if (notify) {
+            window.parent.postMessage({
+              type: 'OS_NOTIFY',
+              title: document.title || 'KCyber',
+              message: `Saved to VFS: ${path}`
+            }, '*');
+          }
+        } catch (e) {
+          console.warn('[KiloVFS] write failed:', e);
+        }
+      },
+      read(path, cb) {
+        if (!KiloVFS.isSupported()) {
+          if (cb) cb(null, path);
+          return;
+        }
+        const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        let cleanupTimer = null;
+        const handler = (e) => {
+          if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+            return;
+          }
+          if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+            if (cleanupTimer) clearTimeout(cleanupTimer);
+            window.removeEventListener('message', handler);
+            if (cb) cb(e.data.data, e.data.path || path);
+          }
+        };
+        cleanupTimer = setTimeout(() => {
+          window.removeEventListener('message', handler);
+          if (cb) cb(null, path);
+        }, 60000); // 60s dialog cleanup timeout
+        window.addEventListener('message', handler);
+        try {
+          window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
+        } catch (e) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (cb) cb(null, path);
+        }
+      },
+      showSave(defaultPath, data, cb) {
+        if (!KiloVFS.isSupported()) {
+          if (cb) cb(null);
+          return;
+        }
+        const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        let cleanupTimer = null;
+        const handler = (e) => {
+          if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+            return;
+          }
+          if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+            if (cleanupTimer) clearTimeout(cleanupTimer);
+            window.removeEventListener('message', handler);
+            if (e.data.path) {
+              KiloVFS.write(e.data.path, data, true);
+              if (cb) cb(e.data.path);
+            } else if (cb) {
+              cb(null);
+            }
+          }
+        };
+        cleanupTimer = setTimeout(() => {
+          window.removeEventListener('message', handler);
+          if (cb) cb(null);
+        }, 60000); // 60s dialog cleanup timeout
+        window.addEventListener('message', handler);
+        try {
+          window.parent.postMessage({
+            type: 'VFS_SHOW_SAVE',
+            requestId: reqId,
+            defaultPath: defaultPath,
+            path: defaultPath
+          }, '*');
+        } catch (e) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (cb) cb(null);
+        }
+      },
+      showOpen(cb) {
+        if (!KiloVFS.isSupported()) {
+          if (cb) cb(null, null);
+          return;
+        }
+        const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        let cleanupTimer = null;
+        const handler = (e) => {
+          if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+            return;
+          }
+          if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+            if (cleanupTimer) clearTimeout(cleanupTimer);
+            window.removeEventListener('message', handler);
+            if (e.data.path) {
+              KiloVFS.read(e.data.path, cb);
+            } else if (cb) {
+              cb(null, null);
+            }
+          }
+        };
+        cleanupTimer = setTimeout(() => {
+          window.removeEventListener('message', handler);
+          if (cb) cb(null, null);
+        }, 60000); // 60s dialog cleanup timeout
+        window.addEventListener('message', handler);
+        try {
+          window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
+        } catch (e) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (cb) cb(null, null);
+        }
+      },
+      launchApp(targetApp, path = '') {
+        try {
+          window.parent.postMessage({
+            type: 'OS_LAUNCH_APP',
+            targetApp,
+            appId: targetApp,
+            path
+          }, '*');
+          window.parent.postMessage({
+            type: 'OS_NOTIFY',
+            title: 'KCyber Workstation IPC',
+            message: `Inspecting in ${targetApp.toUpperCase()}: ${path}`
+          }, '*');
+        } catch (e) {
+          console.warn('[KiloVFS] launchApp failed:', e);
+        }
+      }
+    };
+
+    // Incoming VFS / KiloOS Shell Message Dispatcher
+    window.addEventListener('message', (e) => {
+      if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+        return;
+      }
+      const msg = e.data;
+      if (!msg || typeof msg !== 'object') return;
+      if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+        const filePath = msg.path || '';
+        const fileContent = msg.data !== undefined ? msg.data : msg.content;
+        if (fileContent !== undefined && fileContent !== null) {
+          handleIncomingFileContent(fileContent, filePath);
+        } else if (filePath) {
+          KiloVFS.read(filePath, (data, path) => {
+            if (data) {
+              handleIncomingFileContent(data, path || filePath);
+            } else {
+              showToast(`⚠ Could not read VFS file: ${filePath}`, true);
+            }
+          });
+        }
+      }
+    });
+
+    function handleIncomingFileContent(raw, path) {
+      try {
+        const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        if (applyGameState(data)) {
+          printLine(`[VFS AUTO-LOAD] Cyberdeck session restored from: ${path || 'system'}`);
+          printLine(`                MEM: ${player_mem}/${player_max_mem} | Credits: ${player_credits} cr | Heat: ${player_heat}%`);
+          showToast('💾 Session loaded from VFS!');
+          playAccessGranted();
+        } else {
+          printLine(`[VFS LOAD] File ${path} does not match KCyber save structure.`);
+        }
+      } catch (err) {
+        printLine(`[VFS LOAD ERROR] Failed to parse ${path}: ${err.message}`);
+      }
+    }
     const outputDiv = document.getElementById('output');
     const cmdInput = document.getElementById('cmd-input');
     const terminalDiv = document.getElementById('terminal');
@@ -1237,6 +1479,8 @@
       if (tm && tm.style.display !== 'none' && tm.style.display !== '') return true;
       const hm = document.getElementById('help-modal');
       if (hm && hm.style.display !== 'none' && hm.style.display !== '') return true;
+      const dm = document.getElementById('netlink-duel-modal');
+      if (dm && dm.style.display !== 'none' && dm.style.display !== '') return true;
       return false;
     }
 
@@ -1274,6 +1518,11 @@
       const hm = document.getElementById('help-modal');
       if (hm && hm.style.display !== 'none' && hm.style.display !== '') {
         toggleHelp(false);
+        return true;
+      }
+      const dm = document.getElementById('netlink-duel-modal');
+      if (dm && dm.style.display !== 'none' && dm.style.display !== '') {
+        closeNetLinkDuelModal();
         return true;
       }
       return false;
@@ -1403,25 +1652,60 @@
 
     function exportState() {
       const state = getGameState();
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `kcyber_deck_${Date.now()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      printLine('[EXPORT] Cyberdeck state successfully exported to JSON file.');
-      showToast('💾 State exported to file!');
-      playAccessGranted();
+      const defaultPath = '/home/saves/kcyber_deck.json';
+      if (KiloVFS.isSupported()) {
+        KiloVFS.showSave(defaultPath, state, (savedPath) => {
+          if (savedPath) {
+            printLine(`[VFS EXPORT] Cyberdeck state saved to ${savedPath}.`);
+            showToast(`💾 State saved to VFS: ${savedPath}!`);
+            playAccessGranted();
+          } else {
+            printLine('[EXPORT] VFS save dialog closed or cancelled.');
+          }
+        });
+      } else {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `kcyber_deck_${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        printLine('[EXPORT] Cyberdeck state successfully exported to JSON file.');
+        showToast('💾 State exported to file!');
+        playAccessGranted();
+      }
     }
 
     function triggerImport() {
-      const fi = document.getElementById('import-file-input');
-      if (fi) {
-        fi.value = '';
-        fi.click();
+      if (KiloVFS.isSupported()) {
+        KiloVFS.showOpen((data, path) => {
+          if (data) {
+            try {
+              const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+              if (applyGameState(parsed)) {
+                printLine(`[VFS IMPORT] Cyberdeck state restored from ${path || '/home/saves/kcyber_deck.json'}.`);
+                printLine(`           MEM: ${player_mem}/${player_max_mem} | Credits: ${player_credits} cr | Heat: ${player_heat}%`);
+                showToast('💾 State restored from VFS!');
+                playAccessGranted();
+              } else {
+                throw new Error('Incompatible save structure');
+              }
+            } catch (err) {
+              printLine('[IMPORT ERROR] Invalid JSON data in VFS save file.');
+              showToast('⚠ Import failed (corrupt file)!', true);
+              playAccessDenied();
+            }
+          }
+        });
+      } else {
+        const fi = document.getElementById('import-file-input');
+        if (fi) {
+          fi.value = '';
+          fi.click();
+        }
       }
     }
 
@@ -1447,6 +1731,463 @@
         }
       };
       reader.readAsText(file);
+    }
+
+    // =========================================================================
+    // PAYDATA EXFILTRATION & KILOOS VFS WORKSTATION BRIDGE (/home/crypto/)
+    // =========================================================================
+    let lastExfiltratedPaydataPath = '';
+
+    function exportPaydataPayload(fileName, creditVal, isContract) {
+      const sanitized = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const vfsPath = `/home/crypto/${sanitized}`;
+      lastExfiltratedPaydataPath = vfsPath;
+
+      const hexBytes = [];
+      for (let i = 0; i < 32; i++) {
+        hexBytes.push((Math.floor(Math.random() * 256)).toString(16).padStart(2, '0').toUpperCase());
+      }
+      const hexDump1 = hexBytes.slice(0, 16).join(' ');
+      const hexDump2 = hexBytes.slice(16, 32).join(' ');
+
+      const payloadObj = {
+        header: "KCYBER_EXFIL_PAYDATA_v1.0",
+        filename: fileName,
+        vfs_path: vfsPath,
+        source_node: `NODE 0${connected_node || 'X'}`,
+        classification: isContract ? "CLASSIFIED_BOUNTY_INTEL" : "RESTRICTED_CORPORATE_PAYDATA",
+        credit_valuation: creditVal,
+        timestamp_utc: new Date().toISOString(),
+        extracted_by: "root@cyberdeck",
+        security_signature: "SIG0x" + Math.floor(Math.random() * 0xFFFFFFFF).toString(16).toUpperCase(),
+        hex_dump: `${hexDump1}  |  ${hexDump2}`,
+        decrypted_records: [
+          `TARGET_FILE: ${fileName}`,
+          `ORIGIN_SUBNET: NODE_0${connected_node}`,
+          `EXTRACTION_VECTOR: NEURAL_ICEBREAKER_SIPHON`,
+          `SECURITY_CLEARANCE: RUNNER_LEVEL_5`,
+          `DATA_STREAM_BEGIN`,
+          `0x0000: 4B 43 59 42 45 52 5F 56 46 53 5F 43 52 59 50 54`,
+          `0x0010: ${hexBytes.slice(0, 16).join(' ')}`,
+          `DATA_STREAM_END`
+        ]
+      };
+
+      const payloadText = JSON.stringify(payloadObj, null, 2);
+
+      // Persist directly to KiloOS VFS /home/crypto/
+      KiloVFS.write(vfsPath, payloadText, true);
+
+      // Standalone fallback download if not inside KiloOS shell
+      if (!KiloVFS.isSupported()) {
+        try {
+          const blob = new Blob([payloadText], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = sanitized;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (e) {}
+      }
+
+      printLine(`[PAYDATA EXFILTRATION] Payload written to VFS: ${vfsPath}`);
+      renderPaydataAction(vfsPath, fileName);
+    }
+
+    function renderPaydataAction(vfsPath, fileName) {
+      const line = document.createElement('div');
+      line.className = 'line';
+      line.style.margin = '4px 0 6px 0';
+      line.style.padding = '6px 10px';
+      line.style.background = '#001a08';
+      line.style.border = '1px solid #00ff66';
+      line.style.borderRadius = '3px';
+      line.style.display = 'inline-block';
+      line.innerHTML = `
+        <span style="color:#00ffaa; font-weight:bold;">⚡ EXFILTRATED PAYLOAD: </span>
+        <span style="color:#ffffff;">${fileName}</span>
+        <span style="color:#888; font-size:11px;"> (${vfsPath})</span>
+        <div style="margin-top: 5px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+          <button class="deck-btn" style="background:#003314; color:#00ffaa; border-color:#00ffaa; font-size:11px; padding:2px 8px;" onclick="KiloVFS.launchApp('khex', '${vfsPath}')">Inspect in KHex</button>
+          <button class="deck-btn" style="background:#003314; color:#00ffaa; border-color:#00ffaa; font-size:11px; padding:2px 8px;" onclick="KiloVFS.launchApp('kpad', '${vfsPath}')">Inspect in KPad</button>
+          <span style="color:#666; font-size:10px;">or type 'inspect khex' / 'inspect kpad'</span>
+        </div>
+      `;
+      outputDiv.appendChild(line);
+      outputDiv.scrollTop = outputDiv.scrollHeight;
+      terminalDiv.scrollTop = terminalDiv.scrollHeight;
+    }
+
+    // =========================================================================
+    // RETRO MULTIPLAYER SERVICE (RFMS) - NETLINK INTRUSION RACE DUEL
+    // Strictly behind explicit toolbar button (zero autostart).
+    // Solo fallback with 25000ms timeout for rival AI runner.
+    // =========================================================================
+    let rMultiplayer = null;
+    let duelActive = false;
+    let duelOpponentName = 'Rival Decker';
+    let duelOpponentProgress = 0; // 0 to 100
+    let duelPlayerProgress = 0;   // 0 to 100
+    let duelTargetPin = '5821';
+    let duelAiTimer = null;
+    let duelCountdownTimer = null;
+    let duelCountdownSec = 25;
+    let isDuelSoloFallback = false;
+    let duelWinner = null;
+
+    function openNetLinkDuelModal() {
+      const m = document.getElementById('netlink-duel-modal');
+      if (m) {
+        m.style.display = 'flex';
+        if (cmdInput) cmdInput.blur();
+      }
+    }
+
+    function closeNetLinkDuelModal() {
+      const m = document.getElementById('netlink-duel-modal');
+      if (m) m.style.display = 'none';
+      if (!duelActive && cmdInput) cmdInput.focus();
+    }
+
+    function updateDuelStatus(msg, timerActive = false) {
+      const statusEl = document.getElementById('duel-status-msg');
+      if (statusEl) statusEl.textContent = msg;
+      const timerEl = document.getElementById('duel-timer-msg');
+      if (timerEl) timerEl.style.display = timerActive ? 'block' : 'none';
+    }
+
+    function startNetLinkMatchmaking(customRoom = null) {
+      if (typeof RetroMultiplayer === 'undefined') {
+        showToast('⚠ RetroMultiplayer library not loaded!', true);
+        updateDuelStatus('ERROR: RetroMultiplayer module unavailable.');
+        return;
+      }
+      if (rMultiplayer) {
+        try { rMultiplayer.disconnect(); } catch (e) {}
+        rMultiplayer = null;
+      }
+
+      document.getElementById('btn-start-matchmaking').style.display = 'none';
+      document.getElementById('btn-abort-matchmaking').style.display = 'inline-block';
+
+      duelCountdownSec = 25;
+      const countdownEl = document.getElementById('duel-countdown-val');
+      if (countdownEl) countdownEl.textContent = String(duelCountdownSec);
+      updateDuelStatus('Connecting to Gibson NetLink subnet... Searching for rival runners...', true);
+
+      if (duelCountdownTimer) clearInterval(duelCountdownTimer);
+      duelCountdownTimer = setInterval(() => {
+        duelCountdownSec--;
+        if (countdownEl) countdownEl.textContent = String(Math.max(0, duelCountdownSec));
+        if (duelCountdownSec <= 0) {
+          clearInterval(duelCountdownTimer);
+          duelCountdownTimer = null;
+        }
+      }, 1000);
+
+      try {
+        const runnerName = 'Decker_' + Math.random().toString(36).slice(2, 6).toUpperCase();
+        const opts = {
+          gameId: 'kcyber',
+          prefix: 'CYBER',
+          playerName: runnerName,
+          soloTimeoutMs: 25000,
+          onOpponentJoin: ({ slot, name }) => {
+            if (duelCountdownTimer) clearInterval(duelCountdownTimer);
+            duelOpponentName = name || 'Challenger';
+            showToast(`⚔️ Rival decker ${duelOpponentName} jacked in! DUEL ENGAGED!`);
+            startDuel(duelOpponentName, false);
+          },
+          onOpponentLeave: ({ name }) => {
+            showToast(`⚠️ Rival runner ${name || 'Opponent'} disconnected!`);
+            if (duelActive && !duelWinner) {
+              endDuel('player', 'Rival disconnected from NetLink subnet!');
+            }
+          },
+          onMove: (move) => {
+            handleDuelRemoteMove(move);
+          },
+          onSoloFallback: ({ reason }) => {
+            handleDuelSoloFallback();
+          },
+          onStatusMsg: (msg) => {
+            updateDuelStatus(msg, duelCountdownTimer !== null);
+          }
+        };
+        if (customRoom) opts.roomId = customRoom;
+
+        rMultiplayer = new RetroMultiplayer(opts);
+        rMultiplayer.init().then(({ onlineAvailable, inviteCode }) => {
+          if (inviteCode) {
+            updateDuelStatus(`Matchmaking active on NetLink. Invite code: ${inviteCode}`);
+          }
+        }).catch(err => {
+          console.warn('[KCyber] RFMS init failed, falling back to simulated duel:', err);
+          handleDuelSoloFallback();
+        });
+      } catch (err) {
+        console.warn('[KCyber] RFMS exception:', err);
+        handleDuelSoloFallback();
+      }
+    }
+
+    function abortNetLinkMatchmaking() {
+      if (duelCountdownTimer) {
+        clearInterval(duelCountdownTimer);
+        duelCountdownTimer = null;
+      }
+      if (rMultiplayer) {
+        try { rMultiplayer.disconnect(); } catch (e) {}
+        rMultiplayer = null;
+      }
+      document.getElementById('btn-start-matchmaking').style.display = 'inline-block';
+      document.getElementById('btn-abort-matchmaking').style.display = 'none';
+      updateDuelStatus('OFFLINE (Jack in below to initiate duel connection)', false);
+      showToast('NetLink search aborted.');
+    }
+
+    function joinCustomNetLinkRoom() {
+      const inp = document.getElementById('netlink-custom-room');
+      const code = inp ? inp.value.trim().toUpperCase() : '';
+      if (!code) {
+        showToast('Enter a valid room code.', true);
+        return;
+      }
+      startNetLinkMatchmaking(code);
+    }
+
+    function handleDuelSoloFallback() {
+      if (duelCountdownTimer) {
+        clearInterval(duelCountdownTimer);
+        duelCountdownTimer = null;
+      }
+      isDuelSoloFallback = true;
+      duelOpponentName = 'CORTEX-9 [AI]';
+      showToast('⚡ Solo fallback triggered! Rival AI runner CORTEX-9 breached the subnet!');
+      startDuel(duelOpponentName, true);
+    }
+
+    function startDuel(oppName, isAi) {
+      duelActive = true;
+      duelWinner = null;
+      duelOpponentName = oppName;
+      duelPlayerProgress = 0;
+      duelOpponentProgress = 0;
+      isDuelSoloFallback = isAi;
+
+      duelTargetPin = String(Math.floor(1000 + Math.random() * 9000));
+
+      closeNetLinkDuelModal();
+      document.getElementById('btn-start-matchmaking').style.display = 'inline-block';
+      document.getElementById('btn-abort-matchmaking').style.display = 'none';
+
+      const hud = document.getElementById('duel-hud');
+      if (hud) hud.style.display = 'flex';
+      const rivalLabel = document.getElementById('duel-rival-name');
+      if (rivalLabel) rivalLabel.textContent = oppName;
+      updateDuelHud();
+
+      printLine('========================================================================');
+      printLine('⚔️ NETLINK INTRUSION RACE ENGAGED // TARGET: BLACK-ICE-VAULT-07');
+      printLine(`   Rival Runner: ${oppName} has established an active neural siphon.`);
+      printLine('   RACE OBJECTIVE: Crack the 4-digit master cipher or exploit ICE layers.');
+      printLine('   Type 4-digit PIN guesses (e.g. 7492), or commands: probe, cloak, slow, hack.');
+      printLine('   First runner to reach 100% extraction wins the 1,000 credit bounty!');
+      printLine('========================================================================');
+      playAccessGranted();
+
+      if (duelAiTimer) clearInterval(duelAiTimer);
+      if (isAi) {
+        duelAiTimer = setInterval(() => {
+          if (!duelActive || duelWinner) return;
+          const gain = Math.floor(Math.random() * 12) + 8;
+          duelOpponentProgress = Math.min(100, duelOpponentProgress + gain);
+          updateDuelHud();
+          const actions = [
+            "dispatched brute-force PIN permutation",
+            "injected polymorphic ICE exploit",
+            "bypassed secondary firewall buffer",
+            "siphoned encrypted sector block",
+            "executed heuristic probe on master vault"
+          ];
+          const act = actions[Math.floor(Math.random() * actions.length)];
+          printLine(`[RIVAL FEED] ${duelOpponentName} ${act} (+${gain}% -> ${duelOpponentProgress}%).`);
+          if (duelOpponentProgress >= 100) {
+            endDuel('opponent', `${duelOpponentName} breached the vault core and extracted paydata first!`);
+          }
+        }, 2800);
+      }
+    }
+
+    function handleDuelRemoteMove(move) {
+      if (!duelActive || !move || typeof move !== 'object') return;
+      if (move.type === 'progress') {
+        duelOpponentProgress = Math.min(100, move.progress || 0);
+        updateDuelHud();
+        if (move.log) {
+          printLine(`[RIVAL FEED] ${duelOpponentName}: ${move.log} (${duelOpponentProgress}%)`);
+        }
+        if (duelOpponentProgress >= 100 && !duelWinner) {
+          endDuel('opponent', `${duelOpponentName} completed extraction first!`);
+        }
+      } else if (move.type === 'slow') {
+        duelPlayerProgress = Math.max(0, duelPlayerProgress - 15);
+        updateDuelHud();
+        printLine(`[NETLINK WARNING] ${duelOpponentName} deployed Slow exploit! Your progress dropped to ${duelPlayerProgress}%.`);
+      }
+    }
+
+    function updateDuelHud() {
+      const pBar = document.getElementById('duel-player-bar');
+      const pPct = document.getElementById('duel-player-pct');
+      const rBar = document.getElementById('duel-rival-bar');
+      const rPct = document.getElementById('duel-rival-pct');
+
+      function makeBar(pct) {
+        const filled = Math.min(10, Math.floor(pct / 10));
+        return '[' + '='.repeat(filled) + ' '.repeat(10 - filled) + ']';
+      }
+
+      if (pBar) pBar.textContent = makeBar(duelPlayerProgress);
+      if (pPct) pPct.textContent = `${duelPlayerProgress}%`;
+      if (rBar) rBar.textContent = makeBar(duelOpponentProgress);
+      if (rPct) rPct.textContent = `${duelOpponentProgress}%`;
+    }
+
+    function handleDuelCommand(trimmed) {
+      if (!duelActive) return false;
+      const lower = trimmed.toLowerCase();
+
+      if (lower === 'abort' || lower === 'disconnect' || lower === 'exit') {
+        abortDuel();
+        return true;
+      }
+
+      if (/^\d{4}$/.test(lower)) {
+        let exact = 0;
+        for (let i = 0; i < 4; i++) {
+          if (lower[i] === duelTargetPin[i]) exact++;
+        }
+        if (exact === 4) {
+          duelPlayerProgress = 100;
+          updateDuelHud();
+          if (rMultiplayer) {
+            try { rMultiplayer.sendMove({ type: 'progress', progress: 100, log: 'CRACKED MASTER CIPHER!' }); } catch (e) {}
+          }
+          endDuel('player', `MASTER CIPHER ${lower} CRACKED! Vault core breached!`);
+          return true;
+        } else {
+          const gain = 15 + exact * 10;
+          duelPlayerProgress = Math.min(95, duelPlayerProgress + gain);
+          updateDuelHud();
+          printLine(`[NETLINK CIPHER] Guess '${lower}' -> ${exact}/4 digits confirmed in position. Penetration: ${duelPlayerProgress}%.`);
+          if (rMultiplayer) {
+            try { rMultiplayer.sendMove({ type: 'progress', progress: duelPlayerProgress, log: `Cipher guess ${exact}/4 exact` }); } catch (e) {}
+          }
+          return true;
+        }
+      }
+
+      if (lower === 'probe') {
+        const unrevealedIdx = Math.floor(Math.random() * 4);
+        const digit = duelTargetPin[unrevealedIdx];
+        duelPlayerProgress = Math.min(95, duelPlayerProgress + 20);
+        updateDuelHud();
+        printLine(`[PROBE] Heuristic probe revealed digit at pos ${unrevealedIdx + 1}: '${digit}'. Penetration: ${duelPlayerProgress}%.`);
+        if (rMultiplayer) {
+          try { rMultiplayer.sendMove({ type: 'progress', progress: duelPlayerProgress, log: 'Heuristic probe deployed' }); } catch (e) {}
+        }
+        return true;
+      }
+
+      if (lower === 'cloak') {
+        duelPlayerProgress = Math.min(95, duelPlayerProgress + 15);
+        updateDuelHud();
+        printLine(`[CLOAK] Cloaked trace signature from subnet countermeasures. Penetration: ${duelPlayerProgress}%.`);
+        if (rMultiplayer) {
+          try { rMultiplayer.sendMove({ type: 'progress', progress: duelPlayerProgress, log: 'Cloaked trace' }); } catch (e) {}
+        }
+        return true;
+      }
+
+      if (lower === 'slow') {
+        duelOpponentProgress = Math.max(0, duelOpponentProgress - 15);
+        updateDuelHud();
+        printLine(`[SLOW] Injected latency packet into ${duelOpponentName}'s connection! Rival dropped to ${duelOpponentProgress}%.`);
+        if (rMultiplayer) {
+          try { rMultiplayer.sendMove({ type: 'slow' }); } catch (e) {}
+        }
+        return true;
+      }
+
+      if (lower === 'hack' || lower === 'attack') {
+        duelPlayerProgress = Math.min(95, duelPlayerProgress + 18);
+        updateDuelHud();
+        printLine(`[EXPLOIT] High-frequency siphon applied (+18%). Penetration: ${duelPlayerProgress}%.`);
+        if (rMultiplayer) {
+          try { rMultiplayer.sendMove({ type: 'progress', progress: duelPlayerProgress, log: 'High-frequency siphon' }); } catch (e) {}
+        }
+        if (duelPlayerProgress >= 100) {
+          endDuel('player', 'Vault security layers completely stripped!');
+        }
+        return true;
+      }
+
+      return false;
+    }
+
+    function abortDuel() {
+      if (!duelActive) return;
+      duelActive = false;
+      if (duelAiTimer) {
+        clearInterval(duelAiTimer);
+        duelAiTimer = null;
+      }
+      if (rMultiplayer) {
+        try { rMultiplayer.disconnect(); } catch (e) {}
+        rMultiplayer = null;
+      }
+      const hud = document.getElementById('duel-hud');
+      if (hud) hud.style.display = 'none';
+      printLine('[NETLINK] Intrusion race aborted. Neural link to subnet severed.');
+      showToast('NetLink duel aborted.', true);
+      updatePrompt();
+    }
+
+    function endDuel(winner, reason) {
+      if (!duelActive) return;
+      duelWinner = winner;
+      duelActive = false;
+      if (duelAiTimer) {
+        clearInterval(duelAiTimer);
+        duelAiTimer = null;
+      }
+      if (rMultiplayer) {
+        try { rMultiplayer.disconnect(); } catch (e) {}
+        rMultiplayer = null;
+      }
+      const hud = document.getElementById('duel-hud');
+      if (hud) hud.style.display = 'none';
+
+      printLine('========================================================================');
+      if (winner === 'player') {
+        player_credits += 1000;
+        playCreditChime();
+        playAccessGranted();
+        printLine(`🏆 DUEL VICTORY! ${reason}`);
+        printLine('   Awarded +1,000 credits to cyberdeck balance.');
+        exportPaydataPayload('black_vault_core.dat', 1000, true);
+        showToast('🏆 DUEL VICTORY! +1000 cr & Core Paydata saved to VFS!', false);
+      } else {
+        playAccessDenied();
+        printLine(`⚠ DUEL DEFEAT: ${reason}`);
+        showToast(`⚠ Race lost to ${duelOpponentName}!`, true);
+      }
+      printLine('========================================================================');
+      updatePrompt();
     }
 
     function generateMissions() {
@@ -2737,6 +3478,14 @@
         return;
       }
 
+      if (duelActive) {
+        printLine(`netlink> ${trimmed}`);
+        if (handleDuelCommand(trimmed)) {
+          updatePrompt();
+          return;
+        }
+      }
+
       if (in_shop) {
         printLine(`shop> ${trimmed}`);
         const args = trimmed.split(' ').filter(Boolean);
@@ -3210,6 +3959,7 @@
                printLine(`Download complete. Data value: ${active_mission.reward} credits.`);
                playCreditChime();
                printLine(`CONTRACT COMPLETE! Reward transferred (+${active_mission.reward} cr).`);
+               exportPaydataPayload(active_mission.file, active_mission.reward, true);
                active_mission = null;
                playAccessGranted();
                handled = true;
@@ -3220,6 +3970,7 @@
                spawnBurst(90, 80, 20, 'star', '#ffffff');
                printLine(`Download complete. Data value: ${file.value} credits.`);
                playCreditChime();
+               exportPaydataPayload(file.name, file.value, false);
                file.name = "empty";
                handled = true;
              }
@@ -3233,7 +3984,27 @@
            return;
         }
         
-        printLine("Command not found. Available: ls, download, contracts, status, clear, disconnect / exit");
+        if (cmd === 'inspect') {
+          const targetApp = (args[1] || 'khex').toLowerCase();
+          const filePath = args[2] || lastExfiltratedPaydataPath || '/home/crypto/paydata.zip';
+          if (targetApp === 'kpad' || targetApp === 'pad') {
+            printLine(`[IPC LAUNCH] Siphoning paydata to KPad: ${filePath}`);
+            KiloVFS.launchApp('kpad', filePath);
+          } else {
+            printLine(`[IPC LAUNCH] Siphoning paydata to KHex: ${filePath}`);
+            KiloVFS.launchApp('khex', filePath);
+          }
+          updatePrompt();
+          return;
+        }
+
+        if (cmd === 'duel' || cmd === 'netlink' || cmd === 'multiplayer') {
+          openNetLinkDuelModal();
+          updatePrompt();
+          return;
+        }
+
+        printLine("Command not found. Available: ls, download, inspect, contracts, status, clear, disconnect / exit");
         playAccessDenied();
         updatePrompt();
         return;
@@ -3260,8 +4031,10 @@
           printLine("  guide     - Open Runner's Guide (e.g. 'guide ice')");
           printLine("  save      - Quicksave cyberdeck state [F5]");
           printLine("  load      - Quickload state from storage [F9]");
-          printLine("  export    - Export deck state to JSON file");
-          printLine("  import    - Import deck state from JSON file");
+          printLine("  export    - Export deck state to JSON file or KiloOS VFS");
+          printLine("  import    - Import deck state from JSON file or KiloOS VFS");
+          printLine("  inspect   - Inspect exfiltrated paydata in KHex or KPad (e.g. 'inspect khex')");
+          printLine("  duel      - Open NetLink Intrusion Race multiplayer duel [RFMS]");
           printLine("  audio     - Toggle FM soundscape music & SFX [M]");
           printLine("  tutorial  - Show runner orientation briefing");
           printLine("  exit      - Show session exit guidance");
@@ -3335,6 +4108,24 @@
           break;
         case 'import':
           triggerImport();
+          break;
+        case 'inspect':
+          {
+            const targetApp = (args[1] || 'khex').toLowerCase();
+            const filePath = args[2] || lastExfiltratedPaydataPath || '/home/crypto/paydata.zip';
+            if (targetApp === 'kpad' || targetApp === 'pad') {
+              printLine(`[IPC LAUNCH] Siphoning paydata to KPad: ${filePath}`);
+              KiloVFS.launchApp('kpad', filePath);
+            } else {
+              printLine(`[IPC LAUNCH] Siphoning paydata to KHex: ${filePath}`);
+              KiloVFS.launchApp('khex', filePath);
+            }
+          }
+          break;
+        case 'duel':
+        case 'netlink':
+        case 'multiplayer':
+          openNetLinkDuelModal();
           break;
         case 'audio':
         case 'music':
