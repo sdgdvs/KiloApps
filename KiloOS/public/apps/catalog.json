@@ -83,15 +83,15 @@
     "id": "kbudget",
     "title": "KBudget",
     "folder": "Office",
-    "webBytes": 159652,
+    "webBytes": 156357,
     "exeBytes": 172544,
-    "budgetPercent": 16.0
+    "budgetPercent": 15.7
   },
   {
     "id": "kcalc",
     "title": "KCalc",
     "folder": "System",
-    "webBytes": 261471,
+    "webBytes": 261447,
     "exeBytes": 29184,
     "budgetPercent": 26.2
   },
@@ -115,9 +115,9 @@
     "id": "kchat",
     "title": "KChat",
     "folder": "Network",
-    "webBytes": 119071,
+    "webBytes": 116465,
     "exeBytes": 30208,
-    "budgetPercent": 11.9
+    "budgetPercent": 11.7
   },
   {
     "id": "kchatserver",
@@ -211,9 +211,9 @@
     "id": "kcontribute",
     "title": "KContribute",
     "folder": "System",
-    "webBytes": 34529,
+    "webBytes": 35721,
     "exeBytes": 159232,
-    "budgetPercent": 3.5
+    "budgetPercent": 3.6
   },
   {
     "id": "kconverter",
@@ -235,9 +235,9 @@
     "id": "kcyber",
     "title": "KCyber",
     "folder": "Games",
-    "webBytes": 132492,
+    "webBytes": 138689,
     "exeBytes": 37376,
-    "budgetPercent": 13.3
+    "budgetPercent": 13.9
   },
   {
     "id": "kdarts",
@@ -299,9 +299,9 @@
     "id": "kfleet",
     "title": "KFleet",
     "folder": "System",
-    "webBytes": 78600,
+    "webBytes": 81022,
     "exeBytes": 18432,
-    "budgetPercent": 7.9
+    "budgetPercent": 8.1
   },
   {
     "id": "kfont",
@@ -339,9 +339,9 @@
     "id": "kgraph",
     "title": "KGraph",
     "folder": "System",
-    "webBytes": 164115,
+    "webBytes": 159784,
     "exeBytes": 39424,
-    "budgetPercent": 16.4
+    "budgetPercent": 16.0
   },
   {
     "id": "khabit",
@@ -379,9 +379,9 @@
     "id": "kimage",
     "title": "KImage",
     "folder": "Media",
-    "webBytes": 176128,
+    "webBytes": 171707,
     "exeBytes": 27648,
-    "budgetPercent": 17.6
+    "budgetPercent": 17.2
   },
   {
     "id": "kjournal",
@@ -435,9 +435,9 @@
     "id": "kmech",
     "title": "KMech",
     "folder": "Games",
-    "webBytes": 192916,
+    "webBytes": 184826,
     "exeBytes": 39424,
-    "budgetPercent": 19.3
+    "budgetPercent": 18.5
   },
   {
     "id": "kmedia",
@@ -467,9 +467,9 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 213107,
+    "webBytes": 217977,
     "exeBytes": 57856,
-    "budgetPercent": 21.3
+    "budgetPercent": 21.8
   },
   {
     "id": "knetmap",
@@ -507,9 +507,9 @@
     "id": "kpaint",
     "title": "KPaint",
     "folder": "Media",
-    "webBytes": 276183,
+    "webBytes": 280925,
     "exeBytes": 41984,
-    "budgetPercent": 27.6
+    "budgetPercent": 28.1
   },
   {
     "id": "kpass",
@@ -547,9 +547,9 @@
     "id": "kquarantine",
     "title": "Q\u0337u\u0337a\u0337r\u0337a\u0337n\u0337t\u0337i\u0337n\u0337e\u0337",
     "folder": "Hidden",
-    "webBytes": 14459,
+    "webBytes": 14831,
     "exeBytes": null,
-    "budgetPercent": 1.4
+    "budgetPercent": 1.5
   },
   {
     "id": "kquest",
@@ -571,7 +571,7 @@
     "id": "kread",
     "title": "KRead",
     "folder": "System",
-    "webBytes": 166112,
+    "webBytes": 166110,
     "exeBytes": 31744,
     "budgetPercent": 16.6
   },
@@ -595,9 +595,9 @@
     "id": "krss",
     "title": "KRSS",
     "folder": "Network",
-    "webBytes": 198476,
+    "webBytes": 193402,
     "exeBytes": 22016,
-    "budgetPercent": 19.9
+    "budgetPercent": 19.4
   },
   {
     "id": "ksanctuary",
@@ -715,9 +715,9 @@
     "id": "ksynth",
     "title": "KSynth",
     "folder": "Media",
-    "webBytes": 192410,
+    "webBytes": 187613,
     "exeBytes": 29184,
-    "budgetPercent": 19.3
+    "budgetPercent": 18.8
   },
   {
     "id": "ksys",
@@ -739,9 +739,9 @@
     "id": "ktaskmgr",
     "title": "Task Manager",
     "folder": "System",
-    "webBytes": 50896,
+    "webBytes": 52417,
     "exeBytes": null,
-    "budgetPercent": 5.1
+    "budgetPercent": 5.2
   },
   {
     "id": "kterm",
@@ -763,9 +763,9 @@
     "id": "ktimer",
     "title": "KTimer",
     "folder": "System",
-    "webBytes": 113460,
+    "webBytes": 110368,
     "exeBytes": 33280,
-    "budgetPercent": 11.4
+    "budgetPercent": 11.0
   },
   {
     "id": "ktodo",

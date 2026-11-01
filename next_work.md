@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KCalc
-  kilo_qa: KPaint
+  kilo_qa: KFleet
   kilo_expander: KCyber
   kilo_review: KStellar
 virtual_web_target: kweb://geocities
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KCyber
-  timestamp: '2026-10-31T17:22:17-07:00'
+  agent: kilo-qa
+  app: KPaint
+  timestamp: '2026-10-31T17:36:46-07:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -170,11 +170,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | Compact #tutorial-modal and #help-modal (.modal-box padding and 2-column command grid) so JACK IN and CLOSE buttons fit 800x563 without clipping (sheet.png Panel 1); replace overlapping absolute #visuals (and KCyber/main.c full-width TextOutA colliding with hudBox) with a non-overlapping 2-column Cyberdeck Cockpit layout (#terminal + 240px right deck panel) featuring devicePixelRatio HiDPI #gfxCanvas, live MEM and HEAT bars, Credits/Attempts/Tool-Charges/Active-Contract HUD, contextual quick-command buttons, Tab autocomplete on #cmd-input, and SFX | **[ARGON REVIEW]:** ON/OFF label on #audio-toggle-btn when BGM is disabled. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KPaint`
+- **Active Target**: `KFleet`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPaint` | `KiloOS/public/apps/kpaint.html`, `KPaint/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, retro palette & tool drawer, canvas resize/export, dual Win32 C parity, and promote to Mature table. |
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, agent fleet telemetry, queue visualizer, process monitor, dual Win32 C parity, and promote to Mature table. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, channel switcher, offline message spool, dual Win32 C parity, and promote to Mature table. |
@@ -230,6 +229,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KPaint** | `KiloOS/public/apps/kpaint.html` | Pass 5+ (2026-10-31) | Media / Imaging & Graphics Studio | Complete retro paint studio with multi-layer canvas, F5/F9 snapshot persistence, retro palettes (C64/GameBoy/CGA/Amiga), tool drawer, flipbook animation, and Win32 C parity. |
 | **KCipher** | `KiloOS/public/apps/kcipher.html` | Pass 5+ (2026-10-31) | System / Security | Complete cryptographic suite with classical ciphers, RC4/XOR streams, AES-128 CTR, RSA demo, pipeline chaining, frequency cryptanalysis, steganography, F5/F9 persistence, and dual Win32 C parity. |
 | **KGraph** | `KiloOS/public/apps/kgraph.html` | Pass 5+ (2026-10-31) | System | Scientific function graphing studio with Cartesian, Polar, Parametric plotting, numerical calculus, root finding, CSV dataset import/export, and dual Win32 C parity. |
 | **KPad** | `KiloOS/public/apps/kpad.html` | Pass 5+ (2026-10-31) | Office / Productivity | Complete multi-tab text and code workstation with single-row responsive toolbars, dynamic gutter height synchronization under word wrap, regex workbench, Myers diff viewer, AES-256 encryption, live Markdown preview, F5/F9 state persistence, and dual Win32 C parity. |
@@ -291,6 +291,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T17:36:46-07:00 — kilo-qa: KPaint (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 274.3 KB, native 41.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kpaint_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, collapsible tool drawer [Tab], retro palettes, and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KPaint` to Mature archive; advanced `kilo-qa` to `KFleet`; next agent `kilo-expander`.
+
 - **2026-10-31T17:22:17-07:00 — kilo-usability: KCyber (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KCyber across web and native targets.
@@ -312,9 +318,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated 9 chroma-keyed cyberpunk sprites and JSON atlases in KiloOS/public/assets/sprites/kcyber/ for Cyberdeck Console, 5 distinct ICE constructs (Basic 02, Tracer 03, Hunter 04, Black 05, Phantom 06), Cryo-Stasis lattice, Classified Data Core, and Darknet Contraband Vault.
   - Updated drawVisuals() in kcyber.html with KCYBER_ASSETS loader and full procedural fallbacks; updated KCyber/main.c for Win32 C parity across all 5 ICE constructs; verified zero perimeter glints.
   - Handoff: Advanced `kilo-graphics` to `KMystery`; rotated active agent to `kilo-tester`.
-
-- **2026-10-31T15:35:16-07:00 — kilo-creator: kweb://warez (The Underground Courier / Warez BBS Web Ring & VFS Polish)**
-  - Status: PASS ✅ (0 errors, web 520.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 18.61%, HEAD Δ 16.89%, 0 fail, 0 warn, 6.0s)).
-  - Verified ANSI top-site release board, simulated keygen music player, download quota tracker, and KiloOS VFS export (/home/downloads/ & /home/warez/).
-  - Enhanced KNet resolver and URL routing for warez-vault.scene, normalized line endings saving 12 KB, and validated visual probe contact sheet with zero layout clipping.
-  - Handoff: Advanced `kilo-creator` to `kweb://geocities`; rotated active agent to `kilo-graphics`.

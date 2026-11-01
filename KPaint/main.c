@@ -71,6 +71,7 @@ typedef struct {
     int mirrorMode;
     int canvasWidth;
     int canvasHeight;
+    COLORREF curColorSec;
 } KPaintQuickState;
 
 void PushUndo();
@@ -1115,6 +1116,7 @@ void QuicksaveState(HWND hwnd) {
     st.mirrorMode = mirrorMode;
     st.canvasWidth = canvasWidth;
     st.canvasHeight = canvasHeight;
+    st.curColorSec = curColorSec;
 
     HANDLE hFile = CreateFileA(QUICKSAVE_DAT, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -1149,7 +1151,7 @@ void QuickloadState(HWND hwnd) {
         if (hFile != INVALID_HANDLE_VALUE) {
             KPaintQuickState st = {0};
             DWORD dwRead = 0;
-            if (ReadFile(hFile, &st, sizeof(st), &dwRead, NULL) && dwRead == sizeof(st) && st.magic == 0x4B504153) {
+            if (ReadFile(hFile, &st, sizeof(st), &dwRead, NULL) && dwRead >= (sizeof(DWORD) * 7) && st.magic == 0x4B504153) {
                 curColor = st.curColor;
                 curSize = st.curSize;
                 brushShape = st.brushShape;
@@ -1158,6 +1160,9 @@ void QuickloadState(HWND hwnd) {
                 if (st.canvasWidth > 0 && st.canvasHeight > 0) {
                     canvasWidth = st.canvasWidth;
                     canvasHeight = st.canvasHeight;
+                }
+                if (dwRead >= sizeof(KPaintQuickState)) {
+                    curColorSec = st.curColorSec;
                 }
                 UpdatePen();
                 if (hBtnMirror) SetWindowTextA(hBtnMirror, mirrorMode ? "Mirror ON" : "Mirror [M]");
@@ -1750,6 +1755,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 UpdateTitleStatus(hwnd);
             } else if (wParam == '0') {
                 GenerateSignalArtwork(hwnd);
+            } else if (wParam == VK_ESCAPE) {
+                if (isPainting) {
+                    isPainting = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
             }
             break;
         }
@@ -2255,6 +2265,12 @@ void __stdcall MainEntry() {
                     continue;
                 } else if (wParam == '0') {
                     GenerateSignalArtwork(hwnd);
+                    continue;
+                } else if (wParam == VK_ESCAPE) {
+                    if (isPainting) {
+                        isPainting = 0;
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
                     continue;
                 }
             }
