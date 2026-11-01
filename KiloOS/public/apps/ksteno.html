@@ -864,7 +864,8 @@
       border-color: var(--primary);
     }
 
-    .vfs-carrier-card.selected {
+    .vfs-carrier-card.selected,
+    .vfs-carrier-card.active {
       border-color: var(--primary);
       background: var(--surface-2);
       box-shadow: 0 0 8px rgba(0, 210, 255, 0.3);
@@ -6174,12 +6175,50 @@
 
 
 
+      // VFS Carrier Vault Picker Modal handlers
+      document.getElementById('btn-vfs-picker-close')?.addEventListener('click', () => closeModal('modal-vfs-picker'));
+      document.getElementById('btn-vfs-picker-cancel')?.addEventListener('click', () => closeModal('modal-vfs-picker'));
+      document.getElementById('btn-vfs-carrier-load-custom')?.addEventListener('click', () => {
+        const customPath = document.getElementById('vfs-carrier-custom-path')?.value?.trim();
+        if (customPath) {
+          loadCarrierFromVfsPath(customPath);
+          closeModal('modal-vfs-picker');
+        }
+      });
+      document.getElementById('btn-vfs-picker-confirm')?.addEventListener('click', () => {
+        const targetPath = document.getElementById('vfs-carrier-custom-path')?.value?.trim() || selectedVfsCarrierPath;
+        if (targetPath) {
+          loadCarrierFromVfsPath(targetPath);
+          closeModal('modal-vfs-picker');
+        }
+      });
+      document.getElementById('vfs-picker-local-file')?.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            setCanvasDimensions(img.width, img.height);
+            imgCtx.drawImage(img, 0, 0);
+            backupCleanCanvas();
+            const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const vfsPath = `/home/media/${cleanName}`;
+            KiloVFS.write(vfsPath, reader.result);
+            showToast(`Loaded local carrier & saved to VFS: ${vfsPath}`, "success");
+            closeModal('modal-vfs-picker');
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
       document.getElementById('btn-steg-send-kcipher')?.addEventListener('click', () => {
         let payload = document.getElementById('img-extract-output')?.textContent?.trim() ||
                       document.getElementById('audio-extract-output')?.textContent?.trim() ||
                       document.getElementById('text-extract-output')?.textContent?.trim() || '';
         if (!payload || payload.startsWith('[ERROR:')) {
-          const key = document.getElementById('img-key-input')?.value || '';
+          const key = document.getElementById('img-passphrase')?.value || '';
           const extracted = extractSecretFromImage(key);
           if (extracted && !extracted.startsWith('[ERROR:')) {
             payload = extracted;
@@ -6626,350 +6665,275 @@
 
 
         /* ==========================================================================
-
        KILOOS VFS & CROSS-APP IPC BRIDGE
-
        ========================================================================== */
-
     const KiloVFS = {
-
       write(path, data) {
-
         try {
-
           const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-
           window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
-
           window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: `Saved to VFS: ${path}` }, '*');
-
         } catch (e) {}
-
       },
 
       read(path, cb) {
-
         const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-
+        const timer = setTimeout(() => {
+          window.removeEventListener('message', handler);
+        }, 60000);
         const handler = (e) => {
-
+          if (e.origin !== window.location.origin) return;
           if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
-
+            clearTimeout(timer);
             window.removeEventListener('message', handler);
-
             cb(e.data.data, e.data.path);
-
           }
-
         };
-
         window.addEventListener('message', handler);
-
         try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
-
       },
 
       openPicker(cb) {
-
         const reqId = 'open_' + Date.now();
-
+        const timer = setTimeout(() => {
+          window.removeEventListener('message', handler);
+        }, 60000);
         const handler = (e) => {
-
+          if (e.origin !== window.location.origin) return;
           if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
-
+            clearTimeout(timer);
             window.removeEventListener('message', handler);
-
             if (e.data.path) KiloVFS.read(e.data.path, cb);
-
           }
-
         };
-
         window.addEventListener('message', handler);
-
         try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
-
       },
 
       launchApp(targetApp, path = '') {
-
         try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
-
       }
-
     };
 
+    const VFS_CARRIER_ITEMS = [
+      { id: 'carrier_std', name: 'Standard Carrier', path: '/home/media/carrier.png', desc: '512x384 Standard 24-bit RGB bitmap', fn: () => drawPresetPlasma() },
+      { id: 'carrier_plasma', name: 'Cyber Plasma', path: '/home/media/plasma_carrier.png', desc: '512x384 High-entropy plasma texture', fn: () => drawPresetPlasma() },
+      { id: 'carrier_fractal', name: 'Mandelbrot Fractal', path: '/home/media/fractal_carrier.png', desc: '512x384 Complex bifurcation plane', fn: () => drawPresetFractal() },
+      { id: 'carrier_nebula', name: 'Deep Space Nebula', path: '/home/media/nebula_carrier.png', desc: '512x384 Multi-band cosmic starfield', fn: () => drawPresetNebula() },
+      { id: 'carrier_crt', name: 'CRT Phosphor Noise', path: '/home/media/crt_carrier.png', desc: '512x384 Scanline phosphor matrix', fn: () => drawPresetCRT() },
+      { id: 'carrier_dither', name: 'Sunset Dither', path: '/home/media/dither_carrier.png', desc: '512x384 Ordered Floyd-Steinberg dither', fn: () => drawPresetDither() }
+    ];
 
+    let selectedVfsCarrierPath = '/home/media/carrier.png';
 
-    function saveImageCarrierToVFS() {
-
-      const defaultPath = `/home/media/ksteno_carrier_${Date.now().toString().slice(-4)}.png`;
-
-      const path = prompt("Enter KiloOS VFS path to save stego carrier:", defaultPath) || defaultPath;
-
-      const dataUrl = imgCanvas.toDataURL('image/png');
-
-      KiloVFS.write(path, dataUrl);
-
-      showToast(`Saved carrier to VFS: ${path}`, "success");
-
-      sound.playExtractChime();
-
+    function populateVfsCarrierList() {
+      const container = document.getElementById('vfs-carrier-list');
+      if (!container) return;
+      container.innerHTML = '';
+      VFS_CARRIER_ITEMS.forEach(item => {
+        const card = document.createElement('div');
+        const isActive = selectedVfsCarrierPath === item.path;
+        card.className = `vfs-carrier-card ${isActive ? 'active selected' : ''}`;
+        card.setAttribute('role', 'option');
+        card.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        card.innerHTML = `
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <strong style="color:var(--text); font-size:12px;">${item.name}</strong>
+            <span style="font-size:10px; color:var(--primary); font-family:var(--font-mono);">PNG</span>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.path}</div>
+          <div style="font-size:10px; color:var(--text-muted);">${item.desc}</div>
+        `;
+        card.addEventListener('click', () => {
+          container.querySelectorAll('.vfs-carrier-card').forEach(c => {
+            c.classList.remove('active', 'selected');
+            c.setAttribute('aria-selected', 'false');
+          });
+          card.classList.add('active', 'selected');
+          card.setAttribute('aria-selected', 'true');
+          selectedVfsCarrierPath = item.path;
+          const input = document.getElementById('vfs-carrier-custom-path');
+          if (input) input.value = item.path;
+        });
+        card.addEventListener('dblclick', () => {
+          selectedVfsCarrierPath = item.path;
+          loadCarrierFromVfsPath(item.path);
+          closeModal('modal-vfs-picker');
+        });
+        container.appendChild(card);
+      });
+      const input = document.getElementById('vfs-carrier-custom-path');
+      if (input) input.value = selectedVfsCarrierPath;
     }
 
+    function loadCarrierFromVfsPath(path) {
+      if (!path) return;
+      KiloVFS.read(path, (data) => {
+        if (data && typeof data === 'string') {
+          const img = new Image();
+          img.onload = () => {
+            setCanvasDimensions(img.width, img.height);
+            imgCtx.drawImage(img, 0, 0);
+            backupCleanCanvas();
+            showToast(`Loaded carrier from VFS: ${path}`, "success");
+            sound.playExtractChime();
+          };
+          img.src = data.startsWith('data:') ? data : 'data:image/png;base64,' + data;
+        } else {
+          const preset = VFS_CARRIER_ITEMS.find(p => p.path === path);
+          if (preset && typeof preset.fn === 'function') {
+            preset.fn();
+            const dataUrl = imgCanvas.toDataURL('image/png');
+            KiloVFS.write(path, dataUrl);
+            showToast(`Loaded and saved preset carrier to VFS: ${path}`, "success");
+          } else {
+            showToast(`VFS carrier file not found: ${path}`, "error");
+          }
+        }
+      });
+    }
 
+    function saveImageCarrierToVFS(customPath) {
+      const defaultPath = `/home/media/ksteno_carrier_${Date.now().toString().slice(-4)}.png`;
+      const path = customPath || defaultPath;
+      const dataUrl = imgCanvas.toDataURL('image/png');
+      KiloVFS.write(path, dataUrl);
+      showToast(`Saved carrier to VFS: ${path}`, "success");
+      sound.playExtractChime();
+    }
 
     function openImageCarrierFromVFS() {
-
-      if (window.parent && window.parent !== window) {
-
-        KiloVFS.openPicker((data, path) => {
-
-          if (data) {
-
-            const img = new Image();
-
-            img.onload = () => {
-
-              setCanvasDimensions(img.width, img.height);
-
-              imgCtx.drawImage(img, 0, 0);
-
-              backupCleanCanvas();
-
-              showToast(`Loaded carrier from VFS: ${path || 'file'}`, "success");
-
-            };
-
-            img.src = data.startsWith('data:') ? data : 'data:image/png;base64,' + data;
-
-          }
-
-        });
-
-      } else {
-
-        const path = prompt("Enter KiloOS VFS image path (e.g. /home/media/carrier.png):", "/home/media/carrier.png");
-
-        if (path) {
-
-          KiloVFS.read(path, (data) => {
-
-            if (data) {
-
-              const img = new Image();
-
-              img.onload = () => {
-
-                setCanvasDimensions(img.width, img.height);
-
-                imgCtx.drawImage(img, 0, 0);
-
-                backupCleanCanvas();
-
-                showToast(`Loaded carrier from VFS: ${path}`, "success");
-
-              };
-
-              img.src = data.startsWith('data:') ? data : 'data:image/png;base64,' + data;
-
-            }
-
-          });
-
-        }
-
-      }
-
+      populateVfsCarrierList();
+      openModal('modal-vfs-picker');
     }
-
-
 
     function inspectCarrierInKHex() {
-
       const path = '/home/media/ksteno_inspect.png';
-
       const dataUrl = imgCanvas.toDataURL('image/png');
-
       KiloVFS.write(path, dataUrl);
-
       KiloVFS.launchApp('khex', path);
-
       showToast('Carrier dispatched to KHex for binary analysis', 'info');
-
     }
-
-
 
     function sendPayloadToKCipher(text) {
-
       if (!text || text.trim().length === 0 || text.startsWith('[ERROR:')) {
-
         showToast('No valid payload to decrypt! Extract secret first.', 'warning');
-
         return;
-
       }
-
       const path = '/home/work/steno_extracted.txt';
-
       KiloVFS.write(path, text);
-
       KiloVFS.launchApp('kcipher', path);
-
       showToast('Payload dispatched to KCipher workbench', 'success');
-
       sound.playExtractChime();
-
     }
 
-
-
     function savePayloadToVFS(text, defaultFileName = 'steno_payload.txt') {
-
       if (!text || text.trim().length === 0 || text.startsWith('[ERROR:')) {
-
         showToast('No valid payload to save! Extract secret first.', 'warning');
-
         return;
-
       }
-
       const defaultPath = `/home/work/${defaultFileName}`;
       const path = defaultPath;
       KiloVFS.write(path, text);
-
       showToast(`Payload saved to VFS: ${path}`, 'success');
-
       sound.playExtractChime();
-
     }
-
-
 
     function exportSteganalysisReportToVFS() {
-
       const entropy = document.getElementById('stat-entropy')?.textContent || 'N/A';
-
       const chisq = document.getElementById('stat-chisq')?.textContent || 'N/A';
-
       const prob = document.getElementById('stat-prob')?.textContent || 'N/A';
-
       const est = document.getElementById('stat-est-cap')?.textContent || 'N/A';
-
       const verdict = document.getElementById('stego-verdict-text')?.textContent || 'UNKNOWN';
-
       const dim = `${imgCanvas.width}x${imgCanvas.height}`;
 
-
-
       const report = `=====================================================\n` +
-
 `KSTENO STEGANALYSIS REPORT (WESTFELD-PFITZMANN χ² SCAN)\n` +
-
 `Generated: ${new Date().toISOString()}\n` +
-
 `Target Carrier: Bitmap Canvas (${dim})\n` +
-
 `=====================================================\n\n` +
-
 `1. EXECUTIVE VERDICT\n` +
-
 `-------------------\n` +
-
 `Status: ${verdict}\n` +
-
 `Estimated Injected Secret: ${est}\n\n` +
-
 `2. STATISTICAL METRICS\n` +
-
 `----------------------\n` +
-
 `- Shannon Entropy:       ${entropy}\n` +
-
 `- Chi-Square (χ²):        ${chisq}\n` +
-
 `- Stego Probability (P):  ${prob}\n` +
-
 `- Degrees of Freedom:    127 Pairs of Values (PoVs)\n\n` +
-
 `3. ANALYSIS METHODOLOGY\n` +
-
 `-----------------------\n` +
-
 `Evaluates equalization between even/odd value pairs (2k, 2k+1) across\n` +
-
 `active color planes. Clean photographic images exhibit natural asymmetry;\n` +
-
 `LSB modulation enforces asymptotic equalization, forcing χ² toward zero.\n\n` +
-
 `-- KSteno Stenographic Carrier Suite (KiloOS Phase VI) --\n`;
 
-
-
       const path = `/home/work/steganalysis_report_${Date.now().toString().slice(-4)}.txt`;
-
       KiloVFS.write(path, report);
-
       showToast(`Steganalysis report saved to VFS: ${path}`, 'success');
-
       sound.playExtractChime();
-
     }
-
-
 
     function checkIncomingVFSLaunch() {
-
       try {
-
         const hash = window.location.hash ? decodeURIComponent(window.location.hash.slice(1)) : '';
-
         if (hash && hash.startsWith('/')) {
-
           KiloVFS.read(hash, (content) => {
-
             if (!content) return;
-
             if (hash.endsWith('.png') || hash.endsWith('.jpg') || hash.endsWith('.bmp')) {
-
               const img = new Image();
-
               img.onload = () => {
-
                 setCanvasDimensions(img.width, img.height);
-
                 imgCtx.drawImage(img, 0, 0);
-
                 backupCleanCanvas();
-
                 showToast(`Loaded carrier from VFS: ${hash}`, "success");
-
               };
-
               img.src = content.startsWith('data:') ? content : 'data:image/png;base64,' + content;
-
+            } else if (hash.endsWith('.wav')) {
+              const buf = dataUrlOrBase64ToArrayBuffer(content);
+              applyLoadedWavCarrier(buf, hash);
+              showToast(`Loaded audio carrier from VFS: ${hash}`, "success");
             } else {
-
               document.getElementById('cover-text-input').value = content;
-
               document.getElementById('img-payload-input').value = content;
-
               updateCapacityUI();
-
               showToast(`Loaded payload from VFS: ${hash}`, "success");
-
             }
-
           });
-
         }
-
       } catch (e) {}
-
     }
 
-
+    // Global listener for KiloOS File Browser / VFS launch messages
+    window.addEventListener('message', (e) => {
+      if (e.origin !== window.location.origin) return;
+      if (e.data && (e.data.type === 'FILE_OPEN' || e.data.type === 'VFS_OPEN')) {
+        const p = e.data.path;
+        if (p) {
+          if (p.endsWith('.png') || p.endsWith('.jpg') || p.endsWith('.bmp')) {
+            loadCarrierFromVfsPath(p);
+          } else if (p.endsWith('.wav')) {
+            KiloVFS.read(p, (data) => {
+              if (data) {
+                const buf = dataUrlOrBase64ToArrayBuffer(data);
+                applyLoadedWavCarrier(buf, p);
+                showToast(`Loaded audio carrier from VFS: ${p}`, "success");
+              }
+            });
+          } else {
+            KiloVFS.read(p, (data) => {
+              if (data) {
+                document.getElementById('cover-text-input').value = data;
+                document.getElementById('img-payload-input').value = data;
+                updateCapacityUI();
+                showToast(`Loaded payload from VFS: ${p}`, "success");
+              }
+            });
+          }
+        }
+      }
+    });
 
     /* ==========================================================================
 
