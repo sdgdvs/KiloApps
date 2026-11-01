@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T07:38:51-08:00 — kilo-usability: KSubmarine (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS (0 errors, web 544.9 KB, native 261.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (input 2.41%, 0 cut-off)).
+  - Layout & Sonar: Compact 1-row header, 2-row center tabs, 82px log, and narrow side panels expanded #sonarCanvas to 468x460 with zero HUD collision.
+  - Ergonomics & HiDPI: [HELM]/[SYSTEMS]/[OPS] right sub-tabs and compact gauges eliminate control clipping at 1040x683; click-to-lock/steer wired and #hydrophoneScopeCanvas HiDPI devicePixelRatio scaled.
+  - Handoff: Advanced `kilo-usability` to `KCalc`; rotated active agent to `kilo-qa`.
+
 - **2026-11-01T07:22:29-08:00 — kilo-tester: KSubmarine (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KSubmarine across web and native targets.

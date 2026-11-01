@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://slashnet
-  kilo_graphics: KCosmic
+  kilo_graphics: KSanctuary
   kilo_soundscape: KStellar
   kilo_tester: KHex
   kilo_usability: KHex
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://deep-core
-  timestamp: '2026-11-01T09:37:23-08:00'
+  agent: kilo-graphics
+  app: KCosmic
+  timestamp: '2026-11-01T10:22:21-08:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KCosmic`
+- **Active Target**: `KSanctuary`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
 | `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
@@ -116,6 +115,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art across kstarforge.html (drawModuleBlueprintGlyph, drawDrydockScene, drawStarforgeStation, drawAsteroid, drawEnemyVessel, drawSalvagePod, and skirmish rival rendering) with Imagen 3 2-stage chroma-keyed sprites/atlas tiles for modular ship components, StarForge IX station & drydock gantry, 3 mineral asteroid types, salvage pods, and Syndicate/Marauder/Sentry/Corsair Dreadnought vessels (<999 KB, zero perimeter border glints). |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | **[ARGON REVIEW]:** Replace primitive geometric canvas and inline SVG programmer-art across ksubmarine.html (drawSubmarineSprite, drawLeviathanCreature, drawSquidCreature, drawFloraCreature, drawFaunaCreature, drawSalvageSprite, drawCombatDroneSprite, hydrothermal black smoker spire in drawSonarView/drawNavMapChart, and getFaunaVisualSvg) with Imagen 3 2-stage chroma-keyed sprites/atlas (<999 KB, zero perimeter border glints). — Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
+| `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -305,6 +305,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T10:22:21-08:00 — kilo-graphics: KCosmic (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-graphics updates for KCosmic across web and native targets.
+  - Handoff: Advanced `kilo-graphics` to `KSanctuary`; rotated active agent to `kilo-tester`.
+
 - **2026-11-01T09:37:23-08:00 — kilo-creator: kweb://deep-core (Tier 3 Ghost Node VFS & KMatrix Verification)**
   - Status: PASS ✅ (0 errors, web 314.1 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Connected Ghost Node terminal directly to KiloOS VFS (/sys/alpha.sys & /home/crypto/) with interactive quick directive chips.
@@ -328,9 +333,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, ksys_tutorialSeen flag, and Escape modal dismissals.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, Shift+M audio mute, and visibilitychange timer cleanup.
   - Mature Quarantine & Handoff: Promoted `KSys` to Mature archive; advanced `kilo-qa` to `KChart`; next agent `kilo-expander`.
-
-- **2026-11-01T07:38:51-08:00 — kilo-usability: KSubmarine (Usability, Responsive Layout & Ergonomics Polish)**
-  - Status: PASS (0 errors, web 544.9 KB, native 261.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (input 2.41%, 0 cut-off)).
-  - Layout & Sonar: Compact 1-row header, 2-row center tabs, 82px log, and narrow side panels expanded #sonarCanvas to 468x460 with zero HUD collision.
-  - Ergonomics & HiDPI: [HELM]/[SYSTEMS]/[OPS] right sub-tabs and compact gauges eliminate control clipping at 1040x683; click-to-lock/steer wired and #hydrophoneScopeCanvas HiDPI devicePixelRatio scaled.
-  - Handoff: Advanced `kilo-usability` to `KCalc`; rotated active agent to `kilo-qa`.

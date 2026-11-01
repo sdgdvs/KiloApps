@@ -114,6 +114,7 @@ static CRTTheme g_crtThemes[] = {
 static int g_crtTheme = 0;
 static int g_showGrid = 1;
 static int g_phosphorGlow = 1;
+static float g_warpAnim = 0.0f;
 
 // --- Sound Effects & Procedural Cosmic Audio Engine ---
 #define SFX_CLICK           1
@@ -356,6 +357,7 @@ typedef struct {
     int isPlanet;
     int isMoon;
     int isStation;
+    int isJumpGate;
     int parentIndex; // -1 for star / sun-orbiting; index in bodies[] for moon/station
 
     // Biometrics for this planet
@@ -630,7 +632,7 @@ static int SaveGameState(const char* filename) {
     SaveStateHeader hdr;
     memset(&hdr, 0, sizeof(hdr));
     hdr.magic[0] = 'K'; hdr.magic[1] = 'C'; hdr.magic[2] = 'O'; hdr.magic[3] = 'S';
-    hdr.version = 14;
+    hdr.version = 15;
     hdr.sim = sim;
     hdr.currentSystem = g_currentSystem;
     hdr.systemCount = g_systemCount;
@@ -650,7 +652,7 @@ static int LoadGameState(const char* filename) {
     size_t read = fread(&hdr, sizeof(hdr), 1, f);
     fclose(f);
     if (read != 1) return 0;
-    if (memcmp(hdr.magic, "KCOS", 4) != 0 || hdr.version != 14) return 0;
+    if (memcmp(hdr.magic, "KCOS", 4) != 0 || (hdr.version != 14 && hdr.version != 15)) return 0;
     sim = hdr.sim;
     g_currentSystem = hdr.currentSystem;
     g_systemCount = hdr.systemCount;
@@ -738,6 +740,7 @@ static void LoadStarSystem(int sysIdx) {
     SyncSimToActivePlanet();
     g_currentSystem = sysIdx % g_systemCount;
     if (g_currentSystem < 0) g_currentSystem += g_systemCount;
+    g_warpAnim = 1.0f;
 
     p = GetActivePlanet();
     sim.pressure = p->pressure;
@@ -954,6 +957,22 @@ static void GenerateProceduralStarSystem(void) {
         st->color = COLOR_EMERALD;
         st->isStation = 1;
         st->parentIndex = targetPlanet;
+        bCount++;
+    }
+
+    // Add Hyperion Jump Gate (Sub-Space Warp Conduit at 460 AU)
+    if (bCount < MAX_SYSTEM_BODIES) {
+        CelestialBody* jg = &sys->celestials[bCount];
+        sprintf(jg->id, "jumpgate");
+        sprintf(jg->name, "Hyperion Jump Gate");
+        strcpy(jg->type, "Sub-Space Warp Conduit");
+        jg->orbitRadius = 460.0f;
+        jg->orbitSpeed = 0.04f;
+        jg->angle = -1.75f;
+        jg->radius = 18.0f;
+        jg->color = RGB(0, 240, 255);
+        jg->isJumpGate = 1;
+        jg->parentIndex = 0;
         bCount++;
     }
 
@@ -1704,7 +1723,7 @@ static void InitSimulation(void) {
     strcpy(g_systems[0].desc, "Anchor frontier sector with habitable-zone rocky exoplanets.");
     g_systems[0].starColor = COLOR_ORANGE;
     g_systems[0].starCorona = RGB(120, 45, 10);
-    g_systems[0].bodyCount = 5;
+    g_systems[0].bodyCount = 6;
     g_systems[0].activePlanetIndex = 2; // Aethelgard Prime
 
     // Star
@@ -1778,6 +1797,18 @@ static void InitSimulation(void) {
     g_systems[0].celestials[4].isStation = 1;
     g_systems[0].celestials[4].parentIndex = 2;
 
+    // Hyperion Jump Gate (Interstellar Transit Corridor at 460 AU)
+    strcpy(g_systems[0].celestials[5].id, "jumpgate");
+    strcpy(g_systems[0].celestials[5].name, "Hyperion Jump Gate");
+    strcpy(g_systems[0].celestials[5].type, "Sub-Space Warp Conduit");
+    g_systems[0].celestials[5].orbitRadius = 460.0f;
+    g_systems[0].celestials[5].orbitSpeed = 0.04f;
+    g_systems[0].celestials[5].angle = -1.75f;
+    g_systems[0].celestials[5].radius = 18.0f;
+    g_systems[0].celestials[5].color = RGB(0, 240, 255);
+    g_systems[0].celestials[5].isJumpGate = 1;
+    g_systems[0].celestials[5].parentIndex = 0;
+
     // SYSTEM 1: TRAPPIST-1
     strcpy(g_systems[1].id, "trappist1");
     strcpy(g_systems[1].name, "TRAPPIST-1");
@@ -1785,7 +1816,7 @@ static void InitSimulation(void) {
     strcpy(g_systems[1].desc, "Compact resonant system with 3 habitable-zone worlds.");
     g_systems[1].starColor = RGB(255, 90, 30);
     g_systems[1].starCorona = RGB(100, 30, 10);
-    g_systems[1].bodyCount = 5;
+    g_systems[1].bodyCount = 6;
     g_systems[1].activePlanetIndex = 2; // Trappist-1d Primordial Gaia
 
     strcpy(g_systems[1].celestials[0].id, "t_sun");
@@ -1861,6 +1892,18 @@ static void InitSimulation(void) {
     g_systems[1].celestials[4].isStation = 1;
     g_systems[1].celestials[4].parentIndex = 2;
 
+    // Hyperion Jump Gate
+    strcpy(g_systems[1].celestials[5].id, "jumpgate");
+    strcpy(g_systems[1].celestials[5].name, "Hyperion Jump Gate");
+    strcpy(g_systems[1].celestials[5].type, "Sub-Space Warp Conduit");
+    g_systems[1].celestials[5].orbitRadius = 460.0f;
+    g_systems[1].celestials[5].orbitSpeed = 0.04f;
+    g_systems[1].celestials[5].angle = -0.85f;
+    g_systems[1].celestials[5].radius = 18.0f;
+    g_systems[1].celestials[5].color = RGB(0, 240, 255);
+    g_systems[1].celestials[5].isJumpGate = 1;
+    g_systems[1].celestials[5].parentIndex = 0;
+
     // SYSTEM 2: Gliese-667C
     strcpy(g_systems[2].id, "gliese667c");
     strcpy(g_systems[2].name, "Gliese-667C");
@@ -1868,7 +1911,7 @@ static void InitSimulation(void) {
     strcpy(g_systems[2].desc, "Trinary system companion with deep abyssal ocean worlds.");
     g_systems[2].starColor = RGB(255, 120, 50);
     g_systems[2].starCorona = RGB(110, 40, 15);
-    g_systems[2].bodyCount = 5;
+    g_systems[2].bodyCount = 6;
     g_systems[2].activePlanetIndex = 2; // Gliese-667Cc Ocean World
 
     strcpy(g_systems[2].celestials[0].id, "g_sun");
@@ -1944,6 +1987,18 @@ static void InitSimulation(void) {
     g_systems[2].celestials[4].isMoon = 1;
     g_systems[2].celestials[4].parentIndex = 2;
 
+    // Hyperion Jump Gate
+    strcpy(g_systems[2].celestials[5].id, "jumpgate");
+    strcpy(g_systems[2].celestials[5].name, "Hyperion Jump Gate");
+    strcpy(g_systems[2].celestials[5].type, "Sub-Space Warp Conduit");
+    g_systems[2].celestials[5].orbitRadius = 460.0f;
+    g_systems[2].celestials[5].orbitSpeed = 0.04f;
+    g_systems[2].celestials[5].angle = 1.45f;
+    g_systems[2].celestials[5].radius = 18.0f;
+    g_systems[2].celestials[5].color = RGB(0, 240, 255);
+    g_systems[2].celestials[5].isJumpGate = 1;
+    g_systems[2].celestials[5].parentIndex = 0;
+
     // SYSTEM 3: Tau Ceti
     strcpy(g_systems[3].id, "tauceti");
     strcpy(g_systems[3].name, "Tau Ceti");
@@ -1951,7 +2006,7 @@ static void InitSimulation(void) {
     strcpy(g_systems[3].desc, "Sol-like system with massive ice sheets and cryo-reservoirs.");
     g_systems[3].starColor = RGB(255, 230, 110);
     g_systems[3].starCorona = RGB(120, 90, 25);
-    g_systems[3].bodyCount = 5;
+    g_systems[3].bodyCount = 6;
     g_systems[3].activePlanetIndex = 2; // Tau Ceti-f Frozen Tundra
 
     strcpy(g_systems[3].celestials[0].id, "tc_sun");
@@ -2026,6 +2081,18 @@ static void InitSimulation(void) {
     g_systems[3].celestials[4].color = COLOR_EMERALD;
     g_systems[3].celestials[4].isStation = 1;
     g_systems[3].celestials[4].parentIndex = 2;
+
+    // Hyperion Jump Gate
+    strcpy(g_systems[3].celestials[5].id, "jumpgate");
+    strcpy(g_systems[3].celestials[5].name, "Hyperion Jump Gate");
+    strcpy(g_systems[3].celestials[5].type, "Sub-Space Warp Conduit");
+    g_systems[3].celestials[5].orbitRadius = 460.0f;
+    g_systems[3].celestials[5].orbitSpeed = 0.04f;
+    g_systems[3].celestials[5].angle = 2.85f;
+    g_systems[3].celestials[5].radius = 18.0f;
+    g_systems[3].celestials[5].color = RGB(0, 240, 255);
+    g_systems[3].celestials[5].isJumpGate = 1;
+    g_systems[3].celestials[5].parentIndex = 0;
 
     // Populate default nitrogen and greenhouse on all catalog planets
     for (int s = 0; s < g_systemCount; s++) {
@@ -2994,6 +3061,268 @@ static void DrawStationGDI(HDC hdc, int stX, int stY, int stR, float z, float si
     SelectObject(hdc, hOldBrush);
     SelectObject(hdc, hOldPen);
     DeleteObject(hRingPen);
+}
+
+// --- Procedural Cosmic Anomaly Nebulae (Multi-Stop Deep Space Gas Clouds) ---
+static void DrawCosmicNebulaeGDI(HDC hdc, int cx, int cy, float z, CRTTheme* theme, float time, int sysIdx, int viewW, int viewH, int headerH) {
+    int sX = cx + (int)(-300.0f * z);
+    int sY = cy;
+
+    typedef struct {
+        const char* name;
+        const char* code;
+        int dx, dy;
+        int rx, ry;
+        COLORREF cCore;
+        COLORREF cMid;
+        COLORREF cOuter;
+        COLORREF tagCol;
+    } AnomalyNebulaDef;
+
+    AnomalyNebulaDef nebulae[2];
+
+    if (sysIdx == 0) {
+        nebulae[0] = (AnomalyNebulaDef){ "CYGNUS ION VEIL", "ANOMALY-01", 320, -260, 340, 210, RGB(80, 40, 120), RGB(30, 20, 60), RGB(12, 14, 30), RGB(56, 189, 248) };
+        nebulae[1] = (AnomalyNebulaDef){ "TACHYON RIFT SHEAR", "ANOMALY-02", -220, 310, 290, 180, RGB(110, 60, 20), RGB(50, 25, 15), RGB(18, 12, 22), RGB(245, 158, 11) };
+    } else if (sysIdx == 1) {
+        nebulae[0] = (AnomalyNebulaDef){ "HELIOS CORONA PLUME", "ANOMALY-01", 280, 220, 320, 200, RGB(120, 30, 45), RGB(60, 20, 25), RGB(20, 10, 15), RGB(244, 63, 94) };
+        nebulae[1] = (AnomalyNebulaDef){ "TARTARUS EMISSION DUST", "ANOMALY-02", -300, -220, 260, 170, RGB(50, 55, 110), RGB(25, 30, 65), RGB(10, 15, 35), RGB(129, 140, 248) };
+    } else if (sysIdx == 2) {
+        nebulae[0] = (AnomalyNebulaDef){ "PERSEUS EMERALD CLOUD", "ANOMALY-01", 310, -280, 310, 220, RGB(20, 100, 70), RGB(10, 50, 35), RGB(8, 20, 20), RGB(16, 185, 129) };
+        nebulae[1] = (AnomalyNebulaDef){ "ASTROMETRIC VOID EXPANSION", "ANOMALY-02", -250, 260, 280, 190, RGB(80, 35, 110), RGB(40, 18, 55), RGB(15, 10, 28), RGB(168, 85, 247) };
+    } else {
+        nebulae[0] = (AnomalyNebulaDef){ "TAU CETI CRYO-NEBULA", "ANOMALY-01", 300, -250, 330, 210, RGB(25, 80, 110), RGB(12, 40, 60), RGB(8, 18, 30), RGB(56, 189, 248) };
+        nebulae[1] = (AnomalyNebulaDef){ "STELLAR RESONANCE FILAMENT", "ANOMALY-02", -270, 290, 270, 180, RGB(90, 50, 80), RGB(45, 25, 45), RGB(16, 12, 22), RGB(251, 146, 60) };
+    }
+
+    HFONT hFontSmall = CreateFontA(11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFontSmall);
+
+    for (int n = 0; n < 2; n++) {
+        AnomalyNebulaDef* neb = &nebulae[n];
+        float pulse = 1.0f + sinf(time * 0.4f + (float)n * 1.5f) * 0.05f;
+        int nx = sX + (int)(neb->dx * z);
+        int ny = sY + (int)(neb->dy * z);
+        int rx = (int)(neb->rx * z * pulse);
+        int ry = (int)(neb->ry * z * pulse);
+
+        if (nx + rx < 0 || nx - rx > viewW || ny + ry < headerH || ny - ry > headerH + viewH) {
+            continue;
+        }
+
+        // Layer 1: Outer diffuse envelope
+        HBRUSH hBrOuter = CreateSolidBrush(neb->cOuter);
+        HPEN hPenOuter = CreatePen(PS_SOLID, 1, neb->cOuter);
+        HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hBrOuter);
+        HPEN hOldP = (HPEN)SelectObject(hdc, hPenOuter);
+        Ellipse(hdc, nx - rx, ny - ry, nx + rx, ny + ry);
+
+        // Layer 2: Mid gas cloud
+        int mrx = (int)(rx * 0.68f);
+        int mry = (int)(ry * 0.65f);
+        HBRUSH hBrMid = CreateSolidBrush(neb->cMid);
+        HPEN hPenMid = CreatePen(PS_SOLID, 1, neb->cMid);
+        SelectObject(hdc, hBrMid);
+        SelectObject(hdc, hPenMid);
+        Ellipse(hdc, nx - mrx, ny - mry, nx + mrx, ny + mry);
+        DeleteObject(hBrOuter);
+        DeleteObject(hPenOuter);
+
+        // Layer 3: Ionized gas core
+        int crx = (int)(rx * 0.38f);
+        int cry = (int)(ry * 0.35f);
+        HBRUSH hBrCore = CreateSolidBrush(neb->cCore);
+        HPEN hPenCore = CreatePen(PS_SOLID, 1, neb->cCore);
+        SelectObject(hdc, hBrCore);
+        SelectObject(hdc, hPenCore);
+        Ellipse(hdc, nx - crx, ny - cry, nx + crx, ny + cry);
+        DeleteObject(hBrMid);
+        DeleteObject(hPenMid);
+
+        // Layer 4: Dust filament occlusion
+        HBRUSH hBrDust = CreateSolidBrush(RGB(5, 8, 16));
+        HPEN hPenDust = CreatePen(PS_SOLID, 1, RGB(5, 8, 16));
+        SelectObject(hdc, hBrDust);
+        SelectObject(hdc, hPenDust);
+        int drx = (int)(rx * 0.22f);
+        int dry = (int)(ry * 0.12f);
+        Ellipse(hdc, nx + (int)(rx * 0.1f) - drx, ny + (int)(ry * 0.08f) - dry,
+                     nx + (int)(rx * 0.1f) + drx, ny + (int)(ry * 0.08f) + dry);
+        DeleteObject(hBrCore);
+        DeleteObject(hPenCore);
+        DeleteObject(hBrDust);
+        DeleteObject(hPenDust);
+
+        SelectObject(hdc, hOldB);
+        SelectObject(hdc, hOldP);
+
+        // Astrometric Anomaly Tag
+        if (g_showGrid) {
+            HPEN hTagPen = CreatePen(PS_DOT, 1, neb->tagCol);
+            HPEN hOldP2 = (HPEN)SelectObject(hdc, hTagPen);
+            HBRUSH hOldB2 = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+
+            int retX = nx - (int)(30 * z);
+            int retY = ny - (int)(20 * z);
+            Rectangle(hdc, retX - 8, retY - 8, retX + 8, retY + 8);
+
+            SetTextColor(hdc, neb->tagCol);
+            SetBkMode(hdc, TRANSPARENT);
+            char tagBuf[64];
+            sprintf(tagBuf, "[%s // %s]", neb->code, neb->name);
+            TextOutA(hdc, retX + 12, retY - 6, tagBuf, (int)strlen(tagBuf));
+
+            SelectObject(hdc, hOldB2);
+            SelectObject(hdc, hOldP2);
+            DeleteObject(hTagPen);
+        }
+    }
+
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hFontSmall);
+}
+
+// --- Hyperion Jump Gate Sprite & Aperture Shader ---
+static void DrawJumpGateGDI(HDC hdc, int gx, int gy, int gr, float simTime, float z, int isWarping) {
+    int rad = gr;
+    if (rad < 14) rad = 14;
+
+    // 1. Outer Hexagonal Heavy Alloy Ring
+    POINT pts[6];
+    for (int i = 0; i < 6; i++) {
+        float a = (float)i * 1.04719755f; // PI / 3
+        pts[i].x = gx + (int)(cosf(a) * (float)rad);
+        pts[i].y = gy + (int)(sinf(a) * ((float)rad * 0.85f));
+    }
+    HBRUSH hHullBrush = CreateSolidBrush(RGB(10, 25, 47));
+    HPEN hHullPen = CreatePen(PS_SOLID, max(1, (int)(2 * z)), isWarping ? COLOR_CYAN : RGB(2, 132, 199));
+    HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hHullBrush);
+    HPEN hOldP = (HPEN)SelectObject(hdc, hHullPen);
+    Polygon(hdc, pts, 6);
+    SelectObject(hdc, hOldB);
+    SelectObject(hdc, hOldP);
+    DeleteObject(hHullBrush);
+    DeleteObject(hHullPen);
+
+    // 2. Lateral Docking Pylons & Amber Hazard Trusses
+    int pylonW = (int)(rad * 0.35f);
+    int pylonH = max(4, (int)(8 * z));
+    FillSolidRect(hdc, gx - (int)(rad * 1.3f), gy - pylonH / 2, pylonW, pylonH, RGB(30, 41, 59));
+    FrameSolidRect(hdc, gx - (int)(rad * 1.3f), gy - pylonH / 2, pylonW, pylonH, COLOR_AMBER);
+    FillSolidRect(hdc, gx + (int)(rad * 0.95f), gy - pylonH / 2, pylonW, pylonH, RGB(30, 41, 59));
+    FrameSolidRect(hdc, gx + (int)(rad * 0.95f), gy - pylonH / 2, pylonW, pylonH, COLOR_AMBER);
+
+    // 3. Sub-Space Emitter Nodes (6 surrounding nodes)
+    for (int i = 0; i < 6; i++) {
+        float a = (float)i * 1.04719755f;
+        int tx = gx + (int)(cosf(a) * (float)rad * 0.72f);
+        int ty = gy + (int)(sinf(a) * (float)rad * 0.6f);
+        int nsz = max(2, (int)(4 * z));
+        FillSolidRect(hdc, tx - nsz / 2, ty - nsz / 2, nsz, nsz, isWarping ? RGB(255, 255, 255) : COLOR_CYAN);
+    }
+
+    // 4. Central Aperture (Pulsing Sub-Space Singularity)
+    int apR = (int)(rad * 0.58f);
+    int apRy = (int)(rad * 0.50f);
+    COLORREF apFill = isWarping ? RGB(160, 230, 255) : (sinf(simTime * 3.0f) > 0.0f ? RGB(10, 45, 75) : RGB(20, 25, 55));
+    COLORREF apBorder = isWarping ? RGB(255, 255, 255) : RGB(0, 240, 255);
+    HBRUSH hApBrush = CreateSolidBrush(apFill);
+    HPEN hApPen = CreatePen(PS_SOLID, isWarping ? 2 : 1, apBorder);
+    hOldB = (HBRUSH)SelectObject(hdc, hApBrush);
+    hOldP = (HPEN)SelectObject(hdc, hApPen);
+    Ellipse(hdc, gx - apR, gy - apRy, gx + apR, gy + apRy);
+    SelectObject(hdc, hOldB);
+    SelectObject(hdc, hOldP);
+    DeleteObject(hApBrush);
+    DeleteObject(hApPen);
+
+    // 5. Blinking Aperture Navigation Beacons
+    if ((sinf(simTime * 5.0f) > 0.0f) || isWarping) {
+        int bcR = max(2, (int)(3 * z));
+        FillSolidRect(hdc, gx - (int)(rad * 1.2f) - bcR, gy - bcR, bcR * 2, bcR * 2, COLOR_CYAN);
+        FillSolidRect(hdc, gx + (int)(rad * 1.2f) - bcR, gy - bcR, bcR * 2, bcR * 2, COLOR_CYAN);
+    }
+}
+
+// --- Jump-Gate Warp Transit Animation (Hyperspace Metric Compression) ---
+static void DrawJumpGateWarpFXGDI(HDC hdc, int viewW, int viewH, int headerH, float warpProgress, float z, float simTime, const char* sectorName) {
+    int cx = viewW / 2;
+    int cy = headerH + viewH / 2;
+
+    // 1. Spacetime Metric Compression Rings
+    for (int r = 0; r < 5; r++) {
+        float rOffset = (float)r * 0.18f;
+        float p = warpProgress + rOffset;
+        if (p > 1.0f) p -= 1.0f;
+        int ringRad = (int)((1.0f - p) * (float)viewW * 0.55f);
+        if (ringRad < 10) continue;
+        int ringRadY = (int)((float)ringRad * 0.65f);
+
+        COLORREF ringCol = (r % 2 == 0) ? RGB(0, 240, 255) : RGB(168, 85, 247);
+        HPEN hRingPen = CreatePen(PS_SOLID, max(1, (int)(2.5f * warpProgress)), ringCol);
+        HPEN hOldP = (HPEN)SelectObject(hdc, hRingPen);
+        HBRUSH hOldB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Ellipse(hdc, cx - ringRad, cy - ringRadY, cx + ringRad, cy + ringRadY);
+        SelectObject(hdc, hOldB);
+        SelectObject(hdc, hOldP);
+        DeleteObject(hRingPen);
+    }
+
+    // 2. Hyperspace Radial Warp Streaks
+    for (int s = 0; s < 28; s++) {
+        float ang = (float)s * 0.224399f + (simTime * 0.8f);
+        float innerDist = 30.0f * z + (1.0f - warpProgress) * 50.0f * z;
+        float streakLen = 140.0f * z * warpProgress + (float)((s * 17) % 50);
+
+        int x1 = cx + (int)(cosf(ang) * innerDist);
+        int y1 = cy + (int)(sinf(ang) * (innerDist * 0.7f));
+        int x2 = cx + (int)(cosf(ang) * (innerDist + streakLen));
+        int y2 = cy + (int)(sinf(ang) * ((innerDist + streakLen) * 0.7f));
+
+        COLORREF streakCol = (s % 3 == 0) ? RGB(255, 255, 255) : ((s % 3 == 1) ? RGB(0, 240, 255) : RGB(190, 120, 255));
+        HPEN hStreakPen = CreatePen(PS_SOLID, max(1, (int)(2.0f * warpProgress)), streakCol);
+        HPEN hOldP = (HPEN)SelectObject(hdc, hStreakPen);
+        MoveToEx(hdc, x1, y1, NULL);
+        LineTo(hdc, x2, y2);
+        SelectObject(hdc, hOldP);
+        DeleteObject(hStreakPen);
+    }
+
+    // 3. Central Hyperspace Singularity Core Flash
+    if (warpProgress > 0.35f) {
+        int coreR = (int)(warpProgress * 42.0f * z);
+        HBRUSH hCoreBr = CreateSolidBrush(RGB(255, 255, 255));
+        HPEN hCorePen = CreatePen(PS_SOLID, 2, RGB(0, 240, 255));
+        HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hCoreBr);
+        HPEN hOldP = (HPEN)SelectObject(hdc, hCorePen);
+        Ellipse(hdc, cx - coreR, cy - (int)((float)coreR * 0.7f), cx + coreR, cy + (int)((float)coreR * 0.7f));
+        SelectObject(hdc, hOldB);
+        SelectObject(hdc, hOldP);
+        DeleteObject(hCoreBr);
+        DeleteObject(hCorePen);
+    }
+
+    // 4. Astrometric Warp Telemetry HUD Banner
+    int banW = min(560, viewW - 40);
+    int banH = 30;
+    int bx = (viewW - banW) / 2;
+    int by = headerH + viewH - banH - 14;
+
+    FillSolidRect(hdc, bx, by, banW, banH, RGB(10, 16, 30));
+    FrameSolidRect(hdc, bx, by, banW, banH, RGB(0, 240, 255));
+    FrameSolidRect(hdc, bx + 1, by + 1, banW - 2, banH - 2, RGB(168, 85, 247));
+
+    HFONT hWarpFont = CreateFontA(12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hWarpFont);
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, RGB(0, 240, 255));
+
+    char wBuf[128];
+    sprintf(wBuf, "// HYPERION JUMP GATE TRANSIT // METRIC COMPRESSION: %d%% // SECTOR: %s", (int)(warpProgress * 100.0f), sectorName);
+    TextOutA(hdc, bx + 12, by + 8, wBuf, (int)strlen(wBuf));
+
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hWarpFont);
 }
 
 static void DrawShipGDI(HDC hdc, Ship* s, int sx, int sy, float z, int i, float simTime) {
@@ -4638,6 +4967,9 @@ static void RenderUI(HDC hdc, int width, int height) {
     HRGN hRgnViewport = CreateRectRgn(0, headerH, viewportW, headerH + viewportH);
     SelectClipRgn(hdc, hRgnViewport);
 
+    // 0. Cosmic Anomaly Nebulae (Multi-Stop Deep Space Gas Clouds)
+    DrawCosmicNebulaeGDI(hdc, cx, cy, z, theme, sim.time, g_currentSystem, viewportW, viewportH, headerH);
+
     // A. Starfield
     for (int i = 0; i < STAR_COUNT; i++) {
         int sx = cx + (int)(stars[i].x * z);
@@ -4896,6 +5228,40 @@ static void RenderUI(HDC hdc, int width, int height) {
             }
             SetTextColor(hdc, COLOR_EMERALD);
             TextOutA(hdc, stX - 25, stY + stR + 2, b->name, (int)strlen(b->name));
+        } else if (b->isJumpGate) {
+            if (!sim.paused && sim.speed > 0) {
+                b->angle += b->orbitSpeed * 0.005f * (float)sim.speed;
+            }
+            float jDist = b->orbitRadius * z;
+            int jx = sunX + (int)(cosf(b->angle) * jDist);
+            int jy = sunY + (int)(sinf(b->angle) * (jDist * 0.7f));
+            int jr = (int)(b->radius * z);
+            if (jr < 12) jr = 12;
+            b->currX = (float)jx;
+            b->currY = (float)jy;
+
+            // Orbit path ellipse
+            HPEN hOrbitPen = CreatePen(PS_DOT, 1, RGB(0, 180, 220));
+            HPEN hOldP6 = (HPEN)SelectObject(hdc, hOrbitPen);
+            Arc(hdc, sunX - (int)jDist, sunY - (int)(jDist * 0.7f),
+                     sunX + (int)jDist, sunY + (int)(jDist * 0.7f), 0, 0, 0, 0);
+            SelectObject(hdc, hOldP6);
+            DeleteObject(hOrbitPen);
+
+            DrawJumpGateGDI(hdc, jx, jy, jr, sim.time, z, (g_warpAnim > 0.0f));
+
+            if (sim.selectedType == 6 && sim.selectedIndex == i) {
+                HPEN hSelPen = CreatePen(PS_SOLID, 2, COLOR_CYAN);
+                HPEN hOldP7 = (HPEN)SelectObject(hdc, hSelPen);
+                SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                Rectangle(hdc, jx - jr - 8, jy - jr - 8, jx + jr + 8, jy + jr + 8);
+                SelectObject(hdc, hOldP7);
+                DeleteObject(hSelPen);
+            }
+
+            SetTextColor(hdc, RGB(0, 240, 255));
+            SelectObject(hdc, hFontSmall);
+            TextOutA(hdc, jx - 55, jy + jr + 4, b->name, (int)strlen(b->name));
         }
     }
 
@@ -5056,6 +5422,10 @@ static void RenderUI(HDC hdc, int width, int height) {
             selName = fleet[sim.selectedIndex].name;
             selType = fleet[sim.selectedIndex].role;
         }
+        else if (sim.selectedType == 6 && sim.selectedIndex >= 0 && sim.selectedIndex < CURR_SYS.bodyCount) {
+            selName = CURR_SYS.celestials[sim.selectedIndex].name;
+            selType = "Sub-Space Warp Conduit";
+        }
 
         SetTextColor(hdc, theme->primary);
         SelectObject(hdc, hFontBold);
@@ -5071,6 +5441,9 @@ static void RenderUI(HDC hdc, int width, int height) {
             AddButton(BID_TARGET_PLANET, scX + 8, scY + 42, 198, 24, "Designate Target [T]", NULL, 1);
             AddButton(BID_SEL_ACT1, scX + 8, scY + 70, 198, 24, "Inspect Biometrics", NULL, 1);
             AddButton(BID_SEL_ACT2, scX + 8, scY + 98, 198, 24, "Solar Mirror Orbit", NULL, 1);
+        } else if (sim.selectedType == 6) {
+            AddButton(BID_SEL_ACT1, scX + 8, scY + 42, 198, 24, "Engage Warp Transit [W]", NULL, 1);
+            AddButton(BID_SEL_ACT2, scX + 8, scY + 70, 198, 24, "Center Gate View", NULL, 1);
         } else {
             AddButton(BID_SEL_ACT1, scX + 8, scY + 48, 198, 24, "Inspect Telemetry", NULL, 1);
             AddButton(BID_SEL_ACT2, scX + 8, scY + 76, 198, 24, "Reposition Orbit", NULL, 1);
@@ -5169,6 +5542,11 @@ static void RenderUI(HDC hdc, int width, int height) {
 
             AddButton(BID_CRISIS_QUICK, banX + banW - 105, banY + 6, 95, 24, "MITIGATE", NULL, 1);
         }
+    }
+
+    // Jump-Gate Warp Transit FX
+    if (g_warpAnim > 0.0f) {
+        DrawJumpGateWarpFXGDI(hdc, viewportW, viewportH, headerH, g_warpAnim, z, sim.time, CURR_SYS.name);
     }
 
     SelectClipRgn(hdc, NULL);
@@ -6330,6 +6708,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
         case WM_TIMER: {
             int now = GetTickCount();
+            if (g_warpAnim > 0.0f) {
+                g_warpAnim -= 0.02f * (sim.speed > 0 ? (float)sim.speed : 1.0f);
+                if (g_warpAnim < 0.0f) g_warpAnim = 0.0f;
+            }
             if (!sim.paused && sim.speed > 0) {
                 sim.time += 0.033f * sim.speed;
                 sim.cycle += 0.003f * sim.speed;
@@ -6617,6 +6999,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     } else if (bid == BID_SEL_ACT1) {
                         if (sim.selectedType == 2) sim.activeTab = 0;
                         else if (sim.selectedType == 5) sim.activeTab = 1;
+                        else if (sim.selectedType == 6) {
+                            LoadStarSystem((g_currentSystem + 1) % g_systemCount);
+                            PlaySoundFx(SFX_ENTRY_ROAR);
+                        }
                         PlaySoundFx(SFX_CLICK);
                     } else if (bid == BID_SEL_ACT2) {
                         if (sim.selectedType == 5 && sim.selectedIndex >= 0) {
@@ -6624,6 +7010,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             SetLogMsg("Ship repositioned to stable geosynchronous orbit.", 0);
                         } else if (sim.selectedType == 2) {
                             HandleIntervention(BID_ACT_SOLAR_MIRROR);
+                        } else if (sim.selectedType == 6 && sim.selectedIndex >= 0 && sim.selectedIndex < CURR_SYS.bodyCount) {
+                            sim.camX = -CURR_SYS.celestials[sim.selectedIndex].currX + (winW - 380) / 2 + sim.camX;
+                            sim.camY = -CURR_SYS.celestials[sim.selectedIndex].currY + (winH - 80) / 2 + sim.camY;
+                            SetLogMsg("Centered optics on Hyperion Jump Gate corridor.", 0);
+                            PlaySoundFx(SFX_CLICK);
                         }
                     }
                     InvalidateRect(hwnd, NULL, FALSE);
