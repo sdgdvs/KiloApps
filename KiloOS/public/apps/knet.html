@@ -1268,6 +1268,13 @@
 </div>
 
 <script>
+  // Self-nesting guard: If KNet is loaded inside a nested iframe (such as inside KNet itself), break out to portal
+  try {
+    if (window.top !== window && window.parent !== window.top) {
+      window.location.replace('/web/portal.html');
+    }
+  } catch (e) {}
+
   // Navigation & Workspace State
   const urlInput = document.getElementById('urlInput');
   const btnGo = document.getElementById('btnGo');
@@ -2422,6 +2429,12 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
       return;
     }
 
+    // Disallow nesting KNet within KNet viewport
+    if (url.includes('knet.html') || url === window.location.pathname) {
+      url = '/web/portal.html';
+      urlInput.value = 'kweb://portal';
+    }
+
     // Virtual 1999 Web Route Mappings
     if (url.toLowerCase() === 'kweb://portal' || url.toLowerCase() === 'portal') {
       url = '/web/portal.html';
@@ -2712,6 +2725,12 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
       if (!frameLoc || !frameLoc.pathname || frameLoc.pathname === 'blank' || frameLoc.href === 'about:blank') return;
 
       const cleanPath = frameLoc.pathname;
+      if (cleanPath.includes('knet.html') || cleanPath === window.location.pathname) {
+        // Prevent recursive self-nesting of KNet in viewport
+        httpWebFrame.src = '/web/portal.html';
+        urlInput.value = 'kweb://portal';
+        return;
+      }
       let cleanSearch = '';
       if (frameLoc.search) {
         const sp = new URLSearchParams(frameLoc.search);
@@ -4001,10 +4020,20 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
   function parseLaunchUrl() {
     let target = '';
     if (window.location.hash && window.location.hash.length > 1) {
-      target = decodeURIComponent(window.location.hash.substring(1));
+      let hash = decodeURIComponent(window.location.hash.substring(1)).trim();
+      if (hash.startsWith('?')) {
+        const hashParams = new URLSearchParams(hash);
+        target = hashParams.get('url') || hashParams.get('path') || hashParams.get('q') || '';
+      } else {
+        target = hash;
+      }
     } else if (window.location.search) {
       const params = new URLSearchParams(window.location.search);
       target = params.get('url') || params.get('path') || params.get('q') || '';
+    }
+    // Block recursive nesting of knet or query string fragments
+    if (target && (target.includes('knet.html') || target === window.location.pathname || target.startsWith('?') || target.startsWith('&'))) {
+      target = '';
     }
     if (target) {
       urlInput.value = target;
@@ -4048,9 +4077,14 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
       const raw = localStorage.getItem('knet_session_state') || localStorage.getItem('knet_saved_state');
       if (raw) {
         const s = JSON.parse(raw);
-        if (s.url && s.url !== '/web/portal.html') {
+        if (s.url && s.url !== '/web/portal.html' && !s.url.includes('knet.html') && s.url !== window.location.pathname && !s.url.startsWith('?')) {
           urlInput.value = s.url;
           fetchUrl(s.url, false);
+        } else if (s.url && (s.url.includes('knet.html') || s.url.startsWith('?'))) {
+          // Heal corrupted / contaminated session state
+          localStorage.removeItem('knet_session_state');
+          localStorage.removeItem('knet_saved_state');
+          urlInput.value = '/web/portal.html';
         }
         if (Array.isArray(s.navHistory) && s.navHistory.length > 0) {
           navHistory = s.navHistory;
@@ -4138,8 +4172,11 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
       if (httpContentArea && httpContentArea.style.display === 'block') activeViewMode = 'source';
       else if (httpHexArea && httpHexArea.style.display === 'block') activeViewMode = 'hex';
 
+      const currentVal = urlInput.value || '';
+      const safeUrl = (currentVal.includes('knet.html') || currentVal.startsWith('?')) ? '/web/portal.html' : currentVal;
+
       const autoState = {
-        url: urlInput.value,
+        url: safeUrl,
         navHistory: navHistory.slice(-25),
         navIdx: navIdx,
         activeTab: activeTabId,

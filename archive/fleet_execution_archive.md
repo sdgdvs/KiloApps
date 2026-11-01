@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T14:41:19-07:00 — kilo-expander: KMystery (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KMystery across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
+
 - **2026-10-31T13:37:10-07:00 — kilo-qa: KCipher (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS (0 errors, web 165.0 KB, native 21.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kcipher_tutorialSeen flag, liveTransform persistence, and Escape modal dismissals.

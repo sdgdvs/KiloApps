@@ -1,7 +1,16 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.4.36';
+const MICROS_VERSION = '0.4.37';
+
+function formatAppUrl(url, version) {
+  if (!url) return '';
+  const hashIndex = url.indexOf('#');
+  const hash = hashIndex !== -1 ? url.slice(hashIndex) : '';
+  const base = hashIndex !== -1 ? url.slice(0, hashIndex) : url;
+  const sep = base.includes('?') ? '&' : '?';
+  return `${base}${sep}v=${version}${hash}`;
+}
 
 // Singleton Web Audio Synthesizer (Replaces per-click new AudioContext() leak)
 const osAudioCtxRef = { current: null };
@@ -456,7 +465,7 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
           <iframe 
             ref={iframeRef} 
             className="xp-iframe" 
-            src={app.url ? (app.url.includes('?') ? `${app.url}&v=${MICROS_VERSION}` : `${app.url}?v=${MICROS_VERSION}`) : ''} 
+            src={formatAppUrl(app.url, MICROS_VERSION)} 
             title={app.title} 
             sandbox="allow-scripts allow-same-origin allow-downloads allow-popups"
             style={{ opacity: 0, transition: 'opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)', transform: 'scale(0.98)' }}
@@ -902,7 +911,7 @@ function App() {
       const appDef = APPS.find(a => a.id === appId);
       if (appDef) {
         // Simple way to pass path to a newly launched app is via URL hash
-        openApp({ ...appDef, url: `${appDef.url}#${path || ''}` });
+        openApp(path ? { ...appDef, url: `${appDef.url}#${path}` } : appDef);
       }
     };
     window.addEventListener('os-launch-app', handler);
@@ -1080,7 +1089,7 @@ function App() {
           </button>
         </header>
         <iframe 
-          src={standaloneApp.url ? (standaloneApp.url.includes('?') ? `${standaloneApp.url}&v=${MICROS_VERSION}` : `${standaloneApp.url}?v=${MICROS_VERSION}`) : ''} 
+          src={formatAppUrl(standaloneApp.url, MICROS_VERSION)} 
           title={standaloneApp.title}
           sandbox="allow-scripts allow-same-origin allow-downloads allow-popups"
           style={{ flex: 1, width: '100%', border: 'none' }}

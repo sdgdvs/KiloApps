@@ -291,6 +291,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T17:07:00-07:00 — kilo-adhoc: KNet (Fixed Duplicate Banner & Viewport Self-Nesting)**
+  - Status: PASS ✅ (0 errors, web 208.1 KB, native 56.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Fixed KiloOS `formatAppUrl` query parameter ordering before URL hash and sanitized `os-launch-app` empty path dispatch (`path ? ... : appDef`).
+  - Added nested iframe self-nesting guard in `knet.html` (`window.parent !== window.top`), guarded `fetchUrl` and `httpWebFrame` load sync against recursive `knet.html` embedding, sanitized `parseLaunchUrl` hash parsing, and auto-healed corrupted `knet_session_state`.
+  - Updated `deep_core.html` and `webring.html` home links to canonical `/web/portal.html` and modernized `portal.html` KNet references.
+
 - **2026-10-31T16:40:13-07:00 — kilo-tester: KCyber (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KCyber across web and native targets.
@@ -314,8 +320,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Gameplay & Parity Findings: accept overwrites native node_files and download double-pays 2x contract reward in web (0x bonus in C); KCyber/main.c Timer 2 keeps attacking while connected_node is active after PIN crack; toolbar Reboot fails inside shop/hack/root modes; modal Esc in cmdInput lacks stopPropagation.
   - Phase VI Mesh Findings: Missing KiloOS VFS postMessage Open/Save/Paydata export (/home/saves/ and /home/crypto/) and RFMS NetLink Intrusion Race multiplayer.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-graphics`->`KCyber`, `kilo-usability`->`KCyber`, `kilo-tester`->`KCyber`, `kilo-expander`->`KCyber`]; advanced `kilo-review` to `KStellar`; next agent `kilo-creator`.
-
-- **2026-10-31T14:41:19-07:00 — kilo-expander: KMystery (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KMystery across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
