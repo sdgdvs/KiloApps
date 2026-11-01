@@ -644,6 +644,25 @@
       </div>
     </div>
 
+    <!-- Slashbox: Karma & Moderation Console -->
+    <div class="slashbox" id="sideModConsoleBox">
+      <div class="slashbox-header">
+        <span>Moderation Console</span>
+        <span>Karma HUD</span>
+      </div>
+      <div class="slashbox-body" style="font-size:11px;">
+        <p><strong>Your Status:</strong> <span class="karma-pill" id="sideKarmaDisplay">Good (42)</span></p>
+        <p><strong>Moderation Points:</strong> <span class="mod-points-pill" id="sideModDisplay">5</span></p>
+        <div style="margin: 6px 0; font-size:10px; color:#475569; line-height:1.4;">
+          Moderate responsibly: <code>-1 Troll</code> to <code>+5 Insightful</code>. Points replenish automatically or click below.
+        </div>
+        <div style="display:flex; gap:4px; margin-top:6px;">
+          <button type="button" class="btn-retro" style="flex:1; font-size:10px;" onclick="resetModPoints()">Replenish Points</button>
+          <button type="button" class="btn-retro btn-green" style="font-size:10px;" onclick="toggleShortcutHelp()">Shortcuts [?]</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Slashbox: Cluster Quick-Stat -->
     <div class="slashbox">
       <div class="slashbox-header">
@@ -1268,11 +1287,20 @@ function getKarmaLabel(k) {
   return `Terrible (${k})`;
 }
 
+/**
+ * Updates top masthead and sidebar HUD with current Karma status and moderation points.
+ * @returns {void}
+ */
 function updateUserInfoBar() {
   const karmaEl = document.getElementById('userKarmaDisplay');
   const modEl = document.getElementById('userModPointsDisplay');
-  if (karmaEl) karmaEl.textContent = getKarmaLabel(userKarma);
+  const sideKarmaEl = document.getElementById('sideKarmaDisplay');
+  const sideModEl = document.getElementById('sideModDisplay');
+  const label = getKarmaLabel(userKarma);
+  if (karmaEl) karmaEl.textContent = label;
   if (modEl) modEl.textContent = String(userModPoints);
+  if (sideKarmaEl) sideKarmaEl.textContent = label;
+  if (sideModEl) sideModEl.textContent = String(userModPoints);
 }
 
 function resetModPoints() {
@@ -1638,6 +1666,8 @@ function renderCommentNode(c, depth, threshold, storyId, viewMode) {
         <button type="button" class="btn-retro" style="font-size:10px; padding:1px 5px;" onclick="moderateComment('${storyId}', '${c.id}')">Apply</button>
         <button type="button" class="btn-retro btn-green" style="font-size:10px; padding:1px 5px; margin-left:4px;" onclick="quickModComment('${storyId}', '${c.id}', 1, 'Insightful')" title="Quick +1 Insightful">+1</button>
         <button type="button" class="btn-retro" style="font-size:10px; padding:1px 5px; margin-left:2px; color:#dc2626;" onclick="quickModComment('${storyId}', '${c.id}', -1, 'Troll')" title="Quick -1 Troll">-1</button>
+        <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px; margin-left:2px; color:#059669; font-weight:bold;" onclick="quickSetScore('${storyId}', '${c.id}', 5, 'Insightful')" title="Direct +5 Insightful (Pure Signal)">+5 Pure</button>
+        <button type="button" class="btn-retro" style="font-size:10px; padding:1px 4px; margin-left:2px; color:#dc2626; font-weight:bold;" onclick="quickSetScore('${storyId}', '${c.id}', -1, 'Troll')" title="Direct -1 Troll">-1 Troll</button>
       </div>
     </div>
   `;
@@ -1719,6 +1749,51 @@ function updateCommentThreshold(storyId) {
   }
 }
 
+/**
+ * Directly sets a comment's rating from -1 to +5 with a semantic category tag.
+ * @param {string} storyId - Parent story ID.
+ * @param {string} commentId - Comment ID to rate.
+ * @param {number} targetScore - Score integer (-1 to 5).
+ * @param {string} tagStr - Semantic category (e.g. Troll, Insightful).
+ * @returns {void}
+ */
+function quickSetScore(storyId, commentId, targetScore, tagStr) {
+  if (userModPoints <= 0) {
+    showToast("You have 0 moderation points remaining! Replenish in the Moderation Console.");
+    return;
+  }
+  function applyScore(arr) {
+    for (let c of arr) {
+      if (c.id === commentId) {
+        c.score = Math.max(-1, Math.min(5, targetScore));
+        c.tag = tagStr;
+        return true;
+      }
+      if (c.children && applyScore(c.children)) return true;
+    }
+    return false;
+  }
+  if (applyScore(commentsState[storyId])) {
+    userModPoints--;
+    userKarma += 1;
+    safeSet('slashnet_mod_points', userModPoints);
+    safeSet('slashnet_user_karma', userKarma);
+    safeSet('slashnet_comments_v1', commentsState);
+    updateUserInfoBar();
+    renderComments(storyId);
+    showToast(`Rated comment as ${targetScore >= 0 ? '+' + targetScore : targetScore} ${tagStr}. (+1 Karma)`);
+    playRetroSound(targetScore > 0 ? 800 : 350, 0.08);
+  }
+}
+
+/**
+ * Incrementally moderates a comment by delta (+1 or -1) with a tag.
+ * @param {string} storyId - Parent story ID.
+ * @param {string} commentId - Target comment ID.
+ * @param {number} delta - Score delta (-1 or +1).
+ * @param {string} tagStr - Moderation tag.
+ * @returns {void}
+ */
 function quickModComment(storyId, commentId, delta, tagStr) {
   if (userModPoints <= 0) {
     showToast("You have 0 moderation points remaining! Replenish in the top bar.");
