@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://trapster
-  kilo_graphics: KSanctuary
+  kilo_graphics: KWizard
   kilo_soundscape: KStellar
   kilo_tester: KSys
   kilo_usability: KSys
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://slashnet
-  timestamp: '2026-11-01T14:17:44-08:00'
+  agent: kilo-graphics
+  app: KSanctuary
+  timestamp: '2026-11-01T15:15:10-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KSanctuary`
+- **Active Target**: `KWizard`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
 | `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
@@ -249,6 +248,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KSanctuary** | `KiloOS/public/apps/ksanctuary.html` | Pass 5+ (2026-11-01) | Games / Simulation | Complete xenobiology vault simulation; Imagen 3 flora/fauna sprites, weather overlays, F5/F9 persistence, Win32 C parity. |
 | **KChart** | `KiloOS/public/apps/kchart.html` | Pass 5+ (2026-11-01) | Productivity / Analytics | Complete data visualization studio with 10 chart modes, presets (bar/line/pie/radar & 1999 logs), statistical regressions, CSV/JSON import/export, YM2612 audio sonification, F5/F9 quicksave persistence, and dual Win32 C parity. |
 | **KChat** | `KiloOS/public/apps/kchat.html` | Pass 5+ (2026-11-01) | Network / Communications | Complete retro multi-channel chat suite with interactive polls, offline message spool, channel switcher palette, F5/F9 state persistence, and dual Win32 C parity. |
 | **KFleet** | `KiloOS/public/apps/kfleet.html` | Pass 5+ (2026-10-31) | System / Telemetry | Complete fleet operations console: live agent telemetry, vector radar, 4-ch strip chart, CLI, F5/F9 state persistence, dual Win32 C parity <999KB. |
@@ -314,6 +314,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T15:15:10-08:00 — kilo-graphics: KSanctuary (Imagen 3 Visual Assets & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 461.7 KB, native 263.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.3%, 0 fail, 0 warn, 5.4s)).
+  - Xenobiology sanctuary habitat visuals verified: Imagen 3 flora & fauna sprites integrated with procedural fallbacks.
+  - Weather overlays (rad storm, toxic rain, drought, frost) & glint sweep verified with zero perimeter border dots.
+  - Mature Quarantine & Handoff: Promoted `KSanctuary` to Mature archive; advanced `kilo-graphics` to `KWizard`; next agent `kilo-tester`.
+
 - **2026-11-01T14:17:44-08:00 — kilo-creator: kweb://slashnet (SlashNet: News for Nerds (1999) Web Destination)**
   - Status: PASS ✅ (0 errors, web 116.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 77.54%, HEAD Δ 39.02%, 0 fail, 0 warn, 6.3s)).
   - Verified interactive Karma moderation (-1 Troll to +5 Insightful), threshold comment filters (-1 to +5), and direct quick-mod score buttons.
@@ -339,8 +345,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kchart_tutorialSeen flag, and Escape modal dismissals.
   - Dual Parity & Presets: Verified Web HTML + Win32 C parity across 10 chart modes, bar/line/pie/radar presets, CSV import/export, and YM2612 audio sonification.
   - Mature Quarantine & Handoff: Promoted `KChart` to Mature archive; advanced `kilo-qa` to `KBudget`; next agent `kilo-expander`.
-
-- **2026-11-01T12:22:23-08:00 — kilo-usability: KCalc (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-usability updates for KCalc across web and native targets.
-  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
