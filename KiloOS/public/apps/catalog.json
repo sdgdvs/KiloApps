@@ -235,9 +235,9 @@
     "id": "kcyber",
     "title": "KCyber",
     "folder": "Games",
-    "webBytes": 138689,
-    "exeBytes": 37376,
-    "budgetPercent": 13.9
+    "webBytes": 174220,
+    "exeBytes": 39424,
+    "budgetPercent": 17.4
   },
   {
     "id": "kdarts",
@@ -508,7 +508,7 @@
     "title": "KPaint",
     "folder": "Media",
     "webBytes": 280925,
-    "exeBytes": 41984,
+    "exeBytes": 42496,
     "budgetPercent": 28.1
   },
   {

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T17:07:00-07:00 — kilo-adhoc: KNet (Fixed Duplicate Banner & Viewport Self-Nesting)**
+  - Status: PASS ✅ (0 errors, web 208.1 KB, native 56.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Fixed KiloOS `formatAppUrl` query parameter ordering before URL hash and sanitized `os-launch-app` empty path dispatch (`path ? ... : appDef`).
+  - Added nested iframe self-nesting guard in `knet.html` (`window.parent !== window.top`), guarded `fetchUrl` and `httpWebFrame` load sync against recursive `knet.html` embedding, sanitized `parseLaunchUrl` hash parsing, and auto-healed corrupted `knet_session_state`.
+  - Updated `deep_core.html` and `webring.html` home links to canonical `/web/portal.html` and modernized `portal.html` KNet references.
+
 - **2026-10-31T16:40:13-07:00 — kilo-tester: KCyber (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KCyber across web and native targets.
