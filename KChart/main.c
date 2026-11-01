@@ -1,5 +1,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <commdlg.h>
 
 int dpi = 96;
 #define SCALE(x) MulDiv(x, dpi, 96)
@@ -44,9 +45,10 @@ static double my_atan2(double y, double x) {
 
 #define NUM_ITEMS 5
 
-int values[NUM_ITEMS] = { 20, 60, 45, 80, 30 };
-int target[NUM_ITEMS] = { 20, 60, 45, 80, 30 };
-const char* labels[NUM_ITEMS] = { "Q1", "Q2", "Q3", "Q4", "Q5" };
+int values[NUM_ITEMS] = { 85, 65, 40, 55, 30 };
+int target[NUM_ITEMS] = { 85, 65, 40, 55, 30 };
+const char* labels[NUM_ITEMS] = { "Hardware", "Software", "Peripherals", "Networking", "Services" };
+static char customLabels[NUM_ITEMS][32];
 
 #define NUM_THEMES 5
 const char* themeNames[NUM_THEMES] = { "Cyber Teal", "Neon Sunset", "Emerald Forest", "Sunset Warmth", "Synthwave" };
@@ -66,8 +68,20 @@ COLORREF themes[NUM_THEMES][NUM_ITEMS] = {
 
 int currentTheme = 0;
 
-#define NUM_PRESETS 9
+// Chart modes: 0=Bar, 1=Line, 2=Area, 3=Pie, 4=Donut, 5=Radar, 6=H-Bar, 7=Step, 8=Scatter, 9=Polar
+#define NUM_MODES 10
+int chartMode = 0;
+const char* modeNames[NUM_MODES] = {
+    "Bar View", "Line View", "Area View", "Pie View", "Donut View",
+    "Radar View", "H-Bar View", "Step View", "Scatter View", "Polar View"
+};
+
+#define NUM_PRESETS 12
 const char* presetNames[NUM_PRESETS] = {
+    "Bar Preset (Revenue)",
+    "Line Preset (Temperature)",
+    "Pie Preset (Sound Cards)",
+    "Radar Preset (Subnet '99)",
     "Quarterly Revenue",
     "Tech Stack Share",
     "Monthly Temp",
@@ -75,11 +89,29 @@ const char* presetNames[NUM_PRESETS] = {
     "Weekly Activity",
     "Subnet 10.19.99.x Packet Activity",
     "Y2K System Readiness %",
-    "1999 Sound Card Market Share",
     "Surreal vs Tremor LAN Ping (ms)"
 };
 
+int presetModes[NUM_PRESETS] = {
+    0, // Bar View
+    1, // Line View
+    3, // Pie View
+    5, // Radar View
+    0, // Bar View
+    4, // Donut View
+    1, // Line View
+    6, // H-Bar View
+    2, // Area View
+    5, // Radar View
+    7, // Step View
+    8  // Scatter View
+};
+
 const char* presetLabels[NUM_PRESETS][NUM_ITEMS] = {
+    { "Hardware", "Software", "Peripherals", "Networking", "Services" },
+    { "00:00", "04:00", "08:00", "12:00", "16:00" },
+    { "SB16", "AWE64", "GUS", "YMF724", "Solo1" },
+    { "Throughput", "Latency", "PacketLoss", "Jitter", "Uptime" },
     { "Q1", "Q2", "Q3", "Q4", "Q5" },
     { "React", "Vue", "Svelte", "Node", "Python" },
     { "Jan", "Apr", "Jul", "Oct", "Dec" },
@@ -87,11 +119,14 @@ const char* presetLabels[NUM_PRESETS][NUM_ITEMS] = {
     { "Mon", "Tue", "Wed", "Thu", "Fri" },
     { "10.19.99.1", "10.19.99.4", "10.19.99.12", "10.19.99.7F", "10.19.99.128" },
     { "BIOS", "Win98", "RTDB", "SCADA", "Mail" },
-    { "SBLive", "AWE64", "GUS", "Solo1", "YMF724" },
     { "Surreal", "Tremor", "VoidCraft", "HalfCycle", "MachinaEx" }
 };
 
 int presetValues[NUM_PRESETS][NUM_ITEMS] = {
+    { 85, 65, 40, 55, 30 },
+    { 18, 12, 24, 38, 32 },
+    { 45, 25, 12, 10, 8 },
+    { 88, 75, 92, 68, 99 },
     { 25, 65, 45, 90, 35 },
     { 42, 28, 18, 55, 60 },
     { 14, 22, 35, 20, 10 },
@@ -99,24 +134,28 @@ int presetValues[NUM_PRESETS][NUM_ITEMS] = {
     { 30, 45, 15, 50, 40 },
     { 32, 84, 46, 98, 62 },
     { 98, 95, 82, 74, 100 },
-    { 52, 22, 11, 7, 5 },
     { 28, 34, 42, 38, 55 }
 };
 
 int currentPreset = 0;
 
+void CalculateStats(void);
+
 void LoadPreset(int idx) {
     if (idx < 0 || idx >= NUM_PRESETS) return;
     currentPreset = idx;
+    chartMode = presetModes[idx];
     for (int i = 0; i < NUM_ITEMS; i++) {
         labels[i] = presetLabels[idx][i];
         target[i] = presetValues[idx][i];
+        values[i] = presetValues[idx][i];
     }
+    CalculateStats();
 }
 
 int selectedIndex = 0;
 
-char statusText[128] = "Press [F1] Help | [P] Presets | [1-9,0] Mode | [T] Trend | [C] Theme | [R] Rand | [Up/Down] Nudge | [Ctrl+C] Copy";
+char statusText[160] = "Press [F1] Help | [P] Presets (Bar/Line/Pie/Radar) | [F5] Save | [F9] Load | [E] Export CSV | [I] Import CSV";
 DWORD statusExpiry = 0;
 
 void SetStatus(const char* msg) {
@@ -142,17 +181,10 @@ HWND hBtnTheme;
 HWND hBtnTrend;
 HWND hBtnSort;
 HWND hBtnExport;
+HWND hBtnImport;
 HWND hBtnCopy;
 HWND hBtnHelp;
 HFONT hBtnFont = NULL;
-
-// Chart modes: 0=Bar, 1=Line, 2=Area, 3=Pie, 4=Donut, 5=Radar, 6=H-Bar, 7=Step, 8=Scatter, 9=Polar
-#define NUM_MODES 10
-int chartMode = 0;
-const char* modeNames[NUM_MODES] = {
-    "Bar View", "Line View", "Area View", "Pie View", "Donut View",
-    "Radar View", "H-Bar View", "Step View", "Scatter View", "Polar View"
-};
 
 // Trend modes: 0=Off, 1=Linear Fit, 2=Mov Avg, 3=Mean, 4=Poly (x2)
 #define NUM_TRENDS 5
@@ -397,25 +429,28 @@ void ShowHelpDialog(HWND hwnd) {
         "KChart Studio - Advanced Data Visualization & Analytics Suite\n\n"
         "QUICK-START TUTORIAL:\n"
         "  1. Direct Mode: Press 1-9 to switch Bar, Line, Area, Pie, Donut, Radar, H-Bar, Step, Scatter views, [0] for Polar view.\n"
-        "  2. Presets: Press [P] or click [Preset] to cycle 9 sample datasets (Finance, Tech, Subnet Telemetry '99, Y2K).\n"
-        "  3. Interactive Tweaking: Press [Left]/[Right] to select; press [Up]/[Down] or [+/-] to nudge value.\n"
-        "  4. Regression Overlays: Press [T] or click [Trend] for Linear Fit, MovAvg, Mean, or Quadratic Poly.\n"
-        "  5. Export & Copy: Press [Ctrl+C] or click [Copy] to copy data and statistics to the Windows clipboard.\n\n"
+        "  2. Presets: Press [P] or click [Preset] to cycle presets (Bar, Line, Pie, Radar presets & 1999 logs).\n"
+        "  3. CSV Data: Press [I] / [Ctrl+O] to Import CSV table; press [E] / [Ctrl+S] to Export CSV/JSON/MD.\n"
+        "  4. State Persistence: Press [F5] to QuickSave snapshot; press [F9] to QuickLoad snapshot.\n"
+        "  5. Interactive Tweaking: Press [Left]/[Right] to select; press [Up]/[Down] or [+/-] to nudge value.\n"
+        "  6. Regression Overlays: Press [T] or click [Trend] for Linear Fit, MovAvg, Mean, or Quadratic Poly.\n"
+        "  7. Export & Copy: Press [Ctrl+C] or click [Copy] to copy data and statistics to the Windows clipboard.\n\n"
         "KEYBOARD SHORTCUTS:\n"
         "  [F1] or [H]   : Open this Help & Feature Guide\n"
-        "  [F5]          : QuickSave snapshot to disk\n"
-        "  [F9]          : QuickLoad snapshot from disk\n"
+        "  [F5]          : QuickSave snapshot to disk (kchart_quicksave.dat)\n"
+        "  [F9]          : QuickLoad snapshot from disk (kchart_quicksave.dat)\n"
         "  [1] - [9], [0]: Select Chart Mode (1:Bar, 2:Line, 3:Area, 4:Pie, 5:Donut, 6:Radar, 7:HBar, 8:Step, 9:Scatter, 0:Polar)\n"
-        "  [P]           : Cycle Sample Presets & 1999 Logs\n"
+        "  [P]           : Cycle Presets (Bar, Line, Pie, Radar presets & 1999 Logs)\n"
         "  [M]           : Cycle Chart Modes sequentially\n"
         "  [T]           : Cycle Trendline Overlays (Off, Linear Fit, MovAvg, Mean, Poly x2)\n"
         "  [C]           : Cycle Color Themes (Cyber Teal, Neon Sunset, Emerald, etc.)\n"
         "  [R]           : Generate Randomized Dataset with animation\n"
         "  [S]           : Sort Dataset Ascending\n"
+        "  [I] / [Ctrl+O]: Import CSV dataset table (kchart_data.csv or file dialog)\n"
+        "  [E] / [Ctrl+S]: Export dataset to CSV, JSON, and Markdown reports\n"
         "  [Left]/[Right]: Select / Navigate data point\n"
         "  [Up]/[Down]   : Nudge selected value (+5 / -5)\n"
-        "  [Ctrl+C]      : Copy dataset and summary statistics to Clipboard\n"\
-        "  [E] / [Ctrl+S]: Export dataset to CSV, JSON, and Markdown reports\n"
+        "  [Ctrl+C]      : Copy dataset and summary statistics to Clipboard\n"
         "  [Esc]         : Deselect current data point\n\n"
         "MOUSE CONTROLS:\n"
         "  - Hover over bars, points, pie slices, radar spokes, or petals for interactive tooltips\n"
@@ -444,19 +479,165 @@ BOOL HasSavedState(void) {
     return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
 }
 
+#define SAVE_MAGIC 0x4B434854 // "KCHT"
+
+typedef struct {
+    DWORD magic;
+    int chartMode;
+    int currentTheme;
+    int trendMode;
+    int currentPreset;
+    int selectedIndex;
+    int values[NUM_ITEMS];
+    int target[NUM_ITEMS];
+    int labelCodes[NUM_ITEMS];
+    char labelStrings[NUM_ITEMS][32];
+} KCHART_SAVE;
+
+BOOL ImportCSVData(const char* csvText, int textLen) {
+    if (!csvText || textLen <= 0) return FALSE;
+    int lineStart = 0;
+    int itemCount = 0;
+    int lineNum = 0;
+
+    while (lineStart < textLen && itemCount < NUM_ITEMS) {
+        int lineEnd = lineStart;
+        while (lineEnd < textLen && csvText[lineEnd] != '\r' && csvText[lineEnd] != '\n') {
+            lineEnd++;
+        }
+        if (lineEnd > lineStart) {
+            int commaPos = -1;
+            BOOL inQuotes = FALSE;
+            for (int k = lineStart; k < lineEnd; k++) {
+                if (csvText[k] == '\"') inQuotes = !inQuotes;
+                else if (csvText[k] == ',' && !inQuotes) {
+                    commaPos = k;
+                    break;
+                }
+            }
+            if (commaPos != -1) {
+                int lStart = lineStart;
+                int lEnd = commaPos;
+                while (lStart < lEnd && (csvText[lStart] == ' ' || csvText[lStart] == '\t' || csvText[lStart] == '\"')) lStart++;
+                while (lEnd > lStart && (csvText[lEnd - 1] == ' ' || csvText[lEnd - 1] == '\t' || csvText[lEnd - 1] == '\"')) lEnd--;
+
+                int vStart = commaPos + 1;
+                int vEnd = lineEnd;
+                while (vStart < vEnd && (csvText[vStart] == ' ' || csvText[vStart] == '\t' || csvText[vStart] == '\"')) vStart++;
+                while (vEnd > vStart && (csvText[vEnd - 1] == ' ' || csvText[vEnd - 1] == '\t' || csvText[vEnd - 1] == '\"')) vEnd--;
+
+                BOOL isHeader = FALSE;
+                if (lineNum == 0) {
+                    for (int k = vStart; k < vEnd; k++) {
+                        if ((csvText[k] >= 'A' && csvText[k] <= 'Z') || (csvText[k] >= 'a' && csvText[k] <= 'z')) {
+                            isHeader = TRUE;
+                            break;
+                        }
+                    }
+                }
+
+                if (!isHeader && lEnd > lStart) {
+                    int copyLen = lEnd - lStart;
+                    if (copyLen > 31) copyLen = 31;
+                    for (int c = 0; c < copyLen; c++) {
+                        customLabels[itemCount][c] = csvText[lStart + c];
+                    }
+                    customLabels[itemCount][copyLen] = '\0';
+                    labels[itemCount] = customLabels[itemCount];
+
+                    int val = 0;
+                    int p = vStart;
+                    while (p < vEnd && csvText[p] >= '0' && csvText[p] <= '9') {
+                        val = val * 10 + (csvText[p] - '0');
+                        p++;
+                    }
+                    if (val < 0) val = 0;
+                    target[itemCount] = val;
+                    values[itemCount] = val;
+                    itemCount++;
+                }
+            }
+            lineNum++;
+        }
+        lineStart = lineEnd;
+        while (lineStart < textLen && (csvText[lineStart] == '\r' || csvText[lineStart] == '\n')) {
+            lineStart++;
+        }
+    }
+
+    if (itemCount > 0) {
+        CalculateStats();
+        return TRUE;
+    }
+    return FALSE;
+}
+
+BOOL ImportCSVFile(HWND hwnd, const char* forcedPath) {
+    char path[MAX_PATH] = "kchart_data.csv";
+    if (forcedPath && forcedPath[0]) {
+        lstrcpyA(path, forcedPath);
+    } else {
+        DWORD attr = GetFileAttributesA("kchart_data.csv");
+        if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY) || (forcedPath != NULL && forcedPath[0] == '\0')) {
+            OPENFILENAMEA ofn;
+            ZeroMemory(&ofn, sizeof(ofn));
+            ofn.lStructSize = sizeof(ofn);
+            ofn.hwndOwner = hwnd;
+            ofn.lpstrFilter = "CSV Files (*.csv)\0*.csv\0Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
+            ofn.lpstrFile = path;
+            path[0] = '\0';
+            ofn.nMaxFile = MAX_PATH;
+            ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+            if (!GetOpenFileNameA(&ofn)) {
+                return FALSE;
+            }
+        }
+    }
+
+    HANDLE hFile = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        SetStatus("Import failed: Could not open file.");
+        return FALSE;
+    }
+
+    char buf[4096];
+    DWORD bytesRead = 0;
+    if (ReadFile(hFile, buf, sizeof(buf) - 1, &bytesRead, NULL) && bytesRead > 0) {
+        buf[bytesRead] = '\0';
+        CloseHandle(hFile);
+        if (ImportCSVData(buf, (int)bytesRead)) {
+            char statusBuf[128];
+            wsprintfA(statusBuf, "Imported %s successfully! [I]", path);
+            SetStatus(statusBuf);
+            if (hwnd) InvalidateRect(hwnd, NULL, TRUE);
+            return TRUE;
+        } else {
+            SetStatus("Import failed: No valid data found in CSV.");
+            if (hwnd) InvalidateRect(hwnd, NULL, TRUE);
+            return FALSE;
+        }
+    }
+    CloseHandle(hFile);
+    SetStatus("Import failed: File is empty.");
+    if (hwnd) InvalidateRect(hwnd, NULL, TRUE);
+    return FALSE;
+}
+
 BOOL QuickSaveState(HWND hwnd) {
     HANDLE hFile = CreateFileA("kchart_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
-        int state[5 + NUM_ITEMS * 3];
-        state[0] = chartMode;
-        state[1] = currentTheme;
-        state[2] = trendMode;
-        state[3] = currentPreset;
-        state[4] = selectedIndex;
+        KCHART_SAVE save;
+        ZeroMemory(&save, sizeof(save));
+        save.magic = SAVE_MAGIC;
+        save.chartMode = chartMode;
+        save.currentTheme = currentTheme;
+        save.trendMode = trendMode;
+        save.currentPreset = currentPreset;
+        save.selectedIndex = selectedIndex;
         for (int i = 0; i < NUM_ITEMS; i++) {
-            state[5 + i] = values[i];
-            state[5 + NUM_ITEMS + i] = target[i];
+            save.values[i] = values[i];
+            save.target[i] = target[i];
             int lIdx = -1;
             for (int k = 0; k < NUM_ITEMS; k++) {
                 if (labels[i] == presetLabels[currentPreset][k] || lstrcmpA(labels[i], presetLabels[currentPreset][k]) == 0) {
@@ -476,9 +657,17 @@ BOOL QuickSaveState(HWND hwnd) {
                 }
             }
             if (lIdx == -1) lIdx = i;
-            state[5 + NUM_ITEMS * 2 + i] = lIdx;
+            save.labelCodes[i] = lIdx;
+            if (labels[i]) {
+                int c = 0;
+                while (labels[i][c] && c < 31) {
+                    save.labelStrings[i][c] = labels[i][c];
+                    c++;
+                }
+                save.labelStrings[i][c] = '\0';
+            }
         }
-        WriteFile(hFile, state, sizeof(state), &written, NULL);
+        WriteFile(hFile, &save, sizeof(save), &written, NULL);
         CloseHandle(hFile);
         MarkTutorialSeen();
         SetStatus("Session QuickSaved to disk [F5]");
@@ -494,44 +683,96 @@ BOOL QuickLoadState(HWND hwnd) {
     HANDLE hFile = CreateFileA("kchart_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD read = 0;
-        int state[5 + NUM_ITEMS * 3];
-        DWORD sz = sizeof(state);
-        DWORD prevSz = sizeof(int) * (5 + NUM_ITEMS * 2);
-        DWORD legacySz = sizeof(int) * (4 + NUM_ITEMS * 2);
-        if (ReadFile(hFile, state, sz, &read, NULL) && (read == sz || read == prevSz || read == legacySz)) {
-            chartMode = state[0];
+        KCHART_SAVE save;
+        if (ReadFile(hFile, &save, sizeof(save), &read, NULL) && read == sizeof(save) && save.magic == SAVE_MAGIC) {
+            chartMode = save.chartMode;
             if (chartMode < 0 || chartMode >= NUM_MODES) chartMode = 0;
-            currentTheme = state[1];
+            currentTheme = save.currentTheme;
             if (currentTheme < 0 || currentTheme >= NUM_THEMES) currentTheme = 0;
-            trendMode = state[2];
+            trendMode = save.trendMode;
             if (trendMode < 0 || trendMode >= NUM_TRENDS) trendMode = 0;
-            currentPreset = state[3];
+            currentPreset = save.currentPreset;
             if (currentPreset < 0 || currentPreset >= NUM_PRESETS) currentPreset = 0;
-            LoadPreset(currentPreset);
+            selectedIndex = save.selectedIndex;
+            if (selectedIndex < 0 || selectedIndex >= NUM_ITEMS) selectedIndex = 0;
 
-            if (read >= prevSz) {
-                selectedIndex = state[4];
-                if (selectedIndex < 0 || selectedIndex >= NUM_ITEMS) selectedIndex = 0;
-                for (int i = 0; i < NUM_ITEMS; i++) {
-                    values[i] = state[5 + i];
-                    target[i] = state[5 + NUM_ITEMS + i];
-                    if (values[i] < 0) values[i] = 0;
-                    if (target[i] < 0) target[i] = 0;
+            for (int i = 0; i < NUM_ITEMS; i++) {
+                values[i] = save.values[i];
+                target[i] = save.target[i];
+                if (values[i] < 0) values[i] = 0;
+                if (target[i] < 0) target[i] = 0;
+                for (int c = 0; c < 32; c++) {
+                    customLabels[i][c] = save.labelStrings[i][c];
                 }
-                if (read == sz) {
+                customLabels[i][31] = '\0';
+                labels[i] = customLabels[i];
+            }
+            CalculateStats();
+            MarkTutorialSeen();
+            SetStatus("Session QuickLoaded from disk [F9]");
+            if (hwnd) InvalidateRect(hwnd, NULL, TRUE);
+            CloseHandle(hFile);
+            return TRUE;
+        } else {
+            // Check legacy save format
+            SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+            int state[5 + NUM_ITEMS * 3];
+            DWORD sz = sizeof(state);
+            DWORD prevSz = sizeof(int) * (5 + NUM_ITEMS * 2);
+            DWORD legacySz = sizeof(int) * (4 + NUM_ITEMS * 2);
+            if (ReadFile(hFile, state, sz, &read, NULL) && (read == sz || read == prevSz || read == legacySz)) {
+                chartMode = state[0];
+                if (chartMode < 0 || chartMode >= NUM_MODES) chartMode = 0;
+                currentTheme = state[1];
+                if (currentTheme < 0 || currentTheme >= NUM_THEMES) currentTheme = 0;
+                trendMode = state[2];
+                if (trendMode < 0 || trendMode >= NUM_TRENDS) trendMode = 0;
+                currentPreset = state[3];
+                if (currentPreset < 0 || currentPreset >= NUM_PRESETS) currentPreset = 0;
+                LoadPreset(currentPreset);
+                chartMode = state[0];
+
+                if (read >= prevSz) {
+                    selectedIndex = state[4];
+                    if (selectedIndex < 0 || selectedIndex >= NUM_ITEMS) selectedIndex = 0;
                     for (int i = 0; i < NUM_ITEMS; i++) {
-                        int valCode = state[5 + NUM_ITEMS * 2 + i];
-                        if (valCode >= 0 && valCode < NUM_ITEMS) {
-                            labels[i] = presetLabels[currentPreset][valCode];
-                        } else if (valCode >= 100) {
-                            int p = valCode / 100;
-                            int k = valCode % 100;
-                            if (p < NUM_PRESETS && k < NUM_ITEMS) {
-                                labels[i] = presetLabels[p][k];
+                        values[i] = state[5 + i];
+                        target[i] = state[5 + NUM_ITEMS + i];
+                        if (values[i] < 0) values[i] = 0;
+                        if (target[i] < 0) target[i] = 0;
+                    }
+                    if (read == sz) {
+                        for (int i = 0; i < NUM_ITEMS; i++) {
+                            int valCode = state[5 + NUM_ITEMS * 2 + i];
+                            if (valCode >= 0 && valCode < NUM_ITEMS) {
+                                labels[i] = presetLabels[currentPreset][valCode];
+                            } else if (valCode >= 100) {
+                                int p = valCode / 100;
+                                int k = valCode % 100;
+                                if (p < NUM_PRESETS && k < NUM_ITEMS) {
+                                    labels[i] = presetLabels[p][k];
+                                }
+                            }
+                        }
+                    } else {
+                        int used[NUM_ITEMS] = { 0 };
+                        for (int i = 0; i < NUM_ITEMS; i++) {
+                            for (int k = 0; k < NUM_ITEMS; k++) {
+                                if (!used[k] && target[i] == presetValues[currentPreset][k]) {
+                                    labels[i] = presetLabels[currentPreset][k];
+                                    used[k] = 1;
+                                    break;
+                                }
                             }
                         }
                     }
                 } else {
+                    for (int i = 0; i < NUM_ITEMS; i++) {
+                        values[i] = state[4 + i];
+                        target[i] = state[4 + NUM_ITEMS + i];
+                        if (values[i] < 0) values[i] = 0;
+                        if (target[i] < 0) target[i] = 0;
+                    }
                     int used[NUM_ITEMS] = { 0 };
                     for (int i = 0; i < NUM_ITEMS; i++) {
                         for (int k = 0; k < NUM_ITEMS; k++) {
@@ -543,30 +784,13 @@ BOOL QuickLoadState(HWND hwnd) {
                         }
                     }
                 }
-            } else {
-                for (int i = 0; i < NUM_ITEMS; i++) {
-                    values[i] = state[4 + i];
-                    target[i] = state[4 + NUM_ITEMS + i];
-                    if (values[i] < 0) values[i] = 0;
-                    if (target[i] < 0) target[i] = 0;
-                }
-                int used[NUM_ITEMS] = { 0 };
-                for (int i = 0; i < NUM_ITEMS; i++) {
-                    for (int k = 0; k < NUM_ITEMS; k++) {
-                        if (!used[k] && target[i] == presetValues[currentPreset][k]) {
-                            labels[i] = presetLabels[currentPreset][k];
-                            used[k] = 1;
-                            break;
-                        }
-                    }
-                }
+                CalculateStats();
+                MarkTutorialSeen();
+                SetStatus("Session QuickLoaded from disk [F9]");
+                if (hwnd) InvalidateRect(hwnd, NULL, TRUE);
+                CloseHandle(hFile);
+                return TRUE;
             }
-            CalculateStats();
-            MarkTutorialSeen();
-            SetStatus("Session QuickLoaded from disk [F9]");
-            if (hwnd) InvalidateRect(hwnd, NULL, TRUE);
-            CloseHandle(hFile);
-            return TRUE;
         }
         CloseHandle(hFile);
         SetStatus("QuickLoad failed: Corrupt save file.");
@@ -584,15 +808,15 @@ void LayoutButtons(HWND hwnd) {
     int clientW = rc.right - rc.left;
     int clientH = rc.bottom - rc.top;
 
-    if (hBtnPreset && hBtnRandomize && hBtnToggle && hBtnTheme && hBtnTrend && hBtnSort && hBtnExport && hBtnCopy && hBtnHelp) {
-        int btnCount = 9;
-        int btnW = SCALE(86);
+    if (hBtnPreset && hBtnRandomize && hBtnToggle && hBtnTheme && hBtnTrend && hBtnSort && hBtnExport && hBtnImport && hBtnCopy && hBtnHelp) {
+        int btnCount = 10;
+        int btnW = SCALE(82);
         int btnH = SCALE(28);
-        int gap = SCALE(6);
+        int gap = SCALE(5);
         int totalW = btnCount * btnW + (btnCount - 1) * gap;
         if (totalW > clientW - SCALE(16)) {
             btnW = (clientW - SCALE(16) - (btnCount - 1) * gap) / btnCount;
-            if (btnW < SCALE(46)) btnW = SCALE(46);
+            if (btnW < SCALE(42)) btnW = SCALE(42);
             totalW = btnCount * btnW + (btnCount - 1) * gap;
         }
         int btnY = clientH - SCALE(38);
@@ -600,7 +824,7 @@ void LayoutButtons(HWND hwnd) {
         int startX = (clientW - totalW) / 2;
         if (startX < 4) startX = 4;
 
-        HWND btns[9] = { hBtnPreset, hBtnRandomize, hBtnToggle, hBtnTheme, hBtnTrend, hBtnSort, hBtnExport, hBtnCopy, hBtnHelp };
+        HWND btns[10] = { hBtnPreset, hBtnRandomize, hBtnToggle, hBtnTheme, hBtnTrend, hBtnSort, hBtnExport, hBtnImport, hBtnCopy, hBtnHelp };
         for (int i = 0; i < btnCount; i++) {
             SetWindowPos(btns[i], NULL, startX + i * (btnW + gap), btnY, btnW, btnH, SWP_NOZORDER);
         }
@@ -632,6 +856,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnExport = CreateWindowEx(0, "BUTTON", "Export [E]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                 0, 0, 86, 28, hwnd, (HMENU)9, NULL, NULL);
+            hBtnImport = CreateWindowEx(0, "BUTTON", "Import [I]",
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+                0, 0, 86, 28, hwnd, (HMENU)10, NULL, NULL);
             hBtnCopy = CreateWindowEx(0, "BUTTON", "Copy [^C]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                 0, 0, 86, 28, hwnd, (HMENU)8, NULL, NULL);
@@ -648,6 +875,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBtnTrend, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnSort, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnExport, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
+            SendMessage(hBtnImport, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnCopy, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             
@@ -851,6 +1079,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     target[i] = 10 + (MyRand() % 90);
                 }
                 SetStatus("Generated randomized dataset");
+            } else if (isCtrl && (wParam == 'O' || wParam == 'o')) {
+                ImportCSVFile(hwnd, "");
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'I' || wParam == 'i') {
+                ImportCSVFile(hwnd, NULL);
+                InvalidateRect(hwnd, NULL, TRUE);
             } else if (isCtrl && (wParam == 'S' || wParam == 's')) {
                 ExportDatasetFiles();
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -966,6 +1200,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (cmdId == 9) { // Export
                 ExportDatasetFiles();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (cmdId == 10) { // Import
+                ImportCSVFile(hwnd, NULL);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (cmdId == 8) { // Copy
                 CopyDataToClipboard(hwnd);

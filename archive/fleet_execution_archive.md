@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T09:17:46-08:00 — kilo-review: KHex (Argon Visual, Feature & Usability Review (Pass 2))**
+  - Status: AUDIT COMPLETE (inspected 980x783 sheet.png and audited khex.html + KHex/main.c; dispatched fixes to kilo-tester, kilo-usability, kilo-expander).
+  - Critical Bugs Found: Undefined escapeHtml() crashes PE32 Dissector and Binary Diff; calcMD5() omits 0x80 padding and 8 RFC 1321 steps; 6502/Z80 samples desync on missing opcodes; KHex/main.c fmtFloat UB on ELF/NaN and checksum endian mismatch.
+  - UX & VFS Findings: Panel 3 #entropyClassBadge wraps, .output-box breaks words mid-char, arrow nav spams #toastContainer over histogram, SELECT lacks keydown guard, and VFS message handler lacks origin check and 60s modal timeout.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KHex`, `kilo-usability`->`KHex`, `kilo-expander`->`KHex`]; advanced `kilo-review` to `KFont`; next agent `kilo-creator`.
+
 - **2026-11-01T08:40:46-08:00 — kilo-expander: KSubmarine (KSubmarine (Phase VI VFS/IPC Mesh & RFMS Multiplayer Salvage Race))**
   - Status: PASS ✅ (0 errors, web 592.0 KB, native 266.0 KB < 999 KB; startup, Vite & security_lint PASS; visual WARN (anim 0.0%, input 2.47%, HEAD Δ 0.74%, 0 fail, 1 warn, 8.0s)).
   - VFS & IPC: Integrated KiloVFS export/import to /home/saves/ksubmarine_dive.json (VFS_SHOW_SAVE/VFS_SHOW_OPEN/VFS_WRITE/VFS_READ + OS_NOTIFY) with 60s dialog timeouts, origin validation, standalone Blob/file-input fallbacks, incoming FILE_OPEN auto-restore, and Expedition Bathymetry Log (/home/docs/ksubmarine_log.txt) with Open in KPad (OS_LAUNCH_APP).

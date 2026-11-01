@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KHex
-  kilo_qa: KChart
+  kilo_qa: KBudget
   kilo_expander: KSteno
   kilo_review: KSys
 virtual_web_target: kweb://slashnet
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KCalc
-  timestamp: '2026-11-01T12:22:23-08:00'
+  agent: kilo-qa
+  app: KChart
+  timestamp: '2026-11-01T12:38:24-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -180,11 +180,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Compact 4-row top chrome at 860x653 by removing redundant #quickBitSummary from #kcalcExpBar, merging searchable 20-item CONSTANTS_DB into #view-constants (removing duplicate Constants modal button), unifying #memBadge/#memModal with M0-M7 Memory Bank (M0 = active memory), adding a RAD evaluation notice badge in #view-calculus, and redrawing HiDPI #regressionCanvas via requestAnimationFrame on switchView(statistics) and switchStatsTool(2var). |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KChart`
+- **Active Target**: `KBudget`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChart` | `KiloOS/public/apps/kchart.html`, `KChart/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, chart type presets (bar/line/pie/radar), CSV import/export, dual Win32 C parity, and promote to Mature table. |
 | `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, expense categories, balance projection graphs, dual Win32 C parity, and promote to Mature table. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Klondike deal engine, undo history, win fireworks, dual Win32 C parity, and promote to Mature table. |
@@ -247,6 +246,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KChart** | `KiloOS/public/apps/kchart.html` | Pass 5+ (2026-11-01) | Productivity / Analytics | Complete data visualization studio with 10 chart modes, presets (bar/line/pie/radar & 1999 logs), statistical regressions, CSV/JSON import/export, YM2612 audio sonification, F5/F9 quicksave persistence, and dual Win32 C parity. |
 | **KSys** | `KiloOS/public/apps/ksys.html` | Pass 5+ (2026-11-01) | System / Diagnostics | Complete real-time system diagnostic workstation with hardware inspector, telemetry oscilloscopes, stress burn-in daemon, dual Win32 C parity, and robust F5/F9 state persistence. |
 | **KChat** | `KiloOS/public/apps/kchat.html` | Pass 5+ (2026-11-01) | Network / Communications | Complete retro multi-channel chat suite with interactive polls, offline message spool, channel switcher palette, F5/F9 state persistence, and dual Win32 C parity. |
 | **KFleet** | `KiloOS/public/apps/kfleet.html` | Pass 5+ (2026-10-31) | System / Telemetry | Complete fleet operations console: live agent telemetry, vector radar, 4-ch strip chart, CLI, F5/F9 state persistence, dual Win32 C parity <999KB. |
@@ -312,6 +312,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T12:38:24-08:00 — kilo-qa: KChart (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 144.6 KB, native 42.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.27%, 0 fail, 0 warn, 6.8s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kchart_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Presets: Verified Web HTML + Win32 C parity across 10 chart modes, bar/line/pie/radar presets, CSV import/export, and YM2612 audio sonification.
+  - Mature Quarantine & Handoff: Promoted `KChart` to Mature archive; advanced `kilo-qa` to `KBudget`; next agent `kilo-expander`.
+
 - **2026-11-01T12:22:23-08:00 — kilo-usability: KCalc (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KCalc across web and native targets.
@@ -332,9 +338,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Connected Ghost Node terminal directly to KiloOS VFS (/sys/alpha.sys & /home/crypto/) with interactive quick directive chips.
   - Equipped KMatrix with standalone VFS fallback for verified Sector 04 passkey fragment recovery.
   - Handoff: Advanced `kilo-creator` to `kweb://slashnet`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-01T09:17:46-08:00 — kilo-review: KHex (Argon Visual, Feature & Usability Review (Pass 2))**
-  - Status: AUDIT COMPLETE (inspected 980x783 sheet.png and audited khex.html + KHex/main.c; dispatched fixes to kilo-tester, kilo-usability, kilo-expander).
-  - Critical Bugs Found: Undefined escapeHtml() crashes PE32 Dissector and Binary Diff; calcMD5() omits 0x80 padding and 8 RFC 1321 steps; 6502/Z80 samples desync on missing opcodes; KHex/main.c fmtFloat UB on ELF/NaN and checksum endian mismatch.
-  - UX & VFS Findings: Panel 3 #entropyClassBadge wraps, .output-box breaks words mid-char, arrow nav spams #toastContainer over histogram, SELECT lacks keydown guard, and VFS message handler lacks origin check and 60s modal timeout.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KHex`, `kilo-usability`->`KHex`, `kilo-expander`->`KHex`]; advanced `kilo-review` to `KFont`; next agent `kilo-creator`.
