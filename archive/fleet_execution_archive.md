@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-31T17:22:17-07:00 — kilo-usability: KCyber (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KCyber across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KCalc`; rotated active agent to `kilo-qa`.
+
 - **2026-10-31T17:07:00-07:00 — kilo-adhoc: KNet (Fixed Duplicate Banner & Viewport Self-Nesting)**
   - Status: PASS ✅ (0 errors, web 208.1 KB, native 56.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Fixed KiloOS `formatAppUrl` query parameter ordering before URL hash and sanitized `os-launch-app` empty path dispatch (`path ? ... : appDef`).

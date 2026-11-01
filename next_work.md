@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://demoscene
-  kilo_graphics: KStellar
+  kilo_graphics: KMystery
   kilo_soundscape: KStellar
   kilo_tester: KStellar
   kilo_usability: KStellar
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://geocities
-  timestamp: '2026-10-31T19:35:48-07:00'
+  agent: kilo-graphics
+  app: KStellar
+  timestamp: '2026-10-31T20:22:01-07:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KStellar`
+- **Active Target**: `KMystery`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStellar` | `KiloOS/public/apps/kstellar.html` | **[ARGON REVIEW]:** Replace primitive canvas polygon/rect programmer-art ships on #combat-canvas and #map-canvas (Player Cruiser, Corsair Interceptor, Corsair Marauder, Syndicate Dreadnought, Stealth Infiltrator, and roaming Federation/Traders/Pirate fleet icons) plus geometric SVG placeholders in getPlanetSvg()/getCommodityIcon() with Imagen 3 2-stage chroma-keyed spacefaring sprites and orbital station/anomaly illustrations (<999 KB, zero perimeter border glints). — 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
@@ -115,6 +114,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawVisuals() (kcyber.html) with Imagen 3 2-stage chroma-keyed sprites for the Cyberdeck Console, 5 distinct ICE Guardian Constructs (Basic 02, Tracer 03, Hunter 04, Black 05, Phantom 06 instead of one generic red octagon), Cryo-Stasis lattice, Classified Data Core cartridge, and Darknet Contraband Vault (<999 KB, zero perimeter border glints). — Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
+| `KStellar` | `KiloOS/public/apps/kstellar.html` | **[ARGON REVIEW]:** Replace primitive canvas polygon/rect programmer-art ships on #combat-canvas and #map-canvas (Player Cruiser, Corsair Interceptor, Corsair Marauder, Syndicate Dreadnought, Stealth Infiltrator, and roaming Federation/Traders/Pirate fleet icons) plus geometric SVG placeholders in getPlanetSvg()/getCommodityIcon() with Imagen 3 2-stage chroma-keyed spacefaring sprites and orbital station/anomaly illustrations (<999 KB, zero perimeter border glints). — 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -294,6 +294,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T20:22:01-07:00 — kilo-graphics: KStellar (Imagen 3 Visual Assets & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 209.8 KB, native 162.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.47%, HEAD Δ 4.08%, 0 fail, 0 warn, 7.6s)).
+  - Generated and integrated 12 spacefaring sprites (Player Cruiser, Interceptor, Marauder, Dreadnought, Infiltrator, Roaming Fleets, Orbital Starbase, Anomalies) with procedural fallbacks.
+  - Upgraded getPlanetSvg() and getCommodityIcon() with multi-layer planetary atmospheres, biomes, and rich SVG items.
+  - Glint sweep: eliminated rotating ringworld habitat segments and animated line dash offsets across canvases.
+  - Handoff: Advanced `kilo-graphics` to `KMystery`; rotated active agent to `kilo-tester`.
+
 - **2026-10-31T19:35:48-07:00 — kilo-creator: kweb://geocities (GeoCities Neighborhood Portal ('99 Retro Neighborhoods))**
   - Status: PASS ✅ (0 errors, web 681.8 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Verified SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction animated hazard stripes, and guestbook signing.
@@ -317,8 +324,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kpaint_tutorialSeen flag, and Escape modal dismissals.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, collapsible tool drawer [Tab], retro palettes, and visibilitychange timer cleanup.
   - Mature Quarantine & Handoff: Promoted `KPaint` to Mature archive; advanced `kilo-qa` to `KFleet`; next agent `kilo-expander`.
-
-- **2026-10-31T17:22:17-07:00 — kilo-usability: KCyber (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-usability updates for KCyber across web and native targets.
-  - Handoff: Advanced `kilo-usability` to `KCalc`; rotated active agent to `kilo-qa`.
