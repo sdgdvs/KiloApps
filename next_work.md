@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KCalc
   kilo_qa: KSys
-  kilo_expander: KQuest
+  kilo_expander: KCalc
   kilo_review: KSubmarine
 virtual_web_target: kweb://webring
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KChat
-  timestamp: '2026-11-01T04:36:32-08:00'
+  agent: kilo-expander
+  app: KQuest
+  timestamp: '2026-11-01T05:20:35-08:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -189,11 +189,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KQuest`
+- **Active Target**: `KCalc`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Fix generateHeroSheetText() TypeError crash on player.companion.toUpperCase() (format companion.name and role) plus undefined player.spd/mag/potions (read player.agi, player.int, and inventory counts); harden KiloVFS in kquest.html per architecture.md with event.origin === window.location.origin checks, 60s listener timeouts, VFS_SHOW_SAVE and VFS_SHOW_OPEN pickers, standalone Blob and file-input fallbacks when window.parent === window, appId + filePath in OS_LAUNCH_APP, and incoming FILE_OPEN/VFS_OPEN auto-import. |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY with standalone blob fallback) for saving/loading calculation tapes and workspace JSON snapshots to /home/docs/, and add live HEX/DEC/OCT/BIN radix readout plus FV/CAGR financial tools to KCalc/main.c (<999 KB). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
@@ -208,6 +207,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html`, `KCyber/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kcyber.html (event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) connecting Export/Import to VFS_SHOW_SAVE/VFS_WRITE and VFS_SHOW_OPEN/VFS_READ (/home/saves/kcyber_deck.json), handling incoming FILE_OPEN/VFS_OPEN messages, exporting stolen node/contract paydata payloads to /home/crypto/ on download with an Inspect in KHex/KPad OS_LAUNCH_APP button, and adding ../assets/js/retro_multiplayer.js NetLink Intrusion Race duel mode strictly behind an explicit toolbar button (zero autostart, soloTimeoutMs: 25000 rival AI runner fallback). |
 | `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kstellar.html (strict event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) connecting EXPORT/IMPORT to VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ (/home/saves/kstellar_save.json), handling incoming FILE_OPEN/VFS_OPEN messages, and exporting a Captain Trade & Fleet Ledger (/home/docs/kstellar_ledger.txt) with an Open in KPad OS_LAUNCH_APP button; deepen 4X fleet/diplomacy & turn UX with dynamic market price drift per warp turn, interactive hailing of local ORBITAL TRAFFIC fleets, and Friendly (>= +15) Wingman Escort / Convoy Charter treaties; and integrate ../assets/js/retro_multiplayer.js Galactic Sector Trade & Bounty Race mode strictly behind an explicit MULTIPLAYER button (zero autostart, 25000ms AI Star Captain fallback). |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Harden KiloVFS and starforgeVFS per architecture.md with event.origin === window.location.origin checks, 60s listener timeouts, VFS_SHOW_SAVE + VFS_WRITE + OS_NOTIFY with standalone Blob/file-input fallbacks when window.parent === window, incoming FILE_OPEN/VFS_OPEN postMessage support, and a Save Debrief to VFS (/home/docs/kstarforge_debrief.txt) + Open in KPad button in #flight-debrief-modal; complete live RFMS peer skirmish sync by fixing launchTacticalSkirmish() HiDPI spawn ((flightSim.simW // 800)/2), sending throttled SKIRMISH_STATE and SKIRMISH_FIRE moves when connected, and rendering peerBlueprint modular hulls. — Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
+| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Fix generateHeroSheetText() TypeError crash on player.companion.toUpperCase() (format companion.name and role) plus undefined player.spd/mag/potions (read player.agi, player.int, and inventory counts); harden KiloVFS in kquest.html per architecture.md with event.origin === window.location.origin checks, 60s listener timeouts, VFS_SHOW_SAVE and VFS_SHOW_OPEN pickers, standalone Blob and file-input fallbacks when window.parent === window, appId + filePath in OS_LAUNCH_APP, and incoming FILE_OPEN/VFS_OPEN auto-import. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KSubmarine`
@@ -300,6 +300,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T05:20:35-08:00 — kilo-expander: KQuest (Phase VI VFS Hardening & Hero Sheet Fixes)**
+  - Status: PASS ✅ (0 errors, web 426.6 KB, native 101.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - Fixed generateHeroSheetText() companion name/role formatting and player.agi/int/potion inventory counts.
+  - Hardened KiloVFS with origin checks, 60s timeouts, pickers, standalone fallbacks, and incoming FILE_OPEN auto-import.
+  - Dual-target Win32 C parity updated in KQuest/main.c for ExportHeroSheetToFile companion formatting.
+  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
+
 - **2026-11-01T04:36:32-08:00 — kilo-qa: KChat (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 113.7 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kchat_tutorialSeen flag, and Escape modal dismissals.
@@ -319,9 +326,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-11-01T03:14:44-08:00 — kilo-graphics: KMystery (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 assets already integrated and zero perimeter glints.
   - Handoff: Advanced `kilo-graphics` to `KCosmic`; rotated active agent to `kilo-tester`.
-
-- **2026-11-01T02:33:47-08:00 — kilo-creator: kweb://rfc-archive (IETF 1999 Living RFC Workbench)**
-  - Status: PASS ✅ (0 errors, web 93.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Interactive RFC 1149 Avian Carrier simulator, RFC 2324 HTCPCP teapot console, ASCII TCP stepper & VFS export.
-  - Fixed URL deep-linking router placement and verified KNet/webring routing with zero layout clipping.
-  - Handoff: Advanced `kilo-creator` to `kweb://webring`; rotated active agent to `kilo-graphics`.

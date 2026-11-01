@@ -862,38 +862,216 @@
   <script>
     // --- KILO-OS VFS & IPC MESH BRIDGE ---
     const KiloVFS = {
+      isSupported() {
+        return typeof window !== 'undefined' && window.parent && window.parent !== window;
+      },
       write(path, data) {
         try {
-          window.parent.postMessage({ type: 'VFS_WRITE', path, data: typeof data === 'string' ? data : JSON.stringify(data, null, 2), requestId: 'w_' + Date.now() }, '*');
-          window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: `Saved to VFS: ${path}` }, '*');
-        } catch (e) {}
+          const serialized = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+          if (KiloVFS.isSupported()) {
+            window.parent.postMessage({
+              type: 'VFS_WRITE',
+              path,
+              data: serialized,
+              requestId: 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)
+            }, '*');
+            window.parent.postMessage({
+              type: 'OS_NOTIFY',
+              title: document.title || 'KQuest',
+              message: `Saved to VFS: ${path}`
+            }, '*');
+          } else {
+            KiloVFS.downloadBlob(serialized, path);
+          }
+        } catch (e) {
+          console.warn('[KiloVFS] write error:', e);
+        }
       },
       read(path, cb) {
+        if (!KiloVFS.isSupported()) {
+          if (cb) cb(null, path);
+          return;
+        }
         const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        let cleanupTimer = null;
         const handler = (e) => {
+          if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+            return;
+          }
           if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+            if (cleanupTimer) clearTimeout(cleanupTimer);
             window.removeEventListener('message', handler);
-            cb(e.data.data, e.data.path);
+            if (cb) cb(e.data.data, e.data.path || path);
           }
         };
+        cleanupTimer = setTimeout(() => {
+          window.removeEventListener('message', handler);
+          if (cb) cb(null, path);
+        }, 60000); // 60s listener timeout
         window.addEventListener('message', handler);
-        try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+        try {
+          window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
+        } catch (e) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (cb) cb(null, path);
+        }
+      },
+      showSave(defaultPath, data, cb) {
+        if (!KiloVFS.isSupported()) {
+          KiloVFS.downloadBlob(data, defaultPath);
+          if (cb) cb(defaultPath);
+          return;
+        }
+        const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        let cleanupTimer = null;
+        const handler = (e) => {
+          if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+            return;
+          }
+          if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+            if (cleanupTimer) clearTimeout(cleanupTimer);
+            window.removeEventListener('message', handler);
+            if (e.data.path) {
+              KiloVFS.write(e.data.path, data);
+              if (cb) cb(e.data.path);
+            } else if (cb) {
+              cb(null);
+            }
+          }
+        };
+        cleanupTimer = setTimeout(() => {
+          window.removeEventListener('message', handler);
+          if (cb) cb(null);
+        }, 60000); // 60s listener timeout
+        window.addEventListener('message', handler);
+        try {
+          window.parent.postMessage({
+            type: 'VFS_SHOW_SAVE',
+            requestId: reqId,
+            defaultPath: defaultPath,
+            path: defaultPath
+          }, '*');
+        } catch (e) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (cb) cb(null);
+        }
       },
       openPicker(cb) {
-        const reqId = 'open_' + Date.now();
+        if (!KiloVFS.isSupported()) {
+          KiloVFS.openFileInput(cb);
+          return;
+        }
+        const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        let cleanupTimer = null;
         const handler = (e) => {
+          if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+            return;
+          }
           if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+            if (cleanupTimer) clearTimeout(cleanupTimer);
             window.removeEventListener('message', handler);
-            if (e.data.path) KiloVFS.read(e.data.path, cb);
+            if (e.data.path) {
+              KiloVFS.read(e.data.path, cb);
+            } else if (cb) {
+              cb(null, null);
+            }
           }
         };
+        cleanupTimer = setTimeout(() => {
+          window.removeEventListener('message', handler);
+          if (cb) cb(null, null);
+        }, 60000); // 60s listener timeout
         window.addEventListener('message', handler);
-        try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
+        try {
+          window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
+        } catch (e) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (cb) cb(null, null);
+        }
       },
       launchApp(targetApp, path = '') {
-        try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+        try {
+          window.parent.postMessage({
+            type: 'OS_LAUNCH_APP',
+            targetApp,
+            appId: targetApp,
+            filePath: path,
+            path: path
+          }, '*');
+        } catch (e) {}
+      },
+      downloadBlob(data, defaultPath = 'kquest_hero.json') {
+        try {
+          const content = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+          const mime = (defaultPath.endsWith('.txt') || defaultPath.endsWith('.log')) ? 'text/plain;charset=utf-8' : 'application/json';
+          const blob = new Blob([content], { type: mime });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = defaultPath.split('/').pop() || 'kquest_hero.json';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+          }, 200);
+        } catch (err) {
+          console.warn('[KiloVFS] downloadBlob error:', err);
+        }
+      },
+      openFileInput(cb) {
+        try {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = '.json,.txt,.dat';
+          input.style.display = 'none';
+          input.onchange = (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (evt) => {
+                if (cb) cb(evt.target.result, file.name);
+              };
+              reader.readAsText(file);
+            }
+            if (input.parentNode) input.parentNode.removeChild(input);
+          };
+          document.body.appendChild(input);
+          input.click();
+        } catch (err) {
+          console.warn('[KiloVFS] openFileInput error:', err);
+        }
       }
     };
+
+    // Incoming VFS / OS Message Dispatcher (File Browser file associations, VFS events)
+    window.addEventListener('message', (e) => {
+      if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+        return;
+      }
+      const msg = e.data;
+      if (!msg || typeof msg !== 'object') return;
+      if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+        const filePath = msg.filePath || msg.path || '';
+        const fileContent = msg.data !== undefined ? msg.data : msg.content;
+        if (fileContent !== undefined && fileContent !== null) {
+          if (typeof handleIncomingFileData === 'function') {
+            handleIncomingFileData(fileContent, filePath);
+          }
+        } else if (filePath) {
+          KiloVFS.read(filePath, (data, path) => {
+            if (data && typeof handleIncomingFileData === 'function') {
+              handleIncomingFileData(data, path || filePath);
+            } else if (!data) {
+              showToast(`Could not read file from VFS: ${filePath}`, 3000);
+            }
+          });
+        }
+      }
+    });
+
     // --- GRAPHICS & ANIMATION ENGINE ---
     const GFX = {
       canvas: null,
@@ -8184,6 +8362,52 @@
     // =========================================================================
     // PHASE VI: KILOOS VFS INTEGRATION & CHARACTER DOSSIER EXPORT
     // =========================================================================
+    function loadHeroOrSavePayload(imported, sourceDesc = 'VFS') {
+      if (!imported) return false;
+      try {
+        if (typeof imported === 'string') {
+          imported = JSON.parse(imported);
+        }
+        if (imported.player && imported.player.name) {
+          player = { ...player, ...imported.player };
+          if (player.hp <= 0) player.hp = Math.max(1, Math.floor(player.maxHp * 0.5));
+          charCreated = true;
+          if (imported.ngLevel !== undefined) player.ngLevel = imported.ngLevel;
+          if (imported.achievements) player.achievements = imported.achievements;
+          if (imported.savedEnemy) currentEnemy = imported.savedEnemy;
+        } else if (imported.name) {
+          player = { ...player, ...imported };
+          if (player.hp <= 0) player.hp = Math.max(1, Math.floor(player.maxHp * 0.5));
+          charCreated = true;
+        } else {
+          return false;
+        }
+        try { localStorage.setItem('kquest_tutorialSeen', 'true'); } catch (_) {}
+        if (imported.savedState && imported.savedState !== STATE.CHAR_CREATE && imported.savedState !== STATE.SAVE_LOAD && imported.savedState !== STATE.GAME_OVER) {
+          setGameState(imported.savedState);
+        } else {
+          setGameState(STATE.TOWN);
+        }
+        updateUI();
+        showToast(`📂 Hero ${player.name} (Lvl ${player.level}) loaded from ${sourceDesc}!`, 3000);
+        logMsg(`📂 Loaded Hero ${player.name} from ${sourceDesc}.`, 'system');
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('item');
+        return true;
+      } catch (err) {
+        console.warn('[KQuest] Failed to load payload:', err);
+        return false;
+      }
+    }
+
+    function handleIncomingFileData(content, filePath) {
+      if (!content) return;
+      const ok = loadHeroOrSavePayload(content, filePath || 'VFS');
+      if (!ok) {
+        logMsg(`Opened file ${filePath || 'VFS'} (${typeof content === 'string' ? content.length : 0} bytes).`, 'system');
+        showToast(`📄 Received file: ${filePath || 'VFS'}`, 2500);
+      }
+    }
+
     function exportHeroToVFS() {
       if (!charCreated || currentState === STATE.CHAR_CREATE) {
         showToast('⚠️ Create your hero before exporting!', 2500);
@@ -8208,19 +8432,54 @@
 
       const sheetText = generateHeroSheetText();
 
-      // Write structured JSON character sheet
-      KiloVFS.write('/home/saves/kquest_hero.json', heroPayload);
-      // Write human-readable text dossier
-      KiloVFS.write('/home/saves/kquest_hero_sheet.txt', sheetText);
-
-      showToast('💾 Hero dossier saved to /home/saves/ in KiloOS VFS!', 3000);
-      logMsg('💾 Hero saved to /home/saves/kquest_hero.json & kquest_hero_sheet.txt', 'system');
+      if (KiloVFS.isSupported()) {
+        KiloVFS.showSave('/home/saves/kquest_hero.json', heroPayload, (savedPath) => {
+          const finalPath = savedPath || '/home/saves/kquest_hero.json';
+          KiloVFS.write(finalPath, heroPayload);
+          KiloVFS.write('/home/saves/kquest_hero_sheet.txt', sheetText);
+          showToast(`💾 Hero dossier saved to ${finalPath} in KiloOS VFS!`, 3000);
+          logMsg(`💾 Hero saved to ${finalPath} & kquest_hero_sheet.txt`, 'system');
+        });
+      } else {
+        KiloVFS.downloadBlob(heroPayload, 'kquest_hero.json');
+        showToast('💾 Hero dossier downloaded as kquest_hero.json!', 3000);
+        logMsg('💾 Hero dossier downloaded to local disk.', 'system');
+      }
       if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('item');
     }
 
     function generateHeroSheetText() {
       const b = BIOMES[player.biome] || BIOMES[0];
       const achUnlocked = (player.achievements || []).filter(a => a === 1).length;
+      let compText = 'None';
+      if (player.companion) {
+        if (typeof player.companion === 'object') {
+          const compName = player.companion.name || 'Companion';
+          const compRole = player.companion.role ? ` (${player.companion.role})` : '';
+          compText = `${compName}${compRole}`;
+        } else {
+          compText = String(player.companion);
+        }
+      }
+      const speedVal = player.agi !== undefined ? player.agi : (player.spd !== undefined ? player.spd : 10);
+      const magicVal = player.int !== undefined ? player.int : (player.mag !== undefined ? player.mag : 8);
+
+      const hpPotCount = (player.potions && player.potions.health !== undefined)
+        ? player.potions.health
+        : (player.inventory || [])
+            .filter(i => i.id === 'hp_potion' || (i.name && /health|hp/i.test(i.name)))
+            .reduce((sum, item) => sum + (item.count || 1), 0);
+      const mpPotCount = (player.potions && player.potions.mana !== undefined)
+        ? player.potions.mana
+        : (player.inventory || [])
+            .filter(i => i.id === 'mp_potion' || (i.name && /mana|mp/i.test(i.name)))
+            .reduce((sum, item) => sum + (item.count || 1), 0);
+      const elixirCount = (player.potions && player.potions.elixir !== undefined)
+        ? player.potions.elixir
+        : (player.inventory || [])
+            .filter(i => i.id === 'phoenix_elixir' || (i.name && /elixir/i.test(i.name)))
+            .reduce((sum, item) => sum + (item.count || 1), 0) + (player.phoenixElixirs || 0);
+
       return `=======================================================
                KQUEST HERO CHARACTER DOSSIER
 =======================================================
@@ -8231,14 +8490,14 @@ Health Points:  ${player.hp} / ${player.maxHp} HP
 Mana Points:    ${player.mp} / ${player.maxMp} MP
 Gold Treasury:  ${player.gold} 🪙
 Current Biome:  ${b.name} (Floor ${player.floor})
-Companion:      ${player.companion ? player.companion.toUpperCase() : 'None'}
+Companion:      ${compText}
 
 --- ATTRIBUTES & COMBAT RATINGS ---
 Strength (STR): ${player.str}
 Defense (DEF):  ${player.def}
-Speed (SPD):    ${player.spd || player.agi || 10}
-Magic (INT):    ${player.int || 8}
-Skill Points:   ${player.skillPoints}
+Speed (AGI):    ${speedVal}
+Magic (INT):    ${magicVal}
+Skill Points:   ${player.skillPoints || 0}
 
 --- EQUIPMENT & INVENTORY ---
 Weapon:         ${player.weaponName || player.weapon?.name || 'Iron Sword'} (ATK: ${player.str})
@@ -8246,7 +8505,7 @@ Armor:          ${player.armorName || player.armor?.name || 'Leather Vest'} (DEF
 Iron Scrap:     ${player.materials?.iron || 0}
 Arcane Dust:    ${player.materials?.dust || 0}
 Elemental Core: ${player.materials?.core || 0}
-Potions:        Health (${player.potions?.health || 0}), Mana (${player.potions?.mana || 0}), Elixirs (${player.potions?.elixir || 0})
+Potions:        Health (${hpPotCount}), Mana (${mpPotCount}), Elixirs (${elixirCount})
 
 --- MILESTONES & HONORS ---
 Completed Milestones: ${achUnlocked} / ${ACHIEVEMENTS_DEF.length}
@@ -8261,35 +8520,33 @@ Generated by KQuest on ${new Date().toLocaleString()}
         showToast('⚠️ Create your hero first!', 2500);
         return;
       }
-      exportHeroToVFS();
+      const sheetText = generateHeroSheetText();
+      KiloVFS.write('/home/saves/kquest_hero_sheet.txt', sheetText);
       KiloVFS.launchApp('kpad', '/home/saves/kquest_hero_sheet.txt');
       showToast('📜 Launching Character Dossier in KPad...', 2500);
     }
 
     function importHeroFromVFS() {
-      KiloVFS.read('/home/saves/kquest_hero.json', (data, path) => {
-        if (!data) {
-          showToast('⚠️ /home/saves/kquest_hero.json not found in VFS.', 3000);
-          return;
-        }
-        try {
-          const imported = typeof data === 'string' ? JSON.parse(data) : data;
-          if (imported && (imported.player || imported.name)) {
-            const p = imported.player || imported;
-            player = { ...player, ...p };
-            if (player.hp <= 0) player.hp = Math.max(1, Math.floor(player.maxHp * 0.5));
-            charCreated = true;
-            if (imported.ngLevel !== undefined) player.ngLevel = imported.ngLevel;
-            if (imported.achievements) player.achievements = imported.achievements;
-            updateUI();
-            showToast(`📂 Restored Hero ${player.name} (Lvl ${player.level}) from VFS!`, 3000);
-            logMsg(`📂 Loaded Hero ${player.name} from ${path || '/home/saves/kquest_hero.json'}.`, 'system');
-            if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('item');
+      if (KiloVFS.isSupported()) {
+        KiloVFS.openPicker((data, path) => {
+          if (!data) {
+            showToast('⚠️ /home/saves/kquest_hero.json not found in VFS.', 3000);
+            return;
           }
-        } catch (e) {
-          showToast('❌ Failed to parse VFS save: ' + e.message, 3000);
-        }
-      });
+          const ok = loadHeroOrSavePayload(data, path || '/home/saves/kquest_hero.json');
+          if (!ok) {
+            showToast('❌ Invalid save or character format in VFS.', 3000);
+          }
+        });
+      } else {
+        KiloVFS.openFileInput((data, path) => {
+          if (!data) return;
+          const ok = loadHeroOrSavePayload(data, path || 'file');
+          if (!ok) {
+            showToast('❌ Invalid save or character format.', 3000);
+          }
+        });
+      }
     }
 
     function exportChronicleToVFS() {
@@ -8305,9 +8562,18 @@ Generated by KQuest on ${new Date().toLocaleString()}
         ...(g_MatchReplays && g_MatchReplays.length > 0 ? g_MatchReplays.map(r => `[${r.time}] ${r.text}`) : ['(No combat events recorded yet)']),
         '======================================================='
       ].join('\r\n');
-      KiloVFS.write('/home/docs/kquest_chronicle.txt', lines);
-      showToast('💾 Chronicle saved to /home/docs/kquest_chronicle.txt in VFS!', 3000);
-      logMsg('💾 Chronicle saved to /home/docs/kquest_chronicle.txt', 'system');
+
+      if (KiloVFS.isSupported()) {
+        KiloVFS.showSave('/home/docs/kquest_chronicle.txt', lines, (savedPath) => {
+          const finalPath = savedPath || '/home/docs/kquest_chronicle.txt';
+          KiloVFS.write(finalPath, lines);
+          showToast(`💾 Chronicle saved to ${finalPath} in VFS!`, 3000);
+          logMsg(`💾 Chronicle saved to ${finalPath}`, 'system');
+        });
+      } else {
+        KiloVFS.downloadBlob(lines, 'kquest_chronicle.txt');
+        showToast('💾 Chronicle downloaded as kquest_chronicle.txt!', 3000);
+      }
       if (typeof AudioEngine !== 'undefined') AudioEngine.playPreset('item');
     }
 

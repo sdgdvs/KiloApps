@@ -115,8 +115,8 @@
     "id": "kchat",
     "title": "KChat",
     "folder": "Network",
-    "webBytes": 119071,
-    "exeBytes": 30208,
+    "webBytes": 119039,
+    "exeBytes": 33280,
     "budgetPercent": 11.9
   },
   {
@@ -555,9 +555,9 @@
     "id": "kquest",
     "title": "KQuest",
     "folder": "Games",
-    "webBytes": 406755,
-    "exeBytes": 101888,
-    "budgetPercent": 40.7
+    "webBytes": 436840,
+    "exeBytes": 103936,
+    "budgetPercent": 43.7
   },
   {
     "id": "kradio",

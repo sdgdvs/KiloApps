@@ -717,6 +717,12 @@ void ExportHeroSheetToFile(void) {
     for (int i = 0; i < 10; i++) {
         if (g_Achievements[i]) achCount++;
     }
+    char compBuf[128];
+    if (player.companion.active > 0) {
+        wsprintfA(compBuf, "%s (%s)", player.companion.name, player.companion.role[0] ? player.companion.role : "Companion");
+    } else {
+        lstrcpyA(compBuf, "None");
+    }
     len += wsprintfA(buf + len,
         "=======================================================\r\n"
         "             KQUEST HERO CHARACTER DOSSIER             \r\n"
@@ -760,7 +766,7 @@ void ExportHeroSheetToFile(void) {
         player.mp, player.maxMp,
         player.gold,
         g_Biomes[player.biome].name, player.floor,
-        player.companion.active ? player.companion.name : "None",
+        compBuf,
         player.str, player.weaponBonusStr,
         player.intStat,
         player.def, player.armorBonusDef,
