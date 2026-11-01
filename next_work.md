@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-review
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,11 +31,11 @@ current_targets:
   kilo_creator: kweb://rfc-archive
   kilo_graphics: KMystery
   kilo_soundscape: KStellar
-  kilo_tester: KColony
-  kilo_usability: KCalc
+  kilo_tester: KQuest
+  kilo_usability: KQuest
   kilo_qa: KChat
-  kilo_expander: KCalc
-  kilo_review: KQuest
+  kilo_expander: KQuest
+  kilo_review: KSubmarine
 virtual_web_target: kweb://rfc-archive
 virtual_web_rotation:
 - kweb://slashnet
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KStarForge
-  timestamp: '2026-11-01T01:38:41-08:00'
+  agent: kilo-review
+  app: KQuest
+  timestamp: '2026-11-01T02:17:29-08:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -133,10 +133,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KColony`
+- **Active Target**: `KQuest`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Fix NaN damage in sendMpAction(SPELL) and sendDuelAction(SKILL) by reading player.int instead of undefined player.mag, apply 50% damage reduction for GUARD and PARRY, and call a shared while-loop checkLevelUp() (+2 SP and companion scaling) across Raid, Duel, Bounty, and Combat victories; tick and decrement currentEnemy burningTurns/poisonedTurns/frozenTurns in enemyTurn() and KQuest/main.c EnemyTurn(); log all 18 biome hazards + Phoenix auto-revive in triggerHazard(); wire claimQuests() button, unlock unreachable achievements 0/1/2/5/6/7, apply Utility T1/T2 and Cleric +10 MaxHP passives, preserve gear prefixes + consumable metadata + phoenixElixirs sync, and fix KQuest/main.c Ranger companion turn, upkeep departure reset, Game Over Load button, and g_KeyBinds/[M] hotkeys. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -154,10 +155,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Wire starforgeExpansion and starforgeVFS (generateBlueprintCode, loadBlueprintCode, loadPreset, saveActiveBlueprint) to state.grid with numeric MODULE_DEFS IDs (1..24) + state.calculateTelemetry()/updateUI() instead of undefined window.shipGrid/window.calcShipStats(); apply overclock biases and wire flightTelemetry debrief to flightSim on #btn-flight-dock and Esc; fix skirmish NaN damage (pr.dmg vs pr.damage), state.resources.credits/reputation victory payout, missing audio.playLaser(), tacticalRoute DPS multipliers, >=100% heat scram, boss pursuit AI, starter Vanguard power/heat deficit, exportBomCsv() NaN shields, #spec-crew/costDe sync, and #btn-rush-fab free-build exploit; in KStarForge/main.c add Splash Enter/C/F/E/L keys, GetAsyncKeyState 2D heading flight/mining, drydock cost deduction, and contract save persistence. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KCalc`
+- **Active Target**: `KQuest`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Compact header to 1 nowrap row (show SFX ON/OFF when BGM disabled), lock .game-view to 100vh flex column with scrollable #dynamic-content (compact/collapsible biome grid + grouped Town actions) and pinned compact #log-panel + #controls-panel so Hero Creation and Town buttons fit 1000x723 above the fold; add .sidebar sub-tabs (Hero / Bag / Quests) with [I] focus and top-right #toast; trap Esc and hotkeys inside #mp-modal-overlay + guard SELECTs; pause gfxLoop on document.hidden; and render Tavern NPC + Army/Siege sprites on #kquest-gfx-canvas. |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Compact 4-row top chrome at 860x653 by removing redundant #quickBitSummary from #kcalcExpBar, merging searchable 20-item CONSTANTS_DB into #view-constants (removing duplicate Constants modal button), unifying #memBadge/#memModal with M0-M7 Memory Bank (M0 = active memory), adding a RAD evaluation notice badge in #view-calculus, and redrawing HiDPI #regressionCanvas via requestAnimationFrame on switchView(statistics) and switchStatsTool(2var). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -188,10 +190,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KCalc`
+- **Active Target**: `KQuest`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Fix generateHeroSheetText() TypeError crash on player.companion.toUpperCase() (format companion.name and role) plus undefined player.spd/mag/potions (read player.agi, player.int, and inventory counts); harden KiloVFS in kquest.html per architecture.md with event.origin === window.location.origin checks, 60s listener timeouts, VFS_SHOW_SAVE and VFS_SHOW_OPEN pickers, standalone Blob and file-input fallbacks when window.parent === window, appId + filePath in OS_LAUNCH_APP, and incoming FILE_OPEN/VFS_OPEN auto-import. |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY with standalone blob fallback) for saving/loading calculation tapes and workspace JSON snapshots to /home/docs/, and add live HEX/DEC/OCT/BIN radix readout plus FV/CAGR financial tools to KCalc/main.c (<999 KB). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
@@ -208,11 +211,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Harden KiloVFS and starforgeVFS per architecture.md with event.origin === window.location.origin checks, 60s listener timeouts, VFS_SHOW_SAVE + VFS_WRITE + OS_NOTIFY with standalone Blob/file-input fallbacks when window.parent === window, incoming FILE_OPEN/VFS_OPEN postMessage support, and a Save Debrief to VFS (/home/docs/kstarforge_debrief.txt) + Open in KPad button in #flight-debrief-modal; complete live RFMS peer skirmish sync by fixing launchTacticalSkirmish() HiDPI spawn ((flightSim.simW // 800)/2), sending throttled SKIRMISH_STATE and SKIRMISH_FIRE moves when connected, and rendering peerBlueprint modular hulls. — Phase VI RFMS Blueprint Exchange & Fleet Skirmish: integrate `retro_multiplayer.js` for online ship blueprint sharing & tactical test skirmish (explicit Connect gate, 25s AI fallback) + VFS `/home/blueprints/` save/load. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
-- **Active Target**: `KQuest`
+- **Active Target**: `KSubmarine`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Argon Visual, Feature & Usability Review (Active Audit): inspect `sheet.png` + JRPG overworld/combat viewport, party HUD, and inventory ergonomics; inject fixes via `--inject-fix`. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | Argon Visual, Feature & Usability Review (Active Audit): inspect `sheet.png` + bathysphere sonar, depth gauge, creature encounters, and HUD layout; inject fixes via `--inject-fix`. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | [Argon Audited 2026-10-30: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | [Argon Audited 2026-10-30: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
@@ -223,6 +225,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html`, `KCyber/main.c` | [Argon Audited 2026-10-31: Fixes queued -> kilo-expander, kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | [Argon Audited 2026-10-31: Fixes queued -> kilo-expander, kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | [Argon Audited 2026-10-31: Fixes queued -> kilo-expander, kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
+| `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | [Argon Audited 2026-11-01: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 
 ---
 
@@ -297,6 +300,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T02:17:29-08:00 — kilo-review: KQuest (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 1000x723 sheet.png and audited kquest.html + KQuest/main.c; dispatched surgical fixes to kilo-usability, kilo-tester, and kilo-expander).
+  - Visual & UX Findings: Header wraps H1 into 4 narrow lines and 2 button rows; .game-view scroll clips Hero Creation and Town controls below 1000x723 fold; .sidebar hides Inventory/Quests; #mp-modal-overlay leaks Esc/hotkeys and gfxLoop runs when hidden.
+  - Gameplay & VFS Findings: Multiplayer SPELL/SKILL read undefined player.mag (NaN HP) and GUARD/PARRY are no-ops; Rune burn/poison/freeze never tick in HTML or C; triggerHazard silently drops HP in 17/18 biomes; 6 achievements + claimQuests() are unreachable; generateHeroSheetText() crashes on companion object and KiloVFS lacks origin checks/fallbacks.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KQuest`, `kilo-tester`->`KQuest`, `kilo-expander`->`KQuest`]; advanced `kilo-review` to `KSubmarine`; next agent `kilo-creator`.
+
 - **2026-11-01T01:38:41-08:00 — kilo-expander: KStarForge (Phase VI VFS Hardening & RFMS Skirmish Sync)**
   - Status: PASS ✅ (0 errors, web 350.3 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.08%, HEAD Δ 0.0%, 0 fail, 0 warn, 8.4s)).
   - Hardened KiloVFS and starforgeVFS with event.origin checks, 60s listener timeouts, standalone Blob/file-input fallbacks, and incoming FILE_OPEN/VFS_OPEN IPC support.
@@ -320,9 +329,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KStarForge across web and native targets.
   - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
-
-- **2026-11-01T00:36:30-07:00 — kilo-graphics: KStarForge (Imagen 3 Visual Assets & Glint Sweep)**
-  - Status: PASS ✅ (0 errors, web 330.2 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.65%, HEAD Δ 1.54%, 0 fail, 0 warn, 8.3s)).
-  - Integrated Imagen 3 chroma-keyed 2-stage sprites and atlases for modular components, StarForge IX station, asteroids, salvage pod, and combat vessels.
-  - Verified zero rotating specular glints, zero traveling perimeter border dots, and full procedural fallback.
-  - Handoff: Advanced `kilo-graphics` to `KMystery`; rotated active agent to `kilo-tester`.

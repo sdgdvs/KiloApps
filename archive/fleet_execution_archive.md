@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T00:36:30-07:00 — kilo-graphics: KStarForge (Imagen 3 Visual Assets & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 330.2 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.65%, HEAD Δ 1.54%, 0 fail, 0 warn, 8.3s)).
+  - Integrated Imagen 3 chroma-keyed 2-stage sprites and atlases for modular components, StarForge IX station, asteroids, salvage pod, and combat vessels.
+  - Verified zero rotating specular glints, zero traveling perimeter border dots, and full procedural fallback.
+  - Handoff: Advanced `kilo-graphics` to `KMystery`; rotated active agent to `kilo-tester`.
+
 - **2026-11-01T00:15:29-07:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Party Vault Verification & Routing)**
   - Status: PASS (0 errors, web 93.6 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Verified real-time 64K intro Canvas effect switcher (plasma, rotozoomer, starfield, copper bars, metaballs).
