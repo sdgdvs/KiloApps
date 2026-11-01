@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T08:40:46-08:00 — kilo-expander: KSubmarine (KSubmarine (Phase VI VFS/IPC Mesh & RFMS Multiplayer Salvage Race))**
+  - Status: PASS ✅ (0 errors, web 592.0 KB, native 266.0 KB < 999 KB; startup, Vite & security_lint PASS; visual WARN (anim 0.0%, input 2.47%, HEAD Δ 0.74%, 0 fail, 1 warn, 8.0s)).
+  - VFS & IPC: Integrated KiloVFS export/import to /home/saves/ksubmarine_dive.json (VFS_SHOW_SAVE/VFS_SHOW_OPEN/VFS_WRITE/VFS_READ + OS_NOTIFY) with 60s dialog timeouts, origin validation, standalone Blob/file-input fallbacks, incoming FILE_OPEN auto-restore, and Expedition Bathymetry Log (/home/docs/ksubmarine_log.txt) with Open in KPad (OS_LAUNCH_APP).
+  - RFMS Multiplayer & Dual Parity: Added Abyssal Fleet Co-Op & Salvage Race mode via retro_multiplayer.js behind explicit MULTIPLAYER button with 25s solo timeout AI rival DSV NEREID-IV fallback, telemetry sync, rival dredge alerts, plus Win32 C ksubmarine_log.txt export parity.
+  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
+
 - **2026-11-01T08:17:23-08:00 — kilo-qa: KSys (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 211.3 KB, native 40.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, ksys_tutorialSeen flag, and Escape modal dismissals.
