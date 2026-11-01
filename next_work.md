@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KCosmic
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KSubmarine
+  kilo_usability: KCalc
   kilo_qa: KSys
   kilo_expander: KSubmarine
   kilo_review: KHex
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KSubmarine
-  timestamp: '2026-11-01T07:22:29-08:00'
+  timestamp: '2026-11-01T07:38:51-08:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -156,11 +156,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | **[ARGON REVIEW]:** Guard keydown in ksubmarine.html when typing in INPUT/TEXTAREA/SELECT (fixing #manualSearchInput triggering hotkeys), wire Space sonar ping + WASD/Arrow rudder/ballast/pitch/throttle + E scan/dredge in ksubmarine.html and KSubmarine/main.c WM_KEYDOWN, make Tab call cycleTarget() outside combat view (and M mute SFX when BGM disabled), apply dead maxHull + polymer bonusHull (scaling hullBar and repairs above 100%) and biolum sonarRangeBonus (+300..1000m scan/survey/ping range), wire #btnBilgePump (ID_BTN_BILGE_PUMP) to bilgePumpMode instead of overwritten bilgePumpActive, include cargoWeight + bilgeWater in buoyancyForce and scale #depthBar to 11000m, add 0%-Hull/O2 Emergency Rescue modal + 12/12 Fauna and 6/6 Threat Victory modal, and pause gameLoop rAF on document.hidden. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KSubmarine`
+- **Active Target**: `KCalc`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | **[ARGON REVIEW]:** Compact header to 1 nowrap row (hide #musicToggleBtn and #btnMatrixMusicToggle when !window.__KILO_BGM_ENABLED and label #soundToggleBtn SFX ON/OFF [M]), narrow side panels (268px 1fr 278px) with compact 2-row center tabs and 82px #terminalLog so #sonarCanvas expands above 450x360, fix triple HUD collision inside .sonar-viewport by moving #sonarModeTag to bottom-left and narrowing #sonarOverlay/#sonarTargetHud, organize right panel into [HELM] [SYSTEMS] [OPS] sub-tabs and compact left gauges so 0 controls clip at 1040x683, add click-to-lock/steer on #sonarCanvas, and add devicePixelRatio HiDPI scaling to #hydrophoneScopeCanvas. |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Compact 4-row top chrome at 860x653 by removing redundant #quickBitSummary from #kcalcExpBar, merging searchable 20-item CONSTANTS_DB into #view-constants (removing duplicate Constants modal button), unifying #memBadge/#memModal with M0-M7 Memory Bank (M0 = active memory), adding a RAD evaluation notice badge in #view-calculus, and redrawing HiDPI #regressionCanvas via requestAnimationFrame on switchView(statistics) and switchStatsTool(2var). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -177,6 +176,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | **[ARGON REVIEW]:** Compact 800x563 layout in kstellar.html (reduce body padding to 10px 12px, tighten #dashboard to 1 row by hiding dead #drone-toggle-btn and #music-toggle-btn when !window.__KILO_BGM_ENABLED and labeling #audio-toggle-btn SFX ON/OFF [M], collapse empty #mission-status when !activeMission, and add [TRADE] [SHIPYARD] [MISSIONS] [DIPLOMACY] sub-tabs in #info-panel) so #map-canvas expands above 65% height and station action buttons are visible above the fold on boot without scrolling; compact #manual-modal spacing so Section 1-5 text never clips at 800x563; replace all blocking alert()/confirm() popups in travelTo/buy/sell/upgrade/diplomacy/investigatePhenomenon with an Esc/Space-dismissible in-DOM event modal and inline Emergency Beacon button plus Buy Max/Sell All buttons; add devicePixelRatio HiDPI scaling to #map-canvas and #combat-canvas, boost sector watermark contrast to 0.28 alpha, enforce minimum star spacing (dist >= 11) and quadrant-matched sector assignment in generateGalaxy()/GenerateGalaxy(), and wire Tab/Arrow system cycling + Enter/Space warp/dock keyboard navigation in kstellar.html and KStellar/main.c. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Fix 1160x683 header button wrapping/clipping in kstarforge.html with white-space nowrap and compact spacing so all 5 resource pills and 7 action buttons fit 44px; size #blueprint-canvas to min(470px, calc(100vh - 215px)) so grid + 2-row .blueprint-toolbar fit with 0px scroll, move #toast-container to top-right so toasts never cover .blueprint-toolbar, and compact .blueprint-sidebar-right so #spec-crew and #cost-card fit above the fold; add vfs-blueprint-modal, rfms-fleet-modal, blueprint-code-modal, overclock-modal, and flight-debrief-modal to ALL_MODAL_IDS/Esc/backdrop dismissal, guard [S] and [1-5] in INPUT/TEXTAREA, bind [Z] to #btn-stress-overlay, replace confirm() in #btn-reset-save, and compact KStarForge/main.c STATE_CONTRACTS so Contract 6 fits 920x620. |
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Compact header to 1 nowrap row (show SFX ON/OFF when BGM disabled), lock .game-view to 100vh flex column with scrollable #dynamic-content (compact/collapsible biome grid + grouped Town actions) and pinned compact #log-panel + #controls-panel so Hero Creation and Town buttons fit 1000x723 above the fold; add .sidebar sub-tabs (Hero / Bag / Quests) with [I] focus and top-right #toast; trap Esc and hotkeys inside #mp-modal-overlay + guard SELECTs; pause gfxLoop on document.hidden; and render Tavern NPC + Army/Siege sprites on #kquest-gfx-canvas. |
+| `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | **[ARGON REVIEW]:** Compact header to 1 nowrap row (hide #musicToggleBtn and #btnMatrixMusicToggle when !window.__KILO_BGM_ENABLED and label #soundToggleBtn SFX ON/OFF [M]), narrow side panels (268px 1fr 278px) with compact 2-row center tabs and 82px #terminalLog so #sonarCanvas expands above 450x360, fix triple HUD collision inside .sonar-viewport by moving #sonarModeTag to bottom-left and narrowing #sonarOverlay/#sonarTargetHud, organize right panel into [HELM] [SYSTEMS] [OPS] sub-tabs and compact left gauges so 0 controls clip at 1040x683, add click-to-lock/steer on #sonarCanvas, and add devicePixelRatio HiDPI scaling to #hydrophoneScopeCanvas. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KSys`
@@ -303,6 +303,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T07:38:51-08:00 — kilo-usability: KSubmarine (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS (0 errors, web 544.9 KB, native 261.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (input 2.41%, 0 cut-off)).
+  - Layout & Sonar: Compact 1-row header, 2-row center tabs, 82px log, and narrow side panels expanded #sonarCanvas to 468x460 with zero HUD collision.
+  - Ergonomics & HiDPI: [HELM]/[SYSTEMS]/[OPS] right sub-tabs and compact gauges eliminate control clipping at 1040x683; click-to-lock/steer wired and #hydrophoneScopeCanvas HiDPI devicePixelRatio scaled.
+  - Handoff: Advanced `kilo-usability` to `KCalc`; rotated active agent to `kilo-qa`.
+
 - **2026-11-01T07:22:29-08:00 — kilo-tester: KSubmarine (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KSubmarine across web and native targets.
@@ -325,10 +331,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: Header wraps to 4 lines, 11 center tabs wrap to 5 rows crushing #sonarCanvas to 386x242 with triple HUD overlap (#sonarOverlay + #sonarModeTag + #sonarTargetHud), right panel clips subsystems below fold, and all sprites are canvas/SVG programmer art.
   - Feature/Gameplay Findings: Space sonar ping and WASD/Arrow helm keys unwired, Tab skips cycleTarget(), #manualSearchInput lacks keydown guard, maxHull/bonusHull/sonarRangeBonus/#btnBilgePump are dead or overwritten, depthBar caps at 5000m, zero 0%-Hull/O2 fail or victory modal, and zero VFS/RFMS hooks.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KSubmarine`, `kilo-tester`->`KSubmarine`, `kilo-graphics`->`KSubmarine`, `kilo-expander`->`KSubmarine`]; advanced `kilo-review` to `KHex`; next agent `kilo-creator`.
-
-- **2026-11-01T05:20:35-08:00 — kilo-expander: KQuest (Phase VI VFS Hardening & Hero Sheet Fixes)**
-  - Status: PASS ✅ (0 errors, web 426.6 KB, native 101.5 KB < 999 KB; startup, Vite & security_lint PASS).
-  - Fixed generateHeroSheetText() companion name/role formatting and player.agi/int/potion inventory counts.
-  - Hardened KiloVFS with origin checks, 60s timeouts, pickers, standalone fallbacks, and incoming FILE_OPEN auto-import.
-  - Dual-target Win32 C parity updated in KQuest/main.c for ExportHeroSheetToFile companion formatting.
-  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.

@@ -4862,7 +4862,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     DrawCustomButton(hdc, ID_BTN_QUICK_LOAD, clientW - 605, 6, 80, 24, "LOAD [F9]", 0, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_THEME_TOGGLE, clientW - 520, 6, 110, 24, th->tag, 1, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_SCANLINES_TOGGLE, clientW - 405, 6, 105, 24, g_sub.scanlinesEnabled ? "SCANLINES: ON" : "SCANLINES: OFF", g_sub.scanlinesEnabled, th->accentSonar, th);
-    DrawCustomButton(hdc, ID_BTN_SOUND_TOGGLE, clientW - 295, 6, 95, 24, g_sub.soundEnabled ? "AUDIO: ON" : "AUDIO: OFF", g_sub.soundEnabled, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_SOUND_TOGGLE, clientW - 295, 6, 95, 24, g_sub.soundEnabled ? "SFX: ON [M]" : "SFX: OFF [M]", g_sub.soundEnabled, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_MANUAL, clientW - 195, 6, 85, 24, "MANUAL [H]", g_sub.viewMode == 10, th->accentEmerald, th);
     DrawCustomButton(hdc, ID_BTN_EMERGENCY_BLOW, clientW - 105, 6, 100, 24, "BLOW TANK", 0, th->accentRed, th);
 
@@ -7125,6 +7125,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 g_sub.selectedThreatIdx = (g_sub.selectedThreatIdx + 1) % THREAT_COUNT;
                 PlaySoundAsync(650, 60);
                 InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == 'M' || wParam == 'm') {
+                HandleCommand(ID_BTN_SOUND_TOGGLE);
+                InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == 'A' || wParam == 'a' || wParam == VK_LEFT) {
+                HandleCommand(ID_BTN_RUDDER_PORT);
+                InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == 'D' || wParam == 'd' || wParam == VK_RIGHT) {
+                HandleCommand(ID_BTN_RUDDER_STBD);
+                InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == 'W' || wParam == 'w' || wParam == VK_UP) {
+                HandleCommand(ID_BTN_THROTTLE_FLANK);
+                InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == 'S' || wParam == 's' || wParam == VK_DOWN) {
+                HandleCommand(ID_BTN_THROTTLE_STOP);
+                InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == 'E' || wParam == 'e') {
+                HandleCommand(ID_BTN_SCAN_TARGET);
+                InvalidateRect(hWnd, NULL, FALSE);
             }
             return 0;
         }
@@ -7134,10 +7152,64 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             int my = GET_Y_LPARAM(lParam);
             RECT rcClient;
             GetClientRect(hWnd, &rcClient);
-            int cmd = HitTestButton(mx, my, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);
+            int clientW = rcClient.right - rcClient.left;
+            int clientH = rcClient.bottom - rcClient.top;
+            int cmd = HitTestButton(mx, my, clientW, clientH);
             if (cmd > 0) {
                 HandleCommand(cmd);
                 InvalidateRect(hWnd, NULL, FALSE);
+            } else if (g_sub.viewMode == 0) {
+                int margin = 8;
+                int panelY = 44;
+                int leftW = 280;
+                int rightW = 290;
+                int centerW = clientW - leftW - rightW - (margin * 4);
+                int centerX = leftW + (margin * 2);
+                int sonarH = clientH - panelY - margin - 100;
+                int sonarContentY = panelY + 52;
+                int sonarContentH = sonarH - 58;
+                int scx = centerX + centerW / 2;
+                int scy = sonarContentY + sonarContentH / 2;
+                int sRadius = min(centerW, sonarContentH) / 2 - 12;
+
+                int dx = mx - scx;
+                int dy = my - scy;
+                float distFromCenter = sqrtf((float)(dx * dx + dy * dy));
+
+                if (distFromCenter <= (float)sRadius) {
+                    UnifiedContact contacts[8];
+                    int cCount = GetUnifiedContacts(g_sub.currentSectorIdx, contacts);
+                    int hitContact = -1;
+                    float minCDist = 22.0f;
+                    for (int i = 0; i < cCount; i++) {
+                        float relX = (contacts[i].x - g_sub.posX) / 2.0f;
+                        float relY = (contacts[i].y - g_sub.posY) / 2.0f;
+                        float dNorm = sqrtf(relX * relX + relY * relY);
+                        if (dNorm <= 1.05f) {
+                            int fcx = scx + (int)(relX * (float)sRadius);
+                            int fcy = scy + (int)(relY * (float)sRadius);
+                            float d = sqrtf((float)((mx - fcx) * (mx - fcx) + (my - fcy) * (my - fcy)));
+                            if (d < minCDist) {
+                                minCDist = d;
+                                hitContact = i;
+                            }
+                        }
+                    }
+                    if (hitContact >= 0) {
+                        g_sub.selectedThreatIdx = hitContact;
+                        PlaySoundAsync(640, 60);
+                        AddLog("Sonar target locked via contact reticle.", g_themes[g_sub.currentTheme].accentEmerald);
+                    } else if (distFromCenter > 14.0f) {
+                        float clickAngle = atan2f((float)dy, (float)dx);
+                        float headingDeg = clickAngle * 180.0f / 3.14159265f + 90.0f;
+                        while (headingDeg < 0.0f) headingDeg += 360.0f;
+                        while (headingDeg >= 360.0f) headingDeg -= 360.0f;
+                        g_sub.heading = headingDeg;
+                        PlaySoundAsync(440, 50);
+                        AddLog("Helm: Heading steered via sonar navigation.", g_themes[g_sub.currentTheme].accentSonar);
+                    }
+                    InvalidateRect(hWnd, NULL, FALSE);
+                }
             }
             return 0;
         }

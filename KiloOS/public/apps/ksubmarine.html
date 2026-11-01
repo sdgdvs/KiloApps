@@ -144,23 +144,31 @@
         header {
             background-color: var(--bg-panel-header);
             border-bottom: 2px solid var(--border-panel);
-            padding: 6px 12px;
+            padding: 2px 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 12px;
+            font-size: 11px;
             z-index: 10;
             flex-shrink: 0;
+            white-space: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            gap: 6px;
+            height: 32px;
+            box-sizing: border-box;
         }
 
         .header-title {
             font-weight: bold;
-            font-size: 13px;
+            font-size: 11px;
             color: var(--text-bright);
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .status-badge {
@@ -186,8 +194,18 @@
 
         .header-controls {
             display: flex;
-            gap: 8px;
+            gap: 4px;
             align-items: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .header-controls button, .header-controls select {
+            padding: 2px 6px;
+            font-size: 10px;
+            height: 24px;
+            box-sizing: border-box;
+            white-space: nowrap;
         }
 
         button, select {
@@ -222,12 +240,28 @@
 
         main {
             display: grid;
-            grid-template-columns: 310px 1fr 310px;
+            grid-template-columns: 268px 1fr 278px;
             flex: 1;
             overflow: hidden;
-            gap: 8px;
-            padding: 8px;
+            gap: 6px;
+            padding: 6px;
             background-color: var(--bg-deep);
+        }
+
+        @media (max-width: 940px) {
+            main {
+                grid-template-columns: 240px 1fr 250px;
+                gap: 5px;
+                padding: 5px;
+            }
+        }
+
+        @media (max-width: 820px) {
+            main {
+                grid-template-columns: 210px 1fr 220px;
+                gap: 4px;
+                padding: 4px;
+            }
         }
 
         @media (max-width: 940px) {
@@ -272,8 +306,8 @@
         .panel-header {
             background-color: var(--bg-panel-header);
             border-bottom: 1px solid var(--border-panel);
-            padding: 6px 10px;
-            font-size: 11px;
+            padding: 4px 8px;
+            font-size: 10.5px;
             font-weight: bold;
             color: var(--text-bright);
             letter-spacing: 0.5px;
@@ -284,20 +318,20 @@
         }
 
         .panel-body {
-            padding: 10px;
+            padding: 6px;
             flex: 1;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 4px;
         }
 
         .gauge-group {
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 2px;
             background: rgba(2, 11, 18, 0.4);
-            padding: 5px 7px;
+            padding: 3px 5px;
             border-radius: 3px;
             border: 1px solid rgba(19, 60, 90, 0.4);
         }
@@ -305,19 +339,19 @@
         .gauge-label-row {
             display: flex;
             justify-content: space-between;
-            font-size: 10px;
+            font-size: 9.5px;
             color: var(--text-dim);
-            letter-spacing: 0.3px;
+            letter-spacing: 0.2px;
         }
 
         .gauge-value {
             color: var(--text-bright);
             font-weight: bold;
-            font-size: 11px;
+            font-size: 10px;
         }
 
         .gauge-bar-track {
-            height: 12px;
+            height: 7px;
             background-color: var(--gauge-bg);
             border: 1px solid var(--border-panel);
             border-radius: 2px;
@@ -341,10 +375,39 @@
         }
 
         .gauge-subtext {
-            font-size: 9px;
+            font-size: 8.5px;
             color: var(--text-dim);
             display: flex;
             justify-content: space-between;
+        }
+
+        .micro-meter {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: var(--text-dim);
+        }
+
+        .right-subtabs button {
+            background-color: var(--btn-bg);
+            border: 1px solid var(--border-panel);
+            color: var(--text-dim);
+            padding: 2px 6px;
+            font-size: 9.5px;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .right-subtabs button.active-toggle {
+            background-color: var(--border-panel);
+            border-color: var(--accent-sonar);
+            color: var(--text-bright);
+        }
+
+        .subtab-pane {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
 
         .center-stage {
@@ -377,17 +440,18 @@
 
         .sonar-overlay {
             position: absolute;
-            top: 8px;
-            left: 10px;
-            font-size: 10px;
+            top: 6px;
+            left: 8px;
+            font-size: 8.5px;
             color: var(--text-dim);
             pointer-events: none;
-            line-height: 1.4;
-            background: rgba(7, 23, 36, 0.75);
-            padding: 4px 8px;
+            line-height: 1.25;
+            background: rgba(7, 23, 36, 0.85);
+            padding: 3px 6px;
             border-radius: 3px;
-            border: 1px solid rgba(19, 60, 90, 0.5);
+            border: 1px solid rgba(19, 60, 90, 0.6);
             z-index: 2;
+            max-width: 168px;
         }
 
         .sonar-overlay span {
@@ -397,41 +461,40 @@
 
         .sonar-target-hud {
             position: absolute;
-            top: 8px;
-            right: 10px;
-            width: 220px;
-            background: rgba(7, 23, 36, 0.85);
+            top: 6px;
+            right: 8px;
+            width: 175px;
+            background: rgba(7, 23, 36, 0.88);
             border: 1px solid var(--border-panel);
-            border-radius: 4px;
-            padding: 6px 8px;
-            font-size: 9px;
+            border-radius: 3px;
+            padding: 4px 6px;
+            font-size: 8.5px;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
             z-index: 2;
         }
 
         .sonar-depth-marker {
             position: absolute;
-            bottom: 8px;
-            right: 10px;
-            font-size: 11px;
+            bottom: 6px;
+            right: 8px;
+            font-size: 9.5px;
             color: var(--accent-sonar);
             border: 1px solid var(--border-panel);
             background: rgba(7, 23, 36, 0.85);
-            padding: 3px 8px;
-            border-radius: 3px;
+            padding: 2px 6px;
+            border-radius: 2px;
             z-index: 2;
         }
 
         .sonar-mode-tag {
             position: absolute;
-            top: 8px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 10px;
+            bottom: 6px;
+            left: 8px;
+            font-size: 9px;
             color: var(--accent-emerald);
-            background: rgba(7, 23, 36, 0.8);
+            background: rgba(7, 23, 36, 0.85);
             border: 1px solid var(--border-panel);
             padding: 2px 6px;
             border-radius: 2px;
@@ -482,13 +545,13 @@
             background-color: #01080e;
             border: 1px solid var(--border-panel);
             border-radius: 3px;
-            padding: 6px 8px;
-            font-size: 10px;
-            height: 120px;
+            padding: 4px 6px;
+            font-size: 9.5px;
+            height: 82px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 2px;
             color: var(--text-dim);
             flex-shrink: 0;
         }
@@ -1703,28 +1766,28 @@
     <header>
         <div class="header-title">
             <span class="status-badge" id="masterStatusBadge"></span>
-            <span>DSV ABYSS VOYAGER // SUB-09</span>
+            <span>DSV ABYSS // SUB-09</span>
             <span class="depth-zone-tag" id="zoneTag">EPIPELAGIC (0-200M)</span>
         </div>
         <div class="header-controls">
-            <label for="themeSelect" style="font-size: 10px; color: var(--text-dim);">THEME:</label>
+            <label for="themeSelect" style="font-size: 9px; color: var(--text-dim);">THEME:</label>
             <select id="themeSelect">
-                <option value="theme-abyss">Abyssal Cyan</option>
-                <option value="theme-emerald">Sonar Emerald</option>
-                <option value="theme-amber">Amber Depth</option>
-                <option value="theme-monochrome">Monochrome Radar</option>
+                <option value="theme-abyss">Cyan</option>
+                <option value="theme-emerald">Emerald</option>
+                <option value="theme-amber">Amber</option>
+                <option value="theme-monochrome">Mono</option>
             </select>
-            <button id="scanlineToggleBtn">📺 SCANLINES: ON</button>
-            <button id="soundToggleBtn">🔊 AUDIO: ON</button>
-            <button id="musicToggleBtn" title="Toggle Sega Genesis YM2612 2-Op FM & SNES SPC700 Delay BGM [M]" style="border-color: var(--accent-sonar); color: var(--accent-sonar); font-weight: bold;">🎵 BGM: ON [YM2612]</button>
-            <button id="btnQuickSave" title="Quicksave dive state (F5)" style="border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;">💾 SAVE [F5]</button>
-            <button id="btnQuickLoad" title="Quickload saved dive state (F9)" style="border-color: var(--accent-sonar); color: var(--accent-sonar); font-weight: bold;">📂 LOAD [F9]</button>
-            <button id="btnExportState" title="Export dive telemetry to JSON file" style="border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">📤 EXPORT</button>
-            <button id="btnImportState" title="Import dive telemetry from JSON file" style="border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">📥 IMPORT</button>
+            <button id="scanlineToggleBtn" title="Toggle Scanlines">📺 CRT</button>
+            <button id="soundToggleBtn" title="Toggle Sound Effects [M]">🔊 SFX: ON [M]</button>
+            <button id="musicToggleBtn" title="Toggle Sega Genesis YM2612 2-Op FM & SNES SPC700 Delay BGM [M]" style="border-color: var(--accent-sonar); color: var(--accent-sonar); font-weight: bold;">🎵 BGM: ON</button>
+            <button id="btnQuickSave" title="Quicksave dive state (F5)" style="border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;">💾 F5</button>
+            <button id="btnQuickLoad" title="Quickload saved dive state (F9)" style="border-color: var(--accent-sonar); color: var(--accent-sonar); font-weight: bold;">📂 F9</button>
+            <button id="btnExportState" title="Export dive telemetry to JSON file" style="border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">📤 EXP</button>
+            <button id="btnImportState" title="Import dive telemetry from JSON file" style="border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">📥 IMP</button>
             <input type="file" id="stateImportInput" accept=".json" style="display: none;">
-            <button id="btnBriefing" title="Captain's Dive Briefing & Tutorial" style="border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">⚓ BRIEFING</button>
+            <button id="btnBriefing" title="Captain's Dive Briefing & Tutorial" style="border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">⚓ BRIEF</button>
             <button id="headerHelpBtn" style="border-color: var(--accent-sonar); color: var(--accent-sonar); font-weight: bold;">📖 MANUAL [H]</button>
-            <button id="emergencyBlowBtn" style="border-color: var(--accent-red); color: var(--accent-red); font-weight: bold;">🚨 BLOW BALLAST</button>
+            <button id="emergencyBlowBtn" style="border-color: var(--accent-red); color: var(--accent-red); font-weight: bold;">🚨 BLOW</button>
         </div>
     </header>
 
@@ -1857,23 +1920,31 @@
 
         <!-- CENTER PANEL: ACTIVE SONAR, TRENCH NAVIGATION, CODEX & ENGINEERING -->
         <section class="center-stage">
-            <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between; background: var(--bg-panel-header); border: 1px solid var(--border-panel); padding: 4px 8px; border-radius: 3px; flex-wrap: wrap;">
-                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <button id="viewSonarBtn" class="active-toggle">📡 ACTIVE SONAR</button>
-                    <button id="viewNavMapBtn">🗺️ TRENCH NAV</button>
-                    <button id="viewCodexBtn">🧬 FAUNA CODEX</button>
-                    <button id="viewCargoBtn">💎 CARGO & SALVAGE</button>
-                    <button id="viewLabBtn">🔬 RESEARCH LAB</button>
-                    <button id="viewEngineeringBtn">⚙️ ENGINEERING BAY</button>
-                    <button id="viewDamageBtn">🚨 DAMAGE CONTROL</button>
-                    <button id="viewOutpostsBtn">🏪 OUTPOSTS & TRADE</button>
-                    <button id="viewCombatBtn">⚔️ COMBAT & DEFENSE</button>
-                    <button id="viewAudioBtn">🎧 SOUND MATRIX</button>
-                    <button id="viewManualBtn">📖 CAPTAIN'S MANUAL</button>
+            <div style="display: flex; flex-direction: column; gap: 3px; background: var(--bg-panel-header); border: 1px solid var(--border-panel); padding: 3px 6px; border-radius: 3px; flex-shrink: 0;">
+                <div style="display: flex; gap: 3px; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; gap: 3px; flex-wrap: nowrap; overflow-x: auto;">
+                        <button id="viewSonarBtn" class="active-toggle" style="padding: 2px 5px; font-size: 9.5px;">📡 SONAR</button>
+                        <button id="viewNavMapBtn" style="padding: 2px 5px; font-size: 9.5px;">🗺️ NAV MAP</button>
+                        <button id="viewCodexBtn" style="padding: 2px 5px; font-size: 9.5px;">🧬 CODEX</button>
+                        <button id="viewCargoBtn" style="padding: 2px 5px; font-size: 9.5px;">💎 CARGO</button>
+                        <button id="viewLabBtn" style="padding: 2px 5px; font-size: 9.5px;">🔬 BIO LAB</button>
+                        <button id="viewEngineeringBtn" style="padding: 2px 5px; font-size: 9.5px;">⚙️ ENGIN</button>
+                    </div>
+                    <div style="font-size: 9.5px; color: var(--text-dim); display: flex; gap: 6px; align-items: center; white-space: nowrap; flex-shrink: 0;">
+                        <span>SECTOR: <b id="currentSectorName" style="color: var(--accent-sonar); font-size: 9.5px;">CONTINENTAL SHELF</b></span>
+                    </div>
                 </div>
-                <div style="font-size: 10px; color: var(--text-dim); display: flex; gap: 12px; align-items: center;">
-                    <span>SECTOR: <b id="currentSectorName" style="color: var(--accent-sonar);">CONTINENTAL SHELF</b></span>
-                    <span>SURVEY: <b id="surveyPtsVal" style="color: var(--accent-emerald);">150 PTS</b></span>
+                <div style="display: flex; gap: 3px; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; gap: 3px; flex-wrap: nowrap; overflow-x: auto;">
+                        <button id="viewDamageBtn" style="padding: 2px 5px; font-size: 9.5px;">🚨 DAMAGE</button>
+                        <button id="viewOutpostsBtn" style="padding: 2px 5px; font-size: 9.5px;">🏪 OUTPOST</button>
+                        <button id="viewCombatBtn" style="padding: 2px 5px; font-size: 9.5px;">⚔️ COMBAT</button>
+                        <button id="viewAudioBtn" style="padding: 2px 5px; font-size: 9.5px;">🎧 AUDIO</button>
+                        <button id="viewManualBtn" style="padding: 2px 5px; font-size: 9.5px;">📖 MANUAL</button>
+                    </div>
+                    <div style="font-size: 9.5px; color: var(--text-dim); display: flex; gap: 6px; align-items: center; white-space: nowrap; flex-shrink: 0;">
+                        <span>SURVEY: <b id="surveyPtsVal" style="color: var(--accent-emerald); font-size: 9.5px;">150 PTS</b></span>
+                    </div>
                 </div>
             </div>
 
@@ -2370,104 +2441,117 @@
         </section>
 
         <!-- RIGHT PANEL: HELM, BALLAST & SYSTEM CONTROLS -->
-        <section class="panel">
-            <div class="panel-header">
-                <span>HELM & NAVIGATION</span>
-                <span>CMD-CTRL</span>
+        <section class="panel" id="rightPanel">
+            <div class="panel-header" style="padding: 3px 6px;">
+                <span style="font-size: 10px;">COMMAND</span>
+                <div class="right-subtabs" style="display: flex; gap: 3px;">
+                    <button id="subtabBtnHelm" class="active-toggle" style="padding: 2px 6px; font-size: 9.5px; font-weight: bold;">HELM</button>
+                    <button id="subtabBtnSystems" style="padding: 2px 6px; font-size: 9.5px; font-weight: bold;">SYSTEMS</button>
+                    <button id="subtabBtnOps" style="padding: 2px 6px; font-size: 9.5px; font-weight: bold;">OPS</button>
+                </div>
             </div>
-            <div class="panel-body">
-                <!-- SONAR TARGET SCANNER (PHASE 7) -->
-                <div class="gauge-group">
-                    <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">SONAR CONTACT TRACKER & BIO-SCAN</span>
-                    <div class="controls-grid">
-                        <button class="btn-large" id="btnLockTarget" style="grid-column: span 2; border-color: var(--accent-sonar); color: var(--accent-sonar);">🎯 TARGET LOCK: NONE</button>
-                        <button class="btn-large" id="btnScanTarget" style="grid-column: span 2; border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;">🔬 BIO-ACOUSTIC SCAN TARGET</button>
+            <div class="panel-body" style="padding: 6px; gap: 5px; overflow-y: auto;">
+                <!-- SUB-TAB 1: HELM -->
+                <div id="subtabContentHelm" class="subtab-pane">
+                    <!-- PROPULSION THROTTLE -->
+                    <div class="gauge-group">
+                        <span style="font-size: 9.5px; color: var(--text-dim); font-weight: bold;">PROPULSION THROTTLE</span>
+                        <div class="controls-grid-3">
+                            <button id="btnThrottleRev" style="padding: 3px 2px; font-size: 9.5px;">REV (1/3)</button>
+                            <button id="btnThrottleStop" class="active-toggle" style="padding: 3px 2px; font-size: 9.5px;">STOP</button>
+                            <button id="btnThrottleHalf" style="padding: 3px 2px; font-size: 9.5px;">HALF (2/3)</button>
+                        </div>
+                        <div class="controls-grid" style="margin-top: 4px;">
+                            <button id="btnThrottleFlank" style="grid-column: span 2; padding: 4px; font-size: 9.5px;">⚡ FLANK SPEED (FULL AHEAD)</button>
+                            <button id="btnRudderPort" style="padding: 4px; font-size: 9.5px;">⬅ RUDDER PORT</button>
+                            <button id="btnRudderStbd" style="padding: 4px; font-size: 9.5px;">RUDDER STBD ➡</button>
+                        </div>
+                    </div>
+
+                    <!-- BALLAST ENGINE CONTROLS -->
+                    <div class="gauge-group">
+                        <span style="font-size: 9.5px; color: var(--text-dim); font-weight: bold;">BALLAST DIVE ENGINE</span>
+                        <div class="controls-grid">
+                            <button class="btn-large btn-dive" id="btnFloodBallast" style="padding: 4px; font-size: 9.5px;">🌊 FLOOD BALLAST (+)</button>
+                            <button class="btn-large btn-surface" id="btnPumpBallast" style="padding: 4px; font-size: 9.5px;">💨 BLOW BALLAST (-)</button>
+                            <button class="btn-large" id="btnTrimBow" style="padding: 4px; font-size: 9.5px;">📐 TRIM BOW (-1°)</button>
+                            <button class="btn-large" id="btnTrimStern" style="padding: 4px; font-size: 9.5px;">📐 TRIM STERN (+1°)</button>
+                            <button class="btn-large btn-ping" id="btnSonarPing" style="grid-column: span 2; padding: 4px; font-size: 9.5px;">📡 ACOUSTIC SONAR PING [SPACE]</button>
+                        </div>
+                    </div>
+
+                    <!-- TRENCH NAVIGATION & SECTOR STEERING -->
+                    <div class="gauge-group">
+                        <span style="font-size: 9.5px; color: var(--text-dim); font-weight: bold;">OCEAN NAVIGATION & WAYPOINTS</span>
+                        <div class="controls-grid">
+                            <button class="btn-large" id="btnNextWaypoint" style="grid-column: span 2; padding: 4px; font-size: 9.5px;">🧭 CYCLE NAV WAYPOINT [WP-1]</button>
+                            <button class="btn-large" id="btnAutopilot" style="padding: 4px; font-size: 9.5px;">🎯 AUTOPILOT: OFF</button>
+                            <button class="btn-large" id="btnSurveySector" style="padding: 4px; font-size: 9.5px;">🔬 SURVEY REGION</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- TRENCH NAVIGATION & SECTOR STEERING -->
-                <div class="gauge-group">
-                    <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">OCEAN NAVIGATION & WAYPOINTS</span>
-                    <div class="controls-grid">
-                        <button class="btn-large" id="btnNextWaypoint" style="grid-column: span 2;">🧭 CYCLE NAV WAYPOINT [WP-1]</button>
-                        <button class="btn-large" id="btnAutopilot">🎯 AUTOPILOT: OFF</button>
-                        <button class="btn-large" id="btnSurveySector">🔬 SURVEY REGION</button>
+                <!-- SUB-TAB 2: SYSTEMS -->
+                <div id="subtabContentSystems" class="subtab-pane" style="display: none;">
+                    <!-- AUXILIARY LIFE SUPPORT & ELECTRICAL -->
+                    <div class="gauge-group">
+                        <span style="font-size: 9.5px; color: var(--text-dim); font-weight: bold;">SUBSYSTEM MANAGEMENT</span>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <button id="btnSearchlights" style="padding: 4px; font-size: 9.5px;">💡 FORWARD SEARCHLIGHTS: OFF</button>
+                            <button id="btnScrubber" style="padding: 4px; font-size: 9.5px;">🔄 O2 SCRUBBER: AUTO [ONLINE]</button>
+                            <button id="btnO2Purge" style="padding: 4px; font-size: 9.5px;">🧪 PURGE EMERGENCY O2 CANISTER</button>
+                            <button id="btnBilgePump" style="padding: 4px; font-size: 9.5px;">💧 BILGE PUMPS: AUTO (STANDBY)</button>
+                            <button id="btnLowPowerMode" style="padding: 4px; font-size: 9.5px;">🔋 ECO LOW-POWER MODE: OFF</button>
+                        </div>
+                    </div>
+
+                    <!-- DREDGING CLAW & SALVAGE HARVESTER (PHASE 8) -->
+                    <div class="gauge-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 9.5px; color: var(--text-dim); font-weight: bold;">🗜️ DREDGING CLAW & SALVAGE</span>
+                            <span style="font-size: 9px; color: var(--accent-emerald);" id="cargoHoldBadge">0 / 500 KG</span>
+                        </div>
+                        <div class="controls-grid" style="margin-top: 4px;">
+                            <button class="btn-large" id="btnToggleClaw" style="grid-column: span 2; padding: 4px; font-size: 9.5px;">🗜️ DREDGING CLAW: RETRACTED</button>
+                            <button class="btn-large" id="btnDredgeSeabed" style="grid-column: span 2; border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold; padding: 4px; font-size: 9.5px;">⛏️ HARVEST SALVAGE / DREDGE</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- BALLAST ENGINE CONTROLS -->
-                <div class="gauge-group">
-                    <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">BALLAST DIVE ENGINE</span>
-                    <div class="controls-grid">
-                        <button class="btn-large btn-dive" id="btnFloodBallast">🌊 FLOOD BALLAST (+)</button>
-                        <button class="btn-large btn-surface" id="btnPumpBallast">💨 BLOW BALLAST (-)</button>
-                        <button class="btn-large" id="btnTrimBow">📐 TRIM BOW (-1°)</button>
-                        <button class="btn-large" id="btnTrimStern">📐 TRIM STERN (+1°)</button>
-                        <button class="btn-large btn-ping" id="btnSonarPing">📡 ACOUSTIC SONAR PING</button>
+                <!-- SUB-TAB 3: OPS -->
+                <div id="subtabContentOps" class="subtab-pane" style="display: none;">
+                    <!-- SONAR TARGET SCANNER (PHASE 7) -->
+                    <div class="gauge-group">
+                        <span style="font-size: 9.5px; color: var(--text-dim); font-weight: bold;">SONAR CONTACT TRACKER & BIO-SCAN</span>
+                        <div class="controls-grid" style="margin-top: 4px;">
+                            <button class="btn-large" id="btnLockTarget" style="grid-column: span 2; border-color: var(--accent-sonar); color: var(--accent-sonar); padding: 4px; font-size: 9.5px;">🎯 TARGET LOCK: NONE</button>
+                            <button class="btn-large" id="btnScanTarget" style="grid-column: span 2; border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold; padding: 4px; font-size: 9.5px;">🔬 BIO-ACOUSTIC SCAN TARGET [E]</button>
+                        </div>
                     </div>
-                </div>
 
-                <!-- PROPULSION & STEERING -->
-                <div class="gauge-group">
-                    <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">PROPULSION THROTTLE</span>
-                    <div class="controls-grid-3">
-                        <button id="btnThrottleRev">REV (1/3)</button>
-                        <button id="btnThrottleStop" class="active-toggle">STOP</button>
-                        <button id="btnThrottleHalf">HALF (2/3)</button>
+                    <!-- WEAPONS & TORPEDO DEFENSE (PHASE 12) -->
+                    <div class="gauge-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 9.5px; color: var(--text-dim); font-weight: bold;">⚔️ WEAPONS & TORPEDO DEFENSE</span>
+                            <span style="font-size: 9px; color: var(--accent-red);" id="activeThreatsBadge">0 HOSTILES</span>
+                        </div>
+                        <div class="controls-grid" style="margin-top: 4px;">
+                            <button class="btn-large" id="btnQuickFireAcoustic" style="border-color: var(--accent-sonar); color: var(--accent-sonar); padding: 4px; font-size: 9.5px;">🚀 ACOUSTIC [1]</button>
+                            <button class="btn-large" id="btnQuickFireEmp" style="border-color: var(--accent-emerald); color: var(--accent-emerald); padding: 4px; font-size: 9.5px;">⚡ EMP [2]</button>
+                            <button class="btn-large" id="btnQuickFirePlasma" style="border-color: var(--accent-red); color: var(--accent-red); padding: 4px; font-size: 9.5px;">🔥 PLASMA [3]</button>
+                            <button class="btn-large" id="btnQuickLaunchDecoy" style="border-color: var(--accent-amber); color: var(--accent-amber); padding: 4px; font-size: 9.5px;">🚨 DECOY [4]</button>
+                        </div>
                     </div>
-                    <div class="controls-grid" style="margin-top: 4px;">
-                        <button id="btnThrottleFlank" style="grid-column: span 2;">⚡ FLANK SPEED (FULL AHEAD)</button>
-                        <button id="btnRudderPort">⬅ RUDDER PORT</button>
-                        <button id="btnRudderStbd">RUDDER STBD ➡</button>
-                    </div>
-                </div>
 
-                <!-- AUXILIARY LIFE SUPPORT & ELECTRICAL -->
-                <div class="gauge-group">
-                    <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">SUBSYSTEM MANAGEMENT</span>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <button id="btnSearchlights">💡 FORWARD SEARCHLIGHTS: OFF</button>
-                        <button id="btnScrubber">🔄 O2 SCRUBBER: AUTO [ONLINE]</button>
-                        <button id="btnO2Purge">🧪 PURGE EMERGENCY O2 CANISTER</button>
-                        <button id="btnBilgePump">💧 BILGE PUMPS: AUTO (STANDBY)</button>
-                        <button id="btnLowPowerMode">🔋 ECO LOW-POWER MODE: OFF</button>
-                    </div>
-                </div>
-
-                <!-- DREDGING CLAW & SALVAGE HARVESTER (PHASE 8) -->
-                <div class="gauge-group">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">🗜️ DREDGING CLAW & SALVAGE</span>
-                        <span style="font-size: 9px; color: var(--accent-emerald);" id="cargoHoldBadge">0 / 500 KG</span>
-                    </div>
-                    <div class="controls-grid">
-                        <button class="btn-large" id="btnToggleClaw" style="grid-column: span 2;">🗜️ DREDGING CLAW: RETRACTED</button>
-                        <button class="btn-large" id="btnDredgeSeabed" style="grid-column: span 2; border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">⛏️ HARVEST SALVAGE / DREDGE</button>
-                    </div>
-                </div>
-
-                <!-- WEAPONS & TORPEDO DEFENSE (PHASE 12) -->
-                <div class="gauge-group">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">⚔️ WEAPONS & TORPEDO DEFENSE</span>
-                        <span style="font-size: 9px; color: var(--accent-red);" id="activeThreatsBadge">0 HOSTILES</span>
-                    </div>
-                    <div class="controls-grid">
-                        <button class="btn-large" id="btnQuickFireAcoustic" style="border-color: var(--accent-sonar); color: var(--accent-sonar);">🚀 ACOUSTIC [1]</button>
-                        <button class="btn-large" id="btnQuickFireEmp" style="border-color: var(--accent-emerald); color: var(--accent-emerald);">⚡ EMP [2]</button>
-                        <button class="btn-large" id="btnQuickFirePlasma" style="border-color: var(--accent-red); color: var(--accent-red);">🔥 PLASMA [3]</button>
-                        <button class="btn-large" id="btnQuickLaunchDecoy" style="border-color: var(--accent-amber); color: var(--accent-amber);">🚨 DECOY [4]</button>
-                    </div>
-                </div>
-
-                <!-- QUICK MISSION OBJECTIVE -->
-                <div class="gauge-group">
-                    <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">EXPEDITION DIRECTIVES</span>
-                    <div style="background: var(--bg-deep); border: 1px solid var(--border-panel); padding: 6px; border-radius: 3px; font-size: 10px; line-height: 1.4;">
-                        <div>• Detect & Scan <b>Abyssal Leviathans</b> & <b>Squids</b></div>
-                        <div>• Neutralize <b>Hostile Dredging Drones</b> & <b>Titans</b></div>
-                        <div>• Harvest <b>Manganese Nodules</b> & <b>Sunken Wrecks</b></div>
-                        <div>• Complete <b>12/12 Fauna</b> & <b>6/6 Threats</b></div>
+                    <!-- QUICK MISSION OBJECTIVE -->
+                    <div class="gauge-group">
+                        <span style="font-size: 9.5px; color: var(--text-dim); font-weight: bold;">EXPEDITION DIRECTIVES</span>
+                        <div style="background: var(--bg-deep); border: 1px solid var(--border-panel); padding: 4px 6px; border-radius: 3px; font-size: 9.5px; line-height: 1.35;">
+                            <div>• Detect & Scan <b>Abyssal Leviathans</b> & <b>Squids</b></div>
+                            <div>• Neutralize <b>Hostile Dredging Drones</b> & <b>Titans</b></div>
+                            <div>• Harvest <b>Manganese Nodules</b> & <b>Sunken Wrecks</b></div>
+                            <div>• Complete <b>12/12 Fauna</b> & <b>6/6 Threats</b></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3761,7 +3845,7 @@
                 } else {
                     if (!soundEnabled) {
                         soundEnabled = true;
-                        soundToggleBtn.textContent = '🔊 AUDIO: ON';
+                        soundToggleBtn.textContent = '🔊 SFX: ON [M]';
                     }
                     initAudio();
                     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -5367,6 +5451,37 @@
             viewManualBtn.addEventListener('click', () => setViewMode('manual'));
             headerHelpBtn.addEventListener('click', () => setViewMode(state.viewMode === 'manual' ? 'sonar' : 'manual'));
 
+            // Right Panel Subtab Switcher
+            const subtabBtnHelm = document.getElementById('subtabBtnHelm');
+            const subtabBtnSystems = document.getElementById('subtabBtnSystems');
+            const subtabBtnOps = document.getElementById('subtabBtnOps');
+            const subtabContentHelm = document.getElementById('subtabContentHelm');
+            const subtabContentSystems = document.getElementById('subtabContentSystems');
+            const subtabContentOps = document.getElementById('subtabContentOps');
+
+            function setRightSubtab(tab) {
+                if (subtabBtnHelm) subtabBtnHelm.classList.toggle('active-toggle', tab === 'helm');
+                if (subtabBtnSystems) subtabBtnSystems.classList.toggle('active-toggle', tab === 'systems');
+                if (subtabBtnOps) subtabBtnOps.classList.toggle('active-toggle', tab === 'ops');
+                if (subtabContentHelm) subtabContentHelm.style.display = tab === 'helm' ? 'flex' : 'none';
+                if (subtabContentSystems) subtabContentSystems.style.display = tab === 'systems' ? 'flex' : 'none';
+                if (subtabContentOps) subtabContentOps.style.display = tab === 'ops' ? 'flex' : 'none';
+            }
+            if (subtabBtnHelm) subtabBtnHelm.addEventListener('click', () => { setRightSubtab('helm'); if (typeof SubAudio !== 'undefined' && SubAudio.playFmEarcon) SubAudio.playFmEarcon('click'); });
+            if (subtabBtnSystems) subtabBtnSystems.addEventListener('click', () => { setRightSubtab('systems'); if (typeof SubAudio !== 'undefined' && SubAudio.playFmEarcon) SubAudio.playFmEarcon('click'); });
+            if (subtabBtnOps) subtabBtnOps.addEventListener('click', () => { setRightSubtab('ops'); if (typeof SubAudio !== 'undefined' && SubAudio.playFmEarcon) SubAudio.playFmEarcon('click'); });
+
+            // BGM Visibility Handler for window.__KILO_BGM_ENABLED
+            function updateBgmVisibility() {
+                const bgmAllowed = window.__KILO_BGM_ENABLED !== false;
+                const btnMusic = document.getElementById('musicToggleBtn');
+                if (btnMusic) btnMusic.style.display = bgmAllowed ? '' : 'none';
+                const btnMatrixMusic = document.getElementById('btnMatrixMusicToggle');
+                if (btnMatrixMusic) btnMatrixMusic.style.display = bgmAllowed ? '' : 'none';
+            }
+            updateBgmVisibility();
+
+
             btnToggleAmbientOcean.addEventListener('click', toggleAmbientOceanHum);
             if (btnMatrixMusicToggle) {
                 btnMatrixMusicToggle.addEventListener('click', () => {
@@ -6508,6 +6623,10 @@
                 }
             }
 
+            function getSectorFauna() {
+                return FAUNA_CATALOG.filter(f => f.sectorIdx === state.currentSectorIdx);
+            }
+
             // --- UNIFIED ACTIVE SONAR CONTACT TRACKER (FAUNA & SALVAGE NODES) ---
             function getAllSectorContacts() {
                 const sFauna = FAUNA_CATALOG.filter(f => f.sectorIdx === state.currentSectorIdx).map(f => ({
@@ -7480,7 +7599,7 @@
                         SubAudio.masterGain.gain.setValueAtTime(masterVolume, SubAudio.ctx.currentTime);
                     }
                 }
-                soundToggleBtn.textContent = soundEnabled ? '🔊 AUDIO: ON' : '🔇 AUDIO: OFF';
+                soundToggleBtn.textContent = soundEnabled ? '🔊 SFX: ON [M]' : '🔇 SFX: OFF [M]';
                 playBeep(400, 'sine', 0.06);
             });
 
@@ -8597,11 +8716,78 @@
             };
 
             function resizeCanvas() {
-                canvas.width = canvas.clientWidth * window.devicePixelRatio;
-                canvas.height = canvas.clientHeight * window.devicePixelRatio;
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = canvas.clientWidth * dpr;
+                canvas.height = canvas.clientHeight * dpr;
+
+                if (hydrophoneScopeCanvas) {
+                    const clientW = hydrophoneScopeCanvas.clientWidth || hydrophoneScopeCanvas.offsetWidth || 400;
+                    const clientH = hydrophoneScopeCanvas.clientHeight || hydrophoneScopeCanvas.offsetHeight || 90;
+                    hydrophoneScopeCanvas.width = clientW * dpr;
+                    hydrophoneScopeCanvas.height = clientH * dpr;
+                }
             }
             window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
+
+            // Click-to-Lock & Click-to-Steer Navigation on Sonar Viewport
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+                const cssW = rect.width;
+                const cssH = rect.height;
+                const cxCss = cssW / 2;
+                const cyCss = cssH / 2;
+                const maxRCss = Math.min(cxCss, cyCss) - 20;
+
+                // Priority 1: Check if clicked near any sonar contact in current sector
+                const sContacts = getAllSectorContacts();
+                let hitContactIdx = -1;
+                let minContactDist = 26; // 26px touch/click target tolerance
+
+                sContacts.forEach((c, idx) => {
+                    const relX = (c.x - state.posX) / 2.0;
+                    const relY = (c.y - state.posY) / 2.0;
+                    const distNorm = Math.sqrt(relX * relX + relY * relY);
+                    if (distNorm > 1.05) return;
+                    const cX = cxCss + relX * maxRCss;
+                    const cY = cyCss + relY * maxRCss;
+                    const d = Math.hypot(clickX - cX, clickY - cY);
+                    if (d < minContactDist) {
+                        minContactDist = d;
+                        hitContactIdx = idx;
+                    }
+                });
+
+                if (hitContactIdx >= 0) {
+                    state.selectedTargetIdx = hitContactIdx;
+                    updateTargetHUD();
+                    playBeep(640, 'sine', 0.08);
+                    if (typeof SubAudio !== 'undefined' && SubAudio.playFmEarcon) {
+                        SubAudio.playFmEarcon('click');
+                    }
+                    const c = sContacts[hitContactIdx];
+                    logMessage(`🎯 Sonar target locked: ${c.name} (${c.type.toUpperCase()})`, 'discovery');
+                } else {
+                    // Priority 2: Steer heading towards clicked bearing
+                    const dx = clickX - cxCss;
+                    const dy = clickY - cyCss;
+                    const distFromCenter = Math.hypot(dx, dy);
+                    if (distFromCenter > 14) {
+                        let targetHeadingDeg = (Math.atan2(dy, dx) * 180 / Math.PI + 90);
+                        while (targetHeadingDeg < 0) targetHeadingDeg += 360;
+                        targetHeadingDeg = Math.round(targetHeadingDeg % 360);
+                        state.heading = targetHeadingDeg;
+                        playBeep(440, 'sine', 0.06);
+                        if (typeof SubAudio !== 'undefined' && SubAudio.playFmEarcon) {
+                            SubAudio.playFmEarcon('rudder');
+                        }
+                        logMessage(`🧭 Helm: Heading steered to ${String(targetHeadingDeg).padStart(3, '0')}° via Sonar.`, 'info');
+                        updateTelemetryGauges();
+                    }
+                }
+            });
 
             // --- GRAPHICS SPRITE SYSTEM & ANIMATED ASSETS (LOOP 1) ---
             let globalAnimTime = 0;
@@ -10143,6 +10329,14 @@
             let scopePhase = 0;
             function drawHydrophoneOscilloscope() {
                 const sCanvas = hydrophoneScopeCanvas;
+                if (!sCanvas) return;
+                const hdpr = window.devicePixelRatio || 1;
+                const clientW = sCanvas.clientWidth || sCanvas.offsetWidth || 400;
+                const clientH = sCanvas.clientHeight || sCanvas.offsetHeight || 90;
+                if (sCanvas.width !== clientW * hdpr || sCanvas.height !== clientH * hdpr) {
+                    sCanvas.width = clientW * hdpr;
+                    sCanvas.height = clientH * hdpr;
+                }
                 const sCtx = sCanvas.getContext('2d');
                 const sW = sCanvas.width;
                 const sH = sCanvas.height;
@@ -10150,13 +10344,14 @@
                 sCtx.fillStyle = 'rgba(2, 11, 18, 0.4)';
                 sCtx.fillRect(0, 0, sW, sH);
 
-                // Center line grid
+                // Center line grid with HiDPI crispness
                 sCtx.strokeStyle = 'rgba(0, 210, 255, 0.15)';
-                sCtx.lineWidth = 1;
+                sCtx.lineWidth = 1 * hdpr;
                 sCtx.beginPath();
                 sCtx.moveTo(0, sH / 2);
                 sCtx.lineTo(sW, sH / 2);
-                for (let x = 0; x <= sW; x += 40) {
+                const gridStep = 40 * hdpr;
+                for (let x = 0; x <= sW; x += gridStep) {
                     sCtx.moveTo(x, 0);
                     sCtx.lineTo(x, sH);
                 }
@@ -10165,16 +10360,16 @@
                 scopePhase += 0.08;
                 scopePulseIntensity = Math.max(0, scopePulseIntensity - 0.02);
 
-                const activeAmp = (ambientOceanActive ? 14 : 4) + (scopePulseIntensity * 45);
+                const activeAmp = ((ambientOceanActive ? 14 : 4) + (scopePulseIntensity * 45)) * hdpr;
                 sCtx.strokeStyle = scopePulseIntensity > 0.3 ? '#f59e0b' : (ambientOceanActive ? '#00f0ff' : '#0284c7');
-                sCtx.lineWidth = 2;
+                sCtx.lineWidth = 2 * hdpr;
                 sCtx.beginPath();
 
                 for (let x = 0; x < sW; x++) {
                     const normX = x / sW;
                     const wave1 = Math.sin(normX * 18 + scopePhase) * activeAmp;
                     const wave2 = Math.sin(normX * 42 - scopePhase * 1.5) * (activeAmp * 0.4);
-                    const noise = (Math.random() - 0.5) * (ambientOceanActive ? 6 : 2);
+                    const noise = (Math.random() - 0.5) * ((ambientOceanActive ? 6 : 2) * hdpr);
                     const y = sH / 2 + wave1 + wave2 + noise;
                     if (x === 0) sCtx.moveTo(x, y);
                     else sCtx.lineTo(x, y);

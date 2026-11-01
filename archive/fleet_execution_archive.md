@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T05:20:35-08:00 — kilo-expander: KQuest (Phase VI VFS Hardening & Hero Sheet Fixes)**
+  - Status: PASS ✅ (0 errors, web 426.6 KB, native 101.5 KB < 999 KB; startup, Vite & security_lint PASS).
+  - Fixed generateHeroSheetText() companion name/role formatting and player.agi/int/potion inventory counts.
+  - Hardened KiloVFS with origin checks, 60s timeouts, pickers, standalone fallbacks, and incoming FILE_OPEN auto-import.
+  - Dual-target Win32 C parity updated in KQuest/main.c for ExportHeroSheetToFile companion formatting.
+  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
+
 - **2026-11-01T04:36:32-08:00 — kilo-qa: KChat (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 113.7 KB, native 32.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kchat_tutorialSeen flag, and Escape modal dismissals.
