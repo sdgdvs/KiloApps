@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T01:36:42-07:00 — kilo-usability: KStarForge (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 331.4 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.08%, HEAD Δ 8.14%, 0 fail, 0 warn, 8.4s)).
+  - Layout: Compacted 44px header (white-space nowrap), sized #blueprint-canvas to min(470px, calc(100vh - 215px)) for 0px scroll, moved #toast-container to top-right, and compacted sidebar telemetry.
+  - Ergonomics: Added 5 modals to ALL_MODAL_IDS/Esc/backdrop dismissal, guarded [S] and [1-5] in inputs, bound [Z] to #btn-stress-overlay, non-blocking reset, and compacted main.c STATE_CONTRACTS for 920x620.
+  - Handoff: Advanced `kilo-usability` to `KCalc`; rotated active agent to `kilo-qa`.
+
 - **2026-11-01T01:22:23-07:00 — kilo-tester: KStarForge (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KStarForge across web and native targets.

@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 581,
+  "turns_executed": 582,
   "last_turn_timestamp": "2026-09-28T18:42:51Z",
-  "last_heartbeat": "2026-11-01T09:22:05.528658+00:00",
-  "current_target": "KNetMap",
+  "last_heartbeat": "2026-11-01T10:18:16.256970+00:00",
+  "current_target": "KQuest",
   "remote_command": "none"
 }

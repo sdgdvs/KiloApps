@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://webring
-  kilo_graphics: KMystery
+  kilo_graphics: KCosmic
   kilo_soundscape: KStellar
   kilo_tester: KQuest
   kilo_usability: KQuest
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://rfc-archive
-  timestamp: '2026-11-01T02:33:47-08:00'
+  agent: kilo-graphics
+  app: KMystery
+  timestamp: '2026-11-01T03:14:44-08:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KMystery`
+- **Active Target**: `KCosmic`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
@@ -116,6 +115,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawVisuals() (kcyber.html) with Imagen 3 2-stage chroma-keyed sprites for the Cyberdeck Console, 5 distinct ICE Guardian Constructs (Basic 02, Tracer 03, Hunter 04, Black 05, Phantom 06 instead of one generic red octagon), Cryo-Stasis lattice, Classified Data Core cartridge, and Darknet Contraband Vault (<999 KB, zero perimeter border glints). — Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | **[ARGON REVIEW]:** Replace primitive canvas polygon/rect programmer-art ships on #combat-canvas and #map-canvas (Player Cruiser, Corsair Interceptor, Corsair Marauder, Syndicate Dreadnought, Stealth Infiltrator, and roaming Federation/Traders/Pirate fleet icons) plus geometric SVG placeholders in getPlanetSvg()/getCommodityIcon() with Imagen 3 2-stage chroma-keyed spacefaring sprites and orbital station/anomaly illustrations (<999 KB, zero perimeter border glints). — 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art across kstarforge.html (drawModuleBlueprintGlyph, drawDrydockScene, drawStarforgeStation, drawAsteroid, drawEnemyVessel, drawSalvagePod, and skirmish rival rendering) with Imagen 3 2-stage chroma-keyed sprites/atlas tiles for modular ship components, StarForge IX station & drydock gantry, 3 mineral asteroid types, salvage pods, and Syndicate/Marauder/Sentry/Corsair Dreadnought vessels (<999 KB, zero perimeter border glints). |
+| `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -300,6 +300,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T03:14:44-08:00 — kilo-graphics: KMystery (Skip — Asset Suitability)**
+  - ⏭️ Skip — Imagen 3 assets already integrated and zero perimeter glints.
+  - Handoff: Advanced `kilo-graphics` to `KCosmic`; rotated active agent to `kilo-tester`.
+
 - **2026-11-01T02:33:47-08:00 — kilo-creator: kweb://rfc-archive (IETF 1999 Living RFC Workbench)**
   - Status: PASS ✅ (0 errors, web 93.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Interactive RFC 1149 Avian Carrier simulator, RFC 2324 HTCPCP teapot console, ASCII TCP stepper & VFS export.
@@ -324,9 +328,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KNetMap across web and native targets.
   - Handoff: Advanced `kilo-qa` to `KChat`; rotated active agent to `kilo-expander`.
-
-- **2026-11-01T01:36:42-07:00 — kilo-usability: KStarForge (Usability, Responsive Layout & Ergonomics Polish)**
-  - Status: PASS ✅ (0 errors, web 331.4 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.08%, HEAD Δ 8.14%, 0 fail, 0 warn, 8.4s)).
-  - Layout: Compacted 44px header (white-space nowrap), sized #blueprint-canvas to min(470px, calc(100vh - 215px)) for 0px scroll, moved #toast-container to top-right, and compacted sidebar telemetry.
-  - Ergonomics: Added 5 modals to ALL_MODAL_IDS/Esc/backdrop dismissal, guarded [S] and [1-5] in inputs, bound [Z] to #btn-stress-overlay, non-blocking reset, and compacted main.c STATE_CONTRACTS for 920x620.
-  - Handoff: Advanced `kilo-usability` to `KCalc`; rotated active agent to `kilo-qa`.
