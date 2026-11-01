@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-review
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,13 +29,13 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://geocities
-  kilo_graphics: KMystery
+  kilo_graphics: KStellar
   kilo_soundscape: KStellar
-  kilo_tester: KColony
-  kilo_usability: KCalc
+  kilo_tester: KStellar
+  kilo_usability: KStellar
   kilo_qa: KFleet
-  kilo_expander: KCalc
-  kilo_review: KStellar
+  kilo_expander: KStellar
+  kilo_review: KStarForge
 virtual_web_target: kweb://geocities
 virtual_web_rotation:
 - kweb://slashnet
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KCyber
-  timestamp: '2026-10-31T18:23:17-07:00'
+  agent: kilo-review
+  app: KStellar
+  timestamp: '2026-10-31T18:33:16-07:00'
 last_planner_run: '2026-10-31T18:15:17Z'
 ---
 
@@ -99,12 +99,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://warez` | `KiloOS/public/web/warez.html`, `KiloOS/public/apps/knet.html` | Create *The Underground Courier / Warez BBS Web Ring* (`warez.html` <250 KB): ANSI top-site release board, simulated keygen music player, download quota tracker, and VFS export. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KMystery`
+- **Active Target**: `KStellar`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KStellar` | `KiloOS/public/apps/kstellar.html` | **[ARGON REVIEW]:** Replace primitive canvas polygon/rect programmer-art ships on #combat-canvas and #map-canvas (Player Cruiser, Corsair Interceptor, Corsair Marauder, Syndicate Dreadnought, Stealth Infiltrator, and roaming Federation/Traders/Pirate fleet icons) plus geometric SVG placeholders in getPlanetSvg()/getCommodityIcon() with Imagen 3 2-stage chroma-keyed spacefaring sprites and orbital station/anomaly illustrations (<999 KB, zero perimeter border glints). — 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
-| `KStellar` | `KiloOS/public/apps/kstellar.html` | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html` | Xenobiology sanctuary habitat visuals: biome terrarium flora/fauna sprites, weather overlay polish, and glint sweep. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
@@ -132,10 +132,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KColony`
+- **Active Target**: `KStellar`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | **[ARGON REVIEW]:** Fix KStellar/main.c dead station buttons in WM_COMMAND by implementing missing handlers for ID_BTN_BUY_MED (108), ID_BTN_SELL_MED (109), ID_BTN_REPAIR (110), and ID_BTN_REFUEL (111), include cargoMedicine in all cargoMax checks, hide hBtnBuyMed/hBtnSellMed/hBtnRepair/hBtnRefuel in ShowManualView, non-docked WM_LBUTTONDOWN, and combat start so they stop overlapping Manual/Combat controls, add Emergency Distress Beacon fallback when stranded without fuel, implement missing phenomenon 4 (Alien Monolith) and 5 (Ion Storm) rewards in ID_BTN_INVESTIGATE + WM_PAINT rings, spawn/label enemyClass 3 (Stealth Infiltrator) properly while fixing engineLevel flee scaling and shieldLevel damage absorption in combat, fix GDI HBRUSH leaks in WM_DRAWITEM, route WM_KEYDOWN in GetMessage loop so button clicks stop breaking hotkeys (mapping M to sound mute and H/F1 to Manual); in kstellar.html fix saveGameState/loadGameState quota fallback to persist s.market (food, minerals, tech, medicine) instead of undefined s.food_price, make emergencyBeacon() add +30% fuel (clamped to 100) to prevent >30%-jump soft-locks, and pause renderCanvasLoop rAF when document.hidden. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -151,10 +152,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html`, `KCyber/main.c` | **[ARGON REVIEW]:** Stop accept from overwriting native node_files and stop download in kcyber.html from double-paying 2x contract reward (keep contract file separate alongside node paydata in ls/download and persist/award active_mission_reward once in both kcyber.html and KCyber/main.c); fix KCyber/main.c WM_TIMER (id 2) attacking while connected_node is active after PIN crack and call KillTimer(hwnd, 2) on breach/abort/fail/reboot; handle reboot globally before in_shop/hacking_node/connected_node branches (resetting all 3 modes + updatePrompt) so the toolbar Reboot button never fails; persist ice_slowed in F5/F9 saves, null-guard audioCtx.state + add e.stopPropagation() on modal Esc in cmdInput keydown so closing F1 Help never aborts an active hack, pause renderLoop and ice_interval when document.hidden, and add connect 2-6 shorthand + VK_UP/VK_DOWN history to KCyber/main.c. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KCalc`
+- **Active Target**: `KStellar`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | **[ARGON REVIEW]:** Compact 800x563 layout in kstellar.html (reduce body padding to 10px 12px, tighten #dashboard to 1 row by hiding dead #drone-toggle-btn and #music-toggle-btn when !window.__KILO_BGM_ENABLED and labeling #audio-toggle-btn SFX ON/OFF [M], collapse empty #mission-status when !activeMission, and add [TRADE] [SHIPYARD] [MISSIONS] [DIPLOMACY] sub-tabs in #info-panel) so #map-canvas expands above 65% height and station action buttons are visible above the fold on boot without scrolling; compact #manual-modal spacing so Section 1-5 text never clips at 800x563; replace all blocking alert()/confirm() popups in travelTo/buy/sell/upgrade/diplomacy/investigatePhenomenon with an Esc/Space-dismissible in-DOM event modal and inline Emergency Beacon button plus Buy Max/Sell All buttons; add devicePixelRatio HiDPI scaling to #map-canvas and #combat-canvas, boost sector watermark contrast to 0.28 alpha, enforce minimum star spacing (dist >= 11) and quadrant-matched sector assignment in generateGalaxy()/GenerateGalaxy(), and wire Tab/Arrow system cycling + Enter/Space warp/dock keyboard navigation in kstellar.html and KStellar/main.c. |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Compact 4-row top chrome at 860x653 by removing redundant #quickBitSummary from #kcalcExpBar, merging searchable 20-item CONSTANTS_DB into #view-constants (removing duplicate Constants modal button), unifying #memBadge/#memModal with M0-M7 Memory Bank (M0 = active memory), adding a RAD evaluation notice badge in #view-calculus, and redrawing HiDPI #regressionCanvas via requestAnimationFrame on switchView(statistics) and switchStatsTool(2var). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -184,10 +186,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Klondike deal engine, undo history, win fireworks, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KCalc`
+- **Active Target**: `KStellar`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kstellar.html (strict event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) connecting EXPORT/IMPORT to VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ (/home/saves/kstellar_save.json), handling incoming FILE_OPEN/VFS_OPEN messages, and exporting a Captain Trade & Fleet Ledger (/home/docs/kstellar_ledger.txt) with an Open in KPad OS_LAUNCH_APP button; deepen 4X fleet/diplomacy & turn UX with dynamic market price drift per warp turn, interactive hailing of local ORBITAL TRAFFIC fleets, and Friendly (>= +15) Wingman Escort / Convoy Charter treaties; and integrate ../assets/js/retro_multiplayer.js Galactic Sector Trade & Bounty Race mode strictly behind an explicit MULTIPLAYER button (zero autostart, 25000ms AI Star Captain fallback). |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY with standalone blob fallback) for saving/loading calculation tapes and workspace JSON snapshots to /home/docs/, and add live HEX/DEC/OCT/BIN radix readout plus FV/CAGR financial tools to KCalc/main.c (<999 KB). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
@@ -203,11 +206,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html`, `KCyber/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kcyber.html (event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) connecting Export/Import to VFS_SHOW_SAVE/VFS_WRITE and VFS_SHOW_OPEN/VFS_READ (/home/saves/kcyber_deck.json), handling incoming FILE_OPEN/VFS_OPEN messages, exporting stolen node/contract paydata payloads to /home/crypto/ on download with an Inspect in KHex/KPad OS_LAUNCH_APP button, and adding ../assets/js/retro_multiplayer.js NetLink Intrusion Race duel mode strictly behind an explicit toolbar button (zero autostart, soloTimeoutMs: 25000 rival AI runner fallback). |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
-- **Active Target**: `KStellar`
+- **Active Target**: `KStarForge`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | Argon Visual, Feature & Usability Review (Active Audit): inspect `sheet.png` + 4X galaxy map, diplomacy/fleet panels, and turn progression UX; inject fixes via `--inject-fix`. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Argon Visual, Feature & Usability Review (Active Audit): inspect `sheet.png` + starship hull blueprint grid, skirmish simulator, and VFS controls; inject fixes via `--inject-fix`. |
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | Argon Visual, Feature & Usability Review (Active Audit): inspect `sheet.png` + JRPG overworld/combat viewport, party HUD, and inventory ergonomics; inject fixes via `--inject-fix`. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | Argon Visual, Feature & Usability Review (Active Audit): inspect `sheet.png` + bathysphere sonar, depth gauge, creature encounters, and HUD layout; inject fixes via `--inject-fix`. |
@@ -218,6 +220,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTerm` | `KiloOS/public/apps/kterm.html`, `KTerm/main.c` | [Argon Audited 2026-10-31: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | [Argon Audited 2026-10-31: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html`, `KCyber/main.c` | [Argon Audited 2026-10-31: Fixes queued -> kilo-expander, kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
+| `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | [Argon Audited 2026-10-31: Fixes queued -> kilo-expander, kilo-graphics, kilo-tester, kilo-usability] Visual, feature & usability review. |
 
 ---
 
@@ -291,6 +294,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-31T18:33:16-07:00 — kilo-review: KStellar (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 800x563 and audited kstellar.html + KStellar/main.c).
+  - Visual/UX Findings: 3-row dashboard (with dead BGM/Drone toggles) + padding squeezes #map-canvas to 35% (468x334) and clips 100% of docked station controls below #info-panel fold; #manual-modal clips mid-sentence; blocking alert() spam interrupts warp turns; missing HiDPI scaling, keyboard map nav, and star spacing.
+  - Feature/Parity Findings: KStellar/main.c Buy/Sell Medicine, Repair, and Refuel buttons have zero WM_COMMAND handlers (dead no-ops) and leak across Manual/Combat views; Alien Monolith/Ion Storm anomalies yield empty popups in C; kstellar.html quota-save fallback reads undefined s.food_price and renderCanvasLoop runs when hidden.
+  - Dispatched surgical Row-1 fix specs to kilo-usability, kilo-tester, kilo-graphics, and kilo-expander.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KStellar`, `kilo-tester`->`KStellar`, `kilo-graphics`->`KStellar`, `kilo-expander`->`KStellar`]; advanced `kilo-review` to `KStarForge`; next agent `kilo-creator`.
+
 - **2026-10-31T18:23:17-07:00 — kilo-expander: KCyber (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KCyber across web and native targets.
@@ -312,8 +322,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Fixed KiloOS `formatAppUrl` query parameter ordering before URL hash and sanitized `os-launch-app` empty path dispatch (`path ? ... : appDef`).
   - Added nested iframe self-nesting guard in `knet.html` (`window.parent !== window.top`), guarded `fetchUrl` and `httpWebFrame` load sync against recursive `knet.html` embedding, sanitized `parseLaunchUrl` hash parsing, and auto-healed corrupted `knet_session_state`.
   - Updated `deep_core.html` and `webring.html` home links to canonical `/web/portal.html` and modernized `portal.html` KNet references.
-
-- **2026-10-31T16:40:13-07:00 — kilo-tester: KCyber (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-tester updates for KCyber across web and native targets.
-  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
