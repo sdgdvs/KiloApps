@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://cabled
+  kilo_creator: kweb://scallion
   kilo_graphics: KBreakout
   kilo_soundscape: KStellar
   kilo_tester: KColony
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KSolitaire
   kilo_expander: KHex
   kilo_review: KFleet
-virtual_web_target: kweb://cabled
+virtual_web_target: kweb://scallion
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KChat
-  timestamp: '2026-11-01T23:35:47-08:00'
+  agent: kilo-creator
+  app: kweb://cabled
+  timestamp: '2026-11-02T00:32:29-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://cabled`
+- **Active Target**: `kweb://scallion`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
 | `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 | `kweb://warez` | `KiloOS/public/web/warez.html`, `KiloOS/public/apps/knet.html` | Create *The Underground Courier / Warez BBS Web Ring* (`warez.html` <250 KB): ANSI top-site release board, simulated keygen music player, download quota tracker, and VFS export. |
 | `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
+| `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KBreakout`
@@ -316,6 +316,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T00:32:29-08:00 — kilo-creator: kweb://cabled (Cabled Magazine 1999 Neon Edition (kweb://cabled))**
+  - Status: PASS ✅ (0 errors, web 124.1 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.43%, input 23.93%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.6s)).
+  - Enhanced interactive Y2K audit with armageddon scan timer protection & reset, Dot-Com IPO simulator with dynamic staged IPO stock injection, +MAX/-HALF trades &  reset.
+  - Added interactive Hype-vs-Reality matrix with real-time range sliders, dynamic delusion coefficient recalculation, perimeter radar chart labels, and Jargon Watch category filtering with 6 new neologisms.
+  - Implemented Fetish Hardware 1999 telemetry modal dialog with ASCII schematics, VFS spec sheet export (/home/downloads/), and KNet intra-webring navigation integration.
+  - Handoff: Advanced `kilo-creator` to `kweb://scallion`; rotated active agent to `kilo-graphics`.
+
 - **2026-11-01T23:35:47-08:00 — kilo-expander: KChat (Phase VI KiloOS VFS, IPC Mesh & Win32 C File Dialogs)**
   - Status: PASS ✅ (0 errors, web 137.0 KB, native 35.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Wired KiloOS VFS mesh (VFS_SHOW_SAVE, VFS_WRITE, OS_NOTIFY, VFS_SHOW_OPEN, VFS_READ, FILE_OPEN/VFS_OPEN) for JSON/TXT export/import with 60s timeout & standalone fallbacks.
@@ -337,10 +344,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KChat across web and native targets.
   - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
-
-- **2026-11-01T21:39:06-08:00 — kilo-graphics: KStarDredge (Imagen 3 Visual Assets & Glint Sweep)**
-  - Status: PASS ✅ (0 errors, web 528.2 KB, native 292.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Replaced derelict hull and pirate wreckage programmer art with Imagen 3 chroma-keyed sprites & cosmic anomalies.
-  - Upgraded magnetic dredge beam effects with dual-frequency flux cones and oscillating magnetic tethers across Web and Win32 C.
-  - Glint sweep verified: zero specular glints or traveling border dots across HTML and C.
-  - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-tester`.

@@ -84,6 +84,111 @@
     transform: translateY(1px);
   }
 
+  .btn-cyber-orange {
+    background: #111520;
+    border: 1px solid var(--cabled-neon-orange);
+    color: var(--cabled-neon-orange);
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 6px 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    box-shadow: 0 0 6px rgba(255, 85, 0, 0.2);
+  }
+  .btn-cyber-orange:hover {
+    background: var(--cabled-neon-orange);
+    color: #000;
+    box-shadow: 0 0 14px rgba(255, 85, 0, 0.6);
+  }
+  .btn-cyber-orange:active {
+    transform: translateY(1px);
+  }
+
+  /* Fetish Hardware Telemetry Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+  }
+  .modal-window {
+    background: #0c0f18;
+    border: 2px solid var(--cabled-neon-cyan);
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.4);
+    max-width: 680px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .modal-header {
+    background: #141b2a;
+    border-bottom: 1px solid var(--cabled-border);
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-title {
+    font-family: var(--cabled-font-display);
+    font-size: 18px;
+    color: var(--cabled-neon-cyan);
+    letter-spacing: 0.5px;
+  }
+  .modal-close {
+    background: transparent;
+    border: 1px solid var(--cabled-border);
+    color: #fff;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-family: var(--cabled-font-mono);
+    font-weight: bold;
+  }
+  .modal-close:hover {
+    background: var(--cabled-neon-magenta);
+    border-color: var(--cabled-neon-magenta);
+  }
+  .modal-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .modal-ascii {
+    background: #000;
+    border: 1px solid #1f283d;
+    padding: 12px;
+    font-family: var(--cabled-font-mono);
+    font-size: 11px;
+    color: var(--cabled-neon-lime);
+    white-space: pre;
+    overflow-x: auto;
+    line-height: 1.25;
+  }
+  .modal-footer {
+    background: #101522;
+    border-top: 1px solid var(--cabled-border);
+    padding: 12px 18px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
   .btn-cyber-cyan {
     border-color: var(--cabled-neon-cyan);
     color: var(--cabled-neon-cyan);
@@ -1169,11 +1274,11 @@
   </div>
   <div class="nav-webring-links">
     <span style="color:var(--cabled-text-muted);">WEBRING:</span>
-    <a href="/web/slashnet.html" title="Jump to SlashNet">« SlashNet</a>
+    <a href="/web/slashnet.html" onclick="navigateKnet('/web/slashnet.html', event)" title="Jump to SlashNet">« SlashNet</a>
     <span style="color:#555;">|</span>
-    <a href="/web/portal.html" title="Jump to KiloNet Portal">KNet Portal</a>
+    <a href="/web/portal.html" onclick="navigateKnet('/web/portal.html', event)" title="Jump to KiloNet Portal">KNet Portal</a>
     <span style="color:#555;">|</span>
-    <a href="/web/trapster.html" title="Jump to Trapster P2P">Trapster »</a>
+    <a href="/web/trapster.html" onclick="navigateKnet('/web/trapster.html', event)" title="Jump to Trapster P2P">Trapster »</a>
   </div>
 </nav>
 
@@ -1338,12 +1443,15 @@
             </label>
           </div>
 
-          <div style="display:flex; gap:10px; margin-top:8px;">
-            <button class="btn-cyber-orange" onclick="runArmageddonScan()" style="flex:1;">
+          <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+            <button class="btn-cyber-orange" onclick="runArmageddonScan()" style="flex:1; min-width:180px;">
               ⚡ RUN 2-DIGIT ARMAGEDDON SCAN
             </button>
-            <button class="btn-cyber-cyan" onclick="simulateMidnightRollover()" style="flex:1;">
+            <button class="btn-cyber-cyan" onclick="simulateMidnightRollover()" style="flex:1; min-width:180px;">
               🕛 SIMULATE MIDNIGHT (00:00:00)
+            </button>
+            <button class="btn-cyber" onclick="resetMidnightSimulation()" style="flex:0 0 auto;">
+              🔄 RESET CLOCK
             </button>
           </div>
         </div>
@@ -1489,6 +1597,9 @@
         <button class="btn-cyber-lime" onclick="openPortfolioInKPad()">
           📝 Open Prospectus in KPad
         </button>
+        <button class="btn-cyber-cyan" onclick="resetPortfolioSim()">
+          🔄 Reset Portfolio ($100k Seed)
+        </button>
         <span style="font-family:var(--cabled-font-mono); font-size:11px; color:var(--cabled-text-muted); margin-left:auto;">
           Tip: Liquidate before the April 2000 margin call!
         </span>
@@ -1596,11 +1707,20 @@
 
       <!-- Curated Lexicon Grid -->
       <div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
           <h4 style="font-family:var(--cabled-font-mono); color:var(--cabled-neon-lime);">
             CANONICAL 1999 DICTIONARY (FILTERABLE):
           </h4>
-          <input type="text" id="jargonSearchInput" placeholder="Filter terms or concepts..." oninput="filterLexicon()" style="width:240px;">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select id="jargonCategoryFilter" onchange="filterLexicon()" style="font-size:11px; padding:5px 8px;">
+              <option value="all">ALL CATEGORIES</option>
+              <option value="tech">TECH</option>
+              <option value="economics">ECONOMICS</option>
+              <option value="culture">CULTURE</option>
+              <option value="neologism">CUSTOM NEOLOGISMS</option>
+            </select>
+            <input type="text" id="jargonSearchInput" placeholder="Filter terms or concepts..." oninput="filterLexicon()" style="width:200px;">
+          </div>
         </div>
 
         <div class="jargon-lexicon-grid" id="lexiconGrid">
@@ -1649,9 +1769,12 @@
             <strong id="delusionVal">34.7% (OPTIMISM INDEX)</strong>
           </div>
 
-          <div style="margin-top:10px;">
-            <button class="btn-cyber-orange" onclick="exportHypeMatrixVFS()" style="width:100%; justify-content:center;">
-              📊 Export Hype Matrix Whitepaper to VFS
+          <div style="margin-top:10px; display:flex; gap:8px;">
+            <button class="btn-cyber-orange" onclick="exportHypeMatrixVFS()" style="flex:1; justify-content:center;">
+              📊 Export Whitepaper to VFS
+            </button>
+            <button class="btn-cyber-cyan" onclick="resetHypeMatrix()" style="justify-content:center;">
+              🔄 Reset Defaults
             </button>
           </div>
         </div>
@@ -1690,7 +1813,7 @@
         <p class="fetish-blurb">
           The RIAA tried to sue it into the sun, but the 9th Circuit Court gave music pirates their Magna Carta. Holds approximately eight songs at 128 kbps. If you shake it on the bus, it doesn't skip like your Discman. The future has no moving parts.
         </p>
-        <button class="btn-cyber" onclick="orderFetishSim('Diamond Rio PMP300')">⚡ Inspect Hardware Specs</button>
+        <button class="btn-cyber" onclick="openFetishModal('Diamond Rio PMP300')">⚡ Inspect Hardware Specs</button>
       </div>
 
       <!-- Item 2: Palm V -->
@@ -1703,7 +1826,7 @@
         <p class="fetish-blurb">
           Industrial design perfection. Only 0.4 inches thick with a sculpted metal chassis that slips effortlessly into the breast pocket of an Armani blazer. Stylus graffiti writing makes you feel like an architect drafting the matrix.
         </p>
-        <button class="btn-cyber" onclick="orderFetishSim('3Kom Palm V')">⚡ Inspect Hardware Specs</button>
+        <button class="btn-cyber" onclick="openFetishModal('3Kom Palm V')">⚡ Inspect Hardware Specs</button>
       </div>
 
       <!-- Item 3: Soni VAYO C1 PictureBook -->
@@ -1716,7 +1839,7 @@
         <p class="fetish-blurb">
           The laptop William Gibson would carry if he wore purple titanium shades. Features a built-in CCD lens on the top bezel that swivels 180 degrees to photograph bewildered baristas in Tokyo cybercafes.
         </p>
-        <button class="btn-cyber" onclick="orderFetishSim('Soni VAYO C1')">⚡ Inspect Hardware Specs</button>
+        <button class="btn-cyber" onclick="openFetishModal('Soni VAYO C1')">⚡ Inspect Hardware Specs</button>
       </div>
 
       <!-- Item 4: 3dfx Voodoo3 3500 TV -->
@@ -1729,7 +1852,7 @@
         <p class="fetish-blurb">
           The ultimate gaming and multimedia accelerator. Powers Tremor III Arena at 1024x768 with full bilateral texture filtering while streaming cable television into a postage-stamp overlay window.
         </p>
-        <button class="btn-cyber" onclick="orderFetishSim('3dfx Voodoo3 3500')">⚡ Inspect Hardware Specs</button>
+        <button class="btn-cyber" onclick="openFetishModal('3dfx Voodoo3 3500')">⚡ Inspect Hardware Specs</button>
       </div>
 
       <!-- Item 5: Cybiko Wireless Handheld -->
@@ -1742,7 +1865,7 @@
         <p class="fetish-blurb">
           A clandestine peer-to-peer radio device for teenagers to transmit encrypted text messages across high school study halls without paying paging carriers a single nickel.
         </p>
-        <button class="btn-cyber" onclick="orderFetishSim('Cybiko Wireless')">⚡ Inspect Hardware Specs</button>
+        <button class="btn-cyber" onclick="openFetishModal('Cybiko Wireless')">⚡ Inspect Hardware Specs</button>
       </div>
 
       <!-- Item 6: IBM Microdrive CF+ -->
@@ -1755,7 +1878,7 @@
         <p class="fetish-blurb">
           Miracle of mechanical micromachining: a fully functioning spinning hard drive smaller than a matchbook. If you listen closely in a quiet room, you can hear its tiny read heads seeking track 0.
         </p>
-        <button class="btn-cyber" onclick="orderFetishSim('IBM Microdrive')">⚡ Inspect Hardware Specs</button>
+        <button class="btn-cyber" onclick="openFetishModal('IBM Microdrive')">⚡ Inspect Hardware Specs</button>
       </div>
     </div>
   </section>
@@ -1792,6 +1915,24 @@
   </section>
 
 </main>
+
+<!-- Fetish Hardware Telemetry Modal -->
+<div class="modal-overlay" id="fetishModal" onclick="if(event.target===this)closeFetishModal()">
+  <div class="modal-window">
+    <div class="modal-header">
+      <span class="modal-title" id="fetishModalTitle">HARDWARE TELEMETRY</span>
+      <button class="modal-close" onclick="closeFetishModal()">[X]</button>
+    </div>
+    <div class="modal-body" id="fetishModalBody">
+      <!-- Injected via JS -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cyber" onclick="exportCurrentFetishVFS()">💾 Save Specs to VFS</button>
+      <button class="btn-cyber-cyan" onclick="openCurrentFetishInKPad()">📝 Open in KPad</button>
+      <button class="btn-cyber-lime" onclick="closeFetishModal()">Close</button>
+    </div>
+  </div>
+</div>
 
 <!-- Footer -->
 <footer class="cabled-footer">
@@ -1873,6 +2014,15 @@ function safeSet(key, value) {
  * @param {string} vfsPath
  * @param {string} contentStr
  */
+// --- Inter-App Navigation (KNet & KiloOS integration) ---
+function navigateKnet(url, ev) {
+  if (ev) ev.preventDefault();
+  try {
+    window.parent.postMessage({ type: 'NAVIGATE', url: url }, '*');
+  } catch (e) {}
+  window.location.href = url;
+}
+
 function saveToKiloVfs(vfsPath, contentStr) {
   try {
     window.parent.postMessage({
@@ -2076,10 +2226,16 @@ function updateAuditCalculations() {
   playRetroSound('click');
 }
 
+let _armageddonTimerIds = [];
+
 function runArmageddonScan() {
   playRetroSound('beep');
   const logBox = document.getElementById('y2kLogBox');
   if (!logBox) return;
+
+  // Clear previous timers if running
+  _armageddonTimerIds.forEach(id => clearTimeout(id));
+  _armageddonTimerIds = [];
 
   logBox.textContent = `[${new Date().toTimeString().split(' ')[0]}] Initiating full system scan across local rails...\n`;
 
@@ -2093,13 +2249,30 @@ function runArmageddonScan() {
   ];
 
   steps.forEach((msg, idx) => {
-    setTimeout(() => {
+    const tId = setTimeout(() => {
       const time = new Date().toTimeString().split(' ')[0];
       logBox.textContent += `[${time}] ${msg}\n`;
       logBox.scrollTop = logBox.scrollHeight;
       playRetroSound('click');
     }, (idx + 1) * 280);
+    _armageddonTimerIds.push(tId);
   });
+}
+
+function resetMidnightSimulation() {
+  playRetroSound('click');
+  const clockDigits = document.getElementById('y2kClockDisplay');
+  const clockDate = document.getElementById('y2kDateDisplay');
+  const logBox = document.getElementById('y2kLogBox');
+  if (clockDigits) {
+    clockDigits.textContent = '23:59:58';
+    clockDigits.style.color = 'var(--cabled-neon-lime)';
+  }
+  if (clockDate) clockDate.textContent = 'DATE: 1999-12-31 • SYSTEM RTC: VINTAGE-99';
+  if (logBox) {
+    logBox.textContent = `[${new Date().toTimeString().split(' ')[0]}] System RTC reset to 23:59:58. Armageddon lab armed.\n`;
+  }
+  showToast('🔄 RTC test clock reset to 23:59:58');
 }
 
 function simulateMidnightRollover() {
@@ -2218,13 +2391,46 @@ function renderStockTable() {
         <div class="stock-actions">
           <button class="btn-trade" onclick="buyStock('${stk.ticker}', 10)">+10</button>
           <button class="btn-trade" onclick="buyStock('${stk.ticker}', 50)">+50</button>
-          <button class="btn-trade sell" onclick="sellStock('${stk.ticker}', 10)">-10</button>
+          <button class="btn-trade" onclick="buyStockMax('${stk.ticker}')">+MAX</button>
+          <button class="btn-trade sell" onclick="sellStockHalf('${stk.ticker}')">HALF</button>
           <button class="btn-trade sell" onclick="sellStock('${stk.ticker}', 'all')">SELL</button>
         </div>
       </td>
     `;
     tbody.appendChild(tr);
   });
+}
+
+function buyStockMax(ticker) {
+  const stk = STOCKS.find(s => s.ticker === ticker);
+  if (!stk) return;
+  const maxShares = Math.floor(userCash / stk.price);
+  if (maxShares <= 0) {
+    showToast("⚠️ Insufficient seed capital!");
+    playRetroSound('alarm');
+    return;
+  }
+  buyStock(ticker, maxShares);
+}
+
+function sellStockHalf(ticker) {
+  const held = userPortfolio[ticker] || 0;
+  if (held <= 0) return;
+  const half = Math.ceil(held / 2);
+  sellStock(ticker, half);
+}
+
+function resetPortfolioSim() {
+  userCash = 100000;
+  userPortfolio = {};
+  portfolioHistory = [100000];
+  safeSet('cabled_sim_cash', userCash);
+  safeSet('cabled_sim_holdings', userPortfolio);
+  renderStockTable();
+  updatePortfolioUI();
+  drawPortfolioChart();
+  playRetroSound('click');
+  showToast('🔄 Venture fund reset to $100,000 cash seed.');
 }
 
 function buyStock(ticker, amount) {
@@ -2418,10 +2624,32 @@ function stageIPOEvent() {
   const bonus = Math.floor(Math.random() * 40000 + 20000);
   userCash += bonus;
   safeSet('cabled_sim_cash', userCash);
-  updatePortfolioUI();
 
-  showToast(`🚨 NASDAQ BELL RINGS! +${pop}% IPO pop! Distributed $${bonus.toLocaleString()}!`);
+  // Extract company ticker from latest pitch
+  const pitchText = (document.getElementById('pitchPitchText')?.textContent || "Vapor Startup Net").replace(/"/g, '');
+  const words = pitchText.split(/[\s:.-]+/).filter(w => w.length > 2);
+  const tag = (words[0] || 'VENTURE').toUpperCase().substring(0, 5);
+  const newTicker = `${tag}.NET`;
+
+  // Dynamically inject staged IPO stock into market
+  if (!STOCKS.some(s => s.ticker === newTicker)) {
+    const startPrice = parseFloat((Math.random() * 60 + 25).toFixed(2));
+    const poppedPrice = parseFloat((startPrice * (1 + parseInt(pop) / 100)).toFixed(2));
+    STOCKS.unshift({
+      ticker: newTicker,
+      name: pitchText.substring(0, 36) + '...',
+      price: poppedPrice,
+      prev: startPrice,
+      burn: '$' + Math.floor(Math.random() * 30 + 10) + 'M/mo',
+      volatility: 0.32,
+      archetype: 'Staged IPO'
+    });
+  }
+
+  updatePortfolioUI();
+  showToast(`🚨 NASDAQ BELL RINGS! ${newTicker} debuts at +${pop}% pop! Bonus +$${bonus.toLocaleString()}!`);
   tickMarketDay();
+  generateNewPitch();
 }
 
 function exportPortfolioVFS() {
@@ -2460,7 +2688,13 @@ const CANONICAL_LEXICON = [
   { term: "Silicon Sweatshop", pos: "noun", cat: "culture", def: "An open-plan loft in SoHo where twenty-four-year-olds consume Red Bull and code Perl CGI scripts for eighty hours a week in exchange for unvested stock options." },
   { term: "CrackBerry Thumb", pos: "noun", cat: "tech", def: "Repetitive strain injury localized in the right digit from typing urgent email replies on miniature wireless pagers during red lights." },
   { term: "Frictionless Capitalism", pos: "noun", cat: "economics", def: "The utopian belief that zero-marginal-cost web transactions will abolish inflation, market friction, and physical labor." },
-  { term: "Hypertextual Nomad", pos: "noun", cat: "culture", def: "A telecommuter who claims to live everywhere at once while actually living in their mother's wood-paneled basement with an ISDN line." }
+  { term: "Hypertextual Nomad", pos: "noun", cat: "culture", def: "A telecommuter who claims to live everywhere at once while actually living in their mother's wood-paneled basement with an ISDN line." },
+  { term: "Push Technology", pos: "noun", cat: "tech", def: "PointCast client screensavers saturating corporate bandwidth with unrequested stock tickers and animated banners until sysadmins disconnect the router." },
+  { term: "Dot-Bomb", pos: "noun", cat: "economics", def: "A once-lauded Silicon Valley enterprise whose market capitalization vaporizes following an unsustainable $4M Super Bowl commercial." },
+  { term: "B2B Arbitrage", pos: "noun", cat: "economics", def: "Inserting an XML transaction gateway between two companies already doing business via fax and claiming a 3% platform commission." },
+  { term: "Foosball Equity", pos: "noun", cat: "culture", def: "The psychological concession made by 22-year-old software engineers accepting 40% below-market salaries in exchange for a game room in a warehouse loft." },
+  { term: "Beanie Baby Speculation", pos: "noun", cat: "economics", def: "The retail consumer delusion that synthetic beanbag plush toys will outperform the NASDAQ Composite index over thirty years." },
+  { term: "Y2K Hoarder", pos: "noun", cat: "culture", def: "An IT director who stored thirty cases of Spam, twelve propane tanks, and forty gallons of kerosene in their garage ahead of December 31st." }
 ];
 
 let activeLexicon = [...CANONICAL_LEXICON];
@@ -2486,16 +2720,20 @@ function renderLexicon(list) {
 
 function filterLexicon() {
   const query = document.getElementById('jargonSearchInput')?.value.toLowerCase().trim() || '';
-  if (!query) {
-    renderLexicon(activeLexicon);
-    return;
+  const cat = document.getElementById('jargonCategoryFilter')?.value || 'all';
+
+  let list = activeLexicon;
+  if (cat !== 'all') {
+    list = list.filter(item => item.cat.toLowerCase() === cat.toLowerCase());
   }
-  const filtered = activeLexicon.filter(item => 
-    item.term.toLowerCase().includes(query) || 
-    item.def.toLowerCase().includes(query) ||
-    item.cat.toLowerCase().includes(query)
-  );
-  renderLexicon(filtered);
+  if (query) {
+    list = list.filter(item => 
+      item.term.toLowerCase().includes(query) || 
+      item.def.toLowerCase().includes(query) ||
+      item.cat.toLowerCase().includes(query)
+    );
+  }
+  renderLexicon(list);
 }
 
 const DEFINITION_MATRIX = {
@@ -2572,9 +2810,66 @@ const HYPE_DATA = [
   { name: "Autonomous Highway Cruisers", hype: 70, reality: 45, cat: "Automotive", blurb: "1999: Radar-guided electric pods cruising hands-free. Reality: Partial autonomy under strict highway conditions." }
 ];
 
+const INITIAL_HYPE_DEFAULTS = JSON.parse(JSON.stringify(HYPE_DATA));
+
 function initHypeMatrix() {
+  updateHypeSummary();
   renderHypeCards();
   drawHypeRadar();
+}
+
+function updateHypeSummary() {
+  const totalHype = HYPE_DATA.reduce((sum, item) => sum + item.hype, 0);
+  const totalReal = HYPE_DATA.reduce((sum, item) => sum + item.reality, 0);
+  const avgHype = (totalHype / HYPE_DATA.length).toFixed(1);
+  const avgReal = (totalReal / HYPE_DATA.length).toFixed(1);
+  const delusion = (avgHype - avgReal).toFixed(1);
+
+  const hypeEl = document.getElementById('aggHypeVal');
+  const realEl = document.getElementById('aggRealVal');
+  const delEl = document.getElementById('delusionVal');
+
+  if (hypeEl) hypeEl.textContent = avgHype + '%';
+  if (realEl) realEl.textContent = avgReal + '%';
+  if (delEl) delEl.textContent = delusion + '% (OPTIMISM INDEX)';
+}
+
+function onHypeSliderChange(idx, field, value) {
+  const val = parseInt(value, 10);
+  HYPE_DATA[idx][field] = val;
+
+  const txtEl = document.getElementById(field === 'hype' ? `hypeValText_${idx}` : `realValText_${idx}`);
+  if (txtEl) txtEl.textContent = val + '%';
+
+  const badgeEl = document.getElementById(`hypeBadge_${idx}`);
+  if (badgeEl) {
+    const item = HYPE_DATA[idx];
+    if (item.reality >= item.hype * 0.7) {
+      badgeEl.className = 'hype-badge badge-real';
+      badgeEl.textContent = 'REALIZED';
+    } else if (item.reality < 20) {
+      badgeEl.className = 'hype-badge badge-flop';
+      badgeEl.textContent = 'TOTAL FLOP';
+    } else {
+      badgeEl.className = 'hype-badge badge-hyper';
+      badgeEl.textContent = 'OVER-HYPED';
+    }
+  }
+
+  updateHypeSummary();
+  drawHypeRadar();
+}
+
+function resetHypeMatrix() {
+  playRetroSound('click');
+  for (let i = 0; i < HYPE_DATA.length; i++) {
+    HYPE_DATA[i].hype = INITIAL_HYPE_DEFAULTS[i].hype;
+    HYPE_DATA[i].reality = INITIAL_HYPE_DEFAULTS[i].reality;
+  }
+  updateHypeSummary();
+  renderHypeCards();
+  drawHypeRadar();
+  showToast('🔄 Hype-vs-Reality matrix restored to 1999 defaults.');
 }
 
 function renderHypeCards() {
@@ -2599,22 +2894,18 @@ function renderHypeCards() {
     card.innerHTML = `
       <div class="hype-header">
         <span class="hype-tech-name">${item.name}</span>
-        <span class="hype-badge ${badgeClass}">${badgeText}</span>
+        <span class="hype-badge ${badgeClass}" id="hypeBadge_${idx}">${badgeText}</span>
       </div>
       <div class="bar-compare">
         <div class="bar-row">
           <span>1999 HYPE:</span>
-          <div class="mini-bar">
-            <div class="mini-fill" style="width:${item.hype}%;"></div>
-          </div>
-          <strong style="color:var(--cabled-neon-orange);">${item.hype}%</strong>
+          <input type="range" min="0" max="100" value="${item.hype}" style="flex:1; accent-color:var(--cabled-neon-orange); cursor:pointer;" oninput="onHypeSliderChange(${idx}, 'hype', this.value)">
+          <strong id="hypeValText_${idx}" style="color:var(--cabled-neon-orange); width:35px; text-align:right;">${item.hype}%</strong>
         </div>
         <div class="bar-row">
           <span>REALITY:</span>
-          <div class="mini-bar">
-            <div class="mini-fill reality" style="width:${item.reality}%;"></div>
-          </div>
-          <strong style="color:var(--cabled-neon-cyan);">${item.reality}%</strong>
+          <input type="range" min="0" max="100" value="${item.reality}" style="flex:1; accent-color:var(--cabled-neon-cyan); cursor:pointer;" oninput="onHypeSliderChange(${idx}, 'reality', this.value)">
+          <strong id="realValText_${idx}" style="color:var(--cabled-neon-cyan); width:35px; text-align:right;">${item.reality}%</strong>
         </div>
       </div>
       <p class="hype-description">${item.blurb}</p>
@@ -2626,16 +2917,14 @@ function renderHypeCards() {
 function drawHypeRadar() {
   const cvs = document.getElementById('hypeRadarChart');
   if (!cvs) return;
-  if (cvs.clientWidth) {
-    cvs.width = cvs.clientWidth;
-    cvs.height = cvs.clientHeight || 320;
-  }
+  cvs.width = cvs.clientWidth || 360;
+  cvs.height = cvs.clientHeight || 320;
   const ctx = cvs.getContext('2d');
   const w = cvs.width;
   const h = cvs.height;
   const cx = w / 2;
   const cy = h / 2;
-  const radius = Math.min(cx, cy) - 40;
+  const radius = Math.min(cx, cy) - 48;
 
   ctx.clearRect(0, 0, w, h);
 
@@ -2658,13 +2947,23 @@ function drawHypeRadar() {
     ctx.stroke();
   }
 
-  // Axes lines
+  // Axes lines & labels
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const shortLabels = ["Fiber", "VR Mall", "Micropay", "PointCast", "Glasses", "Paperless", "Y2K Grid", "Autonomous"];
+
   for (let i = 0; i < numAxes; i++) {
     const angle = i * angleStep - Math.PI / 2;
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
     ctx.stroke();
+
+    const lx = cx + Math.cos(angle) * (radius + 20);
+    const ly = cy + Math.sin(angle) * (radius + 20);
+    ctx.fillText(shortLabels[i] || HYPE_DATA[i].name.substring(0, 6), lx, ly);
   }
 
   // Draw 1999 Hype Polygon (Orange)
@@ -2706,6 +3005,7 @@ function drawHypeRadar() {
   ctx.fillRect(10, 10, 12, 12);
   ctx.fillStyle = '#fff';
   ctx.font = '10px monospace';
+  ctx.textAlign = 'left';
   ctx.fillText('1999 HYPE', 26, 20);
 
   ctx.fillStyle = '#00f0ff';
@@ -2731,10 +3031,203 @@ function exportHypeMatrixVFS() {
   saveToKiloVfs('/home/downloads/cabled_hype_matrix.txt', doc);
 }
 
-// --- FEATURE 5: Fetish Hardware Inspector ---
-function orderFetishSim(name) {
+// --- FEATURE 5: Fetish Hardware Inspector & Telemetry Modal ---
+let currentFetishId = 'Diamond Rio PMP300';
+
+const FETISH_DATABASE = {
+  'Diamond Rio PMP300': {
+    name: 'Diamond Rio PMP300 Portable MP3 Player',
+    price: '$200.00 USD (1998-1999)',
+    mfg: 'Diamond Multimedia / San Jose, CA',
+    cpu: 'Cirrus Logic EP7212 ARM7TDMI 74MHz SoC',
+    ram: '32MB Integrated Flash RAM (expandable via 16MB SmartMedia card)',
+    bus: 'Bi-directional Centronics Parallel Port Docking Cable',
+    power: '1x AA Alkaline Battery (approx. 12 hours continuous playback)',
+    flaw: 'Parallel port file transfer averages 4.5 minutes per 4MB song; battery door latch breaks after 3 weeks.',
+    ascii: 
+`+---------------------------------------+
+|  [ RIO PMP300 ]  [=== 128kbps ===]    |
+|  Track 01: daft_punk_revolution909.mp3|
+|  Time: 03:42   [PLAY >] [VOL: |||||]  |
+|  -----------------------------------  |
+|   (<<)     (>>|)    [STOP]    (REC)   |
+|                                       |
+|  [Parallel Port Pinout: DB-25 Native] |
++---------------------------------------+`,
+    notes: 'The landmark device that survived RIAA v. Diamond Multimedia (180 F.3d 1072), legally establishing the consumer right to space-shift digital audio without paying record label royalties.'
+  },
+  '3Kom Palm V': {
+    name: '3Kom Palm V Connected Organizer',
+    price: '$449.00 USD (Released Feb 1999)',
+    mfg: 'Palm Computing / 3Com Corporation',
+    cpu: 'Motorola DragonBall EZ (MC68EZ328) @ 16 MHz',
+    ram: '8MB High-Speed EDO DRAM & 2MB Flash ROM (Palm OS 3.1)',
+    bus: 'Custom Serial HotSync Gold Contacts Cradle (RS-232 57,600 baud)',
+    power: 'Internal Rechargeable Lithium-Ion Cell (charged via HotSync dock)',
+    flaw: 'Contrast slider easily shifts in pockets; stylus Graffiti strokes occasionally register letter \'D\' as \'O\'.',
+    ascii:
+`  /================================\
+ /   .--------------------------.   \
+|   | 11:42 pm    [APPT / MEMO] |    |
+|   | [X] Pitch Kleiner VC synd |    |
+|   | [X] Audit COBOL Y2K tape  |    |
+|   | [ ] Order sushi via ICQ   |    |
+|   '--------------------------'    |
+|       (abc)  [Graffiti Area] (123)|
+|    [Date] [Address] [ToDo] [Memo] |
+ \================================/`,
+    notes: 'Designed by IDEO with an ultra-slim brushed anodized aluminum unibody. Became the quintessential status symbol of late-90s dot-com founders and Sand Hill Road venture capitalists.'
+  },
+  'Soni VAYO C1': {
+    name: 'Soni VAYO C1 PictureBook Subnotebook',
+    price: '$2,299.00 USD (1999)',
+    mfg: 'Soni Computer Corp / Tokyo, Japan',
+    cpu: 'Intel Mobile Pentium MMX @ 266 MHz',
+    ram: '64MB SDRAM (expandable to 96MB)',
+    bus: 'USB 1.0, Type II PCMCIA, i.LINK IEEE 1394 4-pin FireWire',
+    power: 'Smart Li-Ion Pack (2.0 hours real-world runtime)',
+    flaw: 'Internal 3.2GB drive produces high pitch whine; camera driver causes blue screens if rotated during capture.',
+    ascii:
+`     .----------------------------------.
+    /   [  (o) SWIVEL CCD LENS 0.27MP ]  \
+   |   +------------------------------+   |
+   |   | ULTRAWIDE 8.9" TFT 1024x480  |   |
+   |   | "William Gibson Tokyo Mode"  |   |
+   |   +------------------------------+   |
+    \__________________________________/
+      [===== Purple Titanium Chassis =====]
+      [ Q W E R T Y ] [PointStick Track]
+      [===================================]`,
+    notes: 'The pioneer of mobile videoblogging. William Gibson famously praised its cyberpunk aesthetic and panoramic screen ratio in numerous cyberculture publications.'
+  },
+  '3dfx Voodoo3 3500': {
+    name: '3dfx Voodoo3 3500 TV AGP Graphics Accelerator',
+    price: '$249.00 USD (Released July 1999)',
+    mfg: '3dfx Interactive Inc. / San Jose, CA',
+    cpu: 'Avenger 250nm Core @ 183 MHz (single-pass dual-texture engine)',
+    ram: '16MB 143MHz 128-bit SDRAM (5.5 GB/s bandwidth)',
+    bus: 'AGP 2X / Integrated Philips TV Tuner & Audio Capture DSP',
+    power: 'AGP Slot Draw (heatsink gets hot enough to fry an egg; zero fan)',
+    flaw: 'Massive blue breakout cable pod weighs down card; 16-bit color dithering in Glide is visible in dark hallways.',
+    ascii:
+` +-------------------------------------------+
+ | [ 3dfx Avenger Core ]  [ 16MB SDRAM ]     |
+ | [ 183 MHz Glide DSP ]  [ 128-bit Bus ]    |
+ |  GLIDE 3.0 / DIRECTX 6.1 ACCELERATION     |
+ |  Tremor III: 1024x768 @ 72 FPS            |
+ +-------------------------------------------+
+     |||||||||||||||||| [AGP 2X Slot]
+      [ Blue Breakout Cable to TV Tuner & A/V ]`,
+    notes: 'The hardware accelerator that crowned Tremor III Arena and Surreal Tournament king of LAN parties in the summer of 1999 before the NVIDIA GeForce 256 shift.'
+  },
+  'Cybiko Wireless': {
+    name: 'Cybiko Wireless Handheld Computer & Radio Mesh',
+    price: '$139.00 USD (Late 1999)',
+    mfg: 'Cybiko Inc. / Bloomingdale, IL',
+    cpu: 'Hitachi H8S/2246 16-bit RISC @ 11.0592 MHz',
+    ram: '512KB SRAM + 512KB Flash ROM',
+    bus: '916 MHz Digital RF Transceiver (up to 300ft range peer-to-peer)',
+    power: 'Internal NiMH rechargeable pack',
+    flaw: 'Tiny rubber chiclet keyboard requires toothpick-level precision; RF range drops to 20 feet through brick walls.',
+    ascii:
+`      .------------------------.
+     /   [ CYBIKO RF TRANSC ]   \
+    |    +--------------------+  |
+    |    | 160x100 4-GRAY LCD |  |
+    |    | P2P Chat: Neo99... |  |
+    |    +--------------------+  |
+    |      (Antenna Extended)    |
+    |   [Q][W][E][R][T][Y][U][I] |
+    |   [A][S][D][F][G][H][J][K] |
+    |   [Z][X][C][V][B][N][M][.] |
+     \========================/`,
+    notes: 'The stealth adolescent mesh network of 1999. Teens passed encrypted text messages in high school classrooms entirely independent of telecom billing.'
+  },
+  'IBM Microdrive': {
+    name: 'IBM 340MB Microdrive CompactFlash Type II Hard Drive',
+    price: '$499.00 USD (Released Mid 1999)',
+    mfg: 'IBM Storage Systems / San Jose, CA',
+    cpu: 'Miniaturized Western Digital Servo & Voice Coil Motor Driver',
+    ram: '1-inch GMR Head Magnetic Disk Platter (3,600 RPM)',
+    bus: 'CF Type II (5mm thickness) / TrueIDE Mode',
+    power: '3.3V / 5V DC via CompactFlash connector',
+    flaw: 'Severe gyroscopic resistance when rotating camera during write cycle; dropping onto tile floor yields immediate death click.',
+    ascii:
+`   +---------------------------+
+   |  [=== IBM MICRODRIVE ===] |
+   |  Capacity: 340 MB         |
+   |  Platter: 1.0 inch        |
+   |  Spindle: 3,600 RPM       |
+   |  Seek Time: 12ms          |
+   |  [CF Type II Connector]   |
+   +---------------------------+`,
+    notes: 'An astonishing feat of precision mechanical engineering that fit a spinning platter, voice coil actuator, and air-bearing slider inside the footprint of a postage stamp.'
+  }
+};
+
+function openFetishModal(gadgetName) {
   playRetroSound('beep');
-  showToast(`🔍 Telemetry loaded for ${name}. Hardware specs verified.`);
+  currentFetishId = gadgetName;
+  const dev = FETISH_DATABASE[gadgetName] || FETISH_DATABASE['Diamond Rio PMP300'];
+
+  const modal = document.getElementById('fetishModal');
+  const titleEl = document.getElementById('fetishModalTitle');
+  const bodyEl = document.getElementById('fetishModalBody');
+
+  if (titleEl) titleEl.textContent = `⚡ HARDWARE TELEMETRY: ${dev.name.toUpperCase()}`;
+  if (bodyEl) {
+    bodyEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid #1e293b; padding-bottom:8px;">
+        <span style="font-family:var(--cabled-font-mono); font-size:14px; font-weight:bold; color:var(--cabled-neon-lime);">${dev.price}</span>
+        <span style="font-family:var(--cabled-font-mono); font-size:11px; color:var(--cabled-text-muted);">${dev.mfg}</span>
+      </div>
+      <div class="modal-ascii">${dev.ascii}</div>
+      <div style="background:#090d16; border:1px solid #1f283d; padding:12px; font-family:var(--cabled-font-mono); font-size:11px; display:flex; flex-direction:column; gap:6px;">
+        <div><strong style="color:var(--cabled-neon-cyan);">PROCESSOR / SOC:</strong> ${dev.cpu}</div>
+        <div><strong style="color:var(--cabled-neon-cyan);">MEMORY & STORAGE:</strong> ${dev.ram}</div>
+        <div><strong style="color:var(--cabled-neon-cyan);">BUS INTERFACE:</strong> ${dev.bus}</div>
+        <div><strong style="color:var(--cabled-neon-cyan);">POWER SUBSYSTEM:</strong> ${dev.power}</div>
+        <div><strong style="color:var(--cabled-neon-orange);">VINTAGE FLAW:</strong> ${dev.flaw}</div>
+      </div>
+      <p style="font-family:var(--cabled-font-serif); font-size:13px; color:#d1d5db; line-height:1.5;">${dev.notes}</p>
+    `;
+  }
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeFetishModal() {
+  playRetroSound('click');
+  const modal = document.getElementById('fetishModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function exportCurrentFetishVFS() {
+  const dev = FETISH_DATABASE[currentFetishId] || FETISH_DATABASE['Diamond Rio PMP300'];
+  let doc = `========================================================================\n`;
+  doc += `CABLED MAGAZINE // HARDWARE FETISH TELEMETRY DATASHEET (1999)\n`;
+  doc += `Item: ${dev.name}\n`;
+  doc += `========================================================================\n\n`;
+  doc += `Manufacturer:   ${dev.mfg}\n`;
+  doc += `Retail MSRP:    ${dev.price}\n`;
+  doc += `Architecture:   ${dev.cpu}\n`;
+  doc += `Memory:         ${dev.ram}\n`;
+  doc += `Bus/Interface:  ${dev.bus}\n`;
+  doc += `Power Spec:     ${dev.power}\n`;
+  doc += `Quirky Flaw:    ${dev.flaw}\n\n`;
+  doc += `CIRCUIT & FORM-FACTOR SCHEMATIC:\n`;
+  doc += dev.ascii + `\n\n`;
+  doc += `CURATORIAL NOTES:\n`;
+  doc += dev.notes + `\n\n`;
+  doc += `Published in Cabled Magazine Issue 7.12 (December 1999).\n`;
+
+  const filename = `/home/downloads/${currentFetishId.toLowerCase().replace(/[^a-z0-9]/g, '_')}_specs.txt`;
+  saveToKiloVfs(filename, doc);
+}
+
+function openCurrentFetishInKPad() {
+  exportCurrentFetishVFS();
+  const filename = `/home/downloads/${currentFetishId.toLowerCase().replace(/[^a-z0-9]/g, '_')}_specs.txt`;
+  launchKiloApp('kpad.html', { path: filename });
 }
 
 // --- FEATURE 6: Articles & Full Issue Bundling ---
