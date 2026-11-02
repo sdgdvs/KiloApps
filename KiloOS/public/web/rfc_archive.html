@@ -207,6 +207,8 @@
   .btn-amber:hover { background: #b45309; }
   .btn-green { background: #059669; border-color: #10b981; color: #fff; font-weight: bold; }
   .btn-green:hover { background: #047857; }
+  .btn-cyan { background: #0891b2; border-color: #06b6d4; color: #fff; font-weight: bold; }
+  .btn-cyan:hover { background: #0e7490; }
   .btn-red { background: #dc2626; border-color: #ef4444; color: #fff; }
   .btn-red:hover { background: #b91c1c; }
   .btn-sm { font-size: 11px; padding: 4px 8px; }
@@ -773,6 +775,7 @@ Click "Next Step" or "Auto-Run Scenario" to advance TCP state transitions.</div>
           <button class="btn btn-sm btn-green" id="btnSaveActiveRfcToVfs">💾 Save RFC to VFS</button>
           <button class="btn btn-sm btn-amber" id="btnOpenInKPad">📝 Open in KPad</button>
           <button class="btn btn-sm" id="btnInspectInKHex">🔢 Inspect in KHex</button>
+          <button class="btn btn-sm btn-cyan" id="btnDecryptInKCipher" style="display:none;">🔐 Decrypt in KCipher</button>
         </div>
       </div>
 
@@ -1072,19 +1075,33 @@ function saveToKiloVfs(vfsPath, contentStr) {
   }
 }
 
-function launchKiloApp(appFile, args) {
+function launchKiloApp(appIdentifier, args) {
   try {
-    window.parent.postMessage({
-      type: 'LAUNCH_APP',
-      app: appFile,
-      args: args || {}
-    }, '*');
+    const cleanAppId = String(appIdentifier).replace(/\.html$/, '').toLowerCase();
+    const filePath = (args && (args.file || args.path)) || '';
     window.parent.postMessage({
       type: 'OS_LAUNCH_APP',
-      app: appFile,
+      appId: cleanAppId,
+      targetApp: cleanAppId,
+      path: filePath,
       args: args || {}
     }, '*');
-    showToast('Launching ' + appFile + '...');
+    window.parent.postMessage({
+      type: 'KILO_LAUNCH_APP',
+      appId: cleanAppId,
+      targetApp: cleanAppId,
+      path: filePath,
+      args: args || {}
+    }, '*');
+    window.parent.postMessage({
+      type: 'LAUNCH_APP',
+      app: appIdentifier,
+      appId: cleanAppId,
+      targetApp: cleanAppId,
+      path: filePath,
+      args: args || {}
+    }, '*');
+    showToast('Launching ' + cleanAppId + '...');
   } catch (e) {
     showToast('Launch failed: ' + (e.message || e));
   }
@@ -1139,6 +1156,13 @@ btnToggleCrt.addEventListener('click', () => {
 const btnSpoolAllVfs = document.getElementById('btnSpoolAllVfs');
 if (btnSpoolAllVfs) {
   btnSpoolAllVfs.addEventListener('click', () => {
+    let count = 0;
+    if (typeof RFC_DOCS === 'object' && RFC_DOCS !== null) {
+      for (const [key, text] of Object.entries(RFC_DOCS)) {
+        saveToKiloVfs(`/home/downloads/${key}.txt`, text);
+        count++;
+      }
+    }
     const manifest = `IETF LIVING RFC WORKBENCH MANIFEST
 Version: 1999.10.24-RELEASE
 Node: ietf.kilonet.org [198.32.0.10]
@@ -1152,9 +1176,11 @@ Standards Included:
  - RFC 2616: Hypertext Transfer Protocol -- HTTP/1.1
  - RFC 1999: Millennium ARPANET IMP #04 Telemetry
 VFS Export Root: /home/downloads/
+Total Files Spooled: ${count}
 Generated: ${new Date().toISOString()}
 `;
     saveToKiloVfs('/home/downloads/ietf_workbench_manifest.txt', manifest);
+    showToast(`Spooled all ${count} RFCs + manifest to /home/downloads/`);
   });
 }
 
@@ -2424,6 +2450,16 @@ const selRfcDoc = document.getElementById('selRfcDoc');
 const rfcTextDisplay = document.getElementById('rfcTextDisplay');
 const inpFilterRfc = document.getElementById('inpFilterRfc');
 
+const btnDecryptInKCipher = document.getElementById('btnDecryptInKCipher');
+if (btnDecryptInKCipher) {
+  btnDecryptInKCipher.addEventListener('click', () => {
+    const docKey = selRfcDoc.value;
+    const vfsPath = `/home/downloads/${docKey}.txt`;
+    saveToKiloVfs(vfsPath, rfcTextDisplay.textContent);
+    launchKiloApp('kcipher', { file: vfsPath });
+  });
+}
+
 function loadRfcDoc() {
   const docKey = selRfcDoc.value;
   let text = RFC_DOCS[docKey] || "RFC text not found.";
@@ -2435,6 +2471,9 @@ function loadRfcDoc() {
     rfcTextDisplay.textContent = filtered.join('\n') || `[No lines matching "${query}"]`;
   } else {
     rfcTextDisplay.textContent = text;
+  }
+  if (btnDecryptInKCipher) {
+    btnDecryptInKCipher.style.display = (docKey === 'rfc1999') ? 'inline-flex' : 'none';
   }
 }
 
