@@ -316,6 +316,37 @@
             color: #ffffff;
         }
 
+        .badge-proto.proto-loopback {
+            background: #7c3aed;
+            color: #ffffff;
+        }
+
+        .btn-kick, .btn-mute, .btn-ban {
+            font-size: 10px;
+            padding: 0 4px;
+        }
+
+        .btn-kick, .btn-ban {
+            color: #a00000;
+        }
+
+        .btn-mute {
+            color: #000080;
+        }
+
+        .toolbar-row {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            flex-wrap: nowrap;
+            width: 100%;
+        }
+
+        .toolbar-row button {
+            font-size: 10px;
+            padding: 1px 4px;
+        }
+
         table.client-table {
             width: 100%;
             border-collapse: collapse;
@@ -553,37 +584,63 @@
         </header>
 
         <!-- Controls Toolbar -->
-        <nav class="controls-toolbar bevel-outset" aria-label="Server Controls">
-            <div class="control-group">
-                <label for="input-port">Port:</label>
-                <input type="number" id="input-port" class="bevel-inset" value="6667" min="1024" max="65535" aria-label="Port number">
+        <nav class="controls-toolbar bevel-outset" aria-label="Server Controls" style="display: flex; flex-direction: column; gap: 2px; padding: 2px 4px;">
+            <div class="toolbar-row">
+                <div class="control-group">
+                    <label for="input-port">Port:</label>
+                    <input type="number" id="input-port" class="bevel-inset" value="6667" min="1024" max="65535" style="width: 40px; padding: 1px 2px;" aria-label="Port number">
+                </div>
+                <div class="control-group">
+                    <label for="input-max-clients">Max:</label>
+                    <input type="number" id="input-max-clients" class="bevel-inset" value="32" min="1" max="256" style="width: 28px; padding: 1px 2px;" aria-label="Max connected clients">
+                </div>
+                <div class="control-group">
+                    <label for="input-motd">MOTD:</label>
+                    <input type="text" id="input-motd" class="bevel-inset" value="Welcome to KChat!" style="width: 75px; padding: 1px 2px;" aria-label="Server Message of the Day">
+                </div>
+                <label class="control-group" style="cursor: pointer; gap: 1px;" title="Toggle automated simulated bot chatter">
+                    <input type="checkbox" id="chk-bot-traffic" checked style="margin: 0;">
+                    <span>Bots</span>
+                </label>
+                <button id="btn-toggle-server" class="btn-primary" title="Toggle Server state [S]">
+                    <span id="btn-toggle-label">Start Server</span>
+                </button>
+                <button id="btn-copy-conn" title="Copy local connection string [C]">
+                    Copy IP
+                </button>
+                <button id="btn-clear-log" title="Clear console buffer [L]">
+                    Clear
+                </button>
+                <button id="btn-help" title="Help and keyboard shortcuts [F1]">
+                    Help (F1)
+                </button>
             </div>
-            <div class="control-group">
-                <label for="input-max-clients">Max:</label>
-                <input type="number" id="input-max-clients" class="bevel-inset" value="32" min="1" max="256" aria-label="Max connected clients">
+            <div class="toolbar-row">
+                <button id="btn-vfs-save" class="btn-primary" title="Save Server State to KiloOS VFS (/home/saves/kchatserver_state.json)">
+                    💾 VFS Save
+                </button>
+                <button id="btn-vfs-open" title="Open Server State from KiloOS VFS">
+                    📂 VFS Open
+                </button>
+                <button id="btn-export-log" title="Export terminal log to VFS (/home/logs/kchatserver.log)">
+                    📄 Export Log
+                </button>
+                <button id="btn-open-kpad" title="Export log and open in KPad Editor">
+                    📝 KPad
+                </button>
+                <button id="btn-launch-kchat" class="btn-primary" title="Launch KChat client application">
+                    💬 KChat
+                </button>
+                <button id="btn-quicksave" title="QuickSave Server State to Local Storage [F5]">
+                    Save (F5)
+                </button>
+                <button id="btn-quickload" title="QuickLoad Server State from Local Storage [F9]">
+                    Load (F9)
+                </button>
+                <button id="btn-download-exe" title="Download compiled native Win32 binary">
+                    .exe
+                </button>
             </div>
-            
-            <button id="btn-toggle-server" class="btn-primary" title="Toggle Server state [S]">
-                <span id="btn-toggle-label">Start Server</span>
-            </button>
-            <button id="btn-copy-conn" title="Copy local connection string [C]">
-                Copy IP:Port
-            </button>
-            <button id="btn-quicksave" title="QuickSave Server State [F5]">
-                Save (F5)
-            </button>
-            <button id="btn-quickload" title="QuickLoad Server State [F9]">
-                Load (F9)
-            </button>
-            <button id="btn-download-exe" title="Download compiled native Win32 binary">
-                Download .exe
-            </button>
-            <button id="btn-clear-log" title="Clear console buffer [L]">
-                Clear
-            </button>
-            <button id="btn-help" title="Help and keyboard shortcuts [F1]">
-                Help (F1)
-            </button>
         </nav>
 
         <!-- Tab Strip -->
@@ -636,21 +693,24 @@
                                 <th>Remote IP</th>
                                 <th>Ping</th>
                                 <th>Msgs</th>
-                                <th>Action</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="client-table-body">
                             <tr>
-                                <td colspan="8" style="text-align: center; color: #777; padding: 12px;">Server offline. Start daemon to listen for peer connections.</td>
+                                <td colspan="9" style="text-align: center; color: #777; padding: 12px;">Server offline. Start daemon to listen for peer connections.</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
-                    <span style="font-size: 10px; color: #555;">Simulation Controls:</span>
+                <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center; flex-wrap: wrap;">
+                    <span id="lbl-banned-summary" style="font-size: 10px; color: #a00000; font-weight: bold;">Banned IPs: 0</span>
+                    <button id="btn-clear-bans" title="Clear banned IP list">Clear Bans</button>
+                    <span style="font-size: 10px; color: #555;">Simulation:</span>
                     <button id="btn-sim-client" title="Simulate a new incoming peer socket connection">
-                        + Simulate Client Join
+                        + Sim Client Join
                     </button>
                     <button id="btn-drop-all" title="Terminate all active socket connections">
                         Disconnect All
@@ -708,6 +768,8 @@
                     <li><kbd>F1</kbd><span>Operations Manual</span></li>
                     <li><kbd>C</kbd><span>Copy IP:Port</span></li>
                     <li><kbd>Enter</kbd><span>Transmit broadcast</span></li>
+                    <li><kbd>K</kbd><span>Launch KChat client</span></li>
+                    <li><kbd>E</kbd><span>Export Log to VFS</span></li>
                     <li><kbd>L</kbd><span>Clear console log</span></li>
                     <li><kbd>Esc</kbd><span>Dismiss modal dialog</span></li>
                 </ul>
@@ -749,6 +811,208 @@
                 }
             }
 
+            // Phase VI KiloOS VFS & Inter-App IPC Bridge
+            const KiloVFS = {
+                isEmbedded: function() {
+                    try {
+                        return window.parent && window.parent !== window;
+                    } catch (e) {
+                        return false;
+                    }
+                },
+                getTargetOrigin: function() {
+                    return (window.location.origin && window.location.origin !== 'null') ? window.location.origin : '*';
+                },
+                write: function(path, data, notifyTitle, notifyMessage) {
+                    const strData = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                    if (!this.isEmbedded()) {
+                        // Standalone Blob fallback
+                        try {
+                            const blob = new Blob([strData], { type: path.endsWith('.json') ? 'application/json' : 'text/plain' });
+                            const a = document.createElement('a');
+                            a.href = URL.createObjectURL(blob);
+                            a.download = path.split('/').pop() || 'export.txt';
+                            a.click();
+                            URL.revokeObjectURL(a.href);
+                        } catch (e) {}
+                        return;
+                    }
+                    try {
+                        const target = this.getTargetOrigin();
+                        window.parent.postMessage({
+                            type: 'VFS_WRITE',
+                            path: path,
+                            data: strData,
+                            requestId: 'w_' + Date.now()
+                        }, target);
+                        window.parent.postMessage({
+                            type: 'OS_NOTIFY',
+                            title: notifyTitle || 'KChat Server',
+                            message: notifyMessage || ('Saved to VFS: ' + path)
+                        }, target);
+                    } catch (e) {
+                        console.warn('[KiloVFS] write failed:', e);
+                    }
+                },
+                read: function(path, cb) {
+                    if (!this.isEmbedded()) {
+                        if (cb) cb(null, path);
+                        return;
+                    }
+                    const reqId = 'read_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                    let cleanupTimer = null;
+                    const handler = function(e) {
+                        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                            return;
+                        }
+                        if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                            if (cleanupTimer) clearTimeout(cleanupTimer);
+                            window.removeEventListener('message', handler);
+                            if (cb) cb(e.data.data, e.data.path || path);
+                        }
+                    };
+                    cleanupTimer = setTimeout(function() {
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(null, path);
+                    }, 60000); // 60s dialog timeout per architecture.md
+                    window.addEventListener('message', handler);
+                    try {
+                        window.parent.postMessage({
+                            type: 'VFS_READ',
+                            path: path,
+                            requestId: reqId
+                        }, this.getTargetOrigin());
+                    } catch (e) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(null, path);
+                    }
+                },
+                showSave: function(defaultPath, data, cb) {
+                    const strData = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                    if (!this.isEmbedded()) {
+                        // Standalone fallback: download Blob
+                        try {
+                            const blob = new Blob([strData], { type: defaultPath.endsWith('.json') ? 'application/json' : 'text/plain' });
+                            const a = document.createElement('a');
+                            a.href = URL.createObjectURL(blob);
+                            a.download = defaultPath.split('/').pop() || 'kchatserver_save.json';
+                            a.click();
+                            URL.revokeObjectURL(a.href);
+                            if (cb) cb(defaultPath);
+                        } catch (e) {
+                            if (cb) cb(null);
+                        }
+                        return;
+                    }
+                    const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                    let cleanupTimer = null;
+                    const handler = function(e) {
+                        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                            return;
+                        }
+                        if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+                            if (cleanupTimer) clearTimeout(cleanupTimer);
+                            window.removeEventListener('message', handler);
+                            if (e.data.path) {
+                                KiloVFS.write(e.data.path, strData, 'KChat Server', 'Saved state to: ' + e.data.path);
+                                if (cb) cb(e.data.path);
+                            } else {
+                                if (cb) cb(null);
+                            }
+                        }
+                    };
+                    cleanupTimer = setTimeout(function() {
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(null);
+                    }, 60000); // 60s dialog timeout per architecture.md
+                    window.addEventListener('message', handler);
+                    try {
+                        window.parent.postMessage({
+                            type: 'VFS_SHOW_SAVE',
+                            requestId: reqId,
+                            defaultPath: defaultPath,
+                            path: defaultPath
+                        }, this.getTargetOrigin());
+                    } catch (e) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(null);
+                    }
+                },
+                showOpen: function(cb) {
+                    if (!this.isEmbedded()) {
+                        // Standalone fallback: file input
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = '.json,.txt,.log';
+                        input.onchange = function(evt) {
+                            const file = evt.target.files && evt.target.files[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = function(re) {
+                                if (cb) cb(re.target.result, file.name);
+                            };
+                            reader.readAsText(file);
+                        };
+                        input.click();
+                        return;
+                    }
+                    const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                    let cleanupTimer = null;
+                    const handler = function(e) {
+                        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                            return;
+                        }
+                        if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                            if (cleanupTimer) clearTimeout(cleanupTimer);
+                            window.removeEventListener('message', handler);
+                            if (e.data.path) {
+                                KiloVFS.read(e.data.path, cb);
+                            } else {
+                                if (cb) cb(null, null);
+                            }
+                        }
+                    };
+                    cleanupTimer = setTimeout(function() {
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(null, null);
+                    }, 60000); // 60s dialog timeout per architecture.md
+                    window.addEventListener('message', handler);
+                    try {
+                        window.parent.postMessage({
+                            type: 'VFS_SHOW_OPEN',
+                            requestId: reqId
+                        }, this.getTargetOrigin());
+                    } catch (e) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(null, null);
+                    }
+                },
+                launchApp: function(appId, path, content) {
+                    if (!this.isEmbedded()) {
+                        if (appId === 'kchat') {
+                            window.open('kchat.html', '_blank');
+                        } else if (appId === 'kpad') {
+                            window.open('kpad.html', '_blank');
+                        }
+                        return;
+                    }
+                    try {
+                        window.parent.postMessage({
+                            type: 'OS_LAUNCH_APP',
+                            appId: appId,
+                            targetApp: appId,
+                            path: path || '',
+                            content: content || ''
+                        }, this.getTargetOrigin());
+                    } catch (e) {
+                        console.warn('[KiloVFS] launchApp failed:', e);
+                    }
+                }
+            };
+
             // Elements
             const statusIndicator = document.getElementById('status-indicator');
             const statusText = document.getElementById('status-text');
@@ -759,14 +1023,21 @@
             const lblUptime = document.getElementById('lbl-uptime');
             const inputPort = document.getElementById('input-port');
             const inputMaxClients = document.getElementById('input-max-clients');
+            const inputMotd = document.getElementById('input-motd');
+            const chkBotTraffic = document.getElementById('chk-bot-traffic');
             const btnToggleServer = document.getElementById('btn-toggle-server');
             const btnToggleLabel = document.getElementById('btn-toggle-label');
             const btnCopyConn = document.getElementById('btn-copy-conn');
+            const btnClearLog = document.getElementById('btn-clear-log');
+            const btnHelp = document.getElementById('btn-help');
+            const btnVfsSave = document.getElementById('btn-vfs-save');
+            const btnVfsOpen = document.getElementById('btn-vfs-open');
+            const btnExportLog = document.getElementById('btn-export-log');
+            const btnOpenKPad = document.getElementById('btn-open-kpad');
+            const btnLaunchKChat = document.getElementById('btn-launch-kchat');
             const btnQuickSave = document.getElementById('btn-quicksave');
             const btnQuickLoad = document.getElementById('btn-quickload');
             const btnDownloadExe = document.getElementById('btn-download-exe');
-            const btnClearLog = document.getElementById('btn-clear-log');
-            const btnHelp = document.getElementById('btn-help');
             const consoleLogs = document.getElementById('console-logs');
             const telemetryView = document.getElementById('telemetry-view');
             const tabBtnConsole = document.getElementById('tab-btn-console');
@@ -779,6 +1050,8 @@
             const clientTableBody = document.getElementById('client-table-body');
             const btnSimClient = document.getElementById('btn-sim-client');
             const btnDropAll = document.getElementById('btn-drop-all');
+            const lblBannedSummary = document.getElementById('lbl-banned-summary');
+            const btnClearBans = document.getElementById('btn-clear-bans');
             const selectRoomTarget = document.getElementById('select-room-target');
             const inputBroadcast = document.getElementById('input-broadcast');
             const btnSendBroadcast = document.getElementById('btn-send-broadcast');
@@ -802,9 +1075,15 @@
             let packetsOut = 0;
             let bytesTransferred = 0;
 
-            /** @type {Array<{id: number, nick: string, room: string, proto: string, ip: string, latency: number, msgs: number}>} */
+            /** @type {Array<{id: number, nick: string, room: string, proto: string, ip: string, latency: number, msgs: number, muted: boolean}>} */
             let clients = [];
             let nextClientId = 101;
+
+            /** @type {Array<string>} */
+            let bannedIPs = [];
+
+            /** @type {BroadcastChannel|null} */
+            let relayChannel = null;
 
             const SIM_NAMES = ['neo_surfer', 'alice_99', 'cyber_monk', 'pixel_witch', 'echo_node', 'router_zero', 'retro_dev', 'phantom_404'];
             const SIM_ROOMS = ['#general', '#kchat', '#dev'];
@@ -818,7 +1097,7 @@
             ];
 
             // Load persistent configuration
-            const savedConfig = safeGet('kchatserver_config', { port: 6667, maxClients: 32 });
+            const savedConfig = safeGet('kchatserver_config', { port: 6667, maxClients: 32, motd: 'Welcome to KChat!', botTraffic: true });
             let initPort = parseInt(savedConfig.port, 10) || 6667;
             if (initPort < 1024) initPort = 1024;
             if (initPort > 65535) initPort = 65535;
@@ -829,6 +1108,8 @@
             inputMaxClients.value = initMax;
             lblPort.textContent = String(initPort);
             lblClients.textContent = '0 / ' + initMax;
+            if (inputMotd) inputMotd.value = savedConfig.motd || 'Welcome to KChat!';
+            if (chkBotTraffic) chkBotTraffic.checked = savedConfig.botTraffic !== false;
 
             /**
              * Format Date to HH:MM:SS
@@ -892,6 +1173,208 @@
             }
 
             /**
+             * Clean IP string helper
+             * @param {string} raw
+             * @returns {string}
+             */
+            function cleanIpAddress(raw) {
+                if (!raw) return '';
+                return String(raw).split(':')[0].trim();
+            }
+
+            /**
+             * Check if an IP is currently banned
+             * @param {string} ip
+             * @returns {boolean}
+             */
+            function isIpBanned(ip) {
+                const clean = cleanIpAddress(ip);
+                return clean ? bannedIPs.indexOf(clean) !== -1 : false;
+            }
+
+            /**
+             * Moderation: Ban IP address
+             * @param {string} rawIp
+             * @param {number} [clientId]
+             */
+            function banIpAddress(rawIp, clientId) {
+                const clean = cleanIpAddress(rawIp);
+                if (!clean) return;
+                if (bannedIPs.indexOf(clean) === -1) {
+                    bannedIPs.push(clean);
+                }
+                logMessage('[BAN]', 'Administrator banned IP: ' + clean, 'log-tag-warn');
+                showToast('Banned IP: ' + clean);
+
+                // Disconnect any active sockets matching this IP
+                const matches = clients.filter(function(c) {
+                    return cleanIpAddress(c.ip) === clean;
+                });
+                matches.forEach(function(c) {
+                    disconnectClient(c.id, 'IP banned by administrator');
+                });
+
+                updateTelemetryUI();
+            }
+
+            /**
+             * Moderation: Toggle client mute state
+             * @param {number} clientId
+             */
+            function toggleMuteClient(clientId) {
+                const c = clients.find(function(item) { return item.id === clientId; });
+                if (!c) return;
+                c.muted = !c.muted;
+                if (c.muted) {
+                    logMessage('[MUTE]', c.nick + ' (ID ' + c.id + ') muted by administrator.', 'log-tag-warn');
+                    showToast(c.nick + ' muted');
+                } else {
+                    logMessage('[UNMUTE]', c.nick + ' (ID ' + c.id + ') unmuted.', 'log-tag-sys');
+                    showToast(c.nick + ' unmuted');
+                }
+                updateTelemetryUI();
+            }
+
+            /**
+             * Moderation: Clear all banned IPs
+             */
+            function clearAllBans() {
+                const count = bannedIPs.length;
+                bannedIPs = [];
+                logMessage('[SYS]', 'Administrator cleared all (' + count + ') banned IPs.', 'log-tag-sys');
+                showToast('Cleared ' + count + ' banned IP(s)');
+                updateTelemetryUI();
+            }
+
+            /**
+             * Setup same-origin loopback BroadcastChannel
+             */
+            function setupRelayChannel() {
+                teardownRelayChannel();
+                if (typeof BroadcastChannel === 'undefined') return;
+                const port = parseInt(inputPort.value, 10) || 6667;
+                const channelName = 'kilo_kchat_loopback_' + port;
+                try {
+                    relayChannel = new BroadcastChannel(channelName);
+                    relayChannel.onmessage = handleRelayMessage;
+                    logMessage('[RELAY]', 'Local loopback channel active: ' + channelName, 'log-tag-ready');
+                } catch (e) {
+                    console.warn('[KChatServer] BroadcastChannel creation failed:', e);
+                }
+            }
+
+            /**
+             * Teardown loopback channel
+             */
+            function teardownRelayChannel() {
+                if (relayChannel) {
+                    try {
+                        relayChannel.postMessage({
+                            type: 'SERVER_SHUTDOWN',
+                            port: parseInt(inputPort.value, 10) || 6667,
+                            timestamp: Date.now()
+                        });
+                        relayChannel.close();
+                    } catch (e) {}
+                    relayChannel = null;
+                }
+            }
+
+            /**
+             * Handle incoming loopback messages from connected clients/peers
+             * @param {MessageEvent} e
+             */
+            function handleRelayMessage(e) {
+                const data = e.data;
+                if (!data || typeof data !== 'object') return;
+
+                if (data.type === 'CONNECT' || data.type === 'JOIN') {
+                    const clientIp = cleanIpAddress(data.ip) || '127.0.0.1';
+                    if (isIpBanned(clientIp)) {
+                        if (relayChannel) {
+                            relayChannel.postMessage({
+                                type: 'ERROR',
+                                reason: 'IP is banned on this server.',
+                                targetNick: data.nick
+                            });
+                        }
+                        logMessage('[REJECT]', 'Loopback connection refused (Banned IP: ' + clientIp + ')', 'log-tag-warn');
+                        return;
+                    }
+
+                    const max = parseInt(inputMaxClients.value, 10) || 32;
+                    if (clients.length >= max) {
+                        if (relayChannel) {
+                            relayChannel.postMessage({
+                                type: 'ERROR',
+                                reason: 'Server client limit reached (' + max + ').',
+                                targetNick: data.nick
+                            });
+                        }
+                        logMessage('[REJECT]', 'Loopback connection refused: server full (' + max + ').', 'log-tag-warn');
+                        return;
+                    }
+
+                    const c = connectClient(data.nick || ('peer_' + nextClientId), data.room || '#general', 'Loopback (BC)', clientIp + ':6667');
+                    if (relayChannel && c) {
+                        relayChannel.postMessage({
+                            type: 'WELCOME',
+                            clientId: c.id,
+                            nick: c.nick,
+                            room: c.room,
+                            motd: inputMotd ? inputMotd.value : 'Welcome to KChat!',
+                            serverPort: parseInt(inputPort.value, 10) || 6667,
+                            timestamp: Date.now()
+                        });
+                    }
+                } else if (data.type === 'CHAT' || data.type === 'MSG') {
+                    const client = clients.find(function(c) {
+                        return c.nick === data.nick || (data.clientId && c.id === data.clientId);
+                    });
+                    const clientIp = client ? cleanIpAddress(client.ip) : cleanIpAddress(data.ip || '127.0.0.1');
+
+                    if (isIpBanned(clientIp)) {
+                        logMessage('[REJECT]', 'Dropped message from banned IP: ' + clientIp, 'log-tag-warn');
+                        return;
+                    }
+                    if (client && client.muted) {
+                        logMessage('[MUTED DROP]', '<' + (data.nick || 'Peer') + '> ' + (data.text || ''), 'log-tag-warn');
+                        return;
+                    }
+
+                    packetsIn++;
+                    const textLen = (data.text || '').length;
+                    bytesTransferred += textLen + 32;
+                    if (client) client.msgs++;
+
+                    const room = data.room || (client ? client.room : '#general');
+                    logMessage('[MSG (' + room + ')]', '<' + (data.nick || 'Peer') + '> ' + (data.text || ''), 'log-tag-chat');
+
+                    if (relayChannel) {
+                        relayChannel.postMessage({
+                            type: 'CHAT_RELAY',
+                            sender: data.nick || 'Peer',
+                            room: room,
+                            text: data.text || '',
+                            timestamp: Date.now()
+                        });
+                    }
+                    updateTelemetryUI();
+                } else if (data.type === 'QUIT' || data.type === 'DISCONNECT') {
+                    const client = clients.find(function(c) {
+                        return c.nick === data.nick || (data.clientId && c.id === data.clientId);
+                    });
+                    if (client) {
+                        disconnectClient(client.id, data.reason || 'Client closed loopback connection');
+                    }
+                } else if (data.type === 'PING') {
+                    if (relayChannel) {
+                        relayChannel.postMessage({ type: 'PONG', timestamp: Date.now() });
+                    }
+                }
+            }
+
+            /**
              * Update Telemetry UI Displays
              */
             function updateTelemetryUI() {
@@ -906,6 +1389,10 @@
                 cardPackets.textContent = packetsIn + ' / ' + packetsOut;
                 cardBandwidth.textContent = (bytesTransferred / 1024).toFixed(1) + ' KB';
 
+                if (lblBannedSummary) {
+                    lblBannedSummary.textContent = 'Banned IPs: ' + bannedIPs.length;
+                }
+
                 renderClientTable();
             }
 
@@ -914,41 +1401,70 @@
              */
             function renderClientTable() {
                 if (!isRunning) {
-                    clientTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #777; padding: 12px;">Server offline. Start daemon to listen for peer connections.</td></tr>';
+                    clientTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #777; padding: 12px;">Server offline. Start daemon to listen for peer connections.</td></tr>';
                     return;
                 }
 
                 if (clients.length === 0) {
-                    clientTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #777; padding: 12px;">Daemon listening on port ' + inputPort.value + '. No active peer sockets connected.</td></tr>';
+                    clientTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #777; padding: 12px;">Daemon listening on port ' + inputPort.value + '. No active peer sockets connected.</td></tr>';
                     return;
                 }
 
                 let html = '';
                 for (let i = 0; i < clients.length; i++) {
                     const c = clients[i];
-                    const isWs = c.proto === 'WebSocket';
-                    const protoBadge = isWs
-                        ? '<span class="badge-proto proto-ws">WS</span>'
-                        : '<span class="badge-proto proto-tcp">TCP</span>';
+                    let protoBadge = '<span class="badge-proto proto-tcp">TCP</span>';
+                    if (c.proto === 'WebSocket') {
+                        protoBadge = '<span class="badge-proto proto-ws">WS</span>';
+                    } else if (c.proto && c.proto.indexOf('Loopback') !== -1) {
+                        protoBadge = '<span class="badge-proto proto-loopback">LOOP</span>';
+                    }
+
+                    const statusBadge = c.muted
+                        ? '<span class="badge-proto" style="background:#b91c1c;color:#fff;">MUTED</span>'
+                        : '<span class="badge-proto" style="background:#15803d;color:#fff;">OK</span>';
+
                     html += '<tr>' +
                         '<td>' + c.id + '</td>' +
                         '<td><b>' + escapeHtml(c.nick) + '</b></td>' +
                         '<td>' + escapeHtml(c.room) + '</td>' +
                         '<td>' + protoBadge + '</td>' +
-                        '<td>' + c.ip + '</td>' +
+                        '<td>' + escapeHtml(c.ip) + '</td>' +
                         '<td>' + c.latency + ' ms</td>' +
                         '<td>' + c.msgs + '</td>' +
-                        '<td><button class="btn-kick" data-kick-id="' + c.id + '">Kick</button></td>' +
+                        '<td>' + statusBadge + '</td>' +
+                        '<td style="display:flex;gap:3px;align-items:center;">' +
+                            '<button class="btn-mute" data-mute-id="' + c.id + '">' + (c.muted ? 'Unmute' : 'Mute') + '</button>' +
+                            '<button class="btn-kick" data-kick-id="' + c.id + '">Kick</button>' +
+                            '<button class="btn-ban" data-ban-ip="' + escapeHtml(c.ip) + '" data-ban-id="' + c.id + '">Ban IP</button>' +
+                        '</td>' +
                     '</tr>';
                 }
                 clientTableBody.innerHTML = html;
 
-                // Bind kick buttons
+                // Bind Action buttons
                 const kickBtns = clientTableBody.querySelectorAll('.btn-kick');
                 kickBtns.forEach(function(btn) {
                     btn.addEventListener('click', function(e) {
                         const id = parseInt(e.target.getAttribute('data-kick-id'), 10);
                         disconnectClient(id, 'Kicked by administrator');
+                    });
+                });
+
+                const muteBtns = clientTableBody.querySelectorAll('.btn-mute');
+                muteBtns.forEach(function(btn) {
+                    btn.addEventListener('click', function(e) {
+                        const id = parseInt(e.target.getAttribute('data-mute-id'), 10);
+                        toggleMuteClient(id);
+                    });
+                });
+
+                const banBtns = clientTableBody.querySelectorAll('.btn-ban');
+                banBtns.forEach(function(btn) {
+                    btn.addEventListener('click', function(e) {
+                        const ip = e.target.getAttribute('data-ban-ip');
+                        const id = parseInt(e.target.getAttribute('data-ban-id'), 10);
+                        banIpAddress(ip, id);
                     });
                 });
             }
@@ -959,7 +1475,7 @@
              * @returns {string}
              */
             function escapeHtml(str) {
-                return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
             }
 
             /**
@@ -979,19 +1495,27 @@
              * @param {string} [name]
              * @param {string} [room]
              * @param {string} [proto]
+             * @param {string} [customIp]
+             * @returns {object|null}
              */
-            function connectClient(name, room, proto) {
+            function connectClient(name, room, proto, customIp) {
                 const max = parseInt(inputMaxClients.value, 10) || 32;
                 if (clients.length >= max) {
                     logMessage('[REJECT]', 'Connection refused: max client limit (' + max + ') reached.', 'log-tag-warn');
-                    return;
+                    return null;
+                }
+
+                const port = 1024 + Math.floor(Math.random() * 40000);
+                const ip = customIp || ('192.168.1.' + (10 + (nextClientId % 100)) + ':' + port);
+
+                if (isIpBanned(ip)) {
+                    logMessage('[REJECT]', 'Connection refused (Banned IP: ' + cleanIpAddress(ip) + ')', 'log-tag-warn');
+                    return null;
                 }
 
                 const nick = name || SIM_NAMES[Math.floor(Math.random() * SIM_NAMES.length)] + '_' + (clients.length + 1);
                 const clientRoom = room || SIM_ROOMS[Math.floor(Math.random() * SIM_ROOMS.length)];
                 const clientProto = proto || (Math.random() > 0.4 ? 'WebSocket' : 'Raw TCP');
-                const port = 1024 + Math.floor(Math.random() * 40000);
-                const ip = '192.168.1.' + (10 + (nextClientId % 100)) + ':' + port;
 
                 const client = {
                     id: nextClientId++,
@@ -1000,7 +1524,8 @@
                     proto: clientProto,
                     ip: ip,
                     latency: 12 + Math.floor(Math.random() * 24),
-                    msgs: 0
+                    msgs: 0,
+                    muted: false
                 };
 
                 clients.push(client);
@@ -1011,7 +1536,11 @@
                 updateTelemetryUI();
 
                 logMessage('[JOIN]', client.nick + ' connected (' + client.proto + ' from ' + client.ip + ') -> ' + client.room, 'log-tag-info');
+                if (inputMotd && inputMotd.value.trim()) {
+                    logMessage('[MOTD -> ' + client.nick + ']', inputMotd.value.trim(), 'log-tag-sys');
+                }
                 statusHint.textContent = 'Active clients: ' + clients.length + ' / ' + max + ' | Sockets healthy.';
+                return client;
             }
 
             /**
@@ -1043,23 +1572,44 @@
                     clients[i].latency = Math.max(8, Math.min(180, clients[i].latency + Math.floor(Math.random() * 9) - 4));
                 }
 
+                // If bot traffic toggle is disabled, skip simulated joins, leaves, and chat
+                if (chkBotTraffic && !chkBotTraffic.checked) {
+                    updateTelemetryUI();
+                    return;
+                }
+
                 const maxClients = parseInt(inputMaxClients.value, 10) || 32;
                 const r = Math.random();
                 if (r < 0.45) {
-                    // Random message from existing client
-                    const c = clients[Math.floor(Math.random() * clients.length)];
-                    const quote = SIM_QUOTES[Math.floor(Math.random() * SIM_QUOTES.length)];
-                    c.msgs++;
-                    packetsIn++;
-                    bytesTransferred += (quote.length + 32);
-                    logMessage('[MSG (' + c.room + ')]', '<' + c.nick + '> ' + quote, 'log-tag-chat');
+                    // Random message from existing non-muted client
+                    const unmuted = clients.filter(function(c) { return !c.muted; });
+                    if (unmuted.length > 0) {
+                        const c = unmuted[Math.floor(Math.random() * unmuted.length)];
+                        const quote = SIM_QUOTES[Math.floor(Math.random() * SIM_QUOTES.length)];
+                        c.msgs++;
+                        packetsIn++;
+                        bytesTransferred += (quote.length + 32);
+                        logMessage('[MSG (' + c.room + ')]', '<' + c.nick + '> ' + quote, 'log-tag-chat');
+                        if (relayChannel) {
+                            relayChannel.postMessage({
+                                type: 'CHAT_RELAY',
+                                sender: c.nick,
+                                room: c.room,
+                                text: quote,
+                                timestamp: Date.now()
+                            });
+                        }
+                    }
                 } else if (r < 0.65 && clients.length < maxClients) {
                     // Join new simulated client
                     connectClient();
                 } else if (r < 0.75 && clients.length > 2) {
-                    // Disconnect random client
-                    const c = clients[Math.floor(Math.random() * clients.length)];
-                    disconnectClient(c.id, 'Ping timeout 120s');
+                    // Disconnect random simulated client (leave loopback peers intact)
+                    const simClients = clients.filter(function(c) { return c.proto && c.proto.indexOf('Loopback') === -1; });
+                    if (simClients.length > 0) {
+                        const c = simClients[Math.floor(Math.random() * simClients.length)];
+                        disconnectClient(c.id, 'Ping timeout 120s');
+                    }
                 }
                 updateTelemetryUI();
             }
@@ -1079,7 +1629,15 @@
                 if (maxClients > 256) maxClients = 256;
                 inputMaxClients.value = maxClients;
 
-                safeSet('kchatserver_config', { port: port, maxClients: maxClients });
+                const curMotd = inputMotd ? inputMotd.value : 'Welcome to KChat!';
+                const botTraffic = chkBotTraffic ? chkBotTraffic.checked : true;
+
+                safeSet('kchatserver_config', {
+                    port: port,
+                    maxClients: maxClients,
+                    motd: curMotd,
+                    botTraffic: botTraffic
+                });
 
                 isRunning = true;
                 startTime = Date.now();
@@ -1095,11 +1653,16 @@
                 lblPort.textContent = String(port);
                 lblClients.textContent = clients.length + ' / ' + maxClients;
                 lblUptime.textContent = '00:00:00';
-                statusHint.textContent = 'Listening on 0.0.0.0:' + port + ' (WinSock2/WebSocket RFC 6455)';
+                statusHint.textContent = 'Listening on 0.0.0.0:' + port + ' (WinSock2/WebSocket RFC 6455 & Loopback)';
 
                 logMessage('[INIT]', 'Initializing WinSock 2.2 daemon subsystem...', 'log-tag-sys');
                 logMessage('[BIND]', 'Socket bound to INADDR_ANY:' + port + ' — Backlog queue: ' + maxClients, 'log-tag-info');
-                logMessage('[READY]', 'KChat daemon operational. Dual TCP & WebSocket listening.', 'log-tag-ready');
+                if (curMotd.trim()) {
+                    logMessage('[MOTD]', 'Server MOTD: "' + curMotd.trim() + '"', 'log-tag-sys');
+                }
+                logMessage('[READY]', 'KChat daemon operational. Dual TCP, WebSocket & Loopback listening.', 'log-tag-ready');
+
+                setupRelayChannel();
 
                 if (timerUptime) clearInterval(timerUptime);
                 timerUptime = setInterval(updateUptime, 1000);
@@ -1112,8 +1675,8 @@
                     }
                 }, 20000);
 
-                // Initial peer connections simulation (skipped on load)
-                if (!skipAutoSeed) {
+                // Initial peer connections simulation (skipped on load or when bots disabled)
+                if (!skipAutoSeed && botTraffic) {
                     setTimeout(function() { if (isRunning && clients.length < 2) connectClient('alice_99', '#general', 'WebSocket'); }, 1200);
                     setTimeout(function() { if (isRunning && clients.length < 3) connectClient('retro_coder', '#kchat', 'Raw TCP'); }, 2800);
                 }
@@ -1133,6 +1696,8 @@
                 if (timerUptime) { clearInterval(timerUptime); timerUptime = null; }
                 if (timerHeartbeat) { clearInterval(timerHeartbeat); timerHeartbeat = null; }
                 if (timerSimTraffic) { clearInterval(timerSimTraffic); timerSimTraffic = null; }
+
+                teardownRelayChannel();
 
                 inputPort.disabled = false;
                 inputMaxClients.disabled = false;
@@ -1176,8 +1741,8 @@
                 const targetedClients = target === 'GLOBAL' ? clients : clients.filter(function(c) { return c.room === target; });
                 const count = targetedClients.length;
 
-                packetsOut += count;
-                bytesTransferred += text.length * count;
+                packetsOut += Math.max(1, count);
+                bytesTransferred += text.length * Math.max(1, count);
 
                 for (let i = 0; i < targetedClients.length; i++) {
                     targetedClients[i].msgs++;
@@ -1186,6 +1751,17 @@
                 logMessage('[BROADCAST (' + target + ')]', '<ADMIN>: ' + text, 'log-tag-broadcast');
                 inputBroadcast.value = '';
 
+                // Transmit on loopback relay
+                if (relayChannel) {
+                    relayChannel.postMessage({
+                        type: 'BROADCAST',
+                        room: target,
+                        sender: 'ADMIN',
+                        text: text,
+                        timestamp: Date.now()
+                    });
+                }
+
                 showToast('Broadcast transmitted (' + target + ')');
                 statusHint.textContent = 'Broadcast sent to ' + count + ' clients in target: ' + target;
 
@@ -1193,9 +1769,10 @@
             }
 
             /**
-             * QuickSave Server State (F5)
+             * Package full server state into structured object
+             * @returns {object}
              */
-            function quickSave() {
+            function getStateData() {
                 let port = parseInt(inputPort.value, 10) || 6667;
                 if (port < 1024) port = 1024;
                 if (port > 65535) port = 65535;
@@ -1206,10 +1783,13 @@
 
                 const elapsedSec = isRunning ? Math.floor((Date.now() - startTime) / 1000) : 0;
 
-                const state = {
-                    version: 1,
+                return {
+                    app: 'KChatServer',
+                    version: 2,
                     port: port,
                     maxClients: max,
+                    motd: inputMotd ? inputMotd.value : 'Welcome to KChat!',
+                    botTraffic: chkBotTraffic ? chkBotTraffic.checked : true,
                     isRunning: isRunning,
                     elapsedSec: elapsedSec,
                     nextClientId: nextClientId,
@@ -1217,12 +1797,121 @@
                     packetsIn: packetsIn,
                     packetsOut: packetsOut,
                     bytesTransferred: bytesTransferred,
+                    bannedIPs: bannedIPs.slice(),
                     clients: clients.map(function(c) {
-                        return { id: c.id, nick: c.nick, room: c.room, proto: c.proto, ip: c.ip, latency: c.latency, msgs: c.msgs };
+                        return {
+                            id: c.id,
+                            nick: c.nick,
+                            room: c.room,
+                            proto: c.proto,
+                            ip: c.ip,
+                            latency: c.latency,
+                            msgs: c.msgs,
+                            muted: !!c.muted
+                        };
                     }),
                     timestamp: Date.now()
                 };
+            }
 
+            /**
+             * Load state from parsed object
+             * @param {string|object} raw
+             * @param {string} sourceName
+             */
+            function loadStateFromData(raw, sourceName) {
+                let state = raw;
+                if (typeof state === 'string') {
+                    try {
+                        state = JSON.parse(state);
+                    } catch (e) {
+                        showToast('⚠️ Invalid JSON state format');
+                        logMessage('[WARN]', 'Failed to parse JSON state from ' + sourceName, 'log-tag-warn');
+                        return;
+                    }
+                }
+
+                if (!state || typeof state !== 'object') {
+                    showToast('⚠️ Empty state data');
+                    return;
+                }
+
+                if (state.port) {
+                    let p = parseInt(state.port, 10);
+                    if (p < 1024) p = 1024;
+                    if (p > 65535) p = 65535;
+                    inputPort.value = p;
+                }
+                if (state.maxClients) {
+                    let m = parseInt(state.maxClients, 10);
+                    if (m < 1) m = 1;
+                    if (m > 256) m = 256;
+                    inputMaxClients.value = m;
+                }
+                if (state.motd !== undefined && inputMotd) {
+                    inputMotd.value = String(state.motd);
+                }
+                if (state.botTraffic !== undefined && chkBotTraffic) {
+                    chkBotTraffic.checked = !!state.botTraffic;
+                }
+                if (Array.isArray(state.bannedIPs)) {
+                    bannedIPs = state.bannedIPs.slice();
+                }
+                if (state.nextClientId !== undefined) {
+                    nextClientId = state.nextClientId;
+                }
+
+                peakClients = state.peakClients || 0;
+                packetsIn = state.packetsIn || 0;
+                packetsOut = state.packetsOut || 0;
+                bytesTransferred = state.bytesTransferred || 0;
+
+                if (state.isRunning) {
+                    if (!isRunning) {
+                        startServer(true);
+                    }
+                    if (typeof state.elapsedSec === 'number') {
+                        startTime = Date.now() - (state.elapsedSec * 1000);
+                        updateUptime();
+                    }
+                } else {
+                    if (isRunning) {
+                        stopServer();
+                    }
+                    lblPort.textContent = inputPort.value;
+                }
+
+                if (Array.isArray(state.clients)) {
+                    clients = state.clients.map(function(c) {
+                        return {
+                            id: c.id,
+                            nick: c.nick,
+                            room: c.room,
+                            proto: c.proto,
+                            ip: c.ip,
+                            latency: c.latency,
+                            msgs: c.msgs,
+                            muted: !!c.muted
+                        };
+                    });
+                }
+
+                if (!isRunning) {
+                    lblPort.textContent = inputPort.value;
+                }
+
+                updateTelemetryUI();
+                const shortSource = sourceName ? (sourceName.split('/').pop() || sourceName) : 'Storage';
+                showToast('📂 State Loaded (' + shortSource + ')');
+                logMessage('[LOAD]', 'Server state restored from ' + shortSource + ' (Clients: ' + clients.length + ', Pkts: ' + (packetsIn + packetsOut) + ')', 'log-tag-ready');
+                statusHint.textContent = 'Server state restored from ' + shortSource + '.';
+            }
+
+            /**
+             * QuickSave Server State (F5)
+             */
+            function quickSave() {
+                const state = getStateData();
                 safeSet('kchatserver_quicksave', state);
                 showToast('💾 State Saved (F5)');
                 logMessage('[SAVE]', 'Server state and client telemetry saved to local storage.', 'log-tag-sys');
@@ -1239,57 +1928,48 @@
                     logMessage('[WARN]', 'No quicksave data found in storage slot.', 'log-tag-warn');
                     return;
                 }
+                loadStateFromData(state, 'QuickSave slot (F9)');
+            }
 
-                if (state.port) {
-                    let p = parseInt(state.port, 10);
-                    if (p < 1024) p = 1024;
-                    if (p > 65535) p = 65535;
-                    inputPort.value = p;
-                }
-                if (state.maxClients) {
-                    let m = parseInt(state.maxClients, 10);
-                    if (m < 1) m = 1;
-                    if (m > 256) m = 256;
-                    inputMaxClients.value = m;
-                }
-                if (state.nextClientId !== undefined) {
-                    nextClientId = state.nextClientId;
-                }
+            /**
+             * Export Server Console Log to VFS (/home/logs/kchatserver.log)
+             * @param {boolean} [openInKPad]
+             */
+            function exportLogToVFS(openInKPad) {
+                const lines = [];
+                lines.push('========================================================');
+                lines.push('KChat Server Console Log Buffer Export');
+                lines.push('Date: ' + new Date().toISOString() + ' | Port: ' + inputPort.value + ' | Status: ' + (isRunning ? 'RUNNING' : 'OFFLINE'));
+                lines.push('Active Sockets: ' + clients.length + ' | Packets: ' + (packetsIn + packetsOut) + ' | Volume: ' + (bytesTransferred / 1024).toFixed(1) + ' KB');
+                lines.push('========================================================');
+                lines.push('');
 
-                peakClients = state.peakClients || 0;
-                packetsIn = state.packetsIn || 0;
-                packetsOut = state.packetsOut || 0;
-                bytesTransferred = state.bytesTransferred || 0;
+                const entries = consoleLogs.querySelectorAll('.log-entry');
+                entries.forEach(function(el) {
+                    lines.push(el.textContent.trim());
+                });
 
-                if (state.isRunning) {
-                    if (!isRunning) {
-                        startServer(true); // skip auto-seed
-                    }
-                    if (typeof state.elapsedSec === 'number') {
-                        startTime = Date.now() - (state.elapsedSec * 1000);
-                        updateUptime();
-                    }
-                } else {
-                    if (isRunning) {
-                        stopServer();
-                    }
-                    lblPort.textContent = inputPort.value;
+                const logText = lines.join('\n');
+                const vfsPath = '/home/logs/kchatserver.log';
+
+                KiloVFS.write(vfsPath, logText, 'KChat Server', 'Server log exported to ' + vfsPath);
+                logMessage('[VFS]', 'Console log exported to ' + vfsPath, 'log-tag-sys');
+                showToast('Log exported: ' + vfsPath);
+
+                if (openInKPad) {
+                    KiloVFS.launchApp('kpad', vfsPath, logText);
+                    showToast('Opening in KPad...');
+                    logMessage('[IPC]', 'Launched KPad with ' + vfsPath, 'log-tag-info');
                 }
+            }
 
-                // Restore clients array, including empty arrays
-                if (Array.isArray(state.clients)) {
-                    clients = state.clients;
-                }
-
-                // Sync offline lblPort and display
-                if (!isRunning) {
-                    lblPort.textContent = inputPort.value;
-                }
-
-                updateTelemetryUI();
-                showToast('📂 State Restored (F9)');
-                logMessage('[LOAD]', 'Server state restored from quicksave (Clients: ' + clients.length + ', Pkts: ' + (packetsIn + packetsOut) + ')', 'log-tag-ready');
-                statusHint.textContent = 'Server state restored from quicksave slot (F9).';
+            /**
+             * Launch KChat client application
+             */
+            function launchKChatClient() {
+                KiloVFS.launchApp('kchat');
+                showToast('Launching KChat Client...');
+                logMessage('[IPC]', 'Launched KChat Client via OS_LAUNCH_APP', 'log-tag-info');
             }
 
             /**
@@ -1390,7 +2070,12 @@
                 if (!isRunning) {
                     lblPort.textContent = String(val);
                 }
-                safeSet('kchatserver_config', { port: val, maxClients: parseInt(inputMaxClients.value, 10) || 32 });
+                safeSet('kchatserver_config', {
+                    port: val,
+                    maxClients: parseInt(inputMaxClients.value, 10) || 32,
+                    motd: inputMotd ? inputMotd.value : 'Welcome to KChat!',
+                    botTraffic: chkBotTraffic ? chkBotTraffic.checked : true
+                });
             });
             inputMaxClients.addEventListener('input', function() {
                 let val = parseInt(inputMaxClients.value, 10);
@@ -1410,13 +2095,43 @@
                     lblClients.textContent = clients.length + ' / ' + val;
                 }
                 updateTelemetryUI();
-                safeSet('kchatserver_config', { port: parseInt(inputPort.value, 10) || 6667, maxClients: val });
+                safeSet('kchatserver_config', {
+                    port: parseInt(inputPort.value, 10) || 6667,
+                    maxClients: val,
+                    motd: inputMotd ? inputMotd.value : 'Welcome to KChat!',
+                    botTraffic: chkBotTraffic ? chkBotTraffic.checked : true
+                });
             });
+
+            if (inputMotd) {
+                inputMotd.addEventListener('change', function() {
+                    const val = inputMotd.value.trim() || 'Welcome to KChat!';
+                    inputMotd.value = val;
+                    safeSet('kchatserver_config', {
+                        port: parseInt(inputPort.value, 10) || 6667,
+                        maxClients: parseInt(inputMaxClients.value, 10) || 32,
+                        motd: val,
+                        botTraffic: chkBotTraffic ? chkBotTraffic.checked : true
+                    });
+                    logMessage('[CONFIG]', 'Server MOTD updated to: "' + val + '"', 'log-tag-sys');
+                });
+            }
+
+            if (chkBotTraffic) {
+                chkBotTraffic.addEventListener('change', function() {
+                    safeSet('kchatserver_config', {
+                        port: parseInt(inputPort.value, 10) || 6667,
+                        maxClients: parseInt(inputMaxClients.value, 10) || 32,
+                        motd: inputMotd ? inputMotd.value : 'Welcome to KChat!',
+                        botTraffic: chkBotTraffic.checked
+                    });
+                    logMessage('[CONFIG]', 'Automated bot traffic ' + (chkBotTraffic.checked ? 'ENABLED' : 'DISABLED'), 'log-tag-sys');
+                    showToast('Bots ' + (chkBotTraffic.checked ? 'Enabled' : 'Disabled'));
+                });
+            }
 
             btnToggleServer.addEventListener('click', toggleServer);
             btnCopyConn.addEventListener('click', copyConnectionString);
-            btnQuickSave.addEventListener('click', quickSave);
-            btnQuickLoad.addEventListener('click', quickLoad);
             btnClearLog.addEventListener('click', function() {
                 consoleLogs.innerHTML = '';
                 logMessage('[SYS]', 'Console log buffer cleared.', 'log-tag-sys');
@@ -1430,6 +2145,48 @@
             helpModal.addEventListener('click', function(e) {
                 if (e.target === helpModal) toggleHelp(false);
             });
+
+            // VFS and IPC Mesh Event Listeners
+            if (btnVfsSave) {
+                btnVfsSave.addEventListener('click', function() {
+                    const stateObj = getStateData();
+                    KiloVFS.showSave('/home/saves/kchatserver_state.json', stateObj, function(savedPath) {
+                        if (savedPath) {
+                            showToast('VFS Save complete: ' + savedPath);
+                            logMessage('[VFS]', 'Server state saved to ' + savedPath, 'log-tag-ready');
+                        }
+                    });
+                });
+            }
+
+            if (btnVfsOpen) {
+                btnVfsOpen.addEventListener('click', function() {
+                    KiloVFS.showOpen(function(data, path) {
+                        if (data) {
+                            loadStateFromData(data, path || 'VFS_STATE');
+                        }
+                    });
+                });
+            }
+
+            if (btnExportLog) {
+                btnExportLog.addEventListener('click', function() {
+                    exportLogToVFS(false);
+                });
+            }
+
+            if (btnOpenKPad) {
+                btnOpenKPad.addEventListener('click', function() {
+                    exportLogToVFS(true);
+                });
+            }
+
+            if (btnLaunchKChat) {
+                btnLaunchKChat.addEventListener('click', launchKChatClient);
+            }
+
+            btnQuickSave.addEventListener('click', quickSave);
+            btnQuickLoad.addEventListener('click', quickLoad);
 
             tabBtnConsole.addEventListener('click', function() { switchTab('console'); });
             tabBtnTelemetry.addEventListener('click', function() { switchTab('telemetry'); });
@@ -1451,6 +2208,10 @@
                 showToast('All sockets disconnected');
             });
 
+            if (btnClearBans) {
+                btnClearBans.addEventListener('click', clearAllBans);
+            }
+
             btnSendBroadcast.addEventListener('click', sendBroadcast);
             inputBroadcast.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
@@ -1462,6 +2223,41 @@
             btnPresetMaint.addEventListener('click', function() {
                 inputBroadcast.value = 'Notice: Server reboot scheduled in 5 minutes for protocol maintenance.';
                 inputBroadcast.focus();
+            });
+
+            // Cross-App IPC Listener (FILE_OPEN / VFS_OPEN / OPEN_FILE)
+            window.addEventListener('message', function(e) {
+                if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                    return;
+                }
+                const msg = e.data;
+                if (!msg || typeof msg !== 'object') return;
+
+                if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+                    const filePath = msg.path || '';
+                    const fileContent = msg.data !== undefined ? msg.data : msg.content;
+                    if (fileContent !== undefined && fileContent !== null) {
+                        loadStateFromData(fileContent, filePath || 'VFS_FILE');
+                    } else if (filePath) {
+                        KiloVFS.read(filePath, function(data, path) {
+                            if (data !== undefined && data !== null) {
+                                loadStateFromData(data, path || filePath);
+                            }
+                        });
+                    }
+                }
+            });
+
+            // Check for incoming file in URL hash on boot
+            window.addEventListener('DOMContentLoaded', function() {
+                if (window.location.hash && window.location.hash.length > 1) {
+                    const rawHash = decodeURIComponent(window.location.hash.slice(1));
+                    if (rawHash.startsWith('/') && KiloVFS.isEmbedded()) {
+                        KiloVFS.read(rawHash, function(data, path) {
+                            if (data) loadStateFromData(data, path || rawHash);
+                        });
+                    }
+                }
             });
 
             // Keyboard navigation & shortcuts
@@ -1520,6 +2316,12 @@
                 } else if (e.key === 'c' || e.key === 'C') {
                     e.preventDefault();
                     copyConnectionString();
+                } else if (e.key === 'k' || e.key === 'K') {
+                    e.preventDefault();
+                    launchKChatClient();
+                } else if (e.key === 'e' || e.key === 'E') {
+                    e.preventDefault();
+                    exportLogToVFS(false);
                 } else if (e.key === 'l' || e.key === 'L') {
                     e.preventDefault();
                     consoleLogs.innerHTML = '';

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KHex
   kilo_qa: KPing
-  kilo_expander: KChatServer
+  kilo_expander: KHex
   kilo_review: KMedia
 virtual_web_target: kweb://demoscene
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KFont
-  timestamp: '2026-11-02T10:22:14-08:00'
+  agent: kilo-expander
+  app: KChatServer
+  timestamp: '2026-11-02T10:40:26-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -200,11 +200,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KChatServer`
+- **Active Target**: `KHex`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kchatserver.html per architecture.md (event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) with Export Log to VFS (/home/logs/kchatserver.log) + Open in KPad (OS_LAUNCH_APP appId kpad), VFS State Save/Open (/home/saves/kchatserver_state.json via VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ + incoming FILE_OPEN/VFS_OPEN), and a Launch KChat Client button (OS_LAUNCH_APP appId kchat); add editable Server MOTD parity with KChatServer/main.c, a toggleable Bot Traffic switch, per-client Mute/IP-Ban moderation, and a same-origin BroadcastChannel(kilo_kchat_loopback_ + port) local relay while running (<999 KB, zero external network autostart). |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Harden Phase VI KiloOS VFS and IPC Mesh in khex.html per architecture.md: enforce event.origin === window.location.origin in window.addEventListener('message'), post with window.location.origin instead of wildcard (removing dead OS_SET_WINDOW_SIZE), raise sendToOS() timeout to 60000ms for interactive VFS_SHOW_OPEN and VFS_SHOW_SAVE pickers, emit OS_NOTIFY after VFS_WRITE, handle incoming FILE_OPEN/VFS_OPEN messages to auto-load VFS files, add Save to VFS (/home/docs/ or /home/crypto/) and Open in KPad / Send to KCipher OS_LAUNCH_APP buttons in Tab 7 Export, Tab 8 Patch Builder, and Tab 9 Disassembler, and add native Win32 .bin file open/save parity in KHex/main.c (<999 KB). |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY with standalone blob fallback) for saving/loading calculation tapes and workspace JSON snapshots to /home/docs/, and add live HEX/DEC/OCT/BIN radix readout plus FV/CAGR financial tools to KCalc/main.c (<999 KB). |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
@@ -226,6 +225,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kchat.html per architecture.md (strict event.origin === window.location.origin checks, window.location.origin targetOrigin, 60000ms picker timeouts, and standalone Blob/file-input fallbacks when window.parent === window) connecting JSON and TXT Export/Import to VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY (/home/saves/kchat_history.json and /home/docs/kchat_log.txt) and VFS_SHOW_OPEN -> VFS_READ, handling incoming FILE_OPEN and VFS_OPEN messages from KiloOS File Browser to auto-load transcripts/archives, adding an Open Transcript in KPad button (VFS_WRITE + OS_LAUNCH_APP with appId 'kpad'), and adding GetSaveFileNameA file-save dialogs for Save TXT and JSON in KChat/main.c (<999 KB). |
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kfleet.html per architecture.md (event.origin === window.location.origin validation, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks when window.parent === window) connecting #btnExportJson, #btnImportJsonTrigger, and #btnExportLog to VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY (/home/saves/kfleet_telemetry.json and /home/docs/kfleet_events.log) and VFS_SHOW_OPEN/VFS_READ, handling incoming FILE_OPEN/VFS_OPEN messages, adding Open Report in KPad (OS_LAUNCH_APP kpad) and exporting locked NODE-0x7F carrier captures to /sys/anomaly_capture.sig with Inspect in KHex/KMatrix; upgrade KFleet/main.c (<999 KB) to double-buffered GDI with a 3-column FOC workspace featuring clickable Fleet Matrix, animated GDI Tactical Vector Radar with sweep/pulses/zoom [Z]/blip clicks, 4-Channel Strip Chart with [1-4] channel toggles, Beacon [B], Packet Burst [T], and GetSaveFileNameA export. |
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kaudio.html per architecture.md (event.origin === window.location.origin validation, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks when window.parent === window) connecting Project JSON Save/Open and WAV/MIDI/AU/8SVX exports + Open AU/SND to VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY (/home/music/) and VFS_SHOW_OPEN -> VFS_READ, handling incoming FILE_OPEN/VFS_OPEN messages from File Browser or Trapster to auto-load .json synth projects and audition .au/.snd samples, exporting 1999Hz subcarrier captures (signal1999) to /sys/anomaly_capture.sig, and adding an Inspect Audio Binary in KHex (OS_LAUNCH_APP khex) button; upgrade KAudio/main.c (<999 KB) with a 4-track 16-step sequencer grid (Lead, Bass, Perc, SFX), YM2612 2-Op FM / Subtractive engine toggle, and GetSaveFileNameA/GetOpenFileNameA file dialogs for WAV/MIDI/Project I/O. |
+| `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kchatserver.html per architecture.md (event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) with Export Log to VFS (/home/logs/kchatserver.log) + Open in KPad (OS_LAUNCH_APP appId kpad), VFS State Save/Open (/home/saves/kchatserver_state.json via VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ + incoming FILE_OPEN/VFS_OPEN), and a Launch KChat Client button (OS_LAUNCH_APP appId kchat); add editable Server MOTD parity with KChatServer/main.c, a toggleable Bot Traffic switch, per-client Mute/IP-Ban moderation, and a same-origin BroadcastChannel(kilo_kchat_loopback_ + port) local relay while running (<999 KB, zero external network autostart). |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KMedia`
@@ -321,6 +321,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T10:40:26-08:00 — kilo-expander: KChatServer (Phase VI KiloOS VFS, IPC Mesh & Moderation Expansion)**
+  - Status: PASS ✅ (0 errors, web 97.8 KB, native 20.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 9.18%, HEAD Δ 18.2%, 0 fail, 1 warn, 4.8s)).
+  - Wired KiloOS VFS state save/open (/home/saves/kchatserver_state.json) and log export to VFS (/home/logs/kchatserver.log) with KPad and KChat launch via OS_LAUNCH_APP.
+  - Added editable Server MOTD parity with Win32 C, toggleable Bot Traffic switch, per-client Mute/IP-Ban moderation, and kilo_kchat_loopback_<port> BroadcastChannel relay.
+  - Handoff: Advanced `kilo-expander` to `KHex`; rotated active agent to `kilo-review`.
+
 - **2026-11-02T10:22:14-08:00 — kilo-qa: KFont (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KFont across web and native targets.
@@ -343,9 +349,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated Imagen 3 top-down hull schematic, parallax nebula backdrop, enemy cruiser silhouettes, and flagship sprites.
   - Verified zero rotating perimeter border glints and clean dual Win32 C parity.
   - Handoff: Advanced `kilo-graphics` to `KAlchemy`; rotated active agent to `kilo-tester`.
-
-- **2026-11-02T08:20:47-08:00 — kilo-creator: kweb://geocities (GeoCities Neighborhood Portal Tokyo99 and RingSurfer Polish)**
-  - Status: PASS ✅ (0 errors, web 682.2 KB < 999 KB; startup, Vite & security_lint PASS).
-  - Added Tokyo99 Akiba Otaku passport stamp (#10) and updated RingSurfer list to span all 8 neighborhoods (40 homesteads).
-  - Fixed theme button synchronization for Tokyo99 and verified VFS export and Netscape CRT modal.
-  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.

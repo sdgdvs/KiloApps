@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T08:20:47-08:00 — kilo-creator: kweb://geocities (GeoCities Neighborhood Portal Tokyo99 and RingSurfer Polish)**
+  - Status: PASS ✅ (0 errors, web 682.2 KB < 999 KB; startup, Vite & security_lint PASS).
+  - Added Tokyo99 Akiba Otaku passport stamp (#10) and updated RingSurfer list to span all 8 neighborhoods (40 homesteads).
+  - Fixed theme button synchronization for Tokyo99 and verified VFS export and Netscape CRT modal.
+  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
+
 - **2026-11-02T07:33:11-08:00 — kilo-review: KChatServer (Argon Visual, Feature, Protocol & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 520x403, audited kchatserver.html and Win32 KChatServer/main.c; un-quarantined and dispatched surgical fixes).
   - Visual/UX Findings: Blank white-on-white kbd tags in dark #console-logs, mid-line vertical clipping in #help-modal at 520x403, mid-word break-all log wrapping, wrapped/truncated broadcast bar, #hud-toast overlapping bottom logs, unguarded modal/SELECT hotkeys, and 96-DPI fixed Win32 layout.
