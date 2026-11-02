@@ -29,6 +29,7 @@ HWND hList;
 HWND hBtnAdd;
 HWND hBtnSettings;
 HWND hBtnSave, hBtnLoad, hBtnHelp;
+HWND hBtnChartMode;
 HWND hStatus;
 HWND hSearchEdit;
 HWND hTypeCombo;
@@ -41,6 +42,7 @@ HFONT hFont;
 
 char currency_symbol[8] = "$";
 double budget_goal = 0.0;
+int chart_mode = 0; // 0 = Category Pie Chart, 1 = Balance Projection Forecast Graph
 
 static const char *kCurrencies[] = {"$", "EUR ", "GBP ", "JPY ", "CHF "};
 #define NUM_CURRENCIES 5
@@ -48,6 +50,7 @@ static const char *kCurrencies[] = {"$", "EUR ", "GBP ", "JPY ", "CHF "};
 void SaveSettings();
 void UpdateUI();
 void ShowNativeStatus(const char* msg);
+void ToggleChartMode();
 
 void CycleCurrency() {
     int curIdx = 0;
@@ -77,6 +80,20 @@ void ShowNativeStatus(const char* msg) {
     }
 }
 
+void ToggleChartMode() {
+    chart_mode = !chart_mode;
+    if (hBtnChartMode) {
+        SetWindowTextA(hBtnChartMode, chart_mode ? "Chart Mode: Proj [P]" : "Chart Mode: Pie [P]");
+    }
+    SaveSettings();
+    InvalidateRect(hMainWnd, NULL, TRUE);
+    if (chart_mode) {
+        ShowNativeStatus(" Switched to Balance Projection Forecast Graph [P]");
+    } else {
+        ShowNativeStatus(" Switched to Expenses by Category Pie Chart [P]");
+    }
+}
+
 void ShowHelp(HWND hwnd) {
     MessageBoxA(hwnd,
         "=== KBudget Studio Guide & Shortcuts ===\n\n"
@@ -84,6 +101,7 @@ void ShowHelp(HWND hwnd) {
         "- F1 or H: Open this Help & Feature Guide\n"
         "- F5: Quicksave ledger snapshot to kbudget_quicksave.dat\n"
         "- F9: Quickload ledger snapshot from kbudget_quicksave.dat\n"
+        "- P: Toggle Category Pie Chart / Balance Projection Graph\n"
         "- Ctrl+N: Add new transaction (or click '+ New')\n"
         "- Ctrl+F: Focus the search box\n"
         "- Ctrl+S: Export ledger to CSV spreadsheet\n"
@@ -95,7 +113,9 @@ void ShowHelp(HWND hwnd) {
         "- Esc: Close active dialogs\n\n"
         "FEATURES:\n"
         "- Full state snapshot persistence across sessions (F5/F9)\n"
+        "- Dual visual modes: Expense Category Pie & 30-Day Balance Projection\n"
         "- Real-time expenses by category allocation pie chart\n"
+        "- Forward 30-day balance forecast based on net burn rate\n"
         "- Instant multi-criteria search and sort (Date/Amount)\n"
         "- Formatted HTML printable report generation\n\n"
         "KBudget - Lightweight Retro Financial Ledger",
@@ -107,7 +127,7 @@ void NativeQuickSave(HWND hwnd) {
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
         DWORD magic = KBUDGET_QUICKSAVE_MAGIC;
-        DWORD version = 2;
+        DWORD version = 3;
         int sortType = hSortCombo ? (int)SendMessage(hSortCombo, CB_GETCURSEL, 0, 0) : 0;
         char searchBuf[128] = {0};
         if (hSearchEdit) {
@@ -122,6 +142,7 @@ void NativeQuickSave(HWND hwnd) {
         WriteFile(hFile, &sortType, sizeof(sortType), &written, NULL);
         WriteFile(hFile, searchBuf, sizeof(searchBuf), &written, NULL);
         WriteFile(hFile, &budget_goal, sizeof(budget_goal), &written, NULL);
+        WriteFile(hFile, &chart_mode, sizeof(chart_mode), &written, NULL);
         if (num_transactions > 0) {
             WriteFile(hFile, transactions, sizeof(Transaction) * num_transactions, &written, NULL);
         }
@@ -157,7 +178,7 @@ void NativeQuickLoad(HWND hwnd) {
     ReadFile(hFile, &magic, sizeof(magic), &readBytes, NULL);
     ReadFile(hFile, &version, sizeof(version), &readBytes, NULL);
 
-    if (magic != KBUDGET_QUICKSAVE_MAGIC || (version != 1 && version != 2)) {
+    if (magic != KBUDGET_QUICKSAVE_MAGIC || (version != 1 && version != 2 && version != 3)) {
         CloseHandle(hFile);
         ShowNativeStatus(" Invalid or corrupt kbudget_quicksave.dat format!");
         return;
@@ -201,12 +222,22 @@ void NativeQuickLoad(HWND hwnd) {
         budget_goal = 0;
     }
 
+    if (version >= 3) {
+        int cm = 0;
+        if (ReadFile(hFile, &cm, sizeof(cm), &readBytes, NULL) && readBytes == sizeof(cm)) {
+            chart_mode = (cm != 0) ? 1 : 0;
+        }
+    }
+
     num_transactions = count;
     if (num_transactions > 0) {
         ReadFile(hFile, transactions, sizeof(Transaction) * num_transactions, &readBytes, NULL);
     }
     CloseHandle(hFile);
 
+    if (hBtnChartMode) {
+        SetWindowTextA(hBtnChartMode, chart_mode ? "Chart Mode: Proj [P]" : "Chart Mode: Pie [P]");
+    }
     SaveData();
     SaveSettings();
     UpdateUI();
@@ -271,6 +302,7 @@ void SaveSettings() {
             DWORD bytesWritten;
             WriteFile(hFile, currency_symbol, sizeof(currency_symbol), &bytesWritten, NULL);
             WriteFile(hFile, &budget_goal, sizeof(budget_goal), &bytesWritten, NULL);
+            WriteFile(hFile, &chart_mode, sizeof(chart_mode), &bytesWritten, NULL);
             CloseHandle(hFile);
         }
     }
@@ -290,7 +322,14 @@ void LoadSettings() {
             } else {
                 budget_goal = 0;
             }
+            int cm = 0;
+            if (ReadFile(hFile, &cm, sizeof(cm), &bytesRead, NULL) && bytesRead == sizeof(cm)) {
+                chart_mode = (cm != 0) ? 1 : 0;
+            }
             CloseHandle(hFile);
+            if (hBtnChartMode) {
+                SetWindowTextA(hBtnChartMode, chart_mode ? "Chart Mode: Proj [P]" : "Chart Mode: Pie [P]");
+            }
         }
     }
 }
@@ -580,24 +619,38 @@ void ExportCategoriesCSV(HWND hwnd) {
         FILE *f = fopen(szFile, "w");
         if (f) {
             fprintf(f, "Label,Value\n");
-            const char* cats[] = {"Food", "Transport", "Utilities", "Entertainment", "Shopping", "Health", "Other"};
-            int num_cats = 7;
-            double totals[7] = {0};
+            char cats[32][64];
+            double totals[32] = {0};
+            int num_cats = 0;
+
+            const char* def_cats[] = {"Food", "Transport", "Utilities", "Entertainment", "Shopping", "Health"};
+            for (int c = 0; c < 6; c++) {
+                strncpy(cats[num_cats], def_cats[c], 63);
+                cats[num_cats][63] = '\0';
+                num_cats++;
+            }
+
             for (int i = 0; i < num_transactions; i++) {
-                if (!transactions[i].is_income) {
-                    int found = 0;
+                if (!transactions[i].is_income && transactions[i].category[0] != '\0') {
+                    int found = -1;
                     for (int c = 0; c < num_cats; c++) {
                         if (_stricmp(transactions[i].category, cats[c]) == 0) {
-                            totals[c] += transactions[i].amount;
-                            found = 1;
+                            found = c;
                             break;
                         }
                     }
-                    if (!found) {
-                        totals[num_cats - 1] += transactions[i].amount;
+                    if (found == -1 && num_cats < 31) {
+                        strncpy(cats[num_cats], transactions[i].category, 63);
+                        cats[num_cats][63] = '\0';
+                        found = num_cats;
+                        num_cats++;
+                    }
+                    if (found != -1) {
+                        totals[found] += transactions[i].amount;
                     }
                 }
             }
+
             for (int c = 0; c < num_cats; c++) {
                 if (totals[c] > 0) {
                     fprintf(f, "\"%s\",%.2f\n", cats[c], totals[c]);
@@ -719,6 +772,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 20, 232, 205, 26, hwnd, (HMENU)14, NULL, NULL);
             HWND hBtnChart = CreateWindow("BUTTON", "Chart Export (KChart) [Ctrl+K]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 20, 260, 205, 26, hwnd, (HMENU)15, NULL, NULL);
+            hBtnChartMode = CreateWindow("BUTTON", "Chart Mode: Pie [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                20, 288, 205, 26, hwnd, (HMENU)16, NULL, NULL);
                 
             hSearchEdit = CreateWindow("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
                 250, 15, 340, 25, hwnd, (HMENU)4, NULL, NULL);
@@ -742,7 +797,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 490, 330, 100, 28, hwnd, (HMENU)10, NULL, NULL);
 
             hStatus = CreateWindowExA(0, "STATIC",
-                " Ready | F1: Help | F5: Save | F9: Load | Ctrl+N: New | Alt+C: Cur | Ctrl+F: Search | Ctrl+S: Export",
+                " Ready | F1: Help | F5: Save | F9: Load | P: Toggle Graph | Ctrl+N: New | Alt+C: Cur | Ctrl+F: Search",
                 WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 545, 760, 20, hwnd, (HMENU)300, NULL, NULL);
             
             SendMessage(hSearchEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -762,6 +817,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnPrint, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnChart, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnChartMode, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnPrev, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hLblPage, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -864,6 +920,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 ShowHelp(hwnd);
             } else if (LOWORD(wParam) == 15) {
                 ExportCategoriesCSV(hwnd);
+            } else if (LOWORD(wParam) == 16) {
+                ToggleChartMode();
             }
             break;
             
@@ -871,82 +929,275 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             {
                 PAINTSTRUCT ps;
                 HDC hdc = BeginPaint(hwnd, &ps);
-                
-                double total_expense = 0;
-                double categoryTotals[10] = {0};
-                const char* cats[] = {"Food", "Transport", "Utilities", "Entertainment", "Shopping", "Health", "Other"};
-                int num_cats = 7;
-                
-                for (int i = 0; i < num_transactions; i++) {
-                    if (!transactions[i].is_income) {
-                        total_expense += transactions[i].amount;
-                        int found = 0;
-                        for (int c = 0; c < num_cats; c++) {
-                            if (strcmp(transactions[i].category, cats[c]) == 0) {
-                                categoryTotals[c] += transactions[i].amount;
-                                found = 1;
-                                break;
-                            }
-                        }
-                        if (!found) categoryTotals[6] += transactions[i].amount;
-                    }
-                }
-                
-                int cx = 122;
-                int cy = 415;
-                int r = 60;
+
+                RECT rcChartArea = {16, 318, 228, 538};
+                FillRect(hdc, &rcChartArea, hbgBrush);
                 
                 SelectObject(hdc, hFont);
-                SetTextColor(hdc, RGB(248, 250, 252));
                 SetBkMode(hdc, TRANSPARENT);
-                TextOut(hdc, cx - 65, cy - r - 25, "Expenses by Category", 20);
-                
-                if (total_expense > 0) {
-                    COLORREF colors[] = {RGB(239, 68, 68), RGB(249, 115, 22), RGB(245, 158, 11), RGB(234, 179, 8), RGB(132, 204, 22), RGB(34, 197, 94), RGB(59, 130, 246)};
+
+                if (chart_mode == 0) {
+                    // Expenses by Category Pie Chart
+                    double total_expense = 0;
+                    char cats[16][64];
+                    double categoryTotals[16] = {0};
+                    int num_cats = 0;
                     
-                    double start_angle = -1.57079632679; // -90 degrees
-                    for (int c = 0; c < num_cats; c++) {
-                        if (categoryTotals[c] > 0) {
-                            if (categoryTotals[c] >= total_expense) {
-                                HBRUSH hBrush = CreateSolidBrush(colors[c % 7]);
+                    const char* def_cats[] = {"Food", "Transport", "Utilities", "Entertainment", "Shopping", "Health"};
+                    for (int c = 0; c < 6; c++) {
+                        strncpy(cats[num_cats], def_cats[c], 63);
+                        cats[num_cats][63] = '\0';
+                        num_cats++;
+                    }
+                    
+                    for (int i = 0; i < num_transactions; i++) {
+                        if (!transactions[i].is_income) {
+                            total_expense += transactions[i].amount;
+                            int found = -1;
+                            for (int c = 0; c < num_cats; c++) {
+                                if (_stricmp(transactions[i].category, cats[c]) == 0) {
+                                    found = c;
+                                    break;
+                                }
+                            }
+                            if (found == -1 && num_cats < 15) {
+                                strncpy(cats[num_cats], transactions[i].category, 63);
+                                cats[num_cats][63] = '\0';
+                                found = num_cats;
+                                num_cats++;
+                            }
+                            if (found != -1) {
+                                categoryTotals[found] += transactions[i].amount;
+                            } else {
+                                categoryTotals[0] += transactions[i].amount;
+                            }
+                        }
+                    }
+                    
+                    int cx = 122;
+                    int cy = 422;
+                    int r = 55;
+                    
+                    SetTextColor(hdc, RGB(248, 250, 252));
+                    TextOutA(hdc, cx - 65, cy - r - 25, "Expenses by Category", 20);
+                    
+                    if (total_expense > 0) {
+                        COLORREF colors[] = {
+                            RGB(239, 68, 68), RGB(249, 115, 22), RGB(245, 158, 11),
+                            RGB(234, 179, 8), RGB(132, 204, 22), RGB(34, 197, 94),
+                            RGB(6, 182, 212), RGB(59, 130, 246), RGB(139, 92, 246),
+                            RGB(217, 70, 239), RGB(244, 63, 94), RGB(168, 85, 247),
+                            RGB(20, 184, 166), RGB(236, 72, 153), RGB(100, 116, 139), RGB(148, 163, 184)
+                        };
+                        
+                        double start_angle = -1.57079632679; // -90 degrees
+                        for (int c = 0; c < num_cats; c++) {
+                            if (categoryTotals[c] > 0) {
+                                if (categoryTotals[c] >= total_expense) {
+                                    HBRUSH hBrush = CreateSolidBrush(colors[c % 16]);
+                                    HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+                                    HPEN hPen = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
+                                    HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
+                                    Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
+                                    SelectObject(hdc, hOldBrush);
+                                    SelectObject(hdc, hOldPen);
+                                    DeleteObject(hBrush);
+                                    DeleteObject(hPen);
+                                    break;
+                                }
+                                double slice_angle = (categoryTotals[c] / total_expense) * 2.0 * 3.141592653589793;
+                                double end_angle = start_angle - slice_angle;
+                                
+                                int x1 = cx + (int)(r * cos(start_angle));
+                                int y1 = cy + (int)(r * sin(start_angle));
+                                int x2 = cx + (int)(r * cos(end_angle));
+                                int y2 = cy + (int)(r * sin(end_angle));
+                                
+                                HBRUSH hBrush = CreateSolidBrush(colors[c % 16]);
                                 HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
                                 HPEN hPen = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
                                 HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
-                                Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
+                                
+                                Pie(hdc, cx - r, cy - r, cx + r, cy + r, x1, y1, x2, y2);
+                                
                                 SelectObject(hdc, hOldBrush);
                                 SelectObject(hdc, hOldPen);
                                 DeleteObject(hBrush);
                                 DeleteObject(hPen);
-                                break;
+                                
+                                start_angle = end_angle;
                             }
-                            double slice_angle = (categoryTotals[c] / total_expense) * 2.0 * 3.1415926535;
-                            double end_angle = start_angle - slice_angle;
-                            
-                            int x1 = cx + (int)(r * cos(start_angle));
-                            int y1 = cy + (int)(r * sin(start_angle));
-                            int x2 = cx + (int)(r * cos(end_angle));
-                            int y2 = cy + (int)(r * sin(end_angle));
-                            
-                            HBRUSH hBrush = CreateSolidBrush(colors[c % 7]);
-                            HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
-                            HPEN hPen = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
-                            HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
-                            
-                            Pie(hdc, cx - r, cy - r, cx + r, cy + r, x1, y1, x2, y2);
-                            
-                            SelectObject(hdc, hOldBrush);
-                            SelectObject(hdc, hOldPen);
-                            DeleteObject(hBrush);
-                            DeleteObject(hPen);
-                            
-                            start_angle = end_angle;
                         }
+
+                        char topLabel[64];
+                        int topIdx = 0;
+                        for (int c = 1; c < num_cats; c++) {
+                            if (categoryTotals[c] > categoryTotals[topIdx]) topIdx = c;
+                        }
+                        int topPct = (int)((categoryTotals[topIdx] / total_expense) * 100.0);
+                        snprintf(topLabel, sizeof(topLabel), "Top: %s (%d%%)", cats[topIdx], topPct);
+                        SetTextColor(hdc, RGB(148, 163, 184));
+                        TextOutA(hdc, cx - 45, cy + r + 10, topLabel, (int)strlen(topLabel));
+                    } else {
+                        SetTextColor(hdc, RGB(100, 116, 139));
+                        TextOutA(hdc, cx - 40, cy - 10, "No expenses", 11);
                     }
                 } else {
-                    SetTextColor(hdc, RGB(100, 116, 139));
-                    TextOut(hdc, cx - 40, cy - 10, "No expenses", 11);
+                    // Balance Projection Forecast Graph (+30d)
+                    int gx = 18;
+                    int gy = 320;
+                    int gw = 208;
+                    int gh = 210;
+
+                    HBRUSH hGraphBg = CreateSolidBrush(RGB(15, 23, 42));
+                    HPEN hGraphBorder = CreatePen(PS_SOLID, 1, RGB(51, 65, 85));
+                    HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hGraphBg);
+                    HPEN hOldP = (HPEN)SelectObject(hdc, hGraphBorder);
+                    Rectangle(hdc, gx, gy, gx + gw, gy + gh);
+                    SelectObject(hdc, hOldB);
+                    SelectObject(hdc, hOldP);
+                    DeleteObject(hGraphBg);
+                    DeleteObject(hGraphBorder);
+
+                    SetTextColor(hdc, RGB(248, 250, 252));
+                    TextOutA(hdc, gx + 6, gy + 5, "Balance Forecast (+30d)", 23);
+
+                    double total_inc = 0.0, total_exp = 0.0;
+                    int min_days = 99999999, max_days = -99999999;
+                    for (int i = 0; i < num_transactions; i++) {
+                        if (transactions[i].is_income) total_inc += transactions[i].amount;
+                        else total_exp += transactions[i].amount;
+                        int y = 0, m = 0, d = 0;
+                        if (sscanf(transactions[i].date, "%d-%d-%d", &y, &m, &d) == 3) {
+                            int days = y * 365 + m * 30 + d;
+                            if (days < min_days) min_days = days;
+                            if (days > max_days) max_days = days;
+                        }
+                    }
+
+                    double cur_balance = total_inc - total_exp;
+                    int span_days = (num_transactions >= 2 && max_days > min_days) ? (max_days - min_days) : 30;
+                    if (span_days < 3) span_days = 30;
+
+                    double daily_rate = (span_days > 0) ? ((total_inc - total_exp) / (double)span_days) : 0.0;
+                    double proj30 = cur_balance + (daily_rate * 30.0);
+                    double hist_bal = cur_balance - (daily_rate * (double)span_days);
+
+                    if (num_transactions == 0) {
+                        SetTextColor(hdc, RGB(100, 116, 139));
+                        TextOutA(hdc, gx + 45, gy + 90, "No transactions", 15);
+                    } else {
+                        int padL = 36, padR = 12, padT = 26, padB = 26;
+                        int plotX = gx + padL;
+                        int plotY = gy + padT;
+                        int plotW = gw - padL - padR;
+                        int plotH = gh - padT - padB;
+
+                        double minB = cur_balance, maxB = cur_balance;
+                        if (hist_bal < minB) minB = hist_bal;
+                        if (hist_bal > maxB) maxB = hist_bal;
+                        if (proj30 < minB) minB = proj30;
+                        if (proj30 > maxB) maxB = proj30;
+                        if (minB == maxB) { minB -= 100.0; maxB += 100.0; }
+                        double margin = (maxB - minB) * 0.15;
+                        minB -= margin; maxB += margin;
+                        double range = maxB - minB;
+
+                        HPEN hGridPen = CreatePen(PS_DOT, 1, RGB(51, 65, 85));
+                        HPEN hOldGrid = (HPEN)SelectObject(hdc, hGridPen);
+                        for (int k = 0; k <= 2; k++) {
+                            int lineY = plotY + (plotH * k) / 2;
+                            MoveToEx(hdc, plotX, lineY, NULL);
+                            LineTo(hdc, plotX + plotW, lineY);
+
+                            double valAtY = maxB - ((double)k / 2.0) * range;
+                            char lbl[32];
+                            if (fabs(valAtY) >= 1000.0) {
+                                snprintf(lbl, sizeof(lbl), "%s%.0fk", currency_symbol, valAtY / 1000.0);
+                            } else {
+                                snprintf(lbl, sizeof(lbl), "%s%.0f", currency_symbol, valAtY);
+                            }
+                            SetTextColor(hdc, RGB(100, 116, 139));
+                            TextOutA(hdc, gx + 2, lineY - 6, lbl, (int)strlen(lbl));
+                        }
+                        SelectObject(hdc, hOldGrid);
+                        DeleteObject(hGridPen);
+
+                        if (minB < 0 && maxB > 0) {
+                            int zeroY = plotY + plotH - (int)(((0.0 - minB) / range) * plotH);
+                            if (zeroY >= plotY && zeroY <= plotY + plotH) {
+                                HPEN hRedPen = CreatePen(PS_DOT, 1, RGB(239, 68, 68));
+                                HPEN hOldRed = (HPEN)SelectObject(hdc, hRedPen);
+                                MoveToEx(hdc, plotX, zeroY, NULL);
+                                LineTo(hdc, plotX + plotW, zeroY);
+                                SelectObject(hdc, hOldRed);
+                                DeleteObject(hRedPen);
+                            }
+                        }
+
+                        int midX = plotX + plotW / 2;
+                        HPEN hMidPen = CreatePen(PS_DOT, 1, RGB(100, 116, 139));
+                        HPEN hOldMid = (HPEN)SelectObject(hdc, hMidPen);
+                        MoveToEx(hdc, midX, plotY, NULL);
+                        LineTo(hdc, midX, plotY + plotH);
+                        SelectObject(hdc, hOldMid);
+                        DeleteObject(hMidPen);
+
+                        int y_hist = plotY + plotH - (int)(((hist_bal - minB) / range) * plotH);
+                        int y_curr = plotY + plotH - (int)(((cur_balance - minB) / range) * plotH);
+                        int y_proj = plotY + plotH - (int)(((proj30 - minB) / range) * plotH);
+                        if (y_hist < plotY) y_hist = plotY; if (y_hist > plotY + plotH) y_hist = plotY + plotH;
+                        if (y_curr < plotY) y_curr = plotY; if (y_curr > plotY + plotH) y_curr = plotY + plotH;
+                        if (y_proj < plotY) y_proj = plotY; if (y_proj > plotY + plotH) y_proj = plotY + plotH;
+
+                        HPEN hHistPen = CreatePen(PS_SOLID, 2, RGB(34, 197, 94));
+                        HPEN hOldHist = (HPEN)SelectObject(hdc, hHistPen);
+                        MoveToEx(hdc, plotX, y_hist, NULL);
+                        LineTo(hdc, midX, y_curr);
+                        SelectObject(hdc, hOldHist);
+                        DeleteObject(hHistPen);
+
+                        COLORREF projColor = (daily_rate >= 0.0) ? RGB(56, 189, 248) : RGB(245, 158, 11);
+                        HPEN hProjPen = CreatePen(PS_SOLID, 2, projColor);
+                        HPEN hOldProj = (HPEN)SelectObject(hdc, hProjPen);
+                        MoveToEx(hdc, midX, y_curr, NULL);
+                        LineTo(hdc, plotX + plotW, y_proj);
+                        SelectObject(hdc, hOldProj);
+                        DeleteObject(hProjPen);
+
+                        HBRUSH hGreenBrush = CreateSolidBrush(RGB(34, 197, 94));
+                        HBRUSH hOldDot = (HBRUSH)SelectObject(hdc, hGreenBrush);
+                        Ellipse(hdc, midX - 3, y_curr - 3, midX + 4, y_curr + 4);
+                        SelectObject(hdc, hOldDot);
+                        DeleteObject(hGreenBrush);
+
+                        HBRUSH hProjBrush = CreateSolidBrush(projColor);
+                        hOldDot = (HBRUSH)SelectObject(hdc, hProjBrush);
+                        Ellipse(hdc, plotX + plotW - 3, y_proj - 3, plotX + plotW + 4, y_proj + 4);
+                        SelectObject(hdc, hOldDot);
+                        DeleteObject(hProjBrush);
+
+                        char badge[64];
+                        if (fabs(proj30) >= 1000.0) {
+                            snprintf(badge, sizeof(badge), "+30d:%s%.1fk", currency_symbol, proj30 / 1000.0);
+                        } else {
+                            snprintf(badge, sizeof(badge), "+30d:%s%.0f", currency_symbol, proj30);
+                        }
+                        SetTextColor(hdc, projColor);
+                        TextOutA(hdc, gx + gw - 82, gy + 5, badge, (int)strlen(badge));
+
+                        char rateStr[64];
+                        snprintf(rateStr, sizeof(rateStr), "Rate: %s%+.1f/d", currency_symbol, daily_rate);
+                        SetTextColor(hdc, RGB(148, 163, 184));
+                        TextOutA(hdc, gx + 6, gy + gh - 16, rateStr, (int)strlen(rateStr));
+
+                        SetTextColor(hdc, RGB(100, 116, 139));
+                        TextOutA(hdc, plotX - 2, plotY + plotH + 4, "Past", 4);
+                        TextOutA(hdc, midX - 12, plotY + plotH + 4, "Today", 5);
+                        TextOutA(hdc, plotX + plotW - 24, plotY + plotH + 4, "+30d", 4);
+                    }
                 }
-                
+
                 EndPaint(hwnd, &ps);
             }
             return 0;
@@ -1027,6 +1278,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             BOOL alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
             if ((alt && (msg.wParam == 'C' || msg.wParam == 'c')) || (!isEdit && (msg.wParam == 'C' || msg.wParam == 'c'))) {
                 CycleCurrency();
+                bHandled = TRUE;
+            } else if (!isEdit && (msg.wParam == 'P' || msg.wParam == 'p')) {
+                ToggleChartMode();
                 bHandled = TRUE;
             } else if (msg.wParam == VK_F5) {
                 NativeQuickSave(hMainWnd);

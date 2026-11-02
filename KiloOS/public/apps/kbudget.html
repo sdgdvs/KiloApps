@@ -1512,6 +1512,8 @@
                         customExpenseCategories = snapshot.customCategories;
                         safeSet('kbudget_custom_categories', customExpenseCategories);
                         updateCategories();
+                        updateCategoryFilterSelect();
+                        renderSettingsCategoryList();
                     }
                     if (snapshot.search !== undefined) {
                         const searchEl = document.getElementById('search-input');
@@ -1536,6 +1538,7 @@
                     if (tutorialModal && tutorialModal.classList.contains('active')) {
                         closeTutorialModal();
                     }
+                    safeSet('kbudget_tutorialSeen', '1');
                     updateCurrencyLabels();
                     saveTransactions();
                     render();

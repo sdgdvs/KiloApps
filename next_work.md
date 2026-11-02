@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KHex
-  kilo_qa: KBudget
+  kilo_qa: KDB
   kilo_expander: KSys
   kilo_review: KChat
 virtual_web_target: kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KSys
-  timestamp: '2026-11-01T17:22:17-08:00'
+  agent: kilo-qa
+  app: KBudget
+  timestamp: '2026-11-01T18:21:16-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -181,11 +181,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | **[ARGON REVIEW]:** Fix 1024x731 horizontal clipping in sheet.png where nav clips Tab [5] and hides Tab [6] off-screen and .quick-actions-bar clips Quickload [F9] and hides 6 chips (compact .tab-btn padding/labels so all 6 tabs fit in 1024px and wrap/compact .quick-actions-bar), tighten 16-core #cpu-core-spectrum and .info-item WebGL Renderer wrapping so Tab 1 cards fit cleanly above 731px, and guard updateTelemetrySparklines() when !isFlightRecording so pausing/scrubbing #recorder-scrub is not overwritten 1s later. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KBudget`
+- **Active Target**: `KDB`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBudget` | `KiloOS/public/apps/kbudget.html`, `KBudget/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, expense categories, balance projection graphs, dual Win32 C parity, and promote to Mature table. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Klondike deal engine, undo history, win fireworks, dual Win32 C parity, and promote to Mature table. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
@@ -248,6 +247,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KBudget** | `KiloOS/public/apps/kbudget.html` | Pass 5+ (2026-11-01) | Productivity / Finance | Complete retro personal finance ledger and workstation with dual Category Pie & 30-Day Balance Projection forecasts [P], F5/F9 state persistence, dynamic categories, VFS/CSV I/O, and Win32 C parity. |
 | **KSanctuary** | `KiloOS/public/apps/ksanctuary.html` | Pass 5+ (2026-11-01) | Games / Simulation | Complete xenobiology vault simulation; Imagen 3 flora/fauna sprites, weather overlays, F5/F9 persistence, Win32 C parity. |
 | **KChart** | `KiloOS/public/apps/kchart.html` | Pass 5+ (2026-11-01) | Productivity / Analytics | Complete data visualization studio with 10 chart modes, presets (bar/line/pie/radar & 1999 logs), statistical regressions, CSV/JSON import/export, YM2612 audio sonification, F5/F9 quicksave persistence, and dual Win32 C parity. |
 | **KChat** | `KiloOS/public/apps/kchat.html` | Pass 5+ (2026-11-01) | Network / Communications | Complete retro multi-channel chat suite with interactive polls, offline message spool, channel switcher palette, F5/F9 state persistence, and dual Win32 C parity. |
@@ -314,6 +314,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T18:21:16-08:00 — kilo-qa: KBudget (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 152.9 KB, native 172.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 10.44%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.4s)).
+  - State & Persistence: Verified F5/F9 quicksave/quickload, kbudget_tutorialSeen flag, and modal dismissals.
+  - Dual Parity & Balance Forecast: Implemented dual Win32 C parity for 30-day balance projection graphs [P], dynamic expense categories, and category exports.
+  - Mature Quarantine & Handoff: Promoted `KBudget` to Mature archive; advanced `kilo-qa` to `KDB`; next agent `kilo-expander`.
+
 - **2026-11-01T17:22:17-08:00 — kilo-usability: KSys (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KSys across web and native targets.
@@ -337,9 +343,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Equipped persistent sidebar Moderation Console HUD with live Karma status, mod point replenish, and JSDoc typing across core engine.
   - Integrated Beowulf cluster calculator, Linux 2.2 kernel compile/boot simulator, and VFS export to /home/downloads/ and /boot/.
   - Handoff: Advanced `kilo-creator` to `kweb://trapster`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-01T13:32:52-08:00 — kilo-review: KSys (Argon Visual, Feature & Usability Review (Defects Dispatched))**
-  - Status: AUDIT COMPLETE (inspected 1024x731 sheet.png and audited ksys.html + KSys/main.c; un-quarantined/queued surgical fixes to kilo-tester, kilo-usability, and kilo-expander).
-  - Runtime & Potemkin Findings: startContinuousStress() crashes with ReferenceError (undeclared btn/chip/statusText), Home key on Hex tab crashes calling undefined resetHexPage(), toggleHexEndianness() is a no-op Potemkin toggle, and playYm2612Sfx() bypasses modGain.
-  - Visual/UX & Parity Findings: Top nav clips Tab [5] and hides Tab [6] at 1024px width, Quick Actions bar clips Quickload and hides 6 chips, Flight Recorder scrubbing is overwritten after 1s, ksys.html lacks VFS/IPC hooks, and KSys/main.c leaves hBtnGdi/Crypto/Jitter/Probe unwired and resets scroll every 1s.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KSys`, `kilo-usability`->`KSys`, `kilo-expander`->`KSys`] (un-quarantined `KSys` from Mature); advanced `kilo-review` to `KChat`; next agent `kilo-creator`.
