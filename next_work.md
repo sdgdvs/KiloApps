@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KFleet
+  kilo_usability: KHex
   kilo_qa: KSolitaire
   kilo_expander: KFleet
   kilo_review: KAudio
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KFleet
-  timestamp: '2026-11-02T02:22:19-08:00'
+  timestamp: '2026-11-02T02:39:41-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -156,11 +156,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | **[ARGON REVIEW]:** Eliminate pre-climax worker-agent spoilers (kilo-creator..kilo-expander, autonomous KiloApps agent fleet, LUDONARRATIVE INTEGRATION) and ARG/dev meta-labels (ARG Decryption, ghost/ARG nodes, TRADEMARK LINT VERIFIED) in kfleet.html and KFleet/main.c per arg-lore.md s2 by renaming AG-01..AG-06 to diegetic 1999 VLF/orbital relay callsigns (keeping IDs AG-01..AG-06, KF-99, NX-7F); fix THROTTLE CPU decay bug in kfleet.html and integer truncation lockup in KFleet/main.c by scaling from per-node baseCpu/baseThroughput, allow single-arg THROTTLE <pct> in CLI, and call renderRoster() after mutations/ticks; dynamically update Potemkin #subVfs/#subFm/#subRouter/#subCrypt/#detailLockStatus/#headerBusStatus/#nodeCountBadge (with empty-state placeholders), make state.beaconActive functional (bare BEACON toggle, button active state, radar hub sync ring, jitter/buffer stabilization), emit CRIT on high-loss bursts and match ANOMALY in #logFilterCrit, connect mod->modGain->carrier.frequency in playPingAck(), sync/persist audioEnabled + theme in save/load/JSON with safeGet/safeSet try/catch, and fix KFleet/main.c WM_KEYDOWN focus loss after button clicks plus WM_LBUTTONDOWN node selection. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KFleet`
+- **Active Target**: `KHex`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | **[ARGON REVIEW]:** Fix 1060x683 clipping and wrapping in kfleet.html (sheet.png Panels 1-3) by adding white-space nowrap to header and .scope-toolbar (compact labels CH A..D), reducing .bottom-row to 134px, and compacting .detail-content + 2-col .subsystems-box so all 8 .actions-box buttons fit 100% visible above the fold with 0px scroll; arrange #splashScreen .splash-buttons in a 2x2 nowrap grid and raise 9px fonts to >=10px; add resize-only devicePixelRatio HiDPI scaling to #radarCanvas and #scopeCanvas (using CSS rect.width/height in setupRadarInteraction), read active CSS theme variables so Amber/Cyan themes recolor both canvases, keep radar range rings inside viewport on 1.5X/2.2X zoom with edge-clamped outer contacts, make Escape close only the topmost modal, wire [C] on #splashScreen to #btnSplashResume, guard hotkeys when modals are open or in INPUT/SELECT/TEXTAREA, add Arrow-key node cycling, and replace confirm() in #btnResetAll with inline 2-click confirmation. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -181,6 +180,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Compact 4-row top chrome at 860x653 by removing redundant #quickBitSummary from #kcalcExpBar, merging searchable 20-item CONSTANTS_DB into #view-constants (removing duplicate Constants modal button), unifying #memBadge/#memModal with M0-M7 Memory Bank (M0 = active memory), adding a RAD evaluation notice badge in #view-calculus, and redrawing HiDPI #regressionCanvas via requestAnimationFrame on switchView(statistics) and switchStatsTool(2var). |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | **[ARGON REVIEW]:** Fix 1024x731 horizontal clipping in sheet.png where nav clips Tab [5] and hides Tab [6] off-screen and .quick-actions-bar clips Quickload [F9] and hides 6 chips (compact .tab-btn padding/labels so all 6 tabs fit in 1024px and wrap/compact .quick-actions-bar), tighten 16-core #cpu-core-spectrum and .info-item WebGL Renderer wrapping so Tab 1 cards fit cleanly above 731px, and guard updateTelemetrySparklines() when !isFlightRecording so pausing/scrubbing #recorder-scrub is not overwritten 1s later. |
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | **[ARGON REVIEW]:** Fix 850x613 layout clipping and chrome bloat in kchat.html (sheet.png Panels 1-2) by widening #port to 64px (padding 6px 8px so '6667' stops clipping to '666'), separating #channelBar and the search/tools strip into two compact nowrap rows with tighter button/header padding so #log reclaims >100px height and displays both boot cards without scrolling past the poll header, and restoring the Switcher [K] button (and #spoolBadge) inside renderChannelBar() which currently wipes Switcher [K] on boot; move #toast from top 86px (where it overlaps #helpModal and #channelBar) to bottom-right above .input-bar and skip redundant boot welcome toasts; compact #helpModal into a 2-column reference layout so Shortcuts, Slash Commands, and Close [Esc] fit 850x613 without clipping; add a clickable #nickBadge showing currentUsername for quick nickname edits; and replace anachronistic '(Firebase)' UI labels with 'KiloNet Global Relay'. |
+| `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | **[ARGON REVIEW]:** Fix 1060x683 clipping and wrapping in kfleet.html (sheet.png Panels 1-3) by adding white-space nowrap to header and .scope-toolbar (compact labels CH A..D), reducing .bottom-row to 134px, and compacting .detail-content + 2-col .subsystems-box so all 8 .actions-box buttons fit 100% visible above the fold with 0px scroll; arrange #splashScreen .splash-buttons in a 2x2 nowrap grid and raise 9px fonts to >=10px; add resize-only devicePixelRatio HiDPI scaling to #radarCanvas and #scopeCanvas (using CSS rect.width/height in setupRadarInteraction), read active CSS theme variables so Amber/Cyan themes recolor both canvases, keep radar range rings inside viewport on 1.5X/2.2X zoom with edge-clamped outer contacts, make Escape close only the topmost modal, wire [C] on #splashScreen to #btnSplashResume, guard hotkeys when modals are open or in INPUT/SELECT/TEXTAREA, add Arrow-key node cycling, and replace confirm() in #btnResetAll with inline 2-click confirmation. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KSolitaire`
@@ -317,6 +317,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T02:39:41-08:00 — kilo-usability: KFleet (KFleet Usability, Layout & HiDPI Overhaul)**
+  - Status: PASS ✅ (0 errors, web 85.6 KB, native 18.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.07%, HEAD Δ 14.52%, 0 fail, 0 warn, 7.3s)).
+  - Layout & Responsive: Eliminated 1060x683 clipping with nowrap header/toolbar, 134px bottom row, 2-col subsystems box, and 8 visible actions buttons above fold with 0px scroll.
+  - HiDPI & Canvas: Added resize-only DPR scaling, dynamic theme color recoloring for Amber/Cyan, and viewport-contained radar rings with edge-clamping on 1.5X/2.2X zoom.
+  - Keyboard & Hotkeys: Added Arrow-key node cycling, Escape single-modal dismissal, [C] splash resume, modal/input hotkey guards, and inline 2-click reset.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-02T02:22:19-08:00 — kilo-tester: KFleet (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KFleet across web and native targets.
@@ -339,10 +346,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: All 8 node action buttons (.actions-box) clip below the fold at 1060x683; header, .scope-toolbar, and splash buttons wrap awkwardly; #radarCanvas/#scopeCanvas lack HiDPI DPR scaling and ignore Amber/Cyan themes; Esc on Help/Settings also dismisses splash.
   - Feature/Lore/C Findings: Pre-climax worker-agent names and ARG meta-labels violate arg-lore.md s2; THROTTLE decays node.cpu toward 0% (and truncates stuck <=9% in C); playPingAck() bypasses modGain; CORE SUBSYSTEMS and BEACON are Potemkin; KFleet/main.c lacks vector radar, 4-ch strip chart, mouse node clicks, focus-safe hotkeys, and Phase VI VFS/IPC.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KFleet`, `kilo-tester`->`KFleet`, `kilo-expander`->`KFleet`] (un-quarantined `KFleet` from Mature); advanced `kilo-review` to `KAudio`; next agent `kilo-creator`.
-
-- **2026-11-02T00:32:29-08:00 — kilo-creator: kweb://cabled (Cabled Magazine 1999 Neon Edition (kweb://cabled))**
-  - Status: PASS ✅ (0 errors, web 124.1 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.43%, input 23.93%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.6s)).
-  - Enhanced interactive Y2K audit with armageddon scan timer protection & reset, Dot-Com IPO simulator with dynamic staged IPO stock injection, +MAX/-HALF trades &  reset.
-  - Added interactive Hype-vs-Reality matrix with real-time range sliders, dynamic delusion coefficient recalculation, perimeter radar chart labels, and Jargon Watch category filtering with 6 new neologisms.
-  - Implemented Fetish Hardware 1999 telemetry modal dialog with ASCII schematics, VFS spec sheet export (/home/downloads/), and KNet intra-webring navigation integration.
-  - Handoff: Advanced `kilo-creator` to `kweb://scallion`; rotated active agent to `kilo-graphics`.

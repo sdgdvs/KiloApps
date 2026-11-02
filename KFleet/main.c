@@ -529,11 +529,13 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     else AppendLog("[CONSOLE] Telemetry stream resumed.");
                     break;
                 case 'P':
+                case VK_UP:
                 case VK_LEFT:
                     g_selected_node = (g_selected_node + NUM_NODES - 1) % NUM_NODES;
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 case 'N':
+                case VK_DOWN:
                 case VK_RIGHT:
                     g_selected_node = (g_selected_node + 1) % NUM_NODES;
                     InvalidateRect(hwnd, NULL, FALSE);

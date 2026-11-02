@@ -94,15 +94,23 @@
     align-items: center;
     background: var(--bg-header);
     border: 1px solid var(--border);
-    padding: 4px 10px;
+    padding: 3px 6px;
     box-shadow: 0 0 8px var(--phosphor-glow);
     flex-shrink: 0;
+    white-space: nowrap;
   }
 
   .header-left, .header-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .header-right .kbtn {
+    padding: 2px 6px;
+    font-size: 10.5px;
   }
 
   .badge-app {
@@ -286,7 +294,7 @@
     text-overflow: ellipsis;
   }
   .node-badge {
-    font-size: 9px;
+    font-size: 10px;
     padding: 1px 4px;
     font-weight: bold;
     border-radius: 2px;
@@ -347,10 +355,12 @@
     background: var(--bg-header);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
+    white-space: nowrap;
   }
   .scope-channels {
     display: flex;
     gap: 6px;
+    white-space: nowrap;
   }
   .channel-btn {
     font-size: 10px;
@@ -374,22 +384,22 @@
   }
 
   .detail-content {
-    padding: 8px;
+    padding: 5px 6px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
   }
 
   .node-hero {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    padding: 8px;
+    padding: 4px 6px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
   }
   .hero-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
     color: var(--cyan);
     display: flex;
@@ -397,23 +407,23 @@
     align-items: center;
   }
   .hero-role {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--phosphor-dim);
   }
 
   .metric-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    gap: 4px;
   }
 
   .metric-card {
     background: var(--bg-main);
     border: 1px solid var(--border);
-    padding: 5px 6px;
+    padding: 3px 5px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
   }
   .metric-label {
     font-size: 10px;
@@ -421,7 +431,7 @@
     text-transform: uppercase;
   }
   .metric-value {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: bold;
     color: var(--phosphor);
   }
@@ -430,10 +440,10 @@
   .gauge-container {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
     background: var(--bg-card);
     border: 1px solid var(--border);
-    padding: 6px;
+    padding: 3px 5px;
   }
   .gauge-label {
     display: flex;
@@ -441,7 +451,7 @@
     font-size: 10px;
   }
   .gauge-bar-outer {
-    height: 10px;
+    height: 6px;
     background: var(--bg-main);
     border: 1px solid var(--border);
     overflow: hidden;
@@ -458,19 +468,24 @@
   .subsystems-box {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    padding: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    padding: 3px 6px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 6px;
+  }
+  .subsystems-title {
+    grid-column: span 2;
+    font-weight: bold;
+    color: var(--amber);
+    font-size: 10px;
   }
   .subsystem-row {
     display: flex;
     justify-content: space-between;
     font-size: 10px;
-    padding: 2px 0;
-    border-bottom: 1px dotted var(--border);
+    padding: 1px 0;
+    border-bottom: none;
   }
-  .subsystem-row:last-child { border-bottom: none; }
   .sub-status {
     font-weight: bold;
   }
@@ -482,12 +497,16 @@
   .actions-box {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 4px;
+    gap: 3px;
+  }
+  .actions-box .kbtn {
+    padding: 2px 4px;
+    font-size: 10px;
   }
 
   /* Bottom Console & Logs */
   .bottom-row {
-    height: 180px;
+    height: 134px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 6px;
@@ -647,14 +666,16 @@
     gap: 6px;
   }
   .splash-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
     margin-top: 8px;
+    width: 100%;
   }
   .splash-buttons .kbtn {
-    padding: 8px 16px;
-    font-size: 12px;
+    padding: 7px 10px;
+    font-size: 11px;
+    white-space: nowrap;
   }
 
   /* Tutorial Step Callout */
@@ -731,10 +752,10 @@
         <div class="scope-toolbar">
           <span style="font-weight:bold; color:var(--amber); font-size:11px;">MULTI-CHANNEL STRIP CHART</span>
           <div class="scope-channels">
-            <span class="channel-btn active-a" id="chA">CH A: T-PUT</span>
-            <span class="channel-btn active-b" id="chB">CH B: SIGNAL</span>
-            <span class="channel-btn active-c" id="chC">CH C: BUFFER</span>
-            <span class="channel-btn" id="chD">CH D: ENTROPY</span>
+            <span class="channel-btn active-a" id="chA" title="CH A: T-PUT">CH A</span>
+            <span class="channel-btn active-b" id="chB" title="CH B: SIGNAL">CH B</span>
+            <span class="channel-btn active-c" id="chC" title="CH C: BUFFER">CH C</span>
+            <span class="channel-btn" id="chD" title="CH D: ENTROPY">CH D</span>
           </div>
         </div>
         <div class="canvas-wrapper">
@@ -812,21 +833,21 @@
 
         <!-- Subsystems Health Table -->
         <div class="subsystems-box">
-          <div style="font-weight:bold; color:var(--amber); font-size:10px; margin-bottom:2px;">CORE SUBSYSTEMS</div>
+          <div class="subsystems-title">CORE SUBSYSTEMS</div>
           <div class="subsystem-row">
-            <span>VFS Bus Controller</span>
+            <span>VFS Bus</span>
             <span class="sub-status ok" id="subVfs">ACTIVE</span>
           </div>
           <div class="subsystem-row">
-            <span>FM Synthesizer (YM2612)</span>
+            <span>FM (YM2612)</span>
             <span class="sub-status ok" id="subFm">ONLINE</span>
           </div>
           <div class="subsystem-row">
-            <span>Packet Router / CRC32</span>
+            <span>Router/CRC</span>
             <span class="sub-status ok" id="subRouter">SYNCHRONIZED</span>
           </div>
           <div class="subsystem-row">
-            <span>Cryptographic State Vector</span>
+            <span>Crypto Vec</span>
             <span class="sub-status ok" id="subCrypt">VERIFIED</span>
           </div>
         </div>
@@ -835,12 +856,12 @@
         <div class="actions-box">
           <button class="kbtn" id="btnActionPing">PING ECHO</button>
           <button class="kbtn" id="btnActionPoll">POLL REGS</button>
-          <button class="kbtn" id="btnActionDiag">RUN DIAGNOSTIC</button>
+          <button class="kbtn" id="btnActionDiag">DIAGNOSTIC</button>
           <button class="kbtn" id="btnActionPurge">PURGE QUEUE</button>
           <button class="kbtn" id="btnActionThrotDn">THROTTLE -10%</button>
           <button class="kbtn" id="btnActionThrotUp">THROTTLE +10%</button>
-          <button class="kbtn kbtn-amber" id="btnActionBeacon" style="grid-column: span 2;">TOGGLE SYNC BEACON</button>
-          <button class="kbtn kbtn-alert" id="btnActionStress" style="grid-column: span 2;">SIMULATE PACKET BURST</button>
+          <button class="kbtn kbtn-amber" id="btnActionBeacon" style="grid-column: span 1;">BEACON</button>
+          <button class="kbtn kbtn-alert" id="btnActionStress" style="grid-column: span 1;">PKT BURST</button>
         </div>
       </div>
     </div>
@@ -868,12 +889,12 @@
       <div class="panel-header">
         <span>Telemetry Event Stream</span>
         <div class="log-filters">
-          <button class="kbtn active" id="logFilterAll" style="padding:1px 4px; font-size:9px;">ALL</button>
-          <button class="kbtn" id="logFilterInfo" style="padding:1px 4px; font-size:9px;">INFO</button>
-          <button class="kbtn" id="logFilterSync" style="padding:1px 4px; font-size:9px;">SYNC</button>
-          <button class="kbtn" id="logFilterWarn" style="padding:1px 4px; font-size:9px;">WARN</button>
-          <button class="kbtn" id="logFilterCrit" style="padding:1px 4px; font-size:9px;">CRIT</button>
-          <button class="kbtn" id="btnExportLog" style="padding:1px 5px; font-size:9px;">EXPORT</button>
+          <button class="kbtn active" id="logFilterAll" style="padding:1px 4px; font-size:10px;">ALL</button>
+          <button class="kbtn" id="logFilterInfo" style="padding:1px 4px; font-size:10px;">INFO</button>
+          <button class="kbtn" id="logFilterSync" style="padding:1px 4px; font-size:10px;">SYNC</button>
+          <button class="kbtn" id="logFilterWarn" style="padding:1px 4px; font-size:10px;">WARN</button>
+          <button class="kbtn" id="logFilterCrit" style="padding:1px 4px; font-size:10px;">CRIT</button>
+          <button class="kbtn" id="btnExportLog" style="padding:1px 5px; font-size:10px;">EXPORT</button>
         </div>
       </div>
       <div class="log-body" id="logContainer">
@@ -1650,60 +1671,140 @@
     document.getElementById('barMem').style.width = `${(n.memKb / 999) * 100}%`;
   }
 
-  // --- CANVAS: TACTICAL RADAR TOPOLOGY ---
+  // --- CANVAS: THEME COLOR PARSER & HIDPI SCALING ---
+  function getThemeColors() {
+    const s = getComputedStyle(document.body);
+    const phosphor = s.getPropertyValue('--phosphor').trim() || '#33ff66';
+    const phosphorDim = s.getPropertyValue('--phosphor-dim').trim() || '#1e803d';
+    const border = s.getPropertyValue('--border').trim() || '#1a4d2e';
+    const cyan = s.getPropertyValue('--cyan').trim() || '#33ccff';
+    const amber = s.getPropertyValue('--amber').trim() || '#ffaa00';
+    const alert = s.getPropertyValue('--alert').trim() || '#ff3344';
+    return { phosphor, phosphorDim, border, cyan, amber, alert };
+  }
+
+  function hexToRgba(color, alpha) {
+    if (!color) return `rgba(51, 255, 102, ${alpha})`;
+    if (color.startsWith('rgba') || color.startsWith('rgb')) return color;
+    let h = color.replace('#', '');
+    if (h.length === 3) h = h.split('').map(c => c + c).join('');
+    const num = parseInt(h, 16);
+    if (isNaN(num)) return `rgba(51, 255, 102, ${alpha})`;
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
   let radarAngle = 0;
+  let radarW = 0, radarH = 0;
+  let scopeW = 0, scopeH = 0;
+
+  function resizeRadarCanvas() {
+    const canvas = document.getElementById('radarCanvas');
+    if (!canvas || !canvas.parentElement) return;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const cssW = Math.floor(rect.width || canvas.parentElement.clientWidth);
+    const cssH = Math.floor(rect.height || canvas.parentElement.clientHeight);
+    if (cssW <= 0 || cssH <= 0) return;
+    const targetW = Math.round(cssW * dpr);
+    const targetH = Math.round(cssH * dpr);
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
+    }
+    radarW = cssW;
+    radarH = cssH;
+  }
+
+  function resizeScopeCanvas() {
+    const canvas = document.getElementById('scopeCanvas');
+    if (!canvas || !canvas.parentElement) return;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const cssW = Math.floor(rect.width || canvas.parentElement.clientWidth);
+    const cssH = Math.floor(rect.height || canvas.parentElement.clientHeight);
+    if (cssW <= 0 || cssH <= 0) return;
+    const targetW = Math.round(cssW * dpr);
+    const targetH = Math.round(cssH * dpr);
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
+    }
+    scopeW = cssW;
+    scopeH = cssH;
+  }
+
+  window.addEventListener('resize', () => {
+    resizeRadarCanvas();
+    resizeScopeCanvas();
+  });
+
+  // --- CANVAS: TACTICAL RADAR TOPOLOGY ---
   function drawRadar() {
     if (document.hidden) return;
     const canvas = document.getElementById('radarCanvas');
     if (!canvas) return;
+    if (radarW === 0 || radarH === 0) resizeRadarCanvas();
+    if (radarW <= 0 || radarH <= 0) {
+      requestAnimationFrame(drawRadar);
+      return;
+    }
+    const dpr = window.devicePixelRatio || 1;
     const ctx = canvas.getContext('2d');
-    const w = canvas.width = canvas.parentElement.clientWidth;
-    const h = canvas.height = canvas.parentElement.clientHeight;
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+    const w = radarW;
+    const h = radarH;
     ctx.clearRect(0, 0, w, h);
 
+    const colors = getThemeColors();
     const cx = w / 2;
     const cy = h / 2;
-    const maxR = Math.min(cx, cy) * 0.88 * state.radarZoom;
+    // Range rings inside viewport on 1.5X/2.2X zoom
+    const scopeRadius = Math.min(cx, cy) * 0.88;
 
-    // Background Grid
-    ctx.strokeStyle = '#0d2b1a';
+    // Background Grid & Range Rings
+    ctx.strokeStyle = hexToRgba(colors.border, 0.6);
     ctx.lineWidth = 1;
 
-    // Range rings
     for (let r = 1; r <= 4; r++) {
+      const ringR = (scopeRadius / 4) * r;
       ctx.beginPath();
-      ctx.arc(cx, cy, (maxR / 4) * r, 0, Math.PI * 2);
+      ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
       ctx.stroke();
 
-      ctx.fillStyle = '#164a2d';
-      ctx.font = '9px monospace';
-      ctx.fillText(`${r * 250} km`, cx + 4, cy - (maxR / 4) * r + 10);
+      ctx.fillStyle = colors.phosphorDim;
+      ctx.font = '10px monospace';
+      const km = Math.round((r * 250) / state.radarZoom);
+      ctx.fillText(`${km} km`, cx + 4, cy - ringR + 10);
     }
 
-    // Crosshairs
+    // Crosshairs bounded to scopeRadius
     ctx.beginPath();
-    ctx.moveTo(cx - maxR, cy); ctx.lineTo(cx + maxR, cy);
-    ctx.moveTo(cx, cy - maxR); ctx.lineTo(cx, cy + maxR);
+    ctx.moveTo(cx - scopeRadius, cy); ctx.lineTo(cx + scopeRadius, cy);
+    ctx.moveTo(cx, cy - scopeRadius); ctx.lineTo(cx, cy + scopeRadius);
     ctx.stroke();
 
-    // Sweeping Radar Line (Clean phosphor beam within scope, no traveling glint balls!)
+    // Sweeping Radar Line bounded to scopeRadius
     if (!state.streamPaused) {
       radarAngle += 0.025;
       if (radarAngle > Math.PI * 2) radarAngle -= Math.PI * 2;
     }
 
-    const sweepX = cx + Math.cos(radarAngle) * maxR;
-    const sweepY = cy + Math.sin(radarAngle) * maxR;
+    const sweepX = cx + Math.cos(radarAngle) * scopeRadius;
+    const sweepY = cy + Math.sin(radarAngle) * scopeRadius;
 
-    const grad = ctx.createRadialGradient(cx, cy, 5, cx, cy, maxR);
-    grad.addColorStop(0, 'rgba(51, 255, 102, 0.4)');
-    grad.addColorStop(1, 'rgba(51, 255, 102, 0.0)');
+    const grad = ctx.createRadialGradient(cx, cy, 5, cx, cy, scopeRadius);
+    grad.addColorStop(0, hexToRgba(colors.phosphor, 0.4));
+    grad.addColorStop(1, hexToRgba(colors.phosphor, 0.0));
 
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, maxR, radarAngle - 0.35, radarAngle);
+    ctx.arc(cx, cy, scopeRadius, radarAngle - 0.35, radarAngle);
     ctx.closePath();
     ctx.fillStyle = grad;
     ctx.fill();
@@ -1711,28 +1812,30 @@
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.lineTo(sweepX, sweepY);
-    ctx.strokeStyle = 'rgba(51, 255, 102, 0.8)';
+    ctx.strokeStyle = hexToRgba(colors.phosphor, 0.85);
     ctx.lineWidth = 1.5;
     ctx.stroke();
     ctx.restore();
 
     // Center Relay Node (Node 0x00)
-    ctx.fillStyle = '#ffaa00';
+    ctx.fillStyle = colors.amber;
     ctx.beginPath();
     ctx.arc(cx, cy, 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.font = '10px monospace';
+    ctx.fillStyle = colors.phosphor;
     ctx.fillText('NODE-0x00 [HUB]', cx + 7, cy + 4);
 
-    // Plot Fleet Nodes
-    const selected = getSelectedNode();
+    // Plot Fleet Nodes (edge-clamped on 1.5X / 2.2X zoom)
     state.nodes.forEach(n => {
-      const nr = n.radarRadius * maxR;
-      const nx = cx + Math.cos(n.radarAngle) * nr;
-      const ny = cy + Math.sin(n.radarAngle) * nr;
+      const rawDist = n.radarRadius * state.radarZoom * scopeRadius;
+      const clampedDist = Math.min(rawDist, scopeRadius - 6);
+      const isClamped = rawDist > (scopeRadius - 6);
+      const nx = cx + Math.cos(n.radarAngle) * clampedDist;
+      const ny = cy + Math.sin(n.radarAngle) * clampedDist;
 
       // Conduit line to Hub
-      ctx.strokeStyle = n.id === state.selectedId ? 'rgba(51, 255, 102, 0.4)' : 'rgba(20, 60, 35, 0.4)';
+      ctx.strokeStyle = n.id === state.selectedId ? hexToRgba(colors.phosphor, 0.45) : hexToRgba(colors.border, 0.4);
       ctx.setLineDash([2, 4]);
       ctx.beginPath();
       ctx.moveTo(cx, cy);
@@ -1745,14 +1848,14 @@
         const pulseProg = (Date.now() / 1200 + n.radarRadius * 2) % 1;
         const px = cx + (nx - cx) * pulseProg;
         const py = cy + (ny - cy) * pulseProg;
-        ctx.fillStyle = n.isAnomaly ? '#ff3344' : '#33ccff';
+        ctx.fillStyle = n.isAnomaly ? colors.alert : colors.cyan;
         ctx.fillRect(px - 1.5, py - 1.5, 3, 3);
       }
 
       // Blip
       ctx.beginPath();
       ctx.arc(nx, ny, n.id === state.selectedId ? 6 : 4, 0, Math.PI * 2);
-      ctx.fillStyle = n.isAnomaly ? '#ff3344' : (n.id === state.selectedId ? '#33ff66' : '#1da3d1');
+      ctx.fillStyle = n.isAnomaly ? colors.alert : (n.id === state.selectedId ? colors.phosphor : colors.cyan);
       ctx.fill();
 
       if (n.id === state.selectedId) {
@@ -1761,12 +1864,22 @@
         ctx.stroke();
       }
 
+      // Clamped indicator ring if outer contact was clamped to boundary
+      if (isClamped) {
+        ctx.strokeStyle = hexToRgba(colors.alert, 0.5);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(nx, ny, 7, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
       // Label
-      ctx.fillStyle = n.isAnomaly ? '#ff7788' : '#88e0a8';
-      ctx.font = '9px monospace';
+      ctx.fillStyle = n.isAnomaly ? colors.alert : (n.id === state.selectedId ? colors.phosphor : colors.phosphorDim);
+      ctx.font = '10px monospace';
       ctx.fillText(n.id, nx + 7, ny + 3);
     });
 
+    ctx.restore();
     requestAnimationFrame(drawRadar);
   }
 
@@ -1780,19 +1893,20 @@
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
 
-      const w = canvas.width;
-      const h = canvas.height;
+      const w = rect.width;
+      const h = rect.height;
       const cx = w / 2;
       const cy = h / 2;
-      const maxR = Math.min(cx, cy) * 0.88 * state.radarZoom;
+      const scopeRadius = Math.min(cx, cy) * 0.88;
 
       state.nodes.forEach(n => {
-        const nr = n.radarRadius * maxR;
-        const nx = cx + Math.cos(n.radarAngle) * nr;
-        const ny = cy + Math.sin(n.radarAngle) * nr;
+        const rawDist = n.radarRadius * state.radarZoom * scopeRadius;
+        const clampedDist = Math.min(rawDist, scopeRadius - 6);
+        const nx = cx + Math.cos(n.radarAngle) * clampedDist;
+        const ny = cy + Math.sin(n.radarAngle) * clampedDist;
 
         const dist = Math.hypot(mx - nx, my - ny);
-        if (dist < 12) {
+        if (dist < 14) {
           state.selectedId = n.id;
           playBlip(800);
           renderRoster();
@@ -1807,14 +1921,24 @@
     if (document.hidden) return;
     const canvas = document.getElementById('scopeCanvas');
     if (!canvas) return;
+    if (scopeW === 0 || scopeH === 0) resizeScopeCanvas();
+    if (scopeW <= 0 || scopeH <= 0) {
+      requestAnimationFrame(drawScope);
+      return;
+    }
+    const dpr = window.devicePixelRatio || 1;
     const ctx = canvas.getContext('2d');
-    const w = canvas.width = canvas.parentElement.clientWidth;
-    const h = canvas.height = canvas.parentElement.clientHeight;
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+    const w = scopeW;
+    const h = scopeH;
     ctx.clearRect(0, 0, w, h);
 
+    const colors = getThemeColors();
+
     // Background Grid
-    ctx.strokeStyle = '#0d2216';
+    ctx.strokeStyle = hexToRgba(colors.border, 0.4);
     ctx.lineWidth = 1;
     for (let x = 0; x < w; x += 30) {
       ctx.beginPath();
@@ -1829,6 +1953,7 @@
 
     const n = getSelectedNode();
     if (!n || !n.history || n.history.length === 0) {
+      ctx.restore();
       requestAnimationFrame(drawScope);
       return;
     }
@@ -1836,9 +1961,9 @@
     const hist = n.history;
     const step = w / (hist.length - 1);
 
-    // Draw Channel A: Throughput (Green)
+    // Draw Channel A: Throughput (Phosphor)
     if (state.channels.a) {
-      ctx.strokeStyle = '#33ff66';
+      ctx.strokeStyle = colors.phosphor;
       ctx.lineWidth = 2;
       ctx.beginPath();
       hist.forEach((pt, i) => {
@@ -1853,7 +1978,7 @@
 
     // Draw Channel B: Signal (Cyan)
     if (state.channels.b) {
-      ctx.strokeStyle = '#33ccff';
+      ctx.strokeStyle = colors.cyan;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       hist.forEach((pt, i) => {
@@ -1868,7 +1993,7 @@
 
     // Draw Channel C: Buffer (Amber)
     if (state.channels.c) {
-      ctx.strokeStyle = '#ffaa00';
+      ctx.strokeStyle = colors.amber;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       hist.forEach((pt, i) => {
@@ -1881,9 +2006,9 @@
       ctx.stroke();
     }
 
-    // Draw Channel D: Entropy (Red)
+    // Draw Channel D: Entropy (Alert)
     if (state.channels.d) {
-      ctx.strokeStyle = '#ff3344';
+      ctx.strokeStyle = colors.alert;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       hist.forEach((pt, i) => {
@@ -1896,6 +2021,7 @@
       ctx.stroke();
     }
 
+    ctx.restore();
     requestAnimationFrame(drawScope);
   }
 
@@ -2257,13 +2383,30 @@
         importJson(e.target.files[0]);
       }
     });
-    document.getElementById('btnResetAll').addEventListener('click', () => {
-      if (confirm('Factory reset all telemetry buffers and configuration?')) {
-        localStorage.removeItem(SAVE_KEY);
-        localStorage.removeItem(TUT_KEY);
-        location.reload();
-      }
-    });
+    let resetConfirmPending = false;
+    let resetConfirmTimer = null;
+    const btnResetAll = document.getElementById('btnResetAll');
+    if (btnResetAll) {
+      btnResetAll.addEventListener('click', () => {
+        if (!resetConfirmPending) {
+          resetConfirmPending = true;
+          btnResetAll.textContent = 'CONFIRM RESET?';
+          btnResetAll.style.background = 'var(--alert)';
+          btnResetAll.style.color = '#fff';
+          resetConfirmTimer = setTimeout(() => {
+            resetConfirmPending = false;
+            btnResetAll.textContent = 'FACTORY RESET';
+            btnResetAll.style.background = '';
+            btnResetAll.style.color = '';
+          }, 3000);
+        } else {
+          clearTimeout(resetConfirmTimer);
+          localStorage.removeItem(SAVE_KEY);
+          localStorage.removeItem(TUT_KEY);
+          location.reload();
+        }
+      });
+    }
 
     // Radar Toolbar Buttons
     document.getElementById('btnRadarZoom').addEventListener('click', () => {
@@ -2415,16 +2558,24 @@
 
     // Global Hotkeys
     window.addEventListener('keydown', e => {
-      // Escape closes open modals & marks tutorial seen
+      // Escape closes only the topmost modal
       if (e.key === 'Escape') {
+        e.preventDefault();
         const tut = document.getElementById('tutorialModal');
         if (tut && tut.style.display !== 'none') {
           closeTutorial();
+          return;
+        }
+        const settings = document.getElementById('settingsModal');
+        if (settings && settings.style.display !== 'none') {
+          settings.style.display = 'none';
+          return;
         }
         const help = document.getElementById('helpModal');
-        if (help) help.style.display = 'none';
-        const settings = document.getElementById('settingsModal');
-        if (settings) settings.style.display = 'none';
+        if (help && help.style.display !== 'none') {
+          help.style.display = 'none';
+          return;
+        }
         const splash = document.getElementById('splashScreen');
         if (splash && splash.style.display !== 'none') {
           initAudio();
@@ -2433,13 +2584,22 @@
           if (!localStorage.getItem(TUT_KEY)) {
             openTutorial();
           }
+          return;
         }
         return;
       }
 
-      // If splash screen is active, Space or Enter begins operations
+      // If splash screen is active, wire [C] to resume and Enter/Space to start
       const splash = document.getElementById('splashScreen');
       if (splash && splash.style.display !== 'none') {
+        if (e.key === 'c' || e.key === 'C') {
+          e.preventDefault();
+          const btnResume = document.getElementById('btnSplashResume');
+          if (btnResume && !btnResume.disabled) {
+            btnResume.click();
+          }
+          return;
+        }
         if (e.key === 'Enter' || e.code === 'Space') {
           e.preventDefault();
           document.getElementById('btnSplashStart').click();
@@ -2447,8 +2607,17 @@
         }
       }
 
-      // If typing in input, don't trigger hotkeys
-      if (e.target.tagName === 'INPUT') return;
+      // Guard hotkeys when typing in input, select, textarea
+      const tag = e.target.tagName;
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+
+      // Guard hotkeys when any modal is open
+      const modalIds = ['splashScreen', 'helpModal', 'settingsModal', 'tutorialModal'];
+      const anyModalOpen = modalIds.some(id => {
+        const el = document.getElementById(id);
+        return el && el.style.display !== 'none';
+      });
+      if (anyModalOpen) return;
 
       if (e.key === 'F1') {
         e.preventDefault();
@@ -2465,16 +2634,18 @@
       } else if (e.code === 'Space') {
         e.preventDefault();
         document.getElementById('btnPauseStream').click();
-      } else if (e.key === 'p' || e.key === 'P') {
+      } else if (e.key === 'p' || e.key === 'P' || e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
         // Prev Node
+        e.preventDefault();
         const idx = state.nodes.findIndex(n => n.id === state.selectedId);
         const prev = (idx + state.nodes.length - 1) % state.nodes.length;
         state.selectedId = state.nodes[prev].id;
         playBlip(700);
         renderRoster();
         renderDetail();
-      } else if (e.key === 'n' || e.key === 'N') {
+      } else if (e.key === 'n' || e.key === 'N' || e.key === 'ArrowDown' || e.key === 'ArrowRight') {
         // Next Node
+        e.preventDefault();
         const idx = state.nodes.findIndex(n => n.id === state.selectedId);
         const next = (idx + 1) % state.nodes.length;
         state.selectedId = state.nodes[next].id;
