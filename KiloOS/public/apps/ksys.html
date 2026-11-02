@@ -80,7 +80,7 @@
 
     border-bottom: 1px solid var(--border-color);
 
-    padding: 10px 18px;
+    padding: 8px 16px;
 
     display: flex;
 
@@ -92,7 +92,7 @@
 
     flex-wrap: wrap;
 
-    gap: 10px;
+    gap: 8px;
 
   }
 
@@ -222,7 +222,7 @@
 
     display: flex;
 
-    padding: 0 16px;
+    padding: 0 10px;
 
     gap: 4px;
 
@@ -244,21 +244,17 @@
 
     border-bottom: 1px solid var(--border-color);
 
-    padding: 6px 16px;
+    padding: 4px 12px;
 
     display: flex;
 
-    gap: 8px;
+    gap: 4px 6px;
 
     align-items: center;
 
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
 
-    overflow-x: auto;
-
-    scrollbar-width: thin;
-
-    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
 
   }
 
@@ -272,9 +268,9 @@
 
     color: var(--text-main);
 
-    padding: 4px 10px;
+    padding: 3px 8px;
 
-    border-radius: 14px;
+    border-radius: 12px;
 
     font-size: 11px;
 
@@ -316,11 +312,11 @@
 
     background: rgba(255,255,255,0.08);
 
-    padding: 1px 4px;
+    padding: 1px 3px;
 
     border-radius: 3px;
 
-    font-size: 10px;
+    font-size: 9px;
 
     font-family: 'Consolas', monospace;
 
@@ -340,9 +336,9 @@
 
     color: var(--text-muted);
 
-    padding: 12px 18px;
+    padding: 8px 12px;
 
-    font-size: 13px;
+    font-size: 12px;
 
     font-weight: 600;
 
@@ -356,7 +352,7 @@
 
     align-items: center;
 
-    gap: 8px;
+    gap: 6px;
 
     flex-shrink: 0;
 
@@ -394,7 +390,7 @@
 
     overflow-y: auto;
 
-    padding: 20px;
+    padding: 12px 16px;
 
   }
 
@@ -448,7 +444,7 @@
 
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 
-    gap: 20px;
+    gap: 12px;
 
   }
 
@@ -462,9 +458,9 @@
 
     border: 1px solid var(--border-color);
 
-    border-radius: 12px;
+    border-radius: 10px;
 
-    padding: 20px;
+    padding: 14px 16px;
 
     box-shadow: var(--card-shadow);
 
@@ -480,9 +476,9 @@
 
     justify-content: space-between;
 
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 
-    padding-bottom: 10px;
+    padding-bottom: 8px;
 
     border-bottom: 1px solid var(--border-color);
 
@@ -514,7 +510,7 @@
 
     flex-direction: column;
 
-    gap: 10px;
+    gap: 6px;
 
   }
 
@@ -526,9 +522,11 @@
 
     justify-content: space-between;
 
-    align-items: center;
+    align-items: flex-start;
 
-    font-size: 13px;
+    gap: 8px;
+
+    font-size: 12px;
 
   }
 
@@ -537,6 +535,8 @@
   .info-label {
 
     color: var(--text-muted);
+
+    flex-shrink: 0;
 
   }
 
@@ -551,6 +551,12 @@
     color: var(--text-main);
 
     text-align: right;
+
+    word-break: break-word;
+
+    overflow-wrap: anywhere;
+
+    max-width: 62%;
 
   }
 
@@ -1802,17 +1808,17 @@
 
   <nav role="tablist" aria-label="System Diagnostics Navigation">
 
-    <button class="tab-btn active" id="tabbtn-inspector" role="tab" aria-selected="true" aria-controls="tab-inspector" onclick="switchTab('inspector')"><span>[1]</span> 🔍 Component Inspector</button>
+    <button class="tab-btn active" id="tabbtn-inspector" role="tab" aria-selected="true" aria-controls="tab-inspector" onclick="switchTab('inspector')"><span>[1]</span> 🔍 Inspector</button>
 
-    <button class="tab-btn" id="tabbtn-benchmarks" role="tab" aria-selected="false" aria-controls="tab-benchmarks" onclick="switchTab('benchmarks')"><span>[2]</span> ⚡ Diagnostic Benchmarks</button>
+    <button class="tab-btn" id="tabbtn-benchmarks" role="tab" aria-selected="false" aria-controls="tab-benchmarks" onclick="switchTab('benchmarks')"><span>[2]</span> ⚡ Benchmarks</button>
 
-    <button class="tab-btn" id="tabbtn-services" role="tab" aria-selected="false" aria-controls="tab-services" onclick="switchTab('services')"><span>[3]</span> ⚙️ Services & Telemetry</button>
+    <button class="tab-btn" id="tabbtn-services" role="tab" aria-selected="false" aria-controls="tab-services" onclick="switchTab('services')"><span>[3]</span> ⚙️ Services</button>
 
-    <button class="tab-btn" id="tabbtn-logs" role="tab" aria-selected="false" aria-controls="tab-logs" onclick="switchTab('logs')"><span>[4]</span> 📋 Event History Logs</button>
+    <button class="tab-btn" id="tabbtn-logs" role="tab" aria-selected="false" aria-controls="tab-logs" onclick="switchTab('logs')"><span>[4]</span> 📋 Event Logs</button>
 
-    <button class="tab-btn" id="tabbtn-export" role="tab" aria-selected="false" aria-controls="tab-export" onclick="switchTab('export')"><span>[5]</span> 💾 System Report Export</button>
+    <button class="tab-btn" id="tabbtn-export" role="tab" aria-selected="false" aria-controls="tab-export" onclick="switchTab('export')"><span>[5]</span> 💾 Report Export</button>
 
-    <button class="tab-btn" id="tabbtn-hex" role="tab" aria-selected="false" aria-controls="tab-hex" onclick="switchTab('hex')"><span>[6]</span> 🔬 Memory &amp; Hex Inspector</button>
+    <button class="tab-btn" id="tabbtn-hex" role="tab" aria-selected="false" aria-controls="tab-hex" onclick="switchTab('hex')"><span>[6]</span> 🔬 Hex Inspector</button>
 
   </nav>
 
@@ -1822,35 +1828,33 @@
 
   <div class="quick-actions-bar">
 
-    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-right: 4px;">⚡ Quick Actions:</span>
+    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-right: 2px;">⚡ Quick:</span>
 
     <button class="quick-chip" id="chip-audio-toggle" onclick="toggleAudio()" title="Toggle Yamaha YM2612 / SPC700 Audio (Shift+M)">🔊 Sound: ON <kbd>[Shift+M]</kbd></button>
 
-    <button class="quick-chip" onclick="switchTab('benchmarks'); runAllBenchmarks();" title="Run full benchmark suite (Hotkey: 2, then Space/R)">▶ Run Benchmarks <kbd>[2/R]</kbd></button>
+    <button class="quick-chip" onclick="switchTab('benchmarks'); runAllBenchmarks();" title="Run full benchmark suite (Hotkey: 2, then Space/R)">▶ Benchmarks <kbd>[2/R]</kbd></button>
 
-    <button class="quick-chip" id="chip-stress-toggle" onclick="switchTab('benchmarks'); toggleContinuousStress();" title="Toggle continuous diagnostic stress burn-in test (Hotkey: B)">🔥 Stress Mode <kbd>[B]</kbd></button>
-
-
+    <button class="quick-chip" id="chip-stress-toggle" onclick="switchTab('benchmarks'); toggleContinuousStress();" title="Toggle continuous diagnostic stress burn-in test (Hotkey: B)">🔥 Stress <kbd>[B]</kbd></button>
 
     <button class="quick-chip" onclick="refreshActiveView()" title="Refresh live telemetry and hardware metrics (Hotkey: R)">🔄 Refresh <kbd>[R]</kbd></button>
 
     <button class="quick-chip" onclick="switchTab('hex')" title="Inspect diagnostic buffers in hex viewer (Hotkey: 6 or X)">🔬 Hex <kbd>[6/X]</kbd></button>
 
-    <button class="quick-chip" onclick="quicksaveSnapshot()" title="Quicksave diagnostics snapshot to local storage (Hotkey: F5)">💾 Quicksave <kbd>[F5]</kbd></button>
+    <button class="quick-chip" onclick="quicksaveSnapshot()" title="Quicksave diagnostics snapshot to local storage (Hotkey: F5)">💾 Save <kbd>[F5]</kbd></button>
 
-    <button class="quick-chip" onclick="quickloadSnapshot()" title="Quickload diagnostics snapshot from local storage (Hotkey: F9)">📂 Quickload <kbd>[F9]</kbd></button>
+    <button class="quick-chip" onclick="quickloadSnapshot()" title="Quickload diagnostics snapshot from local storage (Hotkey: F9)">📂 Load <kbd>[F9]</kbd></button>
 
     <button class="quick-chip" onclick="triggerImportJson()" title="Import JSON diagnostics snapshot or report (Hotkey: I)">📥 Import <kbd>[I]</kbd></button>
 
     <button class="quick-chip" onclick="switchTab('services')" title="Manage system services and background daemons (Hotkey: 3)">⚙️ Services <kbd>[3]</kbd></button>
 
-    <button class="quick-chip" onclick="quickExportTxt()" title="Export text diagnostics report (Hotkey: E)">📄 Export TXT <kbd>[E]</kbd></button>
+    <button class="quick-chip" onclick="quickExportTxt()" title="Export text diagnostics report (Hotkey: E)">📄 TXT <kbd>[E]</kbd></button>
 
     <button class="quick-chip" onclick="downloadReport('csv')" title="Export CSV diagnostics report (Hotkey: V)">📑 CSV <kbd>[V]</kbd></button>
 
     <button class="quick-chip" onclick="downloadReport('md')" title="Export Markdown report (Hotkey: M)">📝 MD <kbd>[M]</kbd></button>
 
-    <button class="quick-chip" onclick="quickCopyReport()" title="Copy diagnostics report to clipboard">📋 Copy Report</button>
+    <button class="quick-chip" onclick="quickCopyReport()" title="Copy diagnostics report to clipboard">📋 Copy</button>
 
     <button class="quick-chip" onclick="showHelp()" title="Open Help and Keyboard Guide (Hotkey: F1 or H)">❓ Help <kbd>[F1]</kbd></button>
 
@@ -1868,29 +1872,29 @@
 
         <!-- System Health & Anomaly Card -->
 
-        <div class="card" style="grid-column: 1 / -1; border-color: rgba(74, 222, 128, 0.3); background: linear-gradient(135deg, rgba(24, 34, 52, 0.95), rgba(15, 23, 42, 0.98));">
+        <div class="card" style="grid-column: 1 / -1; border-color: rgba(74, 222, 128, 0.3); background: linear-gradient(135deg, rgba(24, 34, 52, 0.95), rgba(15, 23, 42, 0.98)); padding: 12px 16px;">
 
-          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px;">
 
             <h2>🩺 System Health &amp; Anomaly Diagnostic Index</h2>
 
             <div style="display: flex; align-items: center; gap: 8px;">
 
-              <span id="health-badge" class="svc-badge RUNNING" style="font-size: 12px; padding: 4px 10px;">100% • OPTIMAL</span>
+              <span id="health-badge" class="svc-badge RUNNING" style="font-size: 11px; padding: 2px 8px;">100% • OPTIMAL</span>
 
             </div>
 
           </div>
 
-          <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
+          <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 6px;">
 
-            <div style="flex: 1; min-width: 240px;">
+            <div style="flex: 1; min-width: 200px;">
 
-              <div class="meter-bar" style="height: 10px;"><div class="meter-fill" id="health-meter-bar" style="width: 100%; background: linear-gradient(90deg, #4ade80, #38bdf8);"></div></div>
+              <div class="meter-bar" style="height: 8px;"><div class="meter-fill" id="health-meter-bar" style="width: 100%; background: linear-gradient(90deg, #4ade80, #38bdf8);"></div></div>
 
             </div>
 
-            <div id="health-summary" style="font-size: 12px; color: var(--text-muted); font-family: monospace;">
+            <div id="health-summary" style="font-size: 11px; color: var(--text-muted); font-family: monospace;">
 
               Health Score: 100/100 • Subsystems nominal: CPU jitter 0ms | Heap 32% | Quota 2% | All Daemons OK
 
@@ -1898,13 +1902,13 @@
 
           </div>
 
-          <div id="health-advisory-list" style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <div id="health-advisory-list" style="display: flex; gap: 6px; flex-wrap: wrap;">
 
-            <span class="quick-chip" style="cursor: default; border-color: rgba(74, 222, 128, 0.3); color: #4ade80;">✔ Concurrency: Fully Distributed</span>
+            <span class="quick-chip" style="cursor: default; border-color: rgba(74, 222, 128, 0.3); color: #4ade80; padding: 2px 6px; font-size: 10px;">✔ Concurrency: Distributed</span>
 
-            <span class="quick-chip" style="cursor: default; border-color: rgba(56, 189, 248, 0.3); color: #38bdf8;">✔ WebGL Hardware Accelerated</span>
+            <span class="quick-chip" style="cursor: default; border-color: rgba(56, 189, 248, 0.3); color: #38bdf8; padding: 2px 6px; font-size: 10px;">✔ WebGL Hardware Accel</span>
 
-            <span class="quick-chip" style="cursor: default; border-color: rgba(192, 132, 252, 0.3); color: #c084fc;">✔ Memory Heap Within Baseline</span>
+            <span class="quick-chip" style="cursor: default; border-color: rgba(192, 132, 252, 0.3); color: #c084fc; padding: 2px 6px; font-size: 10px;">✔ Memory Within Baseline</span>
 
           </div>
 
@@ -1934,9 +1938,9 @@
 
           </div>
 
-          <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+          <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border-color);">
 
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between;">
+            <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; display: flex; justify-content: space-between;">
 
               <span>Logical Core Utilization Spectrum</span>
 
@@ -1944,7 +1948,7 @@
 
             </div>
 
-            <div id="cpu-core-spectrum" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 6px;">
+            <div id="cpu-core-spectrum" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px;">
 
               <!-- Dynamic Core Load Bars -->
 
@@ -2000,7 +2004,7 @@
 
             <div class="info-item"><span class="info-label">Device Pixel Ratio:</span><span class="info-val" id="gpu-dpr">--</span></div>
 
-            <div class="info-item"><span class="info-label">WebGL Renderer:</span><span class="info-val" id="gpu-renderer">--</span></div>
+            <div class="info-item"><span class="info-label">WebGL Renderer:</span><span class="info-val" id="gpu-renderer" style="font-size: 11px; line-height: 1.25; max-width: 62%;">--</span></div>
 
           </div>
 
@@ -7619,6 +7623,10 @@
 
       }
 
+      lastTelemetryTick = performance.now();
+
+      updateTelemetrySparklines();
+
       showToast('Flight recorder resumed: capturing live telemetry.', 'info');
 
     } else {
@@ -7730,6 +7738,8 @@
   // Live Telemetry Loop (Sparklines + CPU Load Sensing)
 
   function updateTelemetrySparklines() {
+
+    if (!isFlightRecording) return;
 
     const now = performance.now();
 
@@ -8685,21 +8695,29 @@
 
       container.innerHTML = '';
 
+      if (cores >= 8) {
+        container.style.gridTemplateColumns = 'repeat(8, 1fr)';
+        container.style.gap = '3px';
+      } else {
+        container.style.gridTemplateColumns = `repeat(${Math.max(2, cores)}, 1fr)`;
+        container.style.gap = '4px';
+      }
+
       for (let c = 0; c < cores; c++) {
 
         const coreBox = document.createElement('div');
 
         coreBox.id = `core-box-${c}`;
 
-        coreBox.style.cssText = 'background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 4px; padding: 6px; text-align: center;';
+        coreBox.style.cssText = 'background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 3px; padding: 2px 2px; text-align: center;';
 
         coreBox.innerHTML = `
 
-          <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 4px;">Core ${c}</div>
+          <div style="font-size: 9px; color: var(--text-muted); margin-bottom: 2px;">C${c}</div>
 
-          <div class="meter-bar" style="height: 6px;"><div class="meter-fill" id="core-fill-${c}" style="width: 10%;"></div></div>
+          <div class="meter-bar" style="height: 4px;"><div class="meter-fill" id="core-fill-${c}" style="width: 10%;"></div></div>
 
-          <div style="font-size: 10px; font-family: monospace; margin-top: 4px; color: var(--accent-blue);" id="core-val-${c}">10%</div>
+          <div style="font-size: 9px; font-family: monospace; margin-top: 2px; color: var(--accent-blue);" id="core-val-${c}">10%</div>
 
         `;
 

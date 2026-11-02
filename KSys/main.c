@@ -3426,7 +3426,7 @@ void MainEntry() {
 
 
 
-    HWND hwnd = CreateWindowEx(0, "KSysApp", "KSys Workstation Diagnostics - Press [1-5] for Tabs, [F1] for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KSysApp", "KSys Workstation Diagnostics - Press [1-6] for Tabs, [F1] for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
 
         CW_USEDEFAULT, CW_USEDEFAULT, realW, realH, NULL, NULL, hInstance, NULL);
 

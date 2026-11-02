@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KWizard
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KSys
+  kilo_usability: KHex
   kilo_qa: KBudget
   kilo_expander: KSys
   kilo_review: KChat
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KSys
-  timestamp: '2026-11-01T16:18:04-08:00'
+  timestamp: '2026-11-01T17:22:17-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -156,11 +156,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | **[ARGON REVIEW]:** Fix ReferenceError crash in startContinuousStress() (declare btn, chip, statusText, push stress samples to cpuHistory/cpu-sparkline/updateCpuSpectrum, and replace invalid burst/beep SFX keys), implement missing resetHexPage() for Home key on Tab 6, wire Potemkin toggleHexEndianness() so renderHexViewer() and #hex-stats-cursor format/decode Big vs Little Endian words, connect mod->modGain->car.frequency in playYm2612Sfx(), stop #telem-svc-val flickering between renderServices() and updateTelemetrySparklines(), and persist processes plus all 6 benchmark scores in autoSaveState() and handleImportJson(). |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KSys`
+- **Active Target**: `KHex`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | **[ARGON REVIEW]:** Fix 1024x731 horizontal clipping in sheet.png where nav clips Tab [5] and hides Tab [6] off-screen and .quick-actions-bar clips Quickload [F9] and hides 6 chips (compact .tab-btn padding/labels so all 6 tabs fit in 1024px and wrap/compact .quick-actions-bar), tighten 16-core #cpu-core-spectrum and .info-item WebGL Renderer wrapping so Tab 1 cards fit cleanly above 731px, and guard updateTelemetrySparklines() when !isFlightRecording so pausing/scrubbing #recorder-scrub is not overwritten 1s later. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -179,6 +178,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Compact header to 1 nowrap row (show SFX ON/OFF when BGM disabled), lock .game-view to 100vh flex column with scrollable #dynamic-content (compact/collapsible biome grid + grouped Town actions) and pinned compact #log-panel + #controls-panel so Hero Creation and Town buttons fit 1000x723 above the fold; add .sidebar sub-tabs (Hero / Bag / Quests) with [I] focus and top-right #toast; trap Esc and hotkeys inside #mp-modal-overlay + guard SELECTs; pause gfxLoop on document.hidden; and render Tavern NPC + Army/Siege sprites on #kquest-gfx-canvas. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | **[ARGON REVIEW]:** Compact header to 1 nowrap row (hide #musicToggleBtn and #btnMatrixMusicToggle when !window.__KILO_BGM_ENABLED and label #soundToggleBtn SFX ON/OFF [M]), narrow side panels (268px 1fr 278px) with compact 2-row center tabs and 82px #terminalLog so #sonarCanvas expands above 450x360, fix triple HUD collision inside .sonar-viewport by moving #sonarModeTag to bottom-left and narrowing #sonarOverlay/#sonarTargetHud, organize right panel into [HELM] [SYSTEMS] [OPS] sub-tabs and compact left gauges so 0 controls clip at 1040x683, add click-to-lock/steer on #sonarCanvas, and add devicePixelRatio HiDPI scaling to #hydrophoneScopeCanvas. |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Compact 4-row top chrome at 860x653 by removing redundant #quickBitSummary from #kcalcExpBar, merging searchable 20-item CONSTANTS_DB into #view-constants (removing duplicate Constants modal button), unifying #memBadge/#memModal with M0-M7 Memory Bank (M0 = active memory), adding a RAD evaluation notice badge in #view-calculus, and redrawing HiDPI #regressionCanvas via requestAnimationFrame on switchView(statistics) and switchStatsTool(2var). |
+| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | **[ARGON REVIEW]:** Fix 1024x731 horizontal clipping in sheet.png where nav clips Tab [5] and hides Tab [6] off-screen and .quick-actions-bar clips Quickload [F9] and hides 6 chips (compact .tab-btn padding/labels so all 6 tabs fit in 1024px and wrap/compact .quick-actions-bar), tighten 16-core #cpu-core-spectrum and .info-item WebGL Renderer wrapping so Tab 1 cards fit cleanly above 731px, and guard updateTelemetrySparklines() when !isFlightRecording so pausing/scrubbing #recorder-scrub is not overwritten 1s later. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KBudget`
@@ -314,6 +314,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T17:22:17-08:00 — kilo-usability: KSys (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KSys across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-01T16:18:04-08:00 — kilo-tester: KSys (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 216.5 KB, native 40.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 7.04%, HEAD Δ 0.03%, 0 fail, 0 warn, 6.2s)).
   - UI & Audio Audit: Fixed ReferenceError in startContinuousStress, implemented resetHexPage for Home on Tab 6, wired toggleHexEndianness to renderHexViewer and hex-stats-cursor, connected mod->modGain->car.frequency in playYm2612Sfx.
@@ -338,10 +343,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Runtime & Potemkin Findings: startContinuousStress() crashes with ReferenceError (undeclared btn/chip/statusText), Home key on Hex tab crashes calling undefined resetHexPage(), toggleHexEndianness() is a no-op Potemkin toggle, and playYm2612Sfx() bypasses modGain.
   - Visual/UX & Parity Findings: Top nav clips Tab [5] and hides Tab [6] at 1024px width, Quick Actions bar clips Quickload and hides 6 chips, Flight Recorder scrubbing is overwritten after 1s, ksys.html lacks VFS/IPC hooks, and KSys/main.c leaves hBtnGdi/Crypto/Jitter/Probe unwired and resets scroll every 1s.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KSys`, `kilo-usability`->`KSys`, `kilo-expander`->`KSys`] (un-quarantined `KSys` from Mature); advanced `kilo-review` to `KChat`; next agent `kilo-creator`.
-
-- **2026-11-01T13:20:42-08:00 — kilo-expander: KSteno (KSteno Phase VI VFS Carrier Pipeline & KCipher IPC)**
-  - Status: PASS ✅ (0 errors, web 184.1 KB, native 20.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.78%, HEAD Δ 0.53%, 0 fail, 0 warn, 9.0s)).
-  - Added KiloOS VFS Carrier Vault picker modal for loading/saving steganographic carrier images and WAVs to /home/media/ without blocking prompt() dialogs.
-  - Fixed KCipher IPC payload extraction passphrase binding and origin validation in postMessage handlers.
-  - Maintained dual Win32 C parity in KSteno/main.c with native Chi-Square PoV steganalysis, steno_extracted.txt dispatch, and KCipher window IPC focus.
-  - Handoff: Advanced `kilo-expander` to `KHex`; rotated active agent to `kilo-review`.
