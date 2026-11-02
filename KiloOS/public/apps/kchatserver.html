@@ -232,7 +232,7 @@
 
         .log-entry {
             margin: 0;
-            word-break: break-all;
+            overflow-wrap: break-word;
         }
 
         .log-time {
@@ -276,7 +276,7 @@
 
         .telemetry-card-title {
             color: #555;
-            font-size: 9px;
+            font-size: 10px;
             text-transform: uppercase;
         }
 
@@ -293,7 +293,27 @@
             flex: 1;
             background: #fff;
             overflow-y: auto;
+            overflow-x: auto;
             min-height: 100px;
+        }
+
+        .badge-proto {
+            display: inline-block;
+            padding: 1px 4px;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 2px;
+            line-height: 1.2;
+        }
+
+        .badge-proto.proto-ws {
+            background: #0284c7;
+            color: #ffffff;
+        }
+
+        .badge-proto.proto-tcp {
+            background: #475569;
+            color: #ffffff;
         }
 
         table.client-table {
@@ -330,7 +350,7 @@
         }
 
         .btn-kick {
-            font-size: 9px;
+            font-size: 10px;
             padding: 0 4px;
             color: #a00000;
         }
@@ -352,6 +372,8 @@
             display: flex;
             align-items: center;
             gap: 2px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .broadcast-input {
@@ -386,8 +408,8 @@
         /* HUD Toast */
         .hud-toast {
             position: absolute;
-            bottom: 34px;
-            right: 12px;
+            top: 8px;
+            right: 10px;
             background: #000080;
             color: #fff;
             padding: 4px 10px;
@@ -421,8 +443,8 @@
 
         .modal-window {
             background: var(--win-bg);
-            width: 440px;
-            max-width: 94vw;
+            width: 470px;
+            max-width: 96vw;
             box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
             display: flex;
             flex-direction: column;
@@ -443,36 +465,51 @@
             background: var(--win-bg);
             border: 1px solid;
             border-color: var(--win-high) var(--win-shadow) var(--win-shadow) var(--win-high);
-            font-size: 9px;
+            font-size: 10px;
             padding: 1px 4px;
             line-height: 1;
             cursor: pointer;
         }
 
         .modal-body {
-            padding: 10px 12px;
-            line-height: 1.4;
+            padding: 6px 10px;
+            line-height: 1.35;
             font-size: 11px;
             max-height: 75vh;
             overflow-y: auto;
         }
 
         .modal-body h4 {
-            margin: 0 0 4px 0;
+            margin: 0 0 3px 0;
+            font-size: 11px;
             color: #000080;
         }
 
-        .modal-body ul {
-            margin: 3px 0 8px 18px;
-            padding: 0;
+        .modal-arch-desc {
+            margin: 0 0 5px 0;
+            font-size: 10.5px;
+            color: #222;
         }
 
-        .modal-body li {
-            margin-bottom: 3px;
+        .shortcuts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3px 8px;
+            margin: 2px 0 4px 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .shortcuts-grid li {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10.5px;
+            white-space: nowrap;
         }
 
         .modal-footer {
-            padding: 6px 12px 10px;
+            padding: 4px 10px 8px;
             display: flex;
             justify-content: flex-end;
             gap: 6px;
@@ -480,11 +517,21 @@
 
         kbd {
             background: #f0f0f0;
+            color: #111;
             border: 1px solid #999;
             border-radius: 2px;
             padding: 0 3px;
             font-family: var(--font-mono);
             font-size: 10px;
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .console-container kbd,
+        #console-logs kbd {
+            background: #1e293b;
+            color: #38ef7d;
+            border: 1px solid #475569;
+            box-shadow: 0 1px 0 #0f172a;
         }
     </style>
 </head>
@@ -542,10 +589,10 @@
         <!-- Tab Strip -->
         <div class="tab-strip" role="tablist">
             <button id="tab-btn-console" class="tab-btn bevel-outset active" role="tab" aria-selected="true" aria-controls="console-logs">
-                📋 Console Logs
+                📋 [1] Console Logs
             </button>
             <button id="tab-btn-telemetry" class="tab-btn bevel-outset" role="tab" aria-selected="false" aria-controls="telemetry-view">
-                👥 Client Telemetry (<span id="tab-client-count">0</span>)
+                👥 [2] Client Telemetry (<span id="tab-client-count">0</span>)
             </button>
         </div>
 
@@ -554,7 +601,7 @@
             <!-- Terminal Console (Tab 1) -->
             <main class="console-container" id="console-logs" role="tabpanel" aria-live="polite" aria-label="Server activity console">
                 <p class="log-entry"><span class="log-time">[BOOT]</span> <span class="log-tag-info">KChat Server 1.0 (WinSock2 Multi-Client Host)</span></p>
-                <p class="log-entry"><span class="log-time">[HINT]</span> Press <kbd>S</kbd> to launch daemon, <kbd>B</kbd> to broadcast, <kbd>F5</kbd>/<kbd>F9</kbd> for quicksave/load, <kbd>F1</kbd> for guide.</p>
+                <p class="log-entry"><span class="log-time">[HINT]</span> Press <kbd>S</kbd> daemon, <kbd>1</kbd>/<kbd>2</kbd> tabs, <kbd>B</kbd> broadcast, <kbd>F5</kbd>/<kbd>F9</kbd> save/load, <kbd>F1</kbd> guide.</p>
             </main>
 
             <!-- Telemetry & Client Roster View (Tab 2) -->
@@ -624,7 +671,7 @@
                 <option value="#kchat">#kchat</option>
                 <option value="#dev">#dev</option>
             </select>
-            <input type="text" id="input-broadcast" class="bevel-inset broadcast-input" placeholder="Enter broadcast message and press Enter..." aria-label="Broadcast announcement text">
+            <input type="text" id="input-broadcast" class="bevel-inset broadcast-input" placeholder="Broadcast message... [Enter]" aria-label="Broadcast announcement text">
             <button id="btn-send-broadcast" class="btn-primary" title="Transmit announcement to clients [Enter]">
                 Transmit
             </button>
@@ -649,25 +696,20 @@
             </div>
             <div class="modal-body">
                 <h4>Network Architecture & Dual Protocols</h4>
-                <p>KChat Server hosts multi-client TCP chat rooms for KChat peers on LAN or WAN networks with dual-stack support:</p>
-                <ul>
-                    <li><b>WebSocket RFC 6455:</b> Web-based KChat clients handshake via HTTP/1.1 101 Switching Protocols with SHA-1 key verification.</li>
-                    <li><b>Raw TCP WinSock:</b> Native clients exchange newline-terminated ASCII packets directly on the configured port.</li>
-                    <li><b>Broadcast Console:</b> Transmit system-level announcements across individual channels or globally to all connected peer slots.</li>
-                    <li><b>Client Telemetry:</b> Monitor active sockets, peak connections, packet telemetry, bandwidth counters, and ping latency in real-time.</li>
-                </ul>
+                <p class="modal-arch-desc">Hosts multi-client TCP chat rooms with WebSocket RFC 6455 and Raw TCP WinSock dual-stack support, global/channel broadcast console, and real-time socket telemetry.</p>
 
                 <h4>Keyboard Shortcuts & Operational Controls</h4>
-                <ul>
-                    <li><kbd>S</kbd> — Start / Stop server daemon</li>
-                    <li><kbd>B</kbd> — Focus System Broadcast Console input</li>
-                    <li><kbd>Enter</kbd> — Transmit broadcast announcement (when focused)</li>
-                    <li><kbd>F5</kbd> — QuickSave server state and telemetry to local storage</li>
-                    <li><kbd>F9</kbd> — QuickLoad server state and telemetry from local storage</li>
-                    <li><kbd>C</kbd> — Copy connection string (IP:Port) to clipboard</li>
-                    <li><kbd>L</kbd> — Clear console output buffer</li>
-                    <li><kbd>F1</kbd> — Toggle this Operations Manual</li>
-                    <li><kbd>Esc</kbd> — Dismiss open dialog</li>
+                <ul class="shortcuts-grid">
+                    <li><kbd>S</kbd><span>Start / Stop daemon</span></li>
+                    <li><kbd>F5</kbd><span>QuickSave state</span></li>
+                    <li><kbd>B</kbd><span>Focus broadcast input</span></li>
+                    <li><kbd>F9</kbd><span>QuickLoad state</span></li>
+                    <li><kbd>1</kbd>/<kbd>2</kbd><span>Console / Telemetry</span></li>
+                    <li><kbd>F1</kbd><span>Operations Manual</span></li>
+                    <li><kbd>C</kbd><span>Copy IP:Port</span></li>
+                    <li><kbd>Enter</kbd><span>Transmit broadcast</span></li>
+                    <li><kbd>L</kbd><span>Clear console log</span></li>
+                    <li><kbd>Esc</kbd><span>Dismiss modal dialog</span></li>
                 </ul>
             </div>
             <div class="modal-footer">
@@ -884,11 +926,15 @@
                 let html = '';
                 for (let i = 0; i < clients.length; i++) {
                     const c = clients[i];
+                    const isWs = c.proto === 'WebSocket';
+                    const protoBadge = isWs
+                        ? '<span class="badge-proto proto-ws">WS</span>'
+                        : '<span class="badge-proto proto-tcp">TCP</span>';
                     html += '<tr>' +
                         '<td>' + c.id + '</td>' +
                         '<td><b>' + escapeHtml(c.nick) + '</b></td>' +
                         '<td>' + escapeHtml(c.room) + '</td>' +
-                        '<td>' + c.proto + '</td>' +
+                        '<td>' + protoBadge + '</td>' +
                         '<td>' + c.ip + '</td>' +
                         '<td>' + c.latency + ' ms</td>' +
                         '<td>' + c.msgs + '</td>' +
@@ -1420,37 +1466,64 @@
 
             // Keyboard navigation & shortcuts
             window.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (helpModal.classList.contains('active')) {
+                        e.preventDefault();
+                        toggleHelp(false);
+                    }
+                    return;
+                }
                 if (e.key === 'F1') {
                     e.preventDefault();
                     toggleHelp();
-                } else if (e.key === 'F5') {
+                    return;
+                }
+
+                // Guard all hotkeys when help modal is open
+                if (helpModal.classList.contains('active')) {
+                    return;
+                }
+
+                // Check if any form input / select / textarea is focused
+                const isFormInput = document.activeElement && (
+                    document.activeElement.tagName === 'INPUT' ||
+                    document.activeElement.tagName === 'SELECT' ||
+                    document.activeElement.tagName === 'TEXTAREA'
+                );
+
+                if (e.key === 'F5') {
                     e.preventDefault();
                     quickSave();
+                    return;
                 } else if (e.key === 'F9') {
                     e.preventDefault();
                     quickLoad();
-                } else if (e.key === 'Escape') {
-                    if (helpModal.classList.contains('active')) {
-                        toggleHelp(false);
-                    }
-                } else if (!e.ctrlKey && !e.metaKey && !e.altKey &&
-                    document.activeElement.tagName !== 'INPUT' &&
-                    document.activeElement.tagName !== 'SELECT' &&
-                    document.activeElement.tagName !== 'TEXTAREA') {
-                    if (e.key === 's' || e.key === 'S') {
-                        e.preventDefault();
-                        toggleServer();
-                    } else if (e.key === 'b' || e.key === 'B') {
-                        e.preventDefault();
-                        inputBroadcast.focus();
-                    } else if (e.key === 'c' || e.key === 'C') {
-                        e.preventDefault();
-                        copyConnectionString();
-                    } else if (e.key === 'l' || e.key === 'L') {
-                        e.preventDefault();
-                        consoleLogs.innerHTML = '';
-                        logMessage('[SYS]', 'Console log buffer cleared.', 'log-tag-sys');
-                    }
+                    return;
+                }
+
+                if (e.ctrlKey || e.metaKey || e.altKey || isFormInput) {
+                    return;
+                }
+
+                if (e.key === '1') {
+                    e.preventDefault();
+                    switchTab('console');
+                } else if (e.key === '2') {
+                    e.preventDefault();
+                    switchTab('telemetry');
+                } else if (e.key === 's' || e.key === 'S') {
+                    e.preventDefault();
+                    toggleServer();
+                } else if (e.key === 'b' || e.key === 'B') {
+                    e.preventDefault();
+                    inputBroadcast.focus();
+                } else if (e.key === 'c' || e.key === 'C') {
+                    e.preventDefault();
+                    copyConnectionString();
+                } else if (e.key === 'l' || e.key === 'L') {
+                    e.preventDefault();
+                    consoleLogs.innerHTML = '';
+                    logMessage('[SYS]', 'Console log buffer cleared.', 'log-tag-sys');
                 }
             });
 

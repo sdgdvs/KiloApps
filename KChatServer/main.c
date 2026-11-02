@@ -165,7 +165,11 @@ typedef struct {
 
 struct Client clients[MAX_CLIENTS];
 SOCKET listenSocket = INVALID_SOCKET;
+static int g_dpi = 96;
+#define SCALE(x) MulDiv((x), g_dpi, 96)
+
 HWND hLog, hPort, hBtn, hMotd, hBroadcast, hBtnBroadcast, hBtnSave, hBtnLoad, hBtnClear, hBtnHelp, hTelemetry;
+HWND hLblPort = NULL, hLblMotd = NULL, hLblBroadcast = NULL;
 HFONT hUIFont = NULL;
 char logBuf[16384] = "";
 char motd[256] = "Welcome to KChat!";
@@ -608,44 +612,47 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 clients[i].buf_len = 0;
             }
 
-            // Row 1: Port, MOTD, Start/Stop Button, Help
-            CreateWindowA("STATIC", "Port:", WS_CHILD|WS_VISIBLE, 10, 10, 36, 20, hwnd, 0, 0, 0);
-            hPort = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6667", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 48, 8, 54, 22, hwnd, 0, 0, 0);
-            
-            CreateWindowA("STATIC", "MOTD:", WS_CHILD|WS_VISIBLE, 110, 10, 42, 20, hwnd, 0, 0, 0);
-            hMotd = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KChat!", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 155, 8, 160, 22, hwnd, 0, 0, 0);
-            
-            hBtn = CreateWindowA("BUTTON", "Start", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 322, 7, 58, 24, hwnd, (HMENU)100, 0, 0);
-            hBtnHelp = CreateWindowA("BUTTON", "Help F1", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 386, 7, 68, 24, hwnd, (HMENU)104, 0, 0);
-
-            // Row 2: Broadcast Console
-            CreateWindowA("STATIC", "Broadcast:", WS_CHILD|WS_VISIBLE, 10, 38, 64, 20, hwnd, 0, 0, 0);
-            hBroadcast = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 76, 36, 280, 22, hwnd, 0, 0, 0);
-            hBtnBroadcast = CreateWindowA("BUTTON", "Send", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 362, 35, 92, 24, hwnd, (HMENU)101, 0, 0);
-
-            // Row 3: Persistence Buttons & Live Telemetry
-            hBtnSave = CreateWindowA("BUTTON", "Save F5", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 10, 64, 62, 22, hwnd, (HMENU)102, 0, 0);
-            hBtnLoad = CreateWindowA("BUTTON", "Load F9", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 76, 64, 62, 22, hwnd, (HMENU)103, 0, 0);
-            hBtnClear = CreateWindowA("BUTTON", "Clear", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 142, 64, 52, 22, hwnd, (HMENU)105, 0, 0);
-            
-            hTelemetry = CreateWindowA("STATIC", "Clients: 0/64 (Peak: 0) | Pkts: 0/0", WS_CHILD|WS_VISIBLE|SS_LEFT, 204, 68, 255, 18, hwnd, 0, 0, 0);
-
-            // Row 4: Console Log Output
-            hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY|WS_TABSTOP, 10, 92, 452, 290, hwnd, 0, 0, 0);
-            
-            int dpi = 96;
             HDC hdc = GetDC(NULL);
             if (hdc) {
-                dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+                g_dpi = GetDeviceCaps(hdc, LOGPIXELSY);
                 ReleaseDC(NULL, hdc);
             }
-            int fontHeight = -MulDiv(9, dpi, 72);
+
+            // Row 1: Port, MOTD, Start/Stop Button, Help
+            hLblPort = CreateWindowA("STATIC", "Port:", WS_CHILD|WS_VISIBLE, SCALE(10), SCALE(10), SCALE(36), SCALE(20), hwnd, 0, 0, 0);
+            hPort = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6667", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(48), SCALE(8), SCALE(54), SCALE(22), hwnd, 0, 0, 0);
+            
+            hLblMotd = CreateWindowA("STATIC", "MOTD:", WS_CHILD|WS_VISIBLE, SCALE(110), SCALE(10), SCALE(42), SCALE(20), hwnd, 0, 0, 0);
+            hMotd = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KChat!", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(155), SCALE(8), SCALE(160), SCALE(22), hwnd, 0, 0, 0);
+            
+            hBtn = CreateWindowA("BUTTON", "Start", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(322), SCALE(7), SCALE(58), SCALE(24), hwnd, (HMENU)100, 0, 0);
+            hBtnHelp = CreateWindowA("BUTTON", "Help F1", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(386), SCALE(7), SCALE(68), SCALE(24), hwnd, (HMENU)104, 0, 0);
+
+            // Row 2: Broadcast Console
+            hLblBroadcast = CreateWindowA("STATIC", "Broadcast:", WS_CHILD|WS_VISIBLE, SCALE(10), SCALE(38), SCALE(64), SCALE(20), hwnd, 0, 0, 0);
+            hBroadcast = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(76), SCALE(36), SCALE(280), SCALE(22), hwnd, 0, 0, 0);
+            hBtnBroadcast = CreateWindowA("BUTTON", "Send", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(362), SCALE(35), SCALE(92), SCALE(24), hwnd, (HMENU)101, 0, 0);
+
+            // Row 3: Persistence Buttons & Live Telemetry
+            hBtnSave = CreateWindowA("BUTTON", "Save F5", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(10), SCALE(64), SCALE(62), SCALE(22), hwnd, (HMENU)102, 0, 0);
+            hBtnLoad = CreateWindowA("BUTTON", "Load F9", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(76), SCALE(64), SCALE(62), SCALE(22), hwnd, (HMENU)103, 0, 0);
+            hBtnClear = CreateWindowA("BUTTON", "Clear", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(142), SCALE(64), SCALE(52), SCALE(22), hwnd, (HMENU)105, 0, 0);
+            
+            hTelemetry = CreateWindowA("STATIC", "Clients: 0/64 (Peak: 0) | Pkts: 0/0", WS_CHILD|WS_VISIBLE|SS_LEFT, SCALE(204), SCALE(68), SCALE(255), SCALE(18), hwnd, 0, 0, 0);
+
+            // Row 4: Console Log Output
+            hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY|WS_TABSTOP, SCALE(10), SCALE(92), SCALE(452), SCALE(290), hwnd, 0, 0, 0);
+            
+            int fontHeight = -MulDiv(9, g_dpi, 72);
             hUIFont = CreateFontA(fontHeight, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             
+            SendMessageA(hLblPort, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hPort, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hLblMotd, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hMotd, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hLblBroadcast, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBroadcast, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnBroadcast, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnSave, WM_SETFONT, (WPARAM)hUIFont, TRUE);
@@ -657,6 +664,64 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             Log("[BOOT] KChat Server 1.0 (WinSock2 Multi-Client Host)");
             Log("[HINT] Press S to start, F5/F9 for quicksave/load, F1 for manual.");
             UpdateTelemetryUI();
+            break;
+        }
+        case WM_GETMINMAXINFO: {
+            MINMAXINFO* mmi = (MINMAXINFO*)lParam;
+            mmi->ptMinTrackSize.x = SCALE(440);
+            mmi->ptMinTrackSize.y = SCALE(300);
+            return 0;
+        }
+        case WM_SIZE: {
+            int clientW = LOWORD(lParam);
+            int clientH = HIWORD(lParam);
+            if (clientW <= 0 || clientH <= 0 || !hLog) break;
+
+            int pad = SCALE(6);
+            int margin = SCALE(10);
+            int rightEdge = clientW - margin;
+
+            // Row 1: Port, MOTD, Start/Stop Button, Help
+            int helpW = SCALE(68);
+            int startW = SCALE(58);
+            int helpX = rightEdge - helpW;
+            int startX = helpX - pad - startW;
+            int motdX = SCALE(155);
+            int motdW = startX - pad - motdX;
+            if (motdW < SCALE(60)) motdW = SCALE(60);
+
+            MoveWindow(hLblPort, margin, SCALE(10), SCALE(36), SCALE(20), TRUE);
+            MoveWindow(hPort, SCALE(48), SCALE(8), SCALE(54), SCALE(22), TRUE);
+            MoveWindow(hLblMotd, SCALE(110), SCALE(10), SCALE(42), SCALE(20), TRUE);
+            MoveWindow(hMotd, motdX, SCALE(8), motdW, SCALE(22), TRUE);
+            MoveWindow(hBtn, startX, SCALE(7), startW, SCALE(24), TRUE);
+            MoveWindow(hBtnHelp, helpX, SCALE(7), helpW, SCALE(24), TRUE);
+
+            // Row 2: Broadcast Console
+            int sendW = SCALE(80);
+            int sendX = rightEdge - sendW;
+            int bcastX = SCALE(76);
+            int bcastW = sendX - pad - bcastX;
+            if (bcastW < SCALE(80)) bcastW = SCALE(80);
+
+            MoveWindow(hLblBroadcast, margin, SCALE(38), SCALE(64), SCALE(20), TRUE);
+            MoveWindow(hBroadcast, bcastX, SCALE(36), bcastW, SCALE(22), TRUE);
+            MoveWindow(hBtnBroadcast, sendX, SCALE(35), sendW, SCALE(24), TRUE);
+
+            // Row 3: Persistence Buttons & Live Telemetry
+            MoveWindow(hBtnSave, margin, SCALE(64), SCALE(62), SCALE(22), TRUE);
+            MoveWindow(hBtnLoad, SCALE(76), SCALE(64), SCALE(62), SCALE(22), TRUE);
+            MoveWindow(hBtnClear, SCALE(142), SCALE(64), SCALE(52), SCALE(22), TRUE);
+            int telemX = SCALE(202);
+            int telemW = rightEdge - telemX;
+            if (telemW < SCALE(100)) telemW = SCALE(100);
+            MoveWindow(hTelemetry, telemX, SCALE(68), telemW, SCALE(18), TRUE);
+
+            // Row 4: Console Log Output
+            int logTop = SCALE(92);
+            int logH = clientH - logTop - margin;
+            if (logH < SCALE(60)) logH = SCALE(60);
+            MoveWindow(hLog, margin, logTop, clientW - (margin * 2), logH, TRUE);
             break;
         }
         case WM_COMMAND: {
@@ -856,6 +921,11 @@ void __stdcall MainEntry() {
         SetProcessDPIAwareFunc setDpiAware = (SetProcessDPIAwareFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
         if (setDpiAware) setDpiAware();
     }
+    HDC hdc = GetDC(NULL);
+    if (hdc) {
+        g_dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+        ReleaseDC(NULL, hdc);
+    }
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleA(NULL);
     wc.lpszClassName = "KChatServerClass";
@@ -864,8 +934,8 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     HWND hwnd = CreateWindowExA(0, "KChatServerClass", "KChat Server (WinSock2 Multi-Client Host)",
-        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, 488, 436, NULL, NULL, wc.hInstance, NULL);
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT, SCALE(496), SCALE(444), NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

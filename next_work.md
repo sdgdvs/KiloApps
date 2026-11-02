@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KAlchemy
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KChatServer
+  kilo_usability: KHex
   kilo_qa: KFont
   kilo_expander: KChatServer
   kilo_review: KMedia
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KChatServer
-  timestamp: '2026-11-02T09:19:11-08:00'
+  timestamp: '2026-11-02T09:38:06-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -158,11 +158,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | **[ARGON REVIEW]:** Require isRunning in sendBroadcast() (warn when offline instead of inflating packetsOut/bytesTransferred) and filter recipients by selectRoomTarget.value (#general/#kchat/#dev vs GLOBAL); fix F5/F9 quickSave/quickLoad to persist nextClientId and elapsedSec, restore empty clients arrays, skip startServer() auto-seed timers on load, and sync offline lblPort; clamp #input-port (1024..65535) and #input-max-clients (1..256) with live offline header sync, cap #console-logs at 250 entries, and unify visibilitychange timerSimTraffic so join/quit simulation and ping jitter survive tab hide/show; in KChatServer/main.c buffer Raw TCP until newline and loop all coalesced lines in ProcessData(), close socket and decrement g_activeClients on WebSocket opcode 8 Close (and reply Pong 0x8A to opcode 9 Ping while rejecting oversized len-127 frames), wire documented [S] hotkey in MainEntry() when EDITs are unfocused, add SO_REUSEADDR + 1..65535 port clamp, and deduplicate /list rooms. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KChatServer`
+- **Active Target**: `KHex`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | **[ARGON REVIEW]:** Fix invisible white-on-white kbd tags inside dark #console-logs (sheet.png Panels 2-3) with explicit dark-terminal keycap contrast, compact #help-modal .modal-body with a 2-column shortcuts grid so 100% fits 520x403 without mid-line clipping (Panel 1), change .log-entry from word-break break-all to overflow-wrap break-word, move #hud-toast to top-right of .view-content so it stops covering bottom console lines (Panel 3), add white-space nowrap to .broadcast-toolbar label with a shorter #input-broadcast placeholder, raise 9px fonts to >=10px and fit #client-table cleanly in 520px (WS/TCP badges + overflow-x auto), guard hotkeys when #help-modal is open or SELECT is focused while adding [1]/[2] tab hotkeys, and add DPI-scaled coordinates plus WS_THICKFRAME/WM_SIZE resizing in KChatServer/main.c. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -185,6 +184,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | **[ARGON REVIEW]:** Fix 850x613 layout clipping and chrome bloat in kchat.html (sheet.png Panels 1-2) by widening #port to 64px (padding 6px 8px so '6667' stops clipping to '666'), separating #channelBar and the search/tools strip into two compact nowrap rows with tighter button/header padding so #log reclaims >100px height and displays both boot cards without scrolling past the poll header, and restoring the Switcher [K] button (and #spoolBadge) inside renderChannelBar() which currently wipes Switcher [K] on boot; move #toast from top 86px (where it overlaps #helpModal and #channelBar) to bottom-right above .input-bar and skip redundant boot welcome toasts; compact #helpModal into a 2-column reference layout so Shortcuts, Slash Commands, and Close [Esc] fit 850x613 without clipping; add a clickable #nickBadge showing currentUsername for quick nickname edits; and replace anachronistic '(Firebase)' UI labels with 'KiloNet Global Relay'. |
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | **[ARGON REVIEW]:** Fix 1060x683 clipping and wrapping in kfleet.html (sheet.png Panels 1-3) by adding white-space nowrap to header and .scope-toolbar (compact labels CH A..D), reducing .bottom-row to 134px, and compacting .detail-content + 2-col .subsystems-box so all 8 .actions-box buttons fit 100% visible above the fold with 0px scroll; arrange #splashScreen .splash-buttons in a 2x2 nowrap grid and raise 9px fonts to >=10px; add resize-only devicePixelRatio HiDPI scaling to #radarCanvas and #scopeCanvas (using CSS rect.width/height in setupRadarInteraction), read active CSS theme variables so Amber/Cyan themes recolor both canvases, keep radar range rings inside viewport on 1.5X/2.2X zoom with edge-clamped outer contacts, make Escape close only the topmost modal, wire [C] on #splashScreen to #btnSplashResume, guard hotkeys when modals are open or in INPUT/SELECT/TEXTAREA, add Arrow-key node cycling, and replace confirm() in #btnResetAll with inline 2-click confirmation. |
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | **[ARGON REVIEW]:** Eliminate 293px vertical scroll overflow at 1040x803 in kaudio.html (sheet.png Panels 2-3 clipping piano labels and hiding .sequencer-panel off-screen) by consolidating the 7 export/import header buttons into a compact #exportFormatSelect (WAV, MIDI, AU, 8SVX) + #btnExportMaster bar, organizing the Right Panel DSP FX Rack into compact [DELAY/SPC] [DRIVE/DAC] [CHORUS] sub-tabs so .panels-grid stays compact even with #fmControls open, and tightening .key (82px) and .step-btn (20px) so 100% of the workstation fits above the fold with 0px scroll; move #toastContainer to bottom-right (max 2 toasts, skipping redundant 400ms boot toast when #helpModal is open); raise 8px-9px .key-note and #visCanvas fonts to >= 10px (0 tiny-text nodes); add mouse-drag glissando on .key, trap Tab focus and block synth hotkeys while #helpModal or #jamModal is open, rename anachronistic Firebase RTDB labels to KiloNet Studio Relay, and fix KAudio/main.c WM_PAINT header title colliding with Save [F5] at x=650 plus replace UTF-8 emojis in TextOutA/SetStatus with clean ASCII. |
+| `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | **[ARGON REVIEW]:** Fix invisible white-on-white kbd tags inside dark #console-logs (sheet.png Panels 2-3) with explicit dark-terminal keycap contrast, compact #help-modal .modal-body with a 2-column shortcuts grid so 100% fits 520x403 without mid-line clipping (Panel 1), change .log-entry from word-break break-all to overflow-wrap break-word, move #hud-toast to top-right of .view-content so it stops covering bottom console lines (Panel 3), add white-space nowrap to .broadcast-toolbar label with a shorter #input-broadcast placeholder, raise 9px fonts to >=10px and fit #client-table cleanly in 520px (WS/TCP badges + overflow-x auto), guard hotkeys when #help-modal is open or SELECT is focused while adding [1]/[2] tab hotkeys, and add DPI-scaled coordinates plus WS_THICKFRAME/WM_SIZE resizing in KChatServer/main.c. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KFont`
@@ -321,6 +321,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T09:38:06-08:00 — kilo-usability: KChatServer (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 60.2 KB, native 20.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.02%, HEAD Δ 7.42%, 0 fail, 0 warn, 4.8s)).
+  - Layout & Contrast: Dark-terminal phosphor-green kbd keycaps, compact 2-column shortcuts modal fitting 520x403, and top-right HUD toast.
+  - Responsive & DPI: WS/TCP badges, overflow-x client table, and native Win32 DPI scaling with resizable WS_OVERLAPPEDWINDOW/WM_SIZE.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-02T09:19:11-08:00 — kilo-tester: KChatServer (Interactive UI Audit & Inline Repairs)**
   - Status: PASS (0 errors, web 57.2 KB, native 18.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%%, input 3.65%%, HEAD d 0.0%%, 0 fail, 0 warn, 5.5s)).
   - UI & Broadcast Audit: Required isRunning in sendBroadcast, filtered recipients by selectRoomTarget (#general/#kchat/#dev vs GLOBAL), clamped port (1024..65535) and maxClients (1..256) with live offline sync, capped logs at 250.
@@ -345,8 +351,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Feature/Protocol Findings: sendBroadcast() runs offline and ignores room target filtering; F9 quickLoad() collides nextClientId, skips empty client arrays, and triggers duplicate auto-seed timers; visibilitychange drops join/quit traffic branches; main.c drops multi-line Raw TCP frames, leaks zombie sockets on WS opcode 8 Close, and lacks documented [S] hotkey.
   - Phase VI Mesh Findings: Missing KiloOS VFS log/snapshot export-import, OS_LAUNCH_APP KPad/KChat bridge, editable MOTD parity with main.c, and local BroadcastChannel loopback relay.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KChatServer`, `kilo-tester`->`KChatServer`, `kilo-expander`->`KChatServer`] (un-quarantined `KChatServer` from Mature); advanced `kilo-review` to `KMedia`; next agent `kilo-creator`.
-
-- **2026-11-02T07:23:15-08:00 — kilo-expander: KAudio (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KAudio across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KHex`; rotated active agent to `kilo-review`.
