@@ -159,6 +159,8 @@ typedef struct {
     NetLink links[MAX_LINKS];
     char baseIp[32];
     char baseCidr[16];
+    int activeMode;
+    int simPaused;
 } KNetMapSaveData;
 
 static NetNode g_nodes[MAX_NODES];
@@ -482,6 +484,8 @@ static int SaveTopologyState(HWND hwnd) {
     }
     if (g_hEditIp) GetWindowTextA(g_hEditIp, save.baseIp, sizeof(save.baseIp));
     if (g_hEditCidr) GetWindowTextA(g_hEditCidr, save.baseCidr, sizeof(save.baseCidr));
+    save.activeMode = g_activeMode;
+    save.simPaused = g_simPaused;
 
     HANDLE hFile = CreateFileA("knetmap_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
@@ -539,7 +543,8 @@ static int LoadTopologyState(HWND hwnd) {
     g_draggedNode = -1;
     g_connectStart = -1;
     g_pingSource = -1;
-    g_activeMode = 0;
+    g_activeMode = save.activeMode;
+    g_simPaused = save.simPaused;
     for (int i = 0; i < MAX_PACKETS; i++) g_packets[i].active = 0;
 
     // Mark tutorial as seen so restored save never triggers tutorial
@@ -837,6 +842,15 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             return 0;
         }
 
+        case WM_ACTIVATE: {
+            if (LOWORD(wParam) == WA_INACTIVE) {
+                KillTimer(hwnd, 1);
+            } else {
+                SetTimer(hwnd, 1, 30, NULL);
+            }
+            return 0;
+        }
+
         case WM_ERASEBKGND: {
             HDC hdcBg = (HDC)wParam;
             RECT rcCl;
@@ -977,14 +991,21 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 case VK_F9:
                     LoadTopologyState(hwnd);
                     return 0;
-                case VK_ESCAPE:
+                case VK_ESCAPE: {
                     g_activeMode = 0;
                     g_connectStart = -1;
                     g_pingSource = -1;
                     g_selectedNode = -1;
+                    HANDLE hTut = CreateFileA("knetmap_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                    if (hTut != INVALID_HANDLE_VALUE) {
+                        DWORD tw = 0;
+                        WriteFile(hTut, "SEEN", 4, &tw, NULL);
+                        CloseHandle(hTut);
+                    }
                     LogMessage("[MODE] Select Mode active (Cancelled).");
                     InvalidateRect(hwnd, NULL, FALSE);
                     return 0;
+                }
                 case 'C':
                     SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_CONNECT, 0), 0);
                     return 0;
@@ -1208,6 +1229,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         default:
             return DefWindowProcA(hwnd, msg, wParam, lParam);
     }
+    return 0;
 }
 
 void MainEntry(void) {

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T04:15:35-08:00 — kilo-review: KAudio (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 1040x803 4-panel sheet.png, kaudio.html, and KAudio/main.c; un-quarantined KAudio and queued surgical fixes).
+  - Visual/UX Findings: 293px vertical overflow hides .sequencer-panel and clips .key labels at 1040x803; top-center toasts occlude header; 5 tiny-text (<10px) nodes; KAudio/main.c title collides with Save [F5] and TextOutA renders UTF-8 mojibake.
+  - Feature/VFS/Parity Findings: Boot Firebase RTDB autostart; [Q] sets missing notch option; offline WAV/AU/8SVX/JSON omit FM/DSP/sfx state; .AU 0xFFFFFFFF OOM & u-law bug; zero KiloOS VFS/IPC; KAudio/main.c drops A-K recording & blocks UI on Sleep().
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KAudio`, `kilo-tester`->`KAudio`, `kilo-expander`->`KAudio`] (un-quarantined `KAudio` from Mature); advanced `kilo-review` to `KChatServer`; next agent `kilo-creator`.
+
 - **2026-11-02T03:41:15-08:00 — kilo-expander: KFleet (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KFleet across web and native targets.

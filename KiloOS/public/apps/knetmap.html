@@ -2177,8 +2177,13 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
     }
 
     function onKeyDown(e) {
-      // Ignore if typing in text input
-      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+      // Allow F5, F9, and Escape even if focused on an input/select/textarea
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) {
+        if (e.key === 'F5') { e.preventDefault(); saveTopologyQuicksave(); return; }
+        if (e.key === 'F9') { e.preventDefault(); loadTopologyQuicksave(); return; }
+        if (e.key === 'Escape') { e.preventDefault(); e.target.blur(); closeAllModals(); return; }
+        return;
+      }
 
       if (e.key === 'F1' || e.key === 'h' || e.key === 'H' || e.key === '?') { e.preventDefault(); openHelpModal(); }
       else if (e.key === 'F5') { e.preventDefault(); saveTopologyQuicksave(); }
@@ -2563,10 +2568,26 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
        STATE PERSISTENCE (QUICKSAVE F5, QUICKLOAD F9, JSON EXPORT/IMPORT)
        ========================================================================= */
     function saveTopologyQuicksave() {
+      const activeDrawerTab = document.querySelector('.drawer-tab.active')?.id.replace('tab-', '') || 'sniffer';
+      const isDrawerCollapsed = !!document.getElementById('bottomDrawer')?.classList.contains('collapsed');
       const data = {
         nodes: TOPOLOGY.nodes,
         links: TOPOLOGY.links,
         subnets: TOPOLOGY.subnets,
+        activeTool: activeTool || 'select',
+        activeCableType: activeCableType || '100base_tx',
+        isSimPaused: !!isSimPaused,
+        isMuted: !!isMuted,
+        viewZoom: viewZoom,
+        viewPanX: viewPanX,
+        viewPanY: viewPanY,
+        drawerTab: activeDrawerTab,
+        drawerCollapsed: isDrawerCollapsed,
+        chkBroadcastDomains: !!document.getElementById('chkBroadcastDomains')?.checked,
+        chkCollisionDomains: !!document.getElementById('chkCollisionDomains')?.checked,
+        chkIpLabels: !!document.getElementById('chkIpLabels')?.checked,
+        calcIp: document.getElementById('calcIpInput')?.value || '192.168.1.0',
+        calcCidr: document.getElementById('calcCidrSelect')?.value || '24',
         version: '1.0.0',
         timestamp: Date.now()
       };
@@ -2587,10 +2608,55 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
         TOPOLOGY.links = data.links || [];
         if (data.subnets) TOPOLOGY.subnets = data.subnets;
         TOPOLOGY.packets = [];
+
+        if (data.activeTool) setTool(data.activeTool);
+        if (data.activeCableType) selectCableType(data.activeCableType);
+        if (data.isSimPaused !== undefined && data.isSimPaused !== isSimPaused) {
+          toggleSimPause();
+        }
+        if (data.isMuted !== undefined && data.isMuted !== isMuted) {
+          toggleMute();
+        }
+        if (typeof data.viewZoom === 'number') viewZoom = data.viewZoom;
+        if (typeof data.viewPanX === 'number') viewPanX = data.viewPanX;
+        if (typeof data.viewPanY === 'number') viewPanY = data.viewPanY;
+        const hudZoom = document.getElementById('hudZoom');
+        if (hudZoom) hudZoom.textContent = Math.round(viewZoom * 100) + '%';
+
+        if (data.drawerTab) switchDrawerTab(data.drawerTab);
+        if (data.drawerCollapsed !== undefined) {
+          const drawer = document.getElementById('bottomDrawer');
+          const btn = document.getElementById('drawerCollapseBtn');
+          if (drawer && btn) {
+            drawer.classList.toggle('collapsed', !!data.drawerCollapsed);
+            btn.textContent = drawer.classList.contains('collapsed') ? '▲' : '▼';
+          }
+        }
+
+        if (data.chkBroadcastDomains !== undefined) {
+          const el = document.getElementById('chkBroadcastDomains');
+          if (el) el.checked = !!data.chkBroadcastDomains;
+        }
+        if (data.chkCollisionDomains !== undefined) {
+          const el = document.getElementById('chkCollisionDomains');
+          if (el) el.checked = !!data.chkCollisionDomains;
+        }
+        if (data.chkIpLabels !== undefined) {
+          const el = document.getElementById('chkIpLabels');
+          if (el) el.checked = !!data.chkIpLabels;
+        }
+        if (data.calcIp && document.getElementById('calcIpInput')) {
+          document.getElementById('calcIpInput').value = data.calcIp;
+        }
+        if (data.calcCidr && document.getElementById('calcCidrSelect')) {
+          document.getElementById('calcCidrSelect').value = data.calcCidr;
+        }
+
         safeSet('knetmap_tutorialSeen', '1');
         safeSet('kknetmap_tutorialSeen', '1');
         updateCounts();
         updateCidrBar();
+        requestRender();
         soundLinkConnect();
         showToast('Topology Restored [F9]');
         logTerminal('[STATE RESTORED] Loaded topology quicksave from local storage.', 'term-info');
@@ -2629,7 +2695,7 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
 
     function checkFirstRunTutorial() {
       if (!safeGet('knetmap_tutorialSeen', null) && !safeGet('kknetmap_tutorialSeen', null)) {
-        setTimeout(openTutorial, 500);
+        openTutorial();
       }
     }
 
@@ -2848,6 +2914,12 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
     function closeAllModals() {
       const tutModal = document.getElementById('tutorialModal');
       if (tutModal && tutModal.classList.contains('active')) {
+        safeSet('knetmap_tutorialSeen', '1');
+        safeSet('kknetmap_tutorialSeen', '1');
+      }
+      const splashModal = document.getElementById('splashModal');
+      if (splashModal && splashModal.classList.contains('active')) {
+        splashModal.classList.remove('active');
         safeSet('knetmap_tutorialSeen', '1');
         safeSet('kknetmap_tutorialSeen', '1');
       }

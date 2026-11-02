@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KHex
-  kilo_qa: KNetMap
+  kilo_qa: KFont
   kilo_expander: KAudio
   kilo_review: KChatServer
 virtual_web_target: kweb://geocities
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KAudio
-  timestamp: '2026-11-02T06:22:17-08:00'
+  agent: kilo-qa
+  app: KNetMap
+  timestamp: '2026-11-02T06:36:46-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -185,11 +185,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | **[ARGON REVIEW]:** Eliminate 293px vertical scroll overflow at 1040x803 in kaudio.html (sheet.png Panels 2-3 clipping piano labels and hiding .sequencer-panel off-screen) by consolidating the 7 export/import header buttons into a compact #exportFormatSelect (WAV, MIDI, AU, 8SVX) + #btnExportMaster bar, organizing the Right Panel DSP FX Rack into compact [DELAY/SPC] [DRIVE/DAC] [CHORUS] sub-tabs so .panels-grid stays compact even with #fmControls open, and tightening .key (82px) and .step-btn (20px) so 100% of the workstation fits above the fold with 0px scroll; move #toastContainer to bottom-right (max 2 toasts, skipping redundant 400ms boot toast when #helpModal is open); raise 8px-9px .key-note and #visCanvas fonts to >= 10px (0 tiny-text nodes); add mouse-drag glissando on .key, trap Tab focus and block synth hotkeys while #helpModal or #jamModal is open, rename anachronistic Firebase RTDB labels to KiloNet Studio Relay, and fix KAudio/main.c WM_PAINT header title colliding with Save [F5] at x=650 plus replace UTF-8 emojis in TextOutA/SetStatus with clean ASCII. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KNetMap`
+- **Active Target**: `KFont`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
 | `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ICMP network ping graph, host reachability radar, dual Win32 C parity, and promote to Mature table. |
 | `KTerm` | `KiloOS/public/apps/kterm.html`, `KTerm/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, terminal emulator ANSI escape codes, command history, dual Win32 C parity, and promote to Mature table. |
@@ -253,6 +252,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KNetMap** | `KiloOS/public/apps/knetmap.html` | Pass 5+ (2026-11-02) | Network / Utilities | Complete subnet topology visualizer and network simulator with VLSM CIDR calculator, multi-hop ICMP echo packet dispatch, packet sniffer, chaos cable severance, F5/F9 state persistence, and dual Win32 C parity. |
 | **KSolitaire** | `KiloOS/public/apps/ksolitaire.html` | Pass 5+ (2026-11-02) | Games / Card & Board | Complete Klondike solitaire workstation with Classic/Vegas/20-Stage Campaign modes, Mulberry32 PRNG deal selection [F3], undo/redo history [U/Ctrl+Z/Ctrl+Y], win cascade & fireworks, active skills, F5/F9 state persistence, and dual Win32 C parity. |
 | **KBreakout** | `KiloOS/public/apps/kbreakout.html` | Pass 5+ (2026-11-02) | Games / Arcade | Arcade brick-breaker with textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazards, YM2612 soundscape, dual Win32 C parity. |
 | **KBudget** | `KiloOS/public/apps/kbudget.html` | Pass 5+ (2026-11-01) | Productivity / Finance | Complete retro personal finance ledger and workstation with dual Category Pie & 30-Day Balance Projection forecasts [P], F5/F9 state persistence, dynamic categories, VFS/CSV I/O, and Win32 C parity. |
@@ -319,6 +319,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T06:36:46-08:00 — kilo-qa: KNetMap (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 116.8 KB, native 18.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS 0 cut-off controls, zero layout clipping).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, knetmap_tutorialSeen flag, and modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, WM_ACTIVATE / visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KNetMap` to Mature archive; advanced `kilo-qa` to `KFont`; next agent `kilo-expander`.
+
 - **2026-11-02T06:22:17-08:00 — kilo-usability: KAudio (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KAudio across web and native targets.
@@ -339,9 +345,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented ANSI Top-Site full catalog VFS export to /home/warez/top_site_releases.txt & /home/downloads/0xrelease_board.nfo.
   - Polished simulated keygen music player bar controls, quota tracker ratio enforcement, and KNet/Webring integration.
   - Handoff: Advanced `kilo-creator` to `kweb://geocities`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-02T04:15:35-08:00 — kilo-review: KAudio (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 1040x803 4-panel sheet.png, kaudio.html, and KAudio/main.c; un-quarantined KAudio and queued surgical fixes).
-  - Visual/UX Findings: 293px vertical overflow hides .sequencer-panel and clips .key labels at 1040x803; top-center toasts occlude header; 5 tiny-text (<10px) nodes; KAudio/main.c title collides with Save [F5] and TextOutA renders UTF-8 mojibake.
-  - Feature/VFS/Parity Findings: Boot Firebase RTDB autostart; [Q] sets missing notch option; offline WAV/AU/8SVX/JSON omit FM/DSP/sfx state; .AU 0xFFFFFFFF OOM & u-law bug; zero KiloOS VFS/IPC; KAudio/main.c drops A-K recording & blocks UI on Sleep().
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KAudio`, `kilo-tester`->`KAudio`, `kilo-expander`->`KAudio`] (un-quarantined `KAudio` from Mature); advanced `kilo-review` to `KChatServer`; next agent `kilo-creator`.
