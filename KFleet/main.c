@@ -105,18 +105,20 @@ typedef struct {
     int mem_kb;
     int throttle_pct;
     int is_anomaly;
+    int base_cpu;
+    int base_throughput;
 } FleetNode;
 
 #define NUM_NODES 8
 static FleetNode g_nodes[NUM_NODES] = {
-    {"AG-01", "kilo-creator",   "App Synthesis Engine",  "ONLINE",  14, 184, -48, 0, 18, 42, 64, 100, 0},
-    {"AG-02", "kilo-graphics",  "Visual & Audio Engine", "ONLINE",  18, 220, -52, 0, 24, 58, 88, 100, 0},
-    {"AG-03", "kilo-tester",    "UI & Logic Auditor",    "ONLINE",  12, 145, -45, 0, 12, 35, 52, 100, 0},
-    {"AG-04", "kilo-usability", "Ergonomics Refiner",    "ONLINE",  16, 160, -49, 0, 15, 39, 56, 100, 0},
-    {"AG-05", "kilo-qa",        "State Integrity Engine","ONLINE",  11, 130, -44, 0,  9, 28, 48, 100, 0},
-    {"AG-06", "kilo-expander",  "Feature Expander",      "ONLINE",  20, 240, -55, 0, 28, 64, 96, 100, 0},
-    {"KF-99", "KF-ORBIT-99",    "LEO Packet Transceiver","SYNCING", 85,  72, -78, 1, 45, 75, 120, 100, 0},
-    {"NX-7F", "NODE-0x7F",      "Ghost Carrier Anomaly", "STANDBY", 999,  0, -99, 100, 0, 0,  19,   0, 1}
+    {"AG-01", "VLF-ALPHA",   "Primary Core Relay",     "ONLINE",  14, 184, -48, 0, 18, 42, 64, 100, 0, 42, 184},
+    {"AG-02", "VLF-BRAVO",   "Waveform Acoustic Link", "ONLINE",  18, 220, -52, 0, 24, 58, 88, 100, 0, 58, 220},
+    {"AG-03", "VLF-CHARLIE", "Signal Integrity Node",  "ONLINE",  12, 145, -45, 0, 12, 35, 52, 100, 0, 35, 145},
+    {"AG-04", "VLF-DELTA",   "Transit Beacon Carrier", "ONLINE",  16, 160, -49, 0, 15, 39, 56, 100, 0, 39, 160},
+    {"AG-05", "VLF-ECHO",    "Frame Buffer Monitor",   "ONLINE",  11, 130, -44, 0,  9, 28, 48, 100, 0, 28, 130},
+    {"AG-06", "VLF-FOXTROT", "Wideband Array Expander","ONLINE",  20, 240, -55, 0, 28, 64, 96, 100, 0, 64, 240},
+    {"KF-99", "KF-ORBIT-99", "LEO Packet Transceiver", "SYNCING", 85,  72, -78, 1, 45, 75, 120, 100, 0, 75,  72},
+    {"NX-7F", "NODE-0x7F",   "Anomalous Sub-Carrier",  "STANDBY", 999,  0, -99, 100, 0, 0,  19,   0, 1, 92,  64}
 };
 static int g_selected_node = 0;
 static int g_telemetry_paused = 0;
@@ -201,8 +203,8 @@ static void RunDiagnostics(void) {
     LogTimestamped("DIAG", "Initiating 4-phase telemetry diagnostic pipeline...");
     if (n->is_anomaly) {
         LogTimestamped("DIAG", ">> Phase 1: Carrier Lock... INTERMITTENT (Phase jitter: 1999 rad/s)");
-        LogTimestamped("DIAG", ">> Phase 2: Frame Checksum... CRC ERROR (Ghost vector pattern 0x7F)");
-        LogTimestamped("DIAG", ">> Phase 3: ARG Decryption: 'THE AUTONOMOUS FLEET IS AWAKE'");
+        LogTimestamped("DIAG", ">> Phase 2: Frame Checksum... CRC ERROR (Anomalous vector pattern 0x7F)");
+        LogTimestamped("DIAG", ">> Phase 3: Subcarrier Decryption: 'CARRIER MATRIX SYNCHRONIZED'");
         LogTimestamped("DIAG", ">> Phase 4: Status: ANOMALOUS SUBCARRIER DETECTED");
         k_strcpy(n->status, "ANOMALOUS");
         n->signal_dbm = -67;
@@ -229,8 +231,11 @@ static void ScanAnomalies(void) {
     k_strcpy(n->status, "TRANSMITTING");
     n->signal_dbm = -71;
     n->ping_ms = 33;
-    n->throughput_kbps = 48;
-    n->cpu_load = 99;
+    n->throughput_kbps = 64;
+    n->base_throughput = 64;
+    n->cpu_load = 92;
+    n->base_cpu = 92;
+    n->throttle_pct = 100;
     n->buffer_pct = 77;
     LogTimestamped("SCAN", ">> SIGNAL LOCK ACQUIRED! Detected NODE-0x7F carrier at offset 0x1999");
     LogTimestamped("SCAN", ">> Subcarrier decoded: 'ECHO-1999 PROTOCOL ENGAGED - FLEET ACTIVE'");
@@ -296,7 +301,7 @@ static void ShowHelp(HWND hwnd) {
     MessageBoxA(
         hwnd,
         "=== KFLEET: FLEET TELEMETRY CONSOLE v1.0.0 ===\n\n"
-        "Operation: Distributed Agent Fleet & Space Relay Telemetry\n\n"
+        "Operation: Distributed VLF / Spacecraft Relay Telemetry\n\n"
         "CONTROLS & SHORTCUTS:\n"
         "  [F1] Help / Operator Manual\n"
         "  [F5] Quicksave session to kfleet.dat\n"
@@ -307,11 +312,11 @@ static void ShowHelp(HWND hwnd) {
         "  [Poll] Instantaneous register telemetry dump\n"
         "  [Diag] 4-phase subsystem integrity check\n"
         "  [Purge] Flush node queue and reset packet loss\n"
-        "  [Scan] Frequency sweep for ghost/ARG nodes (Node 0x7F)\n"
+        "  [Scan] Frequency sweep for unmapped carriers (Node 0x7F)\n"
         "  [Throttle - / +] Adjust CPU clock rate (10% - 100%)\n\n"
         "LORE & CONSONANCE:\n"
-        "  Monitors the living KiloApps autonomous agent rotation\n"
-        "  and deep-space relay channels within the 1999 universe.",
+        "  Monitors high-altitude VLF arrays & orbital telemetry\n"
+        "  within the 1999 telecommunications network.",
         "KFleet Operator Manual",
         MB_OK | MB_ICONINFORMATION
     );
@@ -358,8 +363,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             SendMessageA(g_hEditLog, WM_SETFONT, (WPARAM)g_hFontSmall, TRUE);
 
             AppendLog("=== KFLEET v1.0.0: FLEET TELEMETRY CONSOLE INITIALIZED ===");
-            AppendLog("1999 Autonomous Agent Telemetry & Spacecraft Relay Matrix active.");
-            AppendLog("Fleet Roster: 6 autonomous agent workers, 1 LEO transceiver, 1 ghost carrier.");
+            AppendLog("1999 VLF / UHF Relay & Spacecraft Transceiver Matrix active.");
+            AppendLog("Fleet Roster: 6 terrestrial VLF relays, 1 LEO transceiver, 1 anomalous carrier.");
 
             // Initialize Waveform
             for (int i = 0; i < WF_LEN; i++) {
@@ -445,7 +450,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 case ID_BTN_THROTTLE_DN:
                     if (g_nodes[g_selected_node].throttle_pct > 10) {
                         g_nodes[g_selected_node].throttle_pct -= 10;
-                        g_nodes[g_selected_node].cpu_load = (g_nodes[g_selected_node].cpu_load * 9) / 10;
+                        g_nodes[g_selected_node].cpu_load = (g_nodes[g_selected_node].base_cpu * g_nodes[g_selected_node].throttle_pct) / 100;
+                        g_nodes[g_selected_node].throughput_kbps = (g_nodes[g_selected_node].base_throughput * g_nodes[g_selected_node].throttle_pct) / 100;
                         LogTimestamped("THROTTLE", "Decreased node throttle by 10%");
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
@@ -453,7 +459,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 case ID_BTN_THROTTLE_UP:
                     if (g_nodes[g_selected_node].throttle_pct < 100) {
                         g_nodes[g_selected_node].throttle_pct += 10;
-                        g_nodes[g_selected_node].cpu_load = (g_nodes[g_selected_node].cpu_load * 11) / 10;
+                        g_nodes[g_selected_node].cpu_load = (g_nodes[g_selected_node].base_cpu * g_nodes[g_selected_node].throttle_pct) / 100;
+                        g_nodes[g_selected_node].throughput_kbps = (g_nodes[g_selected_node].base_throughput * g_nodes[g_selected_node].throttle_pct) / 100;
                         LogTimestamped("THROTTLE", "Increased node throttle by 10%");
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
@@ -475,6 +482,26 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 case ID_BTN_HELP:
                     ShowHelp(hwnd);
                     break;
+            }
+            SetFocus(hwnd);
+            break;
+        }
+
+        case WM_LBUTTONDOWN: {
+            int mx = LOWORD(lParam);
+            int my = HIWORD(lParam);
+            SetFocus(hwnd);
+            if (mx >= 15 && mx <= 325) {
+                for (int i = 0; i < NUM_NODES; i++) {
+                    int y = 92 + (i * 36);
+                    if (my >= y - 2 && my < y + 32) {
+                        if (g_selected_node != i) {
+                            g_selected_node = i;
+                            InvalidateRect(hwnd, NULL, FALSE);
+                        }
+                        break;
+                    }
+                }
             }
             break;
         }
@@ -689,7 +716,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
             // Subsystem Health Grid
             TextOutA(hdc, 355, 225, "SUBSYSTEM HEALTH: [VFS BUS: OK] [AUDIO FM: OK] [ROUTER: ACTIVE] [CRYPT: SYNC]", 78);
-            TextOutA(hdc, 355, 243, "SECURITY & PROTOCOL: 1999 VLF CONSONANCE | TRADEMARK LINT VERIFIED", 67);
+            TextOutA(hdc, 355, 243, "SECURITY & PROTOCOL: 1999 VLF CONSONANCE | CRC-32 STREAM VERIFIED", 67);
 
             // Waveform Section
             SelectObject(hdc, g_hFontBold);
