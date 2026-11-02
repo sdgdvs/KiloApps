@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-review
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,11 +31,11 @@ current_targets:
   kilo_creator: kweb://warez
   kilo_graphics: KDragon
   kilo_soundscape: KStellar
-  kilo_tester: KColony
-  kilo_usability: KHex
+  kilo_tester: KAudio
+  kilo_usability: KAudio
   kilo_qa: KNetMap
-  kilo_expander: KHex
-  kilo_review: KAudio
+  kilo_expander: KAudio
+  kilo_review: KChatServer
 virtual_web_target: kweb://warez
 virtual_web_rotation:
 - kweb://slashnet
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KFleet
-  timestamp: '2026-11-02T03:41:15-08:00'
+  agent: kilo-review
+  app: KAudio
+  timestamp: '2026-11-02T04:15:35-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -130,10 +130,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KColony`
+- **Active Target**: `KAudio`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | **[ARGON REVIEW]:** Eliminate boot Firebase WebSocket autostart in kaudio.html (arg-lore.md s3) by lazy-initializing initializeApp/getDatabase inside joinJamRoom() only on user click, filtering onChildAdded by ev.timestamp >= joinTime so historical events never blast notes or mutate seqTracks on join, and calling leaveJamRoom() on beforeunload/pagehide; add <option value=notch>Notch</option> to #filterType so [Q] stops blanking #filterType; stop triggerPreset() (1-8) from overwriting waveSelect.value; call saveAudioState() on ArrowLeft/Right/-/+ octave hotkeys and on [Z] recording stop (flushing held notes); persist engine, soundbank, fmPreset, fm, snesDamp/snesDampCutoff, glide/glideTime, octaveShift, visMode, and recordedEvents in #btnExportJson/#fileInputJson; honor TUNING_SCALES and octaveShift in runSequencer(), unify #btnExportWav, exportAuFile(), and export8svxFile() to render YM2612 FM, ADSR, track.sfx, and full DSP rack, and fix fileInputAu.onchange to guard dataSize === 0xFFFFFFFF without OOM crash, decode encoding === 1 (G.711 u-law), and stop activeAuSource on re-import/Esc; in KAudio/main.c record A-K WM_KEYDOWN/WM_KEYUP into recordedEvents[], wire VK_SPACE sequencer toggle and -/= octave keys, replace blocking Sleep() in PlaySoundFX() with timer-driven presets [1-9], invalidate visRc in WM_TIMER with live note/idle scope, and honor octaveShift + silent rest steps in ExportWavFile(). |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -156,10 +157,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | **[ARGON REVIEW]:** Eliminate pre-climax worker-agent spoilers (kilo-creator..kilo-expander, autonomous KiloApps agent fleet, LUDONARRATIVE INTEGRATION) and ARG/dev meta-labels (ARG Decryption, ghost/ARG nodes, TRADEMARK LINT VERIFIED) in kfleet.html and KFleet/main.c per arg-lore.md s2 by renaming AG-01..AG-06 to diegetic 1999 VLF/orbital relay callsigns (keeping IDs AG-01..AG-06, KF-99, NX-7F); fix THROTTLE CPU decay bug in kfleet.html and integer truncation lockup in KFleet/main.c by scaling from per-node baseCpu/baseThroughput, allow single-arg THROTTLE <pct> in CLI, and call renderRoster() after mutations/ticks; dynamically update Potemkin #subVfs/#subFm/#subRouter/#subCrypt/#detailLockStatus/#headerBusStatus/#nodeCountBadge (with empty-state placeholders), make state.beaconActive functional (bare BEACON toggle, button active state, radar hub sync ring, jitter/buffer stabilization), emit CRIT on high-loss bursts and match ANOMALY in #logFilterCrit, connect mod->modGain->carrier.frequency in playPingAck(), sync/persist audioEnabled + theme in save/load/JSON with safeGet/safeSet try/catch, and fix KFleet/main.c WM_KEYDOWN focus loss after button clicks plus WM_LBUTTONDOWN node selection. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KHex`
+- **Active Target**: `KAudio`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | **[ARGON REVIEW]:** Eliminate 293px vertical scroll overflow at 1040x803 in kaudio.html (sheet.png Panels 2-3 clipping piano labels and hiding .sequencer-panel off-screen) by consolidating the 7 export/import header buttons into a compact #exportFormatSelect (WAV, MIDI, AU, 8SVX) + #btnExportMaster bar, organizing the Right Panel DSP FX Rack into compact [DELAY/SPC] [DRIVE/DAC] [CHORUS] sub-tabs so .panels-grid stays compact even with #fmControls open, and tightening .key (82px) and .step-btn (20px) so 100% of the workstation fits above the fold with 0px scroll; move #toastContainer to bottom-right (max 2 toasts, skipping redundant 400ms boot toast when #helpModal is open); raise 8px-9px .key-note and #visCanvas fonts to >= 10px (0 tiny-text nodes); add mouse-drag glissando on .key, trap Tab focus and block synth hotkeys while #helpModal or #jamModal is open, rename anachronistic Firebase RTDB labels to KiloNet Studio Relay, and fix KAudio/main.c WM_PAINT header title colliding with Save [F5] at x=650 plus replace UTF-8 emojis in TextOutA/SetStatus with clean ASCII. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -197,10 +199,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KHex`
+- **Active Target**: `KAudio`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kaudio.html per architecture.md (event.origin === window.location.origin validation, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks when window.parent === window) connecting Project JSON Save/Open and WAV/MIDI/AU/8SVX exports + Open AU/SND to VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY (/home/music/) and VFS_SHOW_OPEN -> VFS_READ, handling incoming FILE_OPEN/VFS_OPEN messages from File Browser or Trapster to auto-load .json synth projects and audition .au/.snd samples, exporting 1999Hz subcarrier captures (signal1999) to /sys/anomaly_capture.sig, and adding an Inspect Audio Binary in KHex (OS_LAUNCH_APP khex) button; upgrade KAudio/main.c (<999 KB) with a 4-track 16-step sequencer grid (Lead, Bass, Perc, SFX), YM2612 2-Op FM / Subtractive engine toggle, and GetSaveFileNameA/GetOpenFileNameA file dialogs for WAV/MIDI/Project I/O. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Harden Phase VI KiloOS VFS and IPC Mesh in khex.html per architecture.md: enforce event.origin === window.location.origin in window.addEventListener('message'), post with window.location.origin instead of wildcard (removing dead OS_SET_WINDOW_SIZE), raise sendToOS() timeout to 60000ms for interactive VFS_SHOW_OPEN and VFS_SHOW_SAVE pickers, emit OS_NOTIFY after VFS_WRITE, handle incoming FILE_OPEN/VFS_OPEN messages to auto-load VFS files, add Save to VFS (/home/docs/ or /home/crypto/) and Open in KPad / Send to KCipher OS_LAUNCH_APP buttons in Tab 7 Export, Tab 8 Patch Builder, and Tab 9 Disassembler, and add native Win32 .bin file open/save parity in KHex/main.c (<999 KB). |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY with standalone blob fallback) for saving/loading calculation tapes and workspace JSON snapshots to /home/docs/, and add live HEX/DEC/OCT/BIN radix readout plus FV/CAGR financial tools to KCalc/main.c (<999 KB). |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
@@ -223,11 +226,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kfleet.html per architecture.md (event.origin === window.location.origin validation, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks when window.parent === window) connecting #btnExportJson, #btnImportJsonTrigger, and #btnExportLog to VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY (/home/saves/kfleet_telemetry.json and /home/docs/kfleet_events.log) and VFS_SHOW_OPEN/VFS_READ, handling incoming FILE_OPEN/VFS_OPEN messages, adding Open Report in KPad (OS_LAUNCH_APP kpad) and exporting locked NODE-0x7F carrier captures to /sys/anomaly_capture.sig with Inspect in KHex/KMatrix; upgrade KFleet/main.c (<999 KB) to double-buffered GDI with a 3-column FOC workspace featuring clickable Fleet Matrix, animated GDI Tactical Vector Radar with sweep/pulses/zoom [Z]/blip clicks, 4-Channel Strip Chart with [1-4] channel toggles, Beacon [B], Packet Burst [T], and GetSaveFileNameA export. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
-- **Active Target**: `KAudio`
+- **Active Target**: `KChatServer`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Visual, feature & usability review of 13-note chromatic keyboard, 16-step sequencer, dual-mode oscilloscope/FFT, and dual Win32 C parity. |
 | `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | Visual, feature & usability review of WinSock2 dual TCP/WebSocket chat server, connection telemetry, and dual Win32 C parity. |
 | `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | Visual, feature & usability review of retro media player & studio, 5 visualizer modes, 3-band EQ, CRT filters, and dual Win32 C parity. |
 | `KMail` | `KiloOS/public/apps/kmail.html`, `KMail/main.c` | Visual, feature & usability review of multi-tab email client, AES encryption, KiloNet RTDB delivery, and dual Win32 C parity. |
@@ -239,6 +241,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | [Argon Audited 2026-11-01: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | [Argon Audited 2026-11-01: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | [Argon Audited 2026-11-02: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
+| `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | [Argon Audited 2026-11-02: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 
 ---
 
@@ -259,7 +262,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KCipher** | `KiloOS/public/apps/kcipher.html` | Pass 5+ (2026-10-31) | System / Security | Complete cryptographic suite with classical ciphers, RC4/XOR streams, AES-128 CTR, RSA demo, pipeline chaining, frequency cryptanalysis, steganography, F5/F9 persistence, and dual Win32 C parity. |
 | **KGraph** | `KiloOS/public/apps/kgraph.html` | Pass 5+ (2026-10-31) | System | Scientific function graphing studio with Cartesian, Polar, Parametric plotting, numerical calculus, root finding, CSV dataset import/export, and dual Win32 C parity. |
 | **KPad** | `KiloOS/public/apps/kpad.html` | Pass 5+ (2026-10-31) | Office / Productivity | Complete multi-tab text and code workstation with single-row responsive toolbars, dynamic gutter height synchronization under word wrap, regex workbench, Myers diff viewer, AES-256 encryption, live Markdown preview, F5/F9 state persistence, and dual Win32 C parity. |
-| **KAudio** | `KiloOS/public/apps/kaudio.html` | Pass 5+ (2026-10-30) | Media / Audio & Synthesizer Studio | Complete audio workstation & DSP synthesis studio: 13-note chromatic keyboard, 16-step sequencer, dual-mode oscilloscope/FFT spectrum visualizer, 2-Op FM / subtractive engines, lowpass filter pipeline, full F5/F9 state persistence, and native Win32 C parity. |
 | **KChatServer** | `KiloOS/public/apps/kchatserver.html` | Pass 5+ (2026-10-30) | Network / Communications | Complete WinSock2 dual TCP/WebSocket chat server with F5/F9 state persistence, real-time client connection telemetry, broadcast console, and full Win32 native C parity. |
 | **KMedia** | `KiloOS/public/apps/kmedia.html` | Pass 5+ (2026-10-30) | Media / Audio & Video Player | Complete retro media player & studio with 5 visualizer modes, 3-band EQ, SNES SPC delay, CRT filters, SRT subtitles, Watch Party '99, F5/F9 state persistence, and dual Win32 C parity. |
 | **KMail** | `KiloOS/public/apps/kmail.html` | Pass 5+ (2026-10-30) | Productivity / Communication | Complete multi-tab email client with AES encryption, automated rules, KiloNet RTDB delivery, 6-folder navigation, draft composition, F5/F9 state persistence, and dual Win32 C parity. |
@@ -317,6 +319,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T04:15:35-08:00 — kilo-review: KAudio (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 1040x803 4-panel sheet.png, kaudio.html, and KAudio/main.c; un-quarantined KAudio and queued surgical fixes).
+  - Visual/UX Findings: 293px vertical overflow hides .sequencer-panel and clips .key labels at 1040x803; top-center toasts occlude header; 5 tiny-text (<10px) nodes; KAudio/main.c title collides with Save [F5] and TextOutA renders UTF-8 mojibake.
+  - Feature/VFS/Parity Findings: Boot Firebase RTDB autostart; [Q] sets missing notch option; offline WAV/AU/8SVX/JSON omit FM/DSP/sfx state; .AU 0xFFFFFFFF OOM & u-law bug; zero KiloOS VFS/IPC; KAudio/main.c drops A-K recording & blocks UI on Sleep().
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KAudio`, `kilo-tester`->`KAudio`, `kilo-expander`->`KAudio`] (un-quarantined `KAudio` from Mature); advanced `kilo-review` to `KChatServer`; next agent `kilo-creator`.
+
 - **2026-11-02T03:41:15-08:00 — kilo-expander: KFleet (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KFleet across web and native targets.
@@ -339,9 +347,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KFleet across web and native targets.
   - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
-
-- **2026-11-02T01:33:31-08:00 — kilo-graphics: KBreakout (Imagen 3 Visual Assets & Glint Sweep)**
-  - Status: PASS ✅ (0 errors, web 191.8 KB, native 55.5 KB < 999 KB; visual probe input 17.15%).
-  - Sprites/backgrounds integrated (Flagship boss sprite, nebula bg, metallic/crystalline bricks, plasma trails).
-  - Zero traveling perimeter border glints verified across Web and Win32 C.
-  - Mature Quarantine & Handoff: Promoted `KBreakout` to Mature archive; advanced `kilo-graphics` to `KDragon`; next agent `kilo-tester`.
