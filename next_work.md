@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://rfc-archive
-  kilo_graphics: KAlchemy
+  kilo_graphics: KCyber
   kilo_soundscape: KStellar
   kilo_tester: KMedia
   kilo_usability: KMedia
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://demoscene
-  timestamp: '2026-11-02T12:16:48-08:00'
+  agent: kilo-graphics
+  app: KAlchemy
+  timestamp: '2026-11-02T12:31:56-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KAlchemy`
+- **Active Target**: `KCyber`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawVisuals() (kcyber.html) with Imagen 3 2-stage chroma-keyed sprites for the Cyberdeck Console, 5 distinct ICE Guardian Constructs (Basic 02, Tracer 03, Hunter 04, Black 05, Phantom 06 instead of one generic red octagon), Cryo-Stasis lattice, Classified Data Core cartridge, and Darknet Contraband Vault (<999 KB, zero perimeter border glints). — Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | **[ARGON REVIEW]:** Replace primitive canvas polygon/rect programmer-art ships on #combat-canvas and #map-canvas (Player Cruiser, Corsair Interceptor, Corsair Marauder, Syndicate Dreadnought, Stealth Infiltrator, and roaming Federation/Traders/Pirate fleet icons) plus geometric SVG placeholders in getPlanetSvg()/getCommodityIcon() with Imagen 3 2-stage chroma-keyed spacefaring sprites and orbital station/anomaly illustrations (<999 KB, zero perimeter border glints). — 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art across kstarforge.html (drawModuleBlueprintGlyph, drawDrydockScene, drawStarforgeStation, drawAsteroid, drawEnemyVessel, drawSalvagePod, and skirmish rival rendering) with Imagen 3 2-stage chroma-keyed sprites/atlas tiles for modular ship components, StarForge IX station & drydock gantry, 3 mineral asteroid types, salvage pods, and Syndicate/Marauder/Sentry/Corsair Dreadnought vessels (<999 KB, zero perimeter border glints). |
@@ -114,6 +113,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Replace code-generated 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with Imagen 3 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
+| `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -328,6 +328,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T12:31:56-08:00 — kilo-graphics: KAlchemy (Skip — Asset Suitability)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KAlchemy.
+  - Handoff: Advanced `kilo-graphics` to `KCyber`; rotated active agent to `kilo-tester`.
+
 - **2026-11-02T12:16:48-08:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Party Vault)**
   - Status: PASS ✅ (0 errors, web 93.6 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 37.1%, input 35.19%, HEAD Δ 25.69%, 0 fail, 0 warn, 8.0s)).
   - Anti-trademark parody hardening (TRI-SECTOR and PAST CREW compliance) and complete 64K intro switcher, ANSI NFO studio, and compo voting board verification.
@@ -349,9 +353,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KFont across web and native targets.
   - Handoff: Advanced `kilo-qa` to `KPing`; rotated active agent to `kilo-expander`.
-
-- **2026-11-02T09:38:06-08:00 — kilo-usability: KChatServer (Usability, Responsive Layout & Ergonomics Polish)**
-  - Status: PASS ✅ (0 errors, web 60.2 KB, native 20.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.02%, HEAD Δ 7.42%, 0 fail, 0 warn, 4.8s)).
-  - Layout & Contrast: Dark-terminal phosphor-green kbd keycaps, compact 2-column shortcuts modal fitting 520x403, and top-right HUD toast.
-  - Responsive & DPI: WS/TCP badges, overflow-x client table, and native Win32 DPI scaling with resizable WS_OVERLAPPEDWINDOW/WM_SIZE.
-  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T09:38:06-08:00 — kilo-usability: KChatServer (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 60.2 KB, native 20.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.02%, HEAD Δ 7.42%, 0 fail, 0 warn, 4.8s)).
+  - Layout & Contrast: Dark-terminal phosphor-green kbd keycaps, compact 2-column shortcuts modal fitting 520x403, and top-right HUD toast.
+  - Responsive & DPI: WS/TCP badges, overflow-x client table, and native Win32 DPI scaling with resizable WS_OVERLAPPEDWINDOW/WM_SIZE.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-02T09:19:11-08:00 — kilo-tester: KChatServer (Interactive UI Audit & Inline Repairs)**
   - Status: PASS (0 errors, web 57.2 KB, native 18.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%%, input 3.65%%, HEAD d 0.0%%, 0 fail, 0 warn, 5.5s)).
   - UI & Broadcast Audit: Required isRunning in sendBroadcast, filtered recipients by selectRoomTarget (#general/#kchat/#dev vs GLOBAL), clamped port (1024..65535) and maxClients (1..256) with live offline sync, capped logs at 250.
