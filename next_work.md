@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://demoscene
-  kilo_graphics: KStarship
+  kilo_graphics: KAlchemy
   kilo_soundscape: KStellar
   kilo_tester: KChatServer
   kilo_usability: KChatServer
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://geocities
-  timestamp: '2026-11-02T08:20:47-08:00'
+  agent: kilo-graphics
+  app: KStarship
+  timestamp: '2026-11-02T08:36:57-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KStarship`
+- **Active Target**: `KAlchemy`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawVisuals() (kcyber.html) with Imagen 3 2-stage chroma-keyed sprites for the Cyberdeck Console, 5 distinct ICE Guardian Constructs (Basic 02, Tracer 03, Hunter 04, Black 05, Phantom 06 instead of one generic red octagon), Cryo-Stasis lattice, Classified Data Core cartridge, and Darknet Contraband Vault (<999 KB, zero perimeter border glints). — Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | **[ARGON REVIEW]:** Replace primitive canvas polygon/rect programmer-art ships on #combat-canvas and #map-canvas (Player Cruiser, Corsair Interceptor, Corsair Marauder, Syndicate Dreadnought, Stealth Infiltrator, and roaming Federation/Traders/Pirate fleet icons) plus geometric SVG placeholders in getPlanetSvg()/getCommodityIcon() with Imagen 3 2-stage chroma-keyed spacefaring sprites and orbital station/anomaly illustrations (<999 KB, zero perimeter border glints). — 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
@@ -114,6 +113,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
 | `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Replace code-generated 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with Imagen 3 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies. |
+| `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -321,6 +321,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T08:36:57-08:00 — kilo-graphics: KStarship (Imagen 3 Visual Assets & Glint Sweep)**
+  - Status: PASS ✅ (web 216.6 KB, native 151.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 40.06%, HEAD Δ 0.0%, 0 fail, 0 warn)).
+  - Integrated Imagen 3 top-down hull schematic, parallax nebula backdrop, enemy cruiser silhouettes, and flagship sprites.
+  - Verified zero rotating perimeter border glints and clean dual Win32 C parity.
+  - Handoff: Advanced `kilo-graphics` to `KAlchemy`; rotated active agent to `kilo-tester`.
+
 - **2026-11-02T08:20:47-08:00 — kilo-creator: kweb://geocities (GeoCities Neighborhood Portal Tokyo99 and RingSurfer Polish)**
   - Status: PASS ✅ (0 errors, web 682.2 KB < 999 KB; startup, Vite & security_lint PASS).
   - Added Tokyo99 Akiba Otaku passport stamp (#10) and updated RingSurfer list to span all 8 neighborhoods (40 homesteads).
@@ -344,8 +350,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, knetmap_tutorialSeen flag, and modal dismissals.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, WM_ACTIVATE / visibilitychange timer cleanup.
   - Mature Quarantine & Handoff: Promoted `KNetMap` to Mature archive; advanced `kilo-qa` to `KFont`; next agent `kilo-expander`.
-
-- **2026-11-02T06:22:17-08:00 — kilo-usability: KAudio (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-usability updates for KAudio across web and native targets.
-  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.

@@ -1772,7 +1772,7 @@ void Draw(HDC hdc, RECT* rect) {
     LineTo(memDC, width - 12, height - 180);
     DeleteObject(subLinePen);
 
-    // Mini Hull Blueprint Drawing
+    // Mini Hull Blueprint Drawing (Detailed Hull Subsystem Schematics with zero glints)
     int scx = mapWidth + 48;
     int scy = height - 125;
     COLORREF hullColor = res_hull > 65 ? RGB(0, 255, 204) : (res_hull > 30 ? RGB(255, 170, 0) : RGB(255, 50, 60));
@@ -1780,26 +1780,39 @@ void Draw(HDC hdc, RECT* rect) {
     HBRUSH bBrush = CreateSolidBrush(RGB(10, 26, 48));
     SelectObject(memDC, bPen);
     SelectObject(memDC, bBrush);
-    POINT bpPts[8] = {
-        {scx, scy - 20}, {scx + 12, scy - 4}, {scx + 22, scy + 12}, {scx + 16, scy + 18},
-        {scx, scy + 14}, {scx - 16, scy + 18}, {scx - 22, scy + 12}, {scx - 12, scy - 4}
+    POINT bpPts[12] = {
+        {scx, scy - 22}, {scx + 8, scy - 12}, {scx + 16, scy - 6}, {scx + 24, scy + 10},
+        {scx + 18, scy + 18}, {scx + 8, scy + 14}, {scx, scy + 10},
+        {scx - 8, scy + 14}, {scx - 18, scy + 18}, {scx - 24, scy + 10},
+        {scx - 16, scy - 6}, {scx - 8, scy - 12}
     };
-    Polygon(memDC, bpPts, 8);
+    Polygon(memDC, bpPts, 12);
     DeleteObject(bPen);
     DeleteObject(bBrush);
 
-    // Keel and Bulkheads
+    // Keel, Transverse Bulkheads, & Conduit Busses
     HPEN kPen = CreatePen(PS_SOLID, 1, RGB(0, 200, 255));
     SelectObject(memDC, kPen);
-    MoveToEx(memDC, scx, scy - 18, NULL); LineTo(memDC, scx, scy + 12);
-    MoveToEx(memDC, scx - 12, scy + 2, NULL); LineTo(memDC, scx + 12, scy + 2);
+    MoveToEx(memDC, scx, scy - 20, NULL); LineTo(memDC, scx, scy + 10);
+    MoveToEx(memDC, scx - 14, scy - 2, NULL); LineTo(memDC, scx + 14, scy - 2);
+    MoveToEx(memDC, scx - 10, scy + 6, NULL); LineTo(memDC, scx + 10, scy + 6);
+    // Port & Starboard Warp Nacelle Brackets
+    MoveToEx(memDC, scx - 18, scy + 8, NULL); LineTo(memDC, scx - 22, scy + 18);
+    MoveToEx(memDC, scx + 18, scy + 8, NULL); LineTo(memDC, scx + 22, scy + 18);
     DeleteObject(kPen);
 
-    // Core Reactor Node
-    HBRUSH rBrush = CreateSolidBrush(RGB(0, 255, 255));
+    // Forward Subspace Sensor Dome
+    HBRUSH sensBrush = CreateSolidBrush(RGB(0, 255, 220));
+    SelectObject(memDC, sensBrush);
+    SelectObject(memDC, GetStockObject(NULL_PEN));
+    Ellipse(memDC, scx - 2, scy - 22, scx + 2, scy - 18);
+    DeleteObject(sensBrush);
+
+    // Core Warp Reactor Node
+    HBRUSH rBrush = CreateSolidBrush(res_fuel > 2000 ? RGB(0, 255, 255) : RGB(255, 140, 0));
     SelectObject(memDC, rBrush);
     SelectObject(memDC, GetStockObject(NULL_PEN));
-    Ellipse(memDC, scx - 3, scy - 4, scx + 3, scy + 2);
+    Ellipse(memDC, scx - 4, scy - 4, scx + 4, scy + 4);
     DeleteObject(rBrush);
 
     // Subsystem Status Telemetry Labels

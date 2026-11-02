@@ -283,6 +283,32 @@
     const hullCanvas = document.getElementById('hull-schematic');
     const hCtx = hullCanvas ? hullCanvas.getContext('2d') : null;
 
+    // --- Starship Fleet & Sector Tactical Sprite Assets (Chroma-keyed 2-stage Imagen 3 pipeline) ---
+    const KSTARSHIP_ASSETS = {
+      hullSchematic: { img: null, loaded: false, src: '../assets/sprites/kstarship/hull_schematic.png', fallback: 'assets/sprites/kstarship/hull_schematic.png' },
+      nebulaBackdrop: { img: null, loaded: false, src: '../assets/sprites/kstarship/nebula_backdrop.png', fallback: 'assets/sprites/kstarship/nebula_backdrop.png' },
+      cruiserCorsair: { img: null, loaded: false, src: '../assets/sprites/kstarship/cruiser_corsair.png', fallback: 'assets/sprites/kstarship/cruiser_corsair.png' },
+      cruiserDreadnought: { img: null, loaded: false, src: '../assets/sprites/kstarship/cruiser_dreadnought.png', fallback: 'assets/sprites/kstarship/cruiser_dreadnought.png' },
+      cruiserSyndicate: { img: null, loaded: false, src: '../assets/sprites/kstarship/cruiser_syndicate.png', fallback: 'assets/sprites/kstarship/cruiser_syndicate.png' },
+      cruiserXenon: { img: null, loaded: false, src: '../assets/sprites/kstarship/cruiser_xenon.png', fallback: 'assets/sprites/kstarship/cruiser_xenon.png' },
+      cruiserLeviathan: { img: null, loaded: false, src: '../assets/sprites/kstarship/cruiser_leviathan.png', fallback: 'assets/sprites/kstarship/cruiser_leviathan.png' },
+      shipFlagship: { img: null, loaded: false, src: '../assets/sprites/kstarship/ship_flagship.png', fallback: 'assets/sprites/kstarship/ship_flagship.png' }
+    };
+
+    function initKStarshipAssets() {
+      Object.values(KSTARSHIP_ASSETS).forEach(entry => {
+        const img = new Image();
+        img.onload = () => { entry.img = img; entry.loaded = true; };
+        img.onerror = () => {
+          const fb = new Image();
+          fb.onload = () => { entry.img = fb; entry.loaded = true; };
+          fb.src = entry.fallback;
+        };
+        img.src = entry.src;
+      });
+    }
+    initKStarshipAssets();
+
     const locX = document.getElementById('loc-x');
     const locY = document.getElementById('loc-y');
     const resFuel = document.getElementById('res-fuel');
@@ -1565,28 +1591,37 @@
         hCtx.strokeRect(ex - 2.5, ey - 2.5, 5, 5);
       }
 
-      // 2. Main Titanium Composite Hull Plates & Interior Bulkheads
-      hCtx.fillStyle = 'rgba(10, 26, 48, 0.92)';
-      hCtx.strokeStyle = hullColor;
-      hCtx.lineWidth = 1.3;
-      hCtx.beginPath();
-      hCtx.moveTo(36, 0); // Prow sensor nose
-      hCtx.lineTo(20, -10);
-      hCtx.lineTo(4, -16);
-      hCtx.lineTo(-4, -18); // Port wing tip
-      hCtx.lineTo(-24, -20); // Port nacelle outer
-      hCtx.lineTo(-32, -12); // Port engine aft
-      hCtx.lineTo(-22, -6);
-      hCtx.lineTo(-28, 0); // Center aft notch
-      hCtx.lineTo(-22, 6);
-      hCtx.lineTo(-32, 12); // Starboard engine aft
-      hCtx.lineTo(-24, 20); // Starboard nacelle outer
-      hCtx.lineTo(-4, 18); // Starboard wing tip
-      hCtx.lineTo(4, 16);
-      hCtx.lineTo(20, 10);
-      hCtx.closePath();
-      hCtx.fill();
-      hCtx.stroke();
+      // 2. Main Starship Hull Schematic (Imagen 3 Blueprint cutaway with procedural fallback)
+      if (KSTARSHIP_ASSETS.hullSchematic && KSTARSHIP_ASSETS.hullSchematic.loaded && KSTARSHIP_ASSETS.hullSchematic.img) {
+        hCtx.save();
+        hCtx.globalAlpha = 0.95;
+        const sw = 84;
+        const sh = 56;
+        hCtx.drawImage(KSTARSHIP_ASSETS.hullSchematic.img, -sw / 2, -sh / 2, sw, sh);
+        hCtx.restore();
+      } else {
+        hCtx.fillStyle = 'rgba(10, 26, 48, 0.92)';
+        hCtx.strokeStyle = hullColor;
+        hCtx.lineWidth = 1.3;
+        hCtx.beginPath();
+        hCtx.moveTo(36, 0); // Prow sensor nose
+        hCtx.lineTo(20, -10);
+        hCtx.lineTo(4, -16);
+        hCtx.lineTo(-4, -18); // Port wing tip
+        hCtx.lineTo(-24, -20); // Port nacelle outer
+        hCtx.lineTo(-32, -12); // Port engine aft
+        hCtx.lineTo(-22, -6);
+        hCtx.lineTo(-28, 0); // Center aft notch
+        hCtx.lineTo(-22, 6);
+        hCtx.lineTo(-32, 12); // Starboard engine aft
+        hCtx.lineTo(-24, 20); // Starboard nacelle outer
+        hCtx.lineTo(-4, 18); // Starboard wing tip
+        hCtx.lineTo(4, 16);
+        hCtx.lineTo(20, 10);
+        hCtx.closePath();
+        hCtx.fill();
+        hCtx.stroke();
+      }
 
       // Longitudinal Keel & Bulkhead Dividers
       hCtx.strokeStyle = 'rgba(0, 200, 255, 0.4)';
@@ -1764,8 +1799,32 @@
 
       const time = Date.now();
 
-      // Distinct enemy silhouettes per hostile faction
-      if (type === 'Pirates') {
+      // Check for Imagen 3 cruiser silhouette sprite
+      let cruiserSprite = null;
+      let cW = 32, cH = 32;
+      if (type === 'Pirates' && KSTARSHIP_ASSETS.cruiserCorsair.loaded) {
+        cruiserSprite = KSTARSHIP_ASSETS.cruiserCorsair.img;
+        cW = 34; cH = 34;
+      } else if (type === 'Fleet' && KSTARSHIP_ASSETS.cruiserDreadnought.loaded) {
+        cruiserSprite = KSTARSHIP_ASSETS.cruiserDreadnought.img;
+        cW = 42; cH = 42;
+      } else if (type === 'SyndicateFrigate' && KSTARSHIP_ASSETS.cruiserSyndicate.loaded) {
+        cruiserSprite = KSTARSHIP_ASSETS.cruiserSyndicate.img;
+        cW = 34; cH = 34;
+      } else if (type === 'XenonHunter' && KSTARSHIP_ASSETS.cruiserXenon.loaded) {
+        cruiserSprite = KSTARSHIP_ASSETS.cruiserXenon.img;
+        cW = 36; cH = 36;
+      } else if (KSTARSHIP_ASSETS.cruiserLeviathan.loaded) {
+        cruiserSprite = KSTARSHIP_ASSETS.cruiserLeviathan.img;
+        cW = 46; cH = 46;
+      }
+
+      if (cruiserSprite) {
+        // High-definition cruiser silhouette sprite with drive plume
+        c.drawImage(cruiserSprite, -cW / 2, -cH / 2, cW, cH);
+        c.fillStyle = type === 'Pirates' ? '#ff4400' : (type === 'Fleet' ? '#38bdf8' : '#fbbf24');
+        c.fillRect(-cW / 2 - 3, -1.5, 3, 3);
+      } else if (type === 'Pirates') {
         // Jagged Outlaw Corsair Raider silhouette
         let pGrad = c.createLinearGradient(-16, -12, 16, 12);
         pGrad.addColorStop(0, '#2e0a0a');
@@ -2071,6 +2130,22 @@
         c.restore();
       }
 
+      // Check for Flagship sprite asset
+      if (KSTARSHIP_ASSETS.shipFlagship && KSTARSHIP_ASSETS.shipFlagship.loaded && KSTARSHIP_ASSETS.shipFlagship.img) {
+        c.save();
+        const fSize = 38 + (wLevel > 2 ? 4 : 0);
+        c.drawImage(KSTARSHIP_ASSETS.shipFlagship.img, -fSize / 2, -fSize / 2, fSize, fSize);
+        if (wLevel >= 2) {
+          c.fillStyle = '#00ffff';
+          c.fillRect(-fSize / 2 - 2, 0, 3, 6);
+          c.fillRect(fSize / 2 - 1, 0, 3, 6);
+        }
+        c.restore();
+        c.restore();
+        c.restore();
+        return;
+      }
+
       let wingGrad = c.createLinearGradient(-16, -10, 16, 16);
       wingGrad.addColorStop(0, '#d8eef8');
       wingGrad.addColorStop(0.5, '#00a3b8');
@@ -2278,6 +2353,41 @@
         let sx = (Math.sin(i * 99) * 1000 + pw) % pw;
         let sy = (Math.cos(i * 77) * 1000 + ph) % ph;
         pCtx.fillRect(sx, sy, 1.5, 1.5);
+      }
+
+      // Check for high-res sprite modal preview
+      let mSprite = null;
+      let mW = 72, mH = 72;
+      if (type === 'Pirates' && KSTARSHIP_ASSETS.cruiserCorsair.loaded) {
+        mSprite = KSTARSHIP_ASSETS.cruiserCorsair.img;
+        mW = 80; mH = 80;
+      } else if (type === 'Fleet' && KSTARSHIP_ASSETS.cruiserDreadnought.loaded) {
+        mSprite = KSTARSHIP_ASSETS.cruiserDreadnought.img;
+        mW = 96; mH = 96;
+      } else if (type === 'SyndicateFrigate' && KSTARSHIP_ASSETS.cruiserSyndicate.loaded) {
+        mSprite = KSTARSHIP_ASSETS.cruiserSyndicate.img;
+        mW = 80; mH = 80;
+      } else if (type === 'XenonHunter' && KSTARSHIP_ASSETS.cruiserXenon.loaded) {
+        mSprite = KSTARSHIP_ASSETS.cruiserXenon.img;
+        mW = 84; mH = 84;
+      } else if (type === 'Leviathan' && KSTARSHIP_ASSETS.cruiserLeviathan.loaded) {
+        mSprite = KSTARSHIP_ASSETS.cruiserLeviathan.img;
+        mW = 100; mH = 100;
+      }
+
+      if (mSprite) {
+        pCtx.save();
+        const bob = Math.sin(time * 0.003) * 3;
+        pCtx.translate(cx, cy + bob);
+        // Energy aura behind sprite
+        let aGrad = pCtx.createRadialGradient(0, 0, 10, 0, 0, mW * 0.65);
+        aGrad.addColorStop(0, type === 'Pirates' ? 'rgba(255, 50, 0, 0.25)' : (type === 'Fleet' ? 'rgba(56, 189, 248, 0.25)' : 'rgba(245, 158, 11, 0.25)'));
+        aGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        pCtx.fillStyle = aGrad;
+        pCtx.fillRect(-mW, -mH, mW * 2, mH * 2);
+        pCtx.drawImage(mSprite, -mW / 2, -mH / 2, mW, mH);
+        pCtx.restore();
+        return;
       }
 
       if (type === 'Pirates') {
@@ -3286,6 +3396,19 @@
       ctx.globalAlpha = 1.0;
 
       // Multi-Tier Parallax Volumetric Nebulae (Deep cosmic dust, multi-lobe emission clouds, & ionized filaments)
+      if (KSTARSHIP_ASSETS.nebulaBackdrop && KSTARSHIP_ASSETS.nebulaBackdrop.loaded && KSTARSHIP_ASSETS.nebulaBackdrop.img) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.22;
+        const nbSize = 256;
+        for (let i = 0; i < 4; i++) {
+          const nX = ((i * 450 - state.ship.x * 0.02) % (canvas.width + nbSize) + (canvas.width + nbSize)) % (canvas.width + nbSize) - nbSize / 2;
+          const nY = (((i * 270 + 80) - state.ship.y * 0.02) % (canvas.height + nbSize) + (canvas.height + nbSize)) % (canvas.height + nbSize) - nbSize / 2;
+          ctx.drawImage(KSTARSHIP_ASSETS.nebulaBackdrop.img, nX, nY, nbSize, nbSize);
+        }
+        ctx.restore();
+      }
+
       state.nebulas.forEach(neb => {
         const pFactor = neb.parallax || 0.08;
         const screenX = centerX + (neb.x - state.ship.x * pFactor);

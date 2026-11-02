@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T06:22:17-08:00 — kilo-usability: KAudio (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KAudio across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-02T05:39:53-08:00 — kilo-tester: KAudio (Interactive UI Audit & Inline Repairs)**
   - Status: PASS (0 errors, web 158.6 KB, native 25.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - UI & Hotkeys: Added Notch option to #filterType, prevented triggerPreset overwriting waveSelect, wired -/= and Arrow hotkeys to save state, and flushed notes on Z stop.
