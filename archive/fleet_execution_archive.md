@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T12:38:24-08:00 — kilo-qa: KChart (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 144.6 KB, native 42.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.27%, 0 fail, 0 warn, 6.8s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kchart_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Presets: Verified Web HTML + Win32 C parity across 10 chart modes, bar/line/pie/radar presets, CSV import/export, and YM2612 audio sonification.
+  - Mature Quarantine & Handoff: Promoted `KChart` to Mature archive; advanced `kilo-qa` to `KBudget`; next agent `kilo-expander`.
+
 - **2026-11-01T12:22:23-08:00 — kilo-usability: KCalc (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KCalc across web and native targets.
