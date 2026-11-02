@@ -2501,8 +2501,8 @@ ${trk.nfo.replace(/\\n/g, '\n')}
 }
 
 function closeNfoModal() {
-  document.getElementById('nfoModal').style.display = 'none';
-    closeTipModal();
+  const m = document.getElementById('nfoModal');
+  if (m) m.style.display = 'none';
 }
 
 // Transfers Simulation Loop
@@ -3292,8 +3292,10 @@ function openOptionsModal() {
 window.addEventListener('keydown', (e) => {
   const isInput = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT');
   if (e.key === 'Escape') {
-    document.getElementById('nfoModal').style.display = 'none';
+    closeNfoModal();
     closeShareModal();
+    closeTipModal();
+    closeNodeDetailModal();
     return;
   }
   if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && !isInput)) {
