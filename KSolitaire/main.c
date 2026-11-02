@@ -15,6 +15,7 @@
 #define ID_RESET_STATS    1011
 #define ID_EXPORT_STATS   1012
 #define ID_IMPORT_STATS   1013
+#define ID_SELECT_DEAL    1014
 
 #define ID_THEME_BLUE     1020
 #define ID_THEME_CRIMSON  1021
@@ -83,6 +84,7 @@ typedef struct {
     int xrayCharges;    // X-Ray Vision uses (default 3)
     int shuffleCharges; // Stock Shuffle uses (default 3)
     int xrayTimer;      // X-Ray vision active timer (seconds)
+    int currentDealSeed; // Mulberry/LCRNG deal number
 } SolitaireState;
 
 typedef struct {
@@ -305,8 +307,8 @@ void UpdateWindowTitle(HWND hwnd) {
     if (!hwnd) return;
     char titleBuf[256];
     const char *modeStr = (state.gameMode == 1) ? "Campaign" : ((state.gameMode == 2) ? "Vegas" : "Classic");
-    wsprintfA(titleBuf, "KSolitaire [%s] | Moves: %d | Score: %d | [F1] Help | [H] Hint | [F2] New | [Space] Draw",
-        modeStr, state.moves, state.score);
+    wsprintfA(titleBuf, "KSolitaire [%s #%d] | Moves: %d | Score: %d | [F1] Help | [H] Hint | [F2] New | [F3] Deal | [Space] Draw",
+        modeStr, state.currentDealSeed, state.moves, state.score);
     SetWindowTextA(hwnd, titleBuf);
 }
 
@@ -590,6 +592,7 @@ void NewGame(HWND hwnd) {
     state.timerSeconds = 0;
     state.gameStarted = 0;
     state.stockPasses = 1;
+    if (state.currentDealSeed <= 0) state.currentDealSeed = (int)(rnd() % 999999 + 1);
 
     if (state.campaignStage < 1) state.campaignStage = 1;
     if (state.campaignStage > 20) state.campaignStage = 20;
@@ -1915,7 +1918,7 @@ void ShowHelpDialog(HWND hwnd) {
         "- [Space] / [D]: Draw card from stock / recycle waste\n"
         "- [F1]: Help & Rules\n"
         "- [H] / [Ctrl+H]: Smart Hint\n"
-        "- [F2] / [N]: New Game\n"
+        "- [F2] / [N]: New Game | [F3]: Random Deal\n"
         "- [F5] / [Ctrl+S]: Quicksave Game | [F9]: Quickload Game\n"
         "- [1] Classic | [2] Vegas | [3] Campaign Mode\n"
         "- [U] / [Ctrl+Z]: Undo Move | [Ctrl+Y]: Redo Move\n"
@@ -1951,6 +1954,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             HMENU hGameMenu = CreatePopupMenu();
             AppendMenu(hGameMenu, MF_STRING, ID_NEW_GAME, "New Game\tF2");
+            AppendMenu(hGameMenu, MF_STRING, ID_SELECT_DEAL, "Random Deal\tF3");
             AppendMenu(hGameMenu, MF_SEPARATOR, 0, NULL);
             AppendMenu(hGameMenu, MF_STRING, ID_SAVE_GAME, "Quicksave Game\tF5");
             AppendMenu(hGameMenu, MF_STRING, ID_LOAD_GAME, "Quickload Game\tF9");
@@ -2029,6 +2033,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_COMMAND: {
             int id = LOWORD(wParam);
             if (id == ID_NEW_GAME) { NewGame(hwnd); ShowNativeToast(hwnd, "New Game Started [F2]", 2000); }
+            else if (id == ID_SELECT_DEAL) {
+                state.currentDealSeed = (int)(rnd() % 999999 + 1);
+                NewGame(hwnd);
+                char dealMsg[64];
+                wsprintfA(dealMsg, "Deal #%d Dealt! [F3]", state.currentDealSeed);
+                ShowNativeToast(hwnd, dealMsg, 2500);
+            }
             else if (id == ID_SAVE_GAME) { SaveGameState(); QuickSaveGame(hwnd); }
             else if (id == ID_LOAD_GAME) { QuickLoadGame(hwnd); }
             else if (id == ID_DRAW_1) { state.drawMode = 1; NewGame(hwnd); ShowNativeToast(hwnd, "Draw Mode: 1 Card", 2000); }
@@ -2102,7 +2113,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (CanAutoFinish()) { autoFinishActive = 1; SetTimer(hwnd, 2, 100, NULL); }
                 }
             } else {
-                if (wParam == VK_F5) {
+                if (wParam == VK_F3) {
+                    state.currentDealSeed = (int)(rnd() % 999999 + 1);
+                    NewGame(hwnd);
+                    char dealMsg[64];
+                    wsprintfA(dealMsg, "Deal #%d Dealt! [F3]", state.currentDealSeed);
+                    ShowNativeToast(hwnd, dealMsg, 2500);
+                }
+                else if (wParam == VK_F5) {
                     SaveGameState();
                     QuickSaveGame(hwnd);
                 }
@@ -2497,6 +2515,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                         }
                     }
+                    if (cascadeFrame % 18 == 4 && cascadeFrame < 500) {
+                        int fx = 80 + (rnd() % (winW > 160 ? winW - 160 : 600));
+                        int fy = 60 + (rnd() % (winH > 240 ? (winH / 2) : 200));
+                        SpawnFXBurst(hwnd, fx, fy, rnd() % 3, 36, 1);
+                        TriggerScreenShake(8);
+                        PlayGameBeep(MB_ICONASTERISK);
+                    }
                     for (int i = 0; i < 200; i++) {
                         if (confetti[i].active) {
                             confetti[i].x += confetti[i].vx;
@@ -2713,7 +2738,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Draw Ornate HUD Corner Filigree L-Brackets & Pulsating Perimeter Inlay
             DrawOrnateHUDCorners(memDC, winW, winH);
             DrawPerimeterInlay(memDC, winW, winH, tick);
-            DrawSheenSweeps(memDC, winW, winH, tick);
 
             // Draw Top Status Bar
             RECT statusRc = {0, 0, winW, 35};
@@ -2729,16 +2753,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             char statusText[320];
 
             if (state.gameMode == 1) {
-                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Score: %d  [Stg %d/20]  Wand(W):%d  XRay(X):%d  Shuf(S):%d  [F1: Help | H: Hint]",
-                    state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, state.campaignStage,
+                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Score: %d  Deal: #%d  [Stg %d/20]  Wand:%d  XRay:%d  Shuf:%d",
+                    state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, state.currentDealSeed, state.campaignStage,
                     state.wandCharges, state.xrayCharges, state.shuffleCharges);
             } else if (state.gameMode == 2) {
-                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Cash: $%d  Bank: $%d  Wand(W):%d  XRay(X):%d  Shuf(S):%d  [F1: Help | H: Hint]",
-                    state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, stats.vegasCash,
+                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Cash: $%d  Bank: $%d  Deal: #%d  Wand:%d  XRay:%d  Shuf:%d",
+                    state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, stats.vegasCash, state.currentDealSeed,
                     state.wandCharges, state.xrayCharges, state.shuffleCharges);
             } else {
-                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Score: %d  (Draw %d)  Wand(W):%d  XRay(X):%d  Shuf(S):%d  [F1: Help | H: Hint]",
-                    state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, state.drawMode,
+                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Score: %d  Deal: #%d  (Draw %d)  Wand:%d  XRay:%d  Shuf:%d",
+                    state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, state.currentDealSeed, state.drawMode,
                     state.wandCharges, state.xrayCharges, state.shuffleCharges);
             }
             TextOutA(memDC, 10, 8, statusText, lstrlenA(statusText));

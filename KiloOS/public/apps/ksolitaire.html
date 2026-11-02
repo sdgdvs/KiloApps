@@ -2842,6 +2842,10 @@ function newGame(forcedSeed = null) {
     cancelAnimationFrame(winAnimId);
     winAnimId = null;
   }
+  if (fireworkInterval) {
+    clearInterval(fireworkInterval);
+    fireworkInterval = null;
+  }
   if (autoFinishInterval) {
     clearInterval(autoFinishInterval);
     autoFinishInterval = null;
@@ -3013,7 +3017,8 @@ function saveState(recordUndo = false) {
     targetCards,
     maxStockPasses,
     currentDealSeed,
-    undoStack: undoStack.slice(-25)
+    undoStack: undoStack.slice(-25),
+    redoStack: redoStack.slice(-25)
   };
 
   if (recordUndo) {
@@ -3063,6 +3068,7 @@ function loadSavedGame() {
           if (seedEl) seedEl.textContent = `#${currentDealSeed}`;
         }
         if (Array.isArray(snapshot.undoStack)) undoStack = snapshot.undoStack;
+        redoStack = Array.isArray(snapshot.redoStack) ? snapshot.redoStack : [];
 
         // Synchronize UI dropdowns and labels
         let modeSel = document.getElementById('mode-select');
@@ -3135,6 +3141,7 @@ function restoreGameState(snapshot) {
   stopTimer();
   stopXRay();
   if (winAnimId) { cancelAnimationFrame(winAnimId); winAnimId = null; }
+  if (fireworkInterval) { clearInterval(fireworkInterval); fireworkInterval = null; }
   if (autoFinishInterval) { clearInterval(autoFinishInterval); autoFinishInterval = null; }
 
   stock = snapshot.stock;
@@ -3294,6 +3301,10 @@ function dismissWinBanner() {
     cancelAnimationFrame(winAnimId);
     winAnimId = null;
   }
+  if (fireworkInterval) {
+    clearInterval(fireworkInterval);
+    fireworkInterval = null;
+  }
   const canvas = document.getElementById('win-canvas');
   if (canvas) canvas.style.display = 'none';
 }
@@ -3344,9 +3355,15 @@ function undoMove() {
   xrayCharges = prev.xrayCharges !== undefined ? prev.xrayCharges : 3;
   shuffleCharges = prev.shuffleCharges !== undefined ? prev.shuffleCharges : 3;
 
+  if (prev.currentDealSeed) {
+    currentDealSeed = prev.currentDealSeed;
+    let seedEl = document.getElementById('deal-seed-val');
+    if (seedEl) seedEl.textContent = '#' + currentDealSeed;
+  }
   selectedSelection = null;
   clearHints();
   playSound('flip');
+  showToast('↩ Move undone [U / Ctrl+Z]', 1800);
   updateTimerDisplay();
   render();
   saveState();
@@ -3394,9 +3411,15 @@ function redoMove() {
   xrayCharges = next.xrayCharges !== undefined ? next.xrayCharges : 3;
   shuffleCharges = next.shuffleCharges !== undefined ? next.shuffleCharges : 3;
 
+  if (next.currentDealSeed) {
+    currentDealSeed = next.currentDealSeed;
+    let seedEl = document.getElementById('deal-seed-val');
+    if (seedEl) seedEl.textContent = '#' + currentDealSeed;
+  }
   selectedSelection = null;
   clearHints();
   playSound('flip');
+  showToast('↪ Move redone [Ctrl+Y]', 1800);
   updateTimerDisplay();
   render();
   saveState();
@@ -3971,11 +3994,23 @@ function initFXSystem() {
   }
 
   let wasTimerRunningOnHide = false;
+  let wasWinAnimRunningOnHide = false;
+  let wasFireworksRunningOnHide = false;
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       if (fxAnimId) {
         cancelAnimationFrame(fxAnimId);
         fxAnimId = null;
+      }
+      if (winAnimId) {
+        cancelAnimationFrame(winAnimId);
+        winAnimId = null;
+        wasWinAnimRunningOnHide = true;
+      }
+      if (fireworkInterval) {
+        clearInterval(fireworkInterval);
+        fireworkInterval = null;
+        wasFireworksRunningOnHide = true;
       }
       if (timerInterval) {
         wasTimerRunningOnHide = true;
@@ -3985,6 +4020,13 @@ function initFXSystem() {
       if (!fxAnimId) {
         resizeFX();
         fxAnimId = requestAnimationFrame(fxLoop);
+      }
+      if (wasFireworksRunningOnHide && gameWon) {
+        wasFireworksRunningOnHide = false;
+        let banner = document.getElementById('win-banner');
+        if (banner && banner.classList.contains('active')) {
+          startWinFireworks();
+        }
       }
       if (wasTimerRunningOnHide && !gameWon) {
         wasTimerRunningOnHide = false;
@@ -4467,8 +4509,38 @@ function advanceNextStage() {
   }
 }
 
+let fireworkInterval = null;
+
+function startWinFireworks() {
+  if (fireworkInterval) {
+    clearInterval(fireworkInterval);
+    fireworkInterval = null;
+  }
+  const themes = ['gold', 'cyan', 'red', 'rainbow'];
+  let count = 0;
+  fireworkInterval = setInterval(() => {
+    if (!gameWon) {
+      clearInterval(fireworkInterval);
+      fireworkInterval = null;
+      return;
+    }
+    count++;
+    const x = Math.random() * (window.innerWidth - 160) + 80;
+    const y = Math.random() * (window.innerHeight * 0.45) + 60;
+    const theme = themes[Math.floor(Math.random() * themes.length)];
+    spawnFXBurst(x, y, theme, 48, true);
+    triggerScreenShake(8);
+    playSound('magic');
+    if (count >= 24) {
+      clearInterval(fireworkInterval);
+      fireworkInterval = null;
+    }
+  }, 450);
+}
+
 function startWinCascade() {
   triggerScreenShake(25);
+  startWinFireworks();
 
   for (let i = 0; i < 200; i++) {
     let conf = document.createElement('div');
@@ -4816,6 +4888,7 @@ function openHelpModal() {
 }
 
 function closeHelpModal() {
+  safeSetStorage('ksolitaire_tutorialSeen', '1');
   document.getElementById('help-modal').classList.remove('active');
 }
 

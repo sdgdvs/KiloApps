@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T00:36:01-08:00 — kilo-review: KFleet (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1060x683 and audited kfleet.html + KFleet/main.c; un-quarantined from Mature).
+  - Visual/UX Findings: All 8 node action buttons (.actions-box) clip below the fold at 1060x683; header, .scope-toolbar, and splash buttons wrap awkwardly; #radarCanvas/#scopeCanvas lack HiDPI DPR scaling and ignore Amber/Cyan themes; Esc on Help/Settings also dismisses splash.
+  - Feature/Lore/C Findings: Pre-climax worker-agent names and ARG meta-labels violate arg-lore.md s2; THROTTLE decays node.cpu toward 0% (and truncates stuck <=9% in C); playPingAck() bypasses modGain; CORE SUBSYSTEMS and BEACON are Potemkin; KFleet/main.c lacks vector radar, 4-ch strip chart, mouse node clicks, focus-safe hotkeys, and Phase VI VFS/IPC.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KFleet`, `kilo-tester`->`KFleet`, `kilo-expander`->`KFleet`] (un-quarantined `KFleet` from Mature); advanced `kilo-review` to `KAudio`; next agent `kilo-creator`.
+
 - **2026-11-02T00:32:29-08:00 — kilo-creator: kweb://cabled (Cabled Magazine 1999 Neon Edition (kweb://cabled))**
   - Status: PASS ✅ (0 errors, web 124.1 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.43%, input 23.93%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.6s)).
   - Enhanced interactive Y2K audit with armageddon scan timer protection & reset, Dot-Com IPO simulator with dynamic staged IPO stock injection, +MAX/-HALF trades &  reset.

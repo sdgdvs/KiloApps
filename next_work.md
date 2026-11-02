@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KHex
-  kilo_qa: KSolitaire
+  kilo_qa: KNetMap
   kilo_expander: KFleet
   kilo_review: KAudio
 virtual_web_target: kweb://warez
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KFleet
-  timestamp: '2026-11-02T02:39:41-08:00'
+  agent: kilo-qa
+  app: KSolitaire
+  timestamp: '2026-11-02T03:21:57-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -183,11 +183,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | **[ARGON REVIEW]:** Fix 1060x683 clipping and wrapping in kfleet.html (sheet.png Panels 1-3) by adding white-space nowrap to header and .scope-toolbar (compact labels CH A..D), reducing .bottom-row to 134px, and compacting .detail-content + 2-col .subsystems-box so all 8 .actions-box buttons fit 100% visible above the fold with 0px scroll; arrange #splashScreen .splash-buttons in a 2x2 nowrap grid and raise 9px fonts to >=10px; add resize-only devicePixelRatio HiDPI scaling to #radarCanvas and #scopeCanvas (using CSS rect.width/height in setupRadarInteraction), read active CSS theme variables so Amber/Cyan themes recolor both canvases, keep radar range rings inside viewport on 1.5X/2.2X zoom with edge-clamped outer contacts, make Escape close only the topmost modal, wire [C] on #splashScreen to #btnSplashResume, guard hotkeys when modals are open or in INPUT/SELECT/TEXTAREA, add Arrow-key node cycling, and replace confirm() in #btnResetAll with inline 2-click confirmation. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KSolitaire`
+- **Active Target**: `KNetMap`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Klondike deal engine, undo history, win fireworks, dual Win32 C parity, and promote to Mature table. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
 | `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ICMP network ping graph, host reachability radar, dual Win32 C parity, and promote to Mature table. |
@@ -251,6 +250,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KSolitaire** | `KiloOS/public/apps/ksolitaire.html` | Pass 5+ (2026-11-02) | Games / Card & Board | Complete Klondike solitaire workstation with Classic/Vegas/20-Stage Campaign modes, Mulberry32 PRNG deal selection [F3], undo/redo history [U/Ctrl+Z/Ctrl+Y], win cascade & fireworks, active skills, F5/F9 state persistence, and dual Win32 C parity. |
 | **KBreakout** | `KiloOS/public/apps/kbreakout.html` | Pass 5+ (2026-11-02) | Games / Arcade | Arcade brick-breaker with textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazards, YM2612 soundscape, dual Win32 C parity. |
 | **KBudget** | `KiloOS/public/apps/kbudget.html` | Pass 5+ (2026-11-01) | Productivity / Finance | Complete retro personal finance ledger and workstation with dual Category Pie & 30-Day Balance Projection forecasts [P], F5/F9 state persistence, dynamic categories, VFS/CSV I/O, and Win32 C parity. |
 | **KSanctuary** | `KiloOS/public/apps/ksanctuary.html` | Pass 5+ (2026-11-01) | Games / Simulation | Complete xenobiology vault simulation; Imagen 3 flora/fauna sprites, weather overlays, F5/F9 persistence, Win32 C parity. |
@@ -317,6 +317,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T03:21:57-08:00 — kilo-qa: KSolitaire (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 170.5 KB, native 49.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 65.12%, HEAD Δ 0.43%, 0 fail, 0 warn, 10.0s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, ksolitaire_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity (Klondike deal engine with F3 deal selection, undo history, win fireworks) and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KSolitaire` to Mature archive; advanced `kilo-qa` to `KNetMap`; next agent `kilo-expander`.
+
 - **2026-11-02T02:39:41-08:00 — kilo-usability: KFleet (KFleet Usability, Layout & HiDPI Overhaul)**
   - Status: PASS ✅ (0 errors, web 85.6 KB, native 18.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.07%, HEAD Δ 14.52%, 0 fail, 0 warn, 7.3s)).
   - Layout & Responsive: Eliminated 1060x683 clipping with nowrap header/toolbar, 134px bottom row, 2-col subsystems box, and 8 visible actions buttons above fold with 0px scroll.
@@ -340,9 +346,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented Ask A Sysadmin agony aunt column, Infographic Lab with 56k and bunker canvas charts, and Headline Forge.
   - Wired KiloOS VFS export (/home/downloads/), KPad companion launching, and deep hash routing in KNet/portal/webring.
   - Handoff: Advanced `kilo-creator` to `kweb://warez`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-02T00:36:01-08:00 — kilo-review: KFleet (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1060x683 and audited kfleet.html + KFleet/main.c; un-quarantined from Mature).
-  - Visual/UX Findings: All 8 node action buttons (.actions-box) clip below the fold at 1060x683; header, .scope-toolbar, and splash buttons wrap awkwardly; #radarCanvas/#scopeCanvas lack HiDPI DPR scaling and ignore Amber/Cyan themes; Esc on Help/Settings also dismisses splash.
-  - Feature/Lore/C Findings: Pre-climax worker-agent names and ARG meta-labels violate arg-lore.md s2; THROTTLE decays node.cpu toward 0% (and truncates stuck <=9% in C); playPingAck() bypasses modGain; CORE SUBSYSTEMS and BEACON are Potemkin; KFleet/main.c lacks vector radar, 4-ch strip chart, mouse node clicks, focus-safe hotkeys, and Phase VI VFS/IPC.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KFleet`, `kilo-tester`->`KFleet`, `kilo-expander`->`KFleet`] (un-quarantined `KFleet` from Mature); advanced `kilo-review` to `KAudio`; next agent `kilo-creator`.
