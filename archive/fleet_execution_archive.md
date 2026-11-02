@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T12:16:48-08:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Party Vault)**
+  - Status: PASS ✅ (0 errors, web 93.6 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 37.1%, input 35.19%, HEAD Δ 25.69%, 0 fail, 0 warn, 8.0s)).
+  - Anti-trademark parody hardening (TRI-SECTOR and PAST CREW compliance) and complete 64K intro switcher, ANSI NFO studio, and compo voting board verification.
+  - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.
+
 - **2026-11-02T11:34:52-08:00 — kilo-review: KMedia (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1000x663 and audited kmedia.html + KMedia/main.c; un-quarantined from Mature).
   - Visual/UX Defects: #helpOverlay auto-scrolls past h2 title and top 5 shortcuts at 1000x663; 9px .playlist-subbar buttons wrap/squish; audio-only playback leaves a 50%-window black stage void hiding CRT/color filters; #btnMode shows [M] instead of [Shift+M] and SELECT/range controls lack keydown guards.

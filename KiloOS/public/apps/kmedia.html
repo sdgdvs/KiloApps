@@ -893,11 +893,13 @@
           </div>
         </div>
         <div class="playlist-subbar">
-          <div style="display:flex; gap:4px;">
+          <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
             <button id="btnExportM3u" class="secondary" title="Export playlist as .m3u file">💾 M3U</button>
             <button id="btnExportCue" class="secondary" title="Export cue points sheet">📍 CUE</button>
+            <button id="btnExportWav" class="secondary" title="Export active or demo audio track as WAV to VFS">🎵 WAV</button>
             <button id="btnExportJson" class="secondary" title="Export full playlist and DSP state as .json file">📋 JSON</button>
             <button id="btnImportJson" class="secondary" title="Restore playlist &amp; DSP from JSON backup">📥 Restore JSON</button>
+            <button id="btnOpenInKPad" class="secondary" title="Open M3U / CUE playlist in KPad">📝 Edit in KPad</button>
             <input type="file" id="jsonRestoreInput" accept=".json,application/json" style="display:none;" />
           </div>
           <button id="btnLoopTrack" class="secondary" title="Cycle A-B Repeat (Point A -> Point B -> Clear) [L]">🔁 A-B [L]</button>
@@ -1215,7 +1217,9 @@
     btnMoveDown: document.getElementById('btnMoveDown'),
     btnExportM3u: document.getElementById('btnExportM3u'),
     btnExportCue: document.getElementById('btnExportCue'),
+    btnExportWav: document.getElementById('btnExportWav'),
     btnExportJson: document.getElementById('btnExportJson'),
+    btnOpenInKPad: document.getElementById('btnOpenInKPad'),
     btnLoopTrack: document.getElementById('btnLoopTrack'),
     btnMode: document.getElementById('btnMode'),
     btnSpeed: document.getElementById('btnSpeed'),
@@ -2640,6 +2644,174 @@
     showToast('Cue points cleared');
   };
 
+  // --- KiloOS Phase VI VFS & IPC Mesh Integration ---
+  const KiloVFS = {
+    isEmbedded() {
+      try {
+        return window.parent && window.parent !== window;
+      } catch (e) {
+        return false;
+      }
+    },
+    getTargetOrigin() {
+      return (window.location.origin && window.location.origin !== 'null') ? window.location.origin : '*';
+    },
+    write(path, data, notifyTitle, notifyMessage) {
+      if (!this.isEmbedded()) return;
+      try {
+        const strData = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        const target = this.getTargetOrigin();
+        window.parent.postMessage({
+          type: 'VFS_WRITE',
+          path: path,
+          data: strData,
+          requestId: 'w_' + Date.now()
+        }, target);
+        window.parent.postMessage({
+          type: 'OS_NOTIFY',
+          title: notifyTitle || 'KMedia Player',
+          message: notifyMessage || `Saved to VFS: ${path}`
+        }, target);
+      } catch (e) {
+        console.warn('[KiloVFS] write error:', e);
+      }
+    },
+    read(path, cb) {
+      if (!this.isEmbedded()) {
+        if (cb) cb(null, path);
+        return;
+      }
+      const reqId = 'read_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (cb) cb(e.data.data, e.data.path || path);
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, path);
+      }, 60000);
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({
+          type: 'VFS_READ',
+          path: path,
+          requestId: reqId
+        }, this.getTargetOrigin());
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, path);
+      }
+    },
+    showSave(defaultPath, data, cb) {
+      if (!this.isEmbedded()) {
+        if (cb) cb(null);
+        return;
+      }
+      const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (e.data.path) {
+            KiloVFS.write(e.data.path, data, 'KMedia Player', `Saved to VFS: ${e.data.path}`);
+            if (cb) cb(e.data.path);
+          } else {
+            if (cb) cb(null);
+          }
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null);
+      }, 60000);
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({
+          type: 'VFS_SHOW_SAVE',
+          requestId: reqId,
+          defaultPath: defaultPath,
+          path: defaultPath
+        }, this.getTargetOrigin());
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null);
+      }
+    },
+    showOpen(cb) {
+      if (!this.isEmbedded()) {
+        if (cb) cb(null, null);
+        return;
+      }
+      const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (e.data.path) {
+            KiloVFS.read(e.data.path, cb);
+          } else {
+            if (cb) cb(null, null);
+          }
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, null);
+      }, 60000);
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({
+          type: 'VFS_SHOW_OPEN',
+          requestId: reqId
+        }, this.getTargetOrigin());
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, null);
+      }
+    },
+    launchApp(appId, path = '', content = '') {
+      if (!this.isEmbedded()) return;
+      try {
+        window.parent.postMessage({
+          type: 'OS_LAUNCH_APP',
+          appId: appId,
+          targetApp: appId,
+          path: path,
+          content: content
+        }, this.getTargetOrigin());
+      } catch (e) {}
+    }
+  };
+
+  // Helper to trigger standard download in standalone mode
+  function downloadBlobFallback(blob, defaultFileName) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = defaultFileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => { try { URL.revokeObjectURL(a.href); } catch(e) {} }, 1000);
+  }
+
   // Export CUE Sheet
   UI.btnExportCue.onclick = () => {
     if (cuePoints.length === 0) {
@@ -2655,14 +2827,16 @@
       cueContent += `    TITLE "${cp.trackName}"\n`;
       cueContent += `    INDEX 01 ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}:${ms.toString().padStart(2, '0')}\n`;
     });
-    const blob = new Blob([cueContent], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `kmedia_cues_${Date.now()}.cue`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    showToast('Exported CUE Sheet');
+    const defaultName = `kmedia_cues_${Date.now()}.cue`;
+    if (KiloVFS.isEmbedded()) {
+      KiloVFS.showSave('/home/music/kmedia_cues.cue', cueContent, (savedPath) => {
+        if (savedPath) showToast('Exported CUE to VFS: ' + savedPath);
+      });
+    } else {
+      const blob = new Blob([cueContent], { type: 'text/plain' });
+      downloadBlobFallback(blob, defaultName);
+      showToast('Exported CUE Sheet');
+    }
   };
 
   // Export M3U Playlist
@@ -2675,17 +2849,81 @@
     playlist.forEach(it => {
       m3u += `#EXTINF:-1,${it.name}\n${it.name}\n`;
     });
-    const blob = new Blob([m3u], { type: 'audio/x-mpegurl' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `kmedia_playlist_${Date.now()}.m3u`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    showToast('Exported M3U Playlist');
+    const defaultName = `kmedia_playlist_${Date.now()}.m3u`;
+    if (KiloVFS.isEmbedded()) {
+      KiloVFS.showSave('/home/music/kmedia_playlist.m3u', m3u, (savedPath) => {
+        if (savedPath) showToast('Exported M3U to VFS: ' + savedPath);
+      });
+    } else {
+      const blob = new Blob([m3u], { type: 'audio/x-mpegurl' });
+      downloadBlobFallback(blob, defaultName);
+      showToast('Exported M3U Playlist');
+    }
   };
 
+  // Export Active / Demo WAV track
+  if (UI.btnExportWav) {
+    UI.btnExportWav.onclick = () => {
+      let curTrack = (currentIndex >= 0 && playlist[currentIndex]) ? playlist[currentIndex] : null;
+      let blob = null;
+      let fname = 'kmedia_track.wav';
+      if (curTrack && curTrack.demoIndex !== null && curTrack.demoIndex !== undefined) {
+        blob = generateDemoTrack(curTrack.demoIndex);
+        fname = curTrack.name || `kmedia_demo_${curTrack.demoIndex}.wav`;
+      } else {
+        blob = generateDemoTrack(0);
+        fname = curTrack ? curTrack.name : 'kmedia_demo_track.wav';
+      }
+      if (!fname.toLowerCase().endsWith('.wav')) fname += '.wav';
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        if (KiloVFS.isEmbedded()) {
+          KiloVFS.showSave('/home/music/' + fname, dataUrl, (savedPath) => {
+            if (savedPath) showToast('Exported WAV to VFS: ' + savedPath);
+          });
+        } else {
+          downloadBlobFallback(blob, fname);
+          showToast('Exported WAV: ' + fname);
+        }
+      };
+      reader.readAsDataURL(blob);
+    };
+  }
+
+  // Open M3U/CUE in KPad
+  if (UI.btnOpenInKPad) {
+    UI.btnOpenInKPad.onclick = () => {
+      let text = '';
+      let vfsPath = '/home/music/kmedia_playlist.m3u';
+      if (playlist.length > 0) {
+        text = '#EXTM3U\n' + playlist.map(it => `#EXTINF:-1,${it.name}\n${it.name}`).join('\n') + '\n';
+      } else if (cuePoints.length > 0) {
+        vfsPath = '/home/music/kmedia_cues.cue';
+        text = 'TITLE "KMedia Export"\n' + cuePoints.map((cp, idx) => {
+          const m = Math.floor(cp.time / 60);
+          const s = Math.floor(cp.time % 60);
+          const ms = Math.floor((cp.time % 1) * 75);
+          return `  TRACK ${(idx + 1).toString().padStart(2, '0')} AUDIO\n    TITLE "${cp.trackName}"\n    INDEX 01 ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}:${ms.toString().padStart(2, '0')}\n`;
+        }).join('');
+      } else {
+        text = '#EXTM3U\n#EXTINF:-1,Demo 1 - 1999 Cyberpulse Groove (YM2612 FM + SPC700 Delay)\nDemo 1 - 1999 Cyberpulse Groove.wav\n';
+      }
+      if (KiloVFS.isEmbedded()) {
+        KiloVFS.write(vfsPath, text, 'KMedia Player', `Exported playlist to VFS: ${vfsPath}`);
+        KiloVFS.launchApp('kpad', vfsPath, text);
+        showToast(`Opened ${vfsPath.split('/').pop()} in KPad`);
+      } else {
+        const blob = new Blob([text], { type: 'text/plain' });
+        downloadBlobFallback(blob, vfsPath.split('/').pop());
+        showToast('Downloaded playlist for KPad (standalone mode)');
+      }
+    };
+  }
+
   function parseM3u(text) {
+    if (!text || typeof text !== 'string') return;
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
     let count = 0;
     let pendingTitle = '';
@@ -2704,6 +2942,9 @@
     });
     renderPlaylist();
     showToast(`Loaded ${count} track names from M3U`);
+    if (currentIndex === -1 && playlist.length > 0) {
+      playTrack(0);
+    }
   }
 
   function parseCueSheet(text) {
@@ -2777,14 +3018,17 @@
           crt: crtEnabled
         }
       };
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `kmedia_state_${Date.now()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      showToast('Exported player state to JSON');
+      const jsonStr = JSON.stringify(state, null, 2);
+      const defaultName = `kmedia_state_${Date.now()}.json`;
+      if (KiloVFS.isEmbedded()) {
+        KiloVFS.showSave('/home/saves/kmedia_state.json', jsonStr, (savedPath) => {
+          if (savedPath) showToast('Saved state to VFS: ' + savedPath);
+        });
+      } else {
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        downloadBlobFallback(blob, defaultName);
+        showToast('Exported player state to JSON');
+      }
     } catch(e) {
       showToast('Failed to export JSON: ' + e.message, true);
     }
@@ -2803,11 +3047,26 @@
   }
   if (UI.btnExportJson) UI.btnExportJson.onclick = exportStateJson;
 
-  // Restore JSON file picker wiring
+  // Restore JSON file picker wiring (with VFS showOpen & standalone file-input fallback)
   const btnImportJson = document.getElementById('btnImportJson');
   const jsonRestoreInput = document.getElementById('jsonRestoreInput');
-  if (btnImportJson && jsonRestoreInput) {
-    btnImportJson.onclick = () => jsonRestoreInput.click();
+  if (btnImportJson) {
+    btnImportJson.onclick = () => {
+      if (KiloVFS.isEmbedded()) {
+        KiloVFS.showOpen((content, path) => {
+          if (content) {
+            loadStateFromJson(content);
+            showToast(`Restored state from VFS: ${path || 'kmedia_state.json'}`);
+          } else if (jsonRestoreInput) {
+            jsonRestoreInput.click();
+          }
+        });
+      } else if (jsonRestoreInput) {
+        jsonRestoreInput.click();
+      }
+    };
+  }
+  if (jsonRestoreInput) {
     jsonRestoreInput.onchange = async (e) => {
       if (e.target.files && e.target.files[0]) {
         try {
@@ -2821,6 +3080,93 @@
       }
     };
   }
+
+  // Ingest data from VFS, incoming IPC messages (FILE_OPEN / VFS_OPEN), or file picker
+  function ingestData(content, fileNameOrPath) {
+    if (!content) return;
+    const name = fileNameOrPath ? String(fileNameOrPath).split('/').pop() : 'incoming_file';
+    const lowerName = name.toLowerCase();
+
+    if (lowerName.endsWith('.m3u') || lowerName.endsWith('.m3u8')) {
+      parseM3u(typeof content === 'string' ? content : new TextDecoder().decode(content));
+    } else if (lowerName.endsWith('.cue')) {
+      parseCueSheet(typeof content === 'string' ? content : new TextDecoder().decode(content));
+    } else if (lowerName.endsWith('.srt')) {
+      parseSubtitles(typeof content === 'string' ? content : new TextDecoder().decode(content), true);
+      showToast('Loaded subtitles: ' + name);
+    } else if (lowerName.endsWith('.vtt')) {
+      parseSubtitles(typeof content === 'string' ? content : new TextDecoder().decode(content), false);
+      showToast('Loaded subtitles: ' + name);
+    } else if (lowerName.endsWith('.json') || (typeof content === 'string' && content.trim().startsWith('{') && content.includes('"playlist"'))) {
+      loadStateFromJson(typeof content === 'string' ? content : new TextDecoder().decode(content));
+    } else if (lowerName.endsWith('.wav') || lowerName.endsWith('.au') || lowerName.endsWith('.snd') || lowerName.endsWith('.mp3') || lowerName.endsWith('.ogg')) {
+      let url = '';
+      if (typeof content === 'string') {
+        if (content.startsWith('data:') || content.startsWith('blob:') || content.startsWith('http')) {
+          url = content;
+        } else {
+          try {
+            const bin = atob(content);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            const mime = (lowerName.endsWith('.au') || lowerName.endsWith('.snd')) ? 'audio/basic' : 'audio/wav';
+            url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+          } catch(e) {
+            const blob = new Blob([content], { type: 'audio/wav' });
+            url = URL.createObjectURL(blob);
+          }
+        }
+      } else if (content instanceof Blob) {
+        url = URL.createObjectURL(content);
+      } else if (content instanceof ArrayBuffer || ArrayBuffer.isView(content)) {
+        url = URL.createObjectURL(new Blob([content], { type: 'audio/wav' }));
+      }
+
+      if (url) {
+        playlist.push({ name: name, url: url });
+        renderPlaylist();
+        showToast('Loaded audio track: ' + name);
+        if (currentIndex === -1 || (UI.mediaPlayer && UI.mediaPlayer.paused)) {
+          playTrack(playlist.length - 1);
+        }
+      }
+    }
+  }
+
+  // Handle incoming postMessage from KiloOS File Browser, Trapster, or KAudio
+  window.addEventListener('message', (e) => {
+    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+      return;
+    }
+    const msg = e.data;
+    if (!msg || typeof msg !== 'object') return;
+
+    if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+      const filePath = msg.path || '';
+      const fileContent = msg.data !== undefined ? msg.data : msg.content;
+      if (fileContent !== undefined && fileContent !== null) {
+        ingestData(fileContent, filePath || 'VFS_FILE');
+      } else if (filePath) {
+        KiloVFS.read(filePath, (data, path) => {
+          if (data !== undefined && data !== null) {
+            ingestData(data, path || filePath);
+          }
+        });
+      }
+    }
+  });
+
+  // Check URL hash on boot for auto-loading VFS file
+  window.addEventListener('DOMContentLoaded', () => {
+    if (window.location.hash && window.location.hash.length > 1) {
+      const rawHash = decodeURIComponent(window.location.hash.slice(1));
+      if (rawHash.startsWith('/') && KiloVFS.isEmbedded()) {
+        KiloVFS.read(rawHash, (data, path) => {
+          if (data) ingestData(data, path || rawHash);
+        });
+      }
+    }
+  });
 
   // Toggle Dancing Spectrum
   const btnToggleSpectrum = document.getElementById('btnToggleSpectrum');
@@ -3613,6 +3959,9 @@
       if (!ok) {
         showToast("Quicksave failed: storage quota exceeded.", true);
         return;
+      }
+      if (KiloVFS.isEmbedded()) {
+        KiloVFS.write('/home/saves/kmedia_state.json', JSON.stringify(state, null, 2), 'KMedia Player', 'Quicksave synced to VFS: /home/saves/kmedia_state.json');
       }
       playChime(660, 0.12);
       const trackName = (currentIndex >= 0 && playlist[currentIndex]) ? playlist[currentIndex].name : 'No track active';
