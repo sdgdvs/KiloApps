@@ -196,7 +196,7 @@ void QuickSaveState(HWND hwnd) {
         CloseHandle(hFile);
         MarkTutorialSeen();
         if (showHelp) showHelp = 0;
-        SetStatus(hwnd, "⚡ Quicksave Saved to kaudio_quicksave.dat! [F5]", 2500);
+        SetStatus(hwnd, "[F5] Quicksave Saved to kaudio_quicksave.dat!", 2500);
     }
 }
 
@@ -204,7 +204,7 @@ int QuickLoadState(HWND hwnd) {
     AudioSaveState st;
     HANDLE hFile = CreateFileA("kaudio_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
-        SetStatus(hwnd, "⚠️ No quicksave file found. Press [F5] first!", 2500);
+        SetStatus(hwnd, "[!] No quicksave file found. Press [F5] first!", 2500);
         return 0;
     }
     DWORD bytesRead = 0;
@@ -232,7 +232,7 @@ int QuickLoadState(HWND hwnd) {
 
     MarkTutorialSeen();
     if (showHelp) showHelp = 0;
-    SetStatus(hwnd, "🔄 Quickload Restored from kaudio_quicksave.dat! [F9]", 2500);
+    SetStatus(hwnd, "[F9] Quickload Restored from kaudio_quicksave.dat!", 2500);
     InvalidateRect(hwnd, NULL, FALSE);
     return 1;
 }
@@ -301,7 +301,7 @@ void ExportMidiFile(HWND hwnd) {
         DWORD written = 0;
         WriteFile(hFile, midiData, idx, &written, NULL);
         CloseHandle(hFile);
-        SetStatus(hwnd, "🎹 Standard MIDI File Exported to kaudio_export.mid! [M]", 3000);
+        SetStatus(hwnd, "[MIDI] Standard MIDI File Exported to kaudio_export.mid! [M]", 3000);
     }
 }
 
@@ -352,7 +352,7 @@ void ExportPresetWav(HWND hwnd) {
     }
     if (bufIdx > 0) WriteFile(hFile, sampleBuf, bufIdx * sizeof(short), &written, NULL);
     CloseHandle(hFile);
-    SetStatus(hwnd, "💾 SFX Sample Saved to kaudio_sfx.wav! [S]", 3000);
+    SetStatus(hwnd, "[SAVE] SFX Sample Saved to kaudio_sfx.wav! [S]", 3000);
 }
 
 void CheckFirstRunTutorial(HWND hwnd, int savedStateLoaded) {
@@ -762,11 +762,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Check Preset & DSP Control Buttons (y: 35-65)
             if (y >= 35 && y <= 65) {
-                if (x >= 10 && x <= 70) { PlaySoundFX(1); SetStatus(hwnd, "🦘 [1] Jump FX Triggered", 1600); }
-                else if (x >= 75 && x <= 135) { PlaySoundFX(2); SetStatus(hwnd, "🔫 [2] Laser FX Triggered", 1600); }
-                else if (x >= 140 && x <= 210) { PlaySoundFX(3); SetStatus(hwnd, "💥 [3] Explosion FX Triggered", 1600); }
-                else if (x >= 215 && x <= 265) { PlaySoundFX(4); SetStatus(hwnd, "🪙 [4] Coin FX Triggered", 1600); }
-                else if (x >= 270 && x <= 340) { PlaySoundFX(5); SetStatus(hwnd, "⚡ [5] Powerup FX Triggered", 1600); }
+                if (x >= 10 && x <= 70) { PlaySoundFX(1); SetStatus(hwnd, "[1] Jump FX Triggered", 1600); }
+                else if (x >= 75 && x <= 135) { PlaySoundFX(2); SetStatus(hwnd, "[2] Laser FX Triggered", 1600); }
+                else if (x >= 140 && x <= 210) { PlaySoundFX(3); SetStatus(hwnd, "[3] Explosion FX Triggered", 1600); }
+                else if (x >= 215 && x <= 265) { PlaySoundFX(4); SetStatus(hwnd, "[4] Coin FX Triggered", 1600); }
+                else if (x >= 270 && x <= 340) { PlaySoundFX(5); SetStatus(hwnd, "[5] Powerup FX Triggered", 1600); }
                 else if (x >= 348 && x <= 452) { ExportWavFile(hwnd); }
                 else if (x >= 458 && x <= 560) { delayEnabled = !delayEnabled; SetStatus(hwnd, delayEnabled ? "Delay / Echo Enabled [L]" : "Delay / Echo Disabled [L]", 1800); SaveAudioState(); }
                 else if (x >= 566 && x <= 668) { driveEnabled = !driveEnabled; SetStatus(hwnd, driveEnabled ? "Overdrive Enabled [O]" : "Overdrive Disabled [O]", 1800); SaveAudioState(); }
@@ -788,7 +788,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Check Sequencer Clear Button (x: 95-140, y: 175-198)
             if (y >= 175 && y <= 198 && x >= 95 && x <= 140) {
                 for (int s = 0; s < 16; s++) seqPattern[s] = 0;
-                SetStatus(hwnd, "🗑 Sequencer Pattern Cleared [C]", 2000);
+                SetStatus(hwnd, "Sequencer Pattern Cleared [C]", 2000);
                 SaveAudioState();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
@@ -908,7 +908,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     PlayNote(lastSeqNote, 0);
                     lastSeqNote = -1;
                 }
-                SetStatus(hwnd, seqPlaying ? "▶ Sequencer Started [Space]" : "⏸ Sequencer Paused [Space]", 1800);
+                SetStatus(hwnd, seqPlaying ? "> Sequencer Started [Space]" : "|| Sequencer Paused [Space]", 1800);
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
@@ -925,7 +925,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Sequencer Clear
             if (wParam == 'C' && !isRepeat) {
                 for (int s = 0; s < 16; s++) seqPattern[s] = 0;
-                SetStatus(hwnd, "🗑 Sequencer Pattern Cleared [C]", 2000);
+                SetStatus(hwnd, "Sequencer Pattern Cleared [C]", 2000);
                 SaveAudioState();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
@@ -937,7 +937,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     PlayNote(lastSeqNote, 0);
                     lastSeqNote = -1;
                 }
-                SetStatus(hwnd, seqPlaying ? "▶ Sequencer Started [P]" : "⏸ Sequencer Paused [P]", 1800);
+                SetStatus(hwnd, seqPlaying ? "> Sequencer Started [P]" : "|| Sequencer Paused [P]", 1800);
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
@@ -970,21 +970,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             if (wParam == 'L' && !isRepeat) {
                 delayEnabled = !delayEnabled;
-                SetStatus(hwnd, delayEnabled ? "🔄 Delay / Echo Enabled [L]" : "Delay / Echo Disabled [L]", 1800);
+                SetStatus(hwnd, delayEnabled ? "Delay / Echo Enabled [L]" : "Delay / Echo Disabled [L]", 1800);
                 SaveAudioState();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
             if (wParam == 'O' && !isRepeat) {
                 driveEnabled = !driveEnabled;
-                SetStatus(hwnd, driveEnabled ? "🔥 Overdrive Enabled [O]" : "Overdrive Disabled [O]", 1800);
+                SetStatus(hwnd, driveEnabled ? "Overdrive Enabled [O]" : "Overdrive Disabled [O]", 1800);
                 SaveAudioState();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
             if ((wParam == 'Q' || (wParam == 'F' && (GetKeyState(VK_CONTROL) & 0x8000))) && !isRepeat) {
                 filterEnabled = !filterEnabled;
-                SetStatus(hwnd, filterEnabled ? "🎛️ Lowpass Filter: 3.2 kHz [Q]" : "🎛️ Lowpass Filter: Bypassed [Q]", 1800);
+                SetStatus(hwnd, filterEnabled ? "Lowpass Filter: 3.2 kHz [Q]" : "Lowpass Filter: Bypassed [Q]", 1800);
                 SaveAudioState();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
@@ -1003,10 +1003,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (isRecording) {
                     numEvents = 0;
                     recordingStartTime = GetTickCount();
-                    SetStatus(hwnd, "🔴 Live Recording Session Started... [Z]", 2000);
+                    SetStatus(hwnd, "Live Recording Session Started... [Z]", 2000);
                 } else {
                     char rmsg[64];
-                    wsprintfA(rmsg, "⏺️ Recording Saved (%d events) [Press X to Play]", numEvents);
+                    wsprintfA(rmsg, "Recording Saved (%d events) [Press X to Play]", numEvents);
                     SetStatus(hwnd, rmsg, 2500);
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -1022,10 +1022,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (isPlaying) {
                     playbackStartTime = GetTickCount();
                     playbackIndex = 0;
-                    SetStatus(hwnd, "▶ Playing recorded performance... [X]", 2000);
+                    SetStatus(hwnd, "Playing recorded performance... [X]", 2000);
                 } else {
                     for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) { PlayNote(i, 0); activeKeys[i] = 0; }
-                    SetStatus(hwnd, "⏹️ Playback stopped", 1600);
+                    SetStatus(hwnd, "Playback stopped", 1600);
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
@@ -1132,10 +1132,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(56, 189, 248));
             char title[180];
-            wsprintfA(title, "KAudio Pro | Inst: %d | Oct: %+d | Dly: %s | Drv: %s | Filt: %s | Vis: %s | Seq: %s",
+            wsprintfA(title, "KAudio Pro | Inst: %d | Oct: %+d | Dly: %s | Drv: %s | %s | %s",
                       instrument, octaveShift, delayEnabled ? "ON" : "OFF", driveEnabled ? "ON" : "OFF",
-                      filterEnabled ? "ON" : "OFF", visMode ? "FFT Spectrum" : "Oscilloscope",
-                      seqPlaying ? "PLAY" : "STOP");
+                      visMode ? "FFT" : "Scope", seqPlaying ? "PLAY" : "STOP");
             TextOutA(memDC, 10, 8, title, lstrlenA(title));
 
             // Top Save [F5] Button
@@ -1177,7 +1176,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT r3 = {140, 35, 210, 65}; FillRect(memDC, &r3, btnBrush); TextOutA(memDC, 144, 42, "[3] Explode", 11);
             RECT r4 = {215, 35, 265, 65}; FillRect(memDC, &r4, btnBrush); TextOutA(memDC, 219, 42, "[4] Coin", 8);
             RECT r5 = {270, 35, 340, 65}; FillRect(memDC, &r5, btnBrush); TextOutA(memDC, 274, 42, "[5] Power", 9);
-            RECT rExp = {348, 35, 452, 65}; FillRect(memDC, &rExp, exportBrush); TextOutA(memDC, 354, 42, "💾 WAV [E]", 10);
+            RECT rExp = {348, 35, 452, 65}; FillRect(memDC, &rExp, exportBrush); TextOutA(memDC, 360, 42, "WAV [E]", 7);
 
             // DSP FX Toggle Buttons
             RECT rDly = {458, 35, 560, 65}; FillRect(memDC, &rDly, dlyBrush);
@@ -1352,7 +1351,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(borderPen);
                 
                 SetTextColor(memDC, RGB(56, 189, 248));
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 15, "🎹 KAudio Pro Help & Shortcuts Reference", 41);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 15, "KAudio Pro Help & Shortcuts Reference", 37);
                 SetTextColor(memDC, RGB(241, 245, 249));
                 TextOutA(memDC, helpRc.left + 20, helpRc.top + 42, "A-K: Play Chromatic Piano Notes", 31);
                 TextOutA(memDC, helpRc.left + 20, helpRc.top + 64, "1 - 5: Sound FX Presets (Jump, Laser, Explode, Coin, Power)", 59);

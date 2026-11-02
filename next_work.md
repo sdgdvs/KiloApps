@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KStarship
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KAudio
+  kilo_usability: KHex
   kilo_qa: KNetMap
   kilo_expander: KAudio
   kilo_review: KChatServer
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KAudio
-  timestamp: '2026-11-02T05:39:53-08:00'
+  timestamp: '2026-11-02T06:22:17-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -157,11 +157,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | **[ARGON REVIEW]:** Eliminate boot Firebase WebSocket autostart in kaudio.html (arg-lore.md s3) by lazy-initializing initializeApp/getDatabase inside joinJamRoom() only on user click, filtering onChildAdded by ev.timestamp >= joinTime so historical events never blast notes or mutate seqTracks on join, and calling leaveJamRoom() on beforeunload/pagehide; add <option value=notch>Notch</option> to #filterType so [Q] stops blanking #filterType; stop triggerPreset() (1-8) from overwriting waveSelect.value; call saveAudioState() on ArrowLeft/Right/-/+ octave hotkeys and on [Z] recording stop (flushing held notes); persist engine, soundbank, fmPreset, fm, snesDamp/snesDampCutoff, glide/glideTime, octaveShift, visMode, and recordedEvents in #btnExportJson/#fileInputJson; honor TUNING_SCALES and octaveShift in runSequencer(), unify #btnExportWav, exportAuFile(), and export8svxFile() to render YM2612 FM, ADSR, track.sfx, and full DSP rack, and fix fileInputAu.onchange to guard dataSize === 0xFFFFFFFF without OOM crash, decode encoding === 1 (G.711 u-law), and stop activeAuSource on re-import/Esc; in KAudio/main.c record A-K WM_KEYDOWN/WM_KEYUP into recordedEvents[], wire VK_SPACE sequencer toggle and -/= octave keys, replace blocking Sleep() in PlaySoundFX() with timer-driven presets [1-9], invalidate visRc in WM_TIMER with live note/idle scope, and honor octaveShift + silent rest steps in ExportWavFile(). |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KAudio`
+- **Active Target**: `KHex`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | **[ARGON REVIEW]:** Eliminate 293px vertical scroll overflow at 1040x803 in kaudio.html (sheet.png Panels 2-3 clipping piano labels and hiding .sequencer-panel off-screen) by consolidating the 7 export/import header buttons into a compact #exportFormatSelect (WAV, MIDI, AU, 8SVX) + #btnExportMaster bar, organizing the Right Panel DSP FX Rack into compact [DELAY/SPC] [DRIVE/DAC] [CHORUS] sub-tabs so .panels-grid stays compact even with #fmControls open, and tightening .key (82px) and .step-btn (20px) so 100% of the workstation fits above the fold with 0px scroll; move #toastContainer to bottom-right (max 2 toasts, skipping redundant 400ms boot toast when #helpModal is open); raise 8px-9px .key-note and #visCanvas fonts to >= 10px (0 tiny-text nodes); add mouse-drag glissando on .key, trap Tab focus and block synth hotkeys while #helpModal or #jamModal is open, rename anachronistic Firebase RTDB labels to KiloNet Studio Relay, and fix KAudio/main.c WM_PAINT header title colliding with Save [F5] at x=650 plus replace UTF-8 emojis in TextOutA/SetStatus with clean ASCII. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -183,6 +182,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | **[ARGON REVIEW]:** Fix 1024x731 horizontal clipping in sheet.png where nav clips Tab [5] and hides Tab [6] off-screen and .quick-actions-bar clips Quickload [F9] and hides 6 chips (compact .tab-btn padding/labels so all 6 tabs fit in 1024px and wrap/compact .quick-actions-bar), tighten 16-core #cpu-core-spectrum and .info-item WebGL Renderer wrapping so Tab 1 cards fit cleanly above 731px, and guard updateTelemetrySparklines() when !isFlightRecording so pausing/scrubbing #recorder-scrub is not overwritten 1s later. |
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | **[ARGON REVIEW]:** Fix 850x613 layout clipping and chrome bloat in kchat.html (sheet.png Panels 1-2) by widening #port to 64px (padding 6px 8px so '6667' stops clipping to '666'), separating #channelBar and the search/tools strip into two compact nowrap rows with tighter button/header padding so #log reclaims >100px height and displays both boot cards without scrolling past the poll header, and restoring the Switcher [K] button (and #spoolBadge) inside renderChannelBar() which currently wipes Switcher [K] on boot; move #toast from top 86px (where it overlaps #helpModal and #channelBar) to bottom-right above .input-bar and skip redundant boot welcome toasts; compact #helpModal into a 2-column reference layout so Shortcuts, Slash Commands, and Close [Esc] fit 850x613 without clipping; add a clickable #nickBadge showing currentUsername for quick nickname edits; and replace anachronistic '(Firebase)' UI labels with 'KiloNet Global Relay'. |
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | **[ARGON REVIEW]:** Fix 1060x683 clipping and wrapping in kfleet.html (sheet.png Panels 1-3) by adding white-space nowrap to header and .scope-toolbar (compact labels CH A..D), reducing .bottom-row to 134px, and compacting .detail-content + 2-col .subsystems-box so all 8 .actions-box buttons fit 100% visible above the fold with 0px scroll; arrange #splashScreen .splash-buttons in a 2x2 nowrap grid and raise 9px fonts to >=10px; add resize-only devicePixelRatio HiDPI scaling to #radarCanvas and #scopeCanvas (using CSS rect.width/height in setupRadarInteraction), read active CSS theme variables so Amber/Cyan themes recolor both canvases, keep radar range rings inside viewport on 1.5X/2.2X zoom with edge-clamped outer contacts, make Escape close only the topmost modal, wire [C] on #splashScreen to #btnSplashResume, guard hotkeys when modals are open or in INPUT/SELECT/TEXTAREA, add Arrow-key node cycling, and replace confirm() in #btnResetAll with inline 2-click confirmation. |
+| `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | **[ARGON REVIEW]:** Eliminate 293px vertical scroll overflow at 1040x803 in kaudio.html (sheet.png Panels 2-3 clipping piano labels and hiding .sequencer-panel off-screen) by consolidating the 7 export/import header buttons into a compact #exportFormatSelect (WAV, MIDI, AU, 8SVX) + #btnExportMaster bar, organizing the Right Panel DSP FX Rack into compact [DELAY/SPC] [DRIVE/DAC] [CHORUS] sub-tabs so .panels-grid stays compact even with #fmControls open, and tightening .key (82px) and .step-btn (20px) so 100% of the workstation fits above the fold with 0px scroll; move #toastContainer to bottom-right (max 2 toasts, skipping redundant 400ms boot toast when #helpModal is open); raise 8px-9px .key-note and #visCanvas fonts to >= 10px (0 tiny-text nodes); add mouse-drag glissando on .key, trap Tab focus and block synth hotkeys while #helpModal or #jamModal is open, rename anachronistic Firebase RTDB labels to KiloNet Studio Relay, and fix KAudio/main.c WM_PAINT header title colliding with Save [F5] at x=650 plus replace UTF-8 emojis in TextOutA/SetStatus with clean ASCII. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KNetMap`
@@ -319,6 +319,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T06:22:17-08:00 — kilo-usability: KAudio (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KAudio across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-02T05:39:53-08:00 — kilo-tester: KAudio (Interactive UI Audit & Inline Repairs)**
   - Status: PASS (0 errors, web 158.6 KB, native 25.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - UI & Hotkeys: Added Notch option to #filterType, prevented triggerPreset overwriting waveSelect, wired -/= and Arrow hotkeys to save state, and flushed notes on Z stop.
@@ -340,8 +345,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: 293px vertical overflow hides .sequencer-panel and clips .key labels at 1040x803; top-center toasts occlude header; 5 tiny-text (<10px) nodes; KAudio/main.c title collides with Save [F5] and TextOutA renders UTF-8 mojibake.
   - Feature/VFS/Parity Findings: Boot Firebase RTDB autostart; [Q] sets missing notch option; offline WAV/AU/8SVX/JSON omit FM/DSP/sfx state; .AU 0xFFFFFFFF OOM & u-law bug; zero KiloOS VFS/IPC; KAudio/main.c drops A-K recording & blocks UI on Sleep().
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KAudio`, `kilo-tester`->`KAudio`, `kilo-expander`->`KAudio`] (un-quarantined `KAudio` from Mature); advanced `kilo-review` to `KChatServer`; next agent `kilo-creator`.
-
-- **2026-11-02T03:41:15-08:00 — kilo-expander: KFleet (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KFleet across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KHex`; rotated active agent to `kilo-review`.
