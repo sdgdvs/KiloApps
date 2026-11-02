@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 609,
+  "turns_executed": 611,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-11-02T09:33:57.519412+00:00",
-  "current_target": "KBreakout",
+  "last_heartbeat": "2026-11-02T11:41:04.949765+00:00",
+  "current_target": "KFleet",
   "remote_command": "none"
 }

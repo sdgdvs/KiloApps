@@ -863,6 +863,19 @@
           <button class="kbtn kbtn-amber" id="btnActionBeacon" style="grid-column: span 1;">BEACON</button>
           <button class="kbtn kbtn-alert" id="btnActionStress" style="grid-column: span 1;">PKT BURST</button>
         </div>
+
+        <!-- Locked Anomaly Carrier Capture Box -->
+        <div id="anomalyActionsBox" style="display:none; margin-top:3px; padding:3px 4px; border:1px solid var(--alert); background:rgba(255,51,68,0.1);">
+          <div style="font-size:9.5px; color:var(--alert); font-weight:bold; margin-bottom:2px; display:flex; justify-content:space-between; align-items:center;">
+            <span>NODE-0x7F CARRIER CAPTURE</span>
+            <span id="anomalyStatusTag" style="color:#ff55ee;">[LOCKED]</span>
+          </div>
+          <div style="display:flex; gap:3px;">
+            <button class="kbtn kbtn-alert" id="btnExportCapture" style="flex:1; padding:2px 3px; font-size:9px; white-space:nowrap;">EXPORT /SYS</button>
+            <button class="kbtn" id="btnInspectKHex" style="flex:1; padding:2px 3px; font-size:9px; white-space:nowrap;">INSPECT KHEX</button>
+            <button class="kbtn" id="btnInspectKMatrix" style="flex:1; padding:2px 3px; font-size:9px; white-space:nowrap;">INSPECT KMATRIX</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -873,7 +886,10 @@
     <div class="panel terminal-pane">
       <div class="panel-header">
         <span>Command & Telemetry Uplink [CLI]</span>
-        <button class="kbtn" id="btnClearTerm" style="padding:1px 5px; font-size:10px;">CLEAR</button>
+        <div style="display:flex; gap:4px; align-items:center;">
+          <button class="kbtn" id="btnReportKPad" style="padding:1px 5px; font-size:10px;">REPORT [KPAD]</button>
+          <button class="kbtn" id="btnClearTerm" style="padding:1px 5px; font-size:10px;">CLEAR</button>
+        </div>
       </div>
       <div class="terminal-body" id="termOutput">
         <div class="term-line" style="color:var(--phosphor-dim);">KFLEET Telemetry CLI v1.0.0 initialized. Type 'HELP' for commands.</div>
@@ -1013,9 +1029,10 @@
 
       <div style="border-top:1px solid var(--border); padding-top:8px;">
         <h4 style="color:var(--amber); margin-bottom:6px;">STATE PERSISTENCE & BACKUP</h4>
-        <div style="display:flex; gap:6px; margin-bottom:8px;">
+        <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
           <button class="kbtn" id="btnExportJson">EXPORT JSON BACKUP</button>
           <button class="kbtn" id="btnImportJsonTrigger">IMPORT JSON BACKUP</button>
+          <button class="kbtn" id="btnOpenKPad">REPORT IN KPAD</button>
           <input type="file" id="jsonFileInput" accept=".json" style="display:none;" />
           <button class="kbtn kbtn-alert" id="btnResetAll">FACTORY RESET</button>
         </div>
@@ -1422,7 +1439,27 @@
         appendTerm('  PURGE <node>        : Flush node telemetry buffer and loss count');
         appendTerm('  SCAN                : Deep-frequency sweep for unmapped carriers');
         appendTerm('  BEACON [ON|OFF]     : Toggle global fleet synchronization beacon');
+        appendTerm('  REPORT              : Compile diagnostic telemetry report and open in KPad');
+        appendTerm('  CAPTURE             : Export locked NODE-0x7F carrier capture to /sys/anomaly_capture.sig');
+        appendTerm('  KHEX / KMATRIX      : Inspect anomaly capture in KHex or KMatrix');
         appendTerm('  CLEAR               : Clear terminal screen');
+        break;
+
+      case 'REPORT':
+      case 'KPAD':
+        openReportInKPad();
+        break;
+
+      case 'CAPTURE':
+        exportAnomalyCapture(null);
+        break;
+
+      case 'KHEX':
+        exportAnomalyCapture('khex');
+        break;
+
+      case 'KMATRIX':
+        exportAnomalyCapture('kmatrix');
         break;
 
       case 'CLEAR':
@@ -1669,6 +1706,17 @@
 
     document.getElementById('labelMem').textContent = `${n.memKb} KB / 999 KB`;
     document.getElementById('barMem').style.width = `${(n.memKb / 999) * 100}%`;
+
+    const anomBox = document.getElementById('anomalyActionsBox');
+    if (anomBox) {
+      if (n.id === 'NX-7F' || n.isAnomaly) {
+        anomBox.style.display = 'block';
+        const tag = document.getElementById('anomalyStatusTag');
+        if (tag) tag.textContent = `[${n.status}]`;
+      } else {
+        anomBox.style.display = 'none';
+      }
+    }
   }
 
   // --- CANVAS: THEME COLOR PARSER & HIDPI SCALING ---
@@ -2154,6 +2202,165 @@
     }
   }
 
+  // --- KILOOS PHASE VI VFS & CROSS-APP IPC MESH ---
+  const KiloVFS = {
+    isSupported() {
+      return typeof window !== 'undefined' && window.parent && window.parent !== window;
+    },
+    getTargetOrigin() {
+      return (window.location && window.location.origin && window.location.origin !== 'null') ? window.location.origin : '*';
+    },
+    write(path, data, cb) {
+      if (!this.isSupported()) {
+        if (cb) cb(false);
+        return;
+      }
+      const reqId = 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      try {
+        const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        window.parent.postMessage({
+          type: 'VFS_WRITE',
+          path,
+          data: payload,
+          content: payload,
+          requestId: reqId
+        }, this.getTargetOrigin());
+        window.parent.postMessage({
+          type: 'OS_NOTIFY',
+          title: 'KFleet Telemetry Console',
+          message: `Saved to VFS: ${path}`
+        }, this.getTargetOrigin());
+        if (cb) cb(true);
+      } catch (e) {
+        if (cb) cb(false);
+      }
+    },
+    read(path, cb) {
+      if (!this.isSupported()) {
+        if (cb) cb(null, path);
+        return;
+      }
+      const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin !== window.location.origin) return;
+        if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          const content = e.data.data !== undefined ? e.data.data : e.data.content;
+          if (cb) cb(content, e.data.path || path);
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, path);
+      }, 60000);
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, this.getTargetOrigin());
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, path);
+      }
+    },
+    showSave(defaultPath, data, cb) {
+      if (!this.isSupported()) {
+        if (cb) cb(null);
+        return;
+      }
+      const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin !== window.location.origin) return;
+        if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          const finalPath = e.data.path || defaultPath;
+          if (finalPath) {
+            this.write(finalPath, data, (ok) => {
+              if (cb) cb(ok ? finalPath : null);
+            });
+          } else if (cb) {
+            cb(null);
+          }
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null);
+      }, 60000);
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({
+          type: 'VFS_SHOW_SAVE',
+          requestId: reqId,
+          defaultPath: defaultPath,
+          path: defaultPath
+        }, this.getTargetOrigin());
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null);
+      }
+    },
+    showOpen(cb) {
+      if (!this.isSupported()) {
+        if (cb) cb(null, null);
+        return;
+      }
+      const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin !== window.location.origin) return;
+        if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (e.data.path) {
+            this.read(e.data.path, cb);
+          } else if (cb) {
+            cb(null, null);
+          }
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, null);
+      }, 60000);
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, this.getTargetOrigin());
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, null);
+      }
+    },
+    launchApp(targetApp, path = '') {
+      if (!this.isSupported()) return false;
+      try {
+        window.parent.postMessage({
+          type: 'OS_LAUNCH_APP',
+          targetApp,
+          path
+        }, this.getTargetOrigin());
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+  };
+
+  function fallbackBlobDownload(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function exportJson() {
     const data = {
       app: 'KFleet',
@@ -2164,33 +2371,214 @@
       theme: state.theme,
       exportedAt: new Date().toISOString()
     };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `kfleet_telemetry_${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    appendLog('INFO', 'Telemetry profile exported to JSON file');
+    const jsonStr = JSON.stringify(data, null, 2);
+
+    if (KiloVFS.isSupported()) {
+      KiloVFS.showSave('/home/saves/kfleet_telemetry.json', jsonStr, (savedPath) => {
+        if (savedPath) {
+          appendLog('INFO', `Telemetry profile saved to VFS: ${savedPath}`);
+          alertUserToast(`SAVED TO VFS: ${savedPath}`);
+        } else {
+          fallbackBlobDownload(jsonStr, `kfleet_telemetry_${Date.now()}.json`, 'application/json');
+          appendLog('INFO', 'Telemetry profile exported to local file');
+          alertUserToast('EXPORTED JSON BACKUP');
+        }
+      });
+    } else {
+      fallbackBlobDownload(jsonStr, `kfleet_telemetry_${Date.now()}.json`, 'application/json');
+      appendLog('INFO', 'Telemetry profile exported to JSON file');
+      alertUserToast('EXPORTED JSON BACKUP');
+    }
+  }
+
+  function triggerImportJson() {
+    if (KiloVFS.isSupported()) {
+      KiloVFS.showOpen((content, path) => {
+        if (content) {
+          loadTelemetryData(content, path);
+        } else {
+          document.getElementById('jsonFileInput').click();
+        }
+      });
+    } else {
+      document.getElementById('jsonFileInput').click();
+    }
   }
 
   function importJson(file) {
     const reader = new FileReader();
     reader.onload = e => {
-      try {
-        const data = JSON.parse(e.target.result);
-        if (data.nodes) state.nodes = data.nodes;
-        if (data.selectedId) state.selectedId = data.selectedId;
-        renderRoster();
-        renderDetail();
-        appendLog('INFO', 'Telemetry profile imported successfully');
-        alertUserToast('JSON PROFILE IMPORTED');
-      } catch (err) {
-        alertUserToast('FAILED TO PARSE JSON FILE');
-      }
+      loadTelemetryData(e.target.result, file.name);
     };
     reader.readAsText(file);
   }
+
+  function loadTelemetryData(raw, sourcePath = '') {
+    try {
+      let parsed = raw;
+      if (typeof raw === 'string') {
+        try { parsed = JSON.parse(raw); } catch (e) { parsed = null; }
+      }
+      if (parsed && typeof parsed === 'object' && (parsed.nodes || parsed.app === 'KFleet')) {
+        if (parsed.nodes && Array.isArray(parsed.nodes)) {
+          state.nodes = parsed.nodes;
+        }
+        if (parsed.selectedId) state.selectedId = parsed.selectedId;
+        if (parsed.beaconActive !== undefined) state.beaconActive = !!parsed.beaconActive;
+        if (parsed.theme) {
+          state.theme = parsed.theme;
+          applyTheme();
+        }
+        renderRoster();
+        renderDetail();
+        appendLog('INFO', `Telemetry profile restored from ${sourcePath || 'VFS/File'}`);
+        alertUserToast('PROFILE RESTORED');
+        return true;
+      } else {
+        appendTerm(`[INGEST] Telemetry data from ${sourcePath || 'payload'}:`);
+        const lines = String(raw).split('\n').slice(0, 6);
+        lines.forEach(l => appendTerm(`  ${l}`));
+        return true;
+      }
+    } catch (err) {
+      alertUserToast('FAILED TO INGEST FILE');
+      return false;
+    }
+  }
+
+  function exportLog() {
+    const text = state.logs.map(l => `[${l.ts}] [${l.level}] ${l.message}`).join('\n');
+    if (KiloVFS.isSupported()) {
+      KiloVFS.showSave('/home/docs/kfleet_events.log', text, (savedPath) => {
+        if (savedPath) {
+          appendLog('INFO', `Event log saved to VFS: ${savedPath}`);
+          alertUserToast(`LOG SAVED TO VFS: ${savedPath}`);
+        } else {
+          fallbackBlobDownload(text, `kfleet_log_${Date.now()}.txt`, 'text/plain');
+          appendLog('INFO', 'Event log exported to local file');
+          alertUserToast('EXPORTED EVENT LOG');
+        }
+      });
+    } else {
+      fallbackBlobDownload(text, `kfleet_log_${Date.now()}.txt`, 'text/plain');
+      appendLog('INFO', 'Event log exported to file');
+      alertUserToast('EXPORTED EVENT LOG');
+    }
+  }
+
+  function openReportInKPad() {
+    const totalSec = Math.floor((Date.now() - state.startTime) / 1000);
+    const hrs = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+    const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+    const secs = String(totalSec % 60).padStart(2, '0');
+    const uptimeStr = `T+${hrs}:${mins}:${secs}`;
+
+    let r = `======================================================================\n`;
+    r += `KFLEET: FLEET OPERATIONS TELEMETRY REPORT (1999 VLF CONSONANCE)\n`;
+    r += `======================================================================\n`;
+    r += `GENERATED AT : ${new Date().toISOString()}\n`;
+    r += `SYSTEM UPTIME: ${uptimeStr}\n`;
+    r += `VFS BUS      : ACTIVE (<999KB strictly compliant)\n`;
+    r += `BEACON PULSE : ${state.beaconActive ? 'TRANSMITTING [SYNCHRONIZED]' : 'STANDBY'}\n`;
+    r += `TOTAL NODES  : ${state.nodes.length} ACTIVE TELEMETRY STATIONS\n`;
+    r += `----------------------------------------------------------------------\n`;
+    r += `ID      NAME             STATUS       PING    CPU    THROT   SIGNAL\n`;
+    r += `----------------------------------------------------------------------\n`;
+    state.nodes.forEach(n => {
+      const id = (n.id || '').padEnd(7);
+      const name = (n.name || '').padEnd(16);
+      const st = (n.status || '').padEnd(12);
+      const ping = `${n.ping}ms`.padEnd(7);
+      const cpu = `${n.cpu}%`.padEnd(6);
+      const th = `${n.throttle}%`.padEnd(7);
+      const sig = `${n.signal}dBm`;
+      r += `${id} ${name} ${st} ${ping} ${cpu} ${th} ${sig}\n`;
+    });
+    r += `----------------------------------------------------------------------\n`;
+    r += `RECENT EVENT STREAM ENTRIES:\n`;
+    const recentLogs = state.logs.slice(-12);
+    recentLogs.forEach(l => {
+      r += `[${l.ts}] [${l.level.padEnd(5)}] ${l.message}\n`;
+    });
+    r += `======================================================================\n`;
+    r += `END OF TELEMETRY DIAGNOSTIC DUMP\n`;
+
+    const reportPath = '/home/docs/kfleet_report.txt';
+    if (KiloVFS.isSupported()) {
+      KiloVFS.write(reportPath, r, () => {
+        KiloVFS.launchApp('kpad', reportPath);
+        appendLog('INFO', `Dispatched telemetry report to KPad (${reportPath})`);
+        alertUserToast('REPORT OPENED IN KPAD');
+      });
+    } else {
+      fallbackBlobDownload(r, 'kfleet_report.txt', 'text/plain');
+      appendLog('INFO', 'Telemetry report exported to local file');
+      alertUserToast('REPORT DOWNLOADED');
+    }
+  }
+
+  const ANOMALY_CAPTURE_PATH = '/sys/anomaly_capture.sig';
+
+  function getAnomalyCaptureData() {
+    const ghost = state.nodes.find(n => n.id === 'NX-7F') || {};
+    const now = new Date().toISOString();
+    let sig = `=== ECHO-1999 VLF CARRIER CAPTURE SIGNATURE ===\n`;
+    sig += `TARGET_NODE    : NX-7F (NODE-0x7F)\n`;
+    sig += `CARRIER_STATUS : ${ghost.status || 'ANOMALOUS'}\n`;
+    sig += `FREQUENCY      : 19.99 kHz VLF HETERODYNE\n`;
+    sig += `SECTOR_OFFSET  : 0x10199904\n`;
+    sig += `SIGNAL_STRENGTH: ${ghost.signal || -64} dBm\n`;
+    sig += `TIMESTAMP      : ${now}\n`;
+    sig += `CRC32_CHECKSUM : 0x19997F00\n`;
+    sig += `PAYLOAD_HEX_STREAM:\n`;
+    sig += `00000000: 45 43 48 4F 2D 31 39 39 39 20 4E 4F 44 45 2D 30  ECHO-1999 NODE-0\n`;
+    sig += `00000010: 78 37 46 20 43 41 52 52 49 45 52 20 4C 4F 43 4B  x7F CARRIER LOCK\n`;
+    sig += `00000020: 00 19 99 04 7F AA 55 FF C0 DE 01 23 45 67 89 AB  ...U...#Eg..\n`;
+    sig += `00000030: 53 59 53 54 45 4D 5F 43 4F 4E 56 45 52 47 45 4E  SYSTEM_CONVERGEN\n`;
+    sig += `00000040: 43 45 5F 56 46 53 5F 49 50 43 5F 4D 45 53 48 00  CE_VFS_IPC_MESH.\n`;
+    sig += `=== END ANOMALY CAPTURE ===\n`;
+    return sig;
+  }
+
+  function exportAnomalyCapture(launchTarget = null) {
+    const captureData = getAnomalyCaptureData();
+    if (KiloVFS.isSupported()) {
+      KiloVFS.write(ANOMALY_CAPTURE_PATH, captureData, () => {
+        appendLog('ANOMALY', `Carrier capture written to ${ANOMALY_CAPTURE_PATH}`);
+        alertUserToast(`CAPTURE WRITTEN TO ${ANOMALY_CAPTURE_PATH}`);
+        if (launchTarget) {
+          KiloVFS.launchApp(launchTarget, ANOMALY_CAPTURE_PATH);
+          appendLog('INFO', `Inspecting capture in ${launchTarget.toUpperCase()}`);
+        }
+      });
+    } else {
+      fallbackBlobDownload(captureData, 'anomaly_capture.sig', 'text/plain');
+      appendLog('ANOMALY', 'Anomaly capture downloaded');
+      alertUserToast('CAPTURE DOWNLOADED');
+    }
+  }
+
+  // Incoming Cross-App IPC Listener (FILE_OPEN / VFS_OPEN)
+  window.addEventListener('message', (e) => {
+    if (e.origin !== window.location.origin) return;
+    const msg = e.data;
+    if (!msg || typeof msg !== 'object') return;
+    if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+      const filePath = msg.path || '';
+      const fileContent = msg.data !== undefined ? msg.data : msg.content;
+      if (fileContent !== undefined && fileContent !== null) {
+        loadTelemetryData(fileContent, filePath);
+      } else if (filePath) {
+        KiloVFS.read(filePath, (data, path) => {
+          if (data) {
+            loadTelemetryData(data, path || filePath);
+          } else {
+            alertUserToast(`Could not read file from VFS: ${filePath}`);
+          }
+        });
+      }
+    }
+  });
 
   function alertUserToast(msg) {
     const out = document.getElementById('termOutput');
@@ -2375,9 +2763,12 @@
       startTickLoop();
     });
     document.getElementById('btnExportJson').addEventListener('click', exportJson);
-    document.getElementById('btnImportJsonTrigger').addEventListener('click', () => {
-      document.getElementById('jsonFileInput').click();
-    });
+    document.getElementById('btnImportJsonTrigger').addEventListener('click', triggerImportJson);
+    document.getElementById('btnOpenKPad')?.addEventListener('click', openReportInKPad);
+    document.getElementById('btnReportKPad')?.addEventListener('click', openReportInKPad);
+    document.getElementById('btnExportCapture')?.addEventListener('click', () => exportAnomalyCapture(null));
+    document.getElementById('btnInspectKHex')?.addEventListener('click', () => exportAnomalyCapture('khex'));
+    document.getElementById('btnInspectKMatrix')?.addEventListener('click', () => exportAnomalyCapture('kmatrix'));
     document.getElementById('jsonFileInput').addEventListener('change', e => {
       if (e.target.files && e.target.files[0]) {
         importJson(e.target.files[0]);
@@ -2512,16 +2903,7 @@
       }
     });
 
-    document.getElementById('btnExportLog').addEventListener('click', () => {
-      const text = state.logs.map(l => `[${l.ts}] [${l.level}] ${l.message}`).join('\n');
-      const blob = new Blob([text], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `kfleet_log_${Date.now()}.txt`;
-      a.click();
-      URL.revokeObjectURL(url);
-    });
+    document.getElementById('btnExportLog').addEventListener('click', exportLog);
 
     // Tutorial Buttons
     document.getElementById('btnTutPrev').addEventListener('click', () => {
