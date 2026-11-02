@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T22:38:45-08:00 — kilo-usability: KChat (850x613 Responsive Chrome & Layout Usability Pass)**
+  - Status: PASS ✅ (0 errors, web 127.7 KB, native 34.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 21.05%, HEAD Δ 12.34%, 0 fail, 0 warn, 5.0s)).
+  - Layout & Chrome: Widened #port to 64px, separated channelBar and tools into compact nowrap rows, reclaiming >100px height for #log.
+  - UX & Modals: Restored Switcher [K] & #spoolBadge in renderChannelBar, added clickable #nickBadge, 2-col #helpModal, bottom-right #toast, KiloNet labels.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-01T22:22:17-08:00 — kilo-tester: KChat (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KChat across web and native targets.

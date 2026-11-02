@@ -776,13 +776,13 @@
   </header>
 
   <!-- Navigation Bar -->
-  <nav class="scallion-nav" role="tablist">
-    <button class="nav-btn active" onclick="switchSection('frontpage', this)">📰 Front Page</button>
-    <button class="nav-btn" onclick="switchSection('sysadmin', this)">💻 Ask A Sysadmin</button>
-    <button class="nav-btn" onclick="switchSection('infographics', this)">📊 Infographic Lab</button>
-    <button class="nav-btn" onclick="switchSection('forge', this)">✍️ Headline Forge</button>
-    <button class="nav-btn" onclick="switchSection('opinion', this)">🗳️ Polls &amp; Op-Ed</button>
-    <button class="nav-btn" onclick="switchSection('classifieds', this)">📋 Classifieds '99</button>
+  <nav class="scallion-nav" role="tablist" aria-label="Sections">
+    <button class="nav-btn active" role="tab" aria-selected="true" onclick="switchSection('frontpage', this)">📰 Front Page</button>
+    <button class="nav-btn" role="tab" aria-selected="false" onclick="switchSection('sysadmin', this)">💻 Ask A Sysadmin</button>
+    <button class="nav-btn" role="tab" aria-selected="false" onclick="switchSection('infographics', this)">📊 Infographic Lab</button>
+    <button class="nav-btn" role="tab" aria-selected="false" onclick="switchSection('forge', this)">✍️ Headline Forge</button>
+    <button class="nav-btn" role="tab" aria-selected="false" onclick="switchSection('opinion', this)">🗳️ Polls &amp; Op-Ed</button>
+    <button class="nav-btn" role="tab" aria-selected="false" onclick="switchSection('classifieds', this)">📋 Classifieds '99</button>
   </nav>
 
   <!-- Live Marquee Ticker -->
@@ -1399,6 +1399,10 @@
       <span>&bull;</span>
       <a href="trapster.html">🐱 kweb://trapster</a>
       <span>&bull;</span>
+      <a href="demoscene.html">💾 kweb://demoscene</a>
+      <span>&bull;</span>
+      <a href="rfc_archive.html">📜 kweb://rfc-archive</a>
+      <span>&bull;</span>
       <a href="webring.html">🌐 kweb://webring</a>
       <span>&bull;</span>
       <a href="cybercafe.html">☕ kweb://cybercafe</a>
@@ -1663,14 +1667,20 @@ function launchKiloApp(appFile, args) {
 function switchSection(secId, btnEl) {
   playRetroSound(520, 0.04);
   document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.remove('active');
+    b.setAttribute('aria-selected', 'false');
+  });
 
   const target = document.getElementById('section-' + secId);
   if (target) target.classList.add('active');
   if (!btnEl) {
     btnEl = document.querySelector(`.scallion-nav .nav-btn[onclick*="'${secId}'"]`);
   }
-  if (btnEl) btnEl.classList.add('active');
+  if (btnEl) {
+    btnEl.classList.add('active');
+    btnEl.setAttribute('aria-selected', 'true');
+  }
 
   try {
     if (window.location.hash !== '#' + secId) {
@@ -1690,7 +1700,15 @@ function switchSection(secId, btnEl) {
  * Parses URL hash on load or hashchange to activate requested broadsheet section
  */
 function checkHashRoute() {
-  const hash = (window.location.hash || '').replace('#', '').toLowerCase();
+  let hash = (window.location.hash || '').replace('#', '').toLowerCase();
+  if (hash.startsWith('section-')) hash = hash.replace('section-', '');
+  if (hash.startsWith('sec-')) hash = hash.replace('sec-', '');
+  if (hash === 'ask' || hash === 'sys') hash = 'sysadmin';
+  if (hash === 'chart' || hash === 'charts' || hash === 'modem' || hash === 'bunker') hash = 'infographics';
+  if (hash === 'headline' || hash === 'headlines') hash = 'forge';
+  if (hash === 'editorial' || hash === 'poll' || hash === 'polls') hash = 'opinion';
+  if (hash === 'ads' || hash === 'classified') hash = 'classifieds';
+
   const validSections = ['frontpage', 'sysadmin', 'infographics', 'forge', 'opinion', 'classifieds'];
   if (hash && validSections.includes(hash)) {
     switchSection(hash);
