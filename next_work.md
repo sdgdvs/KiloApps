@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://rfc-archive
   kilo_graphics: KCyber
   kilo_soundscape: KStellar
-  kilo_tester: KMedia
+  kilo_tester: KColony
   kilo_usability: KMedia
   kilo_qa: KPing
   kilo_expander: KMedia
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KAlchemy
-  timestamp: '2026-11-02T12:31:56-08:00'
+  agent: kilo-tester
+  app: KMedia
+  timestamp: '2026-11-02T13:22:16-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -130,11 +130,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KMedia`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | **[ARGON REVIEW]:** Fix ReferenceError in #btnToggleSpectrum (call updateVisualizerUI() instead of undefined updateVisModeDisplay()); default kmedia_speed fallback to index 2 (1.0x instead of index 0 = 0.5x half-speed on boot), parse kmedia_speed/kmedia_mode/kmedia_vismode with isNaN guards so index 0 (0.5x and Oscilloscope) persists, and format 0.75x/1.25x without toFixed(1) rounding to 0.8x/1.3x; eliminate boot Firebase WebSocket autostart by lazy-initializing initializeApp/getDatabase inside joinPartyRoom() only on Connect click, call leavePartyRoom() on beforeunload/pagehide, filter onChildAdded(roomChatRef) by msg.timestamp >= joinTime (cap feed at 100), and fix backwards #btnPartyDJMode host/lock logic; make Play [Space] auto-load loadDemoSuite() / LoadDemoTrack() when playlist is empty; fix A-B Repeat Looper so Set [B] enables isLoopAB=true, #btnToggleLoopAB toggles isLoopAB when A and B exist instead of wiping them, and playTrack() clears stale A-B loops; wire createChannelSplitter(2) dual analysers for real L/R Stereo VU levels plus 2-channel stereo WAV output on Demo Track 6, persist lastVolume + clear mediaPlayer.muted on volume/mute changes; and in KMedia/main.c paint WM_ERASEBKGND client background (fixing unpainted desktop/dialog garbage), stop hijacking VK_UP/VK_DOWN when hListBox has focus, and load dropped .srt/.vtt after PlayTrackByIndex(firstNew). |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -157,6 +156,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | **[ARGON REVIEW]:** Eliminate pre-climax worker-agent spoilers (kilo-creator..kilo-expander, autonomous KiloApps agent fleet, LUDONARRATIVE INTEGRATION) and ARG/dev meta-labels (ARG Decryption, ghost/ARG nodes, TRADEMARK LINT VERIFIED) in kfleet.html and KFleet/main.c per arg-lore.md s2 by renaming AG-01..AG-06 to diegetic 1999 VLF/orbital relay callsigns (keeping IDs AG-01..AG-06, KF-99, NX-7F); fix THROTTLE CPU decay bug in kfleet.html and integer truncation lockup in KFleet/main.c by scaling from per-node baseCpu/baseThroughput, allow single-arg THROTTLE <pct> in CLI, and call renderRoster() after mutations/ticks; dynamically update Potemkin #subVfs/#subFm/#subRouter/#subCrypt/#detailLockStatus/#headerBusStatus/#nodeCountBadge (with empty-state placeholders), make state.beaconActive functional (bare BEACON toggle, button active state, radar hub sync ring, jitter/buffer stabilization), emit CRIT on high-loss bursts and match ANOMALY in #logFilterCrit, connect mod->modGain->carrier.frequency in playPingAck(), sync/persist audioEnabled + theme in save/load/JSON with safeGet/safeSet try/catch, and fix KFleet/main.c WM_KEYDOWN focus loss after button clicks plus WM_LBUTTONDOWN node selection. |
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | **[ARGON REVIEW]:** Eliminate boot Firebase WebSocket autostart in kaudio.html (arg-lore.md s3) by lazy-initializing initializeApp/getDatabase inside joinJamRoom() only on user click, filtering onChildAdded by ev.timestamp >= joinTime so historical events never blast notes or mutate seqTracks on join, and calling leaveJamRoom() on beforeunload/pagehide; add <option value=notch>Notch</option> to #filterType so [Q] stops blanking #filterType; stop triggerPreset() (1-8) from overwriting waveSelect.value; call saveAudioState() on ArrowLeft/Right/-/+ octave hotkeys and on [Z] recording stop (flushing held notes); persist engine, soundbank, fmPreset, fm, snesDamp/snesDampCutoff, glide/glideTime, octaveShift, visMode, and recordedEvents in #btnExportJson/#fileInputJson; honor TUNING_SCALES and octaveShift in runSequencer(), unify #btnExportWav, exportAuFile(), and export8svxFile() to render YM2612 FM, ADSR, track.sfx, and full DSP rack, and fix fileInputAu.onchange to guard dataSize === 0xFFFFFFFF without OOM crash, decode encoding === 1 (G.711 u-law), and stop activeAuSource on re-import/Esc; in KAudio/main.c record A-K WM_KEYDOWN/WM_KEYUP into recordedEvents[], wire VK_SPACE sequencer toggle and -/= octave keys, replace blocking Sleep() in PlaySoundFX() with timer-driven presets [1-9], invalidate visRc in WM_TIMER with live note/idle scope, and honor octaveShift + silent rest steps in ExportWavFile(). |
 | `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | **[ARGON REVIEW]:** Require isRunning in sendBroadcast() (warn when offline instead of inflating packetsOut/bytesTransferred) and filter recipients by selectRoomTarget.value (#general/#kchat/#dev vs GLOBAL); fix F5/F9 quickSave/quickLoad to persist nextClientId and elapsedSec, restore empty clients arrays, skip startServer() auto-seed timers on load, and sync offline lblPort; clamp #input-port (1024..65535) and #input-max-clients (1..256) with live offline header sync, cap #console-logs at 250 entries, and unify visibilitychange timerSimTraffic so join/quit simulation and ping jitter survive tab hide/show; in KChatServer/main.c buffer Raw TCP until newline and loop all coalesced lines in ProcessData(), close socket and decrement g_activeClients on WebSocket opcode 8 Close (and reply Pong 0x8A to opcode 9 Ping while rejecting oversized len-127 frames), wire documented [S] hotkey in MainEntry() when EDITs are unfocused, add SO_REUSEADDR + 1..65535 port clamp, and deduplicate /list rooms. |
+| `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | **[ARGON REVIEW]:** Fix ReferenceError in #btnToggleSpectrum (call updateVisualizerUI() instead of undefined updateVisModeDisplay()); default kmedia_speed fallback to index 2 (1.0x instead of index 0 = 0.5x half-speed on boot), parse kmedia_speed/kmedia_mode/kmedia_vismode with isNaN guards so index 0 (0.5x and Oscilloscope) persists, and format 0.75x/1.25x without toFixed(1) rounding to 0.8x/1.3x; eliminate boot Firebase WebSocket autostart by lazy-initializing initializeApp/getDatabase inside joinPartyRoom() only on Connect click, call leavePartyRoom() on beforeunload/pagehide, filter onChildAdded(roomChatRef) by msg.timestamp >= joinTime (cap feed at 100), and fix backwards #btnPartyDJMode host/lock logic; make Play [Space] auto-load loadDemoSuite() / LoadDemoTrack() when playlist is empty; fix A-B Repeat Looper so Set [B] enables isLoopAB=true, #btnToggleLoopAB toggles isLoopAB when A and B exist instead of wiping them, and playTrack() clears stale A-B loops; wire createChannelSplitter(2) dual analysers for real L/R Stereo VU levels plus 2-channel stereo WAV output on Demo Track 6, persist lastVolume + clear mediaPlayer.muted on volume/mute changes; and in KMedia/main.c paint WM_ERASEBKGND client background (fixing unpainted desktop/dialog garbage), stop hijacking VK_UP/VK_DOWN when hListBox has focus, and load dropped .srt/.vtt after PlayTrackByIndex(firstNew). |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KMedia`
@@ -328,6 +328,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T13:22:16-08:00 — kilo-tester: KMedia (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-tester updates for KMedia across web and native targets.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-11-02T12:31:56-08:00 — kilo-graphics: KAlchemy (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KAlchemy.
   - Handoff: Advanced `kilo-graphics` to `KCyber`; rotated active agent to `kilo-tester`.
@@ -348,8 +353,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Wired KiloOS VFS state save/open (/home/saves/kchatserver_state.json) and log export to VFS (/home/logs/kchatserver.log) with KPad and KChat launch via OS_LAUNCH_APP.
   - Added editable Server MOTD parity with Win32 C, toggleable Bot Traffic switch, per-client Mute/IP-Ban moderation, and kilo_kchat_loopback_<port> BroadcastChannel relay.
   - Handoff: Advanced `kilo-expander` to `KHex`; rotated active agent to `kilo-review`.
-
-- **2026-11-02T10:22:14-08:00 — kilo-qa: KFont (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-qa updates for KFont across web and native targets.
-  - Handoff: Advanced `kilo-qa` to `KPing`; rotated active agent to `kilo-expander`.

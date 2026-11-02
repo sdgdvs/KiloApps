@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T10:22:14-08:00 — kilo-qa: KFont (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KFont across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KPing`; rotated active agent to `kilo-expander`.
+
 - **2026-11-02T09:38:06-08:00 — kilo-usability: KChatServer (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 60.2 KB, native 20.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.02%, HEAD Δ 7.42%, 0 fail, 0 warn, 4.8s)).
   - Layout & Contrast: Dark-terminal phosphor-green kbd keycaps, compact 2-column shortcuts modal fitting 520x403, and top-right HUD toast.
