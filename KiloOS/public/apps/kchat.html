@@ -772,10 +772,11 @@
             <button id="btnFilterPinned" class="btn-secondary" onclick="window.toggleFilterPinned()" aria-label="Toggle pinned filter">📌 Pinned</button>
             <span style="opacity: 0.3;">|</span>
             <button class="btn-secondary" onclick="window.copyLog()" title="Copy channel chat transcript to clipboard [Ctrl+C]">📋 Copy</button>
-            <button class="btn-secondary" onclick="window.exportJSON()" title="Export JSON history">📥 JSON</button>
-            <button class="btn-secondary" onclick="window.exportTXT()" title="Export TXT log">📄 TXT</button>
-            <button class="btn-secondary" onclick="document.getElementById('importFileInput').click()" title="Import history">📤 Import</button>
+            <button class="btn-secondary" onclick="window.exportJSON()" title="Export JSON history to VFS/File">📥 JSON</button>
+            <button class="btn-secondary" onclick="window.exportTXT()" title="Export TXT log to VFS/File">📄 TXT</button>
+            <button class="btn-secondary" onclick="window.importHistory()" title="Import history from VFS or File">📤 Import</button>
             <input type="file" id="importFileInput" style="display:none;" accept=".json,.txt" onchange="window.importFile(event)">
+            <button class="btn-secondary" onclick="window.openInKPad()" title="Open Channel Transcript in KPad editor">📝 KPad</button>
             <button id="btnClear" class="btn-secondary" onclick="window.clearLog()" aria-label="Clear chat log">Clear</button>
             <button id="btnHelp" class="btn-secondary" onclick="window.showHelp()" aria-label="Help">Help <span class="key-badge">F1</span></button>
         </div>
@@ -824,7 +825,7 @@
                             <div><strong>2. Messaging:</strong> Type text and press <span class="key-badge">Enter</span>. Use <code>/me</code> or emotes like <code>/shrug</code>.</div>
                             <div><strong>3. Interactive Polls:</strong> Click <strong>📊 Poll</strong> or press <span class="key-badge">P</span> to create a live vote. Use <code>/vote 1</code>.</div>
                             <div><strong>4. Copy & Pin:</strong> Click <strong>📋 Copy</strong> to copy or <strong>📌 Pin</strong> to pin notices to the room banner.</div>
-                            <div><strong>5. Search & Export:</strong> Press <span class="key-badge">Ctrl+F</span> to filter. Export to <strong>📥 JSON</strong> or <strong>📄 TXT</strong>.</div>
+                            <div><strong>5. Search, Export & KPad:</strong> Press <span class="key-badge">Ctrl+F</span> to filter. Export to <strong>📥 JSON</strong> / <strong>📄 TXT</strong>, or open live in <strong>📝 KPad</strong>.</div>
                             <div><strong>6. Quicksave/Load:</strong> Press <span class="key-badge">F5</span> to save state, <span class="key-badge">F9</span> to restore anytime.</div>
                         </div>
                     </div>
@@ -2228,7 +2229,245 @@
             }
         };
 
-        // Export & Import
+        // ==========================================
+        // KiloOS VFS & IPC Mesh Integration (Phase VI)
+        // ==========================================
+        const KiloVFS = {
+            isEmbedded() {
+                try {
+                    return window.parent && window.parent !== window;
+                } catch (e) {
+                    return false;
+                }
+            },
+            getTargetOrigin() {
+                return (window.location.origin && window.location.origin !== 'null') ? window.location.origin : '*';
+            },
+            write(path, data, notifyTitle, notifyMessage) {
+                if (!this.isEmbedded()) return;
+                try {
+                    const strData = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                    const target = this.getTargetOrigin();
+                    window.parent.postMessage({
+                        type: 'VFS_WRITE',
+                        path: path,
+                        data: strData,
+                        requestId: 'w_' + Date.now()
+                    }, target);
+                    window.parent.postMessage({
+                        type: 'OS_NOTIFY',
+                        title: notifyTitle || 'KChat Pro',
+                        message: notifyMessage || `Saved to VFS: ${path}`
+                    }, target);
+                } catch (e) {
+                    console.warn('[KiloVFS] write error:', e);
+                }
+            },
+            read(path, cb) {
+                if (!this.isEmbedded()) {
+                    if (cb) cb(null, path);
+                    return;
+                }
+                const reqId = 'read_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let cleanupTimer = null;
+                const handler = (e) => {
+                    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                        return;
+                    }
+                    if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (cb) cb(e.data.data, e.data.path || path);
+                    }
+                };
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, path);
+                }, 10000);
+                window.addEventListener('message', handler);
+                try {
+                    window.parent.postMessage({
+                        type: 'VFS_READ',
+                        path: path,
+                        requestId: reqId
+                    }, this.getTargetOrigin());
+                } catch (e) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, path);
+                }
+            },
+            showSave(defaultPath, data, cb) {
+                if (!this.isEmbedded()) {
+                    if (cb) cb(null);
+                    return;
+                }
+                const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let cleanupTimer = null;
+                const handler = (e) => {
+                    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                        return;
+                    }
+                    if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (e.data.path) {
+                            KiloVFS.write(e.data.path, data, 'KChat Pro', `Saved to VFS: ${e.data.path}`);
+                            if (cb) cb(e.data.path);
+                        } else {
+                            if (cb) cb(null);
+                        }
+                    }
+                };
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null);
+                }, 60000); // 60000ms picker timeout per architecture.md
+                window.addEventListener('message', handler);
+                try {
+                    window.parent.postMessage({
+                        type: 'VFS_SHOW_SAVE',
+                        requestId: reqId,
+                        defaultPath: defaultPath,
+                        path: defaultPath
+                    }, this.getTargetOrigin());
+                } catch (e) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null);
+                }
+            },
+            showOpen(cb) {
+                if (!this.isEmbedded()) {
+                    if (cb) cb(null, null);
+                    return;
+                }
+                const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let cleanupTimer = null;
+                const handler = (e) => {
+                    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                        return;
+                    }
+                    if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (e.data.path) {
+                            KiloVFS.read(e.data.path, cb);
+                        } else {
+                            if (cb) cb(null, null);
+                        }
+                    }
+                };
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, null);
+                }, 60000); // 60000ms picker timeout per architecture.md
+                window.addEventListener('message', handler);
+                try {
+                    window.parent.postMessage({
+                        type: 'VFS_SHOW_OPEN',
+                        requestId: reqId
+                    }, this.getTargetOrigin());
+                } catch (e) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, null);
+                }
+            },
+            launchApp(appId, path = '', content = '') {
+                if (!this.isEmbedded()) return;
+                try {
+                    window.parent.postMessage({
+                        type: 'OS_LAUNCH_APP',
+                        appId: appId,
+                        targetApp: appId,
+                        path: path,
+                        content: content
+                    }, this.getTargetOrigin());
+                } catch (e) {}
+            }
+        };
+
+        // Ingest Data from VFS, FILE_OPEN, or Local Upload
+        function ingestData(content, fileNameOrPath) {
+            if (typeof content !== 'string' || !content.trim()) return;
+            const name = fileNameOrPath ? String(fileNameOrPath).split('/').pop() : 'transcript.txt';
+
+            let isJson = false;
+            let parsed = null;
+            if (name.endsWith('.json') || content.trim().startsWith('{')) {
+                try {
+                    parsed = JSON.parse(content);
+                    if (parsed && typeof parsed === 'object') isJson = true;
+                } catch (e) {}
+            }
+
+            if (isJson && parsed) {
+                const rawMsgs = Array.isArray(parsed.messages) ? parsed.messages : [];
+                if (rawMsgs.length > 0 || Array.isArray(parsed.rooms)) {
+                    const sanitized = rawMsgs.filter(m => m && typeof m === 'object').map((m, idx) => ({
+                        id: typeof m.id === 'string' ? m.id.replace(/[^\w-]/g, '') : 'imp_' + Date.now() + '_' + idx,
+                        user: String(m.user || 'Anonymous').slice(0, 32),
+                        text: String(m.text || '').slice(0, 2000),
+                        timestamp: typeof m.timestamp === 'number' && !isNaN(m.timestamp) ? m.timestamp : Date.now(),
+                        room: typeof m.room === 'string' && m.room.startsWith('#') ? m.room.slice(0, 32) : currentRoom,
+                        pinned: Boolean(m.pinned),
+                        reactions: (m.reactions && typeof m.reactions === 'object') ? m.reactions : { '👍': 0, '❤️': 0, '🚀': 0, '💡': 0, '🔥': 0 },
+                        userReacted: (m.userReacted && typeof m.userReacted === 'object') ? m.userReacted : {},
+                        isAI: Boolean(m.isAI),
+                        isPoll: Boolean(m.isPoll),
+                        pollQuestion: m.pollQuestion ? String(m.pollQuestion).slice(0, 200) : '',
+                        pollOptions: Array.isArray(m.pollOptions) ? m.pollOptions.map(opt => ({
+                            text: String(opt.text || '').slice(0, 100),
+                            votes: typeof opt.votes === 'number' ? Math.max(0, opt.votes) : 0
+                        })) : []
+                    }));
+
+                    if (sanitized.length > 0) {
+                        messages = sanitized.slice(-300);
+                    }
+                    if (Array.isArray(parsed.rooms)) {
+                        const validRooms = parsed.rooms.filter(r => typeof r === 'string' && r.startsWith('#')).map(r => r.slice(0, 32));
+                        if (validRooms.length > 0) rooms = validRooms;
+                        if (!rooms.includes('#general')) rooms.unshift('#general');
+                    }
+                    if (parsed.roomTopics && typeof parsed.roomTopics === 'object') {
+                        const cleanTopics = {};
+                        for (const k of Object.keys(parsed.roomTopics)) {
+                            if (typeof k === 'string' && k.startsWith('#')) {
+                                cleanTopics[k.slice(0, 32)] = String(parsed.roomTopics[k] || '').slice(0, 128);
+                            }
+                        }
+                        roomTopics = cleanTopics;
+                    }
+                    safeSaveState();
+                    window.renderChannelBar();
+                    window.renderMessages();
+                    showToast(`Successfully imported ${sanitized.length} message(s) from JSON (${name})!`);
+                    return;
+                }
+            }
+
+            // Fallback: Plain text log/transcript
+            addMessage("System", `--- Imported Transcript from ${name.replace(/[^\w.-]/g, '_')} ---`, currentRoom);
+            const lines = content.split(/\r?\n/);
+            let count = 0;
+            lines.forEach(l => {
+                const trimmed = l.trim().slice(0, 1000);
+                if (trimmed && !trimmed.startsWith('===')) {
+                    const match = trimmed.match(/^\[.*?\]\s*<?([A-Za-z0-9_-]+)>?[:\s]+(.*)$/);
+                    if (match) {
+                        addMessage(match[1].slice(0, 32), match[2], currentRoom);
+                    } else {
+                        addMessage("Imported", trimmed, currentRoom);
+                    }
+                    count++;
+                }
+            });
+            showToast(`Imported ${count} line(s) from ${name}!`);
+        }
+
+        // Export & Import Handlers
         window.exportJSON = function() {
             const exportData = {
                 app: "KChat Pro",
@@ -2240,13 +2479,23 @@
                 messages: messages
             };
             const jsonStr = JSON.stringify(exportData, null, 2);
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `kchat_history_${Date.now()}.json`;
-            a.click();
-            URL.revokeObjectURL(a.href);
-            showToast("Exported history to JSON!");
+
+            if (KiloVFS.isEmbedded()) {
+                KiloVFS.showSave('/home/saves/kchat_history.json', jsonStr, (savedPath) => {
+                    if (savedPath) {
+                        showToast(`Saved history to VFS: ${savedPath}`);
+                    }
+                });
+            } else {
+                // Standalone Blob fallback when window.parent === window
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `kchat_history_${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                showToast("Exported history to JSON!");
+            }
         };
 
         window.exportTXT = function() {
@@ -2268,13 +2517,35 @@
                 }
             });
 
-            const blob = new Blob([txt], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `kchat_log_${Date.now()}.txt`;
-            a.click();
-            URL.revokeObjectURL(a.href);
-            showToast("Exported history to TXT!");
+            if (KiloVFS.isEmbedded()) {
+                KiloVFS.showSave('/home/docs/kchat_log.txt', txt, (savedPath) => {
+                    if (savedPath) {
+                        showToast(`Saved log to VFS: ${savedPath}`);
+                    }
+                });
+            } else {
+                // Standalone Blob fallback when window.parent === window
+                const blob = new Blob([txt], { type: 'text/plain' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `kchat_log_${Date.now()}.txt`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                showToast("Exported history to TXT!");
+            }
+        };
+
+        window.importHistory = function() {
+            if (KiloVFS.isEmbedded()) {
+                KiloVFS.showOpen((data, path) => {
+                    if (data !== null && data !== undefined) {
+                        ingestData(data, path || 'VFS_IMPORT');
+                    }
+                });
+            } else {
+                const fileInput = document.getElementById('importFileInput');
+                if (fileInput) fileInput.click();
+            }
         };
 
         window.importFile = function(event) {
@@ -2285,79 +2556,87 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const content = e.target.result;
-                if (typeof content !== 'string') return;
-
-                if (file.name.endsWith('.json')) {
-                    try {
-                        const parsed = JSON.parse(content);
-                        if (parsed && typeof parsed === 'object') {
-                            const rawMsgs = Array.isArray(parsed.messages) ? parsed.messages : [];
-                            if (rawMsgs.length > 0 || Array.isArray(parsed.rooms)) {
-                                const sanitized = rawMsgs.filter(m => m && typeof m === 'object').map((m, idx) => ({
-                                    id: typeof m.id === 'string' ? m.id.replace(/[^\w-]/g, '') : 'imp_' + Date.now() + '_' + idx,
-                                    user: String(m.user || 'Anonymous').slice(0, 32),
-                                    text: String(m.text || '').slice(0, 2000),
-                                    timestamp: typeof m.timestamp === 'number' && !isNaN(m.timestamp) ? m.timestamp : Date.now(),
-                                    room: typeof m.room === 'string' && m.room.startsWith('#') ? m.room.slice(0, 32) : currentRoom,
-                                    pinned: Boolean(m.pinned),
-                                    reactions: (m.reactions && typeof m.reactions === 'object') ? m.reactions : { '👍': 0, '❤️': 0, '🚀': 0, '💡': 0, '🔥': 0 },
-                                    userReacted: (m.userReacted && typeof m.userReacted === 'object') ? m.userReacted : {},
-                                    isAI: Boolean(m.isAI),
-                                    isPoll: Boolean(m.isPoll),
-                                    pollQuestion: m.pollQuestion ? String(m.pollQuestion).slice(0, 200) : '',
-                                    pollOptions: Array.isArray(m.pollOptions) ? m.pollOptions.map(opt => ({
-                                        text: String(opt.text || '').slice(0, 100),
-                                        votes: typeof opt.votes === 'number' ? Math.max(0, opt.votes) : 0
-                                    })) : []
-                                }));
-
-                                if (sanitized.length > 0) {
-                                    messages = sanitized.slice(-300);
-                                }
-                                if (Array.isArray(parsed.rooms)) {
-                                    const validRooms = parsed.rooms.filter(r => typeof r === 'string' && r.startsWith('#')).map(r => r.slice(0, 32));
-                                    if (validRooms.length > 0) rooms = validRooms;
-                                    if (!rooms.includes('#general')) rooms.unshift('#general');
-                                }
-                                if (parsed.roomTopics && typeof parsed.roomTopics === 'object') {
-                                    const cleanTopics = {};
-                                    for (const k of Object.keys(parsed.roomTopics)) {
-                                        if (typeof k === 'string' && k.startsWith('#')) {
-                                            cleanTopics[k.slice(0, 32)] = String(parsed.roomTopics[k] || '').slice(0, 128);
-                                        }
-                                    }
-                                    roomTopics = cleanTopics;
-                                }
-                                safeSaveState();
-                                window.renderChannelBar();
-                                window.renderMessages();
-                                showToast(`Successfully imported ${sanitized.length} message(s) from JSON!`);
-                            } else {
-                                showToast("Error: No valid messages found in JSON file.");
-                            }
-                        } else {
-                            showToast("Error: Invalid JSON format for KChat history.");
-                        }
-                    } catch(err) {
-                        showToast("Error parsing JSON file: " + err.message);
-                    }
-                } else {
-                    addMessage("System", `--- Imported History from ${file.name.replace(/[^\w.-]/g, '_')} ---`, currentRoom);
-                    const lines = content.split(/\r?\n/);
-                    let count = 0;
-                    lines.forEach(l => {
-                        const trimmed = l.trim().slice(0, 1000);
-                        if (trimmed) {
-                            addMessage("Imported", trimmed, currentRoom);
-                            count++;
-                        }
-                    });
-                    showToast(`Imported ${count} line(s) from TXT!`);
-                }
+                ingestData(content, file.name);
             };
             reader.readAsText(file);
             event.target.value = '';
         };
+
+        // Open Current Channel Transcript in KPad Editor
+        window.openInKPad = function() {
+            let txt = `=======================================\n`;
+            txt += `KChat Pro Transcript -- ${currentRoom} (${new Date().toLocaleString()})\n`;
+            txt += `Topic: ${roomTopics[currentRoom] || 'General discussions'}\n`;
+            txt += `=======================================\n\n`;
+
+            const channelMsgs = messages.filter(m => (m.room || '#general') === currentRoom);
+            if (!channelMsgs.length) {
+                showToast(`No messages in channel ${currentRoom} to view in KPad.`);
+                return;
+            }
+            channelMsgs.forEach(m => {
+                const time = new Date(m.timestamp).toLocaleTimeString();
+                if (m.isPoll) {
+                    txt += `[${time}] 📊 [POLL by ${m.user}]: ${m.pollQuestion}\n`;
+                    (m.pollOptions || []).forEach((opt, idx) => {
+                        txt += `   [${idx + 1}] ${opt.text} -- ${opt.votes || 0} votes\n`;
+                    });
+                    txt += `\n`;
+                } else {
+                    txt += `[${time}] <${m.user}>${m.pinned ? ' 📌[PINNED]' : ''}: ${m.text}\n`;
+                }
+            });
+
+            const safeRoomName = currentRoom.replace(/[^a-zA-Z0-9]/g, '_');
+            const vfsPath = `/home/docs/kchat_transcript_${safeRoomName}.txt`;
+            if (KiloVFS.isEmbedded()) {
+                KiloVFS.write(vfsPath, txt, 'KChat Pro', `Transcript written to ${vfsPath}`);
+                KiloVFS.launchApp('kpad', vfsPath, txt);
+                showToast(`Opening ${currentRoom} transcript in KPad...`);
+            } else {
+                try {
+                    navigator.clipboard.writeText(txt);
+                    showToast("Copied transcript to clipboard! (Launch KPad in KiloOS to view live)");
+                } catch (e) {
+                    showToast("Transcript ready! (Launch KPad in KiloOS)");
+                }
+            }
+        };
+
+        // Incoming IPC Message Handler for File Browser / KiloOS Shell
+        window.addEventListener('message', (e) => {
+            if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+                return;
+            }
+            const msg = e.data;
+            if (!msg || typeof msg !== 'object') return;
+
+            if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+                const filePath = msg.path || '';
+                const fileContent = msg.data !== undefined ? msg.data : msg.content;
+                if (fileContent !== undefined && fileContent !== null) {
+                    ingestData(fileContent, filePath || 'VFS_FILE');
+                } else if (filePath) {
+                    KiloVFS.read(filePath, (data, path) => {
+                        if (data !== undefined && data !== null) {
+                            ingestData(data, path || filePath);
+                        }
+                    });
+                }
+            }
+        });
+
+        // Check for incoming file in URL hash on boot
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.location.hash && window.location.hash.length > 1) {
+                const rawHash = decodeURIComponent(window.location.hash.slice(1));
+                if (rawHash.startsWith('/') && KiloVFS.isEmbedded()) {
+                    KiloVFS.read(rawHash, (data, path) => {
+                        if (data) ingestData(data, path || rawHash);
+                    });
+                }
+            }
+        });
 
         // Firebase & Networking
         let isConnectedToFirebase = false;

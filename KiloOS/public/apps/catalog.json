@@ -115,9 +115,9 @@
     "id": "kchat",
     "title": "KChat",
     "folder": "Network",
-    "webBytes": 116432,
-    "exeBytes": 33280,
-    "budgetPercent": 11.7
+    "webBytes": 130745,
+    "exeBytes": 35328,
+    "budgetPercent": 13.1
   },
   {
     "id": "kchatserver",
@@ -251,9 +251,9 @@
     "id": "kdb",
     "title": "KDB",
     "folder": "Dev",
-    "webBytes": 233796,
-    "exeBytes": 67584,
-    "budgetPercent": 23.4
+    "webBytes": 234725,
+    "exeBytes": 70144,
+    "budgetPercent": 23.5
   },
   {
     "id": "kdirector",
@@ -659,9 +659,9 @@
     "id": "kstardredge",
     "title": "KStarDredge",
     "folder": "Games",
-    "webBytes": 532987,
-    "exeBytes": 292864,
-    "budgetPercent": 53.4
+    "webBytes": 540865,
+    "exeBytes": 299008,
+    "budgetPercent": 54.1
   },
   {
     "id": "kstarforge",

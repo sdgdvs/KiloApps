@@ -1278,29 +1278,47 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetWindowTextA(hFilterPinnedBtn, filterPinnedOnly ? "[Pinned: ON]" : "Pinned");
                 RebuildLogView();
             } else if (wmId == 109) { // Export JSON
-                HANDLE hFile = CreateFileA("kchat_history.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-                if (hFile != INVALID_HANDLE_VALUE) {
-                    DWORD written;
-                    char jsonHeader[] = "{\r\n  \"app\": \"KChat Native Pro\",\r\n  \"messages\": [\r\n";
-                    WriteFile(hFile, jsonHeader, my_strlen(jsonHeader), &written, NULL);
+                OPENFILENAMEA ofn;
+                char szFile[MAX_PATH];
+                my_memset(szFile, 0, sizeof(szFile));
+                my_strcpy(szFile, "kchat_history.json");
+                my_memset(&ofn, 0, sizeof(ofn));
+                ofn.lStructSize = sizeof(ofn);
+                ofn.hwndOwner = hwnd;
+                ofn.lpstrFile = szFile;
+                ofn.nMaxFile = sizeof(szFile);
+                ofn.lpstrFilter = "JSON Files (*.json)\0*.json\0All Files (*.*)\0*.*\0";
+                ofn.nFilterIndex = 1;
+                ofn.lpstrDefExt = "json";
+                ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
 
-                    for (int i = 0; i < g_msgCount; i++) {
-                        char escRoom[64], escUser[64], escText[768];
-                        EscapeJsonString(g_messages[i].room, escRoom, sizeof(escRoom));
-                        EscapeJsonString(g_messages[i].user, escUser, sizeof(escUser));
-                        EscapeJsonString(g_messages[i].text, escText, sizeof(escText));
+                if (GetSaveFileNameA(&ofn)) {
+                    HANDLE hFile = CreateFileA(szFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                    if (hFile != INVALID_HANDLE_VALUE) {
+                        DWORD written;
+                        char jsonHeader[] = "{\r\n  \"app\": \"KChat Native Pro\",\r\n  \"messages\": [\r\n";
+                        WriteFile(hFile, jsonHeader, my_strlen(jsonHeader), &written, NULL);
 
-                        char item[1024];
-                        wsprintfA(item, "    {\"room\": \"%s\", \"user\": \"%s\", \"text\": \"%s\", \"pinned\": %d, \"is_poll\": %d}%s\r\n",
-                            escRoom, escUser, escText, g_messages[i].pinned, g_messages[i].is_poll,
-                            (i == g_msgCount - 1) ? "" : ",");
-                        WriteFile(hFile, item, my_strlen(item), &written, NULL);
+                        for (int i = 0; i < g_msgCount; i++) {
+                            char escRoom[64], escUser[64], escText[768];
+                            EscapeJsonString(g_messages[i].room, escRoom, sizeof(escRoom));
+                            EscapeJsonString(g_messages[i].user, escUser, sizeof(escUser));
+                            EscapeJsonString(g_messages[i].text, escText, sizeof(escText));
+
+                            char item[1024];
+                            wsprintfA(item, "    {\"room\": \"%s\", \"user\": \"%s\", \"text\": \"%s\", \"pinned\": %d, \"is_poll\": %d}%s\r\n",
+                                escRoom, escUser, escText, g_messages[i].pinned, g_messages[i].is_poll,
+                                (i == g_msgCount - 1) ? "" : ",");
+                            WriteFile(hFile, item, my_strlen(item), &written, NULL);
+                        }
+
+                        char jsonFooter[] = "  ]\r\n}\r\n";
+                        WriteFile(hFile, jsonFooter, my_strlen(jsonFooter), &written, NULL);
+                        CloseHandle(hFile);
+                        char msg[MAX_PATH + 64];
+                        wsprintfA(msg, "Exported history to %s", szFile);
+                        AddMessage("System", msg, currentRoom, 0);
                     }
-
-                    char jsonFooter[] = "  ]\r\n}\r\n";
-                    WriteFile(hFile, jsonFooter, my_strlen(jsonFooter), &written, NULL);
-                    CloseHandle(hFile);
-                    AddMessage("System", "Exported history to kchat_history.json", currentRoom, 0);
                 }
             } else if (wmId == 110) { // Import File
                 OPENFILENAMEA ofn;
@@ -1409,12 +1427,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wmId == 102) { // Clear
                 ClearMessages(0);
             } else if (wmId == 103) { // Save TXT
-                HANDLE hFile = CreateFileA("chat_log.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-                if (hFile != INVALID_HANDLE_VALUE) {
-                    DWORD written;
-                    WriteFile(hFile, logBuf, my_strlen(logBuf), &written, NULL);
-                    CloseHandle(hFile);
-                    AddMessage("System", "Saved chat to chat_log.txt", currentRoom, 0);
+                OPENFILENAMEA ofn;
+                char szFile[MAX_PATH];
+                my_memset(szFile, 0, sizeof(szFile));
+                my_strcpy(szFile, "kchat_log.txt");
+                my_memset(&ofn, 0, sizeof(ofn));
+                ofn.lStructSize = sizeof(ofn);
+                ofn.hwndOwner = hwnd;
+                ofn.lpstrFile = szFile;
+                ofn.nMaxFile = sizeof(szFile);
+                ofn.lpstrFilter = "Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
+                ofn.nFilterIndex = 1;
+                ofn.lpstrDefExt = "txt";
+                ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+
+                if (GetSaveFileNameA(&ofn)) {
+                    HANDLE hFile = CreateFileA(szFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                    if (hFile != INVALID_HANDLE_VALUE) {
+                        DWORD written;
+                        WriteFile(hFile, logBuf, my_strlen(logBuf), &written, NULL);
+                        CloseHandle(hFile);
+                        char msg[MAX_PATH + 64];
+                        wsprintfA(msg, "Saved chat to %s", szFile);
+                        AddMessage("System", msg, currentRoom, 0);
+                    }
                 }
             } else if (wmId == 116) { // Copy Chat Log
                 CopyLogToClipboard(hwnd);
