@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://demoscene
+  kilo_creator: kweb://rfc-archive
   kilo_graphics: KAlchemy
   kilo_soundscape: KStellar
   kilo_tester: KMedia
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KPing
   kilo_expander: KMedia
   kilo_review: KMail
-virtual_web_target: kweb://demoscene
+virtual_web_target: kweb://rfc-archive
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KMedia
-  timestamp: '2026-11-02T11:34:52-08:00'
+  agent: kilo-creator
+  app: kweb://demoscene
+  timestamp: '2026-11-02T12:16:48-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://demoscene`
+- **Active Target**: `kweb://rfc-archive`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 | `kweb://warez` | `KiloOS/public/web/warez.html`, `KiloOS/public/apps/knet.html` | Create *The Underground Courier / Warez BBS Web Ring* (`warez.html` <250 KB): ANSI top-site release board, simulated keygen music player, download quota tracker, and VFS export. |
 | `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
+| `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KAlchemy`
@@ -328,6 +328,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T12:16:48-08:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Party Vault)**
+  - Status: PASS ✅ (0 errors, web 93.6 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 37.1%, input 35.19%, HEAD Δ 25.69%, 0 fail, 0 warn, 8.0s)).
+  - Anti-trademark parody hardening (TRI-SECTOR and PAST CREW compliance) and complete 64K intro switcher, ANSI NFO studio, and compo voting board verification.
+  - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.
+
 - **2026-11-02T11:34:52-08:00 — kilo-review: KMedia (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1000x663 and audited kmedia.html + KMedia/main.c; un-quarantined from Mature).
   - Visual/UX Defects: #helpOverlay auto-scrolls past h2 title and top 5 shortcuts at 1000x663; 9px .playlist-subbar buttons wrap/squish; audio-only playback leaves a 50%-window black stage void hiding CRT/color filters; #btnMode shows [M] instead of [Shift+M] and SELECT/range controls lack keydown guards.
@@ -350,9 +355,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Layout & Contrast: Dark-terminal phosphor-green kbd keycaps, compact 2-column shortcuts modal fitting 520x403, and top-right HUD toast.
   - Responsive & DPI: WS/TCP badges, overflow-x client table, and native Win32 DPI scaling with resizable WS_OVERLAPPEDWINDOW/WM_SIZE.
   - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
-
-- **2026-11-02T09:19:11-08:00 — kilo-tester: KChatServer (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS (0 errors, web 57.2 KB, native 18.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%%, input 3.65%%, HEAD d 0.0%%, 0 fail, 0 warn, 5.5s)).
-  - UI & Broadcast Audit: Required isRunning in sendBroadcast, filtered recipients by selectRoomTarget (#general/#kchat/#dev vs GLOBAL), clamped port (1024..65535) and maxClients (1..256) with live offline sync, capped logs at 250.
-  - Persistence & Parity: Persisted nextClientId and elapsedSec in F5/F9, restored empty clients arrays, skipped auto-seed on load, buffered Raw TCP until newline with coalesced loop, handled WS opcode 8 close, opcode 9 pong, rejected len-127, wired [S] hotkey, added SO_REUSEADDR, and deduplicated /list rooms.
-  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
