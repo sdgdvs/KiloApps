@@ -4073,11 +4073,21 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         LineTo(hdc, cx + (int)(cos(angleL) * tractorRange), cyCenter + (int)(sin(angleL) * tractorRange));
         MoveToEx(hdc, cx, cyCenter, NULL);
         LineTo(hdc, cx + (int)(cos(angleR) * tractorRange), cyCenter + (int)(sin(angleR) * tractorRange));
+
+        // Concentric magnetic induction wave arcs (Glint-free static arcs)
+        float arcR1 = tractorRange * 0.35f;
+        float arcR2 = tractorRange * 0.70f;
+        MoveToEx(hdc, cx + (int)(cos(angleL) * arcR1), cyCenter + (int)(sin(angleL) * arcR1), NULL);
+        LineTo(hdc, cx + (int)(cos(g_state.shipAngle) * arcR1), cyCenter + (int)(sin(g_state.shipAngle) * arcR1));
+        LineTo(hdc, cx + (int)(cos(angleR) * arcR1), cyCenter + (int)(sin(angleR) * arcR1));
+        MoveToEx(hdc, cx + (int)(cos(angleL) * arcR2), cyCenter + (int)(sin(angleL) * arcR2), NULL);
+        LineTo(hdc, cx + (int)(cos(g_state.shipAngle) * arcR2), cyCenter + (int)(sin(g_state.shipAngle) * arcR2));
+        LineTo(hdc, cx + (int)(cos(angleR) * arcR2), cyCenter + (int)(sin(angleR) * arcR2));
         
         SelectObject(hdc, oldTrPen);
         DeleteObject(hPenTractor);
 
-        // Magnetic flux tether lines to active ore chunks within tractor range
+        // Magnetic flux tether lines to active ore chunks & pirate wrecks within tractor range
         HPEN hPenTether = CreatePen(PS_DOT, 1, RGB(56, 189, 248));
         HGDIOBJ oldTeth = SelectObject(hdc, hPenTether);
         for (int i = 0; i < MAX_ORE_CHUNKS; i++) {
@@ -4089,6 +4099,17 @@ void RenderGame(HDC hdc, RECT* clientRect) {
                 int chY = cyCenter + (int)cdy;
                 MoveToEx(hdc, cx, cyCenter, NULL);
                 LineTo(hdc, chX, chY);
+            }
+        }
+        for (int i = 0; i < MAX_PIRATE_WRECKS; i++) {
+            if (!g_state.pirateWrecks[i].active) continue;
+            float wdx = g_state.pirateWrecks[i].x - g_state.shipX;
+            float wdy = g_state.pirateWrecks[i].y - g_state.shipY;
+            if (wdx * wdx + wdy * wdy < tractorRange * tractorRange) {
+                int wx = cx + (int)wdx;
+                int wy = cyCenter + (int)wdy;
+                MoveToEx(hdc, cx, cyCenter, NULL);
+                LineTo(hdc, wx, wy);
             }
         }
         SelectObject(hdc, oldTeth);

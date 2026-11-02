@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T17:22:17-08:00 — kilo-usability: KSys (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KSys across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-01T16:18:04-08:00 — kilo-tester: KSys (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 216.5 KB, native 40.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 7.04%, HEAD Δ 0.03%, 0 fail, 0 warn, 6.2s)).
   - UI & Audio Audit: Fixed ReferenceError in startContinuousStress, implemented resetHexPage for Home on Tab 6, wired toggleHexEndianness to renderHexViewer and hex-stats-cursor, connected mod->modGain->car.frequency in playYm2612Sfx.

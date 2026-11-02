@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://cabled
-  kilo_graphics: KWizard
+  kilo_graphics: KBreakout
   kilo_soundscape: KStellar
   kilo_tester: KChat
   kilo_usability: KChat
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://trapster
-  timestamp: '2026-11-01T21:17:06-08:00'
+  agent: kilo-graphics
+  app: KStarDredge
+  timestamp: '2026-11-01T21:39:06-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -99,12 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KWizard`
+- **Active Target**: `KBreakout`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
-| `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Replace code-generated 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with Imagen 3 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
@@ -115,6 +113,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | **[ARGON REVIEW]:** Replace primitive geometric canvas and inline SVG programmer-art across ksubmarine.html (drawSubmarineSprite, drawLeviathanCreature, drawSquidCreature, drawFloraCreature, drawFaunaCreature, drawSalvageSprite, drawCombatDroneSprite, hydrothermal black smoker spire in drawSonarView/drawNavMapChart, and getFaunaVisualSvg) with Imagen 3 2-stage chroma-keyed sprites/atlas (<999 KB, zero perimeter border glints). — Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
+| `KWizard` | `KiloOS/public/apps/kwizard.html` | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
+| `KStarDredge` | `KiloOS/public/apps/kstardredge.html` | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -316,6 +316,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T21:39:06-08:00 — kilo-graphics: KStarDredge (Imagen 3 Visual Assets & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 528.2 KB, native 292.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Replaced derelict hull and pirate wreckage programmer art with Imagen 3 chroma-keyed sprites & cosmic anomalies.
+  - Upgraded magnetic dredge beam effects with dual-frequency flux cones and oscillating magnetic tethers across Web and Win32 C.
+  - Glint sweep verified: zero specular glints or traveling border dots across HTML and C.
+  - Handoff: Advanced `kilo-graphics` to `KBreakout`; rotated active agent to `kilo-tester`.
+
 - **2026-11-01T21:17:06-08:00 — kilo-creator: kweb://trapster (Trapster P2P Chiptune & Tracker Exchange v1.0b)**
   - Status: PASS ✅ (0 errors, web 126.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 60.01%, HEAD Δ 0.0%, 0 fail, 0 warn, 7.1s)).
   - Implemented searchable 1999 P2P node directory, simulated 56k/T1 download queue, and live YM2612/SPC700 chiptune previewer.
@@ -338,8 +345,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Persistence: Verified F5/F9 quicksave/quickload, kbudget_tutorialSeen flag, and modal dismissals.
   - Dual Parity & Balance Forecast: Implemented dual Win32 C parity for 30-day balance projection graphs [P], dynamic expense categories, and category exports.
   - Mature Quarantine & Handoff: Promoted `KBudget` to Mature archive; advanced `kilo-qa` to `KDB`; next agent `kilo-expander`.
-
-- **2026-11-01T17:22:17-08:00 — kilo-usability: KSys (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-usability updates for KSys across web and native targets.
-  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
