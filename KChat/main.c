@@ -34,6 +34,7 @@ typedef struct {
     char poll_options[4][64];
     int poll_votes[4];
     int poll_opt_count;
+    int user_voted;
 } Message;
 
 typedef struct {
@@ -46,7 +47,7 @@ static int g_dpi = 96;
 
 SOCKET s = INVALID_SOCKET;
 HWND hLog, hIp, hPort, hBtn, hInput, hSend, hClear, hSave, hCopyBtn;
-HWND hRoomCombo, hSearchInput, hPinBtn, hReactBtn, hExportJson, hImportBtn;
+HWND hRoomCombo, hSearchInput, hPinBtn, hReactBtn, hExportJson, hImportBtn, hFilterPinnedBtn;
 HWND hTopicLabel, hPollBtn, hVoteBtn, hStatsBtn, hHelpBtn, hSwitcherBtn, hSpoolBtn;
 
 SpoolMessage g_spool[MAX_SPOOL];
@@ -298,8 +299,12 @@ void AddPollMessage(const char* user, const char* question, const char* options[
 int VoteOnLatestPoll(int optIndex) {
     for (int i = g_msgCount - 1; i >= 0; i--) {
         if (my_strcmp(g_messages[i].room, currentRoom) == 0 && g_messages[i].is_poll) {
+            if (g_messages[i].user_voted) {
+                return -2;
+            }
             if (optIndex >= 1 && optIndex <= g_messages[i].poll_opt_count) {
                 g_messages[i].poll_votes[optIndex - 1]++;
+                g_messages[i].user_voted = 1;
                 RebuildLogView();
                 return 1;
             }
@@ -332,6 +337,74 @@ void ShowRoomStats() {
     wsprintfA(statsReport, "[STATS for %s]: User: %s | Messages: %d (Total: %d) | Pinned: %d | Active Polls: %d (Votes: %d)",
         currentRoom, currentUsername, roomMsgs, g_msgCount, roomPinned, roomPolls, totalVotes);
     AddMessage("System", statsReport, currentRoom, 0);
+}
+
+static const char* my_stristr_ptr(const char* haystack, const char* needle) {
+    if (!needle || !*needle) return haystack;
+    for (int i = 0; haystack[i]; i++) {
+        int j = 0;
+        while (haystack[i + j] && needle[j] && to_lower(haystack[i + j]) == to_lower(needle[j])) {
+            j++;
+        }
+        if (!needle[j]) return haystack + i;
+    }
+    return NULL;
+}
+
+static int ExtractJsonString(const char* src, const char* key, char* outVal, int maxVal) {
+    char searchKey[64];
+    wsprintfA(searchKey, "\"%s\"", key);
+    const char* p = my_stristr_ptr(src, searchKey);
+    if (!p) return 0;
+    p += my_strlen(searchKey);
+    while (*p == ' ' || *p == ':' || *p == '\t' || *p == '\r' || *p == '\n') p++;
+    if (*p != '\"') return 0;
+    p++;
+    int i = 0;
+    while (*p && *p != '\"' && i < maxVal - 1) {
+        if (*p == '\\' && *(p + 1)) {
+            p++;
+            if (*p == 'n') outVal[i++] = '\n';
+            else if (*p == 'r') outVal[i++] = '\r';
+            else if (*p == 't') outVal[i++] = '\t';
+            else outVal[i++] = *p;
+        } else {
+            outVal[i++] = *p;
+        }
+        p++;
+    }
+    outVal[i] = '\0';
+    return 1;
+}
+
+static int ExtractJsonInt(const char* src, const char* key, int defaultVal) {
+    char searchKey[64];
+    wsprintfA(searchKey, "\"%s\"", key);
+    const char* p = my_stristr_ptr(src, searchKey);
+    if (!p) return defaultVal;
+    p += my_strlen(searchKey);
+    while (*p == ' ' || *p == ':' || *p == '\t' || *p == '\r' || *p == '\n') p++;
+    if (*p == 't' || *p == 'T') return 1;
+    if (*p == 'f' || *p == 'F') return 0;
+    return my_atoi(p);
+}
+
+void ClearMessages(int all) {
+    if (all) {
+        g_msgCount = 0;
+    } else {
+        int newCount = 0;
+        for (int i = 0; i < g_msgCount; i++) {
+            if (my_strcmp(g_messages[i].room, currentRoom) != 0) {
+                if (newCount != i) {
+                    g_messages[newCount] = g_messages[i];
+                }
+                newCount++;
+            }
+        }
+        g_msgCount = newCount;
+    }
+    RebuildLogView();
 }
 
 void EscapeJsonString(const char* src, char* dst, int maxDst) {
@@ -452,6 +525,7 @@ void LoadQuickSave(HWND hwnd) {
         my_strncpy(currentUsername, data->currentUsername, sizeof(currentUsername));
         my_strncpy(currentRoom, data->currentRoom, sizeof(currentRoom));
         filterPinnedOnly = data->filterPinnedOnly;
+        if (hFilterPinnedBtn) SetWindowTextA(hFilterPinnedBtn, filterPinnedOnly ? "[Pinned: ON]" : "Pinned");
         g_topicCount = data->topicCount;
         if (g_topicCount > MAX_ROOMS) g_topicCount = MAX_ROOMS;
         for (int i = 0; i < g_topicCount; i++) {
@@ -776,15 +850,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Row 2: Search, Pin, Reaction, Export/Import controls + Topic Header
             CreateWindowA("STATIC", "Search:", WS_CHILD|WS_VISIBLE, SCALE(10), SCALE(38), SCALE(45), SCALE(20), hwnd, 0, 0, 0);
-            hSearchInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(58), SCALE(36), SCALE(100), SCALE(24), hwnd, (HMENU)111, 0, 0);
+            hSearchInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(58), SCALE(36), SCALE(90), SCALE(24), hwnd, (HMENU)111, 0, 0);
             
-            hPinBtn = CreateWindowA("BUTTON", "Pin [Ctrl+P]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(164), SCALE(36), SCALE(74), SCALE(24), hwnd, (HMENU)107, 0, 0);
-            hReactBtn = CreateWindowA("BUTTON", "React [R]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(242), SCALE(36), SCALE(60), SCALE(24), hwnd, (HMENU)108, 0, 0);
-            hExportJson = CreateWindowA("BUTTON", "JSON", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(306), SCALE(36), SCALE(46), SCALE(24), hwnd, (HMENU)109, 0, 0);
-            hImportBtn = CreateWindowA("BUTTON", "Import", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(356), SCALE(36), SCALE(48), SCALE(24), hwnd, (HMENU)110, 0, 0);
-            hClear = CreateWindowA("BUTTON", "Clear", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(408), SCALE(36), SCALE(46), SCALE(24), hwnd, (HMENU)102, 0, 0);
+            hPinBtn = CreateWindowA("BUTTON", "Pin [Ctrl+P]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(152), SCALE(36), SCALE(72), SCALE(24), hwnd, (HMENU)107, 0, 0);
+            hReactBtn = CreateWindowA("BUTTON", "React [R]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(228), SCALE(36), SCALE(58), SCALE(24), hwnd, (HMENU)108, 0, 0);
+            hFilterPinnedBtn = CreateWindowA("BUTTON", "Pinned", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(290), SCALE(36), SCALE(54), SCALE(24), hwnd, (HMENU)121, 0, 0);
+            hExportJson = CreateWindowA("BUTTON", "JSON", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(348), SCALE(36), SCALE(42), SCALE(24), hwnd, (HMENU)109, 0, 0);
+            hImportBtn = CreateWindowA("BUTTON", "Import", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(394), SCALE(36), SCALE(46), SCALE(24), hwnd, (HMENU)110, 0, 0);
+            hClear = CreateWindowA("BUTTON", "Clear", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(444), SCALE(36), SCALE(44), SCALE(24), hwnd, (HMENU)102, 0, 0);
 
-            hTopicLabel = CreateWindowA("STATIC", "Topic: General discussions & community hub", WS_CHILD|WS_VISIBLE|SS_LEFTNOWORDWRAP, SCALE(460), SCALE(38), SCALE(350), SCALE(20), hwnd, 0, 0, 0);
+            hTopicLabel = CreateWindowA("STATIC", "Topic: General discussions & community hub", WS_CHILD|WS_VISIBLE|SS_LEFTNOWORDWRAP, SCALE(494), SCALE(38), SCALE(320), SCALE(20), hwnd, 0, 0, 0);
 
             // Row 3: Log area
             hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY|WS_TABSTOP, SCALE(10), SCALE(66), SCALE(810), SCALE(508), hwnd, 0, 0, 0);
@@ -814,6 +889,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hSearchInput, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hPinBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hReactBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hFilterPinnedBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hExportJson, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hImportBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hTopicLabel, WM_SETFONT, (WPARAM)hUIFont, TRUE);
@@ -867,6 +943,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int res = VoteOnLatestPoll(1);
                 if (res == 1) {
                     AddMessage("System", "Voted option [1] on the active poll.", currentRoom, 0);
+                } else if (res == -2) {
+                    AddMessage("System", "You have already voted on this poll.", currentRoom, 0);
                 } else {
                     AddMessage("System", "No active poll found to vote on. Create one with /poll!", currentRoom, 0);
                 }
@@ -981,8 +1059,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         break;
                     }
 
+                    if (my_strcmp(buf, "/clear all") == 0) {
+                        ClearMessages(1);
+                        SetWindowTextA(hInput, "");
+                        break;
+                    }
+
                     if (my_strcmp(buf, "/clear") == 0) {
-                        g_msgCount = 0;
+                        ClearMessages(0);
+                        SetWindowTextA(hInput, "");
+                        break;
+                    }
+
+                    if (my_strcmp(buf, "/pinned") == 0) {
+                        filterPinnedOnly = !filterPinnedOnly;
+                        if (hFilterPinnedBtn) SetWindowTextA(hFilterPinnedBtn, filterPinnedOnly ? "[Pinned: ON]" : "Pinned");
                         RebuildLogView();
                         SetWindowTextA(hInput, "");
                         break;
@@ -1014,8 +1105,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
 
                     if (buf[0] == '/' && buf[1] == 'j' && buf[2] == 'o' && buf[3] == 'i' && buf[4] == 'n' && buf[5] == ' ') {
-                        my_strncpy(currentRoom, buf + 6, sizeof(currentRoom));
-                        UpdateTopicDisplay();
+                        char targetRoom[32];
+                        const char* rawRoom = buf + 6;
+                        while (*rawRoom == ' ') rawRoom++;
+                        if (*rawRoom == '#') {
+                            my_strncpy(targetRoom, rawRoom, sizeof(targetRoom));
+                        } else {
+                            targetRoom[0] = '#';
+                            my_strncpy(targetRoom + 1, rawRoom, sizeof(targetRoom) - 1);
+                        }
+                        int tLen = my_strlen(targetRoom);
+                        while (tLen > 0 && (targetRoom[tLen - 1] == ' ' || targetRoom[tLen - 1] == '\r' || targetRoom[tLen - 1] == '\n')) {
+                            targetRoom[--tLen] = '\0';
+                        }
+                        SwitchToRoom(hwnd, targetRoom);
                         AddMessage("System", "Switched room.", currentRoom, 0);
                         if (s != INVALID_SOCKET) {
                             send(s, buf, my_strlen(buf), 0);
@@ -1085,6 +1188,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             char vMsg[64];
                             wsprintfA(vMsg, "Voted option [%d] on active poll.", optNum);
                             AddMessage("System", vMsg, currentRoom, 0);
+                        } else if (res == -2) {
+                            AddMessage("System", "You have already voted on this poll.", currentRoom, 0);
                         } else if (res == -1) {
                             AddMessage("System", "Invalid option number.", currentRoom, 0);
                         } else {
@@ -1152,16 +1257,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     SetWindowTextA(hInput, "");
                 }
-            } else if (wmId == 107) { // Pin Last
-                if (g_msgCount > 0) {
-                    g_messages[g_msgCount - 1].pinned = !g_messages[g_msgCount - 1].pinned;
-                    RebuildLogView();
+            } else if (wmId == 107) { // Pin Last in current room
+                for (int i = g_msgCount - 1; i >= 0; i--) {
+                    if (my_strcmp(g_messages[i].room, currentRoom) == 0) {
+                        g_messages[i].pinned = !g_messages[i].pinned;
+                        RebuildLogView();
+                        break;
+                    }
                 }
-            } else if (wmId == 108) { // React 👍
-                if (g_msgCount > 0) {
-                    g_messages[g_msgCount - 1].reactions_like++;
-                    RebuildLogView();
+            } else if (wmId == 108) { // React 👍 on latest in current room
+                for (int i = g_msgCount - 1; i >= 0; i--) {
+                    if (my_strcmp(g_messages[i].room, currentRoom) == 0) {
+                        g_messages[i].reactions_like++;
+                        RebuildLogView();
+                        break;
+                    }
                 }
+            } else if (wmId == 121) { // Toggle Pinned Filter
+                filterPinnedOnly = !filterPinnedOnly;
+                SetWindowTextA(hFilterPinnedBtn, filterPinnedOnly ? "[Pinned: ON]" : "Pinned");
+                RebuildLogView();
             } else if (wmId == 109) { // Export JSON
                 HANDLE hFile = CreateFileA("kchat_history.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
                 if (hFile != INVALID_HANDLE_VALUE) {
@@ -1203,36 +1318,96 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (GetOpenFileNameA(&ofn)) {
                     HANDLE hFile = CreateFileA(szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
                     if (hFile != INVALID_HANDLE_VALUE) {
-                        char buffer[4096];
-                        DWORD readBytes;
-                        if (ReadFile(hFile, buffer, sizeof(buffer) - 1, &readBytes, NULL)) {
-                            buffer[readBytes] = 0;
-                            AddMessage("System", "Imported history file.", currentRoom, 0);
-                            
-                            // Parse lines
-                            char* line = buffer;
-                            while (*line) {
-                                while (*line == '\r' || *line == '\n') line++;
-                                if (!*line) break;
-                                char* nextLine = line;
-                                while (*nextLine && *nextLine != '\r' && *nextLine != '\n') nextLine++;
-                                int lineLen = (int)(nextLine - line);
-                                if (lineLen > 0 && lineLen < 350) {
-                                    char cleanLine[384];
-                                    my_strncpy(cleanLine, line, lineLen + 1);
-                                    if (cleanLine[0] != '{' && cleanLine[0] != '}' && cleanLine[0] != '[') {
-                                        AddMessage("Imported", cleanLine, currentRoom, 0);
+                        char* buffer = (char*)GlobalAlloc(GPTR, 65536);
+                        if (buffer) {
+                            DWORD readBytes = 0;
+                            if (ReadFile(hFile, buffer, 65535, &readBytes, NULL)) {
+                                buffer[readBytes] = 0;
+                                int isJson = 0;
+                                int fnLen = my_strlen(szFile);
+                                if (fnLen >= 5 && (szFile[fnLen - 5] == '.' && (szFile[fnLen - 4] == 'j' || szFile[fnLen - 4] == 'J'))) {
+                                    isJson = 1;
+                                } else if (my_stristr(buffer, "\"messages\"")) {
+                                    isJson = 1;
+                                }
+
+                                if (isJson) {
+                                    const char* msgArr = my_stristr_ptr(buffer, "\"messages\"");
+                                    if (msgArr) {
+                                        while (*msgArr && *msgArr != '[') msgArr++;
+                                        if (*msgArr == '[') msgArr++;
+                                    } else {
+                                        msgArr = buffer;
+                                    }
+
+                                    const char* p = msgArr;
+                                    int importedCount = 0;
+                                    while (*p) {
+                                        while (*p && *p != '{') p++;
+                                        if (!*p) break;
+                                        const char* startObj = p;
+                                        int depth = 0;
+                                        while (*p) {
+                                            if (*p == '{') depth++;
+                                            else if (*p == '}') {
+                                                depth--;
+                                                if (depth == 0) { p++; break; }
+                                            }
+                                            p++;
+                                        }
+                                        int objLen = (int)(p - startObj);
+                                        if (objLen > 0 && objLen < 1024) {
+                                            char objBuf[1024];
+                                            my_strncpy(objBuf, startObj, objLen + 1);
+                                            char rRoom[32] = "", rUser[32] = "", rText[384] = "";
+                                            ExtractJsonString(objBuf, "room", rRoom, sizeof(rRoom));
+                                            ExtractJsonString(objBuf, "user", rUser, sizeof(rUser));
+                                            ExtractJsonString(objBuf, "text", rText, sizeof(rText));
+                                            int rPinned = ExtractJsonInt(objBuf, "pinned", 0);
+                                            int rPoll = ExtractJsonInt(objBuf, "is_poll", 0);
+                                            if (rRoom[0] == '\0') my_strcpy(rRoom, currentRoom);
+                                            if (rUser[0] == '\0') my_strcpy(rUser, "Imported");
+                                            if (rText[0] != '\0') {
+                                                AddMessage(rUser, rText, rRoom, rPinned);
+                                                if (rPoll && g_msgCount > 0) {
+                                                    g_messages[g_msgCount - 1].is_poll = 1;
+                                                }
+                                                importedCount++;
+                                            }
+                                        }
+                                    }
+                                    char report[64];
+                                    wsprintfA(report, "Imported %d messages from JSON.", importedCount);
+                                    AddMessage("System", report, currentRoom, 0);
+                                } else {
+                                    AddMessage("System", "Imported history file.", currentRoom, 0);
+                                    char* line = buffer;
+                                    while (*line) {
+                                        while (*line == '\r' || *line == '\n') line++;
+                                        if (!*line) break;
+                                        char* nextLine = line;
+                                        while (*nextLine && *nextLine != '\r' && *nextLine != '\n') nextLine++;
+                                        int lineLen = (int)(nextLine - line);
+                                        if (lineLen > 0 && lineLen < 350) {
+                                            char cleanLine[384];
+                                            my_strncpy(cleanLine, line, lineLen + 1);
+                                            char* tr = cleanLine;
+                                            while (*tr == ' ' || *tr == '\t') tr++;
+                                            if (*tr && *tr != '{' && *tr != '}' && *tr != '[') {
+                                                AddMessage("Imported", tr, currentRoom, 0);
+                                            }
+                                        }
+                                        line = nextLine;
                                     }
                                 }
-                                line = nextLine;
                             }
+                            GlobalFree(buffer);
                         }
                         CloseHandle(hFile);
                     }
                 }
             } else if (wmId == 102) { // Clear
-                g_msgCount = 0;
-                RebuildLogView();
+                ClearMessages(0);
             } else if (wmId == 103) { // Save TXT
                 HANDLE hFile = CreateFileA("chat_log.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
                 if (hFile != INVALID_HANDLE_VALUE) {

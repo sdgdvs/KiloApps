@@ -829,7 +829,7 @@
                 </div>
                 <div class="modal-field">
                     <label for="pollOpt2Input">Option 2:</label>
-                    <input type="text" id="pollOpt2Input" placeholder="e.g. Rich Audio Visualizer" onkeydown="if(event.key==='Enter') window.submitNewPoll()">
+                    <input type="text" id="pollOpt2Input" placeholder="e.g. Rich Audio Visualizer">
                 </div>
                 <div class="modal-field">
                     <label for="pollOpt3Input">Option 3 (Optional):</label>
@@ -976,7 +976,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, onValue, off, serverTimestamp, limitToLast, query } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+        import { getDatabase, ref, push, onChildAdded, onValue, off, serverTimestamp, limitToLast, query, goOffline, goOnline } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
@@ -989,8 +989,11 @@
             measurementId: "G-57ER5L4JTD"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+        let app = null;
+        let db = null;
+        let connectedRef = null;
+        let connectedListener = null;
+        let seenFirebaseKeys = new Set();
 
         // State Store
         let ws = null;
@@ -1338,7 +1341,7 @@
                 showToast("Offline message spool is empty.");
                 return;
             }
-            const canSendFirebase = isFirebase;
+            const canSendFirebase = isFirebase && db;
             const canSendWs = (ws && (ws.readyState === 1 || isVirtual));
             if (!canSendFirebase && !canSendWs) {
                 showToast("⚠️ Cannot flush: Connect to a server or Global Room first.");
@@ -1351,6 +1354,8 @@
                         push(ref(db, 'global_chat/messages'), {
                             user: item.user || currentUsername,
                             text: item.text,
+                            room: item.room || currentRoom,
+                            clientId: item.id,
                             timestamp: serverTimestamp()
                         });
                     } catch(e) {}
@@ -1361,6 +1366,12 @@
                 }
             });
             offlineSpool = [];
+            messages.forEach(m => {
+                if (m.spooled) {
+                    m.spooled = false;
+                }
+            });
+            renderMessages();
             safeSaveState();
             updateSpoolUI();
             renderSpoolList();
@@ -2122,21 +2133,56 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const content = e.target.result;
+                if (typeof content !== 'string') return;
+
                 if (file.name.endsWith('.json')) {
                     try {
                         const parsed = JSON.parse(content);
-                        if (parsed.messages && Array.isArray(parsed.messages)) {
-                            messages = parsed.messages;
-                            if (parsed.rooms && Array.isArray(parsed.rooms)) {
-                                rooms = parsed.rooms;
+                        if (parsed && typeof parsed === 'object') {
+                            const rawMsgs = Array.isArray(parsed.messages) ? parsed.messages : [];
+                            if (rawMsgs.length > 0 || Array.isArray(parsed.rooms)) {
+                                const sanitized = rawMsgs.filter(m => m && typeof m === 'object').map((m, idx) => ({
+                                    id: typeof m.id === 'string' ? m.id.replace(/[^\w-]/g, '') : 'imp_' + Date.now() + '_' + idx,
+                                    user: String(m.user || 'Anonymous').slice(0, 32),
+                                    text: String(m.text || '').slice(0, 2000),
+                                    timestamp: typeof m.timestamp === 'number' && !isNaN(m.timestamp) ? m.timestamp : Date.now(),
+                                    room: typeof m.room === 'string' && m.room.startsWith('#') ? m.room.slice(0, 32) : currentRoom,
+                                    pinned: Boolean(m.pinned),
+                                    reactions: (m.reactions && typeof m.reactions === 'object') ? m.reactions : { '👍': 0, '❤️': 0, '🚀': 0, '💡': 0, '🔥': 0 },
+                                    userReacted: (m.userReacted && typeof m.userReacted === 'object') ? m.userReacted : {},
+                                    isAI: Boolean(m.isAI),
+                                    isPoll: Boolean(m.isPoll),
+                                    pollQuestion: m.pollQuestion ? String(m.pollQuestion).slice(0, 200) : '',
+                                    pollOptions: Array.isArray(m.pollOptions) ? m.pollOptions.map(opt => ({
+                                        text: String(opt.text || '').slice(0, 100),
+                                        votes: typeof opt.votes === 'number' ? Math.max(0, opt.votes) : 0
+                                    })) : []
+                                }));
+
+                                if (sanitized.length > 0) {
+                                    messages = sanitized.slice(-300);
+                                }
+                                if (Array.isArray(parsed.rooms)) {
+                                    const validRooms = parsed.rooms.filter(r => typeof r === 'string' && r.startsWith('#')).map(r => r.slice(0, 32));
+                                    if (validRooms.length > 0) rooms = validRooms;
+                                    if (!rooms.includes('#general')) rooms.unshift('#general');
+                                }
+                                if (parsed.roomTopics && typeof parsed.roomTopics === 'object') {
+                                    const cleanTopics = {};
+                                    for (const k of Object.keys(parsed.roomTopics)) {
+                                        if (typeof k === 'string' && k.startsWith('#')) {
+                                            cleanTopics[k.slice(0, 32)] = String(parsed.roomTopics[k] || '').slice(0, 128);
+                                        }
+                                    }
+                                    roomTopics = cleanTopics;
+                                }
+                                safeSaveState();
+                                window.renderChannelBar();
+                                window.renderMessages();
+                                showToast(`Successfully imported ${sanitized.length} message(s) from JSON!`);
+                            } else {
+                                showToast("Error: No valid messages found in JSON file.");
                             }
-                            if (parsed.roomTopics && typeof parsed.roomTopics === 'object') {
-                                roomTopics = parsed.roomTopics;
-                            }
-                            safeSaveState();
-                            window.renderChannelBar();
-                            showToast("Successfully imported JSON chat history!");
-                            window.renderMessages();
                         } else {
                             showToast("Error: Invalid JSON format for KChat history.");
                         }
@@ -2144,14 +2190,17 @@
                         showToast("Error parsing JSON file: " + err.message);
                     }
                 } else {
-                    addMessage("System", `--- Imported History from ${file.name} ---`, currentRoom);
-                    const lines = content.split('\n');
+                    addMessage("System", `--- Imported History from ${file.name.replace(/[^\w.-]/g, '_')} ---`, currentRoom);
+                    const lines = content.split(/\r?\n/);
+                    let count = 0;
                     lines.forEach(l => {
-                        if (l.trim()) {
-                            addMessage("Imported", l.trim(), currentRoom);
+                        const trimmed = l.trim().slice(0, 1000);
+                        if (trimmed) {
+                            addMessage("Imported", trimmed, currentRoom);
+                            count++;
                         }
                     });
-                    showToast("Imported TXT history!");
+                    showToast(`Imported ${count} line(s) from TXT!`);
                 }
             };
             reader.readAsText(file);
@@ -2159,14 +2208,7 @@
         };
 
         // Firebase & Networking
-        const connectedRef = ref(db, ".info/connected");
         let isConnectedToFirebase = false;
-        onValue(connectedRef, (snap) => {
-            isConnectedToFirebase = snap.val();
-            if (isConnectedToFirebase && isFirebase) {
-                addMessage("System", "* Connected to Global Room.", currentRoom);
-            }
-        });
 
         function cleanupSocket() {
             const s = ws;
@@ -2186,6 +2228,12 @@
             if (messagesRef && firebaseListener) {
                 try { off(messagesRef, 'child_added', firebaseListener); } catch(e) {}
             }
+            if (connectedRef && connectedListener) {
+                try { off(connectedRef, 'value', connectedListener); } catch(e) {}
+            }
+            if (db) {
+                try { goOffline(db); } catch(e) {}
+            }
         });
 
         window.connectGlobal = function() {
@@ -2196,13 +2244,39 @@
 
             if (isFirebase) {
                 if (messagesRef && firebaseListener) {
-                    off(messagesRef, 'child_added', firebaseListener);
+                    try { off(messagesRef, 'child_added', firebaseListener); } catch(e) {}
+                    firebaseListener = null;
+                }
+                if (connectedRef && connectedListener) {
+                    try { off(connectedRef, 'value', connectedListener); } catch(e) {}
+                    connectedListener = null;
+                    connectedRef = null;
+                }
+                if (db) {
+                    try { goOffline(db); } catch(e) {}
                 }
                 isFirebase = false;
                 addMessage("System", 'Disconnected from Global Room.', currentRoom);
                 btnConnectGlobal.textContent = '🌐 Join Global Room (Firebase)';
                 btnConnect.disabled = false;
                 return;
+            }
+
+            if (!app) {
+                app = initializeApp(firebaseConfig);
+                db = getDatabase(app);
+            } else if (db) {
+                try { goOnline(db); } catch(e) {}
+            }
+
+            if (!connectedRef && db) {
+                connectedRef = ref(db, ".info/connected");
+                connectedListener = onValue(connectedRef, (snap) => {
+                    isConnectedToFirebase = !!snap.val();
+                    if (isConnectedToFirebase && isFirebase) {
+                        addMessage("System", "* Connected to Global Room.", currentRoom);
+                    }
+                });
             }
 
             isFirebase = true;
@@ -2215,13 +2289,23 @@
             
             firebaseListener = onChildAdded(recentMessagesQuery, (snapshot) => {
                 if (!isFirebase) return;
+                const snapKey = snapshot.key;
+                if (snapKey && seenFirebaseKeys.has(snapKey)) return;
+                if (snapKey) seenFirebaseKeys.add(snapKey);
+
                 const data = snapshot.val();
                 if (!data) return;
+
+                if (data.clientId) {
+                    const matchByClient = messages.find(m => m.clientId === data.clientId || m.id === data.clientId);
+                    if (matchByClient) return;
+                }
+
                 const lastMsg = messages[messages.length - 1];
                 if (lastMsg && lastMsg.user === data.user && lastMsg.text === data.text && (Date.now() - (lastMsg.timestamp || 0) < 6000)) {
                     return;
                 }
-                addMessage(data.user || 'Anonymous', data.text || '', currentRoom);
+                addMessage(data.user || 'Anonymous', data.text || '', data.room || currentRoom);
             });
             if (offlineSpool.length > 0) {
                 setTimeout(() => window.flushOfflineSpool(), 400);
@@ -2250,7 +2334,6 @@
                 isVirtual = true;
                 ws = {
                     send: (msg) => {
-                        addMessage('You', msg, currentRoom);
                         setTimeout(() => {
                             addMessage('UNKNOWN', 'Virtual socket signal received. Directive active.', currentRoom);
                         }, 1000);
@@ -2502,10 +2585,16 @@
             const isOnline = isFirebase || (ws && (ws.readyState === 1 || isVirtual));
             addMessage(currentUsername, msg, currentRoom, false, !isOnline);
 
-            if (isFirebase) {
+            if (isFirebase && db) {
+                const clientId = 'msg_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+                const latestMsg = messages[messages.length - 1];
+                if (latestMsg) latestMsg.clientId = clientId;
+
                 push(ref(db, 'global_chat/messages'), {
                     user: currentUsername,
                     text: msg,
+                    room: currentRoom,
+                    clientId: clientId,
                     timestamp: serverTimestamp()
                 }).catch(err => {
                     addMessage("System", "Error sending: " + err.message, currentRoom);
@@ -2558,9 +2647,9 @@
         if (pollOpt2) {
             pollOpt2.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
+                    e.preventDefault();
                     const opt3 = document.getElementById('pollOpt3Input');
-                    if (opt3 && !opt3.value) opt3.focus();
-                    else window.submitNewPoll();
+                    if (opt3) opt3.focus();
                 }
             });
         }
