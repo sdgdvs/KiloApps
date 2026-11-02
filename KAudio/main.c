@@ -1,10 +1,12 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <mmsystem.h>
+#include <commdlg.h>
 
 #define W 1000
 #define H 800
 #define NUM_KEYS 13
+#define NUM_SEQ_TRACKS 4
 #define PI 3.14159265358979323846
 
 HMIDIOUT hMidi = NULL;
@@ -14,6 +16,14 @@ char binds[NUM_KEYS] = {'A', 'W', 'S', 'E', 'D', 'F', 'T', 'G', 'Y', 'H', 'U', '
 int is_black[NUM_KEYS] = {0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0};
 int instrument = 0;
 int octaveShift = 0;
+int synthEngine = 0; // 0 = Subtractive (Classic), 1 = YM2612 2-Op FM
+
+// Pseudo-random generator for noise without CRT dependency
+static unsigned long g_seed = 123456789;
+static unsigned int MyRand(void) {
+    g_seed = (g_seed * 1103515245 + 12345) & 0x7fffffff;
+    return (unsigned int)(g_seed >> 16);
+}
 
 // Standalone math functions to avoid CRT dependency
 static double MyFmod(double x, double y) {
@@ -51,13 +61,50 @@ DWORD playbackStartTime = 0;
 int playbackIndex = 0;
 int mouseActiveKey = -1;
 
-// Sequencer State (16 Steps)
-int seqPattern[16] = {1, 0, 0, 1,  0, 1, 0, 0,  1, 0, 1, 0,  0, 0, 1, 0};
+// 4-Track 16-Step Sequencer State (Lead, Bass, Perc, SFX)
+int seqGrid[NUM_SEQ_TRACKS][16] = {
+    {1, 0, 0, 1,  0, 1, 0, 0,  1, 0, 1, 0,  0, 0, 1, 0}, // Track 0: Lead
+    {1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0}, // Track 1: Bass
+    {0, 0, 1, 0,  0, 0, 1, 0,  0, 0, 1, 0,  0, 0, 1, 0}, // Track 2: Perc
+    {0, 0, 0, 0,  0, 0, 0, 1,  0, 0, 0, 0,  0, 0, 0, 1}  // Track 3: SFX
+};
+const char* trackNames[NUM_SEQ_TRACKS] = {"Lead", "Bass", "Perc", "SFX"};
 int seqPlaying = 0;
 int currentStep = 0;
 DWORD lastStepTime = 0;
 int lastSeqNote = -1;
 int showHelp = 0; // Show welcome banner without blocking full screen
+
+// Common Dialog Helpers
+BOOL PromptSaveFileName(HWND hwnd, char* szFile, DWORD maxLen, const char* filter, const char* defExt, const char* title) {
+    OPENFILENAMEA ofn;
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(OPENFILENAMEA);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = maxLen;
+    ofn.lpstrFilter = filter;
+    ofn.nFilterIndex = 1;
+    ofn.lpstrDefExt = defExt;
+    ofn.lpstrTitle = title;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
+    return GetSaveFileNameA(&ofn);
+}
+
+BOOL PromptOpenFileName(HWND hwnd, char* szFile, DWORD maxLen, const char* filter, const char* defExt, const char* title) {
+    OPENFILENAMEA ofn;
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(OPENFILENAMEA);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = maxLen;
+    ofn.lpstrFilter = filter;
+    ofn.nFilterIndex = 1;
+    ofn.lpstrDefExt = defExt;
+    ofn.lpstrTitle = title;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+    return GetOpenFileNameA(&ofn);
+}
 
 // Status Banner Notification State
 char statusMsg[128] = "Welcome to KAudio Pro! Press [F1] for Help";
@@ -103,7 +150,7 @@ typedef struct {
 #pragma pack(push, 1)
 typedef struct {
     DWORD magic;       // 0x4B415544 ("KAUD")
-    DWORD version;     // 2
+    DWORD version;     // 3
     int instrument;
     int octaveShift;
     int delayEnabled;
@@ -111,15 +158,18 @@ typedef struct {
     int delayFeedback;
     int driveEnabled;
     int visMode;
-    int seqPattern[16];
+    int seqPattern[16]; // backwards compatibility (track 0)
     int filterEnabled;
+    int synthEngine;    // 0 = Subtractive, 1 = YM2612 2-Op FM
+    int seqGrid[NUM_SEQ_TRACKS][16];
 } AudioSaveState;
 #pragma pack(pop)
 
 void SaveAudioState() {
     AudioSaveState st;
+    ZeroMemory(&st, sizeof(AudioSaveState));
     st.magic = 0x4B415544;
-    st.version = 2;
+    st.version = 3;
     st.instrument = instrument;
     st.octaveShift = octaveShift;
     st.delayEnabled = delayEnabled;
@@ -127,8 +177,14 @@ void SaveAudioState() {
     st.delayFeedback = delayFeedback;
     st.driveEnabled = driveEnabled;
     st.visMode = visMode;
-    for (int i = 0; i < 16; i++) st.seqPattern[i] = seqPattern[i];
+    for (int i = 0; i < 16; i++) st.seqPattern[i] = seqGrid[0][i];
     st.filterEnabled = filterEnabled;
+    st.synthEngine = synthEngine;
+    for (int trk = 0; trk < NUM_SEQ_TRACKS; trk++) {
+        for (int s = 0; s < 16; s++) {
+            st.seqGrid[trk][s] = seqGrid[trk][s];
+        }
+    }
 
     HANDLE hFile = CreateFileA("kaudio_state.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -145,8 +201,8 @@ int LoadAudioState() {
     DWORD bytesRead = 0;
     BOOL res = ReadFile(hFile, &st, sizeof(AudioSaveState), &bytesRead, NULL);
     CloseHandle(hFile);
-    if (!res || bytesRead < sizeof(AudioSaveState) - sizeof(int)) return 0;
-    if (st.magic != 0x4B415544 || (st.version != 1 && st.version != 2)) return 0;
+    if (!res || bytesRead < sizeof(AudioSaveState) - sizeof(int) * 65) return 0;
+    if (st.magic != 0x4B415544) return 0;
 
     if (st.instrument >= 0 && st.instrument < 128) instrument = st.instrument;
     if (st.octaveShift >= -4 && st.octaveShift <= 4) octaveShift = st.octaveShift;
@@ -155,11 +211,16 @@ int LoadAudioState() {
     if (st.delayFeedback >= 0 && st.delayFeedback <= 95) delayFeedback = st.delayFeedback;
     driveEnabled = (st.driveEnabled != 0);
     visMode = (st.visMode != 0);
-    for (int i = 0; i < 16; i++) seqPattern[i] = (st.seqPattern[i] != 0);
-    if (st.version >= 2 && bytesRead >= sizeof(AudioSaveState)) {
-        filterEnabled = (st.filterEnabled != 0);
+    if (st.version >= 2) filterEnabled = (st.filterEnabled != 0);
+    if (st.version >= 3 && bytesRead >= sizeof(AudioSaveState)) {
+        synthEngine = (st.synthEngine != 0);
+        for (int trk = 0; trk < NUM_SEQ_TRACKS; trk++) {
+            for (int s = 0; s < 16; s++) {
+                seqGrid[trk][s] = (st.seqGrid[trk][s] != 0);
+            }
+        }
     } else {
-        filterEnabled = 1;
+        for (int i = 0; i < 16; i++) seqGrid[0][i] = (st.seqPattern[i] != 0);
     }
 
     return 1;
@@ -177,8 +238,9 @@ void MarkTutorialSeen() {
 
 void QuickSaveState(HWND hwnd) {
     AudioSaveState st;
+    ZeroMemory(&st, sizeof(AudioSaveState));
     st.magic = 0x4B415544;
-    st.version = 2;
+    st.version = 3;
     st.instrument = instrument;
     st.octaveShift = octaveShift;
     st.delayEnabled = delayEnabled;
@@ -186,8 +248,14 @@ void QuickSaveState(HWND hwnd) {
     st.delayFeedback = delayFeedback;
     st.driveEnabled = driveEnabled;
     st.visMode = visMode;
-    for (int i = 0; i < 16; i++) st.seqPattern[i] = seqPattern[i];
+    for (int i = 0; i < 16; i++) st.seqPattern[i] = seqGrid[0][i];
     st.filterEnabled = filterEnabled;
+    st.synthEngine = synthEngine;
+    for (int trk = 0; trk < NUM_SEQ_TRACKS; trk++) {
+        for (int s = 0; s < 16; s++) {
+            st.seqGrid[trk][s] = seqGrid[trk][s];
+        }
+    }
 
     HANDLE hFile = CreateFileA("kaudio_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -210,8 +278,8 @@ int QuickLoadState(HWND hwnd) {
     DWORD bytesRead = 0;
     BOOL res = ReadFile(hFile, &st, sizeof(AudioSaveState), &bytesRead, NULL);
     CloseHandle(hFile);
-    if (!res || bytesRead < sizeof(AudioSaveState) - sizeof(int)) return 0;
-    if (st.magic != 0x4B415544 || (st.version != 1 && st.version != 2)) return 0;
+    if (!res || bytesRead < sizeof(AudioSaveState) - sizeof(int) * 65) return 0;
+    if (st.magic != 0x4B415544) return 0;
 
     if (st.instrument >= 0 && st.instrument < 128) {
         instrument = st.instrument;
@@ -223,11 +291,16 @@ int QuickLoadState(HWND hwnd) {
     if (st.delayFeedback >= 0 && st.delayFeedback <= 95) delayFeedback = st.delayFeedback;
     driveEnabled = (st.driveEnabled != 0);
     visMode = (st.visMode != 0);
-    for (int i = 0; i < 16; i++) seqPattern[i] = (st.seqPattern[i] != 0);
-    if (st.version >= 2 && bytesRead >= sizeof(AudioSaveState)) {
-        filterEnabled = (st.filterEnabled != 0);
+    if (st.version >= 2) filterEnabled = (st.filterEnabled != 0);
+    if (st.version >= 3 && bytesRead >= sizeof(AudioSaveState)) {
+        synthEngine = (st.synthEngine != 0);
+        for (int trk = 0; trk < NUM_SEQ_TRACKS; trk++) {
+            for (int s = 0; s < 16; s++) {
+                seqGrid[trk][s] = (st.seqGrid[trk][s] != 0);
+            }
+        }
     } else {
-        filterEnabled = 1;
+        for (int i = 0; i < 16; i++) seqGrid[0][i] = (st.seqPattern[i] != 0);
     }
 
     MarkTutorialSeen();
@@ -237,8 +310,88 @@ int QuickLoadState(HWND hwnd) {
     return 1;
 }
 
+void SaveProjectDialog(HWND hwnd) {
+    char szPath[MAX_PATH] = "kaudio_project.dat";
+    if (PromptSaveFileName(hwnd, szPath, MAX_PATH, "KAudio Project (*.dat)\0*.dat\0All Files (*.*)\0*.*\0", "dat", "Save KAudio Project")) {
+        AudioSaveState st;
+        ZeroMemory(&st, sizeof(AudioSaveState));
+        st.magic = 0x4B415544;
+        st.version = 3;
+        st.instrument = instrument;
+        st.octaveShift = octaveShift;
+        st.delayEnabled = delayEnabled;
+        st.delayTimeMs = delayTimeMs;
+        st.delayFeedback = delayFeedback;
+        st.driveEnabled = driveEnabled;
+        st.visMode = visMode;
+        for (int i = 0; i < 16; i++) st.seqPattern[i] = seqGrid[0][i];
+        st.filterEnabled = filterEnabled;
+        st.synthEngine = synthEngine;
+        for (int trk = 0; trk < NUM_SEQ_TRACKS; trk++) {
+            for (int s = 0; s < 16; s++) {
+                st.seqGrid[trk][s] = seqGrid[trk][s];
+            }
+        }
+        HANDLE hFile = CreateFileA(szPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD written = 0;
+            WriteFile(hFile, &st, sizeof(AudioSaveState), &written, NULL);
+            CloseHandle(hFile);
+            char msg[128];
+            wsprintfA(msg, "Project Saved: %s", szPath);
+            SetStatus(hwnd, msg, 2500);
+        }
+    }
+}
+
+void OpenProjectDialog(HWND hwnd) {
+    char szPath[MAX_PATH] = "";
+    if (PromptOpenFileName(hwnd, szPath, MAX_PATH, "KAudio Project (*.dat)\0*.dat\0All Files (*.*)\0*.*\0", "dat", "Open KAudio Project")) {
+        AudioSaveState st;
+        HANDLE hFile = CreateFileA(szPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile == INVALID_HANDLE_VALUE) return;
+        DWORD bytesRead = 0;
+        BOOL res = ReadFile(hFile, &st, sizeof(AudioSaveState), &bytesRead, NULL);
+        CloseHandle(hFile);
+        if (!res || st.magic != 0x4B415544) {
+            SetStatus(hwnd, "Error: Invalid KAudio project file!", 2500);
+            return;
+        }
+        if (st.instrument >= 0 && st.instrument < 128) {
+            instrument = st.instrument;
+            if (hMidi) midiOutShortMsg(hMidi, 0x000000C0 | (instrument << 8));
+        }
+        if (st.octaveShift >= -4 && st.octaveShift <= 4) octaveShift = st.octaveShift;
+        delayEnabled = (st.delayEnabled != 0);
+        if (st.delayTimeMs >= 50 && st.delayTimeMs <= 1000) delayTimeMs = st.delayTimeMs;
+        if (st.delayFeedback >= 0 && st.delayFeedback <= 95) delayFeedback = st.delayFeedback;
+        driveEnabled = (st.driveEnabled != 0);
+        visMode = (st.visMode != 0);
+        if (st.version >= 2) filterEnabled = (st.filterEnabled != 0);
+        if (st.version >= 3 && bytesRead >= sizeof(AudioSaveState)) {
+            synthEngine = (st.synthEngine != 0);
+            for (int trk = 0; trk < NUM_SEQ_TRACKS; trk++) {
+                for (int s = 0; s < 16; s++) {
+                    seqGrid[trk][s] = (st.seqGrid[trk][s] != 0);
+                }
+            }
+        } else {
+            for (int i = 0; i < 16; i++) seqGrid[0][i] = (st.seqPattern[i] != 0);
+        }
+        char msg[128];
+        wsprintfA(msg, "Project Loaded: %s", szPath);
+        SetStatus(hwnd, msg, 2500);
+        InvalidateRect(hwnd, NULL, FALSE);
+    }
+}
+
 void ExportMidiFile(HWND hwnd) {
-    unsigned char midiData[512];
+    char szPath[MAX_PATH] = "kaudio_export.mid";
+    if (!PromptSaveFileName(hwnd, szPath, MAX_PATH, "MIDI Files (*.mid)\0*.mid\0All Files (*.*)\0*.*\0", "mid", "Export Standard MIDI File")) {
+        return;
+    }
+
+    unsigned char midiData[2048];
     int idx = 0;
     // Header MThd
     midiData[idx++] = 'M'; midiData[idx++] = 'T'; midiData[idx++] = 'h'; midiData[idx++] = 'd';
@@ -256,31 +409,66 @@ void ExportMidiFile(HWND hwnd) {
     midiData[idx++] = 0x00; midiData[idx++] = 0xFF; midiData[idx++] = 0x51; midiData[idx++] = 0x03;
     midiData[idx++] = 0x07; midiData[idx++] = 0xA1; midiData[idx++] = 0x20;
 
-    // Program change
+    // Program change Channel 1 (Lead)
     midiData[idx++] = 0x00; midiData[idx++] = 0xC0; midiData[idx++] = (unsigned char)instrument;
 
     int ticksPerStep = 24;
     int pendingDelta = 0;
     for (int s = 0; s < 16; s++) {
-        if (seqPattern[s]) {
+        int hasNote = 0;
+        // Track 0: Lead
+        if (seqGrid[0][s]) {
             int noteVal = notes[s % NUM_KEYS] + octaveShift * 12;
             if (noteVal < 0) noteVal = 0;
             if (noteVal > 127) noteVal = 127;
 
-            // Note On
             midiData[idx++] = (unsigned char)pendingDelta;
-            midiData[idx++] = 0x90;
+            midiData[idx++] = 0x90; // Ch 1
             midiData[idx++] = (unsigned char)noteVal;
             midiData[idx++] = 0x64;
 
-            // Note Off after 20 ticks
             midiData[idx++] = 20;
             midiData[idx++] = 0x80;
             midiData[idx++] = (unsigned char)noteVal;
             midiData[idx++] = 0x00;
-
             pendingDelta = 4;
-        } else {
+            hasNote = 1;
+        }
+        // Track 1: Bass
+        if (seqGrid[1][s]) {
+            int bNote = notes[s % 5] - 12 + octaveShift * 12;
+            if (bNote < 0) bNote = 0;
+            if (bNote > 127) bNote = 127;
+
+            midiData[idx++] = (unsigned char)pendingDelta;
+            midiData[idx++] = 0x91; // Ch 2
+            midiData[idx++] = (unsigned char)bNote;
+            midiData[idx++] = 0x50;
+
+            midiData[idx++] = 20;
+            midiData[idx++] = 0x81;
+            midiData[idx++] = (unsigned char)bNote;
+            midiData[idx++] = 0x00;
+            pendingDelta = 4;
+            hasNote = 1;
+        }
+        // Track 2: Percussion (MIDI Channel 10: 0x99)
+        if (seqGrid[2][s]) {
+            int pNote = (s % 4 == 0) ? 35 : ((s % 2 == 0) ? 38 : 42);
+            midiData[idx++] = (unsigned char)pendingDelta;
+            midiData[idx++] = 0x99;
+            midiData[idx++] = (unsigned char)pNote;
+            midiData[idx++] = 0x64;
+
+            midiData[idx++] = 16;
+            midiData[idx++] = 0x89;
+            midiData[idx++] = (unsigned char)pNote;
+            midiData[idx++] = 0x00;
+            pendingDelta = 8;
+            hasNote = 1;
+        }
+
+        if (!hasNote) {
             pendingDelta += ticksPerStep;
         }
     }
@@ -296,12 +484,14 @@ void ExportMidiFile(HWND hwnd) {
     midiData[trkHeadIdx + 6] = (unsigned char)((trkLen >> 8) & 0xFF);
     midiData[trkHeadIdx + 7] = (unsigned char)(trkLen & 0xFF);
 
-    HANDLE hFile = CreateFileA("kaudio_export.mid", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFileA(szPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
         WriteFile(hFile, midiData, idx, &written, NULL);
         CloseHandle(hFile);
-        SetStatus(hwnd, "[MIDI] Standard MIDI File Exported to kaudio_export.mid! [M]", 3000);
+        char msg[128];
+        wsprintfA(msg, "[MIDI] Multi-Track MIDI Saved to %s!", szPath);
+        SetStatus(hwnd, msg, 3000);
     }
 }
 
@@ -478,8 +668,13 @@ void PlaySoundFX(int preset) {
 
 // Generate PCM WAV Audio File Export with DSP Delay & Overdrive Processing
 void ExportWavFile(HWND hwnd) {
+    char szPath[MAX_PATH] = "kaudio_export.wav";
+    if (!PromptSaveFileName(hwnd, szPath, MAX_PATH, "WAV Audio Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0", "wav", "Export WAV Master Audio")) {
+        return;
+    }
+
     DWORD sampleRate = 44100;
-    DWORD durationSec = 3;
+    DWORD durationSec = 4;
     DWORD totalSamples = sampleRate * durationSec;
     DWORD dataSize = totalSamples * sizeof(short);
 
@@ -498,9 +693,9 @@ void ExportWavFile(HWND hwnd) {
     hdr.subchunk2Id[0] = 'd'; hdr.subchunk2Id[1] = 'a'; hdr.subchunk2Id[2] = 't'; hdr.subchunk2Id[3] = 'a';
     hdr.subchunk2Size = dataSize;
 
-    HANDLE hFile = CreateFileA("kaudio_export.wav", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFileA(szPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
-        SetStatus(hwnd, "Error: Failed to create kaudio_export.wav", 3000);
+        SetStatus(hwnd, "Error: Failed to create WAV export file!", 3000);
         return;
     }
 
@@ -516,7 +711,7 @@ void ExportWavFile(HWND hwnd) {
     int dlyPos = 0;
     float fbFactor = (float)delayFeedback / 100.0f;
 
-    // Synthesize audio with DSP Effects
+    // Synthesize 4-Track audio with YM2612 2-Op FM / Subtractive & DSP Effects
     short sampleBuf[1024];
     DWORD bufIdx = 0;
     double freqsMap[13] = {261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88, 523.25};
@@ -524,16 +719,50 @@ void ExportWavFile(HWND hwnd) {
     for (DWORD i = 0; i < totalSamples; i++) {
         double t = (double)i / (double)sampleRate;
         int step = (int)(t / 0.125) % 16;
-        double freq = 0.0;
         double rawVal = 0.0;
-        if (seqPattern[step]) {
+
+        // Track 0: Lead (Subtractive or YM2612 2-Op FM)
+        if (seqGrid[0][step]) {
             int nIdx = step % NUM_KEYS;
             double mult = (octaveShift >= 0) ? (double)(1 << octaveShift) : (1.0 / (double)(1 << -octaveShift));
-            freq = freqsMap[nIdx] * mult;
-            rawVal = (MyFmod(t * freq, 1.0) > 0.5) ? 0.35 : -0.35;
-        } else {
-            // Silent rest step
-            rawVal = 0.0;
+            double freq = freqsMap[nIdx] * mult;
+
+            if (synthEngine == 1) {
+                // YM2612 2-Op FM Synthesis
+                double modFreq = freq * 2.0;
+                double modVal = 2.0 * MySin(2.0 * PI * modFreq * t);
+                rawVal += 0.35 * MySin(2.0 * PI * freq * t + modVal);
+            } else {
+                // Subtractive Classic (Square Wave)
+                rawVal += (MyFmod(t * freq, 1.0) > 0.5) ? 0.35 : -0.35;
+            }
+        }
+
+        // Track 1: Bass
+        if (seqGrid[1][step]) {
+            double bFreq = freqsMap[(step * 2) % 7] * 0.5;
+            if (synthEngine == 1) {
+                double modVal = 1.5 * MySin(2.0 * PI * bFreq * 0.5 * t);
+                rawVal += 0.25 * MySin(2.0 * PI * bFreq * t + modVal);
+            } else {
+                rawVal += (MyFmod(t * bFreq, 1.0) > 0.5) ? 0.25 : -0.25;
+            }
+        }
+
+        // Track 2: Percussion (Snare / Noise burst)
+        if (seqGrid[2][step]) {
+            double stepT = MyFmod(t, 0.125);
+            if (stepT < 0.04) {
+                double noise = ((double)(MyRand() % 1000) / 500.0 - 1.0) * (1.0 - stepT / 0.04);
+                rawVal += noise * 0.22;
+            }
+        }
+
+        // Track 3: SFX (Sweep chirp)
+        if (seqGrid[3][step]) {
+            double stepT = MyFmod(t, 0.125);
+            double sfxFreq = 900.0 - 650.0 * (stepT / 0.125);
+            rawVal += 0.18 * MySin(2.0 * PI * sfxFreq * t);
         }
 
         // Apply Lowpass Filter DSP (cutoff ~3200 Hz: alpha = 0.31)
@@ -575,13 +804,15 @@ void ExportWavFile(HWND hwnd) {
         WriteFile(hFile, sampleBuf, bufIdx * sizeof(short), &written, NULL);
     }
     CloseHandle(hFile);
-    SetStatus(hwnd, "WAV Export with DSP Effects Saved to kaudio_export.wav! [E]", 3500);
+    char msg[128];
+    wsprintfA(msg, "WAV Export Saved: %s! [E]", szPath);
+    SetStatus(hwnd, msg, 3500);
 }
 
 int GetKeyAtPoint(int x, int y) {
     int num_white = 8;
     int whiteW = W / num_white;
-    int keyTop = 220;
+    int keyTop = 275;
     int keyBottom = H - 40;
 
     // Check black keys
@@ -683,9 +914,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         lastSeqNote = -1;
                     }
                     currentStep = (currentStep + 1) % 16;
-                    if (seqPattern[currentStep]) {
+                    // Track 0: Lead
+                    if (seqGrid[0][currentStep]) {
                         lastSeqNote = currentStep % NUM_KEYS;
                         PlayNote(lastSeqNote, 1);
+                    }
+                    // Track 1: Bass
+                    if (seqGrid[1][currentStep]) {
+                        if (hMidi) {
+                            int bNote = notes[currentStep % 5] - 12 + octaveShift * 12;
+                            if (bNote < 0) bNote = 0;
+                            midiOutShortMsg(hMidi, 0x00400090 | (bNote << 8));
+                        }
+                    }
+                    // Track 2: Percussion (General MIDI Channel 10: 38=Snare, 42=HiHat, 35=Kick)
+                    if (seqGrid[2][currentStep]) {
+                        if (hMidi) {
+                            int pNote = (currentStep % 4 == 0) ? 35 : ((currentStep % 2 == 0) ? 38 : 42);
+                            midiOutShortMsg(hMidi, 0x00640099 | (pNote << 8));
+                        }
+                    }
+                    // Track 3: SFX
+                    if (seqGrid[3][currentStep]) {
+                        PlaySoundFX((currentStep % 8) + 1);
                     }
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
