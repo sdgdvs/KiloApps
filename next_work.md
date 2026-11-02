@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KHex
-  kilo_qa: KPing
+  kilo_qa: KTerm
   kilo_expander: KMedia
   kilo_review: KMail
 virtual_web_target: kweb://rfc-archive
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KMedia
-  timestamp: '2026-11-02T13:40:13-08:00'
+  agent: kilo-qa
+  app: KPing
+  timestamp: '2026-11-02T14:22:14-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -189,11 +189,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | **[ARGON REVIEW]:** Fix #helpOverlay first-boot top scroll clipping at 1000x663 (sheet.png Panel 1) by converting .help-box shortcuts into a compact 2-column grid (max-width 720px, padding 14px 18px) so the h2 title, close button, all 26 shortcuts, and Got It footer fit 100% visible with 0px scroll, and call closeBtn.focus() with preventScroll and helpBox.scrollTop = 0; add white-space nowrap to buttons, raise 9px fonts in .playlist-subbar, #btnClearCues, .track-tag, and .party-chat-time to >= 10px, and compact .playlist-subbar labels (M3U, CUE, JSON, Import, A-B [L]) so 20px buttons stop wrapping onto 2 squished lines (Panel 2); fix toolbar labels to match actual hotkeys (#btnMode Mode [Shift+M], #btnMute Vol [M], #btnSpeed Spd 1.0x); render a crisp HiDPI 1999 Studio Deck and full-stage active 5-mode visualizer inside #videoContainer whenever audio-only tracks play (mediaPlayer.videoWidth === 0) with video color filters and .crt-overlay applied so Demo Album playback and CRT/color presets are visible instead of a 50%-window black void; block global hotkeys while #helpOverlay is open or when SELECT/INPUT/TEXTAREA is focused; and rename anachronistic Firebase UI copy to KiloNet Watch Party 99. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KPing`
+- **Active Target**: `KTerm`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ICMP network ping graph, host reachability radar, dual Win32 C parity, and promote to Mature table. |
 | `KTerm` | `KiloOS/public/apps/kterm.html`, `KTerm/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, terminal emulator ANSI escape codes, command history, dual Win32 C parity, and promote to Mature table. |
 | `KChrono` | `KiloOS/public/apps/kchrono.html`, `KChrono/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, timeline event organizer, epoch markers, dual Win32 C parity, and promote to Mature table. |
 | `KMine` | `KiloOS/public/apps/kmine.html`, `KMine/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mine excavation crawler, ore inventory telemetry, dual Win32 C parity, and promote to Mature table. |
@@ -205,6 +204,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ANSI terminal bulletin board, door games, VFS file transfer, dual Win32 C parity, and promote to Mature table. |
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, 2-Op FM patch synthesizer, envelope generator, piano roll, dual Win32 C parity, and promote to Mature table. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Sovereign Web 1.0 browser, bookmarks, history, VFS spooling, dual Win32 C parity, and promote to Mature table. |
+| `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ICMP network ping graph, host reachability radar, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KMedia`
@@ -328,6 +328,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T14:22:14-08:00 — kilo-qa: KPing (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KPing across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KTerm`; rotated active agent to `kilo-expander`.
+
 - **2026-11-02T13:40:13-08:00 — kilo-usability: KMedia (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KMedia across web and native targets.
@@ -346,9 +351,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (0 errors, web 93.6 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 37.1%, input 35.19%, HEAD Δ 25.69%, 0 fail, 0 warn, 8.0s)).
   - Anti-trademark parody hardening (TRI-SECTOR and PAST CREW compliance) and complete 64K intro switcher, ANSI NFO studio, and compo voting board verification.
   - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-02T11:34:52-08:00 — kilo-review: KMedia (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 1000x663 and audited kmedia.html + KMedia/main.c; un-quarantined from Mature).
-  - Visual/UX Defects: #helpOverlay auto-scrolls past h2 title and top 5 shortcuts at 1000x663; 9px .playlist-subbar buttons wrap/squish; audio-only playback leaves a 50%-window black stage void hiding CRT/color filters; #btnMode shows [M] instead of [Shift+M] and SELECT/range controls lack keydown guards.
-  - Feature/Parity Defects: #btnToggleSpectrum throws ReferenceError (updateVisModeDisplay); boot defaults to 0.5x half-speed and autostarts Firebase WebSocket; Set A/B + Loop A-B wipes points; Stereo VU uses fake sine wave; KMedia/main.c skips WM_ERASEBKGND fill, blocks ListBox Up/Down arrows, and lacks 5-mode GDI visualizer and Phase VI VFS mesh.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KMedia`, `kilo-usability`->`KMedia`, `kilo-expander`->`KMedia`] (un-quarantined `KMedia` from Mature); advanced `kilo-review` to `KMail`; next agent `kilo-creator`.
