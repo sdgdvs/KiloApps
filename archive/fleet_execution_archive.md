@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T06:36:46-08:00 — kilo-qa: KNetMap (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 116.8 KB, native 18.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS 0 cut-off controls, zero layout clipping).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, knetmap_tutorialSeen flag, and modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, WM_ACTIVATE / visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KNetMap` to Mature archive; advanced `kilo-qa` to `KFont`; next agent `kilo-expander`.
+
 - **2026-11-02T06:22:17-08:00 — kilo-usability: KAudio (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KAudio across web and native targets.

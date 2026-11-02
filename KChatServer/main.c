@@ -273,9 +273,22 @@ void HandleMessage(int cidx, char* msg) {
         SendRaw(clients[cidx].s, out, clients[cidx].is_ws);
     } else if (my_strcmp(msg, "/list") == 0) {
         SendRaw(clients[cidx].s, "System: Active Rooms:", clients[cidx].is_ws);
-        for (int i=0; i<MAX_CLIENTS; i++) {
-            if (clients[i].s != INVALID_SOCKET) {
-                SendRaw(clients[cidx].s, clients[i].room, clients[cidx].is_ws);
+        char sentRooms[MAX_CLIENTS][32];
+        int numRooms = 0;
+        for (int i = 0; i < MAX_CLIENTS; i++) {
+            if (clients[i].s != INVALID_SOCKET && clients[i].room[0] != '\0') {
+                int alreadySent = 0;
+                for (int j = 0; j < numRooms; j++) {
+                    if (my_strcmp(sentRooms[j], clients[i].room) == 0) {
+                        alreadySent = 1;
+                        break;
+                    }
+                }
+                if (!alreadySent && numRooms < MAX_CLIENTS) {
+                    my_strncpy(sentRooms[numRooms], clients[i].room, 31);
+                    numRooms++;
+                    SendRaw(clients[cidx].s, clients[i].room, clients[cidx].is_ws);
+                }
             }
         }
     } else if (my_strcmp(msg, "/names") == 0) {
@@ -368,15 +381,25 @@ void ProcessData(int cidx) {
 
     if (c->is_ws && c->handshaked) {
         while (c->buf_len >= 2) {
-            unsigned char b1 = c->buf[0];
-            unsigned char b2 = c->buf[1];
+            unsigned char b1 = (unsigned char)c->buf[0];
+            unsigned char b2 = (unsigned char)c->buf[1];
             int opcode = b1 & 0x0F;
             int masked = (b2 & 0x80) != 0;
             int payload_len = b2 & 0x7F;
             int header_len = 2;
             
+            // Reject oversized len-127 frames (64-bit payload)
+            if (payload_len == 127) {
+                Log("[WARN] WebSocket oversized frame (len 127) rejected. Closing socket.");
+                closesocket(c->s);
+                c->s = INVALID_SOCKET;
+                c->buf_len = 0;
+                if (g_activeClients > 0) g_activeClients--;
+                UpdateTelemetryUI();
+                return;
+            }
+
             if (payload_len == 126) { header_len += 2; }
-            else if (payload_len == 127) { header_len += 8; }
             if (masked) header_len += 4;
             
             if (c->buf_len < header_len) break;
@@ -386,20 +409,42 @@ void ProcessData(int cidx) {
             if (c->buf_len < header_len + payload_len) break;
             
             if (opcode == 8) {
+                // WebSocket Opcode 8 Close: close socket, decrement g_activeClients
+                closesocket(c->s);
+                c->s = INVALID_SOCKET;
                 c->buf_len = 0;
+                if (g_activeClients > 0) g_activeClients--;
+                UpdateTelemetryUI();
+                Log("[DISCONNECT] Client socket closed (WebSocket Opcode 8 Close).");
                 return; 
             }
             
-            if (opcode == 1) { // Text frame
-                static char payload[4096]; my_memset(payload, 0, sizeof(payload));
-                unsigned char mask[4] = {0};
-                if (masked) {
-                    mask[0] = c->buf[header_len - 4];
-                    mask[1] = c->buf[header_len - 3];
-                    mask[2] = c->buf[header_len - 2];
-                    mask[3] = c->buf[header_len - 1];
+            unsigned char mask[4] = {0};
+            if (masked) {
+                mask[0] = (unsigned char)c->buf[header_len - 4];
+                mask[1] = (unsigned char)c->buf[header_len - 3];
+                mask[2] = (unsigned char)c->buf[header_len - 2];
+                mask[3] = (unsigned char)c->buf[header_len - 1];
+            }
+            
+            if (opcode == 9) {
+                // WebSocket Opcode 9 Ping -> Reply Pong 0x8A
+                static char pongPayload[128];
+                int plen = payload_len > 125 ? 125 : payload_len;
+                for (int i = 0; i < plen; i++) {
+                    pongPayload[i] = c->buf[header_len + i] ^ (masked ? mask[i % 4] : 0);
                 }
-                
+                unsigned char pongHead[2];
+                pongHead[0] = 0x8A; // FIN + Pong
+                pongHead[1] = (unsigned char)plen;
+                send(c->s, (const char*)pongHead, 2, 0);
+                if (plen > 0) {
+                    send(c->s, pongPayload, plen, 0);
+                }
+                g_packetsOut++;
+                UpdateTelemetryUI();
+            } else if (opcode == 1) { // Text frame
+                static char payload[4096]; my_memset(payload, 0, sizeof(payload));
                 int len = payload_len > 4000 ? 4000 : payload_len;
                 for (int i=0; i<len; i++) {
                     payload[i] = c->buf[header_len + i] ^ (masked ? mask[i % 4] : 0);
@@ -413,13 +458,44 @@ void ProcessData(int cidx) {
             if (c->buf_len > 0) my_memcpy(c->buf, c->buf + total, c->buf_len);
         }
     } else if (!c->is_ws && c->handshaked) {
-        // Raw TCP
-        static char msg[4096]; my_memset(msg, 0, sizeof(msg));
-        int len = c->buf_len > 4000 ? 4000 : c->buf_len;
-        my_memcpy(msg, c->buf, len);
-        msg[len] = '\0';
-        HandleMessage(cidx, msg);
-        c->buf_len = 0;
+        // Raw TCP: buffer until newline and loop all coalesced lines
+        while (c->buf_len > 0) {
+            int line_end = -1;
+            for (int i = 0; i < c->buf_len; i++) {
+                if (c->buf[i] == '\n') {
+                    line_end = i;
+                    break;
+                }
+            }
+            if (line_end == -1) {
+                if (c->buf_len >= 4000) {
+                    line_end = c->buf_len - 1;
+                } else {
+                    break;
+                }
+            }
+            
+            static char msg[4096];
+            my_memset(msg, 0, sizeof(msg));
+            int copy_len = line_end;
+            if (copy_len > 4000) copy_len = 4000;
+            my_memcpy(msg, c->buf, copy_len);
+            msg[copy_len] = '\0';
+            
+            if (copy_len > 0 && msg[copy_len - 1] == '\r') {
+                msg[copy_len - 1] = '\0';
+            }
+            
+            int consumed = line_end + 1;
+            c->buf_len -= consumed;
+            if (c->buf_len > 0) {
+                my_memcpy(c->buf, c->buf + consumed, c->buf_len);
+            }
+            
+            if (msg[0] != '\0') {
+                HandleMessage(cidx, msg);
+            }
+        }
     }
 }
 
@@ -432,7 +508,7 @@ void SaveState() {
     char portStr[16]; my_memset(portStr, 0, sizeof(portStr));
     GetWindowTextA(hPort, portStr, 15);
     data.port = my_atoi(portStr);
-    if (data.port <= 0) data.port = 6667;
+    if (data.port < 1 || data.port > 65535) data.port = 6667;
 
     data.maxClients = MAX_CLIENTS;
     GetWindowTextA(hMotd, data.motd, 255);
@@ -463,7 +539,9 @@ void LoadState() {
 
         if (readBytes >= sizeof(data) && data.magic == SAVE_MAGIC) {
             char portStr[16];
-            my_itoa(data.port > 0 ? data.port : 6667, portStr);
+            int p = data.port;
+            if (p < 1 || p > 65535) p = 6667;
+            my_itoa(p, portStr);
             SetWindowTextA(hPort, portStr);
             SetWindowTextA(hMotd, data.motd);
             g_peakClients = data.peakClients;
@@ -592,7 +670,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char portStr[16];
                 GetWindowTextA(hPort, portStr, 16);
                 int port = my_atoi(portStr);
-                if (port <= 0) port = 6667;
+                if (port < 1) port = 6667;
+                if (port > 65535) port = 65535;
+                my_itoa(port, portStr);
+                SetWindowTextA(hPort, portStr);
                 
                 GetWindowTextA(hMotd, motd, 255);
                 
@@ -602,10 +683,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 }
 
+                int reuse = 1;
+                setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse));
+
                 struct sockaddr_in addr;
                 addr.sin_family = AF_INET;
                 addr.sin_addr.s_addr = INADDR_ANY;
-                addr.sin_port = htons(port);
+                addr.sin_port = htons((unsigned short)port);
                 
                 if (bind(listenSocket, (struct sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR) {
                     Log("[ERROR] Bind failed on port.");
@@ -789,6 +873,7 @@ void __stdcall MainEntry() {
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
+            HWND focus = GetFocus();
             if (msg.wParam == VK_F1) {
                 SendMessageA(hwnd, WM_COMMAND, 104, 0);
                 continue;
@@ -798,8 +883,13 @@ void __stdcall MainEntry() {
             } else if (msg.wParam == VK_F9) {
                 SendMessageA(hwnd, WM_COMMAND, 103, 0);
                 continue;
-            } else if (msg.wParam == VK_RETURN && GetFocus() == hBroadcast) {
+            } else if (msg.wParam == VK_RETURN && focus == hBroadcast) {
                 SendMessageA(hwnd, WM_COMMAND, 101, 0);
+                continue;
+            } else if ((msg.wParam == 'S' || msg.wParam == 's') &&
+                       focus != hPort && focus != hMotd &&
+                       focus != hBroadcast && focus != hLog) {
+                SendMessageA(hwnd, WM_COMMAND, 100, 0);
                 continue;
             }
         }

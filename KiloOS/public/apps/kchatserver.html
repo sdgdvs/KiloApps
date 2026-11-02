@@ -777,10 +777,16 @@
 
             // Load persistent configuration
             const savedConfig = safeGet('kchatserver_config', { port: 6667, maxClients: 32 });
-            if (savedConfig.port) inputPort.value = savedConfig.port;
-            if (savedConfig.maxClients) inputMaxClients.value = savedConfig.maxClients;
-            lblPort.textContent = inputPort.value;
-            lblClients.textContent = '0 / ' + inputMaxClients.value;
+            let initPort = parseInt(savedConfig.port, 10) || 6667;
+            if (initPort < 1024) initPort = 1024;
+            if (initPort > 65535) initPort = 65535;
+            let initMax = parseInt(savedConfig.maxClients, 10) || 32;
+            if (initMax < 1) initMax = 1;
+            if (initMax > 256) initMax = 256;
+            inputPort.value = initPort;
+            inputMaxClients.value = initMax;
+            lblPort.textContent = String(initPort);
+            lblClients.textContent = '0 / ' + initMax;
 
             /**
              * Format Date to HH:MM:SS
@@ -833,6 +839,11 @@
                 p.appendChild(spanTag);
                 p.appendChild(spanText);
                 consoleLogs.appendChild(p);
+
+                // Cap console logs at 250 entries
+                while (consoleLogs.children.length > 250) {
+                    consoleLogs.removeChild(consoleLogs.firstElementChild);
+                }
 
                 // Auto-scroll
                 consoleLogs.scrollTop = consoleLogs.scrollHeight;
@@ -976,11 +987,51 @@
             }
 
             /**
-             * Start Server Daemon
+             * Periodic simulated chat traffic and ping jitter
              */
-            function startServer() {
-                const port = parseInt(inputPort.value, 10) || 6667;
+            function stepSimTraffic() {
+                if (!isRunning || clients.length === 0) return;
+
+                // Ping jitter survives tab hide/show
+                for (let i = 0; i < clients.length; i++) {
+                    clients[i].latency = Math.max(8, Math.min(180, clients[i].latency + Math.floor(Math.random() * 9) - 4));
+                }
+
                 const maxClients = parseInt(inputMaxClients.value, 10) || 32;
+                const r = Math.random();
+                if (r < 0.45) {
+                    // Random message from existing client
+                    const c = clients[Math.floor(Math.random() * clients.length)];
+                    const quote = SIM_QUOTES[Math.floor(Math.random() * SIM_QUOTES.length)];
+                    c.msgs++;
+                    packetsIn++;
+                    bytesTransferred += (quote.length + 32);
+                    logMessage('[MSG (' + c.room + ')]', '<' + c.nick + '> ' + quote, 'log-tag-chat');
+                } else if (r < 0.65 && clients.length < maxClients) {
+                    // Join new simulated client
+                    connectClient();
+                } else if (r < 0.75 && clients.length > 2) {
+                    // Disconnect random client
+                    const c = clients[Math.floor(Math.random() * clients.length)];
+                    disconnectClient(c.id, 'Ping timeout 120s');
+                }
+                updateTelemetryUI();
+            }
+
+            /**
+             * Start Server Daemon
+             * @param {boolean} [skipAutoSeed]
+             */
+            function startServer(skipAutoSeed) {
+                let port = parseInt(inputPort.value, 10) || 6667;
+                if (port < 1024) port = 1024;
+                if (port > 65535) port = 65535;
+                inputPort.value = port;
+
+                let maxClients = parseInt(inputMaxClients.value, 10) || 32;
+                if (maxClients < 1) maxClients = 1;
+                if (maxClients > 256) maxClients = 256;
+                inputMaxClients.value = maxClients;
 
                 safeSet('kchatserver_config', { port: port, maxClients: maxClients });
 
@@ -1015,33 +1066,15 @@
                     }
                 }, 20000);
 
-                // Initial peer connections simulation
-                setTimeout(function() { if (isRunning && clients.length < 2) connectClient('alice_99', '#general', 'WebSocket'); }, 1200);
-                setTimeout(function() { if (isRunning && clients.length < 3) connectClient('retro_coder', '#kchat', 'Raw TCP'); }, 2800);
+                // Initial peer connections simulation (skipped on load)
+                if (!skipAutoSeed) {
+                    setTimeout(function() { if (isRunning && clients.length < 2) connectClient('alice_99', '#general', 'WebSocket'); }, 1200);
+                    setTimeout(function() { if (isRunning && clients.length < 3) connectClient('retro_coder', '#kchat', 'Raw TCP'); }, 2800);
+                }
 
                 // Periodic simulated chat traffic
                 if (timerSimTraffic) clearInterval(timerSimTraffic);
-                timerSimTraffic = setInterval(function() {
-                    if (!isRunning || clients.length === 0) return;
-                    const r = Math.random();
-                    if (r < 0.45) {
-                        // Random message from existing client
-                        const c = clients[Math.floor(Math.random() * clients.length)];
-                        const quote = SIM_QUOTES[Math.floor(Math.random() * SIM_QUOTES.length)];
-                        c.msgs++;
-                        packetsIn++;
-                        bytesTransferred += (quote.length + 32);
-                        logMessage('[MSG (' + c.room + ')]', '<' + c.nick + '> ' + quote, 'log-tag-chat');
-                        updateTelemetryUI();
-                    } else if (r < 0.65 && clients.length < maxClients) {
-                        // Join new simulated client
-                        connectClient();
-                    } else if (r < 0.75 && clients.length > 2) {
-                        // Disconnect random client
-                        const c = clients[Math.floor(Math.random() * clients.length)];
-                        disconnectClient(c.id, 'Ping timeout 120s');
-                    }
-                }, 7500);
+                timerSimTraffic = setInterval(stepSimTraffic, 7500);
 
                 updateTelemetryUI();
             }
@@ -1063,6 +1096,7 @@
                 btnToggleServer.classList.remove('btn-stop');
                 btnToggleServer.classList.add('btn-primary');
 
+                lblPort.textContent = inputPort.value;
                 statusHint.textContent = 'Server terminated. Sockets released.';
                 logMessage('[STOP]', 'Server daemon shutdown. Closed all active socket descriptors.', 'log-tag-stop');
 
@@ -1085,15 +1119,29 @@
                 const text = inputBroadcast.value.trim();
                 if (!text) return;
 
+                if (!isRunning) {
+                    showToast('⚠️ Server offline');
+                    logMessage('[WARN]', 'Cannot broadcast: Server daemon offline.', 'log-tag-warn');
+                    statusHint.textContent = 'Broadcast failed: Server daemon is offline.';
+                    return;
+                }
+
                 const target = selectRoomTarget.value;
-                packetsOut += (clients.length || 1);
-                bytesTransferred += text.length * (clients.length || 1);
+                const targetedClients = target === 'GLOBAL' ? clients : clients.filter(function(c) { return c.room === target; });
+                const count = targetedClients.length;
+
+                packetsOut += count;
+                bytesTransferred += text.length * count;
+
+                for (let i = 0; i < targetedClients.length; i++) {
+                    targetedClients[i].msgs++;
+                }
 
                 logMessage('[BROADCAST (' + target + ')]', '<ADMIN>: ' + text, 'log-tag-broadcast');
                 inputBroadcast.value = '';
 
                 showToast('Broadcast transmitted (' + target + ')');
-                statusHint.textContent = 'Broadcast sent to ' + clients.length + ' clients in target: ' + target;
+                statusHint.textContent = 'Broadcast sent to ' + count + ' clients in target: ' + target;
 
                 updateTelemetryUI();
             }
@@ -1102,14 +1150,23 @@
              * QuickSave Server State (F5)
              */
             function quickSave() {
-                const port = parseInt(inputPort.value, 10) || 6667;
-                const max = parseInt(inputMaxClients.value, 10) || 32;
+                let port = parseInt(inputPort.value, 10) || 6667;
+                if (port < 1024) port = 1024;
+                if (port > 65535) port = 65535;
+
+                let max = parseInt(inputMaxClients.value, 10) || 32;
+                if (max < 1) max = 1;
+                if (max > 256) max = 256;
+
+                const elapsedSec = isRunning ? Math.floor((Date.now() - startTime) / 1000) : 0;
 
                 const state = {
                     version: 1,
                     port: port,
                     maxClients: max,
                     isRunning: isRunning,
+                    elapsedSec: elapsedSec,
+                    nextClientId: nextClientId,
                     peakClients: peakClients,
                     packetsIn: packetsIn,
                     packetsOut: packetsOut,
@@ -1137,21 +1194,50 @@
                     return;
                 }
 
-                if (state.port) inputPort.value = state.port;
-                if (state.maxClients) inputMaxClients.value = state.maxClients;
+                if (state.port) {
+                    let p = parseInt(state.port, 10);
+                    if (p < 1024) p = 1024;
+                    if (p > 65535) p = 65535;
+                    inputPort.value = p;
+                }
+                if (state.maxClients) {
+                    let m = parseInt(state.maxClients, 10);
+                    if (m < 1) m = 1;
+                    if (m > 256) m = 256;
+                    inputMaxClients.value = m;
+                }
+                if (state.nextClientId !== undefined) {
+                    nextClientId = state.nextClientId;
+                }
+
                 peakClients = state.peakClients || 0;
                 packetsIn = state.packetsIn || 0;
                 packetsOut = state.packetsOut || 0;
                 bytesTransferred = state.bytesTransferred || 0;
 
-                if (state.isRunning && !isRunning) {
-                    startServer();
-                } else if (!state.isRunning && isRunning) {
-                    stopServer();
+                if (state.isRunning) {
+                    if (!isRunning) {
+                        startServer(true); // skip auto-seed
+                    }
+                    if (typeof state.elapsedSec === 'number') {
+                        startTime = Date.now() - (state.elapsedSec * 1000);
+                        updateUptime();
+                    }
+                } else {
+                    if (isRunning) {
+                        stopServer();
+                    }
+                    lblPort.textContent = inputPort.value;
                 }
 
-                if (Array.isArray(state.clients) && state.clients.length > 0) {
+                // Restore clients array, including empty arrays
+                if (Array.isArray(state.clients)) {
                     clients = state.clients;
+                }
+
+                // Sync offline lblPort and display
+                if (!isRunning) {
+                    lblPort.textContent = inputPort.value;
                 }
 
                 updateTelemetryUI();
@@ -1241,6 +1327,46 @@
             }
 
             // Event Listeners
+            inputPort.addEventListener('input', function() {
+                let val = parseInt(inputPort.value, 10);
+                if (!isNaN(val)) {
+                    if (val > 65535) { inputPort.value = 65535; }
+                }
+                if (!isRunning) {
+                    lblPort.textContent = inputPort.value || '6667';
+                }
+            });
+            inputPort.addEventListener('change', function() {
+                let val = parseInt(inputPort.value, 10);
+                if (isNaN(val) || val < 1024) val = 1024;
+                if (val > 65535) val = 65535;
+                inputPort.value = val;
+                if (!isRunning) {
+                    lblPort.textContent = String(val);
+                }
+                safeSet('kchatserver_config', { port: val, maxClients: parseInt(inputMaxClients.value, 10) || 32 });
+            });
+            inputMaxClients.addEventListener('input', function() {
+                let val = parseInt(inputMaxClients.value, 10);
+                if (!isNaN(val)) {
+                    if (val > 256) { inputMaxClients.value = 256; }
+                }
+                if (!isRunning) {
+                    lblClients.textContent = clients.length + ' / ' + (inputMaxClients.value || '32');
+                }
+            });
+            inputMaxClients.addEventListener('change', function() {
+                let val = parseInt(inputMaxClients.value, 10);
+                if (isNaN(val) || val < 1) val = 1;
+                if (val > 256) val = 256;
+                inputMaxClients.value = val;
+                if (!isRunning) {
+                    lblClients.textContent = clients.length + ' / ' + val;
+                }
+                updateTelemetryUI();
+                safeSet('kchatserver_config', { port: parseInt(inputPort.value, 10) || 6667, maxClients: val });
+            });
+
             btnToggleServer.addEventListener('click', toggleServer);
             btnCopyConn.addEventListener('click', copyConnectionString);
             btnQuickSave.addEventListener('click', quickSave);
@@ -1307,7 +1433,10 @@
                     if (helpModal.classList.contains('active')) {
                         toggleHelp(false);
                     }
-                } else if (!e.ctrlKey && !e.metaKey && !e.altKey && document.activeElement.tagName !== 'INPUT') {
+                } else if (!e.ctrlKey && !e.metaKey && !e.altKey &&
+                    document.activeElement.tagName !== 'INPUT' &&
+                    document.activeElement.tagName !== 'SELECT' &&
+                    document.activeElement.tagName !== 'TEXTAREA') {
                     if (e.key === 's' || e.key === 'S') {
                         e.preventDefault();
                         toggleServer();
@@ -1331,37 +1460,11 @@
                 toggleHelp(true);
             }
 
-            // Visibility lifecycle protection
+            // Visibility lifecycle protection: keep timers unified so join/quit simulation & ping jitter survive tab hide/show
             document.addEventListener('visibilitychange', function() {
-                if (document.hidden) {
-                    if (timerHeartbeat) { clearInterval(timerHeartbeat); timerHeartbeat = null; }
-                    if (timerSimTraffic) { clearInterval(timerSimTraffic); timerSimTraffic = null; }
-                } else {
-                    if (isRunning) {
-                        if (!timerHeartbeat) {
-                            timerHeartbeat = setInterval(function() {
-                                if (!isRunning) return;
-                                if (Math.random() < 0.3) {
-                                    logMessage('[SYS]', 'Keepalive check OK. 0 dropped packets. Dual-stack sockets active.', 'log-tag-sys');
-                                }
-                            }, 20000);
-                        }
-                        if (!timerSimTraffic) {
-                            timerSimTraffic = setInterval(function() {
-                                if (!isRunning || clients.length === 0) return;
-                                const r = Math.random();
-                                if (r < 0.45) {
-                                    const c = clients[Math.floor(Math.random() * clients.length)];
-                                    const quote = SIM_QUOTES[Math.floor(Math.random() * SIM_QUOTES.length)];
-                                    c.msgs++;
-                                    packetsIn++;
-                                    bytesTransferred += (quote.length + 32);
-                                    logMessage('[MSG (' + c.room + ')]', '<' + c.nick + '> ' + quote, 'log-tag-chat');
-                                    updateTelemetryUI();
-                                }
-                            }, 7500);
-                        }
-                    }
+                if (!document.hidden && isRunning) {
+                    updateUptime();
+                    updateTelemetryUI();
                 }
             });
         })();
