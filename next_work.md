@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KHex
   kilo_qa: KDB
-  kilo_expander: KSys
+  kilo_expander: KHex
   kilo_review: KChat
 virtual_web_target: kweb://trapster
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KBudget
-  timestamp: '2026-11-01T18:21:16-08:00'
+  agent: kilo-expander
+  app: KSys
+  timestamp: '2026-11-01T19:23:16-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -196,11 +196,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, AST/console script runner, sample templates, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KSys`
+- **Active Target**: `KHex`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS/IPC mesh in ksys.html (VFS_WRITE/VFS_SHOW_SAVE for reports/logs/flight-CSV/hex dumps, VFS_SHOW_OPEN/VFS_READ for JSON snapshot import, and OS_LAUNCH_APP to open reports in KPad and dumps in KHex with standalone fallback), and fix Win32 C parity in KSys/main.c (create/show/wire hBtnGdi, hBtnCrypto, hBtnJitter, and hBtnProbe/RunNetworkProbe, make [R] on Tab 1 run all 6 benchmarks, include GDI/Crypto/Jitter in JSON/CSV/MD exports, fix v2 LoadStateFromFile g_DiskResult typo, format actual BatteryLifePercent, update title [1-5] to [1-6], and preserve hOutput scroll position across 1Hz WM_TIMER refreshes). |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Harden Phase VI KiloOS VFS and IPC Mesh in khex.html per architecture.md: enforce event.origin === window.location.origin in window.addEventListener('message'), post with window.location.origin instead of wildcard (removing dead OS_SET_WINDOW_SIZE), raise sendToOS() timeout to 60000ms for interactive VFS_SHOW_OPEN and VFS_SHOW_SAVE pickers, emit OS_NOTIFY after VFS_WRITE, handle incoming FILE_OPEN/VFS_OPEN messages to auto-load VFS files, add Save to VFS (/home/docs/ or /home/crypto/) and Open in KPad / Send to KCipher OS_LAUNCH_APP buttons in Tab 7 Export, Tab 8 Patch Builder, and Tab 9 Disassembler, and add native Win32 .bin file open/save parity in KHex/main.c (<999 KB). |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY with standalone blob fallback) for saving/loading calculation tapes and workspace JSON snapshots to /home/docs/, and add live HEX/DEC/OCT/BIN radix readout plus FV/CAGR financial tools to KCalc/main.c (<999 KB). |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
@@ -218,6 +217,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KQuest` | `KiloOS/public/apps/kquest.html`, `KQuest/main.c` | **[ARGON REVIEW]:** Fix generateHeroSheetText() TypeError crash on player.companion.toUpperCase() (format companion.name and role) plus undefined player.spd/mag/potions (read player.agi, player.int, and inventory counts); harden KiloVFS in kquest.html per architecture.md with event.origin === window.location.origin checks, 60s listener timeouts, VFS_SHOW_SAVE and VFS_SHOW_OPEN pickers, standalone Blob and file-input fallbacks when window.parent === window, appId + filePath in OS_LAUNCH_APP, and incoming FILE_OPEN/VFS_OPEN auto-import. |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into ksubmarine.html (event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) connecting EXPORT/IMPORT to VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ (/home/saves/ksubmarine_dive.json), handling incoming FILE_OPEN/VFS_OPEN messages, and exporting an Expedition Bathymetry Log (/home/docs/ksubmarine_log.txt) with an Open in KPad OS_LAUNCH_APP button, plus integrate ../assets/js/retro_multiplayer.js Abyssal Fleet Co-Op & Salvage Race mode strictly behind an explicit MULTIPLAYER button (zero autostart, soloTimeoutMs 25000 AI rival DSV NEREID-IV fallback, <999 KB). |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Phase VI VFS Carrier Pipeline: load/save steganographic carrier files directly from KiloOS VFS (`/home/media/`), add chi-square steganalysis detector, `"Send Payload to KCipher"` IPC button, and Win32 C parity. |
+| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS/IPC mesh in ksys.html (VFS_WRITE/VFS_SHOW_SAVE for reports/logs/flight-CSV/hex dumps, VFS_SHOW_OPEN/VFS_READ for JSON snapshot import, and OS_LAUNCH_APP to open reports in KPad and dumps in KHex with standalone fallback), and fix Win32 C parity in KSys/main.c (create/show/wire hBtnGdi, hBtnCrypto, hBtnJitter, and hBtnProbe/RunNetworkProbe, make [R] on Tab 1 run all 6 benchmarks, include GDI/Crypto/Jitter in JSON/CSV/MD exports, fix v2 LoadStateFromFile g_DiskResult typo, format actual BatteryLifePercent, update title [1-5] to [1-6], and preserve hOutput scroll position across 1Hz WM_TIMER refreshes). |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KChat`
@@ -314,6 +314,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T19:23:16-08:00 — kilo-expander: KSys (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KSys across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KHex`; rotated active agent to `kilo-review`.
+
 - **2026-11-01T18:21:16-08:00 — kilo-qa: KBudget (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 152.9 KB, native 172.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 10.44%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.4s)).
   - State & Persistence: Verified F5/F9 quicksave/quickload, kbudget_tutorialSeen flag, and modal dismissals.
@@ -336,10 +341,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Xenobiology sanctuary habitat visuals verified: Imagen 3 flora & fauna sprites integrated with procedural fallbacks.
   - Weather overlays (rad storm, toxic rain, drought, frost) & glint sweep verified with zero perimeter border dots.
   - Mature Quarantine & Handoff: Promoted `KSanctuary` to Mature archive; advanced `kilo-graphics` to `KWizard`; next agent `kilo-tester`.
-
-- **2026-11-01T14:17:44-08:00 — kilo-creator: kweb://slashnet (SlashNet: News for Nerds (1999) Web Destination)**
-  - Status: PASS ✅ (0 errors, web 116.3 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 77.54%, HEAD Δ 39.02%, 0 fail, 0 warn, 6.3s)).
-  - Verified interactive Karma moderation (-1 Troll to +5 Insightful), threshold comment filters (-1 to +5), and direct quick-mod score buttons.
-  - Equipped persistent sidebar Moderation Console HUD with live Karma status, mod point replenish, and JSDoc typing across core engine.
-  - Integrated Beowulf cluster calculator, Linux 2.2 kernel compile/boot simulator, and VFS export to /home/downloads/ and /boot/.
-  - Handoff: Advanced `kilo-creator` to `kweb://trapster`; rotated active agent to `kilo-graphics`.
