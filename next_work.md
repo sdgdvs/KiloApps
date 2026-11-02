@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://warez
-  kilo_graphics: KBreakout
+  kilo_graphics: KDragon
   kilo_soundscape: KStellar
   kilo_tester: KFleet
   kilo_usability: KFleet
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://scallion
-  timestamp: '2026-11-02T01:18:20-08:00'
+  agent: kilo-graphics
+  app: KBreakout
+  timestamp: '2026-11-02T01:33:31-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KBreakout`
+- **Active Target**: `KDragon`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Arcade brick-breaker visual upgrade: textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazard visuals, and zero perimeter border dots. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Replace code-generated 16x16 SVG rect programmer-art grids (#start-egg-svg, #player-svg, #enemy-svg) with Imagen 3 2-stage chroma-keyed sprites for Egg, Hatchling, Adult Drake, Elder Sovereign, and Arena Enemies. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Alchemical laboratory & crucible visual overhaul: ornate alembic glassware, elemental reagent icons, transmutation reaction glow, and glint sweep. |
@@ -124,7 +123,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | Compose grand 4X galactic diplomacy & fleet command 6-channel suite (Lydian brass fanfare, floating Maj9 pad voicings, hyperdrive & treaty earcons). |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | Compose abyssal sonar & trench descent 6-channel suite (Suspended `sus2/Maj7` cascade, muffled low-pass SPC700 echo, warm sine sub-bass, hydrophone ping earcons). |
 | `KMaze` | `KiloOS/public/apps/kmaze.html`, `KMaze/main.c` | **[ARGON REVIEW]:** Replace bare single-oscillator playTone() in kmaze.html with a 6-channel YM2612 2-Op FM and cavernous SPC700 echo dungeon soundtrack (adapting across Catacombs/Cyber/Frost/Abyssal/Inferno biomes and Minotaur Overlord boss combat) plus [M] HUD mute toggle and procedural footstep, pickaxe cleave, trap, and shrine earcons. |
-| `KBreakout` | `KiloOS/public/apps/kbreakout.html` | Compose high-energy 6-channel YM2612 FM arcade synthwave theme (Ionian/Mixolydian, 5:3 swing groove, slap bass, brass lead, selective SPC700 delay) + harmonic brick-hit combo pitch escalator and powerup earcons. |
 | `KQuest` | `KiloOS/public/apps/kquest.html` | Compose overworld & battle 6-channel JRPG chiptune suite (Royal Road `IV-V-iii-vi` town/overworld + Heroic `bVI-bVII-I` combat cadence, E-Piano & flute counterpoint, SPC700 echo) + spell/quest earcons. |
 | `KStarship` | `KiloOS/public/apps/kstarship.html` | Compose bridge alert & deep-space exploration 6-channel FM suite (Lydian `#4` pad + tactical Phrygian Dominant combat march, sonar/shield/warp earcons). |
 | `KAlchemy` | `KiloOS/public/apps/kalchemy.html` | Compose mystical alchemical workshop 6-channel suite (Dorian/Lydian celesta bells, warm glass pad, bubbling FM cauldron transients, transmutation fanfare stingers). |
@@ -253,6 +251,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KBreakout** | `KiloOS/public/apps/kbreakout.html` | Pass 5+ (2026-11-02) | Games / Arcade | Arcade brick-breaker with textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazards, YM2612 soundscape, dual Win32 C parity. |
 | **KBudget** | `KiloOS/public/apps/kbudget.html` | Pass 5+ (2026-11-01) | Productivity / Finance | Complete retro personal finance ledger and workstation with dual Category Pie & 30-Day Balance Projection forecasts [P], F5/F9 state persistence, dynamic categories, VFS/CSV I/O, and Win32 C parity. |
 | **KSanctuary** | `KiloOS/public/apps/ksanctuary.html` | Pass 5+ (2026-11-01) | Games / Simulation | Complete xenobiology vault simulation; Imagen 3 flora/fauna sprites, weather overlays, F5/F9 persistence, Win32 C parity. |
 | **KChart** | `KiloOS/public/apps/kchart.html` | Pass 5+ (2026-11-01) | Productivity / Analytics | Complete data visualization studio with 10 chart modes, presets (bar/line/pie/radar & 1999 logs), statistical regressions, CSV/JSON import/export, YM2612 audio sonification, F5/F9 quicksave persistence, and dual Win32 C parity. |
@@ -318,6 +317,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T01:33:31-08:00 — kilo-graphics: KBreakout (Imagen 3 Visual Assets & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 191.8 KB, native 55.5 KB < 999 KB; visual probe input 17.15%).
+  - Sprites/backgrounds integrated (Flagship boss sprite, nebula bg, metallic/crystalline bricks, plasma trails).
+  - Zero traveling perimeter border glints verified across Web and Win32 C.
+  - Mature Quarantine & Handoff: Promoted `KBreakout` to Mature archive; advanced `kilo-graphics` to `KDragon`; next agent `kilo-tester`.
+
 - **2026-11-02T01:18:20-08:00 — kilo-creator: kweb://scallion (The Scallion 1999 Satirical News Broadsheet & Virtual Web Node)**
   - Status: PASS ✅ (0 errors, web 105.9 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Implemented Ask A Sysadmin agony aunt column, Infographic Lab with 56k and bunker canvas charts, and Headline Forge.
@@ -342,8 +347,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Wired KiloOS VFS mesh (VFS_SHOW_SAVE, VFS_WRITE, OS_NOTIFY, VFS_SHOW_OPEN, VFS_READ, FILE_OPEN/VFS_OPEN) for JSON/TXT export/import with 60s timeout & standalone fallbacks.
   - Added Open Transcript in KPad launcher (appId kpad) and Win32 C GetSaveFileNameA dialogs for TXT & JSON export (<999 KB).
   - Handoff: Advanced `kilo-expander` to `KHex`; rotated active agent to `kilo-review`.
-
-- **2026-11-01T23:22:15-08:00 — kilo-qa: KDB (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-qa updates for KDB across web and native targets.
-  - Handoff: Advanced `kilo-qa` to `KSolitaire`; rotated active agent to `kilo-expander`.
