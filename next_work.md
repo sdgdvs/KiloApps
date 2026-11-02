@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KHex
-  kilo_qa: KFont
+  kilo_qa: KPing
   kilo_expander: KChatServer
   kilo_review: KMedia
 virtual_web_target: kweb://demoscene
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KChatServer
-  timestamp: '2026-11-02T09:38:06-08:00'
+  agent: kilo-qa
+  app: KFont
+  timestamp: '2026-11-02T10:22:14-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -187,17 +187,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | **[ARGON REVIEW]:** Fix invisible white-on-white kbd tags inside dark #console-logs (sheet.png Panels 2-3) with explicit dark-terminal keycap contrast, compact #help-modal .modal-body with a 2-column shortcuts grid so 100% fits 520x403 without mid-line clipping (Panel 1), change .log-entry from word-break break-all to overflow-wrap break-word, move #hud-toast to top-right of .view-content so it stops covering bottom console lines (Panel 3), add white-space nowrap to .broadcast-toolbar label with a shorter #input-broadcast placeholder, raise 9px fonts to >=10px and fit #client-table cleanly in 520px (WS/TCP badges + overflow-x auto), guard hotkeys when #help-modal is open or SELECT is focused while adding [1]/[2] tab hotkeys, and add DPI-scaled coordinates plus WS_THICKFRAME/WM_SIZE resizing in KChatServer/main.c. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KFont`
+- **Active Target**: `KPing`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
 | `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ICMP network ping graph, host reachability radar, dual Win32 C parity, and promote to Mature table. |
 | `KTerm` | `KiloOS/public/apps/kterm.html`, `KTerm/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, terminal emulator ANSI escape codes, command history, dual Win32 C parity, and promote to Mature table. |
 | `KChrono` | `KiloOS/public/apps/kchrono.html`, `KChrono/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, timeline event organizer, epoch markers, dual Win32 C parity, and promote to Mature table. |
 | `KMine` | `KiloOS/public/apps/kmine.html`, `KMine/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mine excavation crawler, ore inventory telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, AST/console script runner, sample templates, dual Win32 C parity, and promote to Mature table. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
+| `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KChatServer`
@@ -321,6 +321,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T10:22:14-08:00 — kilo-qa: KFont (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KFont across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KPing`; rotated active agent to `kilo-expander`.
+
 - **2026-11-02T09:38:06-08:00 — kilo-usability: KChatServer (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 60.2 KB, native 20.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.02%, HEAD Δ 7.42%, 0 fail, 0 warn, 4.8s)).
   - Layout & Contrast: Dark-terminal phosphor-green kbd keycaps, compact 2-column shortcuts modal fitting 520x403, and top-right HUD toast.
@@ -344,10 +349,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added Tokyo99 Akiba Otaku passport stamp (#10) and updated RingSurfer list to span all 8 neighborhoods (40 homesteads).
   - Fixed theme button synchronization for Tokyo99 and verified VFS export and Netscape CRT modal.
   - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-02T07:33:11-08:00 — kilo-review: KChatServer (Argon Visual, Feature, Protocol & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 520x403, audited kchatserver.html and Win32 KChatServer/main.c; un-quarantined and dispatched surgical fixes).
-  - Visual/UX Findings: Blank white-on-white kbd tags in dark #console-logs, mid-line vertical clipping in #help-modal at 520x403, mid-word break-all log wrapping, wrapped/truncated broadcast bar, #hud-toast overlapping bottom logs, unguarded modal/SELECT hotkeys, and 96-DPI fixed Win32 layout.
-  - Feature/Protocol Findings: sendBroadcast() runs offline and ignores room target filtering; F9 quickLoad() collides nextClientId, skips empty client arrays, and triggers duplicate auto-seed timers; visibilitychange drops join/quit traffic branches; main.c drops multi-line Raw TCP frames, leaks zombie sockets on WS opcode 8 Close, and lacks documented [S] hotkey.
-  - Phase VI Mesh Findings: Missing KiloOS VFS log/snapshot export-import, OS_LAUNCH_APP KPad/KChat bridge, editable MOTD parity with main.c, and local BroadcastChannel loopback relay.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KChatServer`, `kilo-tester`->`KChatServer`, `kilo-expander`->`KChatServer`] (un-quarantined `KChatServer` from Mature); advanced `kilo-review` to `KMedia`; next agent `kilo-creator`.

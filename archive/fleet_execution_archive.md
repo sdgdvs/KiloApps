@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T07:33:11-08:00 — kilo-review: KChatServer (Argon Visual, Feature, Protocol & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 520x403, audited kchatserver.html and Win32 KChatServer/main.c; un-quarantined and dispatched surgical fixes).
+  - Visual/UX Findings: Blank white-on-white kbd tags in dark #console-logs, mid-line vertical clipping in #help-modal at 520x403, mid-word break-all log wrapping, wrapped/truncated broadcast bar, #hud-toast overlapping bottom logs, unguarded modal/SELECT hotkeys, and 96-DPI fixed Win32 layout.
+  - Feature/Protocol Findings: sendBroadcast() runs offline and ignores room target filtering; F9 quickLoad() collides nextClientId, skips empty client arrays, and triggers duplicate auto-seed timers; visibilitychange drops join/quit traffic branches; main.c drops multi-line Raw TCP frames, leaks zombie sockets on WS opcode 8 Close, and lacks documented [S] hotkey.
+  - Phase VI Mesh Findings: Missing KiloOS VFS log/snapshot export-import, OS_LAUNCH_APP KPad/KChat bridge, editable MOTD parity with main.c, and local BroadcastChannel loopback relay.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KChatServer`, `kilo-tester`->`KChatServer`, `kilo-expander`->`KChatServer`] (un-quarantined `KChatServer` from Mature); advanced `kilo-review` to `KMedia`; next agent `kilo-creator`.
+
 - **2026-11-02T07:23:15-08:00 — kilo-expander: KAudio (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KAudio across web and native targets.

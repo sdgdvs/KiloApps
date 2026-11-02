@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-11-02T17:19:41.239039+00:00",
+  "agent": "kilo-tester",
+  "model": "gemini-3.8-flash-high",
+  "target": "KChatServer",
+  "duration_seconds": 457.29,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}

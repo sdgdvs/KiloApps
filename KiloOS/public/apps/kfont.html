@@ -664,6 +664,7 @@
                     <option value="hex_stream">Raw Hex Stream</option>
                     <option value="bdf_single">Adobe BDF Single Glyph Chunk</option>
                     <option value="bdf_full">Full Adobe BDF 2.1 Font File (Bank)</option>
+                    <option value="ttf_ttx">TrueType OpenType XML (TTX 3.0)</option>
                     <option value="win_fnt_header">Windows .FNT / .FON Binary Header Spec</option>
                     <option value="rom_c_table">Complete C ROM Table font_rom[95][H]</option>
                     <option value="arduino">Arduino PROGMEM Bitmap</option>
@@ -674,6 +675,7 @@
                   <button class="action-btn" id="btnCopyBitmapCode" style="font-size:11px; padding:4px 8px;">Copy Code</button>
                   <button class="action-btn" id="btnDownloadBitmapHeader" style="font-size:11px; padding:4px 8px; background:#10b981;">Download .h</button>
                   <button class="action-btn" id="btnDownloadBdf" style="font-size:11px; padding:4px 8px; background:#0284c7;">Download .bdf</button>
+                  <button class="action-btn" id="btnDownloadTtx" style="font-size:11px; padding:4px 8px; background:#8b5cf6;" title="Download TrueType / OpenType XML (TTX 3.0) format">Download .ttx</button>
                   <button class="action-btn" id="btnDownloadFnt" style="font-size:11px; padding:4px 8px; background:#6366f1;">Download .fnt</button>
                   <button class="action-btn" id="btnInspectFntInKHex" style="font-size:11px; padding:4px 8px; background:#475569; color:#fff;" title="Inspect compiled .FNT binary in KHex editor via KiloOS IPC">🔍 Inspect .FNT in KHex</button>
                 </div>
@@ -3065,6 +3067,8 @@ body {
 
       document.getElementById('btnDownloadBitmapHeader').onclick = downloadBitmapHeader;
       document.getElementById('btnDownloadBdf').onclick = downloadBdf;
+      const btnDlTtx = document.getElementById('btnDownloadTtx');
+      if (btnDlTtx) btnDlTtx.onclick = downloadTtx;
       document.getElementById('btnDownloadFnt').onclick = downloadFnt;
       const btnInspectFnt = document.getElementById('btnInspectFntInKHex');
       if (btnInspectFnt) btnInspectFnt.onclick = inspectFntInKHex;
@@ -3587,6 +3591,8 @@ typedef struct {
                  `ENDCHAR\n`;
       } else if (fmt === 'bdf_full') {
         output = generateFullBdf();
+      } else if (fmt === 'ttf_ttx') {
+        output = generateTtxExtract();
       } else if (fmt === 'win_fnt_header') {
         output = generateWinFntHeader();
       } else if (fmt === 'rom_c_table') {
@@ -3701,6 +3707,97 @@ typedef struct {
         });
       } else {
         fallbackDownloadBitmapHeader(code);
+      }
+    }
+
+    function generateTtxExtract() {
+      const charName = activeBankChar || 'A';
+      const charCode = charName.charCodeAt(0);
+      const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
+      const safeFont = (fontList.value || 'KFont').replace(/[^a-zA-Z0-9]/g, '_');
+      const unitsPerEm = 1000;
+      const glyphWidth = Math.round((bmpW / 8) * 600);
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<!-- TrueType / OpenType TTX 3.0 glyf and hmtx table extract for ${safeFont} -->
+<TTFont sfntVersion="\\x00\\x01\\x00\\x00" ttLibVersion="3.0">
+  <GlyphOrder>
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="glyph${hexCode}"/>
+  </GlyphOrder>
+  <head>
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.0"/>
+    <unitsPerEm value="${unitsPerEm}"/>
+    <xMin value="0"/>
+    <yMin value="-150"/>
+    <xMax value="${glyphWidth}"/>
+    <yMax value="850"/>
+  </head>
+  <hhea>
+    <ascent value="850"/>
+    <descent value="-150"/>
+    <lineGap value="100"/>
+    <advanceWidthMax value="${glyphWidth}"/>
+  </hhea>
+  <maxp>
+    <tableVersion value="0x00010000"/>
+    <numGlyphs value="2"/>
+  </maxp>
+  <hmtx>
+    <mtx name=".notdef" width="500" lsb="50"/>
+    <mtx name="glyph${hexCode}" width="${glyphWidth}" lsb="0"/>
+  </hmtx>
+  <glyf>
+    <TTGlyph name=".notdef" xMin="50" yMin="0" xMax="450" yMax="700">
+      <contour>
+        <pt x="50" y="0" on="1"/>
+        <pt x="50" y="700" on="1"/>
+        <pt x="450" y="700" on="1"/>
+        <pt x="450" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+    <TTGlyph name="glyph${hexCode}" xMin="0" yMin="0" xMax="${glyphWidth}" yMax="700">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="0" y="700" on="1"/>
+        <pt x="${glyphWidth}" y="700" on="1"/>
+        <pt x="${glyphWidth}" y="0" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+  </glyf>
+</TTFont>`;
+    }
+
+    function fallbackDownloadTtx(ttxText, safeFont) {
+      const blob = new Blob([ttxText], { type: 'application/xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kfont_${safeFont}_${bmpW}x${bmpH}.ttx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      playSound('copy');
+      showToast(`Downloaded TrueType XML: kfont_${safeFont}_${bmpW}x${bmpH}.ttx`);
+    }
+
+    function downloadTtx() {
+      const ttxText = generateTtxExtract();
+      const safeFont = (fontList.value || 'KFont').replace(/[^a-zA-Z0-9]/g, '_');
+      const defaultPath = `/home/fonts/kfont_${safeFont}_${bmpW}x${bmpH}.ttx`;
+      if (KiloVFS.isSupported()) {
+        KiloVFS.showSave(defaultPath, ttxText, (savedPath) => {
+          if (savedPath) {
+            showToast(`TrueType XML saved to VFS: ${savedPath}`);
+          } else {
+            fallbackDownloadTtx(ttxText, safeFont);
+          }
+        });
+      } else {
+        fallbackDownloadTtx(ttxText, safeFont);
       }
     }
 

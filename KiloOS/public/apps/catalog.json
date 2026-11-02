@@ -123,9 +123,9 @@
     "id": "kchatserver",
     "title": "KChat Server",
     "folder": "Network",
-    "webBytes": 54721,
-    "exeBytes": 17920,
-    "budgetPercent": 5.5
+    "webBytes": 61696,
+    "exeBytes": 20992,
+    "budgetPercent": 6.2
   },
   {
     "id": "kchess",
@@ -675,9 +675,9 @@
     "id": "kstarship",
     "title": "KStarship",
     "folder": "Games",
-    "webBytes": 215278,
-    "exeBytes": 154112,
-    "budgetPercent": 21.5
+    "webBytes": 221839,
+    "exeBytes": 154624,
+    "budgetPercent": 22.2
   },
   {
     "id": "kstellar",
