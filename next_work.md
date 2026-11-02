@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KCyber
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KMedia
+  kilo_usability: KHex
   kilo_qa: KPing
   kilo_expander: KMedia
   kilo_review: KMail
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KMedia
-  timestamp: '2026-11-02T13:22:16-08:00'
+  timestamp: '2026-11-02T13:40:13-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -159,11 +159,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | **[ARGON REVIEW]:** Fix ReferenceError in #btnToggleSpectrum (call updateVisualizerUI() instead of undefined updateVisModeDisplay()); default kmedia_speed fallback to index 2 (1.0x instead of index 0 = 0.5x half-speed on boot), parse kmedia_speed/kmedia_mode/kmedia_vismode with isNaN guards so index 0 (0.5x and Oscilloscope) persists, and format 0.75x/1.25x without toFixed(1) rounding to 0.8x/1.3x; eliminate boot Firebase WebSocket autostart by lazy-initializing initializeApp/getDatabase inside joinPartyRoom() only on Connect click, call leavePartyRoom() on beforeunload/pagehide, filter onChildAdded(roomChatRef) by msg.timestamp >= joinTime (cap feed at 100), and fix backwards #btnPartyDJMode host/lock logic; make Play [Space] auto-load loadDemoSuite() / LoadDemoTrack() when playlist is empty; fix A-B Repeat Looper so Set [B] enables isLoopAB=true, #btnToggleLoopAB toggles isLoopAB when A and B exist instead of wiping them, and playTrack() clears stale A-B loops; wire createChannelSplitter(2) dual analysers for real L/R Stereo VU levels plus 2-channel stereo WAV output on Demo Track 6, persist lastVolume + clear mediaPlayer.muted on volume/mute changes; and in KMedia/main.c paint WM_ERASEBKGND client background (fixing unpainted desktop/dialog garbage), stop hijacking VK_UP/VK_DOWN when hListBox has focus, and load dropped .srt/.vtt after PlayTrackByIndex(firstNew). |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KMedia`
+- **Active Target**: `KHex`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | **[ARGON REVIEW]:** Fix #helpOverlay first-boot top scroll clipping at 1000x663 (sheet.png Panel 1) by converting .help-box shortcuts into a compact 2-column grid (max-width 720px, padding 14px 18px) so the h2 title, close button, all 26 shortcuts, and Got It footer fit 100% visible with 0px scroll, and call closeBtn.focus() with preventScroll and helpBox.scrollTop = 0; add white-space nowrap to buttons, raise 9px fonts in .playlist-subbar, #btnClearCues, .track-tag, and .party-chat-time to >= 10px, and compact .playlist-subbar labels (M3U, CUE, JSON, Import, A-B [L]) so 20px buttons stop wrapping onto 2 squished lines (Panel 2); fix toolbar labels to match actual hotkeys (#btnMode Mode [Shift+M], #btnMute Vol [M], #btnSpeed Spd 1.0x); render a crisp HiDPI 1999 Studio Deck and full-stage active 5-mode visualizer inside #videoContainer whenever audio-only tracks play (mediaPlayer.videoWidth === 0) with video color filters and .crt-overlay applied so Demo Album playback and CRT/color presets are visible instead of a 50%-window black void; block global hotkeys while #helpOverlay is open or when SELECT/INPUT/TEXTAREA is focused; and rename anachronistic Firebase UI copy to KiloNet Watch Party 99. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -187,6 +186,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | **[ARGON REVIEW]:** Fix 1060x683 clipping and wrapping in kfleet.html (sheet.png Panels 1-3) by adding white-space nowrap to header and .scope-toolbar (compact labels CH A..D), reducing .bottom-row to 134px, and compacting .detail-content + 2-col .subsystems-box so all 8 .actions-box buttons fit 100% visible above the fold with 0px scroll; arrange #splashScreen .splash-buttons in a 2x2 nowrap grid and raise 9px fonts to >=10px; add resize-only devicePixelRatio HiDPI scaling to #radarCanvas and #scopeCanvas (using CSS rect.width/height in setupRadarInteraction), read active CSS theme variables so Amber/Cyan themes recolor both canvases, keep radar range rings inside viewport on 1.5X/2.2X zoom with edge-clamped outer contacts, make Escape close only the topmost modal, wire [C] on #splashScreen to #btnSplashResume, guard hotkeys when modals are open or in INPUT/SELECT/TEXTAREA, add Arrow-key node cycling, and replace confirm() in #btnResetAll with inline 2-click confirmation. |
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | **[ARGON REVIEW]:** Eliminate 293px vertical scroll overflow at 1040x803 in kaudio.html (sheet.png Panels 2-3 clipping piano labels and hiding .sequencer-panel off-screen) by consolidating the 7 export/import header buttons into a compact #exportFormatSelect (WAV, MIDI, AU, 8SVX) + #btnExportMaster bar, organizing the Right Panel DSP FX Rack into compact [DELAY/SPC] [DRIVE/DAC] [CHORUS] sub-tabs so .panels-grid stays compact even with #fmControls open, and tightening .key (82px) and .step-btn (20px) so 100% of the workstation fits above the fold with 0px scroll; move #toastContainer to bottom-right (max 2 toasts, skipping redundant 400ms boot toast when #helpModal is open); raise 8px-9px .key-note and #visCanvas fonts to >= 10px (0 tiny-text nodes); add mouse-drag glissando on .key, trap Tab focus and block synth hotkeys while #helpModal or #jamModal is open, rename anachronistic Firebase RTDB labels to KiloNet Studio Relay, and fix KAudio/main.c WM_PAINT header title colliding with Save [F5] at x=650 plus replace UTF-8 emojis in TextOutA/SetStatus with clean ASCII. |
 | `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | **[ARGON REVIEW]:** Fix invisible white-on-white kbd tags inside dark #console-logs (sheet.png Panels 2-3) with explicit dark-terminal keycap contrast, compact #help-modal .modal-body with a 2-column shortcuts grid so 100% fits 520x403 without mid-line clipping (Panel 1), change .log-entry from word-break break-all to overflow-wrap break-word, move #hud-toast to top-right of .view-content so it stops covering bottom console lines (Panel 3), add white-space nowrap to .broadcast-toolbar label with a shorter #input-broadcast placeholder, raise 9px fonts to >=10px and fit #client-table cleanly in 520px (WS/TCP badges + overflow-x auto), guard hotkeys when #help-modal is open or SELECT is focused while adding [1]/[2] tab hotkeys, and add DPI-scaled coordinates plus WS_THICKFRAME/WM_SIZE resizing in KChatServer/main.c. |
+| `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | **[ARGON REVIEW]:** Fix #helpOverlay first-boot top scroll clipping at 1000x663 (sheet.png Panel 1) by converting .help-box shortcuts into a compact 2-column grid (max-width 720px, padding 14px 18px) so the h2 title, close button, all 26 shortcuts, and Got It footer fit 100% visible with 0px scroll, and call closeBtn.focus() with preventScroll and helpBox.scrollTop = 0; add white-space nowrap to buttons, raise 9px fonts in .playlist-subbar, #btnClearCues, .track-tag, and .party-chat-time to >= 10px, and compact .playlist-subbar labels (M3U, CUE, JSON, Import, A-B [L]) so 20px buttons stop wrapping onto 2 squished lines (Panel 2); fix toolbar labels to match actual hotkeys (#btnMode Mode [Shift+M], #btnMute Vol [M], #btnSpeed Spd 1.0x); render a crisp HiDPI 1999 Studio Deck and full-stage active 5-mode visualizer inside #videoContainer whenever audio-only tracks play (mediaPlayer.videoWidth === 0) with video color filters and .crt-overlay applied so Demo Album playback and CRT/color presets are visible instead of a 50%-window black void; block global hotkeys while #helpOverlay is open or when SELECT/INPUT/TEXTAREA is focused; and rename anachronistic Firebase UI copy to KiloNet Watch Party 99. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KPing`
@@ -328,6 +328,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T13:40:13-08:00 — kilo-usability: KMedia (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KMedia across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-02T13:22:16-08:00 — kilo-tester: KMedia (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KMedia across web and native targets.
@@ -347,9 +352,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Defects: #helpOverlay auto-scrolls past h2 title and top 5 shortcuts at 1000x663; 9px .playlist-subbar buttons wrap/squish; audio-only playback leaves a 50%-window black stage void hiding CRT/color filters; #btnMode shows [M] instead of [Shift+M] and SELECT/range controls lack keydown guards.
   - Feature/Parity Defects: #btnToggleSpectrum throws ReferenceError (updateVisModeDisplay); boot defaults to 0.5x half-speed and autostarts Firebase WebSocket; Set A/B + Loop A-B wipes points; Stereo VU uses fake sine wave; KMedia/main.c skips WM_ERASEBKGND fill, blocks ListBox Up/Down arrows, and lacks 5-mode GDI visualizer and Phase VI VFS mesh.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KMedia`, `kilo-usability`->`KMedia`, `kilo-expander`->`KMedia`] (un-quarantined `KMedia` from Mature); advanced `kilo-review` to `KMail`; next agent `kilo-creator`.
-
-- **2026-11-02T10:40:26-08:00 — kilo-expander: KChatServer (Phase VI KiloOS VFS, IPC Mesh & Moderation Expansion)**
-  - Status: PASS ✅ (0 errors, web 97.8 KB, native 20.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 9.18%, HEAD Δ 18.2%, 0 fail, 1 warn, 4.8s)).
-  - Wired KiloOS VFS state save/open (/home/saves/kchatserver_state.json) and log export to VFS (/home/logs/kchatserver.log) with KPad and KChat launch via OS_LAUNCH_APP.
-  - Added editable Server MOTD parity with Win32 C, toggleable Bot Traffic switch, per-client Mute/IP-Ban moderation, and kilo_kchat_loopback_<port> BroadcastChannel relay.
-  - Handoff: Advanced `kilo-expander` to `KHex`; rotated active agent to `kilo-review`.

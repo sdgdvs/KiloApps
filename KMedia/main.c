@@ -53,7 +53,7 @@ int g_playbackMode = 0;
 int g_speedIndex = 0;
 const int g_speeds[] = {1000, 1250, 1500, 2000, 500};
 const char* g_speedLabels[] = {"Spd: 1.0x", "Spd: 1.25x", "Spd: 1.5x", "Spd: 2.0x", "Spd: 0.5x"};
-const char* g_modeLabels[] = {"Mode: Normal [M]", "Mode: Repeat All [M]", "Mode: Repeat 1 [M]", "Mode: Shuffle [M]"};
+const char* g_modeLabels[] = {"Mode: Normal [Shift+M]", "Mode: Repeat All [Shift+M]", "Mode: Repeat 1 [Shift+M]", "Mode: Shuffle [Shift+M]"};
 
 int g_volume = 1000;
 int g_lastVolume = 1000;
@@ -557,8 +557,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  Right Arrow / N  Next Track\n"
         "  [ / ]            Seek Backward / Forward 5s\n"
         "  Up / Down Arrow  Volume Up / Down (5%)\n"
-        "  U                Toggle Mute / Unmute\n"
-        "  M                Cycle Playback Mode\n"
+        "  M / U            Toggle Mute / Unmute\n"
+        "  Shift+M          Cycle Playback Mode\n"
         "  E / Ctrl+E       Export Video Frame to BMP\n"
         "  F5               Quicksave State (Snapshot playlist, volume & position)\n"
         "  F9               Quickload State (Restore saved workspace)\n"
@@ -1133,7 +1133,11 @@ void MainEntry() {
                     StopTrack();
                     continue;
                 } else if (msg.wParam == 'M' || msg.wParam == 'm') {
-                    CycleMode();
+                    if (GetKeyState(VK_SHIFT) & 0x8000) {
+                        CycleMode();
+                    } else {
+                        ToggleMute();
+                    }
                     continue;
                 } else if (msg.wParam == 'E' || msg.wParam == 'e') {
                     ExportFrameToBMP();
