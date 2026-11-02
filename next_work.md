@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://geocities
+  kilo_creator: kweb://demoscene
   kilo_graphics: KStarship
   kilo_soundscape: KStellar
   kilo_tester: KChatServer
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KFont
   kilo_expander: KChatServer
   kilo_review: KMedia
-virtual_web_target: kweb://geocities
+virtual_web_target: kweb://demoscene
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KChatServer
-  timestamp: '2026-11-02T07:33:11-08:00'
+  agent: kilo-creator
+  app: kweb://geocities
+  timestamp: '2026-11-02T08:20:47-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://geocities`
+- **Active Target**: `kweb://demoscene`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
 | `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 | `kweb://warez` | `KiloOS/public/web/warez.html`, `KiloOS/public/apps/knet.html` | Create *The Underground Courier / Warez BBS Web Ring* (`warez.html` <250 KB): ANSI top-site release board, simulated keygen music player, download quota tracker, and VFS export. |
+| `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KStarship`
@@ -321,6 +321,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T08:20:47-08:00 — kilo-creator: kweb://geocities (GeoCities Neighborhood Portal Tokyo99 and RingSurfer Polish)**
+  - Status: PASS ✅ (0 errors, web 682.2 KB < 999 KB; startup, Vite & security_lint PASS).
+  - Added Tokyo99 Akiba Otaku passport stamp (#10) and updated RingSurfer list to span all 8 neighborhoods (40 homesteads).
+  - Fixed theme button synchronization for Tokyo99 and verified VFS export and Netscape CRT modal.
+  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
+
 - **2026-11-02T07:33:11-08:00 — kilo-review: KChatServer (Argon Visual, Feature, Protocol & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 520x403, audited kchatserver.html and Win32 KChatServer/main.c; un-quarantined and dispatched surgical fixes).
   - Visual/UX Findings: Blank white-on-white kbd tags in dark #console-logs, mid-line vertical clipping in #help-modal at 520x403, mid-word break-all log wrapping, wrapped/truncated broadcast bar, #hud-toast overlapping bottom logs, unguarded modal/SELECT hotkeys, and 96-DPI fixed Win32 layout.
@@ -343,9 +349,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KAudio across web and native targets.
   - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
-
-- **2026-11-02T05:39:53-08:00 — kilo-tester: KAudio (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS (0 errors, web 158.6 KB, native 25.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - UI & Hotkeys: Added Notch option to #filterType, prevented triggerPreset overwriting waveSelect, wired -/= and Arrow hotkeys to save state, and flushed notes on Z stop.
-  - Audio Engines & Parity: Unified WAV/AU/8SVX exports with YM2612 FM, ADSR, sfx, and DSP rack; fixed AU 0xFFFFFFFF and G.711 u-law; eliminated boot Firebase autostart; KAudio/main.c timer-driven SFX, A-K recording, and silent rest steps.
-  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.

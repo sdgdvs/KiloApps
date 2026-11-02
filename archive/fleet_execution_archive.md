@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T05:39:53-08:00 — kilo-tester: KAudio (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS (0 errors, web 158.6 KB, native 25.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - UI & Hotkeys: Added Notch option to #filterType, prevented triggerPreset overwriting waveSelect, wired -/= and Arrow hotkeys to save state, and flushed notes on Z stop.
+  - Audio Engines & Parity: Unified WAV/AU/8SVX exports with YM2612 FM, ADSR, sfx, and DSP rack; fixed AU 0xFFFFFFFF and G.711 u-law; eliminated boot Firebase autostart; KAudio/main.c timer-driven SFX, A-K recording, and silent rest steps.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-11-02T05:14:02-08:00 — kilo-graphics: KDragon (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 sprites already integrated for KDragon
   - Handoff: Advanced `kilo-graphics` to `KStarship`; rotated active agent to `kilo-tester`.

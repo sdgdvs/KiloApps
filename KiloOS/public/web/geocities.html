@@ -2396,7 +2396,7 @@
       <div style="display:flex; align-items:center; gap:8px;">
         <div class="passport-pill" onclick="openPassportModal()" title="Click to view your Cyberspace Passport">
           <span>📜 Cyberspace Passport:</span>
-          <strong id="passportBadgeCount" style="color:#ffff00;">0/9 Stamps</strong>
+          <strong id="passportBadgeCount" style="color:#ffff00;">0/10 Stamps</strong>
           <span id="passportProgressPct" style="color:#38bdf8;">(0%)</span>
         </div>
       </div>
@@ -2441,7 +2441,7 @@
         <!-- Rendered dynamically -->
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #334155; padding-top:8px; margin-top:10px;">
-        <span style="font-size:10px; color:#64748b;" id="passportTotalVisits">Visited: 0 / 35 Homesteads</span>
+        <span style="font-size:10px; color:#64748b;" id="passportTotalVisits">Visited: 0 / 40 Homesteads</span>
         <div style="display:flex; gap:6px;">
           <button class="tool-btn" style="background:#004466; color:#38bdf8;" onclick="downloadPassportTxt()">💾 Download Passport (.TXT)</button>
           <button class="tool-btn" style="background:#334155; color:#fff;" onclick="closePassportModal()">Close</button>
@@ -8388,6 +8388,8 @@ function setNeighborhood(name) {
 
   const btnMap = {
     siliconvalley: 'btnThemeSilicon',
+    tokyo99: 'btnThemeTokyo',
+    tokyo: 'btnThemeTokyo',
     area51: 'btnThemeArea51',
     beverlyhills: 'btnThemeBeverly',
     soho: 'btnThemeSoHo',
@@ -12925,7 +12927,7 @@ let fastCrawlTimer = null;
 
 function getAllHomesteadList() {
   const all = [];
-  ['siliconvalley', 'area51', 'beverlyhills', 'soho', 'enchantedforest'].forEach(nh => {
+  ['siliconvalley', 'tokyo99', 'area51', 'beverlyhills', 'soho', 'enchantedforest', 'sunsetstrip', 'heartland'].forEach(nh => {
     if (HOMESTEADS_DATA[nh]) {
       all.push(...HOMESTEADS_DATA[nh]);
     }
@@ -12966,7 +12968,7 @@ function updatePassportBadges() {
   if (countEl) countEl.textContent = `${unlockedCount}/${stamps.length} Stamps`;
   const pct = Math.round((unlockedCount / stamps.length) * 100);
   if (pctEl) pctEl.textContent = `(${pct}%)`;
-  if (totalVisitsEl) totalVisitsEl.textContent = `Visited: ${visited.length} / 35 Homesteads`;
+  if (totalVisitsEl) totalVisitsEl.textContent = `Visited: ${visited.length} / 40 Homesteads`;
 }
 
 function getPassportStampDefinitions() {
@@ -12984,6 +12986,13 @@ function getPassportStampDefinitions() {
       title: "Silicon Pioneer",
       desc: "Explore all 5 SiliconValley homesteads.",
       isUnlocked: (v) => ['hs_sv_01', 'hs_sv_02', 'hs_sv_03', 'hs_sv_04', 'hs_sv_05'].every(id => v.includes(id))
+    },
+    {
+      id: "stamp_tokyo99",
+      icon: "🎌",
+      title: "Tokyo99 Akiba Otaku",
+      desc: "Explore all 5 Tokyo99 anime, mecha and Neo-Geo shrines.",
+      isUnlocked: (v) => ['hs_tok_01', 'hs_tok_02', 'hs_tok_03', 'hs_tok_04', 'hs_tok_05'].every(id => v.includes(id))
     },
     {
       id: "stamp_area51",
@@ -13093,7 +13102,7 @@ function downloadPassportTxt() {
   txt += `====================================================================\n`;
   txt += `Voyager ID:       ${localStorage.getItem('cyberspire_voyager_id') || 'Voyager-99'}\n`;
   txt += `Issue Date:       December 31, 1999\n`;
-  txt += `Total Homesteads Visited: ${visited.length} / 35\n`;
+  txt += `Total Homesteads Visited: ${visited.length} / 40\n`;
   txt += `--------------------------------------------------------------------\n`;
   txt += `COMMEMORATIVE STAMPS:\n`;
   stamps.forEach((s, i) => {
