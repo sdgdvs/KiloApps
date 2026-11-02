@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T20:15:35-08:00 — kilo-review: KChat (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 850x613 sheet.png — WARN boot RTDB WebSocket autostart — and audited kchat.html + KChat/main.c).
+  - Visual/UX Findings: #port clips 6667 to 666, 3-row wrapped toolbar crushes #log height, renderChannelBar() deletes Switcher [K], #toast overlaps #helpModal/#channelBar, and #helpModal clips at 613px.
+  - Feature/VFS Findings: Boot Firebase autostart violates Connect Gate, Virtual Node echoes messages twice, flushOfflineSpool() leaves Spooled badges stuck, KChat/main.c /clear+/join+Pin+JSON-import bugs, and 0 KiloOS VFS/IPC hooks.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KChat`, `kilo-usability`->`KChat`, `kilo-expander`->`KChat`] (un-quarantined `KChat` from Mature); advanced `kilo-review` to `KFleet`; next agent `kilo-creator`.
+
 - **2026-11-01T19:23:16-08:00 — kilo-expander: KSys (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KSys across web and native targets.

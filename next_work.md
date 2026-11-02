@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KHex
-  kilo_qa: KDB
+  kilo_qa: KSolitaire
   kilo_expander: KChat
   kilo_review: KFleet
 virtual_web_target: kweb://cabled
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KChat
-  timestamp: '2026-11-01T22:38:45-08:00'
+  agent: kilo-qa
+  app: KDB
+  timestamp: '2026-11-01T23:22:15-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -183,11 +183,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | **[ARGON REVIEW]:** Fix 850x613 layout clipping and chrome bloat in kchat.html (sheet.png Panels 1-2) by widening #port to 64px (padding 6px 8px so '6667' stops clipping to '666'), separating #channelBar and the search/tools strip into two compact nowrap rows with tighter button/header padding so #log reclaims >100px height and displays both boot cards without scrolling past the poll header, and restoring the Switcher [K] button (and #spoolBadge) inside renderChannelBar() which currently wipes Switcher [K] on boot; move #toast from top 86px (where it overlaps #helpModal and #channelBar) to bottom-right above .input-bar and skip redundant boot welcome toasts; compact #helpModal into a 2-column reference layout so Shortcuts, Slash Commands, and Close [Esc] fit 850x613 without clipping; add a clickable #nickBadge showing currentUsername for quick nickname edits; and replace anachronistic '(Firebase)' UI labels with 'KiloNet Global Relay'. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KDB`
+- **Active Target**: `KSolitaire`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
 | `KSolitaire` | `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Klondike deal engine, undo history, win fireworks, dual Win32 C parity, and promote to Mature table. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, network node topology visualizer, ping telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
@@ -196,6 +195,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChrono` | `KiloOS/public/apps/kchrono.html`, `KChrono/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, timeline event organizer, epoch markers, dual Win32 C parity, and promote to Mature table. |
 | `KMine` | `KiloOS/public/apps/kmine.html`, `KMine/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mine excavation crawler, ore inventory telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, AST/console script runner, sample templates, dual Win32 C parity, and promote to Mature table. |
+| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KChat`
@@ -316,6 +316,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T23:22:15-08:00 — kilo-qa: KDB (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KDB across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KSolitaire`; rotated active agent to `kilo-expander`.
+
 - **2026-11-01T22:38:45-08:00 — kilo-usability: KChat (850x613 Responsive Chrome & Layout Usability Pass)**
   - Status: PASS ✅ (0 errors, web 127.7 KB, native 34.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 21.05%, HEAD Δ 12.34%, 0 fail, 0 warn, 5.0s)).
   - Layout & Chrome: Widened #port to 64px, separated channelBar and tools into compact nowrap rows, reclaiming >100px height for #log.
@@ -339,9 +344,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented searchable 1999 P2P node directory, simulated 56k/T1 download queue, and live YM2612/SPC700 chiptune previewer.
   - Integrated VFS .mod/.trk direct export to /home/music/, KNet routing, and portal/webring cross-links.
   - Handoff: Advanced `kilo-creator` to `kweb://cabled`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-01T20:15:35-08:00 — kilo-review: KChat (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 850x613 sheet.png — WARN boot RTDB WebSocket autostart — and audited kchat.html + KChat/main.c).
-  - Visual/UX Findings: #port clips 6667 to 666, 3-row wrapped toolbar crushes #log height, renderChannelBar() deletes Switcher [K], #toast overlaps #helpModal/#channelBar, and #helpModal clips at 613px.
-  - Feature/VFS Findings: Boot Firebase autostart violates Connect Gate, Virtual Node echoes messages twice, flushOfflineSpool() leaves Spooled badges stuck, KChat/main.c /clear+/join+Pin+JSON-import bugs, and 0 KiloOS VFS/IPC hooks.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KChat`, `kilo-usability`->`KChat`, `kilo-expander`->`KChat`] (un-quarantined `KChat` from Mature); advanced `kilo-review` to `KFleet`; next agent `kilo-creator`.

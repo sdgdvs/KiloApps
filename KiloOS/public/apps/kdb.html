@@ -4652,6 +4652,8 @@ function quicksaveDatabase() {
     const payload = {
       dbState: dbState,
       currentView: currentView,
+      queryHistory: queryHistory,
+      searchQuery: document.getElementById('searchInput')?.value || '',
       timestamp: Date.now()
     };
     let data = JSON.stringify(payload);
@@ -4698,9 +4700,26 @@ function quickloadDatabase() {
     if (parsed && parsed.dbState && parsed.dbState.tables) {
       targetState = parsed.dbState;
       if (parsed.currentView) switchView(parsed.currentView);
+      if (Array.isArray(parsed.queryHistory)) queryHistory = parsed.queryHistory;
+      if (typeof parsed.searchQuery === 'string') {
+        const sInput = document.getElementById('searchInput');
+        if (sInput) {
+          sInput.value = parsed.searchQuery;
+          if (parsed.searchQuery) filterTable();
+        }
+      }
     }
     if (targetState && targetState.tables) {
       dbState = targetState;
+      if (!dbState.relations || !Array.isArray(dbState.relations)) {
+        dbState.relations = JSON.parse(JSON.stringify(DEFAULT_DATABASE.relations));
+      }
+      if (!dbState.indexes || !Array.isArray(dbState.indexes)) {
+        dbState.indexes = JSON.parse(JSON.stringify(DEFAULT_DATABASE.indexes));
+      }
+      if (!dbState.activeTable || !dbState.tables[dbState.activeTable]) {
+        dbState.activeTable = Object.keys(dbState.tables)[0] || 'employees';
+      }
       sortCol = null;
       sortAsc = true;
       selectedRecordIds.clear();
