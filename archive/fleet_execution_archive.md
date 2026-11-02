@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T02:39:41-08:00 — kilo-usability: KFleet (KFleet Usability, Layout & HiDPI Overhaul)**
+  - Status: PASS ✅ (0 errors, web 85.6 KB, native 18.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.07%, HEAD Δ 14.52%, 0 fail, 0 warn, 7.3s)).
+  - Layout & Responsive: Eliminated 1060x683 clipping with nowrap header/toolbar, 134px bottom row, 2-col subsystems box, and 8 visible actions buttons above fold with 0px scroll.
+  - HiDPI & Canvas: Added resize-only DPR scaling, dynamic theme color recoloring for Amber/Cyan, and viewport-contained radar rings with edge-clamping on 1.5X/2.2X zoom.
+  - Keyboard & Hotkeys: Added Arrow-key node cycling, Escape single-modal dismissal, [C] splash resume, modal/input hotkey guards, and inline 2-click reset.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-02T02:22:19-08:00 — kilo-tester: KFleet (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KFleet across web and native targets.
