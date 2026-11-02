@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T03:21:57-08:00 — kilo-qa: KSolitaire (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 170.5 KB, native 49.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 65.12%, HEAD Δ 0.43%, 0 fail, 0 warn, 10.0s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, ksolitaire_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity (Klondike deal engine with F3 deal selection, undo history, win fireworks) and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KSolitaire` to Mature archive; advanced `kilo-qa` to `KNetMap`; next agent `kilo-expander`.
+
 - **2026-11-02T02:39:41-08:00 — kilo-usability: KFleet (KFleet Usability, Layout & HiDPI Overhaul)**
   - Status: PASS ✅ (0 errors, web 85.6 KB, native 18.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 3.07%, HEAD Δ 14.52%, 0 fail, 0 warn, 7.3s)).
   - Layout & Responsive: Eliminated 1060x683 clipping with nowrap header/toolbar, 134px bottom row, 2-col subsystems box, and 8 visible actions buttons above fold with 0px scroll.

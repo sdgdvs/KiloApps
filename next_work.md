@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://geocities
   kilo_graphics: KStarship
   kilo_soundscape: KStellar
-  kilo_tester: KAudio
+  kilo_tester: KColony
   kilo_usability: KAudio
   kilo_qa: KNetMap
   kilo_expander: KAudio
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KDragon
-  timestamp: '2026-11-02T05:14:02-08:00'
+  agent: kilo-tester
+  app: KAudio
+  timestamp: '2026-11-02T05:39:53-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -130,11 +130,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KAudio`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | **[ARGON REVIEW]:** Eliminate boot Firebase WebSocket autostart in kaudio.html (arg-lore.md s3) by lazy-initializing initializeApp/getDatabase inside joinJamRoom() only on user click, filtering onChildAdded by ev.timestamp >= joinTime so historical events never blast notes or mutate seqTracks on join, and calling leaveJamRoom() on beforeunload/pagehide; add <option value=notch>Notch</option> to #filterType so [Q] stops blanking #filterType; stop triggerPreset() (1-8) from overwriting waveSelect.value; call saveAudioState() on ArrowLeft/Right/-/+ octave hotkeys and on [Z] recording stop (flushing held notes); persist engine, soundbank, fmPreset, fm, snesDamp/snesDampCutoff, glide/glideTime, octaveShift, visMode, and recordedEvents in #btnExportJson/#fileInputJson; honor TUNING_SCALES and octaveShift in runSequencer(), unify #btnExportWav, exportAuFile(), and export8svxFile() to render YM2612 FM, ADSR, track.sfx, and full DSP rack, and fix fileInputAu.onchange to guard dataSize === 0xFFFFFFFF without OOM crash, decode encoding === 1 (G.711 u-law), and stop activeAuSource on re-import/Esc; in KAudio/main.c record A-K WM_KEYDOWN/WM_KEYUP into recordedEvents[], wire VK_SPACE sequencer toggle and -/= octave keys, replace blocking Sleep() in PlaySoundFX() with timer-driven presets [1-9], invalidate visRc in WM_TIMER with live note/idle scope, and honor octaveShift + silent rest steps in ExportWavFile(). |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -155,6 +154,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | **[ARGON REVIEW]:** Fix ReferenceError crash in startContinuousStress() (declare btn, chip, statusText, push stress samples to cpuHistory/cpu-sparkline/updateCpuSpectrum, and replace invalid burst/beep SFX keys), implement missing resetHexPage() for Home key on Tab 6, wire Potemkin toggleHexEndianness() so renderHexViewer() and #hex-stats-cursor format/decode Big vs Little Endian words, connect mod->modGain->car.frequency in playYm2612Sfx(), stop #telem-svc-val flickering between renderServices() and updateTelemetrySparklines(), and persist processes plus all 6 benchmark scores in autoSaveState() and handleImportJson(). |
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | **[ARGON REVIEW]:** Eliminate boot Firebase WebSocket autostart (visual_probe WARN) in kchat.html by lazy-initializing initializeApp/getDatabase/connectedRef inside connectGlobal() and calling goOffline() on leave/beforeunload; stop Virtual Node ws.send from calling addMessage('You', msg) (fixing every message posting twice on 127.0.0.1 port 6667); clear m.spooled = false in messages[] on flushOfflineSpool(), include room in Firebase push payloads, and deduplicate onChildAdded by snapshot key/clientId so multi-message spool flushes never duplicate; remove inline onkeydown on #pollOpt2Input so Enter advances to #pollOpt3Input; sanitize imported JSON/TXT in importFile(); and in KChat/main.c make Clear and /clear only clear currentRoom (unless /clear all), route /join through SwitchToRoom() with '#' auto-prefix, target Pin [Ctrl+P] and React [R] at the latest message in currentRoom, wire a Pinned filter toggle for dead filterPinnedOnly, prevent infinite single-user multi-voting in VoteOnLatestPoll(), and fix whitespace-indented JSON round-trip import. |
 | `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | **[ARGON REVIEW]:** Eliminate pre-climax worker-agent spoilers (kilo-creator..kilo-expander, autonomous KiloApps agent fleet, LUDONARRATIVE INTEGRATION) and ARG/dev meta-labels (ARG Decryption, ghost/ARG nodes, TRADEMARK LINT VERIFIED) in kfleet.html and KFleet/main.c per arg-lore.md s2 by renaming AG-01..AG-06 to diegetic 1999 VLF/orbital relay callsigns (keeping IDs AG-01..AG-06, KF-99, NX-7F); fix THROTTLE CPU decay bug in kfleet.html and integer truncation lockup in KFleet/main.c by scaling from per-node baseCpu/baseThroughput, allow single-arg THROTTLE <pct> in CLI, and call renderRoster() after mutations/ticks; dynamically update Potemkin #subVfs/#subFm/#subRouter/#subCrypt/#detailLockStatus/#headerBusStatus/#nodeCountBadge (with empty-state placeholders), make state.beaconActive functional (bare BEACON toggle, button active state, radar hub sync ring, jitter/buffer stabilization), emit CRIT on high-loss bursts and match ANOMALY in #logFilterCrit, connect mod->modGain->carrier.frequency in playPingAck(), sync/persist audioEnabled + theme in save/load/JSON with safeGet/safeSet try/catch, and fix KFleet/main.c WM_KEYDOWN focus loss after button clicks plus WM_LBUTTONDOWN node selection. |
+| `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | **[ARGON REVIEW]:** Eliminate boot Firebase WebSocket autostart in kaudio.html (arg-lore.md s3) by lazy-initializing initializeApp/getDatabase inside joinJamRoom() only on user click, filtering onChildAdded by ev.timestamp >= joinTime so historical events never blast notes or mutate seqTracks on join, and calling leaveJamRoom() on beforeunload/pagehide; add <option value=notch>Notch</option> to #filterType so [Q] stops blanking #filterType; stop triggerPreset() (1-8) from overwriting waveSelect.value; call saveAudioState() on ArrowLeft/Right/-/+ octave hotkeys and on [Z] recording stop (flushing held notes); persist engine, soundbank, fmPreset, fm, snesDamp/snesDampCutoff, glide/glideTime, octaveShift, visMode, and recordedEvents in #btnExportJson/#fileInputJson; honor TUNING_SCALES and octaveShift in runSequencer(), unify #btnExportWav, exportAuFile(), and export8svxFile() to render YM2612 FM, ADSR, track.sfx, and full DSP rack, and fix fileInputAu.onchange to guard dataSize === 0xFFFFFFFF without OOM crash, decode encoding === 1 (G.711 u-law), and stop activeAuSource on re-import/Esc; in KAudio/main.c record A-K WM_KEYDOWN/WM_KEYUP into recordedEvents[], wire VK_SPACE sequencer toggle and -/= octave keys, replace blocking Sleep() in PlaySoundFX() with timer-driven presets [1-9], invalidate visRc in WM_TIMER with live note/idle scope, and honor octaveShift + silent rest steps in ExportWavFile(). |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KAudio`
@@ -319,6 +319,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T05:39:53-08:00 — kilo-tester: KAudio (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS (0 errors, web 158.6 KB, native 25.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - UI & Hotkeys: Added Notch option to #filterType, prevented triggerPreset overwriting waveSelect, wired -/= and Arrow hotkeys to save state, and flushed notes on Z stop.
+  - Audio Engines & Parity: Unified WAV/AU/8SVX exports with YM2612 FM, ADSR, sfx, and DSP rack; fixed AU 0xFFFFFFFF and G.711 u-law; eliminated boot Firebase autostart; KAudio/main.c timer-driven SFX, A-K recording, and silent rest steps.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-11-02T05:14:02-08:00 — kilo-graphics: KDragon (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 sprites already integrated for KDragon
   - Handoff: Advanced `kilo-graphics` to `KStarship`; rotated active agent to `kilo-tester`.
@@ -339,9 +345,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KFleet across web and native targets.
   - Handoff: Advanced `kilo-expander` to `KHex`; rotated active agent to `kilo-review`.
-
-- **2026-11-02T03:21:57-08:00 — kilo-qa: KSolitaire (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 170.5 KB, native 49.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 65.12%, HEAD Δ 0.43%, 0 fail, 0 warn, 10.0s)).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, ksolitaire_tutorialSeen flag, and Escape modal dismissals.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity (Klondike deal engine with F3 deal selection, undo history, win fireworks) and visibilitychange timer cleanup.
-  - Mature Quarantine & Handoff: Promoted `KSolitaire` to Mature archive; advanced `kilo-qa` to `KNetMap`; next agent `kilo-expander`.

@@ -691,6 +691,7 @@
             <option value="lowpass">Lowpass</option>
             <option value="highpass">Highpass</option>
             <option value="bandpass">Bandpass</option>
+            <option value="notch">Notch</option>
           </select>
         </div>
 
@@ -968,29 +969,21 @@
     appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
   };
 
-  try {
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    window.fb = {
-      app,
-      db,
-      ref,
-      set,
-      get,
-      push,
-      onValue,
-      onChildAdded,
-      off,
-      remove,
-      serverTimestamp,
-      onDisconnect
-    };
-    if (typeof window.onFirebaseReady === 'function') {
-      window.onFirebaseReady();
-    }
-  } catch (err) {
-    console.warn("Firebase RTDB init error:", err);
-  }
+  window.fbApi = {
+    initializeApp,
+    getDatabase,
+    ref,
+    set,
+    get,
+    push,
+    onValue,
+    onChildAdded,
+    off,
+    remove,
+    serverTimestamp,
+    onDisconnect,
+    firebaseConfig
+  };
 </script>
 
 <script>
@@ -1614,8 +1607,16 @@
   recStatus.title = 'Click to toggle Record / Playback (Z / X)';
   recStatus.onclick = () => {
     if (isRecording) {
+      const nowOffset = Date.now() - recordingStartTime;
+      for (const k in activeOscs) {
+        let ki = parseInt(k);
+        if (!isNaN(ki)) {
+          recordedEvents.push({ keyIndex: ki, time: nowOffset, type: 0 });
+        }
+      }
       isRecording = false;
       recStatus.textContent = 'Z: Rec, X: Play';
+      saveAudioState();
       showToast(`⏺️ Recording saved (${recordedEvents.length} events) [Press X to Play]`, 'success', 2500);
     } else if (isPlaying) {
       stopPlayback();
@@ -1690,10 +1691,26 @@
     }
   }
 
+  let joinTime = 0;
   function joinJamRoom() {
     if (!window.fb || !window.fb.db) {
-      showToast('⚠️ Connecting to Firebase RTDB gateway...', 'warning', 2500);
-      return;
+      if (!window.fbApi) {
+        showToast('⚠️ Connecting to Firebase RTDB gateway...', 'warning', 2500);
+        return;
+      }
+      try {
+        const app = window.fbApi.initializeApp(window.fbApi.firebaseConfig);
+        const db = window.fbApi.getDatabase(app);
+        window.fb = {
+          app,
+          db,
+          ...window.fbApi
+        };
+      } catch (err) {
+        console.warn("Firebase RTDB lazy init error:", err);
+        showToast('❌ Failed to initialize Firebase RTDB gateway', 'danger', 3000);
+        return;
+      }
     }
     const rInput = document.getElementById('jamRoomInput');
     const nInput = document.getElementById('jamNickInput');
@@ -1702,6 +1719,8 @@
       jamClientNick = nInput.value.trim();
       safeSetStorage('kaudio_jam_nick', jamClientNick);
     }
+
+    joinTime = Date.now();
 
     try {
       const userRef = window.fb.ref(window.fb.db, `multiplayer/kaudio/rooms/${jamRoomId}/users/${jamClientId}`);
@@ -1723,6 +1742,7 @@
       jamEventsUnsub = window.fb.onChildAdded(eventsRef, snap => {
         const ev = snap.val();
         if (!ev || ev.senderId === jamClientId) return;
+        if (typeof ev.timestamp === 'number' && ev.timestamp < joinTime) return;
         handleRemoteJamEvent(ev);
       });
 
@@ -1752,6 +1772,8 @@
     appendJamTicker('Disconnected from Jam Room.', '#f43f5e');
     showToast('⚪ Disconnected from Jam Room', 'info', 2000);
   }
+  window.addEventListener('beforeunload', () => { if (isJamConnected) leaveJamRoom(); });
+  window.addEventListener('pagehide', () => { if (isJamConnected) leaveJamRoom(); });
 
   function updateJamStatusUI(connected) {
     const pill = document.getElementById('jamStatusPill');
@@ -2396,7 +2418,6 @@
     };
 
     if (type === 'jump') {
-      waveSelect.value = 'square';
       osc.type = 'square';
       osc.frequency.setValueAtTime(150, now);
       osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
@@ -2404,7 +2425,6 @@
       gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
       osc.start(now); osc.stop(now + 0.15);
     } else if (type === 'laser') {
-      waveSelect.value = 'sawtooth';
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(900, now);
       osc.frequency.exponentialRampToValueAtTime(80, now + 0.2);
@@ -2412,7 +2432,6 @@
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
       osc.start(now); osc.stop(now + 0.2);
     } else if (type === 'coin') {
-      waveSelect.value = 'sine';
       osc.type = 'sine';
       osc.frequency.setValueAtTime(987.77, now); // B5
       osc.frequency.setValueAtTime(1318.51, now + 0.08); // E6
@@ -2420,7 +2439,6 @@
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
       osc.start(now); osc.stop(now + 0.3);
     } else if (type === 'powerup') {
-      waveSelect.value = 'triangle';
       osc.type = 'triangle';
       let freqsArr = [330, 392, 493, 659, 783, 987];
       freqsArr.forEach((f, idx) => {
@@ -2430,7 +2448,6 @@
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
       osc.start(now); osc.stop(now + 0.35);
     } else if (type === 'hurt') {
-      waveSelect.value = 'sawtooth';
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(200, now);
       osc.frequency.linearRampToValueAtTime(60, now + 0.18);
@@ -2438,7 +2455,6 @@
       gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
       osc.start(now); osc.stop(now + 0.18);
     } else if (type === 'blip') {
-      waveSelect.value = 'square';
       osc.type = 'square';
       osc.frequency.setValueAtTime(440, now);
       gain.gain.setValueAtTime(0.3, now);
@@ -2447,7 +2463,6 @@
     } else if (type === 'random') {
       let types = ['square', 'sine', 'sawtooth', 'triangle'];
       let chosenType = types[Math.floor(Math.random() * types.length)];
-      waveSelect.value = chosenType;
       osc.type = chosenType;
       let startF = 150 + Math.random() * 800;
       let endF = 100 + Math.random() * 600;
@@ -2618,6 +2633,10 @@
     const isJamOpen = jamModalEl && (jamModalEl.style.display === 'flex' || jamModalEl.offsetParent !== null);
 
     if (e.key === 'Escape') {
+      if (typeof stopActiveAu === 'function' && activeAuSource) {
+        stopActiveAu();
+        showToast('⏹️ .AU audition stopped [Esc]', 'info', 1400);
+      }
       if (isHelpOpen) {
         e.preventDefault();
         helpModalEl.style.display = 'none';
@@ -2718,15 +2737,25 @@
     // Performance Recording Hotkeys
     if (e.key.toUpperCase() === 'Z' && !e.repeat) {
       if (isPlaying) stopPlayback();
-      isRecording = !isRecording;
       if (isRecording) {
+        // Stop recording: flush held notes into recordedEvents
+        const nowOffset = Date.now() - recordingStartTime;
+        for (const k in activeOscs) {
+          let ki = parseInt(k);
+          if (!isNaN(ki)) {
+            recordedEvents.push({ keyIndex: ki, time: nowOffset, type: 0 });
+          }
+        }
+        isRecording = false;
+        recStatus.textContent = 'Z: Rec, X: Play';
+        saveAudioState();
+        showToast(`⏺️ Recording saved (${recordedEvents.length} events) [Press X to Play]`, 'success', 2500);
+      } else {
         recordedEvents = [];
         recordingStartTime = Date.now();
+        isRecording = true;
         recStatus.textContent = '[RECORDING]';
         showToast('🔴 Recording session started...', 'warning', 2000);
-      } else {
-        recStatus.textContent = 'Z: Rec, X: Play';
-        showToast(`⏺️ Recording saved (${recordedEvents.length} events) [Press X to Play]`, 'success', 2500);
       }
       return;
     }
@@ -2820,8 +2849,9 @@
       e.preventDefault();
       if (octaveShift > -4) {
         octaveShift--;
-        octaveBadge.textContent = 'Octave: ' + octaveShift;
+        octaveBadge.textContent = 'Octave: ' + (octaveShift > 0 ? '+' : '') + octaveShift;
         showToast(`Octave shifted: ${octaveShift > 0 ? '+' : ''}${octaveShift}`, 'info', 1400);
+        saveAudioState();
       }
       return;
     }
@@ -2829,8 +2859,9 @@
       e.preventDefault();
       if (octaveShift < 4) {
         octaveShift++;
-        octaveBadge.textContent = 'Octave: ' + octaveShift;
+        octaveBadge.textContent = 'Octave: ' + (octaveShift > 0 ? '+' : '') + octaveShift;
         showToast(`Octave shifted: ${octaveShift > 0 ? '+' : ''}${octaveShift}`, 'info', 1400);
+        saveAudioState();
       }
       return;
     }
@@ -2964,9 +2995,14 @@
             triggerPreset(track.sfx, false);
           } else if (track.notes) {
             let noteIdx = (currentStep % track.notes.length);
+            let semitoneOffset = track.notes[noteIdx];
+            let oct = Math.floor(semitoneOffset / 12);
+            let idx = ((semitoneOffset % 12) + 12) % 12;
+            let baseF = freqs[idx] || (freqs[0] * Math.pow(2, semitoneOffset / 12));
+            let targetFreq = baseF * Math.pow(2, oct + octaveShift);
             let voiceKey = 'seq_' + trIdx;
             if (activeOscs[voiceKey]) stopNote(voiceKey, true);
-            playNote(voiceKey, true, freqs[0] * Math.pow(2, track.notes[noteIdx] / 12));
+            playNote(voiceKey, true, targetFreq);
             setTimeout(() => stopNote(voiceKey, true), intervalMs * 0.8);
           }
         }
@@ -3006,7 +3042,15 @@
   // JSON Export / Import with Effects
   document.getElementById('btnExportJson').onclick = () => {
     const projectData = {
+      engine: synthEngine ? synthEngine.value : 'subtractive',
+      soundbank: soundbankSelect ? soundbankSelect.value : 'custom',
+      fmPreset: fmPresetSelect ? fmPresetSelect.value : '',
       waveType: waveSelect.value,
+      fm: {
+        ratio: fmRatio ? fmRatio.value : '1.0',
+        depth: fmDepth ? fmDepth.value : '450',
+        modDecay: fmModDecay ? fmModDecay.value : '0.25'
+      },
       masterVol: masterVol ? masterVol.value : '0.3',
       adsr: { attack: envA.value, decay: envD.value, sustain: envS.value, release: envR.value },
       filter: { type: filterType.value, cutoff: filterCutoff.value, q: filterQ.value },
@@ -3015,6 +3059,8 @@
         delayTime: delayTime.value,
         delayFeedback: delayFeedback.value,
         delayMix: delayMix.value,
+        snesDamp: chkSnesDamp ? chkSnesDamp.checked : true,
+        snesDampCutoff: snesDampCutoff ? snesDampCutoff.value : '3200',
         drive: chkDrive.checked,
         driveAmount: driveAmount.value,
         bitcrush: (typeof chkBitcrush !== 'undefined' && chkBitcrush) ? chkBitcrush.checked : false,
@@ -3024,7 +3070,12 @@
         chorusDepth: (typeof chorusDepth !== 'undefined' && chorusDepth) ? chorusDepth.value : '6.0',
         chorusMix: (typeof chorusMix !== 'undefined' && chorusMix) ? chorusMix.value : '0.40'
       },
+      glide: (typeof chkGlide !== 'undefined' && chkGlide) ? chkGlide.checked : false,
+      glideTime: (typeof glideTime !== 'undefined' && glideTime) ? glideTime.value : '0.08',
       tuning: (typeof scaleTuningSelect !== 'undefined' && scaleTuningSelect) ? scaleTuningSelect.value : '12tet',
+      octaveShift: octaveShift,
+      visMode: visMode,
+      recordedEvents: recordedEvents || [],
       bpm: seqBpmEl.value,
       tracks: seqTracks.map(t => ({ name: t.name, grid: t.grid }))
     };
@@ -3050,66 +3101,7 @@
     reader.onload = (evt) => {
       try {
         const data = JSON.parse(evt.target.result);
-        if (data.waveType) waveSelect.value = data.waveType;
-        if (data.masterVol !== undefined && masterVol) {
-          masterVol.value = data.masterVol;
-          if (masterGain && ctx) masterGain.gain.setValueAtTime(parseFloat(data.masterVol), ctx.currentTime);
-        }
-        if (data.adsr) {
-          envA.value = data.adsr.attack; valA.textContent = data.adsr.attack + 's';
-          envD.value = data.adsr.decay; valD.textContent = data.adsr.decay + 's';
-          envS.value = data.adsr.sustain; valS.textContent = data.adsr.sustain;
-          envR.value = data.adsr.release; valR.textContent = data.adsr.release + 's';
-        }
-        if (data.filter) {
-          filterType.value = data.filter.type;
-          filterCutoff.value = data.filter.cutoff; valCutoff.textContent = data.filter.cutoff + 'Hz';
-          filterQ.value = data.filter.q; valQ.textContent = data.filter.q;
-          if (filterNode && ctx) {
-            filterNode.type = data.filter.type;
-            filterNode.frequency.setValueAtTime(parseFloat(data.filter.cutoff), ctx.currentTime);
-            filterNode.Q.setValueAtTime(parseFloat(data.filter.q), ctx.currentTime);
-          }
-        }
-        if (data.effects) {
-          if (typeof data.effects.delay !== 'undefined') {
-            chkDelay.checked = !!data.effects.delay;
-            if (data.effects.delayTime) { delayTime.value = data.effects.delayTime; delayTime.oninput(); }
-            if (data.effects.delayFeedback) { delayFeedback.value = data.effects.delayFeedback; delayFeedback.oninput(); }
-            if (data.effects.delayMix) { delayMix.value = data.effects.delayMix; delayMix.oninput(); }
-            chkDelay.onchange();
-          }
-          if (typeof data.effects.drive !== 'undefined') {
-            chkDrive.checked = !!data.effects.drive;
-            if (data.effects.driveAmount) { driveAmount.value = data.effects.driveAmount; driveAmount.oninput(); }
-            chkDrive.onchange();
-          }
-          if (typeof data.effects.bitcrush !== 'undefined' && typeof chkBitcrush !== 'undefined' && chkBitcrush) {
-            chkBitcrush.checked = !!data.effects.bitcrush;
-            if (data.effects.crushBits && crushBits) { crushBits.value = data.effects.crushBits; crushBits.oninput(); }
-            chkBitcrush.onchange();
-          }
-          if (typeof data.effects.chorus !== 'undefined' && typeof chkChorus !== 'undefined' && chkChorus) {
-            chkChorus.checked = !!data.effects.chorus;
-            if (data.effects.chorusRate && chorusRate) { chorusRate.value = data.effects.chorusRate; chorusRate.oninput(); }
-            if (data.effects.chorusDepth && chorusDepth) { chorusDepth.value = data.effects.chorusDepth; chorusDepth.oninput(); }
-            if (data.effects.chorusMix && chorusMix) { chorusMix.value = data.effects.chorusMix; chorusMix.oninput(); }
-            chkChorus.onchange();
-          }
-        }
-        if (data.tuning && scaleTuningSelect) {
-          scaleTuningSelect.value = data.tuning;
-          scaleTuningSelect.onchange();
-        }
-        if (data.bpm) { seqBpmEl.value = data.bpm; valBpmEl.textContent = data.bpm; }
-        if (data.tracks) {
-          data.tracks.forEach((tData, i) => {
-            if (seqTracks[i] && Array.isArray(tData.grid)) {
-              seqTracks[i].grid = tData.grid.slice(0, 16);
-            }
-          });
-          buildSequencerGrid();
-        }
+        loadAudioState(data);
         saveAudioState();
         showToast(`📂 Project "${file.name}" loaded successfully!`, 'success', 3500);
       } catch(err) {
@@ -3119,7 +3111,260 @@
     reader.readAsText(file);
   };
 
-  // WAV Audio Export via OfflineAudioContext with DSP Processing
+  // Unified Offline DSP Master Renderer (YM2612 FM, ADSR, track.sfx, full DSP rack)
+  async function renderOfflineAudio(duration = 4.0, sampleRate = 44100) {
+    const offlineCtx = new OfflineAudioContext(1, Math.floor(sampleRate * duration), sampleRate);
+
+    // Filter Node
+    let offFilter = offlineCtx.createBiquadFilter();
+    offFilter.type = filterType ? filterType.value : 'lowpass';
+    offFilter.frequency.setValueAtTime(parseFloat(filterCutoff ? filterCutoff.value : '4000'), 0);
+    offFilter.Q.setValueAtTime(parseFloat(filterQ ? filterQ.value : '1'), 0);
+
+    // Overdrive Saturation
+    let offDrive = offlineCtx.createWaveShaper();
+    if (chkDrive && chkDrive.checked) {
+      offDrive.curve = makeDistortionCurve(parseFloat(driveAmount ? driveAmount.value : '15'));
+    }
+
+    // Vintage DAC Bitcrusher
+    let offCrush = offlineCtx.createWaveShaper();
+    if (typeof chkBitcrush !== 'undefined' && chkBitcrush && chkBitcrush.checked) {
+      offCrush.curve = makeBitcrushCurve(parseInt(crushBits ? crushBits.value : '12'));
+    }
+
+    let offDriveGain = offlineCtx.createGain();
+
+    // Chorus Stage
+    let offChorusDry = offlineCtx.createGain();
+    offChorusDry.gain.setValueAtTime(1.0, 0);
+    let offChorusWet = offlineCtx.createGain();
+    let isChorus = (typeof chkChorus !== 'undefined' && chkChorus && chkChorus.checked);
+    offChorusWet.gain.setValueAtTime(isChorus ? parseFloat(chorusMix ? chorusMix.value : '0.4') : 0, 0);
+
+    let offChorusDelay = offlineCtx.createDelay(0.1);
+    offChorusDelay.delayTime.setValueAtTime(0.012, 0);
+    let offChorusLfo = offlineCtx.createOscillator();
+    offChorusLfo.type = 'sine';
+    offChorusLfo.frequency.setValueAtTime(parseFloat((typeof chorusRate !== 'undefined' && chorusRate) ? chorusRate.value : '1.2'), 0);
+    let offChorusLfoGain = offlineCtx.createGain();
+    offChorusLfoGain.gain.setValueAtTime(parseFloat((typeof chorusDepth !== 'undefined' && chorusDepth) ? chorusDepth.value : '6.0') / 1000, 0);
+    offChorusLfo.connect(offChorusLfoGain);
+    offChorusLfoGain.connect(offChorusDelay.delayTime);
+    try { offChorusLfo.start(0); offChorusLfo.stop(duration); } catch(e) {}
+
+    // Delay Stage with SNES Damping
+    let offDelay = offlineCtx.createDelay(5.0);
+    offDelay.delayTime.setValueAtTime(parseFloat(delayTime ? delayTime.value : '0.25'), 0);
+    let offFb = offlineCtx.createGain();
+    offFb.gain.setValueAtTime(parseFloat(delayFeedback ? delayFeedback.value : '0.45'), 0);
+    let offDamp = offlineCtx.createBiquadFilter();
+    offDamp.type = 'lowpass';
+    let dampCut = (chkSnesDamp && chkSnesDamp.checked) ? parseFloat(snesDampCutoff ? snesDampCutoff.value : '3200') : 20000;
+    offDamp.frequency.setValueAtTime(dampCut, 0);
+    offDelay.connect(offDamp);
+    offDamp.connect(offFb);
+    offFb.connect(offDelay);
+
+    let offDelayDry = offlineCtx.createGain();
+    offDelayDry.gain.setValueAtTime(1.0, 0);
+    let offDelayWet = offlineCtx.createGain();
+    offDelayWet.gain.setValueAtTime((chkDelay && chkDelay.checked) ? parseFloat(delayMix ? delayMix.value : '0.3') : 0, 0);
+
+    // Audio Graph Connections
+    offFilter.connect(offDrive);
+    offDrive.connect(offCrush);
+    offCrush.connect(offDriveGain);
+
+    offDriveGain.connect(offChorusDry);
+    offDriveGain.connect(offChorusDelay);
+    offChorusDelay.connect(offChorusWet);
+
+    offChorusDry.connect(offDelayDry);
+    offChorusDry.connect(offDelay);
+    offChorusWet.connect(offDelayDry);
+    offChorusWet.connect(offDelay);
+
+    offDelayDry.connect(offlineCtx.destination);
+    offDelay.connect(offDelayWet);
+    offDelayWet.connect(offlineCtx.destination);
+
+    // Synthesize active sequencer tracks
+    const bpm = parseInt(seqBpmEl ? seqBpmEl.value : 120);
+    const stepTime = 60 / bpm / 4;
+    const isFm = (synthEngine && synthEngine.value === 'ym2612');
+    const fmR = parseFloat(fmRatio ? fmRatio.value : '1.0');
+    const fmD = parseFloat(fmDepth ? fmDepth.value : '450');
+    const fmMDecay = parseFloat(fmModDecay ? fmModDecay.value : '0.25');
+
+    const envAtk = parseFloat(envA ? envA.value : '0.05');
+    const envDec = parseFloat(envD ? envD.value : '0.1');
+    const envSus = parseFloat(envS ? envS.value : '0.7');
+    const envRel = parseFloat(envR ? envR.value : '0.2');
+
+    seqTracks.forEach(track => {
+      for (let st = 0; st < 16; st++) {
+        if (track.grid[st]) {
+          let time = st * stepTime;
+          if (time >= duration) break;
+
+          if (track.sfx) {
+            // Render Sound FX into offFilter
+            const sfxType = track.sfx;
+            if (sfxType === 'jump') {
+              let osc = offlineCtx.createOscillator();
+              let g = offlineCtx.createGain();
+              osc.type = 'square';
+              osc.frequency.setValueAtTime(150, time);
+              osc.frequency.exponentialRampToValueAtTime(600, time + 0.15);
+              g.gain.setValueAtTime(0.4, time);
+              g.gain.linearRampToValueAtTime(0.01, time + 0.15);
+              osc.connect(g); g.connect(offFilter);
+              osc.start(time); osc.stop(time + 0.15);
+            } else if (sfxType === 'laser') {
+              let osc = offlineCtx.createOscillator();
+              let g = offlineCtx.createGain();
+              osc.type = 'sawtooth';
+              osc.frequency.setValueAtTime(900, time);
+              osc.frequency.exponentialRampToValueAtTime(80, time + 0.2);
+              g.gain.setValueAtTime(0.5, time);
+              g.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+              osc.connect(g); g.connect(offFilter);
+              osc.start(time); osc.stop(time + 0.2);
+            } else if (sfxType === 'explosion') {
+              let bufSize = Math.floor(sampleRate * 0.3);
+              let buf = offlineCtx.createBuffer(1, bufSize, sampleRate);
+              let cd = buf.getChannelData(0);
+              for (let ci = 0; ci < bufSize; ci++) cd[ci] = Math.random() * 2 - 1;
+              let nsrc = offlineCtx.createBufferSource();
+              nsrc.buffer = buf;
+              let ng = offlineCtx.createGain();
+              ng.gain.setValueAtTime(0.6, time);
+              ng.gain.exponentialRampToValueAtTime(0.01, time + 0.3);
+              nsrc.connect(ng); ng.connect(offFilter);
+              nsrc.start(time); nsrc.stop(time + 0.3);
+            } else if (sfxType === 'coin') {
+              let osc = offlineCtx.createOscillator();
+              let g = offlineCtx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(987.77, time);
+              osc.frequency.setValueAtTime(1318.51, time + 0.08);
+              g.gain.setValueAtTime(0.4, time);
+              g.gain.exponentialRampToValueAtTime(0.01, time + 0.3);
+              osc.connect(g); g.connect(offFilter);
+              osc.start(time); osc.stop(time + 0.3);
+            } else if (sfxType === 'powerup') {
+              let osc = offlineCtx.createOscillator();
+              let g = offlineCtx.createGain();
+              osc.type = 'triangle';
+              let fArr = [330, 392, 493, 659, 783, 987];
+              fArr.forEach((f, idx) => osc.frequency.setValueAtTime(f, time + idx * 0.05));
+              g.gain.setValueAtTime(0.4, time);
+              g.gain.exponentialRampToValueAtTime(0.01, time + 0.35);
+              osc.connect(g); g.connect(offFilter);
+              osc.start(time); osc.stop(time + 0.35);
+            } else if (sfxType === 'hurt') {
+              let osc = offlineCtx.createOscillator();
+              let g = offlineCtx.createGain();
+              osc.type = 'sawtooth';
+              osc.frequency.setValueAtTime(200, time);
+              osc.frequency.linearRampToValueAtTime(60, time + 0.18);
+              g.gain.setValueAtTime(0.5, time);
+              g.gain.linearRampToValueAtTime(0.01, time + 0.18);
+              osc.connect(g); g.connect(offFilter);
+              osc.start(time); osc.stop(time + 0.18);
+            } else if (sfxType === 'blip') {
+              let osc = offlineCtx.createOscillator();
+              let g = offlineCtx.createGain();
+              osc.type = 'square';
+              osc.frequency.setValueAtTime(440, time);
+              g.gain.setValueAtTime(0.3, time);
+              g.gain.linearRampToValueAtTime(0.01, time + 0.05);
+              osc.connect(g); g.connect(offFilter);
+              osc.start(time); osc.stop(time + 0.05);
+            } else if (sfxType === 'signal1999') {
+              let osc = offlineCtx.createOscillator();
+              let amOsc = offlineCtx.createOscillator();
+              let amGain = offlineCtx.createGain();
+              let g = offlineCtx.createGain();
+              osc.type = 'sine'; osc.frequency.setValueAtTime(1999, time);
+              amOsc.type = 'sine'; amOsc.frequency.setValueAtTime(19.99, time);
+              amGain.gain.setValueAtTime(0.18, time);
+              g.gain.setValueAtTime(0.35, time);
+              g.gain.exponentialRampToValueAtTime(0.001, time + 2.0);
+              amOsc.connect(amGain); amGain.connect(g.gain);
+              osc.connect(g); g.connect(offFilter);
+              amOsc.start(time); osc.start(time);
+              amOsc.stop(time + 2.05); osc.stop(time + 2.05);
+            } else {
+              // fallback random
+              let osc = offlineCtx.createOscillator();
+              let g = offlineCtx.createGain();
+              osc.type = 'sawtooth';
+              osc.frequency.setValueAtTime(300, time);
+              osc.frequency.exponentialRampToValueAtTime(100, time + 0.2);
+              g.gain.setValueAtTime(0.4, time);
+              g.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+              osc.connect(g); g.connect(offFilter);
+              osc.start(time); osc.stop(time + 0.2);
+            }
+          } else if (track.notes && track.notes.length > 0) {
+            // Melodic Track with tuning, octaveShift, ADSR & YM2612 FM
+            let semitoneOffset = track.notes[st % track.notes.length];
+            let oct = Math.floor(semitoneOffset / 12);
+            let idx = ((semitoneOffset % 12) + 12) % 12;
+            let baseF = freqs[idx] || (freqs[0] * Math.pow(2, semitoneOffset / 12));
+            let targetFreq = baseF * Math.pow(2, oct + octaveShift);
+
+            let gate = stepTime * 0.8;
+            let voiceGain = offlineCtx.createGain();
+            voiceGain.gain.setValueAtTime(0, time);
+            voiceGain.gain.linearRampToValueAtTime(0.4, time + Math.min(envAtk, gate));
+            if (time + envAtk + envDec < time + gate) {
+              voiceGain.gain.linearRampToValueAtTime(0.4 * envSus, time + envAtk + envDec);
+            } else {
+              voiceGain.gain.linearRampToValueAtTime(0.4 * Math.max(envSus, 0.01), time + gate);
+            }
+            voiceGain.gain.setValueAtTime(0.4 * envSus, time + gate);
+            voiceGain.gain.exponentialRampToValueAtTime(0.0001, Math.min(duration, time + gate + envRel));
+
+            let osc = offlineCtx.createOscillator();
+            let noteEnd = Math.min(duration, time + gate + envRel + 0.05);
+
+            if (isFm) {
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(targetFreq, time);
+
+              let modOsc = offlineCtx.createOscillator();
+              modOsc.type = 'sine';
+              modOsc.frequency.setValueAtTime(targetFreq * fmR, time);
+
+              let modGain = offlineCtx.createGain();
+              modGain.gain.setValueAtTime(fmD, time);
+              modGain.gain.exponentialRampToValueAtTime(0.01, time + fmMDecay);
+
+              modOsc.connect(modGain);
+              modGain.connect(osc.frequency);
+              modOsc.start(time);
+              modOsc.stop(noteEnd);
+            } else {
+              osc.type = waveSelect ? waveSelect.value : 'square';
+              osc.frequency.setValueAtTime(targetFreq, time);
+            }
+
+            osc.connect(voiceGain);
+            voiceGain.connect(offFilter);
+            osc.start(time);
+            osc.stop(noteEnd);
+          }
+        }
+      }
+    });
+
+    return await offlineCtx.startRendering();
+  }
+
+  // WAV Audio Export via OfflineAudioContext with Unified DSP Processing
   document.getElementById('btnExportWav').onclick = async () => {
     initAudio();
     const hasActiveSteps = seqTracks.some(t => t.grid.some(Boolean));
@@ -3128,108 +3373,9 @@
       return;
     }
     showToast('⏳ Rendering 4-second DSP master WAV...', 'info', 2000);
-    const duration = 4.0; // 4 seconds export
+    const duration = 4.0;
     const sampleRate = 44100;
-    const offlineCtx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
-
-    // Build DSP Effects Chain in Offline Context
-    let offFilter = offlineCtx.createBiquadFilter();
-    offFilter.type = filterType.value;
-    offFilter.frequency.setValueAtTime(parseFloat(filterCutoff.value), 0);
-    offFilter.Q.setValueAtTime(parseFloat(filterQ.value), 0);
-
-    let offDrive = offlineCtx.createWaveShaper();
-    if (chkDrive.checked) {
-      offDrive.curve = makeDistortionCurve(parseFloat(driveAmount.value));
-    }
-    let offDriveGain = offlineCtx.createGain();
-
-    let offDelay = offlineCtx.createDelay(5.0);
-    offDelay.delayTime.setValueAtTime(parseFloat(delayTime.value), 0);
-
-    let offFb = offlineCtx.createGain();
-    offFb.gain.setValueAtTime(parseFloat(delayFeedback.value), 0);
-
-    let offDry = offlineCtx.createGain();
-    offDry.gain.setValueAtTime(1.0, 0);
-
-    let offWet = offlineCtx.createGain();
-    offWet.gain.setValueAtTime(chkDelay.checked ? parseFloat(delayMix.value) : 0, 0);
-
-    // Delay Feedback with SNES SPC700 Warmth Damping
-    let offDamp = offlineCtx.createBiquadFilter();
-    offDamp.type = 'lowpass';
-    let dampCut = (chkSnesDamp && chkSnesDamp.checked) ? parseFloat(snesDampCutoff.value) : 20000;
-    offDamp.frequency.setValueAtTime(dampCut, 0);
-
-    offDelay.connect(offDamp);
-    offDamp.connect(offFb);
-    offFb.connect(offDelay);
-
-    // Audio Graph
-    offFilter.connect(offDrive);
-    offDrive.connect(offDriveGain);
-
-    offDriveGain.connect(offDry);
-    offDry.connect(offlineCtx.destination);
-
-    offDriveGain.connect(offDelay);
-    offDelay.connect(offWet);
-    offWet.connect(offlineCtx.destination);
-
-    // Synthesize active sequencer tracks into offline context
-    const bpm = parseInt(seqBpmEl.value);
-    const stepTime = 60 / bpm / 4;
-    const isFm = (synthEngine && synthEngine.value === 'ym2612');
-    const fmR = parseFloat(fmRatio ? fmRatio.value : '1.0');
-    const fmD = parseFloat(fmDepth ? fmDepth.value : '450');
-    const fmMDecay = parseFloat(fmModDecay ? fmModDecay.value : '0.25');
-
-    seqTracks.forEach(track => {
-      for (let st = 0; st < 16; st++) {
-        if (track.grid[st]) {
-          let time = st * stepTime;
-          if (time >= duration) break;
-          let osc = offlineCtx.createOscillator();
-          let gain = offlineCtx.createGain();
-
-          let noteOffset = track.notes ? track.notes[st % track.notes.length] : (st % freqs.length);
-          let targetFreq = track.notes ? (freqs[0] * Math.pow(2, noteOffset / 12)) : freqs[st % freqs.length];
-
-          if (isFm) {
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(targetFreq, time);
-
-            let modOsc = offlineCtx.createOscillator();
-            modOsc.type = 'sine';
-            modOsc.frequency.setValueAtTime(targetFreq * fmR, time);
-
-            let modGain = offlineCtx.createGain();
-            modGain.gain.setValueAtTime(fmD, time);
-            modGain.gain.exponentialRampToValueAtTime(0.01, time + fmMDecay);
-
-            modOsc.connect(modGain);
-            modGain.connect(osc.frequency);
-            modOsc.start(time);
-            modOsc.stop(time + stepTime * 0.9);
-          } else {
-            osc.type = waveSelect.value;
-            osc.frequency.setValueAtTime(targetFreq, time);
-          }
-
-          gain.gain.setValueAtTime(0, time);
-          gain.gain.linearRampToValueAtTime(0.3, time + 0.01);
-          gain.gain.exponentialRampToValueAtTime(0.001, time + stepTime * 0.9);
-
-          osc.connect(gain);
-          gain.connect(offFilter);
-          osc.start(time);
-          osc.stop(time + stepTime * 0.9);
-        }
-      }
-    });
-
-    const renderedBuffer = await offlineCtx.startRendering();
+    const renderedBuffer = await renderOfflineAudio(duration, sampleRate);
     const wavBlob = bufferToWave(renderedBuffer, sampleRate * duration);
     const url = URL.createObjectURL(wavBlob);
     const a = document.createElement('a');
@@ -3553,36 +3699,7 @@
     showToast('🔊 Rendering Sun/NeXT .AU master audio...', 'info', 2000);
     const duration = 4.0;
     const sampleRate = 44100;
-    const offlineCtx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
-    let offFilter = offlineCtx.createBiquadFilter();
-    offFilter.type = filterType.value;
-    offFilter.frequency.setValueAtTime(parseFloat(filterCutoff.value), 0);
-    offFilter.connect(offlineCtx.destination);
-
-    const bpm = parseInt(seqBpmEl.value);
-    const stepTime = 60 / bpm / 4;
-    seqTracks.forEach(track => {
-      for (let st = 0; st < 16; st++) {
-        if (track.grid[st]) {
-          let tStart = st * stepTime;
-          let osc = offlineCtx.createOscillator();
-          osc.type = waveSelect.value;
-          let noteFreq = freqs[0];
-          if (track.notes && track.notes.length) noteFreq = 261.63 * Math.pow(2, (track.notes[st % track.notes.length] || 0) / 12);
-          osc.frequency.setValueAtTime(noteFreq, tStart);
-          let env = offlineCtx.createGain();
-          env.gain.setValueAtTime(0, tStart);
-          env.gain.linearRampToValueAtTime(0.4, tStart + 0.01);
-          env.gain.exponentialRampToValueAtTime(0.001, tStart + 0.2);
-          osc.connect(env);
-          env.connect(offFilter);
-          osc.start(tStart);
-          osc.stop(tStart + 0.25);
-        }
-      }
-    });
-
-    const rendered = await offlineCtx.startRendering();
+    const rendered = await renderOfflineAudio(duration, sampleRate);
     const auBlob = bufferToAu(rendered, Math.floor(sampleRate * duration));
     const url = URL.createObjectURL(auBlob);
     const a = document.createElement('a');
@@ -3644,21 +3761,9 @@
 
   async function export8svxFile() {
     initAudio();
-    const duration = 2.0;
+    const duration = 4.0;
     const sampleRate = 22050;
-    const offlineCtx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
-    let osc = offlineCtx.createOscillator();
-    osc.type = waveSelect.value;
-    osc.frequency.setValueAtTime(freqs[0], 0);
-    let env = offlineCtx.createGain();
-    env.gain.setValueAtTime(0.8, 0);
-    env.gain.exponentialRampToValueAtTime(0.001, duration - 0.05);
-    osc.connect(env);
-    env.connect(offlineCtx.destination);
-    osc.start(0);
-    osc.stop(duration);
-
-    const rendered = await offlineCtx.startRendering();
+    const rendered = await renderOfflineAudio(duration, sampleRate);
     const iffBlob = bufferTo8svx(rendered, Math.floor(sampleRate * duration));
     const url = URL.createObjectURL(iffBlob);
     const a = document.createElement('a');
@@ -3670,7 +3775,28 @@
   }
 
   // Sun/NeXT .AU / .SND Binary File Importer & Telemetry Audition
+  let activeAuSource = null;
+
+  function stopActiveAu() {
+    if (activeAuSource) {
+      try {
+        activeAuSource.stop();
+        activeAuSource.disconnect();
+      } catch(e) {}
+      activeAuSource = null;
+    }
+  }
+
+  function decodeUlawSample(uVal) {
+    uVal = ~uVal & 0xFF;
+    let t = ((uVal & 0x0F) << 3) + 0x84;
+    t <<= (uVal & 0x70) >> 4;
+    let sample = (uVal & 0x80) ? (0x84 - t) : (t - 0x84);
+    return sample / 32768;
+  }
+
   function importAuPrompt() {
+    stopActiveAu();
     const input = document.getElementById('fileInputAu');
     if (input) {
       input.value = '';
@@ -3683,6 +3809,7 @@
     fileInputAu.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
+      stopActiveAu();
       initAudio();
       try {
         const ab = await file.arrayBuffer();
@@ -3698,11 +3825,33 @@
         const sampleRate = view.getUint32(16, false) || 44100;
         const channels = Math.max(1, view.getUint32(20, false));
 
-        // Decode PCM
-        let sampleCount = (dataSize > 0 ? dataSize : ab.byteLength - dataOffset) / (encoding === 3 ? 2 : 1) / channels;
-        let audioBuf = ctx.createBuffer(channels, Math.floor(sampleCount), sampleRate);
+        // Guard against 0xFFFFFFFF (unspecified length) or overflow without OOM crash
+        const actualDataSize = (dataSize === 0xFFFFFFFF || dataSize === 0 || (dataOffset + dataSize > ab.byteLength))
+          ? Math.max(0, ab.byteLength - dataOffset)
+          : dataSize;
 
-        if (encoding === 3) {
+        const bytesPerSample = (encoding === 3 ? 2 : 1);
+        let sampleCount = Math.floor(actualDataSize / bytesPerSample / channels);
+        if (sampleCount <= 0) {
+          showToast('❌ Empty audio data in .AU file', 'warning', 3000);
+          return;
+        }
+
+        let audioBuf = ctx.createBuffer(channels, sampleCount, sampleRate);
+
+        if (encoding === 1) {
+          // G.711 u-law 8-bit decode
+          for (let ch = 0; ch < channels; ch++) {
+            let chData = audioBuf.getChannelData(ch);
+            let pos = dataOffset + ch;
+            for (let i = 0; i < sampleCount; i++) {
+              if (pos < ab.byteLength) {
+                chData[i] = decodeUlawSample(view.getUint8(pos));
+                pos += channels;
+              }
+            }
+          }
+        } else if (encoding === 3) {
           // 16-bit linear PCM Big-Endian
           for (let ch = 0; ch < channels; ch++) {
             let chData = audioBuf.getChannelData(ch);
@@ -3715,7 +3864,7 @@
             }
           }
         } else {
-          // 8-bit PCM / fallback
+          // 8-bit linear PCM / fallback
           for (let ch = 0; ch < channels; ch++) {
             let chData = audioBuf.getChannelData(ch);
             let pos = dataOffset + ch;
@@ -3732,8 +3881,12 @@
         let src = ctx.createBufferSource();
         src.buffer = audioBuf;
         src.connect(masterGain);
+        src.onended = () => {
+          if (activeAuSource === src) activeAuSource = null;
+        };
+        activeAuSource = src;
         src.start();
-        showToast(`🔊 Auditioning Sun/NeXT .AU: ${file.name} (${sampleRate}Hz, ${channels}ch, ${audioBuf.duration.toFixed(2)}s, enc=${encoding})`, 'success', 4500);
+        showToast(`🔊 Auditioning Sun/NeXT .AU: ${file.name} (${sampleRate}Hz, ${channels}ch, ${audioBuf.duration.toFixed(2)}s, enc=${encoding}) [Esc to stop]`, 'success', 4500);
       } catch(err) {
         showToast('❌ Failed to parse .AU / .SND binary file: ' + err.message, 'danger', 4000);
       }

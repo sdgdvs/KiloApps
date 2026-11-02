@@ -34,6 +34,15 @@ static double MySin(double x) {
 // Recording & Playback State
 typedef struct { int keyIndex; DWORD time; int type; } AudioEvent;
 AudioEvent recordedEvents[4000];
+
+typedef struct {
+    DWORD triggerTime;
+    DWORD msg;
+} SfxStep;
+#define MAX_SFX_STEPS 32
+static SfxStep sfxQueue[MAX_SFX_STEPS];
+static int sfxCount = 0;
+static int sfxIndex = 0;
 int numEvents = 0;
 int isRecording = 0;
 int isPlaying = 0;
@@ -376,53 +385,93 @@ void PlayNote(int index, int on) {
     }
 }
 
-// Procedural Sound FX Generator via MIDI Pitch Bends & Notes
+// Procedural Sound FX Generator via Non-Blocking Timer-Driven Steps [Presets 1-9]
 void PlaySoundFX(int preset) {
     if (!hMidi) return;
+    DWORD now = GetTickCount();
+
+    // Flush current queued FX notes and reset pitch bend
+    midiOutShortMsg(hMidi, 0x0040E0);
+    for (int k = 0; k < sfxCount; k++) {
+        if ((sfxQueue[k].msg & 0xF0) == 0x90) {
+            DWORD note = (sfxQueue[k].msg >> 8) & 0x7F;
+            midiOutShortMsg(hMidi, 0x00000080 | (note << 8));
+        }
+    }
+    sfxCount = 0;
+    sfxIndex = 0;
+
     switch (preset) {
         case 1: // Jump
-            midiOutShortMsg(hMidi, 0x0060E0); // Pitch bend down
-            midiOutShortMsg(hMidi, 0x007F0090 | (60 << 8)); // C4
-            Sleep(40);
-            midiOutShortMsg(hMidi, 0x007FFF90 | (72 << 8)); // C5 bend up
-            Sleep(80);
-            midiOutShortMsg(hMidi, 0x00000080 | (60 << 8));
-            midiOutShortMsg(hMidi, 0x00000080 | (72 << 8));
-            midiOutShortMsg(hMidi, 0x0040E0); // Reset bend
+            sfxQueue[sfxCount++] = (SfxStep){ now, 0x0060E0 };
+            sfxQueue[sfxCount++] = (SfxStep){ now, 0x007F0090 | (60 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 40, 0x007F0090 | (72 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 40, 0x007FE0 };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 120, 0x00000080 | (60 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 120, 0x00000080 | (72 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 125, 0x0040E0 };
             break;
         case 2: // Laser
-            midiOutShortMsg(hMidi, 0x007F0090 | (84 << 8)); // C6
-            midiOutShortMsg(hMidi, 0x007FFF00 | 0xE0); // Bend high
-            Sleep(30);
-            midiOutShortMsg(hMidi, 0x007F0090 | (72 << 8));
-            Sleep(40);
-            midiOutShortMsg(hMidi, 0x00000080 | (84 << 8));
-            midiOutShortMsg(hMidi, 0x00000080 | (72 << 8));
-            midiOutShortMsg(hMidi, 0x0040E0);
+            sfxQueue[sfxCount++] = (SfxStep){ now, 0x007FE0 };
+            sfxQueue[sfxCount++] = (SfxStep){ now, 0x007F0090 | (84 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 30, 0x007F0090 | (72 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 30, 0x0020E0 };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 70, 0x00000080 | (84 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 70, 0x00000080 | (72 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 75, 0x0040E0 };
             break;
-        case 3: // Explosion (Cluster)
-            midiOutShortMsg(hMidi, 0x007F0090 | (36 << 8));
-            midiOutShortMsg(hMidi, 0x007F0090 | (37 << 8));
-            midiOutShortMsg(hMidi, 0x007F0090 | (38 << 8));
-            Sleep(120);
-            midiOutShortMsg(hMidi, 0x00000080 | (36 << 8));
-            midiOutShortMsg(hMidi, 0x00000080 | (37 << 8));
-            midiOutShortMsg(hMidi, 0x00000080 | (38 << 8));
+        case 3: // Explosion
+            sfxQueue[sfxCount++] = (SfxStep){ now, 0x007F0090 | (36 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now, 0x007F0090 | (37 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now, 0x007F0090 | (38 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 120, 0x00000080 | (36 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 120, 0x00000080 | (37 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 120, 0x00000080 | (38 << 8) };
             break;
-        case 4: // Coin (Arpeggio Chirp)
-            midiOutShortMsg(hMidi, 0x007F0090 | (71 << 8)); // B5
-            Sleep(60);
-            midiOutShortMsg(hMidi, 0x00000080 | (71 << 8));
-            midiOutShortMsg(hMidi, 0x007F0090 | (76 << 8)); // E6
-            Sleep(140);
-            midiOutShortMsg(hMidi, 0x00000080 | (76 << 8));
+        case 4: // Coin
+            sfxQueue[sfxCount++] = (SfxStep){ now, 0x007F0090 | (71 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 60, 0x00000080 | (71 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 60, 0x007F0090 | (76 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 200, 0x00000080 | (76 << 8) };
             break;
         case 5: // Powerup
-            for (int n = 60; n <= 72; n += 3) {
-                midiOutShortMsg(hMidi, 0x007F0090 | (n << 8));
-                Sleep(40);
-                midiOutShortMsg(hMidi, 0x00000080 | (n << 8));
+            sfxQueue[sfxCount++] = (SfxStep){ now + 0, 0x007F0090 | (60 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 40, 0x00000080 | (60 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 40, 0x007F0090 | (63 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 80, 0x00000080 | (63 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 80, 0x007F0090 | (66 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 120, 0x00000080 | (66 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 120, 0x007F0090 | (69 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 160, 0x00000080 | (69 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 160, 0x007F0090 | (72 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 220, 0x00000080 | (72 << 8) };
+            break;
+        case 6: // Hurt
+            sfxQueue[sfxCount++] = (SfxStep){ now, 0x007F0090 | (55 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now, 0x0055E0 };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 60, 0x0020E0 };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 140, 0x00000080 | (55 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 145, 0x0040E0 };
+            break;
+        case 7: // Blip
+            sfxQueue[sfxCount++] = (SfxStep){ now, 0x007F0090 | (69 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 50, 0x00000080 | (69 << 8) };
+            break;
+        case 8: // Random
+            {
+                int rNote = 48 + (GetTickCount() % 36);
+                sfxQueue[sfxCount++] = (SfxStep){ now, 0x007F0090 | (rNote << 8) };
+                sfxQueue[sfxCount++] = (SfxStep){ now + 100, 0x00000080 | (rNote << 8) };
             }
+            break;
+        case 9: // 1999Hz Subcarrier
+            sfxQueue[sfxCount++] = (SfxStep){ now, 0x007F0090 | (83 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 40, 0x0050E0 };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 80, 0x0030E0 };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 120, 0x0050E0 };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 160, 0x0030E0 };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 240, 0x00000080 | (83 << 8) };
+            sfxQueue[sfxCount++] = (SfxStep){ now + 245, 0x0040E0 };
             break;
     }
 }
@@ -476,15 +525,16 @@ void ExportWavFile(HWND hwnd) {
         double t = (double)i / (double)sampleRate;
         int step = (int)(t / 0.125) % 16;
         double freq = 0.0;
+        double rawVal = 0.0;
         if (seqPattern[step]) {
             int nIdx = step % NUM_KEYS;
-            freq = freqsMap[nIdx];
+            double mult = (octaveShift >= 0) ? (double)(1 << octaveShift) : (1.0 / (double)(1 << -octaveShift));
+            freq = freqsMap[nIdx] * mult;
+            rawVal = (MyFmod(t * freq, 1.0) > 0.5) ? 0.35 : -0.35;
         } else {
-            // Arpeggio fallback
-            freq = (MyFmod(t, 0.4) > 0.2) ? 329.63 : 261.63;
+            // Silent rest step
+            rawVal = 0.0;
         }
-
-        double rawVal = (MyFmod(t * freq, 1.0) > 0.5) ? 0.35 : -0.35;
 
         // Apply Lowpass Filter DSP (cutoff ~3200 Hz: alpha = 0.31)
         if (filterEnabled) {
@@ -660,6 +710,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 if (changed) InvalidateRect(hwnd, NULL, FALSE);
             }
+
+            // Process Non-Blocking Timer-Driven Sound FX Queue
+            if (sfxCount > 0 && sfxIndex < sfxCount) {
+                DWORD now = GetTickCount();
+                while (sfxIndex < sfxCount && now >= sfxQueue[sfxIndex].triggerTime) {
+                    if (hMidi && sfxQueue[sfxIndex].msg) {
+                        midiOutShortMsg(hMidi, sfxQueue[sfxIndex].msg);
+                    }
+                    sfxIndex++;
+                }
+            }
+
+            // Continuously update Oscilloscope / FFT Spectrum Canvas
+            {
+                RECT visRc = {10, 75, W - 10, 160};
+                InvalidateRect(hwnd, &visRc, FALSE);
+            }
             break;
 
         case WM_LBUTTONDOWN: {
@@ -822,17 +889,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 }
             }
-            if ((wParam == VK_RETURN || wParam == VK_SPACE) && showHelp && !isRepeat) {
+            if (wParam == VK_RETURN && showHelp && !isRepeat) {
                 showHelp = 0;
                 MarkTutorialSeen();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
-            // Sound FX Presets 1-5
-            if (wParam >= '1' && wParam <= '5' && !isRepeat) {
+            if (wParam == VK_SPACE && !isRepeat) {
+                if (showHelp) {
+                    showHelp = 0;
+                    MarkTutorialSeen();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+                seqPlaying = !seqPlaying;
+                lastStepTime = GetTickCount();
+                if (!seqPlaying && lastSeqNote != -1) {
+                    PlayNote(lastSeqNote, 0);
+                    lastSeqNote = -1;
+                }
+                SetStatus(hwnd, seqPlaying ? "▶ Sequencer Started [Space]" : "⏸ Sequencer Paused [Space]", 1800);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+            // Sound FX Presets 1-9
+            if (wParam >= '1' && wParam <= '9' && !isRepeat) {
                 int p = (int)(wParam - '0');
                 PlaySoundFX(p);
-                const char* pNames[] = {"", "Jump FX", "Laser FX", "Explosion FX", "Coin FX", "Powerup FX"};
+                const char* pNames[] = {"", "Jump FX", "Laser FX", "Explosion FX", "Coin FX", "Powerup FX", "Hurt FX", "Blip FX", "Random FX", "1999Hz Subcarrier"};
                 char pmsg[64];
                 wsprintfA(pmsg, "Preset [%d] %s Triggered", p, pNames[p]);
                 SetStatus(hwnd, pmsg, 1600);
@@ -966,26 +1050,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
-            if (wParam == VK_LEFT && !isRepeat) {
+            if ((wParam == VK_LEFT || wParam == VK_OEM_MINUS || wParam == VK_SUBTRACT || wParam == 0xBD || wParam == '-') && !isRepeat) {
                 if (octaveShift > -4) {
                     for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) PlayNote(i, 0);
                     octaveShift--;
                     for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) PlayNote(i, 1);
                     char omsg[64];
-                    wsprintfA(omsg, "Octave Shift: %+d", octaveShift);
+                    wsprintfA(omsg, "Octave Shift: %+d [-]", octaveShift);
                     SetStatus(hwnd, omsg, 1400);
                     SaveAudioState();
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
                 break;
             }
-            if (wParam == VK_RIGHT && !isRepeat) {
+            if ((wParam == VK_RIGHT || wParam == VK_OEM_PLUS || wParam == VK_ADD || wParam == 0xBB || wParam == '=' || wParam == '+') && !isRepeat) {
                 if (octaveShift < 4) {
                     for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) PlayNote(i, 0);
                     octaveShift++;
                     for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) PlayNote(i, 1);
                     char omsg[64];
-                    wsprintfA(omsg, "Octave Shift: %+d", octaveShift);
+                    wsprintfA(omsg, "Octave Shift: %+d [=]", octaveShift);
                     SetStatus(hwnd, omsg, 1400);
                     SaveAudioState();
                     InvalidateRect(hwnd, NULL, FALSE);
@@ -996,6 +1080,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == binds[i] && !activeKeys[i]) {
                     activeKeys[i] = 1;
                     PlayNote(i, 1);
+                    if (isRecording && numEvents < 4000) {
+                        recordedEvents[numEvents].keyIndex = i;
+                        recordedEvents[numEvents].time = GetTickCount() - recordingStartTime;
+                        recordedEvents[numEvents].type = 1;
+                        numEvents++;
+                    }
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 }
@@ -1008,6 +1098,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == binds[i] && activeKeys[i]) {
                     activeKeys[i] = 0;
                     PlayNote(i, 0);
+                    if (isRecording && numEvents < 4000) {
+                        recordedEvents[numEvents].keyIndex = i;
+                        recordedEvents[numEvents].time = GetTickCount() - recordingStartTime;
+                        recordedEvents[numEvents].type = 0;
+                        numEvents++;
+                    }
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 }
@@ -1119,8 +1215,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HPEN oldPen = (HPEN)SelectObject(memDC, wavePen);
                 int midY = 117;
                 MoveToEx(memDC, 10, midY, NULL);
+                int hasActiveNote = 0;
+                for (int k = 0; k < NUM_KEYS; k++) if (activeKeys[k]) { hasActiveNote = 1; break; }
+                if (seqPlaying && lastSeqNote != -1) hasActiveNote = 1;
+                double amp = hasActiveNote ? (driveEnabled ? 32.0 : 25.0) : 4.0;
                 for (int x = 10; x < W - 10; x += 4) {
-                    double amp = (driveEnabled ? 32.0 : 25.0);
                     int waveY = midY + (int)(amp * MySin((x + visOffset) * PI / 45.0));
                     LineTo(memDC, x, waveY);
                 }
