@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-01T19:23:16-08:00 — kilo-expander: KSys (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KSys across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KHex`; rotated active agent to `kilo-review`.
+
 - **2026-11-01T18:21:16-08:00 — kilo-qa: KBudget (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 152.9 KB, native 172.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 10.44%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.4s)).
   - State & Persistence: Verified F5/F9 quicksave/quickload, kbudget_tutorialSeen flag, and modal dismissals.

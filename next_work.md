@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KBreakout
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KChat
+  kilo_usability: KHex
   kilo_qa: KDB
   kilo_expander: KChat
   kilo_review: KFleet
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KChat
-  timestamp: '2026-11-01T22:22:17-08:00'
+  timestamp: '2026-11-01T22:38:45-08:00'
 last_planner_run: '2026-11-01T18:33:35Z'
 ---
 
@@ -157,11 +157,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | **[ARGON REVIEW]:** Eliminate boot Firebase WebSocket autostart (visual_probe WARN) in kchat.html by lazy-initializing initializeApp/getDatabase/connectedRef inside connectGlobal() and calling goOffline() on leave/beforeunload; stop Virtual Node ws.send from calling addMessage('You', msg) (fixing every message posting twice on 127.0.0.1 port 6667); clear m.spooled = false in messages[] on flushOfflineSpool(), include room in Firebase push payloads, and deduplicate onChildAdded by snapshot key/clientId so multi-message spool flushes never duplicate; remove inline onkeydown on #pollOpt2Input so Enter advances to #pollOpt3Input; sanitize imported JSON/TXT in importFile(); and in KChat/main.c make Clear and /clear only clear currentRoom (unless /clear all), route /join through SwitchToRoom() with '#' auto-prefix, target Pin [Ctrl+P] and React [R] at the latest message in currentRoom, wire a Pinned filter toggle for dead filterPinnedOnly, prevent infinite single-user multi-voting in VoteOnLatestPoll(), and fix whitespace-indented JSON round-trip import. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KChat`
+- **Active Target**: `KHex`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | **[ARGON REVIEW]:** Fix 850x613 layout clipping and chrome bloat in kchat.html (sheet.png Panels 1-2) by widening #port to 64px (padding 6px 8px so '6667' stops clipping to '666'), separating #channelBar and the search/tools strip into two compact nowrap rows with tighter button/header padding so #log reclaims >100px height and displays both boot cards without scrolling past the poll header, and restoring the Switcher [K] button (and #spoolBadge) inside renderChannelBar() which currently wipes Switcher [K] on boot; move #toast from top 86px (where it overlaps #helpModal and #channelBar) to bottom-right above .input-bar and skip redundant boot welcome toasts; compact #helpModal into a 2-column reference layout so Shortcuts, Slash Commands, and Close [Esc] fit 850x613 without clipping; add a clickable #nickBadge showing currentUsername for quick nickname edits; and replace anachronistic '(Firebase)' UI labels with 'KiloNet Global Relay'. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -181,6 +180,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html`, `KSubmarine/main.c` | **[ARGON REVIEW]:** Compact header to 1 nowrap row (hide #musicToggleBtn and #btnMatrixMusicToggle when !window.__KILO_BGM_ENABLED and label #soundToggleBtn SFX ON/OFF [M]), narrow side panels (268px 1fr 278px) with compact 2-row center tabs and 82px #terminalLog so #sonarCanvas expands above 450x360, fix triple HUD collision inside .sonar-viewport by moving #sonarModeTag to bottom-left and narrowing #sonarOverlay/#sonarTargetHud, organize right panel into [HELM] [SYSTEMS] [OPS] sub-tabs and compact left gauges so 0 controls clip at 1040x683, add click-to-lock/steer on #sonarCanvas, and add devicePixelRatio HiDPI scaling to #hydrophoneScopeCanvas. |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Compact 4-row top chrome at 860x653 by removing redundant #quickBitSummary from #kcalcExpBar, merging searchable 20-item CONSTANTS_DB into #view-constants (removing duplicate Constants modal button), unifying #memBadge/#memModal with M0-M7 Memory Bank (M0 = active memory), adding a RAD evaluation notice badge in #view-calculus, and redrawing HiDPI #regressionCanvas via requestAnimationFrame on switchView(statistics) and switchStatsTool(2var). |
 | `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | **[ARGON REVIEW]:** Fix 1024x731 horizontal clipping in sheet.png where nav clips Tab [5] and hides Tab [6] off-screen and .quick-actions-bar clips Quickload [F9] and hides 6 chips (compact .tab-btn padding/labels so all 6 tabs fit in 1024px and wrap/compact .quick-actions-bar), tighten 16-core #cpu-core-spectrum and .info-item WebGL Renderer wrapping so Tab 1 cards fit cleanly above 731px, and guard updateTelemetrySparklines() when !isFlightRecording so pausing/scrubbing #recorder-scrub is not overwritten 1s later. |
+| `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | **[ARGON REVIEW]:** Fix 850x613 layout clipping and chrome bloat in kchat.html (sheet.png Panels 1-2) by widening #port to 64px (padding 6px 8px so '6667' stops clipping to '666'), separating #channelBar and the search/tools strip into two compact nowrap rows with tighter button/header padding so #log reclaims >100px height and displays both boot cards without scrolling past the poll header, and restoring the Switcher [K] button (and #spoolBadge) inside renderChannelBar() which currently wipes Switcher [K] on boot; move #toast from top 86px (where it overlaps #helpModal and #channelBar) to bottom-right above .input-bar and skip redundant boot welcome toasts; compact #helpModal into a 2-column reference layout so Shortcuts, Slash Commands, and Close [Esc] fit 850x613 without clipping; add a clickable #nickBadge showing currentUsername for quick nickname edits; and replace anachronistic '(Firebase)' UI labels with 'KiloNet Global Relay'. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KDB`
@@ -316,6 +316,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-01T22:38:45-08:00 — kilo-usability: KChat (850x613 Responsive Chrome & Layout Usability Pass)**
+  - Status: PASS ✅ (0 errors, web 127.7 KB, native 34.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 21.05%, HEAD Δ 12.34%, 0 fail, 0 warn, 5.0s)).
+  - Layout & Chrome: Widened #port to 64px, separated channelBar and tools into compact nowrap rows, reclaiming >100px height for #log.
+  - UX & Modals: Restored Switcher [K] & #spoolBadge in renderChannelBar, added clickable #nickBadge, 2-col #helpModal, bottom-right #toast, KiloNet labels.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-01T22:22:17-08:00 — kilo-tester: KChat (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KChat across web and native targets.
@@ -339,8 +345,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: #port clips 6667 to 666, 3-row wrapped toolbar crushes #log height, renderChannelBar() deletes Switcher [K], #toast overlaps #helpModal/#channelBar, and #helpModal clips at 613px.
   - Feature/VFS Findings: Boot Firebase autostart violates Connect Gate, Virtual Node echoes messages twice, flushOfflineSpool() leaves Spooled badges stuck, KChat/main.c /clear+/join+Pin+JSON-import bugs, and 0 KiloOS VFS/IPC hooks.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KChat`, `kilo-usability`->`KChat`, `kilo-expander`->`KChat`] (un-quarantined `KChat` from Mature); advanced `kilo-review` to `KFleet`; next agent `kilo-creator`.
-
-- **2026-11-01T19:23:16-08:00 — kilo-expander: KSys (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KSys across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KHex`; rotated active agent to `kilo-review`.

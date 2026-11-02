@@ -828,7 +828,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hIp = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "127.0.0.1", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(34), SCALE(8), SCALE(72), SCALE(24), hwnd, 0, 0, 0);
             
             CreateWindowA("STATIC", "Port:", WS_CHILD|WS_VISIBLE, SCALE(112), SCALE(10), SCALE(30), SCALE(20), hwnd, 0, 0, 0);
-            hPort = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6667", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(144), SCALE(8), SCALE(42), SCALE(24), hwnd, 0, 0, 0);
+            hPort = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6667", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(144), SCALE(8), SCALE(45), SCALE(24), hwnd, 0, 0, 0);
             
             hBtn = CreateWindowA("BUTTON", "Connect [C]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(192), SCALE(8), SCALE(78), SCALE(24), hwnd, (HMENU)100, 0, 0);
             
