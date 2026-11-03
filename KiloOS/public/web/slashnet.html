@@ -1336,6 +1336,20 @@ function saveToKiloVfs(vfsPath, contentStr) {
       title: 'SlashNet 1999',
       message: 'Saved to VFS: ' + vfsPath
     }, '*');
+    // Standalone fallback: download directly if not running inside KiloOS iframe
+    if (window.parent === window) {
+      try {
+        const blob = new Blob([contentStr], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = vfsPath.split('/').pop() || 'slashnet_export.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      } catch (err) {}
+    }
+
     showToast('Saved to KiloOS VFS: ' + vfsPath);
     playRetroSound(750, 0.08);
   } catch (e) {
