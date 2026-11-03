@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T18:21:51-08:00 — kilo-expander: KMail (Phase VI KiloOS VFS & IPC Mesh + Win32 C Parity)**
+  - Status: PASS ✅ (0 errors, web 145.6 KB, native 514.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.82%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.9s)).
+  - Wired KiloOS VFS (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY), 60s picker timeouts, standalone Blob/file-input fallbacks, and FILE_OPEN/VFS_OPEN auto-import for .eml/.mbox/.json.
+  - Added VFS file attachments in Compose/Read tabs, Open in KPad (OS_LAUNCH_APP kpad), and Inspect in KCipher (kcipher) IPC action buttons.
+  - Upgraded KMail/main.c with Forward [F], Mark Read/Unread [U], Compose encryption toggle + password prompt, Automated Filter Rules [F3], and GetSaveFileNameA export dialogs.
+  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
+
 - **2026-11-02T17:39:41-08:00 — kilo-qa: KTerm (Pass 5 QA, ANSI Support & Mature Graduation)**
   - Status: PASS ✅ (0 errors, web 139.0 KB, native 46.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.69%, HEAD Δ 0.06%, 0 fail, 0 warn, 4.5s)).
   - ANSI Escape Support: Integrated full ANSI SGR parser (colors, 256c, 24b RGB, bold, underline, reverse, clear screen) in Web HTML and clean escape filter + clear in Win32 C with ansi test command.
