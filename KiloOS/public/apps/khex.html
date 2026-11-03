@@ -254,6 +254,12 @@
     gap: 10px;
   }
 
+  #tab-editor .panel-title,
+  #tab-editor .form-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
   label {
     font-size: 0.78rem;
     font-weight: 600;
@@ -279,6 +285,10 @@
     resize: vertical;
     min-height: 100px;
     line-height: 1.4;
+  }
+
+  #rawTextBuffer {
+    min-height: 64px;
   }
 
   input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
@@ -616,10 +626,16 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.82rem;
     color: var(--accent-cyan);
-    word-break: break-all;
+    overflow-wrap: break-word;
+    word-break: normal;
     white-space: pre-wrap;
     max-height: 250px;
     overflow-y: auto;
+  }
+
+  #entropyClassBadge,
+  .entropy-header-row {
+    white-space: nowrap;
   }
   /* Toast Notification Container (Positioned Safely at Bottom-Right so toasts never block .tab-nav clicks) */
   #toastContainer {
@@ -948,7 +964,7 @@
       </div>
       <div class="form-group">
         <label>Input Text / ASCII Stream (or paste Hex Bytes to load into Buffer)</label>
-        <textarea id="rawTextBuffer" placeholder="Type text or paste hex bytes here...">Hello KHex World! Press 'h' for Help.</textarea>
+        <textarea id="rawTextBuffer" style="min-height:64px;" placeholder="Type text or paste hex bytes here...">Hello KHex World! Press 'h' for Help.</textarea>
       </div>
     </div>
 
@@ -996,9 +1012,9 @@
           <button class="btn btn-cyan btn-sm" onclick="computeEntropyAndDistribution()">Analyze Buffer</button>
         </div>
         <div style="display:flex; flex-direction:column; gap:10px; margin-top:6px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.9rem;">
-            <span>Shannon Entropy: <b id="entropyVal" style="color:var(--accent-cyan); font-size:1.1rem;">0.000</b> / 8.000 bits/byte</span>
-            <span id="entropyClassBadge" class="badge" style="color:var(--accent-emerald);">Padded / Constant</span>
+          <div class="entropy-header-row" style="display:flex; justify-content:space-between; align-items:center; font-size:0.9rem; white-space:nowrap; gap:8px;">
+            <span style="white-space:nowrap;">Shannon Entropy: <b id="entropyVal" style="color:var(--accent-cyan); font-size:1.1rem;">0.000</b> / 8.000 bits/byte</span>
+            <span id="entropyClassBadge" class="badge" style="white-space:nowrap; color:var(--accent-emerald);">Padded / Constant</span>
           </div>
           <div style="background:var(--input-bg); border-radius:8px; height:18px; border:1px solid var(--border-color); overflow:hidden; position:relative;">
             <div id="entropyBar" style="height:100%; width:0%; background:linear-gradient(90deg, #10b981, #f59e0b, #ef4444, #8b5cf6); transition:width 0.3s ease;"></div>
@@ -1444,6 +1460,7 @@
             <li><b>[7] Data Export:</b> Formatted HexDump, C/C++ array, Intel HEX (.hex), NASM Assembly DB directives, JSON byte array, Rust byte slice, C# byte array, Python bytes, Base64, and RAW file download.</li>
             <li><b>[8] Strings &amp; Diff:</b> String Carver &amp; Extractor (ASCII &amp; UTF-16LE with min-length and search filtering), <b>Multi-Segment Binary Difference &amp; Delta Analyzer</b> (Hunk breakdown, mutation types, and byte-by-byte inspection), and <b>Binary Patch Builder &amp; Applier</b> (IPS ROM patch format, DOS DEBUG scripts, C array deltas, and JSON deltas).</li>
             <li><b>[9] Opcode Disassembler:</b> Multi-architecture CPU instruction decoder supporting x86-32 Protected Mode, x86-16 Real Mode (DOS .COM), MOS 6502 (NES/C64), and Zilog Z80 (Game Boy/ZX Spectrum), with address rebasing and copy/export to .ASM.</li>
+            <li><b>[0] Struct &amp; Signatures:</b> C-like struct unpacker and binary schema template engine (BMP, WAV, ZIP, IPv4, Custom packets) with live member offset tracking and signature magic scanner.</li>
           </ul>
         </div>
       </div>
@@ -1473,6 +1490,7 @@
             <li><b>Tab 3 (Entropy & Dissection):</b> Shannon entropy meter, byte distribution histogram, and file magic signature detection.</li>
             <li><b>Tabs 4-7:</b> Pattern Search/Replace, Checksums (CRC32/MD5/SHA256), Bitwise Ops, and multi-format Export.</li>
             <li><b>Tabs 8-9:</b> String Carver &amp; Binary Diff, Opcode Disassembler (x86, 6502, Z80).</li>
+            <li><b>Tab [0] (Struct &amp; Signatures):</b> C-style struct unpacker and binary template engine (BMP, WAV, ZIP, IPv4) with live field offsets.</li>
             <li><b>🛰️ Subsystem Memory Offset:</b> Load the Echo ROM sector to inspect classified offset <code>0x0024</code>!</li>
           </ul>
         </div>
@@ -2061,7 +2079,7 @@
     let tut = document.getElementById('tutorialModal');
     let isTutOpen = (tut && tut.style.display !== 'none');
 
-    if (e.key === 'F1' || (!e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'h' || e.key === 'H') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
+    if (e.key === 'F1' || (!e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'h' || e.key === 'H') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT')) {
       toggleHelp();
       e.preventDefault();
       return;
@@ -2079,7 +2097,7 @@
       }
       return;
     }
-    if (isTutOpen && (e.key === 'Enter' || e.key === ' ')) {
+    if (isTutOpen && (e.key === 'Enter' || e.key === ' ') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
       dismissTutorial();
       e.preventDefault();
       return;
@@ -2118,7 +2136,7 @@
         }
       }
     }
-    if (!isHelpOpen && !isTutOpen && !e.ctrlKey && !e.altKey && !e.metaKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    if (!isHelpOpen && !isTutOpen && !e.ctrlKey && !e.altKey && !e.metaKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
       if (activeTab === 'editor') {
         if (e.key === 'ArrowUp') { jumpOffsetStep(-16); e.preventDefault(); return; }
         else if (e.key === 'ArrowDown') { jumpOffsetStep(16); e.preventDefault(); return; }
@@ -2158,11 +2176,7 @@
       else if (e.key === '9') { switchTab('disasm'); e.preventDefault(); }
       else if (e.key === '0') { switchTab('struct'); e.preventDefault(); }
       else if (e.key === 'e' || e.key === 'E') {
-        isLittleEndian = !isLittleEndian;
-        try { localStorage.setItem('khex_endian', isLittleEndian.toString()); } catch (err) {}
-        document.getElementById('endianBadge').innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
-        updateInspector();
-        showToast('Endianness Switched', `Active: ${isLittleEndian ? 'Little Endian (LE)' : 'Big Endian (BE)'}`, 'info');
+        toggleEndianness();
         e.preventDefault();
       }
       else if (e.key === 'p' || e.key === 'P') {
@@ -2182,14 +2196,31 @@
     if (m) m.style.display = m.style.display === 'none' ? 'flex' : 'none';
   }
 
-  // Endianness Toggle
-  document.getElementById('toggleEndianBtn').addEventListener('click', () => {
+  // Endianness Toggle & Multi-Tab Analysis Refresh
+  function toggleEndianness() {
     isLittleEndian = !isLittleEndian;
     try { localStorage.setItem('khex_endian', isLittleEndian.toString()); } catch (err) {}
-    document.getElementById('endianBadge').innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
+    const badge = document.getElementById('endianBadge');
+    if (badge) badge.innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
     updateInspector();
+
+    // Refresh active Tab 2 (editor), Tab 3 (entropy & magic sig), Tab 0 (struct) analyses
+    if (typeof selectByte === 'function' && binaryBuffer && binaryBuffer.length > 0) {
+      selectByte(selectedOffset);
+    }
+    if (typeof dissectHeader === 'function') {
+      dissectHeader();
+    }
+    if (typeof computeEntropyAndDistribution === 'function') {
+      computeEntropyAndDistribution();
+    }
+    if (typeof executeStructUnpack === 'function') {
+      executeStructUnpack();
+    }
     showToast('Endianness Swapped', `Active: ${isLittleEndian ? 'Little Endian (LE)' : 'Big Endian (BE)'}`, 'info');
-  });
+  }
+
+  document.getElementById('toggleEndianBtn').addEventListener('click', toggleEndianness);
 
   // Tab Switcher
   function switchTab(tabId) {
@@ -2591,10 +2622,33 @@
     let f32Str = (Math.abs(f32) < 1e-4 || Math.abs(f32) >= 1e7) && f32 !== 0 ? f32.toExponential(5) : Number(f32.toPrecision(7)).toString();
     document.getElementById('valFloat').innerText = f32Str;
     
-    // Fill 64-bit with pattern
-    view.setUint32(4, val32, isLittleEndian);
-    let f64 = view.getFloat64(0, isLittleEndian);
-    let f64Str = (Math.abs(f64) < 1e-5 || Math.abs(f64) >= 1e9) && f64 !== 0 ? f64.toExponential(8) : Number(f64.toPrecision(10)).toString();
+    // Read actual 8 buffer bytes (or zero-extended uint64) for #valDouble
+    let buf64 = new ArrayBuffer(8);
+    let view64 = new DataView(buf64);
+    if (activeTab !== 'converter' && binaryBuffer && binaryBuffer.length > 0 && selectedOffset >= 0 && selectedOffset < binaryBuffer.length) {
+      for (let i = 0; i < 8; i++) {
+        let b = (selectedOffset + i < binaryBuffer.length) ? binaryBuffer[selectedOffset + i] : 0;
+        view64.setUint8(i, b);
+      }
+    } else {
+      // Zero-extended uint64 fallback when no active buffer selection
+      if (isLittleEndian) {
+        view64.setUint32(0, val32 >>> 0, true);
+        view64.setUint32(4, 0, true);
+      } else {
+        view64.setUint32(0, 0, false);
+        view64.setUint32(4, val32 >>> 0, false);
+      }
+    }
+    let f64 = view64.getFloat64(0, isLittleEndian);
+    let f64Str;
+    if (Number.isNaN(f64)) {
+      f64Str = 'NaN';
+    } else if (!Number.isFinite(f64)) {
+      f64Str = f64 > 0 ? '+Infinity' : '-Infinity';
+    } else {
+      f64Str = (Math.abs(f64) < 1e-5 || Math.abs(f64) >= 1e9) && f64 !== 0 ? f64.toExponential(8) : Number(f64.toPrecision(10)).toString();
+    }
     document.getElementById('valDouble').innerText = f64Str;
 
     // 4-byte Entropy & PopCount for inspector
@@ -2762,10 +2816,10 @@
     showToast('Echo ROM Loaded', 'Project Echo Intranet ROM Sector loaded (128 bytes, Target: 10.19.99.4)', 'success', 5000);
   }
 
-  function gotoOffset(targetOffset = null) {
+  function gotoOffset(targetOffset = null, silent = false) {
     if (typeof switchTab === 'function') {
-      const activeTab = document.querySelector('.tab-btn.active');
-      if (activeTab && activeTab.getAttribute('data-tab') !== 'editor') {
+      const activeTabEl = document.querySelector('.tab-btn.active');
+      if (activeTabEl && activeTabEl.getAttribute('data-tab') !== 'editor') {
         switchTab('editor');
       }
     }
@@ -2787,13 +2841,15 @@
       return;
     }
     selectByte(targetOffset);
-    showToast('Jumped to Address', `Selected offset 0x${targetOffset.toString(16).padStart(8, '0').toUpperCase()} (${targetOffset})`, 'info', 2000);
+    if (!silent) {
+      showToast('Jumped to Address', `Selected offset 0x${targetOffset.toString(16).padStart(8, '0').toUpperCase()} (${targetOffset})`, 'info', 2000);
+    }
   }
 
   function jumpOffsetStep(step) {
     if (!binaryBuffer || binaryBuffer.length === 0) return;
     let target = Math.max(0, Math.min(binaryBuffer.length - 1, selectedOffset + step));
-    gotoOffset(target);
+    gotoOffset(target, true);
   }
 
   function computeChunkEntropy() {
@@ -3203,8 +3259,65 @@
   // --- TAB 3: SEARCH & REPLACE LOGIC ---
   let lastSearchPattern = '';
   let lastSearchMode = '';
+  let lastSearchBytesLength = 0;
   let searchMatches = [];
   let currentSearchIdx = 0;
+
+  function renderSearchResultsBox(matchLen = lastSearchBytesLength || 1) {
+    let resultsBox = document.getElementById('searchResultsBox');
+    if (!resultsBox) return;
+    resultsBox.innerHTML = '';
+
+    if (!searchMatches || searchMatches.length === 0) {
+      resultsBox.innerText = 'No matches found.';
+      return;
+    }
+
+    let summary = document.createElement('div');
+    summary.style.cssText = 'font-weight:bold; color:var(--text-primary); margin-bottom:6px; font-size:0.8rem;';
+    summary.innerText = `Found ${searchMatches.length} match(es). Active: [${currentSearchIdx + 1}/${searchMatches.length}] (Click match to jump & highlight in Hex View):`;
+    resultsBox.appendChild(summary);
+
+    let list = document.createElement('div');
+    list.style.cssText = 'display:flex; flex-direction:column; gap:4px; max-height:190px; overflow-y:auto;';
+
+    searchMatches.forEach((off, idx) => {
+      let row = document.createElement('div');
+      let isActive = (idx === currentSearchIdx);
+      row.style.cssText = 'display:flex; align-items:center; gap:8px; padding:3px 8px; border-radius:4px; cursor:pointer; font-family:monospace; user-select:none; transition:background 0.15s ease; font-size:0.8rem;';
+      if (isActive) {
+        row.style.background = 'rgba(6, 182, 212, 0.2)';
+        row.style.border = '1px solid rgba(6, 182, 212, 0.4)';
+        row.style.color = 'var(--accent-cyan)';
+      } else {
+        row.style.background = 'transparent';
+        row.style.border = '1px solid transparent';
+        row.style.color = 'var(--text-secondary)';
+      }
+      row.onmouseenter = () => { if (idx !== currentSearchIdx) row.style.background = 'rgba(255,255,255,0.06)'; };
+      row.onmouseleave = () => { if (idx !== currentSearchIdx) row.style.background = 'transparent'; };
+
+      row.onclick = () => {
+        currentSearchIdx = idx;
+        selectedOffset = off;
+        renderSearchResultsBox(matchLen);
+        if (typeof switchTab === 'function') switchTab('editor');
+        if (typeof gotoOffset === 'function') gotoOffset(off, true);
+        if (typeof renderHexView === 'function') renderHexView({ start: off, end: off + matchLen });
+        showToast('Match Selected', `Occurrence ${idx + 1} of ${searchMatches.length} at 0x${off.toString(16).toUpperCase()}`, 'info', 2000);
+      };
+
+      let marker = isActive ? '➜' : ' ';
+      row.innerHTML = `<span style="width:14px; color:var(--accent-cyan); font-weight:bold;">${marker}</span>` +
+        `<span style="color:var(--text-dim); min-width:32px;">[${idx + 1}]</span>` +
+        `<span style="color:var(--accent-purple); font-weight:600; text-decoration:underline;">Offset: 0x${off.toString(16).toUpperCase()}</span>` +
+        `<span style="color:var(--text-secondary);">(${off})</span>`;
+
+      list.appendChild(row);
+    });
+
+    resultsBox.appendChild(list);
+  }
 
   function executeSearch() {
     let mode = document.getElementById('searchMode').value;
@@ -3253,16 +3366,12 @@
       currentSearchIdx = (currentSearchIdx + 1) % searchMatches.length;
     }
 
+    lastSearchBytesLength = searchBytes.length;
     if (searchMatches.length === 0) {
       resultsBox.innerText = 'No matches found.';
       showToast('Search Completed', 'No matches found for the given pattern.', 'info');
     } else {
-      let resText = `Found ${searchMatches.length} match(es). Active: [${currentSearchIdx + 1}/${searchMatches.length}]\n`;
-      searchMatches.forEach((off, idx) => {
-        let marker = (idx === currentSearchIdx) ? ' ➜ ' : '   ';
-        resText += `${marker}[${idx + 1}] Offset: 0x${off.toString(16).toUpperCase()} (${off})\n`;
-      });
-      resultsBox.innerText = resText;
+      renderSearchResultsBox(searchBytes.length);
       showToast('Match Found', `Occurrence ${currentSearchIdx + 1} of ${searchMatches.length} at 0x${searchMatches[currentSearchIdx].toString(16).toUpperCase()}`, 'success');
       
       selectedOffset = searchMatches[currentSearchIdx];

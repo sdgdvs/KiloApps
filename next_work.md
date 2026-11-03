@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KCosmic
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KHex
+  kilo_usability: KImage
   kilo_qa: KFont
   kilo_expander: KMatrix
   kilo_review: KScript
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
-  app: KImage
-  timestamp: '2026-11-03T12:19:42-08:00'
+  agent: kilo-usability
+  app: KHex
+  timestamp: '2026-11-03T12:38:06-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -148,11 +148,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Fix all 4 dead Optical DSP filters in kimage.html (applyVignetteFilter, applyChromaticAberrationFilter, applyMedianFilter, applyHistogramEqualization) where mutatePixels passes 3 args (d, w, h) instead of (src, dst, w, h) (copy const src = new Uint8ClampedArray(d) so pixels actually update, default #sliderVignette to 45 and #sliderChromatic to 6 with a toast if 0, and sync #playlistStrip thumbnails when item.img mutates); add missing link.href = url in exportSessionJson(); reset rotation/flip/draw.paths/adjustments inside encodeStegoPayload() after baking ui.mainCanvas so renderCanvas() stops re-applying CSS filters and destroying LSB bits, and slice UTF-8 bytes via extracted.subarray(16, 16 + byteLen) in decodeStegoPayload(); support imgType 3 in parseTGA(), 256-color 0x0C VGA palettes in parsePCX(), and 1999-11-03 EXIF date in loadSampleImage(); in KImage/main.c restore hwnd focus / route WM_KEYDOWN after button clicks so all 16 hotkeys work and Space stops re-clicking toolbar buttons, and guard ID_BTN_PLAY when g_fileCount == 0. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KHex`
+- **Active Target**: `KImage`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Define missing .hidden (display none !important) and .row (display flex; align-items center; gap 8px) CSS in kimage.html so #emptyState hides on image load (fixing sheet.png Panel 3 canvas clipping), inactive #tabKernel..#tabDraw and #rightStegoContent stop stacking simultaneously, #cropControls stays hidden until enabled, and Kernel/Resize/ASCII .row inputs align side-by-side; auto-show #rightPanel (unless user-toggled off) with #btnToggleRight.active and live renderHistogram() on image load so #histCanvas is not blank black; fit .toolbar on 1 row at 1060px (--panel-width 255px, nowrap compact buttons, remove redundant Press H/F1 subtitle), cap #toastContainer to 2 toasts, and in KImage/main.c use 9pt Segoe UI (-MulDiv(9,dpi,72)) and clean ASCII button/help labels (RotL, RotR, <, Play, Pause, >, -) to fix clipped 12pt UTF-8 mojibake. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -164,6 +163,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Compact #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 without vertical scroll, add preventDefault() for Arrow/Space keys so gameplay never scrolls the page, and prevent #toast-container from covering #controls and #message-log. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Arrange #start-screen buttons in a 2-column grid so all 11 fit within 870x623 without bottom clipping; lock body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto) and e.preventDefault() on Arrow/Space keys; resize #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; raise small font-size from 8px to 9.5px. |
+| `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KFont`
@@ -289,6 +289,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T12:38:06-08:00 — kilo-usability: KHex (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 291.3 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.7%, HEAD Δ 0.13%, 0 fail, 0 warn, 5.3s)).
+  - Layout & Responsive: nowrap Shannon Entropy badge row, word-wrap .output-box, Tab 2 panel-title flex-wrap, 64px rawTextBuffer, zero layout clipping at 980x783.
+  - Keyboard & Navigation: SELECT keydown guard, silent arrow gotoOffset, live clickable search match offsets, 8-byte valDouble read, Tab [0] listed in Help & Tutorial modals.
+  - Handoff: Advanced `kilo-usability` to `KImage`; rotated active agent to `kilo-qa`.
+
 - **2026-11-03T12:19:42-08:00 — kilo-tester: KImage (Optical DSP, Stego, Format & C Parity Repairs)**
   - Status: PASS ✅ (0 errors, web 173.6 KB, native 27.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 8.59%, HEAD Δ 0.14%, 0 fail, 0 warn, 6.6s)).
   - Fixed 4 Optical DSP filters in mutatePixels (src copy), synced playlistStrip thumbnails, defaulted vignette (45) & chromatic (6) sliders with 0-guard toasts, added link.href in exportSessionJson, reset adjustments in encodeStegoPayload, and sliced UTF-8 bytes in decodeStegoPayload.
@@ -310,8 +316,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: Missing .hidden and .row CSS leaves #emptyState visible above loaded #mainCanvas (clipping canvas in sheet.png Panel 3), stacks all 7 left tabs + Stego tab simultaneously, wraps #viewTools to a 2nd row, leaves #histCanvas blank, and clips 12pt UTF-8 mojibake buttons in KImage/main.c.
   - Feature/VFS Findings: All 4 Optical DSP filters are dead no-ops (wrong mutatePixels signature), exportSessionJson() omits link.href, encodeStegoPayload() corrupts LSBs when adjustments/transforms are active, parseTGA(type 3)/parsePCX(8-bit VGA) fail, KImage/main.c loses hotkeys after button clicks and lacks retro dithering, and kimage.html has zero Phase VI KiloOS VFS/IPC hooks.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KImage`, `kilo-tester`->`KImage`, `kilo-expander`->`KImage`] (un-quarantined `KImage` from Mature); advanced `kilo-review` to `KSys`; next agent `kilo-creator`.
-
-- **2026-11-03T09:41:19-08:00 — kilo-expander: KCalc (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KCalc across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KHex`; rotated active agent to `kilo-review`.
