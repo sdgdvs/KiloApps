@@ -3888,6 +3888,7 @@
             <option value="kilonet.org">kilonet.org</option>
             <option value="geocities.com">geocities.com</option>
             <option value="slashnet.org">slashnet.org</option>
+            <option value="cabled.com">cabled.com</option>
             <option value="3dfx.com">3dfx.com</option>
             <option value="warez-vault.scene">warez-vault.scene</option>
             <option value="scenecentral.net">scenecentral.net</option>
@@ -3914,6 +3915,7 @@
           <select id="traceTargetSelect" class="form-input" style="flex:1; font-size:11px;">
             <option value="portal">kweb://portal (198.41.0.4 - Central Web Portal)</option>
             <option value="slashnet">kweb://slashnet (199.249.112.34 - SlashNet News for Nerds)</option>
+            <option value="cabled">kweb://cabled (207.46.130.15 - Cabled Magazine Cyber Flagship)</option>
             <option value="trapster">kweb://trapster (198.41.0.99 - Trapster P2P Tracker Swarm)</option>
             <option value="geocities">kweb://geocities (209.85.128.42 - CyberSpire Shrine)</option>
             <option value="warez">kweb://warez (194.109.13.77 - 0xRELEASE Scene Vault)</option>
@@ -9869,6 +9871,21 @@ Admin Contact: CMG-ROB-99
 Name Server: NS1.SLASHNET.ORG (204.152.184.64)
 Status: ACTIVE // NEWS FOR NERDS, STUFF THAT MATTERS`,
 
+  "cabled.com": `Domain Name: CABLED.COM
+Registry Domain ID: D19930102-CABLED
+Registrar WHOIS Server: whois.networksolutions.com
+Creation Date: 1993-01-02T05:00:00Z
+Registry Expiry Date: 2005-01-02T05:00:00Z
+Registrar: Network Solutions Inc.
+Registrant Organization: Cabled Ventures Inc.
+Registrant City: San Francisco
+Registrant State/Province: CA
+Registrant Country: US
+Admin Contact: Editor_Cabled
+Name Server: NS1.CABLED.COM (207.46.130.15)
+Name Server: NS2.CABLED.COM (207.46.130.16)
+Status: ACTIVE // THE APOCALYPSE ISSUE 7.12 & Y2K AUDIT ONLINE`,
+
   "3dfx.com": `Domain Name: 3DFX.COM
 Registry Domain ID: D19950824-3DFX
 Registrar WHOIS Server: whois.networksolutions.com
@@ -10066,6 +10083,14 @@ const TRACEROUTE_HOPS = {
     { hop: 5, host: "subterranean-waveguide-echo (10.19.99.2)", rtt1: "260ms", rtt2: "265ms", rtt3: "258ms", ttl: 60 },
     { hop: 6, host: "CARLSBAD-TRANSPONDER-GRID (10.19.99.4)", rtt1: "342ms", rtt2: "338ms", rtt3: "345ms", ttl: 54 }
   ],
+  cabled: [
+    { hop: 1, host: "gateway.local (192.168.1.1)", rtt1: "12ms", rtt2: "11ms", rtt3: "13ms", ttl: 64 },
+    { hop: 2, host: "nas-01.dialup.isp.net (209.85.128.1)", rtt1: "44ms", rtt2: "47ms", rtt3: "42ms", ttl: 63 },
+    { hop: 3, host: "atm-core.regional.telco.net (198.32.176.1)", rtt1: "65ms", rtt2: "62ms", rtt3: "68ms", ttl: 62 },
+    { hop: 4, host: "mae-west.interchange.net (192.203.230.1)", rtt1: "85ms", rtt2: "89ms", rtt3: "83ms", ttl: 61 },
+    { hop: 5, host: "soma-fiber.sf.net (207.46.130.1)", rtt1: "105ms", rtt2: "102ms", rtt3: "108ms", ttl: 60 },
+    { hop: 6, host: "cyber-flagship.cabled.com (207.46.130.15)", rtt1: "118ms", rtt2: "115ms", rtt3: "116ms", ttl: 59 }
+  ],
   deepcore: [
     { hop: 1, host: "gateway.local (192.168.1.1)", rtt1: "12ms", rtt2: "13ms", rtt3: "11ms", ttl: 64 },
     { hop: 2, host: "nas-01.dialup.isp.net (209.85.128.1)", rtt1: "52ms", rtt2: "49ms", rtt3: "55ms", ttl: 63 },
@@ -10237,6 +10262,7 @@ const SAMPLE_HTML_CODE = `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitio
         <select id="radarTargetSelect" style="width: 100%; font-family: monospace; font-size: 11px; margin-top: 2px; padding: 2px;">
           <option value="portal" data-url="/web/portal.html" data-ip="209.85.128.1">kweb://portal [209.85.128.1] (Local Hub)</option>
           <option value="webring" data-url="/web/webring.html" data-ip="198.41.0.4">kweb://webring [198.41.0.4] (Ring Registry)</option>
+          <option value="cabled" data-url="/web/cabled.html" data-ip="207.46.130.15">kweb://cabled [207.46.130.15] (Cabled Cyber Flagship)</option>
           <option value="geocities" data-url="/web/geocities.html" data-ip="206.190.36.45">kweb://geocities [206.190.36.45] (CyberSpire)</option>
           <option value="trapster" data-url="/web/trapster.html" data-ip="198.41.0.99">kweb://trapster [198.41.0.99] (Trapster P2P)</option>
           <option value="cybercafe" data-url="/web/cybercafe.html" data-ip="194.109.6.92">kweb://cybercafe [194.109.6.92] (Neon Oasis)</option>

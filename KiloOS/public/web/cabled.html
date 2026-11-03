@@ -2048,9 +2048,20 @@ function saveToKiloVfs(vfsPath, contentStr) {
  */
 function launchKiloApp(appName, args) {
   try {
+    const cleanId = appName.replace('.html', '').toLowerCase();
+    const filePath = (args && args.path) ? args.path : '';
+    window.parent.postMessage({
+      type: 'OS_LAUNCH_APP',
+      appId: cleanId,
+      targetApp: cleanId,
+      path: filePath,
+      args: args || {}
+    }, '*');
     window.parent.postMessage({
       type: 'LAUNCH_APP',
       app: appName,
+      appId: cleanId,
+      path: filePath,
       args: args || {}
     }, '*');
   } catch (e) {}
@@ -3355,6 +3366,15 @@ window.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => scrollToSection(targetId), 120);
     }
   }
+
+  window.addEventListener('hashchange', () => {
+    if (window.location.hash) {
+      const targetId = window.location.hash.substring(1);
+      if (document.getElementById(targetId)) {
+        scrollToSection(targetId);
+      }
+    }
+  });
 
   if ('IntersectionObserver' in window) {
     const sectionIds = ['sec-cover', 'sec-y2k', 'sec-ipo', 'sec-jargon', 'sec-hype', 'sec-fetish', 'sec-vfs'];
