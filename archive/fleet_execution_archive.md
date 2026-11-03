@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T23:17:00-08:00 — kilo-review: KRadio (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 500x443 sheet.png, kradio.html, and KRadio/main.c; un-quarantined KRadio and queued surgical fixes to kilo-usability, kilo-tester, and kilo-expander).
+  - Visual/UX Findings: 44px vertical overflow at 500x443 (.volume-group & .footer-hint wrap; #eqPanel/#diagPanel push controls off-screen), top-center #toastContainer overlaps #helpModal & #directoryModal titles, 1-col #helpModal clips shortcuts, Set Preset uses blocking prompt(), and KRadio/main.c uses unscaled 96-DPI coords.
+  - Feature/Lore Findings: Potemkin Math.sin visualizer ignores WebAudio FFT/EQ, external streams fail offline/CORS without procedural synth fallback (and KRadio/main.c mciSendStringA fails on https URLs), url.includes('1999') hijacks normal URLs, Sleep Timer crushes saved volume to 5%, and UI leaks 'ARG Carrier' + 'Winamp'/'Shoutcast'/'DEF CON'/'007'.
+  - VFS/IPC Findings: Unchecked postMessage origin violates architecture.md, checkVfsAudioTrack() overwrites audio.src = vfsData with '/home/music/ksynth_track.wav', and Export/Import lack VFS_SHOW_SAVE/VFS_SHOW_OPEN and /sys/anomaly_capture.sig capture.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KRadio`, `kilo-tester`->`KRadio`, `kilo-expander`->`KRadio`] (un-quarantined `KRadio` from Mature); advanced `kilo-review` to `KRead`; next agent `kilo-creator`.
+
 - **2026-11-02T22:40:59-08:00 — kilo-expander: KMech (Harden KiloVFS and Cross-App IPC in kmech.html and Win32 C parity in KMech/main.c)**
   - Status: PASS ✅ (0 errors, web 212.1 KB, native 39.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Hardened KiloVFS in kmech.html with e.origin validation, targetOrigin, 60s picker timeouts, and suppressed silent autosave OS_NOTIFY.

@@ -625,6 +625,34 @@
         </div>
       </div>
 
+            <!-- Ore Excavation & Subterranean Telemetry Section -->
+      <div style="background:#0d1117; border:1px solid #21262d; border-radius:6px; padding:10px; margin-bottom:12px;">
+        <div style="font-size:12px; font-weight:600; color:#e3b341; margin-bottom:6px;">⛏️ Ore Excavation & Subterranean Telemetry</div>
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; text-align:center; margin-bottom:6px;">
+          <div style="background:#161b22; padding:4px; border-radius:4px; font-size:11px;">
+            <div style="color:#8b949e; font-size:9px;">COPPER [1]</div>
+            <div id="anOreCopper" style="color:#f0883e; font-weight:700;">0</div>
+          </div>
+          <div style="background:#161b22; padding:4px; border-radius:4px; font-size:11px;">
+            <div style="color:#8b949e; font-size:9px;">IRON [2]</div>
+            <div id="anOreIron" style="color:#79c0ff; font-weight:700;">0</div>
+          </div>
+          <div style="background:#161b22; padding:4px; border-radius:4px; font-size:11px;">
+            <div style="color:#8b949e; font-size:9px;">SILVER [3]</div>
+            <div id="anOreSilver" style="color:#d2a8ff; font-weight:700;">0</div>
+          </div>
+          <div style="background:#161b22; padding:4px; border-radius:4px; font-size:11px;">
+            <div style="color:#8b949e; font-size:9px;">GOLD [4]</div>
+            <div id="anOreGold" style="color:#ffd33d; font-weight:700;">0</div>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:11px; color:#c9d1d9;">
+          <span>💎 Gems/Pt: <strong id="anOreGems" style="color:#7ee787;">0</strong></span>
+          <span>Total Ores: <strong id="anOreTotal" style="color:#f0f6fc;">0</strong></span>
+          <span>Crawler Yield: <strong id="anCrawlerTotal" style="color:#58a6ff;">0</strong></span>
+        </div>
+      </div>
+
       <div style="font-size:12px; font-weight:600; color:#79c0ff; margin-bottom:6px;">📜 Recent Match Telemetry (Last 8)</div>
       <div id="anRecentTable" style="max-height:140px; overflow-y:auto; background:#0d1117; border:1px solid #21262d; border-radius:6px; font-family:monospace; font-size:11px;">
         <div style="padding:6px; color:#8b949e; text-align:center;">No recent matches logged in session.</div>
@@ -781,7 +809,18 @@ window.kmineAnalytics = (function() {
     clicks: 0,
     totalBvv: 0,
     totalTime: 0,
-    matches: []
+    matches: [],
+    ores: {
+      coal: 0,
+      copper: 0,
+      iron: 0,
+      silver: 0,
+      gold: 0,
+      platinum: 0,
+      gems: 0,
+      totalYield: 0,
+      crawlerExcavations: 0
+    }
   };
 
   try {
@@ -805,6 +844,19 @@ window.kmineAnalytics = (function() {
   }
 
   return {
+    recordOre: function(val, fromCrawler) {
+      if (!store.ores) store.ores = { coal:0, copper:0, iron:0, silver:0, gold:0, platinum:0, gems:0, totalYield:0, crawlerExcavations:0 };
+      if (val === 0) store.ores.coal++;
+      else if (val === 1) store.ores.copper++;
+      else if (val === 2) store.ores.iron++;
+      else if (val === 3) store.ores.silver++;
+      else if (val === 4) store.ores.gold++;
+      else if (val === 5) store.ores.platinum++;
+      else if (val >= 6) store.ores.gems++;
+      store.ores.totalYield++;
+      if (fromCrawler) store.ores.crawlerExcavations++;
+      save();
+    },
     recordMatch: function(won, timeSec, bvv, clicks, diffName) {
       store.played++;
       if (won) store.won++;
@@ -875,6 +927,15 @@ function refreshAnalyticsUI() {
   if (el('anRankBadge')) el('anRankBadge').textContent = data.rating;
   if (el('anRecordSpan')) el('anRecordSpan').textContent = `${data.won}W / ${data.played - data.won}L (${data.played} total)`;
   if (el('anClicksSpan')) el('anClicksSpan').textContent = `${data.clicks} total actions logged`;
+  if (data.ores) {
+    if (el('anOreCopper')) el('anOreCopper').textContent = data.ores.copper;
+    if (el('anOreIron')) el('anOreIron').textContent = data.ores.iron;
+    if (el('anOreSilver')) el('anOreSilver').textContent = data.ores.silver;
+    if (el('anOreGold')) el('anOreGold').textContent = data.ores.gold;
+    if (el('anOreGems')) el('anOreGems').textContent = (data.ores.gems + data.ores.platinum);
+    if (el('anOreTotal')) el('anOreTotal').textContent = data.ores.totalYield;
+    if (el('anCrawlerTotal')) el('anCrawlerTotal').textContent = data.ores.crawlerExcavations;
+  }
 
   const tbl = el('anRecentTable');
   if (tbl) {
@@ -948,6 +1009,7 @@ window.addEventListener('keydown', function(e) {
     <button id="customBtn" onclick="toggleCustomModal(true)" title="Configure Custom Grid (4)">⚙️ Custom <span class="badge">4</span></button>
     <button id="scannerBtn" onclick="toggleTacticalScanner()" title="Toggle Probability Deduction Scanner (Z)">🔬 Scan <span class="badge">Z</span></button>
     <button id="patternBtn" onclick="togglePatternExplorer()" title="Toggle Deduction Theorems & Pattern Explorer (O)">📐 Patterns <span class="badge">O</span></button>
+    <button id="crawlerBtn" onclick="stepExcavationCrawler()" title="Mine Excavation Crawler [C / Shift+C: Auto]">🤖 Crawler <span class="badge">C</span></button>
     <button id="seedBtn" onclick="toggleSeedModal(true)" title="Configure Deterministic Seed & Daily Challenge (K)">🌱 Seed <span class="badge">K</span></button>
     <button id="themeBtn" onclick="cycleTheme()" title="Switch Visual Theme (T)">🎨 Theme <span class="badge">T</span></button>
   </div>
@@ -956,6 +1018,7 @@ window.addEventListener('keydown', function(e) {
 
   <div class="stats-box">🏆 Best: <span id="bestTime" style="color:#fff;">--</span>s</div>
   <div class="stats-box" id="bvvBox" title="Board Benchmark Value (3BV) & Click Efficiency">⚡ 3BV: <span id="bvvVal" style="color:#fff;">--</span> (<span id="effVal" style="color:#3fb950;">--%</span>)</div>
+  <div class="stats-box" id="oreBox" title="Subterranean Ore Excavation Inventory">⛏️ Ore: <span id="oreTotalDisplay" style="color:#ffd33d;">0</span></div>
 
   <div class="ctrl-group">
     <button id="analyticsBtn" onclick="toggleAnalyticsModal(true)" title="Session Analytics & APM Dashboard (G)">📈 Stats <span class="badge">G</span></button>
@@ -1006,6 +1069,7 @@ window.addEventListener('keydown', function(e) {
   <span><kbd>4</kbd> Custom</span>
   <span><kbd>Z</kbd> Scanner</span>
   <span><kbd>O</kbd> Patterns</span>
+  <span><kbd>C</kbd> Crawler</span>
   <span><kbd>K</kbd> Seed</span>
   <span><kbd>T</kbd> Theme</span>
   <span><kbd>M</kbd> Sound</span>
@@ -1983,6 +2047,8 @@ window.addEventListener('keydown', function(e) {
     if (!keepGrid) {
       grid = Array.from({length: rows}, () => Array(cols).fill(0));
       moves = [];
+      oreInventory = { coal:0, copper:0, iron:0, silver:0, gold:0, platinum:0, gems:0, totalYield:0, crawlerExcavations:0 };
+      updateOreDisplay();
     }
     state = Array.from({length: rows}, () => Array(cols).fill(0));
     initDust();
@@ -2052,7 +2118,173 @@ window.addEventListener('keydown', function(e) {
     }
   }
   
-  function reveal(x, y) {
+
+  // Subterranean Ore Inventory & Excavation Telemetry
+  let oreInventory = {
+    coal: 0,
+    copper: 0,
+    iron: 0,
+    silver: 0,
+    gold: 0,
+    platinum: 0,
+    gems: 0,
+    totalYield: 0,
+    crawlerExcavations: 0
+  };
+
+  function harvestTileOre(val, fromCrawler = false) {
+    if (val === 0) oreInventory.coal++;
+    else if (val === 1) oreInventory.copper++;
+    else if (val === 2) oreInventory.iron++;
+    else if (val === 3) oreInventory.silver++;
+    else if (val === 4) oreInventory.gold++;
+    else if (val === 5) oreInventory.platinum++;
+    else if (val >= 6) oreInventory.gems++;
+    oreInventory.totalYield++;
+    if (fromCrawler) oreInventory.crawlerExcavations++;
+    updateOreDisplay();
+    if (window.kmineAnalytics && typeof window.kmineAnalytics.recordOre === 'function') {
+      window.kmineAnalytics.recordOre(val, fromCrawler);
+    }
+  }
+
+  function updateOreDisplay() {
+    const el = document.getElementById('oreTotalDisplay');
+    if (el) el.textContent = oreInventory.totalYield;
+  }
+
+  // Mine Excavation Crawler Autonomous Logic
+  let autoCrawlerInterval = null;
+
+  function stepExcavationCrawler() {
+    if (gameOver !== 0 || isReplaying) return false;
+    if (firstClick) {
+      const cx = Math.floor(cols / 2);
+      const cy = Math.floor(rows / 2);
+      recordAndApplyMove(cx, cy, 0);
+      showToast(`🤖 Crawler deployed: Excavated initial borehole at (${cx},${cy})`, "info", 2000);
+      return true;
+    }
+
+    let safeTarget = null;
+    let deductionSource = null;
+
+    // Step 1: Scan revealed numbers where flags == number
+    for (let y = 0; y < rows && !safeTarget; y++) {
+      for (let x = 0; x < cols && !safeTarget; x++) {
+        if (state[y][x] === 1 && grid[y][x] > 0) {
+          let flagCount = 0;
+          const hiddenNeighbors = [];
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (dx === 0 && dy === 0) continue;
+              const nx = x + dx, ny = y + dy;
+              if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+                if (state[ny][nx] === 2) flagCount++;
+                else if (state[ny][nx] === 0) hiddenNeighbors.push({ x: nx, y: ny });
+              }
+            }
+          }
+          if (flagCount === grid[y][x] && hiddenNeighbors.length > 0) {
+            safeTarget = hiddenNeighbors[0];
+            deductionSource = { x, y, val: grid[y][x] };
+          }
+        }
+      }
+    }
+
+    // Step 2: Scan for obvious unflagged mines to place flags
+    if (!safeTarget) {
+      for (let y = 0; y < rows && !safeTarget; y++) {
+        for (let x = 0; x < cols && !safeTarget; x++) {
+          if (state[y][x] === 1 && grid[y][x] > 0) {
+            let flagCount = 0;
+            const hiddenNeighbors = [];
+            for (let dy = -1; dy <= 1; dy++) {
+              for (let dx = -1; dx <= 1; dx++) {
+                if (dx === 0 && dy === 0) continue;
+                const nx = x + dx, ny = y + dy;
+                if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+                  if (state[ny][nx] === 2) flagCount++;
+                  else if (state[ny][nx] === 0) hiddenNeighbors.push({ x: nx, y: ny });
+                }
+              }
+            }
+            if (flagCount + hiddenNeighbors.length === grid[y][x] && hiddenNeighbors.length > 0) {
+              const m = hiddenNeighbors[0];
+              recordAndApplyMove(m.x, m.y, 2);
+              showToast(`🤖 Crawler flagged seismic hazard at (${m.x},${m.y})`, "info", 1500);
+              return true;
+            }
+          }
+        }
+      }
+    }
+
+    if (safeTarget) {
+      triggerShake(1.5, 0.9);
+      playSfx('click');
+      for (let i = 0; i < 8; i++) {
+        particles.push({
+          x: safeTarget.x * CELL + CELL / 2,
+          y: safeTarget.y * CELL + CELL / 2,
+          prevX: safeTarget.x * CELL + CELL / 2,
+          prevY: safeTarget.y * CELL + CELL / 2,
+          vx: (Math.random() - 0.5) * 4,
+          vy: (Math.random() - 0.5) * 4,
+          life: 0,
+          maxLife: 20,
+          size: 2,
+          color: "#58a6ff",
+          layer: 0,
+          gravity: 0.05,
+          drag: 0.92
+        });
+      }
+      recordAndApplyMove(safeTarget.x, safeTarget.y, 0);
+      showToast(`🤖 Crawler excavated safe vein at (${safeTarget.x},${safeTarget.y}) via [${deductionSource ? deductionSource.val : 'scan'}]!`, "success", 2000);
+      return true;
+    } else {
+      showToast("🤖 Crawler: Frontier contested / deduction inconclusive. Manual excavation required!", "warn", 2500);
+      if (autoCrawlerInterval) {
+        clearInterval(autoCrawlerInterval);
+        autoCrawlerInterval = null;
+        const btn = document.getElementById('crawlerBtn');
+        if (btn) btn.classList.remove('btn-accent');
+      }
+      return false;
+    }
+  }
+
+  function toggleCrawlerAuto() {
+    const btn = document.getElementById('crawlerBtn');
+    if (autoCrawlerInterval) {
+      clearInterval(autoCrawlerInterval);
+      autoCrawlerInterval = null;
+      if (btn) btn.classList.remove('btn-accent');
+      showToast("🤖 Auto-Crawler deactivated", "info", 1500);
+    } else {
+      if (gameOver !== 0 || isReplaying) return;
+      if (btn) btn.classList.add('btn-accent');
+      showToast("🤖 Auto-Crawler engaged (excavating safe frontier...)", "info", 2000);
+      autoCrawlerInterval = setInterval(() => {
+        if (gameOver !== 0 || isReplaying || document.hidden) {
+          clearInterval(autoCrawlerInterval);
+          autoCrawlerInterval = null;
+          if (btn) btn.classList.remove('btn-accent');
+          return;
+        }
+        const stepped = stepExcavationCrawler();
+        if (!stepped) {
+          clearInterval(autoCrawlerInterval);
+          autoCrawlerInterval = null;
+          if (btn) btn.classList.remove('btn-accent');
+        }
+      }, 260);
+    }
+  }
+
+  function reveal(x, y, fromCrawler = false) {
     if (gameOver === 0) { totalClicks++; update3BVDisplay(); }
     if (x < 0 || x >= cols || y < 0 || y >= rows || state[y][x] !== 0) return;
     state[y][x] = 1;
@@ -2079,10 +2311,11 @@ window.addEventListener('keydown', function(e) {
       }
       return;
     }
+    harvestTileOre(grid[y][x], fromCrawler);
     if (grid[y][x] === 0) {
       for (let dy = -1; dy <= 1; dy++) {
         for (let dx = -1; dx <= 1; dx++) {
-          reveal(x + dx, y + dy);
+          reveal(x + dx, y + dy, fromCrawler);
         }
       }
     }
@@ -3215,7 +3448,8 @@ window.addEventListener('keydown', function(e) {
       cols, rows, totalMines, timeElapsed, flags, 
       moves: JSON.parse(JSON.stringify(moves)),
       diff: document.getElementById('diff').value,
-      timeOffset: Date.now() - startRealTime
+      timeOffset: Date.now() - startRealTime,
+      oreInventory: JSON.parse(JSON.stringify(oreInventory))
     };
     if (safeSetStorage('kmine_quicksave', JSON.stringify(quickSaveData))) {
       showToast("💾 Game quicksaved successfully!", "success");
@@ -3237,6 +3471,10 @@ window.addEventListener('keydown', function(e) {
       timeElapsed = d.timeElapsed; flags = d.flags;
       moves = d.moves || [];
       firstClick = false;
+      if (d.oreInventory) {
+        oreInventory = Object.assign(oreInventory, d.oreInventory);
+        updateOreDisplay();
+      }
       calculate3BV(); gameOver = 0; isReplaying = false;
       document.getElementById('replayBtn').style.display = 'none';
       startRealTime = Date.now() - (d.timeOffset || 0);
@@ -3393,6 +3631,10 @@ window.addEventListener('keydown', function(e) {
   }
 
   function animLoop(timestamp) {
+    if (document.hidden) {
+      requestAnimationFrame(animLoop);
+      return;
+    }
     const dt = (timestamp - lastFrameTime) / 1000;
     lastFrameTime = timestamp;
     animTime += Math.min(dt, 0.1);
@@ -3887,6 +4129,12 @@ window.addEventListener('keydown', function(e) {
       toggleSeedModal(false);
       if (typeof toggleAnalyticsModal === 'function') toggleAnalyticsModal(false);
       if (isReplaying) closeReplayStudio();
+      if (autoCrawlerInterval) {
+        clearInterval(autoCrawlerInterval);
+        autoCrawlerInterval = null;
+        const btn = document.getElementById('crawlerBtn');
+        if (btn) btn.classList.remove('btn-accent');
+      }
       document.querySelectorAll('.toast').forEach(t => t.remove());
     } else if (e.key === 'F2') {
       e.preventDefault();
@@ -3959,7 +4207,11 @@ window.addEventListener('keydown', function(e) {
         let effBtn = (flagMode || e.shiftKey) ? 2 : 0;
         recordAndApplyMove(hoverX, hoverY, effBtn);
       }
-    } else if (e.key === 'x' || e.key === 'X' || e.key === 'c' || e.key === 'C') {
+    } else if (e.key === 'c' || e.key === 'C') {
+      e.preventDefault();
+      if (e.shiftKey) toggleCrawlerAuto();
+      else stepExcavationCrawler();
+    } else if (e.key === 'x' || e.key === 'X') {
       if (gameOver === 0 && !isReplaying) {
         if (hoverX < 0 || hoverY < 0) { hoverX = Math.floor(cols / 2); hoverY = Math.floor(rows / 2); }
         e.preventDefault();
@@ -3979,6 +4231,23 @@ window.addEventListener('keydown', function(e) {
   initGame();
   initRetroMultiplayer();
   requestAnimationFrame(animLoop);
+
+  // Lifecycle & Resource Hygiene: Pause timer and auto-crawler when tab hidden
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopTimer();
+      if (autoCrawlerInterval) {
+        clearInterval(autoCrawlerInterval);
+        autoCrawlerInterval = null;
+        const btn = document.getElementById('crawlerBtn');
+        if (btn) btn.classList.remove('btn-accent');
+      }
+    } else {
+      if (gameOver === 0 && !firstClick && !isReplaying) {
+        startTimer();
+      }
+    }
+  });
 
   // First-run Tutorial Integrity: Show interactive guide only on fresh session
   const tutorialSeen = safeGetStorage('kmine_tutorialSeen') === '1';

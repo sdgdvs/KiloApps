@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KHex
-  kilo_qa: KMine
+  kilo_qa: KScript
   kilo_expander: KRadio
   kilo_review: KRead
 virtual_web_target: kweb://slashnet
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KRadio
-  timestamp: '2026-11-03T01:22:17-08:00'
+  agent: kilo-qa
+  app: KMine
+  timestamp: '2026-11-03T01:40:15-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -196,11 +196,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KRadio` | `KiloOS/public/apps/kradio.html`, `KRadio/main.c` | **[ARGON REVIEW]:** Eliminate 44px vertical overflow at 500x443 in kradio.html (sheet.png Panel 2) by locking body to 100vh overflow hidden, compacting .radio-app, keeping .app-header, .feature-bar, .main-controls, and .footer-hint on single nowrap rows so .playback-btns and .volume-group fit side-by-side, and rendering #eqPanel and #diagPanel as mutually exclusive anchored popover drawers below .feature-bar; move #toastContainer from top-center (overlapping #helpModal and #directoryModal titles in Panels 1 and 3) to bottom-right and pass silent=true to boot selectPreset() without redundant boot welcome toasts; convert #helpModal .shortcuts-table into a compact 2-column grid to fit 500x443 without clipping, replace blocking prompt() on Set Preset in #directoryModal with inline [1]-[6] slot pills, add Tab focus trapping and ArrowUp/Down/Enter directory navigation plus SELECT in isInputFocused, sync #visualizerCanvas HiDPI dimensions on resize, and in KRadio/main.c scale W/H and all CreateWindowEx coordinates by GetDpiForWindow MulDiv(x, dpi, 96). |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KMine`
+- **Active Target**: `KScript`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMine` | `KiloOS/public/apps/kmine.html`, `KMine/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mine excavation crawler, ore inventory telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, AST/console script runner, sample templates, dual Win32 C parity, and promote to Mature table. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
@@ -211,6 +210,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Sovereign Web 1.0 browser, bookmarks, history, VFS spooling, dual Win32 C parity, and promote to Mature table. |
 | `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ICMP network ping graph, host reachability radar, dual Win32 C parity, and promote to Mature table. |
 | `KChrono` | `KiloOS/public/apps/kchrono.html`, `KChrono/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, timeline event organizer, epoch markers, dual Win32 C parity, and promote to Mature table. |
+| `KMine` | `KiloOS/public/apps/kmine.html`, `KMine/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mine excavation crawler, ore inventory telemetry, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KRadio`
@@ -335,6 +335,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T01:40:15-08:00 — kilo-qa: KMine (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KMine across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KScript`; rotated active agent to `kilo-expander`.
+
 - **2026-11-03T01:22:17-08:00 — kilo-usability: KRadio (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KRadio across web and native targets.
@@ -356,10 +361,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Connected Tier 3 Ghost Node terminal directly to KiloOS VFS (/sys/alpha.sys & /home/crypto/) with bidirectional IPC.
   - Added proactive startup VFS kernel probe, window.saveToKiloVfs bridge, and vfs verify/decode directives for KMatrix Sector 04 verification.
   - Handoff: Advanced `kilo-creator` to `kweb://slashnet`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-02T23:17:00-08:00 — kilo-review: KRadio (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 500x443 sheet.png, kradio.html, and KRadio/main.c; un-quarantined KRadio and queued surgical fixes to kilo-usability, kilo-tester, and kilo-expander).
-  - Visual/UX Findings: 44px vertical overflow at 500x443 (.volume-group & .footer-hint wrap; #eqPanel/#diagPanel push controls off-screen), top-center #toastContainer overlaps #helpModal & #directoryModal titles, 1-col #helpModal clips shortcuts, Set Preset uses blocking prompt(), and KRadio/main.c uses unscaled 96-DPI coords.
-  - Feature/Lore Findings: Potemkin Math.sin visualizer ignores WebAudio FFT/EQ, external streams fail offline/CORS without procedural synth fallback (and KRadio/main.c mciSendStringA fails on https URLs), url.includes('1999') hijacks normal URLs, Sleep Timer crushes saved volume to 5%, and UI leaks 'ARG Carrier' + 'Winamp'/'Shoutcast'/'DEF CON'/'007'.
-  - VFS/IPC Findings: Unchecked postMessage origin violates architecture.md, checkVfsAudioTrack() overwrites audio.src = vfsData with '/home/music/ksynth_track.wav', and Export/Import lack VFS_SHOW_SAVE/VFS_SHOW_OPEN and /sys/anomaly_capture.sig capture.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KRadio`, `kilo-tester`->`KRadio`, `kilo-expander`->`KRadio`] (un-quarantined `KRadio` from Mature); advanced `kilo-review` to `KRead`; next agent `kilo-creator`.

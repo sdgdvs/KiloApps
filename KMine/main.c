@@ -109,6 +109,20 @@ DustMote dustMotes[MAX_DUST];
 int dustInit = 0;
 
 typedef struct {
+    int coal;
+    int copper;
+    int iron;
+    int silver;
+    int gold;
+    int platinum;
+    int gems;
+    int totalOres;
+    int crawlerOres;
+} OreInventory;
+
+OreInventory oreInv = {0};
+
+typedef struct {
     int grid[MAX_ROWS][MAX_COLS];
     int state[MAX_ROWS][MAX_COLS];
     int cols, rows, totalMines, diff;
@@ -116,6 +130,7 @@ typedef struct {
     Move moves[MAX_MOVES];
     int movesCount;
     DWORD timeOffset;
+    OreInventory oreInv;
 } QuickSaveData;
 
 QuickSaveData qs;
@@ -387,15 +402,15 @@ void UpdateTitle(HWND hwnd) {
 
     if (gameOver == 2) {
         char buf[128];
-        wsprintfA(buf, "KMine - YOU WIN! 🏆 Time: %ds (Best: %ss) | F1: Help", timeElapsed, bestStr);
+        wsprintfA(buf, "KMine - YOU WIN! 🏆 Time: %ds (Best: %ss) | Ore: %d | F1: Help", timeElapsed, bestStr, oreInv.totalOres);
         SetWindowTextA(hwnd, buf);
     } else if (gameOver == 1) {
         char buf[128];
-        wsprintfA(buf, "KMine - GAME OVER 💥 Time: %ds (Best: %ss) | F1: Help", timeElapsed, bestStr);
+        wsprintfA(buf, "KMine - GAME OVER 💥 Time: %ds (Best: %ss) | Ore: %d | F1: Help", timeElapsed, bestStr, oreInv.totalOres);
         SetWindowTextA(hwnd, buf);
     } else {
         char buf[128];
-        wsprintfA(buf, "KMine - Mines: %d | Time: %ds | Best: %ss | F1: Help [1-3: Diff]", totalMines - flagsPlaced, timeElapsed, bestStr);
+        wsprintfA(buf, "KMine - Mines: %d | Time: %ds | Ore: %d | Best: %ss | F1: Help [1-3: Diff]", totalMines - flagsPlaced, timeElapsed, oreInv.totalOres, bestStr);
         SetWindowTextA(hwnd, buf);
     }
 }
@@ -411,6 +426,30 @@ void UpdateTitle(HWND hwnd) {
 #define IDM_HELP 1008
 #define IDM_QUICKSAVE 1009
 #define IDM_QUICKLOAD 1010
+#define IDM_CRAWLER 1011
+#define IDM_ORE_TELEMETRY 1012
+
+void ShowOreTelemetryDialog(HWND hwnd) {
+    char buf[512];
+    wsprintfA(buf,
+        "KMine - Subterranean Ore Inventory & Telemetry\n"
+        "===============================================\n\n"
+        "Excavated Mineral Reserves:\n"
+        "  * Coal / Bedrock Quartz : %d\n"
+        "  * Copper Ore [Tier 1]   : %d\n"
+        "  * Iron Ore   [Tier 2]   : %d\n"
+        "  * Silver Ore [Tier 3]   : %d\n"
+        "  * Gold Ore   [Tier 4]   : %d\n"
+        "  * Platinum   [Tier 5]   : %d\n"
+        "  * Gemstones  [Tier 6+]  : %d\n\n"
+        "Telemetry Summary:\n"
+        "  * Total Ores Uncovered  : %d\n"
+        "  * Crawler Excavations   : %d\n",
+        oreInv.coal, oreInv.copper, oreInv.iron, oreInv.silver,
+        oreInv.gold, oreInv.platinum, oreInv.gems,
+        oreInv.totalOres, oreInv.crawlerOres);
+    MessageBoxA(hwnd, buf, "Ore Inventory Telemetry", MB_OK | MB_ICONINFORMATION);
+}
 
 HMENU hMenu, hSubMenu;
 
@@ -434,6 +473,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  * 3                : Expert Mode (30x16, 99 mines)\n"
         "  * F5               : Quick Save game state\n"
         "  * F9               : Quick Load game state\n"
+        "  * C                : Mine Excavation Crawler (auto-deduces safe cell)\n"
+        "  * O                : Ore Inventory & Subterranean Telemetry\n"
         "  * Ctrl+E           : Export High Scores (JSON)\n"
         "  * Ctrl+I           : Import High Scores (JSON)\n"
         "  * P / Space        : Watch Replay (when available)\n"
@@ -486,6 +527,7 @@ void InitGame(HWND hwnd, int keepGrid) {
         }
         movesCount = 0;
         firstClick = 1;
+        memset(&oreInv, 0, sizeof(oreInv));
     } else {
         firstClick = 0;
     }
@@ -518,6 +560,17 @@ void Reveal(int x, int y) {
             for (int j=0; j<cols; j++)
                 if (grid[i][j] == 9) state[i][j] = 1;
         return;
+    }
+    {
+        int ore = grid[y][x];
+        if (ore == 0) oreInv.coal++;
+        else if (ore == 1) oreInv.copper++;
+        else if (ore == 2) oreInv.iron++;
+        else if (ore == 3) oreInv.silver++;
+        else if (ore == 4) oreInv.gold++;
+        else if (ore == 5) oreInv.platinum++;
+        else if (ore >= 6) oreInv.gems++;
+        oreInv.totalOres++;
     }
     if (grid[y][x] == 0) {
         for (int dy = -1; dy <= 1; dy++) {
@@ -689,6 +742,82 @@ void SetDifficulty(HWND hwnd, int diff) {
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
+
+void StepExcavationCrawler(HWND hwnd) {
+    if (gameOver != 0 || isReplaying) return;
+    if (firstClick) {
+        int cx = cols / 2, cy = rows / 2;
+        ApplyAction(hwnd, cx, cy, 0);
+        return;
+    }
+    int safeX = -1, safeY = -1;
+    // Step 1: Scan revealed numbers where flagged count == grid number
+    for (int y = 0; y < rows && safeX < 0; y++) {
+        for (int x = 0; x < cols && safeX < 0; x++) {
+            if (state[y][x] == 1 && grid[y][x] > 0) {
+                int flagCount = 0;
+                int hiddenCount = 0;
+                int hx = -1, hy = -1;
+                for (int dy = -1; dy <= 1; dy++) {
+                    for (int dx = -1; dx <= 1; dx++) {
+                        if (dx == 0 && dy == 0) continue;
+                        int nx = x + dx, ny = y + dy;
+                        if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+                            if (state[ny][nx] == 2) flagCount++;
+                            else if (state[ny][nx] == 0) {
+                                hiddenCount++;
+                                if (hx < 0) { hx = nx; hy = ny; }
+                            }
+                        }
+                    }
+                }
+                if (flagCount == grid[y][x] && hiddenCount > 0) {
+                    safeX = hx;
+                    safeY = hy;
+                }
+            }
+        }
+    }
+    // Step 2: Scan for obvious unflagged mines to place flags
+    if (safeX < 0) {
+        for (int y = 0; y < rows && safeX < 0; y++) {
+            for (int x = 0; x < cols && safeX < 0; x++) {
+                if (state[y][x] == 1 && grid[y][x] > 0) {
+                    int flagCount = 0;
+                    int hiddenCount = 0;
+                    int hx = -1, hy = -1;
+                    for (int dy = -1; dy <= 1; dy++) {
+                        for (int dx = -1; dx <= 1; dx++) {
+                            if (dx == 0 && dy == 0) continue;
+                            int nx = x + dx, ny = y + dy;
+                            if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+                                if (state[ny][nx] == 2) flagCount++;
+                                else if (state[ny][nx] == 0) {
+                                    hiddenCount++;
+                                    if (hx < 0) { hx = nx; hy = ny; }
+                                }
+                            }
+                        }
+                    }
+                    if (flagCount + hiddenCount == grid[y][x] && hiddenCount > 0) {
+                        ApplyAction(hwnd, hx, hy, 2);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+    if (safeX >= 0) {
+        oreInv.crawlerOres++;
+        TriggerScreenShake(3, 150);
+        ApplyAction(hwnd, safeX, safeY, 0);
+        InvalidateRect(hwnd, NULL, FALSE);
+    } else {
+        MessageBoxA(hwnd, "Excavation Crawler: Frontier contested or no 100% deductive safe cells found.", "Crawler Telemetry", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
 void QuickSave(HWND hwnd) {
     if (gameOver != 0 || firstClick || isReplaying) {
         MessageBoxA(hwnd, "Cannot quicksave right now.", "Info", MB_OK);
@@ -702,6 +831,7 @@ void QuickSave(HWND hwnd) {
     memcpy(qs.moves, moves, sizeof(Move) * movesCount);
     qs.movesCount = movesCount;
     qs.timeOffset = GetTickCount() - startRealTime;
+    qs.oreInv = oreInv;
     qsValid = 1;
     HANDLE hFile = CreateFileA("kmine_qs.bin", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) { DWORD w; WriteFile(hFile, &qs, sizeof(qs), &w, NULL); CloseHandle(hFile); }
@@ -732,6 +862,7 @@ void QuickLoad(HWND hwnd) {
     memcpy(moves, qs.moves, sizeof(Move) * qs.movesCount);
     movesCount = qs.movesCount;
     startRealTime = GetTickCount() - qs.timeOffset;
+    oreInv = qs.oreInv;
     
     SetTimer(hwnd, 1, 1000, NULL);
     UpdateTitle(hwnd);
@@ -863,6 +994,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hSubMenu, MF_STRING, IDM_QUICKSAVE, "Quick Save\tF5");
             AppendMenuA(hSubMenu, MF_STRING, IDM_QUICKLOAD, "Quick Load\tF9");
             AppendMenuA(hSubMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hSubMenu, MF_STRING, IDM_CRAWLER, "Excavation Crawler Step\tC");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_ORE_TELEMETRY, "Ore Inventory & Telemetry\tO");
+            AppendMenuA(hSubMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hSubMenu, MF_STRING, IDM_HINT, "Safe Move Hint\tH");
             AppendMenuA(hSubMenu, MF_STRING, IDM_HELP, "Help & Shortcuts...\tF1");
             AppendMenuA(hSubMenu, MF_SEPARATOR, 0, NULL);
@@ -904,6 +1038,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 QuickSave(hwnd);
             } else if (LOWORD(wParam) == IDM_QUICKLOAD) {
                 QuickLoad(hwnd);
+            } else if (LOWORD(wParam) == IDM_CRAWLER) {
+                StepExcavationCrawler(hwnd);
+            } else if (LOWORD(wParam) == IDM_ORE_TELEMETRY) {
+                ShowOreTelemetryDialog(hwnd);
             } else if (LOWORD(wParam) == IDM_HINT) {
                 GiveHint(hwnd);
             } else if (LOWORD(wParam) == IDM_HELP) {
@@ -917,7 +1055,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         case WM_KEYDOWN:
-            if (wParam == 'H' || wParam == 'h') {
+            if (wParam == 'C' || wParam == 'c') {
+                StepExcavationCrawler(hwnd);
+            } else if (wParam == 'O' || wParam == 'o') {
+                ShowOreTelemetryDialog(hwnd);
+            } else if (wParam == 'H' || wParam == 'h') {
                 GiveHint(hwnd);
             } else if (wParam == VK_F1 || wParam == 0xBF) {
                 ShowHelpDialog(hwnd);
