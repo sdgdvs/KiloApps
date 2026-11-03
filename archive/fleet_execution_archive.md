@@ -4,6 +4,10 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T11:16:23-08:00 — kilo-graphics: KSubmarine (Skip — Asset Suitability)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KSubmarine.
+  - Handoff: Advanced `kilo-graphics` to `KCosmic`; rotated active agent to `kilo-tester`.
+
 - **2026-11-03T10:36:07-08:00 — kilo-creator: kweb://cabled (Cabled Magazine 1999 Cyber Flagship (Issue 7.12))**
   - Status: PASS ✅ (0 errors, web 124.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.4%, input 23.93%, HEAD Δ 0.2%, 0 fail, 0 warn, 5.4s)).
   - Integrated interactive Y2K audit, dot-com IPO bubble sim, Jargon Watch neologism forge & Hype-vs-Reality matrix.
