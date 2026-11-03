@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KSubmarine
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KSettings
+  kilo_usability: KHex
   kilo_qa: KDB
   kilo_expander: KCalc
   kilo_review: KImage
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KSettings
-  timestamp: '2026-11-03T08:22:17-08:00'
+  timestamp: '2026-11-03T08:37:13-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -161,14 +161,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Implement credit-gated gear unlock progression (unlockedWpns/Arms/Sinks/Specs persisted in getSavePayload/restoreSavePayload and KMechSaveData, resetting on campaign defeat) with synced stats and prices across kmech.html and KMech/main.c (weapons 0/150/220/340/420/520/610, armors 0/160/190/380, sinks 0/140/230/390, specials 0/180/240/320/400) so [1]-[4] buy or equip owned gear instead of granting free endgame loadouts on Battle 1, and stop KMech/main.c armor cycling from free-healing playerStats.hp; initialize boot playerStats.atk=16 and playerHeatGen=22 to match Pulse Laser; fix RFMS remote duel deadlocks in actionAttack/handlePeerMove with p1-first turn gating, mech_miss and overheat-defeat move sync instead of calling local enemyTurn(), enemyIsDefending reset on peer mech_attack, and beforeunload leaveRoom(); isolate Arena wins/losses from campaign battleCount in kmech.html and KMech/main.c; reset evadeTacticalBonus=0.0f after EnemyTurn() in KMech/main.c, use a while-loop for multi-level XP, fix getSavePayload() inBattle when in F1 Help or post-battle, and replace UTF-8 DrawTextA mojibake and blocking Beep() chains in KMech/main.c with clean ASCII and mutable [M] SFX. |
 | `KRadio` | `KiloOS/public/apps/kradio.html`, `KRadio/main.c` | **[ARGON REVIEW]:** Wire a real WebAudio AnalyserNode (fftSize 128) after preampGain in setupAudioGraph() so drawVisualizer() renders live getByteFrequencyData() FFT bars in LED Bars/Solid VU modes and getByteTimeDomainData() waveform in CRT Wave mode reflecting 3-band EQ; fix CORS/offline stream dead-ends in playStream() by retrying without crossorigin on error and providing automatic per-genre 1999 procedural WebAudio synth radio fallback routed through the EQ/analyser graph when external streams fail (plus procedural waveOutOpen 16-bit PCM genre stream synthesis in KRadio/main.c when mciSendStringA fails on https URLs); remove broad url.includes('1999') check in playStream() so normal port/path 1999 URLs are not hijacked into startSubcarrier(), route startSubcarrier() through the main audioCtx EQ/analyser graph with streamStartTime/uptimeTimer, and replace meta 'ARG Carrier' UI labels and 'Winamp'/'Shoutcast'/'DEF CON'/'007' trademarks with diegetic 'VLF Subcarrier' and 1999 parodies per arg-lore.md; fix fadeAndStop() Sleep Timer overwriting kradio_volume to 5%, sync .btn-eq-preset .active on boot/quickload/import, persist isMuted/lastVolume/activePresetIndex across reloads/quickload/import, fix assignCurrentToPreset() stale name when #stationUrl was edited, count estimatedBytesReceived only while actively playing, and in KRadio/main.c remove boot ID_BTN_PLAY auto-play, make ID_BTN_PLAY toggle play/stop, and add [M] mute, VK_UP/VK_DOWN volume, and VK_LEFT/VK_RIGHT preset cycling. |
 | `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | **[ARGON REVIEW]:** Fix updateScrollProgress() curPage formula in kread.html so 100% scroll reaches totalPages and refresh progress/stats on font/line-height changes; make createHighlight() and deleteNote() respect isMarkdownView without corrupting HTML tags in inlineFormat(); keep globalSearchResults active across switchTab() when searchAllTabs is true and allow Ctrl+Delete to clear; and in KRead/main.c refresh UpdateStatusBar() on hEdit cursor/wheel navigation, reset dwScrollPos in LoadFileFromPath/Clear, persist g_currentTheme in quicksave, and track bHasBookmark before jumping on Ctrl+J. |
-| `KSettings` | `KiloOS/public/apps/ksettings.html`, `KSettings/main.c` | **[ARGON REVIEW]:** Wire #previewBtn in Live Theme Preview to cycle presets with toast/chime feedback, highlight the active button in Desktop Wallpaper Presets and sync /.sys_settings_high_contrast to VFS, and in KSettings/main.c sync BM_SETCHECK for ID_CHK_ANIM/ID_CHK_CONTRAST/ID_CHK_SOUND and volume readout in ResetDefaults() and QuickloadState(). |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KSettings`
+- **Active Target**: `KHex`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSettings` | `KiloOS/public/apps/ksettings.html`, `KSettings/main.c` | **[ARGON REVIEW]:** Fix horizontal tab-bar clipping at 700x523 where the 5th tab (#tabSpecs System Specs [5]) is cut off on the right edge by tightening .tab-bar and .tab-btn padding/font-size so all 5 tabs fit cleanly, and update --accent-hover in setAccentColor(). |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -274,6 +272,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KSettings** | `KiloOS/public/apps/ksettings.html` | Pass 5+ (2026-11-03) | System / Configuration | Complete KiloOS control panel with 5-tab responsive navigation, live accent/theme synchronization, VFS persistence, F5/F9 state, and dual Win32 C parity. |
 | **KScript** | `KiloOS/public/apps/kscript.html` | Pass 5+ (2026-11-03) | System / Tools | Advanced script execution engine with F5/F9 state persistence, AST diagnostics, sample templates, VFS mesh, and dual Win32 C parity. |
 | **KTerm** | `KiloOS/public/apps/kterm.html` | Pass 5+ (2026-11-02) | System / Utilities | Complete multi-tab terminal emulator with ANSI escape codes, command history, echo -e, piping, math evaluator, VFS integration, F5/F9 state persistence, and full dual Win32 C parity. |
 | **KNetMap** | `KiloOS/public/apps/knetmap.html` | Pass 5+ (2026-11-02) | Network / Utilities | Complete subnet topology visualizer and network simulator with VLSM CIDR calculator, multi-hop ICMP echo packet dispatch, packet sniffer, chaos cable severance, F5/F9 state persistence, and dual Win32 C parity. |
@@ -336,6 +335,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T08:37:13-08:00 — kilo-usability: KSettings (Usability & Responsive Layout Polish)**
+  - Status: PASS ✅ (0 errors, web 81.2 KB, native 17.0 KB < 999 KB, visual PASS with 0 cut-offs).
+  - Layout: Tightened .tab-bar and .tab-btn padding and font-size so all 5 tabs fit cleanly at 700x523 with zero clipping.
+  - Accent Hover: Implemented computeAccentHover() helper and dynamic --accent-hover sync in setAccentColor().
+  - Mature Quarantine & Handoff: Promoted `KSettings` to Mature archive; advanced `kilo-usability` to `KHex`; next agent `kilo-qa`.
+
 - **2026-11-03T08:22:17-08:00 — kilo-tester: KSettings (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KSettings across web and native targets.
@@ -356,8 +361,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: 5th tab (#tabSpecs System Specs [5]) is clipped horizontally on the right edge of .tab-bar at 700px window width; --accent-hover is never updated when setAccentColor() changes --accent.
   - Feature/Parity Findings: #previewBtn (Active Button) is a dead no-op; wallpaper presets lack active state/VFS sync; Win32 main.c ResetDefaults() and QuickloadState() fail to sync BM_SETCHECK on checkboxes and volume label.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KSettings`, `kilo-tester`->`KSettings`] (un-quarantined `KSettings` from Mature); advanced `kilo-review` to `KImage`; next agent `kilo-creator`.
-
-- **2026-11-03T06:23:18-08:00 — kilo-expander: KRead (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KRead across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.

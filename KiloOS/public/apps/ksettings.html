@@ -81,6 +81,7 @@
     --card-border: #ffffff;
     --text-main: #ffffff;
     --accent: #00e5ff;
+    --accent-hover: #00b8d4;
   }
 
   body, html {
@@ -176,7 +177,7 @@
 
   .btn-primary:hover {
     background: var(--accent-hover);
-    border-color: #0d47a1;
+    border-color: var(--accent-hover);
   }
 
   .btn-danger {
@@ -199,7 +200,7 @@
   .tab-bar {
     display: flex;
     gap: 2px;
-    padding: 6px 16px 0 16px;
+    padding: 4px 8px 0 8px;
     background: #1e293b;
     border-bottom: 1px solid var(--card-border);
     overflow-x: auto;
@@ -213,8 +214,8 @@
   }
 
   .tab-btn {
-    padding: 7px 12px;
-    font-size: 12px;
+    padding: 6px 8px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--text-muted);
     background: transparent;
@@ -754,12 +755,12 @@
       font-size: 10px;
     }
     .tab-bar {
-      padding: 4px 10px 0 10px;
+      padding: 4px 6px 0 6px;
       gap: 1px;
     }
     .tab-btn {
-      padding: 6px 9px;
-      font-size: 11px;
+      padding: 5px 6px;
+      font-size: 10px;
     }
     .content-area {
       padding: 10px;
@@ -1541,12 +1542,28 @@
       });
     }
 
+    /**
+     * Compute a darker hover color from a hex color string (#RRGGBB).
+     * @param {string} hex
+     * @returns {string}
+     */
+    function computeAccentHover(hex) {
+      if (!hex || !/^#[0-9A-Fa-f]{6}$/.test(hex)) return '#1976D2';
+      const num = parseInt(hex.replace('#', ''), 16);
+      const r = Math.max(0, Math.min(255, Math.round(((num >> 16) & 255) * 0.82)));
+      const g = Math.max(0, Math.min(255, Math.round(((num >> 8) & 255) * 0.82)));
+      const b = Math.max(0, Math.min(255, Math.round((num & 255) * 0.82)));
+      return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+
     async function setAccentColor(color, silent = false) {
       if (!color || !/^#[0-9A-Fa-f]{6}$/.test(color)) return;
       state.accentColor = color;
 
       // Update UI elements
+      const hoverColor = computeAccentHover(color);
       document.documentElement.style.setProperty('--accent', color);
+      document.documentElement.style.setProperty('--accent-hover', hoverColor);
       const colorInput = document.getElementById('accentColor');
       const hexInput = document.getElementById('accentHex');
       if (colorInput) colorInput.value = color;
@@ -1593,7 +1610,7 @@
       const previewBox = document.getElementById('previewBox');
       const previewBtn = document.getElementById('previewBtn');
       if (previewBox) previewBox.style.borderColor = state.accentColor;
-      if (previewBtn) previewBtn.style.backgroundColor = state.accentColor;
+      if (previewBtn) previewBtn.style.backgroundColor = '';
     }
 
     async function setDisplayMode(mode, silent = false) {
