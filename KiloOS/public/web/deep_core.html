@@ -5178,6 +5178,18 @@ revealing the blueprint for the App #100 KMatrix singularity.
   // KILOOS VFS & IPC MESH BRIDGE (Phase VI Mission Spec)
   // Connects Tier 3 Ghost Node Terminal to KiloOS VFS (/sys/alpha.sys & /home/crypto/)
   // =========================================================================
+  // Canonical KiloOS VFS bridge function (kilo-creator specification)
+  function saveToKiloVfs(vfsPath, contentStr) {
+    try {
+      window.parent.postMessage({ type: 'VFS_WRITE', path: vfsPath, data: contentStr, requestId: 'vfs_' + Date.now() }, '*');
+      window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: 'Saved to VFS: ' + vfsPath }, '*');
+    } catch (e) {}
+    if (typeof KiloVfs !== 'undefined' && KiloVfs.write) {
+      KiloVfs.write(vfsPath, contentStr, 'Saved to VFS: ' + vfsPath);
+    }
+  }
+  window.saveToKiloVfs = saveToKiloVfs;
+
   const KiloVfs = {
     connected: false,
     vfsCache: {},
@@ -5339,7 +5351,8 @@ revealing the blueprint for the App #100 KMatrix singularity.
               '/home/crypto/alpha_fragment.sys',
               '/home/crypto/kmatrix_verification_guide.txt',
               '/home/crypto/sector_04_fragment.txt',
-              '/home/crypto/kmatrix_passkey_fragment.txt'
+              '/home/crypto/kmatrix_passkey_fragment.txt',
+              '/home/crypto/decoded_fragments.txt'
             ];
             const all = Array.from(new Set([...cachedKeys, ...vfs2Keys, ...defaultKeys]));
             callback(all, all.map(f => ({ name: f, isDirectory: false })));
@@ -5459,6 +5472,9 @@ revealing the blueprint for the App #100 KMatrix singularity.
     const keyFragmentTxt = `KMATRIX PASSKEY FRAGMENT (TIER 3 GHOST NODE 0x1999)\nTOKEN: 1999-ARCH\nSECTOR: STORAGE_VFS (Sector 04)\nTARGET HASH: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946\nVERIFIED BY: DEEP_CORE_SUBTERRANEAN_TERMINAL`;
     KiloVfs.write('/home/crypto/kmatrix_passkey_fragment.txt', keyFragmentTxt, null);
 
+    const decodedSummary = `=== TIER 3 GHOST NODE 0x1999 DECODED FRAGMENTS ===\nNODE: DEEP CORE (10.19.99.127)\nTIMESTAMP: ${new Date().toISOString()}\nSECTOR 04 RECOVERY TOKEN: RECOVERY_1999\nSECTOR 04 INODE: 0x1999 (/system/recovery/1999.log)\nPENULTIMATE KEY FRAGMENT: 1999-ARCH\nVFS KERNEL LOCATION: /sys/alpha.sys\nTARGET SHA-256 SIGNATURE: f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946\nVERIFICATION TARGET: App #100 (KMatrix) -> Sector 04 [STORAGE_VFS]`;
+    KiloVfs.write('/home/crypto/decoded_fragments.txt', decodedSummary, null);
+
     if (!silent) {
       printLine('[VFS SYNC] Decoded fragments successfully committed to KiloOS VFS:', 'text-highlight');
       printLine('  -> /sys/alpha.sys [KEY_PART_2: 1999-ARCH & RECOVERY_1999]', 'text-cyan');
@@ -5473,6 +5489,7 @@ revealing the blueprint for the App #100 KMatrix singularity.
       printLine('  -> /home/crypto/kmatrix_verification_guide.txt', 'text-cyan');
       printLine('  -> /home/crypto/sector_04_fragment.txt', 'text-cyan');
       printLine('  -> /home/crypto/kmatrix_passkey_fragment.txt', 'text-cyan');
+      printLine('  -> /home/crypto/decoded_fragments.txt', 'text-cyan');
       printLine('Verification ready in KMatrix (App #100) & KCipher (/home/crypto/)', 'text-bright');
       SFX.success();
     }
@@ -6673,9 +6690,21 @@ Timestamp: ${new Date().toISOString()}
           printLine('TARGET SYS PATH   : /sys/alpha.sys (Ring-0 Passkey Assembly)');
           printLine('TARGET CRYPTO DIR : /home/crypto/ (Decoded Forensics & Certificates)');
           printLine(`LAST SYNC TIME    : ${KiloVfs.lastSyncTime ? new Date(KiloVfs.lastSyncTime).toLocaleTimeString() : 'NOT YET SYNCHRONIZED'}`);
-          printLine("Directives: 'vfs sync' (commit fragments) | 'vfs read <path>' | 'vfs write <path> <data>' | 'vfs ls'", 'text-dim');
-        } else if (sub === 'sync' || sub === 'commit' || sub === 'push') {
+          printLine("Directives: 'vfs sync' (commit fragments) | 'vfs verify' (test KMatrix) | 'vfs read <path>' | 'vfs write <path> <data>' | 'vfs ls'", 'text-dim');
+        } else if (sub === 'sync' || sub === 'commit' || sub === 'push' || sub === 'save') {
           syncAllFragmentsToVfs(false);
+        } else if (sub === 'verify' || sub === 'check') {
+          syncAllFragmentsToVfs(false);
+          printLine('--- KMATRIX VFS VERIFICATION REPORT ---', 'text-cyan');
+          printLine('Kernel VFS Target  : /sys/alpha.sys [KEY_PART_2: 1999-ARCH & RECOVERY_1999]');
+          printLine('Crypto VFS Target  : /home/crypto/ [decoded fragments, certificates & manifest]');
+          printLine(`Sector 04 Status   : ${state.verifiedSectors.STORAGE_VFS ? 'DEFUSED & COMMITTED ✅' : 'COMMITTED TO VFS (Pending KMatrix Sync)'}`);
+          printLine('Target Hash SHA256 : f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946', 'text-warn');
+          printLine('KMatrix Verification: READY. Type "kmatrix" to launch App #100 and authenticate Sector 04.', 'text-highlight');
+        } else if (sub === 'decode') {
+          defuseSector('STORAGE_VFS', 'Decoded Inode 0x1999 from Ghost Node terminal.');
+          syncAllFragmentsToVfs(false);
+          printLine('[VFS COMMITTED] Synchronized /sys/alpha.sys & /home/crypto/ for KMatrix verification.', 'text-highlight');
         } else if (sub === 'write') {
           if (parts.length > 2) {
             const p = parts[2];
@@ -7700,6 +7729,34 @@ Timestamp: ${new Date().toISOString()}
   renderDisasmTable();
   renderWiretapTable();
   quickloadState(false);
+
+  // Proactively query KiloOS VFS on startup (/sys/alpha.sys & /home/crypto/)
+  try {
+    KiloVfs.read('/sys/alpha.sys', (data) => {
+      if (data) {
+        logMeshEvent('[VFS INGRESS] Subterranean kernel /sys/alpha.sys queried from desktop bridge.');
+        const str = String(data);
+        if ((str.includes('RECOVERY_1999') || str.includes('1999-ARCH')) && !state.verifiedSectors.STORAGE_VFS) {
+          defuseSector('STORAGE_VFS', 'Inode 0x1999 verified from /sys/alpha.sys');
+        }
+      }
+    });
+    setTimeout(() => {
+      if (!KiloVfs.connected) {
+        try {
+          const raw = localStorage.getItem('kiloos_vfs_state_v2');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed['/sys/alpha.sys']) {
+              KiloVfs.vfsCache['/sys/alpha.sys'] = parsed['/sys/alpha.sys'];
+              KiloVfs.connected = true;
+              updateVfsIndicator(true);
+            }
+          }
+        } catch(e) {}
+      }
+    }, 250);
+  } catch(e) {}
 
   // Show first-run briefing if not previously seen
   let hasSeenBriefing = false;

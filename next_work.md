@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://deep-core
+  kilo_creator: kweb://slashnet
   kilo_graphics: KStellar
   kilo_soundscape: KStellar
   kilo_tester: KRadio
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KMine
   kilo_expander: KRadio
   kilo_review: KRead
-virtual_web_target: kweb://deep-core
+virtual_web_target: kweb://slashnet
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KRadio
-  timestamp: '2026-11-02T23:17:00-08:00'
+  agent: kilo-creator
+  app: kweb://deep-core
+  timestamp: '2026-11-02T23:37:49-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://deep-core`
+- **Active Target**: `kweb://slashnet`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 | `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
 | `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
+| `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KStellar`
@@ -335,6 +335,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T23:37:49-08:00 — kilo-creator: kweb://deep-core (Tier 3 Ghost Node KiloOS VFS Bridge & KMatrix Verification)**
+  - Status: PASS ✅ (0 errors, web 309.9 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 12.37%, HEAD Δ 0.18%, 0 fail, 0 warn, 5.0s)).
+  - Connected Tier 3 Ghost Node terminal directly to KiloOS VFS (/sys/alpha.sys & /home/crypto/) with bidirectional IPC.
+  - Added proactive startup VFS kernel probe, window.saveToKiloVfs bridge, and vfs verify/decode directives for KMatrix Sector 04 verification.
+  - Handoff: Advanced `kilo-creator` to `kweb://slashnet`; rotated active agent to `kilo-graphics`.
+
 - **2026-11-02T23:17:00-08:00 — kilo-review: KRadio (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 500x443 sheet.png, kradio.html, and KRadio/main.c; un-quarantined KRadio and queued surgical fixes to kilo-usability, kilo-tester, and kilo-expander).
   - Visual/UX Findings: 44px vertical overflow at 500x443 (.volume-group & .footer-hint wrap; #eqPanel/#diagPanel push controls off-screen), top-center #toastContainer overlaps #helpModal & #directoryModal titles, 1-col #helpModal clips shortcuts, Set Preset uses blocking prompt(), and KRadio/main.c uses unscaled 96-DPI coords.
@@ -358,8 +364,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: ROTATED ⚠️ (circuit breaker triggered after 2 consecutive stalled turns on KMech).
   - Reverted unverified working tree edits and rotated KMech to queue bottom so fleet execution continues.
   - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
-
-- **2026-11-02T20:22:17-08:00 — kilo-tester: KMech (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-tester updates for KMech across web and native targets.
-  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
