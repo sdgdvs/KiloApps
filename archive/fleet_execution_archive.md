@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T05:22:18-08:00 — kilo-qa: KScript (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KScript across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KDB`; rotated active agent to `kilo-expander`.
+
 - **2026-11-03T04:36:24-08:00 — kilo-usability: KRead (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 163.9 KB, native 31.0 KB < 999 KB; visual PASS anim 0.0%, input 8.27%, 0 cut-off controls).
   - Layout & Responsive: Compacted .toolbar into 2 rows and .quick-starter-bar into 1 row at 940px; reduced .content padding-bottom to 32px so short docs fit on Pg 1/1.
