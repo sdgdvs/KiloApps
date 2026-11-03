@@ -1413,6 +1413,7 @@
                 <div style="display:flex; gap:4px; flex-wrap:nowrap; align-items:center;">
 
                     <button class="btn-help-top btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound [M]">🔊 Audio</button>
+                    
 
                     <button class="btn-help-top" onclick="openMultiplayerArenaModal()" title="RFMS Online Arena Duel [P]" style="color:#00ffff; border-color:#00e5ff;">⚔️ Arena</button>
 
@@ -1607,6 +1608,7 @@
                 <div style="display:flex; gap:4px; flex-wrap:nowrap; align-items:center;">
 
                     <button class="btn-help-top btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound [M]">🔊 Audio</button>
+                    <button class="btn-help-top" onclick="exportCombatLogToVFS(true)" style="color:#ffcc66; border-color:#ffcc66;" title="Export Combat Log to VFS (/home/docs/kmech_combat_log.txt) and open in KPad">📜 Log → KPad</button>
 
                     <button class="btn-help-top" onclick="openTelemetryModal()" title="Telemetry Save & Backup [F2]">[F2] Backup</button>
 
@@ -1695,6 +1697,7 @@
                 <button class="btn" onclick="actionAttack()"><span class="key-badge">A</span> Attack (Space)</button>
 
                 <button class="btn" onclick="actionDefend()"><span class="key-badge">D</span> Defend</button>
+                <button class="btn" onclick="exportCombatLogToVFS(true)" style="color:#ffcc66; border-color:#ffcc66;" title="Export Combat Log to VFS (/home/docs/kmech_combat_log.txt) and open in KPad"><span class="key-badge">L</span> Log</button>
 
                 <button class="btn" onclick="showScreen('help')"><span class="key-badge">F1</span> Help</button>
 
@@ -1706,6 +1709,8 @@
 
                 <button class="btn" onclick="returnToGarage()" style="background:#003311; border-color:#00ff88;"><span class="key-badge">R / Space</span> Return to Garage</button>
 
+            
+                <button class="btn" onclick="exportCombatLogToVFS(true)" style="background:#002233; border-color:#ffcc66; color:#ffcc66;" title="Export Combat Log to VFS (/home/docs/kmech_combat_log.txt) and open in KPad"><span class="key-badge">L</span> Combat Log → KPad</button>
             </div>
 
         </div>
@@ -1757,6 +1762,7 @@
                     <tr><td>Toggle Sound (Mute/Unmute)</td><td><span class="shortcut-key">M</span></td><td>Anywhere</td></tr>
 
                     <tr><td>Attack</td><td><span class="shortcut-key">A / Space / 1</span></td><td>Combat</td></tr>
+                    <tr><td>Export Combat Log & KPad</td><td><span class="shortcut-key">L</span></td><td>Combat</td></tr>
 
                     <tr><td>Defend & Vent Heat</td><td><span class="shortcut-key">D / 2</span></td><td>Combat</td></tr>
 
@@ -1899,6 +1905,7 @@
                     <button class="btn-help-top" onclick="inspectTelemetryInKPad()" style="color:#ffff77; border-color:#ffff77;" title="Launch KPad to view telemetry JSON live">📝 Open in KPad</button>
 
                     <button class="btn-help-top" onclick="inspectTelemetryInKHex()" style="color:#77ffff; border-color:#77ffff;" title="Launch KHex to inspect telemetry in binary">🔍 Hex Inspect</button>
+                    <button class="btn-help-top" onclick="exportCombatLogToVFS(true)" style="color:#ffcc66; border-color:#ffcc66;" title="Export combat log to /home/docs/kmech_combat_log.txt and open in KPad">📜 Log → KPad</button>
 
                     <button class="btn-help-top" onclick="copyTelemetryToClipboard()">📋 Copy JSON</button>
 
@@ -4075,6 +4082,7 @@
                 logMsg(`Combat telemetry resumed: ${getPilotRank(playerLevel)} (Battle #${battleCount})`);
 
                 updateGarage();
+        checkInitialHashFile();
 
                 updateBattle();
 
@@ -4105,294 +4113,346 @@
         // Standard KiloOS VFS & Inter-App IPC Bridge (Phase VI Mesh Integration)
 
         const KiloVFS = {
-
             isEmbedded() {
-
                 try { return window.parent && window.parent !== window; } catch (e) { return false; }
-
             },
-
-            write(path, data, cb) {
-
+            getTargetOrigin() {
+                return (window.location && window.location.origin && window.location.origin !== 'null') ? window.location.origin : '*';
+            },
+            write(path, data, cb, silent = false) {
+                if (typeof cb === 'boolean') {
+                    silent = cb;
+                    cb = null;
+                }
                 const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-
-                try {
-
-                    window.parent.postMessage({
-
-                        type: 'VFS_WRITE',
-
-                        path,
-
-                        data: payload,
-
-                        requestId: 'w_' + Date.now()
-
-                    }, '*');
-
-                    window.parent.postMessage({
-
-                        type: 'OS_NOTIFY',
-
-                        title: 'KMech Tactical Workstation',
-
-                        message: `Saved telemetry to VFS: ${path}`
-
-                    }, '*');
-
-                } catch (e) {}
-
+                if (this.isEmbedded()) {
+                    try {
+                        window.parent.postMessage({
+                            type: 'VFS_WRITE',
+                            path,
+                            data: payload,
+                            content: payload,
+                            requestId: 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)
+                        }, this.getTargetOrigin());
+                        if (!silent) {
+                            window.parent.postMessage({
+                                type: 'OS_NOTIFY',
+                                title: 'KMech Tactical Workstation',
+                                message: `Saved to VFS: ${path}`
+                            }, this.getTargetOrigin());
+                        }
+                    } catch (e) {}
+                }
                 try { safeSetStorage('kmech_vfs_' + path, payload); } catch (e) {}
-
                 if (cb) cb(true);
-
             },
-
             read(path, cb) {
-
                 if (!this.isEmbedded()) {
-
                     const fallback = safeGetStorage('kmech_vfs_' + path) || safeGetStorage('kmech_save');
-
                     if (cb) cb(fallback, path);
-
                     return;
-
                 }
-
                 const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-
-                let resolved = false;
-
+                let cleanupTimer = null;
                 const handler = (e) => {
-
+                    if (e.origin !== window.location.origin) return;
                     if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
-
-                        resolved = true;
-
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
                         window.removeEventListener('message', handler);
-
-                        if (cb) cb(e.data.data, e.data.path);
-
+                        const content = e.data.data !== undefined ? e.data.data : e.data.content;
+                        if (cb) cb(content, e.data.path || path);
                     }
-
                 };
-
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    const fallback = safeGetStorage('kmech_vfs_' + path) || safeGetStorage('kmech_save');
+                    if (cb) cb(fallback, path);
+                }, 4000);
                 window.addEventListener('message', handler);
-
                 try {
-
-                    window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
-
-                } catch (e) {}
-
-                setTimeout(() => {
-
-                    if (!resolved) {
-
-                        window.removeEventListener('message', handler);
-
-                        const fallback = safeGetStorage('kmech_vfs_' + path) || safeGetStorage('kmech_save');
-
-                        if (cb) cb(fallback, path);
-
-                    }
-
-                }, 400);
-
-            },
-
-            openPicker(cb) {
-
-                if (!this.isEmbedded()) {
-
-                    importTelemetryFromFile();
-
-                    return;
-
+                    window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, this.getTargetOrigin());
+                } catch (e) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    const fallback = safeGetStorage('kmech_vfs_' + path) || safeGetStorage('kmech_save');
+                    if (cb) cb(fallback, path);
                 }
-
-                const reqId = 'open_' + Date.now();
-
-                let resolved = false;
-
-                const handler = (e) => {
-
-                    if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
-
-                        resolved = true;
-
-                        window.removeEventListener('message', handler);
-
-                        if (e.data.path) KiloVFS.read(e.data.path, cb);
-
-                        else if (cb) cb(null);
-
-                    }
-
-                };
-
-                window.addEventListener('message', handler);
-
-                try {
-
-                    window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
-
-                } catch (e) {}
-
-
-
             },
-
-            launchApp(targetApp, path = '') {
-
+            showSave(defaultPath, data, cb) {
+                if (!this.isEmbedded()) {
+                    if (cb) cb(null);
+                    return;
+                }
+                const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let cleanupTimer = null;
+                const handler = (e) => {
+                    if (e.origin !== window.location.origin) return;
+                    if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        const finalPath = e.data.path || defaultPath;
+                        if (finalPath) {
+                            this.write(finalPath, data, (ok) => {
+                                if (cb) cb(ok ? finalPath : null);
+                            }, false);
+                        } else if (cb) {
+                            cb(null);
+                        }
+                    }
+                };
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null);
+                }, 60000); // 60000ms cleanup timeout
+                window.addEventListener('message', handler);
                 try {
-
-                    window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*');
-
+                    window.parent.postMessage({
+                        type: 'VFS_SHOW_SAVE',
+                        requestId: reqId,
+                        defaultPath: defaultPath,
+                        path: defaultPath
+                    }, this.getTargetOrigin());
+                } catch (e) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null);
+                }
+            },
+            openPicker(cb) {
+                if (!this.isEmbedded()) {
+                    importTelemetryFromFile();
+                    return;
+                }
+                const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                let cleanupTimer = null;
+                const handler = (e) => {
+                    if (e.origin !== window.location.origin) return;
+                    if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        window.removeEventListener('message', handler);
+                        if (e.data.path) {
+                            KiloVFS.read(e.data.path, cb);
+                        } else if (cb) {
+                            cb(null, null);
+                        }
+                    }
+                };
+                cleanupTimer = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, null);
+                }, 60000); // 60000ms cleanup timeout
+                window.addEventListener('message', handler);
+                try {
+                    window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, this.getTargetOrigin());
+                } catch (e) {
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null, null);
+                }
+            },
+            launchApp(targetApp, path = '') {
+                try {
+                    window.parent.postMessage({
+                        type: 'OS_LAUNCH_APP',
+                        appId: targetApp,
+                        targetApp,
+                        path
+                    }, this.getTargetOrigin());
                 } catch (e) {}
-
             }
-
         };
 
-
-
         function saveTelemetryToVFS() {
-
             let payload = getSavePayload();
-
             const ta = document.getElementById('telemetry-textarea');
-
             if (ta && ta.value.trim()) {
-
                 try {
-
                     const parsed = JSON.parse(ta.value.trim());
-
                     if (parsed && typeof parsed === 'object') {
-
                         payload = parsed;
-
                     }
-
                 } catch (e) {}
-
             }
+            const defaultPath = '/home/saves/kmech_telemetry.json';
+            const payloadStr = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
 
-            const path = '/home/saves/kmech_telemetry.json';
-
-            KiloVFS.write(path, payload, (ok) => {
-
-                showToast(`💾 Telemetry saved to VFS: ${path}`, 3000, 'info');
-
-                playSound('click');
-
-            });
-
+            if (KiloVFS.isEmbedded()) {
+                KiloVFS.showSave(defaultPath, payloadStr, (savedPath) => {
+                    if (savedPath) {
+                        showToast(`💾 Telemetry saved to VFS: ${savedPath}`, 3000, 'info');
+                        playSound('click');
+                    } else {
+                        showToast(`⚠️ VFS save cancelled`, 2000, 'warning');
+                    }
+                });
+            } else {
+                // Standalone Blob download fallback
+                try {
+                    const blob = new Blob([payloadStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const dlAnchor = document.createElement('a');
+                    dlAnchor.href = url;
+                    dlAnchor.download = `kmech_telemetry_b${battleCount}.json`;
+                    document.body.appendChild(dlAnchor);
+                    dlAnchor.click();
+                    dlAnchor.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    showToast('💾 Telemetry downloaded (standalone fallback)', 2500, 'info');
+                    playSound('click');
+                } catch (e) {
+                    downloadTelemetryFile();
+                }
+            }
         }
-
-
 
         function loadTelemetryFromVFS() {
-
             const path = '/home/saves/kmech_telemetry.json';
-
             KiloVFS.read(path, (data) => {
-
                 if (data) {
-
                     const ta = document.getElementById('telemetry-textarea');
-
                     if (ta) ta.value = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-
                     applyImportedTelemetry(data);
-
                     showToast(`📂 Telemetry loaded from VFS: ${path}`, 3000, 'info');
-
                 } else {
-
                     KiloVFS.openPicker((pickerData) => {
-
                         if (pickerData) {
-
                             const ta = document.getElementById('telemetry-textarea');
-
                             if (ta) ta.value = typeof pickerData === 'string' ? pickerData : JSON.stringify(pickerData, null, 2);
-
                             applyImportedTelemetry(pickerData);
-
                             showToast(`📂 Telemetry restored from VFS picker`, 3000, 'info');
-
                         } else {
-
                             showToast(`⚠️ Telemetry not found at ${path}. Save first!`, 3000, 'warning');
-
                         }
-
                     });
-
                 }
-
             });
-
         }
-
-
 
         function inspectTelemetryInKPad() {
-
-            saveTelemetryToVFS();
-
+            quickSave(true);
             KiloVFS.launchApp('kpad', '/home/saves/kmech_telemetry.json');
-
         }
-
-
 
         function inspectTelemetryInKHex() {
-
-            saveTelemetryToVFS();
-
+            quickSave(true);
             KiloVFS.launchApp('khex', '/home/saves/kmech_telemetry.json');
-
         }
 
+        function getCombatLogText() {
+            const logEl = document.getElementById('log');
+            let logContent = '';
+            if (logEl) {
+                const lines = Array.from(logEl.querySelectorAll('div')).map(d => d.textContent.trim());
+                logContent = lines.join('\n');
+            }
+            const callsign = (typeof getPilotCallsign === 'function') ? getPilotCallsign() : 'PILOT-01';
+            const rank = (typeof getPilotRank === 'function') ? getPilotRank(playerLevel) : 'Cadet';
+            const lines = [
+                "============================================================",
+                "          KMECH TACTICAL WORKSTATION - COMBAT LOG",
+                `  Callsign: ${callsign} | Rank: ${rank} (Lvl ${playerLevel})`,
+                `  Record: Battle #${battleCount} | Credits: ${credits} CR | Salvage: ${salvage}`,
+                `  Timestamp: ${new Date().toISOString()}`,
+                "============================================================",
+                "",
+                logContent || "> [SYSTEM] No tactical battle entries recorded."
+            ];
+            return lines.join('\n');
+        }
 
+        function exportCombatLogToVFS(openInKPad = true) {
+            const logText = getCombatLogText();
+            const logPath = '/home/docs/kmech_combat_log.txt';
+            if (KiloVFS.isEmbedded()) {
+                KiloVFS.write(logPath, logText, (ok) => {
+                    showToast(`📜 Combat log exported: ${logPath}`, 3000, 'info');
+                    playSound('click');
+                    if (openInKPad) {
+                        setTimeout(() => {
+                            KiloVFS.launchApp('kpad', logPath);
+                        }, 150);
+                    }
+                }, false);
+            } else {
+                // Standalone Blob fallback
+                try {
+                    const blob = new Blob([logText], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const dlAnchor = document.createElement('a');
+                    dlAnchor.href = url;
+                    dlAnchor.download = `kmech_combat_log_b${battleCount}.txt`;
+                    document.body.appendChild(dlAnchor);
+                    dlAnchor.click();
+                    dlAnchor.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    showToast('📜 Combat log downloaded (standalone fallback)', 2500, 'info');
+                    playSound('click');
+                } catch (e) {
+                    showToast('⚠️ Failed to export combat log', 2500, 'danger');
+                }
+            }
+        }
+
+        // Incoming Cross-App IPC Listener (FILE_OPEN / VFS_OPEN)
+        window.addEventListener('message', (e) => {
+            if (e.origin !== window.location.origin) return;
+            const msg = e.data;
+            if (!msg || typeof msg !== 'object') return;
+            if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+                const filePath = msg.path || '';
+                const fileContent = msg.data !== undefined ? msg.data : msg.content;
+                if (fileContent !== undefined && fileContent !== null) {
+                    applyImportedTelemetry(fileContent);
+                    const ta = document.getElementById('telemetry-textarea');
+                    if (ta) ta.value = typeof fileContent === 'string' ? fileContent : JSON.stringify(fileContent, null, 2);
+                    showToast(`📂 Opened ${filePath || 'telemetry'} from File Browser`, 3000, 'info');
+                } else if (filePath) {
+                    KiloVFS.read(filePath, (data, path) => {
+                        if (data) {
+                            applyImportedTelemetry(data);
+                            const ta = document.getElementById('telemetry-textarea');
+                            if (ta) ta.value = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                            showToast(`📂 Opened ${path || filePath} from VFS`, 3000, 'info');
+                        } else {
+                            showToast(`⚠️ Could not read ${filePath} from VFS`, 3000, 'warning');
+                        }
+                    });
+                }
+            }
+        });
+
+        function checkInitialHashFile() {
+            if (window.location.hash && window.location.hash.length > 1) {
+                const hashPath = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+                if (hashPath && !hashPath.startsWith('room=') && !hashPath.startsWith('join=')) {
+                    KiloVFS.read(hashPath, (data, path) => {
+                        if (!data) return;
+                        applyImportedTelemetry(data);
+                        const ta = document.getElementById('telemetry-textarea');
+                        if (ta) ta.value = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                        showToast(`📂 Loaded telemetry from ${path || hashPath} on boot`, 3000, 'info');
+                    });
+                }
+            }
+        }
+        window.addEventListener('hashchange', checkInitialHashFile);
 
         function quickSave(silent = false) {
-
             try {
-
                 const savePayload = getSavePayload();
-
                 if (!safeSetStorage('kmech_save', JSON.stringify(savePayload))) {
-
                     throw new Error("QuotaExceeded");
-
                 }
-
                 safeSetStorage('kmech_tutorialSeen', '1');
-
-                KiloVFS.write('/home/saves/kmech_telemetry.json', savePayload);
-
+                KiloVFS.write('/home/saves/kmech_telemetry.json', savePayload, null, silent);
                 if (!silent) {
-
                     showToast("💾 Mission telemetry saved [F5]", 2500, 'info');
-
                     playSound('click');
-
                 }
-
             } catch(e) {
-
                 if (!silent) showToast("⚠️ Telemetry save failed: Storage quota or error.", 2500, 'danger');
-
             }
-
         }
-
-
 
         function quickLoad() {
 
@@ -7817,7 +7877,13 @@
 
                 }
 
-                return;
+   else if (key === 'l') {
+
+                        e.preventDefault();
+
+                        exportCombatLogToVFS(true);
+
+                    }              return;
 
             }
 
@@ -7998,6 +8064,12 @@
                         e.preventDefault();
 
                         actionDefend();
+
+                    } else if (key === 'l') {
+
+                        e.preventDefault();
+
+                        exportCombatLogToVFS(true);
 
                     } else if (key === 't') {
 

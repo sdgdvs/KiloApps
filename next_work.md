@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KHex
   kilo_qa: KMine
-  kilo_expander: KMech
+  kilo_expander: KCalc
   kilo_review: KRadio
 virtual_web_target: kweb://deep-core
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KChrono
-  timestamp: '2026-11-02T22:22:20-08:00'
+  agent: kilo-expander
+  app: KMech
+  timestamp: '2026-11-02T22:40:59-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -211,11 +211,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChrono` | `KiloOS/public/apps/kchrono.html`, `KChrono/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, timeline event organizer, epoch markers, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KMech`
+- **Active Target**: `KCalc`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Harden KiloVFS in kmech.html per architecture.md by validating e.origin === window.location.origin in all window message listeners, posting with window.location.origin instead of wildcard, adding a 60000ms cleanup timeout to KiloVFS.openPicker(), suppressing OS_NOTIFY desktop notification spam during quickSave(true) silent autosaves, wiring VFS_SHOW_SAVE interactive path selection with standalone Blob download fallback in saveTelemetryToVFS(), handling boot URL hash (#/path) and incoming FILE_OPEN/VFS_OPEN messages from KiloOS File Browser to auto-load telemetry JSON, and adding an Export Combat Log to VFS (/home/docs/kmech_combat_log.txt) + Open in KPad (OS_LAUNCH_APP appId kpad) button in #screen-battle/#modal-telemetry plus GetSaveFileNameA/GetOpenFileNameA telemetry Export/Import dialog parity in KMech/main.c (<999 KB). |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY with standalone blob fallback) for saving/loading calculation tapes and workspace JSON snapshots to /home/docs/, and add live HEX/DEC/OCT/BIN radix readout plus FV/CAGR financial tools to KCalc/main.c (<999 KB). |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Harden Phase VI KiloOS VFS and IPC Mesh in khex.html per architecture.md: enforce event.origin === window.location.origin in window.addEventListener('message'), post with window.location.origin instead of wildcard (removing dead OS_SET_WINDOW_SIZE), raise sendToOS() timeout to 60000ms for interactive VFS_SHOW_OPEN and VFS_SHOW_SAVE pickers, emit OS_NOTIFY after VFS_WRITE, handle incoming FILE_OPEN/VFS_OPEN messages to auto-load VFS files, add Save to VFS (/home/docs/ or /home/crypto/) and Open in KPad / Send to KCipher OS_LAUNCH_APP buttons in Tab 7 Export, Tab 8 Patch Builder, and Tab 9 Disassembler, and add native Win32 .bin file open/save parity in KHex/main.c (<999 KB). |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
@@ -240,6 +239,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kchatserver.html per architecture.md (event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) with Export Log to VFS (/home/logs/kchatserver.log) + Open in KPad (OS_LAUNCH_APP appId kpad), VFS State Save/Open (/home/saves/kchatserver_state.json via VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ + incoming FILE_OPEN/VFS_OPEN), and a Launch KChat Client button (OS_LAUNCH_APP appId kchat); add editable Server MOTD parity with KChatServer/main.c, a toggleable Bot Traffic switch, per-client Mute/IP-Ban moderation, and a same-origin BroadcastChannel(kilo_kchat_loopback_ + port) local relay while running (<999 KB, zero external network autostart). |
 | `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kmedia.html per architecture.md (strict event.origin === window.location.origin validation, window.location.origin targetOrigin, 60000ms picker timeouts, and standalone Blob/file-input fallbacks when window.parent === window) connecting M3U, CUE, JSON workspace state, and active Demo WAV exports/imports to VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY (/home/music/ and /home/saves/kmedia_state.json) and VFS_SHOW_OPEN -> VFS_READ, handling incoming FILE_OPEN and VFS_OPEN messages from File Browser, Trapster, or KAudio to auto-load .m3u/.cue/.srt/.vtt/.json/.wav/.au files, and adding an Open M3U/CUE in KPad button (VFS_WRITE + OS_LAUNCH_APP with appId kpad); upgrade KMedia/main.c (<999 KB) with a double-buffered GDI 5-mode visualizer stage ([V] Oscilloscope, 32-Band LED Spectrum Bars, Stereo VU, Waterfall Sonogram, Radial Demoscene, plus [C] CRT scanlines), all 6 procedural YM2612 2-Op FM and SPC700 Delay demo album tracks, A-B Repeat Loop [L], Cue Bookmarks [B], and GetSaveFileNameA .m3u export/import parity. |
 | `KMail` | `KiloOS/public/apps/kmail.html`, `KMail/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kmail.html per architecture.md (event.origin === window.location.origin checks, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks when window.parent === window) connecting .EML, .MD, .MBOX, .CSV, and .JSON exports/imports to VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY (/home/docs/ and /home/saves/kmail_backup.json) and VFS_SHOW_OPEN -> VFS_READ, handling incoming FILE_OPEN/VFS_OPEN messages from File Browser to auto-open .eml/.mbox/.json files, adding VFS file attachments in Compose/Read tabs, and adding Open in KPad (OS_LAUNCH_APP kpad) and Inspect in KCipher (kcipher) buttons; upgrade KMail/main.c (<999 KB) with Forward [F], Mark Read/Unread [U], password prompt + Compose encryption toggle, Automated Filter Rules [F3], and GetSaveFileNameA export dialogs. |
+| `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Harden KiloVFS in kmech.html per architecture.md by validating e.origin === window.location.origin in all window message listeners, posting with window.location.origin instead of wildcard, adding a 60000ms cleanup timeout to KiloVFS.openPicker(), suppressing OS_NOTIFY desktop notification spam during quickSave(true) silent autosaves, wiring VFS_SHOW_SAVE interactive path selection with standalone Blob download fallback in saveTelemetryToVFS(), handling boot URL hash (#/path) and incoming FILE_OPEN/VFS_OPEN messages from KiloOS File Browser to auto-load telemetry JSON, and adding an Export Combat Log to VFS (/home/docs/kmech_combat_log.txt) + Open in KPad (OS_LAUNCH_APP appId kpad) button in #screen-battle/#modal-telemetry plus GetSaveFileNameA/GetOpenFileNameA telemetry Export/Import dialog parity in KMech/main.c (<999 KB). |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KRadio`
@@ -333,6 +333,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T22:40:59-08:00 — kilo-expander: KMech (Harden KiloVFS and Cross-App IPC in kmech.html and Win32 C parity in KMech/main.c)**
+  - Status: PASS ✅ (0 errors, web 212.1 KB, native 39.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Hardened KiloVFS in kmech.html with e.origin validation, targetOrigin, 60s picker timeouts, and suppressed silent autosave OS_NOTIFY.
+  - Wired VFS_SHOW_SAVE with standalone Blob fallback, boot URL hash, incoming FILE_OPEN/VFS_OPEN auto-loading, and Export Combat Log to VFS + Open in KPad.
+  - Implemented GetSaveFileNameA and GetOpenFileNameA telemetry Export/Import dialog parity in KMech/main.c.
+  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
+
 - **2026-11-02T22:22:20-08:00 — kilo-qa: KChrono (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KChrono across web and native targets.
@@ -351,10 +358,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-11-02T19:34:07-08:00 — kilo-graphics: KMech (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KMech.
   - Handoff: Advanced `kilo-graphics` to `KStellar`; rotated active agent to `kilo-tester`.
-
-- **2026-11-02T19:20:16-08:00 — kilo-creator: kweb://webring (Integrate canonical nodes into RingMaster topology map, badge studio, and ring traversal)**
-  - Status: PASS ✅ (0 errors, web 464.2 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.01%, input 20.6%, HEAD Δ 7.69%, 0 fail, 0 warn, 6.1s)).
-  - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) with interactive reticle targeting and topology constellation map.
-  - Added bidirectional canonical traversal (Prev/Next/Random Canonical) in quick teleport bar, warp deck, and Perl CGI query simulator.
-  - Fixed badge studio member preset lookup to index visible ring nodes cleanly and sync 88x31 micro button archetypes.
-  - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.

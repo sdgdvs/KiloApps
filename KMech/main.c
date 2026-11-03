@@ -410,8 +410,24 @@ void QuickSaveNative() {
 
 void QuickLoadNative();
 
-void ExportTelemetryJSON() {
-    HANDLE hFile = CreateFileA("kmech_telemetry.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+void ExportTelemetryJSON(HWND hwnd) {
+    char szFile[MAX_PATH] = "kmech_telemetry.json";
+    if (hwnd) {
+        OPENFILENAMEA ofn;
+        ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = hwnd;
+        ofn.lpstrFile = szFile;
+        ofn.nMaxFile = sizeof(szFile);
+        ofn.lpstrFilter = "JSON Files (*.json)\0*.json\0All Files (*.*)\0*.*\0";
+        ofn.nFilterIndex = 1;
+        ofn.lpstrDefExt = "json";
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+        if (!GetSaveFileNameA(&ofn)) {
+            return;
+        }
+    }
+    HANDLE hFile = CreateFileA(szFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         char buf[512];
         int len = wsprintfA(buf,
@@ -435,8 +451,8 @@ void ExportTelemetryJSON() {
         DWORD written = 0;
         WriteFile(hFile, buf, len, &written, NULL);
         CloseHandle(hFile);
-        lstrcpyA(garageInfo, "Exported telemetry to kmech_telemetry.json (F2, F3 to import).");
-        addLog("Exported telemetry to kmech_telemetry.json (F2, F3 to import).");
+        wsprintfA(garageInfo, "Exported telemetry to %s.", szFile);
+        addLog(garageInfo);
     } else {
         lstrcpyA(garageInfo, "Failed to write telemetry JSON.");
     }
@@ -472,8 +488,24 @@ static int ParseJsonInt(const char* buf, const char* key, int defaultVal) {
     return val * sign;
 }
 
-void ImportTelemetryJSON() {
-    HANDLE hFile = CreateFileA("kmech_telemetry.json", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+void ImportTelemetryJSON(HWND hwnd) {
+    char szFile[MAX_PATH] = "kmech_telemetry.json";
+    if (hwnd) {
+        OPENFILENAMEA ofn;
+        ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = hwnd;
+        ofn.lpstrFile = szFile;
+        ofn.nMaxFile = sizeof(szFile);
+        ofn.lpstrFilter = "JSON Files (*.json)\0*.json\0All Files (*.*)\0*.*\0";
+        ofn.nFilterIndex = 1;
+        ofn.lpstrDefExt = "json";
+        ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+        if (!GetOpenFileNameA(&ofn)) {
+            return;
+        }
+    }
+    HANDLE hFile = CreateFileA(szFile, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         char buf[2048];
         DWORD bytesRead = 0;
@@ -511,14 +543,14 @@ void ImportTelemetryJSON() {
             if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
 
             MarkTutorialSeen();
-            lstrcpyA(garageInfo, "Imported telemetry from kmech_telemetry.json (F3/Shift+F2).");
-            addLog("Imported telemetry from kmech_telemetry.json (F3/Shift+F2).");
+            wsprintfA(garageInfo, "Imported telemetry from %s.", szFile);
+            addLog(garageInfo);
         } else {
-            lstrcpyA(garageInfo, "Empty or invalid kmech_telemetry.json.");
+            lstrcpyA(garageInfo, "Empty or invalid telemetry file.");
         }
         CloseHandle(hFile);
     } else {
-        lstrcpyA(garageInfo, "No kmech_telemetry.json file found to import.");
+        lstrcpyA(garageInfo, "No telemetry file found to import.");
     }
 }
 
@@ -1598,7 +1630,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     QuickLoadNative();
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (PtInRectLocal(&rectTelem, x, y)) {
-                    ExportTelemetryJSON();
+                    ExportTelemetryJSON(hwnd);
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (PtInRectLocal(&rectHelp, x, y)) {
                     gameState = STATE_HELP;
@@ -1960,15 +1992,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_KEYDOWN: {
             if (wParam == VK_F2) {
                 if (GetKeyState(VK_SHIFT) & 0x8000) {
-                    ImportTelemetryJSON();
+                    ImportTelemetryJSON(hwnd);
                 } else {
-                    ExportTelemetryJSON();
+                    ExportTelemetryJSON(hwnd);
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
             if (wParam == VK_F3) {
-                ImportTelemetryJSON();
+                ImportTelemetryJSON(hwnd);
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
@@ -2103,7 +2135,7 @@ void MainEntry() {
     } else if (GetFileAttributesA("kmech_save.dat") != INVALID_FILE_ATTRIBUTES) {
         QuickLoadNative();
     } else if (GetFileAttributesA("kmech_telemetry.json") != INVALID_FILE_ATTRIBUTES) {
-        ImportTelemetryJSON();
+        ImportTelemetryJSON(NULL);
     }
     
     HINSTANCE hInstance = GetModuleHandle(NULL);
