@@ -1346,6 +1346,7 @@
                     <tr><td>Continue Run</td><td><span class="kbd">F8</span></td><td>Run until next breakpoint is reached</td></tr>
                     <tr><td>Benchmark</td><td><span class="kbd">F6</span></td><td>Execute iterations benchmark with latency analysis</td></tr>
                     <tr><td>AST & Linter</td><td><span class="kbd">Alt+T</span></td><td>Inspect syntax tree & static linter diagnostics</td></tr>
+                    <tr><td>Sample Templates</td><td><span class="kbd">Alt+1..8</span></td><td>Load preset template (Math, Logic, Bitwise, Fib, Checksum, etc.)</td></tr>
                     <tr><td>VFS Script Manager</td><td><span class="kbd">Alt+V</span></td><td>Open KiloOS VFS Script Manager (/home/scripts/)</td></tr>
                     <tr><td>Toggle Breakpoint</td><td><span class="kbd">Click Gutter</span></td><td>Set / clear breakpoint on line</td></tr>
                     <tr><td>Save Script File</td><td><span class="kbd">Ctrl+S</span></td><td>Save .ksc script file or state dump</td></tr>
@@ -1773,6 +1774,8 @@
             btnRun.click();
             const ob = document.getElementById('onboardingBanner');
             if (ob) ob.style.display = 'none';
+            safeStorageSet('kscript_tutorialSeen', 'true');
+            safeStorageSet('kscript_visited', 'true');
             const timeLabel = snapshot.timeStr ? ` from ${snapshot.timeStr}` : '';
             showToast(`📂 Quicksave snapshot restored [F9]${timeLabel}`, 'success', 2400);
         } catch(err) {
@@ -2512,6 +2515,13 @@ endif
         if (e.altKey && !e.ctrlKey && (e.key === 't' || e.key === 'T')) {
             e.preventDefault();
             openAstModal();
+            return;
+        }
+        if (e.altKey && !e.ctrlKey && e.key >= '1' && e.key <= '8') {
+            e.preventDefault();
+            const presets = ['basic', 'vars', 'bitwise', 'fib', 'checksum', 'mathfuncs', 'collatz', 'vfs_demo'];
+            const idx = parseInt(e.key, 10) - 1;
+            if (presets[idx]) loadPreset(presets[idx]);
             return;
         }
     });

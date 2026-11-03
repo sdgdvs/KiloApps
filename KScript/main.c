@@ -1885,14 +1885,48 @@ LRESULT CALLBACK InputEditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             SendMessage(GetParent(hwnd), WM_COMMAND, 13, 0);
             return 0;
         }
+        if (GetKeyState(VK_MENU) < 0 && (wp == 'T' || wp == 't')) {
+            SendMessage(GetParent(hwnd), WM_COMMAND, 14, 0);
+            return 0;
+        }
+        if (GetKeyState(VK_MENU) < 0 && (wp >= '1' && wp <= '8')) {
+            LoadTemplate((int)(wp - '1'));
+            return 0;
+        }
         if (wp == VK_F1) {
             SendMessage(GetParent(hwnd), WM_COMMAND, 8, 0);
             return 0;
         }
     }
-    if (msg == WM_SYSKEYDOWN && (wp == 'H' || wp == 'h')) {
-        SendMessage(GetParent(hwnd), WM_COMMAND, 8, 0);
-        return 0;
+    if (msg == WM_SYSKEYDOWN) {
+        if (wp == 'T' || wp == 't') {
+            SendMessage(GetParent(hwnd), WM_COMMAND, 14, 0);
+            return 0;
+        }
+        if (wp >= '1' && wp <= '8') {
+            LoadTemplate((int)(wp - '1'));
+            return 0;
+        }
+        if (wp == 'H' || wp == 'h') {
+            SendMessage(GetParent(hwnd), WM_COMMAND, 8, 0);
+            return 0;
+        }
+        if (wp == 'M' || wp == 'm') {
+            SendMessage(GetParent(hwnd), WM_COMMAND, 4, 0);
+            return 0;
+        }
+        if (wp == 'P' || wp == 'p') {
+            SendMessage(GetParent(hwnd), WM_COMMAND, 5, 0);
+            return 0;
+        }
+        if (wp == 'S' || wp == 's') {
+            SendMessage(GetParent(hwnd), WM_COMMAND, 6, 0);
+            return 0;
+        }
+        if (wp == 'V' || wp == 'v') {
+            SendMessage(GetParent(hwnd), WM_COMMAND, 13, 0);
+            return 0;
+        }
     }
     return CallWindowProc(oldEditProc, hwnd, msg, wp, lp);
 }
@@ -1995,25 +2029,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
 
             // Toolbar Buttons (S-scaled, non-overlapping)
-            hBtnRec   = CreateWindowEx(0, "BUTTON", "Rec", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(6), S(8), S(46), S(26), hwnd, (HMENU)4, NULL, NULL);
-            hBtnPlay  = CreateWindowEx(0, "BUTTON", "Play", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(56), S(8), S(46), S(26), hwnd, (HMENU)5, NULL, NULL);
-            hBtnStep  = CreateWindowEx(0, "BUTTON", "Step [F10]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(106), S(8), S(72), S(26), hwnd, (HMENU)6, NULL, NULL);
-            hBtnRun   = CreateWindowEx(0, "BUTTON", "Run [^Ent]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(182), S(8), S(78), S(26), hwnd, (HMENU)1, NULL, NULL);
-            hBtnQS    = CreateWindowEx(0, "BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(264), S(8), S(66), S(26), hwnd, (HMENU)11, NULL, NULL);
-            hBtnQL    = CreateWindowEx(0, "BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(334), S(8), S(66), S(26), hwnd, (HMENU)12, NULL, NULL);
-            hBtnBench = CreateWindowEx(0, "BUTTON", "Bench [F6]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(404), S(8), S(70), S(26), hwnd, (HMENU)10, NULL, NULL);
-            hBtnLoad  = CreateWindowEx(0, "BUTTON", "Imp [^O]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(478), S(8), S(58), S(26), hwnd, (HMENU)2, NULL, NULL);
-            hBtnSave  = CreateWindowEx(0, "BUTTON", "Exp [^S]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(540), S(8), S(58), S(26), hwnd, (HMENU)3, NULL, NULL);
-            hBtnVfs   = CreateWindowEx(0, "BUTTON", "VFS [Alt+V]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(602), S(8), S(76), S(26), hwnd, (HMENU)13, NULL, NULL);
-            hBtnClear = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(682), S(8), S(46), S(26), hwnd, (HMENU)9, NULL, NULL);
-            hBtnHelp  = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(732), S(8), S(58), S(26), hwnd, (HMENU)8, NULL, NULL);
+            hBtnRec    = CreateWindowEx(0, "BUTTON", "Rec", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(6), S(8), S(38), S(26), hwnd, (HMENU)4, NULL, NULL);
+            hBtnPlay   = CreateWindowEx(0, "BUTTON", "Play", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(46), S(8), S(38), S(26), hwnd, (HMENU)5, NULL, NULL);
+            hBtnStep   = CreateWindowEx(0, "BUTTON", "Step [F10]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(86), S(8), S(66), S(26), hwnd, (HMENU)6, NULL, NULL);
+            hBtnRun    = CreateWindowEx(0, "BUTTON", "Run [^Ent]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(154), S(8), S(72), S(26), hwnd, (HMENU)1, NULL, NULL);
+            hBtnAst    = CreateWindowEx(0, "BUTTON", "AST [Alt+T]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(228), S(8), S(70), S(26), hwnd, (HMENU)14, NULL, NULL);
+            hBtnPreset = CreateWindowEx(0, "BUTTON", "Tpl [Alt+1..8]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(300), S(8), S(76), S(26), hwnd, (HMENU)15, NULL, NULL);
+            hBtnQS     = CreateWindowEx(0, "BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(378), S(8), S(58), S(26), hwnd, (HMENU)11, NULL, NULL);
+            hBtnQL     = CreateWindowEx(0, "BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(438), S(8), S(58), S(26), hwnd, (HMENU)12, NULL, NULL);
+            hBtnBench  = CreateWindowEx(0, "BUTTON", "Bench [F6]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(498), S(8), S(64), S(26), hwnd, (HMENU)10, NULL, NULL);
+            hBtnLoad   = CreateWindowEx(0, "BUTTON", "Imp [^O]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(564), S(8), S(52), S(26), hwnd, (HMENU)2, NULL, NULL);
+            hBtnSave   = CreateWindowEx(0, "BUTTON", "Exp [^S]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(618), S(8), S(52), S(26), hwnd, (HMENU)3, NULL, NULL);
+            hBtnVfs    = CreateWindowEx(0, "BUTTON", "VFS [Alt+V]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(672), S(8), S(68), S(26), hwnd, (HMENU)13, NULL, NULL);
+            hBtnClear  = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(742), S(8), S(42), S(26), hwnd, (HMENU)9, NULL, NULL);
+            hBtnHelp   = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(786), S(8), S(54), S(26), hwnd, (HMENU)8, NULL, NULL);
 
-            hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, S(796), S(9), S(56), S(24), hwnd, NULL, NULL, NULL);
-            hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, S(856), S(9), S(56), S(24), hwnd, NULL, NULL, NULL);
-            hBtnRep    = CreateWindowEx(0, "BUTTON", "Rep", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(916), S(8), S(46), S(26), hwnd, (HMENU)7, NULL, NULL);
+            hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, S(844), S(9), S(48), S(24), hwnd, NULL, NULL, NULL);
+            hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, S(894), S(9), S(48), S(24), hwnd, NULL, NULL, NULL);
+            hBtnRep    = CreateWindowEx(0, "BUTTON", "Rep", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(944), S(8), S(32), S(26), hwnd, (HMENU)7, NULL, NULL);
 
-            HWND hwnds[] = {hBtnRec, hBtnPlay, hBtnStep, hBtnRun, hBtnQS, hBtnQL, hBtnBench, hBtnLoad, hBtnSave, hBtnVfs, hBtnClear, hRegexFind, hRegexRep, hBtnRep, hBtnHelp};
-            for (int i = 0; i < 15; i++) SendMessage(hwnds[i], WM_SETFONT, (WPARAM)hFont, TRUE);
+            HWND hwnds[] = {hBtnRec, hBtnPlay, hBtnStep, hBtnRun, hBtnAst, hBtnPreset, hBtnQS, hBtnQL, hBtnBench, hBtnLoad, hBtnSave, hBtnVfs, hBtnClear, hRegexFind, hRegexRep, hBtnRep, hBtnHelp};
+            for (int i = 0; i < 17; i++) SendMessage(hwnds[i], WM_SETFONT, (WPARAM)hFont, TRUE);
 
             oldFindProc = (WNDPROC)SetWindowLongPtr(hRegexFind, GWLP_WNDPROC, (LONG_PTR)FindEditProc);
             oldRepProc  = (WNDPROC)SetWindowLongPtr(hRegexRep, GWLP_WNDPROC, (LONG_PTR)RepEditProc);
@@ -2247,9 +2283,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
             }
+            else if (wmId == 14) {
+                ShowAstAnalysisDialog(hwnd);
+            }
+            else if (wmId == 15) {
+                ShowPresetsMenu(hwnd);
+            }
             break;
         }
         case WM_SYSKEYDOWN: {
+            if (wParam == 'T' || wParam == 't') {
+                ShowAstAnalysisDialog(hwnd);
+                return 0;
+            }
+            if (wParam >= '1' && wParam <= '8') {
+                LoadTemplate((int)(wParam - '1'));
+                return 0;
+            }
             if (wParam == 'H' || wParam == 'h') {
                 ShowHelpDialog(hwnd);
                 return 0;
