@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T17:39:41-08:00 — kilo-qa: KTerm (Pass 5 QA, ANSI Support & Mature Graduation)**
+  - Status: PASS ✅ (0 errors, web 139.0 KB, native 46.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.69%, HEAD Δ 0.06%, 0 fail, 0 warn, 4.5s)).
+  - ANSI Escape Support: Integrated full ANSI SGR parser (colors, 256c, 24b RGB, bold, underline, reverse, clear screen) in Web HTML and clean escape filter + clear in Win32 C with ansi test command.
+  - History & State: Added history -c clear command, echo -e escape expansion, F5/F9 state persistence, visibilitychange lifecycle auto-save, and toast top positioning.
+  - Mature Quarantine & Handoff: Promoted `KTerm` to Mature archive; advanced `kilo-qa` to `KChrono`; next agent `kilo-expander`.
+
 - **2026-11-02T17:19:22-08:00 — kilo-usability: KMail (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 126.9 KB, native 509.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.82%, HEAD Δ 4.87%, 0 fail, 0 warn, 7.1s)).
   - Layout & Responsive: Eliminated 960x603 layout clipping in kmail.html by adding white-space nowrap across 26px status-bar with concise shortcut pills, compacting sidebar/folders/search (1-row quick-filters), arranging sidebar-bottom into a 2-column CSS grid (0px vertical scroll), and setting pane-header to flex-direction column so email subjects no longer wrap into a 105px column.

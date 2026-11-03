@@ -3759,61 +3759,37 @@
 
 
         const weapons = [
-
-            { name: "Pulse Laser", atk: 16, heatGen: 22, type: 0, desc: "Rapid coherent beam (Low heat)" },
-
-            { name: "Heavy Gauss Cannon", atk: 28, heatGen: 46, type: 1, desc: "Kinetic hypervelocity slug" },
-
-            { name: "Twin Autocannons", atk: 22, heatGen: 34, type: 2, desc: "Rapid-fire explosive tracer burst" },
-
-            { name: "Plasma Mortar", atk: 36, heatGen: 58, type: 3, desc: "Superheated matter splash" },
-
-            { name: "EMP Arc Disruptor", atk: 20, heatGen: 26, type: 4, desc: "Disrupts & overheats target (+16 heat)" },
-
-            { name: "Particle Beam Lance", atk: 42, heatGen: 64, type: 5, desc: "Pierces 50% target armor plating" },
-
-            { name: "Swarm Cluster Missiles", atk: 34, heatGen: 42, type: 6, desc: "Salvo strikes target + collateral damage" }
-
+            { name: "Pulse Laser", atk: 16, heatGen: 22, price: 0, type: 0, desc: "Rapid coherent beam (Low heat)" },
+            { name: "Heavy Gauss Cannon", atk: 28, heatGen: 46, price: 150, type: 1, desc: "Kinetic hypervelocity slug" },
+            { name: "Twin Autocannons", atk: 22, heatGen: 34, price: 220, type: 2, desc: "Rapid-fire explosive tracer burst" },
+            { name: "Plasma Mortar", atk: 36, heatGen: 58, price: 340, type: 3, desc: "Superheated matter splash" },
+            { name: "EMP Arc Disruptor", atk: 20, heatGen: 26, price: 420, type: 4, desc: "Disrupts & overheats target (+16 heat)" },
+            { name: "Particle Beam Lance", atk: 42, heatGen: 64, price: 520, type: 5, desc: "Pierces 50% target armor plating" },
+            { name: "Swarm Missiles", atk: 34, heatGen: 42, price: 610, type: 6, desc: "Salvo strikes target + collateral damage" }
         ];
 
         const armors = [
-
-            { name: "Standard Composite", def: 5, maxHp: 100, evadeMod: 0.0 },
-
-            { name: "Heavy Ferro-Fibrous", def: 10, maxHp: 130, evadeMod: -0.05 },
-
-            { name: "Light Scout Frame", def: 2, maxHp: 80, evadeMod: 0.15 },
-
-            { name: "Reactive Nanoweave", def: 8, maxHp: 115, evadeMod: 0.05 }
-
+            { name: "Standard Composite", def: 5, maxHp: 100, evadeMod: 0.0, price: 0 },
+            { name: "Heavy Ferro-Fibrous", def: 10, maxHp: 130, evadeMod: -0.05, price: 160 },
+            { name: "Light Scout Frame", def: 3, maxHp: 85, evadeMod: 0.15, price: 190 },
+            { name: "Reactive Nanoweave", def: 12, maxHp: 150, evadeMod: 0.05, price: 380 }
         ];
 
         const heatSinks = [
-
-            { name: "Basic Convection", cooling: 20, maxHeat: 100 },
-
-            { name: "Advanced Double Sink", cooling: 32, maxHeat: 140 },
-
-            { name: "Burst Cryo Vent", cooling: 48, maxHeat: 80 },
-
-            { name: "Vortex Array", cooling: 26, maxHeat: 165 }
-
+            { name: "Basic Convection", cooling: 20, maxHeat: 100, price: 0 },
+            { name: "Adv Double Sink", cooling: 30, maxHeat: 140, price: 140 },
+            { name: "Burst Cryo Vent", cooling: 45, maxHeat: 90, price: 230 },
+            { name: "Vortex Array", cooling: 38, maxHeat: 160, price: 390 }
         ];
 
 
 
         const specials = [
-
-            { name: "None", evadeBonus: 0, shieldDmgReduction: 0 },
-
-            { name: "Jump Jets", evadeBonus: 0.20, shieldDmgReduction: 0 },
-
-            { name: "Energy Shield", evadeBonus: 0, shieldDmgReduction: 6 },
-
-            { name: "Overdrive Core", evadeBonus: 0, shieldDmgReduction: 0 },
-
-            { name: "Repair Nanodrones", evadeBonus: 0, shieldDmgReduction: 0 }
-
+            { name: "None", evadeBonus: 0, shieldDmgReduction: 0, price: 0 },
+            { name: "Jump Jets", evadeBonus: 0.20, shieldDmgReduction: 0, price: 180 },
+            { name: "Energy Shield", evadeBonus: 0, shieldDmgReduction: 6, price: 240 },
+            { name: "Overdrive Core", evadeBonus: 0, shieldDmgReduction: 0, price: 320 },
+            { name: "Repair Nanodrones", evadeBonus: 0, shieldDmgReduction: 0, price: 400 }
         ];
 
 
@@ -3873,26 +3849,23 @@
 
 
         let equipWpn = 0, equipArm = 0, equipSink = 0, equipSpec = 0;
-
-        let playerHeatGen = 30;
-
+        let playerHeatGen = 22;
         let playerCooling = 20;
-
         let credits = 100;
-
         let salvage = 0;
-
         let battleCount = 1;
-
+        let arenaWins = 0;
+        let arenaLosses = 0;
         let playerLevel = 1;
-
         let playerXp = 0;
-
         let previousScreen = 'garage';
 
+        let unlockedWpns = [true, false, false, false, false, false, false];
+        let unlockedArms = [true, false, false, false];
+        let unlockedSinks = [true, false, false, false];
+        let unlockedSpecs = [true, false, false, false, false];
 
-
-        const playerStats = { maxHp: 100, hp: 100, atk: 15, def: 5, maxHeat: 100, heat: 0 };
+        const playerStats = { maxHp: 100, hp: 100, atk: 16, def: 5, maxHeat: 100, heat: 0 };
 
         let enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3, maxHeat: 100, heat: 0 };
 
@@ -3929,133 +3902,118 @@
 
 
         function getSavePayload() {
-
-            const inBattle = getCurrentScreen() === 'battle';
-
+            const screen = getCurrentScreen();
+            const pbActions = document.getElementById('post-battle-actions');
+            const isPostBattle = (pbActions && pbActions.style.display !== 'none') ||
+                                 playerStats.hp <= 0 ||
+                                 enemyStats.hp <= 0;
+            const inBattle = (screen === 'battle' || (screen === 'help' && previousScreen === 'battle')) && !isPostBattle;
             return {
-
                 version: "1.0",
-
                 app: "KMech",
-
                 timestamp: new Date().toISOString(),
-
                 credits,
-
                 salvage,
-
                 battleCount,
-
+                arenaWins: typeof arenaWins === 'number' ? arenaWins : 0,
+                arenaLosses: typeof arenaLosses === 'number' ? arenaLosses : 0,
                 playerLevel,
-
                 playerXp,
-
                 equipWpn,
-
                 equipArm,
-
                 equipSink,
-
                 equipSpec,
-
+                unlockedWpns: [...unlockedWpns],
+                unlockedArms: [...unlockedArms],
+                unlockedSinks: [...unlockedSinks],
+                unlockedSpecs: [...unlockedSpecs],
                 playerHp: playerStats.hp,
-
                 playerHeat: playerStats.heat,
-
                 soundEnabled: soundEnabled ? 1 : 0,
-
                 inBattle,
-
                 enemyStats: inBattle ? {
-
                     maxHp: enemyStats.maxHp,
-
                     hp: enemyStats.hp,
-
                     atk: enemyStats.atk,
-
                     def: enemyStats.def,
-
                     maxHeat: enemyStats.maxHeat,
-
                     heat: enemyStats.heat
-
                 } : null,
-
                 currentTargetLimb,
-
                 enemyStunned: !!enemyStunned,
-
                 playerLimbDamage: [...playerLimbDamage],
-
                 playerLegEvadeBoost,
-
                 isDefending,
-
                 enemyIsDefending
-
             };
-
         }
 
 
 
         function restoreSavePayload(d) {
-
             if (!d || typeof d !== 'object') return false;
-
             credits = typeof d.credits === 'number' ? Math.max(0, Math.floor(d.credits)) : 100;
-
             salvage = typeof d.salvage === 'number' ? Math.max(0, Math.floor(d.salvage)) : 0;
-
             battleCount = typeof d.battleCount === 'number' ? Math.max(1, Math.floor(d.battleCount)) : 1;
-
+            arenaWins = typeof d.arenaWins === 'number' ? Math.max(0, Math.floor(d.arenaWins)) : 0;
+            arenaLosses = typeof d.arenaLosses === 'number' ? Math.max(0, Math.floor(d.arenaLosses)) : 0;
             playerLevel = typeof d.playerLevel === 'number' ? Math.max(1, Math.min(20, Math.floor(d.playerLevel))) : 1;
-
             playerXp = typeof d.playerXp === 'number' ? Math.max(0, Math.floor(d.playerXp)) : 0;
 
             if (typeof d.soundEnabled === 'number' || typeof d.soundEnabled === 'boolean') {
-
                 soundEnabled = !!d.soundEnabled;
-
                 safeSetStorage('kmech_sound', soundEnabled ? '1' : '0');
-
                 updateSoundButton();
-
             }
 
             equipWpn = (typeof d.equipWpn === 'number' ? Math.floor(d.equipWpn) : 0) % weapons.length;
-
             if (equipWpn < 0) equipWpn = 0;
-
             equipArm = (typeof d.equipArm === 'number' ? Math.floor(d.equipArm) : 0) % armors.length;
-
             if (equipArm < 0) equipArm = 0;
-
             equipSink = (typeof d.equipSink === 'number' ? Math.floor(d.equipSink) : 0) % heatSinks.length;
-
             if (equipSink < 0) equipSink = 0;
-
             equipSpec = (typeof d.equipSpec === 'number' ? Math.floor(d.equipSpec) : 0) % specials.length;
-
             if (equipSpec < 0) equipSpec = 0;
 
+            if (Array.isArray(d.unlockedWpns)) {
+                unlockedWpns = weapons.map((_, i) => Boolean(d.unlockedWpns[i]));
+            } else {
+                unlockedWpns = weapons.map((_, i) => i === 0 || i === equipWpn);
+            }
+            unlockedWpns[0] = true;
+            unlockedWpns[equipWpn] = true;
 
+            if (Array.isArray(d.unlockedArms)) {
+                unlockedArms = armors.map((_, i) => Boolean(d.unlockedArms[i]));
+            } else {
+                unlockedArms = armors.map((_, i) => i === 0 || i === equipArm);
+            }
+            unlockedArms[0] = true;
+            unlockedArms[equipArm] = true;
+
+            if (Array.isArray(d.unlockedSinks)) {
+                unlockedSinks = heatSinks.map((_, i) => Boolean(d.unlockedSinks[i]));
+            } else {
+                unlockedSinks = heatSinks.map((_, i) => i === 0 || i === equipSink);
+            }
+            unlockedSinks[0] = true;
+            unlockedSinks[equipSink] = true;
+
+            if (Array.isArray(d.unlockedSpecs)) {
+                unlockedSpecs = specials.map((_, i) => Boolean(d.unlockedSpecs[i]));
+            } else {
+                unlockedSpecs = specials.map((_, i) => i === 0 || i === equipSpec);
+            }
+            unlockedSpecs[0] = true;
+            unlockedSpecs[equipSpec] = true;
 
             playerStats.atk = weapons[equipWpn].atk;
-
             playerHeatGen = weapons[equipWpn].heatGen;
-
             playerStats.def = armors[equipArm].def;
-
             playerStats.maxHp = armors[equipArm].maxHp;
-
             playerStats.maxHeat = heatSinks[equipSink].maxHeat;
-
             playerCooling = heatSinks[equipSink].cooling;
-
             playerStats.hp = (typeof d.playerHp === 'number' && d.playerHp > 0) ? Math.min(d.playerHp, playerStats.maxHp) : playerStats.maxHp;
-
             playerStats.heat = (typeof d.playerHeat === 'number') ? Math.max(0, Math.min(d.playerHeat, playerStats.maxHeat)) : 0;
 
 
@@ -5241,97 +5199,64 @@
 
 
         function startArenaBattle(isRemote, peerName, peerData) {
-
             isArenaDuel = true;
-
             isRemoteDuel = !!isRemote;
-
             arenaPeerName = peerName || 'Neural Aegis Unit';
 
-
-
             let eHp = 130 + playerLevel * 15;
-
             let eAtk = 20 + playerLevel * 3;
-
             let eDef = 7 + playerLevel * 2;
-
             let eHeat = 140;
 
-
-
             if (peerData && peerData.stats) {
-
                 if (peerData.stats.hp) eHp = peerData.stats.hp;
-
                 if (peerData.stats.atk) eAtk = peerData.stats.atk;
-
                 if (peerData.stats.def) eDef = peerData.stats.def;
-
             }
 
-
-
             enemyStats = {
-
                 maxHp: eHp,
-
                 hp: eHp,
-
                 atk: eAtk,
-
                 def: eDef,
-
                 maxHeat: eHeat,
-
                 heat: 0
-
             };
 
-
-
             playerStats.heat = 0;
-
             isDefending = false;
-
             enemyIsDefending = false;
-
             enemyStunned = false;
-
-            isProcessingTurn = false;
-
             playerLegEvadeBoost = 0;
-
             playerLimbDamage = [0, 0, 0, 0, 0];
 
-
-
             document.getElementById('log').innerHTML = '';
-
             document.getElementById('battle-actions').style.display = 'flex';
-
             document.getElementById('post-battle-actions').style.display = 'none';
 
-
-
             const enemyTitle = document.getElementById('enemy-title-name');
-
             if (enemyTitle) enemyTitle.innerText = `[ARENA] ${arenaPeerName}`;
 
-
-
             updateTargetUI();
-
             logMsg(`⚔️ ARENA ENGAGEMENT: Pilot ${getPilotCallsign()} VS ${arenaPeerName}!`);
-
             logMsg(isRemoteDuel ? `RFMS Subnet Synced. Turn-based telemetry active.` : `Simulation Active. AI rival operational.`);
 
+            if (isRemoteDuel) {
+                const isP1 = (!rMultiplayer || rMultiplayer.mySlot === 'p1');
+                if (isP1) {
+                    isProcessingTurn = false;
+                    logMsg("Your turn! (P1 Initiative) Command your mech: [A] Attack or [D] Defend.");
+                } else {
+                    isProcessingTurn = true;
+                    logMsg(`Waiting for ${arenaPeerName} (P1) to initiate strike...`);
+                }
+            } else {
+                isProcessingTurn = false;
+            }
+
             playSound('alarm');
-
             playSound('stomp');
-
             updateBattle();
-
             setBgmMode('combat');
 
             showScreen('battle');
@@ -5341,104 +5266,71 @@
 
 
         function handlePeerMove(move) {
-
             if (!isArenaDuel || !isRemoteDuel || !move) return;
-
             if (move.type === 'mech_attack') {
-
+                enemyIsDefending = false;
                 logMsg(`${arenaPeerName} targets your mech with heavy ordnance!`);
-
                 triggerAnim('enemy-mech-container', 'enemy-attacking', 200);
-
                 playSound('enemyLaser');
-
                 fireProjectile(false, move.equipWpn || 0);
-
                 setTimeout(() => {
-
                     triggerAnim('player-mech-container', 'damaged', 450);
-
                     playSound('impact');
-
                     const targetLimb = limbs[move.targetLimb || 1];
-
                     let dmg = move.dmg || 16;
-
                     if (isDefending) dmg = Math.max(1, Math.floor(dmg * 0.5));
-
                     if (specials[equipSpec].shieldDmgReduction > 0) {
-
                         const absorbed = Math.min(dmg, specials[equipSpec].shieldDmgReduction);
-
                         dmg -= absorbed;
-
                         if (absorbed > 0) {
-
                             playSound('shield');
-
                             logMsg(`Energy Shield absorbed ${absorbed} damage!`);
-
                             addShockwave(140, 70, 45, '#00ffff', 4);
-
                         }
-
                     }
-
                     playerStats.hp -= dmg;
-
                     playerLimbDamage[move.targetLimb || 1] += dmg;
-
                     logMsg(`${arenaPeerName} struck your ${targetLimb.name} dealing ${dmg} damage!`);
-
                     updateBattle();
-
                     if (playerStats.hp <= 0) {
-
                         playerStats.hp = 0;
-
                         updateBattle();
-
                         endBattle(false);
-
                     } else {
-
                         applyCooling();
-
                         updateBattle();
-
                         isDefending = false;
-
                         isProcessingTurn = false;
-
                         logMsg("Your turn! Command your mech: [A] Attack or [D] Defend.");
-
                     }
-
                 }, 160);
-
-            } else if (move.type === 'mech_defend') {
-
-                logMsg(`${arenaPeerName} braced defenses and flushed cooling sinks.`);
-
-                addShockwave(478, 70, 50, '#ffaa00', 4);
-
-                enemyIsDefending = true;
-
+            } else if (move.type === 'mech_miss') {
+                enemyIsDefending = false;
+                playSound('miss');
+                logMsg(`${arenaPeerName} fired ordnance... and missed!`);
                 applyCooling();
-
                 updateBattle();
-
                 isDefending = false;
-
                 isProcessingTurn = false;
-
                 logMsg("Your turn! Command your mech: [A] Attack or [D] Defend.");
-
+            } else if (move.type === 'mech_overheat_defeat') {
+                playSound('alarm');
+                spawnExplosion(478, 70, 35, false);
+                logMsg(`${arenaPeerName} suffered catastrophic core overheat! Mech destroyed.`);
+                enemyStats.hp = 0;
+                updateBattle();
+                endBattle(true);
+            } else if (move.type === 'mech_defend') {
+                logMsg(`${arenaPeerName} braced defenses and flushed cooling sinks.`);
+                addShockwave(478, 70, 50, '#ffaa00', 4);
+                enemyIsDefending = true;
+                applyCooling();
+                updateBattle();
+                isDefending = false;
+                isProcessingTurn = false;
+                logMsg("Your turn! Command your mech: [A] Attack or [D] Defend.");
             }
-
         }
-
-
 
         /* ==================== CHROMA-KEYED SPRITE RENDERERS ==================== */
 
@@ -6655,77 +6547,175 @@
 
 
         function cycleWpn() {
-
-            equipWpn = (equipWpn + 1) % weapons.length;
-
-            playerStats.atk = weapons[equipWpn].atk;
-
-            playerHeatGen = weapons[equipWpn].heatGen;
-
-            playSound('servo');
-
-            showToast(`Weapon: ${weapons[equipWpn].name} (ATK ${playerStats.atk}, Heat ${playerHeatGen})`, 2000);
-
+            let nextIdx = (equipWpn + 1) % weapons.length;
+            if (unlockedWpns[nextIdx]) {
+                equipWpn = nextIdx;
+                playerStats.atk = weapons[equipWpn].atk;
+                playerHeatGen = weapons[equipWpn].heatGen;
+                playSound('servo');
+                showToast(`Weapon: ${weapons[equipWpn].name} (ATK ${playerStats.atk}, Heat ${playerHeatGen})`, 2000);
+            } else {
+                const cost = weapons[nextIdx].price;
+                if (credits >= cost) {
+                    credits -= cost;
+                    unlockedWpns[nextIdx] = true;
+                    equipWpn = nextIdx;
+                    playerStats.atk = weapons[equipWpn].atk;
+                    playerHeatGen = weapons[equipWpn].heatGen;
+                    playSound('rankup');
+                    showToast(`Unlocked & Equipped: ${weapons[equipWpn].name} (-${cost} CR)!`, 2500, 'success');
+                } else {
+                    playSound('alarm');
+                    let found = -1;
+                    for (let i = 1; i < weapons.length; i++) {
+                        let test = (nextIdx + i) % weapons.length;
+                        if (unlockedWpns[test]) {
+                            found = test;
+                            break;
+                        }
+                    }
+                    if (found !== -1 && found !== equipWpn) {
+                        equipWpn = found;
+                        playerStats.atk = weapons[equipWpn].atk;
+                        playerHeatGen = weapons[equipWpn].heatGen;
+                        playSound('servo');
+                        showToast(`Locked: ${weapons[nextIdx].name} (${cost} CR needed). Equipped owned ${weapons[equipWpn].name}.`, 2500, 'warning');
+                    } else {
+                        showToast(`Locked: ${weapons[nextIdx].name} requires ${cost} CR (Have ${credits} CR).`, 2500, 'warning');
+                    }
+                }
+            }
             updateGarage();
-
             quickSave(true);
-
         }
 
         function cycleArm() {
-
-            equipArm = (equipArm + 1) % armors.length;
-
-            playerStats.def = armors[equipArm].def;
-
-            playerStats.maxHp = armors[equipArm].maxHp;
-
-            playerStats.hp = Math.min(playerStats.hp, playerStats.maxHp);
-
-            playSound('servo');
-
-            showToast(`Armor: ${armors[equipArm].name} (DEF ${playerStats.def}, HP ${playerStats.maxHp})`, 2000);
-
+            let nextIdx = (equipArm + 1) % armors.length;
+            if (unlockedArms[nextIdx]) {
+                equipArm = nextIdx;
+                playerStats.def = armors[equipArm].def;
+                playerStats.maxHp = armors[equipArm].maxHp;
+                playerStats.hp = Math.min(playerStats.hp, playerStats.maxHp);
+                playSound('servo');
+                showToast(`Armor: ${armors[equipArm].name} (DEF ${playerStats.def}, HP ${playerStats.maxHp})`, 2000);
+            } else {
+                const cost = armors[nextIdx].price;
+                if (credits >= cost) {
+                    credits -= cost;
+                    unlockedArms[nextIdx] = true;
+                    equipArm = nextIdx;
+                    playerStats.def = armors[equipArm].def;
+                    playerStats.maxHp = armors[equipArm].maxHp;
+                    playerStats.hp = Math.min(playerStats.hp, playerStats.maxHp);
+                    playSound('rankup');
+                    showToast(`Unlocked & Equipped: ${armors[equipArm].name} (-${cost} CR)!`, 2500, 'success');
+                } else {
+                    playSound('alarm');
+                    let found = -1;
+                    for (let i = 1; i < armors.length; i++) {
+                        let test = (nextIdx + i) % armors.length;
+                        if (unlockedArms[test]) {
+                            found = test;
+                            break;
+                        }
+                    }
+                    if (found !== -1 && found !== equipArm) {
+                        equipArm = found;
+                        playerStats.def = armors[equipArm].def;
+                        playerStats.maxHp = armors[equipArm].maxHp;
+                        playerStats.hp = Math.min(playerStats.hp, playerStats.maxHp);
+                        playSound('servo');
+                        showToast(`Locked: ${armors[nextIdx].name} (${cost} CR needed). Equipped owned ${armors[equipArm].name}.`, 2500, 'warning');
+                    } else {
+                        showToast(`Locked: ${armors[nextIdx].name} requires ${cost} CR (Have ${credits} CR).`, 2500, 'warning');
+                    }
+                }
+            }
             updateGarage();
-
             quickSave(true);
-
         }
 
         function cycleSink() {
-
-            equipSink = (equipSink + 1) % heatSinks.length;
-
-            playerStats.maxHeat = heatSinks[equipSink].maxHeat;
-
-            playerCooling = heatSinks[equipSink].cooling;
-
-            if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
-
-            playSound('servo');
-
-            showToast(`Heat Sink: ${heatSinks[equipSink].name} (Cooling ${playerCooling}/turn, Max ${playerStats.maxHeat})`, 2000);
-
+            let nextIdx = (equipSink + 1) % heatSinks.length;
+            if (unlockedSinks[nextIdx]) {
+                equipSink = nextIdx;
+                playerStats.maxHeat = heatSinks[equipSink].maxHeat;
+                playerCooling = heatSinks[equipSink].cooling;
+                if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
+                playSound('servo');
+                showToast(`Heat Sink: ${heatSinks[equipSink].name} (Cooling ${playerCooling}/turn, Max ${playerStats.maxHeat})`, 2000);
+            } else {
+                const cost = heatSinks[nextIdx].price;
+                if (credits >= cost) {
+                    credits -= cost;
+                    unlockedSinks[nextIdx] = true;
+                    equipSink = nextIdx;
+                    playerStats.maxHeat = heatSinks[equipSink].maxHeat;
+                    playerCooling = heatSinks[equipSink].cooling;
+                    if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
+                    playSound('rankup');
+                    showToast(`Unlocked & Equipped: ${heatSinks[equipSink].name} (-${cost} CR)!`, 2500, 'success');
+                } else {
+                    playSound('alarm');
+                    let found = -1;
+                    for (let i = 1; i < heatSinks.length; i++) {
+                        let test = (nextIdx + i) % heatSinks.length;
+                        if (unlockedSinks[test]) {
+                            found = test;
+                            break;
+                        }
+                    }
+                    if (found !== -1 && found !== equipSink) {
+                        equipSink = found;
+                        playerStats.maxHeat = heatSinks[equipSink].maxHeat;
+                        playerCooling = heatSinks[equipSink].cooling;
+                        if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
+                        playSound('servo');
+                        showToast(`Locked: ${heatSinks[nextIdx].name} (${cost} CR needed). Equipped owned ${heatSinks[equipSink].name}.`, 2500, 'warning');
+                    } else {
+                        showToast(`Locked: ${heatSinks[nextIdx].name} requires ${cost} CR (Have ${credits} CR).`, 2500, 'warning');
+                    }
+                }
+            }
             updateGarage();
-
             quickSave(true);
-
         }
 
-
-
         function cycleSpec() {
-
-            equipSpec = (equipSpec + 1) % specials.length;
-
-            playSound('servo');
-
-            showToast(`Special: ${specials[equipSpec].name}`, 2000);
-
+            let nextIdx = (equipSpec + 1) % specials.length;
+            if (unlockedSpecs[nextIdx]) {
+                equipSpec = nextIdx;
+                playSound('servo');
+                showToast(`Special: ${specials[equipSpec].name}`, 2000);
+            } else {
+                const cost = specials[nextIdx].price;
+                if (credits >= cost) {
+                    credits -= cost;
+                    unlockedSpecs[nextIdx] = true;
+                    equipSpec = nextIdx;
+                    playSound('rankup');
+                    showToast(`Unlocked & Equipped: ${specials[equipSpec].name} (-${cost} CR)!`, 2500, 'success');
+                } else {
+                    playSound('alarm');
+                    let found = -1;
+                    for (let i = 1; i < specials.length; i++) {
+                        let test = (nextIdx + i) % specials.length;
+                        if (unlockedSpecs[test]) {
+                            found = test;
+                            break;
+                        }
+                    }
+                    if (found !== -1 && found !== equipSpec) {
+                        equipSpec = found;
+                        playSound('servo');
+                        showToast(`Locked: ${specials[nextIdx].name} (${cost} CR needed). Equipped owned ${specials[equipSpec].name}.`, 2500, 'warning');
+                    } else {
+                        showToast(`Locked: ${specials[nextIdx].name} requires ${cost} CR (Have ${credits} CR).`, 2500, 'warning');
+                    }
+                }
+            }
             updateGarage();
-
             quickSave(true);
-
         }
 
 
@@ -7073,114 +7063,80 @@
 
 
         function endBattle(victory) {
-
             isProcessingTurn = false;
-
-            isDefending = false;
-
-            enemyStunned = false;
-
             playerLegEvadeBoost = 0;
-
             document.getElementById('battle-actions').style.display = 'none';
-
             document.getElementById('post-battle-actions').style.display = 'flex';
-
             if (victory) {
-
                 stopBgm();
-
                 playSound('victory');
-
                 spawnVictoryStars(478, 70);
-
                 let reward = 50 + (battleCount * 12);
-
                 let parts = Math.floor(Math.random() * 3) + 1;
-
                 credits += reward;
-
                 salvage += parts;
-
                 logMsg(`VICTORY! Earned ${reward} CR and ${parts} Salvage Parts.`);
-
                 showToast(`🏆 VICTORY! +${reward} CR, +${parts} Salvage Parts!`, 3500);
-
                 let xpGain = 45 + (battleCount * 20);
-
                 playerXp += xpGain;
-
                 logMsg(`Gained ${xpGain} XP.`);
-
-                if (playerXp >= playerLevel * 100) {
-
+                while (playerXp >= playerLevel * 100) {
                     playerXp -= playerLevel * 100;
-
                     playerLevel++;
-
                     playSound('rankup');
-
                     logMsg(`LEVEL UP! Pilot promoted to Level ${playerLevel} (${getPilotRank(playerLevel)}).`);
-
                     showToast(`⭐ LEVEL UP! Pilot is now Level ${playerLevel} (${getPilotRank(playerLevel)})!`, 4000);
                     updateGarage();
-
                 }
-
-                battleCount++;
-
-                quickSave(true);
-
-                setTimeout(() => {
-
-                    if (soundEnabled && getCurrentScreen() === 'battle') {
-
-                        setBgmMode('hangar');
-
-                        startBgm('hangar');
-
-                    }
-
-                }, 1600);
-
-            } else {
-
-                stopBgm();
-
-                playSound('defeat');
-
-                spawnExplosion(140, 70, 35, false);
-
-                logMsg("CRITICAL DAMAGE. MECH DESTROYED. CAMPAIGN FAILED.");
-
-                showToast(`💥 MECH DESTROYED! Campaign reset.`, 4000, 'danger');
-
                 if (!isArenaDuel) {
-
-                    battleCount = 1;
-
-                    credits = 100;
-
-                    salvage = 0;
-
-                    playerLevel = 1;
-
-                    playerXp = 0;
-
+                    battleCount++;
                 } else {
-
-                    logMsg(`ARENA DEFEAT: Mech hull retrieved by recovery crew. Campaign saved.`);
-
-                    showToast(`💥 Arena duel lost vs ${arenaPeerName}. Mech recovered.`, 3500, 'warning');
-
-                    playerStats.hp = playerStats.maxHp;
-
+                    arenaWins = (arenaWins || 0) + 1;
                 }
-
                 quickSave(true);
-
+                setTimeout(() => {
+                    if (soundEnabled && getCurrentScreen() === 'battle') {
+                        setBgmMode('hangar');
+                        startBgm('hangar');
+                    }
+                }, 1600);
+            } else {
+                stopBgm();
+                playSound('defeat');
+                spawnExplosion(140, 70, 35, false);
+                logMsg("CRITICAL DAMAGE. MECH DESTROYED.");
+                if (!isArenaDuel) {
+                    logMsg("CAMPAIGN FAILED. Telemetry reset.");
+                    showToast(`💥 MECH DESTROYED! Campaign reset.`, 4000, 'danger');
+                    battleCount = 1;
+                    credits = 100;
+                    salvage = 0;
+                    playerLevel = 1;
+                    playerXp = 0;
+                    unlockedWpns = weapons.map((_, i) => i === 0);
+                    unlockedArms = armors.map((_, i) => i === 0);
+                    unlockedSinks = heatSinks.map((_, i) => i === 0);
+                    unlockedSpecs = specials.map((_, i) => i === 0);
+                    equipWpn = 0;
+                    equipArm = 0;
+                    equipSink = 0;
+                    equipSpec = 0;
+                    playerStats.atk = weapons[0].atk;
+                    playerHeatGen = weapons[0].heatGen;
+                    playerStats.def = armors[0].def;
+                    playerStats.maxHp = armors[0].maxHp;
+                    playerStats.maxHeat = heatSinks[0].maxHeat;
+                    playerCooling = heatSinks[0].cooling;
+                    playerStats.hp = playerStats.maxHp;
+                    playerStats.heat = 0;
+                } else {
+                    arenaLosses = (arenaLosses || 0) + 1;
+                    logMsg(`ARENA DEFEAT: Mech hull retrieved by recovery crew. Campaign saved.`);
+                    showToast(`💥 Arena duel lost vs ${arenaPeerName}. Mech recovered.`, 3500, 'warning');
+                    playerStats.hp = playerStats.maxHp;
+                }
+                quickSave(true);
             }
-
         }
 
 
@@ -7196,50 +7152,36 @@
 
 
         function actionAttack() {
-
             if (isProcessingTurn || document.getElementById('battle-actions').style.display === 'none') return;
-
             isProcessingTurn = true;
-
             playerStats.heat += playerHeatGen;
-
             if (equipSpec === 3) {
-
                 playerStats.heat += 12; // Overdrive Core extra heat
-
             }
-
-
 
             if (playerStats.heat > playerStats.maxHeat) {
-
                 playerStats.hp -= 15;
-
                 playSound('alarm');
-
                 triggerShake(16);
-
                 spawnExplosion(140, 70, 15, false);
-
                 logMsg("WARNING: CORE OVERHEAT! Took 15 system dmg.");
-
                 showToast(`⚠️ OVERHEAT DAMAGE (-15 HP)! Defend to cool down.`, 2500, 'danger');
-
                 if (playerStats.hp <= 0) {
-
                     playerStats.hp = 0;
-
                     updateBattle();
-
+                    if (isRemoteDuel && rMultiplayer) {
+                        try {
+                            rMultiplayer.sendMove({
+                                type: 'mech_overheat_defeat',
+                                playerHp: 0,
+                                playerHeat: playerStats.heat
+                            });
+                        } catch (e) {}
+                    }
                     endBattle(false);
-
                     return;
-
                 }
-
             }
-
-
 
             let targetLimb = limbs[currentTargetLimb];
 
@@ -7270,33 +7212,28 @@
 
 
             if (Math.random() > hitChance) {
-
                 triggerAnim('player-mech-container', 'attacking', 200);
-
                 setTimeout(() => {
-
                     playSound('miss');
-
                     logMsg(`Targeting ${targetLimb.name}... Shot Missed!`);
-
                     updateBattle();
-
-                    if (enemyStats.hp > 0 && document.getElementById('battle-actions').style.display !== 'none') {
-
+                    if (isRemoteDuel && rMultiplayer) {
+                        try {
+                            rMultiplayer.sendMove({
+                                type: 'mech_miss',
+                                playerHp: playerStats.hp,
+                                playerHeat: playerStats.heat
+                            });
+                        } catch (e) {}
+                        logMsg(`Waiting for ${arenaPeerName}'s tactical counter-strike...`);
+                    } else if (enemyStats.hp > 0 && document.getElementById('battle-actions').style.display !== 'none') {
                         setTimeout(() => {
-
                             enemyTurn();
-
                         }, 250);
-
                     } else {
-
                         isProcessingTurn = false;
-
                     }
-
                 }, 120);
-
             } else {
 
                 triggerAnim('player-mech-container', 'attacking', 200);
