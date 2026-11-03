@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T04:36:24-08:00 — kilo-usability: KRead (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 163.9 KB, native 31.0 KB < 999 KB; visual PASS anim 0.0%, input 8.27%, 0 cut-off controls).
+  - Layout & Responsive: Compacted .toolbar into 2 rows and .quick-starter-bar into 1 row at 940px; reduced .content padding-bottom to 32px so short docs fit on Pg 1/1.
+  - Toasts & Shortcuts: Relocated .toast-container to bottom-right (bottom: 36px, right: 16px) eliminating top toolbar occlusion; guarded SELECT targets in window keydown listener.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-03T04:22:17-08:00 — kilo-tester: KRead (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KRead across web and native targets.

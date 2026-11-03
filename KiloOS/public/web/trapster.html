@@ -1246,6 +1246,8 @@
             <button class="btn-win" onclick="openShareModal()">➕ Share New Module</button>
             <button class="btn-win" onclick="syncLibraryVfs()">🔄 Rescan VFS</button>
             <button class="btn-win" onclick="exportLibraryManifest()">📜 Export JSON Catalog</button>
+            <button class="btn-win" onclick="importLibraryManifest()">📥 Import Catalog</button>
+            <input type="file" id="importCatalogInput" accept=".json" style="display:none;" onchange="handleImportCatalogFile(event)">
           </div>
         </div>
         <div class="table-container bevel-inset">
@@ -3037,6 +3039,31 @@ function exportLibraryManifest() {
   saveToKiloVfs('/home/music/trapster_catalog.json', jsonStr);
 }
 
+function importLibraryManifest() {
+  const input = document.getElementById('importCatalogInput');
+  if (input) input.click();
+}
+
+function handleImportCatalogFile(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (Array.isArray(data)) {
+        myLibrary = data;
+        safeSet('trapster_library', myLibrary);
+        renderLibraryTable();
+        showToast(`Imported ${data.length} tracks into library`);
+      }
+    } catch (err) {
+      showToast('Invalid JSON catalog file');
+    }
+  };
+  reader.readAsText(file);
+}
+
 // --- Swarm Topology 2D Canvas Visualization ---
 function initTopologyCanvas() {
   const canvas = document.getElementById('topoCanvas');
@@ -3201,6 +3228,8 @@ function openHelpModal() {
 ======================================================================
 KEYBOARD SHORTCUTS:
   [F1] or [H] : Help & Documentation modal
+  [F5]        : Quicksave state & active queue to VFS
+  [F9]        : Quickload state & active queue from storage
   [Space]     : Toggle Play / Pause audio playback
   [M]         : Mute / Unmute all sound channels
   [Esc]       : Dismiss active modal window
@@ -3303,6 +3332,16 @@ window.addEventListener('keydown', (e) => {
     openHelpModal();
     return;
   }
+  if (e.key === 'F5') {
+    e.preventDefault();
+    quickSaveState();
+    return;
+  }
+  if (e.key === 'F9') {
+    e.preventDefault();
+    quickLoadState();
+    return;
+  }
   if (!isInput) {
     if (e.code === 'Space') {
       e.preventDefault();
@@ -3321,6 +3360,43 @@ window.addEventListener('keydown', (e) => {
     }
   }
 });
+
+function quickSaveState() {
+  const state = {
+    activeDownloads,
+    myLibrary,
+    userSpeedKb,
+    selectedTrackId,
+    timestamp: new Date().toISOString()
+  };
+  safeSet('trapster_quicksave', state);
+  saveToKiloVfs('/home/music/trapster_quicksave.json', JSON.stringify(state, null, 2));
+  showToast('State Quicksaved [F5] to /home/music/trapster_quicksave.json');
+}
+
+function quickLoadState() {
+  const state = safeGet('trapster_quicksave', null);
+  if (!state) {
+    showToast('No quicksave state found [F9]');
+    return;
+  }
+  if (Array.isArray(state.activeDownloads)) {
+    activeDownloads = state.activeDownloads;
+    safeSet('trapster_active_dl', activeDownloads);
+    updateTransfersDisplay();
+  }
+  if (Array.isArray(state.myLibrary)) {
+    myLibrary = state.myLibrary;
+    safeSet('trapster_library', myLibrary);
+    renderLibraryTable();
+  }
+  if (state.selectedTrackId) {
+    selectedTrackId = state.selectedTrackId;
+    const trk = TRACK_CATALOG.find(t => t.id === selectedTrackId);
+    if (trk) loadTrackIntoPlayer(trk);
+  }
+  showToast('State Quickloaded [F9] successfully');
+}
 
 
 // --- Master P2P Node & Supernode Directory ---
