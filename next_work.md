@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://scallion
+  kilo_creator: kweb://warez
   kilo_graphics: KCosmic
   kilo_soundscape: KStellar
   kilo_tester: KScript
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KSteno
   kilo_expander: KScript
   kilo_review: KNetMap
-virtual_web_target: kweb://scallion
+virtual_web_target: kweb://warez
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KScript
-  timestamp: '2026-11-03T14:16:00-08:00'
+  agent: kilo-creator
+  app: kweb://scallion
+  timestamp: '2026-11-03T14:36:45-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://scallion`
+- **Active Target**: `kweb://warez`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 | `kweb://warez` | `KiloOS/public/web/warez.html`, `KiloOS/public/apps/knet.html` | Create *The Underground Courier / Warez BBS Web Ring* (`warez.html` <250 KB): ANSI top-site release board, simulated keygen music player, download quota tracker, and VFS export. |
 | `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
 | `kweb://cabled` | `KiloOS/public/web/cabled.html`, `KiloOS/public/apps/knet.html` | Create *Cabled Magazine 1999 Neon Edition* (`cabled.html` <250 KB): late-90s cyber-magazine with interactive Y2K Readiness Audit, Dot-Com IPO Bubble Stock Simulator, Jargon Watch generator, Hype-vs-Reality matrix, and route `kweb://cabled` in `knet.html`. |
+| `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (kilo-graphics)
 - **Active Target**: KCosmic
@@ -291,6 +291,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T14:36:45-08:00 — kilo-creator: kweb://scallion (The Scallion 1999 Satirical News Destination (kweb://scallion))**
+  - Status: PASS ✅ (0 errors, web 114.1 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.23%, input 32.5%, HEAD Δ 0.19%, 0 fail, 0 warn, 4.4s)).
+  - Added deep article routing in knet.html and scallion.html for cyberdream, AOL CDs, and stories.
+  - Implemented vintage 1999 RSS 0.91 XML feed export to KiloOS VFS (/home/downloads/scallion_vintage99.xml) with KRSS compatibility.
+  - Handoff: Advanced `kilo-creator` to `kweb://warez`; rotated active agent to `kilo-graphics`.
+
 - **2026-11-03T14:16:00-08:00 — kilo-review: KScript (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 1040x643 4-panel sheet.png, kscript.html, and KScript/main.c; un-quarantined KScript from Mature).
   - Visual/UX Findings: 3-row toolbar & 2-row presets bloat, wrapped Script Editor header, solid-purple #astCanvas category mismatch, low 2.5x .gutter contrast, undifferentiated trace spam in #outputArea, and toast occlusion over zoom controls.
@@ -315,9 +321,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Layout & Responsive: nowrap Shannon Entropy badge row, word-wrap .output-box, Tab 2 panel-title flex-wrap, 64px rawTextBuffer, zero layout clipping at 980x783.
   - Keyboard & Navigation: SELECT keydown guard, silent arrow gotoOffset, live clickable search match offsets, 8-byte valDouble read, Tab [0] listed in Help & Tutorial modals.
   - Handoff: Advanced `kilo-usability` to `KImage`; rotated active agent to `kilo-qa`.
-
-- **2026-11-03T12:19:42-08:00 — kilo-tester: KImage (Optical DSP, Stego, Format & C Parity Repairs)**
-  - Status: PASS ✅ (0 errors, web 173.6 KB, native 27.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 8.59%, HEAD Δ 0.14%, 0 fail, 0 warn, 6.6s)).
-  - Fixed 4 Optical DSP filters in mutatePixels (src copy), synced playlistStrip thumbnails, defaulted vignette (45) & chromatic (6) sliders with 0-guard toasts, added link.href in exportSessionJson, reset adjustments in encodeStegoPayload, and sliced UTF-8 bytes in decodeStegoPayload.
-  - Supported TGA type 3 grayscale, PCX 256-color 0x0C VGA palettes, 1999-11-03 EXIF date, restored hwnd focus & WM_KEYDOWN routing after button clicks in KImage/main.c, and guarded ID_BTN_PLAY.
-  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.

@@ -2512,6 +2512,22 @@ const btnOpenInKHex = document.getElementById('btnOpenInKHex');
         sub = '#opinion';
       } else if (lower.includes('/classified') || lower.includes('/ads')) {
         sub = '#classifieds';
+      } else if (lower.includes('/cyber-dream') || lower.includes('cyberdream')) {
+        sub = '#article-cyberdream';
+      } else if (lower.includes('/win2000')) {
+        sub = '#article-win2000';
+      } else if (lower.includes('/soundblaster')) {
+        sub = '#article-soundblaster';
+      } else if (lower.includes('/dotcom')) {
+        sub = '#article-dotcom';
+      } else if (lower.includes('/creamedcorn') || lower.includes('creamed-corn')) {
+        sub = '#article-creamedcorn';
+      } else if (lower.includes('/solitaire')) {
+        sub = '#article-solitaire';
+      } else if (lower.includes('/aolcds') || lower.includes('/aol')) {
+        sub = '#article-aolcds';
+      } else if (lower.includes('/vintage99') || lower.includes('/rss')) {
+        sub = '#opinion';
       }
       url = '/web/scallion.html' + sub;
     } else if (url.toLowerCase() === 'kweb://demoscene' || url.toLowerCase().startsWith('kweb://demoscene/') || url.toLowerCase().startsWith('kweb://demoscene#') || url.toLowerCase().startsWith('kweb://demoscene?') || url.toLowerCase() === 'demoscene' || url.toLowerCase().startsWith('demoscene/') || url.toLowerCase() === 'kweb://assembly99' || url.toLowerCase().startsWith('kweb://assembly99/') || url.toLowerCase().startsWith('kweb://assembly99#') || url.toLowerCase() === 'assembly99' || url.toLowerCase() === 'kweb://demoscene.html' || url.toLowerCase() === 'kweb://scene99' || url.toLowerCase() === 'scene99') {

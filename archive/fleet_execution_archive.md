@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T12:19:42-08:00 — kilo-tester: KImage (Optical DSP, Stego, Format & C Parity Repairs)**
+  - Status: PASS ✅ (0 errors, web 173.6 KB, native 27.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 8.59%, HEAD Δ 0.14%, 0 fail, 0 warn, 6.6s)).
+  - Fixed 4 Optical DSP filters in mutatePixels (src copy), synced playlistStrip thumbnails, defaulted vignette (45) & chromatic (6) sliders with 0-guard toasts, added link.href in exportSessionJson, reset adjustments in encodeStegoPayload, and sliced UTF-8 bytes in decodeStegoPayload.
+  - Supported TGA type 3 grayscale, PCX 256-color 0x0C VGA palettes, 1999-11-03 EXIF date, restored hwnd focus & WM_KEYDOWN routing after button clicks in KImage/main.c, and guarded ID_BTN_PLAY.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-11-03T11:16:23-08:00 — kilo-graphics: KSubmarine (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KSubmarine.
   - Handoff: Advanced `kilo-graphics` to `KCosmic`; rotated active agent to `kilo-tester`.

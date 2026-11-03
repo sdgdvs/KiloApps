@@ -731,6 +731,7 @@
       <span class="badge-retro">KILONET VIRTUAL EDITION</span>
       <button class="btn-telemetry" id="btnHelpToggle" onclick="openHelpModal()" title="Help &amp; Shortcuts [F1]/[H]">❓ HELP [F1]</button>
       <button class="btn-telemetry" id="btnAudioToggle" onclick="toggleAudio()" title="Toggle Web Audio SFX [M]">🔊 SFX [M]</button>
+      <button class="btn-telemetry" onclick="exportRssVfs()" title="Export 1999 RSS 0.91 XML Feed to VFS [X]">📡 RSS XML [X]</button>
       <button class="btn-telemetry" onclick="exportFrontPageVfs()" title="Save current edition text to KiloOS VFS [S]">💾 SAVE VFS [S]</button>
       <button class="btn-telemetry" onclick="printFrontPage()" title="Print broadsheet page [P]">🖨️ PRINT [P]</button>
     </div>
@@ -900,6 +901,38 @@
             <div class="lead-toolbar" style="margin-top:8px; padding:4px;">
               <button class="btn-scallion btn-secondary" style="font-size:10px; padding:3px 8px;" onclick="openArticleModal('solitaire')">Read Article</button>
               <button class="btn-scallion btn-secondary" style="font-size:10px; padding:3px 8px;" onclick="saveArticleVfs('solitaire')">Save VFS</button>
+            </div>
+          </div>
+
+          <div class="sub-article-card">
+            <div>
+              <div class="lead-kicker" style="color:var(--scallion-green);">CYBER-DREAM '99</div>
+              <h3 class="sub-article-headline" onclick="openArticleModal('cyberdream')">
+                Area Man In A Hurry To Realize Cyber-Dream Before End Of Century
+              </h3>
+              <p class="sub-article-snippet">
+                Local resident Arthur Pendelton has fewer than 75 days to launch artisanal rubber bands dial-up e-commerce portal before the ball drops in Times Square.
+              </p>
+            </div>
+            <div class="lead-toolbar" style="margin-top:8px; padding:4px;">
+              <button class="btn-scallion btn-secondary" style="font-size:10px; padding:3px 8px;" onclick="openArticleModal('cyberdream')">Read Article</button>
+              <button class="btn-scallion btn-secondary" style="font-size:10px; padding:3px 8px;" onclick="saveArticleVfs('cyberdream')">Save VFS</button>
+            </div>
+          </div>
+
+          <div class="sub-article-card">
+            <div>
+              <div class="lead-kicker" style="color:var(--scallion-red);">PALEONTOLOGY &amp; LANDFILLS</div>
+              <h3 class="sub-article-headline" onclick="openArticleModal('aolcds')">
+                Archaeologists Uncover Mesozoic Fossil Embedded Inside AOL 5.0 Installation Tin
+              </h3>
+              <p class="sub-article-snippet">
+                Limestone strata carbon-dated to 300 million years old proves 700 free hours CD-ROM was delivered to prehistoric trilobite via priority post.
+              </p>
+            </div>
+            <div class="lead-toolbar" style="margin-top:8px; padding:4px;">
+              <button class="btn-scallion btn-secondary" style="font-size:10px; padding:3px 8px;" onclick="openArticleModal('aolcds')">Read Article</button>
+              <button class="btn-scallion btn-secondary" style="font-size:10px; padding:3px 8px;" onclick="saveArticleVfs('aolcds')">Save VFS</button>
             </div>
           </div>
 
@@ -1366,6 +1399,7 @@
           <tr><td style="padding:4px 0;"><strong>[S]</strong></td><td>Export Front Page to KiloOS VFS</td></tr>
           <tr><td style="padding:4px 0;"><strong>[P]</strong></td><td>Print Current Page</td></tr>
           <tr><td style="padding:4px 0;"><strong>[R]</strong></td><td>Randomize Headline Forge</td></tr>
+          <tr><td style="padding:4px 0;"><strong>[X]</strong></td><td>Export Vintage RSS 0.91 XML Feed to VFS</td></tr>
           <tr><td style="padding:4px 0;"><strong>[F1] / [H]</strong></td><td>Open This Hotkey Guide</td></tr>
           <tr><td style="padding:4px 0;"><strong>[Esc]</strong></td><td>Close Open Story / Help Dialog</td></tr>
         </table>
@@ -1701,6 +1735,12 @@ function switchSection(secId, btnEl) {
  */
 function checkHashRoute() {
   let hash = (window.location.hash || '').replace('#', '').toLowerCase();
+  let queryArticle = '';
+  try {
+    const searchParams = new URLSearchParams(window.location.search || '');
+    queryArticle = searchParams.get('article') || '';
+  } catch (e) {}
+
   if (hash.startsWith('section-')) hash = hash.replace('section-', '');
   if (hash.startsWith('sec-')) hash = hash.replace('sec-', '');
   if (hash === 'ask' || hash === 'sys') hash = 'sysadmin';
@@ -1712,6 +1752,23 @@ function checkHashRoute() {
   const validSections = ['frontpage', 'sysadmin', 'infographics', 'forge', 'opinion', 'classifieds'];
   if (hash && validSections.includes(hash)) {
     switchSection(hash);
+  }
+
+  // Article deep linking via hash (#article-id or #id) or query param (?article=id)
+  let articleTarget = queryArticle || '';
+  if (!articleTarget) {
+    if (hash.startsWith('article-')) {
+      articleTarget = hash.replace('article-', '');
+    } else if (ARTICLES[hash] || hash === 'cyber-dream-99' || hash === 'cyberdream') {
+      articleTarget = hash;
+    }
+  }
+  if (articleTarget) {
+    if (articleTarget === 'cyber-dream-99') articleTarget = 'cyberdream';
+    if (ARTICLES[articleTarget]) {
+      switchSection('frontpage');
+      setTimeout(() => openArticleModal(articleTarget), 80);
+    }
   }
 }
 
@@ -1757,6 +1814,23 @@ const ARTICLES = {
     body: `<p>Civil liberties advocates and office slackers alike expressed outrage Thursday after a routine forensic audit of Intel's controversial Processor Serial Number (PSN) telemetry revealed that corporate network admin Dave Kowalski was not, in fact, benchmarking SQL cluster throughput, but had engaged in thirty-eight consecutive hours of Windows Solitaire in Vegas scoring mode.</p>
     <p>"The telemetry is unmistakable," confirmed senior auditor Eleanor Rigby. "Chip #0000-0672-0000-9842 was responsible for 14,200 mouse clicks on the card deck, sixty-four instances of 'Undo Move', and a single triumphant cascade of bouncing king-high decks across the SVGA monitor on Tuesday afternoon."</p>
     <p>Kowalski defended his performance vigorously. "Solitaire is the only application on this machine that stress-tests the L2 cache without crashing the primary domain controller. If anything, the board of directors owes me a bonus for stress validation."</p>`
+  },
+  cyberdream: {
+    kicker: "SPECIAL YEAR 2000 PANIC REPORT",
+    title: "Area Man In A Hurry To Realize Cyber-Dream Before End Of Century",
+    meta: "BY STAFF HUMORIST • PEORIA, IL • OCT 15, 1999",
+    body: `<p>Calling the upcoming calendar milestone 'a non-negotiable deadline for paradigm-shifting digital convergence', local resident Arthur Pendelton announced Thursday that he has fewer than 75 days to finish designing a website that sells artisanal rubber bands over dial-up modems.</p>
+    <p>"If I don't secure venture capital by Thanksgiving, someone in Silicon Valley will beat me to the punch," Pendelton remarked while adding a third animated flame GIF to his index.html page. "The 21st century waits for no man."</p>
+    <p>Pendelton's startup, tentatively titled RubberBandsDirect.com, plans to operate from a two-bedroom apartment utilizing a dedicated 56k dial-up connection. Despite having zero revenue, zero inventory, and no business plan beyond 'disrupting office supplies with hyperlinks', Pendelton has already ordered three cases of customized PetPants-style corporate polo shirts.</p>
+    <p>"When the ball drops in Times Square, my shopping cart CGI-bin script will either process fifteen million orders or explode into flaming silicon," Pendelton added. "Either way, I will be a dot-com legend."</p>`
+  },
+  aolcds: {
+    kicker: "CONSUMER WASTE &amp; LANDFILL DISCOVERY",
+    title: "Archaeologists Uncover Mesozoic Fossil Embedded Inside AOL 5.0 Installation Tin",
+    meta: "BY DANA SCULLY-JONES, PALEONTOLOGY BEAT • DULUTH, MN • DEC 29, 1999",
+    body: `<p>Geologists and paleontologists at the Minnesota Basin Field Station were left speechless Tuesday after chiseling through fifty feet of prehistoric limestone, only to discover an intact tin containing America Online 5.0 offering 700 free hours of dial-up service.</p>
+    <p>"Carbon dating places this trilobite fossil at three hundred million years old," lead researcher Dr. Emmett Hall confirmed while wiping stone dust from the cardboard sleeve. "Yet somehow, Steve Case managed to mail an installation CD directly into this creature's sedimentary matrix."</p>
+    <p>Environmental groups estimated that by midnight on December 31st, uninstalled AOL installation discs will compose approximately fourteen percent of the Earth's continental shelf, providing a durable synthetic foundation for 21st-century highway construction.</p>`
   }
 };
 
@@ -1848,6 +1922,57 @@ function printFrontPage() {
 function exportFrontPageVfs() {
   const text = `THE SCALLION - AMERICA'S FINEST VIRTUAL NEWS SOURCE\nWEDNESDAY, DECEMBER 29, 1999\n\nLEAD STORY: Microsoft Announces Windows 2000 Will Be Shipped On 48,000 Floppy Disks\n\n${ARTICLES.win2000.body.replace(/<[^>]+>/g, '')}\n\n---\n(c) 1999 The Scallion Editorial Syndicate\nkweb://scallion`;
   saveToKiloVfs('/home/downloads/scallion_frontpage.txt', text);
+}
+
+/** Exports full vintage 1999 RSS 0.91 XML feed to KiloOS VFS */
+function exportRssVfs() {
+  const xml = `<?xml version="1.0" encoding="ISO-8859-1" ?>
+<rss version="0.91">
+  <channel>
+    <title>The Scallion Vintage 1999 Wire</title>
+    <link>kweb://scallion</link>
+    <description>America's Finest 1999 Satirical Broadsheet and Late Wire</description>
+    <language>en-us</language>
+    <copyright>Copyright 1999 The Scallion Editorial Syndicate</copyright>
+    <pubDate>Wed, 29 Dec 1999 00:00:01 GMT</pubDate>
+    <item>
+      <title>Microsoft Announces Windows 2000 Will Be Shipped On 48,000 Floppy Disks</title>
+      <link>kweb://scallion#article-win2000</link>
+      <description>We heard our enterprise clients who refuse to install CD-ROM drives loud and clear, confirms VP of Optical Distrust.</description>
+    </item>
+    <item>
+      <title>Area Man In A Hurry To Realize Cyber-Dream Before End Of Century</title>
+      <link>kweb://scallion#article-cyberdream</link>
+      <description>Dot-com visionary refuses to sleep until IPO of artisanal rubber band dial-up website.</description>
+    </item>
+    <item>
+      <title>Archaeologists Uncover Mesozoic Fossil Embedded Inside AOL 5.0 Installation Tin</title>
+      <link>kweb://scallion#article-aolcds</link>
+      <description>Sedimentary rock carbon-dated to 300 million years old contains 700 free hours CD-ROM.</description>
+    </item>
+    <item>
+      <title>Programmer Spends Entire Weekend Configuring SoundBlaster 16 IRQ 7 Only To Realize Speakers Were Unplugged</title>
+      <link>kweb://scallion#article-soundblaster</link>
+      <description>DMA conflicts and jumper needle-nose tweezers culminate in discovery of loose 1/8" stereo jack.</description>
+    </item>
+    <item>
+      <title>Dot-Com Startup Valued At $4.2B Consists Entirely Of Single Flaming GIF And A Foosball Table</title>
+      <link>kweb://scallion#article-dotcom</link>
+      <description>PetPants.com surges 480% in opening day trading despite having no inventory and negative $140M forecast.</description>
+    </item>
+    <item>
+      <title>Man Trades Entire 401(k) For 12,000 Cans Of Creamed Corn And A Compound Crossbow</title>
+      <link>kweb://scallion#article-creamedcorn</link>
+      <description>Duluth resident Arthur Higgins completes cellar fortification ahead of midnight mainframe meltdown.</description>
+    </item>
+    <item>
+      <title>Pentium III Serial Number Tracking Confirms Employee Played 38 Hours Of Desktop Solitaire</title>
+      <link>kweb://scallion#article-solitaire</link>
+      <description>Corporate audit proves network engineer achieved a personal best of 4,812 cards flipped while ostensibly debugging the Oracle payroll schema.</description>
+    </item>
+  </channel>
+</rss>`;
+  saveToKiloVfs('/home/downloads/scallion_vintage99.xml', xml);
 }
 
 // --- Y2K Panic Meter Engine ---
@@ -2556,6 +2681,9 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
   } else if (keyLower === 'r') {
     randomizeForge();
+    e.preventDefault();
+  } else if (keyLower === 'x') {
+    exportRssVfs();
     e.preventDefault();
   }
 });
