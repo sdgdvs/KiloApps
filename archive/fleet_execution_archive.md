@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T22:40:59-08:00 — kilo-expander: KMech (Harden KiloVFS and Cross-App IPC in kmech.html and Win32 C parity in KMech/main.c)**
+  - Status: PASS ✅ (0 errors, web 212.1 KB, native 39.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Hardened KiloVFS in kmech.html with e.origin validation, targetOrigin, 60s picker timeouts, and suppressed silent autosave OS_NOTIFY.
+  - Wired VFS_SHOW_SAVE with standalone Blob fallback, boot URL hash, incoming FILE_OPEN/VFS_OPEN auto-loading, and Export Combat Log to VFS + Open in KPad.
+  - Implemented GetSaveFileNameA and GetOpenFileNameA telemetry Export/Import dialog parity in KMech/main.c.
+  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
+
 - **2026-11-02T22:22:20-08:00 — kilo-qa: KChrono (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KChrono across web and native targets.

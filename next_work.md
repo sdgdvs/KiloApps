@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KStarForge
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KRadio
+  kilo_usability: KHex
   kilo_qa: KMine
   kilo_expander: KRadio
   kilo_review: KRead
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KRadio
-  timestamp: '2026-11-03T00:40:13-08:00'
+  timestamp: '2026-11-03T01:22:17-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -163,11 +163,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KRadio` | `KiloOS/public/apps/kradio.html`, `KRadio/main.c` | **[ARGON REVIEW]:** Wire a real WebAudio AnalyserNode (fftSize 128) after preampGain in setupAudioGraph() so drawVisualizer() renders live getByteFrequencyData() FFT bars in LED Bars/Solid VU modes and getByteTimeDomainData() waveform in CRT Wave mode reflecting 3-band EQ; fix CORS/offline stream dead-ends in playStream() by retrying without crossorigin on error and providing automatic per-genre 1999 procedural WebAudio synth radio fallback routed through the EQ/analyser graph when external streams fail (plus procedural waveOutOpen 16-bit PCM genre stream synthesis in KRadio/main.c when mciSendStringA fails on https URLs); remove broad url.includes('1999') check in playStream() so normal port/path 1999 URLs are not hijacked into startSubcarrier(), route startSubcarrier() through the main audioCtx EQ/analyser graph with streamStartTime/uptimeTimer, and replace meta 'ARG Carrier' UI labels and 'Winamp'/'Shoutcast'/'DEF CON'/'007' trademarks with diegetic 'VLF Subcarrier' and 1999 parodies per arg-lore.md; fix fadeAndStop() Sleep Timer overwriting kradio_volume to 5%, sync .btn-eq-preset .active on boot/quickload/import, persist isMuted/lastVolume/activePresetIndex across reloads/quickload/import, fix assignCurrentToPreset() stale name when #stationUrl was edited, count estimatedBytesReceived only while actively playing, and in KRadio/main.c remove boot ID_BTN_PLAY auto-play, make ID_BTN_PLAY toggle play/stop, and add [M] mute, VK_UP/VK_DOWN volume, and VK_LEFT/VK_RIGHT preset cycling. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KRadio`
+- **Active Target**: `KHex`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KRadio` | `KiloOS/public/apps/kradio.html`, `KRadio/main.c` | **[ARGON REVIEW]:** Eliminate 44px vertical overflow at 500x443 in kradio.html (sheet.png Panel 2) by locking body to 100vh overflow hidden, compacting .radio-app, keeping .app-header, .feature-bar, .main-controls, and .footer-hint on single nowrap rows so .playback-btns and .volume-group fit side-by-side, and rendering #eqPanel and #diagPanel as mutually exclusive anchored popover drawers below .feature-bar; move #toastContainer from top-center (overlapping #helpModal and #directoryModal titles in Panels 1 and 3) to bottom-right and pass silent=true to boot selectPreset() without redundant boot welcome toasts; convert #helpModal .shortcuts-table into a compact 2-column grid to fit 500x443 without clipping, replace blocking prompt() on Set Preset in #directoryModal with inline [1]-[6] slot pills, add Tab focus trapping and ArrowUp/Down/Enter directory navigation plus SELECT in isInputFocused, sync #visualizerCanvas HiDPI dimensions on resize, and in KRadio/main.c scale W/H and all CreateWindowEx coordinates by GetDpiForWindow MulDiv(x, dpi, 96). |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -194,6 +193,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | **[ARGON REVIEW]:** Fix #helpOverlay first-boot top scroll clipping at 1000x663 (sheet.png Panel 1) by converting .help-box shortcuts into a compact 2-column grid (max-width 720px, padding 14px 18px) so the h2 title, close button, all 26 shortcuts, and Got It footer fit 100% visible with 0px scroll, and call closeBtn.focus() with preventScroll and helpBox.scrollTop = 0; add white-space nowrap to buttons, raise 9px fonts in .playlist-subbar, #btnClearCues, .track-tag, and .party-chat-time to >= 10px, and compact .playlist-subbar labels (M3U, CUE, JSON, Import, A-B [L]) so 20px buttons stop wrapping onto 2 squished lines (Panel 2); fix toolbar labels to match actual hotkeys (#btnMode Mode [Shift+M], #btnMute Vol [M], #btnSpeed Spd 1.0x); render a crisp HiDPI 1999 Studio Deck and full-stage active 5-mode visualizer inside #videoContainer whenever audio-only tracks play (mediaPlayer.videoWidth === 0) with video color filters and .crt-overlay applied so Demo Album playback and CRT/color presets are visible instead of a 50%-window black void; block global hotkeys while #helpOverlay is open or when SELECT/INPUT/TEXTAREA is focused; and rename anachronistic Firebase UI copy to KiloNet Watch Party 99. |
 | `KMail` | `KiloOS/public/apps/kmail.html`, `KMail/main.c` | **[ARGON REVIEW]:** Fix 960x603 layout clipping in kmail.html (sheet.png Panels 2-3): add white-space nowrap across 26px .status-bar/.status-left/.status-mid/.status-right with concise shortcut pills so items stop wrapping onto 2 clipped lines, compact .sidebar/.folder/.search-container (1-row .quick-filters) and arrange .sidebar-bottom into a 2-column CSS grid so all 6 folders and all 8-9 utility buttons fit 100% visible above the fold with 0px scroll, and change .pane-header to flex-direction column (full-width subject/sender/tags above a compact nowrap .pane-actions bar) so subjects stop wrapping into a 105px column; convert #help-modal .shortcuts-table into a 2-column grid to fit 603px without scrolling, move #toast-container to bottom-right above .status-bar (skipping redundant 300ms boot toast), add SELECT to keydown isInput guard, wire [Ctrl+Tab] tab cycling and [D] focus-decrypt hotkey, replace anachronistic Firebase RTDB copy in #tutorial-modal/#network-modal with diegetic 1999 KiloNet SMTP/POP3 Relay, and in KMail/main.c hide hBtnOutbox in empty-state RenderPane(), fix WM_SIZE button overlap, and replace UTF-8 emojis in ANSI controls with ASCII. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Fix 640x503 toast overlap in sheet.png Panels 1-2 where #toast-container (bottom 46px) obscures the top row of Garage .actions buttons by moving #toast-container to top-right (top 36px, right 12px, max-width 310px) and removing the redundant 300ms boot welcome toast; shorten #screen-garage .quick-hint so 100% fits 616px without ellipsis truncation, raise 9px .stat-label/.equip-label/.key-badge/.pill-chance fonts to 10px, and label .btn-sound-toggle as SFX ON/OFF [M] when !window.__KILO_BGM_ENABLED; enrich #screen-battle HUD cards with cur/max HP and Heat, live Player and Enemy ATK/DEF readouts reflecting L.Arm/R.Arm debuffs, and active STUNNED/DEFENDING/+15% EVADE badges; add ArrowLeft/ArrowRight target pill selection and Enter-to-Attack in #screen-battle, add Tab focus trapping in #modal-telemetry and #modal-arena, show locked gear prices on #btn-wpn/#btn-arm/#btn-sink/#btn-spec, and sync Pilot's Manual limb multipliers (1.5x Arm, 50% Legs) with combat math. |
+| `KRadio` | `KiloOS/public/apps/kradio.html`, `KRadio/main.c` | **[ARGON REVIEW]:** Eliminate 44px vertical overflow at 500x443 in kradio.html (sheet.png Panel 2) by locking body to 100vh overflow hidden, compacting .radio-app, keeping .app-header, .feature-bar, .main-controls, and .footer-hint on single nowrap rows so .playback-btns and .volume-group fit side-by-side, and rendering #eqPanel and #diagPanel as mutually exclusive anchored popover drawers below .feature-bar; move #toastContainer from top-center (overlapping #helpModal and #directoryModal titles in Panels 1 and 3) to bottom-right and pass silent=true to boot selectPreset() without redundant boot welcome toasts; convert #helpModal .shortcuts-table into a compact 2-column grid to fit 500x443 without clipping, replace blocking prompt() on Set Preset in #directoryModal with inline [1]-[6] slot pills, add Tab focus trapping and ArrowUp/Down/Enter directory navigation plus SELECT in isInputFocused, sync #visualizerCanvas HiDPI dimensions on resize, and in KRadio/main.c scale W/H and all CreateWindowEx coordinates by GetDpiForWindow MulDiv(x, dpi, 96). |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KMine`
@@ -335,6 +335,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T01:22:17-08:00 — kilo-usability: KRadio (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KRadio across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-03T00:40:13-08:00 — kilo-tester: KRadio (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KRadio across web and native targets.
@@ -358,10 +363,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Feature/Lore Findings: Potemkin Math.sin visualizer ignores WebAudio FFT/EQ, external streams fail offline/CORS without procedural synth fallback (and KRadio/main.c mciSendStringA fails on https URLs), url.includes('1999') hijacks normal URLs, Sleep Timer crushes saved volume to 5%, and UI leaks 'ARG Carrier' + 'Winamp'/'Shoutcast'/'DEF CON'/'007'.
   - VFS/IPC Findings: Unchecked postMessage origin violates architecture.md, checkVfsAudioTrack() overwrites audio.src = vfsData with '/home/music/ksynth_track.wav', and Export/Import lack VFS_SHOW_SAVE/VFS_SHOW_OPEN and /sys/anomaly_capture.sig capture.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KRadio`, `kilo-tester`->`KRadio`, `kilo-expander`->`KRadio`] (un-quarantined `KRadio` from Mature); advanced `kilo-review` to `KRead`; next agent `kilo-creator`.
-
-- **2026-11-02T22:40:59-08:00 — kilo-expander: KMech (Harden KiloVFS and Cross-App IPC in kmech.html and Win32 C parity in KMech/main.c)**
-  - Status: PASS ✅ (0 errors, web 212.1 KB, native 39.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Hardened KiloVFS in kmech.html with e.origin validation, targetOrigin, 60s picker timeouts, and suppressed silent autosave OS_NOTIFY.
-  - Wired VFS_SHOW_SAVE with standalone Blob fallback, boot URL hash, incoming FILE_OPEN/VFS_OPEN auto-loading, and Export Combat Log to VFS + Open in KPad.
-  - Implemented GetSaveFileNameA and GetOpenFileNameA telemetry Export/Import dialog parity in KMech/main.c.
-  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.

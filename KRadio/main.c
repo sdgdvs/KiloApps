@@ -564,6 +564,8 @@ LRESULT CALLBACK KRadioVizProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     }
 }
 
+#define S(val) MulDiv((val), dpi, 96)
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -586,106 +588,106 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Title Header
             hTitle = CreateWindowEx(0, "STATIC", "KRadio - Retro Stream Player",
                 WS_CHILD | WS_VISIBLE,
-                16, 12, 270, 24, hwnd, NULL, NULL, NULL);
+                S(16), S(12), S(270), S(24), hwnd, NULL, NULL, NULL);
             SendMessage(hTitle, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
 
             // Help button
             hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]",
                 WS_CHILD | WS_VISIBLE,
-                374, 10, 90, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+                S(374), S(10), S(90), S(26), hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
             // URL Label
             hUrlLabel = CreateWindowEx(0, "STATIC", "Stream URL or Direct MP3/AAC Address:",
                 WS_CHILD | WS_VISIBLE,
-                16, 42, 448, 16, hwnd, NULL, NULL, NULL);
+                S(16), S(42), S(448), S(16), hwnd, NULL, NULL, NULL);
             SendMessage(hUrlLabel, WM_SETFONT, (WPARAM)g_hFontSmall, TRUE);
 
             // URL Edit Box
             hEditUrl = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "https://radio.erb.pw/public/subspace",
                 WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-                16, 60, 448, 24, hwnd, NULL, NULL, NULL);
+                S(16), S(60), S(448), S(24), hwnd, NULL, NULL, NULL);
             SendMessage(hEditUrl, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
             g_pfnOrigEditProc = (WNDPROC)SetWindowLongPtrA(hEditUrl, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
             // Presets Label
             hPresetsLabel = CreateWindowEx(0, "STATIC", "Station Presets (Hotkeys 1 - 6):",
                 WS_CHILD | WS_VISIBLE,
-                16, 88, 448, 16, hwnd, NULL, NULL, NULL);
+                S(16), S(88), S(448), S(16), hwnd, NULL, NULL, NULL);
             SendMessage(hPresetsLabel, WM_SETFONT, (WPARAM)g_hFontSmall, TRUE);
 
             // Preset Buttons (Row 1: 3 buttons, Row 2: 3 buttons)
             hBtnPresets[0] = CreateWindowEx(0, "BUTTON", "[1] Subspace",
                 WS_CHILD | WS_VISIBLE,
-                16, 106, 144, 26, hwnd, (HMENU)ID_PRESET_1, NULL, NULL);
+                S(16), S(106), S(144), S(26), hwnd, (HMENU)ID_PRESET_1, NULL, NULL);
             SendMessage(hBtnPresets[0], WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
             hBtnPresets[1] = CreateWindowEx(0, "BUTTON", "[2] Groove Salad",
                 WS_CHILD | WS_VISIBLE,
-                168, 106, 144, 26, hwnd, (HMENU)ID_PRESET_2, NULL, NULL);
+                S(168), S(106), S(144), S(26), hwnd, (HMENU)ID_PRESET_2, NULL, NULL);
             SendMessage(hBtnPresets[1], WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
             hBtnPresets[2] = CreateWindowEx(0, "BUTTON", "[3] Nightwave",
                 WS_CHILD | WS_VISIBLE,
-                320, 106, 144, 26, hwnd, (HMENU)ID_PRESET_3, NULL, NULL);
+                S(320), S(106), S(144), S(26), hwnd, (HMENU)ID_PRESET_3, NULL, NULL);
             SendMessage(hBtnPresets[2], WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
             hBtnPresets[3] = CreateWindowEx(0, "BUTTON", "[4] DEF CON",
                 WS_CHILD | WS_VISIBLE,
-                16, 136, 144, 26, hwnd, (HMENU)ID_PRESET_4, NULL, NULL);
+                S(16), S(136), S(144), S(26), hwnd, (HMENU)ID_PRESET_4, NULL, NULL);
             SendMessage(hBtnPresets[3], WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
             hBtnPresets[4] = CreateWindowEx(0, "BUTTON", "[5] Secret Agent",
                 WS_CHILD | WS_VISIBLE,
-                168, 136, 144, 26, hwnd, (HMENU)ID_PRESET_5, NULL, NULL);
+                S(168), S(136), S(144), S(26), hwnd, (HMENU)ID_PRESET_5, NULL, NULL);
             SendMessage(hBtnPresets[4], WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
             hBtnPresets[5] = CreateWindowEx(0, "BUTTON", "[6] Space Station",
                 WS_CHILD | WS_VISIBLE,
-                320, 136, 144, 26, hwnd, (HMENU)ID_PRESET_6, NULL, NULL);
+                S(320), S(136), S(144), S(26), hwnd, (HMENU)ID_PRESET_6, NULL, NULL);
             SendMessage(hBtnPresets[5], WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
             // Playback Action Buttons
             hBtnPlay = CreateWindowEx(0, "BUTTON", "Play [Space]",
                 WS_CHILD | WS_VISIBLE,
-                16, 168, 88, 30, hwnd, (HMENU)ID_BTN_PLAY, NULL, NULL);
+                S(16), S(168), S(88), S(30), hwnd, (HMENU)ID_BTN_PLAY, NULL, NULL);
             SendMessage(hBtnPlay, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
             
             hBtnStop = CreateWindowEx(0, "BUTTON", "Stop [S]",
                 WS_CHILD | WS_VISIBLE,
-                110, 168, 72, 30, hwnd, (HMENU)ID_BTN_STOP, NULL, NULL);
+                S(110), S(168), S(72), S(30), hwnd, (HMENU)ID_BTN_STOP, NULL, NULL);
             SendMessage(hBtnStop, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
             hBtnSave = CreateWindowEx(0, "BUTTON", "Save [F5]",
                 WS_CHILD | WS_VISIBLE,
-                188, 168, 84, 30, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+                S(188), S(168), S(84), S(30), hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
             SendMessage(hBtnSave, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
             hBtnLoad = CreateWindowEx(0, "BUTTON", "Load [F9]",
                 WS_CHILD | WS_VISIBLE,
-                278, 168, 84, 30, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
+                S(278), S(168), S(84), S(30), hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
             SendMessage(hBtnLoad, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
             hBtnViz = CreateWindowEx(0, "BUTTON", "Viz [V]",
                 WS_CHILD | WS_VISIBLE,
-                368, 168, 96, 30, hwnd, (HMENU)ID_BTN_VIZ, NULL, NULL);
+                S(368), S(168), S(96), S(30), hwnd, (HMENU)ID_BTN_VIZ, NULL, NULL);
             SendMessage(hBtnViz, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
             // Spectrum Visualizer Window
             hViz = CreateWindowEx(0, "KRadioVizClass", "",
                 WS_CHILD | WS_VISIBLE,
-                16, 204, 448, 96, hwnd, NULL, NULL, NULL);
+                S(16), S(204), S(448), S(96), hwnd, NULL, NULL, NULL);
 
             // Status Display
             hStatus = CreateWindowEx(0, "STATIC", "Status: Ready | Buffer: Standby (64 KB Normal)",
                 WS_CHILD | WS_VISIBLE,
-                16, 306, 448, 20, hwnd, NULL, NULL, NULL);
+                S(16), S(306), S(448), S(20), hwnd, NULL, NULL, NULL);
             SendMessage(hStatus, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
             
             // Shortcut Hint
             hHint = CreateWindowEx(0, "STATIC", "Hotkeys: [1-6] Presets | [Space] Play | [S] Stop | [V] Viz | [B] Buffer | [F5] Save | [F9] Load | [F1] Help",
                 WS_CHILD | WS_VISIBLE,
-                16, 328, 448, 18, hwnd, NULL, NULL, NULL);
+                S(16), S(328), S(448), S(18), hwnd, NULL, NULL, NULL);
             SendMessage(hHint, WM_SETFONT, (WPARAM)g_hFontSmall, TRUE);
             
             // 30 FPS Visualizer animation timer
@@ -792,11 +794,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void MainEntry() {
+    int dpi = 96;
     HMODULE hUser32 = GetModuleHandleA("user32.dll");
     if (hUser32) {
         typedef BOOL(WINAPI *SETPROCESSDPIAWARE)(void);
         SETPROCESSDPIAWARE pSetProcessDPIAware = (SETPROCESSDPIAWARE)GetProcAddress(hUser32, "SetProcessDPIAware");
         if (pSetProcessDPIAware) pSetProcessDPIAware();
+
+        typedef UINT(WINAPI *GETDPIFORSYSTEM)(void);
+        GETDPIFORSYSTEM pGetDpiForSystem = (GETDPIFORSYSTEM)GetProcAddress(hUser32, "GetDpiForSystem");
+        if (pGetDpiForSystem) {
+            dpi = pGetDpiForSystem();
+        } else {
+            HDC hdc = GetDC(NULL);
+            if (hdc) {
+                dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+                ReleaseDC(NULL, hdc);
+            }
+        }
     }
 
     HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -819,7 +834,7 @@ void MainEntry() {
     RegisterClass(&wc);
 
     DWORD style = (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN;
-    RECT rect = { 0, 0, W, H };
+    RECT rect = { 0, 0, MulDiv(W, dpi, 96), MulDiv(H, dpi, 96) };
     AdjustWindowRect(&rect, style, FALSE);
 
     HWND hwnd = CreateWindowEx(0, "KRadioApp", "KRadio - Retro Stream Player [F1: Help]", style,
