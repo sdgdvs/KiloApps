@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T21:40:16-08:00 — kilo-usability: KMech (Stall Circuit Breaker (Auto-Rotated After Consecutive Timeouts))**
+  - Status: ROTATED ⚠️ (circuit breaker triggered after 2 consecutive stalled turns on KMech).
+  - Reverted unverified working tree edits and rotated KMech to queue bottom so fleet execution continues.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-02T20:22:17-08:00 — kilo-tester: KMech (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KMech across web and native targets.
