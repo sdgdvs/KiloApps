@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KHex
   kilo_qa: KFont
-  kilo_expander: KCalc
+  kilo_expander: KHex
   kilo_review: KImage
 virtual_web_target: kweb://cabled
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KDB
-  timestamp: '2026-11-03T09:22:19-08:00'
+  agent: kilo-expander
+  app: KCalc
+  timestamp: '2026-11-03T09:41:19-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -212,11 +212,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KCalc`
+- **Active Target**: `KHex`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY with standalone blob fallback) for saving/loading calculation tapes and workspace JSON snapshots to /home/docs/, and add live HEX/DEC/OCT/BIN radix readout plus FV/CAGR financial tools to KCalc/main.c (<999 KB). |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Harden Phase VI KiloOS VFS and IPC Mesh in khex.html per architecture.md: enforce event.origin === window.location.origin in window.addEventListener('message'), post with window.location.origin instead of wildcard (removing dead OS_SET_WINDOW_SIZE), raise sendToOS() timeout to 60000ms for interactive VFS_SHOW_OPEN and VFS_SHOW_SAVE pickers, emit OS_NOTIFY after VFS_WRITE, handle incoming FILE_OPEN/VFS_OPEN messages to auto-load VFS files, add Save to VFS (/home/docs/ or /home/crypto/) and Open in KPad / Send to KCipher OS_LAUNCH_APP buttons in Tab 7 Export, Tab 8 Patch Builder, and Tab 9 Disassembler, and add native Win32 .bin file open/save parity in KHex/main.c (<999 KB). |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
 | `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kchess.html using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with mandatory event.origin === window.location.origin checks, 60s dialog cleanup timeouts, and standalone Blob download / file-input fallbacks when window.parent === window for .json game saves (/home/saves/kchess_save.json) in Game menu, .pgn match records (/home/docs/kchess_match.pgn) in #pgn-modal, and .fen positions (/home/docs/kchess_position.fen) in #fen-modal and #editor-modal, plus handle incoming FILE_OPEN / VFS_OPEN messages from KiloOS File Browser to auto-load .pgn/.fen/.json files and add an Open PGN in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad) in #pgn-modal. |
@@ -243,6 +242,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Harden KiloVFS in kmech.html per architecture.md by validating e.origin === window.location.origin in all window message listeners, posting with window.location.origin instead of wildcard, adding a 60000ms cleanup timeout to KiloVFS.openPicker(), suppressing OS_NOTIFY desktop notification spam during quickSave(true) silent autosaves, wiring VFS_SHOW_SAVE interactive path selection with standalone Blob download fallback in saveTelemetryToVFS(), handling boot URL hash (#/path) and incoming FILE_OPEN/VFS_OPEN messages from KiloOS File Browser to auto-load telemetry JSON, and adding an Export Combat Log to VFS (/home/docs/kmech_combat_log.txt) + Open in KPad (OS_LAUNCH_APP appId kpad) button in #screen-battle/#modal-telemetry plus GetSaveFileNameA/GetOpenFileNameA telemetry Export/Import dialog parity in KMech/main.c (<999 KB). |
 | `KRadio` | `KiloOS/public/apps/kradio.html`, `KRadio/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kradio.html per architecture.md (strict e.origin === window.location.origin validation, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks when window.parent === window) connecting #btnExport (with inline JSON/M3U/PLS format selector) and #btnImport to VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY (/home/music/ and /home/saves/kradio_config.json) and VFS_SHOW_OPEN -> VFS_READ; fix checkVfsAudioTrack() bug where playStream() immediately overwrites audio.src = vfsData with '/home/music/ksynth_track.wav' by reading VFS paths via VFS_READ postMessage instead of cross-app localStorage snooping and preserving active VFS data URLs, handle incoming FILE_OPEN and VFS_OPEN messages from File Browser/Trapster/KSynth to play .wav/.mp3/.au tracks and import .m3u/.pls/.json playlists, add Export Subcarrier Capture to /sys/anomaly_capture.sig + Inspect in KMatrix/KHex and Open Playlist in KPad (OS_LAUNCH_APP), and add GetSaveFileNameA/GetOpenFileNameA .m3u/.pls playlist I/O in KRadio/main.c (<999 KB). |
 | `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage integration in kread.html (VFS_SHOW_OPEN/VFS_READ and message listener to open VFS files from kexplorer, plus VFS_WRITE/VFS_SHOW_SAVE when exporting notes, HTML, or sessions) and add the missing Alice in Wonderland sample (ID 1044) to KRead/main.c. |
+| `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY with standalone blob fallback) for saving/loading calculation tapes and workspace JSON snapshots to /home/docs/, and add live HEX/DEC/OCT/BIN radix readout plus FV/CAGR financial tools to KCalc/main.c (<999 KB). |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KImage`
@@ -335,6 +335,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T09:41:19-08:00 — kilo-expander: KCalc (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KCalc across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KHex`; rotated active agent to `kilo-review`.
+
 - **2026-11-03T09:22:19-08:00 — kilo-qa: KDB (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KDB across web and native targets.
@@ -354,9 +359,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-11-03T07:33:31-08:00 — kilo-graphics: KMystery (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KMystery.
   - Handoff: Advanced `kilo-graphics` to `KSubmarine`; rotated active agent to `kilo-tester`.
-
-- **2026-11-03T07:21:10-08:00 — kilo-creator: kweb://trapster (Trapster P2P Chiptune & Tracker Exchange v1.0b)**
-  - Status: PASS ✅ (web 129.0 KB < 250 KB, visual probe PASS, 0 errors, 0 layout clipping).
-  - Implemented F5/F9 state persistence to /home/music/ and JSON catalog import/export.
-  - Verified live YM2612/SPC700 chiptune previewer, simulated 56k/T1 download queue, and P2P node directory.
-  - Handoff: Advanced `kilo-creator` to `kweb://cabled`; rotated active agent to `kilo-graphics`.

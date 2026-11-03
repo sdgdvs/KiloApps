@@ -1535,6 +1535,8 @@
     <div class="header-controls">
       <button class="badge-btn" onclick="quicksaveState()" title="Quicksave Workspace State (F5)">💾 Save [F5]</button>
       <button class="badge-btn" onclick="quickloadState()" title="Restore Quicksaved State (F9)">📂 Load [F9]</button>
+      <button class="badge-btn" onclick="saveWorkspaceToVFS()" title="Save Workspace Snapshot to KiloOS VFS (/home/docs/kcalc_workspace.json)">📁 VFS Save</button>
+      <button class="badge-btn" onclick="loadWorkspaceFromVFS()" title="Load Workspace Snapshot from KiloOS VFS">📂 VFS Open</button>
       <button id="themeBadge" class="badge-btn" onclick="cycleDisplayTheme()" title="Cycle Display Theme (L): OLED / Retro LCD / Amber / VFD">🎨 OLED [L]</button>
       <button class="badge-btn" onclick="openHelpModal()" title="Help & Keyboard Shortcuts (H / F1)">Help [F1]</button>
       <button id="keypadModeBtn" class="badge-btn" onclick="toggleKeypadMode()" title="Toggle Standard (Basic 5-col) vs Scientific (7-col) Keypad [S]"><span>📐</span> Sci [S]</button>
@@ -2372,9 +2374,14 @@
             <button class="action-btn" onclick="exportHistoryCSV()">Export CSV</button>
             <button class="action-btn" onclick="exportHistoryTXT()">Export TXT</button>
             <button class="action-btn" onclick="exportHistoryMarkdown()">Export MD</button>
+            <button class="action-btn" onclick="saveTapeToVFS()" title="Save calculation tape to KiloOS VFS (/home/docs/)">📁 Save Tape to VFS</button>
+            <button class="action-btn" onclick="loadTapeFromVFS()" title="Load calculation tape from KiloOS VFS">📂 Load Tape</button>
+            <button class="action-btn" onclick="saveWorkspaceToVFS()" title="Save workspace JSON snapshot to KiloOS VFS (/home/docs/)">💾 VFS Save WS</button>
+            <button class="action-btn" onclick="loadWorkspaceFromVFS()" title="Load workspace JSON snapshot from KiloOS VFS">📂 VFS Open WS</button>
             <button class="action-btn" onclick="exportStateJSON()" title="Export complete workspace snapshot JSON">Export JSON</button>
             <button class="action-btn" onclick="importStateJSON()" title="Import workspace snapshot JSON">Import JSON</button>
             <input type="file" id="stateFileInput" accept=".json" style="display:none;" onchange="handleStateFileImport(event)">
+            <input type="file" id="tapeFileInput" accept=".txt,.json,.csv,.md" style="display:none;" onchange="handleTapeFileImport(event)">
             <button class="action-btn danger" onclick="clearHistory()">Clear</button>
           </div>
 
@@ -3787,6 +3794,312 @@
       return false;
     }
   }
+
+  // ==========================================
+  // Phase VI KiloOS Virtual Filesystem & IPC Mesh
+  // ==========================================
+  const KiloVFS = {
+    isEmbedded() {
+      try {
+        return Boolean(window.parent && window.parent !== window);
+      } catch (e) {
+        return false;
+      }
+    },
+    write(path, data, notifyTitle) {
+      const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+      if (this.isEmbedded()) {
+        try {
+          const reqId = 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+          window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: reqId }, '*');
+          window.parent.postMessage({ type: 'OS_NOTIFY', title: notifyTitle || 'KCalc Pro', message: `Saved to VFS: ${path}` }, '*');
+        } catch (e) {}
+      }
+      try { localStorage.setItem('vfs:' + path, payload); } catch (e) {}
+      return true;
+    },
+    read(path, cb) {
+      if (!this.isEmbedded()) {
+        let localData = null;
+        try { localData = localStorage.getItem('vfs:' + path); } catch (e) {}
+        if (cb) cb(localData, path);
+        return;
+      }
+      const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (cb) cb(e.data.data, e.data.path);
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        let fallbackData = null;
+        try { fallbackData = localStorage.getItem('vfs:' + path); } catch (e) {}
+        if (cb) cb(fallbackData, path);
+      }, 60000);
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, path);
+      }
+    },
+    showSave(defaultPath, data, cb) {
+      const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+      if (!this.isEmbedded()) {
+        const fname = (defaultPath || 'kcalc_export.txt').split('/').pop();
+        const mime = fname.endsWith('.json') ? 'application/json' : (fname.endsWith('.csv') ? 'text/csv' : 'text/plain');
+        downloadFile(fname, payload, mime);
+        if (cb) cb(fname);
+        return;
+      }
+      const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (e.data.path) {
+            KiloVFS.write(e.data.path, payload, 'KCalc Pro');
+            if (cb) cb(e.data.path);
+          } else if (cb) {
+            cb(null);
+          }
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null);
+      }, 60000);
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({
+          type: 'VFS_SHOW_SAVE',
+          requestId: reqId,
+          defaultPath: defaultPath || '/home/docs/kcalc_workspace.json',
+          path: defaultPath || '/home/docs/kcalc_workspace.json'
+        }, '*');
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null);
+      }
+    },
+    showOpen(cb) {
+      if (!this.isEmbedded()) {
+        const fi = document.getElementById('stateFileInput');
+        if (fi) {
+          fi.onchange = (evt) => {
+            handleStateFileImport(evt);
+          };
+          fi.value = '';
+          fi.click();
+        }
+        return;
+      }
+      const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (e.data.path) {
+            KiloVFS.read(e.data.path, cb);
+          } else if (cb) {
+            cb(null, null);
+          }
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, null);
+      }, 60000);
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, null);
+      }
+    }
+  };
+
+  function saveWorkspaceToVFS() {
+    const snap = getFullStateSnapshot();
+    const strData = JSON.stringify(snap, null, 2);
+    KiloVFS.showSave('/home/docs/kcalc_workspace.json', strData, (savedPath) => {
+      if (savedPath) {
+        showToast(`Workspace snapshot saved to ${savedPath}`, 'success');
+      }
+    });
+  }
+
+  function loadWorkspaceFromVFS() {
+    KiloVFS.showOpen((content, path) => {
+      if (!content) return;
+      try {
+        const snap = typeof content === 'string' ? JSON.parse(content) : content;
+        if (restoreFullStateSnapshot(snap)) {
+          showToast(`Restored workspace from ${path || 'VFS'}`, 'success');
+        } else {
+          showToast('Invalid workspace snapshot format', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to parse workspace JSON: ' + e.message, 'error');
+      }
+    });
+  }
+
+  function saveTapeToVFS() {
+    if (historyTape.length === 0) {
+      showToast('Calculation tape is empty!', 'warning');
+      return;
+    }
+    let txt = '=== KCALC PRO CALCULATION TAPE ===\n';
+    txt += `Generated: ${new Date().toLocaleString()}\n\n`;
+    historyTape.forEach((h, i) => {
+      const formula = h.formula || h.expr || '';
+      const result = h.result !== undefined ? h.result : (h.res !== undefined ? h.res : '');
+      const note = h.note ? ` [Note: ${h.note}]` : '';
+      txt += `[${i + 1}] [${h.time || ''}] ${formula} = ${result}${note}\n`;
+    });
+    KiloVFS.showSave('/home/docs/kcalc_tape.txt', txt, (savedPath) => {
+      if (savedPath) {
+        showToast(`Calculation tape saved to ${savedPath}`, 'success');
+      }
+    });
+  }
+
+  function loadTapeFromVFS() {
+    KiloVFS.showOpen((content, path) => {
+      if (!content) return;
+      importTapeData(content, path);
+    });
+  }
+
+  function importTapeData(content, path = '') {
+    try {
+      let importedCount = 0;
+      if (typeof content === 'string' && (content.trim().startsWith('[') || content.trim().startsWith('{'))) {
+        try {
+          const parsed = JSON.parse(content);
+          if (Array.isArray(parsed)) {
+            parsed.forEach(item => {
+              const formula = item.formula || item.expr || item.expression || item.text || '';
+              const result = item.result !== undefined ? item.result : (item.res !== undefined ? item.res : '');
+              if (formula || result) {
+                historyTape.push({
+                  time: item.time || item.timestamp || new Date().toLocaleTimeString(),
+                  formula,
+                  result,
+                  note: item.note || 'Imported'
+                });
+                importedCount++;
+              }
+            });
+          } else if (parsed && Array.isArray(parsed.historyTape)) {
+            parsed.historyTape.forEach(item => {
+              historyTape.push(item);
+              importedCount++;
+            });
+          }
+        } catch (_) {}
+      }
+
+      if (importedCount === 0 && typeof content === 'string') {
+        const lines = content.split('\n');
+        lines.forEach(line => {
+          line = line.trim();
+          if (!line || line.startsWith('===') || line.startsWith('Generated:') || line.startsWith('#') || line.startsWith('Index,') || line.startsWith('|---')) return;
+          if (line.startsWith('|')) {
+            const parts = line.split('|').map(s => s.trim()).filter(Boolean);
+            if (parts.length >= 3 && !isNaN(parseInt(parts[0]))) {
+              const time = parts[1] || new Date().toLocaleTimeString();
+              const formula = parts[2].replace(/`/g, '');
+              const result = (parts[3] || '').replace(/\*\*/g, '');
+              const note = parts[4] || '';
+              historyTape.push({ time, formula, result, note });
+              importedCount++;
+              return;
+            }
+          }
+          const eqIdx = line.lastIndexOf('=');
+          if (eqIdx !== -1) {
+            let left = line.slice(0, eqIdx).trim();
+            const right = line.slice(eqIdx + 1).trim();
+            left = left.replace(/^\[\d+\]\s*/, '').replace(/^\[[\d:]+\]\s*/, '').trim();
+            if (left || right) {
+              historyTape.push({
+                time: new Date().toLocaleTimeString(),
+                formula: left,
+                result: right,
+                note: path ? `From ${path}` : 'Imported'
+              });
+              importedCount++;
+            }
+          }
+        });
+      }
+
+      if (importedCount > 0) {
+        saveHistoryToStorage();
+        renderHistory();
+        showToast(`Loaded ${importedCount} tape records from ${path || 'file'}`, 'success');
+      } else {
+        showToast('No recognizable calculation records found in file', 'warning');
+      }
+    } catch (e) {
+      showToast('Error importing tape: ' + e.message, 'error');
+    }
+  }
+
+  function handleTapeFileImport(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      importTapeData(evt.target.result, file.name);
+    };
+    reader.readAsText(file);
+  }
+
+  window.addEventListener('message', (e) => {
+    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+      return;
+    }
+    if (e.data && (e.data.type === 'FILE_OPEN' || e.data.type === 'VFS_OPEN')) {
+      const path = e.data.path || '';
+      const data = e.data.data;
+      if (typeof data === 'string') {
+        if (path.endsWith('.json') || data.trim().startsWith('{')) {
+          try {
+            const snap = JSON.parse(data);
+            if (snap && (snap.expr !== undefined || snap.calcInputs || snap.historyTape)) {
+              restoreFullStateSnapshot(snap);
+              showToast(`Opened workspace: ${path || 'snapshot'}`, 'success');
+              return;
+            }
+          } catch (_) {}
+        }
+        importTapeData(data, path);
+      }
+    }
+  });
 
   function exportStateJSON() {
     const snap = getFullStateSnapshot();
@@ -6005,6 +6318,8 @@
         <span style="font-size:11px; color:var(--text-muted);">${historyEntries.length} calculation tape records logged</span>
         <div style="display:flex; gap:8px;">
           <button class="kcalc-tool-btn" id="btnDownloadTape">💾 Download File</button>
+          <button class="kcalc-tool-btn" id="btnVfsSaveTape" title="Save tape to KiloOS VFS (/home/docs/)">📁 Save to VFS</button>
+          <button class="kcalc-tool-btn" id="btnVfsLoadTape" title="Load tape from KiloOS VFS">📂 Load from VFS</button>
           <button class="kcalc-tool-btn" id="btnClearTapeStorage" style="color:#f87171;">Clear Tape</button>
         </div>
       </div>
@@ -6058,6 +6373,20 @@
         setTimeout(() => btnCopy.innerText = '📋 Copy to Clipboard', 2000);
       });
     };
+
+    const btnVfsSave = container.querySelector('#btnVfsSaveTape');
+    const btnVfsLoad = container.querySelector('#btnVfsLoadTape');
+    if (btnVfsSave) {
+      btnVfsSave.onclick = () => {
+        saveTapeToVFS();
+      };
+    }
+    if (btnVfsLoad) {
+      btnVfsLoad.onclick = () => {
+        loadTapeFromVFS();
+        closeModal();
+      };
+    }
 
     btnDown.onclick = () => {
       const blob = new Blob([area.value], { type: 'text/plain;charset=utf-8' });
