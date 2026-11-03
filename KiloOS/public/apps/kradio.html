@@ -1233,11 +1233,11 @@
                     </tr>
                     <tr>
                         <td>Alt + M</td>
-                        <td>Export Winamp Playlist [.m3u]</td>
+                        <td>Export KAMP Playlist [.m3u]</td>
                     </tr>
                     <tr>
                         <td>Alt + P</td>
-                        <td>Export Shoutcast Playlist [.pls]</td>
+                        <td>Export ShoutNet Playlist [.pls]</td>
                     </tr>
                     <tr>
                         <td>Alt + I</td>
@@ -1300,7 +1300,7 @@
             { id: 1, name: 'Subspace', genre: 'Synthwave', url: 'https://radio.erb.pw/public/subspace' },
             { id: 2, name: 'Groove Salad', genre: 'Chillout', url: 'https://ice2.somafm.com/groovesalad-128-mp3' },
             { id: 3, name: 'Nightwave', genre: 'Vaporwave', url: 'https://radio.plaza.one/mp3' },
-            { id: 4, name: 'DEF CON', genre: 'Cyber Ambient', url: 'https://ice2.somafm.com/defcon-128-mp3' },
+            { id: 4, name: 'CYBER CON', genre: 'Cyber Ambient', url: 'https://ice2.somafm.com/defcon-128-mp3' },
             { id: 5, name: 'Secret Agent', genre: 'Spy / Retro', url: 'https://ice1.somafm.com/secretagent-128-mp3' },
             { id: 6, name: 'Space Station', genre: 'Spacemusic', url: 'https://ice1.somafm.com/spacestation-128-mp3' }
         ];
@@ -1310,8 +1310,8 @@
             { name: 'Subspace Synthwave', genre: 'Synthwave', url: 'https://radio.erb.pw/public/subspace' },
             { name: 'Groove Salad Chillout', genre: 'Ambient', url: 'https://ice2.somafm.com/groovesalad-128-mp3' },
             { name: 'Nightwave Plaza Vapor', genre: 'Vaporwave', url: 'https://radio.plaza.one/mp3' },
-            { name: 'DEF CON Hacker Radio', genre: 'Cyber Ambient', url: 'https://ice2.somafm.com/defcon-128-mp3' },
-            { name: 'Secret Agent 007 Spy', genre: 'Vintage Lounge', url: 'https://ice1.somafm.com/secretagent-128-mp3' },
+            { name: 'CYBER CON Hacker Radio', genre: 'Cyber Ambient', url: 'https://ice2.somafm.com/defcon-128-mp3' },
+            { name: 'Secret Agent Retro Spy', genre: 'Vintage Lounge', url: 'https://ice1.somafm.com/secretagent-128-mp3' },
             { name: 'Space Station Deep Space', genre: 'Space Ambient', url: 'https://ice1.somafm.com/spacestation-128-mp3' },
             { name: 'Drone Zone Atmospheric', genre: 'Dark Ambient', url: 'https://ice1.somafm.com/dronezone-128-mp3' },
             { name: 'Suburban Lo-Fi Beats', genre: 'Lo-Fi HipHop', url: 'https://ice2.somafm.com/suburbsofgoa-128-mp3' },
@@ -1324,7 +1324,7 @@
             { name: 'Illinois Street Lounge', genre: 'Exotica Lounge', url: 'https://ice1.somafm.com/illstreet-128-mp3' },
             { name: 'Underground 80s Wave', genre: 'Post-Punk / New Wave', url: 'https://ice1.somafm.com/u80s-128-mp3' },
             { name: 'Seven Inch Soul', genre: 'Vintage Vinyl 45s', url: 'https://ice1.somafm.com/sevensoul-128-mp3' },
-            { name: '10.19.99.4 Subcarrier Anomaly', genre: 'ARG Carrier', url: 'https://10.19.99.4/subcarrier' }
+            { name: '10.19.99.4 Subcarrier Anomaly', genre: 'VLF Subcarrier', url: 'https://10.19.99.4/subcarrier' }
         ];
 
         let PRESETS = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
@@ -1412,17 +1412,26 @@
         let vizMode = 0;
         let dpr = window.devicePixelRatio || 1;
 
-        // Web Audio Context & DSP Biquad Filters
+        // Web Audio Context & DSP Biquad Filters + AnalyserNode (fftSize 128)
         let audioCtx = null;
         let sourceNode = null;
         let bassFilter = null;
         let midFilter = null;
         let trebleFilter = null;
         let preampGain = null;
+        let analyserNode = null;
+        let freqData = null;
+        let timeData = null;
         let isAudioGraphSetup = false;
 
-        // Subcarrier Anomaly Generator (Diegetic ARG Audio Detail)
-        let subcarrierCtx = null;
+        // 1999 Procedural WebAudio Synth Radio Fallback Engine
+        let synthMasterGain = null;
+        let synthIntervalId = null;
+        let synthStep = 0;
+        let isSynthFallback = false;
+        let corsRetryDone = false;
+
+        // Diegetic VLF Subcarrier Generator
         let subcarrierOsc = null;
         let subcarrierGain = null;
         let isSubcarrierActive = false;
@@ -1472,13 +1481,34 @@
 
                 preampGain = audioCtx.createGain();
 
+                // AnalyserNode (fftSize 128) after preampGain
+                analyserNode = audioCtx.createAnalyser();
+                analyserNode.fftSize = 128;
+                analyserNode.smoothingTimeConstant = 0.8;
+                freqData = new Uint8Array(analyserNode.frequencyBinCount);
+                timeData = new Uint8Array(analyserNode.fftSize);
+
+                // Synth fallback master gain routed through EQ graph
+                synthMasterGain = audioCtx.createGain();
+                synthMasterGain.connect(bassFilter);
+
+                // Subcarrier gain routed through EQ graph
+                subcarrierGain = audioCtx.createGain();
+                subcarrierGain.connect(bassFilter);
+
                 // Connect Media Element Source
-                sourceNode = audioCtx.createMediaElementSource(audio);
-                sourceNode.connect(bassFilter);
+                try {
+                    sourceNode = audioCtx.createMediaElementSource(audio);
+                    sourceNode.connect(bassFilter);
+                } catch (errSrc) {
+                    console.warn('Media element source already wired or restricted:', errSrc);
+                }
+
                 bassFilter.connect(midFilter);
                 midFilter.connect(trebleFilter);
                 trebleFilter.connect(preampGain);
-                preampGain.connect(audioCtx.destination);
+                preampGain.connect(analyserNode);
+                analyserNode.connect(audioCtx.destination);
 
                 isAudioGraphSetup = true;
                 applyEqValues();
@@ -1487,6 +1517,23 @@
                 console.warn('Audio graph setup skipped or CORS restricted:', e);
                 diagEqStatus.textContent = 'PASSTHROUGH (CORS)';
             }
+        }
+
+        function syncEqPresetButtons() {
+            const b = parseFloat(eqBass.value);
+            const m = parseFloat(eqMid.value);
+            const t = parseFloat(eqTreble.value);
+            const p = parseFloat(eqPreamp.value);
+            let matchedPreset = null;
+            for (const [key, preset] of Object.entries(EQ_PRESETS)) {
+                if (preset.bass === b && preset.mid === m && preset.treble === t && preset.preamp === p) {
+                    matchedPreset = key;
+                    break;
+                }
+            }
+            eqPresetBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.preset === matchedPreset);
+            });
         }
 
         function applyEqValues() {
@@ -1508,6 +1555,8 @@
                 const linearPreamp = Math.pow(10, p / 20);
                 preampGain.gain.setValueAtTime(linearPreamp, audioCtx.currentTime);
             }
+
+            syncEqPresetButtons();
 
             // Persist EQ settings
             safeSetStorage('kradio_eq_settings', JSON.stringify({ bass: b, mid: m, treble: t, preamp: p }));
@@ -1609,50 +1658,190 @@
         }
 
         function fadeAndStop() {
-            let cur = parseInt(volumeSlider.value, 10);
+            const savedVol = parseInt(volumeSlider.value, 10);
+            let cur = savedVol;
             const interval = setInterval(() => {
                 cur -= 5;
                 if (cur <= 0) {
                     clearInterval(interval);
                     stopStream(false);
+                    // Restore original volume so user preference is preserved and not locked to 5%
+                    updateVolume(savedVol);
                 } else {
-                    updateVolume(cur);
+                    // Smooth transient fade without overwriting stored volume
+                    volumeSlider.value = cur;
+                    volumePercent.textContent = `${cur}%`;
+                    audio.volume = cur / 100;
+                    if (synthMasterGain && audioCtx) {
+                        synthMasterGain.gain.setValueAtTime((cur / 100) * 0.22, audioCtx.currentTime);
+                    }
+                    if (subcarrierGain && audioCtx) {
+                        subcarrierGain.gain.setValueAtTime(0.04 * (cur / 100), audioCtx.currentTime);
+                    }
                 }
             }, 100);
         }
 
         btnSleepTimer.addEventListener('click', cycleSleepTimer);
 
-        // Subcarrier Anomaly Generator
+        // 1999 Procedural WebAudio Synth Radio Fallback Engine
+        const SYNTH_SCALES = {
+            synthwave: {
+                notes: [220, 261.63, 329.63, 392.00, 440, 523.25, 392.00, 329.63],
+                bass: [110, 110, 87.31, 87.31, 130.81, 130.81, 98.00, 98.00],
+                waveform: 'sawtooth',
+                tempo: 220
+            },
+            ambient: {
+                notes: [261.63, 293.66, 329.63, 392.00, 440.00, 523.25],
+                bass: [65.41, 65.41, 87.31, 98.00],
+                waveform: 'sine',
+                tempo: 380
+            },
+            vaporwave: {
+                notes: [293.66, 349.23, 440.00, 523.25, 440.00, 349.23],
+                bass: [73.42, 73.42, 98.00, 87.31],
+                waveform: 'triangle',
+                tempo: 300
+            },
+            cyber: {
+                notes: [110, 164.81, 220, 329.63, 220, 164.81],
+                bass: [55, 55, 73.42, 49],
+                waveform: 'sawtooth',
+                tempo: 240
+            },
+            retro: {
+                notes: [293.66, 369.99, 440.00, 587.33, 440.00, 369.99],
+                bass: [73.42, 98.00, 110.00, 73.42],
+                waveform: 'square',
+                tempo: 250
+            }
+        };
+
+        function getGenreKey(genreStr) {
+            const g = (genreStr || '').toLowerCase();
+            if (g.includes('ambient') || g.includes('space') || g.includes('chill')) return 'ambient';
+            if (g.includes('vapor')) return 'vaporwave';
+            if (g.includes('cyber') || g.includes('dark')) return 'cyber';
+            if (g.includes('spy') || g.includes('retro') || g.includes('lounge') || g.includes('jazz')) return 'retro';
+            return 'synthwave';
+        }
+
+        function playSynthVoice(freq, type, dur, gainLevel) {
+            if (!audioCtx || !synthMasterGain) return;
+            const effVol = isMuted ? 0 : (parseInt(volumeSlider.value, 10) / 100);
+            if (effVol <= 0) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const now = audioCtx.currentTime;
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, now);
+
+                gain.gain.setValueAtTime(0.0001, now);
+                gain.gain.linearRampToValueAtTime(gainLevel * effVol * 0.22, now + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+                osc.connect(gain);
+                gain.connect(synthMasterGain);
+                osc.start(now);
+                osc.stop(now + dur + 0.05);
+            } catch (e) {}
+        }
+
+        function startSynthFallback(genreName) {
+            stopSynthFallback();
+            setupAudioGraph();
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const currentGenre = genreName || stationTag.textContent || (PRESETS[activePresetIndex] && PRESETS[activePresetIndex].genre) || 'Synthwave';
+            const genreKey = getGenreKey(currentGenre);
+            const scale = SYNTH_SCALES[genreKey] || SYNTH_SCALES.synthwave;
+
+            isSynthFallback = true;
+            isPlaying = true;
+            playIcon.textContent = '⏸';
+            playLabel.textContent = 'Pause';
+            setStatus('Live (1999 Synth Fallback)', 'playing');
+            diagCodec.textContent = 'WEBAUDIO 1999 SYNTH (OFFLINE FALLBACK)';
+            diagBuffer.textContent = '100% (LOCAL DSP)';
+            streamStartTime = Date.now();
+            if (!uptimeTimer) uptimeTimer = setInterval(updateDiagnosticsHUD, 1000);
+            document.title = `▶ ${displayStation.textContent} [Synth] - KRadio`;
+
+            showToast(`📻 Stream offline: Generating live ${currentGenre} 1999 procedural synth radio`, 'info', 3200);
+
+            synthStep = 0;
+            synthIntervalId = setInterval(() => {
+                if (!isSynthFallback) return;
+                const effVol = isMuted ? 0 : (parseInt(volumeSlider.value, 10) / 100);
+                if (effVol <= 0) return;
+
+                // Bassline on even steps
+                if (synthStep % 2 === 0) {
+                    const bassIdx = (synthStep / 2) % scale.bass.length;
+                    playSynthVoice(scale.bass[bassIdx], 'triangle', (scale.tempo * 1.8) / 1000, 0.45);
+                }
+
+                // Lead/Arp on every step
+                const noteIdx = synthStep % scale.notes.length;
+                playSynthVoice(scale.notes[noteIdx], scale.waveform, (scale.tempo * 0.9) / 1000, 0.28);
+
+                // Subtle harmony chord on step 0 and 8
+                if (synthStep % 8 === 0) {
+                    playSynthVoice(scale.notes[(noteIdx + 2) % scale.notes.length], 'sine', (scale.tempo * 4) / 1000, 0.18);
+                }
+
+                synthStep = (synthStep + 1) % 16;
+            }, scale.tempo);
+        }
+
+        function stopSynthFallback() {
+            if (synthIntervalId) {
+                clearInterval(synthIntervalId);
+                synthIntervalId = null;
+            }
+            isSynthFallback = false;
+        }
+
+        // Diegetic VLF Subcarrier Anomaly Generator routed through main audioCtx EQ graph
         function startSubcarrier() {
             stopSubcarrier();
+            setupAudioGraph();
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
             try {
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContextClass) return;
-                subcarrierCtx = new AudioContextClass();
-                subcarrierOsc = subcarrierCtx.createOscillator();
-                subcarrierGain = subcarrierCtx.createGain();
+                if (!audioCtx) return;
+                subcarrierOsc = audioCtx.createOscillator();
+                if (!subcarrierGain) {
+                    subcarrierGain = audioCtx.createGain();
+                    subcarrierGain.connect(bassFilter);
+                }
 
                 // 1999.4 Hz diegetic carrier
                 subcarrierOsc.type = 'sine';
-                subcarrierOsc.frequency.setValueAtTime(1999.4, subcarrierCtx.currentTime);
+                subcarrierOsc.frequency.setValueAtTime(1999.4, audioCtx.currentTime);
 
-                subcarrierGain.gain.setValueAtTime(0.04 * (isMuted ? 0 : parseInt(volumeSlider.value, 10) / 100), subcarrierCtx.currentTime);
+                const effVol = isMuted ? 0 : (parseInt(volumeSlider.value, 10) / 100);
+                subcarrierGain.gain.setValueAtTime(0.04 * effVol, audioCtx.currentTime);
                 subcarrierOsc.connect(subcarrierGain);
-                subcarrierGain.connect(subcarrierCtx.destination);
                 subcarrierOsc.start();
                 isSubcarrierActive = true;
-            } catch (e) {}
+                isPlaying = true;
+                streamStartTime = Date.now();
+                if (!uptimeTimer) uptimeTimer = setInterval(updateDiagnosticsHUD, 1000);
+            } catch (e) {
+                console.warn('Subcarrier start error:', e);
+            }
         }
 
         function stopSubcarrier() {
             if (subcarrierOsc) {
-                try { subcarrierOsc.stop(); } catch (e) {}
+                try { subcarrierOsc.stop(); subcarrierOsc.disconnect(); } catch (e) {}
                 subcarrierOsc = null;
-            }
-            if (subcarrierCtx) {
-                try { subcarrierCtx.close(); } catch (e) {}
-                subcarrierCtx = null;
             }
             isSubcarrierActive = false;
         }
@@ -1705,35 +1894,33 @@
             ctx.fillRect(0, 0, w, h);
 
             const effVol = isMuted ? 0 : (parseInt(volumeSlider.value, 10) / 100);
-            const active = (isPlaying || isSubcarrierActive) && effVol > 0;
+            const active = (isPlaying || isSubcarrierActive || isSynthFallback) && effVol > 0;
 
-            // Update band target levels
-            for (let i = 0; i < NUM_BANDS; i++) {
-                let target = 0.08;
-                if (active) {
-                    if (isSubcarrierActive) {
-                        const dist = Math.abs(i - 16);
-                        target = dist <= 2 ? (0.9 - dist * 0.3) : 0.08 + Math.random() * 0.08;
+            // Live WebAudio Frequency data for LED Bars & Solid VU modes reflecting 3-band EQ
+            if (analyserNode && active) {
+                analyserNode.getByteFrequencyData(freqData);
+                for (let i = 0; i < NUM_BANDS; i++) {
+                    const binIdx = Math.min(freqData.length - 1, Math.floor((i / NUM_BANDS) * (freqData.length * 0.75)));
+                    const target = Math.min(1.0, Math.max(0.04, (freqData[binIdx] / 255.0) * effVol));
+                    bandLevels[i] += (target - bandLevels[i]) * 0.35;
+
+                    if (bandLevels[i] >= peakLevels[i]) {
+                        peakLevels[i] = bandLevels[i];
+                        peakDecay[i] = 0;
                     } else {
-                        const t = performance.now() * 0.0035;
-                        const wave = Math.sin(t * (1 + i * 0.22)) * 0.4 + 0.5;
-                        const jitter = (Math.random() * 0.3) * effVol;
-                        target = Math.min(1.0, Math.max(0.08, (wave * 0.65 + jitter) * effVol));
+                        peakDecay[i] += 0.012;
+                        peakLevels[i] = Math.max(bandLevels[i], peakLevels[i] - peakDecay[i]);
                     }
                 }
-                bandLevels[i] += (target - bandLevels[i]) * 0.28;
-
-                if (bandLevels[i] >= peakLevels[i]) {
-                    peakLevels[i] = bandLevels[i];
-                    peakDecay[i] = 0;
-                } else {
-                    peakDecay[i] += 0.012;
-                    peakLevels[i] = Math.max(bandLevels[i], peakLevels[i] - peakDecay[i]);
+            } else {
+                for (let i = 0; i < NUM_BANDS; i++) {
+                    bandLevels[i] += (0.04 - bandLevels[i]) * 0.2;
+                    peakLevels[i] = Math.max(0.04, peakLevels[i] - 0.02);
                 }
             }
 
             if (vizMode === 0) {
-                // Mode 0: Authentic Segmented LED Bars
+                // Mode 0: Authentic Segmented LED Bars (getByteFrequencyData FFT)
                 const numSegments = 8;
                 const barSpacing = 3;
                 const totalSpacing = (NUM_BANDS - 1) * barSpacing;
@@ -1773,24 +1960,29 @@
                     }
                 }
             } else if (vizMode === 1) {
-                // Mode 1: CRT Phosphor Waveform
+                // Mode 1: CRT Phosphor Waveform (getByteTimeDomainData reflecting 3-band EQ)
                 ctx.strokeStyle = active ? '#38bdf8' : '#1e293b';
                 ctx.lineWidth = 1.5;
                 ctx.shadowColor = '#38bdf8';
                 ctx.shadowBlur = active ? 6 : 0;
                 ctx.beginPath();
-                const step = w / (NUM_BANDS - 1);
-                for (let i = 0; i < NUM_BANDS; i++) {
-                    const x = i * step;
-                    const mid = h / 2;
-                    const dev = (bandLevels[i] - 0.5) * (h * 0.75);
-                    const y = active ? (mid + (i % 2 === 0 ? dev : -dev)) : mid;
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
+                if (analyserNode && active) {
+                    analyserNode.getByteTimeDomainData(timeData);
+                    const sliceW = w / (timeData.length - 1);
+                    for (let i = 0; i < timeData.length; i++) {
+                        const v = (timeData[i] - 128) / 128.0;
+                        const x = i * sliceW;
+                        const y = h / 2 + v * (h * 0.42) * effVol;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                } else {
+                    ctx.moveTo(0, h / 2);
+                    ctx.lineTo(w, h / 2);
                 }
                 ctx.stroke();
             } else {
-                // Mode 2: Solid VU Bars
+                // Mode 2: Solid VU Bars (getByteFrequencyData FFT)
                 const barSpacing = 3;
                 const totalSpacing = (NUM_BANDS - 1) * barSpacing;
                 const barW = Math.max(3, (w - totalSpacing) / NUM_BANDS);
@@ -1842,19 +2034,34 @@
                 showToast('Cannot assign empty URL to preset', 'warning', 2500);
                 return;
             }
-            let name = displayStation.textContent;
-            if (!name || name === 'Custom Stream' || name === 'Subspace') {
+            const currentActiveUrl = (activePresetIndex >= 0 && activePresetIndex < PRESETS.length) ? PRESETS[activePresetIndex].url : '';
+            const isUrlEdited = (url !== currentActiveUrl);
+
+            let name = '';
+            let genre = 'CUSTOM';
+
+            const dirMatch = STATION_DIRECTORY.find(s => s.url === url);
+            if (dirMatch) {
+                name = dirMatch.name;
+                genre = dirMatch.genre;
+            } else if (!isUrlEdited && displayStation.textContent && displayStation.textContent !== 'Custom Stream') {
+                name = displayStation.textContent;
+                genre = stationTag.textContent || 'CUSTOM';
+            } else {
                 try {
                     const u = new URL(url);
-                    name = u.pathname.split('/').filter(Boolean).pop() || u.hostname;
-                    name = name.charAt(0).toUpperCase() + name.slice(1);
+                    let part = u.pathname.split('/').filter(Boolean).pop() || u.hostname;
+                    part = part.replace(/[-_]/g, ' ').replace(/\.(mp3|aac|ogg|pls|m3u)$/i, '');
+                    name = part.charAt(0).toUpperCase() + part.slice(1);
                 } catch (e) {
-                    name = `Preset ${index + 1}`;
+                    name = `Station ${index + 1}`;
                 }
+                genre = 'STREAM';
             }
+
             PRESETS[index].url = url;
             PRESETS[index].name = name;
-            PRESETS[index].genre = stationTag.textContent || 'CUSTOM';
+            PRESETS[index].genre = genre;
             safeSetStorage('kradio_custom_presets', JSON.stringify(PRESETS));
             selectPreset(index, false);
             showToast(`⭐ Assigned current stream to Preset [${index + 1}] (${name})`, 'success', 2500);
@@ -1954,6 +2161,7 @@
                     bitrate: displayBitrate.textContent
                 },
                 volume: parseInt(volumeSlider.value, 10),
+                lastVolume: lastVolume,
                 isMuted: isMuted,
                 vizMode: vizMode,
                 eq: {
@@ -1973,7 +2181,7 @@
                 m3u += `#EXTINF:-1,${p.name} (${p.genre})\n${p.url}\n`;
             });
             downloadFile(`kradio_playlist_${Date.now()}.m3u`, m3u, "audio/x-mpegurl");
-            showToast("📑 Exported Winamp M3U playlist", "success", 2500);
+            showToast("📑 Exported KAMP M3U playlist", "success", 2500);
         }
 
         function exportPlsPlaylist() {
@@ -1984,7 +2192,7 @@
             });
             pls += `NumberOfEntries=${PRESETS.length}\nVersion=2\n`;
             downloadFile(`kradio_playlist_${Date.now()}.pls`, pls, "audio/x-scpls");
-            showToast("📻 Exported Shoutcast PLS playlist", "success", 2500);
+            showToast("📻 Exported ShoutNet PLS playlist", "success", 2500);
         }
 
         function downloadFile(filename, content, type) {
@@ -2053,6 +2261,27 @@
 
             if (typeof data.volume === 'number' && !isNaN(data.volume)) {
                 updateVolume(data.volume);
+            }
+            if (typeof data.lastVolume === 'number' && !isNaN(data.lastVolume)) {
+                lastVolume = data.lastVolume;
+                safeSetStorage('kradio_last_volume', String(lastVolume));
+            }
+            if (typeof data.isMuted === 'boolean') {
+                isMuted = data.isMuted;
+                safeSetStorage('kradio_is_muted', isMuted ? '1' : '0');
+                if (isMuted) {
+                    btnMute.textContent = '🔇';
+                    audio.volume = 0;
+                    volumePercent.textContent = '0%';
+                }
+            }
+            if (typeof data.activePresetIndex === 'number') {
+                if (data.activePresetIndex >= 0 && data.activePresetIndex < PRESETS.length) {
+                    selectPreset(data.activePresetIndex, false);
+                } else if (data.activePresetIndex === -1) {
+                    activePresetIndex = -1;
+                    renderPresets();
+                }
             }
             if (typeof data.vizMode === 'number' && data.vizMode >= 0 && data.vizMode < VIZ_MODES.length) {
                 vizMode = data.vizMode;
@@ -2183,9 +2412,10 @@
                 stationTag: stationTag.textContent,
                 displayBitrate: displayBitrate.textContent,
                 volume: parseInt(volumeSlider.value, 10),
+                lastVolume: lastVolume,
                 isMuted: isMuted,
                 vizMode: vizMode,
-                isPlaying: isPlaying || isSubcarrierActive,
+                isPlaying: isPlaying || isSubcarrierActive || isSynthFallback,
                 eq: {
                     bass: parseFloat(eqBass.value),
                     mid: parseFloat(eqMid.value),
@@ -2231,14 +2461,23 @@
                 if (state.bufferHealth && diagBuffer) {
                     diagBuffer.textContent = state.bufferHealth;
                 }
+                if (typeof state.lastVolume === 'number') {
+                    lastVolume = state.lastVolume;
+                    safeSetStorage('kradio_last_volume', String(lastVolume));
+                }
                 if (typeof state.volume === 'number') {
                     updateVolume(state.volume);
                 }
-                if (state.isMuted) {
-                    isMuted = true;
-                    btnMute.textContent = '🔇';
-                    audio.volume = 0;
-                    volumePercent.textContent = '0%';
+                if (typeof state.isMuted === 'boolean') {
+                    isMuted = state.isMuted;
+                    safeSetStorage('kradio_is_muted', isMuted ? '1' : '0');
+                    if (isMuted) {
+                        btnMute.textContent = '🔇';
+                        audio.volume = 0;
+                        volumePercent.textContent = '0%';
+                    } else {
+                        btnMute.textContent = parseInt(volumeSlider.value, 10) < 40 ? '🔉' : '🔊';
+                    }
                 }
 
                 if (typeof state.activePresetIndex === 'number' && state.activePresetIndex >= 0 && state.activePresetIndex < PRESETS.length) {
@@ -2318,14 +2557,15 @@
         }
 
         function updateDiagnosticsHUD() {
-            if (isPlaying && streamStartTime) {
+            const isActivelyStreaming = (isPlaying && audio && !audio.paused && !audio.seeking) || isSubcarrierActive || isSynthFallback;
+            if (isActivelyStreaming && streamStartTime) {
                 const diff = Math.floor((Date.now() - streamStartTime) / 1000);
                 const hrs = Math.floor(diff / 3600);
                 const mins = Math.floor((diff % 3600) / 60);
                 const secs = diff % 60;
                 diagUptime.textContent = `${hrs < 10 ? '0' : ''}${hrs}:${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
 
-                // Estimate data usage at 128 kbps (16 KB/sec)
+                // Estimate data usage at 128 kbps (16 KB/sec) only while actively playing
                 estimatedBytesReceived += 16 * 1024;
                 const mb = (estimatedBytesReceived / (1024 * 1024)).toFixed(1);
                 diagData.textContent = `${mb} MB`;
@@ -2366,14 +2606,17 @@
                 audioCtx.resume();
             }
 
-            // In-universe ARG subcarrier anomaly
-            if (url.includes('10.19.99.4') || url.toLowerCase().includes('subcarrier') || url.includes('1999')) {
+            // Stop any active procedural synth fallback
+            stopSynthFallback();
+
+            // In-universe diegetic VLF subcarrier anomaly (only 10.19.99.4 or explicit subcarrier, never broad 1999)
+            if (url.includes('10.19.99.4') || url.toLowerCase().includes('subcarrier')) {
                 stopStream(false);
                 displayStation.textContent = 'Subcarrier Anomaly';
                 stationTag.textContent = '10.19.99.4';
                 displayBitrate.textContent = '1999.4 kHz Carrier Lock';
                 setStatus('Carrier Lock', 'playing');
-                diagCodec.textContent = 'ARG CARRIER / SINE 1999.4Hz';
+                diagCodec.textContent = 'VLF SUBCARRIER / SINE 1999.4Hz';
                 startSubcarrier();
                 isPlaying = true;
                 playIcon.textContent = '⏸';
@@ -2385,9 +2628,11 @@
             }
 
             isStopping = false;
+            corsRetryDone = false;
             setStatus('Connecting...', 'buffering');
             diagCodec.textContent = url.toLowerCase().includes('.aac') ? 'AAC / HTTPS' : 'MP3 / HTTPS';
-            
+
+            audio.crossOrigin = 'anonymous';
             if (audio.src !== url || audio.paused) {
                 audio.src = url;
                 audio.load();
@@ -2407,17 +2652,33 @@
                     document.title = `▶ ${displayStation.textContent} - KRadio`;
                     showToast(`Tuned in: ${displayStation.textContent}`, 'success', 2200);
                 }).catch(err => {
-                    isPlaying = false;
-                    playIcon.textContent = '▶';
-                    playLabel.textContent = 'Play';
-                    document.title = 'KRadio - Retro Stream Player';
-
                     if (err && err.name === 'NotAllowedError') {
+                        isPlaying = false;
+                        playIcon.textContent = '▶';
+                        playLabel.textContent = 'Play';
                         setStatus('Ready', 'ready');
+                        return;
+                    }
+                    // Fix CORS/offline stream dead-ends by retrying without crossorigin attribute first
+                    if (!corsRetryDone && audio.hasAttribute('crossorigin')) {
+                        corsRetryDone = true;
+                        audio.removeAttribute('crossorigin');
+                        audio.src = url;
+                        audio.load();
+                        audio.play().then(() => {
+                            isPlaying = true;
+                            playIcon.textContent = '⏸';
+                            playLabel.textContent = 'Pause';
+                            setStatus('Live', 'playing');
+                            streamStartTime = Date.now();
+                            if (!uptimeTimer) uptimeTimer = setInterval(updateDiagnosticsHUD, 1000);
+                            document.title = `▶ ${displayStation.textContent} - KRadio`;
+                        }).catch(() => {
+                            startSynthFallback();
+                        });
                     } else {
-                        setStatus('Error', 'error');
-                        showToast('Stream offline or blocked. Click Play to retry.', 'warning', 3000);
-                        console.warn('Audio playback error:', err);
+                        // Automatic per-genre 1999 procedural synth radio fallback
+                        startSynthFallback();
                     }
                 });
             }
@@ -2431,6 +2692,17 @@
                 playIcon.textContent = '▶';
                 playLabel.textContent = 'Play';
                 setStatus('Paused', 'ready');
+                showToast('Playback paused', 'info', 1400);
+                return;
+            }
+
+            if (isSynthFallback) {
+                stopSynthFallback();
+                isPlaying = false;
+                playIcon.textContent = '▶';
+                playLabel.textContent = 'Play';
+                setStatus('Paused', 'ready');
+                document.title = 'KRadio - Retro Stream Player';
                 showToast('Playback paused', 'info', 1400);
                 return;
             }
@@ -2451,6 +2723,7 @@
         // Stop Stream
         function stopStream(notify = true) {
             stopSubcarrier();
+            stopSynthFallback();
             isStopping = true;
             audio.pause();
             audio.removeAttribute('src');
@@ -2477,18 +2750,26 @@
             volumePercent.textContent = `${val}%`;
             
             safeSetStorage('kradio_volume', String(val));
+            safeSetStorage('kradio_last_volume', String(val));
 
-            if (subcarrierGain && subcarrierCtx) {
-                subcarrierGain.gain.setValueAtTime(0.04 * (val / 100), subcarrierCtx.currentTime);
+            const effVol = val / 100;
+
+            if (subcarrierGain && audioCtx) {
+                subcarrierGain.gain.setValueAtTime(0.04 * effVol, audioCtx.currentTime);
+            }
+            if (synthMasterGain && audioCtx) {
+                synthMasterGain.gain.setValueAtTime(0.22 * effVol, audioCtx.currentTime);
             }
 
             if (val === 0) {
                 isMuted = true;
+                safeSetStorage('kradio_is_muted', '1');
                 btnMute.textContent = '🔇';
                 audio.volume = 0;
             } else {
                 isMuted = false;
-                audio.volume = val / 100;
+                safeSetStorage('kradio_is_muted', '0');
+                audio.volume = effVol;
                 btnMute.textContent = val < 40 ? '🔉' : '🔊';
             }
         }
@@ -2496,15 +2777,21 @@
         function toggleMute() {
             if (isMuted) {
                 isMuted = false;
+                safeSetStorage('kradio_is_muted', '0');
                 updateVolume(lastVolume > 0 ? lastVolume : 80);
                 showToast(`Volume unmuted (${volumeSlider.value}%)`, 'info', 1200);
             } else {
                 lastVolume = parseInt(volumeSlider.value, 10);
+                safeSetStorage('kradio_last_volume', String(lastVolume));
                 isMuted = true;
+                safeSetStorage('kradio_is_muted', '1');
                 btnMute.textContent = '🔇';
                 audio.volume = 0;
-                if (subcarrierGain && subcarrierCtx) {
-                    subcarrierGain.gain.setValueAtTime(0, subcarrierCtx.currentTime);
+                if (subcarrierGain && audioCtx) {
+                    subcarrierGain.gain.setValueAtTime(0, audioCtx.currentTime);
+                }
+                if (synthMasterGain && audioCtx) {
+                    synthMasterGain.gain.setValueAtTime(0, audioCtx.currentTime);
                 }
                 volumePercent.textContent = '0%';
                 showToast('Audio muted', 'info', 1200);
@@ -2527,9 +2814,38 @@
         btnSave.addEventListener('click', quicksaveState);
         btnLoad.addEventListener('click', quickloadState);
 
+        stationUrl.addEventListener('input', () => {
+            const currentUrl = stationUrl.value.trim();
+            const matchedIndex = PRESETS.findIndex(p => p.url === currentUrl);
+            if (matchedIndex !== -1) {
+                activePresetIndex = matchedIndex;
+                displayStation.textContent = PRESETS[matchedIndex].name;
+                stationTag.textContent = PRESETS[matchedIndex].genre;
+                displayBitrate.textContent = 'Live Preset';
+            } else {
+                activePresetIndex = -1;
+                const dirMatch = STATION_DIRECTORY.find(s => s.url === currentUrl);
+                if (dirMatch) {
+                    displayStation.textContent = dirMatch.name;
+                    stationTag.textContent = dirMatch.genre;
+                    displayBitrate.textContent = 'Directory Stream';
+                } else {
+                    displayStation.textContent = 'Custom Stream';
+                    stationTag.textContent = 'DIRECT';
+                    displayBitrate.textContent = 'Direct URL';
+                }
+            }
+            renderPresets();
+        });
+
         btnClearUrl.addEventListener('click', () => {
             stationUrl.value = '';
             stationUrl.focus();
+            activePresetIndex = -1;
+            displayStation.textContent = 'Custom Stream';
+            stationTag.textContent = 'DIRECT';
+            displayBitrate.textContent = 'Direct URL';
+            renderPresets();
             showToast('URL cleared. Paste direct stream URL.', 'info', 1500);
         });
 
@@ -2623,13 +2939,19 @@
         audio.addEventListener('error', () => {
             if (isStopping) return;
             if (audio.src && audio.src !== window.location.href) {
-                isPlaying = false;
-                playIcon.textContent = '▶';
-                playLabel.textContent = 'Play';
-                setStatus('Stream Offline', 'error');
-                diagBuffer.textContent = 'OFFLINE / FAILED';
-                document.title = 'KRadio - Retro Stream Player';
-                showToast('Unable to connect to stream server', 'error', 3000);
+                // Retry without crossorigin on error
+                if (!corsRetryDone && audio.hasAttribute('crossorigin')) {
+                    corsRetryDone = true;
+                    audio.removeAttribute('crossorigin');
+                    audio.src = stationUrl.value.trim();
+                    audio.load();
+                    audio.play().catch(() => {
+                        startSynthFallback();
+                    });
+                    return;
+                }
+                // Automatic per-genre 1999 procedural synth radio fallback
+                startSynthFallback();
             }
         });
 
@@ -2849,6 +3171,15 @@
                 }
             }
 
+            // Restore lastVolume preference
+            const storedLastVol = safeGetStorage('kradio_last_volume');
+            if (storedLastVol !== null) {
+                const parsedLast = parseInt(storedLastVol, 10);
+                if (!isNaN(parsedLast) && parsedLast >= 0 && parsedLast <= 100) {
+                    lastVolume = parsedLast;
+                }
+            }
+
             // Restore volume preference
             let savedVolume = 80;
             const storedVol = safeGetStorage('kradio_volume');
@@ -2859,6 +3190,15 @@
                 }
             }
             updateVolume(savedVolume);
+
+            // Restore mute preference
+            const storedMute = safeGetStorage('kradio_is_muted');
+            if (storedMute === '1') {
+                isMuted = true;
+                btnMute.textContent = '🔇';
+                audio.volume = 0;
+                volumePercent.textContent = '0%';
+            }
 
             // Restore station / preset preference
             let presetIdx = 0;

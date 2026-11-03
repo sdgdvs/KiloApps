@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T22:22:20-08:00 — kilo-qa: KChrono (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KChrono across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KMine`; rotated active agent to `kilo-expander`.
+
 - **2026-11-02T21:40:16-08:00 — kilo-usability: KMech (Stall Circuit Breaker (Auto-Rotated After Consecutive Timeouts))**
   - Status: ROTATED ⚠️ (circuit breaker triggered after 2 consecutive stalled turns on KMech).
   - Reverted unverified working tree edits and rotated KMech to queue bottom so fleet execution continues.
