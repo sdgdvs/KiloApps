@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T15:16:20-08:00 — kilo-review: KMail (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 960x603 sheet.png and audited kmail.html + KMail/main.c; un-quarantined for targeted fixes).
+  - Visual/UX Findings: 26px .status-bar wraps/clips all items onto 2 lines, .sidebar-bottom clips Network/Save/Load/Export/Import/Trash off-screen at 603px height, .pane-header crushes subjects into a 105px column, #help-modal overflows, and SELECT focus triggers list hotkeys.
+  - Feature/VFS Findings: Boot Firebase RTDB WebSocket autostart triggers visual_probe WARN, playSend() bypasses modGain, folder rules allow invalid/capitalized folder names, custom tags miss #tag-filter, KMail/main.c seed XOR decrypts to gibberish and breaks JSON round-trip with web, and Phase VI KiloOS VFS/IPC mesh is missing.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KMail`, `kilo-usability`->`KMail`, `kilo-expander`->`KMail`] (un-quarantined `KMail` from Mature); advanced `kilo-review` to `KMech`; next agent `kilo-creator`.
+
 - **2026-11-02T14:41:12-08:00 — kilo-expander: KMedia (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KMedia across web and native targets.

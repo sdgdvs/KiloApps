@@ -603,7 +603,7 @@
   /* Toasts */
   #toastContainer {
     position: fixed;
-    bottom: 70px;
+    top: 44px;
     right: 16px;
     display: flex;
     flex-direction: column;
@@ -699,6 +699,7 @@
   <button class="quick-chip" data-cmd="dmesg" title="Kernel diagnostic boot log">📋 dmesg</button>
   <button class="quick-chip" data-cmd="sysinfo" title="System and terminal version">ℹ️ sysinfo</button>
   <button class="quick-chip" data-cmd="tutorial" title="Replay terminal tutorial briefing">🎓 tutorial</button>
+  <button class="quick-chip" data-cmd="ansi" title="Test ANSI escape codes & colors">🎨 ansi</button>
 </div>
 
 <main id="output" role="log" aria-live="polite" aria-atomic="false" aria-label="Terminal Output"></main>
@@ -818,6 +819,7 @@
           <tr data-cmd="backup"><td class="code-cell"><code>export-state</code> / <code>backup</code></td><td class="cmd-desc">Export full multi-tab JSON state backup snapshot</td></tr>
           <tr data-cmd="restore"><td class="code-cell"><code>import-state</code> / <code>restore</code></td><td class="cmd-desc">Import previously exported JSON state backup snapshot</td></tr>
           <tr data-cmd="tutorial"><td class="code-cell"><code>tutorial</code></td><td class="cmd-desc">Open the quick-start onboarding briefing dialog</td></tr>
+          <tr data-cmd="ansi"><td class="code-cell"><code>ansi</code></td><td class="cmd-desc">Run ANSI escape code &amp; color capability verification matrix</td></tr>
           <tr data-cmd="rmdir Projects"><td class="code-cell"><code>rmdir</code> / <code>rd</code> &lt;dir&gt;</td><td class="cmd-desc">Remove empty directory from virtual file system</td></tr>
           <tr data-cmd="export-log"><td class="code-cell"><code>export-log</code> [file]</td><td class="cmd-desc">Export current session log to downloadable text file</td></tr>
           <tr data-cmd="newtab"><td class="code-cell"><code>newtab</code> [name]</td><td class="cmd-desc">Create a new named terminal tab session</td></tr>
@@ -1877,6 +1879,177 @@
     prompt.textContent = pathStr + '>';
   }
 
+  const ANSI_COLOR_MAP = {
+    30: '#1e1e1e', 31: '#ff5555', 32: '#50fa7b', 33: '#f1fa8c',
+    34: '#61afef', 35: '#ff79c6', 36: '#8be9fd', 37: '#f8f8f2',
+    90: '#6272a4', 91: '#ff6e6e', 92: '#69ff94', 93: '#ffffa5',
+    94: '#d6acff', 95: '#ff92df', 96: '#a4ffff', 97: '#ffffff',
+    40: '#1e1e1e', 41: '#681b1b', 42: '#144a27', 43: '#594c16',
+    44: '#1a3d6d', 45: '#521857', 46: '#164a4d', 47: '#bfbfbf',
+    100: '#44475a', 101: '#8b2020', 102: '#206b38', 103: '#7a671d',
+    104: '#275291', 105: '#73217a', 106: '#1e686c', 107: '#ffffff'
+  };
+
+  function get256Color(n) {
+    if (n < 8) return ANSI_COLOR_MAP[30 + n] || '#f8f8f2';
+    if (n < 16) return ANSI_COLOR_MAP[90 + (n - 8)] || '#ffffff';
+    if (n >= 16 && n <= 231) {
+      n -= 16;
+      const b = (n % 6) * 51;
+      const g = (Math.floor(n / 6) % 6) * 51;
+      const r = Math.floor(n / 36) * 51;
+      return `rgb(${r},${g},${b})`;
+    }
+    if (n >= 232 && n <= 255) {
+      const v = (n - 232) * 10 + 8;
+      return `rgb(${v},${v},${v})`;
+    }
+    return '#f8f8f2';
+  }
+
+  function renderAnsiToElement(text, parentEl) {
+    let s = String(text).replace(/\e\[|\033\[|\x1b\[/gi, '\x1b[');
+
+    if (s.includes('\x1b[2J')) {
+      output.innerHTML = '';
+      s = s.replace(/\x1b\[2J|\x1b\[H/g, '');
+      if (!s) return;
+    }
+
+    let curFg = null;
+    let curBg = null;
+    let isBold = false;
+    let isDim = false;
+    let isItalic = false;
+    let isUnderline = false;
+    let isInverse = false;
+    let isStrike = false;
+
+    const csiRegex = /\x1b\[([0-9;]*)([a-zA-Z])/g;
+    let lastIdx = 0;
+    let match;
+
+    function appendSpan(str) {
+      if (!str) return;
+      const span = document.createElement('span');
+      let fg = isInverse ? (curBg || 'var(--term-bg)') : curFg;
+      let bg = isInverse ? (curFg || 'var(--term-fg)') : curBg;
+
+      if (fg) span.style.color = fg;
+      if (bg) span.style.backgroundColor = bg;
+      if (isBold) span.style.fontWeight = 'bold';
+      if (isDim) span.style.opacity = '0.65';
+      if (isItalic) span.style.fontStyle = 'italic';
+      if (isUnderline && isStrike) span.style.textDecoration = 'underline line-through';
+      else if (isUnderline) span.style.textDecoration = 'underline';
+      else if (isStrike) span.style.textDecoration = 'line-through';
+
+      span.textContent = str;
+      parentEl.appendChild(span);
+    }
+
+    while ((match = csiRegex.exec(s)) !== null) {
+      const textChunk = s.substring(lastIdx, match.index);
+      if (textChunk) {
+        appendSpan(textChunk);
+      }
+      lastIdx = csiRegex.lastIndex;
+
+      const codeStr = match[1];
+      const command = match[2];
+
+      if (command === 'm') {
+        if (!codeStr || codeStr === '0') {
+          curFg = null; curBg = null;
+          isBold = false; isDim = false; isItalic = false;
+          isUnderline = false; isInverse = false; isStrike = false;
+        } else {
+          const codes = codeStr.split(';').map(c => parseInt(c, 10) || 0);
+          for (let i = 0; i < codes.length; i++) {
+            const code = codes[i];
+            if (code === 0) {
+              curFg = null; curBg = null;
+              isBold = false; isDim = false; isItalic = false;
+              isUnderline = false; isInverse = false; isStrike = false;
+            } else if (code === 1) {
+              isBold = true;
+            } else if (code === 2) {
+              isDim = true;
+            } else if (code === 3) {
+              isItalic = true;
+            } else if (code === 4) {
+              isUnderline = true;
+            } else if (code === 7) {
+              isInverse = true;
+            } else if (code === 9) {
+              isStrike = true;
+            } else if (code === 22) {
+              isBold = false; isDim = false;
+            } else if (code === 23) {
+              isItalic = false;
+            } else if (code === 24) {
+              isUnderline = false;
+            } else if (code === 27) {
+              isInverse = false;
+            } else if (code === 29) {
+              isStrike = false;
+            } else if (code >= 30 && code <= 37) {
+              curFg = ANSI_COLOR_MAP[code];
+            } else if (code === 38) {
+              if (codes[i + 1] === 5 && codes[i + 2] !== undefined) {
+                curFg = get256Color(codes[i + 2]);
+                i += 2;
+              } else if (codes[i + 1] === 2 && codes[i + 4] !== undefined) {
+                curFg = `rgb(${codes[i + 2]},${codes[i + 3]},${codes[i + 4]})`;
+                i += 4;
+              }
+            } else if (code === 39) {
+              curFg = null;
+            } else if (code >= 40 && code <= 47) {
+              curBg = ANSI_COLOR_MAP[code];
+            } else if (code === 48) {
+              if (codes[i + 1] === 5 && codes[i + 2] !== undefined) {
+                curBg = get256Color(codes[i + 2]);
+                i += 2;
+              } else if (codes[i + 1] === 2 && codes[i + 4] !== undefined) {
+                curBg = `rgb(${codes[i + 2]},${codes[i + 3]},${codes[i + 4]})`;
+                i += 4;
+              }
+            } else if (code === 49) {
+              curBg = null;
+            } else if (code >= 90 && code <= 97) {
+              curFg = ANSI_COLOR_MAP[code];
+            } else if (code >= 100 && code <= 107) {
+              curBg = ANSI_COLOR_MAP[code];
+            }
+          }
+        }
+      }
+    }
+
+    const remaining = s.substring(lastIdx);
+    if (remaining) {
+      appendSpan(remaining);
+    }
+  }
+
+  function showAnsiTestCard() {
+    print('ANSI Terminal Graphics & Color Verification Matrix:', 'log-system');
+    print('\x1b[1mStandard 8 Colors (Normal & Bright):\x1b[0m');
+    print('  \x1b[30m■ Black\x1b[0m    \x1b[31m■ Red\x1b[0m    \x1b[32m■ Green\x1b[0m    \x1b[33m■ Yellow\x1b[0m    \x1b[34m■ Blue\x1b[0m    \x1b[35m■ Magenta\x1b[0m    \x1b[36m■ Cyan\x1b[0m    \x1b[37m■ White\x1b[0m');
+    print('  \x1b[90m■ Bright0\x1b[0m  \x1b[91m■ Bright1\x1b[0m  \x1b[92m■ Bright2\x1b[0m  \x1b[93m■ Bright3\x1b[0m   \x1b[94m■ Bright4\x1b[0m  \x1b[95m■ Bright5\x1b[0m    \x1b[96m■ Bright6\x1b[0m  \x1b[97m■ Bright7\x1b[0m');
+    print('\x1b[1mText Attributes:\x1b[0m');
+    print('  \x1b[1mBold Text\x1b[0m  |  \x1b[2mDim Text\x1b[0m  |  \x1b[3mItalic Text\x1b[0m  |  \x1b[4mUnderline Text\x1b[0m  |  \x1b[7mInverted Text\x1b[0m  |  \x1b[9mStrikethrough\x1b[0m');
+    print('\x1b[1mBackground Color Swatches:\x1b[0m');
+    print('  \x1b[41;37m RED BG \x1b[0m \x1b[42;30m GRN BG \x1b[0m \x1b[43;30m YEL BG \x1b[0m \x1b[44;37m BLU BG \x1b[0m \x1b[45;37m MAG BG \x1b[0m \x1b[46;30m CYN BG \x1b[0m \x1b[47;30m WHT BG \x1b[0m');
+    print('\x1b[1m256-Color & 24-bit Truecolor Demo:\x1b[0m');
+    let c256 = '  ';
+    for (let i = 196; i <= 201; i++) c256 += `\x1b[38;5;${i}m■256-${i}\x1b[0m `;
+    print(c256);
+    print('  \x1b[38;2;255;128;0m■ RGB(255,128,0)\x1b[0m  \x1b[38;2;128;255;0m■ RGB(128,255,0)\x1b[0m  \x1b[38;2;0;200;255m■ RGB(0,200,255)\x1b[0m  \x1b[38;2;220;50;220m■ RGB(220,50,220)\x1b[0m');
+    print('ANSI Escape Sequence Engine: ACTIVE (SGR, 256c, 24b, Clear, Reset).', 'log-system');
+  }
+
   let printLogHook = null;
   let lastCmdSuccess = true;
 
@@ -1888,20 +2061,25 @@
       const line = document.createElement('div');
       line.className = 'log-line';
       
-      if (forceClass === 'log-error' || text.startsWith('ERROR:') || text.startsWith('Usage:') || text.startsWith('Bad command')) {
+      if (forceClass === 'log-error' || (typeof text === 'string' && (text.startsWith('ERROR:') || text.startsWith('Usage:') || text.startsWith('Bad command')))) {
         lastCmdSuccess = false;
       }
       if (forceClass !== null) {
           if (forceClass) line.classList.add(forceClass);
-      } else if (text.includes('ERROR') || text.includes('FATAL') || text.includes('WARNING')) {
+      } else if (typeof text === 'string' && (text.includes('ERROR') || text.includes('FATAL') || text.includes('WARNING'))) {
           line.classList.add('log-error');
-      } else if (text.includes('SYSTEM') || text.includes('CERBERUS') || text.includes('STATUS')) {
+      } else if (typeof text === 'string' && (text.includes('SYSTEM') || text.includes('CERBERUS') || text.includes('STATUS'))) {
           line.classList.add('log-system');
-      } else if (text.includes('>>') || text.includes('<<')) {
+      } else if (typeof text === 'string' && (text.includes('>>') || text.includes('<<'))) {
           line.classList.add('log-operator');
       }
       
-      line.textContent = text;
+      const textStr = String(text != null ? text : '');
+      if (textStr.includes('\x1b[') || textStr.includes('\u001b[') || textStr.includes('\033[') || /\\[e0]33\[|\\x1b\[/i.test(textStr)) {
+        renderAnsiToElement(textStr, line);
+      } else {
+        line.textContent = textStr;
+      }
       output.appendChild(line);
 
       while (output.childNodes.length > MAX_LOG_LINES) {
@@ -2040,7 +2218,8 @@
           print("  grep / find   - Search text lines (grep [-i] <pattern> [file])");
           print("  wc            - Count lines, words, and bytes in file (wc <file>)");
           print("  head / tail   - View first or last N lines (head [-n N] <file>)");
-          print("  history       - Command history list (!n to recall, !! for last)");
+          print("  history       - Command history list (!n to recall, !! for last, -c to clear)");
+          print("  ansi          - Run ANSI escape code & color capability verification matrix");
           print("  calc          - Arithmetic math calculator (calc <expression>)");
           print("  ps / tasks    - Show live KiloOS or virtual system processes and memory");
           print("  kill <pid>    - Terminate KiloOS task or process (kill <pid>)");
@@ -2065,6 +2244,8 @@
           print("  newtab        - Open a new terminal tab session");
           print("  exit          - Close active terminal tab");
           print("  Piping        - Command stdout piping across ps/dir/dmesg/type/history/env into grep/wc/head/tail (cmd1 | cmd2)");
+      } else if (cmd === 'ansi' || cmd === 'ansitest') {
+          showAnsiTestCard();
       } else if (cmd === 'ver' || cmd === 'sysinfo') {
           print("KiloOS Web Terminal v1.2 (Multi-Tab, Deep Utilities & Piping)");
           print("Kernel Constraints: <999KB Strict Size Policy Active.");
@@ -2302,7 +2483,23 @@
               }
           }
       } else if (cmd === 'echo') {
-          print(args.slice(1).join(' '));
+          let echoArgs = args.slice(1);
+          let interp = false;
+          if (echoArgs[0] === '-e') {
+              interp = true;
+              echoArgs = echoArgs.slice(1);
+          }
+          let echoText = echoArgs.join(' ');
+          if (interp || /\\[e0]33|\\x1b/i.test(echoText)) {
+              echoText = echoText
+                .replace(/\\e\[/gi, '\x1b[')
+                .replace(/\\033\[/g, '\x1b[')
+                .replace(/\\x1b\[/gi, '\x1b[')
+                .replace(/\\n/g, '\n')
+                .replace(/\\t/g, '\t');
+          }
+          const echoLines = echoText.split('\n');
+          echoLines.forEach(l => print(l));
       } else if (cmd === 'mkdir') {
           let dirArg = args.slice(1).find(a => !isOptionFlag(a));
           if (!dirArg) {
@@ -2513,8 +2710,18 @@
               }
           }
       } else if (cmd === 'history') {
-          print("Session Command History:");
-          s.history.forEach((h, i) => print(`  ${String(i + 1).padStart(2, ' ')}  ${h}`));
+          if (args[1] === '-c' || args[1] === 'clear') {
+              s.history = [];
+              s.historyPos = 0;
+              print("Command history cleared.", "log-system");
+          } else {
+              print("Session Command History:");
+              if (s.history.length === 0) {
+                  print("  (history empty)");
+              } else {
+                  s.history.forEach((h, i) => print(`  ${String(i + 1).padStart(2, ' ')}  ${h}`));
+              }
+          }
       } else if (cmd === 'calc') {
           const expr = trimmed.substring(4).trim();
           if (!expr) {
@@ -2912,7 +3119,7 @@
       const builtins = [
         'help', 'ver', 'clear', 'dir', 'cd', 'type', 'echo', 'mkdir', 'touch', 
         'del', 'rm', 'copy', 'cp', 'move', 'mv', 'grep', 'wc', 'head', 'tail', 
-        'history', 'calc', 'ps', 'uptime', 'ping', 'netstat', 'theme', 'color', 
+        'history', 'ansi', 'calc', 'ps', 'uptime', 'ping', 'netstat', 'theme', 'color', 
         'dmesg', 'glitch', 'run', 'exec', 'date', 'time', 'whoami', 'cls', 'ls', 
         'cat', 'alias', 'unalias', 'env', 'export', 'unset', 'macro', 'export-log', 
         'newtab', 'save', 'quicksave', 'load', 'quickload', 'backup', 'restore', 
@@ -3062,6 +3269,8 @@
 
   function showToast(message, type = 'success', duration = 3500) {
     if (!toastContainer) return;
+    if (tutorialModal && tutorialModal.classList.contains('open')) return;
+    if (helpModal && helpModal.classList.contains('open')) return;
     const toast = document.createElement('div');
     toast.className = `toast ${type === 'sys' ? 'toast-sys' : type === 'warn' ? 'toast-warn' : type === 'err' ? 'toast-err' : ''}`;
     
@@ -3383,6 +3592,9 @@
     }
   }
 
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) autoSaveState();
+  });
   window.addEventListener('beforeunload', autoSaveState);
   window.addEventListener('pagehide', autoSaveState);
 </script>

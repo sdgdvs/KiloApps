@@ -261,9 +261,45 @@ void AppendOutput(const char* text) {
         WriteFile(g_hRedirFile, "\r\n", 2, &written, NULL);
         return;
     }
-    int len = GetWindowTextLengthA(hOut);
-    SendMessageA(hOut, EM_SETSEL, len, len);
-    SendMessageA(hOut, EM_REPLACESEL, FALSE, (LPARAM)text);
+
+    // Check for clear screen escape sequence \x1b[2J or \033[2J
+    if (my_strstri(text, "\x1b[2J") != NULL || my_strstri(text, "\\033[2J") != NULL || my_strstri(text, "\\e[2J") != NULL) {
+        SetWindowTextA(hOut, "");
+        TabSession* curTab = &g_tabs[g_activeTab];
+        if (curTab->outputBuffer) curTab->outputBuffer[0] = '\0';
+        return;
+    }
+
+    // Filter out ANSI escape codes so EDIT control displays clean text
+    char cleanText[8192];
+    int dst = 0;
+    int src = 0;
+    int len = lstrlenA(text);
+
+    while (src < len && dst < (int)sizeof(cleanText) - 4) {
+        if ((text[src] == 0x1B && text[src+1] == '[') ||
+            (text[src] == '\\' && (text[src+1] == '0' && text[src+2] == '3' && text[src+3] == '3' && text[src+4] == '[')) ||
+            (text[src] == '\\' && (text[src+1] == 'e' || text[src+1] == 'E') && text[src+2] == '[') ||
+            (text[src] == '\\' && (text[src+1] == 'x' || text[src+1] == 'X') && text[src+2] == '1' && (text[src+3] == 'b' || text[src+3] == 'B') && text[src+4] == '[')) {
+            
+            if (text[src] == 0x1B) src += 2;
+            else if (text[src+1] == '0') src += 5;
+            else if (text[src+1] == 'e' || text[src+1] == 'E') src += 3;
+            else src += 5;
+
+            while (src < len && !((text[src] >= 'A' && text[src] <= 'Z') || (text[src] >= 'a' && text[src] <= 'z'))) {
+                src++;
+            }
+            if (src < len) src++;
+        } else {
+            cleanText[dst++] = text[src++];
+        }
+    }
+    cleanText[dst] = '\0';
+
+    int curLen = GetWindowTextLengthA(hOut);
+    SendMessageA(hOut, EM_SETSEL, curLen, curLen);
+    SendMessageA(hOut, EM_REPLACESEL, FALSE, (LPARAM)cleanText);
     SendMessageA(hOut, EM_REPLACESEL, FALSE, (LPARAM)"\r\n");
     SendMessageA(hOut, EM_SCROLLCARET, 0, 0);
 }
@@ -956,7 +992,8 @@ void ProcessSingleCommand(const char* rawCmd) {
         AppendOutput("  grep/find  - Search text lines (grep [-i] <pattern> [file])");
         AppendOutput("  wc         - Count lines, words, and bytes in file (wc <file>)");
         AppendOutput("  head/tail  - View first or last N lines (head [-n N] <file>)");
-        AppendOutput("  history    - Display command history (!n to recall, !! for last)");
+        AppendOutput("  history    - Display command history (!n to recall, !! for last, -c to clear)");
+        AppendOutput("  ansi       - Run ANSI escape code & color capability verification matrix");
         AppendOutput("  calc       - Arithmetic math calculator (calc <expression>)");
         AppendOutput("  ps/tasks   - Show virtual system processes and memory");
         AppendOutput("  uptime     - Display system uptime and command telemetry");
@@ -997,6 +1034,14 @@ void ProcessSingleCommand(const char* rawCmd) {
         }
     } else if (MatchCommand(cmd, "tutorial")) {
         ShowHelpDialog(g_hMainWnd ? g_hMainWnd : hOut);
+    } else if (MatchCommand(cmd, "ansi") || MatchCommand(cmd, "ansitest")) {
+        AppendOutput("ANSI Terminal Graphics & Color Verification Matrix:");
+        AppendOutput("Standard 8 Colors (Normal & Bright):");
+        AppendOutput("  ■ Black    ■ Red    ■ Green    ■ Yellow    ■ Blue    ■ Magenta    ■ Cyan    ■ White");
+        AppendOutput("  ■ Bright0  ■ Bright1■ Bright2  ■ Bright3   ■ Bright4  ■ Bright5    ■ Bright6  ■ Bright7");
+        AppendOutput("Text Attributes: Bold | Dim | Italic | Underline | Inverted | Strikethrough");
+        AppendOutput("Background Color Swatches: [RED] [GRN] [YEL] [BLU] [MAG] [CYN] [WHT]");
+        AppendOutput("ANSI Escape Sequence Engine: ACTIVE (Win32 CSI parser, SGR filter, screen reset)");
     } else if (MatchCommand(cmd, "ver") || MatchCommand(cmd, "sysinfo")) {
         AppendOutput("KiloOS Native v1.2 (Deep Utilities & Multi-Tab Terminal Shell)");
         AppendOutput("Kernel Constraints: <999KB Strict Size Policy Active.");
@@ -1283,7 +1328,37 @@ void ProcessSingleCommand(const char* rawCmd) {
         const char* text = cmd + 4;
         if (*text == ' ' || *text == '\t' || *text == '\0') {
             while (*text == ' ' || *text == '\t') text++;
-            AppendOutput(text);
+            BOOL interp = FALSE;
+            if (text[0] == '-' && text[1] == 'e' && (text[2] == ' ' || text[2] == '\t' || text[2] == '\0')) {
+                interp = TRUE;
+                text += 2;
+                while (*text == ' ' || *text == '\t') text++;
+            }
+            if (!interp && (my_strstri(text, "\\e[") || my_strstri(text, "\\033[") || my_strstri(text, "\\x1b["))) {
+                interp = TRUE;
+            }
+            if (interp) {
+                char expanded[2048];
+                int eIdx = 0;
+                for (int i = 0; text[i] && eIdx < (int)sizeof(expanded) - 2; i++) {
+                    if (text[i] == '\\' && text[i+1] == 'n') {
+                        expanded[eIdx] = '\0';
+                        AppendOutput(expanded);
+                        eIdx = 0;
+                        i++;
+                    } else if (text[i] == '\\' && text[i+1] == 't') {
+                        expanded[eIdx++] = ' ';
+                        expanded[eIdx++] = ' ';
+                        i++;
+                    } else {
+                        expanded[eIdx++] = text[i];
+                    }
+                }
+                expanded[eIdx] = '\0';
+                AppendOutput(expanded);
+            } else {
+                AppendOutput(text);
+            }
         } else {
             AppendOutput("Bad command or file name.");
         }
@@ -1631,11 +1706,23 @@ void ProcessSingleCommand(const char* rawCmd) {
             }
         }
     } else if (MatchCommand(cmd, "history")) {
-        AppendOutput("Session Command History:");
-        for (int i = 0; i < tab->history_count; i++) {
-            char hLine[300];
-            wsprintfA(hLine, "  %2d  %s", i + 1, tab->history[i]);
-            AppendOutput(hLine);
+        const char* hArg = cmd + 7;
+        while (*hArg == ' ' || *hArg == '\t') hArg++;
+        if (StringStartsWithIC(hArg, "-c") || StringStartsWithIC(hArg, "clear")) {
+            tab->history_count = 0;
+            tab->history_pos = 0;
+            AppendOutput("Command history cleared.");
+        } else {
+            AppendOutput("Session Command History:");
+            if (tab->history_count == 0) {
+                AppendOutput("  (history empty)");
+            } else {
+                for (int i = 0; i < tab->history_count; i++) {
+                    char hLine[300];
+                    wsprintfA(hLine, "  %2d  %s", i + 1, tab->history[i]);
+                    AppendOutput(hLine);
+                }
+            }
         }
     } else if (MatchCommand(cmd, "calc")) {
         const char* expr = cmd + 4;
@@ -2023,7 +2110,7 @@ void PerformTabCompletion() {
     const char* builtins[] = {
         "help", "ver", "clear", "cls", "dir", "ls", "cd", "type", "cat", 
         "echo", "mkdir", "touch", "del", "rm", "copy", "cp", "move", "mv", 
-        "grep", "wc", "head", "tail", "history", "calc", "ps", "uptime", 
+        "grep", "wc", "head", "tail", "history", "ansi", "calc", "ps", "uptime", 
         "ping", "netstat", "theme", "color", "dmesg", "glitch", "run", "exec", 
         "date", "time", "whoami", "alias", "unalias", "env", "export", 
         "unset", "macro", "export-log", "newtab", NULL

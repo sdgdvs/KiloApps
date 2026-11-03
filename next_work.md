@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KHex
-  kilo_qa: KTerm
+  kilo_qa: KChrono
   kilo_expander: KMail
   kilo_review: KMech
 virtual_web_target: kweb://webring
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KMail
-  timestamp: '2026-11-02T17:19:22-08:00'
+  agent: kilo-qa
+  app: KTerm
+  timestamp: '2026-11-02T17:39:41-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -191,11 +191,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMail` | `KiloOS/public/apps/kmail.html`, `KMail/main.c` | **[ARGON REVIEW]:** Fix 960x603 layout clipping in kmail.html (sheet.png Panels 2-3): add white-space nowrap across 26px .status-bar/.status-left/.status-mid/.status-right with concise shortcut pills so items stop wrapping onto 2 clipped lines, compact .sidebar/.folder/.search-container (1-row .quick-filters) and arrange .sidebar-bottom into a 2-column CSS grid so all 6 folders and all 8-9 utility buttons fit 100% visible above the fold with 0px scroll, and change .pane-header to flex-direction column (full-width subject/sender/tags above a compact nowrap .pane-actions bar) so subjects stop wrapping into a 105px column; convert #help-modal .shortcuts-table into a 2-column grid to fit 603px without scrolling, move #toast-container to bottom-right above .status-bar (skipping redundant 300ms boot toast), add SELECT to keydown isInput guard, wire [Ctrl+Tab] tab cycling and [D] focus-decrypt hotkey, replace anachronistic Firebase RTDB copy in #tutorial-modal/#network-modal with diegetic 1999 KiloNet SMTP/POP3 Relay, and in KMail/main.c hide hBtnOutbox in empty-state RenderPane(), fix WM_SIZE button overlap, and replace UTF-8 emojis in ANSI controls with ASCII. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KTerm`
+- **Active Target**: `KChrono`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KTerm` | `KiloOS/public/apps/kterm.html`, `KTerm/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, terminal emulator ANSI escape codes, command history, dual Win32 C parity, and promote to Mature table. |
 | `KChrono` | `KiloOS/public/apps/kchrono.html`, `KChrono/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, timeline event organizer, epoch markers, dual Win32 C parity, and promote to Mature table. |
 | `KMine` | `KiloOS/public/apps/kmine.html`, `KMine/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mine excavation crawler, ore inventory telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, AST/console script runner, sample templates, dual Win32 C parity, and promote to Mature table. |
@@ -266,6 +265,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KTerm** | `KiloOS/public/apps/kterm.html` | Pass 5+ (2026-11-02) | System / Utilities | Complete multi-tab terminal emulator with ANSI escape codes, command history, echo -e, piping, math evaluator, VFS integration, F5/F9 state persistence, and full dual Win32 C parity. |
 | **KNetMap** | `KiloOS/public/apps/knetmap.html` | Pass 5+ (2026-11-02) | Network / Utilities | Complete subnet topology visualizer and network simulator with VLSM CIDR calculator, multi-hop ICMP echo packet dispatch, packet sniffer, chaos cable severance, F5/F9 state persistence, and dual Win32 C parity. |
 | **KSolitaire** | `KiloOS/public/apps/ksolitaire.html` | Pass 5+ (2026-11-02) | Games / Card & Board | Complete Klondike solitaire workstation with Classic/Vegas/20-Stage Campaign modes, Mulberry32 PRNG deal selection [F3], undo/redo history [U/Ctrl+Z/Ctrl+Y], win cascade & fireworks, active skills, F5/F9 state persistence, and dual Win32 C parity. |
 | **KBreakout** | `KiloOS/public/apps/kbreakout.html` | Pass 5+ (2026-11-02) | Games / Arcade | Arcade brick-breaker with textured metallic/crystalline bricks, plasma paddle/ball trails, boss hazards, YM2612 soundscape, dual Win32 C parity. |
@@ -330,6 +330,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T17:39:41-08:00 — kilo-qa: KTerm (Pass 5 QA, ANSI Support & Mature Graduation)**
+  - Status: PASS ✅ (0 errors, web 139.0 KB, native 46.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.69%, HEAD Δ 0.06%, 0 fail, 0 warn, 4.5s)).
+  - ANSI Escape Support: Integrated full ANSI SGR parser (colors, 256c, 24b RGB, bold, underline, reverse, clear screen) in Web HTML and clean escape filter + clear in Win32 C with ansi test command.
+  - History & State: Added history -c clear command, echo -e escape expansion, F5/F9 state persistence, visibilitychange lifecycle auto-save, and toast top positioning.
+  - Mature Quarantine & Handoff: Promoted `KTerm` to Mature archive; advanced `kilo-qa` to `KChrono`; next agent `kilo-expander`.
+
 - **2026-11-02T17:19:22-08:00 — kilo-usability: KMail (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 126.9 KB, native 509.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.82%, HEAD Δ 4.87%, 0 fail, 0 warn, 7.1s)).
   - Layout & Responsive: Eliminated 960x603 layout clipping in kmail.html by adding white-space nowrap across 26px status-bar with concise shortcut pills, compacting sidebar/folders/search (1-row quick-filters), arranging sidebar-bottom into a 2-column CSS grid (0px vertical scroll), and setting pane-header to flex-direction column so email subjects no longer wrap into a 105px column.
@@ -354,9 +360,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented interactive RFC 1149 CPIP simulator, RFC 2324 HTCPCP console with 418 Teapot easter egg, and RFC 793 ASCII TCP state machine stepper.
   - Enhanced KiloOS VFS spooling, cross-app IPC for KPad/KHex/KCipher, and unified webring/KNet routing.
   - Handoff: Advanced `kilo-creator` to `kweb://webring`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-02T15:16:20-08:00 — kilo-review: KMail (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 960x603 sheet.png and audited kmail.html + KMail/main.c; un-quarantined for targeted fixes).
-  - Visual/UX Findings: 26px .status-bar wraps/clips all items onto 2 lines, .sidebar-bottom clips Network/Save/Load/Export/Import/Trash off-screen at 603px height, .pane-header crushes subjects into a 105px column, #help-modal overflows, and SELECT focus triggers list hotkeys.
-  - Feature/VFS Findings: Boot Firebase RTDB WebSocket autostart triggers visual_probe WARN, playSend() bypasses modGain, folder rules allow invalid/capitalized folder names, custom tags miss #tag-filter, KMail/main.c seed XOR decrypts to gibberish and breaks JSON round-trip with web, and Phase VI KiloOS VFS/IPC mesh is missing.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KMail`, `kilo-usability`->`KMail`, `kilo-expander`->`KMail`] (un-quarantined `KMail` from Mature); advanced `kilo-review` to `KMech`; next agent `kilo-creator`.

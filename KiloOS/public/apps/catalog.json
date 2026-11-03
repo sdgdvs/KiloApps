@@ -395,9 +395,9 @@
     "id": "kmail",
     "title": "KMail",
     "folder": "Network",
-    "webBytes": 127323,
-    "exeBytes": 520704,
-    "budgetPercent": 12.7
+    "webBytes": 129967,
+    "exeBytes": 521728,
+    "budgetPercent": 13.0
   },
   {
     "id": "kmandel",
@@ -747,9 +747,9 @@
     "id": "kterm",
     "title": "KTerm",
     "folder": "System",
-    "webBytes": 132911,
-    "exeBytes": 46080,
-    "budgetPercent": 13.3
+    "webBytes": 142299,
+    "exeBytes": 47616,
+    "budgetPercent": 14.2
   },
   {
     "id": "ktetris",
