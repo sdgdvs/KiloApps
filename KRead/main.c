@@ -26,6 +26,7 @@ typedef struct {
     DWORD dwTextLen;
     DWORD dwBookmark;
     DWORD dwScrollPos;
+    BOOL bHasBookmark;
 } KREAD_TAB;
 
 static KREAD_TAB g_Tabs[MAX_TABS];
@@ -177,6 +178,16 @@ static const char* g_SampleChronosText =
     "DIAGNOSTIC HASH: 0x99A7-F00D-C0DE\r\n"
     "SYSTEM INTEGRITY: 100% NOMINAL";
 
+static WNDPROC g_OldEditProc = NULL;
+
+static LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    LRESULT res = CallWindowProcA(g_OldEditProc, hwnd, uMsg, wParam, lParam);
+    if (uMsg == WM_KEYUP || uMsg == WM_KEYDOWN || uMsg == WM_LBUTTONUP || uMsg == WM_MOUSEWHEEL || uMsg == WM_VSCROLL) {
+        UpdateStatusBar();
+    }
+    return res;
+}
+
 void UpdateStatusBar() {
     if (!g_hStatus) return;
     RECT rc;
@@ -205,8 +216,9 @@ void UpdateStatusBar() {
     int colIdx = (int)selStart - lineStart + 1;
     int totalLines = hEdit ? (int)SendMessageA(hEdit, EM_GETLINECOUNT, 0, 0) : 1;
     if (totalLines < 1) totalLines = 1;
+    int firstVisLine = hEdit ? (int)SendMessageA(hEdit, EM_GETFIRSTVISIBLELINE, 0, 0) + 1 : lineIdx;
     int totalPages = max(1, (totalLines + 29) / 30);
-    int curPage = min(totalPages, max(1, (lineIdx + 29) / 30));
+    int curPage = min(totalPages, max(1, (max(lineIdx, firstVisLine) + 29) / 30));
     wsprintfA(szPart1, "Ln %d/%d (Pg %d/%d) | Col %d | %d ch | %dpt", lineIdx, totalLines, curPage, totalPages, colIdx, docLen, currentFontSize);
     SendMessageA(g_hStatus, SB_SETTEXTA, 1, (LPARAM)szPart1);
 
@@ -331,6 +343,7 @@ void AddNewTab(HWND hwnd, const char* title, const char* initialText) {
     }
 
     g_Tabs[newIdx].dwBookmark = 0;
+    g_Tabs[newIdx].bHasBookmark = FALSE;
     g_Tabs[newIdx].dwScrollPos = 0;
     g_Tabs[newIdx].pszText = NULL;
     g_Tabs[newIdx].dwTextLen = 0;
@@ -365,6 +378,7 @@ void CloseCurrentTab(HWND hwnd) {
             g_Tabs[0].dwTextLen = 0;
         }
         g_Tabs[0].dwBookmark = 0;
+        g_Tabs[0].bHasBookmark = FALSE;
         g_Tabs[0].dwScrollPos = 0;
         lstrcpyA(g_Tabs[0].szTitle, "Untitled");
         
@@ -399,8 +413,10 @@ void CloseCurrentTab(HWND hwnd) {
     LoadTabState(nextIdx);
 }
 
-#define QUICKSAVE_MAGIC 0x3344524B // "KRD3"
+#define QUICKSAVE_MAGIC_V4 0x3444524B // "KRD4"
+#define QUICKSAVE_MAGIC_V3 0x3344524B // "KRD3"
 #define QUICKSAVE_MAGIC_V2 0x3244524B // "KRD2"
+#define QUICKSAVE_MAGIC QUICKSAVE_MAGIC_V4
 
 void QuicksaveNative(HWND hwnd) {
     SaveActiveTabState();
@@ -410,7 +426,7 @@ void QuicksaveNative(HWND hwnd) {
         return;
     }
     DWORD written = 0;
-    DWORD magic = QUICKSAVE_MAGIC;
+    DWORD magic = QUICKSAVE_MAGIC_V4;
     WriteFile(hFile, &magic, sizeof(DWORD), &written, NULL);
     WriteFile(hFile, &g_NumTabs, sizeof(int), &written, NULL);
     WriteFile(hFile, &g_ActiveTab, sizeof(int), &written, NULL);
@@ -418,10 +434,12 @@ void QuicksaveNative(HWND hwnd) {
     WriteFile(hFile, currentFontFace, sizeof(currentFontFace), &written, NULL);
     WriteFile(hFile, &g_bgColor, sizeof(COLORREF), &written, NULL);
     WriteFile(hFile, &g_textColor, sizeof(COLORREF), &written, NULL);
+    WriteFile(hFile, &g_currentTheme, sizeof(int), &written, NULL);
 
     for (int i = 0; i < g_NumTabs; i++) {
         WriteFile(hFile, g_Tabs[i].szTitle, sizeof(g_Tabs[i].szTitle), &written, NULL);
         WriteFile(hFile, &g_Tabs[i].dwBookmark, sizeof(DWORD), &written, NULL);
+        WriteFile(hFile, &g_Tabs[i].bHasBookmark, sizeof(BOOL), &written, NULL);
         WriteFile(hFile, &g_Tabs[i].dwScrollPos, sizeof(DWORD), &written, NULL);
         WriteFile(hFile, &g_Tabs[i].dwTextLen, sizeof(DWORD), &written, NULL);
         if (g_Tabs[i].dwTextLen > 0 && g_Tabs[i].pszText) {
@@ -442,7 +460,7 @@ void QuickloadNative(HWND hwnd) {
     DWORD readBytes = 0;
     DWORD magic = 0;
     ReadFile(hFile, &magic, sizeof(DWORD), &readBytes, NULL);
-    if (magic != QUICKSAVE_MAGIC && magic != QUICKSAVE_MAGIC_V2) {
+    if (magic != QUICKSAVE_MAGIC_V4 && magic != QUICKSAVE_MAGIC_V3 && magic != QUICKSAVE_MAGIC_V2) {
         CloseHandle(hFile);
         ShowNativeStatus("Invalid quicksave snapshot file format.");
         return;
@@ -451,12 +469,22 @@ void QuickloadNative(HWND hwnd) {
     int numTabs = 0, activeTab = 0, fontSize = 0;
     char fontFace[32] = {0};
     COLORREF bgCol = 0, txtCol = 0;
+    int loadedTheme = 0;
     ReadFile(hFile, &numTabs, sizeof(int), &readBytes, NULL);
     ReadFile(hFile, &activeTab, sizeof(int), &readBytes, NULL);
     ReadFile(hFile, &fontSize, sizeof(int), &readBytes, NULL);
     ReadFile(hFile, fontFace, sizeof(fontFace), &readBytes, NULL);
     ReadFile(hFile, &bgCol, sizeof(COLORREF), &readBytes, NULL);
     ReadFile(hFile, &txtCol, sizeof(COLORREF), &readBytes, NULL);
+    if (magic == QUICKSAVE_MAGIC_V4) {
+        ReadFile(hFile, &loadedTheme, sizeof(int), &readBytes, NULL);
+        if (loadedTheme >= 0 && loadedTheme <= 3) g_currentTheme = loadedTheme;
+    } else {
+        if (bgCol == RGB(24, 24, 28)) g_currentTheme = 1;
+        else if (bgCol == RGB(251, 240, 217)) g_currentTheme = 2;
+        else if (bgCol == RGB(0, 0, 0)) g_currentTheme = 3;
+        else g_currentTheme = 0;
+    }
 
     if (numTabs <= 0 || numTabs > MAX_TABS) {
         CloseHandle(hFile);
@@ -485,7 +513,12 @@ void QuickloadNative(HWND hwnd) {
     for (int i = 0; i < g_NumTabs; i++) {
         ReadFile(hFile, g_Tabs[i].szTitle, sizeof(g_Tabs[i].szTitle), &readBytes, NULL);
         ReadFile(hFile, &g_Tabs[i].dwBookmark, sizeof(DWORD), &readBytes, NULL);
-        if (magic == QUICKSAVE_MAGIC) {
+        if (magic == QUICKSAVE_MAGIC_V4) {
+            ReadFile(hFile, &g_Tabs[i].bHasBookmark, sizeof(BOOL), &readBytes, NULL);
+        } else {
+            g_Tabs[i].bHasBookmark = (g_Tabs[i].dwBookmark > 0);
+        }
+        if (magic == QUICKSAVE_MAGIC_V4 || magic == QUICKSAVE_MAGIC_V3) {
             ReadFile(hFile, &g_Tabs[i].dwScrollPos, sizeof(DWORD), &readBytes, NULL);
         } else {
             g_Tabs[i].dwScrollPos = g_Tabs[i].dwBookmark;
@@ -615,6 +648,10 @@ void LoadFileFromPath(HWND hwnd, const char* szFilePath, BOOL inNewTab) {
             SetWindowTextA(hEdit, pszNormalized);
             lstrcpynA(g_Tabs[g_ActiveTab].szTitle, fname, 60);
             g_Tabs[g_ActiveTab].dwBookmark = 0;
+            g_Tabs[g_ActiveTab].bHasBookmark = FALSE;
+            g_Tabs[g_ActiveTab].dwScrollPos = 0;
+            SendMessageA(hEdit, EM_SETSEL, 0, 0);
+            SendMessageA(hEdit, EM_SCROLLCARET, 0, 0);
 
             if (g_Tabs[g_ActiveTab].pszText) {
                 VirtualFree(g_Tabs[g_ActiveTab].pszText, 0, MEM_RELEASE);
@@ -990,6 +1027,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SendMessageA(hEdit, EM_SETLIMITTEXT, 0, 0);
             SendMessageA(hEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(16, 16));
+            g_OldEditProc = (WNDPROC)SetWindowLongPtrA(hEdit, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
             // Status Bar
             g_hStatus = CreateWindowExA(0, STATUSCLASSNAME, "", 
@@ -1118,6 +1156,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Clear
             if (id == 1000) {
                 SetWindowTextA(hEdit, "");
+                if (g_ActiveTab >= 0 && g_ActiveTab < g_NumTabs) {
+                    g_Tabs[g_ActiveTab].dwScrollPos = 0;
+                    g_Tabs[g_ActiveTab].dwBookmark = 0;
+                    g_Tabs[g_ActiveTab].bHasBookmark = FALSE;
+                    if (g_Tabs[g_ActiveTab].pszText) {
+                        VirtualFree(g_Tabs[g_ActiveTab].pszText, 0, MEM_RELEASE);
+                        g_Tabs[g_ActiveTab].pszText = NULL;
+                        g_Tabs[g_ActiveTab].dwTextLen = 0;
+                    }
+                }
                 ShowNativeStatus("Document cleared [Ctrl+Del]");
                 UpdateStatusBar();
             }
@@ -1221,15 +1269,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DWORD start = 0, end = 0;
                 SendMessageA(hEdit, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
                 g_Tabs[g_ActiveTab].dwBookmark = start;
+                g_Tabs[g_ActiveTab].bHasBookmark = TRUE;
                 PlaySfx(3);
                 ShowNativeStatus("Bookmark saved for active tab! [Ctrl+B]");
             }
             if (id == 1006) {
-                DWORD bm = g_Tabs[g_ActiveTab].dwBookmark;
-                SendMessageA(hEdit, EM_SETSEL, bm, bm);
-                SendMessageA(hEdit, EM_SCROLLCARET, 0, 0);
-                PlaySfx(4);
-                ShowNativeStatus("Jumped to saved bookmark position! [Ctrl+J]");
+                if (!g_Tabs[g_ActiveTab].bHasBookmark) {
+                    ShowNativeStatus("No bookmark set for active tab! Press Ctrl+B to save.");
+                } else {
+                    DWORD bm = g_Tabs[g_ActiveTab].dwBookmark;
+                    SendMessageA(hEdit, EM_SETSEL, bm, bm);
+                    SendMessageA(hEdit, EM_SCROLLCARET, 0, 0);
+                    PlaySfx(4);
+                    ShowNativeStatus("Jumped to saved bookmark position! [Ctrl+J]");
+                }
             }
 
             // Quicksave, Quickload & Sound FX

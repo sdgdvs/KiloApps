@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://trapster
   kilo_graphics: KMystery
   kilo_soundscape: KStellar
-  kilo_tester: KRead
+  kilo_tester: KColony
   kilo_usability: KRead
   kilo_qa: KScript
   kilo_expander: KRead
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KStarForge
-  timestamp: '2026-11-03T03:32:17-08:00'
+  agent: kilo-tester
+  app: KRead
+  timestamp: '2026-11-03T04:22:17-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -131,11 +131,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KRead`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | **[ARGON REVIEW]:** Fix updateScrollProgress() curPage formula in kread.html so 100% scroll reaches totalPages and refresh progress/stats on font/line-height changes; make createHighlight() and deleteNote() respect isMarkdownView without corrupting HTML tags in inlineFormat(); keep globalSearchResults active across switchTab() when searchAllTabs is true and allow Ctrl+Delete to clear; and in KRead/main.c refresh UpdateStatusBar() on hEdit cursor/wheel navigation, reset dwScrollPos in LoadFileFromPath/Clear, persist g_currentTheme in quicksave, and track bHasBookmark before jumping on Ctrl+J. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -162,6 +161,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMail` | Eliminate boot Firebase RTDB WebSocket autostart in kmail.html (arg-lore.md s3) by defaulting netEnabled to false (safeGet('kmail_net_enabled') === '1'), lazy-initializing initializeApp/getDatabase only when user clicks Enable/Connect in #network-modal [F4], and calling goOffline/off on disable or beforeunload; connect mod -> modGain -> carrier.frequency in AudioEngine.playSend(); validate/lowercase action === 'folder' targets in applyRulesToEmail() against inbox/sent/drafts/outbox/trash (mapping starred to em.starred=true), hide #new-rule-param for star/read, restrict runRulesOnInbox() to inbox + renderPane(), and run applyRulesToEmail() + reset tabs + accept array/CSV tags and 0..5 folders in importJson(); dynamically sync custom tags into #tag-filter; preserve em._decryptedBody across renderPane() tab switches (with Re-lock button), guard visibilitychange from auto-saving empty Untitled Drafts, sort newest/oldest by timestamp, and persist #sort-select in quickSave/quickLoad; in KMail/main.c fix emails[2] gibberish XOR seed using hex-safe XOR (HEX | **[ARGON REVIEW]:** ...), fix ImportJson() colon-whitespace/array-tags parsing + reset tabs, search body/tags in RefreshEmailList(), fix Outbox label in ExportSingleMarkdown(), remove literal (Write body here...) body text, and allow ID_BTN_DELETE on list selection and saved Draft tabs. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Implement credit-gated gear unlock progression (unlockedWpns/Arms/Sinks/Specs persisted in getSavePayload/restoreSavePayload and KMechSaveData, resetting on campaign defeat) with synced stats and prices across kmech.html and KMech/main.c (weapons 0/150/220/340/420/520/610, armors 0/160/190/380, sinks 0/140/230/390, specials 0/180/240/320/400) so [1]-[4] buy or equip owned gear instead of granting free endgame loadouts on Battle 1, and stop KMech/main.c armor cycling from free-healing playerStats.hp; initialize boot playerStats.atk=16 and playerHeatGen=22 to match Pulse Laser; fix RFMS remote duel deadlocks in actionAttack/handlePeerMove with p1-first turn gating, mech_miss and overheat-defeat move sync instead of calling local enemyTurn(), enemyIsDefending reset on peer mech_attack, and beforeunload leaveRoom(); isolate Arena wins/losses from campaign battleCount in kmech.html and KMech/main.c; reset evadeTacticalBonus=0.0f after EnemyTurn() in KMech/main.c, use a while-loop for multi-level XP, fix getSavePayload() inBattle when in F1 Help or post-battle, and replace UTF-8 DrawTextA mojibake and blocking Beep() chains in KMech/main.c with clean ASCII and mutable [M] SFX. |
 | `KRadio` | `KiloOS/public/apps/kradio.html`, `KRadio/main.c` | **[ARGON REVIEW]:** Wire a real WebAudio AnalyserNode (fftSize 128) after preampGain in setupAudioGraph() so drawVisualizer() renders live getByteFrequencyData() FFT bars in LED Bars/Solid VU modes and getByteTimeDomainData() waveform in CRT Wave mode reflecting 3-band EQ; fix CORS/offline stream dead-ends in playStream() by retrying without crossorigin on error and providing automatic per-genre 1999 procedural WebAudio synth radio fallback routed through the EQ/analyser graph when external streams fail (plus procedural waveOutOpen 16-bit PCM genre stream synthesis in KRadio/main.c when mciSendStringA fails on https URLs); remove broad url.includes('1999') check in playStream() so normal port/path 1999 URLs are not hijacked into startSubcarrier(), route startSubcarrier() through the main audioCtx EQ/analyser graph with streamStartTime/uptimeTimer, and replace meta 'ARG Carrier' UI labels and 'Winamp'/'Shoutcast'/'DEF CON'/'007' trademarks with diegetic 'VLF Subcarrier' and 1999 parodies per arg-lore.md; fix fadeAndStop() Sleep Timer overwriting kradio_volume to 5%, sync .btn-eq-preset .active on boot/quickload/import, persist isMuted/lastVolume/activePresetIndex across reloads/quickload/import, fix assignCurrentToPreset() stale name when #stationUrl was edited, count estimatedBytesReceived only while actively playing, and in KRadio/main.c remove boot ID_BTN_PLAY auto-play, make ID_BTN_PLAY toggle play/stop, and add [M] mute, VK_UP/VK_DOWN volume, and VK_LEFT/VK_RIGHT preset cycling. |
+| `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | **[ARGON REVIEW]:** Fix updateScrollProgress() curPage formula in kread.html so 100% scroll reaches totalPages and refresh progress/stats on font/line-height changes; make createHighlight() and deleteNote() respect isMarkdownView without corrupting HTML tags in inlineFormat(); keep globalSearchResults active across switchTab() when searchAllTabs is true and allow Ctrl+Delete to clear; and in KRead/main.c refresh UpdateStatusBar() on hEdit cursor/wheel navigation, reset dwScrollPos in LoadFileFromPath/Clear, persist g_currentTheme in quicksave, and track bHasBookmark before jumping on Ctrl+J. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KRead`
@@ -337,6 +337,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T04:22:17-08:00 — kilo-tester: KRead (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-tester updates for KRead across web and native targets.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-11-03T03:32:17-08:00 — kilo-graphics: KStarForge (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement already integrated for KStarForge.
   - Handoff: Advanced `kilo-graphics` to `KMystery`; rotated active agent to `kilo-tester`.
@@ -357,8 +362,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KRadio across web and native targets.
   - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
-
-- **2026-11-03T01:40:15-08:00 — kilo-qa: KMine (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-qa updates for KMine across web and native targets.
-  - Handoff: Advanced `kilo-qa` to `KScript`; rotated active agent to `kilo-expander`.
