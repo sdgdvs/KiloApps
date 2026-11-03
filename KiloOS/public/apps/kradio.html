@@ -986,10 +986,17 @@
                     <span class="status-dot" id="statusDot"></span>
                     <span id="statusText">Ready</span>
                 </div>
-                <button class="btn-help" id="btnExport" title="Export Station Playlist & Config [.json / .m3u / .pls]">
-                    📤 Export
-                </button>
-                <button class="btn-help" id="btnImport" title="Import Station Playlist [.json / .m3u / .pls]">
+                <div class="export-picker-group" style="display:inline-flex; align-items:center; gap:2px;">
+                    <select id="exportFormatSelect" class="format-select" title="Export Format (JSON / M3U / PLS)" style="background:#060911; color:var(--accent); border:1px solid var(--border-color); font-family:monospace; font-size:11px; padding:3px 4px; border-radius:4px; height:26px; cursor:pointer;">
+                        <option value="json">JSON</option>
+                        <option value="m3u">M3U</option>
+                        <option value="pls">PLS</option>
+                    </select>
+                    <button class="btn-help" id="btnExport" title="Export Station Playlist & Config [Alt+E]">
+                        📤 Export
+                    </button>
+                </div>
+                <button class="btn-help" id="btnImport" title="Import Station Playlist [.json / .m3u / .pls] [Alt+I]">
                     📥 Import
                 </button>
                 <button class="btn-help" id="btnHelp" title="Help & Shortcuts [F1]">
@@ -1064,6 +1071,33 @@
             <div class="diag-item"><span>Stream Uptime:</span> <b id="diagUptime">00:00:00</b></div>
             <div class="diag-item"><span>Est. Data Recv:</span> <b id="diagData">0.0 MB</b></div>
             <div class="diag-item"><span>EQ Status:</span> <b id="diagEqStatus">ACTIVE (WebAudio)</b></div>
+            <div class="diag-ipc-bar" style="grid-column: 1 / -1; display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; padding-top:6px; border-top:1px dashed #1e293b; align-items:center;">
+                <span style="font-size:10px; color:#64748b; font-weight:bold; letter-spacing:0.5px;">KILO-MESH:</span>
+                <button class="btn-tool" id="btnExportCapture" style="font-size:11px; padding:2px 8px; height:24px;" title="Export 1999.4 kHz Anomaly Subcarrier Capture to /sys/anomaly_capture.sig">
+                    📡 Export Subcarrier Capture
+                </button>
+                <button class="btn-tool" id="btnInspectMatrix" style="font-size:11px; padding:2px 8px; height:24px;" title="Launch KMatrix with /sys/anomaly_capture.sig [OS_LAUNCH_APP]">
+                    📊 Inspect in KMatrix
+                </button>
+                <button class="btn-tool" id="btnInspectHex" style="font-size:11px; padding:2px 8px; height:24px;" title="Launch KHex with /sys/anomaly_capture.sig [OS_LAUNCH_APP]">
+                    🔍 Inspect in KHex
+                </button>
+                <button class="btn-tool" id="btnOpenPlaylistKPad" style="font-size:11px; padding:2px 8px; height:24px;" title="Launch KPad with /home/music/kradio_playlist.m3u [OS_LAUNCH_APP]">
+                    📝 Open Playlist in KPad
+                </button>
+            </div>
+        </div>
+
+        <!-- Subcarrier Detection Alert Banner -->
+        <div class="subcarrier-alert-bar" id="subcarrierAlertBar" style="display:none; background:rgba(239, 68, 68, 0.12); border:1px solid #ef4444; border-radius:6px; padding:6px 10px; margin-bottom:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+                <span style="color:#ef4444; font-weight:bold; font-size:12px;">🚨 VLF SUBCARRIER DETECTED (10.19.99.4 / 1999.4 Hz)</span>
+            </div>
+            <div style="display:flex; gap:6px;">
+                <button class="btn-tool" id="btnAlertExportCapture" style="font-size:11px; color:#fca5a5; border-color:#ef4444;">📡 Export Capture</button>
+                <button class="btn-tool" id="btnAlertInspectMatrix" style="font-size:11px; color:#fca5a5; border-color:#ef4444;">📊 KMatrix</button>
+                <button class="btn-tool" id="btnAlertInspectHex" style="font-size:11px; color:#fca5a5; border-color:#ef4444;">🔍 KHex</button>
+            </div>
         </div>
 
         <!-- Visualizer & Now Playing -->
@@ -1263,6 +1297,16 @@
                     <button class="btn-help" id="btnModalImport" style="flex:1; justify-content:center;">📥 Import</button>
                     <button class="btn-help" id="btnModalReset" style="flex:1; justify-content:center;">↺ Reset Defaults</button>
                 </div>
+                <div style="margin-top:10px; padding:8px; background:rgba(56, 189, 248, 0.05); border:1px solid rgba(56, 189, 248, 0.2); border-radius:6px;">
+                    <div style="font-weight:bold; color:var(--accent); font-size:12px; margin-bottom:4px;">Phase VI KiloOS VFS & Inter-App IPC Mesh</div>
+                    <p style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">Exchange playlists, audio buffers, and anomaly signatures directly with other KiloOS apps.</p>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button class="btn-help" id="btnModalExportCapture" style="flex:1; justify-content:center;">📡 Capture Subcarrier (/sys)</button>
+                        <button class="btn-help" id="btnModalInspectMatrix" style="flex:1; justify-content:center;">📊 Inspect in KMatrix</button>
+                        <button class="btn-help" id="btnModalInspectHex" style="flex:1; justify-content:center;">🔍 Inspect in KHex</button>
+                        <button class="btn-help" id="btnModalOpenKPad" style="flex:1; justify-content:center;">📝 Open in KPad</button>
+                    </div>
+                </div>
                 <p style="font-size: 11px; color: var(--text-muted); margin-top:2px;">
                     Tip: Direct HTTPS MP3 and AAC streaming endpoints are supported. Custom streams can be assigned to any preset slot.
                 </p>
@@ -1341,6 +1385,19 @@
         const btnExport = document.getElementById('btnExport');
         const btnImport = document.getElementById('btnImport');
         const fileImportPlaylist = document.getElementById('fileImportPlaylist');
+        const exportFormatSelect = document.getElementById('exportFormatSelect');
+        const btnExportCapture = document.getElementById('btnExportCapture');
+        const btnInspectMatrix = document.getElementById('btnInspectMatrix');
+        const btnInspectHex = document.getElementById('btnInspectHex');
+        const btnOpenPlaylistKPad = document.getElementById('btnOpenPlaylistKPad');
+        const subcarrierAlertBar = document.getElementById('subcarrierAlertBar');
+        const btnAlertExportCapture = document.getElementById('btnAlertExportCapture');
+        const btnAlertInspectMatrix = document.getElementById('btnAlertInspectMatrix');
+        const btnAlertInspectHex = document.getElementById('btnAlertInspectHex');
+        const btnModalExportCapture = document.getElementById('btnModalExportCapture');
+        const btnModalInspectMatrix = document.getElementById('btnModalInspectMatrix');
+        const btnModalInspectHex = document.getElementById('btnModalInspectHex');
+        const btnModalOpenKPad = document.getElementById('btnModalOpenKPad');
         const btnModalExportJson = document.getElementById('btnModalExportJson');
         const btnModalExportM3u = document.getElementById('btnModalExportM3u');
         const btnModalExportPls = document.getElementById('btnModalExportPls');

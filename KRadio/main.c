@@ -1,6 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <mmsystem.h>
+#include <commdlg.h>
 
 #pragma function(memset)
 void* __cdecl memset(void* dest, int c, size_t count) {
@@ -20,6 +21,8 @@ void* __cdecl memset(void* dest, int c, size_t count) {
 #define ID_BTN_SAVE     4
 #define ID_BTN_LOAD     5
 #define ID_BTN_VIZ      6
+#define ID_BTN_EXPORT   7
+#define ID_BTN_IMPORT   8
 #define ID_PRESET_1     101
 #define ID_PRESET_2     102
 #define ID_PRESET_3     103
@@ -28,9 +31,9 @@ void* __cdecl memset(void* dest, int c, size_t count) {
 #define ID_PRESET_6     106
 
 typedef struct {
-    const char* name;
-    const char* genre;
-    const char* url;
+    char name[48];
+    char genre[32];
+    char url[512];
 } StationPreset;
 
 typedef struct {
@@ -43,7 +46,7 @@ typedef struct {
     int bufferHealth;   // 0-100%
 } KRadioState;
 
-static const StationPreset g_presets[6] = {
+static StationPreset g_presets[6] = {
     { "Subspace",     "Synthwave",    "https://radio.erb.pw/public/subspace" },
     { "Groove Salad", "Chillout",     "https://ice2.somafm.com/groovesalad-128-mp3" },
     { "Nightwave",    "Vaporwave",    "https://radio.plaza.one/mp3" },
@@ -111,6 +114,17 @@ static int PseudoRand() {
     return (int)((g_rng >> 16) & 0x7FFF);
 }
 
+void PlayStream(HWND hwnd);
+void StopStream(void);
+void SelectPreset(int index);
+void UpdateStatusText(void);
+void QuicksaveState(HWND hwnd);
+void QuickloadState(HWND hwnd);
+void CycleVizMode(void);
+void CycleBufferMode(void);
+void ExportPlaylistDialog(HWND hwnd);
+void ImportPlaylistDialog(HWND hwnd);
+
 void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
         "=== KRadio Retro Stream Player ===\n\n"
@@ -122,6 +136,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  - [B] Buffer Mode: Cycle 64KB Normal, 128KB Robust, 32KB Low-Latency\n"
         "  - [Enter]: Tune to stream when typing in URL field\n"
         "  - [Escape]: Return focus to controls / dismiss edit\n"
+        "  - [Alt+E] Export Playlist: Save active stations to .m3u or .pls file\n"
+        "  - [Alt+I] Import Playlist: Open and load .m3u or .pls playlist\n"
         "  - [F5] Quicksave: Save active station, visualizer & playback state\n"
         "  - [F9] Quickload: Restore saved station, visualizer & playback state\n"
         "  - [F1 / H]: Show this Help reference\n\n"
@@ -136,6 +152,202 @@ void ShowHelpDialog(HWND hwnd) {
         "  Click the visualizer panel or press [V] to cycle styles.",
         "KRadio Help & Keyboard Shortcuts",
         MB_OK | MB_ICONINFORMATION);
+}
+
+static char* GetNextLine(char* p, char** next) {
+    if (!p || !*p) {
+        if (next) *next = NULL;
+        return NULL;
+    }
+    char* start = p;
+    while (*p && *p != '\r' && *p != '\n') p++;
+    if (*p == '\r') {
+        *p = '\0';
+        p++;
+        if (*p == '\n') {
+            *p = '\0';
+            p++;
+        }
+    } else if (*p == '\n') {
+        *p = '\0';
+        p++;
+    }
+    if (next) *next = p;
+    return start;
+}
+
+void ExportPlaylistDialog(HWND hwnd) {
+    char szFile[MAX_PATH] = "kradio_playlist.m3u";
+    OPENFILENAMEA ofn;
+    memset(&ofn, 0, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFilter = "M3U Playlist (*.m3u)\0*.m3u\0PLS Playlist (*.pls)\0*.pls\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrDefExt = "m3u";
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
+
+    if (GetSaveFileNameA(&ofn)) {
+        HANDLE hFile = CreateFileA(szFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            char buf[3072];
+            DWORD written = 0;
+            int isPls = 0;
+            int len = lstrlenA(szFile);
+            if (len >= 4 &&
+                (szFile[len-3] == 'p' || szFile[len-3] == 'P') &&
+                (szFile[len-2] == 'l' || szFile[len-2] == 'L') &&
+                (szFile[len-1] == 's' || szFile[len-1] == 'S')) {
+                isPls = 1;
+            }
+
+            if (isPls) {
+                lstrcpyA(buf, "[playlist]\r\n");
+                for (int i = 0; i < 6; i++) {
+                    char line[384];
+                    wsprintfA(line, "File%d=%s\r\nTitle%d=%s\r\nLength%d=-1\r\n",
+                        i + 1, g_presets[i].url, i + 1, g_presets[i].name, i + 1);
+                    lstrcatA(buf, line);
+                }
+                char footer[64];
+                wsprintfA(footer, "NumberOfEntries=6\r\nVersion=2\r\n");
+                lstrcatA(buf, footer);
+            } else {
+                lstrcpyA(buf, "#EXTM3U\r\n");
+                for (int i = 0; i < 6; i++) {
+                    char line[384];
+                    wsprintfA(line, "#EXTINF:-1,%s (%s)\r\n%s\r\n",
+                        g_presets[i].name, g_presets[i].genre, g_presets[i].url);
+                    lstrcatA(buf, line);
+                }
+            }
+            WriteFile(hFile, buf, (DWORD)lstrlenA(buf), &written, NULL);
+            CloseHandle(hFile);
+
+            char status[256];
+            wsprintfA(status, "Status: Exported playlist to %s", szFile);
+            if (hStatus) SetWindowTextA(hStatus, status);
+        }
+    }
+}
+
+void ImportPlaylistDialog(HWND hwnd) {
+    char szFile[MAX_PATH] = "";
+    OPENFILENAMEA ofn;
+    memset(&ofn, 0, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFilter = "Playlist Files (*.m3u;*.pls)\0*.m3u;*.pls\0M3U Playlist (*.m3u)\0*.m3u\0PLS Playlist (*.pls)\0*.pls\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+
+    if (GetOpenFileNameA(&ofn)) {
+        HANDLE hFile = CreateFileA(szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD fileSize = GetFileSize(hFile, NULL);
+            if (fileSize > 0 && fileSize < 65536) {
+                char* buf = (char*)GlobalAlloc(GPTR, fileSize + 2);
+                if (buf) {
+                    DWORD read = 0;
+                    ReadFile(hFile, buf, fileSize, &read, NULL);
+                    buf[read] = '\0';
+
+                    int importedCount = 0;
+                    char* p = buf;
+                    char* next = NULL;
+
+                    int isPls = 0;
+                    int slen = lstrlenA(szFile);
+                    if (slen >= 4 &&
+                        (szFile[slen-3] == 'p' || szFile[slen-3] == 'P') &&
+                        (szFile[slen-2] == 'l' || szFile[slen-2] == 'L') &&
+                        (szFile[slen-1] == 's' || szFile[slen-1] == 'S')) {
+                        isPls = 1;
+                    }
+
+                    if (isPls) {
+                        while (p && *p && importedCount < 6) {
+                            char* line = GetNextLine(p, &next);
+                            p = next;
+                            if (!line) break;
+                            if ((line[0] == 'F' || line[0] == 'f') &&
+                                (line[1] == 'i' || line[1] == 'I') &&
+                                (line[2] == 'l' || line[2] == 'L') &&
+                                (line[3] == 'e' || line[3] == 'E')) {
+                                char* eq = line + 4;
+                                while (*eq && *eq != '=') eq++;
+                                if (*eq == '=') {
+                                    eq++;
+                                    while (*eq == ' ' || *eq == '\t') eq++;
+                                    if (*eq) {
+                                        lstrcpyA(g_presets[importedCount].url, eq);
+                                        wsprintfA(g_presets[importedCount].name, "Stream %d", importedCount + 1);
+                                        lstrcpyA(g_presets[importedCount].genre, "PLS");
+                                        importedCount++;
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        char pendingTitle[48] = "";
+                        while (p && *p && importedCount < 6) {
+                            char* line = GetNextLine(p, &next);
+                            p = next;
+                            if (!line) break;
+                            while (*line == ' ' || *line == '\t') line++;
+                            if (line[0] == '#' && line[1] == 'E' && line[2] == 'X' && line[3] == 'T' && line[4] == 'I' && line[5] == 'N' && line[6] == 'F') {
+                                char* comma = line + 7;
+                                while (*comma && *comma != ',') comma++;
+                                if (*comma == ',') {
+                                    comma++;
+                                    while (*comma == ' ' || *comma == '\t') comma++;
+                                    int ti = 0;
+                                    while (*comma && *comma != '(' && ti < 47) {
+                                        pendingTitle[ti++] = *comma++;
+                                    }
+                                    while (ti > 0 && (pendingTitle[ti-1] == ' ' || pendingTitle[ti-1] == '\t')) ti--;
+                                    pendingTitle[ti] = '\0';
+                                }
+                            } else if (line[0] != '#' && (
+                                (line[0] == 'h' && line[1] == 't' && line[2] == 't' && line[3] == 'p') ||
+                                (line[0] == 'H' && line[1] == 'T' && line[2] == 'T' && line[3] == 'P'))) {
+                                lstrcpyA(g_presets[importedCount].url, line);
+                                if (pendingTitle[0]) {
+                                    lstrcpyA(g_presets[importedCount].name, pendingTitle);
+                                    pendingTitle[0] = '\0';
+                                } else {
+                                    wsprintfA(g_presets[importedCount].name, "Station %d", importedCount + 1);
+                                }
+                                lstrcpyA(g_presets[importedCount].genre, "M3U");
+                                importedCount++;
+                            }
+                        }
+                    }
+
+                    if (importedCount > 0) {
+                        for (int i = 0; i < 6; i++) {
+                            if (hBtnPresets[i]) {
+                                char bTitle[64];
+                                wsprintfA(bTitle, "[%d] %s", i + 1, g_presets[i].name);
+                                SetWindowTextA(hBtnPresets[i], bTitle);
+                            }
+                        }
+                        SetWindowTextA(hEditUrl, g_presets[0].url);
+                        SelectPreset(0);
+                        char status[256];
+                        wsprintfA(status, "Status: Loaded %d stations from %s", importedCount, szFile);
+                        if (hStatus) SetWindowTextA(hStatus, status);
+                    } else {
+                        if (hStatus) SetWindowTextA(hStatus, "Status: No valid streams in playlist");
+                    }
+                    GlobalFree(buf);
+                }
+            }
+            CloseHandle(hFile);
+        }
+    }
 }
 
 void UpdateStatusText() {
@@ -300,6 +512,14 @@ void QuickloadState(HWND hwnd) {
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_KEYDOWN) {
+        if ((GetKeyState(VK_MENU) & 0x8000) && (wParam == 'E' || wParam == 'e')) {
+            ExportPlaylistDialog(GetParent(hwnd));
+            return 0;
+        }
+        if ((GetKeyState(VK_MENU) & 0x8000) && (wParam == 'I' || wParam == 'i')) {
+            ImportPlaylistDialog(GetParent(hwnd));
+            return 0;
+        }
         if (wParam == VK_RETURN) {
             PlayStream(GetParent(hwnd));
             return 0;
@@ -586,15 +806,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hFontSmall = CreateFontA(fontHeightSmall, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             // Title Header
-            hTitle = CreateWindowEx(0, "STATIC", "KRadio - Retro Stream Player",
+            hTitle = CreateWindowEx(0, "STATIC", "KRadio - Retro Stream",
                 WS_CHILD | WS_VISIBLE,
-                S(16), S(12), S(270), S(24), hwnd, NULL, NULL, NULL);
+                S(16), S(12), S(195), S(24), hwnd, NULL, NULL, NULL);
             SendMessage(hTitle, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
+
+            HWND hBtnExp = CreateWindowEx(0, "BUTTON", "Exp [Alt+E]",
+                WS_CHILD | WS_VISIBLE,
+                S(216), S(10), S(78), S(26), hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+            SendMessage(hBtnExp, WM_SETFONT, (WPARAM)g_hFontSmall, TRUE);
+
+            HWND hBtnImp = CreateWindowEx(0, "BUTTON", "Imp [Alt+I]",
+                WS_CHILD | WS_VISIBLE,
+                S(298), S(10), S(78), S(26), hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
+            SendMessage(hBtnImp, WM_SETFONT, (WPARAM)g_hFontSmall, TRUE);
 
             // Help button
             hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]",
                 WS_CHILD | WS_VISIBLE,
-                S(374), S(10), S(90), S(26), hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+                S(380), S(10), S(84), S(26), hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
             // URL Label
@@ -685,7 +915,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hStatus, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
             
             // Shortcut Hint
-            hHint = CreateWindowEx(0, "STATIC", "Hotkeys: [1-6] Presets | [Space] Play | [S] Stop | [V] Viz | [B] Buffer | [F5] Save | [F9] Load | [F1] Help",
+            hHint = CreateWindowEx(0, "STATIC", "Hotkeys: [1-6] Presets | [Space] Play | [S] Stop | [V] Viz | [Alt+E] Exp | [Alt+I] Imp | [F5/F9] Save/Load",
                 WS_CHILD | WS_VISIBLE,
                 S(16), S(328), S(448), S(18), hwnd, NULL, NULL, NULL);
             SendMessage(hHint, WM_SETFONT, (WPARAM)g_hFontSmall, TRUE);
@@ -732,7 +962,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_KEYDOWN: {
-            if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
+            if ((GetKeyState(VK_MENU) & 0x8000) && (wParam == 'E' || wParam == 'e')) {
+                ExportPlaylistDialog(hwnd);
+            } else if ((GetKeyState(VK_MENU) & 0x8000) && (wParam == 'I' || wParam == 'i')) {
+                ImportPlaylistDialog(hwnd);
+            } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                 ShowHelpDialog(hwnd);
             } else if (wParam == VK_F5) {
                 QuicksaveState(hwnd);
@@ -767,6 +1001,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 QuickloadState(hwnd);
             } else if (id == ID_BTN_VIZ) {
                 CycleVizMode();
+            } else if (id == ID_BTN_EXPORT) {
+                ExportPlaylistDialog(hwnd);
+            } else if (id == ID_BTN_IMPORT) {
+                ImportPlaylistDialog(hwnd);
             } else if (id >= ID_PRESET_1 && id <= ID_PRESET_6) {
                 SelectPreset(id - ID_PRESET_1);
             }
@@ -861,6 +1099,14 @@ void MainEntry() {
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         // Intercept global hotkeys before standard edit control dispatching
         if (msg.message == WM_KEYDOWN) {
+            if ((GetKeyState(VK_MENU) & 0x8000) && (msg.wParam == 'E' || msg.wParam == 'e')) {
+                ExportPlaylistDialog(hwnd);
+                continue;
+            }
+            if ((GetKeyState(VK_MENU) & 0x8000) && (msg.wParam == 'I' || msg.wParam == 'i')) {
+                ImportPlaylistDialog(hwnd);
+                continue;
+            }
             if (msg.wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
                 continue;
