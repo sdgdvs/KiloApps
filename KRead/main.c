@@ -157,6 +157,15 @@ static const char* g_SampleKiloText =
     "- M: Toggle Sound FX (Mute / Unmute)\r\n"
     "- F1 / H: Contextual Help";
 
+static const char* g_SampleAliceTitle = "Alice in Wonderland Excerpt.txt";
+static const char* g_SampleAliceText = 
+    "ALICE'S ADVENTURES IN WONDERLAND\r\n"
+    "by Lewis Carroll\r\n"
+    "================================\r\n\r\n"
+    "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?'\r\n\r\n"
+    "So she was considering in her own mind (as well as she could, for the hot day made her feel very sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.\r\n\r\n"
+    "There was nothing so VERY remarkable in that; nor did Alice think it so VERY much out of the way to hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); but when the Rabbit actually TOOK A WATCH OUT OF ITS WAISTCOAT-POCKET, and looked at it, and then hurried on, Alice started to her feet, for it flashed across her mind that she had never before seen a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she ran across the field after it...\r\n";
+
 static const char* g_SampleChronosTitle = "Chronos Subcarrier Decrypt.log";
 static const char* g_SampleChronosText = 
     "[CHRONOS NODE 0x7F - SUBCARRIER DECRYPT]\r\n"
@@ -937,6 +946,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hSubSamples, MF_STRING, 1040, "🚀 Cyberpunk Manifesto");
             AppendMenuA(hSubSamples, MF_STRING, 1041, "⏳ The Time Machine (Excerpt)");
             AppendMenuA(hSubSamples, MF_STRING, 1042, "💻 KiloOS Architecture Guide");
+            AppendMenuA(hSubSamples, MF_STRING, 1044, "✨ Alice in Wonderland");
             AppendMenuA(hSubSamples, MF_STRING, 1043, "🛰️ Chronos '99 Telemetry");
             AppendMenuA(hSubFile, MF_POPUP, (UINT_PTR)hSubSamples, "Load Sample Document");
 
@@ -1147,6 +1157,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (id == 1042) {
                 AddNewTab(hwnd, g_SampleKiloTitle, g_SampleKiloText);
                 ShowNativeStatus("Loaded KiloOS Architecture Guide sample!");
+            }
+            if (id == 1044) {
+                AddNewTab(hwnd, g_SampleAliceTitle, g_SampleAliceText);
+                ShowNativeStatus("Loaded Alice in Wonderland sample!");
             }
             if (id == 1043) {
                 AddNewTab(hwnd, g_SampleChronosTitle, g_SampleChronosText);

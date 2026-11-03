@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KHex
   kilo_qa: KDB
-  kilo_expander: KRead
+  kilo_expander: KCalc
   kilo_review: KSettings
 virtual_web_target: kweb://trapster
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KScript
-  timestamp: '2026-11-03T05:37:40-08:00'
+  agent: kilo-expander
+  app: KRead
+  timestamp: '2026-11-03T06:23:18-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -212,11 +212,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMine` | `KiloOS/public/apps/kmine.html`, `KMine/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mine excavation crawler, ore inventory telemetry, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KRead`
+- **Active Target**: `KCalc`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage integration in kread.html (VFS_SHOW_OPEN/VFS_READ and message listener to open VFS files from kexplorer, plus VFS_WRITE/VFS_SHOW_SAVE when exporting notes, HTML, or sessions) and add the missing Alice in Wonderland sample (ID 1044) to KRead/main.c. |
 | `KCalc` | `KiloOS/public/apps/kcalc.html`, `KCalc/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY with standalone blob fallback) for saving/loading calculation tapes and workspace JSON snapshots to /home/docs/, and add live HEX/DEC/OCT/BIN radix readout plus FV/CAGR financial tools to KCalc/main.c (<999 KB). |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Harden Phase VI KiloOS VFS and IPC Mesh in khex.html per architecture.md: enforce event.origin === window.location.origin in window.addEventListener('message'), post with window.location.origin instead of wildcard (removing dead OS_SET_WINDOW_SIZE), raise sendToOS() timeout to 60000ms for interactive VFS_SHOW_OPEN and VFS_SHOW_SAVE pickers, emit OS_NOTIFY after VFS_WRITE, handle incoming FILE_OPEN/VFS_OPEN messages to auto-load VFS files, add Save to VFS (/home/docs/ or /home/crypto/) and Open in KPad / Send to KCipher OS_LAUNCH_APP buttons in Tab 7 Export, Tab 8 Patch Builder, and Tab 9 Disassembler, and add native Win32 .bin file open/save parity in KHex/main.c (<999 KB). |
 | `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
@@ -243,6 +242,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMail` | `KiloOS/public/apps/kmail.html`, `KMail/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kmail.html per architecture.md (event.origin === window.location.origin checks, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks when window.parent === window) connecting .EML, .MD, .MBOX, .CSV, and .JSON exports/imports to VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY (/home/docs/ and /home/saves/kmail_backup.json) and VFS_SHOW_OPEN -> VFS_READ, handling incoming FILE_OPEN/VFS_OPEN messages from File Browser to auto-open .eml/.mbox/.json files, adding VFS file attachments in Compose/Read tabs, and adding Open in KPad (OS_LAUNCH_APP kpad) and Inspect in KCipher (kcipher) buttons; upgrade KMail/main.c (<999 KB) with Forward [F], Mark Read/Unread [U], password prompt + Compose encryption toggle, Automated Filter Rules [F3], and GetSaveFileNameA export dialogs. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Harden KiloVFS in kmech.html per architecture.md by validating e.origin === window.location.origin in all window message listeners, posting with window.location.origin instead of wildcard, adding a 60000ms cleanup timeout to KiloVFS.openPicker(), suppressing OS_NOTIFY desktop notification spam during quickSave(true) silent autosaves, wiring VFS_SHOW_SAVE interactive path selection with standalone Blob download fallback in saveTelemetryToVFS(), handling boot URL hash (#/path) and incoming FILE_OPEN/VFS_OPEN messages from KiloOS File Browser to auto-load telemetry JSON, and adding an Export Combat Log to VFS (/home/docs/kmech_combat_log.txt) + Open in KPad (OS_LAUNCH_APP appId kpad) button in #screen-battle/#modal-telemetry plus GetSaveFileNameA/GetOpenFileNameA telemetry Export/Import dialog parity in KMech/main.c (<999 KB). |
 | `KRadio` | `KiloOS/public/apps/kradio.html`, `KRadio/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kradio.html per architecture.md (strict e.origin === window.location.origin validation, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks when window.parent === window) connecting #btnExport (with inline JSON/M3U/PLS format selector) and #btnImport to VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY (/home/music/ and /home/saves/kradio_config.json) and VFS_SHOW_OPEN -> VFS_READ; fix checkVfsAudioTrack() bug where playStream() immediately overwrites audio.src = vfsData with '/home/music/ksynth_track.wav' by reading VFS paths via VFS_READ postMessage instead of cross-app localStorage snooping and preserving active VFS data URLs, handle incoming FILE_OPEN and VFS_OPEN messages from File Browser/Trapster/KSynth to play .wav/.mp3/.au tracks and import .m3u/.pls/.json playlists, add Export Subcarrier Capture to /sys/anomaly_capture.sig + Inspect in KMatrix/KHex and Open Playlist in KPad (OS_LAUNCH_APP), and add GetSaveFileNameA/GetOpenFileNameA .m3u/.pls playlist I/O in KRadio/main.c (<999 KB). |
+| `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS postMessage integration in kread.html (VFS_SHOW_OPEN/VFS_READ and message listener to open VFS files from kexplorer, plus VFS_WRITE/VFS_SHOW_SAVE when exporting notes, HTML, or sessions) and add the missing Alice in Wonderland sample (ID 1044) to KRead/main.c. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KSettings`
@@ -335,6 +335,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T06:23:18-08:00 — kilo-expander: KRead (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KRead across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
+
 - **2026-11-03T05:37:40-08:00 — kilo-qa: KScript (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 175.6 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kscript_tutorialSeen flag, Alt+1..8 template loading, and Escape modal dismissals.
@@ -356,7 +361,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KRead across web and native targets.
   - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
-
-- **2026-11-03T03:32:17-08:00 — kilo-graphics: KStarForge (Skip — Asset Suitability)**
-  - ⏭️ Skip — Imagen 3 asset replacement already integrated for KStarForge.
-  - Handoff: Advanced `kilo-graphics` to `KMystery`; rotated active agent to `kilo-tester`.
