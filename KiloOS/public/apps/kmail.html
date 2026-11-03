@@ -961,6 +961,34 @@
       try { goOffline(fbDb); } catch(e) {}
     }
   };
+
+  // ==========================================
+  // Cross-App IPC Listener (FILE_OPEN / VFS_OPEN)
+  // ==========================================
+  window.addEventListener('message', (e) => {
+    // Architecture invariant: validate origin first
+    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+      return;
+    }
+    const msg = e.data;
+    if (!msg || typeof msg !== 'object') return;
+    if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
+      const filePath = msg.path || '';
+      const fileContent = msg.data !== undefined ? msg.data : msg.content;
+      if (fileContent !== undefined && fileContent !== null) {
+        handleIncomingFileData(fileContent, filePath);
+      } else if (filePath) {
+        KiloVFS.read(filePath, (data, path) => {
+          if (data !== null && data !== undefined) {
+            handleIncomingFileData(data, path || filePath);
+          } else {
+            showToast(`Could not read file from VFS: ${filePath}`, 'error');
+          }
+        });
+      }
+    }
+  });
+
 </script>
 </head>
 <body>
@@ -1073,11 +1101,11 @@
         <span>📤 Export</span>
         <kbd>O</kbd>
       </button>
-      <button class="side-action-btn" onclick="document.getElementById('import-file').click()" aria-label="Import JSON Mailbox" title="Import JSON (I)">
+      <button class="side-action-btn" onclick="importMailboxPicker()" aria-label="Import Mailbox (JSON, EML, MBOX, VFS)" title="Import Mailbox or Message (I)">
         <span>📥 Import</span>
         <kbd>I</kbd>
       </button>
-      <input type="file" id="import-file" style="display:none" onchange="importJson(event)" accept=".json" aria-label="Upload mailbox JSON file">
+      <input type="file" id="import-file" style="display:none" onchange="importFileFallback(event)" accept=".json,.eml,.mbox,.txt,.md" aria-label="Upload mailbox file">
       <button class="side-action-btn" style="color:#f87171;" onclick="confirmEmptyTrash()" aria-label="Empty Trash Folder" title="Permanently delete all trash emails">
         <span>🗑️ Empty</span>
       </button>
@@ -1415,6 +1443,196 @@
       return false;
     }
   }
+
+  // ==========================================
+  // Phase VI KiloOS VFS & Inter-App IPC Bridge
+  // ==========================================
+  const KiloVFS = {
+    isSupported() {
+      return typeof window !== 'undefined' && window.parent && window.parent !== window;
+    },
+    getTargetOrigin() {
+      return (window.location.origin && window.location.origin !== 'null') ? window.location.origin : '*';
+    },
+    write(path, data, notify = true) {
+      if (!this.isSupported()) return;
+      const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+      const reqId = 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      try {
+        window.parent.postMessage({
+          type: 'VFS_WRITE',
+          path,
+          data: payload,
+          requestId: reqId
+        }, this.getTargetOrigin());
+        if (notify) {
+          window.parent.postMessage({
+            type: 'OS_NOTIFY',
+            title: document.title || 'KMail',
+            message: `Saved to VFS: ${path}`
+          }, this.getTargetOrigin());
+        }
+      } catch (e) {
+        console.warn('[KiloVFS] write failed:', e);
+      }
+    },
+    read(path, cb) {
+      if (!this.isSupported()) {
+        if (cb) cb(null, path);
+        return;
+      }
+      const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (cb) cb(e.data.data, e.data.path || path);
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, path);
+      }, 60000); // 60s dialog cleanup timeout
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, this.getTargetOrigin());
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, path);
+      }
+    },
+    showSave(defaultPath, data, cb) {
+      if (!this.isSupported()) {
+        this.standaloneDownload(defaultPath, data);
+        if (cb) cb(defaultPath);
+        return;
+      }
+      const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (e.data.path) {
+            this.write(e.data.path, data, true);
+            if (cb) cb(e.data.path);
+          } else if (cb) {
+            cb(null);
+          }
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null);
+      }, 60000); // 60s dialog cleanup timeout
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({
+          type: 'VFS_SHOW_SAVE',
+          requestId: reqId,
+          defaultPath,
+          path: defaultPath
+        }, this.getTargetOrigin());
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        this.standaloneDownload(defaultPath, data);
+        if (cb) cb(defaultPath);
+      }
+    },
+    openPicker(cb) {
+      if (!this.isSupported()) {
+        this.standaloneOpenFile(cb);
+        return;
+      }
+      const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      let cleanupTimer = null;
+      const handler = (e) => {
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
+          return;
+        }
+        if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+          if (cleanupTimer) clearTimeout(cleanupTimer);
+          window.removeEventListener('message', handler);
+          if (e.data.path) {
+            this.read(e.data.path, cb);
+          } else if (cb) {
+            cb(null, null);
+          }
+        }
+      };
+      cleanupTimer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        if (cb) cb(null, null);
+      }, 60000); // 60s dialog cleanup timeout
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, this.getTargetOrigin());
+      } catch (e) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        window.removeEventListener('message', handler);
+        this.standaloneOpenFile(cb);
+      }
+    },
+    launchApp(targetApp, path = '', options = {}) {
+      if (!this.isSupported()) return;
+      try {
+        window.parent.postMessage({
+          type: 'OS_LAUNCH_APP',
+          targetApp,
+          appId: targetApp,
+          path,
+          ...options
+        }, this.getTargetOrigin());
+      } catch (e) {}
+    },
+    standaloneDownload(fileName, content) {
+      const name = fileName.split('/').pop() || 'kmail_export.txt';
+      const mime = name.endsWith('.json') ? 'application/json' : (name.endsWith('.csv') ? 'text/csv' : (name.endsWith('.mbox') ? 'application/mbox' : (name.endsWith('.eml') ? 'message/rfc822' : 'text/plain')));
+      const blob = new Blob([content], { type: `${mime};charset=utf-8` });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    },
+    standaloneOpenFile(cb) {
+      const inp = document.createElement('input');
+      inp.type = 'file';
+      inp.accept = '.json,.eml,.mbox,.txt,.md';
+      inp.style.display = 'none';
+      inp.onchange = (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (re) => {
+          if (cb) cb(re.target.result, file.name);
+          document.body.removeChild(inp);
+        };
+        reader.readAsText(file);
+      };
+      document.body.appendChild(inp);
+      inp.click();
+    }
+  };
+
+  function formatBytes(bytes) {
+    if (!bytes || bytes <= 0) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
   // Procedural Web Audio Engine (Genesis YM2612 2-op FM & SNES SPC700 Delay)
   const AudioEngine = {
     ctx: null,
@@ -2744,7 +2962,7 @@
       rows.push([
         e.id,
         e.folder,
-        new Date().toISOString(),
+        new Date(e.timestamp || Date.now()).toISOString(),
         `"${(e.sender || '').replace(/"/g, '""')}"`,
         `"${(e.subject || '').replace(/"/g, '""')}"`,
         e.starred ? 'YES' : 'NO',
@@ -2755,16 +2973,16 @@
       ]);
     });
     const csvContent = rows.map(r => r.join(',')).join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = "kmail_index.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    const defaultPath = `/home/docs/kmail_index.csv`;
     AudioEngine.playClick();
-    showToast("Exported mailbox index to CSV.", "success");
+    if (KiloVFS.isSupported()) {
+      KiloVFS.showSave(defaultPath, csvContent, (savedPath) => {
+        if (savedPath) showToast(`Exported CSV index to ${savedPath}`, "success");
+      });
+    } else {
+      KiloVFS.standaloneDownload('kmail_index.csv', csvContent);
+      showToast("Exported CSV index.", "success");
+    }
   };
 
   window.printEmail = function(eid) {
@@ -2860,17 +3078,17 @@
     let em = emails.find(e => e.id === eid);
     if (!em) return;
     const bodyContent = (em.encrypted && em._decryptedBody) ? em._decryptedBody : em.body;
-    const emlContent = `From: ${em.sender}\nTo: ${userAddress}\nSubject: ${em.subject}\nDate: ${new Date().toUTCString()}\nX-Tags: ${(em.tags||[]).join(', ')}\nX-Starred: ${em.starred ? 'yes' : 'no'}\nMIME-Version: 1.0\nContent-Type: text/plain; charset=utf-8\n\n${bodyContent}`;
-    const blob = new Blob([emlContent], { type: 'message/rfc822' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `email_${em.id}.eml`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    const emlContent = `From: ${em.sender}\nTo: ${userAddress}\nSubject: ${em.subject}\nDate: ${new Date(em.timestamp || Date.now()).toUTCString()}\nX-Tags: ${(em.tags||[]).join(', ')}\nX-Starred: ${em.starred ? 'yes' : 'no'}\nMIME-Version: 1.0\nContent-Type: text/plain; charset=utf-8\n\n${bodyContent}`;
+    const defaultPath = `/home/docs/email_${em.id}.eml`;
     AudioEngine.playClick();
-    showToast(`Exported email_${em.id}.eml`, "success");
+    if (KiloVFS.isSupported()) {
+      KiloVFS.showSave(defaultPath, emlContent, (savedPath) => {
+        if (savedPath) showToast(`Exported ${savedPath}`, "success");
+      });
+    } else {
+      KiloVFS.standaloneDownload(`email_${em.id}.eml`, emlContent);
+      showToast(`Exported email_${em.id}.eml`, "success");
+    }
   };
 
   window.exportSingleMd = function(eid) {
@@ -2878,29 +3096,30 @@
     if (!em) return;
     const bodyContent = (em.encrypted && em._decryptedBody) ? em._decryptedBody : em.body;
     const mdContent = `# ${em.subject}\n\n- **From:** ${em.sender}\n- **Folder:** ${em.folder}\n- **Tags:** ${(em.tags||[]).join(', ') || 'none'}\n- **Starred:** ${em.starred ? 'Yes' : 'No'}\n\n---\n\n${bodyContent}\n`;
-    const blob = new Blob([mdContent], { type: 'text/markdown' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `email_${em.id}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    const defaultPath = `/home/docs/email_${em.id}.md`;
     AudioEngine.playClick();
-    showToast(`Exported email_${em.id}.md`, "success");
+    if (KiloVFS.isSupported()) {
+      KiloVFS.showSave(defaultPath, mdContent, (savedPath) => {
+        if (savedPath) showToast(`Exported ${savedPath}`, "success");
+      });
+    } else {
+      KiloVFS.standaloneDownload(`email_${em.id}.md`, mdContent);
+      showToast(`Exported email_${em.id}.md`, "success");
+    }
   };
 
   window.exportJson = function() {
-    const blob = new Blob([JSON.stringify(emails, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = "kmail_backup.json";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    const jsonContent = JSON.stringify(emails, null, 2);
+    const defaultPath = `/home/saves/kmail_backup.json`;
     AudioEngine.playClick();
-    showToast("Exported mailbox backup JSON.", "success");
+    if (KiloVFS.isSupported()) {
+      KiloVFS.showSave(defaultPath, jsonContent, (savedPath) => {
+        if (savedPath) showToast(`Exported mailbox backup to ${savedPath}`, "success");
+      });
+    } else {
+      KiloVFS.standaloneDownload('kmail_backup.json', jsonContent);
+      showToast("Exported mailbox backup JSON.", "success");
+    }
   };
 
   const QUICKSAVE_KEY = 'kmail_quicksave_snapshot';
@@ -3035,38 +3254,305 @@
     }
   };
 
-  window.importJson = function(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    if (file.size > 1024 * 500) { showToast("File too large (max 500KB).", "error"); return; }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const imported = JSON.parse(e.target.result);
-        if(Array.isArray(imported)) {
+
+  // ==========================================
+  // Phase VI VFS Attachments & Inter-App IPC
+  // ==========================================
+  window.attachVfsFile = function(tabId) {
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab) return;
+    if (!tab.data.attachments) tab.data.attachments = [];
+
+    if (KiloVFS.isSupported()) {
+      showToast("Opening KiloOS VFS file picker...", "info");
+      KiloVFS.openPicker((content, path) => {
+        if (!path && !content) return;
+        const name = path ? path.split('/').pop() : 'attachment.txt';
+        const size = typeof content === 'string' ? content.length : (content ? JSON.stringify(content).length : 0);
+        tab.data.attachments.push({
+          name: name || 'attachment.txt',
+          path: path || '/home/docs/' + name,
+          size: size,
+          content: typeof content === 'string' ? content : JSON.stringify(content, null, 2)
+        });
+        renderPane();
+        showToast(`Attached ${name} from VFS.`, "success");
+      });
+    } else {
+      KiloVFS.standaloneOpenFile((content, fileName) => {
+        if (!fileName) return;
+        tab.data.attachments.push({
+          name: fileName,
+          path: '/local/' + fileName,
+          size: (content || '').length,
+          content: content
+        });
+        renderPane();
+        showToast(`Attached ${fileName}.`, "success");
+      });
+    }
+  };
+
+  window.removeComposeAttachment = function(tabId, idx) {
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab || !tab.data.attachments) return;
+    tab.data.attachments.splice(idx, 1);
+    renderPane();
+  };
+
+  window.saveAttachmentToVFS = function(eid, attIdx) {
+    let em = emails.find(e => e.id === eid);
+    if (!em || !em.attachments || !em.attachments[attIdx]) return;
+    const att = em.attachments[attIdx];
+    const defaultPath = att.path && att.path.startsWith('/home/') ? att.path : `/home/docs/${att.name}`;
+    KiloVFS.showSave(defaultPath, att.content, (savedPath) => {
+      if (savedPath) showToast(`Saved attachment to ${savedPath}`, 'success');
+    });
+  };
+
+  window.openAttachmentInKPad = function(eid, attIdx) {
+    let em = emails.find(e => e.id === eid);
+    if (!em || !em.attachments || !em.attachments[attIdx]) return;
+    const att = em.attachments[attIdx];
+    const defaultPath = `/home/docs/${att.name}`;
+    if (KiloVFS.isSupported()) {
+      KiloVFS.write(defaultPath, att.content, true);
+      KiloVFS.launchApp('kpad', defaultPath);
+      showToast(`Opening ${att.name} in KPad...`, 'info');
+    } else {
+      KiloVFS.standaloneDownload(att.name, att.content);
+    }
+  };
+
+  window.openInKPad = function(eid) {
+    let em = emails.find(e => e.id === eid);
+    if (!em) return;
+    const bodyContent = (em.encrypted && em._decryptedBody) ? em._decryptedBody : em.body;
+    const padContent = `Subject: ${em.subject}\nFrom: ${em.sender}\nTo: ${userAddress}\nDate: ${new Date(em.timestamp || Date.now()).toLocaleString()}\nTags: ${(em.tags || []).join(', ')}\n\n${bodyContent}`;
+    const vfsPath = `/home/docs/email_${em.id}.txt`;
+    if (KiloVFS.isSupported()) {
+      KiloVFS.write(vfsPath, padContent, true);
+      KiloVFS.launchApp('kpad', vfsPath);
+      showToast(`Opened email in KPad (${vfsPath}).`, "info");
+    } else {
+      showToast("KPad is available inside KiloOS desktop.", "info");
+      KiloVFS.standaloneDownload(`email_${em.id}.txt`, padContent);
+    }
+  };
+
+  window.inspectInKCipher = function(eid) {
+    let em = emails.find(e => e.id === eid);
+    if (!em) return;
+    const cipherPayload = em.encrypted ? em.body : ((em.tags || []).includes('Personal') || em.subject.includes('Secret') ? em.body : em.body);
+    const vfsPath = `/home/crypto/kmail_msg_${em.id}.txt`;
+    if (KiloVFS.isSupported()) {
+      KiloVFS.write(vfsPath, cipherPayload, true);
+      KiloVFS.launchApp('kcipher', vfsPath);
+      showToast(`Inspecting payload in KCipher (${vfsPath}).`, "info");
+    } else {
+      showToast("KCipher is available inside KiloOS desktop.", "info");
+      KiloVFS.standaloneDownload(`kmail_msg_${em.id}.txt`, cipherPayload);
+    }
+  };
+
+  window.handleIncomingFileData = function(data, filePath = '') {
+    if (!data) return;
+    const lowerPath = (filePath || '').toLowerCase();
+    try {
+      if (lowerPath.endsWith('.json') || (typeof data === 'string' && data.trim().startsWith('['))) {
+        const imported = typeof data === 'string' ? JSON.parse(data) : data;
+        if (Array.isArray(imported)) {
           emails = imported.slice(0, 1000).map((m, idx) => ({
-            id: typeof m.id === 'number' ? m.id : idx + 1,
+            id: typeof m.id === 'number' ? m.id : nextId++,
             folder: ['inbox', 'starred', 'sent', 'drafts', 'outbox', 'trash'].includes(m.folder) ? m.folder : 'inbox',
             subject: typeof m.subject === 'string' ? m.subject : '(No Subject)',
             sender: typeof m.sender === 'string' ? m.sender : 'unknown@kilo.os',
             body: typeof m.body === 'string' ? m.body : '',
-            unread: !!m.unread,
+            unread: m.unread !== undefined ? !!m.unread : true,
             tags: Array.isArray(m.tags) ? m.tags.filter(t => typeof t === 'string') : [],
             encrypted: !!m.encrypted,
-            starred: !!m.starred
+            starred: !!m.starred,
+            attachments: Array.isArray(m.attachments) ? m.attachments : [],
+            timestamp: typeof m.timestamp === 'number' ? m.timestamp : Date.now()
           }));
           nextId = emails.reduce((max, m) => Math.max(max, m.id), 0) + 1;
           safeSaveEmails();
           renderList();
-          showToast(`Mailbox imported (${emails.length} emails).`, "success");
-        } else {
-          showToast("Invalid mailbox JSON format (must be array).", "error");
+          updateFolderBadges();
+          showToast(`Imported ${emails.length} emails from ${filePath || 'JSON'}.`, "success");
+          return;
+        } else if (imported && typeof imported === 'object') {
+          const newEm = {
+            id: nextId++,
+            folder: 'inbox',
+            subject: imported.subject || '(Imported Email)',
+            sender: imported.sender || 'imported@kilo.os',
+            body: imported.body || '',
+            unread: true,
+            tags: Array.isArray(imported.tags) ? imported.tags : ['Imported'],
+            encrypted: !!imported.encrypted,
+            starred: !!imported.starred,
+            attachments: Array.isArray(imported.attachments) ? imported.attachments : [],
+            timestamp: Date.now()
+          };
+          emails.unshift(newEm);
+          safeSaveEmails();
+          renderList();
+          updateFolderBadges();
+          openEmailTab(newEm.id);
+          showToast(`Opened ${newEm.subject}`, "success");
+          return;
         }
-      } catch(err) { showToast("Invalid JSON mailbox file.", "error"); }
+      }
+
+      if (lowerPath.endsWith('.eml') || (typeof data === 'string' && (data.includes('From:') || data.includes('Subject:')))) {
+        const lines = data.split(/\r?\n/);
+        let headerMode = true;
+        let sender = 'unknown@kilo.os';
+        let subject = '(No Subject)';
+        let tags = ['EML'];
+        let bodyLines = [];
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          if (headerMode) {
+            if (line.trim() === '') {
+              headerMode = false;
+              continue;
+            }
+            if (/^From:\s*(.*)/i.test(line)) sender = line.replace(/^From:\s*/i, '').trim();
+            else if (/^Subject:\s*(.*)/i.test(line)) subject = line.replace(/^Subject:\s*/i, '').trim();
+            else if (/^X-Tags:\s*(.*)/i.test(line)) {
+              const tStr = line.replace(/^X-Tags:\s*/i, '').trim();
+              if (tStr) tags = tStr.split(',').map(s => s.trim()).filter(Boolean);
+            }
+          } else {
+            bodyLines.push(line);
+          }
+        }
+        const newEm = {
+          id: nextId++,
+          folder: 'inbox',
+          subject: subject,
+          sender: sender,
+          body: bodyLines.join('\n'),
+          unread: true,
+          tags: tags,
+          encrypted: false,
+          starred: false,
+          attachments: [],
+          timestamp: Date.now()
+        };
+        emails.unshift(newEm);
+        safeSaveEmails();
+        renderList();
+        updateFolderBadges();
+        openEmailTab(newEm.id);
+        showToast(`Imported and opened EML email: "${subject}"`, "success");
+        return;
+      }
+
+      if (lowerPath.endsWith('.mbox') || (typeof data === 'string' && data.startsWith('From '))) {
+        const msgs = data.split(/\n(?=From \S+)/);
+        let count = 0;
+        msgs.forEach(rawMsg => {
+          if (!rawMsg.trim()) return;
+          const lines = rawMsg.split(/\r?\n/);
+          let sender = 'unknown@kilo.os';
+          let subject = '(No Subject)';
+          let folder = 'inbox';
+          let tags = ['MBOX'];
+          let bodyLines = [];
+          let headerMode = true;
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (i === 0 && line.startsWith('From ')) continue;
+            if (headerMode) {
+              if (line.trim() === '') { headerMode = false; continue; }
+              if (/^From:\s*(.*)/i.test(line)) sender = line.replace(/^From:\s*/i, '').trim();
+              else if (/^Subject:\s*(.*)/i.test(line)) subject = line.replace(/^Subject:\s*/i, '').trim();
+              else if (/^X-Folder:\s*(.*)/i.test(line)) folder = line.replace(/^X-Folder:\s*/i, '').trim().toLowerCase();
+              else if (/^X-Tags:\s*(.*)/i.test(line)) {
+                const tStr = line.replace(/^X-Tags:\s*/i, '').trim();
+                if (tStr) tags = tStr.split(',').map(s => s.trim()).filter(Boolean);
+              }
+            } else {
+              bodyLines.push(line.startsWith('>From ') ? line.slice(1) : line);
+            }
+          }
+          emails.unshift({
+            id: nextId++,
+            folder: ['inbox', 'starred', 'sent', 'drafts', 'outbox', 'trash'].includes(folder) ? folder : 'inbox',
+            subject,
+            sender,
+            body: bodyLines.join('\n'),
+            unread: true,
+            tags,
+            encrypted: false,
+            starred: false,
+            attachments: [],
+            timestamp: Date.now()
+          });
+          count++;
+        });
+        safeSaveEmails();
+        renderList();
+        updateFolderBadges();
+        showToast(`Imported ${count} messages from Unix MBOX.`, "success");
+        return;
+      }
+
+      // Default fallback for .txt or .md
+      const filename = filePath ? filePath.split('/').pop() : 'document.txt';
+      const newEm = {
+        id: nextId++,
+        folder: 'inbox',
+        subject: filename,
+        sender: 'local@kilo.os',
+        body: typeof data === 'string' ? data : JSON.stringify(data, null, 2),
+        unread: true,
+        tags: ['Document'],
+        encrypted: false,
+        starred: false,
+        attachments: [],
+        timestamp: Date.now()
+      };
+      emails.unshift(newEm);
+      safeSaveEmails();
+      renderList();
+      updateFolderBadges();
+      openEmailTab(newEm.id);
+      showToast(`Loaded ${filename} into Inbox.`, "success");
+    } catch (err) {
+      console.warn("Failed to parse incoming file data:", err);
+      showToast("Error parsing file data: " + err.message, "error");
+    }
+  };
+
+  window.importMailboxPicker = function() {
+    if (KiloVFS.isSupported()) {
+      showToast("Selecting file from KiloOS VFS...", "info");
+      KiloVFS.openPicker((data, path) => {
+        if (data) handleIncomingFileData(data, path);
+      });
+    } else {
+      const inp = document.getElementById('import-file');
+      if (inp) inp.click();
+    }
+  };
+
+  window.importFileFallback = function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    if (file.size > 1024 * 1024) { showToast("File too large (max 1MB).", "error"); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      handleIncomingFileData(e.target.result, file.name);
     };
     reader.readAsText(file);
     event.target.value = '';
-  }
+  };
+
+  window.importJson = window.importFileFallback;
 
   // Keyboard Shortcuts Listener
   document.addEventListener('keydown', (e) => {
@@ -3256,7 +3742,7 @@
     // Import [I] / Export [O]
     if (e.key === 'i' || e.key === 'I') {
       e.preventDefault();
-      document.getElementById('import-file').click();
+      importMailboxPicker();
       return;
     }
     if (e.key === 'o' || e.key === 'O') {
