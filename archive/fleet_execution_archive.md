@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T12:38:06-08:00 — kilo-usability: KHex (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 291.3 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.7%, HEAD Δ 0.13%, 0 fail, 0 warn, 5.3s)).
+  - Layout & Responsive: nowrap Shannon Entropy badge row, word-wrap .output-box, Tab 2 panel-title flex-wrap, 64px rawTextBuffer, zero layout clipping at 980x783.
+  - Keyboard & Navigation: SELECT keydown guard, silent arrow gotoOffset, live clickable search match offsets, 8-byte valDouble read, Tab [0] listed in Help & Tutorial modals.
+  - Handoff: Advanced `kilo-usability` to `KImage`; rotated active agent to `kilo-qa`.
+
 - **2026-11-03T12:19:42-08:00 — kilo-tester: KImage (Optical DSP, Stego, Format & C Parity Repairs)**
   - Status: PASS ✅ (0 errors, web 173.6 KB, native 27.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 8.59%, HEAD Δ 0.14%, 0 fail, 0 warn, 6.6s)).
   - Fixed 4 Optical DSP filters in mutatePixels (src copy), synced playlistStrip thumbnails, defaulted vignette (45) & chromatic (6) sliders with 0-guard toasts, added link.href in exportSessionJson, reset adjustments in encodeStegoPayload, and sliced UTF-8 bytes in decodeStegoPayload.

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://warez
-  kilo_graphics: KCosmic
+  kilo_graphics: KWizard
   kilo_soundscape: KStellar
   kilo_tester: KScript
   kilo_usability: KScript
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://scallion
-  timestamp: '2026-11-03T14:36:45-08:00'
+  agent: kilo-graphics
+  app: KCosmic
+  timestamp: '2026-11-03T15:16:01-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://scallion` | `KiloOS/public/web/scallion.html`, `KiloOS/public/apps/knet.html` | Create *The Scallion: 1999 Satirical News* (`scallion.html` <250 KB): interactive late-90s tech/culture satire portal, "Ask A Sysadmin" interactive column, Infographic & Headline generator, VFS clipping export, and route `kweb://scallion` in `knet.html`. |
 
 ### 2. Game Content & Graphics Queue (kilo-graphics)
-- **Active Target**: KCosmic
+- **Active Target**: `KWizard`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| KCosmic | KiloOS/public/apps/kcosmic.html, KCosmic/main.c | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
 | KWizard | KiloOS/public/apps/kwizard.html | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
 | KRogue | KiloOS/public/apps/krogue.html, KRogue/main.c | Dungeon crawler sprite overhaul: hero chassis/classes, procedural dungeon floor/wall tiles, 5 creature archetypes, item icons, and glint sweep. |
 | KColony | KiloOS/public/apps/kcolony.html, KColony/main.c | Colony simulation visuals: planetary structures, colonists, exploration rovers, alien megafauna, terraforming atmosphere overlays, and glint sweep. |
@@ -114,6 +113,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | KStarship | KiloOS/public/apps/kstarship.html | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | KCyber | KiloOS/public/apps/kcyber.html, KCyber/main.c | Netrunner icebreaker deck visual polish: isometric node towers, 5 distinct IC guardian constructs, matrix grid perspective, and glint sweep. |
 | KStellar | KiloOS/public/apps/kstellar.html, KStellar/main.c | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
+| KCosmic | KiloOS/public/apps/kcosmic.html, KCosmic/main.c | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -291,6 +291,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T15:16:01-08:00 — kilo-graphics: KCosmic (Cosmic Exploration Visuals & Jump Gate Warp)**
+  - Status: PASS ✅ (0 errors, web 590.4 KB, native 264.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 16.76%, 0 fail, 0 warn, 8.3s)).
+  - Visuals: Verified multi-stop cosmic anomaly nebulae, Hyperion Jump Gate sprite, and sub-space warp transit FX across HTML and Win32 C.
+  - Glint sweep: Verified stationary crystal nodes on ancient precursor spires and zero traveling perimeter dots.
+  - Handoff: Advanced `kilo-graphics` to `KWizard`; rotated active agent to `kilo-tester`.
+
 - **2026-11-03T14:36:45-08:00 — kilo-creator: kweb://scallion (The Scallion 1999 Satirical News Destination (kweb://scallion))**
   - Status: PASS ✅ (0 errors, web 114.1 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.23%, input 32.5%, HEAD Δ 0.19%, 0 fail, 0 warn, 4.4s)).
   - Added deep article routing in knet.html and scallion.html for cyberdream, AOL CDs, and stories.
@@ -315,9 +321,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KFont across web and native targets.
   - Handoff: Advanced `kilo-qa` to `KSteno`; rotated active agent to `kilo-expander`.
-
-- **2026-11-03T12:38:06-08:00 — kilo-usability: KHex (Usability, Responsive Layout & Ergonomics Polish)**
-  - Status: PASS ✅ (0 errors, web 291.3 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.7%, HEAD Δ 0.13%, 0 fail, 0 warn, 5.3s)).
-  - Layout & Responsive: nowrap Shannon Entropy badge row, word-wrap .output-box, Tab 2 panel-title flex-wrap, 64px rawTextBuffer, zero layout clipping at 980x783.
-  - Keyboard & Navigation: SELECT keydown guard, silent arrow gotoOffset, live clickable search match offsets, 8-byte valDouble read, Tab [0] listed in Help & Tutorial modals.
-  - Handoff: Advanced `kilo-usability` to `KImage`; rotated active agent to `kilo-qa`.
