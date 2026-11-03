@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T17:19:22-08:00 — kilo-usability: KMail (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 126.9 KB, native 509.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.82%, HEAD Δ 4.87%, 0 fail, 0 warn, 7.1s)).
+  - Layout & Responsive: Eliminated 960x603 layout clipping in kmail.html by adding white-space nowrap across 26px status-bar with concise shortcut pills, compacting sidebar/folders/search (1-row quick-filters), arranging sidebar-bottom into a 2-column CSS grid (0px vertical scroll), and setting pane-header to flex-direction column so email subjects no longer wrap into a 105px column.
+  - Shortcuts & UX: Converted help-modal shortcuts into 2-column grid, moved toast-container to bottom-right above status-bar, added SELECT to keydown isInput guard, wired Ctrl+Tab tab cycling and [D] focus-decrypt hotkey, and updated tutorial/network modals with diegetic 1999 KiloNet SMTP/POP3 Relay copy.
+  - Win32 C Parity: In KMail/main.c hid hBtnOutbox in empty-state RenderPane(), fixed WM_SIZE button overlap and Help label collision, and replaced UTF-8 emojis in ANSI controls with ASCII.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-02T16:39:38-08:00 — kilo-tester: KMail (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 124.3 KB, native 509.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Web UI & Firebase: Eliminated boot RTDB WebSocket autostart; mod->modGain->carrier in playSend; folder rules validated; custom tags synced to #tag-filter; preserved decryptedBody across tab switches with Re-lock; guarded empty draft auto-save; timestamp sorting & sort-select persistence.
