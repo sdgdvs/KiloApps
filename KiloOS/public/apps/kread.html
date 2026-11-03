@@ -113,24 +113,42 @@
   .toolbar {
     background: var(--bg-toolbar);
     border-bottom: 1px solid var(--border-color);
-    padding: 6px 14px;
+    padding: 4px 10px;
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 4px;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     z-index: 10;
-    overflow-x: auto;
-    scrollbar-width: none;
   }
-  .toolbar::-webkit-scrollbar { display: none; }
 
   .toolbar-group {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-wrap: nowrap;
+    gap: 4px;
     align-items: center;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .toolbar-group::-webkit-scrollbar { display: none; }
+
+  .toolbar .btn {
+    padding: 3px 6px;
+    font-size: 11.5px;
+    white-space: nowrap;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .toolbar .btn kbd {
+    font-size: 9px;
+    padding: 1px 3px;
+    margin-left: 2px;
+  }
+
+  .toolbar select.btn {
+    padding-right: 14px;
+    font-size: 11.5px;
   }
 
   .btn {
@@ -297,31 +315,41 @@
   .quick-starter-bar {
     background: var(--bg-toolbar);
     border-bottom: 1px solid var(--border-color);
-    padding: 5px 12px;
+    padding: 3px 10px;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
-    gap: 6px;
-    font-size: 12px;
+    gap: 4px;
+    font-size: 11px;
     font-family: system-ui, -apple-system, sans-serif;
     user-select: none;
     z-index: 5;
     overflow-x: auto;
     scrollbar-width: none;
+    width: 100%;
+    box-sizing: border-box;
   }
   .quick-starter-bar::-webkit-scrollbar { display: none; }
   .quick-starter-lbl {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
     opacity: 0.75;
-    margin-right: 4px;
+    margin-right: 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .btn-sm {
-    padding: 3px 8px;
+    padding: 2px 6px;
     font-size: 11px;
-    border-radius: 5px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .btn-sm kbd {
+    font-size: 8.5px;
+    padding: 1px 2px;
   }
   .toast-close {
     background: transparent;
@@ -398,7 +426,7 @@
     white-space: pre-wrap;
     word-wrap: break-word;
     outline: none;
-    padding-bottom: 120px;
+    padding-bottom: 32px;
   }
 
   mark.search-match {
@@ -625,24 +653,26 @@
     align-items: center;
   }
 
-  /* Non-Blocking Toast System (Top-Center Safe Anchor - Zero Occlusion) */
+  /* Non-Blocking Toast System (Bottom-Right Safe Anchor - Zero Occlusion) */
   .toast-container {
     position: fixed;
-    top: 54px;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 36px;
+    right: 16px;
+    top: auto;
+    left: auto;
+    transform: none;
     display: flex;
     flex-direction: column;
     gap: 8px;
     z-index: 9999;
     pointer-events: none;
     max-width: 440px;
-    width: 90%;
+    width: auto;
   }
   .toast {
     background: var(--toast-bg);
     color: var(--toast-text);
-    padding: 10px 16px;
+    padding: 8px 14px;
     border-radius: 8px;
     font-size: 13px;
     font-family: system-ui, sans-serif;
@@ -657,11 +687,11 @@
     pointer-events: auto;
   }
   @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateY(-16px) scale(0.96); }
+    from { opacity: 0; transform: translateY(12px) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
   @keyframes toastFadeOut {
-    to { opacity: 0; transform: translateY(-8px) scale(0.96); pointer-events: none; }
+    to { opacity: 0; transform: translateY(8px) scale(0.96); pointer-events: none; }
   }
 
   /* Modal Form Controls */
@@ -4060,10 +4090,11 @@
         return;
       }
 
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
         if (e.key === 'Escape') {
           if (renameModal.classList.contains('open')) renameModal.classList.remove('open');
           if (noteModal.classList.contains('open')) noteModal.classList.remove('open');
+          if (typeof e.target.blur === 'function') e.target.blur();
         }
         return;
       }

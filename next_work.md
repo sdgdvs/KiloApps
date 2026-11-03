@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KMystery
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KRead
+  kilo_usability: KHex
   kilo_qa: KScript
   kilo_expander: KRead
   kilo_review: KSettings
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KRead
-  timestamp: '2026-11-03T04:22:17-08:00'
+  timestamp: '2026-11-03T04:36:24-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -164,11 +164,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | **[ARGON REVIEW]:** Fix updateScrollProgress() curPage formula in kread.html so 100% scroll reaches totalPages and refresh progress/stats on font/line-height changes; make createHighlight() and deleteNote() respect isMarkdownView without corrupting HTML tags in inlineFormat(); keep globalSearchResults active across switchTab() when searchAllTabs is true and allow Ctrl+Delete to clear; and in KRead/main.c refresh UpdateStatusBar() on hEdit cursor/wheel navigation, reset dwScrollPos in LoadFileFromPath/Clear, persist g_currentTheme in quicksave, and track bHasBookmark before jumping on Ctrl+J. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KRead`
+- **Active Target**: `KHex`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | **[ARGON REVIEW]:** Move .toast-container to bottom-right (bottom: 36px, right: 16px, top/left: auto, transform: none) so toasts stop occluding the top toolbar, compact .toolbar into 2 rows and .quick-starter-bar into 1 row at 940px width, reduce .content padding-bottom to 32px so short docs fit on Pg 1/1, and guard SELECT targets in the window keydown listener. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -196,6 +195,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMail` | `KiloOS/public/apps/kmail.html`, `KMail/main.c` | **[ARGON REVIEW]:** Fix 960x603 layout clipping in kmail.html (sheet.png Panels 2-3): add white-space nowrap across 26px .status-bar/.status-left/.status-mid/.status-right with concise shortcut pills so items stop wrapping onto 2 clipped lines, compact .sidebar/.folder/.search-container (1-row .quick-filters) and arrange .sidebar-bottom into a 2-column CSS grid so all 6 folders and all 8-9 utility buttons fit 100% visible above the fold with 0px scroll, and change .pane-header to flex-direction column (full-width subject/sender/tags above a compact nowrap .pane-actions bar) so subjects stop wrapping into a 105px column; convert #help-modal .shortcuts-table into a 2-column grid to fit 603px without scrolling, move #toast-container to bottom-right above .status-bar (skipping redundant 300ms boot toast), add SELECT to keydown isInput guard, wire [Ctrl+Tab] tab cycling and [D] focus-decrypt hotkey, replace anachronistic Firebase RTDB copy in #tutorial-modal/#network-modal with diegetic 1999 KiloNet SMTP/POP3 Relay, and in KMail/main.c hide hBtnOutbox in empty-state RenderPane(), fix WM_SIZE button overlap, and replace UTF-8 emojis in ANSI controls with ASCII. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Fix 640x503 toast overlap in sheet.png Panels 1-2 where #toast-container (bottom 46px) obscures the top row of Garage .actions buttons by moving #toast-container to top-right (top 36px, right 12px, max-width 310px) and removing the redundant 300ms boot welcome toast; shorten #screen-garage .quick-hint so 100% fits 616px without ellipsis truncation, raise 9px .stat-label/.equip-label/.key-badge/.pill-chance fonts to 10px, and label .btn-sound-toggle as SFX ON/OFF [M] when !window.__KILO_BGM_ENABLED; enrich #screen-battle HUD cards with cur/max HP and Heat, live Player and Enemy ATK/DEF readouts reflecting L.Arm/R.Arm debuffs, and active STUNNED/DEFENDING/+15% EVADE badges; add ArrowLeft/ArrowRight target pill selection and Enter-to-Attack in #screen-battle, add Tab focus trapping in #modal-telemetry and #modal-arena, show locked gear prices on #btn-wpn/#btn-arm/#btn-sink/#btn-spec, and sync Pilot's Manual limb multipliers (1.5x Arm, 50% Legs) with combat math. |
 | `KRadio` | `KiloOS/public/apps/kradio.html`, `KRadio/main.c` | **[ARGON REVIEW]:** Eliminate 44px vertical overflow at 500x443 in kradio.html (sheet.png Panel 2) by locking body to 100vh overflow hidden, compacting .radio-app, keeping .app-header, .feature-bar, .main-controls, and .footer-hint on single nowrap rows so .playback-btns and .volume-group fit side-by-side, and rendering #eqPanel and #diagPanel as mutually exclusive anchored popover drawers below .feature-bar; move #toastContainer from top-center (overlapping #helpModal and #directoryModal titles in Panels 1 and 3) to bottom-right and pass silent=true to boot selectPreset() without redundant boot welcome toasts; convert #helpModal .shortcuts-table into a compact 2-column grid to fit 500x443 without clipping, replace blocking prompt() on Set Preset in #directoryModal with inline [1]-[6] slot pills, add Tab focus trapping and ArrowUp/Down/Enter directory navigation plus SELECT in isInputFocused, sync #visualizerCanvas HiDPI dimensions on resize, and in KRadio/main.c scale W/H and all CreateWindowEx coordinates by GetDpiForWindow MulDiv(x, dpi, 96). |
+| `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | **[ARGON REVIEW]:** Move .toast-container to bottom-right (bottom: 36px, right: 16px, top/left: auto, transform: none) so toasts stop occluding the top toolbar, compact .toolbar into 2 rows and .quick-starter-bar into 1 row at 940px width, reduce .content padding-bottom to 32px so short docs fit on Pg 1/1, and guard SELECT targets in the window keydown listener. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KScript`
@@ -337,6 +337,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T04:36:24-08:00 — kilo-usability: KRead (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 163.9 KB, native 31.0 KB < 999 KB; visual PASS anim 0.0%, input 8.27%, 0 cut-off controls).
+  - Layout & Responsive: Compacted .toolbar into 2 rows and .quick-starter-bar into 1 row at 940px; reduced .content padding-bottom to 32px so short docs fit on Pg 1/1.
+  - Toasts & Shortcuts: Relocated .toast-container to bottom-right (bottom: 36px, right: 16px) eliminating top toolbar occlusion; guarded SELECT targets in window keydown listener.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-03T04:22:17-08:00 — kilo-tester: KRead (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KRead across web and native targets.
@@ -357,8 +363,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: Toast container at top:54px occludes rows 2-4 of the 4-row wrapped toolbar; Quick Load bar wraps Theme T onto a 2nd row at 940px; 120px content padding causes false 2-page overflow on short docs.
   - Feature/Parity Findings: Page counter curPage never reaches totalPages at 100% scroll; createHighlight/deleteNote break Markdown view; KRead/main.c status bar Ln/Col never updates on read-only EDIT navigation and lacks VFS IPC and Alice sample.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KRead`, `kilo-tester`->`KRead`, `kilo-expander`->`KRead`] (un-quarantined `KRead` from Mature); advanced `kilo-review` to `KSettings`; next agent `kilo-creator`.
-
-- **2026-11-03T02:23:17-08:00 — kilo-expander: KRadio (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KRadio across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.

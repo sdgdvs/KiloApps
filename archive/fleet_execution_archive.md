@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T02:23:17-08:00 — kilo-expander: KRadio (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-expander updates for KRadio across web and native targets.
+  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.
+
 - **2026-11-03T01:40:15-08:00 — kilo-qa: KMine (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KMine across web and native targets.
