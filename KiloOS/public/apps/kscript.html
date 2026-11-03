@@ -2080,7 +2080,7 @@ exists_before = vfs_exists(log_path)
 print "Exists before write:", exists_before
 
 // Write session header to KiloOS VFS
-header = "=== KScript VFS Telemetry Session ===\nTimestamp: " + hex(0x20261023) + "\n"
+header = "=== KScript VFS Telemetry Session ===\\nTimestamp: " + hex(0x20261023) + "\\n"
 vfs_write(log_path, header)
 
 // Compute algorithmic workload
@@ -2088,7 +2088,7 @@ sum_squares = 0
 iter = 1
 while iter <= 8
   sum_squares = sum_squares + (iter * iter)
-  line = "Iteration " + iter + " -> cumulative sum: " + sum_squares + "\n"
+  line = "Iteration " + iter + " -> cumulative sum: " + sum_squares + "\\n"
   vfs_append(log_path, line)
   iter = iter + 1
 endwhile
@@ -2553,6 +2553,7 @@ endif
         },
         hex: (x) => '0x' + (Number(x) >>> 0).toString(16).toUpperCase(),
         bin: (x) => '0b' + (Number(x) >>> 0).toString(2),
+        oct: (x) => '0o' + (Number(x) >>> 0).toString(8),
         len: (arr) => Array.isArray(arr) ? arr.length : (typeof arr === 'string' ? arr.length : 0),
         push: (arr, v) => { if (Array.isArray(arr)) { arr.push(v); return arr.length; } return 0; },
         pop: (arr) => Array.isArray(arr) ? (arr.pop() ?? 0) : 0,
@@ -2681,6 +2682,14 @@ endif
                 const start = idx;
                 while (/[01]/.test(peek())) advance();
                 return parseInt(str.substring(start, idx), 2) || 0;
+            }
+
+            // Octal literal: 0o...
+            if (str.substring(idx, idx + 2).toLowerCase() === '0o') {
+                idx += 2;
+                const start = idx;
+                while (/[0-7]/.test(peek())) advance();
+                return parseInt(str.substring(start, idx), 8) || 0;
             }
 
             // Numbers
@@ -3104,11 +3113,49 @@ endif
                 continue;
             }
 
-            if (/^endwhile\b/i.test(stmt) || (/^end\b/i.test(stmt) && loopStack.length > 0)) {
+            if (/^endwhile\b/i.test(stmt) || (/^end\b/i.test(stmt) && loopStack.length > 0 && loopStack[loopStack.length - 1].type === 'while')) {
                 const top = loopStack[loopStack.length - 1];
                 if (top && top.type === 'while') {
                     const condVal = parseExpression(top.condExpr, vars, nodeCounter);
                     if (condVal) {
+                        pc = top.startPc + 1;
+                        continue;
+                    } else {
+                        loopStack.pop();
+                        pc++;
+                        continue;
+                    }
+                }
+            }
+
+            // 2b. Control Flow: loop <count> ... endloop
+            if (/^loop\b/i.test(stmt)) {
+                const countExpr = stmt.substring(4).trim();
+                const totalIters = countExpr ? Math.max(0, Math.trunc(Number(parseExpression(countExpr, vars, nodeCounter)) || 0)) : 1;
+                if (totalIters > 0) {
+                    loopStack.push({ type: 'loop', startPc: pc, currentIter: 1, totalIters });
+                    pc++;
+                } else {
+                    // Jump past matching endloop
+                    let depth = 1;
+                    while (++pc < lines.length) {
+                        const s = lines[pc].clean;
+                        if (/^while\b/i.test(s) || /^loop\b/i.test(s)) depth++;
+                        else if (/^endwhile\b/i.test(s) || /^endloop\b/i.test(s) || /^end\b/i.test(s)) {
+                            depth--;
+                            if (depth === 0) break;
+                        }
+                    }
+                    pc++;
+                }
+                continue;
+            }
+
+            if (/^endloop\b/i.test(stmt) || (/^end\b/i.test(stmt) && loopStack.length > 0 && loopStack[loopStack.length - 1].type === 'loop')) {
+                const top = loopStack[loopStack.length - 1];
+                if (top && top.type === 'loop') {
+                    if (top.currentIter < top.totalIters) {
+                        top.currentIter++;
                         pc = top.startPc + 1;
                         continue;
                     } else {
@@ -3434,10 +3481,21 @@ endif
 
         const colors = {
             'Assignment': '#38bdf8',
+            'STMT_ASSIGN': '#38bdf8',
             'Branching': '#f59e0b',
+            'STMT_BRANCH_IF': '#f59e0b',
+            'STMT_BRANCH_ELIF': '#fbbf24',
+            'STMT_BRANCH_ELSE': '#f59e0b',
+            'STMT_ENDIF': '#d97706',
             'Loop': '#ec4899',
+            'STMT_LOOP_WHILE': '#ec4899',
+            'STMT_LOOP': '#ec4899',
+            'STMT_ENDWHILE': '#db2777',
+            'STMT_ENDLOOP': '#db2777',
             'Output': '#10b981',
+            'STMT_PRINT': '#10b981',
             'Expression': '#a78bfa',
+            'EXPRESSION': '#a78bfa',
             'Comment': '#64748b'
         };
 
@@ -3610,9 +3668,22 @@ endif
         renderMemoryTable(state.vars);
     }
 
+    function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    let currentRenderedVars = {};
+
     function renderMemoryTable(vars) {
+        currentRenderedVars = vars || {};
         const filter = memSearch.value.trim().toLowerCase();
-        const keys = Object.keys(vars).sort();
+        const keys = Object.keys(currentRenderedVars).sort();
         const matchedKeys = keys.filter(k => !filter || k.toLowerCase().includes(filter));
 
         if (matchedKeys.length === 0) {
@@ -3622,7 +3693,7 @@ endif
 
         let html = '';
         for (const k of matchedKeys) {
-            const val = vars[k];
+            const val = currentRenderedVars[k];
             const isArr = Array.isArray(val);
             const isNum = typeof val === 'number';
             let decVal = isArr ? `[${val.join(', ')}]` : (isNum ? val : `"${val}"`);
@@ -3634,15 +3705,30 @@ endif
                 const b = (val >>> 0).toString(2).padStart(16, '0').slice(-16);
                 binVal = `${b.slice(0,4)} ${b.slice(4,8)} ${b.slice(8,12)} ${b.slice(12,16)}`;
             }
-            html += `<tr onclick="copyVariable('${k}', '${val}')" title="Click to copy ${k} = ${val}">
-                <td class="var-name">${k}</td>
-                <td>${decVal}</td>
-                <td class="var-hex">${hexVal}</td>
-                <td class="var-bin">${binVal}</td>
+            const safeK = escapeHtml(k);
+            const safeDec = escapeHtml(decVal);
+            const safeHex = escapeHtml(hexVal);
+            const safeBin = escapeHtml(binVal);
+            const safeTitle = escapeHtml(`Click to copy ${k} = ${isArr ? `[${val.join(', ')}]` : val}`);
+
+            html += `<tr class="mem-row" data-var="${safeK}" title="${safeTitle}" style="cursor:pointer;">
+                <td class="var-name">${safeK}</td>
+                <td>${safeDec}</td>
+                <td class="var-hex">${safeHex}</td>
+                <td class="var-bin">${safeBin}</td>
             </tr>`;
         }
         memTableBody.innerHTML = html;
     }
+
+    memTableBody.addEventListener('click', (e) => {
+        const tr = e.target.closest('tr[data-var]');
+        if (!tr) return;
+        const k = tr.getAttribute('data-var');
+        if (k && currentRenderedVars && (k in currentRenderedVars)) {
+            window.copyVariable(k, currentRenderedVars[k]);
+        }
+    });
 
     memSearch.addEventListener('input', () => {
         if (lastExecutionState && lastExecutionState.vars) {
@@ -3661,8 +3747,11 @@ endif
     });
 
     window.copyVariable = (name, val) => {
-        navigator.clipboard.writeText(`${name} = ${val}`);
-        showToast(`Copied ${name} = ${val} to clipboard`, 'info', 1500);
+        const textVal = Array.isArray(val) ? `[${val.join(', ')}]` : String(val);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(`${name} = ${textVal}`).catch(() => {});
+        }
+        showToast(`Copied ${name} = ${textVal} to clipboard`, 'info', 1500);
     };
 
     // ==========================================
@@ -4160,6 +4249,9 @@ endif
             // Classify AST statement node
             let category = 'EXPRESSION';
             let detail = line;
+            let assignTarget = null;
+            let isCompoundAssign = false;
+
             if (/^print\b/i.test(line)) {
                 category = 'STMT_PRINT';
                 detail = line.substring(5).trim();
@@ -4181,30 +4273,58 @@ endif
             } else if (/^endwhile\b/i.test(line)) {
                 category = 'STMT_ENDWHILE';
                 detail = '';
+            } else if (/^loop\b/i.test(line)) {
+                category = 'STMT_LOOP';
+                detail = line.substring(4).trim();
+            } else if (/^endloop\b/i.test(line)) {
+                category = 'STMT_ENDLOOP';
+                detail = '';
             } else {
                 const assignM = line.match(/^([a-zA-Z_]\w*)\s*(=|\+=|-=|\*=|\/=|%=|&=|\|=|\^=|<<=|>>=)\s*(.+)$/);
                 if (assignM) {
                     category = 'STMT_ASSIGN';
                     detail = `${assignM[1]} ${assignM[2]} ${assignM[3]}`;
-                    if (!assignedVars.has(assignM[1])) assignedVars.set(assignM[1], lineNum);
+                    assignTarget = assignM[1];
+                    isCompoundAssign = assignM[2] !== '=';
                 }
             }
 
-            // Variable references check
-            const words = line.match(/\b[a-zA-Z_]\w*\b/g) || [];
-            const keywords = new Set(['if', 'elif', 'else', 'endif', 'while', 'endwhile', 'print', 'true', 'false', 'abs', 'min', 'max', 'clamp', 'sqrt', 'pow', 'sign', 'rand', 'gcd', 'fact', 'hex', 'bin', 'len', 'push', 'pop', 'at', 'sum', 'avg', 'vfs_read', 'vfs_write', 'vfs_append', 'vfs_exists', 'vfs_size', 'vfs_list', 'vfs_delete', 'vfs', 'read', 'write', 'append', 'exists', 'size', 'list', 'delete', 'str', 'int', 'time']);
+            // Variable references check (strip string literals first so string literals like "Active" or "Status:" are not parsed as variable identifiers)
+            const codeWithoutStrings = line.replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, ' ');
+            const words = codeWithoutStrings.match(/\b[a-zA-Z_]\w*\b/g) || [];
+            const keywords = new Set([
+                'if', 'elif', 'else', 'endif', 'while', 'endwhile', 'loop', 'endloop',
+                'print', 'true', 'false', 'abs', 'min', 'max', 'clamp', 'sqrt', 'pow',
+                'sign', 'rand', 'gcd', 'fact', 'hex', 'bin', 'oct', 'len', 'push', 'pop',
+                'at', 'sum', 'avg', 'vfs_read', 'vfs_write', 'vfs_append', 'vfs_exists',
+                'vfs_size', 'vfs_list', 'vfs_delete', 'vfs', 'read', 'write', 'append',
+                'exists', 'size', 'list', 'delete', 'str', 'int', 'time'
+            ]);
+
+            let isFirstIdent = true;
             words.forEach(w => {
                 const lw = w.toLowerCase();
-                if (!keywords.has(lw)) {
-                    const assignLeft = line.match(/^([a-zA-Z_]\w*)\s*=/);
-                    if (!assignLeft || assignLeft[1] !== w) {
-                        referencedVars.add(w);
-                        if (!assignedVars.has(w)) {
-                            diagnostics.push({ line: lineNum, type: 'warning', msg: `Variable '${w}' referenced before explicit assignment (defaults to 0)` });
-                        }
-                    }
+                if (keywords.has(lw)) {
+                    isFirstIdent = false;
+                    return;
+                }
+                // If it is a pure assignment (e.g. x = expr), the first word is the assignment target on LHS and is not a read reference
+                if (isFirstIdent && assignTarget && w === assignTarget && !isCompoundAssign) {
+                    isFirstIdent = false;
+                    return;
+                }
+                isFirstIdent = false;
+
+                referencedVars.add(w);
+                if (!assignedVars.has(w)) {
+                    diagnostics.push({ line: lineNum, type: 'warning', msg: `Variable '${w}' referenced before explicit assignment (defaults to 0)` });
                 }
             });
+
+            // Register newly assigned variable
+            if (assignTarget && !assignedVars.has(assignTarget)) {
+                assignedVars.set(assignTarget, lineNum);
+            }
 
             ast.push({ line: lineNum, category, detail });
         });

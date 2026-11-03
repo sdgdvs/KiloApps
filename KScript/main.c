@@ -538,6 +538,17 @@ int ParsePrimary(const char** p) {
         return val;
     }
 
+    // Octal literal: 0o or 0O
+    if (**p == '0' && (*(*p + 1) == 'o' || *(*p + 1) == 'O')) {
+        *p += 2;
+        int val = 0;
+        while (**p >= '0' && **p <= '7') {
+            val = (val << 3) | (**p - '0');
+            (*p)++;
+        }
+        return val;
+    }
+
     // Decimal numbers
     if (**p >= '0' && **p <= '9') {
         int val = 0;
@@ -1794,7 +1805,7 @@ void ShowHelpDialog(HWND hwnd) {
         "====================================================\n\n"
         "[SYNTAX & VARIABLES]\n"
         " - Variables: Multi-character identifiers (e.g. counter = 42, mask = 0xFF)\n"
-        " - Literals: Decimal (100), Hex (0x1F, 0xFF00), Binary (0b1010)\n"
+        " - Literals: Decimal (100), Hex (0x1F, 0xFF00), Binary (0b1010), Octal (0o77)\n"
         " - Comments: Lines starting with // are ignored\n\n"
         "[OPERATORS & PRECEDENCE]\n"
         " - Arithmetic: +, -, *, /, %, ** (Power)\n"

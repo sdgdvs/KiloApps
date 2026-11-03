@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T13:22:22-08:00 — kilo-qa: KFont (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KFont across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KSteno`; rotated active agent to `kilo-expander`.
+
 - **2026-11-03T12:38:06-08:00 — kilo-usability: KHex (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 291.3 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.7%, HEAD Δ 0.13%, 0 fail, 0 warn, 5.3s)).
   - Layout & Responsive: nowrap Shannon Entropy badge row, word-wrap .output-box, Tab 2 panel-title flex-wrap, 64px rawTextBuffer, zero layout clipping at 980x783.
