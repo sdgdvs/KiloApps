@@ -827,7 +827,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-  import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+  import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect, goOffline, goOnline } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
   const firebaseConfig = {
     apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
     authDomain: "kiloappschat.firebaseapp.com",
@@ -837,28 +837,47 @@
     messagingSenderId: "290208566057",
     appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
   };
-  try {
-    const fbApp = initializeApp(firebaseConfig);
-    const fbDb = getDatabase(fbApp);
-    window.fb = {
-      app: fbApp,
-      db: fbDb,
-      ref,
-      set,
-      get,
-      push,
-      onValue,
-      onChildAdded,
-      off,
-      serverTimestamp,
-      onDisconnect
-    };
-    if (window.initNetworkMail) {
-      window.initNetworkMail();
+
+  let fbApp = null;
+  let fbDb = null;
+
+  window.ensureFirebase = function() {
+    if (!fbApp) {
+      try {
+        fbApp = initializeApp(firebaseConfig);
+        fbDb = getDatabase(fbApp);
+        window.fb = {
+          app: fbApp,
+          db: fbDb,
+          ref,
+          set,
+          get,
+          push,
+          onValue,
+          onChildAdded,
+          off,
+          serverTimestamp,
+          onDisconnect,
+          goOffline,
+          goOnline
+        };
+      } catch (err) {
+        console.warn("Firebase initialization skipped or offline:", err);
+      }
+    } else if (fbDb) {
+      try { goOnline(fbDb); } catch(e) {}
     }
-  } catch (err) {
-    console.warn("Firebase initialization skipped or offline:", err);
-  }
+    return window.fb;
+  };
+
+  window.disconnectFirebase = function() {
+    if (window.detachMailListener) {
+      window.detachMailListener();
+    }
+    if (fbDb) {
+      try { goOffline(fbDb); } catch(e) {}
+    }
+  };
 </script>
 </head>
 <body>
@@ -1348,7 +1367,8 @@
         modGain.gain.setValueAtTime(300, t);
         modGain.gain.exponentialRampToValueAtTime(10, t + 0.15);
 
-        mod.connect(carrier.frequency);
+        mod.connect(modGain);
+        modGain.connect(carrier.frequency);
         carrier.connect(masterGain);
         masterGain.connect(this.ctx.destination);
 
@@ -1736,6 +1756,22 @@
     showToast("Rule deleted.", "info");
   };
 
+  
+  window.onRuleActionChange = function() {
+    const act = (document.getElementById('new-rule-action') ? document.getElementById('new-rule-action').value : 'tag');
+    const paramCont = document.getElementById('new-rule-param-container');
+    const paramInp = document.getElementById('new-rule-param');
+    if (paramCont) {
+      if (act === 'star' || act === 'read') {
+        paramCont.style.display = 'none';
+        if (paramInp) paramInp.style.display = 'none';
+      } else {
+        paramCont.style.display = 'block';
+        if (paramInp) paramInp.style.display = 'block';
+      }
+    }
+  };
+
   window.addNewRule = function() {
     const field = document.getElementById('new-rule-field').value;
     const match = document.getElementById('new-rule-match').value;
@@ -1784,7 +1820,7 @@
   };
 
   // KiloNet Global Mail Delivery via Firebase RTDB
-  let netEnabled = safeGet('kmail_net_enabled') !== '0';
+  let netEnabled = safeGet('kmail_net_enabled') === '1';
   let userAddress = safeGet('kmail_net_address') || 'user@kilo.os';
   let processedNetworkMsgIds = new Set();
   const sessionStartTime = Date.now() - 7200000;
@@ -1913,6 +1949,33 @@
     renderList();
   };
 
+    function syncTagFilter() {
+    const tf = document.getElementById('tag-filter');
+    if (!tf) return;
+    const currentVal = tf.value;
+    const defaultTags = ['Urgent', 'Work', 'Personal', 'News', 'Finance', 'Follow-up', 'System', 'Network'];
+    const tagSet = new Set(defaultTags);
+    emails.forEach(e => {
+      if (Array.isArray(e.tags)) {
+        e.tags.forEach(t => {
+          if (t && typeof t === 'string' && t.trim()) tagSet.add(t.trim());
+        });
+      }
+    });
+    const allTags = Array.from(tagSet);
+    const customTags = allTags.filter(t => !defaultTags.includes(t)).sort();
+    const finalTags = [...defaultTags, ...customTags];
+
+    const existingOptions = Array.from(tf.options).slice(1).map(o => o.value);
+    const isSame = existingOptions.length === finalTags.length && existingOptions.every((v, i) => v === finalTags[i]);
+    if (!isSame) {
+      tf.innerHTML = '<option value="">All Tags</option>' + finalTags.map(t => `<option value="${escapeHTML(t)}">${escapeHTML(t)}</option>`).join('');
+      if (currentVal && finalTags.includes(currentVal)) {
+        tf.value = currentVal;
+      }
+    }
+  }
+
   function getVisibleFilteredEmails() {
     const sq = (document.getElementById('search-box').value || '').toLowerCase().trim();
     const tagF = document.getElementById('tag-filter').value;
@@ -2027,6 +2090,7 @@
   }
 
   function renderList() {
+    syncTagFilter();
     updateFolderBadges();
     updateStatusBar();
     const list = document.getElementById('list');
@@ -2769,6 +2833,7 @@
         nextId,
         searchQuery: searchEl ? searchEl.value : '',
         tagFilter: tagEl ? tagEl.value : '',
+        sortSelect: (document.getElementById('sort-select') ? document.getElementById('sort-select').value : 'newest'),
         activeQuickFilter,
         tabs: tabs.map(t => ({
           id: t.id,

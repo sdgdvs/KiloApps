@@ -55,7 +55,7 @@ typedef struct {
 Email emails[200] = {
     {1, 0, "Welcome to KiloOS", "sysadmin@kilo.os", "Hello User,\r\n\r\nWelcome to KiloOS email suite.\r\nUse folders, star priority emails, save drafts, and export messages.\r\n\r\n- SysAdmin", 1, 0, 1, "Work"},
     {2, 0, "Meeting at 3PM", "boss@kilo.os", "Don't forget our meeting at 3PM in Conference Room B.", 0, 0, 1, "Urgent,Work"},
-    {3, 0, "Top Secret Info", "agent@kilo.os", "\x11\x14\x05\x5e\x06\x16\x16\x07\x16\x11\x5e\x1c\x19\x1f\x18", 1, 1, 0, "Personal"}, // Mock XOR encrypted with pass "pass"
+    {3, 0, "Top Secret Info", "agent@kilo.os", "HEX:20131c19150207533b081f1c4a412206110f07061d41101c0204531213151a0511151a1c1e411a0050021c1d1608011e150553151f135335020817120941120750514a494051532624225d", 1, 1, 0, "Personal"}, // Hex-safe XOR encrypted with pass "pass"
     {4, 0, "Newsletter #42", "news@kilo.os", "Weekly digest on minimalist desktop OS development...", 0, 0, 0, "News"},
     {5, 2, "Re: Meeting at 3PM", "me@kilo.os", "I'll be there on time with the slides ready.", 0, 0, 0, ""},
     {6, 3, "Draft: Q4 Roadmap", "team@kilo.os", "Q4 Objectives:\r\n1. KMail feature upgrade\r\n2. Performance optimization", 0, 0, 0, "Work"},
@@ -147,7 +147,9 @@ void RefreshEmailList() {
         if(matchesFolder) {
             if (searchQuery[0] == '\0' || 
                 contains_nocase(emails[i].subject, searchQuery) || 
-                contains_nocase(emails[i].sender, searchQuery)) {
+                contains_nocase(emails[i].sender, searchQuery) ||
+                contains_nocase(emails[i].body, searchQuery) ||
+                contains_nocase(emails[i].tags, searchQuery)) {
                 
                 if (tagQuery[0] == '\0' || contains_nocase(emails[i].tags, tagQuery)) {
                     char displayStr[256];
@@ -503,7 +505,7 @@ void RenderPane() {
         if (t->emailId > 0 && t->composeBody[0]) {
             wsprintfA(compStr, "To: %s\r\nSub: %s\r\n\r\n%s", t->composeTo, t->composeSub, t->composeBody);
         } else {
-            wsprintfA(compStr, "To: %s\r\nSub: %s\r\n\r\n%s", t->composeTo[0] ? t->composeTo : "", t->composeSub[0] ? t->composeSub : "", t->composeBody[0] ? t->composeBody : "(Write body here...)");
+            wsprintfA(compStr, "To: %s\r\nSub: %s\r\n\r\n%s", t->composeTo[0] ? t->composeTo : "", t->composeSub[0] ? t->composeSub : "", t->composeBody[0] ? t->composeBody : "");
         }
         SetWindowTextA(hBody, compStr);
         
@@ -529,6 +531,26 @@ void RenderPane() {
 void CryptStr(char* data, const char* pass) {
     int pLen = lstrlenA(pass);
     if(pLen == 0) return;
+    if (data[0] == 'H' && data[1] == 'E' && data[2] == 'X' && data[3] == ':') {
+        char out[2048];
+        int outLen = 0;
+        int i = 4;
+        while (data[i] && data[i+1] && outLen < (int)sizeof(out) - 1) {
+            int b0 = (data[i] >= '0' && data[i] <= '9') ? data[i] - '0' :
+                     (data[i] >= 'a' && data[i] <= 'f') ? data[i] - 'a' + 10 :
+                     (data[i] >= 'A' && data[i] <= 'F') ? data[i] - 'A' + 10 : 0;
+            int b1 = (data[i+1] >= '0' && data[i+1] <= '9') ? data[i+1] - '0' :
+                     (data[i+1] >= 'a' && data[i+1] <= 'f') ? data[i+1] - 'a' + 10 :
+                     (data[i+1] >= 'A' && data[i+1] <= 'F') ? data[i+1] - 'A' + 10 : 0;
+            unsigned int b = (b0 << 4) | b1;
+            out[outLen] = (char)(b ^ pass[outLen % pLen]);
+            outLen++;
+            i += 2;
+        }
+        out[outLen] = 0;
+        lstrcpyA(data, out);
+        return;
+    }
     for(int i = 0; data[i]; i++) {
         data[i] ^= pass[i % pLen];
     }
@@ -560,7 +582,7 @@ void ExportSingleMarkdown(Email* em) {
     char header[512];
     wsprintfA(header, "# %s\r\n\r\n- **From:** %s\r\n- **Folder:** %s\r\n- **Tags:** %s\r\n- **Starred:** %s\r\n\r\n---\r\n\r\n",
         em->subject, em->sender,
-        em->folder == 0 ? "Inbox" : (em->folder == 2 ? "Sent" : (em->folder == 3 ? "Drafts" : "Trash")),
+        em->folder == 0 ? "Inbox" : (em->folder == 1 ? "Starred" : (em->folder == 2 ? "Sent" : (em->folder == 3 ? "Drafts" : (em->folder == 4 ? "Outbox" : "Trash")))),
         em->tags[0] ? em->tags : "none",
         em->starred ? "Yes" : "No");
     WriteFile(hFile, header, lstrlenA(header), &written, NULL);
@@ -797,57 +819,98 @@ void ImportJson(HWND hwnd) {
             else em.folder = 0;
         }
 
-        const char* fSub = my_strstr(objStart, "\"subject\":\"");
+        const char* fSub = my_strstr(objStart, "\"subject\":");
         if (fSub && fSub < objEnd) {
-            fSub += 11;
-            int si = 0;
-            while (fSub < objEnd && *fSub != '"' && si < 127) {
-                if (*fSub == '\\' && *(fSub+1) == '"') { em.subject[si++] = '"'; fSub += 2; }
-                else if (*fSub == '\\' && *(fSub+1) == '\\') { em.subject[si++] = '\\'; fSub += 2; }
-                else { em.subject[si++] = *fSub++; }
+            fSub += 10;
+            while (*fSub == ' ' || *fSub == '\t') fSub++;
+            if (*fSub == '"') {
+                fSub++;
+                int si = 0;
+                while (fSub < objEnd && *fSub != '"' && si < 127) {
+                    if (*fSub == '\\' && *(fSub+1) == '"') { em.subject[si++] = '"'; fSub += 2; }
+                    else if (*fSub == '\\' && *(fSub+1) == '\\') { em.subject[si++] = '\\'; fSub += 2; }
+                    else { em.subject[si++] = *fSub++; }
+                }
+                em.subject[si] = '\0';
             }
-            em.subject[si] = '\0';
         }
 
-        const char* fSnd = my_strstr(objStart, "\"sender\":\"");
+        const char* fSnd = my_strstr(objStart, "\"sender\":");
         if (fSnd && fSnd < objEnd) {
-            fSnd += 10;
-            int si = 0;
-            while (fSnd < objEnd && *fSnd != '"' && si < 127) {
-                if (*fSnd == '\\' && *(fSnd+1) == '"') { em.sender[si++] = '"'; fSnd += 2; }
-                else { em.sender[si++] = *fSnd++; }
+            fSnd += 9;
+            while (*fSnd == ' ' || *fSnd == '\t') fSnd++;
+            if (*fSnd == '"') {
+                fSnd++;
+                int si = 0;
+                while (fSnd < objEnd && *fSnd != '"' && si < 127) {
+                    if (*fSnd == '\\' && *(fSnd+1) == '"') { em.sender[si++] = '"'; fSnd += 2; }
+                    else { em.sender[si++] = *fSnd++; }
+                }
+                em.sender[si] = '\0';
             }
-            em.sender[si] = '\0';
         }
 
-        const char* fBody = my_strstr(objStart, "\"body\":\"");
+        const char* fBody = my_strstr(objStart, "\"body\":");
         if (fBody && fBody < objEnd) {
-            fBody += 8;
-            int bi = 0;
-            while (fBody < objEnd && *fBody != '"' && bi < 2046) {
-                if (*fBody == '\\' && *(fBody+1) == 'n') { em.body[bi++] = '\r'; em.body[bi++] = '\n'; fBody += 2; }
-                else if (*fBody == '\\' && *(fBody+1) == 'r') { fBody += 2; }
-                else if (*fBody == '\\' && *(fBody+1) == '"') { em.body[bi++] = '"'; fBody += 2; }
-                else { em.body[bi++] = *fBody++; }
+            fBody += 7;
+            while (*fBody == ' ' || *fBody == '\t') fBody++;
+            if (*fBody == '"') {
+                fBody++;
+                int bi = 0;
+                while (fBody < objEnd && *fBody != '"' && bi < 2046) {
+                    if (*fBody == '\\' && *(fBody+1) == 'n') { em.body[bi++] = '\r'; em.body[bi++] = '\n'; fBody += 2; }
+                    else if (*fBody == '\\' && *(fBody+1) == 'r') { fBody += 2; }
+                    else if (*fBody == '\\' && *(fBody+1) == '"') { em.body[bi++] = '"'; fBody += 2; }
+                    else { em.body[bi++] = *fBody++; }
+                }
+                em.body[bi] = '\0';
             }
-            em.body[bi] = '\0';
         }
 
         const char* fTag = my_strstr(objStart, "\"tags\":");
         if (fTag && fTag < objEnd) {
             fTag += 7;
-            while (*fTag == ' ') fTag++;
+            while (*fTag == ' ' || *fTag == '\t') fTag++;
             if (*fTag == '"') {
                 fTag++;
                 int ti = 0;
                 while (fTag < objEnd && *fTag != '"' && ti < 127) em.tags[ti++] = *fTag++;
                 em.tags[ti] = '\0';
+            } else if (*fTag == '[') {
+                fTag++;
+                int ti = 0;
+                while (fTag < objEnd && *fTag != ']' && ti < 126) {
+                    if (*fTag == '"') {
+                        fTag++;
+                        if (ti > 0 && em.tags[ti-1] != ',' && ti < 126) em.tags[ti++] = ',';
+                        while (fTag < objEnd && *fTag != '"' && ti < 126) em.tags[ti++] = *fTag++;
+                        if (*fTag == '"') fTag++;
+                    } else {
+                        fTag++;
+                    }
+                }
+                em.tags[ti] = '\0';
             }
         }
 
-        if (my_strstr(objStart, "\"unread\":true") || my_strstr(objStart, "\"unread\":1")) em.unread = 1;
-        if (my_strstr(objStart, "\"starred\":true") || my_strstr(objStart, "\"starred\":1")) em.starred = 1;
-        if (my_strstr(objStart, "\"encrypted\":true") || my_strstr(objStart, "\"encrypted\":1")) em.encrypted = 1;
+        const char* fUnread = my_strstr(objStart, "\"unread\":");
+        if (fUnread && fUnread < objEnd) {
+            fUnread += 9;
+            while (*fUnread == ' ' || *fUnread == '\t') fUnread++;
+            if (*fUnread == '1' || my_strnicmp(fUnread, "true", 4) == 0) em.unread = 1;
+        }
+        const char* fStar = my_strstr(objStart, "\"starred\":");
+        if (fStar && fStar < objEnd) {
+            fStar += 10;
+            while (*fStar == ' ' || *fStar == '\t') fStar++;
+            if (*fStar == '1' || my_strnicmp(fStar, "true", 4) == 0) em.starred = 1;
+        }
+        const char* fEnc = my_strstr(objStart, "\"encrypted\":");
+        if (fEnc && fEnc < objEnd) {
+            fEnc += 12;
+            while (*fEnc == ' ' || *fEnc == '\t') fEnc++;
+            if (*fEnc == '1' || my_strnicmp(fEnc, "true", 4) == 0) em.encrypted = 1;
+        }
 
         emails[count++] = em;
         p = objEnd + 1;
@@ -858,6 +921,10 @@ void ImportJson(HWND hwnd) {
         num_emails = count;
         nextId = 1;
         for (int i = 0; i < num_emails; i++) if (emails[i].id >= nextId) nextId = emails[i].id + 1;
+        num_tabs = 0;
+        currentTabIdx = -1;
+        SendMessage(hTab, TCM_DELETEALLITEMS, 0, 0);
+        RenderPane();
         RefreshEmailList();
         char msg[64];
         wsprintfA(msg, "Imported %d emails from JSON.", count);
@@ -1163,8 +1230,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             else if (LOWORD(wParam) == ID_BTN_DELETE) {
                 if(currentTabIdx != -1) {
-                    if(tabs[currentTabIdx].id == 1) { // read tab
-                        int eid = tabs[currentTabIdx].emailId;
+                    int eid = tabs[currentTabIdx].emailId;
+                    if(eid > 0) {
                         for(int i = 0; i < num_emails; i++) {
                             if(emails[i].id == eid) {
                                 if(emails[i].folder == 5) emails[i].folder = 99; // permanent delete
@@ -1175,6 +1242,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     CloseCurrentTab();
                     RefreshEmailList();
+                } else {
+                    int sel = SendMessage(hEmails, LB_GETCURSEL, 0, 0);
+                    if (sel != LB_ERR) {
+                        int eid = (int)SendMessage(hEmails, LB_GETITEMDATA, sel, 0);
+                        if (eid > 0) {
+                            for(int i = 0; i < num_emails; i++) {
+                                if(emails[i].id == eid) {
+                                    if(emails[i].folder == 5) emails[i].folder = 99;
+                                    else emails[i].folder = 5;
+                                    break;
+                                }
+                            }
+                            RefreshEmailList();
+                        }
+                    }
                 }
             }
             else if (LOWORD(wParam) == ID_BTN_EMPTY_TRASH) {
