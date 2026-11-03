@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -28,7 +28,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: ready
 current_targets:
-  kilo_creator: kweb://webring
+  kilo_creator: kweb://deep-core
   kilo_graphics: KMech
   kilo_soundscape: KStellar
   kilo_tester: KMech
@@ -36,7 +36,7 @@ current_targets:
   kilo_qa: KChrono
   kilo_expander: KMech
   kilo_review: KRadio
-virtual_web_target: kweb://webring
+virtual_web_target: kweb://deep-core
 virtual_web_rotation:
 - kweb://slashnet
 - kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-review
-  app: KMech
-  timestamp: '2026-11-02T18:34:11-08:00'
+  agent: kilo-creator
+  app: kweb://webring
+  timestamp: '2026-11-02T19:20:16-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -83,11 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues (Multi-Turn Mission Pipelines)
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
-- **Active Target**: `kweb://webring`
+- **Active Target**: `kweb://deep-core`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 | `kweb://deep-core` | `KiloOS/public/web/deep_core.html` | Connect Tier 3 Ghost Node terminal to KiloOS VFS (`/sys/alpha.sys` & `/home/crypto/`) so decoded fragments can be written directly to VFS for `KMatrix` verification. |
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 | `kweb://trapster` | `KiloOS/public/web/trapster.html`, `KiloOS/public/apps/knet.html` | Create *Trapster P2P Chiptune & Tracker Exchange v1.0b* (`trapster.html` <250 KB): searchable 1999 P2P node directory, simulated 56k/T1 download queue, live YM2612/SPC700 track previewer, VFS `.mod`/`.trk` save to `/home/music/`, and route `kweb://trapster` in `knet.html`. |
@@ -97,6 +96,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 | `kweb://rfc-archive` | `KiloOS/public/web/rfc_archive.html`, `KiloOS/public/apps/knet.html` | Create *IETF 1999 Living RFC Workbench* (`rfc_archive.html` <250 KB): interactive RFC 1149 (IP over Avian Carriers) packet loss simulator, RFC 2324 (`418 I'm a teapot`) HTCPCP console, ASCII TCP state stepper, and VFS `.txt` export. |
+| `kweb://webring` | `KiloOS/public/web/webring.html` | Integrate new canonical nodes (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`) into RingMaster topology map, badge generator, and random/next ring traversal. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Active Target**: `KMech`
@@ -333,6 +333,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T19:20:16-08:00 — kilo-creator: kweb://webring (Integrate canonical nodes into RingMaster topology map, badge studio, and ring traversal)**
+  - Status: PASS ✅ (0 errors, web 464.2 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.01%, input 20.6%, HEAD Δ 7.69%, 0 fail, 0 warn, 6.1s)).
+  - Integrated canonical nodes (slashnet, trapster, cabled, scallion, demoscene, rfc-archive) with interactive reticle targeting and topology constellation map.
+  - Added bidirectional canonical traversal (Prev/Next/Random Canonical) in quick teleport bar, warp deck, and Perl CGI query simulator.
+  - Fixed badge studio member preset lookup to index visible ring nodes cleanly and sync 88x31 micro button archetypes.
+  - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.
+
 - **2026-11-02T18:34:11-08:00 — kilo-review: KMech (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 640x503 sheet.png, kmech.html, KMech/main.c, and 10 sprite PNGs; un-quarantined KMech from Mature).
   - Graphics & UX Findings: All 10 PNGs in assets/sprites/kmech/ are PIL ImageDraw stick-figure/polygon programmer art; #toast-container (bottom 46px) covers Garage action buttons in sheet.png Panels 1-2; .quick-hint truncates; Combat HUD lacks Enemy ATK/DEF and status badges.
@@ -359,9 +366,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Shortcuts & UX: Converted help-modal shortcuts into 2-column grid, moved toast-container to bottom-right above status-bar, added SELECT to keydown isInput guard, wired Ctrl+Tab tab cycling and [D] focus-decrypt hotkey, and updated tutorial/network modals with diegetic 1999 KiloNet SMTP/POP3 Relay copy.
   - Win32 C Parity: In KMail/main.c hid hBtnOutbox in empty-state RenderPane(), fixed WM_SIZE button overlap and Help label collision, and replaced UTF-8 emojis in ANSI controls with ASCII.
   - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
-
-- **2026-11-02T16:39:38-08:00 — kilo-tester: KMail (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS ✅ (0 errors, web 124.3 KB, native 509.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Web UI & Firebase: Eliminated boot RTDB WebSocket autostart; mod->modGain->carrier in playSend; folder rules validated; custom tags synced to #tag-filter; preserved decryptedBody across tab switches with Re-lock; guarded empty draft auto-save; timestamp sorting & sort-select persistence.
-  - Native Win32 C Parity: Hex-safe XOR seed for emails[2]; ImportJson colon-whitespace & array-tags parsing + tab reset; body/tags search in RefreshEmailList; Outbox label fixed; literal prompt text removed; ID_BTN_DELETE allowed on list selection and draft tabs.
-  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.

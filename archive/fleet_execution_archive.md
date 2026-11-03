@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T16:39:38-08:00 — kilo-tester: KMail (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 124.3 KB, native 509.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Web UI & Firebase: Eliminated boot RTDB WebSocket autostart; mod->modGain->carrier in playSend; folder rules validated; custom tags synced to #tag-filter; preserved decryptedBody across tab switches with Re-lock; guarded empty draft auto-save; timestamp sorting & sort-select persistence.
+  - Native Win32 C Parity: Hex-safe XOR seed for emails[2]; ImportJson colon-whitespace & array-tags parsing + tab reset; body/tags search in RefreshEmailList; Outbox label fixed; literal prompt text removed; ID_BTN_DELETE allowed on list selection and draft tabs.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-11-02T16:16:46-08:00 — kilo-graphics: KCyber (Imagen 3 Visual Assets & Glint Sweep)**
   - Status: PASS ✅ (0 errors, web 166.4 KB, native 38.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Verified 9 Imagen 3 chroma-keyed cyberpunk sprites (Console, 5 ICE Guardian Constructs, Stasis lattice, Data Core, Vault) with crisp HiDPI canvas backing.

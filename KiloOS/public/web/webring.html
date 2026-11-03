@@ -1641,11 +1641,14 @@
       <button class="btn-teleport alt" onclick="triggerRingTourNext()">
         <span>⏩</span> Next Ring Node »
       </button>
-      <button class="btn-teleport alt" onclick="triggerCanonicalTourNext()" style="color:#34d399; border-color:rgba(52,211,153,0.6);" title="Sequential hop to next canonical 1999 web destination">
-        <span>★</span> Canonical Tour »
+      <button class="btn-teleport alt" onclick="triggerCanonicalTourPrev()" style="color:#34d399; border-color:rgba(52,211,153,0.6);" title="Sequential hop to previous canonical 1999 web destination">
+        <span>«</span> Prev Canonical
+      </button>
+      <button class="btn-teleport alt" onclick="triggerCanonicalTourNext(1)" style="color:#34d399; border-color:rgba(52,211,153,0.6);" title="Sequential hop to next canonical 1999 web destination">
+        <span>★</span> Next Canonical »
       </button>
       <button class="btn-teleport alt" onclick="triggerCanonicalRandomWarp()" style="color:var(--amber-bright); border-color:rgba(251,191,36,0.6);" title="Random warp between the 6 canonical 1999 web destinations">
-        <span>★</span> Canonical Warp
+        <span>🎲</span> Random Canonical
       </button>
     </div>
   </div>
@@ -1762,11 +1765,14 @@
           <button class="btn-teleport" id="btnLaunchWarp" onclick="triggerStagedWarp()">
             <span>🚀</span> Engage Hyperspace Warp
           </button>
+          <button class="btn-teleport" id="btnCanonicalTourPrev" onclick="triggerCanonicalTourPrev()" style="background:linear-gradient(180deg, #047857 0%, #065f46 100%); border-color:#34d399; color:#fff;" title="Sequential ring hop to previous canonical destination">
+            <span>⏮</span> « Canonical Prev
+          </button>
+          <button class="btn-teleport" id="btnCanonicalTourNext" onclick="triggerCanonicalTourNext(1)" style="background:linear-gradient(180deg, #059669 0%, #047857 100%); border-color:#34d399; color:#fff;" title="Sequential ring hop through the 6 canonical destinations">
+            <span>⏩</span> Canonical Next »
+          </button>
           <button class="btn-teleport" id="btnCanonicalWarp" onclick="triggerCanonicalWarp()" style="background:linear-gradient(180deg, #d97706 0%, #b45309 100%); border-color:#fbbf24; color:#fff;">
             <span>★</span> Random Canonical Leap (1 of 6)
-          </button>
-          <button class="btn-teleport" id="btnCanonicalTourNext" onclick="triggerCanonicalTourNext()" style="background:linear-gradient(180deg, #059669 0%, #047857 100%); border-color:#34d399; color:#fff;" title="Sequential ring hop through the 6 canonical destinations">
-            <span>⏩</span> Canonical Tour »
           </button>
           <button class="btn-teleport alt" onclick="triggerInstantWarp()">
             <span>⚡</span> Instant Leap (No Delay)
@@ -3416,18 +3422,28 @@ Monitoring transit sessions...
           <select id="cgiQueryPreset" style="flex:1; padding:6px; background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-med); border-radius:3px; font-family:var(--font-mono); font-size:12px;">
             <option value="action=next&id=knet-portal">GET /cgi-bin/ringmaster.pl?action=next&amp;id=knet-portal</option>
             <option value="action=next&id=slashnet">GET /cgi-bin/ringmaster.pl?action=next&amp;id=slashnet (News for Nerds)</option>
-            <option value="action=next&id=trapster">GET /cgi-bin/ringmaster.pl?action=next&amp;id=trapster (P2P Swarm)</option>
-            <option value="action=next&id=cabled">GET /cgi-bin/ringmaster.pl?action=next&amp;id=cabled (Cyber Mag)</option>
-            <option value="action=next&id=scallion">GET /cgi-bin/ringmaster.pl?action=next&amp;id=scallion (Satire Wire)</option>
-            <option value="action=next&id=demoscene">GET /cgi-bin/ringmaster.pl?action=next&amp;id=demoscene (Assembly '99)</option>
-            <option value="action=next&id=rfc-archive">GET /cgi-bin/ringmaster.pl?action=next&amp;id=rfc-archive (IETF Bench)</option>
-            <option value="action=next&id=slashnet&scope=canonical">GET /cgi-bin/ringmaster.pl?action=next&amp;id=slashnet&amp;scope=canonical (Next Canonical Site)</option>
-            <option value="action=random&scope=canonical">GET /cgi-bin/ringmaster.pl?action=random&amp;scope=canonical (Random Canonical Hop)</option>
             <option value="action=prev&id=slashnet">GET /cgi-bin/ringmaster.pl?action=prev&amp;id=slashnet</option>
+            <option value="action=next&id=trapster">GET /cgi-bin/ringmaster.pl?action=next&amp;id=trapster (P2P Swarm)</option>
+            <option value="action=prev&id=trapster">GET /cgi-bin/ringmaster.pl?action=prev&amp;id=trapster</option>
+            <option value="action=next&id=cabled">GET /cgi-bin/ringmaster.pl?action=next&amp;id=cabled (Cyber Mag)</option>
+            <option value="action=prev&id=cabled">GET /cgi-bin/ringmaster.pl?action=prev&amp;id=cabled</option>
+            <option value="action=next&id=scallion">GET /cgi-bin/ringmaster.pl?action=next&amp;id=scallion (Satire Wire)</option>
+            <option value="action=prev&id=scallion">GET /cgi-bin/ringmaster.pl?action=prev&amp;id=scallion</option>
+            <option value="action=next&id=demoscene">GET /cgi-bin/ringmaster.pl?action=next&amp;id=demoscene (Assembly '99)</option>
+            <option value="action=prev&id=demoscene">GET /cgi-bin/ringmaster.pl?action=prev&amp;id=demoscene</option>
+            <option value="action=next&id=rfc-archive">GET /cgi-bin/ringmaster.pl?action=next&amp;id=rfc-archive (IETF Bench)</option>
+            <option value="action=prev&id=rfc-archive">GET /cgi-bin/ringmaster.pl?action=prev&amp;id=rfc-archive</option>
+            <option value="action=next&id=slashnet&scope=canonical">GET /cgi-bin/ringmaster.pl?action=next&amp;id=slashnet&amp;scope=canonical (Next Canonical Site)</option>
+            <option value="action=prev&id=slashnet&scope=canonical">GET /cgi-bin/ringmaster.pl?action=prev&amp;id=slashnet&amp;scope=canonical (Prev Canonical Site)</option>
+            <option value="action=random&scope=canonical">GET /cgi-bin/ringmaster.pl?action=random&amp;scope=canonical (Random Canonical Hop)</option>
             <option value="action=random">GET /cgi-bin/ringmaster.pl?action=random</option>
+            <option value="action=stats&id=slashnet">GET /cgi-bin/ringmaster.pl?action=stats&amp;id=slashnet (SlashNet Telemetry)</option>
+            <option value="action=stats&id=trapster">GET /cgi-bin/ringmaster.pl?action=stats&amp;id=trapster (Trapster Telemetry)</option>
+            <option value="action=stats&id=cabled">GET /cgi-bin/ringmaster.pl?action=stats&amp;id=cabled (Cabled Telemetry)</option>
+            <option value="action=stats&id=scallion">GET /cgi-bin/ringmaster.pl?action=stats&amp;id=scallion (The Scallion Telemetry)</option>
+            <option value="action=stats&id=demoscene">GET /cgi-bin/ringmaster.pl?action=stats&amp;id=demoscene (Assembly '99 Telemetry)</option>
+            <option value="action=stats&id=rfc-archive">GET /cgi-bin/ringmaster.pl?action=stats&amp;id=rfc-archive (IETF Bench Telemetry)</option>
             <option value="action=stats&id=cybercafe">GET /cgi-bin/ringmaster.pl?action=stats&amp;id=cybercafe</option>
-            <option value="action=stats&id=slashnet">GET /cgi-bin/ringmaster.pl?action=stats&amp;id=slashnet</option>
-            <option value="action=stats&id=demoscene">GET /cgi-bin/ringmaster.pl?action=stats&amp;id=demoscene</option>
             <option value="action=list">GET /cgi-bin/ringmaster.pl?action=list</option>
           </select>
           <button class="btn btn-primary" onclick="executeCgiQuery()">🚀 Send CGI Request</button>
@@ -5568,7 +5584,8 @@ const CANONICAL_PRESET_MAP = {
 function applyMemberNodePreset(nodeId) {
   if (!nodeId) return;
   const matchIdx = resolveNodeMatch(nodeId);
-  const node = matchIdx !== -1 ? ringNodes[matchIdx] : ringNodes.find(n => n.id === nodeId);
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  const node = matchIdx !== -1 ? visibleNodes[matchIdx] : ringNodes.find(n => n.id === nodeId);
   if (!node) return;
   const titleEl = document.getElementById('badgeSiteTitle');
   const idEl = document.getElementById('badgeRingId');
@@ -6566,7 +6583,7 @@ function toggleTopologyDirection() {
   }
 }
 
-function focusTopologyNode(nodeId) {
+function focusTopologyNode(nodeId, openModal = false) {
   let node = ringNodes.find(n => n.id === nodeId);
   if (!node) {
     const matchIdx = resolveNodeMatch(nodeId);
@@ -6585,8 +6602,14 @@ function focusTopologyNode(nodeId) {
   }
   const freq = 520 + (fullIdx % 6) * 110;
   playFmTone(freq, 1.2, 0.4, 0.08, 0.08, false);
-  openNodeModal(node.id);
+  if (openModal) {
+    openNodeModal(node.id);
+  }
   showNoticeToast(`Focused Canonical Node: ${node.name} (${node.id})`);
+}
+
+function triggerCanonicalTourPrev() {
+  triggerCanonicalTourNext(-1);
 }
 
 let canonicalTraceTimer = null;
@@ -6719,7 +6742,7 @@ function initTopologyMap() {
   const ctx = canvas.getContext('2d');
 
   canvas.addEventListener('mousemove', (e) => {
-    if (loopTraceActive) return; // Keep hover lock during automated trace
+    if (loopTraceActive || canonicalTraceTimer) return; // Keep hover lock during automated trace
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
@@ -7057,6 +7080,19 @@ function drawTopologyMap(canvas, ctx) {
       ctx.beginPath();
       ctx.arc(nx, ny, nodeR + 4, 0, Math.PI * 2);
       ctx.stroke();
+    }
+
+    // Interactive targeting reticle for focused or hovered nodes
+    if (isHovered) {
+      ctx.save();
+      ctx.strokeStyle = isCanonical ? "rgba(251, 191, 36, 0.9)" : "rgba(56, 189, 248, 0.9)";
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      const reticleR = nodeR + 7;
+      ctx.beginPath();
+      ctx.arc(nx, ny, reticleR, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
     }
 
     ctx.fillStyle = isHovered ? "#ffffff" : nodeColor;
@@ -10925,19 +10961,36 @@ function updateWidgetPreview() {
 
 function testWidgetNavigation(action) {
   if (typeof playSfx === 'function') playSfx('click');
+  const siteIdEl = document.getElementById('widgetSiteIdInput');
+  const siteId = siteIdEl ? siteIdEl.value.trim() : 'knet-portal';
   if (action === 'random') {
     triggerStagedWarp();
     switchTab('tab-teleport');
   } else if (action === 'next' || action === 'skip') {
-    surfStep(1);
+    const matchIdx = resolveNodeMatch(siteId);
+    if (matchIdx !== -1) {
+      const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+      const step = action === 'skip' ? 2 : 1;
+      const nextNode = visibleNodes[(matchIdx + step) % visibleNodes.length];
+      surfToNode(nextNode.id);
+    } else {
+      surfStep(action === 'skip' ? 2 : 1);
+    }
     switchTab('tab-surf');
   } else if (action === 'prev') {
-    surfStep(-1);
+    const matchIdx = resolveNodeMatch(siteId);
+    if (matchIdx !== -1) {
+      const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+      const prevNode = visibleNodes[(matchIdx - 1 + visibleNodes.length) % visibleNodes.length];
+      surfToNode(prevNode.id);
+    } else {
+      surfStep(-1);
+    }
     switchTab('tab-surf');
   } else {
     switchTab('tab-directory');
   }
-  showNoticeToast('Widget test: Dispatched [' + action.toUpperCase() + '] action!');
+  showNoticeToast('Widget test: Dispatched [' + action.toUpperCase() + '] action for site #' + siteId + '!');
 }
 
 function copyWidgetSnippet() {
