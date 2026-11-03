@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KStellar
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KMail
+  kilo_usability: KHex
   kilo_qa: KTerm
   kilo_expander: KMail
   kilo_review: KMech
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KMail
-  timestamp: '2026-11-02T16:39:38-08:00'
+  timestamp: '2026-11-02T17:19:22-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -160,11 +160,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMail` | Eliminate boot Firebase RTDB WebSocket autostart in kmail.html (arg-lore.md s3) by defaulting netEnabled to false (safeGet('kmail_net_enabled') === '1'), lazy-initializing initializeApp/getDatabase only when user clicks Enable/Connect in #network-modal [F4], and calling goOffline/off on disable or beforeunload; connect mod -> modGain -> carrier.frequency in AudioEngine.playSend(); validate/lowercase action === 'folder' targets in applyRulesToEmail() against inbox/sent/drafts/outbox/trash (mapping starred to em.starred=true), hide #new-rule-param for star/read, restrict runRulesOnInbox() to inbox + renderPane(), and run applyRulesToEmail() + reset tabs + accept array/CSV tags and 0..5 folders in importJson(); dynamically sync custom tags into #tag-filter; preserve em._decryptedBody across renderPane() tab switches (with Re-lock button), guard visibilitychange from auto-saving empty Untitled Drafts, sort newest/oldest by timestamp, and persist #sort-select in quickSave/quickLoad; in KMail/main.c fix emails[2] gibberish XOR seed using hex-safe XOR (HEX | **[ARGON REVIEW]:** ...), fix ImportJson() colon-whitespace/array-tags parsing + reset tabs, search body/tags in RefreshEmailList(), fix Outbox label in ExportSingleMarkdown(), remove literal (Write body here...) body text, and allow ID_BTN_DELETE on list selection and saved Draft tabs. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KMail`
+- **Active Target**: `KHex`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMail` | `KiloOS/public/apps/kmail.html`, `KMail/main.c` | **[ARGON REVIEW]:** Fix 960x603 layout clipping in kmail.html (sheet.png Panels 2-3): add white-space nowrap across 26px .status-bar/.status-left/.status-mid/.status-right with concise shortcut pills so items stop wrapping onto 2 clipped lines, compact .sidebar/.folder/.search-container (1-row .quick-filters) and arrange .sidebar-bottom into a 2-column CSS grid so all 6 folders and all 8-9 utility buttons fit 100% visible above the fold with 0px scroll, and change .pane-header to flex-direction column (full-width subject/sender/tags above a compact nowrap .pane-actions bar) so subjects stop wrapping into a 105px column; convert #help-modal .shortcuts-table into a 2-column grid to fit 603px without scrolling, move #toast-container to bottom-right above .status-bar (skipping redundant 300ms boot toast), add SELECT to keydown isInput guard, wire [Ctrl+Tab] tab cycling and [D] focus-decrypt hotkey, replace anachronistic Firebase RTDB copy in #tutorial-modal/#network-modal with diegetic 1999 KiloNet SMTP/POP3 Relay, and in KMail/main.c hide hBtnOutbox in empty-state RenderPane(), fix WM_SIZE button overlap, and replace UTF-8 emojis in ANSI controls with ASCII. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -189,6 +188,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | **[ARGON REVIEW]:** Eliminate 293px vertical scroll overflow at 1040x803 in kaudio.html (sheet.png Panels 2-3 clipping piano labels and hiding .sequencer-panel off-screen) by consolidating the 7 export/import header buttons into a compact #exportFormatSelect (WAV, MIDI, AU, 8SVX) + #btnExportMaster bar, organizing the Right Panel DSP FX Rack into compact [DELAY/SPC] [DRIVE/DAC] [CHORUS] sub-tabs so .panels-grid stays compact even with #fmControls open, and tightening .key (82px) and .step-btn (20px) so 100% of the workstation fits above the fold with 0px scroll; move #toastContainer to bottom-right (max 2 toasts, skipping redundant 400ms boot toast when #helpModal is open); raise 8px-9px .key-note and #visCanvas fonts to >= 10px (0 tiny-text nodes); add mouse-drag glissando on .key, trap Tab focus and block synth hotkeys while #helpModal or #jamModal is open, rename anachronistic Firebase RTDB labels to KiloNet Studio Relay, and fix KAudio/main.c WM_PAINT header title colliding with Save [F5] at x=650 plus replace UTF-8 emojis in TextOutA/SetStatus with clean ASCII. |
 | `KChatServer` | `KiloOS/public/apps/kchatserver.html`, `KChatServer/main.c` | **[ARGON REVIEW]:** Fix invisible white-on-white kbd tags inside dark #console-logs (sheet.png Panels 2-3) with explicit dark-terminal keycap contrast, compact #help-modal .modal-body with a 2-column shortcuts grid so 100% fits 520x403 without mid-line clipping (Panel 1), change .log-entry from word-break break-all to overflow-wrap break-word, move #hud-toast to top-right of .view-content so it stops covering bottom console lines (Panel 3), add white-space nowrap to .broadcast-toolbar label with a shorter #input-broadcast placeholder, raise 9px fonts to >=10px and fit #client-table cleanly in 520px (WS/TCP badges + overflow-x auto), guard hotkeys when #help-modal is open or SELECT is focused while adding [1]/[2] tab hotkeys, and add DPI-scaled coordinates plus WS_THICKFRAME/WM_SIZE resizing in KChatServer/main.c. |
 | `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | **[ARGON REVIEW]:** Fix #helpOverlay first-boot top scroll clipping at 1000x663 (sheet.png Panel 1) by converting .help-box shortcuts into a compact 2-column grid (max-width 720px, padding 14px 18px) so the h2 title, close button, all 26 shortcuts, and Got It footer fit 100% visible with 0px scroll, and call closeBtn.focus() with preventScroll and helpBox.scrollTop = 0; add white-space nowrap to buttons, raise 9px fonts in .playlist-subbar, #btnClearCues, .track-tag, and .party-chat-time to >= 10px, and compact .playlist-subbar labels (M3U, CUE, JSON, Import, A-B [L]) so 20px buttons stop wrapping onto 2 squished lines (Panel 2); fix toolbar labels to match actual hotkeys (#btnMode Mode [Shift+M], #btnMute Vol [M], #btnSpeed Spd 1.0x); render a crisp HiDPI 1999 Studio Deck and full-stage active 5-mode visualizer inside #videoContainer whenever audio-only tracks play (mediaPlayer.videoWidth === 0) with video color filters and .crt-overlay applied so Demo Album playback and CRT/color presets are visible instead of a 50%-window black void; block global hotkeys while #helpOverlay is open or when SELECT/INPUT/TEXTAREA is focused; and rename anachronistic Firebase UI copy to KiloNet Watch Party 99. |
+| `KMail` | `KiloOS/public/apps/kmail.html`, `KMail/main.c` | **[ARGON REVIEW]:** Fix 960x603 layout clipping in kmail.html (sheet.png Panels 2-3): add white-space nowrap across 26px .status-bar/.status-left/.status-mid/.status-right with concise shortcut pills so items stop wrapping onto 2 clipped lines, compact .sidebar/.folder/.search-container (1-row .quick-filters) and arrange .sidebar-bottom into a 2-column CSS grid so all 6 folders and all 8-9 utility buttons fit 100% visible above the fold with 0px scroll, and change .pane-header to flex-direction column (full-width subject/sender/tags above a compact nowrap .pane-actions bar) so subjects stop wrapping into a 105px column; convert #help-modal .shortcuts-table into a 2-column grid to fit 603px without scrolling, move #toast-container to bottom-right above .status-bar (skipping redundant 300ms boot toast), add SELECT to keydown isInput guard, wire [Ctrl+Tab] tab cycling and [D] focus-decrypt hotkey, replace anachronistic Firebase RTDB copy in #tutorial-modal/#network-modal with diegetic 1999 KiloNet SMTP/POP3 Relay, and in KMail/main.c hide hBtnOutbox in empty-state RenderPane(), fix WM_SIZE button overlap, and replace UTF-8 emojis in ANSI controls with ASCII. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KTerm`
@@ -330,6 +330,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T17:19:22-08:00 — kilo-usability: KMail (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 126.9 KB, native 509.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.82%, HEAD Δ 4.87%, 0 fail, 0 warn, 7.1s)).
+  - Layout & Responsive: Eliminated 960x603 layout clipping in kmail.html by adding white-space nowrap across 26px status-bar with concise shortcut pills, compacting sidebar/folders/search (1-row quick-filters), arranging sidebar-bottom into a 2-column CSS grid (0px vertical scroll), and setting pane-header to flex-direction column so email subjects no longer wrap into a 105px column.
+  - Shortcuts & UX: Converted help-modal shortcuts into 2-column grid, moved toast-container to bottom-right above status-bar, added SELECT to keydown isInput guard, wired Ctrl+Tab tab cycling and [D] focus-decrypt hotkey, and updated tutorial/network modals with diegetic 1999 KiloNet SMTP/POP3 Relay copy.
+  - Win32 C Parity: In KMail/main.c hid hBtnOutbox in empty-state RenderPane(), fixed WM_SIZE button overlap and Help label collision, and replaced UTF-8 emojis in ANSI controls with ASCII.
+  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
+
 - **2026-11-02T16:39:38-08:00 — kilo-tester: KMail (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 124.3 KB, native 509.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Web UI & Firebase: Eliminated boot RTDB WebSocket autostart; mod->modGain->carrier in playSend; folder rules validated; custom tags synced to #tag-filter; preserved decryptedBody across tab switches with Re-lock; guarded empty draft auto-save; timestamp sorting & sort-select persistence.
@@ -353,8 +360,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: 26px .status-bar wraps/clips all items onto 2 lines, .sidebar-bottom clips Network/Save/Load/Export/Import/Trash off-screen at 603px height, .pane-header crushes subjects into a 105px column, #help-modal overflows, and SELECT focus triggers list hotkeys.
   - Feature/VFS Findings: Boot Firebase RTDB WebSocket autostart triggers visual_probe WARN, playSend() bypasses modGain, folder rules allow invalid/capitalized folder names, custom tags miss #tag-filter, KMail/main.c seed XOR decrypts to gibberish and breaks JSON round-trip with web, and Phase VI KiloOS VFS/IPC mesh is missing.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KMail`, `kilo-usability`->`KMail`, `kilo-expander`->`KMail`] (un-quarantined `KMail` from Mature); advanced `kilo-review` to `KMech`; next agent `kilo-creator`.
-
-- **2026-11-02T14:41:12-08:00 — kilo-expander: KMedia (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KMedia across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KCalc`; rotated active agent to `kilo-review`.

@@ -450,6 +450,7 @@ void RenderPane() {
         ShowWindow(hBtnExportMd, SW_HIDE);
         ShowWindow(hBtnDecrypt, SW_HIDE);
         ShowWindow(hBtnSaveDraft, SW_HIDE);
+        ShowWindow(hBtnOutbox, SW_HIDE);
         SetWindowLong(hBody, GWL_STYLE, GetWindowLong(hBody, GWL_STYLE) | ES_READONLY);
         return;
     }
@@ -466,20 +467,20 @@ void RenderPane() {
             em->folder == 2 ? "To" : "From", 
             em->sender, 
             em->tags[0] ? em->tags : "(none)",
-            em->starred ? "★ Starred" : "Normal");
+            em->starred ? "[*] Starred" : "Normal");
         SetWindowTextA(hTitle, tStr);
         SetWindowLong(hBody, GWL_STYLE, GetWindowLong(hBody, GWL_STYLE) | ES_READONLY);
         
         ShowWindow(hBtnReply, SW_SHOW);
         ShowWindow(hBtnStar, SW_SHOW);
-        SetWindowTextA(hBtnStar, em->starred ? "Unstar [S]" : "★ Star [S]");
+        SetWindowTextA(hBtnStar, em->starred ? "Unstar [S]" : "* Star [S]");
         ShowWindow(hBtnTag, SW_SHOW);
         ShowWindow(hBtnExportEml, SW_SHOW);
         ShowWindow(hBtnExportMd, SW_SHOW);
         ShowWindow(hBtnSaveDraft, SW_HIDE);
 
         if(em->encrypted) {
-            SetWindowTextA(hBody, "🔒 This message is encrypted. Click Decrypt [D] to view.");
+            SetWindowTextA(hBody, "[ENCRYPTED] This message is encrypted. Click Decrypt [D] to view.");
             ShowWindow(hBtnDecrypt, SW_SHOW);
             SetWindowTextA(hBtnDecrypt, "Decrypt [D]");
             EnableWindow(hBtnDecrypt, TRUE);
@@ -522,7 +523,7 @@ void RenderPane() {
         MoveWindow(hBtnOutbox, 470, 122, 115, 26, TRUE);
 
         ShowWindow(hBtnDecrypt, SW_SHOW); // Reuse as 'Send'
-        SetWindowTextA(hBtnDecrypt, "Send [Ctrl+↵]");
+        SetWindowTextA(hBtnDecrypt, "Send [Ctrl+Enter]");
         MoveWindow(hBtnDecrypt, 590, 122, 115, 26, TRUE);
         EnableWindow(hBtnDecrypt, TRUE);
     }
@@ -1116,7 +1117,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hTitle, WM_SETFONT, (WPARAM)hBold, TRUE);
             
             hBtnReply = CreateWindowEx(0, "BUTTON", "Reply [R]", WS_CHILD | WS_TABSTOP, 340, 122, 75, 26, hwnd, (HMENU)ID_BTN_REPLY, NULL, NULL);
-            hBtnStar = CreateWindowEx(0, "BUTTON", "★ Star [S]", WS_CHILD | WS_TABSTOP, 420, 122, 80, 26, hwnd, (HMENU)ID_BTN_STAR, NULL, NULL);
+            hBtnStar = CreateWindowEx(0, "BUTTON", "* Star [S]", WS_CHILD | WS_TABSTOP, 420, 122, 80, 26, hwnd, (HMENU)ID_BTN_STAR, NULL, NULL);
             hBtnTag = CreateWindowEx(0, "BUTTON", "Tag [T]", WS_CHILD | WS_TABSTOP, 505, 122, 65, 26, hwnd, (HMENU)ID_BTN_TAG, NULL, NULL);
             hBtnExportEml = CreateWindowEx(0, "BUTTON", "Export .EML [E]", WS_CHILD | WS_TABSTOP, 575, 122, 80, 26, hwnd, (HMENU)ID_BTN_EXPORT_EML, NULL, NULL);
             hBtnExportMd = CreateWindowEx(0, "BUTTON", "Export .MD [M]", WS_CHILD | WS_TABSTOP, 660, 122, 75, 26, hwnd, (HMENU)ID_BTN_EXPORT_MD, NULL, NULL);
@@ -1366,19 +1367,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hEmails, 130, 110, 200, nh - 120, TRUE);
             
             MoveWindow(hBtnDelete, nw - 110, 10, 95, 30, TRUE);
+            if (nw < 760) {
+                ShowWindow(hHelpLabel, SW_HIDE);
+            } else {
+                ShowWindow(hHelpLabel, SW_SHOW);
+                MoveWindow(hHelpLabel, 528, 16, (nw - 110) - 535, 20, TRUE);
+            }
             
             MoveWindow(hTab, 340, 50, nw - 350, 25, TRUE);
             MoveWindow(hTitle, 340, 85, nw - 350, 35, TRUE);
-            
-            MoveWindow(hBtnReply, 340, 122, 75, 26, TRUE);
-            MoveWindow(hBtnStar, 420, 122, 80, 26, TRUE);
-            MoveWindow(hBtnTag, 505, 122, 65, 26, TRUE);
-            MoveWindow(hBtnExportEml, 575, 122, 80, 26, TRUE);
-            MoveWindow(hBtnExportMd, 660, 122, 75, 26, TRUE);
-            MoveWindow(hBtnDecrypt, 740, 122, 90, 26, TRUE);
-            MoveWindow(hBtnSaveDraft, 340, 122, 135, 26, TRUE);
-            
             MoveWindow(hBody, 340, 155, nw - 350, nh - 165, TRUE);
+            RenderPane();
             break;
         }
         case WM_CTLCOLORSTATIC: {

@@ -59,20 +59,20 @@
     backdrop-filter: blur(12px);
     display: flex;
     flex-direction: column;
-    padding: 16px 0 12px 0;
+    padding: 8px 0;
     user-select: none;
-    overflow-y: auto;
+    overflow-y: hidden;
   }
   .compose-btn {
-    margin: 0 12px 14px 12px;
-    padding: 10px 14px;
+    margin: 0 8px 6px 8px;
+    padding: 6px 10px;
     background: var(--accent);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -85,14 +85,14 @@
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
   }
   .folder {
-    padding: 9px 16px;
+    padding: 5px 12px;
     cursor: pointer;
     color: var(--text-sec);
     display: flex;
     align-items: center;
     justify-content: space-between;
     transition: all 0.15s ease;
-    font-size: 13px;
+    font-size: 12px;
     border-left: 3px solid transparent;
   }
   .folder:hover {
@@ -111,10 +111,10 @@
     gap: 8px;
   }
   .folder-badge {
-    font-size: 11px;
+    font-size: 10px;
     background: rgba(255, 255, 255, 0.12);
-    padding: 2px 7px;
-    border-radius: 10px;
+    padding: 1px 6px;
+    border-radius: 8px;
     color: var(--text-sec);
     font-weight: 500;
   }
@@ -124,19 +124,19 @@
   }
 
   .search-container {
-    padding: 12px 14px;
+    padding: 6px 8px;
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
-    margin: 10px 0;
+    margin: 4px 0;
   }
   .search-container input {
     width: 100%;
     background: rgba(0,0,0,0.25);
     border: 1px solid var(--border);
     color: white;
-    padding: 8px 10px;
-    border-radius: 6px;
-    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 11px;
     outline: none;
     transition: border-color 0.2s;
   }
@@ -148,34 +148,46 @@
     background: #1e293b;
     border: 1px solid var(--border);
     color: var(--text-primary);
-    padding: 6px 8px;
-    border-radius: 6px;
-    font-size: 12px;
-    margin-top: 8px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin-top: 4px;
     outline: none;
     cursor: pointer;
   }
 
   .sidebar-bottom {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 0 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    padding: 4px 8px 6px 8px;
     margin-top: auto;
   }
   .side-action-btn {
-    padding: 7px 10px;
+    padding: 4px 6px;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 4px;
     background: rgba(255, 255, 255, 0.05);
     color: var(--text-sec);
-    font-size: 12px;
+    font-size: 11px;
     cursor: pointer;
     font-weight: 500;
     display: flex;
     align-items: center;
     justify-content: space-between;
     transition: all 0.15s ease;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .side-action-btn span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .side-action-btn kbd {
+    font-size: 9px;
+    padding: 1px 3px;
+    margin-left: 2px;
   }
   .side-action-btn:hover {
     background: rgba(255, 255, 255, 0.1);
@@ -339,44 +351,58 @@
     background: rgba(239, 68, 68, 0.15);
   }
   .pane-header {
-    padding: 16px 20px;
+    padding: 10px 16px 8px 16px;
     border-bottom: 1px solid var(--border);
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
     background: rgba(30, 41, 59, 0.3);
   }
+  .pane-header-info {
+    width: 100%;
+  }
   .pane-subject {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
-    margin: 0 0 6px 0;
+    margin: 0 0 3px 0;
     color: #ffffff;
+    word-break: break-word;
+    line-height: 1.3;
   }
   .pane-sender {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-sec);
     margin: 0;
   }
   .pane-actions {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-wrap: nowrap;
+    gap: 4px;
     align-items: center;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    white-space: nowrap;
   }
   .pane-actions button {
     background: rgba(255, 255, 255, 0.08);
     color: white;
     border: 1px solid var(--border);
-    padding: 6px 10px;
-    border-radius: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
     cursor: pointer;
-    font-size: 12px;
     font-weight: 500;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
     transition: all 0.15s ease;
+  }
+  .pane-actions button kbd {
+    font-size: 9px;
+    padding: 1px 3px;
   }
   .pane-actions button:hover {
     background: rgba(255, 255, 255, 0.16);
@@ -463,12 +489,12 @@
   /* Toast Notification System (Vision Audit & Toast Occlusion Remediation) */
   #toast-container {
     position: fixed;
-    top: 14px;
-    right: 20px;
+    bottom: 30px;
+    right: 16px;
     z-index: 9999;
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: column-reverse;
+    gap: 6px;
     pointer-events: none;
   }
   .toast {
@@ -616,6 +642,44 @@
     background: var(--danger-hover);
   }
 
+  #help-modal .modal-window {
+    width: 660px;
+    max-width: 95vw;
+  }
+  #help-modal .modal-content {
+    padding: 10px 16px;
+  }
+  #help-modal .shortcuts-table {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 14px;
+    width: 100%;
+    border-collapse: separate;
+    margin-top: 6px;
+  }
+  #help-modal .shortcuts-table tbody {
+    display: contents;
+  }
+  #help-modal .shortcuts-table tr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  #help-modal .shortcuts-table td {
+    padding: 1px 2px;
+    font-size: 11px;
+    border: none;
+  }
+  #help-modal .shortcuts-table td:first-child {
+    width: auto;
+    white-space: nowrap;
+  }
+  #help-modal .shortcuts-table td:last-child {
+    text-align: right;
+    color: #cbd5e1;
+  }
   .shortcuts-table {
     width: 100%;
     border-collapse: collapse;
@@ -625,11 +689,11 @@
     border-bottom: 1px solid rgba(255,255,255,0.06);
   }
   .shortcuts-table td {
-    padding: 8px 6px;
-    font-size: 13px;
+    padding: 4px 6px;
+    font-size: 12px;
   }
   .shortcuts-table td:first-child {
-    width: 150px;
+    width: 120px;
   }
 
   .tag-preset-chip {
@@ -660,11 +724,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 12px;
+    padding: 0 10px;
     font-size: 11px;
     color: var(--text-sec);
     user-select: none;
     z-index: 100;
+    white-space: nowrap;
+    overflow: hidden;
   }
   .status-left {
     font-weight: 500;
@@ -672,21 +738,34 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .status-mid {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     opacity: 0.9;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .status-mid span {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
   }
   .status-mid kbd {
     font-size: 10px;
     padding: 1px 4px;
+    white-space: nowrap;
   }
   .status-right {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 10.5px;
     color: #64748b;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   /* Accessible focus rings */
@@ -745,20 +824,24 @@
 
   /* Quick Filters & Sorting */
   .quick-filters {
-    display: flex;
-    gap: 4px;
-    margin-top: 8px;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3px;
+    margin-top: 4px;
   }
   .qfilter-btn {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border);
     color: var(--text-sec);
-    padding: 3px 7px;
-    border-radius: 12px;
-    font-size: 10.5px;
+    padding: 3px 2px;
+    border-radius: 4px;
+    font-size: 10px;
     cursor: pointer;
     transition: all 0.15s ease;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .qfilter-btn:hover {
     background: rgba(255, 255, 255, 0.12);
@@ -964,39 +1047,39 @@
     
     <div class="sidebar-bottom">
       <button class="side-action-btn" onclick="showHelpModal()" aria-label="Help and Keyboard Shortcuts" title="Help and Keyboard Shortcuts (F1 or H)">
-        <span>❓ Help & Keys</span>
+        <span>❓ Help</span>
         <kbd>F1</kbd>
       </button>
       <button class="side-action-btn" onclick="openRulesModal()" aria-label="Automated Mail Rules & Filters" title="Automated Mail Rules (F3)">
-        <span>⚙️ Filter Rules</span>
+        <span>⚙️ Rules</span>
         <kbd>F3</kbd>
       </button>
       <button class="side-action-btn" onclick="showModal('network-modal')" aria-label="KiloNet Mail Settings" title="KiloNet Global Mail Delivery (F4)">
-        <span id="side-net-label">🌐 Network Mail</span>
+        <span id="side-net-label">🌐 Relay</span>
         <kbd>F4</kbd>
       </button>
       <button class="side-action-btn" onclick="quickSave()" aria-label="Quicksave Mailbox" title="Quicksave Mailbox (F5)">
-        <span>💾 Quicksave</span>
+        <span>💾 Save</span>
         <kbd>F5</kbd>
       </button>
       <button class="side-action-btn" onclick="quickLoad()" aria-label="Quickload Mailbox" title="Quickload Mailbox (F9)">
-        <span>📂 Quickload</span>
+        <span>📂 Load</span>
         <kbd>F9</kbd>
       </button>
       <button class="side-action-btn" id="side-outbox-btn" style="display:none; color:#93c5fd;" onclick="flushOutbox()" aria-label="Dispatch All Outbox Messages" title="Dispatch all queued outbox emails">
-        <span>🚀 Flush Outbox</span>
+        <span>🚀 Flush</span>
       </button>
       <button class="side-action-btn" onclick="showModal('export-modal')" aria-label="Export Mailbox" title="Export MBOX, CSV, or JSON (O)">
-        <span>📤 Export Mail</span>
+        <span>📤 Export</span>
         <kbd>O</kbd>
       </button>
       <button class="side-action-btn" onclick="document.getElementById('import-file').click()" aria-label="Import JSON Mailbox" title="Import JSON (I)">
-        <span>📥 Import JSON</span>
+        <span>📥 Import</span>
         <kbd>I</kbd>
       </button>
       <input type="file" id="import-file" style="display:none" onchange="importJson(event)" accept=".json" aria-label="Upload mailbox JSON file">
       <button class="side-action-btn" style="color:#f87171;" onclick="confirmEmptyTrash()" aria-label="Empty Trash Folder" title="Permanently delete all trash emails">
-        <span>🗑️ Empty Trash</span>
+        <span>🗑️ Empty</span>
       </button>
     </div>
   </div>
@@ -1020,18 +1103,18 @@
 </div>
 
 <div class="status-bar" id="status-bar" role="status" aria-live="polite">
-  <div class="status-left" id="status-folder-info">📥 Inbox · 7 messages</div>
+  <div class="status-left" id="status-folder-info">📥 Inbox · 7 msgs</div>
   <div class="status-mid">
     <span><kbd>F1</kbd> Help</span>
-    <span><kbd>C</kbd> Compose</span>
-    <span><kbd>↑/↓</kbd> Select</span>
+    <span><kbd>C</kbd> New</span>
+    <span><kbd>↑/↓</kbd> Nav</span>
     <span><kbd>S</kbd> Star</span>
-    <span><kbd>U</kbd> Read/Unread</span>
+    <span><kbd>U</kbd> Read</span>
+    <span><kbd>D</kbd> Decrypt</span>
     <span><kbd>R</kbd> Reply</span>
     <span><kbd>F3</kbd> Rules</span>
-    <span><kbd>F5</kbd> Save</span>
-    <span><kbd>F9</kbd> Load</span>
-    <button id="sfx-toggle" onclick="toggleAudio()" style="background:none; border:none; color:var(--text-sec); cursor:pointer; font-size:11px; padding:2px 4px; font-family:inherit;" title="Toggle Retro Sound Effects">🔊 SFX: On</button>
+    <span><kbd>F5/F9</kbd> Save/Load</span>
+    <button id="sfx-toggle" onclick="toggleAudio()" style="background:none; border:none; color:var(--text-sec); cursor:pointer; font-size:11px; padding:2px 4px; font-family:inherit; white-space:nowrap;" title="Toggle Retro Sound Effects">🔊 SFX: On</button>
   </div>
   <div class="status-right" id="status-storage-info" style="cursor:pointer;" onclick="showModal('network-modal')" title="Click for Network Mail Settings">🟢 KiloNet: user@kilo.os</div>
 </div>
@@ -1061,7 +1144,7 @@
           <strong style="color:#93c5fd;">💾 Quicksave & Quickload:</strong> Press <kbd>F5</kbd> anytime to snapshot complete mailbox state and settings. Press <kbd>F9</kbd> to restore instantly.
         </div>
         <div style="background:rgba(0,0,0,0.25); border:1px solid var(--border); border-radius:6px; padding:8px 12px;">
-          <strong style="color:#93c5fd;">🌐 KiloNet & Security:</strong> Press <kbd>F4</kbd> for real-time peer email via Firebase RTDB. Secure sensitive messages with AES password encryption and organize with <kbd>F3</kbd> filter rules.
+          <strong style="color:#93c5fd;">🌐 KiloNet & Security:</strong> Press <kbd>F4</kbd> for peer email via diegetic 1999 KiloNet SMTP/POP3 Relay. Secure sensitive messages with password encryption and organize with <kbd>F3</kbd> filter rules.
         </div>
       </div>
       <p style="margin:0; font-size:12px; color:var(--text-sec);">
@@ -1087,29 +1170,32 @@
       </p>
       <h4 style="margin:14px 0 6px 0; color:#93c5fd; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Navigation & Actions</h4>
       <table class="shortcuts-table">
-        <tr><td><kbd>1</kbd> - <kbd>6</kbd></td><td>Switch Folders (Inbox, Starred, Sent, Drafts, Outbox, Trash)</td></tr>
-        <tr><td><kbd>↑</kbd> / <kbd>↓</kbd> or <kbd>J</kbd> / <kbd>K</kbd></td><td>Navigate next / previous email in list</td></tr>
-        <tr><td><kbd>C</kbd> / <kbd>N</kbd></td><td>Compose New Message in a tab</td></tr>
-        <tr><td><kbd>Ctrl</kbd> + <kbd>F</kbd> / <kbd>/</kbd></td><td>Focus search bar (Esc to clear)</td></tr>
-        <tr><td><kbd>S</kbd></td><td>Toggle Star priority on active email</td></tr>
-        <tr><td><kbd>U</kbd></td><td>Toggle Read / Unread status on active email</td></tr>
-        <tr><td><kbd>R</kbd></td><td>Reply to selected email</td></tr>
-        <tr><td><kbd>F</kbd></td><td>Forward selected email</td></tr>
-        <tr><td><kbd>T</kbd></td><td>Add / remove tags on active email</td></tr>
-        <tr><td><kbd>P</kbd></td><td>Print or preview active email</td></tr>
-        <tr><td><kbd>Del</kbd></td><td>Move selected email to Trash / Delete</td></tr>
-        <tr><td><kbd>E</kbd></td><td>Export single email as .EML</td></tr>
-        <tr><td><kbd>M</kbd></td><td>Export single email as Markdown (.MD)</td></tr>
-        <tr><td><kbd>O</kbd></td><td>Open Export menu (Unix .MBOX, .CSV Index, .JSON)</td></tr>
-        <tr><td><kbd>I</kbd></td><td>Import Mailbox from JSON</td></tr>
-        <tr><td><kbd>F3</kbd></td><td>Automated Mail Rules & Filters Wizard</td></tr>
-        <tr><td><kbd>F4</kbd></td><td>KiloNet Global Mail Delivery Settings</td></tr>
-        <tr><td><kbd>F5</kbd> / <kbd>F9</kbd></td><td>Quicksave / Quickload Mailbox Snapshot</td></tr>
-        <tr><td><kbd>Ctrl</kbd> + <kbd>S</kbd></td><td>Save draft in compose mode</td></tr>
-        <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>Send email in compose mode</td></tr>
-        <tr><td><kbd>Ctrl</kbd> + <kbd>W</kbd></td><td>Close active tab</td></tr>
-        <tr><td><kbd>Esc</kbd></td><td>Close modal / clear search / close tab</td></tr>
-        <tr><td><kbd>F1</kbd> / <kbd>H</kbd></td><td>Open this Help & Shortcuts dialog</td></tr>
+        <tbody>
+          <tr><td><kbd>1</kbd> - <kbd>6</kbd></td><td>Switch Folders</td></tr>
+          <tr><td><kbd>↑</kbd> / <kbd>↓</kbd> or <kbd>J</kbd> / <kbd>K</kbd></td><td>Navigate email list</td></tr>
+          <tr><td><kbd>C</kbd> / <kbd>N</kbd></td><td>Compose new message</td></tr>
+          <tr><td><kbd>Ctrl+Tab</kbd></td><td>Cycle open tabs</td></tr>
+          <tr><td><kbd>D</kbd></td><td>Focus decrypt password</td></tr>
+          <tr><td><kbd>S</kbd></td><td>Toggle star priority</td></tr>
+          <tr><td><kbd>U</kbd></td><td>Toggle read / unread</td></tr>
+          <tr><td><kbd>R</kbd></td><td>Reply to selected email</td></tr>
+          <tr><td><kbd>F</kbd></td><td>Forward selected email</td></tr>
+          <tr><td><kbd>T</kbd></td><td>Add / remove tags</td></tr>
+          <tr><td><kbd>P</kbd></td><td>Print or preview email</td></tr>
+          <tr><td><kbd>Del</kbd></td><td>Move to Trash / Delete</td></tr>
+          <tr><td><kbd>Ctrl+F</kbd> / <kbd>/</kbd></td><td>Focus search bar</td></tr>
+          <tr><td><kbd>E</kbd></td><td>Export single .EML</td></tr>
+          <tr><td><kbd>M</kbd></td><td>Export Markdown (.MD)</td></tr>
+          <tr><td><kbd>O</kbd></td><td>Export (MBOX, CSV, JSON)</td></tr>
+          <tr><td><kbd>I</kbd></td><td>Import JSON mailbox</td></tr>
+          <tr><td><kbd>F3</kbd></td><td>Mail Filter Rules Wizard</td></tr>
+          <tr><td><kbd>F4</kbd></td><td>KiloNet Relay Settings</td></tr>
+          <tr><td><kbd>F5</kbd> / <kbd>F9</kbd></td><td>Quicksave / Quickload</td></tr>
+          <tr><td><kbd>Ctrl+S</kbd></td><td>Save draft in compose</td></tr>
+          <tr><td><kbd>Ctrl+Enter</kbd></td><td>Send email in compose</td></tr>
+          <tr><td><kbd>Ctrl+W</kbd></td><td>Close active tab</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>Dismiss modal / search</td></tr>
+        </tbody>
       </table>
     </div>
     <div class="modal-footer">
@@ -1234,12 +1320,12 @@
 <div class="modal-backdrop" id="network-modal" role="dialog" aria-modal="true" aria-labelledby="network-modal-title" onclick="onModalBackdropClick(event, 'network-modal')">
   <div class="modal-window" style="width: 480px;">
     <div class="modal-header">
-      <h3 id="network-modal-title"><span>🌐</span> KiloNet Global Mail Delivery (Firebase RTDB)</h3>
+      <h3 id="network-modal-title"><span>🌐</span> KiloNet Global Mail Delivery (1999 SMTP/POP3 Relay)</h3>
       <button class="modal-close-btn" onclick="closeModal('network-modal')" aria-label="Close network modal">✕</button>
     </div>
     <div class="modal-content">
       <p style="margin-top:0; color:#94a3b8; font-size:12.5px;">
-        Connect to real-time decentralized KiloApps global email delivery. Send and receive messages with peers browsing kiloapps.web.app anywhere in the world.
+        Connect to diegetic 1999 KiloNet SMTP/POP3 Relay email delivery. Send and receive messages with peers browsing kiloapps.web.app anywhere in the world.
       </p>
       
       <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:14px;">
@@ -1257,8 +1343,8 @@
           <button id="net-toggle-btn" class="modal-btn primary" onclick="toggleNetworkMail()" style="padding:4px 12px; font-size:12px;">Enabled</button>
         </div>
         <div style="font-size:12px; color:var(--text-sec);">
-          Status: <strong id="net-status-text" style="color:#10b981;">Connected (RTDB)</strong><br>
-          Gateway: <span style="font-family:monospace; color:#93c5fd;">kiloappschat-default-rtdb.firebaseio.com</span><br>
+          Status: <strong id="net-status-text" style="color:#10b981;">Connected (KiloNet Relay)</strong><br>
+          Relay Gateway: <span style="font-family:monospace; color:#93c5fd;">relay.smtp.kilonet.org (Port 25 / 110)</span><br>
           Broadcast Address: <span style="font-family:monospace; color:#f59e0b;">all@kilo.os</span>
         </div>
       </div>
@@ -1860,7 +1946,7 @@
     } else {
       const isConnected = !!(window.fb && window.fb.db);
       if (netStatusText) {
-        netStatusText.textContent = isConnected ? 'Connected (RTDB)' : 'Connecting...';
+        netStatusText.textContent = isConnected ? 'Connected (KiloNet Relay)' : 'Connecting...';
         netStatusText.style.color = isConnected ? '#10b981' : '#f59e0b';
       }
       if (netToggleBtn) { netToggleBtn.textContent = 'Enabled'; netToggleBtn.className = 'modal-btn primary'; }
@@ -2354,10 +2440,10 @@
 
       pane.innerHTML = `
         <div class="pane-header">
-          <div>
+          <div class="pane-header-info">
             <h2 class="pane-subject">${em.starred ? '<span style="color:var(--gold)">★</span> ' : ''}${em.encrypted ? '🔒 ' : ''}${escapeHTML(em.subject)}</h2>
             <p class="pane-sender">${em.folder==='sent' ? 'To: ' + escapeHTML(em.sender) : (em.folder==='outbox' ? 'Queued To: ' + escapeHTML(em.sender) : 'From: ' + escapeHTML(em.sender))}</p>
-            <div class="item-tags" style="margin-top:8px;">${tagsHtml}</div>
+            <div class="item-tags" style="margin-top:6px;">${tagsHtml}</div>
           </div>
           <div class="pane-actions">${actionsHtml}</div>
         </div>
@@ -2984,7 +3070,23 @@
 
   // Keyboard Shortcuts Listener
   document.addEventListener('keydown', (e) => {
-    const isInput = (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA');
+    const isInput = (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT');
+
+    // Ctrl+Tab / Ctrl+Shift+Tab: cycle open tabs
+    if (e.ctrlKey && e.key === 'Tab') {
+      e.preventDefault();
+      if (tabs.length > 1) {
+        let idx = tabs.findIndex(t => t.id === activeTabId);
+        if (idx === -1) idx = 0;
+        if (e.shiftKey) {
+          idx = (idx - 1 + tabs.length) % tabs.length;
+        } else {
+          idx = (idx + 1) % tabs.length;
+        }
+        switchTab(tabs[idx].id);
+      }
+      return;
+    }
     const hasModifier = e.ctrlKey || e.altKey || e.metaKey;
     const anyModalOpen = document.querySelectorAll('.modal-backdrop.active').length > 0;
 
@@ -3167,6 +3269,16 @@
     if (activeTabId) {
       const tab = tabs.find(t => t.id === activeTabId);
       if (tab && tab.type === 'read') {
+        // [D]: Focus decryption password input if message is encrypted
+        if (e.key === 'd' || e.key === 'D') {
+          const passInput = document.getElementById(`dec-pass-${tab.emailId}`);
+          if (passInput) {
+            e.preventDefault();
+            passInput.focus();
+            passInput.select();
+            return;
+          }
+        }
         const em = emails.find(item => item.id === tab.emailId);
         if (em) {
           if (e.key === 's' || e.key === 'S') {
@@ -3256,9 +3368,7 @@
       safeSet(ONBOARD_KEY, 'true');
     } catch(e) {}
   } else {
-    setTimeout(() => {
-      showToast("Welcome to KMail! Press F1 or H anytime for Help & Shortcuts.", "info", 4000);
-    }, 300);
+    // Redundant 300ms boot toast skipped per usability & layout audit
   }
 </script>
 </body>
