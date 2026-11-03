@@ -406,7 +406,7 @@
             margin-bottom: 2px;
         }
 
-        /* Terminal Event Log */
+        /* Terminal Event Log & Timeline Organizer */
         .event-log-container {
             flex: 1;
             display: flex;
@@ -416,11 +416,96 @@
             overflow: hidden;
         }
 
+        .timeline-organizer-bar {
+            display: flex;
+            gap: 4px;
+            padding: 4px 6px;
+            background: var(--bg-panel-dark);
+            border: 1px solid var(--border-dim);
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            flex-wrap: wrap;
+        }
+        .org-filter-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            color: var(--text-dim);
+            font-size: 10px;
+            font-family: inherit;
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .org-filter-btn:hover {
+            color: var(--text-bright);
+            border-color: var(--border-bright);
+        }
+        .org-filter-btn.active {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--epoch-beta);
+            border-color: var(--epoch-beta);
+            font-weight: bold;
+        }
+        .org-filter-btn.active[data-filter="alpha"] {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--epoch-alpha);
+            border-color: var(--epoch-alpha);
+        }
+        .org-filter-btn.active[data-filter="gamma"] {
+            background: rgba(192, 132, 252, 0.2);
+            color: var(--epoch-gamma);
+            border-color: var(--epoch-gamma);
+        }
+        .org-filter-btn.active[data-filter="causal"] {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+        .org-filter-btn .badge {
+            font-size: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 1px 4px;
+            border-radius: 6px;
+        }
+        .epoch-marker {
+            display: inline-block;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 1px 4px;
+            border-radius: 2px;
+            margin-right: 4px;
+            text-transform: uppercase;
+        }
+        .epoch-marker.alpha {
+            background: rgba(245, 158, 11, 0.25);
+            color: var(--epoch-alpha);
+            border: 1px solid var(--epoch-alpha-dim);
+        }
+        .epoch-marker.beta {
+            background: rgba(6, 182, 212, 0.25);
+            color: var(--epoch-beta);
+            border: 1px solid var(--epoch-beta-dim);
+        }
+        .epoch-marker.gamma {
+            background: rgba(192, 132, 252, 0.25);
+            color: var(--epoch-gamma);
+            border: 1px solid var(--epoch-gamma-dim);
+        }
+        .epoch-marker.global {
+            background: rgba(16, 185, 129, 0.25);
+            color: var(--accent-green);
+            border: 1px solid rgba(16, 185, 129, 0.5);
+        }
+
         .event-log {
             flex: 1;
             background: #050811;
             border: 1px solid var(--border-dim);
-            border-radius: 4px;
+            border-radius: 0 0 4px 4px;
             padding: 8px;
             font-size: 11px;
             overflow-y: auto;
@@ -897,14 +982,21 @@
                 </div>
             </div>
 
-            <!-- Real-time Temporal Event Log -->
+            <!-- Timeline Event Organizer -->
             <div class="event-log-container">
                 <div class="sidebar-title">
-                    <span>Temporal Event Log</span>
+                    <span>Timeline Event Organizer</span>
                     <span style="cursor: pointer;" id="btnClearLog" title="Clear log">Clear</span>
                 </div>
+                <div class="timeline-organizer-bar" id="timelineOrgBar">
+                    <button class="org-filter-btn active" data-filter="all" id="btnFilterAll">ALL <span class="badge" id="cntAll">1</span></button>
+                    <button class="org-filter-btn" data-filter="alpha" id="btnFilterAlpha">α '84 <span class="badge" id="cntAlpha">0</span></button>
+                    <button class="org-filter-btn" data-filter="beta" id="btnFilterBeta">β '42 <span class="badge" id="cntBeta">1</span></button>
+                    <button class="org-filter-btn" data-filter="gamma" id="btnFilterGamma">γ '88 <span class="badge" id="cntGamma">0</span></button>
+                    <button class="org-filter-btn" data-filter="causal" id="btnFilterCausal">⚡ Causal <span class="badge" id="cntCausal">0</span></button>
+                </div>
                 <div class="event-log" id="eventLog">
-                    <div class="log-entry ripple">[00:00:00] Chrono-Array synchronized. Welcome, Architect.</div>
+                    <div class="log-entry ripple" data-epoch="beta" data-cat="system"><span class="epoch-marker beta">β '42</span> [00:00:00] Chrono-Array synchronized. Welcome, Architect.</div>
                 </div>
             </div>
         </div>
@@ -1172,13 +1264,39 @@
 
     <!-- Script Implementation -->
     <script>
+        /* --- Safe Storage Helpers (Wrapped in try/catch for sandbox/iframe security) --- */
+        function safeGet(key, defVal = null) {
+            try {
+                const v = localStorage.getItem(key);
+                return v !== null ? v : defVal;
+            } catch (e) {
+                return defVal;
+            }
+        }
+        function safeSet(key, val) {
+            try {
+                localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        function safeRemove(key) {
+            try {
+                localStorage.removeItem(key);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
         /* --- Audio Synthesizer (Yamaha YM2612 2-Operator FM & SNES SPC700 Stereo Delay) --- */
         class TachyonAudio {
             constructor() {
                 this.ctx = null;
                 this.sfxEnabled = true;
                 this.droneEnabled = true;
-                this.muted = localStorage.getItem('kchrono_muted') === 'true';
+                this.muted = safeGet('kchrono_muted') === 'true';
                 this.masterVol = 0.7;
                 this.droneCarrier = null;
                 this.droneModulator = null;
@@ -1262,7 +1380,7 @@
 
             toggleMute() {
                 this.muted = !this.muted;
-                localStorage.setItem('kchrono_muted', this.muted ? 'true' : 'false');
+                safeSet('kchrono_muted', this.muted ? 'true' : 'false');
                 this.setVolume(this.masterVol);
                 return !this.muted;
             }
@@ -1575,6 +1693,7 @@
                 this.player = { x: 4, y: 7, facing: 'down' };
                 this.inventory = []; // Max 4 items
                 this.flags = {};
+                this.eventFilter = 'all';
 
                 // Map Grids for Alpha, Beta, Gamma (24x16 each)
                 this.grids = {
@@ -2445,14 +2564,15 @@
                     inventory: this.inventory,
                     echoBuffer: this.echoBuffer,
                     grids: this.grids,
-                    entities: this.entities
+                    entities: this.entities,
+                    eventFilter: this.eventFilter || 'all'
                 };
                 try {
-                    localStorage.setItem('kchrono_quicksave', JSON.stringify(savePayload));
-                    localStorage.setItem('kchrono_hasSave', 'true');
+                    safeSet('kchrono_quicksave', savePayload);
+                    safeSet('kchrono_hasSave', 'true');
                     audio.playTone(700, 0.1, 'sine', 0.2);
                     setTimeout(() => audio.playTone(900, 0.15, 'sine', 0.2), 80);
-                    this.logEvent("[QUICKSAVE] Timeline snapshot locked into storage matrix.", "success");
+                    this.logEvent("[QUICKSAVE] Timeline snapshot locked into storage matrix.", "success", this.currentEpoch, "causal");
                     showToast("💾 Quicksave Complete (F5)");
                     document.getElementById('btnSplashContinue').disabled = false;
                 } catch(e) {
@@ -2462,13 +2582,13 @@
             }
 
             quickload() {
-                const raw = localStorage.getItem('kchrono_quicksave');
+                const raw = safeGet('kchrono_quicksave');
                 if (!raw) {
                     showToast("No quicksave file found!");
                     return false;
                 }
                 try {
-                    const data = JSON.parse(raw);
+                    const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
                     const sc = SCENARIOS.find(s => s.id === data.scenarioId) || SCENARIOS[0];
                     this.currentScenario = sc;
                     this.currentEpoch = data.currentEpoch;
@@ -2485,6 +2605,7 @@
                     this.echoGhost = null;
                     this.won = false;
                     this.history = [];
+                    this.eventFilter = data.eventFilter || 'all';
                     this.saveUndoState();
 
                     audio.setEpochDrone(this.currentEpoch);
@@ -2495,10 +2616,13 @@
                     if (typeof updateUI === 'function') {
                         updateUI();
                     }
+                    if (typeof applyEventFilter === 'function') {
+                        applyEventFilter(this.eventFilter);
+                    }
 
                     audio.playTone(900, 0.1, 'sine', 0.2);
                     setTimeout(() => audio.playTone(700, 0.15, 'sine', 0.2), 80);
-                    this.logEvent("[QUICKLOAD] Timeline restored from persistent sector.", "success");
+                    this.logEvent("[QUICKLOAD] Timeline restored from persistent sector.", "success", this.currentEpoch, "causal");
                     showToast("📂 Quicksave Loaded (F9)");
                     return true;
                 } catch(e) {
@@ -2508,18 +2632,31 @@
                 }
             }
 
-            logEvent(msg, type = 'normal') {
+            logEvent(msg, type = 'normal', epoch = null, category = null) {
                 this.lastCausalLog = msg;
                 const logEl = document.getElementById('eventLog');
                 if (!logEl) return;
+                const entryEpoch = epoch || this.currentEpoch || 'beta';
+                const entryCat = category || (type === 'danger' || msg.includes('PARADOX') ? 'paradox' : (msg.includes('ECHO') ? 'echo' : (type === 'success' || msg.includes('CAUSAL') || msg.includes('RELAY') || msg.includes('GATE') || msg.includes('SLUICE') || msg.includes('SEED')) ? 'causal' : 'normal'));
+
                 const div = document.createElement('div');
                 div.className = `log-entry ${type}`;
+                div.dataset.epoch = entryEpoch;
+                div.dataset.cat = entryCat;
+
                 const timeStr = new Date().toTimeString().split(' ')[0];
-                div.textContent = `[${timeStr}] ${msg}`;
+                const markerLabel = entryEpoch === 'alpha' ? "α '84" : entryEpoch === 'beta' ? "β '42" : entryEpoch === 'gamma' ? "γ '88" : "Ω";
+                div.innerHTML = `<span class="epoch-marker ${entryEpoch}">${markerLabel}</span> [${timeStr}] ${msg}`;
+
                 logEl.insertBefore(div, logEl.firstChild);
-                // Trim log elements
-                while (logEl.children.length > 50) {
+                while (logEl.children.length > 60) {
                     logEl.removeChild(logEl.lastChild);
+                }
+                if (typeof updateEventCounts === 'function') {
+                    updateEventCounts();
+                }
+                if (typeof applyEventFilter === 'function') {
+                    applyEventFilter(this.eventFilter || 'all');
                 }
             }
 
@@ -2575,7 +2712,13 @@
         }
 
         // Clean static rendering (zero floating motes, zero orbiting glints, zero traveling perimeter dots)
+        let isRenderRunning = false;
         function render() {
+            if (document.hidden) {
+                isRenderRunning = false;
+                return;
+            }
+            isRenderRunning = true;
             ctx.save();
             ctx.scale(dpr, dpr);
 
@@ -3571,7 +3714,7 @@
                 } else if (activeModal.id === 'tutorialOverlay') {
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        localStorage.setItem('kchrono_tutorialSeen', 'true');
+                        safeSet('kchrono_tutorialSeen', 'true');
                         closeAllOverlays();
                         return;
                     }
@@ -3760,6 +3903,9 @@
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
             if (modal) modal.classList.remove('active');
+            if (modalId === 'tutorialOverlay') {
+                safeSet('kchrono_tutorialSeen', 'true');
+            }
             if (!gameStarted && modalId !== 'splashOverlay') {
                 document.getElementById('splashOverlay').classList.add('active');
             }
@@ -3795,10 +3941,12 @@
         function startTimeline(scenarioIndex = 0) {
             audio.init();
             gameStarted = true;
-            localStorage.setItem('kchrono_tutorialSeen', 'true');
             closeAllOverlays();
             selectedScenarioIndex = scenarioIndex;
             engine.initScenario(SCENARIOS[scenarioIndex]);
+            if (safeGet('kchrono_tutorialSeen') !== 'true') {
+                document.getElementById('tutorialOverlay').classList.add('active');
+            }
         }
 
         // Backdrop click to dismiss modal
@@ -3855,6 +4003,50 @@
         document.getElementById('btnRewind').addEventListener('click', () => { audio.init(); engine.undo(); });
         document.getElementById('btnQuicksave').addEventListener('click', () => { audio.init(); engine.quicksave(); });
         document.getElementById('btnQuickload').addEventListener('click', () => { audio.init(); engine.quickload(); });
+        // Timeline Event Organizer filter logic
+        function updateEventCounts() {
+            const logEl = document.getElementById('eventLog');
+            if (!logEl) return;
+            const entries = Array.from(logEl.children);
+            let alpha = 0, beta = 0, gamma = 0, causal = 0;
+            entries.forEach(e => {
+                if (e.dataset.epoch === 'alpha') alpha++;
+                else if (e.dataset.epoch === 'beta') beta++;
+                else if (e.dataset.epoch === 'gamma') gamma++;
+                if (e.dataset.cat === 'causal' || e.dataset.cat === 'echo') causal++;
+            });
+            const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+            setTxt('cntAll', entries.length);
+            setTxt('cntAlpha', alpha);
+            setTxt('cntBeta', beta);
+            setTxt('cntGamma', gamma);
+            setTxt('cntCausal', causal);
+        }
+
+        function applyEventFilter(filter) {
+            if (engine) engine.eventFilter = filter;
+            document.querySelectorAll('.org-filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
+            });
+            const logEl = document.getElementById('eventLog');
+            if (!logEl) return;
+            Array.from(logEl.children).forEach(entry => {
+                if (filter === 'all') {
+                    entry.style.display = '';
+                } else if (filter === 'causal') {
+                    entry.style.display = (entry.dataset.cat === 'causal' || entry.dataset.cat === 'echo') ? '' : 'none';
+                } else {
+                    entry.style.display = entry.dataset.epoch === filter ? '' : 'none';
+                }
+            });
+        }
+
+        document.querySelectorAll('.org-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                applyEventFilter(btn.dataset.filter);
+            });
+        });
+
         document.getElementById('btnClearLog').addEventListener('click', () => { document.getElementById('eventLog').innerHTML = ''; });
         document.getElementById('btnAudioToggle').addEventListener('click', () => {
             audio.init();
@@ -3966,11 +4158,11 @@
 
         // Tutorial Dismiss
         document.getElementById('btnTutClose').addEventListener('click', () => {
-            localStorage.setItem('kchrono_tutorialSeen', 'true');
+            safeSet('kchrono_tutorialSeen', 'true');
             closeAllOverlays();
         });
         document.getElementById('btnTutDismiss').addEventListener('click', () => {
-            localStorage.setItem('kchrono_tutorialSeen', 'true');
+            safeSet('kchrono_tutorialSeen', 'true');
             closeAllOverlays();
         });
 
@@ -4021,13 +4213,13 @@
                     crt: document.getElementById('chkCrt').checked,
                     theme: document.getElementById('selTheme').value
                 };
-                localStorage.setItem('kchrono_settings', JSON.stringify(s));
+                safeSet('kchrono_settings', s);
             } catch(e) {}
         }
 
         function loadSettings() {
             try {
-                const raw = localStorage.getItem('kchrono_settings');
+                const raw = safeGet('kchrono_settings');
                 if (!raw) return;
                 const s = JSON.parse(raw);
                 if (s.vol !== undefined) {
@@ -4081,7 +4273,7 @@
             saveSettings();
         });
         document.getElementById('btnResetTutorial').addEventListener('click', () => {
-            localStorage.removeItem('kchrono_tutorialSeen');
+            safeRemove('kchrono_tutorialSeen');
             showToast("Tutorial reset! Will display on next New Timeline.");
         });
 
@@ -4121,7 +4313,7 @@
                 reader.onload = (evt) => {
                     try {
                         const data = JSON.parse(evt.target.result);
-                        localStorage.setItem('kchrono_quicksave', JSON.stringify(data));
+                        safeSet('kchrono_quicksave', data);
                         gameStarted = true;
                         engine.quickload();
                         closeAllOverlays();
@@ -4148,6 +4340,9 @@
                 if (audio && audio.ctx && audio.ctx.state === 'suspended') {
                     audio.ctx.resume().catch(() => {});
                 }
+                if (!isRenderRunning) {
+                    requestAnimationFrame(render);
+                }
             }
         });
 
@@ -4155,7 +4350,7 @@
         loadSettings();
 
         // Check if quicksave exists on page load
-        if (localStorage.getItem('kchrono_quicksave')) {
+        if (safeGet('kchrono_quicksave')) {
             document.getElementById('btnSplashContinue').disabled = false;
         }
 

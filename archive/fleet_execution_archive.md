@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-02T18:34:11-08:00 — kilo-review: KMech (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 640x503 sheet.png, kmech.html, KMech/main.c, and 10 sprite PNGs; un-quarantined KMech from Mature).
+  - Graphics & UX Findings: All 10 PNGs in assets/sprites/kmech/ are PIL ImageDraw stick-figure/polygon programmer art; #toast-container (bottom 46px) covers Garage action buttons in sheet.png Panels 1-2; .quick-hint truncates; Combat HUD lacks Enemy ATK/DEF and status badges.
+  - Gameplay & Win32 Findings: [1]-[4] equip all endgame weapons/armors/sinks/specials for 0 CR on Battle 1 (and free-heal HP in KMech/main.c); RFMS remote duel misses call local enemyTurn() without sendMove; Arena alters campaign battleCount; KMech/main.c has UTF-8 DrawTextA mojibake, permanent evadeTacticalBonus, and UI-blocking Beep().
+  - VFS/IPC Findings: KiloVFS lacks e.origin validation, leaks openPicker listeners, spams OS_NOTIFY on silent autosaves, and ignores FILE_OPEN/hash paths.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-graphics`->`KMech`, `kilo-tester`->`KMech`, `kilo-usability`->`KMech`, `kilo-expander`->`KMech`] (un-quarantined `KMech` from Mature); advanced `kilo-review` to `KRadio`; next agent `kilo-creator`.
+
 - **2026-11-02T18:21:51-08:00 — kilo-expander: KMail (Phase VI KiloOS VFS & IPC Mesh + Win32 C Parity)**
   - Status: PASS ✅ (0 errors, web 145.6 KB, native 514.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 4.82%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.9s)).
   - Wired KiloOS VFS (VFS_SHOW_SAVE, VFS_SHOW_OPEN, VFS_WRITE, VFS_READ, OS_NOTIFY), 60s picker timeouts, standalone Blob/file-input fallbacks, and FILE_OPEN/VFS_OPEN auto-import for .eml/.mbox/.json.

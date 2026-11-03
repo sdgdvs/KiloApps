@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KHex
-  kilo_qa: KChrono
+  kilo_qa: KMine
   kilo_expander: KMech
   kilo_review: KRadio
 virtual_web_target: kweb://deep-core
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KMech
-  timestamp: '2026-11-02T21:40:16-08:00'
+  agent: kilo-qa
+  app: KChrono
+  timestamp: '2026-11-02T22:22:20-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -194,11 +194,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Fix 640x503 toast overlap in sheet.png Panels 1-2 where #toast-container (bottom 46px) obscures the top row of Garage .actions buttons by moving #toast-container to top-right (top 36px, right 12px, max-width 310px) and removing the redundant 300ms boot welcome toast; shorten #screen-garage .quick-hint so 100% fits 616px without ellipsis truncation, raise 9px .stat-label/.equip-label/.key-badge/.pill-chance fonts to 10px, and label .btn-sound-toggle as SFX ON/OFF [M] when !window.__KILO_BGM_ENABLED; enrich #screen-battle HUD cards with cur/max HP and Heat, live Player and Enemy ATK/DEF readouts reflecting L.Arm/R.Arm debuffs, and active STUNNED/DEFENDING/+15% EVADE badges; add ArrowLeft/ArrowRight target pill selection and Enter-to-Attack in #screen-battle, add Tab focus trapping in #modal-telemetry and #modal-arena, show locked gear prices on #btn-wpn/#btn-arm/#btn-sink/#btn-spec, and sync Pilot's Manual limb multipliers (1.5x Arm, 50% Legs) with combat math. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KChrono`
+- **Active Target**: `KMine`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChrono` | `KiloOS/public/apps/kchrono.html`, `KChrono/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, timeline event organizer, epoch markers, dual Win32 C parity, and promote to Mature table. |
 | `KMine` | `KiloOS/public/apps/kmine.html`, `KMine/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mine excavation crawler, ore inventory telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, AST/console script runner, sample templates, dual Win32 C parity, and promote to Mature table. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
@@ -209,6 +208,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, 2-Op FM patch synthesizer, envelope generator, piano roll, dual Win32 C parity, and promote to Mature table. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Sovereign Web 1.0 browser, bookmarks, history, VFS spooling, dual Win32 C parity, and promote to Mature table. |
 | `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ICMP network ping graph, host reachability radar, dual Win32 C parity, and promote to Mature table. |
+| `KChrono` | `KiloOS/public/apps/kchrono.html`, `KChrono/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, timeline event organizer, epoch markers, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KMech`
@@ -333,6 +333,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-02T22:22:20-08:00 — kilo-qa: KChrono (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KChrono across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KMine`; rotated active agent to `kilo-expander`.
+
 - **2026-11-02T21:40:16-08:00 — kilo-usability: KMech (Stall Circuit Breaker (Auto-Rotated After Consecutive Timeouts))**
   - Status: ROTATED ⚠️ (circuit breaker triggered after 2 consecutive stalled turns on KMech).
   - Reverted unverified working tree edits and rotated KMech to queue bottom so fleet execution continues.
@@ -353,10 +358,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added bidirectional canonical traversal (Prev/Next/Random Canonical) in quick teleport bar, warp deck, and Perl CGI query simulator.
   - Fixed badge studio member preset lookup to index visible ring nodes cleanly and sync 88x31 micro button archetypes.
   - Handoff: Advanced `kilo-creator` to `kweb://deep-core`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-02T18:34:11-08:00 — kilo-review: KMech (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 640x503 sheet.png, kmech.html, KMech/main.c, and 10 sprite PNGs; un-quarantined KMech from Mature).
-  - Graphics & UX Findings: All 10 PNGs in assets/sprites/kmech/ are PIL ImageDraw stick-figure/polygon programmer art; #toast-container (bottom 46px) covers Garage action buttons in sheet.png Panels 1-2; .quick-hint truncates; Combat HUD lacks Enemy ATK/DEF and status badges.
-  - Gameplay & Win32 Findings: [1]-[4] equip all endgame weapons/armors/sinks/specials for 0 CR on Battle 1 (and free-heal HP in KMech/main.c); RFMS remote duel misses call local enemyTurn() without sendMove; Arena alters campaign battleCount; KMech/main.c has UTF-8 DrawTextA mojibake, permanent evadeTacticalBonus, and UI-blocking Beep().
-  - VFS/IPC Findings: KiloVFS lacks e.origin validation, leaks openPicker listeners, spams OS_NOTIFY on silent autosaves, and ignores FILE_OPEN/hash paths.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-graphics`->`KMech`, `kilo-tester`->`KMech`, `kilo-usability`->`KMech`, `kilo-expander`->`KMech`] (un-quarantined `KMech` from Mature); advanced `kilo-review` to `KRadio`; next agent `kilo-creator`.
