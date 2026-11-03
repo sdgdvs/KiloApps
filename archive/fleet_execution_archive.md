@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T08:37:13-08:00 — kilo-usability: KSettings (Usability & Responsive Layout Polish)**
+  - Status: PASS ✅ (0 errors, web 81.2 KB, native 17.0 KB < 999 KB, visual PASS with 0 cut-offs).
+  - Layout: Tightened .tab-bar and .tab-btn padding and font-size so all 5 tabs fit cleanly at 700x523 with zero clipping.
+  - Accent Hover: Implemented computeAccentHover() helper and dynamic --accent-hover sync in setAccentColor().
+  - Mature Quarantine & Handoff: Promoted `KSettings` to Mature archive; advanced `kilo-usability` to `KHex`; next agent `kilo-qa`.
+
 - **2026-11-03T08:22:17-08:00 — kilo-tester: KSettings (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-tester updates for KSettings across web and native targets.
