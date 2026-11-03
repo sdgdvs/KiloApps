@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T05:37:40-08:00 — kilo-qa: KScript (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 175.6 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kscript_tutorialSeen flag, Alt+1..8 template loading, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity (AST dialog, Templates menu, hotkeys) and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KScript` to Mature archive; advanced `kilo-qa` to `KDB`; next agent `kilo-expander`.
+
 - **2026-11-03T05:22:18-08:00 — kilo-qa: KScript (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KScript across web and native targets.

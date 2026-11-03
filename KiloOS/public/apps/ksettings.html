@@ -839,7 +839,7 @@
             </div>
             <div class="preview-body">
               <span>Accent color actively linked to KiloOS desktop styling.</span>
-              <button class="btn btn-sm btn-primary" id="previewBtn">Active Button</button>
+              <button class="btn btn-sm btn-primary" id="previewBtn" onclick="cycleThemePreset()" title="Click to cycle theme preset with chime feedback">Active Button (Cycle Preset)</button>
             </div>
           </div>
         </div>
@@ -864,7 +864,7 @@
           <div class="setting-row">
             <div class="setting-info">
               <div class="setting-title">High Contrast Borders</div>
-              <div class="setting-desc">Enhances window boundary definition for improved legibility.</div>
+              <div class="setting-desc">Enhances window boundary definition for improved legibility. (VFS: /.sys_settings_high_contrast)</div>
             </div>
             <label class="switch">
               <input type="checkbox" id="contrastToggle" onchange="updateHighContrast(this.checked)">
@@ -878,13 +878,13 @@
             <div class="card-title">🖼️ Desktop Wallpaper Presets</div>
           </div>
           <div class="setting-desc" style="margin-bottom:8px;">Choose a retro palette preset for system styling:</div>
-          <div class="items-grid">
-            <button class="btn btn-sm" onclick="applyPreset('#2196F3', true)">Default Blue</button>
-            <button class="btn btn-sm" onclick="applyPreset('#008080', true)">1999 Classic Teal</button>
-            <button class="btn btn-sm" onclick="applyPreset('#00E676', false)">Matrix Phosphor</button>
-            <button class="btn btn-sm" onclick="applyPreset('#FF9100', true)">Amber CRT</button>
-            <button class="btn btn-sm" onclick="applyPreset('#E040FB', true)">Cyber Neon</button>
-            <button class="btn btn-sm" onclick="applyPreset('#00E5FF', true)">Midnight Ice</button>
+          <div class="items-grid" id="wallpaperPresetsGrid">
+            <button class="btn btn-sm" data-color="#2196F3" onclick="applyPreset('#2196F3', true)">Default Blue</button>
+            <button class="btn btn-sm" data-color="#008080" onclick="applyPreset('#008080', true)">1999 Classic Teal</button>
+            <button class="btn btn-sm" data-color="#00E676" onclick="applyPreset('#00E676', false)">Matrix Phosphor</button>
+            <button class="btn btn-sm" data-color="#FF9100" onclick="applyPreset('#FF9100', true)">Amber CRT</button>
+            <button class="btn btn-sm" data-color="#E040FB" onclick="applyPreset('#E040FB', true)">Cyber Neon</button>
+            <button class="btn btn-sm" data-color="#00E5FF" onclick="applyPreset('#00E5FF', true)">Midnight Ice</button>
           </div>
         </div>
 

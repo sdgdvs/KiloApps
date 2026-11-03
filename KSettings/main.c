@@ -266,6 +266,22 @@ void UpdateSpecsReadout(void) {
     SetWindowTextA(hSpecs, buf);
 }
 
+void SyncUIControls(void) {
+    if (g_hMain) {
+        HWND hAnim = GetDlgItem(g_hMain, ID_CHK_ANIM);
+        if (hAnim) SendMessageA(hAnim, BM_SETCHECK, g_state.animations ? BST_CHECKED : BST_UNCHECKED, 0);
+        HWND hContrast = GetDlgItem(g_hMain, ID_CHK_CONTRAST);
+        if (hContrast) SendMessageA(hContrast, BM_SETCHECK, g_state.highContrast ? BST_CHECKED : BST_UNCHECKED, 0);
+        HWND hSound = GetDlgItem(g_hMain, ID_CHK_SOUND);
+        if (hSound) SendMessageA(hSound, BM_SETCHECK, g_state.soundEnabled ? BST_CHECKED : BST_UNCHECKED, 0);
+    }
+    if (g_hwndsAudio[1]) {
+        char volMsg[64];
+        wsprintfA(volMsg, "Master Audio Output Volume: %d%%", g_state.soundVolume);
+        SetWindowTextA(g_hwndsAudio[1], volMsg);
+    }
+}
+
 void QuicksaveState(void) {
     g_state.signature = SAVE_SIG;
     g_state.timestamp = GetTickCount();
@@ -296,6 +312,7 @@ void QuickloadState(void) {
             RefreshVisibility();
             UpdateTaskbarList();
             UpdateSpecsReadout();
+            SyncUIControls();
             SetStatus("📂 Quickloaded settings state [F9]");
             PlayChime(0);
             return;
@@ -322,6 +339,7 @@ void ResetDefaults(void) {
     RefreshVisibility();
     UpdateTaskbarList();
     UpdateSpecsReadout();
+    SyncUIControls();
     SetStatus("🔄 Reset to factory defaults");
     PlayChime(1);
 }
@@ -378,6 +396,7 @@ void CheckFirstRunTutorial(HWND hwnd) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
+            g_hMain = hwnd;
             INITCOMMONCONTROLSEX icex;
             icex.dwSize = sizeof(icex);
             icex.dwICC = ICC_TAB_CLASSES | ICC_BAR_CLASSES;
