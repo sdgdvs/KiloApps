@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://trapster
-  kilo_graphics: KStarForge
+  kilo_graphics: KMystery
   kilo_soundscape: KStellar
   kilo_tester: KRead
   kilo_usability: KRead
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://slashnet
-  timestamp: '2026-11-03T03:18:00-08:00'
+  agent: kilo-graphics
+  app: KStarForge
+  timestamp: '2026-11-03T03:32:17-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -99,11 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://slashnet` | `KiloOS/public/web/slashnet.html`, `KiloOS/public/apps/knet.html` | Create *SlashNet: News for Nerds (1999)* (`slashnet.html` <250 KB): interactive Karma moderation (`-1 Troll` to `+5 Insightful`), threshold comment filter (`-1` to `+5`), Beowulf cluster calculator, Linux 2.2 kernel compile mini-sim, VFS article export, and route `kweb://slashnet` in `knet.html` / `portal.html`. |
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Active Target**: `KStarForge`
+- **Active Target**: `KMystery`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art across kstarforge.html (drawModuleBlueprintGlyph, drawDrydockScene, drawStarforgeStation, drawAsteroid, drawEnemyVessel, drawSalvagePod, and skirmish rival rendering) with Imagen 3 2-stage chroma-keyed sprites/atlas tiles for modular ship components, StarForge IX station & drydock gantry, 3 mineral asteroid types, salvage pods, and Syndicate/Marauder/Sentry/Corsair Dreadnought vessels (<999 KB, zero perimeter border glints). |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawSuspectPortrait() (5 suspects), drawNoirLocationScene() (Office, The Manor, The Docks, The Casino, Train Station), and drawDossierSketch() (11 forensic clues) with Imagen 3 2-stage chroma-keyed character/evidence sprites and atmospheric noir backdrops (<999 KB, zero perimeter border glints). |
 | `KSubmarine` | `KiloOS/public/apps/ksubmarine.html` | **[ARGON REVIEW]:** Replace primitive geometric canvas and inline SVG programmer-art across ksubmarine.html (drawSubmarineSprite, drawLeviathanCreature, drawSquidCreature, drawFloraCreature, drawFaunaCreature, drawSalvageSprite, drawCombatDroneSprite, hydrothermal black smoker spire in drawSonarView/drawNavMapChart, and getFaunaVisualSvg) with Imagen 3 2-stage chroma-keyed sprites/atlas (<999 KB, zero perimeter border glints). — Bathysphere trench exploration visuals: bioluminescent leviathan silhouettes, hydrothermal vent plumes, sonar HUD polish, and glint sweep. |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
@@ -115,6 +114,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art in drawVisuals() (kcyber.html) with Imagen 3 2-stage chroma-keyed sprites for the Cyberdeck Console, 5 distinct ICE Guardian Constructs (Basic 02, Tracer 03, Hunter 04, Black 05, Phantom 06 instead of one generic red octagon), Cryo-Stasis lattice, Classified Data Core cartridge, and Darknet Contraband Vault (<999 KB, zero perimeter border glints). — Netrunner icebreaker deck visual polish: isometric node towers, IC guardian constructs, matrix grid perspective, and glint sweep. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | **[ARGON REVIEW]:** Replace all 10 PIL ImageDraw stick-figure/polygon programmer-art PNGs in KiloOS/public/assets/sprites/kmech/ (mech_player_standard, mech_player_heavy, mech_player_light, mech_player_nano, mech_enemy_scout, mech_enemy_goliath, mech_enemy_interceptor, mech_enemy_titan, mech_enemy_dreadnought, mech_enemy_overlord) with genuine Imagen 3 generate_image 2-stage chroma-keyed 1999 tactical mecha sprites extracted from solid #FF00FF backgrounds with crisp alpha edges, zero perimeter glints, and <999 KB budget. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html` | **[ARGON REVIEW]:** Replace primitive canvas polygon/rect programmer-art ships on #combat-canvas and #map-canvas (Player Cruiser, Corsair Interceptor, Corsair Marauder, Syndicate Dreadnought, Stealth Infiltrator, and roaming Federation/Traders/Pirate fleet icons) plus geometric SVG placeholders in getPlanetSvg()/getCommodityIcon() with Imagen 3 2-stage chroma-keyed spacefaring sprites and orbital station/anomaly illustrations (<999 KB, zero perimeter border glints). — 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
+| `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | **[ARGON REVIEW]:** Replace primitive geometric canvas programmer-art across kstarforge.html (drawModuleBlueprintGlyph, drawDrydockScene, drawStarforgeStation, drawAsteroid, drawEnemyVessel, drawSalvagePod, and skirmish rival rendering) with Imagen 3 2-stage chroma-keyed sprites/atlas tiles for modular ship components, StarForge IX station & drydock gantry, 3 mineral asteroid types, salvage pods, and Syndicate/Marauder/Sentry/Corsair Dreadnought vessels (<999 KB, zero perimeter border glints). |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -337,6 +337,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T03:32:17-08:00 — kilo-graphics: KStarForge (Skip — Asset Suitability)**
+  - ⏭️ Skip — Imagen 3 asset replacement already integrated for KStarForge.
+  - Handoff: Advanced `kilo-graphics` to `KMystery`; rotated active agent to `kilo-tester`.
+
 - **2026-11-03T03:18:00-08:00 — kilo-creator: kweb://slashnet (SlashNet (1999) Web Expansion & Standalone VFS Fallback)**
   - Status: PASS ✅ (0 errors, web 116.9 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Verified full interactive Karma moderation (-1 Troll to +5 Insightful), threshold filter (-1 to +5), Beowulf cluster calc, and Linux 2.2 compile sim.
@@ -358,8 +362,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KMine across web and native targets.
   - Handoff: Advanced `kilo-qa` to `KScript`; rotated active agent to `kilo-expander`.
-
-- **2026-11-03T01:22:17-08:00 — kilo-usability: KRadio (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-usability updates for KRadio across web and native targets.
-  - Handoff: Advanced `kilo-usability` to `KHex`; rotated active agent to `kilo-qa`.
