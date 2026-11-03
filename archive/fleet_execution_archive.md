@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T06:31:12-08:00 — kilo-review: KSettings (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 700x523 sheet.png and audited ksettings.html + KSettings/main.c).
+  - Visual/UX Findings: 5th tab (#tabSpecs System Specs [5]) is clipped horizontally on the right edge of .tab-bar at 700px window width; --accent-hover is never updated when setAccentColor() changes --accent.
+  - Feature/Parity Findings: #previewBtn (Active Button) is a dead no-op; wallpaper presets lack active state/VFS sync; Win32 main.c ResetDefaults() and QuickloadState() fail to sync BM_SETCHECK on checkboxes and volume label.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KSettings`, `kilo-tester`->`KSettings`] (un-quarantined `KSettings` from Mature); advanced `kilo-review` to `KImage`; next agent `kilo-creator`.
+
 - **2026-11-03T06:23:18-08:00 — kilo-expander: KRead (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KRead across web and native targets.

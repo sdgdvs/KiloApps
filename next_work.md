@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KHex
-  kilo_qa: KDB
+  kilo_qa: KFont
   kilo_expander: KCalc
   kilo_review: KImage
 virtual_web_target: kweb://cabled
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KSettings
-  timestamp: '2026-11-03T08:37:13-08:00'
+  agent: kilo-qa
+  app: KDB
+  timestamp: '2026-11-03T09:22:19-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -196,11 +196,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | **[ARGON REVIEW]:** Move .toast-container to bottom-right (bottom: 36px, right: 16px, top/left: auto, transform: none) so toasts stop occluding the top toolbar, compact .toolbar into 2 rows and .quick-starter-bar into 1 row at 940px width, reduce .content padding-bottom to 32px so short docs fit on Pg 1/1, and guard SELECT targets in the window keydown listener. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KDB`
+- **Active Target**: `KFont`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, LSB image/audio steganography suite, bitplane visualizer, dual Win32 C parity, and promote to Mature table. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, subterranean waterfall spectrogram, audio decoder telemetry, dual Win32 C parity, and promote to Mature table. |
@@ -210,6 +209,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ICMP network ping graph, host reachability radar, dual Win32 C parity, and promote to Mature table. |
 | `KChrono` | `KiloOS/public/apps/kchrono.html`, `KChrono/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, timeline event organizer, epoch markers, dual Win32 C parity, and promote to Mature table. |
 | `KMine` | `KiloOS/public/apps/kmine.html`, `KMine/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mine excavation crawler, ore inventory telemetry, dual Win32 C parity, and promote to Mature table. |
+| `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KCalc`
@@ -335,6 +335,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T09:22:19-08:00 — kilo-qa: KDB (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KDB across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KFont`; rotated active agent to `kilo-expander`.
+
 - **2026-11-03T08:37:13-08:00 — kilo-usability: KSettings (Usability & Responsive Layout Polish)**
   - Status: PASS ✅ (0 errors, web 81.2 KB, native 17.0 KB < 999 KB, visual PASS with 0 cut-offs).
   - Layout: Tightened .tab-bar and .tab-btn padding and font-size so all 5 tabs fit cleanly at 700x523 with zero clipping.
@@ -355,9 +360,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Implemented F5/F9 state persistence to /home/music/ and JSON catalog import/export.
   - Verified live YM2612/SPC700 chiptune previewer, simulated 56k/T1 download queue, and P2P node directory.
   - Handoff: Advanced `kilo-creator` to `kweb://cabled`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-03T06:31:12-08:00 — kilo-review: KSettings (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 700x523 sheet.png and audited ksettings.html + KSettings/main.c).
-  - Visual/UX Findings: 5th tab (#tabSpecs System Specs [5]) is clipped horizontally on the right edge of .tab-bar at 700px window width; --accent-hover is never updated when setAccentColor() changes --accent.
-  - Feature/Parity Findings: #previewBtn (Active Button) is a dead no-op; wallpaper presets lack active state/VFS sync; Win32 main.c ResetDefaults() and QuickloadState() fail to sync BM_SETCHECK on checkboxes and volume label.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KSettings`, `kilo-tester`->`KSettings`] (un-quarantined `KSettings` from Mature); advanced `kilo-review` to `KImage`; next agent `kilo-creator`.
