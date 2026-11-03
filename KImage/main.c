@@ -1156,6 +1156,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     QuickLoad(hwnd, FALSE);
                     break;
                 case ID_BTN_PLAY:
+                    if (g_fileCount == 0) break;
                     g_slideshowPlaying = !g_slideshowPlaying;
                     SetWindowTextA(g_hBtnPlay, g_slideshowPlaying ? "⏸ Pause" : "▶ Play");
                     if (g_slideshowPlaying) {
@@ -1165,6 +1166,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     break;
             }
+            SetFocus(hwnd);
             break;
         }
         case WM_TIMER: {
@@ -1557,24 +1559,31 @@ void MainEntry() {
             BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
             if (msg.wParam == VK_F1 || (!ctrl && (msg.wParam == 'H' || msg.wParam == 'h'))) {
                 ShowHelpDialog(hwnd);
+                SetFocus(hwnd);
                 continue;
             } else if (msg.wParam == VK_F5) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_QUICKSAVE, 0);
+                SetFocus(hwnd);
                 continue;
             } else if (msg.wParam == VK_F9) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_QUICKLOAD, 0);
+                SetFocus(hwnd);
                 continue;
             } else if (ctrl && (msg.wParam == 'S' || msg.wParam == 's')) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_SAVE, 0);
+                SetFocus(hwnd);
                 continue;
             } else if (ctrl && (msg.wParam == 'O' || msg.wParam == 'o')) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_OPEN, 0);
+                SetFocus(hwnd);
                 continue;
             } else if (!ctrl && (msg.wParam == 'N' || msg.wParam == 'n')) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_DEMO, 0);
+                SetFocus(hwnd);
                 continue;
             } else if (!ctrl && (msg.wParam == 'W' || msg.wParam == 'w')) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_ZOOM_FIT, 0);
+                SetFocus(hwnd);
                 continue;
             } else if (msg.wParam == VK_ESCAPE) {
                 if (g_cropMode || g_drawMode) {
@@ -1583,8 +1592,13 @@ void MainEntry() {
                     if (g_hBtnCrop) SendMessage(g_hBtnCrop, BM_SETCHECK, BST_UNCHECKED, 0);
                     if (g_hBtnDraw) SendMessage(g_hBtnDraw, BM_SETCHECK, BST_UNCHECKED, 0);
                     InvalidateRect(hwnd, NULL, TRUE);
+                    SetFocus(hwnd);
                     continue;
                 }
+            } else {
+                SendMessage(hwnd, WM_KEYDOWN, msg.wParam, msg.lParam);
+                SetFocus(hwnd);
+                continue;
             }
         }
         if (!IsDialogMessage(hwnd, &msg)) {

@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T09:22:19-08:00 — kilo-qa: KDB (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KDB across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KFont`; rotated active agent to `kilo-expander`.
+
 - **2026-11-03T08:37:13-08:00 — kilo-usability: KSettings (Usability & Responsive Layout Polish)**
   - Status: PASS ✅ (0 errors, web 81.2 KB, native 17.0 KB < 999 KB, visual PASS with 0 cut-offs).
   - Layout: Tightened .tab-bar and .tab-btn padding and font-size so all 5 tabs fit cleanly at 700x523 with zero clipping.

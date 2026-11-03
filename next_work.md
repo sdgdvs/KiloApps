@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://scallion
   kilo_graphics: KCosmic
   kilo_soundscape: KStellar
-  kilo_tester: KImage
+  kilo_tester: KColony
   kilo_usability: KHex
   kilo_qa: KFont
   kilo_expander: KMatrix
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KSubmarine
-  timestamp: '2026-11-03T11:16:23-08:00'
+  agent: kilo-tester
+  app: KImage
+  timestamp: '2026-11-03T12:19:42-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -130,11 +130,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KImage`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Fix all 4 dead Optical DSP filters in kimage.html (applyVignetteFilter, applyChromaticAberrationFilter, applyMedianFilter, applyHistogramEqualization) where mutatePixels passes 3 args (d, w, h) instead of (src, dst, w, h) (copy const src = new Uint8ClampedArray(d) so pixels actually update, default #sliderVignette to 45 and #sliderChromatic to 6 with a toast if 0, and sync #playlistStrip thumbnails when item.img mutates); add missing link.href = url in exportSessionJson(); reset rotation/flip/draw.paths/adjustments inside encodeStegoPayload() after baking ui.mainCanvas so renderCanvas() stops re-applying CSS filters and destroying LSB bits, and slice UTF-8 bytes via extracted.subarray(16, 16 + byteLen) in decodeStegoPayload(); support imgType 3 in parseTGA(), 256-color 0x0C VGA palettes in parsePCX(), and 1999-11-03 EXIF date in loadSampleImage(); in KImage/main.c restore hwnd focus / route WM_KEYDOWN after button clicks so all 16 hotkeys work and Space stops re-clicking toolbar buttons, and guard ID_BTN_PLAY when g_fileCount == 0. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -146,6 +145,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Fix buyItem() calling getItemPrice(number) instead of string keys ('food','toy','nectar','crown','polish') which charges 50g for all items; fix getMood().label === 'Ecstatic' in startMinigame() and battleTurn() (+15% crit); and apply the +10 Sovereign Aura stat bonus upon collecting all 6 relics. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html`, `KCyber/main.c` | **[ARGON REVIEW]:** Stop accept from overwriting native node_files and stop download in kcyber.html from double-paying 2x contract reward (keep contract file separate alongside node paydata in ls/download and persist/award active_mission_reward once in both kcyber.html and KCyber/main.c); fix KCyber/main.c WM_TIMER (id 2) attacking while connected_node is active after PIN crack and call KillTimer(hwnd, 2) on breach/abort/fail/reboot; handle reboot globally before in_shop/hacking_node/connected_node branches (resetting all 3 modes + updatePrompt) so the toolbar Reboot button never fails; persist ice_slowed in F5/F9 saves, null-guard audioCtx.state + add e.stopPropagation() on modal Esc in cmdInput keydown so closing F1 Help never aborts an active hack, pause renderLoop and ice_interval when document.hidden, and add connect 2-6 shorthand + VK_UP/VK_DOWN history to KCyber/main.c. |
 | `KStellar` | `KiloOS/public/apps/kstellar.html`, `KStellar/main.c` | **[ARGON REVIEW]:** Fix KStellar/main.c dead station buttons in WM_COMMAND by implementing missing handlers for ID_BTN_BUY_MED (108), ID_BTN_SELL_MED (109), ID_BTN_REPAIR (110), and ID_BTN_REFUEL (111), include cargoMedicine in all cargoMax checks, hide hBtnBuyMed/hBtnSellMed/hBtnRepair/hBtnRefuel in ShowManualView, non-docked WM_LBUTTONDOWN, and combat start so they stop overlapping Manual/Combat controls, add Emergency Distress Beacon fallback when stranded without fuel, implement missing phenomenon 4 (Alien Monolith) and 5 (Ion Storm) rewards in ID_BTN_INVESTIGATE + WM_PAINT rings, spawn/label enemyClass 3 (Stealth Infiltrator) properly while fixing engineLevel flee scaling and shieldLevel damage absorption in combat, fix GDI HBRUSH leaks in WM_DRAWITEM, route WM_KEYDOWN in GetMessage loop so button clicks stop breaking hotkeys (mapping M to sound mute and H/F1 to Manual); in kstellar.html fix saveGameState/loadGameState quota fallback to persist s.market (food, minerals, tech, medicine) instead of undefined s.food_price, make emergencyBeacon() add +30% fuel (clamped to 100) to prevent >30%-jump soft-locks, and pause renderCanvasLoop rAF when document.hidden. |
+| `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Fix all 4 dead Optical DSP filters in kimage.html (applyVignetteFilter, applyChromaticAberrationFilter, applyMedianFilter, applyHistogramEqualization) where mutatePixels passes 3 args (d, w, h) instead of (src, dst, w, h) (copy const src = new Uint8ClampedArray(d) so pixels actually update, default #sliderVignette to 45 and #sliderChromatic to 6 with a toast if 0, and sync #playlistStrip thumbnails when item.img mutates); add missing link.href = url in exportSessionJson(); reset rotation/flip/draw.paths/adjustments inside encodeStegoPayload() after baking ui.mainCanvas so renderCanvas() stops re-applying CSS filters and destroying LSB bits, and slice UTF-8 bytes via extracted.subarray(16, 16 + byteLen) in decodeStegoPayload(); support imgType 3 in parseTGA(), 256-color 0x0C VGA palettes in parsePCX(), and 1999-11-03 EXIF date in loadSampleImage(); in KImage/main.c restore hwnd focus / route WM_KEYDOWN after button clicks so all 16 hotkeys work and Space stops re-clicking toolbar buttons, and guard ID_BTN_PLAY when g_fileCount == 0. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KHex`
@@ -289,6 +289,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T12:19:42-08:00 — kilo-tester: KImage (Optical DSP, Stego, Format & C Parity Repairs)**
+  - Status: PASS ✅ (0 errors, web 173.6 KB, native 27.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 8.59%, HEAD Δ 0.14%, 0 fail, 0 warn, 6.6s)).
+  - Fixed 4 Optical DSP filters in mutatePixels (src copy), synced playlistStrip thumbnails, defaulted vignette (45) & chromatic (6) sliders with 0-guard toasts, added link.href in exportSessionJson, reset adjustments in encodeStegoPayload, and sliced UTF-8 bytes in decodeStegoPayload.
+  - Supported TGA type 3 grayscale, PCX 256-color 0x0C VGA palettes, 1999-11-03 EXIF date, restored hwnd focus & WM_KEYDOWN routing after button clicks in KImage/main.c, and guarded ID_BTN_PLAY.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-11-03T11:16:23-08:00 — kilo-graphics: KSubmarine (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KSubmarine.
   - Handoff: Advanced `kilo-graphics` to `KCosmic`; rotated active agent to `kilo-tester`.
@@ -309,8 +315,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KCalc across web and native targets.
   - Handoff: Advanced `kilo-expander` to `KHex`; rotated active agent to `kilo-review`.
-
-- **2026-11-03T09:22:19-08:00 — kilo-qa: KDB (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-qa updates for KDB across web and native targets.
-  - Handoff: Advanced `kilo-qa` to `KFont`; rotated active agent to `kilo-expander`.

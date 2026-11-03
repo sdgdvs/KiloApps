@@ -741,13 +741,13 @@
           <div class="control-group" style="margin-top:10px; border-top:1px solid var(--glass-border); padding-top:10px;">
             <label>Photographic & Optical DSP</label>
             <div class="control-group" style="margin-top:4px;">
-              <label>Vignette Falloff <span class="val" id="valVignette">0%</span></label>
-              <input type="range" id="sliderVignette" min="0" max="100" value="0">
+              <label>Vignette Falloff <span class="val" id="valVignette">45%</span></label>
+              <input type="range" id="sliderVignette" min="0" max="100" value="45">
               <button id="btnApplyVignette" style="margin-top:4px;">Apply Vignette</button>
             </div>
             <div class="control-group" style="margin-top:6px;">
-              <label>Chromatic Aberration <span class="val" id="valChromatic">0px</span></label>
-              <input type="range" id="sliderChromatic" min="0" max="25" value="0">
+              <label>Chromatic Aberration <span class="val" id="valChromatic">6px</span></label>
+              <input type="range" id="sliderChromatic" min="0" max="25" value="6">
               <button id="btnApplyChromatic" style="margin-top:4px;">Apply Chromatic Aberration</button>
             </div>
             <div class="row" style="margin-top:6px;">
@@ -1482,7 +1482,7 @@
         name: 'kimage_demo.png',
         size: '122 KB',
         type: 'image/png',
-        exif: { camera: 'KiloOS Virtual Studio', date: '2026-09-03', exposure: '1/250s', aperture: 'f/2.8', iso: 'ISO 100', software: 'KImage Pro v2.0' }
+        exif: { camera: 'KiloOS Virtual Studio', date: '1999-11-03', exposure: '1/250s', aperture: 'f/2.8', iso: 'ISO 100', software: 'KImage Pro v2.0' }
       };
       state.playlist = [demoItem];
       selectImage(0);
@@ -2336,6 +2336,7 @@
     newImg.onload = () => {
       state.playlist[state.currentIndex].img = newImg;
       renderCanvas();
+      updatePlaylistUI();
       showToast("Applied convolution matrix filter", "success");
     };
     newImg.src = offCanvas.toDataURL();
@@ -2571,6 +2572,7 @@
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     const baseName = (item.name || 'session').split('.')[0];
+    link.href = url;
     link.download = `${baseName}_session.json`;
     document.body.appendChild(link);
     link.click();
@@ -2877,6 +2879,7 @@
     newImg.onload = () => {
       state.playlist[state.currentIndex].img = newImg;
       renderCanvas();
+      updatePlaylistUI();
       showToast(`Applied ${palKey.toUpperCase()} retro dithering (${algo})`, "success");
     };
     newImg.src = off.toDataURL('image/png');
@@ -2898,13 +2901,20 @@
     offCtx.drawImage(item.img, 0, 0);
 
     const imgData = offCtx.getImageData(0, 0, w, h);
-    pixelFn(imgData.data, w, h);
+    const d = imgData.data;
+    const src = new Uint8ClampedArray(d);
+    if (pixelFn.length >= 4) {
+      pixelFn(src, d, w, h);
+    } else {
+      pixelFn(d, w, h);
+    }
     offCtx.putImageData(imgData, 0, 0);
 
     const newImg = new Image();
     newImg.onload = () => {
       state.playlist[state.currentIndex].img = newImg;
       renderCanvas();
+      updatePlaylistUI();
       if (toastMsg) showToast(toastMsg, "success");
     };
     newImg.src = off.toDataURL('image/png');
@@ -3174,8 +3184,14 @@
     octx.putImageData(imgData, 0, 0);
     const newImg = new Image();
     newImg.onload = () => {
+      state.rotation = 0;
+      state.flipH = false;
+      state.flipV = false;
+      state.draw.paths = [];
+      resetAdjustments();
       state.playlist[state.currentIndex].img = newImg;
       renderCanvas();
+      updatePlaylistUI();
       showToast(`Encoded ${payloadBytes.length} bytes into pixel LSBs! Save as PNG/BMP to keep.`, "success");
     };
     newImg.src = off.toDataURL('image/png');
@@ -3206,17 +3222,20 @@
       extracted[i] = byte;
     }
 
-    const decoder = new TextDecoder('utf-8', { fatal: false });
-    const rawString = decoder.decode(extracted);
-    if (rawString.startsWith('KSTEGO:')) {
-      const parts = rawString.split(':');
-      if (parts.length >= 3) {
-        const len = parseInt(parts[1], 16);
-        const prefixLen = 7 + 8 + 1;
-        const secret = rawString.substring(prefixLen, prefixLen + len);
-        document.getElementById('stegoOutput').value = secret;
-        showToast(`Found hidden payload (${len} chars)!`, "success");
-        return;
+    if (extracted.length >= 16) {
+      const headerStr = new TextDecoder('utf-8', { fatal: false }).decode(extracted.subarray(0, 16));
+      if (headerStr.startsWith('KSTEGO:')) {
+        const parts = headerStr.split(':');
+        if (parts.length >= 2) {
+          const byteLen = parseInt(parts[1], 16);
+          if (!isNaN(byteLen) && byteLen >= 0 && 16 + byteLen <= extracted.length) {
+            const secretBytes = extracted.subarray(16, 16 + byteLen);
+            const secret = new TextDecoder('utf-8', { fatal: false }).decode(secretBytes);
+            document.getElementById('stegoOutput').value = secret;
+            showToast(`Found hidden payload (${byteLen} chars)!`, "success");
+            return;
+          }
+        }
       }
     }
     document.getElementById('stegoOutput').value = '[No valid KSTEGO payload detected in pixel LSBs]';
@@ -3997,6 +4016,15 @@
             dst[dstIdx] = r; dst[dstIdx + 1] = g; dst[dstIdx + 2] = b; dst[dstIdx + 3] = a;
           }
         }
+      } else if (imgType === 3) {
+        for (let y = 0; y < h; y++) {
+          const row = topToBottom ? y : (h - 1 - y);
+          for (let x = 0; x < w; x++) {
+            const dstIdx = (row * w + x) * 4;
+            const val = view.getUint8(offset++);
+            dst[dstIdx] = val; dst[dstIdx + 1] = val; dst[dstIdx + 2] = val; dst[dstIdx + 3] = 255;
+          }
+        }
       } else if (imgType === 10) {
         let pixelCount = w * h;
         let p = 0;
@@ -4062,6 +4090,11 @@
       const imgData = ctx.createImageData(w, h);
       const dst = imgData.data;
 
+      let vgaPalette = null;
+      if (u8.length >= 769 && u8[u8.length - 769] === 0x0C) {
+        vgaPalette = u8.subarray(u8.length - 768);
+      }
+
       let offset = 128;
       const totalLineBytes = nPlanes * bytesPerLine;
       const scanlineBuf = new Uint8Array(totalLineBytes);
@@ -4087,6 +4120,12 @@
             dst[dstIdx + 1] = scanlineBuf[bytesPerLine + x];
             dst[dstIdx + 2] = scanlineBuf[2 * bytesPerLine + x];
             dst[dstIdx + 3] = 255;
+          } else if (vgaPalette) {
+            const palIdx = scanlineBuf[x] * 3;
+            dst[dstIdx] = vgaPalette[palIdx];
+            dst[dstIdx + 1] = vgaPalette[palIdx + 1];
+            dst[dstIdx + 2] = vgaPalette[palIdx + 2];
+            dst[dstIdx + 3] = 255;
           } else {
             const v = scanlineBuf[x];
             dst[dstIdx] = v; dst[dstIdx + 1] = v; dst[dstIdx + 2] = v; dst[dstIdx + 3] = 255;
@@ -4105,7 +4144,10 @@
     const item = state.playlist[state.currentIndex];
     if (!item) return;
     const intensity = (parseInt(document.getElementById('sliderVignette')?.value) || 0) / 100;
-    if (intensity <= 0) return;
+    if (intensity <= 0) {
+      showToast("Adjust Vignette slider > 0% to apply", "warning");
+      return;
+    }
 
     mutatePixels((src, dst, w, h) => {
       const cx = w / 2;
@@ -4132,7 +4174,10 @@
     const item = state.playlist[state.currentIndex];
     if (!item) return;
     const shift = parseInt(document.getElementById('sliderChromatic')?.value) || 0;
-    if (shift <= 0) return;
+    if (shift <= 0) {
+      showToast("Adjust Chromatic Aberration slider > 0px to apply", "warning");
+      return;
+    }
 
     mutatePixels((src, dst, w, h) => {
       for (let y = 0; y < h; y++) {
