@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KHex
-  kilo_qa: KScript
+  kilo_qa: KDB
   kilo_expander: KRead
   kilo_review: KSettings
 virtual_web_target: kweb://trapster
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KRead
-  timestamp: '2026-11-03T04:36:24-08:00'
+  agent: kilo-qa
+  app: KScript
+  timestamp: '2026-11-03T05:22:18-08:00'
 last_planner_run: '2026-11-02T19:18:50Z'
 ---
 
@@ -198,11 +198,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | **[ARGON REVIEW]:** Move .toast-container to bottom-right (bottom: 36px, right: 16px, top/left: auto, transform: none) so toasts stop occluding the top toolbar, compact .toolbar into 2 rows and .quick-starter-bar into 1 row at 940px width, reduce .content padding-bottom to 32px so short docs fit on Pg 1/1, and guard SELECT targets in the window keydown listener. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KScript`
+- **Active Target**: `KDB`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, AST/console script runner, sample templates, dual Win32 C parity, and promote to Mature table. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, LSB image/audio steganography suite, bitplane visualizer, dual Win32 C parity, and promote to Mature table. |
@@ -213,6 +212,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ICMP network ping graph, host reachability radar, dual Win32 C parity, and promote to Mature table. |
 | `KChrono` | `KiloOS/public/apps/kchrono.html`, `KChrono/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, timeline event organizer, epoch markers, dual Win32 C parity, and promote to Mature table. |
 | `KMine` | `KiloOS/public/apps/kmine.html`, `KMine/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mine excavation crawler, ore inventory telemetry, dual Win32 C parity, and promote to Mature table. |
+| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, AST/console script runner, sample templates, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KRead`
@@ -337,6 +337,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T05:22:18-08:00 — kilo-qa: KScript (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KScript across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KDB`; rotated active agent to `kilo-expander`.
+
 - **2026-11-03T04:36:24-08:00 — kilo-usability: KRead (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 163.9 KB, native 31.0 KB < 999 KB; visual PASS anim 0.0%, input 8.27%, 0 cut-off controls).
   - Layout & Responsive: Compacted .toolbar into 2 rows and .quick-starter-bar into 1 row at 940px; reduced .content padding-bottom to 32px so short docs fit on Pg 1/1.
@@ -357,9 +362,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Verified full interactive Karma moderation (-1 Troll to +5 Insightful), threshold filter (-1 to +5), Beowulf cluster calc, and Linux 2.2 compile sim.
   - Added standalone download fallback for VFS exports and verified KNet / Portal / Webring routing.
   - Handoff: Advanced `kilo-creator` to `kweb://trapster`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-03T02:32:13-08:00 — kilo-review: KRead (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 940x643 and audited kread.html + KRead/main.c).
-  - Visual/UX Findings: Toast container at top:54px occludes rows 2-4 of the 4-row wrapped toolbar; Quick Load bar wraps Theme T onto a 2nd row at 940px; 120px content padding causes false 2-page overflow on short docs.
-  - Feature/Parity Findings: Page counter curPage never reaches totalPages at 100% scroll; createHighlight/deleteNote break Markdown view; KRead/main.c status bar Ln/Col never updates on read-only EDIT navigation and lacks VFS IPC and Alice sample.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KRead`, `kilo-tester`->`KRead`, `kilo-expander`->`KRead`] (un-quarantined `KRead` from Mature); advanced `kilo-review` to `KSettings`; next agent `kilo-creator`.

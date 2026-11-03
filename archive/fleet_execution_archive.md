@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T02:32:13-08:00 — kilo-review: KRead (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 4-panel sheet.png at 940x643 and audited kread.html + KRead/main.c).
+  - Visual/UX Findings: Toast container at top:54px occludes rows 2-4 of the 4-row wrapped toolbar; Quick Load bar wraps Theme T onto a 2nd row at 940px; 120px content padding causes false 2-page overflow on short docs.
+  - Feature/Parity Findings: Page counter curPage never reaches totalPages at 100% scroll; createHighlight/deleteNote break Markdown view; KRead/main.c status bar Ln/Col never updates on read-only EDIT navigation and lacks VFS IPC and Alice sample.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KRead`, `kilo-tester`->`KRead`, `kilo-expander`->`KRead`] (un-quarantined `KRead` from Mature); advanced `kilo-review` to `KSettings`; next agent `kilo-creator`.
+
 - **2026-11-03T02:23:17-08:00 — kilo-expander: KRadio (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KRadio across web and native targets.

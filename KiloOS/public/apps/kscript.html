@@ -2410,7 +2410,10 @@ endif
             closeModal(astModal);
             closeModal(vfsModal);
             const ob = document.getElementById('onboardingBanner');
-            if (ob) ob.style.display = 'none';
+            if (ob && ob.style.display !== 'none') {
+                ob.style.display = 'none';
+                safeStorageSet('kscript_tutorialSeen', 'true');
+            }
             toastContainer.innerHTML = '';
             return;
         }
@@ -4270,6 +4273,19 @@ endif
             safeStorageSet('kscript_visited', 'true');
         };
     }
+
+    // Lifecycle & Resource Hygiene: Pause active execution/macro replaying on document.hidden
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            if (isPlaying) {
+                isPlaying = false;
+                if (statusBadge) {
+                    statusBadge.textContent = "READY";
+                    statusBadge.className = "status-badge";
+                }
+            }
+        }
+    });
 
     // Drag and Drop support
     window.addEventListener('dragover', (e) => e.preventDefault());

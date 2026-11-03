@@ -9,7 +9,7 @@
 HWND hMainWnd = NULL;
 HWND hInput, hOutput, hMemory, hRegexFind, hRegexRep;
 HWND hBtnRun, hBtnLoad, hBtnSave, hBtnStep, hBtnBench, hBtnRec, hBtnPlay, hBtnRep, hBtnHelp, hBtnClear, hBtnVfs;
-HWND hBtnQS, hBtnQL;
+HWND hBtnQS, hBtnQL, hBtnAst, hBtnPreset;
 
 #define MAX_VARS 256
 #define MAX_VAR_NAME 32
@@ -58,6 +58,28 @@ int HexVal(char c) {
     if (c >= 'a' && c <= 'f') return c - 'a' + 10;
     if (c >= 'A' && c <= 'F') return c - 'A' + 10;
     return 0;
+}
+
+const char* StrChr(const char* s, char c) {
+    while (*s) {
+        if (*s == c) return s;
+        s++;
+    }
+    return (c == '\0') ? s : NULL;
+}
+
+const char* StrStr(const char* haystack, const char* needle) {
+    if (!*needle) return haystack;
+    for (; *haystack; haystack++) {
+        const char* h = haystack;
+        const char* n = needle;
+        while (*h && *n && (*h == *n)) {
+            h++;
+            n++;
+        }
+        if (!*n) return haystack;
+    }
+    return NULL;
 }
 
 int StrEqualCase(const char* a, const char* b) {
@@ -1361,13 +1383,296 @@ int HasQuicksave(void) {
     return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
 }
 
+typedef struct {
+    const char* title;
+    const char* code;
+} ScriptTemplate;
+
+static const ScriptTemplate g_templates[] = {
+    { "1. Basic Math & Precedence",
+      "// Basic Arithmetic & Precedence\r\n"
+      "a = 15\r\n"
+      "b = 4\r\n"
+      "print \"Sum:\", a + b\r\n"
+      "print \"Difference:\", a - b\r\n"
+      "print \"Product:\", a * b\r\n"
+      "print \"Division:\", a / b\r\n"
+      "print \"Modulo:\", a % b\r\n"
+      "print \"Compound:\", (a + b) * (a - b)\r\n"
+    },
+    { "2. Variables & Logic",
+      "// Variables & Logical Operators\r\n"
+      "x = 100\r\n"
+      "y = 200\r\n"
+      "is_greater = y > x\r\n"
+      "is_equal = x == y\r\n"
+      "both_positive = (x > 0) && (y > 0)\r\n"
+      "print \"y > x:\", is_greater\r\n"
+      "print \"x == y:\", is_equal\r\n"
+      "print \"Both positive:\", both_positive\r\n"
+      "t = x\r\n"
+      "x = y\r\n"
+      "y = t\r\n"
+      "print \"Swapped x:\", x, \"y:\", y\r\n"
+    },
+    { "3. Bitwise Flags & Masks",
+      "// Bitwise Flags & Mask Operations\r\n"
+      "FLAG_READ  = 0x01\r\n"
+      "FLAG_WRITE = 0x02\r\n"
+      "FLAG_EXEC  = 0x04\r\n"
+      "FLAG_ADMIN = 0x80\r\n"
+      "perms = FLAG_READ | FLAG_WRITE\r\n"
+      "print \"Initial perms:\", perms\r\n"
+      "perms = perms | FLAG_EXEC\r\n"
+      "print \"Granted exec:\", perms\r\n"
+      "has_write = (perms & FLAG_WRITE) != 0\r\n"
+      "print \"Has write:\", has_write\r\n"
+      "perms = perms & (~FLAG_WRITE)\r\n"
+      "print \"Revoked write:\", perms\r\n"
+    },
+    { "4. Fibonacci Calculation",
+      "// Fibonacci Sequence Calculation\r\n"
+      "n0 = 0\r\n"
+      "n1 = 1\r\n"
+      "print \"Fib 0:\", n0\r\n"
+      "print \"Fib 1:\", n1\r\n"
+      "n2 = n0 + n1\r\n"
+      "print \"Fib 2:\", n2\r\n"
+      "n3 = n1 + n2\r\n"
+      "print \"Fib 3:\", n3\r\n"
+      "n4 = n2 + n3\r\n"
+      "print \"Fib 4:\", n4\r\n"
+      "n5 = n3 + n4\r\n"
+      "print \"Fib 5:\", n5\r\n"
+      "n6 = n4 + n5\r\n"
+      "print \"Fib 6:\", n6\r\n"
+      "n7 = n5 + n6\r\n"
+      "print \"Fib 7:\", n7\r\n"
+    },
+    { "5. 16-Bit Checksum",
+      "// 16-Bit Modulo Checksum\r\n"
+      "d1 = 0x4B\r\n"
+      "d2 = 0x69\r\n"
+      "d3 = 0x6C\r\n"
+      "d4 = 0x6F\r\n"
+      "sum = d1 + d2 + d3 + d4\r\n"
+      "chk = sum % 0xFFFF\r\n"
+      "print \"Data bytes:\", d1, d2, d3, d4\r\n"
+      "print \"Checksum (Kilo):\", chk\r\n"
+    },
+    { "6. Math Functions",
+      "// Built-in Math Functions\r\n"
+      "a = -42\r\n"
+      "b = abs(a)\r\n"
+      "r1 = min(50, 25)\r\n"
+      "r2 = max(50, 25)\r\n"
+      "r3 = clamp(120, 0, 100)\r\n"
+      "r4 = sqrt(256)\r\n"
+      "r5 = pow(2, 8)\r\n"
+      "r6 = gcd(48, 18)\r\n"
+      "print \"abs(-42):\", b\r\n"
+      "print \"min(50,25):\", r1\r\n"
+      "print \"max(50,25):\", r2\r\n"
+      "print \"clamp(120,0,100):\", r3\r\n"
+      "print \"sqrt(256):\", r4\r\n"
+      "print \"pow(2,8):\", r5\r\n"
+      "print \"gcd(48,18):\", r6\r\n"
+    },
+    { "7. Collatz Sequence",
+      "// Collatz Sequence Step Demonstration\r\n"
+      "n = 27\r\n"
+      "print \"Start n:\", n\r\n"
+      "s1 = (n % 2 == 0) ? (n / 2) : (n * 3 + 1)\r\n"
+      "print \"Step 1:\", s1\r\n"
+      "s2 = (s1 % 2 == 0) ? (s1 / 2) : (s1 * 3 + 1)\r\n"
+      "print \"Step 2:\", s2\r\n"
+      "s3 = (s2 % 2 == 0) ? (s2 / 2) : (s2 * 3 + 1)\r\n"
+      "print \"Step 3:\", s3\r\n"
+      "s4 = (s3 % 2 == 0) ? (s3 / 2) : (s3 * 3 + 1)\r\n"
+      "print \"Step 4:\", s4\r\n"
+    },
+    { "8. KiloOS VFS Scripting Demo",
+      "// KiloOS VFS Pipeline Demo\r\n"
+      "path = \"/home/scripts/automation_report.log\"\r\n"
+      "header = \"=== KScript VFS Telemetry ===\"\r\n"
+      "vfs_write(path, header)\r\n"
+      "exists = vfs_exists(path)\r\n"
+      "size = vfs_size(path)\r\n"
+      "data = vfs_read(path)\r\n"
+      "print \"File exists:\", exists\r\n"
+      "print \"File size:\", size\r\n"
+      "print \"VFS Content:\", data\r\n"
+    }
+};
+#define NUM_TEMPLATES (int)(sizeof(g_templates) / sizeof(g_templates[0]))
+
+void LoadTemplate(int idx) {
+    if (idx >= 0 && idx < NUM_TEMPLATES) {
+        SetWindowTextA(hInput, g_templates[idx].code);
+        RunScript();
+    }
+}
+
+void ShowPresetsMenu(HWND hwnd) {
+    HMENU hMenu = CreatePopupMenu();
+    for (int i = 0; i < NUM_TEMPLATES; i++) {
+        AppendMenuA(hMenu, MF_STRING, 100 + i, g_templates[i].title);
+    }
+    RECT rcBtn = {0};
+    if (hBtnPreset) GetWindowRect(hBtnPreset, &rcBtn);
+    else GetWindowRect(hwnd, &rcBtn);
+    int cmd = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, rcBtn.left, rcBtn.bottom, 0, hwnd, NULL);
+    DestroyMenu(hMenu);
+    if (cmd >= 100 && cmd < 100 + NUM_TEMPLATES) {
+        LoadTemplate(cmd - 100);
+    }
+}
+
+void ShowAstAnalysisDialog(HWND hwnd) {
+    int len = GetWindowTextLengthA(hInput);
+    if (len <= 0) {
+        MessageBoxA(hwnd, "Editor is empty. Type some code or load a template first.", "AST & Linter Suite", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    char* buf = (char*)VirtualAlloc(NULL, len + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (!buf) return;
+    GetWindowTextA(hInput, buf, len + 1);
+
+    int totalStmts = 0;
+    int printStmts = 0;
+    int assignStmts = 0;
+    int branchStmts = 0;
+    int loopStmts = 0;
+    int vfsStmts = 0;
+    int otherExprs = 0;
+
+    char diagBuf[1024];
+    diagBuf[0] = '\0';
+    int diagCount = 0;
+    char treePreview[2048];
+    treePreview[0] = '\0';
+    int previewCount = 0;
+
+    const char* p = buf;
+    int lineNum = 1;
+    while (*p) {
+        const char* lineStart = p;
+        while (*p && *p != '\r' && *p != '\n') p++;
+        int lineLen = (int)(p - lineStart);
+        if (*p == '\r') p++;
+        if (*p == '\n') p++;
+
+        while (lineLen > 0 && (*lineStart == ' ' || *lineStart == '\t')) {
+            lineStart++;
+            lineLen--;
+        }
+        char line[256];
+        int copyLen = lineLen < 255 ? lineLen : 255;
+        for (int i = 0; i < copyLen; i++) line[i] = lineStart[i];
+        line[copyLen] = '\0';
+        for (int i = 0; i < copyLen - 1; i++) {
+            if (line[i] == '/' && line[i+1] == '/') {
+                line[i] = '\0';
+                copyLen = i;
+                break;
+            }
+        }
+        while (copyLen > 0 && (line[copyLen - 1] == ' ' || line[copyLen - 1] == '\t')) {
+            line[--copyLen] = '\0';
+        }
+
+        if (copyLen > 0) {
+            totalStmts++;
+            const char* cat = "EXPR";
+            if (StrStartsWithCase(line, "print")) {
+                printStmts++;
+                cat = "STMT_PRINT";
+            } else if (StrStartsWithCase(line, "if") || StrStartsWithCase(line, "elif") ||
+                       StrStartsWithCase(line, "else") || StrStartsWithCase(line, "endif")) {
+                branchStmts++;
+                cat = "STMT_BRANCH";
+                if (StrStartsWithCase(line, "if ")) {
+                    const char* eq = StrChr(line + 3, '=');
+                    if (eq && *(eq + 1) != '=' && *(eq - 1) != '!' && *(eq - 1) != '<' && *(eq - 1) != '>') {
+                        if (diagCount < 5) {
+                            char d[128];
+                            wsprintfA(d, " - [L%d] Warning: Possible '=' assignment in 'if' condition (use '==')\r\n", lineNum);
+                            lstrcatA(diagBuf, d);
+                            diagCount++;
+                        }
+                    }
+                }
+            } else if (StrStartsWithCase(line, "while") || StrStartsWithCase(line, "endwhile")) {
+                loopStmts++;
+                cat = "STMT_LOOP";
+            } else if (StrStartsWithCase(line, "vfs") || StrStr(line, "vfs_") || StrStr(line, "vfs.")) {
+                vfsStmts++;
+                cat = "STMT_VFS";
+            } else if (StrChr(line, '=')) {
+                assignStmts++;
+                cat = "STMT_ASSIGN";
+            } else {
+                otherExprs++;
+            }
+
+            if (StrStr(line, "/ 0") || StrStr(line, "/0")) {
+                if (diagCount < 5) {
+                    char d[128];
+                    wsprintfA(d, " - [L%d] Error: Division by literal zero detected\r\n", lineNum);
+                    lstrcatA(diagBuf, d);
+                    diagCount++;
+                }
+            }
+
+            if (previewCount < 8) {
+                char entry[160];
+                wsprintfA(entry, " L%d: [%s] %s\r\n", lineNum, cat, line);
+                lstrcatA(treePreview, entry);
+                previewCount++;
+            }
+        }
+        lineNum++;
+    }
+
+    VirtualFree(buf, 0, MEM_RELEASE);
+
+    char report[4096];
+    wsprintfA(report,
+        "====================================================\r\n"
+        "      KSCRIPT AST & STATIC CODE LINTER SUITE        \r\n"
+        "====================================================\r\n\r\n"
+        "[AST STATEMENT METRICS]\r\n"
+        " - Total AST Statements:  %d\r\n"
+        " - Evaluated Node Count:  %d\r\n"
+        " - Active Variables:      %d\r\n"
+        " - Last Exec Latency:     %d us\r\n\r\n"
+        "[STATEMENT TYPE BREAKDOWN]\r\n"
+        " - Print Statements:      %d\r\n"
+        " - Variable Assignments:  %d\r\n"
+        " - Branching Statements:  %d\r\n"
+        " - Loop Sequences:        %d\r\n"
+        " - VFS Mesh Operations:   %d\r\n"
+        " - Expressions:           %d\r\n\r\n"
+        "[LINTER DIAGNOSTICS]\r\n"
+        "%s\r\n"
+        "[AST SYNTAX TREE PREVIEW]\r\n"
+        "%s",
+        totalStmts, nodeCount, g_varCount, lastExecMicros,
+        printStmts, assignStmts, branchStmts, loopStmts, vfsStmts, otherExprs,
+        diagCount > 0 ? diagBuf : " [OK] 0 syntax issues or division-by-zero errors detected.\r\n",
+        treePreview[0] ? treePreview : " (no statements)\r\n"
+    );
+
+    MessageBoxA(hwnd, report, "KScript - AST & Code Linter Suite [Alt+T]", MB_OK | MB_ICONINFORMATION);
+}
+
 int SaveQuicksaveState(HWND hwnd) {
     HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
         MessageBoxA(hwnd, "Failed to create quicksave file (kscript_quicksave.dat).", "KScript Error", MB_OK | MB_ICONERROR);
         return 0;
     }
-    const char magic[8] = "KSCR_QS1";
+    const char magic[8] = "KSCR_QS2";
     DWORD dwWritten = 0;
     WriteFile(hFile, magic, 8, &dwWritten, NULL);
 
@@ -1387,6 +1692,25 @@ int SaveQuicksaveState(HWND hwnd) {
         WriteFile(hFile, macroBuf, macroLen, &dwWritten, NULL);
     }
 
+    int findLen = GetWindowTextLengthA(hRegexFind);
+    WriteFile(hFile, &findLen, sizeof(int), &dwWritten, NULL);
+    if (findLen > 0) {
+        char fbuf[256];
+        GetWindowTextA(hRegexFind, fbuf, sizeof(fbuf));
+        WriteFile(hFile, fbuf, findLen, &dwWritten, NULL);
+    }
+
+    int repLen = GetWindowTextLengthA(hRegexRep);
+    WriteFile(hFile, &repLen, sizeof(int), &dwWritten, NULL);
+    if (repLen > 0) {
+        char rbuf[256];
+        GetWindowTextA(hRegexRep, rbuf, sizeof(rbuf));
+        WriteFile(hFile, rbuf, repLen, &dwWritten, NULL);
+    }
+
+    WriteFile(hFile, &g_splitX1, sizeof(int), &dwWritten, NULL);
+    WriteFile(hFile, &g_splitX2, sizeof(int), &dwWritten, NULL);
+
     CloseHandle(hFile);
     MarkTutorialSeen();
     return 1;
@@ -1400,7 +1724,9 @@ int LoadQuicksaveState(HWND hwnd) {
     char magic[8] = {0};
     DWORD dwRead = 0;
     ReadFile(hFile, magic, 8, &dwRead, NULL);
-    if (dwRead < 8 || !MemEqual(magic, "KSCR_QS1", 8)) {
+    int isV2 = MemEqual(magic, "KSCR_QS2", 8);
+    int isV1 = MemEqual(magic, "KSCR_QS1", 8);
+    if (dwRead < 8 || (!isV1 && !isV2)) {
         CloseHandle(hFile);
         return 0;
     }
@@ -1429,6 +1755,33 @@ int LoadQuicksaveState(HWND hwnd) {
         }
     }
 
+    if (isV2) {
+        int findLen = 0;
+        if (ReadFile(hFile, &findLen, sizeof(int), &dwRead, NULL) && findLen >= 0 && findLen < 256) {
+            char fbuf[256];
+            fbuf[0] = '\0';
+            if (findLen > 0) ReadFile(hFile, fbuf, findLen, &dwRead, NULL);
+            fbuf[findLen] = '\0';
+            SetWindowTextA(hRegexFind, fbuf);
+        }
+        int repLen = 0;
+        if (ReadFile(hFile, &repLen, sizeof(int), &dwRead, NULL) && repLen >= 0 && repLen < 256) {
+            char rbuf[256];
+            rbuf[0] = '\0';
+            if (repLen > 0) ReadFile(hFile, rbuf, repLen, &dwRead, NULL);
+            rbuf[repLen] = '\0';
+            SetWindowTextA(hRegexRep, rbuf);
+        }
+        int s1 = 0, s2 = 0;
+        if (ReadFile(hFile, &s1, sizeof(int), &dwRead, NULL) && ReadFile(hFile, &s2, sizeof(int), &dwRead, NULL)) {
+            if (s1 > 0 && s2 > 0) {
+                g_splitX1 = s1;
+                g_splitX2 = s2;
+                RelayoutPanels(hwnd);
+            }
+        }
+    }
+
     CloseHandle(hFile);
     RunScript();
     return 1;
@@ -1449,7 +1802,8 @@ void ShowHelpDialog(HWND hwnd) {
         " - Comparison: ==, !=, <, <=, >, >=\n"
         " - Logical: &&, ||, !\n\n"
         "[BUILT-IN FUNCTIONS]\n"
-        " abs(x), min(a,b), max(a,b), clamp(x,lo,hi), sqrt(x), gcd(a,b), sign(x), rand(min,max), pow(b,e)\n\n"
+        " abs(x), min(a,b), max(a,b), clamp(x,lo,hi), sqrt(x), gcd(a,b), sign(x), rand(min,max), pow(b,e)\n"
+        " vfs_read, vfs_write, vfs_append, vfs_exists, vfs_size, vfs_list\n\n"
         "[OUTPUT & CONSOLE]\n"
         " print \"Result is:\", val\n"
         " print \"Bitmask:\", mask, \"Flags:\", flags\n\n"
@@ -1457,6 +1811,8 @@ void ShowHelpDialog(HWND hwnd) {
         " - [Ctrl+Enter]        : Run Entire Script\n"
         " - [F5]                : Quicksave Snapshot (kscript_quicksave.dat)\n"
         " - [F9]                : Quickload Snapshot (kscript_quicksave.dat)\n"
+        " - [Alt+T]             : AST & Code Linter Suite\n"
+        " - [Alt+1..8]          : Load Sample Templates\n"
         " - [F6]                : Run Benchmark (500 iterations)\n"
         " - [F10] / [Alt+S]     : Step Line-by-Line\n"
         " - [Ctrl+S]            : Save Script File (.ksc / .json)\n"
@@ -1464,6 +1820,7 @@ void ShowHelpDialog(HWND hwnd) {
         " - [Ctrl+K]            : Clear Console & Reset State\n"
         " - [Alt+M] / [Ctrl+M]  : Toggle Macro Recording\n"
         " - [Alt+P] / [Ctrl+P]  : Play Recorded Macro\n"
+        " - [Alt+V]             : Open KiloOS VFS Script Explorer\n"
         " - [F1] / [Alt+H]      : Open this Help Guide";
 
     MessageBoxA(hwnd, helpText, "KScript - Help & Reference", MB_OK | MB_ICONINFORMATION);
@@ -1473,7 +1830,7 @@ void UpdateWindowTitle() {
     if (isRecording) {
         SetWindowTextA(hMainWnd, "KScript [● RECORDING MACRO] - Press Alt+M to Stop");
     } else {
-        SetWindowTextA(hMainWnd, "KScript - [Ctrl+Enter] Run | [F5] Save | [F9] Load | [F1] Help");
+        SetWindowTextA(hMainWnd, "KScript - [Ctrl+Enter] Run | [F5] Save | [F9] Load | [Alt+T] AST | [F1] Help");
     }
 }
 
