@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KImage
-  kilo_qa: KFont
+  kilo_qa: KSteno
   kilo_expander: KMatrix
   kilo_review: KScript
 virtual_web_target: kweb://scallion
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KHex
-  timestamp: '2026-11-03T12:38:06-08:00'
+  agent: kilo-qa
+  app: KFont
+  timestamp: '2026-11-03T13:22:22-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -166,11 +166,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KFont`
+- **Active Target**: `KSteno`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
 | `KSteno` | `KiloOS/public/apps/ksteno.html`, `KSteno/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, LSB image/audio steganography suite, bitplane visualizer, dual Win32 C parity, and promote to Mature table. |
 | `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, subterranean waterfall spectrogram, audio decoder telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ANSI terminal bulletin board, door games, VFS file transfer, dual Win32 C parity, and promote to Mature table. |
@@ -180,6 +179,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChrono` | `KiloOS/public/apps/kchrono.html`, `KChrono/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, timeline event organizer, epoch markers, dual Win32 C parity, and promote to Mature table. |
 | `KMine` | `KiloOS/public/apps/kmine.html`, `KMine/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, mine excavation crawler, ore inventory telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KDB` | `KiloOS/public/apps/kdb.html`, `KDB/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, SQL/relational table operations, CSV/JSON dataset export, query optimizer tests, dual Win32 C parity, and promote to Mature table. |
+| `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KMatrix`
@@ -289,6 +289,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T13:22:22-08:00 — kilo-qa: KFont (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-qa updates for KFont across web and native targets.
+  - Handoff: Advanced `kilo-qa` to `KSteno`; rotated active agent to `kilo-expander`.
+
 - **2026-11-03T12:38:06-08:00 — kilo-usability: KHex (Usability, Responsive Layout & Ergonomics Polish)**
   - Status: PASS ✅ (0 errors, web 291.3 KB, native 37.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 14.7%, HEAD Δ 0.13%, 0 fail, 0 warn, 5.3s)).
   - Layout & Responsive: nowrap Shannon Entropy badge row, word-wrap .output-box, Tab 2 panel-title flex-wrap, 64px rawTextBuffer, zero layout clipping at 980x783.
@@ -310,9 +315,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Integrated interactive Y2K audit, dot-com IPO bubble sim, Jargon Watch neologism forge & Hype-vs-Reality matrix.
   - Enhanced KiloOS VFS export, inter-app KPad/KNet dispatch, and portal.html WHOIS/traceroute/radar node routing.
   - Handoff: Advanced `kilo-creator` to `kweb://scallion`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-03T10:17:06-08:00 — kilo-review: KImage (Argon Visual, Feature & Usability Review)**
-  - Status: AUDIT COMPLETE (inspected 1060x683 sheet.png and audited kimage.html + KImage/main.c; un-quarantined KImage with surgical fixes queued).
-  - Visual/UX Findings: Missing .hidden and .row CSS leaves #emptyState visible above loaded #mainCanvas (clipping canvas in sheet.png Panel 3), stacks all 7 left tabs + Stego tab simultaneously, wraps #viewTools to a 2nd row, leaves #histCanvas blank, and clips 12pt UTF-8 mojibake buttons in KImage/main.c.
-  - Feature/VFS Findings: All 4 Optical DSP filters are dead no-ops (wrong mutatePixels signature), exportSessionJson() omits link.href, encodeStegoPayload() corrupts LSBs when adjustments/transforms are active, parseTGA(type 3)/parsePCX(8-bit VGA) fail, KImage/main.c loses hotkeys after button clicks and lacks retro dithering, and kimage.html has zero Phase VI KiloOS VFS/IPC hooks.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KImage`, `kilo-tester`->`KImage`, `kilo-expander`->`KImage`] (un-quarantined `KImage` from Mature); advanced `kilo-review` to `KSys`; next agent `kilo-creator`.

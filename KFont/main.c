@@ -7,8 +7,15 @@
 
 HWND hList, hSizeList;
 HWND hCustomText, hBold, hItalic, hAnatomyChar;
-HWND hTabMetrics, hTabGlyphs, hTabDiag, hTabAnatomy, hTabWaterfall, hTabSample, hTabSpec, hHelpBtn, hCopyBtn;
+HWND hTabMetrics, hTabGlyphs, hTabDiag, hTabAnatomy, hTabWaterfall, hTabSample, hTabSpec, hTabEditor, hHelpBtn, hCopyBtn;
 HWND hPanel, hRangeList;
+HWND hEditorCode;
+HWND hBtnEdPrev, hBtnEdNext, hBtnEdRasterize, hBtnEdClear, hBtnEdInvert, hBtnEdFmt, hBtnEdCopy, hBtnEdExport;
+
+unsigned char edChar = 'A';
+int edFormat = 0; // 0 = BDF 2.1, 1 = TTF TTX 3.0, 2 = C ROM Table
+unsigned char edBank[95][16];
+BOOL edBankInitialized = FALSE;
 
 HFONT hCurrentFont = NULL;
 int currentSize = 24;
@@ -28,6 +35,20 @@ void SelectTab(HWND hwnd, int tabIdx);
 void ShowHelpDialog(HWND hwnd);
 void UpdateFont(HWND hwnd);
 void CopyReportToClipboard(HWND hwnd);
+void RasterizeGlyph(HDC hdcRef, unsigned char c, unsigned char* outRows);
+void InitEditorBank(HDC hdcRef);
+void GenerateEditorExport(char* outBuf, int maxLen, int format);
+void UpdateEditorCode(void);
+void UpdateEditorFormatBtnText(void);
+void SaveEditorExportToFile(HWND hwnd);
+void CopyEditorCodeToClipboard(HWND hwnd);
+
+static void AppendStr(char* dest, int* pOffset, const char* src) {
+    while (*src) {
+        dest[(*pOffset)++] = *src++;
+    }
+    dest[*pOffset] = '\0';
+}
 
 static unsigned int ParseHexW(const WCHAR* s) {
     unsigned int val = 0;
@@ -94,11 +115,202 @@ void GetBlockRange(int sel, int* pStart, int* pEnd) {
     }
 }
 
+void RasterizeGlyph(HDC hdcRef, unsigned char c, unsigned char* outRows) {
+    for (int i = 0; i < 16; i++) outRows[i] = 0;
+    HDC hMemDC = CreateCompatibleDC(hdcRef);
+    HBITMAP hBmp = CreateBitmap(8, 16, 1, 1, NULL);
+    HBITMAP hOldBmp = (HBITMAP)SelectObject(hMemDC, hBmp);
+    HFONT hRasterFont = CreateFontA(-14, 0, 0, 0, isBold ? FW_BOLD : FW_NORMAL, isItalic, 0, 0, DEFAULT_CHARSET, 0, 0, NONANTIALIASED_QUALITY, DEFAULT_PITCH, currentFontName);
+    HFONT hOldFont = (HFONT)SelectObject(hMemDC, hRasterFont);
+
+    RECT rc = {0, 0, 8, 16};
+    FillRect(hMemDC, &rc, (HBRUSH)GetStockObject(BLACK_BRUSH));
+    SetTextColor(hMemDC, RGB(255, 255, 255));
+    SetBkColor(hMemDC, RGB(0, 0, 0));
+    SetBkMode(hMemDC, OPAQUE);
+
+    char chStr[2] = {(char)c, 0};
+    TextOutA(hMemDC, 0, 0, chStr, 1);
+
+    for (int y = 0; y < 16; y++) {
+        unsigned char byteVal = 0;
+        for (int x = 0; x < 8; x++) {
+            COLORREF pix = GetPixel(hMemDC, x, y);
+            if (pix != RGB(0, 0, 0)) {
+                byteVal |= (unsigned char)(1 << (7 - x));
+            }
+        }
+        outRows[y] = byteVal;
+    }
+
+    SelectObject(hMemDC, hOldFont);
+    DeleteObject(hRasterFont);
+    SelectObject(hMemDC, hOldBmp);
+    DeleteObject(hBmp);
+    DeleteDC(hMemDC);
+}
+
+void InitEditorBank(HDC hdcRef) {
+    if (edBankInitialized) return;
+    for (int c = 32; c <= 126; c++) {
+        RasterizeGlyph(hdcRef, (unsigned char)c, edBank[c - 32]);
+    }
+    edBankInitialized = TRUE;
+}
+
+void GenerateEditorExport(char* outBuf, int maxLen, int format) {
+    int off = 0;
+    outBuf[0] = '\0';
+    char chunk[256];
+
+    if (format == 0) { // Adobe BDF 2.1
+        wsprintfA(chunk, "STARTFONT 2.1\r\nFONT -KiloApps-%s-Medium-R-Normal--16-160-75-75-C-80-ISO8859-1\r\n", currentFontName);
+        AppendStr(outBuf, &off, chunk);
+        AppendStr(outBuf, &off, "SIZE 16 75 75\r\nFONTBOUNDINGBOX 8 16 0 -2\r\nSTARTPROPERTIES 2\r\nFONT_ASCENT 14\r\nFONT_DESCENT 2\r\nENDPROPERTIES\r\nCHARS 95\r\n");
+
+        for (int c = 32; c <= 126; c++) {
+            wsprintfA(chunk, "STARTCHAR char_%02X\r\nENCODING %d\r\nSWIDTH 1000 0\r\nDWIDTH 8 0\r\nBBX 8 16 0 -2\r\nBITMAP\r\n", c, c);
+            AppendStr(outBuf, &off, chunk);
+            for (int r = 0; r < 16; r++) {
+                wsprintfA(chunk, "%02X\r\n", (UINT)edBank[c - 32][r]);
+                AppendStr(outBuf, &off, chunk);
+            }
+            AppendStr(outBuf, &off, "ENDCHAR\r\n");
+        }
+        AppendStr(outBuf, &off, "ENDFONT\r\n");
+    } else if (format == 1) { // TrueType TTX 3.0 XML
+        wsprintfA(chunk, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<!-- TrueType / OpenType TTX 3.0 Font Extract (%s) -->\r\n<TTFont sfntVersion=\"\\x00\\x01\\x00\\x00\" ttLibVersion=\"3.0\">\r\n", currentFontName);
+        AppendStr(outBuf, &off, chunk);
+        AppendStr(outBuf, &off, "  <GlyphOrder>\r\n    <GlyphID id=\"0\" name=\".notdef\"/>\r\n    <GlyphID id=\"1\" name=\"space\"/>\r\n");
+        for (int c = 33; c <= 126; c++) {
+            wsprintfA(chunk, "    <GlyphID id=\"%d\" name=\"glyph%04X\"/>\r\n", c - 31, c);
+            AppendStr(outBuf, &off, chunk);
+        }
+        AppendStr(outBuf, &off, "  </GlyphOrder>\r\n  <head>\r\n    <tableVersion value=\"1.0\"/>\r\n    <fontRevision value=\"1.0\"/>\r\n    <unitsPerEm value=\"1000\"/>\r\n    <xMin value=\"0\" yMin=\"-200\" xMax=\"800\" yMax=\"800\"/>\r\n  </head>\r\n  <hhea>\r\n    <ascent value=\"800\" descent=\"-200\" lineGap=\"90\"/>\r\n    <advanceWidthMax value=\"800\" numberOfHMetrics=\"95\"/>\r\n  </hhea>\r\n  <glyf>\r\n");
+        wsprintfA(chunk, "    <!-- Active Selected Glyph: '%c' (U+%04X) Matrix Vector -->\r\n    <TTGlyph name=\"glyph%04X\" xMin=\"0\" yMin=\"-200\" xMax=\"800\" yMax=\"800\">\r\n", (edChar >= 32 && edChar <= 126) ? edChar : ' ', (UINT)edChar, (UINT)edChar);
+        AppendStr(outBuf, &off, chunk);
+        for (int r = 0; r < 16; r++) {
+            for (int col = 0; col < 8; col++) {
+                if ((edBank[edChar - 32][r] >> (7 - col)) & 1) {
+                    int x0 = col * 100;
+                    int y0 = 800 - (r + 1) * 62;
+                    wsprintfA(chunk, "      <contour><pt x=\"%d\" y=\"%d\" on=\"1\"/><pt x=\"%d\" y=\"%d\" on=\"1\"/></contour>\r\n", x0, y0, x0 + 100, y0 + 62);
+                    AppendStr(outBuf, &off, chunk);
+                }
+            }
+        }
+        AppendStr(outBuf, &off, "    </TTGlyph>\r\n  </glyf>\r\n</TTFont>\r\n");
+    } else { // C Header ROM Table
+        wsprintfA(chunk, "/* === KFont 8x16 Bitmap Font ROM Table === */\r\n/* Font: %s | Size: 16px | 95 ASCII Glyphs (32..126) */\r\n\r\nconst unsigned char font_rom_8x16[95][16] = {\r\n", currentFontName);
+        AppendStr(outBuf, &off, chunk);
+        for (int c = 32; c <= 126; c++) {
+            char chDisp = (c >= 32 && c <= 126 && c != '\\' && c != '\'') ? (char)c : ' ';
+            wsprintfA(chunk, "  /* [%3d '%c'] */ { ", c, chDisp);
+            AppendStr(outBuf, &off, chunk);
+            for (int r = 0; r < 16; r++) {
+                wsprintfA(chunk, "0x%02X%s", (UINT)edBank[c - 32][r], (r == 15) ? "" : ", ");
+                AppendStr(outBuf, &off, chunk);
+            }
+            wsprintfA(chunk, " }%s\r\n", (c == 126) ? "" : ",");
+            AppendStr(outBuf, &off, chunk);
+        }
+        AppendStr(outBuf, &off, "};\r\n");
+    }
+}
+
+void UpdateEditorFormatBtnText(void) {
+    if (!hBtnEdFmt) return;
+    const char* txt = (edFormat == 0) ? "Fmt: BDF 2.1" : (edFormat == 1 ? "Fmt: TTF TTX" : "Fmt: C Table");
+    SetWindowTextA(hBtnEdFmt, txt);
+}
+
+void UpdateEditorCode(void) {
+    if (!hEditorCode) return;
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 65536);
+    if (buf) {
+        GenerateEditorExport(buf, 65536, edFormat);
+        SetWindowTextA(hEditorCode, buf);
+        HeapFree(GetProcessHeap(), 0, buf);
+    }
+}
+
+void SaveEditorExportToFile(HWND hwnd) {
+    const char* filename = (edFormat == 0) ? "kfont_export.bdf" : (edFormat == 1 ? "kfont_export.ttx" : "kfont_export.h");
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 65536);
+    if (!buf) return;
+    GenerateEditorExport(buf, 65536, edFormat);
+    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, buf, lstrlenA(buf), &written, NULL);
+        CloseHandle(hFile);
+        char msg[128];
+        wsprintfA(msg, "Font successfully exported to %s!", filename);
+        MessageBoxA(hwnd, msg, "KFont Export", MB_OK | MB_ICONINFORMATION);
+    } else {
+        MessageBoxA(hwnd, "Failed to create export file.", "KFont Error", MB_OK | MB_ICONERROR);
+    }
+    HeapFree(GetProcessHeap(), 0, buf);
+}
+
+void CopyEditorCodeToClipboard(HWND hwnd) {
+    int len = GetWindowTextLengthA(hEditorCode);
+    if (len <= 0) return;
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    if (hMem) {
+        char* pMem = (char*)GlobalLock(hMem);
+        if (pMem) {
+            GetWindowTextA(hEditorCode, pMem, len + 1);
+            GlobalUnlock(hMem);
+            if (OpenClipboard(hwnd)) {
+                EmptyClipboard();
+                SetClipboardData(CF_TEXT, hMem);
+                CloseClipboard();
+                MessageBoxA(hwnd, "Export code copied to clipboard!", "KFont", MB_OK | MB_ICONINFORMATION);
+                return;
+            }
+        }
+        GlobalFree(hMem);
+    }
+}
+
 LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_COMMAND:
             if (LOWORD(wParam) == 20 && HIWORD(wParam) == CBN_SELCHANGE) {
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 201) { // Prev glyph
+                if (edChar > 32) edChar--;
+                else edChar = 126;
+                UpdateEditorCode();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 202) { // Next glyph
+                if (edChar < 126) edChar++;
+                else edChar = 32;
+                UpdateEditorCode();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 203) { // Rasterize from font
+                HDC hdcRef = GetDC(hwnd);
+                RasterizeGlyph(hdcRef, edChar, edBank[edChar - 32]);
+                ReleaseDC(hwnd, hdcRef);
+                UpdateEditorCode();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 204) { // Clear
+                for (int i = 0; i < 16; i++) edBank[edChar - 32][i] = 0;
+                UpdateEditorCode();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 205) { // Invert
+                for (int i = 0; i < 16; i++) edBank[edChar - 32][i] = (unsigned char)~edBank[edChar - 32][i];
+                UpdateEditorCode();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 206) { // Toggle format: BDF -> TTF -> C -> BDF
+                edFormat = (edFormat + 1) % 3;
+                UpdateEditorFormatBtnText();
+                UpdateEditorCode();
+            } else if (LOWORD(wParam) == 207) { // Copy Code
+                CopyEditorCodeToClipboard(hwnd);
+            } else if (LOWORD(wParam) == 208) { // Save Export File
+                SaveEditorExportToFile(hwnd);
             }
             break;
         case WM_LBUTTONDOWN: {
@@ -132,6 +344,46 @@ LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     SelectObject(hdc, hOld);
                     ReleaseDC(hwnd, hdc);
+                }
+            } else if (currentTab == 7) { // Font Editor & BDF/TTF Studio
+                int mx = LOWORD(lParam);
+                int my = HIWORD(lParam);
+                // 8x16 Grid: x=15, y=50, 8 cols x 16 rows, 16x16 px cells
+                if (mx >= 15 && mx < 15 + 8 * 16 && my >= 50 && my < 50 + 16 * 16) {
+                    int col = (mx - 15) / 16;
+                    int row = (my - 50) / 16;
+                    if (col >= 0 && col < 8 && row >= 0 && row < 16) {
+                        edBank[edChar - 32][row] ^= (unsigned char)(1 << (7 - col));
+                        UpdateEditorCode();
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                }
+                // ASCII Palette: x=15, y=410, 16 cols x 6 rows, 17x18 px cells
+                else if (mx >= 15 && mx < 15 + 16 * 17 && my >= 410 && my < 410 + 6 * 18) {
+                    int col = (mx - 15) / 17;
+                    int row = (my - 410) / 18;
+                    int idx = row * 16 + col;
+                    if (idx >= 0 && idx < 95) {
+                        edChar = (unsigned char)(32 + idx);
+                        UpdateEditorCode();
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                }
+            }
+            break;
+        }
+        case WM_RBUTTONDOWN: {
+            if (currentTab == 7) {
+                int mx = LOWORD(lParam);
+                int my = HIWORD(lParam);
+                if (mx >= 15 && mx < 15 + 8 * 16 && my >= 50 && my < 50 + 16 * 16) {
+                    int col = (mx - 15) / 16;
+                    int row = (my - 50) / 16;
+                    if (col >= 0 && col < 8 && row >= 0 && row < 16) {
+                        edBank[edChar - 32][row] &= (unsigned char)~(1 << (7 - col));
+                        UpdateEditorCode();
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
                 }
             }
             break;
@@ -615,6 +867,113 @@ LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 SelectObject(hdc, hOld);
             }
+            else if (currentTab == 7) { // Font Editor & BDF/TTF Studio
+                SelectObject(hdc, hFont);
+                char buf[128];
+                wsprintfA(buf, "Active Glyph: '%c' (ASCII %d / 0x%02X)", (edChar >= 32 && edChar <= 126) ? edChar : ' ', (UINT)edChar, (UINT)edChar);
+                SetTextColor(hdc, RGB(0, 102, 204));
+                TextOutA(hdc, 15, 8, buf, lstrlenA(buf));
+                SetTextColor(hdc, RGB(0, 0, 0));
+
+                TextOutA(hdc, 15, 34, "Pixel Grid (L-Click Toggle / R-Click Clear):", 44);
+                HBRUSH hCellOn = CreateSolidBrush(RGB(14, 165, 233));
+                HBRUSH hCellOff = CreateSolidBrush(RGB(241, 245, 249));
+                HPEN hGridPen = CreatePen(PS_SOLID, 1, RGB(203, 213, 225));
+                HPEN hOldPen = (HPEN)SelectObject(hdc, hGridPen);
+
+                for (int r = 0; r < 16; r++) {
+                    unsigned char byteVal = edBank[edChar - 32][r];
+                    for (int c = 0; c < 8; c++) {
+                        BOOL on = (byteVal >> (7 - c)) & 1;
+                        RECT rcCell = { 15 + c * 16, 50 + r * 16, 15 + (c + 1) * 16, 50 + (r + 1) * 16 };
+                        FillRect(hdc, &rcCell, on ? hCellOn : hCellOff);
+                        MoveToEx(hdc, rcCell.left, rcCell.top, NULL);
+                        LineTo(hdc, rcCell.right, rcCell.top);
+                        LineTo(hdc, rcCell.right, rcCell.bottom);
+                        LineTo(hdc, rcCell.left, rcCell.bottom);
+                        LineTo(hdc, rcCell.left, rcCell.top);
+                    }
+                }
+                DeleteObject(hCellOn);
+                DeleteObject(hCellOff);
+
+                // Previews at x=160
+                int px = 160;
+                TextOutA(hdc, px, 50, "1x Preview:", 11);
+                for (int r = 0; r < 16; r++) {
+                    unsigned char b = edBank[edChar - 32][r];
+                    for (int c = 0; c < 8; c++) {
+                        if ((b >> (7 - c)) & 1) SetPixel(hdc, px + c, 68 + r, RGB(0, 0, 0));
+                    }
+                }
+
+                TextOutA(hdc, px, 95, "2x Preview:", 11);
+                HBRUSH hBlack = (HBRUSH)GetStockObject(BLACK_BRUSH);
+                for (int r = 0; r < 16; r++) {
+                    unsigned char b = edBank[edChar - 32][r];
+                    for (int c = 0; c < 8; c++) {
+                        if ((b >> (7 - c)) & 1) {
+                            RECT r2 = { px + c * 2, 115 + r * 2, px + (c + 1) * 2, 115 + (r + 1) * 2 };
+                            FillRect(hdc, &r2, hBlack);
+                        }
+                    }
+                }
+
+                TextOutA(hdc, px, 155, "4x Preview:", 11);
+                for (int r = 0; r < 16; r++) {
+                    unsigned char b = edBank[edChar - 32][r];
+                    for (int c = 0; c < 8; c++) {
+                        if ((b >> (7 - c)) & 1) {
+                            RECT r4 = { px + c * 4, 175 + r * 4, px + (c + 1) * 4, 175 + (r + 1) * 4 };
+                            FillRect(hdc, &r4, hBlack);
+                        }
+                    }
+                }
+
+                TextOutA(hdc, 15, 318, "Live String Preview (Banked 8x16 Bitmap Font):", 46);
+                const char* sampleStr = "THE QUICK BROWN FOX 123";
+                int sx = 15, sy = 338;
+                for (int i = 0; sampleStr[i]; i++) {
+                    unsigned char ch = (unsigned char)sampleStr[i];
+                    if (ch >= 32 && ch <= 126) {
+                        for (int r = 0; r < 16; r++) {
+                            unsigned char b = edBank[ch - 32][r];
+                            for (int c = 0; c < 8; c++) {
+                                if ((b >> (7 - c)) & 1) {
+                                    SetPixel(hdc, sx + c, sy + r, RGB(15, 23, 42));
+                                }
+                            }
+                        }
+                    }
+                    sx += 9;
+                    if (sx > 275) break;
+                }
+
+                TextOutA(hdc, 15, 390, "ASCII Bank (Click glyph to edit):", 33);
+                HBRUSH hSelBrush = CreateSolidBrush(RGB(186, 230, 253));
+                for (int idx = 0; idx < 95; idx++) {
+                    unsigned char ch = (unsigned char)(32 + idx);
+                    int col = idx % 16;
+                    int row = idx / 16;
+                    int gx = 15 + col * 17;
+                    int gy = 410 + row * 18;
+                    RECT rcG = { gx, gy, gx + 17, gy + 18 };
+                    if (ch == edChar) {
+                        FillRect(hdc, &rcG, hSelBrush);
+                    }
+                    char s[2] = { (char)ch, 0 };
+                    TextOutA(hdc, gx + 4, gy + 1, s, 1);
+                    MoveToEx(hdc, rcG.left, rcG.top, NULL);
+                    LineTo(hdc, rcG.right, rcG.top);
+                    LineTo(hdc, rcG.right, rcG.bottom);
+                    LineTo(hdc, rcG.left, rcG.bottom);
+                    LineTo(hdc, rcG.left, rcG.top);
+                }
+                DeleteObject(hSelBrush);
+
+                SelectObject(hdc, hOldPen);
+                DeleteObject(hGridPen);
+            }
             
             BitBlt(hdcScreen, 0, 0, rcClient.right, rcClient.bottom, hdc, 0, 0, SRCCOPY);
             SelectObject(hdc, hOldBmp);
@@ -642,6 +1001,10 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM font) {
 }
 
 void CopyReportToClipboard(HWND hwnd) {
+    if (currentTab == 7) {
+        CopyEditorCodeToClipboard(hwnd);
+        return;
+    }
     char report[2048];
     if (currentTab == 6) { // Spec / Code Tab
         wsprintfA(report,
@@ -729,13 +1092,27 @@ void CopyReportToClipboard(HWND hwnd) {
 }
 
 void SelectTab(HWND hwnd, int tabIdx) {
-    if (tabIdx < 0 || tabIdx > 6) return;
+    if (tabIdx < 0 || tabIdx > 7) return;
     currentTab = tabIdx;
-    HWND tabs[] = {hTabMetrics, hTabGlyphs, hTabDiag, hTabAnatomy, hTabWaterfall, hTabSample, hTabSpec};
-    for (int i = 0; i < 7; i++) {
+    HWND tabs[] = {hTabMetrics, hTabGlyphs, hTabDiag, hTabAnatomy, hTabWaterfall, hTabSample, hTabSpec, hTabEditor};
+    for (int i = 0; i < 8; i++) {
         SendMessage(tabs[i], BM_SETCHECK, (i == currentTab) ? BST_CHECKED : BST_UNCHECKED, 0);
     }
     ShowWindow(hRangeList, currentTab == 1 ? SW_SHOW : SW_HIDE);
+    int swEd = (currentTab == 7) ? SW_SHOW : SW_HIDE;
+    ShowWindow(hEditorCode, swEd);
+    ShowWindow(hBtnEdPrev, swEd);
+    ShowWindow(hBtnEdNext, swEd);
+    ShowWindow(hBtnEdRasterize, swEd);
+    ShowWindow(hBtnEdClear, swEd);
+    ShowWindow(hBtnEdInvert, swEd);
+    ShowWindow(hBtnEdFmt, swEd);
+    ShowWindow(hBtnEdCopy, swEd);
+    ShowWindow(hBtnEdExport, swEd);
+    if (currentTab == 7) {
+        UpdateEditorFormatBtnText();
+        UpdateEditorCode();
+    }
     InvalidateRect(hPanel, NULL, TRUE);
 }
 
@@ -774,6 +1151,9 @@ typedef struct {
     WCHAR anatomyChar;
     char customText[512];
     int rangeIndex;
+    unsigned char edChar;
+    int edFormat;
+    unsigned char edBank[95][16];
 } KFontSaveData;
 
 void QuicksaveNative(HWND hwnd) {
@@ -786,6 +1166,13 @@ void QuicksaveNative(HWND hwnd) {
     data.anatomyChar = anatomyChar;
     GetWindowTextA(hCustomText, data.customText, sizeof(data.customText));
     data.rangeIndex = (int)SendMessage(hRangeList, CB_GETCURSEL, 0, 0);
+    data.edChar = edChar;
+    data.edFormat = edFormat;
+    for (int i = 0; i < 95; i++) {
+        for (int j = 0; j < 16; j++) {
+            data.edBank[i][j] = edBank[i][j];
+        }
+    }
 
     HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -836,6 +1223,17 @@ void QuickloadNative(HWND hwnd) {
                 SendMessage(hRangeList, CB_SETCURSEL, data.rangeIndex, 0);
             }
 
+            if (read >= sizeof(KFontSaveData)) {
+                if (data.edChar >= 32 && data.edChar <= 126) edChar = data.edChar;
+                if (data.edFormat >= 0 && data.edFormat <= 2) edFormat = data.edFormat;
+                for (int i = 0; i < 95; i++) {
+                    for (int j = 0; j < 16; j++) {
+                        edBank[i][j] = data.edBank[i][j];
+                    }
+                }
+                edBankInitialized = TRUE;
+            }
+
             UpdateFont(hwnd);
             SelectTab(hwnd, data.tab);
 
@@ -860,9 +1258,10 @@ void ShowHelpDialog(HWND hwnd) {
         "  [4] Anatomy: Vector guidelines, ABC spacing, bearings & codec\n"
         "  [5] Waterfall: Optical scaling cascade across 9 scale steps\n"
         "  [6] Sample & Dissector: Live text test & running advance table\n"
-        "  [7] Spec / Code: Win32 C LOGFONT & CSS variables code generator\n\n"
+        "  [7] Spec / Code: Win32 C LOGFONT & CSS variables code generator\n"
+        "  [8] Editor: Bitmap font studio, pixel glyph grid, & BDF/TTF/C export\n\n"
         "Keyboard Shortcuts:\n"
-        "  [1-7]  : Switch inspector tabs\n"
+        "  [1-8]  : Switch inspector tabs\n"
         "  [F5]   : Quicksave workspace snapshot (kfont_quicksave.dat)\n"
         "  [F9]   : Quickload snapshot (kfont_quicksave.dat)\n"
         "  [B]    : Toggle Bold\n"
@@ -923,16 +1322,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateWindowEx(0, "BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 602, 70, 24, hwnd, (HMENU)120, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 86, 602, 72, 24, hwnd, (HMENU)121, NULL, NULL);
 
-            // Tab bar (7 tabs + Copy + Help)
-            hTabMetrics   = CreateWindowEx(0, "BUTTON", "Metrics [1]",   WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 170, 10, 82, 20, hwnd, (HMENU)10, NULL, NULL);
-            hTabGlyphs    = CreateWindowEx(0, "BUTTON", "Glyphs [2]",    WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 254, 10, 80, 20, hwnd, (HMENU)11, NULL, NULL);
-            hTabDiag      = CreateWindowEx(0, "BUTTON", "Diagnostics [3]", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 336, 10, 96, 20, hwnd, (HMENU)12, NULL, NULL);
-            hTabAnatomy   = CreateWindowEx(0, "BUTTON", "Anatomy [4]",   WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 434, 10, 88, 20, hwnd, (HMENU)13, NULL, NULL);
-            hTabWaterfall = CreateWindowEx(0, "BUTTON", "Waterfall [5]", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 524, 10, 86, 20, hwnd, (HMENU)14, NULL, NULL);
-            hTabSample    = CreateWindowEx(0, "BUTTON", "Sample [6]",    WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 612, 10, 80, 20, hwnd, (HMENU)15, NULL, NULL);
-            hTabSpec      = CreateWindowEx(0, "BUTTON", "Spec/Code [7]", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 694, 10, 92, 20, hwnd, (HMENU)16, NULL, NULL);
-            hCopyBtn      = CreateWindowEx(0, "BUTTON", "Copy [C]",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 788, 10, 68, 20, hwnd, (HMENU)17, NULL, NULL);
-            hHelpBtn      = CreateWindowEx(0, "BUTTON", "Help [F1]",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 858, 10, 72, 20, hwnd, (HMENU)18, NULL, NULL);
+            // Tab bar (8 tabs + Copy + Help)
+            hTabMetrics   = CreateWindowEx(0, "BUTTON", "Metrics [1]",   WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 170, 10, 76, 20, hwnd, (HMENU)10, NULL, NULL);
+            hTabGlyphs    = CreateWindowEx(0, "BUTTON", "Glyphs [2]",    WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 248, 10, 70, 20, hwnd, (HMENU)11, NULL, NULL);
+            hTabDiag      = CreateWindowEx(0, "BUTTON", "Diagnostics [3]", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 320, 10, 88, 20, hwnd, (HMENU)12, NULL, NULL);
+            hTabAnatomy   = CreateWindowEx(0, "BUTTON", "Anatomy [4]",   WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 410, 10, 76, 20, hwnd, (HMENU)13, NULL, NULL);
+            hTabWaterfall = CreateWindowEx(0, "BUTTON", "Waterfall [5]", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 488, 10, 74, 20, hwnd, (HMENU)14, NULL, NULL);
+            hTabSample    = CreateWindowEx(0, "BUTTON", "Sample [6]",    WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 564, 10, 66, 20, hwnd, (HMENU)15, NULL, NULL);
+            hTabSpec      = CreateWindowEx(0, "BUTTON", "Spec/Code [7]", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 632, 10, 72, 20, hwnd, (HMENU)16, NULL, NULL);
+            hTabEditor    = CreateWindowEx(0, "BUTTON", "Editor [8]",    WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 706, 10, 74, 20, hwnd, (HMENU)17, NULL, NULL);
+            hCopyBtn      = CreateWindowEx(0, "BUTTON", "Copy [C]",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 784, 10, 64, 20, hwnd, (HMENU)18, NULL, NULL);
+            hHelpBtn      = CreateWindowEx(0, "BUTTON", "Help [F1]",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 852, 10, 68, 20, hwnd, (HMENU)19, NULL, NULL);
             
             SendMessage(hTabMetrics, BM_SETCHECK, BST_CHECKED, 0);
 
@@ -946,6 +1346,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             hPanel = CreateWindowEx(WS_EX_CLIENTEDGE, "KFontPanel", "", WS_CHILD | WS_VISIBLE, 170, 38, W - 190, H - 48, hwnd, NULL, NULL, NULL);
             
+            hBtnEdPrev      = CreateWindowEx(0, "BUTTON", "< Prev", WS_CHILD, 15, 8, 50, 22, hPanel, (HMENU)201, NULL, NULL);
+            hBtnEdNext      = CreateWindowEx(0, "BUTTON", "Next >", WS_CHILD, 68, 8, 50, 22, hPanel, (HMENU)202, NULL, NULL);
+            hBtnEdRasterize = CreateWindowEx(0, "BUTTON", "Rasterize", WS_CHILD, 122, 8, 64, 22, hPanel, (HMENU)203, NULL, NULL);
+            hBtnEdClear     = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD, 190, 8, 46, 22, hPanel, (HMENU)204, NULL, NULL);
+            hBtnEdInvert    = CreateWindowEx(0, "BUTTON", "Invert", WS_CHILD, 240, 8, 46, 22, hPanel, (HMENU)205, NULL, NULL);
+            hBtnEdFmt       = CreateWindowEx(0, "BUTTON", "Fmt: BDF 2.1", WS_CHILD, 290, 8, 88, 22, hPanel, (HMENU)206, NULL, NULL);
+            hBtnEdCopy      = CreateWindowEx(0, "BUTTON", "Copy Code", WS_CHILD, 382, 8, 72, 22, hPanel, (HMENU)207, NULL, NULL);
+            hBtnEdExport    = CreateWindowEx(0, "BUTTON", "Save Export", WS_CHILD, 458, 8, 80, 22, hPanel, (HMENU)208, NULL, NULL);
+            hEditorCode     = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL | WS_VSCROLL | WS_HSCROLL, 290, 34, 450, 600, hPanel, (HMENU)210, NULL, NULL);
+
             hRangeList = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, 10, 10, 280, 220, hPanel, (HMENU)20, NULL, NULL);
             const char* blocks[] = {
                 "Basic Latin (0020-007F)",
@@ -970,6 +1380,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hRangeList, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             HDC hdc = GetDC(hwnd);
+            InitEditorBank(hdc);
             LOGFONTA lf = {0};
             lf.lfCharSet = DEFAULT_CHARSET;
             EnumFontFamiliesExA(hdc, &lf, (FONTENUMPROCA)EnumFontFamExProc, 0, 0);
@@ -983,8 +1394,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (LOWORD(wParam) == 18 && HIWORD(wParam) == BN_CLICKED) {
                 ShowHelpDialog(hwnd);
             }
-            else if (LOWORD(wParam) == 17 && HIWORD(wParam) == BN_CLICKED) {
+            else if (LOWORD(wParam) == 18 && HIWORD(wParam) == BN_CLICKED) {
                 CopyReportToClipboard(hwnd);
+            }
+            else if (LOWORD(wParam) == 19 && HIWORD(wParam) == BN_CLICKED) {
+                ShowHelpDialog(hwnd);
             }
             else if (LOWORD(wParam) == 120 && HIWORD(wParam) == BN_CLICKED) {
                 QuicksaveNative(hwnd);
@@ -992,7 +1406,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (LOWORD(wParam) == 121 && HIWORD(wParam) == BN_CLICKED) {
                 QuickloadNative(hwnd);
             }
-            else if (LOWORD(wParam) >= 10 && LOWORD(wParam) <= 16 && HIWORD(wParam) == BN_CLICKED) {
+            else if (LOWORD(wParam) >= 10 && LOWORD(wParam) <= 17 && HIWORD(wParam) == BN_CLICKED) {
                 SelectTab(hwnd, LOWORD(wParam) - 10);
             }
             else if (LOWORD(wParam) >= 101 && LOWORD(wParam) <= 106 && HIWORD(wParam) == BN_CLICKED) {
@@ -1056,7 +1470,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hChild = (HWND)lParam;
             if (hChild == hTabMetrics || hChild == hTabGlyphs || hChild == hTabDiag ||
                 hChild == hTabAnatomy || hChild == hTabWaterfall || hChild == hTabSample ||
-                hChild == hTabSpec || hChild == hBold || hChild == hItalic) {
+                hChild == hTabSpec || hChild == hTabEditor || hChild == hBold || hChild == hItalic) {
                 HDC hdcStatic = (HDC)wParam;
                 SetTextColor(hdcStatic, RGB(224, 224, 224));
                 SetBkColor(hdcStatic, RGB(18, 18, 18));
@@ -1124,7 +1538,7 @@ void MainEntry() {
                 "Welcome to KFont Typography & Font Engineering Inspector!\n\n"
                 "Explore font outline metrics, Unicode blocks, kerning tables, vector anatomy, and code generation.\n\n"
                 "Key Controls:\n"
-                "  - [1-7]  : Switch inspector tabs\n"
+                "  - [1-8]  : Switch inspector tabs\n"
                 "  - [F5]   : Quicksave workspace snapshot (kfont_quicksave.dat)\n"
                 "  - [F9]   : Quickload snapshot\n"
                 "  - [F1/H] : Comprehensive Help & Shortcut Reference\n"
@@ -1138,7 +1552,7 @@ void MainEntry() {
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN) {
             HWND hFocus = GetFocus();
-            BOOL inEdit = (hFocus == hCustomText || hFocus == hAnatomyChar);
+            BOOL inEdit = (hFocus == hCustomText || hFocus == hAnatomyChar || hFocus == hEditorCode);
             if (msg.wParam == VK_ESCAPE) {
                 if (inEdit) {
                     SetFocus(hwnd);
@@ -1156,7 +1570,7 @@ void MainEntry() {
                     continue;
                 }
             } else if (!inEdit) {
-                if (msg.wParam >= '1' && msg.wParam <= '7') {
+                if (msg.wParam >= '1' && msg.wParam <= '8') {
                     SelectTab(hwnd, (int)(msg.wParam - '1'));
                     continue;
                 } else if (msg.wParam == 'B' || msg.wParam == 'b') {

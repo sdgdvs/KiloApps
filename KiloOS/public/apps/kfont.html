@@ -4143,7 +4143,7 @@ typedef struct {
         if (isOscillating) {
           wasOscillatingBeforeHidden = true;
           isOscillating = false;
-          const btn = document.getElementById('btnTogglePulse');
+          const btn = document.getElementById('btnToggleOscillation') || document.getElementById('btnTogglePulse');
           if (btn) {
             btn.textContent = '▶ Start Typographic Pulse / Breath Mode';
             btn.style.background = '#7c3aed';
@@ -4155,7 +4155,7 @@ typedef struct {
           const activeTab = document.querySelector('.tab-btn.active')?.dataset.target;
           if (activeTab === 'panel-opentype') {
             isOscillating = true;
-            const btn = document.getElementById('btnTogglePulse');
+            const btn = document.getElementById('btnToggleOscillation') || document.getElementById('btnTogglePulse');
             if (btn) {
               btn.textContent = '⏹ Stop Typographic Pulse';
               btn.style.background = '#dc2626';

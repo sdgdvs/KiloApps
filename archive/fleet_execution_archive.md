@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T10:17:06-08:00 — kilo-review: KImage (Argon Visual, Feature & Usability Review)**
+  - Status: AUDIT COMPLETE (inspected 1060x683 sheet.png and audited kimage.html + KImage/main.c; un-quarantined KImage with surgical fixes queued).
+  - Visual/UX Findings: Missing .hidden and .row CSS leaves #emptyState visible above loaded #mainCanvas (clipping canvas in sheet.png Panel 3), stacks all 7 left tabs + Stego tab simultaneously, wraps #viewTools to a 2nd row, leaves #histCanvas blank, and clips 12pt UTF-8 mojibake buttons in KImage/main.c.
+  - Feature/VFS Findings: All 4 Optical DSP filters are dead no-ops (wrong mutatePixels signature), exportSessionJson() omits link.href, encodeStegoPayload() corrupts LSBs when adjustments/transforms are active, parseTGA(type 3)/parsePCX(8-bit VGA) fail, KImage/main.c loses hotkeys after button clicks and lacks retro dithering, and kimage.html has zero Phase VI KiloOS VFS/IPC hooks.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KImage`, `kilo-tester`->`KImage`, `kilo-expander`->`KImage`] (un-quarantined `KImage` from Mature); advanced `kilo-review` to `KSys`; next agent `kilo-creator`.
+
 - **2026-11-03T09:41:19-08:00 — kilo-expander: KCalc (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KCalc across web and native targets.
