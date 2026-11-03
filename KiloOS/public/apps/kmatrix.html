@@ -1615,6 +1615,9 @@
     try {
       initAudio();
       if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
       const baseTime = audioCtx.currentTime;
       const unit = 0.055; // 55ms time unit
       const freq = 1999;
@@ -1771,6 +1774,7 @@
       printLine(`TELEMETRY: ${sec.telemetry}`, "system");
       logTelemetry(`Sector ${sec.id} BREACHED with key '${cleanKey}'`);
       saveState(false);
+      persistVFSBreachState(true);
       checkClimax();
     } else {
       SFX.error();
@@ -1791,6 +1795,7 @@
       renderHUD();
       SFX.breach();
       saveState(false);
+      persistVFSBreachState(true);
       checkClimax();
     } else {
       SFX.error();
@@ -1950,19 +1955,26 @@
         clearanceLevel: state.completed ? "ARCHITECT" : (breachedCount > 0 ? "FIELD_OPERATIVE" : "ANALYST")
       };
       const jsonStr = JSON.stringify(breachPayload, null, 2);
-      window.parent.postMessage({
-        type: 'VFS_WRITE',
-        path: '/home/crypto/kmatrix_breach.json',
-        data: jsonStr,
-        requestId: 'kmatrix_breach_' + Date.now()
-      }, '*');
-      if (notify) {
+      if (window.parent && window.parent !== window) {
         window.parent.postMessage({
-          type: 'OS_NOTIFY',
-          title: 'KMatrix // Terminal',
-          message: 'Breach state persisted to VFS: /home/crypto/kmatrix_breach.json'
+          type: 'VFS_WRITE',
+          path: '/home/crypto/kmatrix_breach.json',
+          data: jsonStr,
+          requestId: 'kmatrix_breach_' + Date.now()
         }, '*');
-        printLine('[VFS WRITE] Breach state synced to /home/crypto/kmatrix_breach.json', 'cyan');
+        if (notify) {
+          window.parent.postMessage({
+            type: 'OS_NOTIFY',
+            title: 'KMatrix // Terminal',
+            message: 'Breach state persisted to VFS: /home/crypto/kmatrix_breach.json'
+          }, '*');
+          printLine('[VFS WRITE] Breach state synced to /home/crypto/kmatrix_breach.json', 'cyan');
+        }
+      } else {
+        try { localStorage.setItem('kilo_vfs_/home/crypto/kmatrix_breach.json', jsonStr); } catch(e) {}
+        if (notify) {
+          printLine('[VFS WRITE] Breach state synced to /home/crypto/kmatrix_breach.json (standalone)', 'cyan');
+        }
       }
     } catch(e) {}
   }
@@ -2164,12 +2176,60 @@
         printLine("--- KILOOS VFS SECTOR VERIFICATION ---", "cyan");
         printLine("Querying /sys/alpha.sys for subterranean passkey fragments...", "system");
         printLine("Querying /sys/anomaly_capture.sig for intercepted RF signal frames...", "system");
-        try {
-          window.parent.postMessage({ type: 'VFS_READ', path: '/sys/alpha.sys', requestId: 'kmatrix_poll_alpha_' + Date.now() }, '*');
-          window.parent.postMessage({ type: 'VFS_READ', path: '/sys/anomaly_capture.sig', requestId: 'kmatrix_poll_sig_' + Date.now() }, '*');
-          printLine("Dispatched VFS_READ requests for /sys/alpha.sys and /sys/anomaly_capture.sig to KiloOS desktop bridge.", "system");
-        } catch(e) {
-          printLine("Unable to contact KiloOS desktop bridge (standalone window mode).", "alert");
+        if (window.parent && window.parent !== window) {
+          try {
+            window.parent.postMessage({ type: 'VFS_READ', path: '/sys/alpha.sys', requestId: 'kmatrix_poll_alpha_' + Date.now() }, '*');
+            window.parent.postMessage({ type: 'VFS_READ', path: '/sys/anomaly_capture.sig', requestId: 'kmatrix_poll_sig_' + Date.now() }, '*');
+            printLine("Dispatched VFS_READ requests for /sys/alpha.sys and /sys/anomaly_capture.sig to KiloOS desktop bridge.", "system");
+          } catch(e) {
+            printLine("Unable to contact KiloOS desktop bridge (standalone window mode).", "alert");
+          }
+        } else {
+          let alpha = null;
+          let sig = null;
+          try {
+            alpha = localStorage.getItem('kilo_vfs_/sys/alpha.sys');
+            if (!alpha) {
+              const raw = localStorage.getItem('kiloos_vfs_state_v2');
+              if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && parsed['/sys/alpha.sys']) alpha = parsed['/sys/alpha.sys'];
+              }
+            }
+            sig = localStorage.getItem('kilo_vfs_/sys/anomaly_capture.sig');
+            if (!sig) {
+              const raw = localStorage.getItem('kiloos_vfs_state_v2');
+              if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && parsed['/sys/anomaly_capture.sig']) sig = parsed['/sys/anomaly_capture.sig'];
+              }
+            }
+          } catch(err) {}
+
+          if (alpha) {
+            printLine(`[VFS QUERY] /sys/alpha.sys confirmed in standalone storage (${alpha.length} bytes).`, 'success');
+            if (alpha.includes('RECOVERY_1999') || alpha.includes('1999-ARCH')) {
+              const sec = state.sectors.find(s => s.id === 'STORAGE_VFS');
+              if (sec && sec.status !== 'BREACHED') {
+                sec.status = 'BREACHED';
+                renderHUD();
+                printLine('[VFS KERNEL AUTHENTICATED] Sector 04 (STORAGE_VFS) verified from /sys/alpha.sys!', 'success');
+                logTelemetry('Sector STORAGE_VFS auto-breached via KiloOS VFS kernel fragment verification.');
+                saveState(false);
+                persistVFSBreachState(true);
+                checkClimax();
+              }
+            }
+          } else {
+            printLine("[VFS QUERY] /sys/alpha.sys inspected: Passkey fragment awaiting ghost node sync.", "dim");
+          }
+
+          if (sig) {
+            printLine(`[VFS QUERY] /sys/anomaly_capture.sig confirmed in standalone storage (${sig.length} bytes).`, 'cyan');
+          } else {
+            printLine("[VFS QUERY] /sys/anomaly_capture.sig inspected: Receiver idle (awaiting anomaly frames).", "dim");
+          }
+          printLine("Dispatched local VFS queries for /sys/alpha.sys and /sys/anomaly_capture.sig [STANDALONE CACHE].", "system");
         }
         break;
 
@@ -2566,6 +2626,7 @@
           printLine('[VFS KERNEL AUTHENTICATED] Sector 04 (STORAGE_VFS) verified from /sys/alpha.sys!', 'success');
           logTelemetry('Sector STORAGE_VFS auto-breached via KiloOS VFS kernel fragment verification.');
           saveState(false);
+          persistVFSBreachState(true);
           checkClimax();
         } else {
           printLine('[VFS QUERY] /sys/alpha.sys kernel fragment confirmed (STORAGE_VFS already breached).', 'dim');
@@ -2651,7 +2712,6 @@
       }
     } catch(err) {}
   }, 180);
-  } catch(e) {}
 
   renderHUD();
   initMatrixRain();

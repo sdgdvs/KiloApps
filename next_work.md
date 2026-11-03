@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KImage
   kilo_qa: KSteno
-  kilo_expander: KMatrix
+  kilo_expander: KChess
   kilo_review: KScript
 virtual_web_target: kweb://scallion
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KFont
-  timestamp: '2026-11-03T13:22:22-08:00'
+  agent: kilo-expander
+  app: KMatrix
+  timestamp: '2026-11-03T13:38:06-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -182,11 +182,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KMatrix`
+- **Active Target**: `KChess`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KMatrix` | `KiloOS/public/apps/kmatrix.html`, `KMatrix/main.c` | **[ARGON REVIEW]:** Add vfs/verify to AUTOCOMPLETE_LIST, query both /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback, persist breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json, and play 2-Op FM Morse ECHO cadence in cmdWaterfall(). |
 | `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kchess.html using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with mandatory event.origin === window.location.origin checks, 60s dialog cleanup timeouts, and standalone Blob download / file-input fallbacks when window.parent === window for .json game saves (/home/saves/kchess_save.json) in Game menu, .pgn match records (/home/docs/kchess_match.pgn) in #pgn-modal, and .fen positions (/home/docs/kchess_position.fen) in #fen-modal and #editor-modal, plus handle incoming FILE_OPEN / VFS_OPEN messages from KiloOS File Browser to auto-load .pgn/.fen/.json files and add an Open PGN in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad) in #pgn-modal. |
 | `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kgo.html (#sgf-modal and boot listener) using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with event.origin === window.location.origin checks, 60s dialog timeouts, and standalone Blob/file-input fallbacks when window.parent === window for .sgf match records (/home/docs/kgo_match.sgf) and .json saves (/home/saves/kgo_save.json), handle incoming FILE_OPEN/VFS_OPEN messages from File Browser to auto-load .sgf/.json files, add an Open SGF in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad), and add SGF file import parity to KGo/main.c. |
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kimage.html per architecture.md (event.origin === window.location.origin checks, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks when window.parent === window) adding Open from VFS (VFS_SHOW_OPEN -> VFS_READ) and Save to VFS (VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY) for exported images (/home/media/), .JSON sessions (/home/saves/kimage_session.json), and ASCII .txt art (/home/docs/), handling incoming FILE_OPEN/VFS_OPEN messages and URL #/path hash to auto-load .png/.jpg/.bmp/.tga/.pcx/.json files, and adding Open ASCII in KPad (OS_LAUNCH_APP kpad), Send Stego to KCipher (kcipher), and Inspect Image in KHex (khex) buttons; upgrade KImage/main.c (<999 KB) by wiring ID_BTN_RESIZE_HALF (0.5x) and ID_BTN_RESIZE_DOUBLE (2x) and adding a Dither [T] Floyd-Steinberg retro palette button cycling 1-Bit Mono, DMG-4 Green, CGA, and C64 palettes. |
@@ -227,6 +226,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KMatrix** | `KiloOS/public/apps/kmatrix.html` | Pass 5+ (2026-11-03) | System / Security & ARG Climax | Complete Milestone #100 retro forensic master terminal with 5-sector cryptographic analysis, 2-Op FM Morse ECHO waterfall telemetry, VFS kernel verification, breach state JSON persistence, F5/F9 state, and dual Win32 C parity. |
 | **KSettings** | `KiloOS/public/apps/ksettings.html` | Pass 5+ (2026-11-03) | System / Configuration | Complete KiloOS control panel with 5-tab responsive navigation, live accent/theme synchronization, VFS persistence, F5/F9 state, and dual Win32 C parity. |
 | **KScript** | `KiloOS/public/apps/kscript.html` | Pass 5+ (2026-11-03) | System / Tools | Advanced script execution engine with F5/F9 state persistence, AST diagnostics, sample templates, VFS mesh, and dual Win32 C parity. |
 | **KTerm** | `KiloOS/public/apps/kterm.html` | Pass 5+ (2026-11-02) | System / Utilities | Complete multi-tab terminal emulator with ANSI escape codes, command history, echo -e, piping, math evaluator, VFS integration, F5/F9 state persistence, and full dual Win32 C parity. |
@@ -289,6 +289,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T13:38:06-08:00 — kilo-expander: KMatrix (KMatrix VFS Mesh Dual-Query, Breach Persistence & Morse Echo Cadence)**
+  - Status: PASS ✅ (0 errors, web 105.0 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.61%, HEAD Δ 9.43%, 0 fail, 0 warn, 8.4s)).
+  - Added vfs/verify to AUTOCOMPLETE_LIST with Tab completion parity in KMatrix/main.c.
+  - Wired dual-query for /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback.
+  - Persisted breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json on sector decrypt and override.
+  - Transmitted 2-Op FM Morse ECHO cadence on 1999 Hz carrier in cmdWaterfall() with audioCtx auto-resume.
+  - Mature Quarantine & Handoff: Promoted `KMatrix` to Mature archive; advanced `kilo-expander` to `KChess`; next agent `kilo-review`.
+
 - **2026-11-03T13:22:22-08:00 — kilo-qa: KFont (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-qa updates for KFont across web and native targets.
@@ -309,9 +317,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-11-03T11:16:23-08:00 — kilo-graphics: KSubmarine (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KSubmarine.
   - Handoff: Advanced `kilo-graphics` to `KCosmic`; rotated active agent to `kilo-tester`.
-
-- **2026-11-03T10:36:07-08:00 — kilo-creator: kweb://cabled (Cabled Magazine 1999 Cyber Flagship (Issue 7.12))**
-  - Status: PASS ✅ (0 errors, web 124.7 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.4%, input 23.93%, HEAD Δ 0.2%, 0 fail, 0 warn, 5.4s)).
-  - Integrated interactive Y2K audit, dot-com IPO bubble sim, Jargon Watch neologism forge & Hype-vs-Reality matrix.
-  - Enhanced KiloOS VFS export, inter-app KPad/KNet dispatch, and portal.html WHOIS/traceroute/radar node routing.
-  - Handoff: Advanced `kilo-creator` to `kweb://scallion`; rotated active agent to `kilo-graphics`.

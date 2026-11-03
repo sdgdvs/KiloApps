@@ -359,7 +359,7 @@ static void ProcessCommand(HWND hwnd, const char* input) {
         AppendOutput("  codebook [filter]    - Subterranean codebook decrypter table");
         AppendOutput("  dump <sec>           - Forensic hexadecimal memory dump");
         AppendOutput("  waterfall, cascade   - RF frequency waterfall & audio telemetry");
-        AppendOutput("  vfs                  - Query KiloOS VFS kernel fragment verification");
+        AppendOutput("  vfs, verify          - Query KiloOS VFS kernel fragment verification");
         AppendOutput("  override <key>       - Master override token");
         AppendOutput("  save, load           - Quicksave [F5] / Quickload [F9]");
         AppendOutput("  clear, cls           - Clear terminal buffer");
@@ -393,6 +393,7 @@ static void ProcessCommand(HWND hwnd, const char* input) {
             char buf[128];
             wsprintfA(buf, "SUCCESS: %s BREACHED! Subsystem synchronized.", g_sectors[found].id);
             AppendOutput(buf);
+            QuickSaveState();
             CheckClimax(hwnd);
         } else {
             AppendOutput("BREACH FAILED: Key rejected. Inspect sector clue via 'scan'.");
@@ -541,6 +542,7 @@ static void ProcessCommand(HWND hwnd, const char* input) {
             AppendOutput("MASTER OVERRIDE ACCEPTED: All sectors breached.");
             int i;
             for (i = 0; i < NUM_SECTORS; i++) g_sectors[i].breached = 1;
+            QuickSaveState();
             CheckClimax(hwnd);
         } else {
             AppendOutput("ACCESS DENIED: Invalid master override token.");
@@ -717,6 +719,70 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
     return 0;
 }
 
+static const char* const AUTOCOMPLETE_LIST[] = {
+    "help", "status", "scan", "analyze", "dump", "disasm", "entropy", "ping", "traceroute", "sniff",
+    "matrix", "rain", "codebook", "decrypt", "waterfall", "cascade", "stats", "breach", "override",
+    "audio", "theme", "save", "load", "logexport", "clear", "cls", "ascend", "director", "climax",
+    "replay", "cutscene", "fanfare", "vfs", "verify",
+    "MEM_HEAP", "AUDIO_DSP", "NET_RELAY", "STORAGE_VFS", "CORE_AI",
+    "7F1999", "1999HZ", "10.19.99.4", "RECOVERY_1999", "AUTONOMOUS_FLEET"
+};
+#define AUTOCOMPLETE_COUNT (sizeof(AUTOCOMPLETE_LIST) / sizeof(AUTOCOMPLETE_LIST[0]))
+
+static void DoTabAutocomplete(HWND hEdit) {
+    char text[256];
+    GetWindowTextA(hEdit, text, sizeof(text));
+    int len = k_strlen(text);
+    if (len == 0) return;
+
+    int lastWordStart = len;
+    while (lastWordStart > 0 && text[lastWordStart - 1] != ' ') {
+        lastWordStart--;
+    }
+    const char* prefix = text + lastWordStart;
+    int plen = len - lastWordStart;
+    if (plen == 0) return;
+
+    int matchCount = 0;
+    int firstMatchIndex = -1;
+    char candidates[256];
+    candidates[0] = '\0';
+
+    int i;
+    for (i = 0; i < (int)AUTOCOMPLETE_COUNT; i++) {
+        int j;
+        int matches = 1;
+        for (j = 0; j < plen; j++) {
+            if (k_toupper(AUTOCOMPLETE_LIST[i][j]) != k_toupper(prefix[j])) {
+                matches = 0;
+                break;
+            }
+        }
+        if (matches) {
+            if (matchCount == 0) firstMatchIndex = i;
+            if (matchCount < 6) {
+                if (candidates[0]) k_strcat(candidates, ", ");
+                k_strcat(candidates, AUTOCOMPLETE_LIST[i]);
+            }
+            matchCount++;
+        }
+    }
+
+    if (matchCount == 1) {
+        char newText[256];
+        k_strcpy(newText, text);
+        newText[lastWordStart] = '\0';
+        k_strcat(newText, AUTOCOMPLETE_LIST[firstMatchIndex]);
+        k_strcat(newText, " ");
+        SetWindowTextA(hEdit, newText);
+        SendMessageA(hEdit, EM_SETSEL, (WPARAM)k_strlen(newText), (LPARAM)k_strlen(newText));
+    } else if (matchCount > 1) {
+        char buf[320];
+        wsprintfA(buf, "[AUTOCOMPLETE] Candidates: %s%s", candidates, matchCount > 6 ? ", ..." : "");
+        AppendOutput(buf);
+    }
+}
+
 // Entry Point
 void __cdecl MainEntry(void) {
     HINSTANCE hInstance = GetModuleHandleA(NULL);
@@ -748,6 +814,10 @@ void __cdecl MainEntry(void) {
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_TAB && GetFocus() == g_hEditInput) {
+                DoTabAutocomplete(g_hEditInput);
+                continue;
+            }
             if (msg.wParam == VK_RETURN && GetFocus() == g_hEditInput) {
                 char text[256];
                 GetWindowTextA(g_hEditInput, text, sizeof(text));

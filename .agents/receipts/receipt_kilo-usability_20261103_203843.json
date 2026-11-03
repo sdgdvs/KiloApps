@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-11-03T20:38:43.362393+00:00",
+  "agent": "kilo-usability",
+  "model": "gemini-3.8-flash-high",
+  "target": "KHex",
+  "duration_seconds": 511.28,
+  "returncode": 0,
+  "success": true,
+  "provenance": null
+}
