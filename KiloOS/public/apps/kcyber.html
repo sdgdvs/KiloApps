@@ -419,7 +419,7 @@
     <aside id="deck-panel">
       <!-- 1. Cyber Visual Screen (HiDPI Canvas) -->
       <div id="visuals">
-        <canvas id="gfxCanvas"></canvas>
+        <canvas id="gfxCanvas" width="221" height="140"></canvas>
       </div>
 
       <!-- 2. Live Telemetry Bars -->
@@ -2343,8 +2343,27 @@
     }
     initKCyberAssets();
 
+    function resizeGfxCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.round(rect.width) || 221;
+      const h = Math.round(rect.height) || 140;
+      const targetW = Math.round(w * dpr);
+      const targetH = Math.round(h * dpr);
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+      }
+    }
+
     function drawVisuals() {
+      resizeGfxCanvas();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      const baseW = 180;
+      const baseH = 160;
+      ctx.scale(canvas.width / baseW, canvas.height / baseH);
+
       const cx = 90;
       const cy = 82;
       const horizonY = 50;
@@ -2392,7 +2411,7 @@
 
       // Base background fill
       ctx.fillStyle = bgTheme;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, baseW, baseH);
 
       // Horizon atmospheric glow band
       const hGrad = ctx.createLinearGradient(0, horizonY - 14, 0, horizonY + 16);
@@ -2400,7 +2419,7 @@
       hGrad.addColorStop(0.5, horizonGlow);
       hGrad.addColorStop(1, 'transparent');
       ctx.fillStyle = hGrad;
-      ctx.fillRect(0, horizonY - 14, canvas.width, 30);
+      ctx.fillRect(0, horizonY - 14, baseW, 30);
 
       // Distant Cyberspace Skyline / Isometric Node Towers
       const skylineNodes = [
@@ -2484,14 +2503,14 @@
       const rayBottomOffsets = [-92, -68, -45, -24, 0, 24, 45, 68, 92];
       for (let r = 0; r < rayBottomOffsets.length; r++) {
         const xBottom = cx + rayBottomOffsets[r] * 1.8;
-        const rayGrad = ctx.createLinearGradient(cx, horizonY, xBottom, canvas.height);
+        const rayGrad = ctx.createLinearGradient(cx, horizonY, xBottom, baseH);
         rayGrad.addColorStop(0, 'rgba(0, 255, 100, 0.05)');
         rayGrad.addColorStop(0.3, gridColor);
         rayGrad.addColorStop(1, hudColor);
         ctx.strokeStyle = rayGrad;
         ctx.beginPath();
         ctx.moveTo(cx, horizonY);
-        ctx.lineTo(xBottom, canvas.height);
+        ctx.lineTo(xBottom, baseH);
         ctx.stroke();
       }
 
@@ -2500,7 +2519,7 @@
       const speed = 0.0075;
       for (let r = 0; r < numRungs; r++) {
         const phase = ((animTick * speed + r / numRungs) % 1.0);
-        const py = horizonY + Math.pow(phase, 2.2) * (canvas.height - horizonY);
+        const py = horizonY + Math.pow(phase, 2.2) * (baseH - horizonY);
         const rungAlpha = Math.min(1.0, Math.pow(phase, 1.5) * 0.85 + 0.1);
         ctx.strokeStyle = (gridColor.startsWith('rgba')
           ? gridColor.replace(/[\d\.]+\)$/, rungAlpha.toFixed(2) + ')')
@@ -2508,7 +2527,7 @@
         ctx.lineWidth = phase > 0.6 ? 1.5 : 1;
         ctx.beginPath();
         ctx.moveTo(6, py);
-        ctx.lineTo(canvas.width - 6, py);
+        ctx.lineTo(baseW - 6, py);
         ctx.stroke();
 
         // Node vertex intersection glimmers (matrix data crossings)
@@ -2516,7 +2535,7 @@
           ctx.fillStyle = hudColor;
           for (let ri = 1; ri < rayBottomOffsets.length - 1; ri += 2) {
             const rx = cx + rayBottomOffsets[ri] * 1.8 * phase;
-            if (rx > 10 && rx < canvas.width - 10) {
+            if (rx > 10 && rx < baseW - 10) {
               ctx.fillRect(rx - 0.75, py - 0.75, 1.5, 1.5);
             }
           }
@@ -2531,7 +2550,7 @@
       for (let c = 0; c < streamColumns.length; c++) {
         const colX = streamColumns[c];
         const seed = (c * 37 + Math.floor(animTick / 6)) % 100;
-        const charY = 18 + ((animTick * 1.4 + c * 25) % (canvas.height - 24));
+        const charY = 18 + ((animTick * 1.4 + c * 25) % (baseH - 24));
         ctx.fillStyle = (animTick % 6 < 3) ? '#ffffff' : hudColor;
         ctx.globalAlpha = 0.6;
         ctx.fillText(hexChars[(seed + c) % hexChars.length], colX, charY);
@@ -3378,6 +3397,8 @@
         }
         ctx.restore();
       }
+
+      ctx.restore();
 
       // 4. CRT Scanlines Raster Overlay
       ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
