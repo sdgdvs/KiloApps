@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,7 +31,7 @@ current_targets:
   kilo_creator: kweb://demoscene
   kilo_graphics: KMine
   kilo_soundscape: KStellar
-  kilo_tester: KBreakout
+  kilo_tester: KColony
   kilo_usability: KBreakout
   kilo_qa: KBBS
   kilo_expander: KBreakout
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KTrader
-  timestamp: '2026-11-03T23:34:01-08:00'
+  agent: kilo-tester
+  app: KBreakout
+  timestamp: '2026-11-04T03:19:12-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -130,11 +130,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KBreakout`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | **[ARGON REVIEW]:** Fix brick collision logic in kbreakout.html so Type 8 bricks decrement brick_hp[r][c] instead of morphing bricks[r][c] into types 7/6/5/4, implement Type 5 teleporter, Type 6 powerup crate, and Type 7 1-hit ghost brick handlers matching main.c, wire sticky_timer countdown and paddle ball-catch on power_type===4, invoke recordTelemetry() across gameplay events, and replace the invalid CSS linear-gradient fillStyle in renderDuel() P1 surge meter. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -148,6 +147,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Fix all 4 dead Optical DSP filters in kimage.html (applyVignetteFilter, applyChromaticAberrationFilter, applyMedianFilter, applyHistogramEqualization) where mutatePixels passes 3 args (d, w, h) instead of (src, dst, w, h) (copy const src = new Uint8ClampedArray(d) so pixels actually update, default #sliderVignette to 45 and #sliderChromatic to 6 with a toast if 0, and sync #playlistStrip thumbnails when item.img mutates); add missing link.href = url in exportSessionJson(); reset rotation/flip/draw.paths/adjustments inside encodeStegoPayload() after baking ui.mainCanvas so renderCanvas() stops re-applying CSS filters and destroying LSB bits, and slice UTF-8 bytes via extracted.subarray(16, 16 + byteLen) in decodeStegoPayload(); support imgType 3 in parseTGA(), 256-color 0x0C VGA palettes in parsePCX(), and 1999-11-03 EXIF date in loadSampleImage(); in KImage/main.c restore hwnd focus / route WM_KEYDOWN after button clicks so all 16 hotkeys work and Space stops re-clicking toolbar buttons, and guard ID_BTN_PLAY when g_fileCount == 0. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | **[ARGON REVIEW]:** Fix broken multi-line string literals in PRESETS.vfs_demo caused by unescaped \n inside template literal, implement documented 0o octal literals in parsePrimary() and loop/endloop control flow in createScriptStepper(), strip string literals before identifier scanning and support compound assignments in analyzeScript() to eliminate false-positive linter warnings on DEFAULT_SCRIPT, and HTML-escape renderMemoryTable() cells/copy handlers to prevent XSS and quote SyntaxErrors. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | **[ARGON REVIEW]:** Fix createNode() and loadPresetTopology() in knetmap.html to match node.subnetId via isIpInSubnet() (assigning sub-dmz to GW-BORDER-7200, FW-BASTION, and SW-DMZ-3CON instead of sub-eng), implement drawCollisionDomains() in drawScene() when #chkCollisionDomains is checked, fix onTouchStart() calling undefined updateInspector() instead of updateInspectorPane(), dynamically update #cidrStatsLabel/#cidrParentLabel in updateCidrBar() and wire oninput=recalcSubnetTool() + dynamic split child preview in #subnetModal, dispatch an initial ICMP ping pulse on preset load, and in KNetMap/main.c compute full IP/mask/range in CalculateSubnet(), make ID_BTN_CUT enter click-to-sever link mode (g_activeMode=3), and route WM_KEYDOWN in MainEntry GetMessageA loop. |
+| `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | **[ARGON REVIEW]:** Fix brick collision logic in kbreakout.html so Type 8 bricks decrement brick_hp[r][c] instead of morphing bricks[r][c] into types 7/6/5/4, implement Type 5 teleporter, Type 6 powerup crate, and Type 7 1-hit ghost brick handlers matching main.c, wire sticky_timer countdown and paddle ball-catch on power_type===4, invoke recordTelemetry() across gameplay events, and replace the invalid CSS linear-gradient fillStyle in renderDuel() P1 surge meter. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
 - **Active Target**: `KBreakout`
@@ -291,6 +291,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-04T03:19:12-08:00 — kilo-tester: KBreakout (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (0 errors, web 197.9 KB, native 55.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - UI & Hotkey Audit: Modals (tutorial/pause/telemetry/duel/replay) dismiss cleanly; added input focus guard to prevent hotkey trigger while typing.
+  - Repairs: Type 8 titanium brick HP decrement matching main.c, Type 5 teleporter, Type 6 crate & Type 7 ghost handlers, sticky_timer paddle ball-catch, comprehensive recordTelemetry, and renderDuel surge gradient.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-11-03T23:34:01-08:00 — kilo-graphics: KTrader (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KTrader.
   - Handoff: Advanced `kilo-graphics` to `KMine`; rotated active agent to `kilo-tester`.
@@ -311,9 +317,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KNetMap across web and native targets.
   - Handoff: Advanced `kilo-expander` to `KChess`; rotated active agent to `kilo-review`.
-
-- **2026-11-03T20:37:18-08:00 — kilo-qa: KAnomaly (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 124.9 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.97%, HEAD Δ 0.44%, 0 fail, 0 warn, 7.2s)).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload persistence via safeGet/safeSet, kanomaly_tutorialSeen flag, and Escape modal dismissals.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, audio decoder telemetry earcon, and visibilitychange lifecycle cleanup.
-  - Mature Quarantine & Handoff: Promoted `KAnomaly` to Mature archive; advanced `kilo-qa` to `KBBS`; next agent `kilo-expander`.

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T20:37:18-08:00 — kilo-qa: KAnomaly (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 124.9 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.97%, HEAD Δ 0.44%, 0 fail, 0 warn, 7.2s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload persistence via safeGet/safeSet, kanomaly_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, audio decoder telemetry earcon, and visibilitychange lifecycle cleanup.
+  - Mature Quarantine & Handoff: Promoted `KAnomaly` to Mature archive; advanced `kilo-qa` to `KBBS`; next agent `kilo-expander`.
+
 - **2026-11-03T20:22:26-08:00 — kilo-usability: KNetMap (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KNetMap across web and native targets.

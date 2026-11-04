@@ -1389,7 +1389,7 @@ let invite_prompt_open = false;
 let telemetry_open = false;
 
 // Tactical Telemetry Tracking
-let telemetry = safeGetJSON('kbreakout_telemetry') || {
+let defaultTelemetry = {
     ballsLaunched: 0,
     paddleHits: 0,
     bricksBroken: 0,
@@ -1401,9 +1401,16 @@ let telemetry = safeGetJSON('kbreakout_telemetry') || {
     duelsWon: 0,
     duelsPlayed: 0
 };
+let telemetry = Object.assign(defaultTelemetry, safeGetJSON('kbreakout_telemetry') || {});
 function saveTelemetry() { safeSetJSON('kbreakout_telemetry', telemetry); }
 function recordTelemetry(metric, delta = 1) {
-    if (telemetry && telemetry[metric] !== undefined) {
+    if (!telemetry) return;
+    if (metric === 'maxCombo') {
+        if (delta > (telemetry.maxCombo || 0)) {
+            telemetry.maxCombo = delta;
+            saveTelemetry();
+        }
+    } else if (telemetry[metric] !== undefined) {
         telemetry[metric] += delta;
         saveTelemetry();
     }
@@ -1709,11 +1716,13 @@ function updateForgeMatDisplay() {
 
 function craftForge(recipe) {
     initAudio();
+    let crafted = false;
     if (recipe === 1) {
         if (plasma_shards >= 15 && nano_alloys >= 10) {
             plasma_shards -= 15; nano_alloys -= 10;
             active_supernova = 1; dur_fire = 600;
             playCraftSuccess(); playPowerupEarcon(recipe);
+            crafted = true;
         } else { playCraftFail(); }
     } else if (recipe === 2) {
         if (plasma_shards >= 12 && quantum_cores >= 8) {
@@ -1721,37 +1730,46 @@ function craftForge(recipe) {
             active_chronos = 1;
             pad_w += 15;
             playCraftSuccess(); playPowerupEarcon(recipe);
+            crafted = true;
         } else { playCraftFail(); }
     } else if (recipe === 3) {
         if (quantum_cores >= 10 && nano_alloys >= 15) {
             quantum_cores -= 10; nano_alloys -= 15;
             active_valkyrie = 1; dur_laser = 600;
             playCraftSuccess(); playPowerupEarcon(recipe);
+            crafted = true;
         } else { playCraftFail(); }
     } else if (recipe === 4) {
         if (plasma_shards >= 10 && quantum_cores >= 10 && nano_alloys >= 10) {
             plasma_shards -= 10; quantum_cores -= 10; nano_alloys -= 10;
             aegis_layers += 3; dur_barrier = 800;
             playCraftSuccess(); playPowerupEarcon(recipe);
+            crafted = true;
         } else { playCraftFail(); }
     } else if (recipe === 5) {
         if (plasma_shards >= 20 && quantum_cores >= 15 && nano_alloys >= 15) {
             plasma_shards -= 20; quantum_cores -= 15; nano_alloys -= 15;
             spawnGravityWell(w / 2, 140, 45, 0);
             playCraftSuccess(); playPowerupEarcon(recipe);
+            crafted = true;
         } else { playCraftFail(); }
     } else if (recipe === 6) {
         if (plasma_shards >= 12 && quantum_cores >= 12 && nano_alloys >= 12) {
             plasma_shards -= 12; quantum_cores -= 12; nano_alloys -= 12;
             active_satellite_boost = 1; dur_satellite = 700;
             playCraftSuccess(); playPowerupEarcon(recipe);
+            crafted = true;
         } else { playCraftFail(); }
     } else if (recipe === 7) {
         if (quantum_cores >= 15 && nano_alloys >= 10) {
             quantum_cores -= 15; nano_alloys -= 10;
             active_resonance_catalyst = 1;
             playCraftSuccess(); playPowerupEarcon(recipe);
+            crafted = true;
         } else { playCraftFail(); }
+    }
+    if (crafted) {
+        recordTelemetry('forgeCrafts', 1);
     }
     saveGameData();
     updateForgeMatDisplay();
@@ -1818,8 +1836,12 @@ function initRetroMultiplayer() {
             onOpponentLeave: ({ slot, name }) => {
                 showToast(`⚠️ Opponent ${name || 'Challenger'} disconnected!`, 'warning', 4000);
                 if (isDuelMode && gameMode === MODE_DUEL_ONLINE) {
-                    duelMatchOver = true;
-                    duelWinner = myPlayerSlot;
+                    if (!duelMatchOver) {
+                        duelMatchOver = true;
+                        duelWinner = myPlayerSlot;
+                        recordTelemetry('duelsPlayed', 1);
+                        recordTelemetry('duelsWon', 1);
+                    }
                     showToast(`🏆 VICTORY! Opponent disconnected!`, 'success', 5000);
                 }
             },
@@ -2268,8 +2290,12 @@ function handleRemoteDuelMove(data) {
         p1KOs = data.p1KOs;
         p2KOs = data.p2KOs;
         if (p1KOs >= targetKOs || p2KOs >= targetKOs) {
-            duelMatchOver = true;
-            duelWinner = (p1KOs >= targetKOs) ? 1 : 2;
+            if (!duelMatchOver) {
+                duelMatchOver = true;
+                duelWinner = (p1KOs >= targetKOs) ? 1 : 2;
+                recordTelemetry('duelsPlayed', 1);
+                if (duelWinner === myPlayerSlot) recordTelemetry('duelsWon', 1);
+            }
         } else {
             duelRoundResetTimer = 75;
         }
@@ -2385,6 +2411,8 @@ function updateDuelAI() {
         if (p1KOs >= targetKOs) {
             duelMatchOver = true;
             duelWinner = 1;
+            recordTelemetry('duelsPlayed', 1);
+            recordTelemetry('duelsWon', 1);
             showToast("🏆 DUEL VICTORY! Championship Cleared!", 'success', 5000);
         } else {
             duelRoundResetTimer = 75;
@@ -2439,6 +2467,7 @@ function updateDuel() {
             b.dy = -Math.max(3.0, 5.0 - Math.abs(hitRel));
             p1ComboCount = 0;
             playPaddleHit();
+            recordTelemetry('paddleHits', 1);
             spawnShockwave(b.x, b.y, '#00ffff');
         }
 
@@ -2453,6 +2482,8 @@ function updateDuel() {
                 bricks_left--;
                 score += 50;
                 p1ComboCount++;
+                recordTelemetry('bricksBroken', 1);
+                if (p1ComboCount > (telemetry.maxCombo || 0)) recordTelemetry('maxCombo', p1ComboCount);
                 spawnParticles(b.x, b.y, getBrickColor(type, r, c), 6);
                 playBrickHit(type, p1ComboCount);
 
@@ -2476,6 +2507,7 @@ function updateDuel() {
         if (p2KOs >= targetKOs) {
             duelMatchOver = true;
             duelWinner = 2;
+            recordTelemetry('duelsPlayed', 1);
             showToast("💀 MATCH DEFEAT! Opponent won the duel.", 'error', 5000);
         } else {
             duelRoundResetTimer = 75;
@@ -2581,9 +2613,14 @@ function renderDuel() {
     ctx.fillRect(ARENA_DIV_X + 8, DUEL_H - 140, 18, sH);
     ctx.strokeStyle = '#00ffff';
     ctx.strokeRect(ARENA_DIV_X + 8, DUEL_H - 140, 18, sH);
-    let fillP1 = (duelSurgeP1 / 100) * sH;
-    ctx.fillStyle = 'linear-gradient(180deg, #00ffff, #0088cc)';
-    ctx.fillRect(ARENA_DIV_X + 9, DUEL_H - 140 + (sH - fillP1), 16, fillP1);
+    let fillP1 = Math.max(0, Math.min(sH, (duelSurgeP1 / 100) * sH));
+    if (fillP1 > 0) {
+        let p1Grad = ctx.createLinearGradient(ARENA_DIV_X + 9, DUEL_H - 140, ARENA_DIV_X + 9, DUEL_H - 50);
+        p1Grad.addColorStop(0, '#00ffff');
+        p1Grad.addColorStop(1, '#0088cc');
+        ctx.fillStyle = p1Grad;
+        ctx.fillRect(ARENA_DIV_X + 9, DUEL_H - 140 + (sH - fillP1), 16, fillP1);
+    }
     ctx.font = '8.5px Segoe UI';
     ctx.fillStyle = '#00ffff';
     ctx.fillText("SRG", ARENA_DIV_X + 17, DUEL_H - 42);
@@ -2593,9 +2630,14 @@ function renderDuel() {
     ctx.fillRect(ARENA_DIV_X + ARENA_DIV_W - 26, DUEL_H - 140, 18, sH);
     ctx.strokeStyle = '#ff00c8';
     ctx.strokeRect(ARENA_DIV_X + ARENA_DIV_W - 26, DUEL_H - 140, 18, sH);
-    let fillP2 = (duelSurgeP2 / 100) * sH;
-    ctx.fillStyle = '#ff00c8';
-    ctx.fillRect(ARENA_DIV_X + ARENA_DIV_W - 25, DUEL_H - 140 + (sH - fillP2), 16, fillP2);
+    let fillP2 = Math.max(0, Math.min(sH, (duelSurgeP2 / 100) * sH));
+    if (fillP2 > 0) {
+        let p2Grad = ctx.createLinearGradient(ARENA_DIV_X + ARENA_DIV_W - 25, DUEL_H - 140, ARENA_DIV_X + ARENA_DIV_W - 25, DUEL_H - 50);
+        p2Grad.addColorStop(0, '#ff00c8');
+        p2Grad.addColorStop(1, '#880066');
+        ctx.fillStyle = p2Grad;
+        ctx.fillRect(ARENA_DIV_X + ARENA_DIV_W - 25, DUEL_H - 140 + (sH - fillP2), 16, fillP2);
+    }
     ctx.fillStyle = '#ff00c8';
     ctx.fillText("SRG", ARENA_DIV_X + ARENA_DIV_W - 17, DUEL_H - 42);
     ctx.restore();
@@ -2865,7 +2907,7 @@ function applySelectedPreset() {
 function loadBoardPreset(idx) {
     const p = boardPresets[idx] || boardPresets[0];
     bricks = p.bricks.map(row => [...row]);
-    brick_hp = bricks.map(row => row.map(v => v > 0 ? (v === 4 ? 3 : (v === 3 ? 2 : 1)) : 0));
+    brick_hp = bricks.map(row => row.map(v => v === 8 ? 4 : 0));
     bricks_left = 0;
     for (let r = 0; r < bricks.length; r++) {
         for (let c = 0; c < bricks[r].length; c++) {
@@ -2935,7 +2977,7 @@ function importBoardFromBox() {
             if (parsed.brick_hp && Array.isArray(parsed.brick_hp)) {
                 brick_hp = parsed.brick_hp.map(row => [...row]);
             } else {
-                brick_hp = bricks.map(row => row.map(v => v > 0 ? (v === 4 ? 3 : (v === 3 ? 2 : 1)) : 0));
+                brick_hp = bricks.map(row => row.map(v => v === 8 ? 4 : 0));
             }
             bricks_left = 0;
             for (let r = 0; r < bricks.length; r++) {
@@ -3135,6 +3177,8 @@ function triggerQuantumResonance(orig_r, orig_c) {
                 score += 35 * chain;
                 lifetime_bricks++;
                 quantum_cores += 2;
+                recordTelemetry('quantumFarmed', 2);
+                recordTelemetry('bricksBroken', 1);
             }
         }
     }
@@ -3332,6 +3376,30 @@ function drawBrick(r, c, type, bx, by, hp) {
         return;
     }
 
+    if (type === 5) {
+        // --- TYPE 5: QUANTUM TELEPORTER PORTAL BRICK ---
+        ctx.fillStyle = '#1e0836';
+        ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
+        ctx.strokeStyle = '#c044ff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx + 2, by + 2, BR_W - 4, BR_H - 4);
+
+        let tAng = frame * 0.12 + (r + c);
+        ctx.save();
+        ctx.translate(bx + BR_W / 2, by + BR_H / 2);
+        ctx.rotate(tAng);
+        ctx.strokeStyle = '#e088ff';
+        ctx.beginPath();
+        ctx.arc(0, 0, 4, 0, Math.PI * 1.5);
+        ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return;
+    }
+
     // --- METALLIC & CRYSTALLINE TEXTURED BRICKS ---
     const isMetallic = (type === 8 || type === 9 || type === 3);
     const isCrystalline = !isMetallic;
@@ -3426,6 +3494,8 @@ function triggerExplosion(r, c) {
                     score += 15;
                     lifetime_bricks++;
                     plasma_shards += 1;
+                    recordTelemetry('plasmaFarmed', 1);
+                    recordTelemetry('bricksBroken', 1);
                     if (isExp && (nr !== r || nc !== c)) {
                         triggerExplosion(nr, nc);
                     }
@@ -3581,6 +3651,18 @@ function update() {
         if (cd_gravity > 0) cd_gravity--;
         if (cd_satellite > 0) cd_satellite--;
         if (paddle_timer > 0) { paddle_timer--; if (paddle_timer === 0) pad_w = (diff === 1 ? 45 : 65); }
+        if (sticky_timer > 0) {
+            sticky_timer--;
+            if (sticky_timer === 0) {
+                for (let b of balls) {
+                    if (b.stuck) {
+                        b.stuck = 0;
+                        b.dy = -speed;
+                        recordTelemetry('ballsLaunched', 1);
+                    }
+                }
+            }
+        }
 
         let moveSpeed = active_chronos ? 8 : 6;
         if (keys['ArrowLeft'] || keys['KeyA']) pad_x -= moveSpeed;
@@ -3631,6 +3713,8 @@ function update() {
                     if (boss_hp <= 0) {
                         score += 500;
                         nano_alloys += 5; quantum_cores += 3;
+                        recordTelemetry('alloyFarmed', 5);
+                        recordTelemetry('quantumFarmed', 3);
                         boss_active = 0;
                         document.getElementById('boss-bar-container').style.display = 'none';
                         level++;
@@ -3645,6 +3729,7 @@ function update() {
                         let type = bricks[r][c];
                         spawnParticles(l.x, l.y, getBrickColor(type, r, c), 5);
                         plasma_shards++;
+                        recordTelemetry('plasmaFarmed', 1);
                         if (type === 10) {
                             spawnLaser(c * BR_W + BR_W/2, r * BR_H + 35 + BR_H/2, -5.5, -2.5, 2);
                             spawnLaser(c * BR_W + BR_W/2, r * BR_H + 35 + BR_H/2, 5.5, -2.5, 2);
@@ -3653,8 +3738,39 @@ function update() {
                             triggerQuantumResonance(r, c);
                         } else if (type === 4) {
                             triggerExplosion(r, c);
+                        } else if (type === 5) {
+                            bricks[r][c] = 0; bricks_left--; score += 30; lifetime_bricks++;
+                            quantum_cores++;
+                            recordTelemetry('quantumFarmed', 1);
+                            recordTelemetry('bricksBroken', 1);
+                        } else if (type === 6) {
+                            bricks[r][c] = 0; bricks_left--; score += 30; lifetime_bricks++;
+                            quantum_cores++;
+                            recordTelemetry('quantumFarmed', 1);
+                            recordTelemetry('bricksBroken', 1);
+                            power_active = 1; power_type = Math.floor(Math.random() * 9) + 1;
+                            power_x = c * BR_W + BR_W / 2; power_y = r * BR_H + 35 + BR_H / 2;
+                        } else if (type === 7) {
+                            bricks[r][c] = 0; bricks_left--; score += 30; lifetime_bricks++;
+                            plasma_shards++;
+                            recordTelemetry('plasmaFarmed', 1);
+                            recordTelemetry('bricksBroken', 1);
+                        } else if (type === 8) {
+                            if (!brick_hp[r]) brick_hp[r] = [];
+                            if (brick_hp[r][c] === undefined || brick_hp[r][c] <= 0) brick_hp[r][c] = 4;
+                            brick_hp[r][c] -= (l.type === 1 ? 2 : 1);
+                            if (brick_hp[r][c] <= 0) {
+                                bricks[r][c] = 0; bricks_left--; score += 40; lifetime_bricks++; nano_alloys += 2;
+                                recordTelemetry('alloyFarmed', 2);
+                                recordTelemetry('bricksBroken', 1);
+                            } else {
+                                score += 10;
+                            }
+                        } else if (type > 1) {
+                            bricks[r][c]--; score += 5;
                         } else {
                             bricks[r][c] = 0; bricks_left--; score += 10; lifetime_bricks++;
+                            recordTelemetry('bricksBroken', 1);
                         }
                     }
                 }
@@ -3733,6 +3849,11 @@ function update() {
                 triggerScreenShake(4.0, 0.025);
                 spComboCount = 0;
                 playPaddleHit();
+                recordTelemetry('paddleHits', 1);
+                if (sticky_timer > 0) {
+                    b.stuck = 1;
+                    b.stuckOffset = Math.max(0, Math.min(pad_w - 8, b.x - pad_x));
+                }
             }
 
             if (boss_active && b.x + 8 > boss_x && b.x < boss_x + boss_w && b.y + 8 > boss_y && b.y < boss_y + boss_h) {
@@ -3745,6 +3866,8 @@ function update() {
                 if (boss_hp <= 0) {
                     score += 500;
                     nano_alloys += 5; quantum_cores += 3;
+                    recordTelemetry('alloyFarmed', 5);
+                    recordTelemetry('quantumFarmed', 3);
                     boss_active = 0;
                     document.getElementById('boss-bar-container').style.display = 'none';
                     level++;
@@ -3768,6 +3891,9 @@ function update() {
                     } else if (type === 10) {
                         bricks[r][c] = 0; bricks_left--; score += 30 * chaosMult; lifetime_bricks++;
                         quantum_cores++; plasma_shards++;
+                        recordTelemetry('quantumFarmed', 1);
+                        recordTelemetry('plasmaFarmed', 1);
+                        recordTelemetry('bricksBroken', 1);
                         spawnLaser(bx, by, -7, 0, 2);
                         spawnLaser(bx, by, 7, 0, 2);
                         spawnLaser(bx, by, 0, -7, 2);
@@ -3779,26 +3905,103 @@ function update() {
                     } else if (type === 9) {
                         triggerScreenShake(3.0, 0.02);
                         if (dur_fire <= 0 && !active_supernova) b.dy = -b.dy;
-                        else { bricks[r][c] = 0; bricks_left--; score += 50 * chaosMult; nano_alloys += 2; }
+                        else {
+                            bricks[r][c] = 0; bricks_left--; score += 50 * chaosMult; nano_alloys += 2;
+                            recordTelemetry('alloyFarmed', 2);
+                            recordTelemetry('bricksBroken', 1);
+                        }
                     } else if (type === 4) {
                         bricks[r][c] = 0; bricks_left--; plasma_shards += 2;
+                        recordTelemetry('plasmaFarmed', 2);
+                        recordTelemetry('bricksBroken', 1);
                         if (dur_fire <= 0 && !active_supernova) b.dy = -b.dy;
                         triggerExplosion(r, c);
                         triggerScreenShake(14.0, 0.05);
+                        spComboCount++;
+                        if (spComboCount > (telemetry.maxCombo || 0)) recordTelemetry('maxCombo', spComboCount);
+                        playBrickHit(4, spComboCount);
+                    } else if (type === 5) {
+                        bricks[r][c] = 0; bricks_left--; score += 20 * chaosMult; lifetime_bricks++; quantum_cores++;
+                        recordTelemetry('quantumFarmed', 1);
+                        recordTelemetry('bricksBroken', 1);
+                        spawnParticles(bx, by, '#aa00ff', 12);
+                        spawnShockwave(bx, by, '#aa00ff');
+                        triggerScreenShake(5.0, 0.02);
+                        b.x = 20 + Math.random() * (w - 40);
+                        b.y = 150;
+                        b.dx = (Math.random() < 0.5 ? 1 : -1) * (speed + 1);
+                        b.dy = speed;
+                        spComboCount++;
+                        if (spComboCount > (telemetry.maxCombo || 0)) recordTelemetry('maxCombo', spComboCount);
+                        playBrickHit(5, spComboCount);
+                    } else if (type === 6) {
+                        bricks[r][c] = 0; bricks_left--; score += 25 * chaosMult; lifetime_bricks++; quantum_cores++;
+                        recordTelemetry('quantumFarmed', 1);
+                        recordTelemetry('bricksBroken', 1);
+                        spawnParticles(bx, by, '#00ffcc', 12);
+                        spawnShockwave(bx, by, '#00ffcc');
+                        triggerScreenShake(4.0, 0.02);
+                        power_active = 1; power_type = Math.floor(Math.random() * 9) + 1;
+                        power_x = bx; power_y = by;
+                        if (dur_fire <= 0 && !active_supernova) b.dy = -b.dy;
+                        spComboCount++;
+                        if (spComboCount > (telemetry.maxCombo || 0)) recordTelemetry('maxCombo', spComboCount);
+                        playBrickHit(6, spComboCount);
+                    } else if (type === 7) {
+                        bricks[r][c] = 0; bricks_left--; score += 30 * chaosMult; lifetime_bricks++; plasma_shards++;
+                        recordTelemetry('plasmaFarmed', 1);
+                        recordTelemetry('bricksBroken', 1);
+                        spawnParticles(bx, by, '#c8ffff', 10);
+                        spawnShockwave(bx, by, '#c8ffff');
+                        triggerScreenShake(3.0, 0.02);
+                        if (dur_fire <= 0 && !active_supernova) b.dy = -b.dy;
+                        spComboCount++;
+                        if (spComboCount > (telemetry.maxCombo || 0)) recordTelemetry('maxCombo', spComboCount);
+                        playBrickHit(7, spComboCount);
+                    } else if (type === 8) {
+                        if (!brick_hp[r]) brick_hp[r] = [];
+                        if (brick_hp[r][c] === undefined || brick_hp[r][c] <= 0) brick_hp[r][c] = 4;
+                        spawnParticles(bx, by, '#505050', 8);
+                        triggerScreenShake(3.0, 0.02);
+                        if (dur_fire > 0 || active_supernova) {
+                            bricks[r][c] = 0; bricks_left--; score += 40 * chaosMult; lifetime_bricks++; nano_alloys += 2;
+                            recordTelemetry('alloyFarmed', 2);
+                            recordTelemetry('bricksBroken', 1);
+                        } else {
+                            brick_hp[r][c]--;
+                            if (brick_hp[r][c] <= 0) {
+                                bricks[r][c] = 0; bricks_left--; score += 40 * chaosMult; lifetime_bricks++; nano_alloys += 2;
+                                recordTelemetry('alloyFarmed', 2);
+                                recordTelemetry('bricksBroken', 1);
+                            } else {
+                                score += 5;
+                            }
+                            b.dy = -b.dy;
+                        }
+                        spComboCount++;
+                        if (spComboCount > (telemetry.maxCombo || 0)) recordTelemetry('maxCombo', spComboCount);
+                        playBrickHit(8, spComboCount);
                     } else {
                         spawnParticles(bx, by, getBrickColor(type, r, c), 12);
                         spawnShockwave(bx, by, getBrickColor(type, r, c));
                         triggerScreenShake(3.0, 0.02);
                         plasma_shards++;
+                        recordTelemetry('plasmaFarmed', 1);
                         if (dur_fire > 0 || active_supernova) {
                             bricks[r][c] = 0; bricks_left--; score += 15 * chaosMult; lifetime_bricks++;
+                            recordTelemetry('bricksBroken', 1);
                         } else {
                             bricks[r][c]--;
-                            if (bricks[r][c] === 0) { bricks_left--; score += 10 * chaosMult; lifetime_bricks++; }
+                            if (bricks[r][c] === 0) {
+                                bricks_left--; score += 10 * chaosMult; lifetime_bricks++;
+                                recordTelemetry('bricksBroken', 1);
+                            } else {
+                                score += 5;
+                            }
                             b.dy = -b.dy;
                         }
                         spComboCount++;
-                        if (spComboCount > (telemetry.maxCombo || 0)) telemetry.maxCombo = spComboCount;
+                        if (spComboCount > (telemetry.maxCombo || 0)) recordTelemetry('maxCombo', spComboCount);
                         playBrickHit(type, spComboCount);
 
                         if (!power_active && Math.random() < 0.20) {
@@ -3850,6 +4053,11 @@ function update() {
         balls = balls.filter(b => b.y <= h || dur_barrier > 0 || aegis_layers > 0);
         if (balls.length === 0) {
             lives--;
+            power_active = 0;
+            sticky_timer = 0;
+            dur_laser = 0;
+            dur_fire = 0;
+            dur_satellite = 0;
             triggerScreenShake(12.0, 0.04);
             if (lives <= 0) {
                 state = 2; stopBgm(); playLifeLost(); saveGameData();
@@ -4691,6 +4899,12 @@ document.addEventListener('visibilitychange', () => {
 });
 
 window.addEventListener('keydown', e => {
+    // Input guard: never trigger global hotkeys when typing in input/textarea/select
+    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT')) {
+        if (e.code === 'Escape') document.activeElement.blur();
+        return;
+    }
+
     keys[e.code] = true;
 
     // Key rebinding listener
@@ -4789,7 +5003,11 @@ window.addEventListener('keydown', e => {
             if (isKeyAction(e.code, 'launch') || e.code === 'Space') {
                 e.preventDefault();
                 for (let b of balls) {
-                    if (b.stuck) { b.stuck = 0; b.dy = -3.8; }
+                    if (b.stuck) {
+                        b.stuck = 0;
+                        b.dy = -3.8;
+                        recordTelemetry('ballsLaunched', 1);
+                    }
                 }
                 return;
             }
@@ -4909,6 +5127,7 @@ cvs.addEventListener('pointerdown', e => {
             if (b.stuck) {
                 b.stuck = 0;
                 b.dy = -speed;
+                recordTelemetry('ballsLaunched', 1);
             }
         }
     }

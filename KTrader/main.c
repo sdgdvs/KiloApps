@@ -65,7 +65,7 @@ int availMissionTarget[3];
 int availMissionReward[3];
 
 
-const char* goodNames[8] = { "Food", "Water", "Ore", "Tech", "Meds", "Luxury", "Contra", "Military" };
+const char* goodNames[8] = { "[FD] Food", "[H2] Water", "[OR] Ore", "[TC] Tech", "[MD] Meds", "[LX] Lux", "[XX] Contra", "[ML] Arms" };
 int currentPrices[8];
 
 unsigned int rngState = 0x1234;
@@ -1285,7 +1285,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hListLog = CreateWindow("LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | LBS_NOINTEGRALHEIGHT,
                 20, 590, 600, 70, hwnd, (HMENU)ID_LIST_LOG, NULL, NULL);
 
-            HWND hStatMarket = CreateWindow("STATIC", "Market", WS_CHILD | WS_VISIBLE, 300, 250, 100, 20, hwnd, NULL, NULL, NULL);
+            HWND hStatMarket = CreateWindow("STATIC", "Starport Market Stalls", WS_CHILD | WS_VISIBLE, 300, 250, 160, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatMarket, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             for (int i = 0; i < 8; i++) {
@@ -1669,12 +1669,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SelectObject(memDC, oldPen);
             DeleteObject(hWarpPen);
 
-            // Floating dust motes
-            for (int i = 0; i < 6; i++) {
-                int dx = ((animTick * (i + 1) * 2) + i * 100) % 600;
-                int dy = 20 + i * 20 + FastSin(animTick * 4 + i * 60) * 8 / 100;
-                SetPixel(memDC, dx, dy, RGB(0, 255, 255));
-            }
+            // Glint sweep: clean starfield, 0 perimeter glints
 
             // Draw Player Ship (Left side: x~100, y~75)
             int py = 75 + (FastSin(animTick * 6) * 3) / 100;
@@ -1733,21 +1728,30 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SelectObject(memDC, hEngPen);
                 Polygon(memDC, flPts, 3);
 
-                // Sleek Hull
-                HBRUSH hShipBrush = CreateSolidBrush(RGB(0, 150, 230));
-                HPEN hShipPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+                // Merchant Vessel Chassis: Armored Hull & Twin Cargo Pod Sponsons
+                HBRUSH hCargoBrush = CreateSolidBrush(RGB(220, 140, 20));
+                HPEN hCargoPen = CreatePen(PS_SOLID, 1, RGB(255, 215, 0));
+                SelectObject(memDC, hCargoBrush);
+                SelectObject(memDC, hCargoPen);
+                Rectangle(memDC, 82, py - 20, 106, py - 12);
+                Rectangle(memDC, 82, py + 12, 106, py + 20);
+                SelectObject(memDC, origBrush); SelectObject(memDC, origPen);
+                DeleteObject(hCargoBrush); DeleteObject(hCargoPen);
+
+                HBRUSH hShipBrush = CreateSolidBrush(RGB(14, 52, 92));
+                HPEN hShipPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
                 SelectObject(memDC, hShipBrush);
                 SelectObject(memDC, hShipPen);
-                POINT shipPts[6] = {
-                    {135, py}, {82, py + 18}, {90, py + 6},
-                    {76, py}, {90, py - 6}, {82, py - 18}
+                POINT shipPts[8] = {
+                    {138, py}, {112, py + 12}, {85, py + 14}, {74, py + 8},
+                    {70, py}, {74, py - 8}, {85, py - 14}, {112, py - 12}
                 };
-                Polygon(memDC, shipPts, 6);
+                Polygon(memDC, shipPts, 8);
 
-                // Cockpit Canopy
-                HBRUSH hCanopyBrush = CreateSolidBrush(RGB(0, 255, 255));
+                // Command Bridge Canopy
+                HBRUSH hCanopyBrush = CreateSolidBrush(RGB(100, 255, 255));
                 SelectObject(memDC, hCanopyBrush);
-                Ellipse(memDC, 95, py - 4, 115, py + 4);
+                Ellipse(memDC, 108, py - 4, 126, py + 4);
 
                 // Weapon Blasters based on level
                 HPEN hCyanPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
@@ -1793,16 +1797,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SelectObject(memDC, hPEngPen);
                 Polygon(memDC, pflPts, 3);
 
-                // Pirate Hull
-                HBRUSH hPirateBrush = CreateSolidBrush(RGB(204, 17, 0));
-                HPEN hPiratePen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+                // Interstellar Pirate Raider Silhouette (Predatory Jagged Hull)
+                HBRUSH hPirateBrush = CreateSolidBrush(RGB(180, 10, 0));
+                HPEN hPiratePen = CreatePen(PS_SOLID, 2, RGB(255, 50, 50));
                 SelectObject(memDC, hPirateBrush);
                 SelectObject(memDC, hPiratePen);
-                POINT pPts[6] = {
-                    {465, ey}, {518, ey - 24}, {510, ey - 8},
-                    {524, ey}, {510, ey + 8}, {518, ey + 24}
+                POINT pPts[8] = {
+                    {455, ey}, {485, ey - 10}, {525, ey - 26}, {512, ey - 6},
+                    {528, ey}, {512, ey + 6}, {525, ey + 26}, {485, ey + 10}
                 };
-                Polygon(memDC, pPts, 6);
+                Polygon(memDC, pPts, 8);
 
                 // Optic Visor
                 HBRUSH hVisor = CreateSolidBrush(RGB(255, 255, 0));
@@ -1935,27 +1939,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     DeleteObject(hRingPen);
                 }
 
-                // Upgraded Multi-Segment Orbital Spaceport Docking Hub (zero orbital glints)
+                // Starport Market Stalls Orbital Docking Hub (zero glints)
                 int satX = 554;
                 int satY = 53;
                 HBRUSH hSolar = CreateSolidBrush(RGB(10, 60, 100));
                 HPEN hCyanPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
                 SelectObject(memDC, hSolar);
                 SelectObject(memDC, hCyanPen);
-                Rectangle(memDC, satX - 12, satY - 4, satX - 4, satY + 4);
-                Rectangle(memDC, satX + 4, satY - 4, satX + 12, satY + 4);
-                HBRUSH hMod = CreateSolidBrush(RGB(30, 40, 50));
-                HPEN hWhitePen = CreatePen(PS_SOLID, 1, RGB(220, 220, 220));
+                Rectangle(memDC, satX - 16, satY - 4, satX - 6, satY + 4);
+                Rectangle(memDC, satX + 6, satY - 4, satX + 16, satY + 4);
+                HBRUSH hMod = CreateSolidBrush(RGB(30, 45, 60));
+                HPEN hWhitePen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
                 SelectObject(memDC, hMod);
                 SelectObject(memDC, hWhitePen);
-                Rectangle(memDC, satX - 5, satY - 5, satX + 6, satY + 6);
+                Rectangle(memDC, satX - 6, satY - 6, satX + 7, satY + 7);
+                // Market Cargo Pod Stalls (Amber/Cyan container bays)
+                HBRUSH hPod = CreateSolidBrush(RGB(220, 130, 20));
+                SelectObject(memDC, hPod);
+                Rectangle(memDC, satX - 4, satY + 7, satX + 5, satY + 12);
                 SelectObject(memDC, hCyanPen);
-                MoveToEx(memDC, satX, satY - 5, NULL);
-                LineTo(memDC, satX, satY - 9);
+                MoveToEx(memDC, satX, satY - 6, NULL);
+                LineTo(memDC, satX, satY - 11);
                 SelectObject(memDC, origBrush);
                 SelectObject(memDC, origPen);
                 DeleteObject(hSolar); DeleteObject(hCyanPen);
-                DeleteObject(hMod); DeleteObject(hWhitePen);
+                DeleteObject(hMod); DeleteObject(hWhitePen); DeleteObject(hPod);
             }
 
             // Laser Projectiles

@@ -1693,6 +1693,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (cd_gravity > 0) cd_gravity--;
                 if (cd_satellite > 0) cd_satellite--;
                 if (paddle_timer > 0) { paddle_timer--; if (paddle_timer == 0) pad_w = (diff == 1) ? 45 : 65; }
+                if (sticky_timer > 0) sticky_timer--;
 
                 int move_speed = active_chronos ? 8 : 6;
                 if ((GetAsyncKeyState(VK_LEFT) & 0x8000) || (GetAsyncKeyState('A') & 0x8000)) pad_x -= move_speed;
