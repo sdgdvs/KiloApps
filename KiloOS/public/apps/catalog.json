@@ -76,24 +76,24 @@
     "title": "KBreakout",
     "folder": "Games",
     "webBytes": 228761,
-    "exeBytes": 56832,
+    "exeBytes": 57344,
     "budgetPercent": 22.9
   },
   {
     "id": "kbudget",
     "title": "KBudget",
     "folder": "Office",
-    "webBytes": 159821,
+    "webBytes": 156523,
     "exeBytes": 176128,
-    "budgetPercent": 16.0
+    "budgetPercent": 15.7
   },
   {
     "id": "kcalc",
     "title": "KCalc",
     "folder": "System",
-    "webBytes": 276270,
+    "webBytes": 282856,
     "exeBytes": 29184,
-    "budgetPercent": 27.7
+    "budgetPercent": 28.3
   },
   {
     "id": "kcalendar",
@@ -115,9 +115,9 @@
     "id": "kchat",
     "title": "KChat",
     "folder": "Network",
-    "webBytes": 140241,
+    "webBytes": 143365,
     "exeBytes": 36352,
-    "budgetPercent": 14.0
+    "budgetPercent": 14.4
   },
   {
     "id": "kchatserver",
@@ -235,9 +235,9 @@
     "id": "kcyber",
     "title": "KCyber",
     "folder": "Games",
-    "webBytes": 174849,
+    "webBytes": 170374,
     "exeBytes": 39424,
-    "budgetPercent": 17.5
+    "budgetPercent": 17.1
   },
   {
     "id": "kdarts",
@@ -299,9 +299,9 @@
     "id": "kfleet",
     "title": "KFleet",
     "folder": "System",
-    "webBytes": 103291,
+    "webBytes": 106346,
     "exeBytes": 18944,
-    "budgetPercent": 10.3
+    "budgetPercent": 10.6
   },
   {
     "id": "kfont",
@@ -331,17 +331,17 @@
     "id": "kgo",
     "title": "KGo",
     "folder": "Games",
-    "webBytes": 186212,
+    "webBytes": 181271,
     "exeBytes": 198656,
-    "budgetPercent": 18.6
+    "budgetPercent": 18.1
   },
   {
     "id": "kgraph",
     "title": "KGraph",
     "folder": "System",
-    "webBytes": 159784,
+    "webBytes": 164115,
     "exeBytes": 39424,
-    "budgetPercent": 16.0
+    "budgetPercent": 16.4
   },
   {
     "id": "khabit",
@@ -443,9 +443,9 @@
     "id": "kmedia",
     "title": "KMedia",
     "folder": "Media",
-    "webBytes": 166529,
+    "webBytes": 171033,
     "exeBytes": 22528,
-    "budgetPercent": 16.7
+    "budgetPercent": 17.1
   },
   {
     "id": "kmine",
@@ -467,9 +467,9 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 214864,
+    "webBytes": 219762,
     "exeBytes": 58880,
-    "budgetPercent": 21.5
+    "budgetPercent": 22.0
   },
   {
     "id": "knetmap",
@@ -523,9 +523,9 @@
     "id": "kping",
     "title": "KPing",
     "folder": "System",
-    "webBytes": 187685,
+    "webBytes": 183450,
     "exeBytes": 52736,
-    "budgetPercent": 18.8
+    "budgetPercent": 18.4
   },
   {
     "id": "kpomodoro",
@@ -595,9 +595,9 @@
     "id": "krss",
     "title": "KRSS",
     "folder": "Network",
-    "webBytes": 193402,
+    "webBytes": 198476,
     "exeBytes": 22016,
-    "budgetPercent": 19.4
+    "budgetPercent": 19.9
   },
   {
     "id": "ksanctuary",
@@ -611,15 +611,15 @@
     "id": "kscript",
     "title": "KScript",
     "folder": "Dev",
-    "webBytes": 198161,
+    "webBytes": 193234,
     "exeBytes": 34816,
-    "budgetPercent": 19.8
+    "budgetPercent": 19.3
   },
   {
     "id": "ksettings",
     "title": "Settings",
     "folder": "System",
-    "webBytes": 83139,
+    "webBytes": 83140,
     "exeBytes": null,
     "budgetPercent": 8.3
   },
@@ -667,9 +667,9 @@
     "id": "kstarforge",
     "title": "KStarForge",
     "folder": "Games",
-    "webBytes": 358697,
+    "webBytes": 366125,
     "exeBytes": 31232,
-    "budgetPercent": 35.9
+    "budgetPercent": 36.6
   },
   {
     "id": "kstarship",
@@ -715,9 +715,9 @@
     "id": "ksynth",
     "title": "KSynth",
     "folder": "Media",
-    "webBytes": 187613,
+    "webBytes": 192410,
     "exeBytes": 29184,
-    "budgetPercent": 18.8
+    "budgetPercent": 19.3
   },
   {
     "id": "ksys",
@@ -763,9 +763,9 @@
     "id": "ktimer",
     "title": "KTimer",
     "folder": "System",
-    "webBytes": 110368,
+    "webBytes": 113460,
     "exeBytes": 33280,
-    "budgetPercent": 11.0
+    "budgetPercent": 11.4
   },
   {
     "id": "ktodo",
@@ -835,7 +835,7 @@
     "id": "kzip",
     "title": "KZip",
     "folder": "System",
-    "webBytes": 157616,
+    "webBytes": 157593,
     "exeBytes": 26112,
     "budgetPercent": 15.8
   }

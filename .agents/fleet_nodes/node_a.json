@@ -5,7 +5,7 @@
   "hostname": "P10700",
   "model_tier": "Gemini Pro",
   "cadence": "1 turn/hour",
-  "status": "error",
+  "status": "active",
   "schedule_minutes": [
     12
   ],
@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 651,
+  "turns_executed": 653,
   "last_turn_timestamp": "2026-09-28T18:42:51Z",
-  "last_heartbeat": "2026-11-04T15:22:08.811899+00:00",
-  "current_target": "KBreakout",
+  "last_heartbeat": "2026-11-04T19:19:04.932209+00:00",
+  "current_target": "KSanctuary",
   "remote_command": "none"
 }
