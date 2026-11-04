@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T20:22:26-08:00 — kilo-usability: KNetMap (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KNetMap across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KImage`; rotated active agent to `kilo-qa`.
+
 - **2026-11-03T19:20:37-08:00 — kilo-tester: KNetMap (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 121.8 KB, native 19.5 KB < 999 KB; startup, Vite & security_lint PASS; visual WARN (anim 0.0%, input 0.23%, HEAD Δ 1.51%, 0 fail, 1 warn, 8.2s)).
   - Web Repairs: isIpInSubnet matches DMZ nodes to sub-dmz, implemented drawCollisionDomains for #chkCollisionDomains, fixed onTouchStart updateInspectorPane, dynamic CIDR bar labels and VLSM split child preview with oninput recalc, dispatched initial ICMP ping pulse.

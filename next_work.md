@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://demoscene
-  kilo_graphics: KColony
+  kilo_graphics: KMine
   kilo_soundscape: KStellar
   kilo_tester: KBreakout
   kilo_usability: KBreakout
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://geocities
-  timestamp: '2026-11-03T22:21:03-08:00'
+  agent: kilo-graphics
+  app: KTrader
+  timestamp: '2026-11-03T23:34:01-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -99,12 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://geocities` | `KiloOS/public/web/geocities.html`, `KiloOS/public/apps/knet.html` | Create *GeoCities Neighborhood Portal ('99 Retro Neighborhoods)* (`geocities.html` <250 KB): SiliconValley, Area51, and Tokyo99 homestead personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export. |
 
 ### 2. Game Content & Graphics Queue (kilo-graphics)
-- **Active Target**: `KColony`
+- **Active Target**: `KMine`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| KColony | KiloOS/public/apps/kcolony.html, KColony/main.c | Colony simulation visuals: planetary structures, colonists, exploration rovers, alien megafauna, terraforming atmosphere overlays, and glint sweep. |
-| KTrader | KiloOS/public/apps/ktrader.html, KTrader/main.c | Galactic trade visuals: merchant vessel chassis, starport market stalls, trade good icons, interstellar pirate silhouettes, and glint sweep. |
 | KMine | KiloOS/public/apps/kmine.html, KMine/main.c | Subterranean excavation crawler visuals: drill rigs, mineral veins, seismic hazard indicators, ore refinery equipment, and glint sweep. |
 | KChrono | KiloOS/public/apps/kchrono.html, KChrono/main.c | Temporal paradox visual suite: time-portal distortion effects, historic epoch landmark cards, timeline branching node glyphs, and glint sweep. |
 | KStarDredge | KiloOS/public/apps/kstardredge.html | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
@@ -114,6 +112,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | KCosmic | KiloOS/public/apps/kcosmic.html, KCosmic/main.c | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
 | KWizard | KiloOS/public/apps/kwizard.html | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
 | KRogue | KiloOS/public/apps/krogue.html, KRogue/main.c | Dungeon crawler sprite overhaul: hero chassis/classes, procedural dungeon floor/wall tiles, 5 creature archetypes, item icons, and glint sweep. |
+| KColony | KiloOS/public/apps/kcolony.html, KColony/main.c | Colony simulation visuals: planetary structures, colonists, exploration rovers, alien megafauna, terraforming atmosphere overlays, and glint sweep. |
+| KTrader | KiloOS/public/apps/ktrader.html, KTrader/main.c | Galactic trade visuals: merchant vessel chassis, starport market stalls, trade good icons, interstellar pirate silhouettes, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -291,6 +291,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T23:34:01-08:00 — kilo-graphics: KTrader (Skip — Asset Suitability)**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KTrader.
+  - Handoff: Advanced `kilo-graphics` to `KMine`; rotated active agent to `kilo-tester`.
+
 - **2026-11-03T22:21:03-08:00 — kilo-creator: kweb://geocities (GeoCities Neighborhood Portal ('99 Retro Neighborhoods))**
   - Status: PASS ✅ (0 errors, web 683.5 KB < 999 KB; startup, Vite & security_lint PASS).
   - Wired SiliconValley, Area51, and Tokyo99 personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export.
@@ -313,8 +317,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload persistence via safeGet/safeSet, kanomaly_tutorialSeen flag, and Escape modal dismissals.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, audio decoder telemetry earcon, and visibilitychange lifecycle cleanup.
   - Mature Quarantine & Handoff: Promoted `KAnomaly` to Mature archive; advanced `kilo-qa` to `KBBS`; next agent `kilo-expander`.
-
-- **2026-11-03T20:22:26-08:00 — kilo-usability: KNetMap (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-usability updates for KNetMap across web and native targets.
-  - Handoff: Advanced `kilo-usability` to `KImage`; rotated active agent to `kilo-qa`.

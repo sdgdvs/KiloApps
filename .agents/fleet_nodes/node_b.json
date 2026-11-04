@@ -5,7 +5,7 @@
   "hostname": "DESKTOP-HSSS709",
   "model_tier": "Gemini Pro",
   "cadence": "1 turn/hour",
-  "status": "active",
+  "status": "error",
   "schedule_minutes": [
     30
   ],
@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 651,
+  "turns_executed": 653,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-11-04T03:40:04.678701+00:00",
-  "current_target": "KNetMap",
+  "last_heartbeat": "2026-11-04T06:40:05.635015+00:00",
+  "current_target": "KTrader",
   "remote_command": "none"
 }
