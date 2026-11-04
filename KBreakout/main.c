@@ -2899,6 +2899,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, W/2 - (tlen * 3), 48, toast_text, tlen);
                 SetBkMode(memDC, TRANSPARENT);
             }
+
+            // Subtle CRT scanline pass
+            HPEN crtPen = CreatePen(PS_SOLID, 1, RGB(12, 12, 22));
+            HGDIOBJ oldCrt = SelectObject(memDC, crtPen);
+            for (int sy = 0; sy < H; sy += 3) {
+                MoveToEx(memDC, 0, sy, NULL);
+                LineTo(memDC, W, sy);
+            }
+            SelectObject(memDC, oldCrt);
+            DeleteObject(crtPen);
             
             /* Subtle retro CRT phosphor grid and scanline raster pass */
             {
