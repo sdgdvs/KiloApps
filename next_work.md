@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KWizard
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KScript
+  kilo_usability: KImage
   kilo_qa: KSteno
   kilo_expander: KScript
   kilo_review: KNetMap
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KScript
-  timestamp: '2026-11-03T15:38:29-08:00'
+  timestamp: '2026-11-03T16:22:15-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -149,11 +149,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | **[ARGON REVIEW]:** Fix broken multi-line string literals in PRESETS.vfs_demo caused by unescaped \n inside template literal, implement documented 0o octal literals in parsePrimary() and loop/endloop control flow in createScriptStepper(), strip string literals before identifier scanning and support compound assignments in analyzeScript() to eliminate false-positive linter warnings on DEFAULT_SCRIPT, and HTML-escape renderMemoryTable() cells/copy handlers to prevent XSS and quote SyntaxErrors. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KScript`
+- **Active Target**: `KImage`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | **[ARGON REVIEW]:** Compact 3-row header .toolbar and 2-row .presets-bar vertical bloat at 1040x643 and set white-space nowrap on #panelEditor .panel-header so Script Editor does not wrap, map AST category keys in renderAstDistribution() (STMT_ASSIGN, STMT_BRANCH_*, STMT_LOOP_*, STMT_PRINT, EXPRESSION) to distinct colors and short labels so #astCanvas is not solid purple with overflowing legend text, raise .gutter contrast from #475569 to >= #94a3b8, differentiate Print/Return/trace lines in #outputArea, move .toast-container to bottom 42px so toasts do not cover zoom controls, and unify v2.2 labels. |
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Define missing .hidden (display none !important) and .row (display flex; align-items center; gap 8px) CSS in kimage.html so #emptyState hides on image load (fixing sheet.png Panel 3 canvas clipping), inactive #tabKernel..#tabDraw and #rightStegoContent stop stacking simultaneously, #cropControls stays hidden until enabled, and Kernel/Resize/ASCII .row inputs align side-by-side; auto-show #rightPanel (unless user-toggled off) with #btnToggleRight.active and live renderHistogram() on image load so #histCanvas is not blank black; fit .toolbar on 1 row at 1060px (--panel-width 255px, nowrap compact buttons, remove redundant Press H/F1 subtitle), cap #toastContainer to 2 toasts, and in KImage/main.c use 9pt Segoe UI (-MulDiv(9,dpi,72)) and clean ASCII button/help labels (RotL, RotR, <, Play, Pause, >, -) to fix clipped 12pt UTF-8 mojibake. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -166,6 +165,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Compact #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 without vertical scroll, add preventDefault() for Arrow/Space keys so gameplay never scrolls the page, and prevent #toast-container from covering #controls and #message-log. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Arrange #start-screen buttons in a 2-column grid so all 11 fit within 870x623 without bottom clipping; lock body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto) and e.preventDefault() on Arrow/Space keys; resize #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; raise small font-size from 8px to 9.5px. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
+| `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | **[ARGON REVIEW]:** Compact 3-row header .toolbar and 2-row .presets-bar vertical bloat at 1040x643 and set white-space nowrap on #panelEditor .panel-header so Script Editor does not wrap, map AST category keys in renderAstDistribution() (STMT_ASSIGN, STMT_BRANCH_*, STMT_LOOP_*, STMT_PRINT, EXPRESSION) to distinct colors and short labels so #astCanvas is not solid purple with overflowing legend text, raise .gutter contrast from #475569 to >= #94a3b8, differentiate Print/Return/trace lines in #outputArea, move .toast-container to bottom 42px so toasts do not cover zoom controls, and unify v2.2 labels. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KSteno`
@@ -291,6 +291,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T16:22:15-08:00 — kilo-usability: KScript (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KScript across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KImage`; rotated active agent to `kilo-qa`.
+
 - **2026-11-03T15:38:29-08:00 — kilo-tester: KScript (KScript Engine Parsing, Stepper & Security Hardening)**
   - Status: PASS ✅ (0 errors, web 180.5 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.44%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.1s)).
   - Fixed multi-line strings in PRESETS.vfs_demo by escaping \n in template literal.
@@ -316,11 +321,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: 3-row toolbar & 2-row presets bloat, wrapped Script Editor header, solid-purple #astCanvas category mismatch, low 2.5x .gutter contrast, undifferentiated trace spam in #outputArea, and toast occlusion over zoom controls.
   - Engine/Mesh/C Findings: Broken unescaped newlines in PRESETS.vfs_demo, missing 0o octal & loop/endloop, analyzeScript() string-literal false positives, renderMemoryTable() XSS, unguarded VFS postMessage & empty VFS_LIST_DONE stub, and broken Win32 Template 7 Collatz ternary + missing if/while/hex/bin parity.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KScript`, `kilo-usability`->`KScript`, `kilo-expander`->`KScript`] (un-quarantined `KScript` from Mature); advanced `kilo-review` to `KNetMap`; next agent `kilo-creator`.
-
-- **2026-11-03T13:38:06-08:00 — kilo-expander: KMatrix (KMatrix VFS Mesh Dual-Query, Breach Persistence & Morse Echo Cadence)**
-  - Status: PASS ✅ (0 errors, web 105.0 KB, native 22.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 0.61%, HEAD Δ 9.43%, 0 fail, 0 warn, 8.4s)).
-  - Added vfs/verify to AUTOCOMPLETE_LIST with Tab completion parity in KMatrix/main.c.
-  - Wired dual-query for /sys/alpha.sys and /sys/anomaly_capture.sig with explicit terminal feedback.
-  - Persisted breach state via VFS_WRITE to /home/crypto/kmatrix_breach.json on sector decrypt and override.
-  - Transmitted 2-Op FM Morse ECHO cadence on 1999 Hz carrier in cmdWaterfall() with audioCtx auto-resume.
-  - Mature Quarantine & Handoff: Promoted `KMatrix` to Mature archive; advanced `kilo-expander` to `KChess`; next agent `kilo-review`.

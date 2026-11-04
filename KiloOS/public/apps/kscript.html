@@ -48,12 +48,12 @@
         display: flex;
         flex-direction: column;
         height: 100%;
-        gap: 10px;
+        gap: 6px;
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
         border-radius: 12px;
         backdrop-filter: blur(14px);
-        padding: 14px;
+        padding: 10px 12px;
         box-shadow: 0 10px 36px rgba(0, 0, 0, 0.45);
         min-height: 0;
     }
@@ -61,21 +61,19 @@
     /* Header */
     .header {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 8px;
+        flex-direction: column;
+        gap: 5px;
     }
 
     .title-group {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
     }
 
     h1 {
         margin: 0;
-        font-size: 1.35rem;
+        font-size: 1.25rem;
         font-weight: 800;
         background: linear-gradient(to right, #e0e7ff, #a78bfa, #8b5cf6);
         -webkit-background-clip: text;
@@ -136,42 +134,49 @@
     /* Toolbar */
     .toolbar {
         display: flex;
-        gap: 5px;
+        gap: 3px;
         align-items: center;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: thin;
+        width: 100%;
     }
 
     button {
         background: var(--accent);
         color: white;
         border: none;
-        padding: 5px 10px;
-        border-radius: 6px;
+        padding: 3px 6px;
+        border-radius: 5px;
         font-family: inherit;
         font-weight: 600;
-        font-size: 11.5px;
+        font-size: 11px;
         cursor: pointer;
         transition: all 0.15s ease;
-        box-shadow: 0 2px 6px rgba(139, 92, 246, 0.25);
+        box-shadow: 0 1px 4px rgba(139, 92, 246, 0.2);
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 3px;
         user-select: none;
         touch-action: manipulation;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
 
     
     .toolbar-group {
         display: flex;
-        gap: 4px;
+        gap: 2px;
         align-items: center;
+        flex-shrink: 0;
     }
 
     .toolbar-divider {
         width: 1px;
-        height: 18px;
+        height: 16px;
         background: rgba(255, 255, 255, 0.16);
-        margin: 0 3px;
+        margin: 0 2px;
         flex-shrink: 0;
     }
 
@@ -276,10 +281,10 @@
     }
 
     .btn-key {
-        font-size: 9.5px;
+        font-size: 9px;
         opacity: 0.85;
         background: rgba(0, 0, 0, 0.28);
-        padding: 1px 4px;
+        padding: 0 3px;
         border-radius: 3px;
         border: 1px solid rgba(255, 255, 255, 0.18);
     }
@@ -292,10 +297,13 @@
         background: rgba(15, 23, 42, 0.7);
         border: 1px solid var(--glass-border);
         border-radius: 8px;
-        padding: 5px 12px;
-        font-size: 11.5px;
-        gap: 12px;
-        flex-wrap: wrap;
+        padding: 4px 10px;
+        font-size: 11px;
+        gap: 10px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: thin;
+        flex-shrink: 0;
     }
 
     .telemetry-group {
@@ -326,10 +334,14 @@
     .presets-bar {
         display: flex;
         align-items: center;
-        gap: 5px;
-        font-size: 11px;
+        gap: 4px;
+        font-size: 10.5px;
         color: var(--text-muted);
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: thin;
+        flex-shrink: 0;
     }
 
     .preset-chip {
@@ -338,12 +350,14 @@
         user-select: none;
         border: 1px solid var(--glass-border);
         color: #cbd5e1;
-        padding: 3px 8px;
+        padding: 2px 6px;
         border-radius: 5px;
-        font-size: 11px;
+        font-size: 10.5px;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.15s ease;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
 
     .preset-chip:hover {
@@ -444,6 +458,29 @@
         flex-shrink: 0;
     }
 
+    #panelEditor .panel-header {
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    #panelEditor .panel-header > div:first-child {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    #panelEditor .panel-header span {
+        white-space: nowrap;
+    }
+
+    #panelEditor .find-replace {
+        flex-shrink: 1;
+        min-width: 0;
+        overflow: hidden;
+    }
+
     /* Editor Container with Line Gutter Alignment */
     .editor-container {
         display: flex;
@@ -471,7 +508,7 @@
         font-family: "Consolas", "Monaco", "Lucida Console", "Courier New", monospace;
         font-size: var(--editor-font-size, 13px);
         line-height: var(--editor-line-height, 20px);
-        color: #475569;
+        color: #94a3b8;
         text-align: right;
         flex-shrink: 0;
     }
@@ -489,8 +526,8 @@
     }
 
     .gutter-line:hover {
-        color: #94a3b8;
-        background: rgba(255, 255, 255, 0.04);
+        color: #f1f5f9;
+        background: rgba(255, 255, 255, 0.06);
     }
 
     .gutter-line.breakpoint::before {
@@ -601,6 +638,73 @@
     .output.error {
         color: #fda4af;
         background: rgba(244, 63, 94, 0.05);
+    }
+
+    .out-line {
+        line-height: 1.5;
+        word-break: break-all;
+    }
+
+    .out-line.out-print {
+        color: #38bdf8;
+    }
+
+    .out-tag-print {
+        color: #0ea5e9;
+        font-weight: 700;
+    }
+
+    .out-val-print {
+        color: #bae6fd;
+    }
+
+    .out-line.out-return {
+        color: #fbbf24;
+        font-weight: 700;
+        margin-top: 4px;
+        padding-top: 2px;
+        border-top: 1px dashed rgba(251, 191, 36, 0.35);
+    }
+
+    .out-tag-return {
+        color: #f59e0b;
+    }
+
+    .out-val-return {
+        color: #fde68a;
+    }
+
+    .out-line.out-trace {
+        color: #94a3b8;
+        font-size: 12px;
+    }
+
+    .out-trace-var {
+        color: #c4b5fd;
+        font-weight: 600;
+    }
+
+    .out-trace-val {
+        color: #e2e8f0;
+    }
+
+    .out-line.out-error {
+        color: #fca5a5;
+        background: rgba(239, 68, 68, 0.15);
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    .out-line.out-bench {
+        color: #a78bfa;
+    }
+
+    .out-line.out-bench-hdr {
+        color: #c4b5fd;
+        font-weight: 700;
+        border-bottom: 1px solid rgba(167, 139, 250, 0.3);
+        margin-bottom: 2px;
     }
 
     /* Memory Inspector Table */
@@ -798,7 +902,7 @@
     /* Toast Container */
     .toast-container {
         position: fixed;
-        bottom: 20px;
+        bottom: 42px;
         right: 20px;
         display: flex;
         flex-direction: column;
@@ -1143,7 +1247,7 @@
                     <span>💾 VFS Save</span>
                 </button>
                 <button id="btnLaunchKHex" type="button" style="background:#7c3aed" title="Inspect Active Script in KHex (OS_LAUNCH_APP)">
-                    <span>🔍 In KHex</span>
+                    <span>🔍 KHex</span>
                 </button>
             </div>
             <div class="toolbar-divider" aria-hidden="true"></div>
@@ -1188,19 +1292,19 @@
 
     <!-- Presets Bar -->
     <div class="presets-bar" role="region" aria-label="Script Presets">
-        <span>Presets:</span>
+        <span style="font-weight:600; color:#94a3b8; flex-shrink:0;">Presets:</span>
         <button type="button" class="preset-chip" onclick="loadPreset('basic')">📐 Basic Math</button>
-        <button type="button" class="preset-chip" onclick="loadPreset('vars')">🔄 Variables & Logic</button>
-        <button type="button" class="preset-chip" onclick="loadPreset('bitwise')">⚙️ Bitwise Flags & Masks</button>
-        <button type="button" class="preset-chip" onclick="loadPreset('fib')">🔢 Fibonacci (Loop)</button>
-        <button type="button" class="preset-chip" onclick="loadPreset('checksum')">🛡️ 16-Bit Checksum</button>
-        <button type="button" class="preset-chip" onclick="loadPreset('mathfuncs')">🧪 Math Functions</button>
-        <button type="button" class="preset-chip" onclick="loadPreset('collatz')">⏱️ Collatz Sequence</button>
-        <button type="button" class="preset-chip" onclick="loadPreset('stress')">⚡ Stress Test</button>
-        <button type="button" class="preset-chip" onclick="loadPreset('arrays')">📦 Arrays & Aggregation</button>
-        <button type="button" class="preset-chip" onclick="loadPreset('crypto_hash')">🔑 FNV-1a Hash (32-bit)</button>
-        <button type="button" class="preset-chip" onclick="loadPreset('lint_audit')">🛡️ Linter Audit</button>
-        <button type="button" class="preset-chip" onclick="loadPreset('vfs_demo')">🌐 VFS Scripting</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('vars')">🔄 Variables</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('bitwise')">⚙️ Bitwise</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('fib')">🔢 Fibonacci</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('checksum')">🛡️ Checksum</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('mathfuncs')">🧪 Math Funcs</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('collatz')">⏱️ Collatz</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('stress')">⚡ Stress</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('arrays')">📦 Arrays</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('crypto_hash')">🔑 FNV-1a</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('lint_audit')">🛡️ Linter</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('vfs_demo')">🌐 VFS Demo</button>
     </div>
 
     <!-- Onboarding / Quick Tip Banner -->
@@ -1214,10 +1318,10 @@
         <!-- Editor Panel with Gutter -->
         <div class="panel" id="panelEditor" style="flex: 1.25;">
             <div class="panel-header">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span>Script Editor</span>
+                <div style="display:flex; align-items:center; gap:6px; white-space:nowrap; flex-shrink:0;">
+                    <span style="white-space:nowrap;">Script Editor</span>
                     <button type="button" class="shortcut-pill run-pill" id="runShortcutPill" title="Execute Script (Ctrl+Enter)">
-                        <span class="pill-kbd">Ctrl+Enter</span> Run
+                        <span class="pill-kbd">Ctrl+↵</span> Run
                     </button>
                 </div>
                 <div class="find-replace">
@@ -1315,7 +1419,7 @@
 <div id="helpModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal">
         <div class="modal-header">
-            <h2 id="modalTitle">⚡ KScript v2.0 Guide & Reference</h2>
+            <h2 id="modalTitle">⚡ KScript v2.2 Guide & Reference</h2>
             <button id="modalClose" type="button" class="modal-close" title="Close [Esc]" aria-label="Close [Esc]">&times;</button>
         </div>
         <div style="font-size: 12.5px; line-height: 1.6; color: #e2e8f0;">
@@ -1728,7 +1832,7 @@
         const fInput = document.getElementById('regexFind');
         const rInput = document.getElementById('regexRep');
         const snapshot = {
-            version: '2.0-qa',
+            version: '2.2-qa',
             timestamp: Date.now(),
             timeStr: new Date().toLocaleTimeString(),
             code: exprInput.value,
@@ -1798,7 +1902,7 @@
 
     // Default script template
     const DEFAULT_SCRIPT = 
-`// Welcome to KScript v2.0!
+`// Welcome to KScript v2.2!
 // Press Ctrl+Enter to Run, F5 to Quicksave, F9 to Quickload, F1 for Help
 
 mask = 0xFF00
@@ -3467,6 +3571,23 @@ endif
         ctx.fillText(`${maxMicros.toFixed(1)}μs`, width - padRight, height - 8);
     }
 
+    function mapAstCategory(rawCat) {
+        if (!rawCat) return { key: 'EXPRESSION', label: 'Expr', color: '#a78bfa' };
+        if (rawCat === 'STMT_ASSIGN' || rawCat === 'Assignment') {
+            return { key: 'STMT_ASSIGN', label: 'Assign', color: '#38bdf8' };
+        }
+        if (rawCat.startsWith('STMT_BRANCH_') || rawCat === 'STMT_ENDIF' || rawCat === 'Branching') {
+            return { key: 'STMT_BRANCH', label: 'Branch', color: '#f59e0b' };
+        }
+        if (rawCat.startsWith('STMT_LOOP') || rawCat.startsWith('STMT_END') || rawCat === 'Loop') {
+            return { key: 'STMT_LOOP', label: 'Loop', color: '#ec4899' };
+        }
+        if (rawCat === 'STMT_PRINT' || rawCat === 'Output') {
+            return { key: 'STMT_PRINT', label: 'Print', color: '#10b981' };
+        }
+        return { key: 'EXPRESSION', label: 'Expr', color: '#a78bfa' };
+    }
+
     // AST Statement Type Distribution Canvas
     function renderAstDistribution(ast) {
         const canvas = document.getElementById('astCanvas');
@@ -3474,68 +3595,61 @@ endif
         const { ctx, width, height } = setupHiDpiCanvas(canvas);
         ctx.clearRect(0, 0, width, height);
 
-        const counts = {};
-        for (const node of ast) {
-            counts[node.category] = (counts[node.category] || 0) + 1;
-        }
-
-        const colors = {
-            'Assignment': '#38bdf8',
-            'STMT_ASSIGN': '#38bdf8',
-            'Branching': '#f59e0b',
-            'STMT_BRANCH_IF': '#f59e0b',
-            'STMT_BRANCH_ELIF': '#fbbf24',
-            'STMT_BRANCH_ELSE': '#f59e0b',
-            'STMT_ENDIF': '#d97706',
-            'Loop': '#ec4899',
-            'STMT_LOOP_WHILE': '#ec4899',
-            'STMT_LOOP': '#ec4899',
-            'STMT_ENDWHILE': '#db2777',
-            'STMT_ENDLOOP': '#db2777',
-            'Output': '#10b981',
-            'STMT_PRINT': '#10b981',
-            'Expression': '#a78bfa',
-            'EXPRESSION': '#a78bfa',
-            'Comment': '#64748b'
+        const categoryOrder = ['STMT_ASSIGN', 'STMT_BRANCH', 'STMT_LOOP', 'STMT_PRINT', 'EXPRESSION'];
+        const catMap = {
+            'STMT_ASSIGN': { label: 'Assign', color: '#38bdf8', count: 0 },
+            'STMT_BRANCH': { label: 'Branch', color: '#f59e0b', count: 0 },
+            'STMT_LOOP':   { label: 'Loop',   color: '#ec4899', count: 0 },
+            'STMT_PRINT':  { label: 'Print',  color: '#10b981', count: 0 },
+            'EXPRESSION':  { label: 'Expr',   color: '#a78bfa', count: 0 }
         };
 
-        const categories = Object.keys(counts);
+        for (const node of ast) {
+            const mapped = mapAstCategory(node.category);
+            if (catMap[mapped.key]) {
+                catMap[mapped.key].count++;
+            } else {
+                catMap['EXPRESSION'].count++;
+            }
+        }
+
         const total = ast.length;
+        const activeKeys = categoryOrder.filter(k => catMap[k].count > 0);
 
         const summaryEl = document.getElementById('astCategorySummary');
         if (summaryEl) {
-            summaryEl.textContent = categories.map(c => `${c}: ${counts[c]}`).join(' · ');
+            summaryEl.textContent = activeKeys.map(k => `${catMap[k].label}: ${catMap[k].count}`).join(' · ');
         }
 
-        const barY = 14;
-        const barH = 20;
+        const barY = 12;
+        const barH = 18;
         const pad = 10;
-        const barW = width - pad * 2;
+        const barW = Math.max(10, width - pad * 2);
 
         let curX = pad;
-        for (const cat of categories) {
-            const segW = (counts[cat] / total) * barW;
-            ctx.fillStyle = colors[cat] || '#8b5cf6';
+        for (const k of activeKeys) {
+            const segW = (catMap[k].count / total) * barW;
+            ctx.fillStyle = catMap[k].color;
             ctx.fillRect(curX, barY, segW, barH);
             curX += segW;
         }
 
         let legX = pad;
-        const legY = 50;
+        const legY = 46;
         ctx.font = '10px monospace';
         ctx.textBaseline = 'middle';
 
-        for (const cat of categories) {
-            const col = colors[cat] || '#8b5cf6';
-            ctx.fillStyle = col;
+        for (const k of activeKeys) {
+            const item = catMap[k];
+            ctx.fillStyle = item.color;
             ctx.fillRect(legX, legY - 4, 8, 8);
             ctx.fillStyle = '#cbd5e1';
             ctx.textAlign = 'left';
-            const pct = Math.round((counts[cat] / total) * 100);
-            const label = `${cat} ${pct}%`;
+            const pct = Math.round((item.count / total) * 100);
+            const label = `${item.label} ${pct}%`;
             ctx.fillText(label, legX + 12, legY);
-            legX += ctx.measureText(label).width + 20;
-            if (legX > width - 60) break;
+            legX += ctx.measureText(label).width + 16;
+            if (legX > width - 40) break;
         }
     }
 
@@ -3647,11 +3761,49 @@ endif
     document.getElementById('btnZoomOut')?.addEventListener('click', () => applyFontSize(currentFontSize - 1));
     document.getElementById('btnZoomReset')?.addEventListener('click', () => applyFontSize(13));
 
+    // Output Console Line Differentiating Renderer
+    function renderOutput(rawText) {
+        if (!outputArea) return;
+        if (!rawText) {
+            outputArea.innerHTML = '';
+            return;
+        }
+        const lines = rawText.split('\n');
+        const htmlLines = lines.map(line => {
+            if (!line.trim()) {
+                return '<div class="out-line out-empty">&nbsp;</div>';
+            }
+            if (line.startsWith('Print: ')) {
+                const content = escapeHtml(line.substring(7));
+                return `<div class="out-line out-print"><span class="out-tag-print">Print:</span> <span class="out-val-print">${content}</span></div>`;
+            }
+            if (line.startsWith('Return: ')) {
+                const content = escapeHtml(line.substring(8));
+                return `<div class="out-line out-return"><span class="out-tag-return">Return:</span> <span class="out-val-return">${content}</span></div>`;
+            }
+            if (line.startsWith('Script Error:') || line.startsWith('Step Error:') || line.startsWith('Execution Error:')) {
+                return `<div class="out-line out-error">${escapeHtml(line)}</div>`;
+            }
+            if (line.startsWith('=== BENCHMARK')) {
+                return `<div class="out-line out-bench out-bench-hdr">${escapeHtml(line)}</div>`;
+            }
+            if (line.startsWith('Iterations:') || line.startsWith('Total Time:') || line.startsWith('Avg Latency:') || line.startsWith('Throughput:') || line.startsWith('Node Speed:')) {
+                return `<div class="out-line out-bench">${escapeHtml(line)}</div>`;
+            }
+            const assignM = line.match(/^([a-zA-Z_]\w*)\s*=\s*(.+)$/);
+            if (assignM) {
+                return `<div class="out-line out-trace"><span class="out-trace-var">${escapeHtml(assignM[1])}</span> = <span class="out-trace-val">${escapeHtml(assignM[2])}</span></div>`;
+            }
+            return `<div class="out-line">${escapeHtml(line)}</div>`;
+        });
+        outputArea.innerHTML = htmlLines.join('\n');
+    }
+
     // UI Updates
     function updateUI(state, execTimeMs = 0) {
         if (!state) return;
         lastExecutionState = state;
-        outputArea.textContent = state.outStr || "";
+        renderOutput(state.outStr || "");
         outputArea.scrollTop = outputArea.scrollHeight;
 
         // Telemetry stats
@@ -3784,7 +3936,7 @@ endif
             showToast("Script executed successfully.", "success", 1800);
         } catch(err) {
             outputArea.classList.add('error');
-            outputArea.textContent = `Script Error:\n${err.message}`;
+            renderOutput(`Script Error:\n${err.message}`);
             statusBadge.textContent = "ERROR";
             statusBadge.className = "status-badge";
             showToast("Script Error: " + err.message, "error");
@@ -3815,7 +3967,7 @@ endif
             }
         } catch(err) {
             outputArea.classList.add('error');
-            outputArea.textContent = `Step Error:\n${err.message}`;
+            renderOutput(`Step Error:\n${err.message}`);
             activeStepLine = -1;
             renderGutter();
             activeStepper = null;
@@ -3869,7 +4021,7 @@ endif
             }
         } catch(err) {
             outputArea.classList.add('error');
-            outputArea.textContent = `Execution Error:\n${err.message}`;
+            renderOutput(`Execution Error:\n${err.message}`);
             statusBadge.textContent = "ERROR";
             statusBadge.className = "status-badge";
             showToast("Error: " + err.message, "error");
@@ -3877,7 +4029,7 @@ endif
     };
 
     btnClear.onclick = () => {
-        outputArea.textContent = "";
+        renderOutput("");
         outputArea.classList.remove('error');
         activeStepper = null;
         activeStepLine = -1;
@@ -3938,7 +4090,7 @@ endif
         renderBenchHistogram(latencies, avgMicros, minMicros, maxMicros);
 
         // Output summary to console as well
-        outputArea.textContent = `=== BENCHMARK REPORT ===\nIterations: ${iters}\nTotal Time: ${totalMs.toFixed(2)} ms\nAvg Latency: ${avgMicros.toFixed(1)} μs\nThroughput: ${runsPerSec.toLocaleString()} runs/sec\nNode Speed: ${nodeSpeed.toLocaleString()} nodes/sec\n`;
+        renderOutput(`=== BENCHMARK REPORT ===\nIterations: ${iters}\nTotal Time: ${totalMs.toFixed(2)} ms\nAvg Latency: ${avgMicros.toFixed(1)} μs\nThroughput: ${runsPerSec.toLocaleString()} runs/sec\nNode Speed: ${nodeSpeed.toLocaleString()} nodes/sec\n`);
         showToast(`Benchmark finished: ${runsPerSec.toLocaleString()} runs/s`, "success", 3000);
     };
 
@@ -4107,7 +4259,7 @@ endif
         const state = lastExecutionState || { vars: {}, nodeCount: 0, lastVal: 0 };
         const snapshot = {
             app: "KScript",
-            version: "2.0",
+            version: "2.2",
             timestamp: new Date().toISOString(),
             astNodes: state.nodeCount,
             variables: state.vars,
@@ -4606,7 +4758,7 @@ endif
             });
         });
         setTimeout(() => {
-            showToast("⚡ Welcome to KScript v2.0! [Ctrl+Enter] Run · [F5] Save · [F9] Load · [F1] Help", "info", 3500);
+            showToast("⚡ Welcome to KScript v2.2! [Ctrl+Enter] Run · [F5] Save · [F9] Load · [F1] Help", "info", 3500);
         }, 300);
     });
 </script>
