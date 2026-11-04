@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-review
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,11 +31,11 @@ current_targets:
   kilo_creator: kweb://demoscene
   kilo_graphics: KMine
   kilo_soundscape: KStellar
-  kilo_tester: KColony
-  kilo_usability: KImage
+  kilo_tester: KSanctuary
+  kilo_usability: KSanctuary
   kilo_qa: KSynth
-  kilo_expander: KChess
-  kilo_review: KSanctuary
+  kilo_expander: KSanctuary
+  kilo_review: KGraph
 virtual_web_target: kweb://demoscene
 virtual_web_rotation:
 - kweb://slashnet
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-expander
-  app: KBreakout
-  timestamp: '2026-11-04T10:37:59-08:00'
+  agent: kilo-review
+  app: KSanctuary
+  timestamp: '2026-11-04T11:18:18-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -130,10 +130,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KColony`
+- **Active Target**: `KSanctuary`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KSanctuary` | `KiloOS/public/apps/ksanctuary.html`, `KSanctuary/main.c` | **[ARGON REVIEW]:** Fix ReferenceError showRetroToast -> showToast in processNewDay() (ksanctuary.html:8680) crashing relic recovery and soft-locking scouts; decouple holotape/relicsFound[0] from the water-policy else-if chain in ksanctuary.html and KSanctuary/main.c; persist and apply candidate traits on admission, wire Reactor Power Priority policy in getTotals()/CalculateTotals(), fix rare_radaway (reset rads=0) and persist rare_target (+12 Def) in getDefenseBreakdown()/CalculateTotalDefense(), scale Infirmary upgrades (+1 maxWorkers and +8 HP/-8 Rads triage/lvl), apply getScrapDiscount/GetEffectiveScrapCost to facility upgrade and defense button checks/labels, add turretCount*3 kW load and Rad Storm +25 Rads/-20% waterPurity parity in HTML, fix [M] -> toggleAudio() and Canvas strokeStyle CSS var, and add clanIdx 5 Titan Cyber-Vanguard to DrawRaidModal/DrawDefenseView in main.c. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -150,10 +151,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | **[ARGON REVIEW]:** Fix brick collision logic in kbreakout.html so Type 8 bricks decrement brick_hp[r][c] instead of morphing bricks[r][c] into types 7/6/5/4, implement Type 5 teleporter, Type 6 powerup crate, and Type 7 1-hit ghost brick handlers matching main.c, wire sticky_timer countdown and paddle ball-catch on power_type===4, invoke recordTelemetry() across gameplay events, and replace the invalid CSS linear-gradient fillStyle in renderDuel() P1 surge meter. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KImage`
+- **Active Target**: `KSanctuary`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KSanctuary` | Eliminate 230px top-chrome vertical bloat at 850x613 (sheet.png) by compacting header buttons onto 1 nowrap row, changing #hud-container to a single-row 9-column grid (repeat(9, minmax(0,1fr))) to eliminate the 2-card orphan row, and shortening #tab-bar [1]-[8] labels with nowrap (plus widening tabW 68 -> 108 in KSanctuary/main.c | **[ARGON REVIEW]:** 6067) so row 1 of #facilities-grid renders unclipped above the fold; add devicePixelRatio HiDPI scaling to #vault-cutaway-canvas so room labels and 48x48 xenobiology sprites render crisply without non-integer 0.78x pixelated distortion, cancel vaultAnimId when leaving #view-facilities and merge duplicate visibilitychange listeners, and replace blocking confirm() in resetShelter() with an Esc-dismissible in-DOM modal. |
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Define missing .hidden (display none !important) and .row (display flex; align-items center; gap 8px) CSS in kimage.html so #emptyState hides on image load (fixing sheet.png Panel 3 canvas clipping), inactive #tabKernel..#tabDraw and #rightStegoContent stop stacking simultaneously, #cropControls stays hidden until enabled, and Kernel/Resize/ASCII .row inputs align side-by-side; auto-show #rightPanel (unless user-toggled off) with #btnToggleRight.active and live renderHistogram() on image load so #histCanvas is not blank black; fit .toolbar on 1 row at 1060px (--panel-width 255px, nowrap compact buttons, remove redundant Press H/F1 subtitle), cap #toastContainer to 2 toasts, and in KImage/main.c use 9pt Segoe UI (-MulDiv(9,dpi,72)) and clean ASCII button/help labels (RotL, RotR, <, Play, Pause, >, -) to fix clipped 12pt UTF-8 mojibake. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -182,10 +184,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KChess`
+- **Active Target**: `KSanctuary`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
+| `KSanctuary` | `KiloOS/public/apps/ksanctuary.html`, `KSanctuary/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into ksanctuary.html per architecture.md (event.origin === window.location.origin checks, 60s picker timeouts, standalone Blob/file-input fallbacks) connecting Export/Import to VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ (/home/saves/ksanctuary_vault704.json), handling incoming FILE_OPEN/VFS_OPEN messages, and adding Export Overseer Log (/home/docs/vault704_log.txt) + Open in KPad (OS_LAUNCH_APP kpad); deepen Xenobiology Biosphere into an interactive Hydroponics/Gene-Vault ecosystem mechanic reacting to waterPurity, UV power, and Cryo Seeds/Enzyme with periodic bio-synthesis yields, and add a GDI Vault 704 Structural Cross-Section strip with weather overlay and xenobiology dome to DrawFacilitiesView in KSanctuary/main.c (<999 KB). |
 | `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kchess.html using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with mandatory event.origin === window.location.origin checks, 60s dialog cleanup timeouts, and standalone Blob download / file-input fallbacks when window.parent === window for .json game saves (/home/saves/kchess_save.json) in Game menu, .pgn match records (/home/docs/kchess_match.pgn) in #pgn-modal, and .fen positions (/home/docs/kchess_position.fen) in #fen-modal and #editor-modal, plus handle incoming FILE_OPEN / VFS_OPEN messages from KiloOS File Browser to auto-load .pgn/.fen/.json files and add an Open PGN in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad) in #pgn-modal. |
 | `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kgo.html (#sgf-modal and boot listener) using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with event.origin === window.location.origin checks, 60s dialog timeouts, and standalone Blob/file-input fallbacks when window.parent === window for .sgf match records (/home/docs/kgo_match.sgf) and .json saves (/home/saves/kgo_save.json), handle incoming FILE_OPEN/VFS_OPEN messages from File Browser to auto-load .sgf/.json files, add an Open SGF in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad), and add SGF file import parity to KGo/main.c. |
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kimage.html per architecture.md (event.origin === window.location.origin checks, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks when window.parent === window) adding Open from VFS (VFS_SHOW_OPEN -> VFS_READ) and Save to VFS (VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY) for exported images (/home/media/), .JSON sessions (/home/saves/kimage_session.json), and ASCII .txt art (/home/docs/), handling incoming FILE_OPEN/VFS_OPEN messages and URL #/path hash to auto-load .png/.jpg/.bmp/.tga/.pcx/.json files, and adding Open ASCII in KPad (OS_LAUNCH_APP kpad), Send Stego to KCipher (kcipher), and Inspect Image in KHex (khex) buttons; upgrade KImage/main.c (<999 KB) by wiring ID_BTN_RESIZE_HALF (0.5x) and ID_BTN_RESIZE_DOUBLE (2x) and adding a Dither [T] Floyd-Steinberg retro palette button cycling 1-Bit Mono, DMG-4 Green, CGA, and C64 palettes. |
@@ -200,11 +203,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | **[ARGON REVIEW]:** Complete Win32 C parity in kbreakout.html by wiring the declared-but-dead ufo_active, ufo_bullet, shield_active, boss_bullets, and meteors hazard update and render routines into update() and render() to match KBreakout/main.c. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
-- **Active Target**: `KSanctuary`
+- **Active Target**: `KGraph`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSanctuary` | `KiloOS/public/apps/ksanctuary.html`, `KSanctuary/main.c` | Visual, feature & usability review: evaluate xenobiology habitat ecosystem balance, weather overlays, creature sprite rendering, and Win32 C parity. |
 | `KGraph` | `KiloOS/public/apps/kgraph.html`, `KGraph/main.c` | Visual, feature & usability review: evaluate Cartesian/polar/parametric function plotting precision, axis label contrast, calculus root finder ergonomics, and Win32 C parity. |
 | `KMandel` | `KiloOS/public/apps/kmandel.html`, `KMandel/main.c` | Visual, feature & usability review: evaluate deep fractal zoom coordinate HUD, palette cycling smoothness, landmark tour preset drawer, and Win32 C parity. |
 | `KTask` | `KiloOS/public/apps/ktask.html`, `KTask/main.c` | Visual, feature & usability review: evaluate process list sort order, memory telemetry sparklines, kill/suspend modal confirmations, and Win32 C parity. |
@@ -216,6 +218,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | [Argon Audited 2026-11-03: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | [Argon Audited 2026-11-03: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | [Argon Audited 2026-11-03: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
+| `KSanctuary` | `KiloOS/public/apps/ksanctuary.html`, `KSanctuary/main.c` | [Argon Audited 2026-11-04: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 
 ---
 
@@ -235,7 +238,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | **KTerm** | `KiloOS/public/apps/kterm.html` | Pass 5+ (2026-11-02) | System / Utilities | Complete multi-tab terminal emulator with ANSI escape codes, command history, echo -e, piping, math evaluator, VFS integration, F5/F9 state persistence, and full dual Win32 C parity. |
 | **KSolitaire** | `KiloOS/public/apps/ksolitaire.html` | Pass 5+ (2026-11-02) | Games / Card & Board | Complete Klondike solitaire workstation with Classic/Vegas/20-Stage Campaign modes, Mulberry32 PRNG deal selection [F3], undo/redo history [U/Ctrl+Z/Ctrl+Y], win cascade & fireworks, active skills, F5/F9 state persistence, and dual Win32 C parity. |
 | **KBudget** | `KiloOS/public/apps/kbudget.html` | Pass 5+ (2026-11-01) | Productivity / Finance | Complete retro personal finance ledger and workstation with dual Category Pie & 30-Day Balance Projection forecasts [P], F5/F9 state persistence, dynamic categories, VFS/CSV I/O, and Win32 C parity. |
-| **KSanctuary** | `KiloOS/public/apps/ksanctuary.html` | Pass 5+ (2026-11-01) | Games / Simulation | Complete xenobiology vault simulation; Imagen 3 flora/fauna sprites, weather overlays, F5/F9 persistence, Win32 C parity. |
 | **KChart** | `KiloOS/public/apps/kchart.html` | Pass 5+ (2026-11-01) | Productivity / Analytics | Complete data visualization studio with 10 chart modes, presets (bar/line/pie/radar & 1999 logs), statistical regressions, CSV/JSON import/export, YM2612 audio sonification, F5/F9 quicksave persistence, and dual Win32 C parity. |
 | **KPaint** | `KiloOS/public/apps/kpaint.html` | Pass 5+ (2026-10-31) | Media / Imaging & Graphics Studio | Complete retro paint studio with multi-layer canvas, F5/F9 snapshot persistence, retro palettes (C64/GameBoy/CGA/Amiga), tool drawer, flipbook animation, and Win32 C parity. |
 | **KCipher** | `KiloOS/public/apps/kcipher.html` | Pass 5+ (2026-10-31) | System / Security | Complete cryptographic suite with classical ciphers, RC4/XOR streams, AES-128 CTR, RSA demo, pipeline chaining, frequency cryptanalysis, steganography, F5/F9 persistence, and dual Win32 C parity. |
@@ -290,6 +292,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-04T11:18:18-08:00 — kilo-review: KSanctuary (Argon visual, feature & usability review for KSanctuary)**
+  - Inspected 850x613 sheet.png & xenobiology RGBA sprites; audited ksanctuary.html (9164 LOC) and KSanctuary/main.c (6209 LOC).
+  - Found critical showRetroToast ReferenceError crash on relic recovery, holotape else-if bypassing water policy penalties, and Potemkin power priority/traits/rare items.
+  - Dispatched surgical fixes to kilo-tester (simulation/parity bugs), kilo-usability (230px top-chrome bloat & HiDPI cutaway), and kilo-expander (Phase VI VFS mesh, xenobiology loop & Win32 cutaway).
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KSanctuary`, `kilo-usability`->`KSanctuary`, `kilo-expander`->`KSanctuary`] (un-quarantined `KSanctuary` from Mature); advanced `kilo-review` to `KGraph`; next agent `kilo-creator`.
+
 - **2026-11-04T10:37:59-08:00 — kilo-expander: KBreakout (Win32 C Hazard Parity & KiloOS VFS Replay/Board Mesh Integration)**
   - Status: PASS ✅ (0 errors, web 223.4 KB, native 56.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 12.18%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.7s)).
   - Completed full dual-target hazard parity: wired ufo_active, ufo_bullet, shield_active, boss_bullets, and meteors hazard updates and render routines in update() and render() matching KBreakout/main.c.
@@ -313,7 +321,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI & Hotkey Audit: Modals (tutorial/pause/telemetry/duel/replay) dismiss cleanly; added input focus guard to prevent hotkey trigger while typing.
   - Repairs: Type 8 titanium brick HP decrement matching main.c, Type 5 teleporter, Type 6 crate & Type 7 ghost handlers, sticky_timer paddle ball-catch, comprehensive recordTelemetry, and renderDuel surge gradient.
   - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
-
-- **2026-11-03T23:34:01-08:00 — kilo-graphics: KTrader (Skip — Asset Suitability)**
-  - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KTrader.
-  - Handoff: Advanced `kilo-graphics` to `KMine`; rotated active agent to `kilo-tester`.
