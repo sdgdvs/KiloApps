@@ -91,9 +91,9 @@
     "id": "kcalc",
     "title": "KCalc",
     "folder": "System",
-    "webBytes": 269371,
+    "webBytes": 282856,
     "exeBytes": 29184,
-    "budgetPercent": 27.0
+    "budgetPercent": 28.3
   },
   {
     "id": "kcalendar",
@@ -252,7 +252,7 @@
     "title": "KDB",
     "folder": "Dev",
     "webBytes": 234725,
-    "exeBytes": 70144,
+    "exeBytes": 73728,
     "budgetPercent": 23.5
   },
   {
@@ -307,8 +307,8 @@
     "id": "kfont",
     "title": "KFont",
     "folder": "System",
-    "webBytes": 258563,
-    "exeBytes": 32768,
+    "webBytes": 258665,
+    "exeBytes": 39936,
     "budgetPercent": 25.9
   },
   {
@@ -371,17 +371,17 @@
     "id": "khex",
     "title": "KHex",
     "folder": "System",
-    "webBytes": 293503,
+    "webBytes": 298286,
     "exeBytes": 38400,
-    "budgetPercent": 29.4
+    "budgetPercent": 29.9
   },
   {
     "id": "kimage",
     "title": "KImage",
     "folder": "Media",
-    "webBytes": 176128,
-    "exeBytes": 27648,
-    "budgetPercent": 17.6
+    "webBytes": 177766,
+    "exeBytes": 28160,
+    "budgetPercent": 17.8
   },
   {
     "id": "kjournal",
@@ -419,9 +419,9 @@
     "id": "kmatrix",
     "title": "KMatrix",
     "folder": "System",
-    "webBytes": 104660,
-    "exeBytes": 21504,
-    "budgetPercent": 10.5
+    "webBytes": 107559,
+    "exeBytes": 22528,
+    "budgetPercent": 10.8
   },
   {
     "id": "kmaze",
@@ -467,9 +467,9 @@
     "id": "knet",
     "title": "KNet",
     "folder": "Network",
-    "webBytes": 218961,
+    "webBytes": 219762,
     "exeBytes": 57856,
-    "budgetPercent": 21.9
+    "budgetPercent": 22.0
   },
   {
     "id": "knetmap",
@@ -572,7 +572,7 @@
     "title": "KRead",
     "folder": "System",
     "webBytes": 167836,
-    "exeBytes": 31744,
+    "exeBytes": 27136,
     "budgetPercent": 16.8
   },
   {
@@ -611,17 +611,17 @@
     "id": "kscript",
     "title": "KScript",
     "folder": "Dev",
-    "webBytes": 174093,
+    "webBytes": 193234,
     "exeBytes": 34816,
-    "budgetPercent": 17.4
+    "budgetPercent": 19.3
   },
   {
     "id": "ksettings",
     "title": "Settings",
     "folder": "System",
-    "webBytes": 82051,
+    "webBytes": 83140,
     "exeBytes": null,
-    "budgetPercent": 8.2
+    "budgetPercent": 8.3
   },
   {
     "id": "ksimon",
@@ -691,9 +691,9 @@
     "id": "ksteno",
     "title": "KSteno",
     "folder": "System",
-    "webBytes": 188531,
-    "exeBytes": 20992,
-    "budgetPercent": 18.9
+    "webBytes": 191482,
+    "exeBytes": 27136,
+    "budgetPercent": 19.2
   },
   {
     "id": "ksubmarine",

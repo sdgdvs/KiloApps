@@ -909,16 +909,28 @@ void ShowVirtualWeb(const char* site) {
     } else if (lstrcmpiA(site, "warez") == 0 || lstrcmpiA(site, "kweb:warez") == 0 || lstrcmpiA(site, "kweb://warez") == 0) {
         SetWindowTextA(hContentEdit,
             "========================================================================\r\n"
-            "★ 1999 SCENE KEYGEN & CRACKTRO REPOSITORY (PARODY ARCHIVE) ★\r\n"
+            "★ THE UNDERGROUND COURIER // WAREZ BBS & TOP-SITE RELEASE BOARD ★\r\n"
             "========================================================================\r\n"
-            "Greetings to our demoscene friends: FLARELIGHT, RAZOR 1999, SKID VECTOR!\r\n"
+            "HOST: GIGA-CORE:2121  |  PIPE: OC-3 155 Mbps  |  RATIO: 1:3.0 (ENFORCED)\r\n"
+            "AFFILIATES: [FLT] [RZR] [PDX] [SKD] [CLS] [CYB]  |  DAILY LEECH: 250.0 MB\r\n"
             "------------------------------------------------------------------------\r\n\r\n"
-            "AVAILABLE RETRO PACKS (PARODIES):\r\n"
+            "TOP-SITE RELEASES (PARODIES & NO-CD CRACKS):\r\n"
             "  [01] Surreal Tournament '99 Patch v436       - [14.2 MB] by FLARELIGHT\r\n"
             "  [02] Tremor III Arena Point Release 1.32      - [28.4 MB] by RAZOR 1999\r\n"
             "  [03] VoidCraft Brood expansion fix           - [8.1 MB]  by SKID VECTOR\r\n"
-            "  [04] Half-Cycle Opposing Shift trainer       - [1.2 MB]  by PARALAX\r\n\r\n"
-            "Chiptune BGM: Playing 4-channel MOD track 'Techno_Dreams_99.mod'\r\n"
+            "  [04] Half-Cycle Opposing Shift trainer       - [1.2 MB]  by PARALAX\r\n"
+            "  [05] Machina Ex Augmentation Keymaker        - [0.8 MB]  by CYBRID\r\n"
+            "  [06] System Glitch 2 Bio-Shock Trainer       - [1.5 MB]  by KLASS\r\n\r\n"
+            "SIMULATED KEYGEN CHIPTUNE PLAYER:\r\n"
+            "  Track: Mega Drive FM Rush (140 BPM) [YM2612 2-Op FM + SPC700 Delay]\r\n"
+            "  Status: SYNTHESIZING ACTIVE // Buffer: 44.1 kHz 16-bit\r\n\r\n"
+            "KILOOS VFS INTEGRATION & SPATIAL EXPORT:\r\n"
+            "  • Board Catalog : /home/warez/top_site_releases.txt\r\n"
+            "  • Scene NFO     : /home/downloads/0xrelease_board.nfo\r\n"
+            "  • License Keys  : /home/warez/<user>_license.txt\r\n"
+            "------------------------------------------------------------------------\r\n"
+            "KILONET WEBRING NAV:\r\n"
+            "  [Prev]: kweb:asm_temple  |  [Hub]: kweb:webring  |  [Next]: kweb:slashnet\r\n"
             "========================================================================\r\n");
     } else if (lstrcmpiA(site, "darknet") == 0 || lstrcmpiA(site, "kweb:darknet") == 0 || lstrcmpiA(site, "kweb://darknet") == 0) {
         SetWindowTextA(hContentEdit,
