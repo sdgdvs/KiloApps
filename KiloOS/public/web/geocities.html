@@ -4572,6 +4572,9 @@ Commands recognized: ATZ, ATDT, ATH0, ATI4.
     <!-- Quick Stamp Greetings -->
     <div class="quick-stamp-group">
       <span style="font-size:11px; color:#ffff00; font-family:'Courier New', monospace; margin-right:4px;">1-Click Stamps:</span>
+      <button class="quick-stamp-btn" style="border-color:#00ffcc; color:#00ffcc;" onclick="applyQuickStamp('⚡ Surfing from SiliconValley at 450MHz Celeron!')">⚡ SiliconValley 450MHz</button>
+      <button class="quick-stamp-btn" style="border-color:#38bdf8; color:#38bdf8;" onclick="applyQuickStamp('🎌 Konnichiwa from Tokyo99 Akiba Otaku shrine!')">🎌 Tokyo99 Akiba Otaku</button>
+      <button class="quick-stamp-btn" style="border-color:#39ff14; color:#39ff14;" onclick="applyQuickStamp('🛸 Surfing from Area51 neighborhood radar post!')">🛸 Area51 Radar Post</button>
       <button class="quick-stamp-btn" onclick="applyQuickStamp('Greetings to FLARELIGHT &amp; RAZOR 1999!')">⚡ FLARELIGHT &amp; RAZOR 1999</button>
       <button class="quick-stamp-btn" onclick="applyQuickStamp('ProTracker .MOD vault certified gold!')">💾 ProTracker Gold</button>
       <button class="quick-stamp-btn" onclick="applyQuickStamp('Silicon Oracle prophecy holds true!')">🔮 Oracle Prophecy</button>
@@ -8377,6 +8380,7 @@ const NEIGHBORHOOD_NAMES = ['siliconvalley', 'area51', 'tokyo99', 'tokyo', 'beve
 let currentNeighborhood = localStorage.getItem('cyberspire_neighborhood') || 'siliconvalley';
 
 function setNeighborhood(name) {
+  if (name === 'tokyo') name = 'tokyo99';
   if (!NEIGHBORHOOD_NAMES.includes(name)) name = 'siliconvalley';
   currentNeighborhood = name;
   localStorage.setItem('cyberspire_neighborhood', name);
@@ -12453,9 +12457,12 @@ Pin 8: VSS (Ground reference plane)</pre></div></div>`
   ]
 };
 
+HOMESTEADS_DATA.tokyo = HOMESTEADS_DATA.tokyo99;
+
 let currentExplorerNh = 'siliconvalley';
 
 function switchExplorerNeighborhood(nh) {
+  if (nh === 'tokyo') nh = 'tokyo99';
   currentExplorerNh = nh;
   const map = {
     siliconvalley: 'tabNhSilicon',
@@ -14769,6 +14776,22 @@ initWebSafePaletteLab();
 initHaliteDungeon();
 initCounterMarqueeForge();
 initRingmasterConsole();
+
+// Listen for hashchange and IPC postMessage
+window.addEventListener('hashchange', checkUrlParameters);
+window.addEventListener('message', (ev) => {
+  if (!ev.data) return;
+  if (ev.data.type === 'SET_NEIGHBORHOOD' && ev.data.neighborhood) {
+    setNeighborhood(ev.data.neighborhood.toLowerCase());
+  } else if (ev.data.type === 'OPEN_HOMESTEAD' && ev.data.id) {
+    openHomesteadModal(ev.data.id);
+  } else if (ev.data.type === 'NAVIGATE' && ev.data.url) {
+    const u = ev.data.url.toLowerCase();
+    NEIGHBORHOOD_NAMES.forEach(n => {
+      if (u.includes(n)) setNeighborhood(n === 'tokyo' ? 'tokyo99' : n);
+    });
+  }
+});
 
 // Auto-unlock audio context on user interaction
 document.body.addEventListener('click', () => {

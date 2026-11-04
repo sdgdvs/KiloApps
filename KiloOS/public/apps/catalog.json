@@ -27,9 +27,9 @@
     "id": "kanomaly",
     "title": "KAnomaly",
     "folder": "System",
-    "webBytes": 121780,
-    "exeBytes": 25088,
-    "budgetPercent": 12.2
+    "webBytes": 127887,
+    "exeBytes": 25600,
+    "budgetPercent": 12.8
   },
   {
     "id": "kasteroids",
@@ -475,9 +475,9 @@
     "id": "knetmap",
     "title": "KNetMap",
     "folder": "Network",
-    "webBytes": 124705,
+    "webBytes": 132591,
     "exeBytes": 19968,
-    "budgetPercent": 12.5
+    "budgetPercent": 13.3
   },
   {
     "id": "knote",
