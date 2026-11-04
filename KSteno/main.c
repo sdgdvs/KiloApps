@@ -52,6 +52,9 @@ static void k_strcat(char* dst, const char* src) {
 #define ID_BTN_VFS_REPORT   115
 #define ID_BTN_SEND_KCIPHER 116
 #define ID_CAPACITY_LABEL   117
+#define ID_BTN_QSAVE        118
+#define ID_BTN_QLOAD        119
+#define ID_BTN_BITPLANE     120
 
 // Cyber Theme Colors
 static COLORREF COLOR_BG = RGB(8, 13, 26);
@@ -89,6 +92,10 @@ static HWND g_hBtnSaveFile = NULL;
 static HWND g_hBtnLoadFile = NULL;
 static HWND g_hBtnVfsReport = NULL;
 static HWND g_hBtnSendKCipher = NULL;
+static HWND g_hBtnQuickSave = NULL;
+static HWND g_hBtnQuickLoad = NULL;
+static HWND g_hBtnBitplane = NULL;
+static int g_bitplaneSlice = 0; // 0 (LSB) to 7 (MSB)
 
 static char g_szStatus[512] = "KSteno Ready. Select carrier mode, enter secret message, and click Inject or Extract.";
 
@@ -1007,6 +1014,272 @@ static void DoLoadCover(void) {
     }
 }
 
+static void DoCopyOutput(HWND hwnd) {
+    char outText[8192];
+    outText[0] = 0;
+    GetWindowTextA(g_hEditOutput, outText, sizeof(outText));
+    int len = k_strlen(outText);
+    if (len == 0) {
+        SetWindowTextA(g_hStatusLabel, "Console output is empty. Nothing to copy.");
+        return;
+    }
+    if (OpenClipboard(hwnd)) {
+        EmptyClipboard();
+        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+        if (hMem) {
+            char* pMem = (char*)GlobalLock(hMem);
+            if (pMem) {
+                k_strcpy(pMem, outText);
+                GlobalUnlock(hMem);
+                SetClipboardData(CF_TEXT, hMem);
+            }
+        }
+        CloseClipboard();
+        SetWindowTextA(g_hStatusLabel, "Copied console output to Windows clipboard.");
+    }
+}
+
+static void DoBitplaneSlice(void) {
+    HANDLE hFile = CreateFileA("carrier_stego.bmp", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    const char* srcFile = "carrier_stego.bmp";
+    if (hFile == INVALID_HANDLE_VALUE) {
+        hFile = CreateFileA("carrier.bmp", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        srcFile = "carrier.bmp";
+    }
+    if (hFile == INVALID_HANDLE_VALUE) {
+        char errBuf[256];
+        EncodeBmpCarrier("carrier.bmp", "carrier_stego.bmp", "KSteno Default Carrier Seed", "KSTENO-1999", errBuf);
+        hFile = CreateFileA("carrier_stego.bmp", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        srcFile = "carrier_stego.bmp";
+    }
+
+    if (hFile != INVALID_HANDLE_VALUE) {
+        unsigned char bmpBuf[256 * 256 * 3 + 1024];
+        DWORD bytesRead = 0;
+        ReadFile(hFile, bmpBuf, sizeof(bmpBuf), &bytesRead, NULL);
+        CloseHandle(hFile);
+
+        if (bytesRead > sizeof(K_BMP_FILEHEADER) + sizeof(K_BMP_INFOHEADER)) {
+            K_BMP_FILEHEADER* bfh = (K_BMP_FILEHEADER*)bmpBuf;
+            int offset = bfh->bfOffBits;
+            int pixelBytes = bytesRead - offset;
+            int bit0 = 0, bit1 = 0;
+            int targetBit = g_bitplaneSlice;
+
+            unsigned char sliceBuf[256 * 256 * 3 + 1024];
+            memcpy(sliceBuf, bmpBuf, bytesRead);
+
+            char raster[12][33];
+            for (int r = 0; r < 12; r++) {
+                for (int c = 0; c < 32; c++) {
+                    raster[r][c] = '.';
+                }
+                raster[r][32] = 0;
+            }
+
+            int step = pixelBytes / (12 * 32);
+            if (step < 1) step = 1;
+
+            for (int i = 0; i < pixelBytes; i++) {
+                unsigned char b = bmpBuf[offset + i];
+                int bitVal = (b >> targetBit) & 1;
+                if (bitVal) {
+                    bit1++;
+                    sliceBuf[offset + i] = 255;
+                } else {
+                    bit0++;
+                    sliceBuf[offset + i] = 0;
+                }
+            }
+
+            for (int r = 0; r < 12; r++) {
+                for (int c = 0; c < 32; c++) {
+                    int idx = (r * 32 + c) * step;
+                    if (idx < pixelBytes) {
+                        int bVal = (bmpBuf[offset + idx] >> targetBit) & 1;
+                        raster[r][c] = bVal ? '#' : '.';
+                    }
+                }
+            }
+
+            HANDLE hOut = CreateFileA("bitplane_slice.bmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hOut != INVALID_HANDLE_VALUE) {
+                DWORD wr = 0;
+                WriteFile(hOut, sliceBuf, bytesRead, &wr, NULL);
+                CloseHandle(hOut);
+            }
+
+            int total = bit0 + bit1;
+            int pct1 = total > 0 ? (bit1 * 100) / total : 0;
+            const char* tag = (targetBit == 0) ? "LSB (Carrier payload modulation plane)" :
+                              (targetBit == 7) ? "MSB (Structural contour plane)" :
+                              "Mid-plane (Mixed texture & tone)";
+
+            char report[4096];
+            wsprintfA(report,
+                "=== BITPLANE SLICE VISUALIZER (BIT %d %s) ===\r\n"
+                "Carrier Source: %s\r\n"
+                "Bitplane Slice: Bit %d (%s)\r\n"
+                "Total Scanned Pixels: %d\r\n"
+                "Distribution: 0s = %d (%d%%) | 1s = %d (%d%%)\r\n"
+                "Entropy Metric: %s\r\n"
+                "Saved Monochrome Slice: bitplane_slice.bmp\r\n"
+                "\r\n--- 32x12 RASTER PREVIEW (. = 0, # = 1) ---\r\n",
+                targetBit, (targetBit == 0 ? "LSB" : (targetBit == 7 ? "MSB" : "MID")),
+                srcFile, targetBit, tag, total, bit0, 100 - pct1, bit1, pct1,
+                (pct1 >= 45 && pct1 <= 55) ? "HIGH ENTROPY / CARRIER NOISE DETECTED" : "STRUCTURED CONTOUR / LOW NOISE");
+
+            for (int r = 0; r < 12; r++) {
+                k_strcat(report, raster[r]);
+                k_strcat(report, "\r\n");
+            }
+            k_strcat(report, "----------------------------------------------------\r\n"
+                             "Press Bitplane Slice or Ctrl+B again to inspect next bitplane (0-7).\r\n"
+                             "Parity: Verbatim match with KSteno Web Steganalysis Slicer.\r\n");
+
+            SetWindowTextA(g_hEditOutput, report);
+            wsprintfA(g_szStatus, "Bitplane %d (%s) inspected. Exported bitplane_slice.bmp.",
+                targetBit, targetBit == 0 ? "LSB" : (targetBit == 7 ? "MSB" : "MID"));
+            SetWindowTextA(g_hStatusLabel, g_szStatus);
+
+            g_bitplaneSlice = (g_bitplaneSlice + 1) % 8;
+            return;
+        }
+    }
+    SetWindowTextA(g_hStatusLabel, "Could not open carrier bitmap for bitplane slicing.");
+}
+
+static void SaveSnapshot(HWND hwnd) {
+    char cover[8192];
+    char secret[8192];
+    char key[128];
+    char outText[8192];
+    memset(cover, 0, sizeof(cover));
+    memset(secret, 0, sizeof(secret));
+    memset(key, 0, sizeof(key));
+    memset(outText, 0, sizeof(outText));
+
+    GetWindowTextA(g_hEditCover, cover, sizeof(cover) - 1);
+    GetWindowTextA(g_hEditSecret, secret, sizeof(secret) - 1);
+    GetWindowTextA(g_hEditKey, key, sizeof(key) - 1);
+    GetWindowTextA(g_hEditOutput, outText, sizeof(outText) - 1);
+    int mode = (int)SendMessageA(g_hComboMode, CB_GETCURSEL, 0, 0);
+
+    HANDLE hFile = CreateFileA("ksteno_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &mode, sizeof(mode), &written, NULL);
+        WriteFile(hFile, &g_bitplaneSlice, sizeof(g_bitplaneSlice), &written, NULL);
+
+        int kLen = k_strlen(key);
+        WriteFile(hFile, &kLen, sizeof(kLen), &written, NULL);
+        if (kLen > 0) WriteFile(hFile, key, kLen, &written, NULL);
+
+        int cLen = k_strlen(cover);
+        WriteFile(hFile, &cLen, sizeof(cLen), &written, NULL);
+        if (cLen > 0) WriteFile(hFile, cover, cLen, &written, NULL);
+
+        int sLen = k_strlen(secret);
+        WriteFile(hFile, &sLen, sizeof(sLen), &written, NULL);
+        if (sLen > 0) WriteFile(hFile, secret, sLen, &written, NULL);
+
+        int oLen = k_strlen(outText);
+        WriteFile(hFile, &oLen, sizeof(oLen), &written, NULL);
+        if (oLen > 0) WriteFile(hFile, outText, oLen, &written, NULL);
+
+        CloseHandle(hFile);
+        wsprintfA(g_szStatus, "Session snapshot saved [F5] to ksteno_quicksave.dat");
+        SetWindowTextA(g_hStatusLabel, g_szStatus);
+    } else {
+        SetWindowTextA(g_hStatusLabel, "Failed to save session snapshot.");
+    }
+}
+
+static void LoadSnapshot(HWND hwnd) {
+    HANDLE hFile = CreateFileA("ksteno_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD read = 0;
+        int mode = 0;
+        ReadFile(hFile, &mode, sizeof(mode), &read, NULL);
+        ReadFile(hFile, &g_bitplaneSlice, sizeof(g_bitplaneSlice), &read, NULL);
+
+        int kLen = 0;
+        char key[128];
+        memset(key, 0, sizeof(key));
+        ReadFile(hFile, &kLen, sizeof(kLen), &read, NULL);
+        if (kLen > 0 && kLen < (int)sizeof(key)) ReadFile(hFile, key, kLen, &read, NULL);
+
+        int cLen = 0;
+        char cover[8192];
+        memset(cover, 0, sizeof(cover));
+        ReadFile(hFile, &cLen, sizeof(cLen), &read, NULL);
+        if (cLen > 0 && cLen < (int)sizeof(cover)) ReadFile(hFile, cover, cLen, &read, NULL);
+
+        int sLen = 0;
+        char secret[8192];
+        memset(secret, 0, sizeof(secret));
+        ReadFile(hFile, &sLen, sizeof(sLen), &read, NULL);
+        if (sLen > 0 && sLen < (int)sizeof(secret)) ReadFile(hFile, secret, sLen, &read, NULL);
+
+        int oLen = 0;
+        char outText[8192];
+        memset(outText, 0, sizeof(outText));
+        ReadFile(hFile, &oLen, sizeof(oLen), &read, NULL);
+        if (oLen > 0 && oLen < (int)sizeof(outText)) ReadFile(hFile, outText, oLen, &read, NULL);
+
+        CloseHandle(hFile);
+
+        if (mode >= 0 && mode <= 3) {
+            SendMessageA(g_hComboMode, CB_SETCURSEL, mode, 0);
+        }
+        SetWindowTextA(g_hEditKey, key);
+        SetWindowTextA(g_hEditCover, cover);
+        SetWindowTextA(g_hEditSecret, secret);
+        SetWindowTextA(g_hEditOutput, outText);
+
+        UpdateCapacityStatus();
+        wsprintfA(g_szStatus, "Session snapshot restored [F9] (%d secret bytes, %d cover bytes)", sLen, cLen);
+        SetWindowTextA(g_hStatusLabel, g_szStatus);
+    } else {
+        SetWindowTextA(g_hStatusLabel, "No quicksave file found. Press F5 to save snapshot.");
+    }
+}
+
+static void CheckFirstRun(HWND hwnd) {
+    HANDLE hSave = CreateFileA("ksteno_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hSave != INVALID_HANDLE_VALUE) {
+        CloseHandle(hSave);
+        return;
+    }
+    HANDLE hTut = CreateFileA("ksteno_tutorialSeen.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) {
+        CloseHandle(hTut);
+        return;
+    }
+    HANDLE hNew = CreateFileA("ksteno_tutorialSeen.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hNew != INVALID_HANDLE_VALUE) {
+        DWORD wr = 0;
+        WriteFile(hNew, "1", 1, &wr, NULL);
+        CloseHandle(hNew);
+    }
+    MessageBoxA(hwnd,
+        "Welcome to KSteno - Stenographic Carrier Suite & Workbench (1999 Edition)\n\n"
+        "Supported Carrier Modes:\n"
+        "1. Whitespace Chaff (SNOW Standard: Space=0, Tab=1)\n"
+        "2. Zero-Width Unicode Envelope Modulation\n"
+        "3. 24-Bit BMP Image LSB Carrier (carrier.bmp -> carrier_stego.bmp)\n"
+        "4. 16-Bit PCM Audio WAV Carrier (carrier.wav -> carrier_stego.wav)\n\n"
+        "Steganalysis & Visual Inspection:\n"
+        "- Chi-Square (PoV) Scan: Asymptotic equilibrium test\n"
+        "- Bitplane Visualizer: Slice bitplanes 0 (LSB) through 7 (MSB)\n\n"
+        "Keyboard Shortcuts & Ergonomics:\n"
+        "- Ctrl+Enter: Inject Secret | Ctrl+E: Extract Secret\n"
+        "- Ctrl+S / F5: QuickSave snapshot | Ctrl+O / F9: QuickLoad snapshot\n"
+        "- Ctrl+B: Cycle Bitplane Slice | Ctrl+R: Chi-Square Scan\n"
+        "- F1 / H: Field Manual | Esc: Clear Input/Output",
+        "KSteno - First Run Operative Briefing", MB_OK | MB_ICONINFORMATION);
+}
+
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -1020,7 +1293,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             g_hFontNormal = CreateFontA(13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
             // Mode Combo
-            g_hComboMode = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 140, 52, 280, 200, hwnd, (HMENU)ID_COMBO_MODE, NULL, NULL);
+            g_hComboMode = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 120, 50, 230, 200, hwnd, (HMENU)ID_COMBO_MODE, NULL, NULL);
             SendMessageA(g_hComboMode, CB_ADDSTRING, 0, (LPARAM)"Whitespace Chaff (SNOW Standard)");
             SendMessageA(g_hComboMode, CB_ADDSTRING, 0, (LPARAM)"Zero-Width Unicode Modulation");
             SendMessageA(g_hComboMode, CB_ADDSTRING, 0, (LPARAM)"24-Bit BMP Image LSB Carrier");
@@ -1028,7 +1301,13 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             SendMessageA(g_hComboMode, CB_SETCURSEL, 0, 0);
 
             // Passphrase Key
-            g_hEditKey = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "KSTENO-1999", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 530, 52, 220, 24, hwnd, (HMENU)ID_EDIT_KEY, NULL, NULL);
+            g_hEditKey = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "KSTENO-1999", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 445, 50, 120, 24, hwnd, (HMENU)ID_EDIT_KEY, NULL, NULL);
+
+            // QuickSave, QuickLoad, Bitplane Slice Buttons
+            g_hBtnQuickSave = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 575, 48, 72, 26, hwnd, (HMENU)ID_BTN_QSAVE, NULL, NULL);
+            g_hBtnQuickLoad = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 652, 48, 72, 26, hwnd, (HMENU)ID_BTN_QLOAD, NULL, NULL);
+            g_hBtnBitplane = CreateWindowA("BUTTON", "Bitplane Slice", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 729, 48, 98, 26, hwnd, (HMENU)ID_BTN_BITPLANE, NULL, NULL);
+            g_hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 832, 48, 68, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             // Cover Text Box
             g_hEditCover = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", 
@@ -1049,15 +1328,15 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
             // Action Buttons
             int bx = 20;
-            g_hBtnInject = CreateWindowA("BUTTON", "Inject Secret", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 100, 30, hwnd, (HMENU)ID_BTN_INJECT, NULL, NULL); bx += 105;
-            g_hBtnExtract = CreateWindowA("BUTTON", "Extract Secret", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 100, 30, hwnd, (HMENU)ID_BTN_EXTRACT, NULL, NULL); bx += 105;
-            g_hBtnChisq = CreateWindowA("BUTTON", "Chi-Square Scan", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 115, 30, hwnd, (HMENU)ID_BTN_CHISQ, NULL, NULL); bx += 120;
-            g_hBtnLoadFile = CreateWindowA("BUTTON", "Load Carrier", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 95, 30, hwnd, (HMENU)ID_BTN_LOAD_FILE, NULL, NULL); bx += 100;
-            g_hBtnSaveFile = CreateWindowA("BUTTON", "Export File", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 85, 30, hwnd, (HMENU)ID_BTN_SAVE_FILE, NULL, NULL); bx += 90;
-            g_hBtnVfsReport = CreateWindowA("BUTTON", "VFS Report", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 85, 30, hwnd, (HMENU)ID_BTN_VFS_REPORT, NULL, NULL); bx += 90;
-            g_hBtnSendKCipher = CreateWindowA("BUTTON", "Send to KCipher", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 115, 30, hwnd, (HMENU)ID_BTN_SEND_KCIPHER, NULL, NULL); bx += 120;
-            g_hBtnClear = CreateWindowA("BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 60, 30, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL); bx += 65;
-            g_hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 305, 75, 30, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            g_hBtnInject = CreateWindowA("BUTTON", "Inject Secret", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 300, 95, 28, hwnd, (HMENU)ID_BTN_INJECT, NULL, NULL); bx += 100;
+            g_hBtnExtract = CreateWindowA("BUTTON", "Extract Secret", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 300, 95, 28, hwnd, (HMENU)ID_BTN_EXTRACT, NULL, NULL); bx += 100;
+            g_hBtnChisq = CreateWindowA("BUTTON", "Chi-Square Scan", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 300, 110, 28, hwnd, (HMENU)ID_BTN_CHISQ, NULL, NULL); bx += 115;
+            g_hBtnLoadFile = CreateWindowA("BUTTON", "Load Carrier", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 300, 90, 28, hwnd, (HMENU)ID_BTN_LOAD_FILE, NULL, NULL); bx += 95;
+            g_hBtnSaveFile = CreateWindowA("BUTTON", "Export File", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 300, 80, 28, hwnd, (HMENU)ID_BTN_SAVE_FILE, NULL, NULL); bx += 85;
+            g_hBtnVfsReport = CreateWindowA("BUTTON", "VFS Report", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 300, 85, 28, hwnd, (HMENU)ID_BTN_VFS_REPORT, NULL, NULL); bx += 90;
+            g_hBtnSendKCipher = CreateWindowA("BUTTON", "Send to KCipher", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 300, 110, 28, hwnd, (HMENU)ID_BTN_SEND_KCIPHER, NULL, NULL); bx += 115;
+            g_hBtnCopy = CreateWindowA("BUTTON", "Copy Output", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 300, 90, 28, hwnd, (HMENU)ID_BTN_COPY, NULL, NULL); bx += 95;
+            g_hBtnClear = CreateWindowA("BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, bx, 300, 65, 28, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
 
             // Output Console Box
             g_hEditOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
@@ -1082,6 +1361,18 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             SendMessageA(g_hStatusLabel, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
             SendMessageA(g_hCapacityLabel, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
             SendMessageA(g_hBtnSendKCipher, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessageA(g_hBtnQuickSave, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessageA(g_hBtnQuickLoad, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessageA(g_hBtnBitplane, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessageA(g_hBtnHelp, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessageA(g_hBtnInject, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessageA(g_hBtnExtract, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessageA(g_hBtnChisq, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessageA(g_hBtnLoadFile, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessageA(g_hBtnSaveFile, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessageA(g_hBtnVfsReport, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessageA(g_hBtnCopy, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessageA(g_hBtnClear, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
             UpdateCapacityStatus();
             return 0;
         }
@@ -1131,12 +1422,16 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 UpdateCapacityStatus();
             }
             switch (wmId) {
-                case ID_BTN_INJECT:  DoInject(); break;
-                case ID_BTN_EXTRACT: DoExtract(); break;
-                case ID_BTN_CHISQ:   DoChiSquareScan(); break;
-                case ID_BTN_SAVE_FILE: DoExportPayload(); break;
-                case ID_BTN_LOAD_FILE: DoLoadCover(); break;
-                case ID_BTN_VFS_REPORT: DoExportVFSReport(); break;
+                case ID_BTN_QSAVE:       SaveSnapshot(hwnd); break;
+                case ID_BTN_QLOAD:       LoadSnapshot(hwnd); break;
+                case ID_BTN_BITPLANE:    DoBitplaneSlice(); break;
+                case ID_BTN_COPY:        DoCopyOutput(hwnd); break;
+                case ID_BTN_INJECT:      DoInject(); break;
+                case ID_BTN_EXTRACT:     DoExtract(); break;
+                case ID_BTN_CHISQ:       DoChiSquareScan(); break;
+                case ID_BTN_SAVE_FILE:   DoExportPayload(); break;
+                case ID_BTN_LOAD_FILE:   DoLoadCover(); break;
+                case ID_BTN_VFS_REPORT:  DoExportVFSReport(); break;
                 case ID_BTN_SEND_KCIPHER: DoSendKCipher(); break;
                 case ID_BTN_CLEAR:
                     SetWindowTextA(g_hEditSecret, "");
@@ -1152,11 +1447,13 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         "   - Zero-Width Unicode Envelope\n"
                         "   - 24-Bit BMP Image LSB Carrier (carrier.bmp -> carrier_stego.bmp)\n"
                         "   - 16-Bit PCM Audio WAV Carrier (carrier.wav -> carrier_stego.wav)\n"
-                        "2. Enter secret payload and optional RC4 encryption key.\n"
-                        "3. Click 'Inject Secret' to modulate payload into host carrier.\n"
-                        "4. Click 'Extract Secret' to recover hidden communiqué.\n"
-                        "5. Use 'Chi-Square Scan' to test Pairs of Values (PoV) equilibrium.\n"
-                        "6. Shortcuts: Ctrl+Enter (Inject), Ctrl+E (Extract), F1 (Help), F5 (Save), F9 (Load).",
+                        "2. Steganalysis & Visual Inspection:\n"
+                        "   - Chi-Square Scan (PoV asymptotic equilibrium test)\n"
+                        "   - Bitplane Visualizer (Slices bitplanes 0-7, exports bitplane_slice.bmp)\n"
+                        "3. Enter secret payload and optional RC4 encryption key.\n"
+                        "4. Click 'Inject Secret' to modulate payload into host carrier.\n"
+                        "5. Click 'Extract Secret' to recover hidden communique.\n"
+                        "6. Shortcuts: Ctrl+Enter (Inject), Ctrl+E (Extract), F1 (Help), F5 (Save), F9 (Load), Ctrl+B (Bitplane), Ctrl+R (ChiSq).",
                         "KSteno Field Manual", MB_OK | MB_ICONINFORMATION);
                     break;
             }
@@ -1185,7 +1482,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             SelectObject(hdc, g_hFontBold);
             SetTextColor(hdc, COLOR_TEXT);
             TextOutA(hdc, 20, 54, "Carrier Mode:", 13);
-            TextOutA(hdc, 440, 54, "Passphrase:", 11);
+            TextOutA(hdc, 360, 54, "Passphrase:", 11);
 
             TextOutA(hdc, 20, 90, "Cover Text / Host (Drag-and-Drop Supported):", 44);
             TextOutA(hdc, 470, 72, "Secret Payload Message:", 23);
@@ -1250,22 +1547,26 @@ void MainEntry(void) {
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+    CheckFirstRun(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
             BOOL bCtrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
-            if (msg.wParam == VK_F1) {
+            if (msg.wParam == VK_F1 || (!bCtrl && (msg.wParam == 'H' || msg.wParam == 'h') && GetFocus() != g_hEditCover && GetFocus() != g_hEditSecret && GetFocus() != g_hEditKey)) {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HELP, 0), 0);
                 continue;
             } else if (msg.wParam == VK_ESCAPE) {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_CLEAR, 0), 0);
                 continue;
             } else if (msg.wParam == VK_F5 || (bCtrl && (msg.wParam == 'S' || msg.wParam == 's'))) {
-                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SAVE_FILE, 0), 0);
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_QSAVE, 0), 0);
                 continue;
             } else if (msg.wParam == VK_F9 || (bCtrl && (msg.wParam == 'O' || msg.wParam == 'o'))) {
-                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_LOAD_FILE, 0), 0);
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_QLOAD, 0), 0);
+                continue;
+            } else if (bCtrl && (msg.wParam == 'B' || msg.wParam == 'b')) {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_BITPLANE, 0), 0);
                 continue;
             } else if (bCtrl && msg.wParam == VK_RETURN) {
                 SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_INJECT, 0), 0);

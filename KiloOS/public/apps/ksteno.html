@@ -6622,6 +6622,10 @@
 
       try {
 
+        const hasSave = localStorage.getItem('ksteno_save');
+
+        if (hasSave) return;
+
         const seen = localStorage.getItem('ksteno_tutorialSeen');
 
         if (!seen) {
@@ -6945,25 +6949,37 @@
 
       try {
 
+        const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('data-tab') || 'tab-image';
+
         const state = {
 
-          theme: document.body.getAttribute('data-theme'),
+          theme: document.body.getAttribute('data-theme') || 'default',
 
-          handle: document.getElementById('operative-handle').value,
+          activeTab: activeTab,
 
-          imgPayload: document.getElementById('img-payload-input').value,
+          handle: document.getElementById('operative-handle')?.value || '',
 
-          imgPassphrase: document.getElementById('img-passphrase').value,
+          imgPayload: document.getElementById('img-payload-input')?.value || '',
 
-          imgBitDepth: document.getElementById('img-bit-depth').value,
+          imgPassphrase: document.getElementById('img-passphrase')?.value || '',
 
-          audioPayload: document.getElementById('audio-payload-input').value,
+          imgBitDepth: document.getElementById('img-bit-depth')?.value || '1',
 
-          textCover: document.getElementById('cover-text-input').value,
+          audioPayload: document.getElementById('audio-payload-input')?.value || '',
 
-          textPayload: document.getElementById('text-payload-input').value,
+          audioPassphrase: document.getElementById('audio-passphrase')?.value || '',
 
-          soundEnabled: sound.enabled,
+          textCover: document.getElementById('cover-text-input')?.value || '',
+
+          textPayload: document.getElementById('text-payload-input')?.value || '',
+
+          textPassphrase: document.getElementById('text-passphrase')?.value || '',
+
+          bitplaneSlider: document.getElementById('bitplane-slider')?.value || '0',
+
+          bitplaneChannel: document.getElementById('bitplane-channel')?.value || 'all',
+
+          soundEnabled: sound ? sound.enabled : true,
 
           timestamp: Date.now()
 
@@ -6971,7 +6987,7 @@
 
         localStorage.setItem('ksteno_save', JSON.stringify(state));
 
-        sound.playExtractChime();
+        if (sound) sound.playExtractChime();
 
         showToast("Quick Save successful [F5]", "success");
 
@@ -7005,31 +7021,125 @@
 
           document.body.setAttribute('data-theme', state.theme);
 
-          document.getElementById('theme-selector').value = state.theme;
+          const sel = document.getElementById('theme-selector');
+
+          if (sel) sel.value = state.theme;
+
+        }
+
+        if (state.activeTab) {
+
+          const tabBtn = document.querySelector('.tab-btn[data-tab="' + state.activeTab + '"]');
+
+          if (tabBtn) tabBtn.click();
 
         }
 
         if (state.handle) {
 
-          document.getElementById('operative-handle').value = state.handle;
+          const handleInput = document.getElementById('operative-handle');
 
-          document.getElementById('status-op-name').textContent = `Operative: ${state.handle}`;
+          if (handleInput) handleInput.value = state.handle;
+
+          const statusOp = document.getElementById('status-op-name');
+
+          if (statusOp) statusOp.textContent = 'Operative: ' + state.handle;
 
         }
 
-        if (state.imgPayload !== undefined) document.getElementById('img-payload-input').value = state.imgPayload;
+        if (state.imgPayload !== undefined) {
 
-        if (state.imgPassphrase !== undefined) document.getElementById('img-passphrase').value = state.imgPassphrase;
+          const el = document.getElementById('img-payload-input');
 
-        if (state.imgBitDepth !== undefined) document.getElementById('img-bit-depth').value = state.imgBitDepth;
+          if (el) el.value = state.imgPayload;
 
-        if (state.audioPayload !== undefined) document.getElementById('audio-payload-input').value = state.audioPayload;
+        }
 
-        if (state.textCover !== undefined) document.getElementById('cover-text-input').value = state.textCover;
+        if (state.imgPassphrase !== undefined) {
 
-        if (state.textPayload !== undefined) document.getElementById('text-payload-input').value = state.textPayload;
+          const el = document.getElementById('img-passphrase');
 
-        if (state.soundEnabled !== undefined) {
+          if (el) el.value = state.imgPassphrase;
+
+        }
+
+        if (state.imgBitDepth !== undefined) {
+
+          const el = document.getElementById('img-bit-depth');
+
+          if (el) el.value = state.imgBitDepth;
+
+        }
+
+        if (state.audioPayload !== undefined) {
+
+          const el = document.getElementById('audio-payload-input');
+
+          if (el) el.value = state.audioPayload;
+
+        }
+
+        if (state.audioPassphrase !== undefined) {
+
+          const el = document.getElementById('audio-passphrase');
+
+          if (el) el.value = state.audioPassphrase;
+
+        }
+
+        if (state.textCover !== undefined) {
+
+          const el = document.getElementById('cover-text-input');
+
+          if (el) el.value = state.textCover;
+
+        }
+
+        if (state.textPayload !== undefined) {
+
+          const el = document.getElementById('text-payload-input');
+
+          if (el) el.value = state.textPayload;
+
+        }
+
+        if (state.textPassphrase !== undefined) {
+
+          const el = document.getElementById('text-passphrase');
+
+          if (el) el.value = state.textPassphrase;
+
+        }
+
+        if (state.bitplaneSlider !== undefined) {
+
+          const el = document.getElementById('bitplane-slider');
+
+          if (el) {
+
+            el.value = state.bitplaneSlider;
+
+            renderBitplaneSlice();
+
+          }
+
+        }
+
+        if (state.bitplaneChannel !== undefined) {
+
+          const el = document.getElementById('bitplane-channel');
+
+          if (el) {
+
+            el.value = state.bitplaneChannel;
+
+            renderBitplaneSlice();
+
+          }
+
+        }
+
+        if (state.soundEnabled !== undefined && sound) {
 
           sound.enabled = !!state.soundEnabled;
 
@@ -7049,7 +7159,7 @@
 
         updateAudioCapacityUI();
 
-        sound.playExtractChime();
+        if (sound) sound.playExtractChime();
 
         showToast("Quick Load successful [F9]", "success");
 
@@ -8033,6 +8143,38 @@
       initFirebaseIntegration();
 
       initVFSAndIPCHooks();
+
+
+
+      // Lifecycle & Resource Hygiene: pause audio on hidden tab
+
+      document.addEventListener('visibilitychange', () => {
+
+        if (document.hidden) {
+
+          if (typeof isPlayingAudio !== 'undefined' && isPlayingAudio) {
+
+            stopAudioCarrier();
+
+          }
+
+          if (sound && sound.ctx && sound.ctx.state === 'running') {
+
+            sound.ctx.suspend().catch(() => {});
+
+          }
+
+        } else {
+
+          if (sound && sound.ctx && sound.ctx.state === 'suspended') {
+
+            sound.ctx.resume().catch(() => {});
+
+          }
+
+        }
+
+      });
 
     });
 
