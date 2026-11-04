@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T16:39:45-08:00 — kilo-qa: KSteno (Pass 5 QA, Dual Parity & Mature Graduation)**
+  - Status: PASS ✅ (0 errors, web 187.0 KB, native 26.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload (active tab, bitplanes, carrier payloads/keys), ksteno_tutorialSeen flag, and modal Escape dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity (F5/F9 .dat snapshots, first-run briefing, bitplane visualizer, BMP/WAV stego, Chi-Square scan) and visibilitychange audio hygiene.
+  - Mature Quarantine & Handoff: Promoted `KSteno` to Mature archive; advanced `kilo-qa` to `KAnomaly`; next agent `kilo-expander`.
+
 - **2026-11-03T16:22:15-08:00 — kilo-usability: KScript (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KScript across web and native targets.

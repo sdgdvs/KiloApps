@@ -443,6 +443,60 @@ static int HitTestNode(int x, int y) {
     return -1;
 }
 
+static int HitTestLink(int x, int y) {
+    for (int i = g_linkCount - 1; i >= 0; i--) {
+        int u = g_links[i].fromNode;
+        int v = g_links[i].toNode;
+        if (u < 0 || u >= g_nodeCount || v < 0 || v >= g_nodeCount) continue;
+        int x1 = g_nodes[u].x;
+        int y1 = g_nodes[u].y;
+        int x2 = g_nodes[v].x;
+        int y2 = g_nodes[v].y;
+        long dx = x2 - x1;
+        long dy = y2 - y1;
+        long lenSq = dx * dx + dy * dy;
+        if (lenSq == 0) continue;
+        long dot = (long)(x - x1) * dx + (long)(y - y1) * dy;
+        float t = (float)dot / (float)lenSq;
+        if (t < 0.0f) t = 0.0f;
+        else if (t > 1.0f) t = 1.0f;
+        float px = (float)x1 + t * (float)dx;
+        float py = (float)y1 + t * (float)dy;
+        float distSq = ((float)x - px) * ((float)x - px) + ((float)y - py) * ((float)y - py);
+        if (distSq <= 100.0f) { // within 10 pixels of cable
+            return i;
+        }
+    }
+    return -1;
+}
+
+static unsigned long ParseIp(const char* s) {
+    unsigned long ip = 0;
+    int octet = 0;
+    while (*s) {
+        if (*s >= '0' && *s <= '9') {
+            octet = octet * 10 + (*s - '0');
+        } else if (*s == '.') {
+            ip = (ip << 8) | (octet & 0xFF);
+            octet = 0;
+        }
+        s++;
+    }
+    ip = (ip << 8) | (octet & 0xFF);
+    return ip;
+}
+
+static void FormatIp(unsigned long ip, char* out) {
+    char b[16];
+    out[0] = '\0';
+    for (int i = 3; i >= 0; i--) {
+        int octet = (int)((ip >> (i * 8)) & 0xFF);
+        k_itoa(octet, b);
+        k_strcat(out, b);
+        if (i > 0) k_strcat(out, ".");
+    }
+}
+
 static void CalculateSubnet(void) {
     char ipBuf[32];
     char cidrBuf[16];
@@ -452,20 +506,43 @@ static void CalculateSubnet(void) {
     int bits = k_atoi(cidrBuf);
     if (bits < 1 || bits > 30) bits = 24;
 
-    int total = 1 << (32 - bits);
-    int usable = total >= 2 ? total - 2 : 1;
+    unsigned long ipVal = ParseIp(ipBuf);
+    if (ipVal == 0 && ipBuf[0] == '\0') {
+        ipVal = 0xC0A80100UL; // 192.168.1.0
+    }
+
+    unsigned long mask = (bits == 0) ? 0 : ((0xFFFFFFFFUL << (32 - bits)) & 0xFFFFFFFFUL);
+    unsigned long net = ipVal & mask;
+    unsigned long bcast = net | (~mask & 0xFFFFFFFFUL);
+    unsigned long firstHost = (bits <= 30) ? net + 1 : net;
+    unsigned long lastHost = (bits <= 30) ? bcast - 1 : bcast;
+    long total = (bits >= 32) ? 1 : (1L << (32 - bits));
+    long usable = (bits <= 30 && total >= 2) ? total - 2 : 1;
+
+    char netStr[24], maskStr[24], bcastStr[24], firstStr[24], lastStr[24];
+    FormatIp(net, netStr);
+    FormatIp(mask, maskStr);
+    FormatIp(bcast, bcastStr);
+    FormatIp(firstHost, firstStr);
+    FormatIp(lastHost, lastStr);
 
     char msg[256];
     char num[16];
-    k_strcpy(msg, "[SUBNET] Calculated CIDR /");
+    k_strcpy(msg, "[SUBNET] Net: ");
+    k_strcat(msg, netStr);
+    k_strcat(msg, "/");
     k_itoa(bits, num);
     k_strcat(msg, num);
-    k_strcat(msg, " -> Total IPs: ");
-    k_itoa(total, num);
+    k_strcat(msg, " Mask: ");
+    k_strcat(msg, maskStr);
+    k_strcat(msg, " Range: ");
+    k_strcat(msg, firstStr);
+    k_strcat(msg, " - ");
+    k_strcat(msg, lastStr);
+    k_strcat(msg, " (");
+    k_itoa((int)usable, num);
     k_strcat(msg, num);
-    k_strcat(msg, ", Usable Hosts: ");
-    k_itoa(usable, num);
-    k_strcat(msg, num);
+    k_strcat(msg, " usable)");
     LogMessage(msg);
 }
 
@@ -761,7 +838,8 @@ static void DrawTopologyCanvas(HDC hdc) {
     k_strcat(statBuf, n4);
     k_strcat(statBuf, "  |  MODE: ");
     k_strcat(statBuf, (g_activeMode == 1) ? "[CONNECT LINK]" :
-                      (g_activeMode == 2) ? "[PING ICMP]" : "[SELECT]");
+                      (g_activeMode == 2) ? "[PING ICMP]" :
+                      (g_activeMode == 3) ? "[SEVER LINK]" : "[SELECT]");
     if (g_simPaused) k_strcat(statBuf, " [PAUSED]");
 
     SetTextColor(hdcMem, COL_CYAN);
@@ -1012,6 +1090,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 case 'P':
                     SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_PING, 0), 0);
                     return 0;
+                case 'X':
+                case 'K':
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_CUT, 0), 0);
+                    return 0;
                 case VK_DELETE:
                 case VK_BACK:
                     if (g_selectedNode >= 0) {
@@ -1086,6 +1168,27 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             g_activeMode = 0;
                         }
                     }
+                } else if (g_activeMode == 3) { // Sever Link (Mode 3)
+                    int hitLink = HitTestLink(mx, my);
+                    if (hitLink >= 0) {
+                        g_links[hitLink].status = (g_links[hitLink].status == 1) ? 0 : 1;
+                        if (g_links[hitLink].status == 0) {
+                            LogMessage("[SEVER] Link severed! Packet routing disrupted.");
+                        } else {
+                            LogMessage("[SEVER] Link restored. Cable operational.");
+                        }
+                    } else if (hit >= 0) {
+                        int toggled = 0;
+                        for (int i = 0; i < g_linkCount; i++) {
+                            if (g_links[i].fromNode == hit || g_links[i].toNode == hit) {
+                                g_links[i].status = (g_links[i].status == 1) ? 0 : 1;
+                                toggled++;
+                            }
+                        }
+                        if (toggled > 0) {
+                            LogMessage("[SEVER] Toggled links connected to node.");
+                        }
+                    }
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -1156,11 +1259,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 case ID_BTN_CUT:
-                    if (g_linkCount > 0) {
-                        g_links[g_linkCount - 1].status = (g_links[g_linkCount - 1].status == 1) ? 0 : 1;
-                        LogMessage("[CHAOS] Toggled link up/down state.");
-                        InvalidateRect(hwnd, NULL, FALSE);
-                    }
+                    g_activeMode = 3;
+                    LogMessage("[MODE] Sever Link Mode: click link or node to sever/restore cable.");
+                    InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 case ID_BTN_CLEAR:
                     ClearTopology();
@@ -1259,6 +1360,15 @@ void MainEntry(void) {
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            HWND hFocus = GetFocus();
+            int isEdit = (hFocus == g_hEditIp || hFocus == g_hEditCidr || hFocus == g_hEditLog);
+            if (!isEdit || msg.wParam == VK_F1 || msg.wParam == VK_F5 || msg.wParam == VK_F9 || msg.wParam == VK_ESCAPE) {
+                if (msg.hwnd != hwnd) {
+                    SendMessageA(hwnd, msg.message, msg.wParam, msg.lParam);
+                }
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }

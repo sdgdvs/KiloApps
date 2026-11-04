@@ -863,7 +863,7 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
         <div style="display:flex; gap:10px; margin-bottom:12px; align-items:flex-end;">
           <div style="flex:1;">
             <label style="display:block; font-size:10px; color:var(--text-dim); text-transform:uppercase;">Base IP Address</label>
-            <input type="text" id="calcIpInput" value="192.168.1.0" style="width:100%; background:#1e293b; border:1px solid rgba(255,255,255,0.15); color:#fff; padding:6px; font-family:'Consolas', monospace; font-size:12px; border-radius:4px;">
+            <input type="text" id="calcIpInput" value="192.168.1.0" oninput="recalcSubnetTool()" style="width:100%; background:#1e293b; border:1px solid rgba(255,255,255,0.15); color:#fff; padding:6px; font-family:'Consolas', monospace; font-size:12px; border-radius:4px;">
           </div>
           <div style="width:120px;">
             <label style="display:block; font-size:10px; color:var(--text-dim); text-transform:uppercase;">Subnet Mask</label>
@@ -893,7 +893,7 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
             Divide this address block into smaller broadcast domains to optimize host assignment across engineering, DMZ, and management VLANs.
           </p>
           <div style="display:flex; gap:8px;">
-            <button class="btn" onclick="splitCurrentSubnet()">Split into Two /25 Subnets</button>
+            <button class="btn" id="btnSplitSubnet" onclick="splitCurrentSubnet()">Split into Two /25 Subnets</button>
             <button class="btn btn-success" onclick="applySubnetToCurrentMap()">Apply as Zone to Topology</button>
           </div>
         </div>
@@ -1221,8 +1221,6 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
       const id = 'node-' + (nodeCounter++);
       let name = customName;
       let defaultIp = customIp;
-      let subnetId = 'sub-eng';
-
       if (!name) {
         if (type === 'router') name = 'GW-CYBER-' + (nodeCounter - 1);
         else if (type === 'switch') name = 'SW-3CON-' + (nodeCounter - 1);
@@ -1233,6 +1231,12 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
 
       if (!defaultIp) {
         defaultIp = '192.168.10.' + (10 + nodeCounter);
+      }
+
+      let subnetId = 'sub-eng';
+      if (typeof TOPOLOGY !== 'undefined' && TOPOLOGY.subnets) {
+        const matched = TOPOLOGY.subnets.find(s => isIpInSubnet(defaultIp, s.cidr));
+        if (matched) subnetId = matched.id;
       }
 
       const node = {
@@ -1537,6 +1541,11 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
         drawSubnetDomains();
       }
 
+      // Draw Collision Domains (Translucent Per-Link Capsules)
+      if (document.getElementById('chkCollisionDomains')?.checked) {
+        drawCollisionDomains();
+      }
+
       // Draw Cable Links
       drawLinks();
 
@@ -1625,6 +1634,45 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
         ctx.font = '10px Consolas, monospace';
         ctx.fillText(`${subDef.name} (${subDef.cidr})`, minX + 8, minY + 14);
       }
+    }
+
+    function drawCollisionDomains() {
+      TOPOLOGY.links.forEach((link, idx) => {
+        const n1 = TOPOLOGY.nodes.find(n => n.id === link.fromId);
+        const n2 = TOPOLOGY.nodes.find(n => n.id === link.toId);
+        if (!n1 || !n2 || link.status === 'severed') return;
+
+        const dx = n2.x - n1.x;
+        const dy = n2.y - n1.y;
+        const len = Math.hypot(dx, dy) || 1;
+        const angle = Math.atan2(dy, dx);
+
+        ctx.save();
+        ctx.translate(n1.x, n1.y);
+        ctx.rotate(angle);
+
+        const padX = 22;
+        const padY = 18;
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.08)';
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.45)';
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 3]);
+
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(-padX, -padY, len + padX * 2, padY * 2, padY);
+        } else {
+          ctx.rect(-padX, -padY, len + padX * 2, padY * 2);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = '9px Consolas, monospace';
+        ctx.fillText(`CD-${idx + 1}`, len / 2 - 12, -padY - 3);
+
+        ctx.restore();
+      });
     }
 
     function drawLinks() {
@@ -2020,7 +2068,7 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
           dragNodeId = clickedNode.id;
           dragOffsetX = world.x - clickedNode.x;
           dragOffsetY = world.y - clickedNode.y;
-          updateInspector(clickedNode);
+          updateInspectorPane(clickedNode);
         } else if (!clickedNode) {
           isPanning = true;
           panStartX = t.clientX - viewPanX;
@@ -2407,18 +2455,39 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
       if (!bar) return;
       bar.innerHTML = '';
 
+      let totalIps = 0;
+      let totalUsable = 0;
+
       TOPOLOGY.subnets.forEach(sub => {
+        const details = getSubnetDetails(sub.cidr);
+        totalIps += details.total;
+        totalUsable += details.usable;
+
         const slice = document.createElement('div');
         slice.className = 'cidr-slice';
         slice.style.flex = '1';
         slice.style.background = sub.color;
         slice.textContent = `${sub.name} (${sub.cidr})`;
-        slice.title = `${sub.name}\nCIDR: ${sub.cidr}\nVLAN: ${sub.vlan}`;
+        slice.title = `${sub.name}\nCIDR: ${sub.cidr}\nVLAN: ${sub.vlan}\nUsable Hosts: ${details.usable}`;
         slice.onclick = () => {
           showToast(`Subnet: ${sub.name} [${sub.cidr}]`);
         };
         bar.appendChild(slice);
       });
+
+      const parentLabel = document.getElementById('cidrParentLabel');
+      if (parentLabel) {
+        if (TOPOLOGY.subnets.length > 0) {
+          parentLabel.textContent = `Supernet Pool (${totalIps} Total IPs)`;
+        } else {
+          parentLabel.textContent = 'No Subnets Defined';
+        }
+      }
+
+      const statsLabel = document.getElementById('cidrStatsLabel');
+      if (statsLabel) {
+        statsLabel.textContent = `Subnets: ${TOPOLOGY.subnets.length} | Usable Hosts: ${totalUsable} | Assigned: ${TOPOLOGY.nodes.length}`;
+      }
     }
 
     /* =========================================================================
@@ -2433,9 +2502,13 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
       if (presetKey === 'corp') {
         // 1999 Corporate DMZ & Multi-Subnet LAN
         const r1 = createNode('router', 320, 140, 'GW-BORDER-7200', '198.51.100.1');
+        r1.subnetId = 'sub-dmz';
         const fw = createNode('firewall', 320, 240, 'FW-BASTION', '198.51.100.2');
+        fw.subnetId = 'sub-dmz';
         const sw1 = createNode('switch', 180, 360, 'SW-DMZ-3CON', '198.51.100.10');
+        sw1.subnetId = 'sub-dmz';
         const sw2 = createNode('switch', 460, 360, 'SW-ENG-3CON', '192.168.10.1');
+        sw2.subnetId = 'sub-eng';
 
         const srvWeb = createNode('server', 80, 480, 'SOL-WEB-APACHE', '198.51.100.20');
         srvWeb.subnetId = 'sub-dmz';
@@ -2519,6 +2592,26 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
       updateCounts();
       soundLinkConnect();
       syncOnlineTopology();
+
+      // Dispatch initial ICMP ping pulse on preset load
+      if (TOPOLOGY.nodes.length >= 2) {
+        let src = TOPOLOGY.nodes[TOPOLOGY.nodes.length - 1].id;
+        let dst = TOPOLOGY.nodes[0].id;
+        if (!findShortestRoute(src, dst)) {
+          for (let i = 0; i < TOPOLOGY.nodes.length; i++) {
+            for (let j = 0; j < TOPOLOGY.nodes.length; j++) {
+              if (i !== j && findShortestRoute(TOPOLOGY.nodes[i].id, TOPOLOGY.nodes[j].id)) {
+                src = TOPOLOGY.nodes[i].id;
+                dst = TOPOLOGY.nodes[j].id;
+                break;
+              }
+            }
+          }
+        }
+        setTimeout(() => {
+          dispatchPacket(src, dst, 'ICMP', 'Echo Request (Initial Pulse)');
+        }, 150);
+      }
     }
 
     function loadPresetFromSplash(presetKey) {
@@ -2754,18 +2847,48 @@ Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
     }
 
     function recalcSubnetTool() {
-      const ip = document.getElementById('calcIpInput').value.trim();
+      const ip = document.getElementById('calcIpInput').value.trim() || '192.168.1.0';
       const bits = parseInt(document.getElementById('calcCidrSelect').value, 10);
       const details = getSubnetDetails(`${ip}/${bits}`);
 
       const box = document.getElementById('calcResultsBox');
+      if (!box) return;
+
+      let splitHtml = '';
+      if (bits < 30) {
+        const nextBits = bits + 1;
+        const childA = getSubnetDetails(`${details.net}/${nextBits}`);
+        const netBInt = (ipToInt(details.net) + Math.pow(2, 32 - nextBits)) >>> 0;
+        const childB = getSubnetDetails(`${intToIp(netBInt)}/${nextBits}`);
+        splitHtml = `
+          <div id="calcSplitPreviewBox" style="margin-top:10px; padding:8px 10px; background:rgba(0,240,255,0.06); border:1px dashed rgba(0,240,255,0.3); border-radius:4px; font-size:11px;">
+            <div style="color:var(--cyan); font-weight:bold; margin-bottom:4px;">VLSM Split Preview (Two /${nextBits} Subnets):</div>
+            <div style="color:var(--text-main); margin-bottom:2px;">• <strong>Child A:</strong> <span style="color:var(--cyan);">${childA.net}/${nextBits}</span> (${childA.usable} hosts: ${childA.first} - ${childA.last})</div>
+            <div style="color:var(--text-main);">• <strong>Child B:</strong> <span style="color:var(--cyan);">${childB.net}/${nextBits}</span> (${childB.usable} hosts: ${childB.first} - ${childB.last})</div>
+          </div>
+        `;
+      } else {
+        splitHtml = `
+          <div id="calcSplitPreviewBox" style="margin-top:10px; padding:6px 10px; background:rgba(244,63,94,0.08); border:1px dashed rgba(244,63,94,0.3); border-radius:4px; font-size:11px; color:var(--rose);">
+            Cannot split /30 or higher into smaller host subnets.
+          </div>
+        `;
+      }
+
       box.innerHTML = `
         <div class="kv-row"><span class="kv-key">Network Address:</span><span class="kv-val" style="color:var(--cyan);">${details.net}</span></div>
         <div class="kv-row"><span class="kv-key">Broadcast Address:</span><span class="kv-val" style="color:var(--rose);">${details.bcast}</span></div>
         <div class="kv-row"><span class="kv-key">Subnet Mask:</span><span class="kv-val">${details.mask}</span></div>
-        <div class="kv-row"><span class="kv-key">Usable Host Range:</span><span class="kv-val" style="color:var(--emerald);">${details.firstHost} - ${details.lastHost}</span></div>
-        <div class="kv-row"><span class="kv-key">Total Host Capacity:</span><span class="kv-val">${details.usableHosts} usable hosts (${details.totalHosts} total IPs)</span></div>
+        <div class="kv-row"><span class="kv-key">Usable Host Range:</span><span class="kv-val" style="color:var(--emerald);">${details.first} - ${details.last}</span></div>
+        <div class="kv-row"><span class="kv-key">Total Host Capacity:</span><span class="kv-val">${details.usable} usable hosts (${details.total} total IPs)</span></div>
+        ${splitHtml}
       `;
+
+      const btnSplit = document.getElementById('btnSplitSubnet');
+      if (btnSplit) {
+        btnSplit.textContent = bits < 30 ? `Split into Two /${bits + 1} Subnets` : 'Subnet at Maximum Depth';
+        btnSplit.disabled = (bits >= 30);
+      }
     }
 
     function splitCurrentSubnet() {
