@@ -807,6 +807,90 @@
             cursor: pointer;
         }
 
+        /* Historic Epoch Landmark Cards */
+        .landmark-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(19, 28, 51, 0.85);
+            border: 1px solid var(--border-bright);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-bright);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .landmark-badge:hover {
+            background: var(--bg-card-hover);
+            border-color: #ffffff;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+        }
+        .landmark-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .landmark-card-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .landmark-card-item:hover {
+            border-color: var(--border-bright);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+        }
+        .landmark-card-item.active[data-epoch="alpha"] {
+            border-color: var(--epoch-alpha);
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
+        }
+        .landmark-card-item.active[data-epoch="beta"] {
+            border-color: var(--epoch-beta);
+            box-shadow: 0 0 14px rgba(6, 182, 212, 0.35);
+        }
+        .landmark-card-item.active[data-epoch="gamma"] {
+            border-color: var(--epoch-gamma);
+            box-shadow: 0 0 14px rgba(192, 132, 252, 0.35);
+        }
+        .landmark-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 6px;
+        }
+        .landmark-card-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-bright);
+        }
+        .landmark-card-blueprint {
+            background: #040711;
+            border: 1px solid var(--border-dim);
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 10px;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
+        .landmark-card-anchors {
+            font-size: 10px;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
         /* Responsive Usability Breakpoints */
         @media (max-width: 1120px) {
             .header-controls .btn-text {
@@ -897,6 +981,9 @@
             <button class="btn-ctrl" id="btnQuickload" title="Quickload game state [F9]">
                 <span>📂</span> <span class="btn-text">F9 Load</span>
             </button>
+            <button class="btn-ctrl" id="btnLandmarks" title="Historic Epoch Landmark Cards [L]">
+                <span>🏛️</span> <span class="btn-text">Landmarks [L]</span>
+            </button>
             <button class="btn-ctrl" id="btnScenarios" title="Select mission scenario">
                 <span>📋</span> <span class="btn-text">Scenarios</span>
             </button>
@@ -917,7 +1004,12 @@
         <!-- Center/Left Simulation Canvas Viewport -->
         <div class="viewport-container">
             <div class="viewport-bar">
-                <div id="epochDesc">EPOCH BETA (2042) — Chrono-Station Prime Reality</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div id="epochDesc">EPOCH BETA (2042) — Chrono-Station Prime Reality</div>
+                    <button class="landmark-badge" id="btnEpochLandmarkBadge" title="Inspect Landmark Card [L]">
+                        <span>🏛️</span> <span id="epochLandmarkName">Chrono-Station Prime Nexus</span>
+                    </button>
+                </div>
                 <div style="display: flex; gap: 14px;">
                     <span id="echoStatus">Echo Ghost: Idle</span>
                     <span id="turnCounter">Turn: 0</span>
@@ -1117,6 +1209,28 @@
                 <button class="btn-ctrl modal-close btn-close close" id="btnTutDismiss" style="background: var(--epoch-beta); color: #000; font-weight: bold; padding: 6px 16px;">
                     ACKNOWLEDGE & BEGIN
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Landmark Cards Overlay -->
+    <div class="overlay" id="landmarkOverlay">
+        <div class="modal-card" style="width: 780px;">
+            <div class="modal-header">
+                <div class="modal-title"><span>🏛️</span> HISTORIC EPOCH LANDMARK CARDS</div>
+                <button class="btn-ctrl modal-close btn-close close" id="btnLandmarkClose" title="Close Landmarks [ESC]">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 11px; color: var(--text-dim); margin-bottom: 10px;">
+                    Select an epoch card below to inspect architectural schematics, primary causal anchors, and shift temporal perspective.
+                </p>
+                <div class="landmark-grid" id="landmarkGrid">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between;">
+                <span style="font-size: 11px; color: var(--text-dim);">Keys [1] Alpha · [2] Beta · [3] Gamma · [ESC / L] Close</span>
+                <button class="btn-ctrl modal-close btn-close close" id="btnLandmarkDismiss">Close</button>
             </div>
         </div>
     </div>
@@ -1712,9 +1826,10 @@
                 // Undo history buffer (last 20 states)
                 this.history = [];
 
-                // Visual particle systems & ripple waves
+                // Visual particle systems, ripples & temporal portal distortion waves
                 this.ripples = [];
                 this.particles = [];
+                this.distortionWaves = [];
 
                 this.lastCausalLog = "";
             }
@@ -2221,6 +2336,28 @@
                 this.addParadoxStrain(2, "Cross-epoch tachyon phase jump");
                 this.logEvent(`WARP: Displaced to EPOCH ${targetEpoch.toUpperCase()} (Tachyon Phase Shift)`, "ripple");
                 this.spawnWarpEffect(this.player.x * TILE_SIZE + 16, this.player.y * TILE_SIZE + 16);
+                this.spawnDistortionWave(this.player.x * TILE_SIZE + 16, this.player.y * TILE_SIZE + 16, targetEpoch);
+            }
+
+            spawnDistortionWave(x, y, targetEpoch) {
+                const colors = {
+                    alpha: ['rgba(245, 158, 11, 0.9)', 'rgba(251, 191, 36, 0.65)', 'rgba(180, 83, 9, 0.45)'],
+                    beta:  ['rgba(6, 182, 212, 0.9)', 'rgba(56, 189, 248, 0.65)', 'rgba(14, 116, 144, 0.45)'],
+                    gamma: ['rgba(192, 132, 252, 0.9)', 'rgba(233, 213, 255, 0.65)', 'rgba(107, 33, 168, 0.45)']
+                }[targetEpoch] || ['rgba(56, 189, 248, 0.9)', 'rgba(192, 132, 252, 0.65)', 'rgba(245, 158, 11, 0.45)'];
+
+                for (let i = 0; i < 3; i++) {
+                    this.distortionWaves.push({
+                        x, y,
+                        radius: 4 + i * 8,
+                        maxRadius: 180 + i * 40,
+                        speed: 5.5 - i * 1.0,
+                        color: colors[i],
+                        alpha: 1.0,
+                        chromaticOffset: (i - 1) * 5
+                    });
+                }
+                triggerShake(8);
             }
 
             teleportToNearestFloor() {
@@ -2809,6 +2946,31 @@
                 ctx.restore();
             }
 
+            // Render Temporal Portal Distortion Waves (Chromatic Displacement Vortex)
+            for (let i = engine.distortionWaves.length - 1; i >= 0; i--) {
+                const w = engine.distortionWaves[i];
+                w.radius += w.speed;
+                w.alpha -= 0.022;
+                if (w.alpha <= 0 || w.radius >= w.maxRadius) {
+                    engine.distortionWaves.splice(i, 1);
+                    continue;
+                }
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(w.x + w.chromaticOffset, w.y, w.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = w.color.replace(/[\d\.]+\)$/, `${w.alpha})`);
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Secondary chromatic aberration halo
+                ctx.beginPath();
+                ctx.arc(w.x - w.chromaticOffset, w.y, Math.max(1, w.radius - 4), 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(56, 189, 248, ${w.alpha * 0.5})`;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+            }
+
             // Render Particles
             for (let i = engine.particles.length - 1; i >= 0; i--) {
                 const p = engine.particles[i];
@@ -3015,44 +3177,66 @@
                 c.fillStyle = "#030712";
                 c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-                // Static Concentric Quantum Containment Housing (Zero Rotating Glints)
+                // Time-Portal Distortion Effects: Concentric Harmonic Field Disruption
+                const tPulse = now / 240;
+                const coreWarp = Math.sin(tPulse * 2) * 2;
+
+                // Cyan Magnetic Containment Casing
                 c.strokeStyle = "#38bdf8";
                 c.lineWidth = 1.5;
                 c.strokeRect(x + 5, y + 5, 22, 22);
-                c.strokeStyle = "#c084fc";
+
+                // Harmonic distortion wave
+                c.strokeStyle = "rgba(192, 132, 252, 0.65)";
                 c.lineWidth = 1.5;
                 c.beginPath();
-                c.arc(x + 16, y + 16, 8, 0, Math.PI * 2);
+                c.arc(x + 16, y + 16, 9 + coreWarp, 0, Math.PI * 2);
                 c.stroke();
 
-                const t = now / 250;
-                const pulse = Math.sin(t * 2) * 2;
-                const grad = c.createRadialGradient(x + 16, y + 16, 1, x + 16, y + 16, 7 + pulse);
+                // Luminous Quantum Core Singularity
+                const grad = c.createRadialGradient(x + 16, y + 16, 1, x + 16, y + 16, 8 + coreWarp);
                 grad.addColorStop(0, "#ffffff");
-                grad.addColorStop(0.4, "#38bdf8");
+                grad.addColorStop(0.35, "#38bdf8");
+                grad.addColorStop(0.7, "#818cf8");
                 grad.addColorStop(1, "rgba(2, 132, 199, 0)");
                 c.fillStyle = grad;
                 c.beginPath();
-                c.arc(x + 16, y + 16, 7 + pulse, 0, Math.PI * 2);
+                c.arc(x + 16, y + 16, 8 + coreWarp, 0, Math.PI * 2);
                 c.fill();
             } else if (tile === TILES.TACHYON_RIFT) {
                 c.fillStyle = "#090214";
                 c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-                // Static Layered Dimensional Breach Rings (Zero Rotating Glints)
-                c.strokeStyle = "#c084fc";
+                // Time-Portal Distortion Effects: Gravitational Lensing & Horizon Rings
+                const tPulse = (now / 200);
+                const lensBreath1 = Math.sin(tPulse) * 1.5;
+                const lensBreath2 = Math.cos(tPulse * 1.3) * 1.5;
+
+                // Outer Chromatic Ergosphere Ring
+                c.strokeStyle = "rgba(192, 132, 252, 0.75)";
                 c.lineWidth = 1.5;
                 c.beginPath();
-                c.arc(x + 16, y + 16, 11, 0, Math.PI * 2);
+                c.arc(x + 16, y + 16, 12 + lensBreath1, 0, Math.PI * 2);
                 c.stroke();
+
+                // Cyan Lensing Refraction Halo
+                c.strokeStyle = "rgba(34, 211, 238, 0.55)";
+                c.lineWidth = 1;
+                c.beginPath();
+                c.arc(x + 16, y + 16, 9 + lensBreath2, 0, Math.PI * 2);
+                c.stroke();
+
+                // Violet Inner Boundary
                 c.strokeStyle = "#a855f7";
                 c.lineWidth = 1.5;
                 c.beginPath();
-                c.arc(x + 16, y + 16, 7, 0, Math.PI * 2);
+                c.arc(x + 16, y + 16, 6, 0, Math.PI * 2);
                 c.stroke();
+
+                // Singularity Event Horizon (Zero rotating glints)
                 c.fillStyle = "#000000";
                 c.beginPath();
-                c.arc(x + 16, y + 16, 4, 0, Math.PI * 2);
+                c.arc(x + 16, y + 16, 3.5, 0, Math.PI * 2);
                 c.fill();
                 c.strokeStyle = "#ffffff";
                 c.lineWidth = 1;
@@ -3365,35 +3549,55 @@
             chronoCtx.clearRect(0, 0, w, h);
 
             const nodes = [
-                { id: 'alpha', label: '1984 (α)', x: Math.round(w * 0.15), y: Math.round(h * 0.5), color: '#f59e0b' },
-                { id: 'beta', label: '2042 (β)', x: Math.round(w * 0.50), y: Math.round(h * 0.5), color: '#06b6d4' },
-                { id: 'gamma', label: '2188 (γ)', x: Math.round(w * 0.85), y: Math.round(h * 0.5), color: '#c084fc' }
+                { id: 'alpha', label: '1984 (α)', x: Math.round(w * 0.16), y: Math.round(h * 0.52), color: '#f59e0b', type: 'anchor' },
+                { id: 'beta',  label: '2042 (β)', x: Math.round(w * 0.50), y: Math.round(h * 0.52), color: '#06b6d4', type: 'nexus' },
+                { id: 'gamma', label: '2188 (γ)', x: Math.round(w * 0.84), y: Math.round(h * 0.52), color: '#c084fc', type: 'singularity' }
             ];
 
-            // Draw Causal Link Line Connectors
-            chronoCtx.strokeStyle = "#334155";
-            chronoCtx.lineWidth = 2;
+            // 1. Primary Causal Timeline Spine
+            chronoCtx.strokeStyle = "#1e293b";
+            chronoCtx.lineWidth = 3;
             chronoCtx.beginPath();
-            chronoCtx.moveTo(nodes[0].x, nodes[0].y); chronoCtx.lineTo(nodes[1].x, nodes[1].y);
-            chronoCtx.moveTo(nodes[1].x, nodes[1].y); chronoCtx.lineTo(nodes[2].x, nodes[2].y);
+            chronoCtx.moveTo(nodes[0].x, nodes[0].y);
+            chronoCtx.lineTo(nodes[1].x, nodes[1].y);
+            chronoCtx.lineTo(nodes[2].x, nodes[2].y);
             chronoCtx.stroke();
 
-            // Active Epoch Timeline Segment Highlight (Clean Static Line, Zero Traveling Comets)
+            // 2. Secondary Echo Divergence Branch Line (sprouting from Beta nexus)
+            const echoActive = engine.isRecordingEcho || engine.isPlayingEcho || engine.echoGhost;
+            const branchForkY = nodes[1].y - 20;
+            chronoCtx.strokeStyle = echoActive ? "rgba(6, 182, 212, 0.75)" : "rgba(51, 65, 85, 0.4)";
+            chronoCtx.lineWidth = 1.5;
+            chronoCtx.setLineDash([4, 3]);
+            chronoCtx.beginPath();
+            chronoCtx.moveTo(nodes[1].x - 14, nodes[1].y);
+            chronoCtx.lineTo(nodes[1].x, branchForkY);
+            chronoCtx.lineTo(nodes[2].x - 14, branchForkY);
+            chronoCtx.stroke();
+            chronoCtx.setLineDash([]);
+
+            // Branch fork label
+            chronoCtx.font = "8px monospace";
+            chronoCtx.fillStyle = echoActive ? "#38bdf8" : "#475569";
+            chronoCtx.textAlign = "center";
+            chronoCtx.fillText("ECHO FORK", nodes[1].x + 36, branchForkY - 3);
+
+            // 3. Active Epoch Timeline Segment Highlight
             chronoCtx.lineWidth = 2.5;
             if (engine.currentEpoch === 'alpha' || engine.currentEpoch === 'beta') {
-                chronoCtx.strokeStyle = "rgba(6, 182, 212, 0.7)";
+                chronoCtx.strokeStyle = "rgba(6, 182, 212, 0.8)";
                 chronoCtx.beginPath();
                 chronoCtx.moveTo(nodes[0].x, nodes[0].y); chronoCtx.lineTo(nodes[1].x, nodes[1].y);
                 chronoCtx.stroke();
             }
             if (engine.currentEpoch === 'beta' || engine.currentEpoch === 'gamma') {
-                chronoCtx.strokeStyle = "rgba(192, 132, 252, 0.7)";
+                chronoCtx.strokeStyle = "rgba(192, 132, 252, 0.8)";
                 chronoCtx.beginPath();
                 chronoCtx.moveTo(nodes[1].x, nodes[1].y); chronoCtx.lineTo(nodes[2].x, nodes[2].y);
                 chronoCtx.stroke();
             }
 
-            // Directional Causal Chevrons (Static, Period-Accurate HUD Indicators)
+            // Directional Causal Chevrons
             chronoCtx.fillStyle = "#64748b";
             chronoCtx.font = "bold 9px monospace";
             chronoCtx.textAlign = "center";
@@ -3401,29 +3605,106 @@
             chronoCtx.fillText("►►", Math.round((nodes[0].x + nodes[1].x) / 2), nodes[0].y);
             chronoCtx.fillText("►►", Math.round((nodes[1].x + nodes[2].x) / 2), nodes[1].y);
 
+            // 4. Render Unique Vector Timeline Branching Node Glyphs
             nodes.forEach(n => {
                 const isActive = engine.currentEpoch === n.id;
-                chronoCtx.fillStyle = isActive ? n.color : "#1e293b";
-                chronoCtx.beginPath();
-                chronoCtx.arc(n.x, n.y, isActive ? 14 : 10, 0, Math.PI * 2);
-                chronoCtx.fill();
-                chronoCtx.strokeStyle = n.color;
-                chronoCtx.lineWidth = 2;
-                chronoCtx.stroke();
+                const nx = n.x;
+                const ny = n.y;
+
+                if (n.type === 'anchor') {
+                    // Alpha: Precursor Diamond Anchor Glyph [◈]
+                    chronoCtx.save();
+                    chronoCtx.strokeStyle = isActive ? "#f59e0b" : "#78350f";
+                    chronoCtx.lineWidth = 1.5;
+                    const bSize = isActive ? 13 : 10;
+                    chronoCtx.strokeRect(nx - bSize, ny - bSize, bSize * 2, bSize * 2);
+
+                    chronoCtx.fillStyle = isActive ? "#f59e0b" : "#1e293b";
+                    chronoCtx.beginPath();
+                    chronoCtx.moveTo(nx, ny - (bSize - 3));
+                    chronoCtx.lineTo(nx + (bSize - 3), ny);
+                    chronoCtx.lineTo(nx, ny + (bSize - 3));
+                    chronoCtx.lineTo(nx - (bSize - 3), ny);
+                    chronoCtx.closePath();
+                    chronoCtx.fill();
+                    chronoCtx.strokeStyle = isActive ? "#fef08a" : "#d97706";
+                    chronoCtx.stroke();
+
+                    chronoCtx.fillStyle = isActive ? "#000000" : "#d97706";
+                    chronoCtx.fillRect(nx - 1, ny - 3, 2, 6);
+                    chronoCtx.fillRect(nx - 3, ny - 1, 6, 2);
+                    chronoCtx.restore();
+
+                } else if (n.type === 'nexus') {
+                    // Beta: Prime Convergence Nexus Glyph [⬡]
+                    chronoCtx.save();
+                    const nRad = isActive ? 13 : 10;
+                    chronoCtx.beginPath();
+                    for (let i = 0; i < 6; i++) {
+                        const a = (i * Math.PI / 3) - Math.PI / 6;
+                        const hx = nx + nRad * Math.cos(a);
+                        const hy = ny + nRad * Math.sin(a);
+                        if (i === 0) chronoCtx.moveTo(hx, hy);
+                        else chronoCtx.lineTo(hx, hy);
+                    }
+                    chronoCtx.closePath();
+                    chronoCtx.fillStyle = isActive ? "#06b6d4" : "#1e293b";
+                    chronoCtx.fill();
+                    chronoCtx.strokeStyle = isActive ? "#a5f3fc" : "#0891b2";
+                    chronoCtx.lineWidth = 1.5;
+                    chronoCtx.stroke();
+
+                    chronoCtx.beginPath();
+                    chronoCtx.arc(nx, ny, nRad * 0.5, 0, Math.PI * 2);
+                    chronoCtx.fillStyle = isActive ? "#ffffff" : "#0f172a";
+                    chronoCtx.fill();
+                    chronoCtx.strokeStyle = isActive ? "#0891b2" : "#38bdf8";
+                    chronoCtx.stroke();
+                    chronoCtx.restore();
+
+                } else if (n.type === 'singularity') {
+                    // Gamma: Singularity Horizon Glyph [✺] with dimensional spikes
+                    chronoCtx.save();
+                    const sRad = isActive ? 13 : 10;
+                    chronoCtx.strokeStyle = isActive ? "#e9d5ff" : "#581c87";
+                    chronoCtx.lineWidth = 1.5;
+                    for (let i = 0; i < 8; i++) {
+                        const a = i * Math.PI / 4;
+                        const len = (i % 2 === 0) ? sRad + 4 : sRad + 1;
+                        chronoCtx.beginPath();
+                        chronoCtx.moveTo(nx, ny);
+                        chronoCtx.lineTo(nx + Math.cos(a) * len, ny + Math.sin(a) * len);
+                        chronoCtx.stroke();
+                    }
+
+                    chronoCtx.beginPath();
+                    chronoCtx.arc(nx, ny, sRad * 0.7, 0, Math.PI * 2);
+                    chronoCtx.fillStyle = isActive ? "#c084fc" : "#1e293b";
+                    chronoCtx.fill();
+                    chronoCtx.strokeStyle = isActive ? "#f3e8ff" : "#9333ea";
+                    chronoCtx.lineWidth = 1.5;
+                    chronoCtx.stroke();
+
+                    chronoCtx.fillStyle = "#000000";
+                    chronoCtx.beginPath();
+                    chronoCtx.arc(nx, ny, sRad * 0.35, 0, Math.PI * 2);
+                    chronoCtx.fill();
+                    chronoCtx.restore();
+                }
 
                 chronoCtx.fillStyle = isActive ? "#ffffff" : "#94a3b8";
                 chronoCtx.font = "bold 10px monospace";
                 chronoCtx.textAlign = "center";
-                chronoCtx.fillText(n.label, n.x, n.y + 24);
+                chronoCtx.fillText(n.label, nx, ny + 24);
             });
 
             // Period-Accurate Chrono Timestamp HUD
             chronoCtx.fillStyle = engine.currentEpoch === 'alpha' ? '#f59e0b' : engine.currentEpoch === 'beta' ? '#06b6d4' : '#c084fc';
             chronoCtx.font = "bold 9px monospace";
             chronoCtx.textAlign = "center";
-            const chronoStamp = engine.currentEpoch === 'alpha' ? "1984-10-26 09:14:02 // PRECURSOR CONDUIT" :
-                                engine.currentEpoch === 'beta'  ? "2042-05-18 14:32:45 // PRIME CHRONO-ARRAY" :
-                                                                  "2188-11-04 23:59:10 // COLLAPSE HORIZON";
+            const chronoStamp = engine.currentEpoch === 'alpha' ? "1984-10-26 09:14:02 // ANCHOR: PRECURSOR SUB-BASEMENT" :
+                                engine.currentEpoch === 'beta'  ? "2042-05-18 14:32:45 // NEXUS: CHRONO-STATION PRIME" :
+                                                                  "2188-11-04 23:59:10 // HORIZON: SINGULARITY RUINS";
             chronoCtx.fillText(chronoStamp, Math.round(w * 0.5), 10);
 
             chronoCtx.restore();
@@ -3453,15 +3734,22 @@
                 });
 
                 const descEl = document.getElementById('epochDesc');
+                const lmEl = document.getElementById('epochLandmarkName');
                 if (engine.currentEpoch === 'alpha') {
                     descEl.textContent = "EPOCH ALPHA (1984) — Precursor Sub-Basement Facility";
                     descEl.style.color = "var(--epoch-alpha)";
+                    if (lmEl) lmEl.textContent = "Precursor Sub-Basement";
                 } else if (engine.currentEpoch === 'beta') {
                     descEl.textContent = "EPOCH BETA (2042) — Chrono-Station Prime Reality";
                     descEl.style.color = "var(--epoch-beta)";
+                    if (lmEl) lmEl.textContent = "Chrono-Station Prime";
                 } else {
                     descEl.textContent = "EPOCH GAMMA (2188) — Singularity & Decayed Ruins";
                     descEl.style.color = "var(--epoch-gamma)";
+                    if (lmEl) lmEl.textContent = "Singularity Horizon";
+                }
+                if (document.getElementById('landmarkOverlay')?.classList.contains('active')) {
+                    renderLandmarkCards();
                 }
             }
 
@@ -3759,6 +4047,12 @@
             } else if (e.key >= '4' && e.key <= '7') {
                 const slotIdx = parseInt(e.key, 10) - 4;
                 engine.useInventoryItem(slotIdx);
+            } else if (e.key === 'l' || e.key === 'L') {
+                if (document.getElementById('landmarkOverlay')?.classList.contains('active')) {
+                    closeModal('landmarkOverlay');
+                } else {
+                    openLandmarksModal();
+                }
             } else if (e.key === 'r' || e.key === 'R') {
                 engine.toggleRecordEcho();
             } else if (e.key === 'p' || e.key === 'P') {
@@ -4116,6 +4410,80 @@
             audio.init();
             document.getElementById('settingsOverlay').classList.add('active');
         });
+
+        /* --- Historic Epoch Landmark Cards Logic --- */
+        const HISTORIC_LANDMARKS = [
+            {
+                epoch: 'alpha',
+                year: '1984',
+                code: 'T-58Y Baseline',
+                title: 'Precursor Geothermal Sub-Basement',
+                color: '#f59e0b',
+                blueprint: 'Reinforced concrete blast bunker with heavy hydraulic thermal conduits & brass rotor dynamos.',
+                anchors: '⚡ Precursor Geothermal Relay · 🌊 Cryo-Sluice Conduit · 🌱 Botanical Specimen Vault',
+                resonance: 'Baseline Origin Point (Divergence 0.0%)'
+            },
+            {
+                epoch: 'beta',
+                year: '2042',
+                code: 'Prime Reality',
+                title: 'Chrono-Station Prime Central Nexus',
+                color: '#06b6d4',
+                blueprint: 'Titanium-alloy station bulkhead complex with dual biometric interlocks & supercooled sluices.',
+                anchors: '⯐ Biometric Pressure Array · 🛑 Reinforced Blast Gates · 👻 Echo Ghost Fulcrum',
+                resonance: 'Prime Convergence Fulcrum (Echo Recording)'
+            },
+            {
+                epoch: 'gamma',
+                year: '2188',
+                code: 'T+146Y Terminal',
+                title: 'Entropic Singularity Horizon Ruins',
+                color: '#c084fc',
+                blueprint: 'Fractured obsidian monoliths suspended over quantum void chasms with petrified bio-bridges.',
+                anchors: '✺ Omega Singularity Core · 🌀 Tachyon Dimensional Rift · 🌌 Sub-Zero Ice Span',
+                resonance: 'Terminal Collapse Horizon (Breach Imminent)'
+            }
+        ];
+
+        function renderLandmarkCards() {
+            const grid = document.getElementById('landmarkGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            HISTORIC_LANDMARKS.forEach(lm => {
+                const isActive = engine.currentEpoch === lm.epoch;
+                const card = document.createElement('div');
+                card.className = `landmark-card-item ${isActive ? 'active' : ''}`;
+                card.setAttribute('data-epoch', lm.epoch);
+                card.innerHTML = `
+                    <div class="landmark-card-header" style="color: ${lm.color};">
+                        <span>EPOCH ${lm.epoch.toUpperCase()} (${lm.year})</span>
+                        <span>${lm.code}</span>
+                    </div>
+                    <div class="landmark-card-title">${lm.title}</div>
+                    <div class="landmark-card-blueprint">${lm.blueprint}</div>
+                    <div class="landmark-card-anchors"><b>Causal Anchors:</b><br>${lm.anchors}</div>
+                    <div style="font-size: 10px; color: ${isActive ? lm.color : '#64748b'}; font-weight: bold;">
+                        ${isActive ? '● CURRENT TEMPORAL FOCUS' : '○ Click to Shift Reality'}
+                    </div>
+                `;
+                card.addEventListener('click', () => {
+                    audio.init();
+                    engine.switchEpoch(lm.epoch);
+                    closeModal('landmarkOverlay');
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        function openLandmarksModal() {
+            renderLandmarkCards();
+            document.getElementById('landmarkOverlay')?.classList.add('active');
+        }
+
+        document.getElementById('btnLandmarks')?.addEventListener('click', () => { audio.init(); openLandmarksModal(); });
+        document.getElementById('btnEpochLandmarkBadge')?.addEventListener('click', () => { audio.init(); openLandmarksModal(); });
+        document.getElementById('btnLandmarkClose')?.addEventListener('click', () => closeModal('landmarkOverlay'));
+        document.getElementById('btnLandmarkDismiss')?.addEventListener('click', () => closeModal('landmarkOverlay'));
 
         // Top bar buttons
         document.getElementById('btnScenarios').addEventListener('click', () => { audio.init(); openScenarioModal(); });

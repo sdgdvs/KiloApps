@@ -114,6 +114,7 @@ static void PlaySfx(int type) {
 #define STATE_PLAYING  2
 #define STATE_HELP     3
 #define STATE_VICTORY  4
+#define STATE_LANDMARKS 5
 
 typedef struct {
     int x, y;
@@ -175,6 +176,15 @@ static int g_hasEchoGhost = 0;
 static EchoStep g_echoGhost;
 
 /* Particles & Ripples */
+typedef struct {
+    int x, y;
+    int radius;
+    int maxRadius;
+    COLORREF color;
+    int active;
+} WarpDistortion;
+#define MAX_WARP_DISTORTIONS 6
+static WarpDistortion g_warpDistortions[MAX_WARP_DISTORTIONS];
 static Particle g_particles[MAX_PARTICLES];
 static int g_particleCount = 0;
 static int g_rippleRadius = 0;
@@ -832,6 +842,88 @@ static void DrawGame(HDC hdc, RECT* rcClient) {
         SetTextColor(memDC, RGB(16, 185, 129));
         TextOutA(memDC, 60, 420, "Press [SPACE] or [ENTER] to acknowledge and begin mission.", 58);
 
+    } else if (g_appState == STATE_LANDMARKS) {
+        SelectObject(memDC, hTitleFont);
+        SetTextColor(memDC, RGB(56, 189, 248));
+        TextOutA(memDC, 50, 30, "HISTORIC EPOCH LANDMARK DOSSIER", 31);
+
+        SelectObject(memDC, hFont);
+        // Card 1: Alpha
+        HBRUSH c1Br = CreateSolidBrush(RGB(18, 14, 10));
+        RECT rC1 = { 40, 75, 275, 430 };
+        FillRect(memDC, &rC1, c1Br);
+        DeleteObject(c1Br);
+        HPEN pC1 = CreatePen(PS_SOLID, (g_game.epoch == EPOCH_ALPHA) ? 2 : 1, RGB(245, 158, 11));
+        HGDIOBJ oP = SelectObject(memDC, pC1);
+        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        RoundRect(memDC, 40, 75, 275, 430, 8, 8);
+        SelectObject(memDC, oP);
+        DeleteObject(pC1);
+
+        SetTextColor(memDC, RGB(245, 158, 11));
+        TextOutA(memDC, 55, 90, "EPOCH ALPHA (1984)", 18);
+        SetTextColor(memDC, RGB(248, 250, 252));
+        TextOutA(memDC, 55, 115, "Precursor Sub-Basement", 22);
+        SetTextColor(memDC, RGB(148, 163, 184));
+        TextOutA(memDC, 55, 145, "• Heavy concrete bunker", 23);
+        TextOutA(memDC, 55, 165, "• Geothermal power relay", 24);
+        TextOutA(memDC, 55, 185, "• Cryo-floodgate sluice", 23);
+        TextOutA(memDC, 55, 205, "• Ancient seed cryo-vault", 25);
+        SetTextColor(memDC, RGB(245, 158, 11));
+        TextOutA(memDC, 55, 245, "Resonance: Baseline Anchor", 26);
+        TextOutA(memDC, 55, 385, "[1] SHIFT TO ALPHA", 18);
+
+        // Card 2: Beta
+        HBRUSH c2Br = CreateSolidBrush(RGB(8, 18, 30));
+        RECT rC2 = { 295, 75, 530, 430 };
+        FillRect(memDC, &rC2, c2Br);
+        DeleteObject(c2Br);
+        HPEN pC2 = CreatePen(PS_SOLID, (g_game.epoch == EPOCH_BETA) ? 2 : 1, RGB(6, 182, 212));
+        oP = SelectObject(memDC, pC2);
+        RoundRect(memDC, 295, 75, 530, 430, 8, 8);
+        SelectObject(memDC, oP);
+        DeleteObject(pC2);
+
+        SetTextColor(memDC, RGB(6, 182, 212));
+        TextOutA(memDC, 310, 90, "EPOCH BETA (2042)", 17);
+        SetTextColor(memDC, RGB(248, 250, 252));
+        TextOutA(memDC, 310, 115, "Chrono-Station Prime", 20);
+        SetTextColor(memDC, RGB(148, 163, 184));
+        TextOutA(memDC, 310, 145, "• Titanium bulkhead array", 25);
+        TextOutA(memDC, 310, 165, "• Biometric pressure locks", 26);
+        TextOutA(memDC, 310, 185, "• Reinforced blast gate", 23);
+        TextOutA(memDC, 310, 205, "• Chrono-Echo Ghost fulcrum", 27);
+        SetTextColor(memDC, RGB(6, 182, 212));
+        TextOutA(memDC, 310, 245, "Resonance: Prime Reality", 24);
+        TextOutA(memDC, 310, 385, "[2] SHIFT TO BETA", 17);
+
+        // Card 3: Gamma
+        HBRUSH c3Br = CreateSolidBrush(RGB(18, 8, 28));
+        RECT rC3 = { 550, 75, 785, 430 };
+        FillRect(memDC, &rC3, c3Br);
+        DeleteObject(c3Br);
+        HPEN pC3 = CreatePen(PS_SOLID, (g_game.epoch == EPOCH_GAMMA) ? 2 : 1, RGB(192, 132, 252));
+        oP = SelectObject(memDC, pC3);
+        RoundRect(memDC, 550, 75, 785, 430, 8, 8);
+        SelectObject(memDC, oP);
+        DeleteObject(pC3);
+
+        SetTextColor(memDC, RGB(192, 132, 252));
+        TextOutA(memDC, 565, 90, "EPOCH GAMMA (2188)", 18);
+        SetTextColor(memDC, RGB(248, 250, 252));
+        TextOutA(memDC, 565, 115, "Singularity Horizon Ruin", 24);
+        SetTextColor(memDC, RGB(148, 163, 184));
+        TextOutA(memDC, 565, 145, "• Fractured obsidian chasm", 26);
+        TextOutA(memDC, 565, 165, "• Omega Singularity Core", 24);
+        TextOutA(memDC, 565, 185, "• Tachyon Dimensional Rift", 26);
+        TextOutA(memDC, 565, 205, "• Petrified Bio-Archway", 23);
+        SetTextColor(memDC, RGB(192, 132, 252));
+        TextOutA(memDC, 565, 245, "Resonance: Terminal Ruin", 24);
+        TextOutA(memDC, 565, 385, "[3] SHIFT TO GAMMA", 18);
+
+        SetTextColor(memDC, RGB(56, 189, 248));
+        TextOutA(memDC, 50, 465, "Press [1 / 2 / 3] to Shift Reality Focus  |  Press [L / ESC / SPACE] to Return", 77);
+
     } else if (g_appState == STATE_PLAYING || g_appState == STATE_VICTORY) {
         // Top HUD Bar
         HBRUSH hudBrush = CreateSolidBrush(RGB(12, 18, 34));
@@ -846,12 +938,14 @@ static void DrawGame(HDC hdc, RECT* rcClient) {
         COLORREF epCol = (g_game.epoch == EPOCH_ALPHA) ? RGB(245, 158, 11) : (g_game.epoch == EPOCH_BETA) ? RGB(6, 182, 212) : RGB(192, 132, 252);
         SetTextColor(memDC, epCol);
         if (g_game.epoch == EPOCH_ALPHA) {
-            TextOutA(memDC, 95, 12, "[1] EPOCH ALPHA (1984)", 22);
+            TextOutA(memDC, 95, 12, "[1] ALPHA '84", 13);
         } else if (g_game.epoch == EPOCH_BETA) {
-            TextOutA(memDC, 95, 12, "[2] EPOCH BETA (2042)", 21);
+            TextOutA(memDC, 95, 12, "[2] BETA '42", 12);
         } else {
-            TextOutA(memDC, 95, 12, "[3] EPOCH GAMMA (2188)", 22);
+            TextOutA(memDC, 95, 12, "[3] GAMMA '88", 13);
         }
+        SetTextColor(memDC, RGB(56, 189, 248));
+        TextOutA(memDC, 220, 12, "[L] LANDMARKS", 13);
 
         // Scenario Badge
         SetTextColor(memDC, RGB(203, 213, 225));
@@ -1041,13 +1135,20 @@ static void DrawGame(HDC hdc, RECT* rcClient) {
                     FillRect(memDC, &rTile, cBg);
                     DeleteObject(cBg);
 
-                    // Gyroscopic rotating rings
+                    // Time-Portal Distortion: Harmonic Quantum Containment Rings
+                    int cWarp = (g_animTick % 4);
                     HPEN cPen = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
                     HPEN oldP = (HPEN)SelectObject(memDC, cPen);
                     SelectObject(memDC, GetStockObject(NULL_BRUSH));
-                    Ellipse(memDC, tx + 4, ty + 4, tx + TILE_SZ - 4, ty + TILE_SZ - 4);
+                    Ellipse(memDC, tx + 3 - cWarp, ty + 3 - cWarp, tx + TILE_SZ - 3 + cWarp, ty + TILE_SZ - 3 + cWarp);
                     SelectObject(memDC, oldP);
                     DeleteObject(cPen);
+
+                    HPEN cPen2 = CreatePen(PS_SOLID, 1, RGB(192, 132, 252));
+                    oldP = (HPEN)SelectObject(memDC, cPen2);
+                    Ellipse(memDC, tx + 6, ty + 6, tx + TILE_SZ - 6, ty + TILE_SZ - 6);
+                    SelectObject(memDC, oldP);
+                    DeleteObject(cPen2);
 
                     // Pulsing Singularity Core
                     int pR = 4 + (g_animTick % 3);
@@ -1062,14 +1163,21 @@ static void DrawGame(HDC hdc, RECT* rcClient) {
                     FillRect(memDC, &rTile, rBg);
                     DeleteObject(rBg);
 
-                    // Swirling vortex rings
+                    // Time-Portal Distortion: Gravitational Lensing Horizon Rings
+                    int lBreath = (g_animTick % 3);
                     HPEN rfPen = CreatePen(PS_SOLID, 1, RGB(192, 132, 252));
                     HPEN oldP = (HPEN)SelectObject(memDC, rfPen);
                     SelectObject(memDC, GetStockObject(NULL_BRUSH));
-                    Ellipse(memDC, tx + 3, ty + 6, tx + TILE_SZ - 3, ty + TILE_SZ - 6);
-                    Ellipse(memDC, tx + 6, ty + 3, tx + TILE_SZ - 6, ty + TILE_SZ - 3);
+                    Ellipse(memDC, tx + 2 - lBreath, ty + 4, tx + TILE_SZ - 2 + lBreath, ty + TILE_SZ - 4);
+                    Ellipse(memDC, tx + 5, ty + 3 - lBreath, tx + TILE_SZ - 5, ty + TILE_SZ - 3 + lBreath);
                     SelectObject(memDC, oldP);
                     DeleteObject(rfPen);
+
+                    HPEN rfPen2 = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
+                    oldP = (HPEN)SelectObject(memDC, rfPen2);
+                    Ellipse(memDC, tx + 7, ty + 7, tx + TILE_SZ - 7, ty + TILE_SZ - 7);
+                    SelectObject(memDC, oldP);
+                    DeleteObject(rfPen2);
 
                     // Dark Singularity Center
                     HBRUSH dBr = CreateSolidBrush(RGB(0, 0, 0));
@@ -1281,6 +1389,126 @@ static void DrawGame(HDC hdc, RECT* rcClient) {
             g_rippleRadius += 6;
         }
 
+        // Render Time-Portal Chromatic Distortion Waves
+        for (int i = 0; i < MAX_WARP_DISTORTIONS; i++) {
+            if (g_warpDistortions[i].active) {
+                HPEN distPen = CreatePen(PS_SOLID, 2, g_warpDistortions[i].color);
+                HPEN oldP = (HPEN)SelectObject(memDC, distPen);
+                SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                Ellipse(memDC, g_warpDistortions[i].x - g_warpDistortions[i].radius,
+                               g_warpDistortions[i].y - g_warpDistortions[i].radius,
+                               g_warpDistortions[i].x + g_warpDistortions[i].radius,
+                               g_warpDistortions[i].y + g_warpDistortions[i].radius);
+                SelectObject(memDC, oldP);
+                DeleteObject(distPen);
+                g_warpDistortions[i].radius += 5;
+                if (g_warpDistortions[i].radius >= g_warpDistortions[i].maxRadius) {
+                    g_warpDistortions[i].active = 0;
+                }
+            }
+        }
+
+        // --- Right Sidebar: Timeline Branching Node Glyphs & Landmark Telemetry ---
+        int rx = 705;
+        // Panel Background Card
+        HBRUSH sbBr = CreateSolidBrush(RGB(12, 18, 34));
+        RECT rSb = { rx, 56, rx + 120, 504 };
+        FillRect(memDC, &rSb, sbBr);
+        DeleteObject(sbBr);
+        HPEN sbPen = CreatePen(PS_SOLID, 1, RGB(30, 41, 59));
+        HPEN oldSbP = (HPEN)SelectObject(memDC, sbPen);
+        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        Rectangle(memDC, rx, 56, rx + 120, 504);
+        SelectObject(memDC, oldSbP);
+        DeleteObject(sbPen);
+
+        // Sidebar Title: CHRONOGRAPH
+        SetTextColor(memDC, RGB(56, 189, 248));
+        TextOutA(memDC, rx + 10, 64, "CHRONOGRAPH", 11);
+
+        // Branching Conduit Lines
+        HPEN cdPen = CreatePen(PS_SOLID, 2, RGB(51, 65, 85));
+        HPEN oldCd = (HPEN)SelectObject(memDC, cdPen);
+        MoveToEx(memDC, rx + 30, 105, NULL); LineTo(memDC, rx + 30, 155);
+        MoveToEx(memDC, rx + 30, 175, NULL); LineTo(memDC, rx + 30, 225);
+        // Echo Fork Branch Line
+        if (g_isRecordingEcho || g_hasEchoGhost) {
+            HPEN efPen = CreatePen(PS_DOT, 1, RGB(6, 182, 212));
+            SelectObject(memDC, efPen);
+            MoveToEx(memDC, rx + 30, 165, NULL); LineTo(memDC, rx + 80, 185); LineTo(memDC, rx + 80, 225);
+            SelectObject(memDC, cdPen);
+            DeleteObject(efPen);
+            SetTextColor(memDC, RGB(6, 182, 212));
+            TextOutA(memDC, rx + 55, 172, "ECHO", 4);
+        }
+        SelectObject(memDC, oldCd);
+        DeleteObject(cdPen);
+
+        // Timeline Branching Node Glyphs
+        // Node 1: Alpha Diamond Anchor Glyph [◈]
+        COLORREF aCol = (g_game.epoch == EPOCH_ALPHA) ? RGB(245, 158, 11) : RGB(120, 53, 15);
+        HPEN aPen = CreatePen(PS_SOLID, 1, aCol);
+        HPEN oldN = (HPEN)SelectObject(memDC, aPen);
+        MoveToEx(memDC, rx + 30, 95, NULL); LineTo(memDC, rx + 38, 103);
+        LineTo(memDC, rx + 30, 111); LineTo(memDC, rx + 22, 103); LineTo(memDC, rx + 30, 95);
+        SelectObject(memDC, oldN);
+        DeleteObject(aPen);
+        SetTextColor(memDC, aCol);
+        TextOutA(memDC, rx + 44, 96, "ALPHA '84", 9);
+
+        // Node 2: Beta Prime Nexus Hex Glyph (⬡)
+        COLORREF bCol = (g_game.epoch == EPOCH_BETA) ? RGB(6, 182, 212) : RGB(14, 116, 144);
+        HPEN bPen = CreatePen(PS_SOLID, 1, bCol);
+        oldN = (HPEN)SelectObject(memDC, bPen);
+        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        Ellipse(memDC, rx + 23, 158, rx + 37, 172);
+        SelectObject(memDC, oldN);
+        DeleteObject(bPen);
+        SetTextColor(memDC, bCol);
+        TextOutA(memDC, rx + 44, 160, "BETA '42", 8);
+
+        // Node 3: Gamma Singularity Star Glyph {*}
+        COLORREF gCol = (g_game.epoch == EPOCH_GAMMA) ? RGB(192, 132, 252) : RGB(107, 33, 168);
+        HPEN gPen = CreatePen(PS_SOLID, 1, gCol);
+        oldN = (HPEN)SelectObject(memDC, gPen);
+        MoveToEx(memDC, rx + 23, 230, NULL); LineTo(memDC, rx + 37, 230);
+        MoveToEx(memDC, rx + 30, 223, NULL); LineTo(memDC, rx + 30, 237);
+        MoveToEx(memDC, rx + 25, 225, NULL); LineTo(memDC, rx + 35, 235);
+        MoveToEx(memDC, rx + 35, 225, NULL); LineTo(memDC, rx + 25, 235);
+        SelectObject(memDC, oldN);
+        DeleteObject(gPen);
+        SetTextColor(memDC, gCol);
+        TextOutA(memDC, rx + 44, 223, "GAMMA '88", 9);
+
+        // Historic Epoch Landmark Card Pill
+        SetTextColor(memDC, RGB(248, 250, 252));
+        TextOutA(memDC, rx + 10, 270, "LANDMARK CARD", 13);
+        SetTextColor(memDC, RGB(148, 163, 184));
+        if (g_game.epoch == EPOCH_ALPHA) {
+            SetTextColor(memDC, RGB(245, 158, 11));
+            TextOutA(memDC, rx + 10, 290, "Precursor Bunker", 16);
+            SetTextColor(memDC, RGB(148, 163, 184));
+            TextOutA(memDC, rx + 10, 310, "Geothermal Relay", 16);
+            TextOutA(memDC, rx + 10, 328, "Cryo-Floodgate", 14);
+            TextOutA(memDC, rx + 10, 346, "Bio-Seed Vault", 14);
+        } else if (g_game.epoch == EPOCH_BETA) {
+            SetTextColor(memDC, RGB(6, 182, 212));
+            TextOutA(memDC, rx + 10, 290, "Station Prime", 13);
+            SetTextColor(memDC, RGB(148, 163, 184));
+            TextOutA(memDC, rx + 10, 310, "Biometric Array", 15);
+            TextOutA(memDC, rx + 10, 328, "Blast Gates", 11);
+            TextOutA(memDC, rx + 10, 346, "Echo Ghost Link", 15);
+        } else {
+            SetTextColor(memDC, RGB(192, 132, 252));
+            TextOutA(memDC, rx + 10, 290, "Singularity Ruin", 16);
+            SetTextColor(memDC, RGB(148, 163, 184));
+            TextOutA(memDC, rx + 10, 310, "Omega Singularity", 17);
+            TextOutA(memDC, rx + 10, 328, "Tachyon Rift", 12);
+            TextOutA(memDC, rx + 10, 346, "Petrified Bridge", 16);
+        }
+        SetTextColor(memDC, RGB(56, 189, 248));
+        TextOutA(memDC, rx + 10, 380, "[L] View Dossier", 16);
+
         // Render Particles
         for (int i = 0; i < g_particleCount; i++) {
             Particle* p = &g_particles[i];
@@ -1397,7 +1625,23 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 if (wParam == VK_SPACE || wParam == VK_RETURN || wParam == VK_ESCAPE || wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                     g_appState = STATE_PLAYING;
                 }
+            } else if (g_appState == STATE_LANDMARKS) {
+                if (wParam == '1') {
+                    SwitchEpoch(EPOCH_ALPHA);
+                    g_appState = STATE_PLAYING;
+                } else if (wParam == '2') {
+                    SwitchEpoch(EPOCH_BETA);
+                    g_appState = STATE_PLAYING;
+                } else if (wParam == '3') {
+                    SwitchEpoch(EPOCH_GAMMA);
+                    g_appState = STATE_PLAYING;
+                } else if (wParam == 'L' || wParam == 'l' || wParam == VK_ESCAPE || wParam == VK_SPACE || wParam == VK_RETURN) {
+                    g_appState = STATE_PLAYING;
+                }
             } else if (g_appState == STATE_PLAYING) {
+                if (wParam == 'L' || wParam == 'l') {
+                    g_appState = STATE_LANDMARKS;
+                }
                 if (wParam == VK_UP || wParam == 'W') MovePlayer(0, -1);
                 else if (wParam == VK_DOWN || wParam == 'S') MovePlayer(0, 1);
                 else if (wParam == VK_LEFT || wParam == 'A') MovePlayer(-1, 0);

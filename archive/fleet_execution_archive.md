@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-04T08:21:08-08:00 — kilo-usability: KBreakout (KBreakout Viewport Fit, Non-Wrapping HUD & Usability Pass)**
+  - Status: PASS (0 errors, web 202.7 KB, native 55.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 12.2%, HEAD delta 16.72%, 0 fail, 0 warn, 7.7s)).
+  - Layout & Sizing: Scaled #game-container with fitGameToViewport() to fit 480x423 KiloOS viewport cleanly with zero clipping, keeping paddle at y=h-40 and all #skill-bar controls 100% visible in both solo and duel modes.
+  - HUD & Visuals: Compacted #ui into a single non-wrapping row, repositioned #toast-bar below #ui so it never obscures HUD counters, and added CRT phosphor grid and scanline pass across web and Win32 C targets.
+  - Handoff: Advanced `kilo-usability` to `KImage`; rotated active agent to `kilo-qa`.
+
 - **2026-11-04T03:19:12-08:00 — kilo-tester: KBreakout (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 197.9 KB, native 55.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - UI & Hotkey Audit: Modals (tutorial/pause/telemetry/duel/replay) dismiss cleanly; added input focus guard to prevent hotkey trigger while typing.

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://rfc-archive
-  kilo_graphics: KMine
+  kilo_graphics: KStarDredge
   kilo_soundscape: KStellar
   kilo_tester: KSanctuary
   kilo_usability: KImage
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://demoscene
-  timestamp: '2026-11-04T11:35:08-08:00'
+  agent: kilo-graphics
+  app: KChrono
+  timestamp: '2026-11-04T12:39:18-08:00'
 last_planner_run: '2026-11-04T20:16:29Z'
 ---
 
@@ -99,12 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://demoscene` | `KiloOS/public/web/demoscene.html`, `KiloOS/public/apps/knet.html` | Create *Assembly '99 Demoscene Party Vault* (`demoscene.html` <250 KB): real-time 64K intro Canvas effect switcher (plasma, rotozoomer, 3D starfield, copper bars, metaballs), ANSI `.NFO` viewer with VFS save, and party voting board. |
 
 ### 2. Game Content & Graphics Queue (kilo-graphics)
-- **Active Target**: `KMine`
+- **Active Target**: `KStarDredge`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| KMine | KiloOS/public/apps/kmine.html, KMine/main.c | Subterranean excavation crawler visuals: drill rigs, mineral veins, seismic hazard indicators, ore refinery equipment, and glint sweep. |
-| KChrono | KiloOS/public/apps/kchrono.html, KChrono/main.c | Temporal paradox visual suite: time-portal distortion effects, historic epoch landmark cards, timeline branching node glyphs, and glint sweep. |
 | KStarDredge | KiloOS/public/apps/kstardredge.html | Deep space salvager visuals: derelict hull wreckage sprites, magnetic dredge beam effects, cosmic anomaly silhouettes, and glint sweep. |
 | KStarship | KiloOS/public/apps/kstarship.html | Starship bridge & sector tactical display upgrade: detailed hull subsystem schematics, nebula parallax backdrop, enemy cruiser silhouettes, and glint sweep. |
 | KCyber | KiloOS/public/apps/kcyber.html, KCyber/main.c | Netrunner icebreaker deck visual polish: isometric node towers, 5 distinct IC guardian constructs, matrix grid perspective, and glint sweep. |
@@ -114,6 +112,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | KRogue | KiloOS/public/apps/krogue.html, KRogue/main.c | Dungeon crawler sprite overhaul: hero chassis/classes, procedural dungeon floor/wall tiles, 5 creature archetypes, item icons, and glint sweep. |
 | KColony | KiloOS/public/apps/kcolony.html, KColony/main.c | Colony simulation visuals: planetary structures, colonists, exploration rovers, alien megafauna, terraforming atmosphere overlays, and glint sweep. |
 | KTrader | KiloOS/public/apps/ktrader.html, KTrader/main.c | Galactic trade visuals: merchant vessel chassis, starport market stalls, trade good icons, interstellar pirate silhouettes, and glint sweep. |
+| KMine | KiloOS/public/apps/kmine.html, KMine/main.c | Subterranean excavation crawler visuals: drill rigs, mineral veins, seismic hazard indicators, ore refinery equipment, and glint sweep. |
+| KChrono | KiloOS/public/apps/kchrono.html, KChrono/main.c | Temporal paradox visual suite: time-portal distortion effects, historic epoch landmark cards, timeline branching node glyphs, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -297,6 +297,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-04T12:39:18-08:00 — kilo-graphics: KChrono (Temporal Paradox Visual Suite & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 214.1 KB, native 27.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.08%, HEAD Δ 2.95%, 0 fail, 0 warn, 8.5s)).
+  - Integrated time-portal distortion effects (gravitational lensing & chromatic vortex waves on epoch warp and rift/core tiles).
+  - Added Historic Epoch Landmark Cards with architectural schematics, key causal relics, and fast epoch shifting across Web and Win32 C.
+  - Implemented vector Timeline Branching Node Glyphs in Chronograph with Prime spine and Echo fork branch indicators; verified 100% glint-free.
+  - Handoff: Advanced `kilo-graphics` to `KStarDredge`; rotated active agent to `kilo-tester`.
+
 - **2026-11-04T11:35:08-08:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Party Vault Expansion)**
   - Status: PASS ✅ (0 errors, web 98.9 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - Real-time 64K intro Canvas effect switcher (plasma, rotozoom, 3D starfield, copper bars, metaballs) with 60 FPS Mode 13h rasterizer.
@@ -320,9 +327,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kbbs_tutorialSeen flag, and Escape modal dismissals.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup.
   - Mature Quarantine & Handoff: Promoted `KBBS` to Mature archive; advanced `kilo-qa` to `KSynth`; next agent `kilo-expander`.
-
-- **2026-11-04T08:21:08-08:00 — kilo-usability: KBreakout (KBreakout Viewport Fit, Non-Wrapping HUD & Usability Pass)**
-  - Status: PASS (0 errors, web 202.7 KB, native 55.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 12.2%, HEAD delta 16.72%, 0 fail, 0 warn, 7.7s)).
-  - Layout & Sizing: Scaled #game-container with fitGameToViewport() to fit 480x423 KiloOS viewport cleanly with zero clipping, keeping paddle at y=h-40 and all #skill-bar controls 100% visible in both solo and duel modes.
-  - HUD & Visuals: Compacted #ui into a single non-wrapping row, repositioned #toast-bar below #ui so it never obscures HUD counters, and added CRT phosphor grid and scanline pass across web and Win32 C targets.
-  - Handoff: Advanced `kilo-usability` to `KImage`; rotated active agent to `kilo-qa`.
