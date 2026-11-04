@@ -1217,6 +1217,35 @@
 (function() {
   'use strict';
 
+  /**
+   * Safe localStorage getter with fallback
+   * @param {string} key
+   * @param {*} fallback
+   * @returns {*}
+   */
+  function safeGet(key, fallback) {
+    try {
+      var item = localStorage.getItem(key);
+      if (item === null || item === undefined) return fallback;
+      return JSON.parse(item);
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  /**
+   * Safe localStorage setter
+   * @param {string} key
+   * @param {*} value
+   */
+  function safeSet(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      console.warn("[KAnomaly] Storage write failed:", e);
+    }
+  }
+
   // --- Constants & Station Data ---
   var STATIONS = [
     { id: "BH-09", name: "Kola Wellhead", loc: "Kola Peninsula, Murmansk", depth: 12262, stratum: "Precambrian Gneiss", noise: -88, sens: "2.10 V/g", lat: 69.39, lon: 30.61 },
@@ -2100,8 +2129,15 @@
     }
   }
 
-  // Master Animation Loop
+  var animFrameId = null;
+
+  // Master Animation Loop (with visibility hygiene)
   function animLoop() {
+    if (document.hidden) {
+      animFrameId = null;
+      return;
+    }
+
     if (state.isSweeping) {
       state.freq = +(state.freq + state.sweepDir * 0.05).toFixed(2);
       if (state.freq >= 115.0) { state.freq = 115.0; state.sweepDir = -1; }
@@ -2120,8 +2156,27 @@
       renderTriangulationMap();
     }
 
-    requestAnimationFrame(animLoop);
+    animFrameId = requestAnimationFrame(animLoop);
   }
+
+  document.addEventListener("visibilitychange", function() {
+    if (document.hidden) {
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+      if (audioCtx && audioCtx.state === "running") {
+        try { audioCtx.suspend(); } catch (e) {}
+      }
+    } else {
+      if (audioCtx && audioCtx.state === "suspended" && state.audioEnabled) {
+        try { audioCtx.resume(); } catch (e) {}
+      }
+      if (!animFrameId) {
+        animFrameId = requestAnimationFrame(animLoop);
+      }
+    }
+  });
 
   // --- Catalog & Dossier UI ---
   function updateCatalogUI() {
@@ -2240,7 +2295,15 @@
   // --- Quicksave & Quickload Persistence ---
   function quickSaveState() {
     try {
-      localStorage.setItem("kanomaly_state", JSON.stringify({
+      var activeTab = "tab-waterfall";
+      var activeTabEl = document.querySelector(".tab-content.active");
+      if (activeTabEl && activeTabEl.id) activeTab = activeTabEl.id;
+
+      var curTheme = "theme-green";
+      if (document.body.classList.contains("theme-amber")) curTheme = "theme-amber";
+      else if (document.body.classList.contains("theme-cyan")) curTheme = "theme-cyan";
+
+      safeSet("kanomaly_state", {
         stationIdx: state.stationIdx,
         freq: state.freq,
         bandwidth: state.bandwidth,
@@ -2248,31 +2311,44 @@
         audioEnabled: state.audioEnabled,
         scanlines: state.scanlines,
         discoveredAnomalies: state.discoveredAnomalies,
-        triangulationSolved: state.triangulationSolved
-      }));
+        selectedAnomalyId: state.selectedAnomalyId,
+        triangulationSolved: state.triangulationSolved,
+        activeTab: activeTab,
+        theme: curTheme
+      });
       logTerminal("[STATE SAVED] Quicksave written to localStorage [F5]", "warn");
       playUiClick(880);
-    } catch(e) {
+    } catch (e) {
       logTerminal("[SAVE ERROR] " + e.message, "alert");
     }
   }
 
   function quickLoadState() {
     try {
-      var data = localStorage.getItem("kanomaly_state");
-      if (!data) {
+      var parsed = safeGet("kanomaly_state", null);
+      if (!parsed) {
         logTerminal("[LOAD WARNING] No previous session save found.", "warn");
         return;
       }
-      var parsed = JSON.parse(data);
-      state.stationIdx = parsed.stationIdx || 0;
-      state.freq = parsed.freq || 10.19;
+      state.stationIdx = (typeof parsed.stationIdx === "number") ? parsed.stationIdx : 0;
+      state.freq = (typeof parsed.freq === "number") ? parsed.freq : 10.19;
       state.bandwidth = parsed.bandwidth || 250;
       state.demodMode = parsed.demodMode || "FSK";
       state.audioEnabled = parsed.audioEnabled !== false;
       state.scanlines = parsed.scanlines !== false;
       state.discoveredAnomalies = parsed.discoveredAnomalies || {};
+      state.selectedAnomalyId = parsed.selectedAnomalyId || null;
       state.triangulationSolved = !!parsed.triangulationSolved;
+
+      if (parsed.theme) {
+        document.body.className = parsed.theme;
+        var themeSel = document.getElementById("themeSelect");
+        if (themeSel) {
+          if (parsed.theme === "theme-amber") themeSel.value = "amber";
+          else if (parsed.theme === "theme-cyan") themeSel.value = "cyan";
+          else themeSel.value = "green";
+        }
+      }
 
       // Update UI components
       document.getElementById("stationSelect").value = state.stationIdx;
@@ -2281,9 +2357,15 @@
       updateStationInfo();
       checkSignalLock();
       updateCatalogUI();
+
+      if (parsed.activeTab) {
+        var targetBtn = document.querySelector('.tab-btn[data-tab="' + parsed.activeTab + '"]');
+        if (targetBtn) targetBtn.click();
+      }
+
       logTerminal("[STATE LOADED] Session restored from localStorage [F9]", "cyan");
       playUiClick(660);
-    } catch(e) {
+    } catch (e) {
       logTerminal("[LOAD ERROR] " + e.message, "alert");
     }
   }
@@ -2340,7 +2422,7 @@
   document.getElementById("btnSplashStart").addEventListener("click", function() {
     initAudio();
     document.getElementById("splashScreen").style.display = "none";
-    if (!localStorage.getItem("kanomaly_tutorialSeen")) {
+    if (!safeGet("kanomaly_tutorialSeen", null)) {
       document.getElementById("tutorialModal").classList.add("active");
       showTutorialStep(0);
     }
@@ -2363,7 +2445,7 @@
     if (currentTutStep < TUTORIAL_STEPS.length - 1) {
       showTutorialStep(currentTutStep + 1);
     } else {
-      localStorage.setItem("kanomaly_tutorialSeen", "1");
+      safeSet("kanomaly_tutorialSeen", "1");
       document.getElementById("tutorialModal").classList.remove("active");
     }
   });
@@ -2371,7 +2453,7 @@
     if (currentTutStep > 0) showTutorialStep(currentTutStep - 1);
   });
   document.getElementById("btnSkipTutorial").addEventListener("click", function() {
-    localStorage.setItem("kanomaly_tutorialSeen", "1");
+    safeSet("kanomaly_tutorialSeen", "1");
     document.getElementById("tutorialModal").classList.remove("active");
   });
 
@@ -2577,6 +2659,17 @@
       return;
     }
     if (e.key === "Escape") {
+      var tutModal = document.getElementById("tutorialModal");
+      if (tutModal && tutModal.classList.contains("active")) {
+        safeSet("kanomaly_tutorialSeen", "1");
+        tutModal.classList.remove("active");
+      }
+      var splash = document.getElementById("splashScreen");
+      if (splash && splash.style.display !== "none") {
+        splash.style.display = "none";
+        initAudio();
+        resizeCanvases();
+      }
       document.querySelectorAll(".modal-overlay").forEach(function(m) {
         m.classList.remove("active");
       });
@@ -2690,9 +2783,7 @@
     };
     var path = "/sys/anomaly_capture.sig";
     KiloVFS.write(path, payload);
-    try {
-      localStorage.setItem("kanomaly_vfs_sig", JSON.stringify(payload));
-    } catch (e) {}
+    safeSet("kanomaly_vfs_sig", payload);
     logTerminal("[VFS EXPORT] Intercepted signal written to " + path, "alert");
     return path;
   }
@@ -2708,9 +2799,8 @@
     logTerminal("[VFS] Requesting signal file " + p + "...", "cyan");
     KiloVFS.read(p, function(data, readPath) {
       if (!data && window.parent === window) {
-        try {
-          data = localStorage.getItem("kanomaly_vfs_sig");
-        } catch (e) {}
+        var cachedSig = safeGet("kanomaly_vfs_sig", null);
+        if (cachedSig) data = typeof cachedSig === "string" ? cachedSig : JSON.stringify(cachedSig);
       }
       if (!data) {
         logTerminal("[VFS ERROR] File not found or empty: " + (readPath || p), "alert");
@@ -3141,7 +3231,7 @@
   logTerminal("=== KANOMALY v1.0.0 INITIALIZED ===", "alert");
   logTerminal("Lithosphere Geophone Array online. Ready for signal interception.", "dim");
 
-  requestAnimationFrame(animLoop);
+  animFrameId = requestAnimationFrame(animLoop);
 })();
 </script>
 </body>

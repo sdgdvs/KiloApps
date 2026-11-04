@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KImage
-  kilo_qa: KAnomaly
+  kilo_qa: KBBS
   kilo_expander: KNetMap
   kilo_review: KBreakout
 virtual_web_target: kweb://geocities
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KNetMap
-  timestamp: '2026-11-03T20:22:26-08:00'
+  agent: kilo-qa
+  app: KAnomaly
+  timestamp: '2026-11-03T20:37:18-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -159,7 +159,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | Shift chessboard left (TS=64, OX=64, OY=124, Eval Bar at x=18..34, left rank labels at x=48, right rank labels at x=590) to fix drawEvalBar() colliding with rank 8..1 labels, fix KChess/main.c capRc ({20,46,W-20,94}) painting over top file labels and Rank 8, and render a live interactive Move History & Clocks panel (x=606..744, y=118..642) in both kchess.html and KChess/main.c with White/Black clocks, scrollable 2-column SAN move list, active-ply highlight, wheel scroll, and click-to-jump; add warm champagne/ivory outer rim stroke on Black pieces (!isWhite) in drawChessPieceSprite() and DrawChessPiece() for dark-square contrast; compact #help-modal .modal-card (2-col shortcuts) so #help-close-btn fits 800x903 without clipping, add white-space nowrap to .menu-bar/#menu-status-badge/.menu-btn-quickhelp (removing duplicate canvas Help badge), and move #toast-container to top:48px right:16px while skipping redundant boot welcome toast; add pointer drag-and-drop piece movement in kchess.html and KChess/main.c (WM_MOUSEMOVE/WM_LBUTTONUP), wire ArrowLeft/Right in #replay-modal to replayStepPrev()/replayStepNext(), let focused modal buttons handle Enter/Space without primaryBtn hijacking, and replace prompt() in editorExportFEN() with #fen-modal. |
 | `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Eliminate 216px vertical overflow at 700x723 in kgo.html by locking body to 100vh flex column with overflow hidden, merging h1 and .status-container into a compact top bar, collapsing the redundant 3-row #hotkey-bar (and removing misleading /WASD label since S toggles Analyzer), tightening .board/.board-container/.controls padding, and making getCellSize() viewport-responsive so 9x9, 13x13, and 19x19 boards plus all controls fit 100% visible with 0px scroll; raise kbd, badge, .stone-num-label, .liberty-badge, and .ko-overlay font sizes to >= 10px (0 tiny-text warnings); remove random rotate() on .stone so 3D lighting stays top-left and move numbers (M) never render upside-down, and append .last-move-aura/.ripple/.ripple-outer to .cell instead of overflow-hidden .stone; replace blocking alert() dialogs for Stats/Campaign/Score with Esc-dismissible in-DOM modals, pause idle updateScreenShake rAF loop, and change KGo/main.c Goban coordinates from invisible mahogany RGB(75,48,24) to gold RGB(255,220,110). |
 | `KCosmic` | `KiloOS/public/apps/kcosmic.html`, `KCosmic/main.c` | Orbit & navigation viewport ergonomics, touch/keyboard flight controls, HiDPI radar canvas scaling, and compact HUD. |
-| `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Subterranean waterfall spectrogram HiDPI scaling, frequency tuner wheel/keyboard precision (`ArrowLeft/Right`), and clear decoder telemetry readout. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Convert absolute 12-button top toolbar into non-overlapping flex header so it stops colliding with H1 title at 960x683, compact layout so Shipyard/Missions/Log fit without 807px vertical scroll overflow, add flex-wrap and upgrade stat labels (+20 Cargo/+10 Shield, -2 Fuel/+50 Tank, +15 Dmg) to #ui-shipyard, remove misleading [1]-[5] prefixes from #market-table rows, and add devicePixelRatio HiDPI scaling to #gfx-canvas. |
 | `KDragon` | `KiloOS/public/apps/kdragon.html`, `KDragon/main.c` | **[ARGON REVIEW]:** Compact #main-container, .stats, .entity-display, #controls, #shop-controls, and .message-log to fit 660x623 without vertical scroll, add preventDefault() for Arrow/Space keys so gameplay never scrolls the page, and prevent #toast-container from covering #controls and #message-log. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Arrange #start-screen buttons in a 2-column grid so all 11 fit within 870x623 without bottom clipping; lock body to 100vh overflow:hidden with scrollable .panel-col drawers (max-height:460px; overflow-y:auto) and e.preventDefault() on Arrow/Space keys; resize #grid, #grid-container, #bg-canvas, and #fg-canvas from 400x400 to 419x419 to match the 20x20 cells + 19px gaps; raise small font-size from 8px to 9.5px. |
@@ -168,11 +167,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | **[ARGON REVIEW]:** Update resetView() in knetmap.html to auto-fit and center the TOPOLOGY.nodes bounding box (with 55px label/hull padding) inside canvasContainer and compact preset node Y-coordinates (y=75..345) so all 8 Corp DMZ nodes and labels render 100% visible in the 905x428 canvas; compact aside.palette (2-column grids for Add Hardware, Diagnostics, and Media Standard with tighter gaps) so all tools, cable selectors, overlays, and Clear Grid fit at 1080x683 without vertical scroll clipping; and add Arrow/WASD viewport/node navigation and Enter ping trigger in onKeyDown. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KAnomaly`
+- **Active Target**: `KBBS`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, subterranean waterfall spectrogram, audio decoder telemetry, dual Win32 C parity, and promote to Mature table. |
 | `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ANSI terminal bulletin board, door games, VFS file transfer, dual Win32 C parity, and promote to Mature table. |
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, 2-Op FM patch synthesizer, envelope generator, piano roll, dual Win32 C parity, and promote to Mature table. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Sovereign Web 1.0 browser, bookmarks, history, VFS spooling, dual Win32 C parity, and promote to Mature table. |
@@ -192,7 +190,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kgo.html (#sgf-modal and boot listener) using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with event.origin === window.location.origin checks, 60s dialog timeouts, and standalone Blob/file-input fallbacks when window.parent === window for .sgf match records (/home/docs/kgo_match.sgf) and .json saves (/home/saves/kgo_save.json), handle incoming FILE_OPEN/VFS_OPEN messages from File Browser to auto-load .sgf/.json files, add an Open SGF in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad), and add SGF file import parity to KGo/main.c. |
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kimage.html per architecture.md (event.origin === window.location.origin checks, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks when window.parent === window) adding Open from VFS (VFS_SHOW_OPEN -> VFS_READ) and Save to VFS (VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY) for exported images (/home/media/), .JSON sessions (/home/saves/kimage_session.json), and ASCII .txt art (/home/docs/), handling incoming FILE_OPEN/VFS_OPEN messages and URL #/path hash to auto-load .png/.jpg/.bmp/.tga/.pcx/.json files, and adding Open ASCII in KPad (OS_LAUNCH_APP kpad), Send Stego to KCipher (kcipher), and Inspect Image in KHex (khex) buttons; upgrade KImage/main.c (<999 KB) by wiring ID_BTN_RESIZE_HALF (0.5x) and ID_BTN_RESIZE_DOUBLE (2x) and adding a Dither [T] Floyd-Steinberg retro palette button cycling 1-Bit Mono, DMG-4 Green, CGA, and C64 palettes. |
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Harden Phase VI KiloOS VFS and IPC Mesh in khex.html per architecture.md: enforce event.origin === window.location.origin in window.addEventListener('message'), post with window.location.origin instead of wildcard (removing dead OS_SET_WINDOW_SIZE), raise sendToOS() timeout to 60000ms for interactive VFS_SHOW_OPEN and VFS_SHOW_SAVE pickers, emit OS_NOTIFY after VFS_WRITE, handle incoming FILE_OPEN/VFS_OPEN messages to auto-load VFS files, add Save to VFS (/home/docs/ or /home/crypto/) and Open in KPad / Send to KCipher OS_LAUNCH_APP buttons in Tab 7 Export, Tab 8 Patch Builder, and Tab 9 Disassembler, and add native Win32 .bin file open/save parity in KHex/main.c (<999 KB). |
-| `KAnomaly` | `KiloOS/public/apps/kanomaly.html`, `KAnomaly/main.c` | Phase VI VFS Signal Bridge: allow exporting demodulated subterranean signal frames directly to `/sys/anomaly_capture.sig` in KiloOS VFS and launching `KMatrix` or `KHex` via `OS_LAUNCH_APP` for cross-app decoding. |
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Build interactive 12-system Galactic Star Chart [C] (plus KTrader/main.c parity) rendering planets (x,y) jump-gate topology, ecoType/techLevel badges, current location, and active mission target highlight, add player cur/max shield bars to #ui-combat-panel, and enforce Navy patrol confiscation when jumping with Contraband cargo. |
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
@@ -229,6 +226,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KAnomaly** | `KiloOS/public/apps/kanomaly.html` | Pass 5+ (2026-11-03) | Scientific / Signal Analysis & Geophysics | Complete subterranean acoustic & VLF signal analyzer featuring 6 global borehole geophones, HiDPI waterfall spectrogram graticules, audio decoder telemetry, F5/F9 state persistence, and dual Win32 C parity. |
 | **KSteno** | `KiloOS/public/apps/ksteno.html` | Pass 5+ (2026-11-03) | Security / Steganography & Cryptography | Complete stenographic carrier suite & covert channel workbench with image LSB, 16-bit PCM WAV audio, whitespace/zero-width text modulation, Chi-Square PoV steganalysis, spectral bitplane visualizer, F5/F9 state persistence, and dual Win32 C parity. |
 | **KMatrix** | `KiloOS/public/apps/kmatrix.html` | Pass 5+ (2026-11-03) | System / Security & ARG Climax | Complete Milestone #100 retro forensic master terminal with 5-sector cryptographic analysis, 2-Op FM Morse ECHO waterfall telemetry, VFS kernel verification, breach state JSON persistence, F5/F9 state, and dual Win32 C parity. |
 | **KSettings** | `KiloOS/public/apps/ksettings.html` | Pass 5+ (2026-11-03) | System / Configuration | Complete KiloOS control panel with 5-tab responsive navigation, live accent/theme synchronization, VFS persistence, F5/F9 state, and dual Win32 C parity. |
@@ -291,6 +289,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T20:37:18-08:00 — kilo-qa: KAnomaly (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 124.9 KB, native 25.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 5.97%, HEAD Δ 0.44%, 0 fail, 0 warn, 7.2s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload persistence via safeGet/safeSet, kanomaly_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity, audio decoder telemetry earcon, and visibilitychange lifecycle cleanup.
+  - Mature Quarantine & Handoff: Promoted `KAnomaly` to Mature archive; advanced `kilo-qa` to `KBBS`; next agent `kilo-expander`.
+
 - **2026-11-03T20:22:26-08:00 — kilo-usability: KNetMap (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-usability updates for KNetMap across web and native targets.
@@ -313,9 +317,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Enhanced webring navigation with direct Portal and KNet interconnects alongside 0xRELEASE courier top-site board.
   - Synchronized Win32 C parity in KNet/main.c for top-site release board, keygen chiptune player, download quota, and VFS export.
   - Handoff: Advanced `kilo-creator` to `kweb://geocities`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-03T17:31:49-08:00 — kilo-review: KNetMap (Argon Visual, Feature & Usability Review (Dispatched to Flash))**
-  - Status: AUDIT COMPLETE (reviewed 4-panel sheet.png at 1080x683 and audited knetmap.html + KNetMap/main.c).
-  - Visual/UX Findings: Preset topologies clip bottom switch labels and cut off all 4 bottom-tier servers/workstations below the 428px canvas at default zoom/pan; left .palette overflows vertically hiding Sever Link, Traffic Burst, Media Standard, Overlays, and Clear Grid.
-  - Feature/Parity Findings: #chkCollisionDomains is a dead Potemkin checkbox never read in drawScene(); DMZ nodes default to Engineering LAN subnet hull; onTouchStart calls undefined updateInspector(); CIDR strip stats are static; KNetMap/main.c CalculateSubnet() ignores IP input and ID_BTN_CUT only toggles the last link; VFS/IPC mesh is missing.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KNetMap`, `kilo-tester`->`KNetMap`, `kilo-expander`->`KNetMap`] (un-quarantined `KNetMap` from Mature); advanced `kilo-review` to `KBreakout`; next agent `kilo-creator`.

@@ -257,6 +257,7 @@ static void CheckSignalLock(void) {
         k_strcat(msg, " | Signal: ");
         k_strcat(msg, g_anomalies[g_locked_anom_idx].name);
         AppendLog(msg);
+        MessageBeep(MB_OK); // Discrete audio decoder telemetry earcon
     }
 }
 
@@ -637,6 +638,8 @@ static void DoTriangulation(void) {
     AppendLog("  >> ARG NODE MATCH: 10.19.99.4 [Subterranean Darknet Relay Active]");
 }
 
+#define KANOMALY_DAT_MAGIC 0x4D4F4E41 // 'ANOM'
+
 static void QuickSaveState(void) {
     HANDLE hFile = CreateFileA(
         "kanomaly.dat",
@@ -650,11 +653,14 @@ static void QuickSaveState(void) {
     if (hFile == INVALID_HANDLE_VALUE) return;
 
     DWORD written;
+    DWORD magic = KANOMALY_DAT_MAGIC;
+    WriteFile(hFile, &magic, sizeof(magic), &written, NULL);
     WriteFile(hFile, &g_freq_centikhz, sizeof(g_freq_centikhz), &written, NULL);
     WriteFile(hFile, &g_curr_station, sizeof(g_curr_station), &written, NULL);
     WriteFile(hFile, &g_bandwidth_idx, sizeof(g_bandwidth_idx), &written, NULL);
     WriteFile(hFile, &g_mode_idx, sizeof(g_mode_idx), &written, NULL);
     WriteFile(hFile, &g_discovered_count, sizeof(g_discovered_count), &written, NULL);
+    WriteFile(hFile, &g_is_sweeping, sizeof(g_is_sweeping), &written, NULL);
 
     for (int i = 0; i < NUM_ANOMALIES; i++) {
         WriteFile(hFile, &g_anomalies[i].discovered, sizeof(int), &written, NULL);
@@ -680,11 +686,22 @@ static void QuickLoadState(void) {
     }
 
     DWORD read;
-    ReadFile(hFile, &g_freq_centikhz, sizeof(g_freq_centikhz), &read, NULL);
-    ReadFile(hFile, &g_curr_station, sizeof(g_curr_station), &read, NULL);
-    ReadFile(hFile, &g_bandwidth_idx, sizeof(g_bandwidth_idx), &read, NULL);
-    ReadFile(hFile, &g_mode_idx, sizeof(g_mode_idx), &read, NULL);
-    ReadFile(hFile, &g_discovered_count, sizeof(g_discovered_count), &read, NULL);
+    DWORD magic = 0;
+    ReadFile(hFile, &magic, sizeof(magic), &read, NULL);
+    if (magic == KANOMALY_DAT_MAGIC) {
+        ReadFile(hFile, &g_freq_centikhz, sizeof(g_freq_centikhz), &read, NULL);
+        ReadFile(hFile, &g_curr_station, sizeof(g_curr_station), &read, NULL);
+        ReadFile(hFile, &g_bandwidth_idx, sizeof(g_bandwidth_idx), &read, NULL);
+        ReadFile(hFile, &g_mode_idx, sizeof(g_mode_idx), &read, NULL);
+        ReadFile(hFile, &g_discovered_count, sizeof(g_discovered_count), &read, NULL);
+        ReadFile(hFile, &g_is_sweeping, sizeof(g_is_sweeping), &read, NULL);
+    } else {
+        g_freq_centikhz = (int)magic;
+        ReadFile(hFile, &g_curr_station, sizeof(g_curr_station), &read, NULL);
+        ReadFile(hFile, &g_bandwidth_idx, sizeof(g_bandwidth_idx), &read, NULL);
+        ReadFile(hFile, &g_mode_idx, sizeof(g_mode_idx), &read, NULL);
+        ReadFile(hFile, &g_discovered_count, sizeof(g_discovered_count), &read, NULL);
+    }
 
     for (int i = 0; i < NUM_ANOMALIES; i++) {
         ReadFile(hFile, &g_anomalies[i].discovered, sizeof(int), &read, NULL);
@@ -911,14 +928,19 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             SetTimer(hwnd, TIMER_TICK, 50, NULL);
             CheckSignalLock();
 
-            // First-run tutorial check
-            HANDLE hCheck = CreateFileA("kanomaly_tut.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-            if (hCheck == INVALID_HANDLE_VALUE) {
-                HANDLE hCreate = CreateFileA("kanomaly_tut.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-                if (hCreate != INVALID_HANDLE_VALUE) CloseHandle(hCreate);
-                ShowHelp(hwnd);
+            // First-run tutorial check (never on restored save)
+            HANDLE hSaveCheck = CreateFileA("kanomaly.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hSaveCheck != INVALID_HANDLE_VALUE) {
+                CloseHandle(hSaveCheck);
             } else {
-                CloseHandle(hCheck);
+                HANDLE hCheck = CreateFileA("kanomaly_tut.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hCheck == INVALID_HANDLE_VALUE) {
+                    HANDLE hCreate = CreateFileA("kanomaly_tut.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                    if (hCreate != INVALID_HANDLE_VALUE) CloseHandle(hCreate);
+                    ShowHelp(hwnd);
+                } else {
+                    CloseHandle(hCheck);
+                }
             }
             break;
         }
@@ -1038,6 +1060,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         }
 
         case WM_KEYDOWN: {
+            if (wParam == VK_ESCAPE) {
+                if (g_is_sweeping) {
+                    g_is_sweeping = 0;
+                    AppendLog("[SWEEP] Sweep paused [Esc]");
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+                return 0;
+            }
             if (wParam == VK_F1) { ShowHelp(hwnd); return 0; }
             if (wParam == VK_F2) { LaunchKHex(); return 0; }
             if (wParam == VK_F3) { LaunchKMatrix(); return 0; }
@@ -1145,6 +1175,10 @@ void __cdecl MainEntry(void) {
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_ESCAPE) {
+                SendMessageA(hwnd, WM_KEYDOWN, VK_ESCAPE, 0);
+                continue;
+            }
             if (msg.wParam == VK_F1) { ShowHelp(hwnd); continue; }
             if (msg.wParam == VK_F2) { LaunchKHex(); continue; }
             if (msg.wParam == VK_F3) { LaunchKMatrix(); continue; }

@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T17:31:49-08:00 — kilo-review: KNetMap (Argon Visual, Feature & Usability Review (Dispatched to Flash))**
+  - Status: AUDIT COMPLETE (reviewed 4-panel sheet.png at 1080x683 and audited knetmap.html + KNetMap/main.c).
+  - Visual/UX Findings: Preset topologies clip bottom switch labels and cut off all 4 bottom-tier servers/workstations below the 428px canvas at default zoom/pan; left .palette overflows vertically hiding Sever Link, Traffic Burst, Media Standard, Overlays, and Clear Grid.
+  - Feature/Parity Findings: #chkCollisionDomains is a dead Potemkin checkbox never read in drawScene(); DMZ nodes default to Engineering LAN subnet hull; onTouchStart calls undefined updateInspector(); CIDR strip stats are static; KNetMap/main.c CalculateSubnet() ignores IP input and ID_BTN_CUT only toggles the last link; VFS/IPC mesh is missing.
+  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KNetMap`, `kilo-tester`->`KNetMap`, `kilo-expander`->`KNetMap`] (un-quarantined `KNetMap` from Mature); advanced `kilo-review` to `KBreakout`; next agent `kilo-creator`.
+
 - **2026-11-03T17:23:19-08:00 — kilo-expander: KScript (Verified Turn (Auto-Salvaged at Timeout))**
   - Status: PASS ✅ (verified by orchestrator post-turn salvage).
   - Completed kilo-expander updates for KScript across web and native targets.
