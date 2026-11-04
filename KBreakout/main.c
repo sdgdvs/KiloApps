@@ -2900,6 +2900,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetBkMode(memDC, TRANSPARENT);
             }
             
+            /* Subtle retro CRT phosphor grid and scanline raster pass */
+            {
+                HPEN crtGridPen = CreatePen(PS_SOLID, 1, RGB(8, 18, 24));
+                HGDIOBJ oGrid = SelectObject(memDC, crtGridPen);
+                for (int gx = 20; gx < W; gx += 40) {
+                    MoveToEx(memDC, gx, 0, NULL);
+                    LineTo(memDC, gx, H);
+                }
+                for (int gy = 20; gy < H; gy += 40) {
+                    MoveToEx(memDC, 0, gy, NULL);
+                    LineTo(memDC, W, gy);
+                }
+                SelectObject(memDC, oGrid);
+                DeleteObject(crtGridPen);
+
+                /* Subtle retro CRT scanline raster pass */
+                HPEN crtPen = CreatePen(PS_SOLID, 1, RGB(4, 6, 12));
+                HGDIOBJ oCrt = SelectObject(memDC, crtPen);
+                for (int crtY = 0; crtY < H; crtY += 4) {
+                    MoveToEx(memDC, 0, crtY, NULL);
+                    LineTo(memDC, W, crtY);
+                }
+                SelectObject(memDC, oCrt);
+                DeleteObject(crtPen);
+            }
+            
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, hOld);
             DeleteObject(hbm);

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -32,7 +32,7 @@ current_targets:
   kilo_graphics: KMine
   kilo_soundscape: KStellar
   kilo_tester: KColony
-  kilo_usability: KBreakout
+  kilo_usability: KImage
   kilo_qa: KBBS
   kilo_expander: KBreakout
   kilo_review: KSanctuary
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KBreakout
-  timestamp: '2026-11-04T03:19:12-08:00'
+  timestamp: '2026-11-04T08:21:08-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -150,11 +150,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | **[ARGON REVIEW]:** Fix brick collision logic in kbreakout.html so Type 8 bricks decrement brick_hp[r][c] instead of morphing bricks[r][c] into types 7/6/5/4, implement Type 5 teleporter, Type 6 powerup crate, and Type 7 1-hit ghost brick handlers matching main.c, wire sticky_timer countdown and paddle ball-catch on power_type===4, invoke recordTelemetry() across gameplay events, and replace the invalid CSS linear-gradient fillStyle in renderDuel() P1 surge meter. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KBreakout`
+- **Active Target**: `KImage`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | **[ARGON REVIEW]:** Fit #game-container and canvas cleanly inside the 480x423 KiloOS viewport without vertical clipping (compact #ui into a single non-wrapping row, adjust layout or scale #game-container for both 400px solo and 740px duel modes so the paddle at y=h-40 and #skill-bar are 100% visible), reposition #toast-bar below #ui so it does not obscure HUD counters, and add a subtle CRT scanline/grid pass. |
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Define missing .hidden (display none !important) and .row (display flex; align-items center; gap 8px) CSS in kimage.html so #emptyState hides on image load (fixing sheet.png Panel 3 canvas clipping), inactive #tabKernel..#tabDraw and #rightStegoContent stop stacking simultaneously, #cropControls stays hidden until enabled, and Kernel/Resize/ASCII .row inputs align side-by-side; auto-show #rightPanel (unless user-toggled off) with #btnToggleRight.active and live renderHistogram() on image load so #histCanvas is not blank black; fit .toolbar on 1 row at 1060px (--panel-width 255px, nowrap compact buttons, remove redundant Press H/F1 subtitle), cap #toastContainer to 2 toasts, and in KImage/main.c use 9pt Segoe UI (-MulDiv(9,dpi,72)) and clean ASCII button/help labels (RotL, RotR, <, Play, Pause, >, -) to fix clipped 12pt UTF-8 mojibake. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -167,6 +166,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KHex` | `KiloOS/public/apps/khex.html`, `KHex/main.c` | **[ARGON REVIEW]:** Fix 980x783 layout and UX issues in khex.html (sheet.png Panel 3): add white-space nowrap to #entropyClassBadge and Shannon Entropy header row, change .output-box from word-break break-all to overflow-wrap break-word so #sigDetailsBox stops splitting words mid-character, and pass silent=true from jumpOffsetStep() to gotoOffset() so Arrow-key byte navigation stops spamming #toastContainer popups over #byteFreqHistogram; add flex-wrap wrap (gap 6px) to Tab 2 .panel-title/.form-row and tighten #rawTextBuffer min-height to 64px; guard global keydown handlers when e.target.tagName === 'SELECT', refresh active Tab 2/3/0 analyses on Swap Endian [E], make #searchResultsBox match offsets clickable to jump+highlight in Hex View, read actual 8 buffer bytes (or zero-extended uint64) for #valDouble, and list Tab [0] Struct & Signatures in #helpModal and #tutorialModal. |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | **[ARGON REVIEW]:** Compact 3-row header .toolbar and 2-row .presets-bar vertical bloat at 1040x643 and set white-space nowrap on #panelEditor .panel-header so Script Editor does not wrap, map AST category keys in renderAstDistribution() (STMT_ASSIGN, STMT_BRANCH_*, STMT_LOOP_*, STMT_PRINT, EXPRESSION) to distinct colors and short labels so #astCanvas is not solid purple with overflowing legend text, raise .gutter contrast from #475569 to >= #94a3b8, differentiate Print/Return/trace lines in #outputArea, move .toast-container to bottom 42px so toasts do not cover zoom controls, and unify v2.2 labels. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | **[ARGON REVIEW]:** Update resetView() in knetmap.html to auto-fit and center the TOPOLOGY.nodes bounding box (with 55px label/hull padding) inside canvasContainer and compact preset node Y-coordinates (y=75..345) so all 8 Corp DMZ nodes and labels render 100% visible in the 905x428 canvas; compact aside.palette (2-column grids for Add Hardware, Diagnostics, and Media Standard with tighter gaps) so all tools, cable selectors, overlays, and Clear Grid fit at 1080x683 without vertical scroll clipping; and add Arrow/WASD viewport/node navigation and Enter ping trigger in onKeyDown. |
+| `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | **[ARGON REVIEW]:** Fit #game-container and canvas cleanly inside the 480x423 KiloOS viewport without vertical clipping (compact #ui into a single non-wrapping row, adjust layout or scale #game-container for both 400px solo and 740px duel modes so the paddle at y=h-40 and #skill-bar are 100% visible), reposition #toast-bar below #ui so it does not obscure HUD counters, and add a subtle CRT scanline/grid pass. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KBBS`
@@ -291,6 +291,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-04T08:21:08-08:00 — kilo-usability: KBreakout (KBreakout Viewport Fit, Non-Wrapping HUD & Usability Pass)**
+  - Status: PASS (0 errors, web 202.7 KB, native 55.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 12.2%, HEAD delta 16.72%, 0 fail, 0 warn, 7.7s)).
+  - Layout & Sizing: Scaled #game-container with fitGameToViewport() to fit 480x423 KiloOS viewport cleanly with zero clipping, keeping paddle at y=h-40 and all #skill-bar controls 100% visible in both solo and duel modes.
+  - HUD & Visuals: Compacted #ui into a single non-wrapping row, repositioned #toast-bar below #ui so it never obscures HUD counters, and added CRT phosphor grid and scanline pass across web and Win32 C targets.
+  - Handoff: Advanced `kilo-usability` to `KImage`; rotated active agent to `kilo-qa`.
+
 - **2026-11-04T03:19:12-08:00 — kilo-tester: KBreakout (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (0 errors, web 197.9 KB, native 55.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
   - UI & Hotkey Audit: Modals (tutorial/pause/telemetry/duel/replay) dismiss cleanly; added input focus guard to prevent hotkey trigger while typing.
@@ -312,8 +318,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual/UX Findings: At 480x423 KiloOS window size, #game-container (~530px tall) clips the bottom ~75px of the playfield (hiding the paddle at y=380, ball launch zone, and entire #skill-bar), #ui wraps into two rows, #toast-bar overlaps HUD counters, and P1 surge bar in renderDuel() uses an invalid CSS linear-gradient string on ctx.fillStyle.
   - Feature/Gameplay Findings: Brick collision else-branch decrements bricks[r][c] type ID instead of brick_hp[r][c] (morphing Type 8 titanium bricks into Types 7/6/5/4), sticky_timer (power_type 4) never catches balls or decrements, recordTelemetry() is never called (leaving telemetry modal stats at 0), and UFO/shield/meteor/boss-bullet hazards are dead stubs in web.
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KBreakout`, `kilo-tester`->`KBreakout`, `kilo-expander`->`KBreakout`] (un-quarantined `KBreakout` from Mature); advanced `kilo-review` to `KSanctuary`; next agent `kilo-creator`.
-
-- **2026-11-03T21:23:23-08:00 — kilo-expander: KNetMap (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-expander updates for KNetMap across web and native targets.
-  - Handoff: Advanced `kilo-expander` to `KChess`; rotated active agent to `kilo-review`.
