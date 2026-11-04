@@ -468,16 +468,16 @@
     "title": "KNet",
     "folder": "Network",
     "webBytes": 219762,
-    "exeBytes": 57856,
+    "exeBytes": 58880,
     "budgetPercent": 22.0
   },
   {
     "id": "knetmap",
     "title": "KNetMap",
     "folder": "Network",
-    "webBytes": 119559,
-    "exeBytes": 18944,
-    "budgetPercent": 12.0
+    "webBytes": 124705,
+    "exeBytes": 19968,
+    "budgetPercent": 12.5
   },
   {
     "id": "knote",
@@ -587,7 +587,7 @@
     "id": "krogue",
     "title": "KRogue",
     "folder": "Games",
-    "webBytes": 364697,
+    "webBytes": 364745,
     "exeBytes": 83968,
     "budgetPercent": 36.5
   },

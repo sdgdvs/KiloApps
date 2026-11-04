@@ -294,14 +294,14 @@ static void DeleteNode(int idx) {
 
 static void LoadPresetCorp(void) {
     ClearTopology();
-    AddNode(NODE_ROUTER, 240, 90, "GW-CYBER-7200", "198.51.100.1");
-    AddNode(NODE_FIREWALL, 240, 180, "FW-BASTION", "198.51.100.2");
-    AddNode(NODE_SWITCH, 140, 280, "SW-DMZ-3CON", "198.51.100.10");
-    AddNode(NODE_SWITCH, 340, 280, "SW-ENG-3CON", "192.168.10.1");
-    AddNode(NODE_SERVER, 80, 400, "SOL-APACHE", "198.51.100.20");
-    AddNode(NODE_SERVER, 180, 400, "SOL-MAIL", "198.51.100.21");
-    AddNode(NODE_WORKSTATION, 300, 400, "WS-DEV-01", "192.168.10.101");
-    AddNode(NODE_WORKSTATION, 400, 400, "WS-DEV-02", "192.168.10.102");
+    AddNode(NODE_ROUTER, 240, 75, "GW-CYBER-7200", "198.51.100.1");
+    AddNode(NODE_FIREWALL, 240, 165, "FW-BASTION", "198.51.100.2");
+    AddNode(NODE_SWITCH, 140, 255, "SW-DMZ-3CON", "198.51.100.10");
+    AddNode(NODE_SWITCH, 340, 255, "SW-ENG-3CON", "192.168.10.1");
+    AddNode(NODE_SERVER, 80, 345, "SOL-APACHE", "198.51.100.20");
+    AddNode(NODE_SERVER, 180, 345, "SOL-MAIL", "198.51.100.21");
+    AddNode(NODE_WORKSTATION, 300, 345, "WS-DEV-01", "192.168.10.101");
+    AddNode(NODE_WORKSTATION, 400, 345, "WS-DEV-02", "192.168.10.102");
 
     AddLink(0, 1, 2); // Router to Firewall (Fiber)
     AddLink(1, 2, 0); // Firewall to DMZ Switch (100BaseTX)
@@ -1098,6 +1098,51 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 case VK_BACK:
                     if (g_selectedNode >= 0) {
                         DeleteNode(g_selectedNode);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
+                    return 0;
+                case VK_RETURN:
+                    if (g_nodeCount >= 2) {
+                        int src = (g_selectedNode >= 0) ? g_selectedNode : 0;
+                        int dst = (src == 0) ? 1 : 0;
+                        for (int l = 0; l < g_linkCount; l++) {
+                            if (g_links[l].from == src) { dst = g_links[l].to; break; }
+                            if (g_links[l].to == src) { dst = g_links[l].from; break; }
+                        }
+                        DispatchPacket(src, dst, 0);
+                        LogMessage("[PING] Enter key dispatched ICMP packet.");
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
+                    return 0;
+                case VK_UP:
+                case 'W':
+                    if (g_selectedNode >= 0 && g_selectedNode < g_nodeCount) {
+                        g_nodes[g_selectedNode].y -= 15;
+                        if (g_nodes[g_selectedNode].y < 30) g_nodes[g_selectedNode].y = 30;
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
+                    return 0;
+                case VK_DOWN:
+                case 'S':
+                    if (g_selectedNode >= 0 && g_selectedNode < g_nodeCount) {
+                        g_nodes[g_selectedNode].y += 15;
+                        if (g_nodes[g_selectedNode].y > CANVAS_H - 40) g_nodes[g_selectedNode].y = CANVAS_H - 40;
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
+                    return 0;
+                case VK_LEFT:
+                case 'A':
+                    if (g_selectedNode >= 0 && g_selectedNode < g_nodeCount) {
+                        g_nodes[g_selectedNode].x -= 15;
+                        if (g_nodes[g_selectedNode].x < 30) g_nodes[g_selectedNode].x = 30;
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
+                    return 0;
+                case VK_RIGHT:
+                case 'D':
+                    if (g_selectedNode >= 0 && g_selectedNode < g_nodeCount) {
+                        g_nodes[g_selectedNode].x += 15;
+                        if (g_nodes[g_selectedNode].x > CANVAS_W - 30) g_nodes[g_selectedNode].x = CANVAS_W - 30;
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
                     return 0;
