@@ -364,7 +364,7 @@ unsigned char transferBuf[132];
 int transferBytesTotal = 0;
 char transferStatusMsg[128] = "";
 
-HWND hBtnXmDl, hBtnXmUl, hBtnZmDl, hBtnZmUl, hBtnDoor, hBtnArt, hBtnMsg, hBtnFiles;
+HWND hBtnXmDl, hBtnXmUl, hBtnZmDl, hBtnZmUl, hBtnDoor, hBtnArt, hBtnMsg, hBtnFiles, hBtnSave, hBtnLoad;
 unsigned char sigBuf[6] = {0};
 
 /* ZMODEM State */
@@ -1156,7 +1156,11 @@ INT_PTR CALLBACK MacrosProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 #define IDD_HELP 4000
 INT_PTR CALLBACK HelpProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) {
-    if (msg == WM_COMMAND && (LOWORD(wParam) == 1 || LOWORD(wParam) == 2)) {
+    if (msg == WM_COMMAND && (LOWORD(wParam) == 1 || LOWORD(wParam) == 2 || LOWORD(wParam) == IDCANCEL)) {
+        EndDialog(hdlg, 1);
+        return TRUE;
+    }
+    if (msg == WM_CLOSE) {
         EndDialog(hdlg, 1);
         return TRUE;
     }
@@ -2043,6 +2047,115 @@ void SaveDoorState(void) {
     }
 }
 
+void SaveBBSList(void);
+void LoadBBSList(void);
+void SaveMacros(void);
+void LoadMacros(void);
+
+struct MasterSaveState {
+    DWORD magic; /* 0x4B424253 'KBBS' */
+    DWORD version; /* 1 */
+    struct DoorSaveState door;
+    struct KBBS_SETTINGS settings;
+    int curX, curY;
+    int activeTop, scrollOffset;
+    unsigned char curFg, curBg;
+    char reserved[2];
+    struct Cell screenView[TERM_ROWS][TERM_COLS];
+};
+
+void MasterQuicksave(HWND hwnd) {
+    SaveDoorState();
+    SaveSettings();
+    SaveBBSList();
+    SaveMacros();
+
+    struct MasterSaveState st;
+    my_memset(&st, 0, sizeof(st));
+    st.magic = 0x4B424253;
+    st.version = 1;
+    st.door = gDoorState;
+    st.settings = kbbsSettings;
+    st.curX = curX;
+    st.curY = curY;
+    st.activeTop = activeTop;
+    st.scrollOffset = scrollOffset;
+    st.curFg = curFg;
+    st.curBg = curBg;
+
+    int r, c;
+    for (r = 0; r < TERM_ROWS; r++) {
+        int line = activeTop + r;
+        if (line >= 0 && line < MAX_LINES) {
+            for (c = 0; c < TERM_COLS; c++) {
+                st.screenView[r][c] = screen[line][c];
+            }
+        }
+    }
+
+    HANDLE hFile = CreateFileA("kbbs_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD wr = 0;
+        WriteFile(hFile, &st, sizeof(st), &wr, NULL);
+        CloseHandle(hFile);
+        SetStatusText("Session state, screen & door progress quicksaved to kbbs_quicksave.dat [F5]");
+    } else {
+        SetStatusText("Quicksave failed to open kbbs_quicksave.dat");
+    }
+    if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
+}
+
+void MasterQuickload(HWND hwnd) {
+    LoadDoorState();
+    LoadSettings();
+    LoadBBSList();
+    LoadMacros();
+
+    HANDLE hFile = CreateFileA("kbbs_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        struct MasterSaveState st;
+        DWORD rb = 0;
+        ReadFile(hFile, &st, sizeof(st), &rb, NULL);
+        CloseHandle(hFile);
+
+        if (rb == sizeof(st) && st.magic == 0x4B424253) {
+            gDoorState = st.door;
+            SaveDoorState();
+            kbbsSettings = st.settings;
+            SaveSettings();
+
+            curX = st.curX;
+            curY = st.curY;
+            curFg = st.curFg;
+            curBg = st.curBg;
+            scrollOffset = st.scrollOffset;
+
+            int r, c;
+            for (r = 0; r < TERM_ROWS; r++) {
+                int line = activeTop + r;
+                if (line >= 0 && line < MAX_LINES) {
+                    for (c = 0; c < TERM_COLS; c++) {
+                        screen[line][c] = st.screenView[r][c];
+                    }
+                }
+            }
+
+            if (hHost && kbbsSettings.lastHost[0]) SetWindowTextA(hHost, kbbsSettings.lastHost);
+            if (hPort && kbbsSettings.lastPort > 0) {
+                char pBuf[16];
+                my_itoa(kbbsSettings.lastPort, pBuf);
+                SetWindowTextA(hPort, pBuf);
+            }
+            SetStatusText("Session state, screen & door progress quickloaded from kbbs_quicksave.dat [F9]");
+        } else {
+            SetStatusText("Quicksave file corrupted; reloaded base configs.");
+        }
+    } else {
+        SetStatusText("No kbbs_quicksave.dat found; reloaded door & settings from defaults.");
+    }
+    if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
+}
+
 void RunDoorGameStream(int choice) {
     LoadDoorState();
     ClearScreen();
@@ -2349,12 +2462,24 @@ void RunFileAreaStream(HWND hwnd) {
 }
 
 void CheckFirstRunTutorial(HWND hwnd) {
-    HANDLE hFile = CreateFileA("kbbs_tutorial.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile != INVALID_HANDLE_VALUE) {
-        CloseHandle(hFile);
+    HANDLE hTutorial = CreateFileA("kbbs_tutorial.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTutorial != INVALID_HANDLE_VALUE) {
+        CloseHandle(hTutorial);
         return;
     }
-    hFile = CreateFileA("kbbs_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    /* Do not pop tutorial if a saved session or door state exists */
+    HANDLE hSaved = CreateFileA("kbbs_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hSaved != INVALID_HANDLE_VALUE) {
+        CloseHandle(hSaved);
+        return;
+    }
+    HANDLE hDoor = CreateFileA("kbbs_door.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hDoor != INVALID_HANDLE_VALUE) {
+        CloseHandle(hDoor);
+        return;
+    }
+
+    HANDLE hFile = CreateFileA("kbbs_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         char marker = '1';
         DWORD wr = 0;
@@ -2465,6 +2590,12 @@ LRESULT CALLBACK WndProc
             hBtnFiles = CreateWindowA("BUTTON", "Files [F]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 dpiScale(560), dpiScale(30), dpiScale(66), dpiScale(22), hwnd, (HMENU)116, 0, 0);
 
+            hBtnSave = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(630), dpiScale(30), dpiScale(66), dpiScale(22), hwnd, (HMENU)117, 0, 0);
+
+            hBtnLoad = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(700), dpiScale(30), dpiScale(66), dpiScale(22), hwnd, (HMENU)118, 0, 0);
+
             SendMessageA(hEcho, BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
 
             /* Subclass host and port edit controls for Enter key connect */
@@ -2491,6 +2622,8 @@ LRESULT CALLBACK WndProc
             SendMessageA(hBtnCapture, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnFiles, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnSave, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnLoad, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnDoor, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnArt, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtnMsg, WM_SETFONT, (WPARAM)hUIFont, TRUE);
@@ -2762,6 +2895,10 @@ LRESULT CALLBACK WndProc
                 DialogBoxParamA(GetModuleHandleA(NULL), MAKEINTRESOURCEA(IDD_MSGREADER), hwnd, MsgReaderProc, 0);
             } else if (LOWORD(wParam) == 116) {
                 RunFileAreaStream(hwnd);
+            } else if (LOWORD(wParam) == 117) {
+                MasterQuicksave(hwnd);
+            } else if (LOWORD(wParam) == 118) {
+                MasterQuickload(hwnd);
             }
             break;
         }
@@ -3190,6 +3327,15 @@ LRESULT CALLBACK WndProc
                 break;
             }
 
+            if (wParam == VK_F5) {
+                MasterQuicksave(hwnd);
+                return 0;
+            }
+            if (wParam == VK_F9) {
+                MasterQuickload(hwnd);
+                return 0;
+            }
+
             if (sock == INVALID_SOCKET) {
                 if (wParam == VK_F1) {
                     SendMessageA(hwnd, WM_COMMAND, 112, 0);
@@ -3354,6 +3500,14 @@ void __stdcall MainEntry() {
         if (msg.message == WM_KEYDOWN) {
             HWND focusHwnd = GetFocus();
             if (focusHwnd != hHost && focusHwnd != hPort) {
+                if (msg.wParam == VK_F5) {
+                    SendMessageA(hMain, WM_COMMAND, 117, 0); // Quicksave
+                    continue;
+                }
+                if (msg.wParam == VK_F9) {
+                    SendMessageA(hMain, WM_COMMAND, 118, 0); // Quickload
+                    continue;
+                }
                 if (msg.wParam == VK_F1 || (sock == INVALID_SOCKET && (msg.wParam == 'H' || msg.wParam == 'h'))) {
                     SendMessageA(hMain, WM_COMMAND, 112, 0); // Help
                     continue;

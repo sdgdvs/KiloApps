@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-review
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -33,7 +33,7 @@ current_targets:
   kilo_soundscape: KStellar
   kilo_tester: KColony
   kilo_usability: KImage
-  kilo_qa: KBBS
+  kilo_qa: KSynth
   kilo_expander: KBreakout
   kilo_review: KSanctuary
 virtual_web_target: kweb://demoscene
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-usability
-  app: KBreakout
-  timestamp: '2026-11-04T08:21:08-08:00'
+  agent: kilo-qa
+  app: KBBS
+  timestamp: '2026-11-04T09:32:28-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -169,11 +169,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | **[ARGON REVIEW]:** Fit #game-container and canvas cleanly inside the 480x423 KiloOS viewport without vertical clipping (compact #ui into a single non-wrapping row, adjust layout or scale #game-container for both 400px solo and 740px duel modes so the paddle at y=h-40 and #skill-bar are 100% visible), reposition #toast-bar below #ui so it does not obscure HUD counters, and add a subtle CRT scanline/grid pass. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
-- **Active Target**: `KBBS`
+- **Active Target**: `KSynth`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ANSI terminal bulletin board, door games, VFS file transfer, dual Win32 C parity, and promote to Mature table. |
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, 2-Op FM patch synthesizer, envelope generator, piano roll, dual Win32 C parity, and promote to Mature table. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, Sovereign Web 1.0 browser, bookmarks, history, VFS spooling, dual Win32 C parity, and promote to Mature table. |
 | `KPing` | `KiloOS/public/apps/kping.html`, `KPing/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, ICMP network ping graph, host reachability radar, dual Win32 C parity, and promote to Mature table. |
@@ -195,7 +194,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KTrader` | `KiloOS/public/apps/ktrader.html`, `KTrader/main.c` | **[ARGON REVIEW]:** Build interactive 12-system Galactic Star Chart [C] (plus KTrader/main.c parity) rendering planets (x,y) jump-gate topology, ecoType/techLevel badges, current location, and active mission target highlight, add player cur/max shield bars to #ui-combat-panel, and enforce Navy patrol confiscation when jumping with Contraband cargo. |
 | `KSynth` | `KiloOS/public/apps/ksynth.html`, `KSynth/main.c` | Phase VI VFS Audio Patch Bank: Allow exporting/importing 2-Op FM patch presets (`.fm`) to `/home/music/` and playing tracks in KRadio/Trapster. |
 | `KNet` | `KiloOS/public/apps/knet.html`, `KNet/main.c` | Phase VI VFS & TINAG Hardening: remove Tier 3 darknet nodes (`darknet`, `deep-core`, `10.19.99.4/classified`, `echo-subsystem.net`) from surface bookmark chips per `arg_plan.md` §6 (keep address-bar routing!), add `"Save Page/Spool to KiloOS VFS"` (`/home/downloads/`), and route new `kweb://` parodies (`slashnet`, `trapster`, `cabled`, `scallion`, `demoscene`, `rfc-archive`). |
-| `KBBS` | `KiloOS/public/apps/kbbs.html`, `KBBS/main.c` | Phase VI VFS & Door Game Mesh: allow downloading ANSI `.NFO` / `.TXT` bulletins from KBBS File Area directly into KiloOS VFS (`/home/bbs/`) and launching `KPad` or `KHex` via `OS_LAUNCH_APP` to inspect them. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS Open/Save (/home/saves/kmystery_case.json via VFS_SHOW_OPEN and VFS_SHOW_SAVE postMessage with standalone JSON fallback), add Export Forensic Dossier Report (/home/docs/kmystery_dossier.txt via VFS_WRITE + OS_NOTIFY on case solved) and a Present Clue shortcut inside #dossier-modal, and add Clue Dossier Viewer [C] / double-click inspection parity to KMystery/main.c. |
 | `KCyber` | `KiloOS/public/apps/kcyber.html`, `KCyber/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kcyber.html (event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) connecting Export/Import to VFS_SHOW_SAVE/VFS_WRITE and VFS_SHOW_OPEN/VFS_READ (/home/saves/kcyber_deck.json), handling incoming FILE_OPEN/VFS_OPEN messages, exporting stolen node/contract paydata payloads to /home/crypto/ on download with an Inspect in KHex/KPad OS_LAUNCH_APP button, and adding ../assets/js/retro_multiplayer.js NetLink Intrusion Race duel mode strictly behind an explicit toolbar button (zero autostart, soloTimeoutMs: 25000 rival AI runner fallback). |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | **[ARGON REVIEW]:** Enforce event.origin === window.location.origin and window.location.origin targetOrigin across all KiloVFS postMessage handlers in kscript.html per architecture.md, populate KiloVFS.cache in the empty VFS_LIST_DONE stub, avoid direct kiloos_vfs_state_v2 writes when embedded in KiloOS, add 60000ms timeouts and standalone fallbacks for VFS Open and VFS_SHOW_SAVE plus Open in KPad IPC in #exportModal, and upgrade KScript/main.c parity with ternary operator for Template 7 Collatz, if/else/endif and while/endwhile in StepScript(), hex/bin/fact built-ins, single-dialog SaveJsonDump, and unclipped hBtnRec label. |
@@ -229,6 +227,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 | Application | Primary File | Pass Count / Date | Category | Summary of Mature State |
 |---|---|---|---|---|
+| **KBBS** | `KiloOS/public/apps/kbbs.html` | Pass 5+ (2026-11-04) | Internet / Communications & BBS Terminal | Complete ANSI/VT100 terminal workstation & BBS client with Telnet/WebSocket engine, FidoNet EchoNet reader, dialing directory, script macro engine, XMODEM/ZMODEM transfer, LORD & TradeWars door games mini-suite, KiloOS VFS mesh (/home/bbs/), F5/F9 state persistence, and dual Win32 C parity. |
 | **KAnomaly** | `KiloOS/public/apps/kanomaly.html` | Pass 5+ (2026-11-03) | Scientific / Signal Analysis & Geophysics | Complete subterranean acoustic & VLF signal analyzer featuring 6 global borehole geophones, HiDPI waterfall spectrogram graticules, audio decoder telemetry, F5/F9 state persistence, and dual Win32 C parity. |
 | **KSteno** | `KiloOS/public/apps/ksteno.html` | Pass 5+ (2026-11-03) | Security / Steganography & Cryptography | Complete stenographic carrier suite & covert channel workbench with image LSB, 16-bit PCM WAV audio, whitespace/zero-width text modulation, Chi-Square PoV steganalysis, spectral bitplane visualizer, F5/F9 state persistence, and dual Win32 C parity. |
 | **KMatrix** | `KiloOS/public/apps/kmatrix.html` | Pass 5+ (2026-11-03) | System / Security & ARG Climax | Complete Milestone #100 retro forensic master terminal with 5-sector cryptographic analysis, 2-Op FM Morse ECHO waterfall telemetry, VFS kernel verification, breach state JSON persistence, F5/F9 state, and dual Win32 C parity. |
@@ -291,6 +290,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-04T09:32:28-08:00 — kilo-qa: KBBS (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 212.0 KB, native 111.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.15%, 0 fail, 0 warn, 6.1s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kbbs_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KBBS` to Mature archive; advanced `kilo-qa` to `KSynth`; next agent `kilo-expander`.
+
 - **2026-11-04T08:21:08-08:00 — kilo-usability: KBreakout (KBreakout Viewport Fit, Non-Wrapping HUD & Usability Pass)**
   - Status: PASS (0 errors, web 202.7 KB, native 55.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 12.2%, HEAD delta 16.72%, 0 fail, 0 warn, 7.7s)).
   - Layout & Sizing: Scaled #game-container with fitGameToViewport() to fit 480x423 KiloOS viewport cleanly with zero clipping, keeping paddle at y=h-40 and all #skill-bar controls 100% visible in both solo and duel modes.
@@ -312,9 +317,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Wired SiliconValley, Area51, and Tokyo99 personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export.
   - Added Tokyo99 and SiliconValley 1-click shoutbox stamps, normalized Tokyo aliases, and wired hashchange/IPC postMessage listeners.
   - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.
-
-- **2026-11-03T21:32:07-08:00 — kilo-review: KBreakout (Argon Visual, Feature & Usability Review (Defects Dispatched))**
-  - Status: AUDIT COMPLETE (inspected 480x423 sheet.png and audited kbreakout.html + KBreakout/main.c; dispatched surgical fixes to Flash queues).
-  - Visual/UX Findings: At 480x423 KiloOS window size, #game-container (~530px tall) clips the bottom ~75px of the playfield (hiding the paddle at y=380, ball launch zone, and entire #skill-bar), #ui wraps into two rows, #toast-bar overlaps HUD counters, and P1 surge bar in renderDuel() uses an invalid CSS linear-gradient string on ctx.fillStyle.
-  - Feature/Gameplay Findings: Brick collision else-branch decrements bricks[r][c] type ID instead of brick_hp[r][c] (morphing Type 8 titanium bricks into Types 7/6/5/4), sticky_timer (power_type 4) never catches balls or decrements, recordTelemetry() is never called (leaving telemetry modal stats at 0), and UFO/shield/meteor/boss-bullet hazards are dead stubs in web.
-  - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-usability`->`KBreakout`, `kilo-tester`->`KBreakout`, `kilo-expander`->`KBreakout`] (un-quarantined `KBreakout` from Mature); advanced `kilo-review` to `KSanctuary`; next agent `kilo-creator`.

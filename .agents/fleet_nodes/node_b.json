@@ -15,7 +15,7 @@
   "timer_enabled": false,
   "turns_executed": 654,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-11-04T15:40:04.244256+00:00",
-  "current_target": "KBreakout",
+  "last_heartbeat": "2026-11-04T16:40:04.300512+00:00",
+  "current_target": "KBBS",
   "remote_command": "none"
 }
