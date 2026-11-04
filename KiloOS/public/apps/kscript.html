@@ -1538,6 +1538,18 @@
                 <h3>📋 Copy JSON to Clipboard</h3>
                 <p>Copy current variable memory structure directly as JSON to clipboard.</p>
             </div>
+            <div class="export-card" onclick="vfsShowSaveModal()">
+                <h3>💾 Save to KiloOS VFS</h3>
+                <p>Save active script to /home/scripts/ via KiloOS VFS picker with 60s timeout & download fallback.</p>
+            </div>
+            <div class="export-card" onclick="vfsShowOpenModal()">
+                <h3>📂 Open from KiloOS VFS</h3>
+                <p>Browse and load script files from KiloOS VFS with 60s timeout & local file picker fallback.</p>
+            </div>
+            <div class="export-card" onclick="openInKPadIpc()">
+                <h3>📝 Open Script in KPad</h3>
+                <p>Commit active script to /home/scripts/active_script.ks and launch KPad editor via OS_LAUNCH_APP IPC.</p>
+            </div>
         </div>
         <div class="modal-footer">
             <button type="button" id="btnExportModalCloseBottom" style="background:#475569;">Close [Esc]</button>
@@ -1693,11 +1705,16 @@
     // ==========================================
     const KiloVFS = {
         cache: {},
+        getTargetOrigin() {
+            return (window.location.origin && window.location.origin !== 'null') ? window.location.origin : '*';
+        },
         init() {
             try {
-                const parsed = safeStorageGetJSON('kiloos_vfs_state_v2', null);
-                if (parsed && typeof parsed === 'object') {
-                    this.cache = Object.assign({}, parsed);
+                if (window.parent === window) {
+                    const parsed = safeStorageGetJSON('kiloos_vfs_state_v2', null);
+                    if (parsed && typeof parsed === 'object') {
+                        this.cache = Object.assign({}, parsed);
+                    }
                 }
             } catch(e) {}
             // Seed standard scripts if missing
@@ -1709,6 +1726,8 @@
             }
             // Listen to VFS messages from KiloOS parent
             window.addEventListener('message', (e) => {
+                // Enforce event.origin === window.location.origin per architecture.md
+                if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
                 if (!e.data) return;
                 if (e.data.type === 'VFS_CHANGED') {
                     if (e.data.deleted) {
@@ -1716,25 +1735,37 @@
                     } else if (e.data.path) {
                         this.cache[e.data.path] = e.data.data;
                     }
-                } else if (e.data.type === 'VFS_LIST_DONE' && e.data.files) {
-                    // Update list of files
+                } else if (e.data.type === 'VFS_LIST_DONE') {
+                    // Populate KiloVFS.cache with files from VFS
+                    if (Array.isArray(e.data.files)) {
+                        e.data.files.forEach(f => {
+                            if (typeof f === 'string' && !this.cache.hasOwnProperty(f)) {
+                                this.cache[f] = "";
+                            }
+                        });
+                    } else if (e.data.files && typeof e.data.files === 'object') {
+                        Object.assign(this.cache, e.data.files);
+                    }
                 }
             });
             try {
-                window.parent.postMessage({ type: 'VFS_LIST', requestId: 'init_list_' + Date.now() }, '*');
+                window.parent.postMessage({ type: 'VFS_LIST', requestId: 'init_list_' + Date.now() }, this.getTargetOrigin());
             } catch(e) {}
         },
         saveToStorage() {
-            safeStorageSet('kiloos_vfs_state_v2', this.cache);
+            // Avoid direct kiloos_vfs_state_v2 writes when embedded in KiloOS
+            if (window.parent === window) {
+                safeStorageSet('kiloos_vfs_state_v2', this.cache);
+            }
         },
         write(path, data, notify = true) {
             const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
             this.cache[path] = payload;
             this.saveToStorage();
             try {
-                window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, '*');
+                window.parent.postMessage({ type: 'VFS_WRITE', path, data: payload, requestId: 'w_' + Date.now() }, this.getTargetOrigin());
                 if (notify) {
-                    window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: `Saved to VFS: ${path}` }, '*');
+                    window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: `Saved to VFS: ${path}` }, this.getTargetOrigin());
                 }
             } catch(e) {}
             return payload.length;
@@ -1750,9 +1781,13 @@
         read(path, cb) {
             const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
             let done = false;
+            let cleanupTimer = null;
             const handler = (e) => {
+                // Enforce event.origin === window.location.origin
+                if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
                 if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
                     done = true;
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
                     window.removeEventListener('message', handler);
                     if (e.data.data !== undefined) this.cache[path] = e.data.data;
                     cb(e.data.data ?? this.cache[path] ?? "", e.data.path);
@@ -1760,24 +1795,26 @@
             };
             window.addEventListener('message', handler);
             try {
-                window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
+                window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, this.getTargetOrigin());
             } catch(e) {}
-            setTimeout(() => {
+            cleanupTimer = setTimeout(() => {
                 if (!done) {
                     window.removeEventListener('message', handler);
                     cb(this.cache[path] ?? "", path);
                 }
-            }, 150);
+            }, 60000);
         },
         readSync(path) {
             if (this.cache.hasOwnProperty(path)) return this.cache[path];
-            try {
-                const parsed = safeStorageGetJSON('kiloos_vfs_state_v2', null);
-                if (parsed && parsed[path] !== undefined) {
-                    this.cache[path] = parsed[path];
-                    return parsed[path];
-                }
-            } catch(e) {}
+            if (window.parent === window) {
+                try {
+                    const parsed = safeStorageGetJSON('kiloos_vfs_state_v2', null);
+                    if (parsed && parsed[path] !== undefined) {
+                        this.cache[path] = parsed[path];
+                        return parsed[path];
+                    }
+                } catch(e) {}
+            }
             return "";
         },
         existsSync(path) {
@@ -1796,33 +1833,115 @@
             delete this.cache[path];
             this.saveToStorage();
             try {
-                window.parent.postMessage({ type: 'VFS_DELETE', path, requestId: 'del_' + Date.now() }, '*');
+                window.parent.postMessage({ type: 'VFS_DELETE', path, requestId: 'del_' + Date.now() }, this.getTargetOrigin());
             } catch(e) {}
             return true;
         },
         openPicker(cb) {
+            if (window.parent === window) {
+                // Standalone fallback: file input
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.ks,.ksc,.txt,.json';
+                input.style.display = 'none';
+                input.onchange = (ev) => {
+                    const file = ev.target.files && ev.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (re) => {
+                            if (cb) cb(re.target.result, file.name);
+                        };
+                        reader.readAsText(file);
+                    }
+                    if (input.parentNode) input.parentNode.removeChild(input);
+                };
+                document.body.appendChild(input);
+                input.click();
+                return;
+            }
             const reqId = 'open_' + Date.now();
             let cleaned = false;
+            let cleanupTimer = null;
             const handler = (e) => {
+                // Enforce event.origin === window.location.origin
+                if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
                 if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
                     cleaned = true;
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
                     window.removeEventListener('message', handler);
-                    if (e.data.path) KiloVFS.read(e.data.path, cb);
+                    if (e.data.path) {
+                        KiloVFS.read(e.data.path, cb);
+                    } else if (cb) {
+                        cb(null, null);
+                    }
                 }
             };
             window.addEventListener('message', handler);
-            setTimeout(() => {
+            cleanupTimer = setTimeout(() => {
                 if (!cleaned) {
                     window.removeEventListener('message', handler);
+                    if (cb) cb(null, null);
                 }
-            }, 30000);
+            }, 60000);
             try {
-                window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
-            } catch(e) {}
+                window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, this.getTargetOrigin());
+            } catch(e) {
+                if (cleanupTimer) clearTimeout(cleanupTimer);
+                window.removeEventListener('message', handler);
+                if (cb) cb(null, null);
+            }
+        },
+        savePicker(defaultPath, data, cb) {
+            const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+            if (window.parent === window) {
+                // Standalone fallback: Blob download
+                const blob = new Blob([payload], { type: 'text/plain;charset=utf-8' });
+                const fname = defaultPath ? defaultPath.split('/').pop() : 'script.ks';
+                downloadBlob(blob, fname);
+                if (cb) cb(fname);
+                return;
+            }
+            const reqId = 'save_' + Date.now();
+            let cleaned = false;
+            let cleanupTimer = null;
+            const handler = (e) => {
+                // Enforce event.origin === window.location.origin
+                if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
+                if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
+                    cleaned = true;
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
+                    window.removeEventListener('message', handler);
+                    if (e.data.path) {
+                        KiloVFS.write(e.data.path, payload, true);
+                        if (cb) cb(e.data.path);
+                    } else if (cb) {
+                        cb(null);
+                    }
+                }
+            };
+            window.addEventListener('message', handler);
+            cleanupTimer = setTimeout(() => {
+                if (!cleaned) {
+                    window.removeEventListener('message', handler);
+                    if (cb) cb(null);
+                }
+            }, 60000);
+            try {
+                window.parent.postMessage({
+                    type: 'VFS_SHOW_SAVE',
+                    requestId: reqId,
+                    defaultPath: defaultPath || '/home/scripts/script.ks',
+                    path: defaultPath || '/home/scripts/script.ks'
+                }, this.getTargetOrigin());
+            } catch(e) {
+                if (cleanupTimer) clearTimeout(cleanupTimer);
+                window.removeEventListener('message', handler);
+                if (cb) cb(null);
+            }
         },
         launchApp(targetApp, path = '') {
             try {
-                window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*');
+                window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, this.getTargetOrigin());
             } catch(e) {}
         }
     };
@@ -2130,6 +2249,8 @@ print "Final total:", total`;
 
     // Inter-App IPC Mesh: receive files to open from KiloOS / File Browser
     window.addEventListener('message', (e) => {
+        // Enforce event.origin === window.location.origin per architecture.md
+        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
         if (!e.data) return;
         if (e.data.type === 'FILE_OPEN' || e.data.type === 'VFS_OPEN') {
             const filePath = e.data.path;
@@ -2698,11 +2819,11 @@ endif
             return 1;
         },
         os_notify: (title, msg) => {
-            try { window.parent.postMessage({ type: 'OS_NOTIFY', title: String(title), message: String(msg) }, '*'); } catch(e) {}
+            try { window.parent.postMessage({ type: 'OS_NOTIFY', title: String(title), message: String(msg) }, KiloVFS.getTargetOrigin()); } catch(e) {}
             return 1;
         },
         'os.notify': (title, msg) => {
-            try { window.parent.postMessage({ type: 'OS_NOTIFY', title: String(title), message: String(msg) }, '*'); } catch(e) {}
+            try { window.parent.postMessage({ type: 'OS_NOTIFY', title: String(title), message: String(msg) }, KiloVFS.getTargetOrigin()); } catch(e) {}
             return 1;
         },
         str: (x) => String(x),
@@ -4300,6 +4421,46 @@ endif
         const state = lastExecutionState || { vars: {} };
         navigator.clipboard.writeText(JSON.stringify(state.vars, null, 2));
         showToast("Variables JSON copied to clipboard!", "success");
+        closeModal(exportModal);
+    };
+
+    window.vfsShowSaveModal = () => {
+        let path = activeVfsPath || '/home/scripts/active_script.ks';
+        KiloVFS.savePicker(path, exprInput.value, (savedPath) => {
+            if (savedPath) {
+                activeVfsPath = savedPath;
+                if (vfsSaveFilename) vfsSaveFilename.value = savedPath;
+                showToast(`Saved to VFS: ${savedPath}`, "success");
+                renderVfsFileList();
+            }
+        });
+        closeModal(exportModal);
+    };
+
+    window.vfsShowOpenModal = () => {
+        KiloVFS.openPicker((data, path) => {
+            if (data !== undefined && data !== null) {
+                exprInput.value = data;
+                if (path) {
+                    activeVfsPath = path;
+                    if (vfsSaveFilename) vfsSaveFilename.value = path;
+                }
+                renderGutter();
+                showToast(`Loaded "${path || 'script'}" from VFS`, "success");
+                pulseRunPill();
+                btnRun.click();
+            }
+        });
+        closeModal(exportModal);
+    };
+
+    window.openInKPadIpc = () => {
+        let path = activeVfsPath || '/home/scripts/active_script.ks';
+        if (!path.startsWith('/')) path = '/home/scripts/' + path;
+        if (!path.endsWith('.ks') && !path.endsWith('.txt')) path += '.ks';
+        KiloVFS.write(path, exprInput.value, false);
+        KiloVFS.launchApp('kpad', path);
+        showToast(`Saved and opened in KPad: ${path}`, "info");
         closeModal(exportModal);
     };
 

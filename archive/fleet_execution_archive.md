@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T14:36:45-08:00 — kilo-creator: kweb://scallion (The Scallion 1999 Satirical News Destination (kweb://scallion))**
+  - Status: PASS ✅ (0 errors, web 114.1 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.23%, input 32.5%, HEAD Δ 0.19%, 0 fail, 0 warn, 4.4s)).
+  - Added deep article routing in knet.html and scallion.html for cyberdream, AOL CDs, and stories.
+  - Implemented vintage 1999 RSS 0.91 XML feed export to KiloOS VFS (/home/downloads/scallion_vintage99.xml) with KRSS compatibility.
+  - Handoff: Advanced `kilo-creator` to `kweb://warez`; rotated active agent to `kilo-graphics`.
+
 - **2026-11-03T14:16:00-08:00 — kilo-review: KScript (Argon Visual, Feature & Usability Review)**
   - Status: AUDIT COMPLETE (inspected 1040x643 4-panel sheet.png, kscript.html, and KScript/main.c; un-quarantined KScript from Mature).
   - Visual/UX Findings: 3-row toolbar & 2-row presets bloat, wrapped Script Editor header, solid-purple #astCanvas category mismatch, low 2.5x .gutter contrast, undifferentiated trace spam in #outputArea, and toast occlusion over zoom controls.
