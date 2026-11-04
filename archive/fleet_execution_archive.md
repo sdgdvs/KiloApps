@@ -4,6 +4,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-03T16:22:15-08:00 — kilo-usability: KScript (Verified Turn (Auto-Salvaged at Timeout))**
+  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
+  - Completed kilo-usability updates for KScript across web and native targets.
+  - Handoff: Advanced `kilo-usability` to `KImage`; rotated active agent to `kilo-qa`.
+
 - **2026-11-03T15:38:29-08:00 — kilo-tester: KScript (KScript Engine Parsing, Stepper & Security Hardening)**
   - Status: PASS ✅ (0 errors, web 180.5 KB, native 30.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.44%, HEAD Δ 0.0%, 0 fail, 0 warn, 5.1s)).
   - Fixed multi-line strings in PRESETS.vfs_demo by escaping \n in template literal.

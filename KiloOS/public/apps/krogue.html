@@ -2856,15 +2856,13 @@
 
                 if (player.invisible_turns > 0) {
                     let invisGlow = (Math.sin(frameCount * 0.18) + 1) * 0.5;
-                    ctx.fillStyle = 
-gba(183, 148, 244, );
+                    ctx.fillStyle = `rgba(183, 148, 244, ${0.25 + invisGlow * 0.25})`;
                     ctx.beginPath(); ctx.arc(cx, cy, 14, 0, Math.PI * 2); ctx.fill();
                     ctx.strokeStyle = '#b794f4'; ctx.lineWidth = 1; ctx.stroke();
                 }
                 if (player.berserk_turns > 0) {
                     let bGlow = (Math.sin(frameCount * 0.25) + 1) * 0.5;
-                    ctx.fillStyle = 
-gba(229, 62, 62, );
+                    ctx.fillStyle = `rgba(229, 62, 62, ${0.3 + bGlow * 0.3})`;
                     ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.fill();
                 }
 

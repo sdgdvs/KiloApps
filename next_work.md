@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -29,7 +29,7 @@ commit_checkpoint: 16
 status: ready
 current_targets:
   kilo_creator: kweb://geocities
-  kilo_graphics: KWizard
+  kilo_graphics: KColony
   kilo_soundscape: KStellar
   kilo_tester: KNetMap
   kilo_usability: KNetMap
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-creator
-  app: kweb://warez
-  timestamp: '2026-11-03T18:18:04-08:00'
+  agent: kilo-graphics
+  app: KRogue
+  timestamp: '2026-11-03T18:33:09-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -99,12 +99,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `kweb://warez` | `KiloOS/public/web/warez.html`, `KiloOS/public/apps/knet.html` | Create *The Underground Courier / Warez BBS Web Ring* (`warez.html` <250 KB): ANSI top-site release board, simulated keygen music player, download quota tracker, and VFS export. |
 
 ### 2. Game Content & Graphics Queue (kilo-graphics)
-- **Active Target**: `KWizard`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| KWizard | KiloOS/public/apps/kwizard.html | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
-| KRogue | KiloOS/public/apps/krogue.html, KRogue/main.c | Dungeon crawler sprite overhaul: hero chassis/classes, procedural dungeon floor/wall tiles, 5 creature archetypes, item icons, and glint sweep. |
 | KColony | KiloOS/public/apps/kcolony.html, KColony/main.c | Colony simulation visuals: planetary structures, colonists, exploration rovers, alien megafauna, terraforming atmosphere overlays, and glint sweep. |
 | KTrader | KiloOS/public/apps/ktrader.html, KTrader/main.c | Galactic trade visuals: merchant vessel chassis, starport market stalls, trade good icons, interstellar pirate silhouettes, and glint sweep. |
 | KMine | KiloOS/public/apps/kmine.html, KMine/main.c | Subterranean excavation crawler visuals: drill rigs, mineral veins, seismic hazard indicators, ore refinery equipment, and glint sweep. |
@@ -114,6 +112,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | KCyber | KiloOS/public/apps/kcyber.html, KCyber/main.c | Netrunner icebreaker deck visual polish: isometric node towers, 5 distinct IC guardian constructs, matrix grid perspective, and glint sweep. |
 | KStellar | KiloOS/public/apps/kstellar.html, KStellar/main.c | 4X stellar empire map visual upgrade: star spectral class rendering, fleet ship icons, orbital ringworlds, and glint sweep. |
 | KCosmic | KiloOS/public/apps/kcosmic.html, KCosmic/main.c | Cosmic space exploration & trade visuals: celestial bodies, cosmic anomaly nebulae, jump-gate warp animations, and glint sweep. |
+| KWizard | KiloOS/public/apps/kwizard.html | Arcane wizard duel visuals: elemental spell particle effects, grimoire rune illustrations, wizard tower backdrop, and glint sweep. |
+| KRogue | KiloOS/public/apps/krogue.html, KRogue/main.c | Dungeon crawler sprite overhaul: hero chassis/classes, procedural dungeon floor/wall tiles, 5 creature archetypes, item icons, and glint sweep. |
 
 ### 3. Procedural Audio & Soundscape Queue (`kilo-soundscape`)
 - **Active Target**: `KStellar`
@@ -291,6 +291,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-03T18:33:09-08:00 — kilo-graphics: KRogue (Imagen 3 Visual Assets & Glint Sweep)**
+  - Status: PASS ✅ (0 errors, web 356.2 KB, native 82.0 KB < 999 KB).
+  - Verified hero, monster, and dungeon texture sprite integration.
+  - Fixed sprite aura template literal syntax and confirmed zero glints.
+  - Handoff: Advanced `kilo-graphics` to `KColony`; rotated active agent to `kilo-tester`.
+
 - **2026-11-03T18:18:04-08:00 — kilo-creator: kweb://warez (The Underground Courier / Warez BBS Web Ring & VFS Polish)**
   - Status: PASS ✅ (0 errors, web 534.4 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 18.55%, HEAD Δ 0.72%, 0 fail, 0 warn, 7.2s)).
   - Enhanced webring navigation with direct Portal and KNet interconnects alongside 0xRELEASE courier top-site board.
@@ -313,8 +319,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Tutorial: Verified F5/F9 quicksave/quickload (active tab, bitplanes, carrier payloads/keys), ksteno_tutorialSeen flag, and modal Escape dismissals.
   - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity (F5/F9 .dat snapshots, first-run briefing, bitplane visualizer, BMP/WAV stego, Chi-Square scan) and visibilitychange audio hygiene.
   - Mature Quarantine & Handoff: Promoted `KSteno` to Mature archive; advanced `kilo-qa` to `KAnomaly`; next agent `kilo-expander`.
-
-- **2026-11-03T16:22:15-08:00 — kilo-usability: KScript (Verified Turn (Auto-Salvaged at Timeout))**
-  - Status: PASS ✅ (verified by orchestrator post-turn salvage).
-  - Completed kilo-usability updates for KScript across web and native targets.
-  - Handoff: Advanced `kilo-usability` to `KImage`; rotated active agent to `kilo-qa`.
