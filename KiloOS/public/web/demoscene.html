@@ -1190,8 +1190,8 @@ function toggleCRT() {
 }
 
 // --- Navigation Tabs ---
-function switchTab(tabId) {
-  playUiSfx('tab');
+function switchTab(tabId, silent) {
+  if (!silent) playUiSfx('tab');
   document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
   
@@ -1369,6 +1369,44 @@ canvas.addEventListener('mousemove', (e) => {
 });
 
 window.addEventListener('mouseup', () => {
+  isDraggingBall = false;
+  draggedBall = null;
+});
+
+// Mobile & Tablet Touch Support for Fluid Metaballs
+canvas.addEventListener('touchstart', (e) => {
+  if (!e.touches || !e.touches[0]) return;
+  const touch = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = W / rect.width;
+  const scaleY = H / rect.height;
+  const mx = (touch.clientX - rect.left) * scaleX;
+  const my = (touch.clientY - rect.top) * scaleY;
+
+  for (let b of metaballs) {
+    const dist = Math.hypot(b.x - mx, b.y - my);
+    if (dist < b.r * 1.5) {
+      isDraggingBall = true;
+      draggedBall = b;
+      e.preventDefault();
+      break;
+    }
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+  if (isDraggingBall && draggedBall && e.touches && e.touches[0]) {
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    draggedBall.x = (touch.clientX - rect.left) * scaleX;
+    draggedBall.y = (touch.clientY - rect.top) * scaleY;
+    e.preventDefault();
+  }
+}, { passive: false });
+
+window.addEventListener('touchend', () => {
   isDraggingBall = false;
   draggedBall = null;
 });
@@ -2603,18 +2641,34 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
   }
 
+  // Alt+1..5 global tab switcher
+  if (e.altKey && ['1', '2', '3', '4', '5'].includes(e.key)) {
+    const tabs = ['tab-effects', 'tab-nfo', 'tab-voting', 'tab-jukebox', 'tab-webring'];
+    const idx = parseInt(e.key, 10) - 1;
+    if (tabs[idx]) switchTab(tabs[idx]);
+    return;
+  }
+
+  const activePane = document.querySelector('.tab-pane.active');
+  const activeTabId = activePane ? activePane.id : '';
+
   if (e.key === ' ' || e.code === 'Space') {
     togglePlayPause();
   } else if (e.key === '1') {
-    setEffect('plasma');
+    if (activeTabId === 'tab-effects') setEffect('plasma');
+    else switchTab('tab-effects');
   } else if (e.key === '2') {
-    setEffect('rotozoom');
+    if (activeTabId === 'tab-effects') setEffect('rotozoom');
+    else switchTab('tab-nfo');
   } else if (e.key === '3') {
-    setEffect('starfield');
+    if (activeTabId === 'tab-effects') setEffect('starfield');
+    else switchTab('tab-voting');
   } else if (e.key === '4') {
-    setEffect('copper');
+    if (activeTabId === 'tab-effects') setEffect('copper');
+    else switchTab('tab-jukebox');
   } else if (e.key === '5') {
-    setEffect('metaballs');
+    if (activeTabId === 'tab-effects') setEffect('metaballs');
+    else switchTab('tab-webring');
   } else if (e.key === 'm' || e.key === 'M') {
     toggleGlobalAudio();
   }
@@ -2634,11 +2688,11 @@ window.addEventListener('DOMContentLoaded', () => {
   try {
     const hash = window.location.hash.replace('#', '').toLowerCase();
     if (hash) {
-      if (hash.includes('nfo')) switchTab('tab-nfo');
-      else if (hash.includes('vote') || hash.includes('compo')) switchTab('tab-voting');
-      else if (hash.includes('juke') || hash.includes('music') || hash.includes('audio')) switchTab('tab-jukebox');
-      else if (hash.includes('ring') || hash.includes('web')) switchTab('tab-webring');
-      else if (hash.includes('effect') || hash.includes('intro')) switchTab('tab-effects');
+      if (hash.includes('nfo')) switchTab('tab-nfo', true);
+      else if (hash.includes('vote') || hash.includes('compo')) switchTab('tab-voting', true);
+      else if (hash.includes('juke') || hash.includes('music') || hash.includes('audio')) switchTab('tab-jukebox', true);
+      else if (hash.includes('ring') || hash.includes('web')) switchTab('tab-webring', true);
+      else if (hash.includes('effect') || hash.includes('intro')) switchTab('tab-effects', true);
     }
 
     const params = new URLSearchParams(window.location.search);
@@ -2658,6 +2712,30 @@ window.addEventListener('DOMContentLoaded', () => {
       switchTab('tab-nfo');
     }
   } catch (e) {}
+
+  
+// Inter-App IPC PostMessage Handler (KiloOS Integration)
+window.addEventListener('message', (ev) => {
+  try {
+    const msg = ev.data;
+    if (!msg || typeof msg !== 'object') return;
+    if (msg.type === 'SET_EFFECT' && msg.effect) {
+      if (['plasma', 'rotozoom', 'starfield', 'copper', 'metaballs'].includes(msg.effect)) {
+        setEffect(msg.effect);
+        switchTab('tab-effects');
+      }
+    } else if (msg.type === 'OPEN_NFO' && msg.nfo) {
+      if (NFO_FILES[msg.nfo]) {
+        selectNfoFile(msg.nfo);
+        switchTab('tab-nfo');
+      }
+    } else if (msg.type === 'NAVIGATE_TAB' && msg.tab) {
+      if (document.getElementById(msg.tab)) {
+        switchTab(msg.tab);
+      }
+    }
+  } catch (e) {}
+});
 
   // Start Canvas animation
   requestAnimationFrame(rasterLoop);
