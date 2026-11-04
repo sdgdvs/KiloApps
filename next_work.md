@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KImage
   kilo_qa: KSynth
-  kilo_expander: KBreakout
+  kilo_expander: KChess
   kilo_review: KSanctuary
 virtual_web_target: kweb://demoscene
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KBBS
-  timestamp: '2026-11-04T09:32:28-08:00'
+  agent: kilo-expander
+  app: KBreakout
+  timestamp: '2026-11-04T10:37:59-08:00'
 last_planner_run: '2026-11-03T19:34:53Z'
 ---
 
@@ -182,11 +182,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KFont` | `KiloOS/public/apps/kfont.html`, `KFont/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, font editor glyph grid, export BDF/TTF preview, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KBreakout`
+- **Active Target**: `KChess`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | **[ARGON REVIEW]:** Complete Win32 C parity in kbreakout.html by wiring the declared-but-dead ufo_active, ufo_bullet, shield_active, boss_bullets, and meteors hazard update and render routines into update() and render() to match KBreakout/main.c. |
 | `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kchess.html using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with mandatory event.origin === window.location.origin checks, 60s dialog cleanup timeouts, and standalone Blob download / file-input fallbacks when window.parent === window for .json game saves (/home/saves/kchess_save.json) in Game menu, .pgn match records (/home/docs/kchess_match.pgn) in #pgn-modal, and .fen positions (/home/docs/kchess_position.fen) in #fen-modal and #editor-modal, plus handle incoming FILE_OPEN / VFS_OPEN messages from KiloOS File Browser to auto-load .pgn/.fen/.json files and add an Open PGN in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad) in #pgn-modal. |
 | `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kgo.html (#sgf-modal and boot listener) using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with event.origin === window.location.origin checks, 60s dialog timeouts, and standalone Blob/file-input fallbacks when window.parent === window for .sgf match records (/home/docs/kgo_match.sgf) and .json saves (/home/saves/kgo_save.json), handle incoming FILE_OPEN/VFS_OPEN messages from File Browser to auto-load .sgf/.json files, add an Open SGF in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad), and add SGF file import parity to KGo/main.c. |
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kimage.html per architecture.md (event.origin === window.location.origin checks, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks when window.parent === window) adding Open from VFS (VFS_SHOW_OPEN -> VFS_READ) and Save to VFS (VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY) for exported images (/home/media/), .JSON sessions (/home/saves/kimage_session.json), and ASCII .txt art (/home/docs/), handling incoming FILE_OPEN/VFS_OPEN messages and URL #/path hash to auto-load .png/.jpg/.bmp/.tga/.pcx/.json files, and adding Open ASCII in KPad (OS_LAUNCH_APP kpad), Send Stego to KCipher (kcipher), and Inspect Image in KHex (khex) buttons; upgrade KImage/main.c (<999 KB) by wiring ID_BTN_RESIZE_HALF (0.5x) and ID_BTN_RESIZE_DOUBLE (2x) and adding a Dither [T] Floyd-Steinberg retro palette button cycling 1-Bit Mono, DMG-4 Green, CGA, and C64 palettes. |
@@ -198,6 +197,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html`, `KCyber/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kcyber.html (event.origin === window.location.origin checks, 60s dialog timeouts, standalone Blob/file-input fallbacks) connecting Export/Import to VFS_SHOW_SAVE/VFS_WRITE and VFS_SHOW_OPEN/VFS_READ (/home/saves/kcyber_deck.json), handling incoming FILE_OPEN/VFS_OPEN messages, exporting stolen node/contract paydata payloads to /home/crypto/ on download with an Inspect in KHex/KPad OS_LAUNCH_APP button, and adding ../assets/js/retro_multiplayer.js NetLink Intrusion Race duel mode strictly behind an explicit toolbar button (zero autostart, soloTimeoutMs: 25000 rival AI runner fallback). |
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | **[ARGON REVIEW]:** Enforce event.origin === window.location.origin and window.location.origin targetOrigin across all KiloVFS postMessage handlers in kscript.html per architecture.md, populate KiloVFS.cache in the empty VFS_LIST_DONE stub, avoid direct kiloos_vfs_state_v2 writes when embedded in KiloOS, add 60000ms timeouts and standalone fallbacks for VFS Open and VFS_SHOW_SAVE plus Open in KPad IPC in #exportModal, and upgrade KScript/main.c parity with ternary operator for Template 7 Collatz, if/else/endif and while/endwhile in StepScript(), hex/bin/fact built-ins, single-dialog SaveJsonDump, and unclipped hBtnRec label. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into knetmap.html per architecture.md (event.origin === window.location.origin checks, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks) adding Export/Import VFS (/home/saves/knetmap_topology.json via VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ), incoming FILE_OPEN/VFS_OPEN topology loading, and Export Capture to VFS (/home/docs/knetmap_capture.log) + Inspect in KPad (OS_LAUNCH_APP kpad) + Launch KPing (kping) buttons in .drawer-actions; add Traceroute [T] mode and rubber-band link preview to KNetMap/main.c. |
+| `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | **[ARGON REVIEW]:** Complete Win32 C parity in kbreakout.html by wiring the declared-but-dead ufo_active, ufo_bullet, shield_active, boss_bullets, and meteors hazard update and render routines into update() and render() to match KBreakout/main.c. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KSanctuary`
@@ -290,6 +290,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-04T10:37:59-08:00 — kilo-expander: KBreakout (Win32 C Hazard Parity & KiloOS VFS Replay/Board Mesh Integration)**
+  - Status: PASS ✅ (0 errors, web 223.4 KB, native 56.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 12.18%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.7s)).
+  - Completed full dual-target hazard parity: wired ufo_active, ufo_bullet, shield_active, boss_bullets, and meteors hazard updates and render routines in update() and render() matching KBreakout/main.c.
+  - Integrated KiloOS VFS & Inter-App IPC Mesh with bidirectional replay (.kbrk) and board matrix (.kbrd) saving/loading and quicksave mirroring.
+  - Handoff: Advanced `kilo-expander` to `KChess`; rotated active agent to `kilo-review`.
+
 - **2026-11-04T09:32:28-08:00 — kilo-qa: KBBS (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 212.0 KB, native 111.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.15%, 0 fail, 0 warn, 6.1s)).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, kbbs_tutorialSeen flag, and Escape modal dismissals.
@@ -311,9 +317,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-11-03T23:34:01-08:00 — kilo-graphics: KTrader (Skip — Asset Suitability)**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate or already integrated for KTrader.
   - Handoff: Advanced `kilo-graphics` to `KMine`; rotated active agent to `kilo-tester`.
-
-- **2026-11-03T22:21:03-08:00 — kilo-creator: kweb://geocities (GeoCities Neighborhood Portal ('99 Retro Neighborhoods))**
-  - Status: PASS ✅ (0 errors, web 683.5 KB < 999 KB; startup, Vite & security_lint PASS).
-  - Wired SiliconValley, Area51, and Tokyo99 personal web rings with hit counters, under-construction GIFs, guestbook signing, and VFS HTML export.
-  - Added Tokyo99 and SiliconValley 1-click shoutbox stamps, normalized Tokyo aliases, and wired hashchange/IPC postMessage listeners.
-  - Handoff: Advanced `kilo-creator` to `kweb://demoscene`; rotated active agent to `kilo-graphics`.

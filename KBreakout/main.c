@@ -1219,6 +1219,13 @@ int LoadGameState() {
         boss_active = s.boss_active; boss_type = s.boss_type; boss_dx = s.boss_dx;
         boss_hp = s.boss_hp; boss_max_hp = s.boss_max_hp; boss_x = s.boss_x; boss_y = s.boss_y;
 
+        shield_active = (level >= 14);
+        shield_x = 50; shield_dx = (float)(2 + (level >= 16 ? 1 : 0));
+        meteor_active = (level >= 12 && level % 4 == 0);
+        ufo_bullet_active = 0;
+        for (int i = 0; i < MAX_BOSS_BULLETS; i++) boss_bullets[i].active = 0;
+        for (int i = 0; i < MAX_METEORS; i++) meteors[i].active = 0;
+
         state = 1; // Play
         success = 1;
         ShowToast("TACTICAL QUICKSAVE RESTORED [F9]");

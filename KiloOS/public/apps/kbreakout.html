@@ -343,7 +343,9 @@ button:focus-visible, .skill-btn:focus-visible, .forge-btn:focus-visible { outli
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;">
                 <button class="forge-btn" onclick="playLastReplay()" style="padding:4px;">▶ PLAY LAST MATCH</button>
                 <button class="forge-btn" onclick="exportReplayFile()" style="padding:4px;">💾 EXPORT (.kbrk)</button>
-                <button class="forge-btn" onclick="triggerImportReplay()" style="padding:4px;">📂 IMPORT REPLAY</button>
+                <button class="forge-btn" onclick="saveReplayToVFS()" style="padding:4px;">📁 VFS SAVE</button>
+                <button class="forge-btn" onclick="loadReplayFromVFS()" style="padding:4px;">📂 VFS LOAD</button>
+                <button class="forge-btn" onclick="triggerImportReplay()" style="padding:4px;">📂 IMPORT DISK</button>
                 <input type="file" id="replay-file-input" accept=".kbrk,.json" style="display:none;" onchange="handleReplayFileSelected(event)">
             </div>
         </div>
@@ -363,10 +365,12 @@ button:focus-visible, .skill-btn:focus-visible, .forge-btn:focus-visible { outli
         <div class="manual-section">
             <b>BOARD MATRIX JSON (6x10):</b>
             <textarea id="board-json-box" rows="3" style="width:100%; background:#090a14; border:1px solid #446; color:#aef; font-family:monospace; font-size:9.5px; padding:4px; border-radius:3px; resize:vertical; margin-top:4px;" placeholder="Exported or imported board layout data will appear here..."></textarea>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:4px;">
-                <button class="forge-btn" onclick="exportBoardState()" style="padding:3px;">📋 EXPORT ACTIVE</button>
-                <button class="forge-btn" onclick="downloadBoardFile()" style="padding:3px;">💾 SAVE .KBRD</button>
-                <button class="forge-btn" onclick="importBoardFromBox()" style="padding:3px; background:#00d2aa; color:#000;">🧩 APPLY MATRIX</button>
+            <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:4px; margin-top:4px;">
+                <button class="forge-btn" onclick="exportBoardState()" style="padding:3px;">📋 EXPORT</button>
+                <button class="forge-btn" onclick="downloadBoardFile()" style="padding:3px;">💾 DISK SAVE</button>
+                <button class="forge-btn" onclick="saveBoardToVFS()" style="padding:3px;">📁 VFS SAVE</button>
+                <button class="forge-btn" onclick="loadBoardFromVFS()" style="padding:3px;">📂 VFS LOAD</button>
+                <button class="forge-btn" onclick="importBoardFromBox()" style="padding:3px; background:#00d2aa; color:#000;">🧩 APPLY</button>
             </div>
         </div>
         <div style="text-align:center; margin-top:6px;">
@@ -1230,6 +1234,120 @@ function abortToMenu() {
     saveGameData();
 }
 
+// Standard KiloOS VFS & Cross-App IPC Bridge (graceful no-op when standalone)
+const KiloVFS = {
+    write(path, data) {
+        try {
+            window.parent.postMessage({ type: 'VFS_WRITE', path, data: typeof data === 'string' ? data : JSON.stringify(data, null, 2), requestId: 'w_' + Date.now() }, '*');
+            window.parent.postMessage({ type: 'OS_NOTIFY', title: document.title, message: `Saved to VFS: ${path}` }, '*');
+        } catch (e) {}
+    },
+    read(path, cb) {
+        const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const handler = (e) => {
+            if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
+                window.removeEventListener('message', handler);
+                cb(e.data.data, e.data.path);
+            }
+        };
+        window.addEventListener('message', handler);
+        try { window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*'); } catch (e) {}
+    },
+    openPicker(cb) {
+        const reqId = 'open_' + Date.now();
+        const handler = (e) => {
+            if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
+                window.removeEventListener('message', handler);
+                if (e.data.path) KiloVFS.read(e.data.path, cb);
+            }
+        };
+        window.addEventListener('message', handler);
+        try { window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*'); } catch (e) {}
+    },
+    launchApp(targetApp, path = '') {
+        try { window.parent.postMessage({ type: 'OS_LAUNCH_APP', targetApp, path }, '*'); } catch (e) {}
+    }
+};
+
+function saveReplayToVFS() {
+    const replayObj = savedReplay || {
+        version: 1,
+        app: 'KBreakout',
+        date: Date.now(),
+        mode: gameMode,
+        score: score,
+        events: activeRecordingEvents
+    };
+    if (replayObj.events.length === 0) {
+        showToast('Play a round first to record replay data!', 'warning', 2500);
+        return;
+    }
+    const path = '/home/saves/kbreakout_replay.kbrk';
+    KiloVFS.write(path, replayObj);
+    showToast(`📁 Replay saved to KiloOS VFS: ${path}`, 'success', 2500);
+}
+
+function loadReplayFromVFS() {
+    KiloVFS.openPicker((content, path) => {
+        try {
+            const data = typeof content === 'string' ? JSON.parse(content) : content;
+            if (data && Array.isArray(data.events)) {
+                closeReplayModal();
+                startReplayPlayback(data);
+                showToast(`▶ Replay loaded from VFS: ${path}`, 'success', 2500);
+            } else {
+                showToast('Invalid replay file from VFS!', 'error', 3000);
+            }
+        } catch(err) {
+            showToast('Failed to parse VFS replay file!', 'error', 3000);
+        }
+    });
+}
+
+function saveBoardToVFS() {
+    const layout = {
+        app: 'KBreakout',
+        date: Date.now(),
+        rows: ROWS,
+        cols: COLS,
+        bricks: bricks.map(row => [...row]),
+        brick_hp: brick_hp.map(row => [...row])
+    };
+    const path = '/home/saves/kbreakout_board.kbrd';
+    KiloVFS.write(path, layout);
+    showToast(`📁 Board matrix saved to KiloOS VFS: ${path}`, 'success', 2500);
+}
+
+function loadBoardFromVFS() {
+    KiloVFS.openPicker((content, path) => {
+        try {
+            const parsed = typeof content === 'string' ? JSON.parse(content) : content;
+            if (parsed && Array.isArray(parsed.bricks)) {
+                bricks = parsed.bricks.map(row => [...row]);
+                if (parsed.brick_hp && Array.isArray(parsed.brick_hp)) {
+                    brick_hp = parsed.brick_hp.map(row => [...row]);
+                } else {
+                    brick_hp = bricks.map(row => row.map(v => v === 8 ? 4 : 0));
+                }
+                bricks_left = 0;
+                for (let r = 0; r < bricks.length; r++) {
+                    for (let c = 0; c < bricks[r].length; c++) {
+                        if (bricks[r][c] > 0) bricks_left++;
+                    }
+                }
+                closeReplayModal();
+                state = 1;
+                setCanvasMode(false);
+                showToast(`🧩 Custom board applied from VFS: ${path}`, 'success', 2500);
+            } else {
+                showToast('Invalid JSON: bricks array missing!', 'error', 3000);
+            }
+        } catch(err) {
+            showToast('Failed to load board matrix from VFS!', 'error', 3000);
+        }
+    });
+}
+
 function hasSavedGame() {
     let s = safeGetJSON('kbreakout_quicksave');
     return s !== null && typeof s === 'object' && !!s.saved;
@@ -1281,8 +1399,12 @@ function quicksaveGame(silent = false) {
         active_singularity,
         active_satellite_boost,
         active_resonance_catalyst,
-        boss_active, boss_type, boss_hp, boss_max_hp, boss_x, boss_y, boss_dx
+        boss_active, boss_type, boss_hp, boss_max_hp, boss_x, boss_y, boss_dx,
+        shield_active, shield_x, shield_dx,
+        ufo_active, ufo_x, ufo_dx, ufo_timer,
+        meteor_active
     };
+    try { KiloVFS.write('/home/saves/kbreakout_quicksave.json', saveData); } catch(e) {}
     const ok = safeSetJSON('kbreakout_quicksave', saveData);
     if (ok) {
         safeSetStorage('kbreakout_tutorialSeen', '1');
@@ -1366,6 +1488,17 @@ function quickloadGame() {
     boss_x = saveData.boss_x || (w/2 - 50);
     boss_y = saveData.boss_y || 35;
     boss_dx = saveData.boss_dx || 0;
+
+    shield_active = saveData.shield_active !== undefined ? saveData.shield_active : (level >= 14 ? 1 : 0);
+    shield_x = saveData.shield_x !== undefined ? saveData.shield_x : 50;
+    shield_dx = saveData.shield_dx !== undefined ? saveData.shield_dx : (level >= 16 ? 3 : 2);
+    ufo_active = saveData.ufo_active || 0;
+    ufo_x = saveData.ufo_x || 10;
+    ufo_dx = saveData.ufo_dx || 2;
+    ufo_timer = saveData.ufo_timer !== undefined ? saveData.ufo_timer : 250;
+    meteor_active = saveData.meteor_active !== undefined ? saveData.meteor_active : (level >= 12 && level % 4 === 0);
+    ufo_bullet = { active: 0, x: 0, y: 0 };
+    boss_bullets = [];
 
     lasers = [];
     meteors = [];
@@ -3739,11 +3872,135 @@ function update() {
         if (frame % 4 === 0) {
             recordReplayEvent('frame', { px: Math.round(pad_x), bx: Math.round(balls[0]?.x || 0), by: Math.round(balls[0]?.y || 0), sc: score });
         }
+        if (shield_active) {
+            shield_x += shield_dx;
+            if (shield_x < 10 || shield_x + shield_w > w - 10) shield_dx = -shield_dx;
+        }
+
+        if (ufo_active) {
+            ufo_x += ufo_dx;
+            if (ufo_x < 10 || ufo_x + 30 > w - 10) ufo_dx = -ufo_dx;
+            if (!ufo_bullet.active && (Math.random() < 0.03)) {
+                ufo_bullet.active = 1;
+                ufo_bullet.x = ufo_x + 15;
+                ufo_bullet.y = ufo_y + 10;
+                playLaserShot();
+            }
+        } else {
+            if (ufo_timer > 0) ufo_timer--;
+            else if (level >= 3) {
+                ufo_active = 1;
+                ufo_x = 10;
+                ufo_dx = 2;
+                ufo_timer = 300;
+            }
+        }
+
+        if (ufo_bullet.active) {
+            ufo_bullet.y += 3.5;
+            for (let s of satellites) {
+                let sdx = ufo_bullet.x - s.x;
+                let sdy = ufo_bullet.y - s.y;
+                if (sdx * sdx + sdy * sdy < 144) {
+                    ufo_bullet.active = 0;
+                    spawnParticles(s.x, s.y, '#00ffc8', 8);
+                    spawnShockwave(s.x, s.y, '#00ffc8');
+                    playWallBounce();
+                    break;
+                }
+            }
+            if (ufo_bullet.active && ufo_bullet.y > h - 40 && ufo_bullet.y < h - 30 && ufo_bullet.x > pad_x && ufo_bullet.x < pad_x + pad_w) {
+                ufo_bullet.active = 0;
+                spawnParticles(ufo_bullet.x, ufo_bullet.y, '#ff00ff', 10);
+                triggerScreenShake(3.0, 0.02);
+                if (score > 25) score -= 25;
+                playPaddleHit();
+            } else if (ufo_bullet.y > h) {
+                ufo_bullet.active = 0;
+            }
+        }
+
         if (boss_active) {
-            boss_x += boss_dx;
-            if (boss_x < 10 || boss_x + boss_w > w - 10) boss_dx = -boss_dx;
+            if (boss_type === 1 || boss_type === 3) {
+                boss_x += boss_dx;
+                if (boss_x < 10 || boss_x + boss_w > w - 10) boss_dx = -boss_dx;
+            }
             let fillPct = Math.max(0, Math.min(100, (boss_hp / boss_max_hp) * 100));
             document.getElementById('boss-bar-fill').style.width = fillPct + '%';
+
+            boss_shield_angle += 0.04;
+            let fire_chance = (boss_type === 1) ? 0.02 : ((boss_type === 2) ? 0.03 : 0.04);
+            if (Math.random() < fire_chance && boss_bullets.length < 6) {
+                boss_bullets.push({
+                    active: 1,
+                    x: boss_x + 20 + (boss_bullets.length % 2 === 0 ? 0 : boss_w - 40),
+                    y: boss_y + boss_h
+                });
+                playLaserShot();
+            }
+        }
+
+        for (let bb of boss_bullets) {
+            if (!bb.active) continue;
+            bb.y += 3.0;
+            for (let s of satellites) {
+                let sdx = bb.x - s.x;
+                let sdy = bb.y - s.y;
+                if (sdx * sdx + sdy * sdy < 144) {
+                    bb.active = 0;
+                    spawnParticles(s.x, s.y, '#00ffc8', 8);
+                    playWallBounce();
+                    break;
+                }
+            }
+            if (bb.active && bb.y > h - 40 && bb.y < h - 30 && bb.x > pad_x && bb.x < pad_x + pad_w) {
+                bb.active = 0;
+                spawnParticles(bb.x, bb.y, '#ff0055', 8);
+                triggerScreenShake(3.0, 0.02);
+                if (score > 20) score -= 20;
+                playPaddleHit();
+            } else if (bb.y > h) {
+                bb.active = 0;
+            }
+        }
+        boss_bullets = boss_bullets.filter(bb => bb.active);
+
+        if (meteor_active) {
+            if (Math.random() < 0.02 && meteors.length < 6) {
+                meteors.push({
+                    active: 1,
+                    x: Math.floor(Math.random() * (w - 24)) + 12,
+                    y: 0
+                });
+            }
+            for (let m of meteors) {
+                if (!m.active) continue;
+                m.y += 3.5;
+                for (let s of satellites) {
+                    let sdx = m.x - s.x;
+                    let sdy = m.y - s.y;
+                    if (sdx * sdx + sdy * sdy < 196) {
+                        m.active = 0;
+                        spawnParticles(s.x, s.y, '#ff9632', 12);
+                        spawnShockwave(s.x, s.y, '#ff9632');
+                        playExplosionSFX();
+                        break;
+                    }
+                }
+                if (m.active && m.y > h - 40 && m.y < h - 30 && m.x > pad_x && m.x < pad_x + pad_w) {
+                    m.active = 0;
+                    sticky_timer = 0;
+                    pad_w = (diff === 1) ? 30 : 45;
+                    paddle_timer = 200;
+                    spawnParticles(m.x, m.y, '#ff6400', 15);
+                    spawnShockwave(m.x, m.y, '#ff6400');
+                    triggerScreenShake(6.0, 0.035);
+                    playExplosionSFX();
+                } else if (m.y > h) {
+                    m.active = 0;
+                }
+            }
+            meteors = meteors.filter(m => m.active);
         }
         if (dur_laser > 0) dur_laser--;
         if (dur_fire > 0) dur_fire--;
@@ -3812,7 +4069,28 @@ function update() {
             l.y += (l.vy || -7);
             if (l.y < 0 || l.x < 0 || l.x > w) l.active = 0;
             else {
-                if (boss_active && l.x > boss_x && l.x < boss_x + boss_w && l.y > boss_y && l.y < boss_y + boss_h) {
+                if (shield_active && l.x > shield_x && l.x < shield_x + shield_w && l.y > shield_y && l.y < shield_y + 8) {
+                l.active = 0;
+                spawnParticles(l.x, l.y, '#00ffff', 4);
+                playWallBounce();
+            }
+            if (ufo_active && l.x > ufo_x && l.x < ufo_x + 30 && l.y > ufo_y && l.y < ufo_y + 12) {
+                ufo_active = 0;
+                l.active = 0;
+                score += 100;
+                quantum_cores += 2;
+                plasma_shards += 3;
+                recordTelemetry('quantumFarmed', 2);
+                recordTelemetry('plasmaFarmed', 3);
+                spawnParticles(ufo_x + 15, ufo_y + 6, '#ff00ff', 15);
+                spawnShockwave(ufo_x + 15, ufo_y + 6, '#ff00ff');
+                playExplosionSFX();
+                power_active = 1;
+                power_type = Math.floor(Math.random() * 9) + 1;
+                power_x = ufo_x + 15;
+                power_y = ufo_y;
+            }
+            if (boss_active && l.x > boss_x && l.x < boss_x + boss_w && l.y > boss_y && l.y < boss_y + boss_h) {
                     boss_hp -= (l.type === 1 ? 2 : 1);
                     l.active = 0;
                     spawnParticles(l.x, l.y, '#ff0055', 4);
@@ -3960,6 +4238,32 @@ function update() {
                     b.stuck = 1;
                     b.stuckOffset = Math.max(0, Math.min(pad_w - 8, b.x - pad_x));
                 }
+            }
+
+            if (shield_active && b.y + 8 > shield_y && b.y < shield_y + 8 &&
+                b.x + 8 > shield_x && b.x < shield_x + shield_w) {
+                b.dy = -b.dy;
+                spawnParticles(b.x, b.y, '#00ffff', 6);
+                playWallBounce();
+            }
+
+            if (ufo_active && b.x + 8 > ufo_x && b.x < ufo_x + 30 &&
+                b.y + 8 > ufo_y && b.y < ufo_y + 12) {
+                ufo_active = 0;
+                b.dy = -b.dy;
+                score += 100;
+                quantum_cores += 2;
+                plasma_shards += 3;
+                recordTelemetry('quantumFarmed', 2);
+                recordTelemetry('plasmaFarmed', 3);
+                spawnParticles(ufo_x + 15, ufo_y + 6, '#ff00ff', 15);
+                spawnShockwave(ufo_x + 15, ufo_y + 6, '#ff00ff');
+                triggerScreenShake(5.0, 0.03);
+                playExplosionSFX();
+                power_active = 1;
+                power_type = Math.floor(Math.random() * 9) + 1;
+                power_x = ufo_x + 15;
+                power_y = ufo_y;
             }
 
             if (boss_active && b.x + 8 > boss_x && b.x < boss_x + boss_w && b.y + 8 > boss_y && b.y < boss_y + boss_h) {
@@ -4820,8 +5124,91 @@ function render() {
             }
         }
 
+        // Hazard Reflector Shield Barrier
+        if (shield_active) {
+            ctx.save();
+            ctx.fillStyle = '#00ffff';
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#00ffff';
+            ctx.fillRect(shield_x, shield_y, shield_w, 8);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(shield_x + 4, shield_y + 2, shield_w - 8, 2);
+            ctx.fillStyle = '#0088aa';
+            ctx.fillRect(shield_x, shield_y, 4, 8);
+            ctx.fillRect(shield_x + shield_w - 4, shield_y, 4, 8);
+            ctx.restore();
+        }
+
+        // Alien UFO Drone & Blinking Sensor Array
+        if (ufo_active) {
+            ctx.save();
+            ctx.fillStyle = '#ff00ff';
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#ff00ff';
+            ctx.fillRect(ufo_x, ufo_y + 3, 30, 6);
+            ctx.fillStyle = '#00ffff';
+            ctx.beginPath();
+            ctx.arc(ufo_x + 15, ufo_y + 3, 6, Math.PI, 0);
+            ctx.fill();
+            ctx.fillStyle = '#aa00aa';
+            ctx.fillRect(ufo_x + 5, ufo_y + 9, 20, 2);
+            for (let i = 0; i < 3; i++) {
+                let lx = ufo_x + 5 + i * 10;
+                let blink = ((frame % 30 < 15 && i % 2 === 0) || (frame % 30 >= 15 && i % 2 !== 0));
+                ctx.fillStyle = blink ? '#ffff00' : '#888800';
+                ctx.fillRect(lx - 1, ufo_y + 5, 2, 2);
+            }
+            ctx.restore();
+        }
+
+        // UFO Drone Downward Plasma Bolt
+        if (ufo_bullet.active) {
+            ctx.save();
+            ctx.fillStyle = '#ff00ff';
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = '#ff00ff';
+            ctx.fillRect(ufo_bullet.x - 2, ufo_bullet.y, 4, 8);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(ufo_bullet.x - 1, ufo_bullet.y + 2, 2, 4);
+            ctx.restore();
+        }
+
         // Draw Boss Fortress Core with distinctive mechanical chassis
         drawBoss(ctx);
+
+        // Boss Artillery Plasma Bullets
+        for (let bb of boss_bullets) {
+            if (bb.active) {
+                ctx.save();
+                ctx.fillStyle = '#ff3264';
+                ctx.shadowBlur = 6;
+                ctx.shadowColor = '#ff0055';
+                ctx.fillRect(bb.x - 3, bb.y - 3, 6, 6);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(bb.x - 1, bb.y - 1, 2, 2);
+                ctx.restore();
+            }
+        }
+
+        // Incandescent Falling Meteors
+        for (let m of meteors) {
+            if (m.active) {
+                ctx.save();
+                ctx.fillStyle = '#ff6400';
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = '#ff3200';
+                ctx.beginPath();
+                ctx.arc(m.x, m.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ffff55';
+                ctx.beginPath();
+                ctx.arc(m.x, m.y - 1, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255, 100, 0, 0.5)';
+                ctx.fillRect(m.x - 2, m.y - 9, 4, 5);
+                ctx.restore();
+            }
+        }
 
         for (let gw of gravity_wells) {
             let grad = ctx.createRadialGradient(gw.x, gw.y, 4, gw.x, gw.y, 25);

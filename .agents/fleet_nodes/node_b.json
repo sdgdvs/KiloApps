@@ -5,7 +5,7 @@
   "hostname": "DESKTOP-HSSS709",
   "model_tier": "Gemini Pro",
   "cadence": "1 turn/hour",
-  "status": "error",
+  "status": "active",
   "schedule_minutes": [
     30
   ],
@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 654,
+  "turns_executed": 655,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-11-04T16:40:04.300512+00:00",
+  "last_heartbeat": "2026-11-04T17:33:06.096801+00:00",
   "current_target": "KBBS",
   "remote_command": "none"
 }
