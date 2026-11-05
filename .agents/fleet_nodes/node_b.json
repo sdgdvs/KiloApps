@@ -5,7 +5,7 @@
   "hostname": "9900K",
   "model_tier": "Gemini Pro",
   "cadence": "1 turn/hour",
-  "status": "error",
+  "status": "active",
   "schedule_minutes": [
     30
   ],
@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 658,
+  "turns_executed": 659,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-11-05T18:40:02.824423+00:00",
-  "current_target": "KSanctuary",
+  "last_heartbeat": "2026-11-05T19:37:27.922566+00:00",
+  "current_target": "KImage",
   "remote_command": "none"
 }

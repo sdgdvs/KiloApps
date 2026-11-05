@@ -139,9 +139,9 @@
     "id": "kchrono",
     "title": "KChrono",
     "folder": "Games",
-    "webBytes": 201667,
-    "exeBytes": 23552,
-    "budgetPercent": 20.2
+    "webBytes": 219238,
+    "exeBytes": 28160,
+    "budgetPercent": 21.9
   },
   {
     "id": "kcipher",
@@ -379,9 +379,9 @@
     "id": "kimage",
     "title": "KImage",
     "folder": "Media",
-    "webBytes": 177766,
+    "webBytes": 178674,
     "exeBytes": 28160,
-    "budgetPercent": 17.8
+    "budgetPercent": 17.9
   },
   {
     "id": "kjournal",
@@ -603,9 +603,9 @@
     "id": "ksanctuary",
     "title": "KSanctuary",
     "folder": "Games",
-    "webBytes": 472731,
-    "exeBytes": 269824,
-    "budgetPercent": 47.3
+    "webBytes": 478574,
+    "exeBytes": 272384,
+    "budgetPercent": 47.9
   },
   {
     "id": "kscript",
@@ -715,9 +715,9 @@
     "id": "ksynth",
     "title": "KSynth",
     "folder": "Media",
-    "webBytes": 187613,
-    "exeBytes": 29184,
-    "budgetPercent": 18.8
+    "webBytes": 193750,
+    "exeBytes": 29696,
+    "budgetPercent": 19.4
   },
   {
     "id": "ksys",

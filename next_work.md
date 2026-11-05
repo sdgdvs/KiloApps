@@ -59,7 +59,7 @@ last_run:
   agent: kilo-qa
   app: KSynth
   timestamp: '2026-11-05T12:18:07-08:00'
-last_planner_run: '2026-11-04T20:16:29Z'
+last_planner_run: '2026-11-05T20:34:16Z'
 ---
 
 # KiloApps Master Fleet Work & Queue State (`Phase VI: System Convergence`)
@@ -186,6 +186,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMail` | `KiloOS/public/apps/kmail.html`, `KMail/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, POP3/SMTP retro mail client, folder organization, attachment preview, dual Win32 C parity, and promote to Mature table. |
 | `KRead` | `KiloOS/public/apps/kread.html`, `KRead/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, retro e-book and document reader, bookmarking, typeface customization, dual Win32 C parity, and promote to Mature table. |
 | `KAudio` | `KiloOS/public/apps/kaudio.html`, `KAudio/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, digital audio workstation and waveform editor, multi-track playback, dual Win32 C parity, and promote to Mature table. |
+| `KChat` | `KiloOS/public/apps/kchat.html`, `KChat/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, retro IRC/chat workstation, channel manager, direct messages, dual Win32 C parity, and promote to Mature table. |
+| `KFleet` | `KiloOS/public/apps/kfleet.html`, `KFleet/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, multi-agent fleet monitor & status console, process telemetry, dual Win32 C parity, and promote to Mature table. |
+| `KSys` | `KiloOS/public/apps/ksys.html`, `KSys/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, system diagnostic & hardware info dashboard, resource monitors, dual Win32 C parity, and promote to Mature table. |
+| `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, media player & audio visualizer, playlist management, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
 - **Active Target**: `KChess`
@@ -204,6 +208,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | **[ARGON REVIEW]:** Enforce event.origin === window.location.origin and window.location.origin targetOrigin across all KiloVFS postMessage handlers in kscript.html per architecture.md, populate KiloVFS.cache in the empty VFS_LIST_DONE stub, avoid direct kiloos_vfs_state_v2 writes when embedded in KiloOS, add 60000ms timeouts and standalone fallbacks for VFS Open and VFS_SHOW_SAVE plus Open in KPad IPC in #exportModal, and upgrade KScript/main.c parity with ternary operator for Template 7 Collatz, if/else/endif and while/endwhile in StepScript(), hex/bin/fact built-ins, single-dialog SaveJsonDump, and unclipped hBtnRec label. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into knetmap.html per architecture.md (event.origin === window.location.origin checks, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks) adding Export/Import VFS (/home/saves/knetmap_topology.json via VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ), incoming FILE_OPEN/VFS_OPEN topology loading, and Export Capture to VFS (/home/docs/knetmap_capture.log) + Inspect in KPad (OS_LAUNCH_APP kpad) + Launch KPing (kping) buttons in .drawer-actions; add Traceroute [T] mode and rubber-band link preview to KNetMap/main.c. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | **[ARGON REVIEW]:** Complete Win32 C parity in kbreakout.html by wiring the declared-but-dead ufo_active, ufo_bullet, shield_active, boss_bullets, and meteors hazard update and render routines into update() and render() to match KBreakout/main.c. |
+| `KAbyss` | `KiloOS/public/apps/kabyss.html`, `KAbyss/main.c` | Wire Phase VI KiloOS VFS mesh (/home/saves/kabyss_dive.json), RFMS multiplayer abyssal expedition race, depth telemetry, and dual Win32 C parity. |
+| `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Wire Phase VI KiloOS VFS mesh (/home/saves/kstarforge_ship.json), vessel blueprint export to KHex/KPad, and dual Win32 C parity. |
+| `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | Wire Phase VI KiloOS VFS mesh (/home/saves/kmech_chassis.json), mech loadout sharing, arena skirmish telemetry, and dual Win32 C parity. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KGraph`
@@ -222,6 +229,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | [Argon Audited 2026-11-03: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | [Argon Audited 2026-11-03: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html`, `KSanctuary/main.c` | [Argon Audited 2026-11-04: Fixes queued -> kilo-expander, kilo-tester, kilo-usability] Visual, feature & usability review. |
+| `KCalendar` | `KiloOS/public/apps/kcalendar.html`, `KCalendar/main.c` | Visual, feature & usability review: evaluate month/week/day calendar grid rendering, event modal ergonomics, reminder alert timing, and Win32 C parity. |
+| `KRss` | `KiloOS/public/apps/krss.html`, `KRss/main.c` | Visual, feature & usability review: evaluate feed article reader typography, OPML import/export UX, speech audio playback, and Win32 C parity. |
+| `KBookmark` | `KiloOS/public/apps/kbookmark.html`, `KBookmark/main.c` | Visual, feature & usability review: evaluate folder tree navigation, Netscape HTML bookmark import, search filter responsiveness, and Win32 C parity. |
+| `KPomodoro` | `KiloOS/public/apps/kpomodoro.html`, `KPomodoro/main.c` | Visual, feature & usability review: evaluate timer dial visibility, interval transition earcons, task estimate drawer, and Win32 C parity. |
 
 ---
 
