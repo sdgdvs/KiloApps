@@ -2,20 +2,20 @@
   "node_id": "pc_b",
   "name": "PC B (anonymous2)",
   "account": "anonymous2",
-  "hostname": "DESKTOP-HSSS709",
+  "hostname": "9900K",
   "model_tier": "Gemini Pro",
   "cadence": "1 turn/hour",
-  "status": "active",
+  "status": "error",
   "schedule_minutes": [
     30
   ],
-  "session_start": "2026-11-02T05:06:44.8184945Z",
+  "session_start": "2026-11-05T03:42:40.8569557Z",
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 657,
+  "turns_executed": 658,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-11-04T19:35:42.028899+00:00",
-  "current_target": "kweb://demoscene",
+  "last_heartbeat": "2026-11-05T18:40:02.824423+00:00",
+  "current_target": "KSanctuary",
   "remote_command": "none"
 }

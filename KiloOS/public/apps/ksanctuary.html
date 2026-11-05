@@ -4136,6 +4136,7 @@
             const w = vaultCanvas.width;
             const h = vaultCanvas.height;
             const ctx = vaultCtx;
+            const strokeHighlight = (typeof window !== 'undefined' && window.getComputedStyle) ? (window.getComputedStyle(document.documentElement).getPropertyValue('--border-corner').trim() || '#528a55') : '#528a55';
 
             ctx.fillStyle = '#0a0f0b';
             ctx.fillRect(0, 0, w, h);
@@ -4394,7 +4395,7 @@
                     ctx.fillRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
                 }
 
-                ctx.strokeStyle = (vaultHoverRoom && vaultHoverRoom.id === r.id) ? 'var(--border-corner)' : '#1f2e21';
+                ctx.strokeStyle = (vaultHoverRoom && vaultHoverRoom.id === r.id) ? strokeHighlight : '#1f2e21';
                 ctx.lineWidth = 1;
                 ctx.strokeRect(r.x, r.y, r.w, r.h);
 
@@ -4849,6 +4850,7 @@
             barricadeMaxHp: 100,
             turretCount: 1,
             turretOverclock: false,
+            rareTarget: false,
             combatDrillLevel: 1,
             raidThreatDays: 3,
             lastRaidReport: null,
@@ -4973,11 +4975,11 @@
                 }
             ],
             survivors: [
-                { id: 's1', name: 'Laura Martinez', role: 'Chief Overseer', health: 100, hunger: 0, thirst: 0, morale: 90, rads: 0, job: 'cmd', str: 4, agi: 5, int: 8 },
-                { id: 's2', name: 'Marcus Vance', role: 'Senior Engineer', health: 95, hunger: 0, thirst: 0, morale: 85, rads: 0, job: 'gen', str: 6, agi: 4, int: 7 },
-                { id: 's3', name: 'Elena Rostova', role: 'Hydrologist', health: 100, hunger: 0, thirst: 0, morale: 80, rads: 0, job: 'water', str: 5, agi: 5, int: 6 },
-                { id: 's4', name: 'Caleb Stone', role: 'Agronomist', health: 90, hunger: 0, thirst: 0, morale: 85, rads: 0, job: 'farm', str: 5, agi: 6, int: 6 },
-                { id: 's5', name: 'Dr. Arthur Ross', role: 'Vault Physician', health: 100, hunger: 0, thirst: 0, morale: 88, rads: 0, job: 'infirmary', str: 3, agi: 4, int: 9 }
+                { id: 's1', name: 'Laura Martinez', role: 'Chief Overseer', trait: 'Overseer Protocol', health: 100, hunger: 0, thirst: 0, morale: 90, rads: 0, job: 'cmd', str: 4, agi: 5, int: 8 },
+                { id: 's2', name: 'Marcus Vance', role: 'Senior Engineer', trait: 'Turbine Guru (+30% Power)', health: 95, hunger: 0, thirst: 0, morale: 85, rads: 0, job: 'gen', str: 6, agi: 4, int: 7 },
+                { id: 's3', name: 'Elena Rostova', role: 'Hydrologist', trait: 'Pure Flow (+30% Water)', health: 100, hunger: 0, thirst: 0, morale: 80, rads: 0, job: 'water', str: 5, agi: 5, int: 6 },
+                { id: 's4', name: 'Caleb Stone', role: 'Agronomist', trait: 'Crop Tender (+Food)', health: 90, hunger: 0, thirst: 0, morale: 85, rads: 0, job: 'farm', str: 5, agi: 6, int: 6 },
+                { id: 's5', name: 'Dr. Arthur Ross', role: 'Vault Physician', trait: 'Field Triage (+Healing)', health: 100, hunger: 0, thirst: 0, morale: 88, rads: 0, job: 'infirmary', str: 3, agi: 4, int: 9 }
             ],
             survivorSubTab: 'roster',
             candidates: [
@@ -5542,6 +5544,8 @@
                 }, 2800);
             } catch (e) {}
         }
+        function showRetroToast(msg, type = 'info') { showToast(msg, type); }
+        window.showRetroToast = showToast;
 
         // Save & Load State
         function saveState() {
@@ -5604,6 +5608,7 @@
             if (state.barricadeMaxHp === undefined) state.barricadeMaxHp = 100;
             if (state.turretCount === undefined) state.turretCount = 1;
             if (state.turretOverclock === undefined) state.turretOverclock = false;
+            if (state.rareTarget === undefined) state.rareTarget = false;
             if (state.combatDrillLevel === undefined) state.combatDrillLevel = 1;
             if (state.raidThreatDays === undefined) state.raidThreatDays = 3;
             if (!state.weather) {
@@ -5780,8 +5785,38 @@
                 statBonus = Math.max(0, (survivor.str - 5) * 0.15);
             }
 
+            // Candidate & Dweller Trait synergy bonuses
+            if (survivor.trait) {
+                const tr = survivor.trait.toLowerCase();
+                if ((facility.id === 'farm' || facility.id === 'farm_aero') && (tr.includes('crop') || tr.includes('hydro') || tr.includes('harvester') || tr.includes('green'))) {
+                    statBonus += 0.30;
+                } else if ((facility.id === 'gen' || facility.id === 'gen_sub') && (tr.includes('power') || tr.includes('overclock') || tr.includes('turbine') || tr.includes('wrench'))) {
+                    statBonus += 0.30;
+                } else if ((facility.id === 'water' || facility.id === 'water_deep') && (tr.includes('water') || tr.includes('flow') || tr.includes('hydro'))) {
+                    statBonus += 0.30;
+                } else if ((facility.id === 'workshop' || facility.id === 'smelter') && (tr.includes('scrap') || tr.includes('salvage') || tr.includes('eagle'))) {
+                    statBonus += 0.30;
+                } else if ((facility.id === 'infirmary' || facility.id === 'bp_medsurge') && (tr.includes('heal') || tr.includes('triage') || tr.includes('surgeon'))) {
+                    statBonus += 0.30;
+                } else if (facility.id === 'security' && (tr.includes('defense') || tr.includes('vigilant') || tr.includes('combat'))) {
+                    statBonus += 0.30;
+                }
+            }
+
             eff += statBonus;
             return Math.max(0.15, eff);
+        }
+
+        function isFacilityPowered(fac, isBlackout) {
+            if (!isBlackout || fac.powerProd > 0) return true;
+            const policy = (state.policies && state.policies.power) || 'balanced';
+            if (policy === 'lifesupport') {
+                return fac.id === 'infirmary' || fac.id === 'cmd' || fac.id === 'bp_medsurge' || fac.id === 'bp_radshield';
+            } else if (policy === 'production') {
+                return fac.id === 'farm' || fac.id === 'water' || fac.id === 'farm_aero' || fac.id === 'water_deep';
+            } else {
+                return fac.powerPriority <= 2;
+            }
         }
 
         // Calculation Helpers
@@ -5812,8 +5847,8 @@
                 }
 
                 if (assignedWorkers.length > 0) {
-                    // If facility is powered
-                    const isPowered = !isBlackout || fac.powerPriority <= 2;
+                    // If facility is powered under active Reactor Power Priority
+                    const isPowered = isFacilityPowered(fac, isBlackout);
                     if (isPowered) {
                         totalFoodProd += Math.round(fac.foodProd * workerEffSum);
                         totalWaterProd += Math.round(fac.waterProd * workerEffSum);
@@ -5821,6 +5856,9 @@
                     }
                 }
             });
+
+            // Sentry Turrets auxiliary power load (3 kW each)
+            totalPowerLoad += (state.turretCount || 1) * 3;
 
             // Consumption rates based on policy
             let foodPerPerson = 1;
@@ -5985,6 +6023,9 @@
             if (state.relics && state.relics.mantlet) {
                 baseHull += 10; // Chobham Alloy Mantlet: +10 Base Defense
             }
+            if (state.rareTarget || (state.caravan && state.caravan.rareItems && state.caravan.rareItems.some(r => r.id === 'rare_target' && r.bought))) {
+                baseHull += 12; // Sentry Targeting Overdrive Module (+12 Base Def)
+            }
             const maxBar = state.barricadeMaxHp || 100;
             const barricadeDef = Math.floor(((state.barricadeHp !== undefined ? state.barricadeHp : 100) / maxBar) * 25);
             const turretDef = (state.turretCount || 1) * 18 + (state.turretOverclock ? 12 : 0);
@@ -6003,12 +6044,16 @@
             const drillBonus = (state.combatDrillLevel || 1) * 3;
 
             state.survivors.forEach(s => {
+                let traitDefBonus = 0;
+                if (s.trait && (s.trait.includes('Defense') || s.trait.includes('Vigilant') || s.trait.includes('Combat'))) {
+                    traitDefBonus = 4;
+                }
                 if (s.job === 'security') {
                     activeGuards++;
-                    guardDef += (s.str * 2) + drillBonus;
+                    guardDef += (s.str * 2) + drillBonus + traitDefBonus;
                 } else if (s.job !== 'expedition') {
                     passiveMilitia++;
-                    guardDef += Math.floor(s.str * 0.5);
+                    guardDef += Math.floor(s.str * 0.5) + (traitDefBonus > 0 ? 2 : 0);
                 }
             });
 
@@ -6329,6 +6374,39 @@
             if (lblGuardCount) lblGuardCount.textContent = def.activeGuards;
             const lblMilitiaCount = document.getElementById('lbl-militia-count');
             if (lblMilitiaCount) lblMilitiaCount.textContent = def.passiveMilitia;
+
+            // Defense Buttons (apply scrap discounts)
+            const repairCost = getScrapDiscount(15);
+            const reinforceCost = getScrapDiscount(35);
+            const turretCost = getScrapDiscount(45);
+            const ocCost = getScrapDiscount(20);
+            const drillCost = getScrapDiscount(12);
+
+            const btnRepair = document.getElementById('btn-repair-barricade');
+            if (btnRepair) {
+                btnRepair.textContent = `REPAIR (+35 HP // ${repairCost} SCRAP)`;
+                btnRepair.disabled = state.scrap < repairCost || barHp >= barMax;
+            }
+            const btnReinforce = document.getElementById('btn-reinforce-barricade');
+            if (btnReinforce) {
+                btnReinforce.textContent = `REINFORCE (+25 MAX // ${reinforceCost} SCRAP)`;
+                btnReinforce.disabled = state.scrap < reinforceCost;
+            }
+            const btnTurret = document.getElementById('btn-build-turret');
+            if (btnTurret) {
+                btnTurret.textContent = `FABRICATE TURRET (+18 DEF // ${turretCost} SCRAP)`;
+                btnTurret.disabled = state.scrap < turretCost || (state.turretCount || 1) >= 5;
+            }
+            const btnOc = document.getElementById('btn-oc-turret');
+            if (btnOc) {
+                btnOc.textContent = state.turretOverclock ? 'SENSORS OVERCLOCKED' : `OVERCLOCK SENSORS (+12 DEF // ${ocCost} SCRAP)`;
+                btnOc.disabled = state.turretOverclock || state.scrap < ocCost;
+            }
+            const btnDrill = document.getElementById('btn-combat-drill');
+            if (btnDrill) {
+                btnDrill.textContent = `RUN COMBAT DRILL (+READINESS // ${drillCost} SCRAP)`;
+                btnDrill.disabled = state.scrap < drillCost;
+            }
 
             // Radar
             const threatDays = state.raidThreatDays !== undefined ? state.raidThreatDays : 3;
@@ -6917,9 +6995,10 @@
             if (rareId === 'rare_radaway') {
                 state.survivors.forEach(s => {
                     s.health = Math.min(100, s.health + 20);
+                    s.rads = 0;
                 });
                 state.exteriorRads = Math.max(2.0, state.exteriorRads - 3.0);
-                logEvent('★ RARE ARTIFACT: Rad-Away Anti-Toxin administered! All dwellers restored +20 HP and cleansed of radiation trauma.', 'cycle');
+                logEvent('★ RARE ARTIFACT: Rad-Away Anti-Toxin administered! All dwellers restored +20 HP and cleansed of radiation trauma (0 Rads).', 'cycle');
             } else if (rareId === 'rare_enzyme') {
                 state.food += 30;
                 logEvent('★ RARE ARTIFACT: Hydroponic Super-Growth Enzyme applied! Vault food stores enriched (+30 Food).', 'cycle');
@@ -6928,6 +7007,7 @@
                 state.barricadeHp = state.barricadeMaxHp;
                 logEvent(`★ RARE ARTIFACT: Heavy Ballistic Armor Plates welded onto blast doors! Barricades fully repaired and Max HP raised to ${state.barricadeMaxHp}.`, 'cycle');
             } else if (rareId === 'rare_target') {
+                state.rareTarget = true;
                 state.defense += 12;
                 logEvent('★ RARE ARTIFACT: Sentry Targeting Overdrive Unit integrated! Base defense permanently boosted (+12 Def).', 'cycle');
             } else if (rareId === 'rare_lux') {
@@ -7201,7 +7281,7 @@
                 }
 
                 const curLvl = fac.level || 1;
-                const upgCost = curLvl * 30;
+                const upgCost = getScrapDiscount(curLvl * 30);
                 const canUpgrade = curLvl < 3 && state.scrap >= upgCost;
                 const upgBtnText = curLvl >= 3 ? 'MAX LEVEL' : `UPGRADE LV${curLvl + 1} (${upgCost}S)`;
 
@@ -7356,7 +7436,8 @@
                 state.defense += 5;
                 bonusMsg = '+5 Sensor Defense';
             } else if (fac.id === 'infirmary') {
-                bonusMsg = 'Enhanced medical triage & faster recovery';
+                fac.maxWorkers++;
+                bonusMsg = '+1 staff slot & enhanced medical triage (+8 HP / -8 Rads/lvl)';
             }
 
             logEvent(`UPGRADE: ${fac.name} upgraded to Level ${fac.level}! (${bonusMsg})`, 'cycle');
@@ -7834,7 +7915,9 @@
                 id: 's_' + Date.now(),
                 name: cand.name,
                 role: cand.role,
+                trait: cand.trait || 'Hardy Wastelander',
                 health: cand.health,
+                rads: cand.rads || 0,
                 hunger: 0,
                 thirst: 0,
                 morale: cand.morale,
@@ -8532,9 +8615,6 @@
 
             if (state.policies.water === 'normal' && state.water > 0 && state.waterPurity >= 80) {
                 state.morale = Math.min(100, state.morale + 2);
-            }
-            if (state.relics && state.relics.holotape) {
-                state.morale = Math.min(100, state.morale + 1); // Echo Holo-Tape #704: +1 morale/cycle from ambient 1999Hz harmonics
             } else if (state.policies.water === 'half') {
                 state.morale = Math.max(10, state.morale - 3);
             } else if (state.policies.water === 'minimal') {
@@ -8543,6 +8623,10 @@
                     s.rads = Math.min(100, (s.rads || 0) + 8);
                 });
                 logEvent(`WATER RECYCLING: Recycled silt consumption contaminated dwellers with +8 Rads!`, 'warn');
+            }
+
+            if (state.relics && state.relics.holotape) {
+                state.morale = Math.min(100, state.morale + 1); // Echo Holo-Tape #704: +1 morale/cycle from ambient 1999Hz harmonics
             }
 
             // Low Water Purity radiation exposure
@@ -8677,7 +8761,7 @@
                                     state.morale = Math.min(100, (state.morale || 85) + 10);
                                 }
                                 relicMsg = ` ★ RELIC RECOVERED: [${relicNames[relicKey]}]!`;
-                                showRetroToast(`★ RELIC DISCOVERED: ${relicNames[relicKey]}!`, 'success');
+                                showToast(`★ RELIC DISCOVERED: ${relicNames[relicKey]}!`, 'success');
                                 playSound('relic');
                             }
                         }
@@ -8700,13 +8784,16 @@
                 const wounded = state.survivors.filter(s => s.health < 90 || (s.rads || 0) > 20);
                 if (wounded.length > 0 && ((state.meds || 0) > 0 || hasSurgWing)) {
                     if (!hasSurgWing && state.meds > 0) state.meds--;
-                    let healAmt = (hasSurgWing ? 25 : 15);
+                    const infLevel = infirmaryFac ? (infirmaryFac.level || 1) : 1;
+                    const lvlBonus = (infLevel - 1) * 8;
+                    let healAmt = (hasSurgWing ? 25 : 15) + lvlBonus;
                     if (state.relics && state.relics.trauma) healAmt += 10; // Auto-Suture Trauma Kit: +10 HP extra triage healing
+                    const deconAmt = (hasSurgWing ? 20 : 10) + lvlBonus;
                     wounded.forEach(w => {
                         w.health = Math.min(100, w.health + healAmt);
-                        w.rads = Math.max(0, (w.rads || 0) - (hasSurgWing ? 20 : 10));
+                        w.rads = Math.max(0, (w.rads || 0) - deconAmt);
                     });
-                    logEvent(`MED-LAB: Triage & radiation decontamination administered to ${wounded.length} dweller(s).`, 'info');
+                    logEvent(`MED-LAB: Triage & radiation decontamination administered to ${wounded.length} dweller(s) (+${healAmt} HP / -${deconAmt} Rads).`, 'info');
                 }
             }
 
@@ -8824,10 +8911,12 @@
                     let sickCount = 0;
                     state.survivors.forEach(s => {
                         s.health = Math.max(10, s.health - 12);
+                        s.rads = Math.min(100, (s.rads || 0) + 25);
                         s.morale = Math.max(15, s.morale - 8);
                         sickCount++;
                     });
-                    logEvent(`⚠ RADIATION SICKNESS: Gamma radiation penetrated unshielded airlocks! ${sickCount} dwellers suffered radiation sickness (-12 HP)!`, 'crit');
+                    state.waterPurity = Math.max(10, (state.waterPurity !== undefined ? state.waterPurity : 100) - 20);
+                    logEvent(`⚠ RADIATION SICKNESS: Gamma radiation penetrated unshielded airlocks! ${sickCount} dwellers suffered radiation sickness (-12 HP, +25 Rads) and water purity dropped -20%!`, 'crit');
                     playSound('alert');
                 }
             } else if (curType === 2) { // Drought
@@ -9081,9 +9170,7 @@
             } else if (e.code === 'KeyA') {
                 toggleAutoRun();
             } else if (e.code === 'KeyM') {
-                if (typeof toggleSound === 'function') {
-                    toggleSound();
-                }
+                toggleAudio();
             }
         });
 

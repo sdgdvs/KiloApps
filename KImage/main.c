@@ -843,40 +843,40 @@ void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
         "KImage Pro - High-Fidelity Image Studio\n\n"
         "KEYBOARD & MOUSE SHORTCUTS:\n"
-        "• N / Demo : Load In-Memory Demo Studio Test Image\n"
-        "• O / Ctrl+O : Open BMP Image / Scan Directory\n"
-        "• Ctrl+S : Save / Export Current Image\n"
-        "• F5 : Quicksave snapshot to kimage_quicksave.bmp\n"
-        "• F9 : Quickload snapshot from kimage_quicksave.bmp\n"
-        "• H / F1 : Open this Help Guide\n"
-        "• Space : Play / Pause Slideshow\n"
-        "• Left / Right Arrow : Previous / Next Image\n"
-        "• + / - : Zoom In / Out\n"
-        "• Mouse Wheel : Zoom In / Out\n"
-        "• 0 / Home : Reset Zoom (1:1)\n"
-        "• W : Fit Image to Window / Canvas Viewport\n"
-        "• [ / ] : Rotate ↺ -90° / ↻ +90°\n"
-        "• C : Toggle Interactive Crop Tool\n"
-        "• D : Toggle Annotation Brush Tool\n"
-        "• S : Sharpen Convolution Filter\n"
-        "• E : Edge Detection Filter\n"
-        "• G : Grayscale Filter\n"
-        "• P : Sepia Filter\n"
-        "• I : Invert Colors\n"
-        "• B : 3x3 Box Blur Filter\n"
-        "• R : Reset to Original Base Image\n"
-        "• Esc : Cancel Crop / Deselect Active Tools\n"
-        "• Drag & Drop : Drop any BMP file directly onto window\n\n"
+        "- N / Demo : Load In-Memory Demo Studio Test Image\n"
+        "- O / Ctrl+O : Open BMP Image / Scan Directory\n"
+        "- Ctrl+S : Save / Export Current Image\n"
+        "- F5 : Quicksave snapshot to kimage_quicksave.bmp\n"
+        "- F9 : Quickload snapshot from kimage_quicksave.bmp\n"
+        "- H / F1 : Open this Help Guide\n"
+        "- Space : Play / Pause Slideshow\n"
+        "- Left / Right Arrow : Previous / Next Image\n"
+        "- + / - : Zoom In / Out\n"
+        "- Mouse Wheel : Zoom In / Out\n"
+        "- 0 / Home : Reset Zoom (1:1)\n"
+        "- W : Fit Image to Window / Canvas Viewport\n"
+        "- [ / ] : Rotate RotL (-90 deg) / RotR (+90 deg)\n"
+        "- C : Toggle Interactive Crop Tool\n"
+        "- D : Toggle Annotation Brush Tool\n"
+        "- S : Sharpen Convolution Filter\n"
+        "- E : Edge Detection Filter\n"
+        "- G : Grayscale Filter\n"
+        "- P : Sepia Filter\n"
+        "- I : Invert Colors\n"
+        "- B : 3x3 Box Blur Filter\n"
+        "- R : Reset to Original Base Image\n"
+        "- Esc : Cancel Crop / Deselect Active Tools\n"
+        "- Drag & Drop : Drop any BMP file directly onto window\n\n"
         "TOOLBAR CONTROLS:\n"
-        "• Open / Save / Demo: Load or export 32-bit BMP files or sample\n"
-        "• QSav [F5] / QLoad [F9]: Quick session snapshot persistence\n"
-        "• Rotate & Flip: ↺ -90°, ↻ +90°, Horizontal & Vertical Flip\n"
-        "• Color FX: Gray, Sepia, Inv, Blur, Brightness (+/-), Post, Thresh, Solar, SwapRB\n"
-        "• Spatial Kernels: Sharpen, Edge Detect, Emboss, Sobel\n"
-        "• Interactive Crop: Drag bounding box on canvas to crop\n"
-        "• Annotation Draw: Freehand drawing tool with blue ink\n"
-        "• Slideshow: Auto-cycles all BMPs in directory (2.5s interval)\n"
-        "• Sidebar: Live RGB Color Histogram & Image Metadata\n",
+        "- Open / Save / Demo: Load or export 32-bit BMP files or sample\n"
+        "- QSav [F5] / QLoad [F9]: Quick session snapshot persistence\n"
+        "- Rotate & Flip: RotL (-90 deg), RotR (+90 deg), Horizontal & Vertical Flip\n"
+        "- Color FX: Gray, Sepia, Inv, Blur, Brightness (+/-), Post, Thresh, Solar, SwapRB\n"
+        "- Spatial Kernels: Sharpen, Edge Detect, Emboss, Sobel\n"
+        "- Interactive Crop: Drag bounding box on canvas to crop\n"
+        "- Annotation Draw: Freehand drawing tool with blue ink\n"
+        "- Slideshow: Auto-cycles all BMPs in directory (2.5s interval)\n"
+        "- Sidebar: Live RGB Color Histogram & Image Metadata\n",
         "KImage Pro User Guide", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -888,7 +888,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = GetDC(hwnd);
             int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
             ReleaseDC(hwnd, hdc);
-            int fontHeight = -MulDiv(12, dpi, 72);
+            int fontHeight = -MulDiv(9, dpi, 72);
             HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             int x1 = 6, y1 = 5, btnH = 26;
@@ -923,11 +923,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtn = CreateWindowEx(0, "BUTTON", "Fit", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 32, btnH, hwnd, (HMENU)ID_BTN_ZOOM_FIT, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 36;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "↺", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 28, btnH, hwnd, (HMENU)ID_BTN_ROT_CCW, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 30;
+            hBtn = CreateWindowEx(0, "BUTTON", "RotL", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 36, btnH, hwnd, (HMENU)ID_BTN_ROT_CCW, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 38;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "↻", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 28, btnH, hwnd, (HMENU)ID_BTN_ROT_CW, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 30;
+            hBtn = CreateWindowEx(0, "BUTTON", "RotR", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 36, btnH, hwnd, (HMENU)ID_BTN_ROT_CW, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 38;
 
             hBtn = CreateWindowEx(0, "BUTTON", "FlpH", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 38, btnH, hwnd, (HMENU)ID_BTN_FLIP_H, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 40;
@@ -987,13 +987,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtn = CreateWindowEx(0, "BUTTON", "SwapRB", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x2, y2, 54, btnH, hwnd, (HMENU)ID_BTN_SWAPRB, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x2 += 58;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "◀", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x2, y2, 28, btnH, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "<", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x2, y2, 28, btnH, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x2 += 30;
 
-            g_hBtnPlay = CreateWindowEx(0, "BUTTON", "▶ Play", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x2, y2, 56, btnH, hwnd, (HMENU)ID_BTN_PLAY, NULL, NULL);
-            SendMessage(g_hBtnPlay, WM_SETFONT, (WPARAM)hFont, TRUE); x2 += 58;
+            g_hBtnPlay = CreateWindowEx(0, "BUTTON", "Play", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x2, y2, 48, btnH, hwnd, (HMENU)ID_BTN_PLAY, NULL, NULL);
+            SendMessage(g_hBtnPlay, WM_SETFONT, (WPARAM)hFont, TRUE); x2 += 50;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "▶", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x2, y2, 28, btnH, hwnd, (HMENU)ID_BTN_NEXT, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", ">", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x2, y2, 28, btnH, hwnd, (HMENU)ID_BTN_NEXT, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             g_hPenDraw = CreatePen(PS_SOLID, 3, RGB(59, 130, 246));
@@ -1158,7 +1158,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case ID_BTN_PLAY:
                     if (g_fileCount == 0) break;
                     g_slideshowPlaying = !g_slideshowPlaying;
-                    SetWindowTextA(g_hBtnPlay, g_slideshowPlaying ? "⏸ Pause" : "▶ Play");
+                    SetWindowTextA(g_hBtnPlay, g_slideshowPlaying ? "Pause" : "Play");
                     if (g_slideshowPlaying) {
                         SetTimer(hwnd, TIMER_SLIDESHOW, 2500, NULL);
                     } else {

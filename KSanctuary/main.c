@@ -258,6 +258,7 @@ typedef struct {
     char id[16];
     char name[48];
     char role[32];
+    char trait[48];
     int health;
     int hunger;
     int thirst;
@@ -439,6 +440,7 @@ typedef struct {
     int caravanRepLevel;
     int caravanTradesCount;
     int caravanRareBought[5];
+    int rareTarget; // Sentry Targeting Overdrive Module (+12 Base Def)
 
     // Active Tab & Manual Sub-tab
     int currentTab; // 0: Facilities, 1: Survivors, 2: Expeditions, 3: Defense, 4: Research, 5: Hazards, 6: Caravan, 7: Directives, 8: Manual
@@ -762,6 +764,31 @@ static float GetWorkerEfficiency(const Survivor* s, const Facility* fac) {
         if (s->str > 5) statBonus += (s->str - 5) * 0.15f;
     }
 
+    if (s->trait[0] != '\0') {
+        if ((strcmp(fac->id, "farm") == 0 || strcmp(fac->id, "farm_aero") == 0) &&
+            (strstr(s->trait, "Crops") || strstr(s->trait, "Hydro") || strstr(s->trait, "Food") || strstr(s->trait, "Botanist") || strstr(s->trait, "Crop") || strstr(s->trait, "Green"))) {
+            statBonus += 0.30f;
+        } else if ((strcmp(fac->id, "gen") == 0 || strcmp(fac->id, "gen_sub") == 0) &&
+            (strstr(s->trait, "Power") || strstr(s->trait, "Machinist") || strstr(s->trait, "Turbine") || strstr(s->trait, "Wrench") || strstr(s->trait, "Overclock"))) {
+            statBonus += 0.30f;
+        } else if ((strcmp(fac->id, "water") == 0 || strcmp(fac->id, "water_deep") == 0) &&
+            (strstr(s->trait, "Water") || strstr(s->trait, "Flow") || strstr(s->trait, "Hydro") || strstr(s->trait, "Pure"))) {
+            statBonus += 0.30f;
+        } else if ((strcmp(fac->id, "workshop") == 0 || strcmp(fac->id, "smelter") == 0) &&
+            (strstr(s->trait, "Scrap") || strstr(s->trait, "Salvage") || strstr(s->trait, "Eagle") || strstr(s->trait, "Scrapper"))) {
+            statBonus += 0.30f;
+        } else if ((strcmp(fac->id, "infirmary") == 0 || strcmp(fac->id, "bp_medsurge") == 0) &&
+            (strstr(s->trait, "Triage") || strstr(s->trait, "Healing") || strstr(s->trait, "Surgeon") || strstr(s->trait, "Medic"))) {
+            statBonus += 0.30f;
+        } else if (strcmp(fac->id, "cmd") == 0 && (strstr(s->trait, "Overseer") || strstr(s->trait, "Protocol") || strstr(s->trait, "Tactician"))) {
+            statBonus += 0.25f;
+        } else if (strcmp(fac->id, "security") == 0 && (strstr(s->trait, "Defense") || strstr(s->trait, "Vigilant") || strstr(s->trait, "Combat"))) {
+            statBonus += 0.30f;
+        } else if (strstr(s->trait, "Hardy")) {
+            statBonus += 0.10f;
+        }
+    }
+
     eff += statBonus;
     if (eff < 0.15f) eff = 0.15f;
     return eff;
@@ -907,6 +934,7 @@ static int CalculateTotalDefense() {
     int baseHull = 10;
     if (g_state.techReinforcedDef) baseHull += 15;
     if (g_state.relicsFound[3]) baseHull += 10; // Chobham Alloy Mantlet
+    if (g_state.rareTarget) baseHull += 12; // Sentry Targeting Overdrive Module
     int maxBar = (g_state.barricadeMaxHp > 0) ? g_state.barricadeMaxHp : 100;
     int barDef = (g_state.barricadeHp * 25) / maxBar;
     int turDef = g_state.turretCount * 18 + (g_state.turretOverclock ? 12 : 0);
@@ -966,7 +994,21 @@ static void CalculateTotals(float* foodProd, float* foodNeed, float* waterProd, 
         }
 
         if (assignedCount > 0) {
-            int isPowered = (!isBlackout || fac->powerPriority <= 2);
+            int isPowered = !isBlackout;
+            if (isBlackout) {
+                if (fac->powerProd > 0) isPowered = 1;
+                else if (g_state.policyPower == 1) { // Life Support First
+                    isPowered = (strcmp(fac->id, "infirmary") == 0 || strcmp(fac->id, "bp_medsurge") == 0 ||
+                                 strcmp(fac->id, "quarters") == 0 || strcmp(fac->id, "quarters_ext") == 0 ||
+                                 strcmp(fac->id, "cmd") == 0 || fac->powerPriority <= 1);
+                } else if (g_state.policyPower == 2) { // Resource Priority
+                    isPowered = (strcmp(fac->id, "farm") == 0 || strcmp(fac->id, "farm_aero") == 0 ||
+                                 strcmp(fac->id, "water") == 0 || strcmp(fac->id, "water_deep") == 0 ||
+                                 fac->powerPriority <= 1);
+                } else { // Balanced
+                    isPowered = (fac->powerPriority <= 2);
+                }
+            }
             if (isPowered) {
                 *foodProd += fac->foodProd * effSum;
                 *waterProd += fac->waterProd * effSum;
@@ -974,6 +1016,9 @@ static void CalculateTotals(float* foodProd, float* foodNeed, float* waterProd, 
             }
         }
     }
+
+    // Sentry Turrets auxiliary power load (3 kW each)
+    *powerLoad += (g_state.turretCount > 0 ? g_state.turretCount : 1) * 3;
 
     // Technology Tree bonuses
     if (g_state.techWaterFilt) {
@@ -1164,9 +1209,10 @@ static void BuyRareItem(int rareIdx) {
         for (int i = 0; i < g_state.numSurvivors; i++) {
             g_state.survivors[i].health += 20;
             if (g_state.survivors[i].health > 100) g_state.survivors[i].health = 100;
+            g_state.survivors[i].rads = 0;
         }
         if (g_state.exteriorRads > 3.0f) g_state.exteriorRads -= 3.0f;
-        AddLog("★ RARE ARTIFACT: Rad-Away Anti-Toxin Cask administered! All survivors healed +20 HP.", 3);
+        AddLog("★ RARE ARTIFACT: Rad-Away Anti-Toxin Cask administered! All survivors healed +20 HP and cleansed of rads.", 3);
     } else if (rareIdx == 1) { // Super enzyme
         g_state.food += 30.0f;
         AddLog("★ RARE ARTIFACT: Hydroponic Super-Growth Enzyme applied (+30 Food).", 3);
@@ -1175,6 +1221,7 @@ static void BuyRareItem(int rareIdx) {
         g_state.barricadeHp = g_state.barricadeMaxHp;
         AddLog("★ RARE ARTIFACT: Heavy Ballistic Armor welded! Barricades repaired & Max HP raised.", 3);
     } else if (rareIdx == 3) { // Targeting module
+        g_state.rareTarget = 1;
         g_state.defense += 12;
         AddLog("★ RARE ARTIFACT: Sentry Targeting Overdrive Module installed (+12 Base Def).", 3);
     } else if (rareIdx == 4) { // Luxury cassettes
@@ -1505,10 +1552,6 @@ static void ProcessNewDay() {
     if (g_state.policyWater == 0 && g_state.water > 0.0f && g_state.waterPurity >= 80.0f) {
         g_state.morale += 2.0f;
         if (g_state.morale > 100.0f) g_state.morale = 100.0f;
-    }
-    if (g_state.relicsFound[0]) {
-        g_state.morale += 1.0f; // Echo Holo-Tape #704: +1 morale/cycle from ambient 1999Hz harmonic broadcast
-        if (g_state.morale > 100.0f) g_state.morale = 100.0f;
     } else if (g_state.policyWater == 1) {
         g_state.morale -= 3.0f;
         if (g_state.morale < 10.0f) g_state.morale = 10.0f;
@@ -1520,6 +1563,10 @@ static void ProcessNewDay() {
             if (g_state.survivors[i].rads > 100) g_state.survivors[i].rads = 100;
         }
         AddLog("WATER RECYCLING: Silt recycling contaminated dwellers with +8 Rads!", 1);
+    }
+    if (g_state.relicsFound[0]) {
+        g_state.morale += 1.0f; // Echo Holo-Tape #704: +1 morale/cycle from ambient 1999Hz harmonic broadcast
+        if (g_state.morale > 100.0f) g_state.morale = 100.0f;
     }
 
     // Contaminated Aquifer rad ingestion
@@ -1704,18 +1751,24 @@ static void ProcessNewDay() {
         }
         if (treatedCount > 0 && (g_state.meds > 0 || hasSurg)) {
             if (!hasSurg && g_state.meds > 0) g_state.meds--;
-            int healAmt = (hasSurg ? 25 : 15);
+            int infLvl = 1;
+            for (int f = 0; f < g_state.numFacilities; f++) {
+                if (strcmp(g_state.facilities[f].id, "infirmary") == 0) { infLvl = g_state.facilities[f].level; break; }
+            }
+            int lvlBonus = (infLvl - 1) * 8;
+            int healAmt = (hasSurg ? 25 : 15) + lvlBonus;
             if (g_state.relicsFound[2]) healAmt += 10; // Auto-Suture Trauma Kit: +10 HP extra triage healing
+            int deconAmt = (hasSurg ? 20 : 10) + lvlBonus;
             for (int s = 0; s < g_state.numSurvivors; s++) {
                 if (g_state.survivors[s].health < 90 || g_state.survivors[s].rads > 20) {
                     g_state.survivors[s].health += healAmt;
                     if (g_state.survivors[s].health > 100) g_state.survivors[s].health = 100;
-                    g_state.survivors[s].rads -= (hasSurg ? 20 : 10);
+                    g_state.survivors[s].rads -= deconAmt;
                     if (g_state.survivors[s].rads < 0) g_state.survivors[s].rads = 0;
                 }
             }
             char medBuf[128];
-            sprintf(medBuf, "MED-LAB: Triage & decon wash administered to %d dweller(s).", treatedCount);
+            sprintf(medBuf, "MED-LAB: Triage & decon wash administered to %d dweller(s) (+%d HP / -%d Rads).", treatedCount, healAmt, deconAmt);
             AddLog(medBuf, 0);
         }
     }
@@ -1914,6 +1967,7 @@ static void InitGameState() {
     g_state.barricadeMaxHp = 100;
     g_state.turretCount = 1;
     g_state.turretOverclock = 0;
+    g_state.rareTarget = 0;
     g_state.combatDrillLevel = 1;
     g_state.raidThreatDays = 3;
     strcpy(g_state.lastRaidClan, "None yet");
@@ -2257,10 +2311,12 @@ static void InitGameState() {
     int sAgi[] = { 5, 4, 5, 6, 4 };
     int sInt[] = { 8, 7, 6, 6, 9 };
 
+    const char* sTraits[] = { "Overseer Protocol", "Turbine Guru (+30% Power)", "Pure Flow (+30% Water)", "Crop Tender (+Food)", "Field Triage (+Healing)" };
     for (int i = 0; i < 5; i++) {
         sprintf(g_state.survivors[i].id, "s%d", i + 1);
         strcpy(g_state.survivors[i].name, sNames[i]);
         strcpy(g_state.survivors[i].role, sRoles[i]);
+        strcpy(g_state.survivors[i].trait, sTraits[i]);
         strcpy(g_state.survivors[i].job, sJobs[i]);
         g_state.survivors[i].health = sHealth[i];
         g_state.survivors[i].morale = sMorale[i];
@@ -3347,12 +3403,27 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
             SetTextColor(hdc, COL_AMBER);
             TextOutA(hdc, cx + 180, cy + 5, lvlBuf, (int)strlen(lvlBuf));
 
+            int isFacPowered = !isBlackout;
+            if (isBlackout) {
+                if (fac->powerProd > 0) isFacPowered = 1;
+                else if (g_state.policyPower == 1) { // Life Support First
+                    isFacPowered = (strcmp(fac->id, "infirmary") == 0 || strcmp(fac->id, "bp_medsurge") == 0 ||
+                                    strcmp(fac->id, "quarters") == 0 || strcmp(fac->id, "quarters_ext") == 0 ||
+                                    strcmp(fac->id, "cmd") == 0 || fac->powerPriority <= 1);
+                } else if (g_state.policyPower == 2) { // Resource Priority
+                    isFacPowered = (strcmp(fac->id, "farm") == 0 || strcmp(fac->id, "farm_aero") == 0 ||
+                                    strcmp(fac->id, "water") == 0 || strcmp(fac->id, "water_deep") == 0 ||
+                                    fac->powerPriority <= 1);
+                } else { // Balanced
+                    isFacPowered = (fac->powerPriority <= 2);
+                }
+            }
             const char* stText = "ONLINE";
             COLORREF stColor = COL_GREEN;
             if (fac->powerProd > 0) {
                 stText = "GEN";
                 stColor = COL_GREEN;
-            } else if (isBlackout && fac->powerPriority > 2) {
+            } else if (isBlackout && !isFacPowered) {
                 stText = "BROWNOUT";
                 stColor = COL_RED;
             } else if (fac->maxWorkers > 0 && fac->assigned == 0) {
@@ -3436,11 +3507,11 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
 
             // Upgrade Button
             if (fac->level < 3) {
-                int uCost = fac->level * 30;
+                int uCost = GetEffectiveScrapCost(fac->level * 30);
                 char uBuf[24];
                 sprintf(uBuf, "UPG LV%d (%dS)", fac->level + 1, uCost);
-                COLORREF uBg = (g_state.scrap >= uCost) ? COL_BTN_BG : COL_DARK_CARD;
-                COLORREF uTxt = (g_state.scrap >= uCost) ? COL_AMBER : COL_TEXT_DIM;
+                COLORREF uBg = (g_state.scrap >= (float)uCost) ? COL_BTN_BG : COL_DARK_CARD;
+                COLORREF uTxt = (g_state.scrap >= (float)uCost) ? COL_AMBER : COL_TEXT_DIM;
                 DrawButtonControl(hdc, hFontSmall, cx + colW - 105, cy + 48, 98, 19, uBuf, uTxt, uBg, COL_BORDER, BTN_FAC_UPGRADE, i, 0);
             } else {
                 SetTextColor(hdc, COL_TEXT_DIM);
@@ -3575,8 +3646,12 @@ static void DrawSurvivorsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x,
             SetTextColor(hdc, moodCol);
             TextOutA(hdc, x + 155, cy + 5, moodStr, (int)strlen(moodStr));
 
-            char roleBuf[64];
-            sprintf(roleBuf, "%s | S:%d A:%d I:%d", s->role, s->str, s->agi, s->inte);
+            char roleBuf[128];
+            if (s->trait[0] != '\0') {
+                sprintf(roleBuf, "%s | %s | S:%d A:%d I:%d", s->role, s->trait, s->str, s->agi, s->inte);
+            } else {
+                sprintf(roleBuf, "%s | S:%d A:%d I:%d", s->role, s->str, s->agi, s->inte);
+            }
             SetTextColor(hdc, COL_TEXT_DIM);
             TextOutA(hdc, x + 44, cy + 22, roleBuf, (int)strlen(roleBuf));
 
@@ -3915,8 +3990,8 @@ static void DrawDefenseView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
     int radH = 48;
     DrawStyledBox(hdc, x, radY, w, radH, RGB(25, 12, 10), COL_RED);
 
-    int cIdx = g_state.day / 3;
-    if (cIdx > 4) cIdx = 4;
+    int cIdx = g_state.day / 4;
+    if (cIdx > 5) cIdx = 5;
     DrawRaiderSprite(hdc, x + 8, radY + 8, cIdx);
 
     SelectObject(hdc, hFontSmall);
@@ -3935,7 +4010,7 @@ static void DrawDefenseView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
 
     SelectObject(hdc, hFontSmall);
     SetTextColor(hdc, COL_TEXT_MAIN);
-    const char* pClans[] = { "Rustfang Marauders (~35)", "Iron Skull Warband (~50)", "Rad-Scorpion Reavers (~70)", "Dune Stalkers (~90)", "Super-Mutant Siege (~110)" };
+    const char* pClans[] = { "Rustfang Marauders (~35)", "Iron Skull Warband (~50)", "Rad-Scorpion Reavers (~70)", "Dune Stalkers (~90)", "Super-Mutant Siege (~110)", "Titan Cyber-Vanguard (~140)" };
     char pBuf[64];
     sprintf(pBuf, "Projected Warband: %s", pClans[cIdx]);
     TextOutA(hdc, x + 46, radY + 32, pBuf, (int)strlen(pBuf));
@@ -3973,13 +4048,17 @@ static void DrawDefenseView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
     SetTextColor(hdc, COL_TEXT_DIM);
     TextOutA(hdc, x + 46, cardY + 48, "Steel blast-doors absorb shock", 30);
 
-    COLORREF rBg = (g_state.scrap >= 15 && g_state.barricadeHp < g_state.barricadeMaxHp) ? COL_BTN_BG : COL_DARK_CARD;
-    COLORREF rTxt = (g_state.scrap >= 15 && g_state.barricadeHp < g_state.barricadeMaxHp) ? COL_GREEN : COL_TEXT_DIM;
-    DrawButtonControl(hdc, hFontSmall, x + 8, cardY + 68, (cardW - 20) / 2, 22, "REPAIR (+35HP)", rTxt, rBg, COL_BORDER, BTN_DEF_REPAIR, 0, 0);
+    int repCost = GetEffectiveScrapCost(15);
+    char repBuf[24]; sprintf(repBuf, "REPAIR (%dS)", repCost);
+    COLORREF rBg = (g_state.scrap >= (float)repCost && g_state.barricadeHp < g_state.barricadeMaxHp) ? COL_BTN_BG : COL_DARK_CARD;
+    COLORREF rTxt = (g_state.scrap >= (float)repCost && g_state.barricadeHp < g_state.barricadeMaxHp) ? COL_GREEN : COL_TEXT_DIM;
+    DrawButtonControl(hdc, hFontSmall, x + 8, cardY + 68, (cardW - 20) / 2, 22, repBuf, rTxt, rBg, COL_BORDER, BTN_DEF_REPAIR, 0, 0);
 
-    COLORREF rfBg = (g_state.scrap >= 35) ? COL_BTN_BG : COL_DARK_CARD;
-    COLORREF rfTxt = (g_state.scrap >= 35) ? COL_AMBER : COL_TEXT_DIM;
-    DrawButtonControl(hdc, hFontSmall, x + 12 + (cardW - 20) / 2, cardY + 68, (cardW - 20) / 2, 22, "MAX+25 (35S)", rfTxt, rfBg, COL_BORDER, BTN_DEF_REINFORCE, 0, 0);
+    int reinfCost = GetEffectiveScrapCost(35);
+    char reinfBuf[24]; sprintf(reinfBuf, "MAX+25 (%dS)", reinfCost);
+    COLORREF rfBg = (g_state.scrap >= (float)reinfCost) ? COL_BTN_BG : COL_DARK_CARD;
+    COLORREF rfTxt = (g_state.scrap >= (float)reinfCost) ? COL_AMBER : COL_TEXT_DIM;
+    DrawButtonControl(hdc, hFontSmall, x + 12 + (cardW - 20) / 2, cardY + 68, (cardW - 20) / 2, 22, reinfBuf, rfTxt, rfBg, COL_BORDER, BTN_DEF_REINFORCE, 0, 0);
 
     // Card 2: Turrets
     int c2X = x + cardW + 8;
@@ -4009,13 +4088,17 @@ static void DrawDefenseView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
     SetTextColor(hdc, COL_TEXT_DIM);
     TextOutA(hdc, c2X + 46, cardY + 50, "Twin 50-cal crossfire sentries", 30);
 
-    COLORREF bTurBg = (g_state.scrap >= 45) ? COL_BTN_BG : COL_DARK_CARD;
-    COLORREF bTurTxt = (g_state.scrap >= 45) ? COL_GREEN : COL_TEXT_DIM;
-    DrawButtonControl(hdc, hFontSmall, c2X + 8, cardY + 68, (cardW - 20) / 2, 22, "+TURRET(45S)", bTurTxt, bTurBg, COL_BORDER, BTN_DEF_TURRET, 0, 0);
+    int bTurCost = GetEffectiveScrapCost(45);
+    char bTurBuf[24]; sprintf(bTurBuf, "+TURRET(%dS)", bTurCost);
+    COLORREF bTurBg = (g_state.scrap >= (float)bTurCost) ? COL_BTN_BG : COL_DARK_CARD;
+    COLORREF bTurTxt = (g_state.scrap >= (float)bTurCost) ? COL_GREEN : COL_TEXT_DIM;
+    DrawButtonControl(hdc, hFontSmall, c2X + 8, cardY + 68, (cardW - 20) / 2, 22, bTurBuf, bTurTxt, bTurBg, COL_BORDER, BTN_DEF_TURRET, 0, 0);
 
-    COLORREF ocBg = (!g_state.turretOverclock && g_state.scrap >= 20) ? COL_BTN_BG : COL_DARK_CARD;
-    COLORREF ocTxt = (!g_state.turretOverclock && g_state.scrap >= 20) ? COL_AMBER : COL_TEXT_DIM;
-    DrawButtonControl(hdc, hFontSmall, c2X + 12 + (cardW - 20) / 2, cardY + 68, (cardW - 20) / 2, 22, "OVERCLK(20S)", ocTxt, ocBg, COL_BORDER, BTN_DEF_OVERCLOCK, 0, 0);
+    int ocCost = GetEffectiveScrapCost(20);
+    char ocBuf[24]; sprintf(ocBuf, "OVERCLK(%dS)", ocCost);
+    COLORREF ocBg = (!g_state.turretOverclock && g_state.scrap >= (float)ocCost) ? COL_BTN_BG : COL_DARK_CARD;
+    COLORREF ocTxt = (!g_state.turretOverclock && g_state.scrap >= (float)ocCost) ? COL_AMBER : COL_TEXT_DIM;
+    DrawButtonControl(hdc, hFontSmall, c2X + 12 + (cardW - 20) / 2, cardY + 68, (cardW - 20) / 2, 22, ocBuf, ocTxt, ocBg, COL_BORDER, BTN_DEF_OVERCLOCK, 0, 0);
 
     // Card 3: Combat Readiness
     int c3X = c2X + cardW + 8;
@@ -4057,9 +4140,11 @@ static void DrawDefenseView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
     SetTextColor(hdc, COL_TEXT_DIM);
     TextOutA(hdc, c3X + 44, cardY + 50, "+3 Def bonus per drill level", 28);
 
-    COLORREF drBg = (g_state.scrap >= 12) ? COL_BTN_BG : COL_DARK_CARD;
-    COLORREF drTxt = (g_state.scrap >= 12) ? COL_CYAN : COL_TEXT_DIM;
-    DrawButtonControl(hdc, hFontSmall, c3X + 8, cardY + 68, cardW - 16, 22, "RUN DRILL (12 SCRAP)", drTxt, drBg, COL_BORDER, BTN_DEF_DRILL, 0, 0);
+    int drillCost = GetEffectiveScrapCost(12);
+    char drillBuf[32]; sprintf(drillBuf, "COMBAT DRILL (%dS)", drillCost);
+    COLORREF drBg = (g_state.scrap >= (float)drillCost) ? COL_BTN_BG : COL_DARK_CARD;
+    COLORREF drTxt = (g_state.scrap >= (float)drillCost) ? COL_CYAN : COL_TEXT_DIM;
+    DrawButtonControl(hdc, hFontSmall, c3X + 8, cardY + 68, cardW - 16, 22, drillBuf, drTxt, drBg, COL_BORDER, BTN_DEF_DRILL, 0, 0);
 
     // 3. Guard Roster List
     int rosterY = cardY + cardH + 8;
@@ -5140,6 +5225,7 @@ static void DrawRaidModal(HDC hdc, HFONT hFontBold, HFONT hFontSmall) {
     else if (strstr(g_state.lastRaidClan, "Rad-Scorpion") != NULL) raidClanIdx = 2;
     else if (strstr(g_state.lastRaidClan, "Dune Stalker") != NULL) raidClanIdx = 3;
     else if (strstr(g_state.lastRaidClan, "Super-Mutant") != NULL) raidClanIdx = 4;
+    else if (strstr(g_state.lastRaidClan, "Titan Cyber") != NULL) raidClanIdx = 5;
 
     DrawRaiderSprite(hdc, mx + 16, my + 40, raidClanIdx);
 
@@ -5378,7 +5464,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 g_crtScanlines = !g_crtScanlines;
                 PlaySfx(SFX_CLICK);
                 InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam == 'S' || wParam == 's') {
+            } else if (wParam == 'M' || wParam == 'm' || wParam == 'S' || wParam == 's') {
                 g_soundEnabled = !g_soundEnabled;
                 PlaySfx(SFX_CLICK);
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -5524,7 +5610,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                                 g_state.defense += 5;
                                 strcpy(bonusMsg, "+5 Sensor Defense");
                             } else if (strcmp(fac->id, "infirmary") == 0) {
-                                strcpy(bonusMsg, "Faster Medical Recovery");
+                                fac->maxWorkers++;
+                                strcpy(bonusMsg, "+1 staff slot & enhanced recovery (+8 HP / -8 Rads/lvl)");
                             }
                             char buf[128];
                             sprintf(buf, "UPGRADE: %s upgraded to Level %d! (%s)", fac->name, fac->level, bonusMsg);
@@ -5642,6 +5729,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             sprintf(s->id, "s_%d", (int)time(NULL) % 10000 + g_state.numSurvivors);
                             strcpy(s->name, c->name);
                             strcpy(s->role, c->role);
+                            strcpy(s->trait, c->trait);
                             strcpy(s->job, "unassigned");
                             s->health = c->health;
                             s->morale = c->morale;
@@ -6042,7 +6130,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             DrawButtonControl(memDC, hFontSmall, rightX - 285, 14, 65, 24, "SAVE (F5)", COL_TEXT_MAIN, COL_BTN_BG, COL_BORDER, BTN_QUICKSAVE, 0, 0);
             const char* crtLabel = g_crtScanlines ? "CRT: ON" : "CRT: OFF";
             DrawButtonControl(memDC, hFontSmall, rightX - 355, 14, 65, 24, crtLabel, g_crtScanlines ? COL_GREEN : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_CRT, 0, 0);
-            const char* audLabel = g_soundEnabled ? "AUDIO: ON" : "AUDIO: OFF";
+            const char* audLabel = g_soundEnabled ? "AUDIO: ON [M]" : "AUDIO: OFF [M]";
             DrawButtonControl(memDC, hFontSmall, rightX - 435, 14, 75, 24, audLabel, g_soundEnabled ? COL_GREEN : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_AUDIO, 0, 0);
             char themeLabel[40];
             sprintf(themeLabel, "THEME: %s", g_palettes[g_currentTheme].name);

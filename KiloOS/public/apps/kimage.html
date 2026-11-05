@@ -20,9 +20,11 @@
     --accent-active: #2563eb;
     --danger: #ef4444;
     --success: #22c55e;
-    --panel-width: 285px;
+    --panel-width: 255px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  .hidden { display: none !important; }
+  .row { display: flex; align-items: center; gap: 8px; }
   body {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -40,21 +42,23 @@
   /* Header Toolbar */
   .toolbar {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 14px;
+    padding: 6px 12px;
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--glass-border);
     z-index: 20;
-    gap: 8px;
+    gap: 6px;
+    box-sizing: border-box;
   }
   .toolbar-section {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    flex-shrink: 0;
   }
   .app-title {
     font-size: 15px;
@@ -73,17 +77,18 @@
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid var(--glass-border);
     color: var(--text-main);
-    padding: 6px 11px;
+    padding: 5px 9px;
     border-radius: 6px;
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 4px;
     user-select: none;
+    white-space: nowrap;
   }
   button:hover {
     background: rgba(255, 255, 255, 0.12);
@@ -644,7 +649,7 @@
     <div class="toolbar-section">
       <div class="app-title">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        KImage Pro <span style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-left:8px;">(Press H/F1 for Help)</span>
+        KImage Pro
       </div>
       <button class="primary" id="btnOpen" aria-label="Open Images">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
@@ -1263,7 +1268,8 @@
     adjustments: { brightness: 0, contrast: 0, blur: 0, saturation: 0, preset: 'none' },
     crop: { active: false, x: 0, y: 0, w: 0, h: 0 },
     draw: { active: false, isDrawing: false, color: '#3b82f6', size: 4, paths: [] },
-    slideshow: { playing: false, timer: null, animFrame: null, startTime: 0, interval: 3000, wasPlaying: false }
+    slideshow: { playing: false, timer: null, animFrame: null, startTime: 0, interval: 3000, wasPlaying: false },
+    rightPanelUserClosed: false
   };
 
   // UI Elements
@@ -1299,6 +1305,9 @@
   function showToast(msg, type = 'info', duration = 2800) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
+    while (container.children.length >= 2) {
+      container.removeChild(container.firstChild);
+    }
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.title = 'Click to dismiss';
@@ -1952,6 +1961,11 @@
       ui.btnSaveModal.classList.remove('hidden');
       ui.emptyState.classList.add('hidden');
       ui.canvasWrapper.classList.remove('hidden');
+      if (!state.rightPanelUserClosed) {
+        ui.rightPanel.classList.remove('hidden');
+        document.getElementById('btnToggleRight')?.classList.add('active');
+        requestAnimationFrame(() => renderHistogram());
+      }
     } else {
       ui.bottomBar.classList.add('hidden');
       ui.leftPanel.classList.add('hidden');
@@ -1959,6 +1973,8 @@
       ui.btnSaveModal.classList.add('hidden');
       ui.emptyState.classList.remove('hidden');
       ui.canvasWrapper.classList.add('hidden');
+      ui.rightPanel.classList.add('hidden');
+      document.getElementById('btnToggleRight')?.classList.remove('active');
       state.currentIndex = -1;
     }
   }
@@ -2085,6 +2101,7 @@
     if (metaMP) metaMP.textContent = `${((targetW * targetH) / 1000000).toFixed(2)} MP`;
 
     renderHistogram();
+    requestAnimationFrame(() => renderHistogram());
   }
 
   // Render RGB Color Histogram with Crisp HiDPI Scaling
@@ -2508,6 +2525,11 @@
         ui.btnSaveModal.classList.remove('hidden');
         ui.emptyState.classList.add('hidden');
         ui.canvasWrapper.classList.remove('hidden');
+        if (!state.rightPanelUserClosed) {
+          ui.rightPanel.classList.remove('hidden');
+          document.getElementById('btnToggleRight')?.classList.add('active');
+          requestAnimationFrame(() => renderHistogram());
+        }
 
         selectImage(0, true);
         if (snap.activeTab) {
@@ -3383,9 +3405,11 @@
   const btnToggleRight = document.getElementById('btnToggleRight');
   if (btnToggleRight) {
     btnToggleRight.onclick = () => {
-      ui.rightPanel.classList.toggle('hidden');
-      btnToggleRight.classList.toggle('active', !ui.rightPanel.classList.contains('hidden'));
-      if (!ui.rightPanel.classList.contains('hidden')) {
+      const willHide = !ui.rightPanel.classList.contains('hidden');
+      ui.rightPanel.classList.toggle('hidden', willHide);
+      btnToggleRight.classList.toggle('active', !willHide);
+      state.rightPanelUserClosed = willHide;
+      if (!willHide) {
         requestAnimationFrame(() => renderHistogram());
       }
     };

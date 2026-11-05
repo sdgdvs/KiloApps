@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -31,8 +31,8 @@ current_targets:
   kilo_creator: kweb://rfc-archive
   kilo_graphics: KStarDredge
   kilo_soundscape: KStellar
-  kilo_tester: KSanctuary
-  kilo_usability: KImage
+  kilo_tester: KColony
+  kilo_usability: KSanctuary
   kilo_qa: KSynth
   kilo_expander: KChess
   kilo_review: KGraph
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-graphics
-  app: KChrono
-  timestamp: '2026-11-04T12:39:18-08:00'
+  agent: kilo-usability
+  app: KImage
+  timestamp: '2026-11-05T11:36:59-08:00'
 last_planner_run: '2026-11-04T20:16:29Z'
 ---
 
@@ -130,11 +130,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KCyber` | `KiloOS/public/apps/kcyber.html` | Compose 1999 cyberpunk netrunner breakbeat 6-channel FM suite (Dorian acid FM bass, syncopated 5:3 breakbeat drums, cold digital bell arpeggios, ICE breach alarms). |
 
 ### 4. App Tester Queue (`kilo-tester`)
-- **Active Target**: `KSanctuary`
+- **Active Target**: `KColony`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KSanctuary` | `KiloOS/public/apps/ksanctuary.html`, `KSanctuary/main.c` | **[ARGON REVIEW]:** Fix ReferenceError showRetroToast -> showToast in processNewDay() (ksanctuary.html:8680) crashing relic recovery and soft-locking scouts; decouple holotape/relicsFound[0] from the water-policy else-if chain in ksanctuary.html and KSanctuary/main.c; persist and apply candidate traits on admission, wire Reactor Power Priority policy in getTotals()/CalculateTotals(), fix rare_radaway (reset rads=0) and persist rare_target (+12 Def) in getDefenseBreakdown()/CalculateTotalDefense(), scale Infirmary upgrades (+1 maxWorkers and +8 HP/-8 Rads triage/lvl), apply getScrapDiscount/GetEffectiveScrapCost to facility upgrade and defense button checks/labels, add turretCount*3 kW load and Rad Storm +25 Rads/-20% waterPurity parity in HTML, fix [M] -> toggleAudio() and Canvas strokeStyle CSS var, and add clanIdx 5 Titan Cyber-Vanguard to DrawRaidModal/DrawDefenseView in main.c. |
 | `KColony` | `KiloOS/public/apps/kcolony.html`, `KColony/main.c` | **[ARGON REVIEW]:** Preserve unlimited resources (maxPower = 9999, power = 9999, food = 9999, mat = 9999, advm = 9999, sci = 9999) during gameTick() when gameMode === 4 (Sandbox Colony) instead of clamping maxPower to 50 + batCount*50, and allow Space key on #start-screen when tick === 0 to launch startGame(0). |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Fix tower target priority in update() (kfortress.html & KFortress/main.c) to rank enemies by path progress (e.waypointIndex * 10000 - distToNextWaypoint) instead of adding tower distance; wire missing mutator effects (mutators.eclipse +30% tower fire rate, mutators.phaseshift +75% kill gold, mutators.titan 2x boss spawns); and route poison/trap/chain kills through the unified death handler so boss kills award 100g and increment hsBoss. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Rebalance impossible Medium/Hard hour budgets to Easy 18h / Medium 20h / Hard 22h and fix advanceTime()/AdvanceTime() so reaching 0h finishes the current action and still permits final Accuse [A] (only failing if hours > timeLeft); fix resetScannerFreq() to restore moves=12 instead of decrementing moves--, clamp scanner current >= 0, and add Reset [R] to KMystery/main.c; call dead spawnShockwave() on clue/scanner/lie/win events, mute rainGain and sfxGain in NoirAudioEngine.toggleMusic(), and route WM_KEYDOWN in KMystery/main.c GetMessageA loop so child-control focus stops breaking hotkeys. |
@@ -149,13 +148,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | **[ARGON REVIEW]:** Fix broken multi-line string literals in PRESETS.vfs_demo caused by unescaped \n inside template literal, implement documented 0o octal literals in parsePrimary() and loop/endloop control flow in createScriptStepper(), strip string literals before identifier scanning and support compound assignments in analyzeScript() to eliminate false-positive linter warnings on DEFAULT_SCRIPT, and HTML-escape renderMemoryTable() cells/copy handlers to prevent XSS and quote SyntaxErrors. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | **[ARGON REVIEW]:** Fix createNode() and loadPresetTopology() in knetmap.html to match node.subnetId via isIpInSubnet() (assigning sub-dmz to GW-BORDER-7200, FW-BASTION, and SW-DMZ-3CON instead of sub-eng), implement drawCollisionDomains() in drawScene() when #chkCollisionDomains is checked, fix onTouchStart() calling undefined updateInspector() instead of updateInspectorPane(), dynamically update #cidrStatsLabel/#cidrParentLabel in updateCidrBar() and wire oninput=recalcSubnetTool() + dynamic split child preview in #subnetModal, dispatch an initial ICMP ping pulse on preset load, and in KNetMap/main.c compute full IP/mask/range in CalculateSubnet(), make ID_BTN_CUT enter click-to-sever link mode (g_activeMode=3), and route WM_KEYDOWN in MainEntry GetMessageA loop. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | **[ARGON REVIEW]:** Fix brick collision logic in kbreakout.html so Type 8 bricks decrement brick_hp[r][c] instead of morphing bricks[r][c] into types 7/6/5/4, implement Type 5 teleporter, Type 6 powerup crate, and Type 7 1-hit ghost brick handlers matching main.c, wire sticky_timer countdown and paddle ball-catch on power_type===4, invoke recordTelemetry() across gameplay events, and replace the invalid CSS linear-gradient fillStyle in renderDuel() P1 surge meter. |
+| `KSanctuary` | `KiloOS/public/apps/ksanctuary.html`, `KSanctuary/main.c` | **[ARGON REVIEW]:** Fix ReferenceError showRetroToast -> showToast in processNewDay() (ksanctuary.html:8680) crashing relic recovery and soft-locking scouts; decouple holotape/relicsFound[0] from the water-policy else-if chain in ksanctuary.html and KSanctuary/main.c; persist and apply candidate traits on admission, wire Reactor Power Priority policy in getTotals()/CalculateTotals(), fix rare_radaway (reset rads=0) and persist rare_target (+12 Def) in getDefenseBreakdown()/CalculateTotalDefense(), scale Infirmary upgrades (+1 maxWorkers and +8 HP/-8 Rads triage/lvl), apply getScrapDiscount/GetEffectiveScrapCost to facility upgrade and defense button checks/labels, add turretCount*3 kW load and Rad Storm +25 Rads/-20% waterPurity parity in HTML, fix [M] -> toggleAudio() and Canvas strokeStyle CSS var, and add clanIdx 5 Titan Cyber-Vanguard to DrawRaidModal/DrawDefenseView in main.c. |
 
 ### 5. Usability & UX Queue (`kilo-usability`)
-- **Active Target**: `KImage`
+- **Active Target**: `KSanctuary`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Define missing .hidden (display none !important) and .row (display flex; align-items center; gap 8px) CSS in kimage.html so #emptyState hides on image load (fixing sheet.png Panel 3 canvas clipping), inactive #tabKernel..#tabDraw and #rightStegoContent stop stacking simultaneously, #cropControls stays hidden until enabled, and Kernel/Resize/ASCII .row inputs align side-by-side; auto-show #rightPanel (unless user-toggled off) with #btnToggleRight.active and live renderHistogram() on image load so #histCanvas is not blank black; fit .toolbar on 1 row at 1060px (--panel-width 255px, nowrap compact buttons, remove redundant Press H/F1 subtitle), cap #toastContainer to 2 toasts, and in KImage/main.c use 9pt Segoe UI (-MulDiv(9,dpi,72)) and clean ASCII button/help labels (RotL, RotR, <, Play, Pause, >, -) to fix clipped 12pt UTF-8 mojibake. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html`, `KSanctuary/main.c` | **[ARGON REVIEW]:** Eliminate 230px top-chrome vertical bloat at 850x613 (sheet.png) by compacting header buttons onto 1 nowrap row, changing #hud-container to a single-row 9-column grid (repeat(9, minmax(0,1fr))) to eliminate the 2-card orphan row, and shortening #tab-bar [1]-[8] labels with nowrap (plus widening tabW 68 -> 108 in KSanctuary/main.c:6067) so row 1 of #facilities-grid renders unclipped above the fold; add devicePixelRatio HiDPI scaling to #vault-cutaway-canvas so room labels and 48x48 xenobiology sprites render crisply without non-integer 0.78x pixelated distortion, cancel vaultAnimId when leaving #view-facilities and merge duplicate visibilitychange listeners, and replace blocking confirm() in resetShelter() with an Esc-dismissible in-DOM modal. |
 | `KFortress` | `KiloOS/public/apps/kfortress.html`, `KFortress/main.c` | **[ARGON REVIEW]:** Convert .tower-selection in .sidebar to a compact 2-column CSS grid (grid-template-columns: 1fr 1fr; gap: 4px) and tighten .sidebar padding/gaps so all 7 towers, 4 traps, modes, map switcher, #waveBtn, #academyBtn/#resetBtn, and HERO & SKILLS [1-5] fit 100% visible inside the 1024x703 KiloOS viewport without vertical scroll clipping; also add right-click / [Delete] tower demolish for 70% gold refund. |
 | `KMystery` | `KiloOS/public/apps/kmystery.html`, `KMystery/main.c` | **[ARGON REVIEW]:** Compact #help-modal > div padding/margins and 2-column Tips/Guide layout so first-boot manual fits 960x673 without mid-line text clipping; preserve [S]/[I] hotkeys and show hour costs (2h/1h) on #search-btn, #interrogate-btn, #lab-btn, and #travel-buttons; fix #scanner-game button labels from kHz to Hz; persist discovered suspect alibis and CAUGHT/NERVOUS reactions in #suspect-list (plus patience dots and [PRESENT] in KMystery/main.c hListSuspects); and wire #scene-canvas click hotspots. |
@@ -169,6 +168,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KScript` | `KiloOS/public/apps/kscript.html`, `KScript/main.c` | **[ARGON REVIEW]:** Compact 3-row header .toolbar and 2-row .presets-bar vertical bloat at 1040x643 and set white-space nowrap on #panelEditor .panel-header so Script Editor does not wrap, map AST category keys in renderAstDistribution() (STMT_ASSIGN, STMT_BRANCH_*, STMT_LOOP_*, STMT_PRINT, EXPRESSION) to distinct colors and short labels so #astCanvas is not solid purple with overflowing legend text, raise .gutter contrast from #475569 to >= #94a3b8, differentiate Print/Return/trace lines in #outputArea, move .toast-container to bottom 42px so toasts do not cover zoom controls, and unify v2.2 labels. |
 | `KNetMap` | `KiloOS/public/apps/knetmap.html`, `KNetMap/main.c` | **[ARGON REVIEW]:** Update resetView() in knetmap.html to auto-fit and center the TOPOLOGY.nodes bounding box (with 55px label/hull padding) inside canvasContainer and compact preset node Y-coordinates (y=75..345) so all 8 Corp DMZ nodes and labels render 100% visible in the 905x428 canvas; compact aside.palette (2-column grids for Add Hardware, Diagnostics, and Media Standard with tighter gaps) so all tools, cable selectors, overlays, and Clear Grid fit at 1080x683 without vertical scroll clipping; and add Arrow/WASD viewport/node navigation and Enter ping trigger in onKeyDown. |
 | `KBreakout` | `KiloOS/public/apps/kbreakout.html`, `KBreakout/main.c` | **[ARGON REVIEW]:** Fit #game-container and canvas cleanly inside the 480x423 KiloOS viewport without vertical clipping (compact #ui into a single non-wrapping row, adjust layout or scale #game-container for both 400px solo and 740px duel modes so the paddle at y=h-40 and #skill-bar are 100% visible), reposition #toast-bar below #ui so it does not obscure HUD counters, and add a subtle CRT scanline/grid pass. |
+| `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Define missing .hidden (display none !important) and .row (display flex; align-items center; gap 8px) CSS in kimage.html so #emptyState hides on image load (fixing sheet.png Panel 3 canvas clipping), inactive #tabKernel..#tabDraw and #rightStegoContent stop stacking simultaneously, #cropControls stays hidden until enabled, and Kernel/Resize/ASCII .row inputs align side-by-side; auto-show #rightPanel (unless user-toggled off) with #btnToggleRight.active and live renderHistogram() on image load so #histCanvas is not blank black; fit .toolbar on 1 row at 1060px (--panel-width 255px, nowrap compact buttons, remove redundant Press H/F1 subtitle), cap #toastContainer to 2 toasts, and in KImage/main.c use 9pt Segoe UI (-MulDiv(9,dpi,72)) and clean ASCII button/help labels (RotL, RotR, <, Play, Pause, >, -) to fix clipped 12pt UTF-8 mojibake. |
 
 ### 6. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial, State & Mature Graduation)
 - **Active Target**: `KSynth`
@@ -297,6 +297,18 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-05T11:36:59-08:00 — kilo-usability: KImage (Usability, Responsive Layout & Ergonomics Polish)**
+  - Status: PASS ✅ (0 errors, web 174.5 KB, native 27.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 17.19%, HEAD Δ 12.12%, 0 fail, 0 warn, 4.9s)).
+  - Layout & CSS: Defined missing .hidden and .row CSS, fitted .toolbar on 1 row at 1060px with --panel-width 255px, and capped toasts to 2.
+  - Panels & Histogram: Auto-show #rightPanel with live RGB histogram on image load and cleanly hide #emptyState to fix canvas clipping.
+  - Native Parity: Applied 9pt Segoe UI (-MulDiv(9,dpi,72)) and clean ASCII labels (RotL, RotR, <, Play, Pause, >, -) in KImage/main.c.
+  - Handoff: Advanced `kilo-usability` to `KSanctuary`; rotated active agent to `kilo-qa`.
+
+- **2026-11-05T10:39:52-08:00 — kilo-tester: KSanctuary (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS (0 errors, web 467.4 KB, native 266.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
+  - Repairs: showRetroToast ReferenceError fixed, holotape decoupled from water policy, traits persisted/applied on admission, Reactor Power Priority wired in getTotals/CalculateTotals, rare items fixed/persisted, Infirmary upgrades scaled, scrap discounts applied to facility/defense buttons, turret 3kW load & Rad Storm parity added, KeyM hotkey/Canvas strokeStyle fixed, and Titan Cyber-Vanguard integrated in main.c.
+  - Handoff: Advanced `kilo-tester` to `KColony`; rotated active agent to `kilo-usability`.
+
 - **2026-11-04T12:39:18-08:00 — kilo-graphics: KChrono (Temporal Paradox Visual Suite & Glint Sweep)**
   - Status: PASS ✅ (0 errors, web 214.1 KB, native 27.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 1.08%, HEAD Δ 2.95%, 0 fail, 0 warn, 8.5s)).
   - Integrated time-portal distortion effects (gravitational lensing & chromatic vortex waves on epoch warp and rift/core tiles).
@@ -315,15 +327,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Found critical showRetroToast ReferenceError crash on relic recovery, holotape else-if bypassing water policy penalties, and Potemkin power priority/traits/rare items.
   - Dispatched surgical fixes to kilo-tester (simulation/parity bugs), kilo-usability (230px top-chrome bloat & HiDPI cutaway), and kilo-expander (Phase VI VFS mesh, xenobiology loop & Win32 cutaway).
   - Argon Fix Injection & Handoff: Injected Row-1 specs [`kilo-tester`->`KSanctuary`, `kilo-usability`->`KSanctuary`, `kilo-expander`->`KSanctuary`] (un-quarantined `KSanctuary` from Mature); advanced `kilo-review` to `KGraph`; next agent `kilo-creator`.
-
-- **2026-11-04T10:37:59-08:00 — kilo-expander: KBreakout (Win32 C Hazard Parity & KiloOS VFS Replay/Board Mesh Integration)**
-  - Status: PASS ✅ (0 errors, web 223.4 KB, native 56.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 12.18%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.7s)).
-  - Completed full dual-target hazard parity: wired ufo_active, ufo_bullet, shield_active, boss_bullets, and meteors hazard updates and render routines in update() and render() matching KBreakout/main.c.
-  - Integrated KiloOS VFS & Inter-App IPC Mesh with bidirectional replay (.kbrk) and board matrix (.kbrd) saving/loading and quicksave mirroring.
-  - Handoff: Advanced `kilo-expander` to `KChess`; rotated active agent to `kilo-review`.
-
-- **2026-11-04T09:32:28-08:00 — kilo-qa: KBBS (Pass 5 QA, Dual Parity & Mature Quarantine)**
-  - Status: PASS ✅ (0 errors, web 212.0 KB, native 111.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.15%, 0 fail, 0 warn, 6.1s)).
-  - State & Tutorial: Verified F5/F9 quicksave/quickload, kbbs_tutorialSeen flag, and Escape modal dismissals.
-  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup.
-  - Mature Quarantine & Handoff: Promoted `KBBS` to Mature archive; advanced `kilo-qa` to `KSynth`; next agent `kilo-expander`.

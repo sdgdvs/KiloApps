@@ -4,6 +4,18 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-11-04T10:37:59-08:00 — kilo-expander: KBreakout (Win32 C Hazard Parity & KiloOS VFS Replay/Board Mesh Integration)**
+  - Status: PASS ✅ (0 errors, web 223.4 KB, native 56.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 12.18%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.7s)).
+  - Completed full dual-target hazard parity: wired ufo_active, ufo_bullet, shield_active, boss_bullets, and meteors hazard updates and render routines in update() and render() matching KBreakout/main.c.
+  - Integrated KiloOS VFS & Inter-App IPC Mesh with bidirectional replay (.kbrk) and board matrix (.kbrd) saving/loading and quicksave mirroring.
+  - Handoff: Advanced `kilo-expander` to `KChess`; rotated active agent to `kilo-review`.
+
+- **2026-11-04T09:32:28-08:00 — kilo-qa: KBBS (Pass 5 QA, Dual Parity & Mature Quarantine)**
+  - Status: PASS ✅ (0 errors, web 212.0 KB, native 111.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 6.15%, 0 fail, 0 warn, 6.1s)).
+  - State & Tutorial: Verified F5/F9 quicksave/quickload, kbbs_tutorialSeen flag, and Escape modal dismissals.
+  - Dual Parity & Lifecycle: Verified Web HTML + Win32 C parity and visibilitychange timer cleanup.
+  - Mature Quarantine & Handoff: Promoted `KBBS` to Mature archive; advanced `kilo-qa` to `KSynth`; next agent `kilo-expander`.
+
 - **2026-11-04T08:21:08-08:00 — kilo-usability: KBreakout (KBreakout Viewport Fit, Non-Wrapping HUD & Usability Pass)**
   - Status: PASS (0 errors, web 202.7 KB, native 55.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 12.2%, HEAD delta 16.72%, 0 fail, 0 warn, 7.7s)).
   - Layout & Sizing: Scaled #game-container with fitGameToViewport() to fit 480x423 KiloOS viewport cleanly with zero clipping, keeping paddle at y=h-40 and all #skill-bar controls 100% visible in both solo and duel modes.

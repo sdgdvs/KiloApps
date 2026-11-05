@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-11-05T03:37:43.684325+00:00",
+  "agent": "kilo-tester",
+  "model": "gemini-3.8-flash-high",
+  "target": "KSanctuary",
+  "duration_seconds": 462.39,
+  "returncode": 1,
+  "success": false,
+  "provenance": null
+}
