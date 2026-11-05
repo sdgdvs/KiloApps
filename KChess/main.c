@@ -1332,6 +1332,40 @@ static void GeneratePGN(char* outBuf, int maxLen) {
     wsprintfA(outBuf + pos, "%s", gameOver ? (winner == 1 ? "1-0" : (winner == 2 ? "0-1" : "1/2-1/2")) : "*");
 }
 
+static int SaveFENToFile(void) {
+    char szPath[MAX_PATH];
+    GetModuleFileNameA(NULL, szPath, MAX_PATH);
+    char* lastSlash = my_strrchr(szPath, '\\');
+    if (lastSlash) *(lastSlash + 1) = '\0';
+    lstrcatA(szPath, "kchess_position.fen");
+
+    HANDLE hFile = CreateFileA(szPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+    char fen[256];
+    GenerateFEN(fen);
+    DWORD bytesWritten = 0;
+    WriteFile(hFile, fen, lstrlenA(fen), &bytesWritten, NULL);
+    CloseHandle(hFile);
+    return 1;
+}
+
+static int SavePGNToFile(void) {
+    char szPath[MAX_PATH];
+    GetModuleFileNameA(NULL, szPath, MAX_PATH);
+    char* lastSlash = my_strrchr(szPath, '\\');
+    if (lastSlash) *(lastSlash + 1) = '\0';
+    lstrcatA(szPath, "kchess_match.pgn");
+
+    HANDLE hFile = CreateFileA(szPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+    char pgn[4096];
+    GeneratePGN(pgn, sizeof(pgn));
+    DWORD bytesWritten = 0;
+    WriteFile(hFile, pgn, lstrlenA(pgn), &bytesWritten, NULL);
+    CloseHandle(hFile);
+    return 1;
+}
+
 void ResetGame(void) {
     wKingMoved = 0; wRookLMoved = 0; wRookRMoved = 0;
     bKingMoved = 0; bRookLMoved = 0; bRookRMoved = 0;
@@ -1997,8 +2031,8 @@ static void ShowHelpDialog(HWND hwnd) {
         "  [1-4]          : Set AI Difficulty (Easy, Medium, Hard, Master)\n"
         "  [M]            : Switch Game Mode (Campaign / Free / Puzzle / Blitz)\n"
         "  [P]            : Cycle AI Personality (Easy, Medium, Hard, Master)\n"
-        "  [E]            : Copy FEN Position to Clipboard\n"
-        "  [G]            : Copy PGN Move History to Clipboard\n"
+        "  [E]            : Copy FEN to Clipboard & Save to kchess_position.fen\n"
+        "  [G]            : Copy PGN to Clipboard & Save to kchess_match.pgn\n"
         "  [I]            : Import FEN / PGN from Clipboard\n"
         "  [R]            : Restart Game / Advance to Next Campaign Stage\n"
         "  [Arrows]       : Navigate board cursor\n"
@@ -2684,19 +2718,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MessageBeep(MB_ICONWARNING);
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam == 'E') { // COPY FEN TO CLIPBOARD
+            } else if (wParam == 'E') { // COPY FEN TO CLIPBOARD & SAVE FILE
                 char fenBuf[128];
                 GenerateFEN(fenBuf);
                 CopyTextToClipboard(hwnd, fenBuf);
-                wsprintfA(hintText, "FEN Copied to Clipboard!");
+                SaveFENToFile();
+                wsprintfA(hintText, "FEN Copied & Saved (kchess_position.fen)!");
                 hintActive = 1;
                 MessageBeep(MB_OK);
                 InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam == 'G') { // COPY PGN TO CLIPBOARD
+            } else if (wParam == 'G') { // COPY PGN TO CLIPBOARD & SAVE FILE
                 char pgnBuf[2048];
                 GeneratePGN(pgnBuf, 2048);
                 CopyTextToClipboard(hwnd, pgnBuf);
-                wsprintfA(hintText, "PGN Copied to Clipboard!");
+                SavePGNToFile();
+                wsprintfA(hintText, "PGN Copied & Saved (kchess_match.pgn)!");
                 hintActive = 1;
                 MessageBeep(MB_OK);
                 InvalidateRect(hwnd, NULL, FALSE);

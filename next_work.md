@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-review
+current_agent: kilo-review
+next_agent: kilo-creator
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -34,7 +34,7 @@ current_targets:
   kilo_tester: KColony
   kilo_usability: KSanctuary
   kilo_qa: KNet
-  kilo_expander: KChess
+  kilo_expander: KSanctuary
   kilo_review: KGraph
 virtual_web_target: kweb://rfc-archive
 virtual_web_rotation:
@@ -56,9 +56,9 @@ virtual_web_rotation:
 - kweb://darknet
 - kweb://portal
 last_run:
-  agent: kilo-qa
-  app: KSynth
-  timestamp: '2026-11-05T12:18:07-08:00'
+  agent: kilo-expander
+  app: KChess
+  timestamp: '2026-11-05T13:20:19-08:00'
 last_planner_run: '2026-11-05T20:34:16Z'
 ---
 
@@ -192,11 +192,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KMedia` | `KiloOS/public/apps/kmedia.html`, `KMedia/main.c` | Pass 5 QA & Mature Graduation: F5/F9 state persistence, media player & audio visualizer, playlist management, dual Win32 C parity, and promote to Mature table. |
 
 ### 7. Feature Expander Queue (`kilo-expander` — Phase VI VFS Mesh & RFMS Multiplayer)
-- **Active Target**: `KChess`
+- **Active Target**: `KSanctuary`
 
 | Target | Primary Files | Phase VI Mission Spec (<999 KB) |
 |---|---|---|
-| `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kchess.html using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with mandatory event.origin === window.location.origin checks, 60s dialog cleanup timeouts, and standalone Blob download / file-input fallbacks when window.parent === window for .json game saves (/home/saves/kchess_save.json) in Game menu, .pgn match records (/home/docs/kchess_match.pgn) in #pgn-modal, and .fen positions (/home/docs/kchess_position.fen) in #fen-modal and #editor-modal, plus handle incoming FILE_OPEN / VFS_OPEN messages from KiloOS File Browser to auto-load .pgn/.fen/.json files and add an Open PGN in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad) in #pgn-modal. |
 | `KSanctuary` | `KiloOS/public/apps/ksanctuary.html`, `KSanctuary/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into ksanctuary.html per architecture.md (event.origin === window.location.origin checks, 60s picker timeouts, standalone Blob/file-input fallbacks) connecting Export/Import to VFS_SHOW_SAVE/VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN/VFS_READ (/home/saves/ksanctuary_vault704.json), handling incoming FILE_OPEN/VFS_OPEN messages, and adding Export Overseer Log (/home/docs/vault704_log.txt) + Open in KPad (OS_LAUNCH_APP kpad); deepen Xenobiology Biosphere into an interactive Hydroponics/Gene-Vault ecosystem mechanic reacting to waterPurity, UV power, and Cryo Seeds/Enzyme with periodic bio-synthesis yields, and add a GDI Vault 704 Structural Cross-Section strip with weather overlay and xenobiology dome to DrawFacilitiesView in KSanctuary/main.c (<999 KB). |
 | `KGo` | `KiloOS/public/apps/kgo.html`, `KGo/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kgo.html (#sgf-modal and boot listener) using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with event.origin === window.location.origin checks, 60s dialog timeouts, and standalone Blob/file-input fallbacks when window.parent === window for .sgf match records (/home/docs/kgo_match.sgf) and .json saves (/home/saves/kgo_save.json), handle incoming FILE_OPEN/VFS_OPEN messages from File Browser to auto-load .sgf/.json files, add an Open SGF in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad), and add SGF file import parity to KGo/main.c. |
 | `KImage` | `KiloOS/public/apps/kimage.html`, `KImage/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS and IPC Mesh into kimage.html per architecture.md (event.origin === window.location.origin checks, window.location.origin targetOrigin, 60000ms picker timeouts, standalone Blob/file-input fallbacks when window.parent === window) adding Open from VFS (VFS_SHOW_OPEN -> VFS_READ) and Save to VFS (VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY) for exported images (/home/media/), .JSON sessions (/home/saves/kimage_session.json), and ASCII .txt art (/home/docs/), handling incoming FILE_OPEN/VFS_OPEN messages and URL #/path hash to auto-load .png/.jpg/.bmp/.tga/.pcx/.json files, and adding Open ASCII in KPad (OS_LAUNCH_APP kpad), Send Stego to KCipher (kcipher), and Inspect Image in KHex (khex) buttons; upgrade KImage/main.c (<999 KB) by wiring ID_BTN_RESIZE_HALF (0.5x) and ID_BTN_RESIZE_DOUBLE (2x) and adding a Dither [T] Floyd-Steinberg retro palette button cycling 1-Bit Mono, DMG-4 Green, CGA, and C64 palettes. |
@@ -211,6 +210,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 | `KAbyss` | `KiloOS/public/apps/kabyss.html`, `KAbyss/main.c` | Wire Phase VI KiloOS VFS mesh (/home/saves/kabyss_dive.json), RFMS multiplayer abyssal expedition race, depth telemetry, and dual Win32 C parity. |
 | `KStarForge` | `KiloOS/public/apps/kstarforge.html`, `KStarForge/main.c` | Wire Phase VI KiloOS VFS mesh (/home/saves/kstarforge_ship.json), vessel blueprint export to KHex/KPad, and dual Win32 C parity. |
 | `KMech` | `KiloOS/public/apps/kmech.html`, `KMech/main.c` | Wire Phase VI KiloOS VFS mesh (/home/saves/kmech_chassis.json), mech loadout sharing, arena skirmish telemetry, and dual Win32 C parity. |
+| `KChess` | `KiloOS/public/apps/kchess.html`, `KChess/main.c` | **[ARGON REVIEW]:** Wire Phase VI KiloOS VFS & IPC Mesh into kchess.html using VFS_SHOW_SAVE -> VFS_WRITE + OS_NOTIFY and VFS_SHOW_OPEN -> VFS_READ with mandatory event.origin === window.location.origin checks, 60s dialog cleanup timeouts, and standalone Blob download / file-input fallbacks when window.parent === window for .json game saves (/home/saves/kchess_save.json) in Game menu, .pgn match records (/home/docs/kchess_match.pgn) in #pgn-modal, and .fen positions (/home/docs/kchess_position.fen) in #fen-modal and #editor-modal, plus handle incoming FILE_OPEN / VFS_OPEN messages from KiloOS File Browser to auto-load .pgn/.fen/.json files and add an Open PGN in KPad IPC button (VFS_WRITE + OS_LAUNCH_APP appId kpad) in #pgn-modal. |
 
 ### 8. Argon Visual, Feature & Usability Critic (`kilo-review` — Gemini 4 Argon)
 - **Active Target**: `KGraph`
@@ -307,6 +307,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-11-05T13:20:19-08:00 — kilo-expander: KChess (KChess Phase VI VFS and IPC Mesh Expansion)**
+  - Status: PASS ✅ (0 errors, web 246.7 KB, native 54.5 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 37.86%, HEAD Δ 1.15%, 0 fail, 0 warn, 9.8s)).
+  - Wired Phase VI KiloOS VFS mesh with strict origin validation, 60s dialog timeouts, and standalone Blob/file-input fallbacks for .json saves (/home/saves/kchess_save.json), .pgn match logs (/home/docs/kchess_match.pgn), and .fen positions (/home/docs/kchess_position.fen) across Game menu, #pgn-modal, #fen-modal, and #editor-modal.
+  - Added Open in KPad IPC button in #pgn-modal (VFS_WRITE + OS_LAUNCH_APP appId kpad), handled incoming FILE_OPEN/VFS_OPEN messages from KiloOS File Browser to auto-load chess files, and added native file export parity in KChess/main.c.
+  - Handoff: Advanced `kilo-expander` to `KSanctuary`; rotated active agent to `kilo-review`.
+
 - **2026-11-05T12:18:07-08:00 — kilo-qa: KSynth (Pass 5 QA, Dual Parity & Mature Quarantine)**
   - Status: PASS ✅ (0 errors, web 189.2 KB, native 29.0 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS (anim 0.0%, input 2.49%, HEAD Δ 0.0%, 0 fail, 0 warn, 6.5s)).
   - State & Tutorial: Verified F5/F9 quicksave/quickload, ksynth_tutorialSeen flag, and Escape modal dismissals.
@@ -331,9 +337,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Added Historic Epoch Landmark Cards with architectural schematics, key causal relics, and fast epoch shifting across Web and Win32 C.
   - Implemented vector Timeline Branching Node Glyphs in Chronograph with Prime spine and Echo fork branch indicators; verified 100% glint-free.
   - Handoff: Advanced `kilo-graphics` to `KStarDredge`; rotated active agent to `kilo-tester`.
-
-- **2026-11-04T11:35:08-08:00 — kilo-creator: kweb://demoscene (Assembly '99 Demoscene Party Vault Expansion)**
-  - Status: PASS ✅ (0 errors, web 98.9 KB < 999 KB; startup, Vite & security_lint PASS; visual PASS).
-  - Real-time 64K intro Canvas effect switcher (plasma, rotozoom, 3D starfield, copper bars, metaballs) with 60 FPS Mode 13h rasterizer.
-  - Interactive ANSI .NFO studio, KiloOS VFS frame/spool/ballot export, party voting board, and KNet webring integration.
-  - Handoff: Advanced `kilo-creator` to `kweb://rfc-archive`; rotated active agent to `kilo-graphics`.

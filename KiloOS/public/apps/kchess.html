@@ -648,6 +648,7 @@
         <button class="primary" onclick="editorApplyToGame()">▶ Play Position</button>
         <button onclick="editorExportFEN()">📋 Export FEN</button>
         <button onclick="editorSaveFENFile()">💾 Save .fen</button>
+        <button onclick="editorOpenFENFile()">📂 Open .fen</button>
         <button class="modal-close" onclick="closeModals()">Close [Esc]</button>
       </div>
     </div>
@@ -750,20 +751,24 @@
     isSupported() {
       return typeof window !== 'undefined' && window.parent && window.parent !== window;
     },
+    getTargetOrigin() {
+      return (window.location.origin && window.location.origin !== 'null') ? window.location.origin : '*';
+    },
     write(path, data) {
       try {
         const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        const targetOrigin = KiloVFS.getTargetOrigin();
         window.parent.postMessage({
           type: 'VFS_WRITE',
           path,
           data: payload,
           requestId: 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)
-        }, '*');
+        }, targetOrigin);
         window.parent.postMessage({
           type: 'OS_NOTIFY',
           title: document.title || 'KChess',
           message: `Saved to VFS: ${path}`
-        }, '*');
+        }, targetOrigin);
       } catch (e) {
         console.warn('[KiloVFS] write failed:', e);
       }
@@ -776,8 +781,8 @@
       const reqId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
       let cleanupTimer = null;
       const handler = (e) => {
-        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
-          return;
+        if (window.location.origin && window.location.origin !== 'null') {
+          if (e.origin !== window.location.origin) return;
         }
         if (e.data && e.data.type === 'VFS_READ_DONE' && e.data.requestId === reqId) {
           if (cleanupTimer) clearTimeout(cleanupTimer);
@@ -791,7 +796,7 @@
       }, 60000); // 60s dialog cleanup timeout
       window.addEventListener('message', handler);
       try {
-        window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, '*');
+        window.parent.postMessage({ type: 'VFS_READ', path, requestId: reqId }, KiloVFS.getTargetOrigin());
       } catch (e) {
         if (cleanupTimer) clearTimeout(cleanupTimer);
         window.removeEventListener('message', handler);
@@ -806,8 +811,8 @@
       const reqId = 'save_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
       let cleanupTimer = null;
       const handler = (e) => {
-        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
-          return;
+        if (window.location.origin && window.location.origin !== 'null') {
+          if (e.origin !== window.location.origin) return;
         }
         if (e.data && e.data.type === 'VFS_SHOW_SAVE_DONE' && e.data.requestId === reqId) {
           if (cleanupTimer) clearTimeout(cleanupTimer);
@@ -831,14 +836,14 @@
           requestId: reqId,
           defaultPath: defaultPath,
           path: defaultPath
-        }, '*');
+        }, KiloVFS.getTargetOrigin());
       } catch (e) {
         if (cleanupTimer) clearTimeout(cleanupTimer);
         window.removeEventListener('message', handler);
         if (cb) cb(null);
       }
     },
-    openPicker(cb) {
+    showOpen(cb) {
       if (!KiloVFS.isSupported()) {
         if (cb) cb(null, null);
         return;
@@ -846,8 +851,8 @@
       const reqId = 'open_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
       let cleanupTimer = null;
       const handler = (e) => {
-        if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
-          return;
+        if (window.location.origin && window.location.origin !== 'null') {
+          if (e.origin !== window.location.origin) return;
         }
         if (e.data && e.data.type === 'VFS_SHOW_OPEN_DONE' && e.data.requestId === reqId) {
           if (cleanupTimer) clearTimeout(cleanupTimer);
@@ -865,12 +870,15 @@
       }, 60000); // 60s dialog cleanup timeout
       window.addEventListener('message', handler);
       try {
-        window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, '*');
+        window.parent.postMessage({ type: 'VFS_SHOW_OPEN', requestId: reqId }, KiloVFS.getTargetOrigin());
       } catch (e) {
         if (cleanupTimer) clearTimeout(cleanupTimer);
         window.removeEventListener('message', handler);
         if (cb) cb(null, null);
       }
+    },
+    openPicker(cb) {
+      return this.showOpen(cb);
     },
     launchApp(targetApp, path = '') {
       try {
@@ -879,21 +887,21 @@
           targetApp,
           appId: targetApp,
           path
-        }, '*');
+        }, KiloVFS.getTargetOrigin());
       } catch (e) {}
     }
   };
 
   // Incoming VFS/OS Message Dispatcher
   window.addEventListener('message', (e) => {
-    if (e.origin && window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) {
-      return;
+    if (window.location.origin && window.location.origin !== 'null') {
+      if (e.origin !== window.location.origin) return;
     }
     const msg = e.data;
     if (!msg || typeof msg !== 'object') return;
     if (msg.type === 'FILE_OPEN' || msg.type === 'VFS_OPEN' || msg.type === 'OPEN_FILE') {
-      const filePath = msg.path || '';
-      const fileContent = msg.data !== undefined ? msg.data : msg.content;
+      const filePath = msg.path || msg.file || '';
+      const fileContent = msg.data !== undefined ? msg.data : (msg.content !== undefined ? msg.content : msg.fileData);
       if (fileContent !== undefined && fileContent !== null) {
         handleIncomingFileData(fileContent, filePath);
       } else if (filePath) {
@@ -3843,6 +3851,74 @@
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
           showToast("Editor position downloaded (.fen)!", "success");
+      }
+  }
+
+  function editorOpenFENFile() {
+      if (KiloVFS.isSupported()) {
+          KiloVFS.showOpen((data, path) => {
+              if (data) {
+                  editorLoadFEN(data.trim());
+              }
+          });
+      } else {
+          // Standalone file-input fallback when window.parent === window
+          const inp = document.getElementById('import-fen-input');
+          if (inp) {
+              const oldHandler = inp.onchange;
+              inp.onchange = (e) => {
+                  const file = e.target.files && e.target.files[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = function(evt) {
+                      editorLoadFEN((evt.target.result || '').trim());
+                      inp.onchange = oldHandler;
+                  };
+                  reader.readAsText(file);
+                  e.target.value = '';
+              };
+              inp.click();
+          }
+      }
+  }
+
+  function editorLoadFEN(fenStr) {
+      try {
+          const parts = fenStr.trim().split(/\s+/);
+          if (parts.length < 1) return false;
+          const rows = parts[0].split('/');
+          if (rows.length !== 8) return false;
+          const charToEditorPiece = {
+              'P': 1, 'N': 2, 'B': 3, 'R': 4, 'Q': 5, 'K': 6,
+              'p': -1, 'n': -2, 'b': -3, 'r': -4, 'q': -5, 'k': -6
+          };
+          const newGrid = Array(8).fill(0).map(() => Array(8).fill(0));
+          for (let y = 0; y < 8; y++) {
+              let x = 0;
+              for (let i = 0; i < rows[y].length; i++) {
+                  const ch = rows[y][i];
+                  if (ch >= '1' && ch <= '8') {
+                      x += parseInt(ch, 10);
+                  } else if (charToEditorPiece[ch]) {
+                      if (x < 8) {
+                          newGrid[y][x] = charToEditorPiece[ch];
+                          x++;
+                      }
+                  }
+              }
+          }
+          editorBoard = newGrid;
+          if (parts[1] === 'b') {
+              setEditorTurn(-1);
+          } else {
+              setEditorTurn(1);
+          }
+          renderEditorGrid();
+          showToast('FEN loaded into Board Editor!', 'success');
+          return true;
+      } catch (e) {
+          showToast('Failed to parse FEN for editor: ' + e.message, 'warn');
+          return false;
       }
   }
 
