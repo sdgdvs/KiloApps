@@ -2487,8 +2487,13 @@
     if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
   });
 
+  let animFrameId = null;
   function renderVisualizer() {
-    requestAnimationFrame(renderVisualizer);
+    if (document.hidden) {
+      animFrameId = null;
+      return;
+    }
+    animFrameId = requestAnimationFrame(renderVisualizer);
 
     // Animate LFO Phase LED
     const lfoLed = document.getElementById('lfoLed');
@@ -3003,6 +3008,16 @@
 
   function panicAllNotesOff() {
     stopArp();
+    if (isSeqPlaying) {
+      isSeqPlaying = false;
+      stopSequencer();
+      const btnSeqPlay = document.getElementById('btnSeqPlay');
+      if (btnSeqPlay) {
+        btnSeqPlay.innerText = '▶ Play [Space]';
+        btnSeqPlay.classList.add('btn-primary');
+        btnSeqPlay.style.background = '';
+      }
+    }
     for (const [noteNum] of activeVoices) {
       triggerNoteOff(noteNum);
     }
@@ -4710,12 +4725,37 @@
   window.addEventListener('pagehide', () => {
     saveCurrentPatch();
   });
+  let wasSeqPlayingBeforeHidden = false;
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
+      if (isSeqPlaying) {
+        wasSeqPlayingBeforeHidden = true;
+      }
       if (typeof panicAllNotesOff === 'function') {
         panicAllNotesOff();
       }
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
       saveCurrentPatch();
+    } else {
+      if (wasSeqPlayingBeforeHidden) {
+        wasSeqPlayingBeforeHidden = false;
+        if (typeof startSequencer === 'function') {
+          isSeqPlaying = true;
+          startSequencer();
+          const btnSeqPlay = document.getElementById('btnSeqPlay');
+          if (btnSeqPlay) {
+            btnSeqPlay.innerText = '⏸ Pause [Space]';
+            btnSeqPlay.classList.remove('btn-primary');
+            btnSeqPlay.style.background = 'var(--accent-pink)';
+          }
+        }
+      }
+      if (!animFrameId && typeof renderVisualizer === 'function') {
+        animFrameId = requestAnimationFrame(renderVisualizer);
+      }
     }
   });
 

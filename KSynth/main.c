@@ -115,7 +115,7 @@ Preset g_presets[] = {
     { 1, 523, "0.001","0.10", "0.30", "0.05" }, // 4: 8-Bit Chiptune
     { 3, 880, "0.005","0.60", "0.10", "0.80" }, // 5: Glass Bell (Triangle)
     { 4, 440, "0.01", "0.15", "0.10", "0.10" }, // 6: Noise Generator
-    { 1, 110, "0.01", "0.18", "0.30", "0.12" }, // 7: YM2612 FM Bass
+    { 5, 110, "0.01", "0.18", "0.30", "0.12" }, // 7: YM2612 FM Bass
     { 2, 261, "0.45", "0.50", "0.85", "1.20" }, // 8: SPC700 Echo Pad
     { 0, 1999, "0.02", "0.10", "0.90", "0.30" } // 9: 1999 Ghost Beacon
 };
@@ -155,6 +155,14 @@ void GenerateWave(int type, int freq, double attack, double decay, double sustai
             else val = -1.0 + (t - 0.75) * 4.0;
         } else if (type == 4) { // Noise
             val = ((double)fast_rand() / 32767.0) * 2.0 - 1.0;
+        } else if (type == 5) { // 2-Op FM (YM2612 Carrier + Modulator)
+            double modPhase = phase * 2.0;
+            while (modPhase >= 1.0) modPhase -= 1.0;
+            double modSin = (modPhase < 0.5) ? (4.0 * modPhase * (1.0 - modPhase)) : (-4.0 * (modPhase - 0.5) * (1.0 - (modPhase - 0.5)));
+            double carPhase = phase + modSin * 0.35;
+            while (carPhase >= 1.0) carPhase -= 1.0;
+            while (carPhase < 0.0) carPhase += 1.0;
+            val = (carPhase < 0.5) ? (4.0 * carPhase * (1.0 - carPhase)) : (-4.0 * (carPhase - 0.5) * (1.0 - (carPhase - 0.5)));
         }
         
         double t = (double)i / SAMPLE_RATE;
@@ -706,8 +714,8 @@ void ExportFmPreset(HWND hwnd, const char* filename) {
     GetWindowTextA(hDelayFdbk, dFdbk, sizeof(dFdbk));
     GetWindowTextA(hDelayMix, dMix, sizeof(dMix));
 
-    static const char* waveNames[] = { "sine", "square", "sawtooth", "triangle", "noise" };
-    const char* waveStr = (wave >= 0 && wave < 5) ? waveNames[wave] : "sine";
+    static const char* waveNames[] = { "sine", "square", "sawtooth", "triangle", "noise", "fm" };
+    const char* waveStr = (wave >= 0 && wave < 6) ? waveNames[wave] : "sine";
 
     char json[1024];
     wsprintfA(json,
@@ -798,7 +806,13 @@ BOOL ImportFmPreset(HWND hwnd, const char* filename) {
         else if (my_strstr(val, "saw")) SendMessage(hComboWave, CB_SETCURSEL, 2, 0);
         else if (my_strstr(val, "tri")) SendMessage(hComboWave, CB_SETCURSEL, 3, 0);
         else if (my_strstr(val, "noise")) SendMessage(hComboWave, CB_SETCURSEL, 4, 0);
+        else if (my_strstr(val, "fm")) SendMessage(hComboWave, CB_SETCURSEL, 5, 0);
         else SendMessage(hComboWave, CB_SETCURSEL, 0, 0);
+    }
+
+    extract_json_str(json, "engineMode", val, sizeof(val));
+    if (val[0] && my_strstr(val, "fm")) {
+        SendMessage(hComboWave, CB_SETCURSEL, 5, 0);
     }
 
     SendMessage(hComboPreset, CB_SETCURSEL, -1, 0);
@@ -973,7 +987,7 @@ BOOL LoadStateFromFile(const char* filename) {
         SendMessage(hComboPreset, CB_SETCURSEL, -1, 0);
     }
 
-    if (data.wave >= 0 && data.wave < 5) {
+    if (data.wave >= 0 && data.wave < 6) {
         SendMessage(hComboWave, CB_SETCURSEL, data.wave, 0);
     }
 
@@ -1101,6 +1115,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboWave, CB_ADDSTRING, 0, (LPARAM)"Sawtooth");
             SendMessage(hComboWave, CB_ADDSTRING, 0, (LPARAM)"Triangle");
             SendMessage(hComboWave, CB_ADDSTRING, 0, (LPARAM)"Noise");
+            SendMessage(hComboWave, CB_ADDSTRING, 0, (LPARAM)"2-Op FM (YM2612)");
             SendMessage(hComboWave, CB_SETCURSEL, 0, 0);
             
             // Frequency
@@ -1204,6 +1219,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdcStatic = (HDC)wParam;
             SetBkMode(hdcStatic, TRANSPARENT);
             return (LRESULT)GetStockObject(NULL_BRUSH);
+        }
+        case WM_KILLFOCUS:
+        case WM_ACTIVATE: {
+            if (LOWORD(wParam) == WA_INACTIVE) {
+                if (hWaveOut) waveOutReset(hWaveOut);
+            }
+            break;
         }
         case WM_COMMAND: {
             if (LOWORD(wParam) == 1) {
