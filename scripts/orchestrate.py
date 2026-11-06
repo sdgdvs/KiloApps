@@ -399,10 +399,10 @@ def check_and_handle_remote_commands(node_id: str) -> bool:
             return True
         data = json.loads(raw)
         cmd = data.get("remote_command", "none")
-        if cmd == "stop":
-            log(f"[REMOTE CONTROL] Received remote 'stop' command. Disabling Windows Scheduled Task on {node_id}.")
+        if cmd in ("stop", "freeze"):
+            log(f"[REMOTE CONTROL] Received remote '{cmd}' command. Disabling Windows Scheduled Task on {node_id}.")
             disable_scheduled_task()
-            data["status"] = "stopped"
+            data["status"] = "frozen" if cmd == "freeze" else "stopped"
             data["remote_command"] = "none"
             data["last_heartbeat"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
             atomic_write_json(node_file, data)
@@ -413,10 +413,47 @@ def check_and_handle_remote_commands(node_id: str) -> bool:
                     atomic_write_json(SESSION_FILE, s_data)
                 except Exception:
                     pass
+            cfg_file = REPO_ROOT / ".agents" / "dashboard_config.json"
+            if cfg_file.exists():
+                try:
+                    c_raw = cfg_file.read_text(encoding="utf-8-sig", errors="replace").replace("\x00", "").strip()
+                    cfg = json.loads(c_raw) if c_raw else {}
+                    cfg["autostart_turns_on_launch"] = False
+                    if cmd == "freeze":
+                        cfg["fleet_frozen"] = True
+                    atomic_write_json(cfg_file, cfg)
+                except Exception:
+                    pass
             return False
     except Exception as e:
         log(f"Warning reading remote commands: {e}")
     return True
+
+
+def is_fleet_globally_frozen() -> tuple[bool, str]:
+    """Checks whether the fleet is globally frozen via dashboard_config.json or next_work.md status."""
+    cfg_file = REPO_ROOT / ".agents" / "dashboard_config.json"
+    if cfg_file.exists():
+        try:
+            c_raw = cfg_file.read_text(encoding="utf-8-sig", errors="replace").replace("\x00", "").strip()
+            if c_raw:
+                cfg = json.loads(c_raw)
+                if cfg.get("fleet_frozen", False):
+                    return True, "dashboard_config.json (fleet_frozen=true)"
+        except Exception:
+            pass
+
+    if NEXT_WORK_FILE.exists():
+        try:
+            nw_text = NEXT_WORK_FILE.read_text(encoding="utf-8-sig", errors="replace")
+            fm = parse_frontmatter(nw_text)
+            st = str(fm.get("status", "ready")).strip().lower()
+            if st in ("frozen", "paused", "stopped"):
+                return True, f"next_work.md (status='{st}')"
+        except Exception:
+            pass
+
+    return False, ""
 
 
 def is_in_collision_window(node_id: str) -> bool:
@@ -769,7 +806,7 @@ INAPPROPRIATE_SOUNDSCAPE_TARGETS = {
     "kpass", "krss", "kscript", "ksettings", "ksteno", "ksys", "ktask",
     "ktaskmgr", "kterm", "ktimer", "ktodo", "kzip", "kbookmark", "kclip",
     "kcolor", "kexplorer", "kfleet", "kgraph", "khex", "kread",
-    "kchatserver", "kcontribute", "kpomodoro"
+    "kchatserver", "kpomodoro"
 }
 
 
@@ -1056,6 +1093,7 @@ def main():
     parser.add_argument("--no-receipt", action="store_true", help="Skip emitting turn receipt")
     parser.add_argument("--ignore-window", action="store_true", help="Bypass remote fleet contributor window guard")
     parser.add_argument("--ignore-session", action="store_true", help="Bypass 24-hour session timer check")
+    parser.add_argument("--ignore-freeze", action="store_true", help="Bypass global fleet freeze guard")
     args = parser.parse_args()
 
     log("=" * 60)
@@ -1077,12 +1115,21 @@ def main():
         else:
             check_and_recover_git_state()
 
-        # 3. Continuous Mode Self-Healing: neutralize 24h timer and task trigger boundaries
-        ensure_continuous_scheduler(node_id)
-
-        # 4. Check for remote commands from fleet dashboard
+        # 3. Check for remote commands from fleet dashboard
         if not check_and_handle_remote_commands(node_id):
             return
+
+        # 3b. Enforce Global Fleet Freeze before any self-healing, log rotation, or planner dispatch
+        if not args.ignore_freeze:
+            frozen, freeze_reason = is_fleet_globally_frozen()
+            if frozen:
+                log(f"[FLEET FROZEN] Global freeze active via {freeze_reason}. Disabling local scheduled task and skipping dispatch.")
+                if not args.dry_run:
+                    disable_scheduled_task()
+                return
+
+        # 4. Continuous Mode Self-Healing: neutralize 24h timer and task trigger boundaries
+        ensure_continuous_scheduler(node_id)
 
         # 5. Enforce session limit (Continuous mode by default unless explicitly configured)
         if not args.ignore_session and not check_session_timer():
@@ -1192,8 +1239,8 @@ def main():
 
             log(f"Queue State: agent='{agent}', status='{status}', model='{model}', effort='{effort}', timeout={timeout_min}m")
 
-            if status != "ready" and not args.force_agent and not should_run_planner:
-                log(f"Task status is '{status}' (not 'ready'). Skipping dispatch.")
+            if status != "ready" and not args.force_agent:
+                log(f"Task status is '{status}' (not 'ready'). Skipping dispatch (including planner).")
                 return
 
             # Pre-flight auto-skip check: avoid spending millions of tokens on known skip targets

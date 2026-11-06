@@ -34,7 +34,6 @@
 | [KCOLOSSEUM](gallery/screenshots/kcolosseum.png) | [Launch](file:///C:\KiloApps\KiloApps\KiloOS\public\apps\kcolosseum.html) | 60 FPS | 17ms | 238.1 KB | 🟢 Active |
 | [KCONNECT4](gallery/screenshots/kconnect4.png) | [Launch](file:///C:\KiloApps\KiloApps\KiloOS\public\apps\kconnect4.html) | 60 FPS | 17ms | 175 KB | 🔒 Locked (Mature 5+) |
 | [KCONTACTS](gallery/screenshots/kcontacts.png) | [Launch](file:///C:\KiloApps\KiloApps\KiloOS\public\apps\kcontacts.html) | 60 FPS | 17ms | 140.7 KB | 🟢 Active |
-| [KCONTRIBUTE](gallery/screenshots/kcontribute.png) | [Launch](file:///C:\KiloApps\KiloApps\KiloOS\public\apps\kcontribute.html) | 60 FPS | 17ms | 34.9 KB | 🟢 Active |
 | [KCONVERTER](gallery/screenshots/kconverter.png) | [Launch](file:///C:\KiloApps\KiloApps\KiloOS\public\apps\kconverter.html) | 60 FPS | 17ms | 102.2 KB | 🔒 Locked (Mature 5+) |
 | [KCOSMIC](gallery/screenshots/kcosmic.png) | [Launch](file:///C:\KiloApps\KiloApps\KiloOS\public\apps\kcosmic.html) | 57 FPS | 33ms | 549.3 KB | 🟢 Active |
 | [KCYBER](gallery/screenshots/kcyber.png) | [Launch](file:///C:\KiloApps\KiloApps\KiloOS\public\apps\kcyber.html) | 60 FPS | 17ms | 89.4 KB | 🟢 Active |

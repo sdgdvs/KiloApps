@@ -208,14 +208,6 @@
     "budgetPercent": 15.4
   },
   {
-    "id": "kcontribute",
-    "title": "KContribute",
-    "folder": "System",
-    "webBytes": 35721,
-    "exeBytes": 159232,
-    "budgetPercent": 3.6
-  },
-  {
     "id": "kconverter",
     "title": "KConverter",
     "folder": "System",

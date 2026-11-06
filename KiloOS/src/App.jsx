@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.4.37';
+const MICROS_VERSION = '0.4.38';
 
 function formatAppUrl(url, version) {
   if (!url) return '';
@@ -142,7 +142,6 @@ const APPS = [
   { id: 'kfleet', title: 'KFleet', url: '/apps/kfleet.html', exeUrl: '/exe/KFleet.exe', icon: '/assets/icons/kfleet.ico', w: 1060, h: 720, folder: 'System' },
   { id: 'knetmap', title: 'KNetMap', url: '/apps/knetmap.html', exeUrl: '/exe/KNetMap.exe', icon: '/assets/icons/knetmap.ico', w: 1080, h: 720, folder: 'Network' },
   { id: 'ksteno', title: 'KSteno', url: '/apps/ksteno.html', exeUrl: '/exe/KSteno.exe', icon: '/assets/icons/ksteno.ico', w: 1040, h: 720, folder: 'System' },
-  { id: 'kcontribute', title: 'KContribute', url: '/apps/kcontribute.html', exeUrl: '/exe/KContribute.exe', icon: '/assets/icons/kcontribute.ico', w: 840, h: 640, folder: 'System' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {

@@ -33,6 +33,15 @@ jobs:
           git fetch upstream main
           git rebase upstream/main || git rebase --abort
 
+      - name: Check Global Fleet Freeze State
+        shell: pwsh
+        run: |
+          $nw = Get-Content "next_work.md" -Raw
+          if ($nw -match "(?m)^status:\s*(frozen|paused|stopped)\s*$") {
+            Write-Host "Upstream fleet is currently $($Matches[1]). Skipping autonomous contributor turn."
+            exit 0
+          }
+
       - name: Set up MSVC & Win32 C Build Tools
         uses: ilammy/msvc-dev-cmd@v1
 
@@ -59,7 +68,7 @@ jobs:
         run: |
           $agyBinDir = "$env:LOCALAPPDATA\agy\bin"
           New-Item -ItemType Directory -Force -Path $agyBinDir | Out-Null
-          
+
           # Download agy Windows binary
           $zipPath = "$env:TEMP\agy.zip"
           Invoke-WebRequest -Uri "https://antigravity.google/downloads/agy-windows-amd64.zip" -OutFile $zipPath -UseBasicParsing
@@ -128,5 +137,5 @@ jobs:
             - **Model:** $MODEL_USED
             - **Host:** GitHub Actions Windows Runner
             - **Verification:** Size checks (<=999KB), Win32 C builds, and React frontend builds all verified.
-            
+
             Receipt emitted to \`.agents/receipts/\`."

@@ -26,7 +26,7 @@ agent_timeouts:
   kilo-planner: 10
 tool_call_cap: 32
 commit_checkpoint: 16
-status: ready
+status: frozen
 current_targets:
   kilo_creator: kweb://rfc-archive
   kilo_graphics: KStarDredge

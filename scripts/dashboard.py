@@ -237,6 +237,7 @@ def load_config() -> dict:
         "autostart_turns_on_launch": False,  # Defensive default: only start on this PC if explicitly configured!
         "enable_24h_timer": False,  # Optional auto-stop timer: defaults to OFF (continuous mode)
         "always_on_top": False,
+        "fleet_frozen": False,
         "node_id": "auto",
     }
     if CONFIG_FILE.exists():
@@ -254,6 +255,60 @@ def save_config(config: dict):
         CONFIG_FILE.write_text(json.dumps(config, indent=2), encoding="utf-8")
     except Exception:
         pass
+
+
+def get_next_work_status() -> str:
+    """Reads the global queue status ('ready', 'frozen', 'paused', etc.) from next_work.md YAML frontmatter."""
+    if not NEXT_WORK_FILE.exists():
+        return "ready"
+    try:
+        content = NEXT_WORK_FILE.read_text(encoding="utf-8-sig", errors="replace")
+        in_fm = False
+        for line in content.splitlines():
+            s = line.strip()
+            if s == "---":
+                if not in_fm:
+                    in_fm = True
+                    continue
+                break
+            if in_fm and s.startswith("status:"):
+                return s.split(":", 1)[1].strip().strip("\"'").lower()
+    except Exception:
+        pass
+    return "ready"
+
+
+def set_next_work_status(new_status: str) -> bool:
+    """Updates status: <new_status> inside next_work.md YAML frontmatter."""
+    if not NEXT_WORK_FILE.exists():
+        return False
+    try:
+        raw_nw = NEXT_WORK_FILE.read_text(encoding="utf-8-sig", errors="replace")
+        nw_nl = "\r\n" if "\r\n" in raw_nw else "\n"
+        parts = raw_nw.replace("\r\n", "\n").split("---", 2)
+        if len(parts) < 3:
+            return False
+        fm_lines = parts[1].splitlines()
+        replaced = False
+        for i, ln in enumerate(fm_lines):
+            if ln.strip().startswith("status:"):
+                fm_lines[i] = f"status: {new_status}"
+                replaced = True
+                break
+        if not replaced:
+            fm_lines.append(f"status: {new_status}")
+        updated = "---" + "\n".join(fm_lines) + "\n---" + parts[2]
+        NEXT_WORK_FILE.write_bytes(updated.replace("\n", nw_nl).encode("utf-8"))
+        return True
+    except Exception:
+        return False
+
+
+def is_fleet_frozen(config: dict | None = None) -> bool:
+    """Returns True if either local config fleet_frozen is True or next_work.md has status: frozen/paused."""
+    if config and config.get("fleet_frozen", False):
+        return True
+    return get_next_work_status() in ("frozen", "paused")
 
 
 def set_windows_autostart(enable: bool):
@@ -345,8 +400,8 @@ class FleetDashboard(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("KiloApps Multi-PC Fleet Dashboard")
-        self.geometry("540x820")
-        self.minsize(480, 700)
+        self.geometry("540x875")
+        self.minsize(480, 740)
         self.configure(bg="#1e1e2e")
 
         if ICON_PATH.exists():
@@ -391,8 +446,8 @@ class FleetDashboard(tk.Tk):
         self.cached_task_state = query_task_state_from_system()
         self.last_task_query_time = time.time()
 
-        # Initial autostart turn trigger if enabled
-        if self.config_data.get("autostart_turns_on_launch", False):
+        # Initial autostart turn trigger if enabled (never fire while frozen!)
+        if self.config_data.get("autostart_turns_on_launch", False) and not is_fleet_frozen(self.config_data):
             self.after(500, self._auto_start_on_launch)
 
         # Start periodic telemetry polling (1-second ticker, 0-subprocess overhead)
@@ -413,6 +468,10 @@ class FleetDashboard(tk.Tk):
         self.c_red_hover = "#d32f2f"
         self.c_accent = "#8be9fd"
         self.c_orange = "#ffb86c"
+        self.c_freeze_btn = "#0277bd"
+        self.c_freeze_hover = "#0288d1"
+        self.c_unfreeze_btn = "#e65100"
+        self.c_unfreeze_hover = "#ef6c00"
 
         # Main Container
         main_frame = tk.Frame(self, bg=self.c_bg, padx=16, pady=12)
@@ -527,7 +586,25 @@ class FleetDashboard(tk.Tk):
             cursor="hand2",
             command=self.stop_creation_turns,
         )
-        self.btn_stop.pack(fill=tk.X, pady=(0, 6))
+        self.btn_stop.pack(fill=tk.X, pady=(0, 4))
+
+        # Global Freeze / Unfreeze Toggle Button (Coordinator Master Switch)
+        init_frozen = is_fleet_frozen(self.config_data)
+        self.btn_freeze = tk.Button(
+            btn_frame,
+            text="🔥  Unfreeze Fleet (Restore Ready State)" if init_frozen else "❄  Freeze Entire Fleet (Pause All Nodes)",
+            font=("Segoe UI", 11, "bold"),
+            bg=self.c_unfreeze_btn if init_frozen else self.c_freeze_btn,
+            fg="#ffffff",
+            activebackground=self.c_unfreeze_hover if init_frozen else self.c_freeze_hover,
+            activeforeground="#ffffff",
+            relief=tk.FLAT,
+            padx=10,
+            pady=8,
+            cursor="hand2",
+            command=self.toggle_fleet_freeze,
+        )
+        self.btn_freeze.pack(fill=tk.X, pady=(0, 6))
 
         # 3. Multi-PC Fleet Network Card
         fleet_card = tk.Frame(main_frame, bg=self.c_card, highlightbackground=self.c_card_border, highlightthickness=1, padx=10, pady=8)
@@ -741,6 +818,9 @@ class FleetDashboard(tk.Tk):
         self.txt_log.see(tk.END)
 
     def _auto_start_on_launch(self):
+        if is_fleet_frozen(self.config_data):
+            self.log("❄ Global Fleet Freeze active. Skipping auto-start on launch.")
+            return
         self.log("Auto-start on login enabled. Ensuring creation turns are scheduled...")
         self.start_creation_turns(silent=True)
 
@@ -791,8 +871,11 @@ class FleetDashboard(tk.Tk):
         min_desc = ", ".join([f":{m:02d}" for m in self.current_node_profile["minutes"]])
         tier_desc = self.current_node_profile.get("model_tier", "Gemini Ultra")
         self.subtitle_lbl.configure(text=f"Multi-PC Dispatcher • Local: {self.current_node_name} • {tier_desc} (Slots {min_desc})")
-        self.log(f"Ultra cadence updated to {val} turns/hr (Slots {min_desc}). Re-arming scheduler...")
-        self.start_creation_turns(silent=True)
+        if is_fleet_frozen(self.config_data):
+            self.log(f"Ultra cadence saved ({val} turns/hr). Fleet is frozen; scheduler remains paused.")
+        else:
+            self.log(f"Ultra cadence updated to {val} turns/hr (Slots {min_desc}). Re-arming scheduler...")
+            self.start_creation_turns(silent=True)
 
     def on_close(self):
         self.destroy()
@@ -802,6 +885,21 @@ class FleetDashboard(tk.Tk):
     def start_creation_turns(self, silent: bool = False):
         if self.is_busy:
             return
+        if is_fleet_frozen(self.config_data):
+            if silent:
+                return
+            unfreeze_ok = messagebox.askyesno(
+                "Fleet Currently Frozen",
+                "The KiloApps fleet is currently FROZEN globally.\n\n"
+                "Do you want to UNFREEZE the fleet (set next_work.md status: ready) "
+                "and start creation turns on this PC?",
+            )
+            if not unfreeze_ok:
+                return
+            self.config_data["fleet_frozen"] = False
+            save_config(self.config_data)
+            set_next_work_status("ready")
+            self.log("🔥 Global freeze lifted by user before starting local turns.")
         self.is_busy = True
         self.btn_start.configure(state=tk.DISABLED)
         use_24h = self.var_24h_timer.get()
@@ -960,8 +1058,205 @@ class FleetDashboard(tk.Tk):
     def _finish_stop(self):
         self.is_busy = False
         self.btn_stop.configure(state=tk.NORMAL)
+        self.btn_freeze.configure(state=tk.NORMAL)
         self.cached_task_state = "Disabled"
         self.refresh_status(force_query=True)
+
+    def toggle_fleet_freeze(self):
+        if self.is_busy:
+            return
+        if is_fleet_frozen(self.config_data):
+            self.unfreeze_fleet()
+        else:
+            self.freeze_entire_fleet()
+
+    def freeze_entire_fleet(self):
+        if self.is_busy:
+            return
+        self.is_busy = True
+        self.btn_freeze.configure(state=tk.DISABLED)
+        self.config_data["fleet_frozen"] = True
+        self.config_data["autostart_turns_on_launch"] = False
+        self.var_autostart_turns.set(False)
+        save_config(self.config_data)
+        self.log("❄ FREEZING ENTIRE FLEET: Halting local tasks, setting status=frozen, and broadcasting freeze...")
+
+        def task():
+            try:
+                # 1. Mark next_work.md status: frozen
+                set_next_work_status("frozen")
+
+                # 2. Stop & disable local Windows Scheduled Task
+                ps_script = REPO_ROOT / "scripts" / "stop_task.ps1"
+                subprocess.run(
+                    [
+                        "powershell.exe",
+                        "-NoProfile",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        str(ps_script),
+                    ],
+                    cwd=str(REPO_ROOT),
+                    capture_output=True,
+                    text=True,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=CREATE_NO_WINDOW,
+                )
+                for tn in (TASK_NAME, f"{TASK_NAME}-User"):
+                    subprocess.run(
+                        ["schtasks.exe", "/change", "/tn", tn, "/disable"],
+                        capture_output=True,
+                        text=True,
+                        stdin=subprocess.DEVNULL,
+                        creationflags=CREATE_NO_WINDOW,
+                    )
+
+                # 3. Terminate running worker processes (agy.exe and lock PID)
+                subprocess.run(
+                    ["taskkill.exe", "/F", "/IM", "agy.exe", "/T"],
+                    capture_output=True,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=CREATE_NO_WINDOW,
+                )
+                if LOCK_FILE.exists():
+                    try:
+                        pid = LOCK_FILE.read_text(encoding="utf-8").strip()
+                        if pid:
+                            subprocess.run(
+                                ["taskkill.exe", "/F", "/PID", pid, "/T"],
+                                capture_output=True,
+                                stdin=subprocess.DEVNULL,
+                                creationflags=CREATE_NO_WINDOW,
+                            )
+                        LOCK_FILE.unlink()
+                    except Exception:
+                        pass
+
+                # 4. Update local session & all fleet node telemetry files
+                if SESSION_FILE.exists():
+                    try:
+                        s_data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+                        s_data["status"] = "stopped"
+                        SESSION_FILE.write_text(json.dumps(s_data, indent=2), encoding="utf-8")
+                    except Exception:
+                        pass
+
+                now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                for nid in ("pc_a", "pc_b", "pc_c"):
+                    node_file = FLEET_NODES_DIR / f"node_{nid.replace('pc_', '')}.json"
+                    if node_file.exists():
+                        try:
+                            n_data = json.loads(node_file.read_text(encoding="utf-8-sig"))
+                            if nid == self.current_node_id:
+                                n_data["status"] = "frozen"
+                                n_data["remote_command"] = "none"
+                                n_data["last_heartbeat"] = now_iso
+                            else:
+                                n_data["remote_command"] = "freeze"
+                            node_file.write_text(json.dumps(n_data, indent=2), encoding="utf-8")
+                        except Exception:
+                            pass
+
+                # 5. Commit and push global freeze state so remote PCs also halt on next sync
+                subprocess.run(
+                    ["git", "add", "next_work.md", ".agents/fleet_nodes/"],
+                    cwd=str(REPO_ROOT),
+                    capture_output=True,
+                    creationflags=CREATE_NO_WINDOW,
+                )
+                c_res = subprocess.run(
+                    ["git", "commit", "-m", "chore(fleet): freeze entire fleet via coordinator"],
+                    cwd=str(REPO_ROOT),
+                    capture_output=True,
+                    text=True,
+                    creationflags=CREATE_NO_WINDOW,
+                )
+                if c_res.returncode == 0:
+                    p_res = subprocess.run(
+                        ["git", "push"],
+                        cwd=str(REPO_ROOT),
+                        capture_output=True,
+                        text=True,
+                        creationflags=CREATE_NO_WINDOW,
+                    )
+                    if p_res.returncode == 0:
+                        self.after(0, lambda: self.log("❄ Global fleet freeze committed & pushed to origin/main."))
+                    else:
+                        self.after(0, lambda: self.log(f"❄ Local fleet frozen (git push note: {p_res.stderr.strip()})"))
+                else:
+                    self.after(0, lambda: self.log("❄ Fleet frozen locally & queue marked status=frozen."))
+            except Exception as e:
+                self.after(0, lambda: self.log(f"Freeze error: {e}"))
+            finally:
+                self.after(0, self._finish_stop)
+
+        threading.Thread(target=task, daemon=True).start()
+
+    def unfreeze_fleet(self):
+        if self.is_busy:
+            return
+        self.is_busy = True
+        self.btn_freeze.configure(state=tk.DISABLED)
+        self.config_data["fleet_frozen"] = False
+        save_config(self.config_data)
+        self.log("🔥 UNFREEZING FLEET: Restoring next_work.md status=ready and clearing remote freeze commands...")
+
+        def task():
+            try:
+                set_next_work_status("ready")
+                now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                for nid in ("pc_a", "pc_b", "pc_c"):
+                    node_file = FLEET_NODES_DIR / f"node_{nid.replace('pc_', '')}.json"
+                    if node_file.exists():
+                        try:
+                            n_data = json.loads(node_file.read_text(encoding="utf-8-sig"))
+                            n_data["remote_command"] = "none"
+                            if n_data.get("status") == "frozen":
+                                n_data["status"] = "stopped"
+                            if nid == self.current_node_id:
+                                n_data["last_heartbeat"] = now_iso
+                            node_file.write_text(json.dumps(n_data, indent=2), encoding="utf-8")
+                        except Exception:
+                            pass
+
+                subprocess.run(
+                    ["git", "add", "next_work.md", ".agents/fleet_nodes/"],
+                    cwd=str(REPO_ROOT),
+                    capture_output=True,
+                    creationflags=CREATE_NO_WINDOW,
+                )
+                c_res = subprocess.run(
+                    ["git", "commit", "-m", "chore(fleet): unfreeze fleet via coordinator (status=ready)"],
+                    cwd=str(REPO_ROOT),
+                    capture_output=True,
+                    text=True,
+                    creationflags=CREATE_NO_WINDOW,
+                )
+                if c_res.returncode == 0:
+                    p_res = subprocess.run(
+                        ["git", "push"],
+                        cwd=str(REPO_ROOT),
+                        capture_output=True,
+                        text=True,
+                        creationflags=CREATE_NO_WINDOW,
+                    )
+                    if p_res.returncode == 0:
+                        self.after(0, lambda: self.log("🔥 Fleet unfrozen & pushed! Click '▶ Start' when ready to schedule turns."))
+                    else:
+                        self.after(0, lambda: self.log(f"🔥 Fleet unfrozen locally (git push note: {p_res.stderr.strip()})"))
+                else:
+                    self.after(0, lambda: self.log("🔥 Fleet unfrozen (status=ready). Click '▶ Start' to schedule turns."))
+            except Exception as e:
+                self.after(0, lambda: self.log(f"Unfreeze error: {e}"))
+            finally:
+                def _done():
+                    self.is_busy = False
+                    self.btn_freeze.configure(state=tk.NORMAL)
+                    self.refresh_status(force_query=True)
+                self.after(0, _done)
+
+        threading.Thread(target=task, daemon=True).start()
 
     def stop_all_remote_pcs(self):
         other_nodes = [nid for nid in ("pc_a", "pc_b", "pc_c") if nid != self.current_node_id]
@@ -1042,6 +1337,13 @@ class FleetDashboard(tk.Tk):
         threading.Thread(target=task, daemon=True).start()
 
     def run_manual_turn(self):
+        if is_fleet_frozen(self.config_data):
+            messagebox.showwarning(
+                "Fleet Frozen",
+                "The fleet is currently FROZEN globally.\n\n"
+                "Click '🔥 Unfreeze Fleet' first before running a turn.",
+            )
+            return
         now = datetime.datetime.now()
         is_safe = self.current_node_profile.get("is_safe", lambda m: True)
         if not is_safe(now.minute):
@@ -1127,9 +1429,26 @@ class FleetDashboard(tk.Tk):
             except Exception:
                 pass
 
+        frozen_now = is_fleet_frozen(self.config_data)
+        if not self.is_busy:
+            if frozen_now:
+                self.btn_freeze.configure(
+                    text="🔥  Unfreeze Fleet (Restore Ready State)",
+                    bg=self.c_unfreeze_btn,
+                    activebackground=self.c_unfreeze_hover,
+                )
+            else:
+                self.btn_freeze.configure(
+                    text="❄  Freeze Entire Fleet (Pause All Nodes)",
+                    bg=self.c_freeze_btn,
+                    activebackground=self.c_freeze_hover,
+                )
+
         # Update Engine Status Badge
         if task_state == "Running":
             self.lbl_status.configure(text="⚡ RUNNING (Executing Turn)", fg=self.c_accent)
+        elif frozen_now:
+            self.lbl_status.configure(text="❄ FROZEN (Global Fleet Pause)", fg=self.c_accent)
         elif task_state == "Ready" and session_active:
             self.lbl_status.configure(text="🟢 ACTIVE & SCHEDULED", fg=self.c_green)
         elif task_state == "Ready" and not session_active:
@@ -1163,6 +1482,8 @@ class FleetDashboard(tk.Tk):
                 text=f"{next_time.strftime('%H:%M:%S')} (in {next_m}m {next_s}s)",
                 fg=self.c_fg,
             )
+        elif frozen_now:
+            self.lbl_next_run.configure(text="Frozen (Global Pause Active)", fg=self.c_accent)
         elif task_state == "Disabled" or not session_active:
             self.lbl_next_run.configure(text="Suspended (Task Stopped)", fg=self.c_sub)
         else:
@@ -1236,6 +1557,9 @@ class FleetDashboard(tk.Tk):
                 if task_state == "Running":
                     stat_text = f"RUNNING ({sched_str})"
                     stat_color = self.c_accent
+                elif frozen_now or status == "frozen":
+                    stat_text = "FROZEN (Local)"
+                    stat_color = self.c_accent
                 elif task_state == "Ready" and session_active:
                     stat_text = f"ACTIVE ({sched_str})"
                     stat_color = self.c_green
@@ -1246,9 +1570,12 @@ class FleetDashboard(tk.Tk):
                     stat_text = f"{task_state.upper()} ({sched_str})"
                     stat_color = self.c_orange
             else:
-                if remote_cmd == "stop":
-                    stat_text = "STOP REQUESTED"
-                    stat_color = self.c_orange
+                if remote_cmd in ("stop", "freeze"):
+                    stat_text = "FREEZE QUEUED" if remote_cmd == "freeze" else "STOP REQUESTED"
+                    stat_color = self.c_accent if remote_cmd == "freeze" else self.c_orange
+                elif status == "frozen":
+                    stat_text = f"FROZEN ({sched_str})"
+                    stat_color = self.c_accent
                 elif status == "active":
                     stat_text = f"ACTIVE ({sched_str})"
                     stat_color = self.c_green

@@ -1,31 +1,28 @@
-name: Gatekeeper Auto-Merge
+name: Gatekeeper PR Verification (Auto-Merge Disabled)
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened]
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  gatekeeper-verify-and-merge:
+  gatekeeper-verify-only:
     runs-on: windows-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
 
     steps:
-      - name: Checkout PR Branch from Fork
+      - name: Checkout PR Branch
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
-      - name: Set up Upstream Tracking Remote
+      - name: Fetch Upstream Main Base
         shell: bash
         run: |
-          git remote add upstream https://github.com/${{ github.repository }}.git || true
-          git fetch upstream main
+          git fetch origin main
 
       - name: Set up MSVC & Win32 C Build Tools
         uses: ilammy/msvc-dev-cmd@v1
@@ -42,11 +39,11 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'KiloOS/package-lock.json'
 
-      - name: Gate 0 - Algorithmic Security Lint & Immutability Check (Trusted Upstream)
+      - name: Gate 0 - Algorithmic Security Lint & Immutability Check (Trusted Main)
         shell: pwsh
         run: |
-          git show upstream/main:scripts/security_lint.py | Out-File -FilePath "$env:TEMP\trusted_lint.py" -Encoding utf8
-          python "$env:TEMP\trusted_lint.py" --pr --base upstream/main
+          git show origin/main:scripts/security_lint.py | Out-File -FilePath "$env:TEMP\trusted_lint.py" -Encoding utf8
+          python "$env:TEMP\trusted_lint.py" --pr --base origin/main
 
       - name: Install Frontend Dependencies (Sandboxed)
         shell: pwsh
@@ -65,76 +62,11 @@ jobs:
           cd KiloOS
           npm run build
 
-      - name: Gate 3 - Validate Turn Receipt & Merge Authorization
-        id: gate_receipts
+      - name: Gate 3 - Manual Review Required (Auto-Merge Disabled)
         shell: pwsh
         run: |
-          $receipts = Get-ChildItem -Path ".agents/receipts" -Filter "receipt_*.json" -ErrorAction SilentlyContinue
-          $prAuthor = "${{ github.event.pull_request.user.login }}"
-          $repoOwner = "${{ github.repository_owner }}"
-          $isOwner = ($prAuthor -eq $repoOwner)
-          $hasValidReceipt = $false
-
-          if ($receipts -and $receipts.Count -gt 0) {
-            Write-Host "Found $($receipts.Count) turn receipt(s). Validating provenance & schema..."
-            foreach ($r in $receipts) {
-              $data = Get-Content $r.FullName -Raw | ConvertFrom-Json
-              if (-not $data.agent -or -not $data.timestamp) {
-                Write-Error "Invalid receipt schema in $($r.Name)"
-                exit 1
-              }
-              if ($data.provenance) {
-                if (-not $data.provenance.run_id) {
-                  Write-Error "Receipt $($r.Name) has malformed provenance: missing run_id"
-                  exit 1
-                }
-                Write-Host "Receipt $($r.Name) verified with GitHub Actions Run ID: $($data.provenance.run_id)"
-              }
-            }
-            $hasValidReceipt = $true
-            Write-Host "Receipt validation passed."
-          }
-
-          if ($hasValidReceipt -or $isOwner) {
-            Write-Host "PR authorized for autonomous auto-merge."
-            echo "should_merge=true" >> $env:GITHUB_OUTPUT
-          } else {
-            Write-Host "============================================================"
-            Write-Host "SECURITY GATE PASSED, BUT MANUAL APPROVAL REQUIRED."
-            Write-Host "External contributor or bot PR ($prAuthor) requires human review."
-            Write-Host "Auto-merge disabled for untrusted origin."
-            Write-Host "============================================================"
-            echo "should_merge=false" >> $env:GITHUB_OUTPUT
-          }
-
-      - name: Auto-Merge Valid PR
-        if: steps.gate_receipts.outputs.should_merge == 'true'
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "All deterministic compiler gates PASSED. Auto-merging PR #${{ github.event.pull_request.number }}..."
-          gh pr merge "${{ github.event.pull_request.number }}" --merge --repo "${{ github.repository }}"
-
-      - name: Post-Merge Reconcile on Main
-        if: steps.gate_receipts.outputs.should_merge == 'true'
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Checkout latest main with write credentials
-          git config user.name "KiloApps Gatekeeper Bot"
-          git config user.email "gatekeeper@kiloapps.local"
-          git fetch upstream main
-          git checkout main || git checkout -B main upstream/main
-          git reset --hard upstream/main
-
-          # Reconcile turn receipts and advance next_work.md
-          uv run scripts/reconcile_receipts.py
-
-          # Push updated queue state if modified
-          if [ -n "$(git status --porcelain)" ]; then
-            git add -A
-            git commit -m "chore(gatekeeper): reconcile turn receipts and advance fleet rotation"
-            git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" main
-          fi
+          Write-Host "============================================================"
+          Write-Host "ALL COMPILER, SIZE, AND SECURITY GATES PASSED."
+          Write-Host "Autonomous PR auto-merge is DISABLED by maintainer policy."
+          Write-Host "This PR is held for manual human review and merge."
+          Write-Host "============================================================"
