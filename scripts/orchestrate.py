@@ -822,6 +822,7 @@ def extract_target_mission_spec(target: str, agent: str = "") -> str:
 
         # 1. Search inside `agent`'s dedicated section first so per-agent [ARGON REVIEW] specs are matched
         section_headers = {
+            "kilo-adhoc": r"(?:^|\n)### 0\.",
             "kilo-creator": r"### 1\.",
             "kilo-graphics": r"### 2\.",
             "kilo-soundscape": r"### 3\.",
@@ -849,10 +850,34 @@ def extract_target_mission_spec(target: str, agent: str = "") -> str:
     return ""
 
 
+def get_priority_zero_target(content: str) -> str:
+    """Returns the top pending PM-* ticket in ### 0. Priority-0 Argon Queue, or '' if drained."""
+    import re
+    sec_m = re.search(r"(?:^|\n)### 0\.[^\n]*\n(.*?)(?=\n### \d|\n---|\n## |\Z)", content, re.DOTALL)
+    if not sec_m:
+        return ""
+    for m in re.finditer(r"^\|\s*[`*]*([A-Za-z0-9_:/~.-]+)[`*]*\s*\|", sec_m.group(1), re.MULTILINE):
+        cand = m.group(1).strip()
+        if cand.lower() in ("target", "ticket", "id", "app", "application", "---", "complete", "none"):
+            continue
+        if set(cand).issubset({"-", ":"}):
+            continue
+        return cand
+    return ""
+
+
 def build_agent_prompt(agent: str, targets: dict) -> str:
     target = str(targets.get(agent.replace("-", "_"), "the next app in queue"))
     spec_hint = extract_target_mission_spec(target, agent)
-    if agent == "kilo-tester":
+    if agent == "kilo-adhoc":
+        return (
+            f"Activate skill 'kilo-adhoc'. "
+            f"Execute Priority-0 Postmortem Restart Argon Ticket '{target}' from section `### 0.` of next_work.md (consult `docs/POSTMORTEM_ROADMAP.md` for architectural context).{spec_hint} "
+            f"Implement the complete engineering solution cleanly, run deterministic verification (`python -m py_compile` on modified Python scripts, `python check_sizes.py`, `python scripts/security_lint.py`, plus `cd KiloOS && npm run build` if KiloOS changed or `python scripts/verify_turn.py --app <App> --build-native` if an app changed), "
+            f'pop `{target}` and advance the Priority-0 Argon queue via `python scripts/advance_turn.py --agent kilo-adhoc --app {target} --complete-p0 --title "<Summary>" --bullet "<Key change 1>" --bullet "<Verification>"`, '
+            f'then `git add -A && git commit -m "feat(postmortem): complete {target}" && git push origin main` and STOP immediately. Process `{target}` only then STOP.'
+        )
+    elif agent == "kilo-tester":
         return (
             f"Activate skill 'kilo-tester'. "
             f"Perform interactive UI audit, VFS/IPC check, and inline fixes for target app '{target}' per next_work.md.{spec_hint} "
@@ -935,6 +960,8 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
 
 
 def handle_preflight_skip(agent: str, targets: dict, frontmatter: dict, node_id: str) -> bool:
+    if agent == "kilo-adhoc":
+        return False
     """
     Pre-flight check in Python to auto-advance past Mature or inappropriate targets with 0 LLM tokens.
     Instead of wasting the scheduled turn slot, advances `targets[fm_target_key]` in-place to the
@@ -1173,10 +1200,13 @@ def main():
             log(f"Error parsing frontmatter in {NEXT_WORK_FILE.name}: {e}. Skipping dispatch.")
             return
 
-        # Check if 24 hours have elapsed since last planner run
+        # Priority-0 Postmortem Argon Override: if ### 0. has pending PM-* tickets, ALWAYS run them first on Argon!
+        p0_target = get_priority_zero_target(content_or_err) if not args.force_agent else ""
+
+        # Check if 24 hours have elapsed since last planner run (suppressed while Priority-0 Argon queue is draining)
         last_planner_str = frontmatter.get("last_planner_run")
         should_run_planner = False
-        if not args.force_agent and last_planner_str:
+        if not args.force_agent and not p0_target and last_planner_str:
             try:
                 ts_str = str(last_planner_str).strip()
                 if ts_str.endswith("Z"):
@@ -1190,7 +1220,13 @@ def main():
             except Exception as e:
                 log(f"Warning parsing last_planner_run timestamp '{last_planner_str}': {e}")
 
-        if should_run_planner:
+        if p0_target:
+            agent = "kilo-adhoc"
+            if not isinstance(frontmatter.get("current_targets"), dict):
+                frontmatter["current_targets"] = {}
+            frontmatter["current_targets"]["kilo_adhoc"] = p0_target
+            log(f"[PRIORITY-0 ARGON QUEUE] Pending postmortem ticket '{p0_target}' detected in ### 0. Dispatching kilo-adhoc on Gemini 4 Argon first!")
+        elif should_run_planner:
             agent = "kilo-planner"
         else:
             agent = args.force_agent or frontmatter.get("current_agent", "kilo-tester")
@@ -1204,12 +1240,14 @@ def main():
                 model = os.environ.get("AGY_MODEL")
             elif isinstance(fm_agent_models, dict) and agent in fm_agent_models:
                 model = str(fm_agent_models[agent]).strip()
+            elif agent == "kilo-adhoc":
+                model = "gemini-4-argon-high"
             else:
                 model = frontmatter.get("model", "gemini-3.8-flash-high")
 
             # High effort across all active Flash & Argon agents to maximize code/UX/fix quality
             HIGH_EFFORT_AGENTS = {
-                "kilo-creator", "kilo-expander", "kilo-soundscape", "kilo-tester",
+                "kilo-adhoc", "kilo-creator", "kilo-expander", "kilo-soundscape", "kilo-tester",
                 "kilo-usability", "kilo-qa", "kilo-graphics", "kilo-planner", "kilo-review"
             }
             fm_effort = frontmatter.get("effort", "high")
@@ -1314,7 +1352,7 @@ def main():
                 except Exception:
                     pass
 
-            if is_argon_turn and (process.returncode != 0 or argon_did_not_advance) and dispatch_attempt == 0 and not args.force_agent:
+            if is_argon_turn and agent != "kilo-adhoc" and (process.returncode != 0 or argon_did_not_advance) and dispatch_attempt == 0 and not args.force_agent:
                 log(
                     f"[ARGON QUOTA/FAILURE FALLBACK] {agent} ({model}) failed to complete (code={process.returncode}). "
                     f"Auto-rotating to next Flash agent and dispatching immediately in the same tick!"

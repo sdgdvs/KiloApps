@@ -41,6 +41,7 @@ except ImportError:
 
 
 AGENT_SECTION_HEADERS = {
+    "kilo-adhoc": r"(?:^|\n)### 0\.",
     "kilo-creator": r"### 1\.",
     "kilo-graphics": r"### 2\.",
     "kilo-soundscape": r"### 3\.",
@@ -209,6 +210,7 @@ def advance_section_and_pick_next(
     mature_set: set[str],
     quarantined: bool,
     audit_note: str = "",
+    pop_completed: bool = False,
 ) -> tuple[str, str]:
     """
     Finds the next valid target for `agent` in its queue section,
@@ -227,7 +229,7 @@ def advance_section_and_pick_next(
 
     sec_header = sec_m.group(1)
     sec_body = sec_m.group(2)
-    effective_mature = set() if agent == "kilo-review" else mature_set
+    effective_mature = set() if agent in ("kilo-review", "kilo-adhoc") else mature_set
 
     all_candidates = extract_pipeline_targets(sec_body)
     # Filter out completed_app and (for non-review agents) any mature apps
@@ -235,7 +237,10 @@ def advance_section_and_pick_next(
         t for t in all_candidates
         if t.lower() != completed_app.lower() and t.lower() not in effective_mature
     ]
-    next_target = remaining[0] if remaining else (all_candidates[0] if all_candidates else completed_app)
+    if pop_completed and not remaining:
+        next_target = "COMPLETE"
+    else:
+        next_target = remaining[0] if remaining else (all_candidates[0] if all_candidates else completed_app)
 
     # Update `- **Active Target**: ...` or `- **Target**: ...` line in section
     sec_body = re.sub(
@@ -261,6 +266,8 @@ def advance_section_and_pick_next(
             if row_target.lower() in effective_mature:
                 continue  # Purge mature apps from worker pipeline tables (except kilo-review)
             if row_target.lower() == completed_app.lower():
+                if pop_completed:
+                    continue  # One-shot Priority-0 ticket completed: pop row from queue
                 if not quarantined or agent == "kilo-review":
                     if audit_note and agent == "kilo-review":
                         parts_r = row_txt.rstrip("\n").split("|")
@@ -284,6 +291,14 @@ def advance_section_and_pick_next(
                     sec_body,
                     count=1,
                 )
+        elif pop_completed:
+            next_target = "COMPLETE"
+            sec_body = re.sub(
+                r"(-\s*\*\*(?:Active )?Target\*\*:\s*)`?[^`\n]+`?",
+                r"\g<1>`COMPLETE`",
+                sec_body,
+                count=1,
+            )
 
     new_content = content[:sec_m.start()] + sec_header + sec_body + content[sec_m.end():]
     return new_content, next_target
@@ -292,7 +307,7 @@ def advance_section_and_pick_next(
 def purge_mature_across_all_sections(content: str, mature_set: set[str]) -> str:
     """Removes any row belonging to a mature app from worker queue tables (### 1. through ### 7.)."""
     for agent in AGENT_SECTION_HEADERS:
-        if agent == "kilo-review":
+        if agent in ("kilo-review", "kilo-adhoc"):
             continue
         hdr_pat = AGENT_SECTION_HEADERS[agent]
         sec_m = re.search(rf"({hdr_pat}[^\n]*\n)(.*?)(?=\n### \d|\n---|\n## |\Z)", content, re.DOTALL)
@@ -339,6 +354,11 @@ def main() -> int:
     parser.add_argument("--bullet", action="append", default=[], help="Log bullet line (pass multiple times, max 5)")
     parser.add_argument("--quarantine-mature", type=str, default="", help="If set, moves app to Mature table with this summary")
     parser.add_argument("--category", type=str, default="Application", help="Category for Mature table when --quarantine-mature is used")
+    parser.add_argument(
+        "--complete-p0",
+        action="store_true",
+        help="Pop completed Priority-0 Argon ticket from ### 0. and stay on kilo-adhoc until ### 0. drains",
+    )
     parser.add_argument(
         "--inject-fix",
         action="append",
@@ -389,6 +409,7 @@ def main() -> int:
         else:
             audit_note = f"[Argon Verified Clean ✅ {date_str}] Visual, feature & usability review."
 
+    is_p0_turn = (args.agent == "kilo-adhoc" or args.complete_p0)
     content, next_target = advance_section_and_pick_next(
         content=content,
         agent=args.agent,
@@ -396,6 +417,7 @@ def main() -> int:
         mature_set=mature_set,
         quarantined=quarantined,
         audit_note=audit_note,
+        pop_completed=is_p0_turn,
     )
 
     # Update YAML frontmatter
@@ -412,9 +434,17 @@ def main() -> int:
             "kilo-creator", "kilo-graphics",
             "kilo-tester", "kilo-usability", "kilo-qa", "kilo-expander", "kilo-review",
         ]) if a != "kilo-soundscape"]
-        curr_idx = rotation.index(args.agent) if args.agent in rotation else 0
-        next_agent = rotation[(curr_idx + 1) % len(rotation)]
-        after_next = rotation[(curr_idx + 2) % len(rotation)]
+        if is_p0_turn and next_target != "COMPLETE":
+            next_agent = "kilo-adhoc"
+            after_next = "kilo-adhoc"
+        elif is_p0_turn and next_target == "COMPLETE":
+            next_agent = rotation[0] if rotation else "kilo-creator"
+            after_next = rotation[1] if len(rotation) > 1 else next_agent
+            fm["last_planner_run"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        else:
+            curr_idx = rotation.index(args.agent) if args.agent in rotation else 0
+            next_agent = rotation[(curr_idx + 1) % len(rotation)]
+            after_next = rotation[(curr_idx + 2) % len(rotation)]
 
         fm["current_agent"] = next_agent
         fm["next_agent"] = after_next
@@ -434,7 +464,7 @@ def main() -> int:
         # Also ensure no worker agent's current_target is pointing at a newly quarantined mature app
         if quarantined:
             for other_agent in AGENT_SECTION_HEADERS:
-                if other_agent == "kilo-review":
+                if other_agent in ("kilo-review", "kilo-adhoc"):
                     continue
                 okey = other_agent.replace("-", "_")
                 curr_t = str(fm["current_targets"].get(okey, ""))

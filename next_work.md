@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-adhoc
+next_agent: kilo-adhoc
 agent_rotation:
 - kilo-creator
 - kilo-graphics
@@ -11,10 +11,12 @@ agent_rotation:
 - kilo-review
 model: gemini-3.8-flash-high
 agent_models:
+  kilo-adhoc: gemini-4-argon-high
   kilo-review: gemini-4-argon-high
 effort: high
 timeout_minutes: 10
 agent_timeouts:
+  kilo-adhoc: 14
   kilo-creator: 11
   kilo-expander: 11
   kilo-soundscape: 11
@@ -28,6 +30,7 @@ tool_call_cap: 32
 commit_checkpoint: 16
 status: frozen
 current_targets:
+  kilo_adhoc: PM-01-ORCHESTRATOR-CIRCUIT-BREAKER
   kilo_creator: kweb://rfc-archive
   kilo_graphics: KStarDredge
   kilo_soundscape: KStellar
@@ -66,6 +69,29 @@ last_planner_run: '2026-11-05T20:34:16Z'
 
 This document is the single active source of truth for autonomous agent dispatching.
 The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YAML frontmatter and Mission Pipeline Tables below on every tick.
+
+> **❄️ FLEET PAUSED (`status: frozen`) — PRIORITY-0 ARGON RESTART GATE ARMED:**
+> While `### 0.` below contains pending `PM-*` tickets, unfreezing the fleet automatically pins `scripts/orchestrate.py` to **`kilo-adhoc` on `gemini-4-argon-high` (14m timeout)** and suppresses `kilo-planner` and Flash app turns until all 12 postmortem architecture upgrades (`PM-01` through `PM-12`, detailed in `docs/POSTMORTEM_ROADMAP.md`) have completed in exact order and popped from `### 0.`. Once `PM-12` finishes, `scripts/advance_turn.py --complete-p0` automatically hands the fleet back to the standard `agent_rotation`.
+
+### 0. Priority-0 Postmortem & Restart Hardening Queue (`kilo-adhoc` — Gemini 4 Argon)
+- **Active Target**: `PM-01-ORCHESTRATOR-CIRCUIT-BREAKER`
+
+| Target | Primary Files | Argon Engineering Spec (Execute 1 Ticket Per Turn, Then `--complete-p0`) |
+|---|---|---|
+| `PM-01-ORCHESTRATOR-CIRCUIT-BREAKER` | `scripts/orchestrate.py` | Fix the `returncode != 0` timeout death-spiral blind spot: move the 2-Strike Stall Monitor & Circuit Breaker outside `if process.returncode == 0:`, parse `AGY_ERROR` JSON from `stderr` (on `429 RESOURCE_EXHAUSTED`, pause/cooldown the local node until quota reset without incrementing stall strikes; on `DEADLINE_EXCEEDED`/`print_timeout`, park dirty working-tree edits into a named `git stash push -u` instead of `--autostash`, increment stall strikes, and auto-rotate past the target after 2 consecutive timeouts), replace `git pull --rebase --autostash` in `run_git_pull()` with clean pre-pull dirty-tree parking so half-finished timeout edits never bleed into subsequent turns, and delete the `--no-visual` salvage fallback so visually broken leftovers are stashed rather than committed to `main`. |
+| `PM-02-HARNESS-GUARD-MERGE` | `scripts/harness_guard.py`, `scripts/regression_sweep.py`, `scripts/verify_turn.py`, `scripts/orchestrate.py` | Port and integrate the harness hardening suite (check `c:/KiloApps/kilo-harness-fix/scripts/` if present on host or implement cleanly per `docs/POSTMORTEM_ROADMAP.md`): add `scripts/harness_guard.py` enforcing protected harness/infrastructure paths against unauthorized worker mutation, emit cryptographic `.agents/verify/<app_slug>.json` PASS tokens from `scripts/verify_turn.py` (binding git tree hash + visual/startup/lint results), require `Agent-Turn:` commit trailers on autonomous worker commits, and add `scripts/regression_sweep.py` for batch post-turn regression verification. |
+| `PM-03-ATOMIC-TICKETS-WEB-C-SPLIT` | `scripts/advance_turn.py`, `scripts/orchestrate.py`, `.agents/skills/kilo-review/SKILL.md`, `next_work.md` | Enforce atomic single-turn work decomposition (`1 Ticket = 1 Cohesive Fix`, target duration `2-4m`): update `scripts/advance_turn.py --inject-fix` and `.agents/skills/kilo-review/SKILL.md` so each injected fix spec is capped (`<= 350` chars, `<= 3` functions/concerns), decouple Web `.html` fixes from Win32 `main.c` parity fixes into separate sequential tickets instead of forcing both 10k-line HTML and 6k-line C edits in one 10m Flash turn, and split the existing 1,000-character `[ARGON REVIEW]` mega-rows in sections `### 4.`, `### 5.`, and `### 7.` of `next_work.md` (`KSanctuary`, `KStellar`, `KGo`, `KMaze`, `KCyber`, `KImage`, `KChess`, `KMystery`) into clean atomic rows. |
+| `PM-04-IMMUTABLE-MATURE-LOCK` | `mature_apps_registry.json`, `scripts/orchestrate.py`, `scripts/advance_turn.py`, `.agents/skills/kilo-review/SKILL.md` | Eliminate the 22/22 Mature lock breach loop: consolidate `mature_apps_registry.json` and `## Mature Applications` in `next_work.md` into a single authoritative lock enforced by `orchestrate.py`, `advance_turn.py`, and `harness_guard.py` so NO autonomous agent—including `kilo-review` (`--inject-fix`) and `kilo-planner`—can modify or un-quarantine a graduated app; add an explicit human-only CLI flag (`python scripts/advance_turn.py --unlock <App>`) for intentional maintainer re-opening. |
+| `PM-05-TOTAL-FOOTPRINT-BYTE-GATE` | `check_sizes.py`, `scripts/verify_turn.py`, `scripts/byte_budget_gate.py`, `KiloOS/public/assets/sprites/` | Close the external sprite loophole on the 999 KB cartridge rule: unify `check_sizes.py`, `scripts/verify_turn.py`, and `scripts/byte_budget_gate.py` around a single canonical `999 * 1024` byte (`1,022,976` B) ceiling measured across **total per-app web footprint** (`KiloOS/public/apps/<app>.html` + `KiloOS/public/assets/sprites/<app>/**` + app-exclusive assets) as well as `<App>.exe`, and quantize/compress/atlas `KDragon` (`2.53 MB` sprites) and `KQuest` (`1.85 MB` sprites) so every app in KiloOS passes the honest total-footprint `< 999 KB` gate with zero visual degradation. |
+| `PM-06-INDEXEDDB-VFS-UPGRADE` | `KiloOS/src/App.jsx`, `KiloOS/src/vfsStore.js`, `KiloOS/package.json` | Eliminate the 5 MB `localStorage` quota cliff in KiloOS before Phase VI VFS expansion: create `KiloOS/src/vfsStore.js` backed by **IndexedDB** (~hundreds of MBs capacity) with automatic one-time migration from legacy `localStorage.getItem('kiloos_vfs_state_v2')` and graceful fallback, surface non-blocking retro OS toast notifications on storage errors instead of swallowing `QuotaExceededError`, replace remaining blocking `alert()`/`prompt()` calls in `KiloOS/src/App.jsx` with non-blocking in-DOM KiloOS modals, bump `MICROS_VERSION`, and verify `npm run build`. |
+| `PM-07-IPC-ROUTER-AND-KILO-SDK` | `KiloOS/src/App.jsx`, `KiloOS/public/sdk/kilo-sdk.js`, `.agents/rules/architecture.md` | Fix per-window `postMessage` listener thrashing and wildcard origin broadcasts in `KiloOS/src/App.jsx`: refactor per-`<Window>` `window.addEventListener('message', ...)` (which currently re-binds across all open windows on every 1Hz `OS_TELEMETRY_BEAT`) into a single top-level `useRef`-backed IPC router enforcing `window.location.origin` (eliminating `postMessage(..., '*')`), ship a shared `< 8 KB` `/sdk/kilo-sdk.js` helper (`KiloSDK.vfsRead`, `vfsWrite`, `openPicker`, `savePicker`, `notify`, `launchApp` with automatic standalone Blob/input fallback), and document it in `.agents/rules/architecture.md`. |
+| `PM-08-QUEUE-SHARDING-AND-TELEMETRY-DIET` | `scripts/orchestrate.py`, `scripts/advance_turn.py`, `scripts/dashboard.py`, `.gitignore` | Stop polluting `main` git history with per-turn telemetry files: compact the ~2,950 historical `.agents/receipts/receipt_*.json` files into a single rolled-up `.agents/telemetry_summary.json` + archive bundle, update `orchestrate.py` and `dashboard.py` to read/append local JSONL telemetry (`.agents/local_turns.jsonl`, gitignored) alongside rolled-up counts without committing a new JSON file on every turn, and keep `fleet_nodes/*.json` commits restricted to explicit coordinator state transitions (`freeze`/`unfreeze`/`stop`). |
+| `PM-09-BINARY-GIT-DIET-AND-SERVER-CLEANUP` | `KiloOS_Server/`, `.gitignore`, `scripts/verify_turn.py`, `AGENTS.md` | Clean up repository binary bloat and stale duplicate trees: remove the orphaned 41 MB `KiloOS_Server/KiloOS_Server.exe` binary and stale duplicate `KiloOS_Server/public/apps/*.html` copies (preserving authoritative server source and build scripts), stop tracking duplicate intermediate `<App>/<App>.exe` binaries in root app folders (gitignoring `<App>/<App>.exe` and `*.obj` while keeping `KiloOS/public/exe/<App>.exe` or release packaging clean), and update `scripts/verify_turn.py` and `AGENTS.md` accordingly. |
+| `PM-10-CI-CONTRIBUTOR-SECURITY-ALIGNMENT` | `.github/workflows/gatekeeper-auto-merge.yml`, `.github/workflows/contributor-fleet-turn.yml`, `scripts/security_lint.py` | Align CI PR verification and security linting: keep `gatekeeper-auto-merge.yml` strictly read-only (`pull_request`, `permissions: contents: read`, auto-merge permanently disabled), update `scripts/security_lint.py --pr` and workflow checks to inspect only PR-changed files (`git diff --name-only origin/main...HEAD`) rather than full-tree receipt globs, and add headless `test_app_startup.py` / `verify_turn.py --no-visual` validation for modified apps in PR CI. |
+| `PM-11-TWO-TIER-CURATION-BOARD-CARD` | `AGENTS.md`, `KiloOS/public/apps/kchess.html`, `KChess/main.c`, `KiloOS/public/apps/ksolitaire.html`, `KSolitaire/main.c`, `KiloOS/public/apps/kfreecell.html`, `KFreecell/main.c` | Establish the Two-Tier Fleet Philosophy in `AGENTS.md` (Tier 1 crisp `< 180 KB` 1999 utilities & classic arcade/board/card games vs Tier 2 deep RPG/simulation flagship worlds) and execute Subtraction Curation Pass Part 1: strip out-of-place arcade-maximalist bloat (`freezePowerups`, 512-particle shockwaves, and screen-shake in `KChess`; RPG active combat skills in `KSolitaire` and `KFreecell`) across both Web HTML and Win32 C (`build.bat`), preserving crisp classic rules, AI, PGN/FEN, undo/redo, F5/F9 saves, and visual polish. |
+| `PM-12-TWO-TIER-CURATION-UTILITIES` | `KiloOS/public/apps/kchart.html`, `KChart/main.c`, `KiloOS/public/apps/khabit.html`, `KHabit/main.c`, `mature_apps_registry.json`, `next_work.md` | Execute Subtraction Curation Pass Part 2 & Lock Tier-1 Classics: disable/remove unsolicited continuous BGM synthesis or arcade gimmicks from pure office/data utilities (`KChart`, `KHabit`, keeping discrete optional UI earcons muted by default), verify startup and layout via `verify_turn.py`, and register all completed Tier-1 classic utilities and board/card games in the immutable `mature_apps_registry.json` so resumed fleet turns focus strictly on Tier-2 flagship worlds and `kweb://` destinations. |
+
+---
 
 ## Strategic Direction — Phase VI: System Convergence, Cross-App VFS Mesh & The 1999 Web
 1. **Pillar 1 — KiloOS VFS & Inter-App IPC Mesh**: Transform KiloApps from isolated `localStorage` silos into an interconnected 1999 Operating System. Wire `VFS_READ`, `VFS_WRITE`, `VFS_SHOW_OPEN`, `VFS_SHOW_SAVE`, `OS_NOTIFY`, and `OS_LAUNCH_APP` (`postMessage` to KiloOS shell with graceful standalone fallback) so files saved in `KBBS`, `KNet`, `KCipher`, `KScript`, `KDB`, `KSynth`, or `KStarForge` can be opened and inspected across `File Browser` (`kexplorer`), `KHex`, `KPad`, `KGraph`, and `KMatrix`.
